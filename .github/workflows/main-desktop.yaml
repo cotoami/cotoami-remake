@@ -4,8 +4,6 @@ on:
   push:
     branches:
     - main
-    # paths:
-    # - 'cotoami_desktop/**'
 
 jobs:
   build:
@@ -19,23 +17,24 @@ jobs:
     runs-on: ${{ matrix.platform }}
     
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+    - name: Install Rust stable
+      uses: dtolnay/rust-toolchain@stable
 
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectPath: cotoami_desktop/tauri
-          tagName: desktop-v__VERSION__
-          releaseName: 'Cotoami Desktop v__VERSION__'
-          releaseDraft: true
-          prerelease: false
+    - name: Build and release desktop app
+      uses: tauri-apps/tauri-action@v0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        projectPath: cotoami_desktop/tauri
+        tagName: desktop-dev-build
+        releaseName: 'Cotoami Desktop Dev Build'
+        releaseDraft: false
+        prerelease: false
