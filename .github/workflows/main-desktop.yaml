@@ -33,3 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: cotoami_desktop/tauri
+          tagName: desktop-v__VERSION__
+          releaseName: 'Cotoami Desktop v__VERSION__'
+          releaseDraft: true
+          prerelease: false
