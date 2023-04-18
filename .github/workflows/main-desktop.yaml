@@ -28,13 +28,18 @@ jobs:
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
 
+    - name: Get timestamp
+      env:
+        TZ: 'Asia/Tokyo'
+      run: echo "TIMESTAMP=$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
+
     - name: Build and release desktop app
       uses: tauri-apps/tauri-action@v0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         projectPath: cotoami_desktop/tauri
-        tagName: desktop-dev-build
-        releaseName: 'Cotoami Desktop Dev Build'
+        tagName: desktop-dev-${{ env.TIMESTAMP }}
+        releaseName: Cotoami Desktop dev-${{ env.TIMESTAMP }}
         releaseDraft: false
         prerelease: false
