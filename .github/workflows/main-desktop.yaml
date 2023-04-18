@@ -34,7 +34,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         projectPath: cotoami_desktop/tauri
-        tagName: desktop-dev-${{ github.run_number }}
-        releaseName: Cotoami Desktop dev-${{ github.run_number }}
+        tagName: desktop-dev${{ github.run_number }}
+        releaseName: Cotoami Desktop dev${{ github.run_number }}
         releaseDraft: false
         prerelease: false
