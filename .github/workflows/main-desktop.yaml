@@ -1,0 +1,35 @@
+name: main-desktop
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - 'cotoami_desktop/**'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: cotoami_desktop/tauri
