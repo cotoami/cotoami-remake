@@ -4,7 +4,7 @@
 
 ### 1. Create initial UI assets
 
-```
+```shell
 $ mkdir ui
 ```
 
