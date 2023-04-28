@@ -1,7 +1,7 @@
 {
   "build": {
     "beforeDevCommand": "",
-    "beforeBuildCommand": "cd ui && yarn run build",
+    "beforeBuildCommand": "cd ui && yarn && yarn run build",
     "devPath": "http://127.0.0.1:5173/",
     "distDir": "../ui/dist"
   },
