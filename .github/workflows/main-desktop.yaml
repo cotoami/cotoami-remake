@@ -28,6 +28,12 @@ jobs:
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
 
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: corretto
+        java-version: 17
+
     - name: Build and release desktop app
       uses: tauri-apps/tauri-action@v0
       env:
