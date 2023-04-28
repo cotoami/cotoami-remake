@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# sbt specific
+.cache
+.cache-main
+.cache-tests
+.history
+.lib/
+.bsp/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/project/
+project/plugins/project/
+
+# VSCode and Metals
+# https://scalameta.org/metals/docs/editors/vscode.html#files-and-directories-to-include-in-your-gitignore
+.vscode/
+.metals/
+.bloop/
+.ammonite/
+metals.sbt
