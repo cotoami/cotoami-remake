@@ -3,7 +3,9 @@ package cotoami
 import scala.util.Success
 import scala.util.Failure
 import scala.collection.mutable.{Map => MutableMap}
+import scala.concurrent.duration.FiniteDuration
 
+import cats.MonoidK
 import cats.effect.IO
 
 import scala.scalajs.js
@@ -11,6 +13,7 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.URL
+import org.scalajs.dom.EventTarget
 import org.scalajs.dom.raw.CustomEvent
 import org.scalajs.dom.Event
 import org.scalajs.dom.ext.Ajax
@@ -25,23 +28,112 @@ import io.circe.parser._
 import io.circe.syntax._
 
 object FunctionalUI {
-  type Cmd[Msg] = IO[Option[Msg]]
-  type Cmds[Msg] = Seq[Cmd[Msg]]
-
-  type Sub[Msg] = (Dispatch[Msg], OnSubscribe) => Unit
-  type Subs[Msg] = Map[String, Sub[Msg]]
-  type Dispatch[Msg] = Msg => Unit
-  type OnSubscribe = Option[Unsubscribe] => Unit
-  type Unsubscribe = () => Unit
-
   case class Program[Model, Msg](
       init: (URL) => (Model, Cmds[Msg]),
       view: (Model, Msg => Unit) => ReactElement,
       update: (Msg, Model) => (Model, Cmds[Msg]),
-      subscriptions: Model => Subs[Msg] = (model: Model) =>
-        Map.empty[String, Sub[Msg]],
+      subscriptions: Model => Sub[Msg] = (model: Model) => Sub.Empty,
       onUrlChange: Option[URL => Msg] = None
   )
+
+  type Cmd[Msg] = IO[Option[Msg]]
+  type Cmds[Msg] = Seq[Cmd[Msg]]
+
+  type Dispatch[Msg] = Msg => Unit
+
+  sealed trait Sub[+Msg] {
+    def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg]
+
+    final def combine[LubMsg >: Msg](other: Sub[LubMsg]): Sub[LubMsg] =
+      (this, other) match {
+        case (Sub.Empty, Sub.Empty) => Sub.Empty
+        case (Sub.Empty, s2)        => s2
+        case (s1, Sub.Empty)        => s1
+        case (s1, s2)               => Sub.Combined(s1, s2)
+      }
+  }
+
+  implicit object MonoidKSub extends MonoidK[Sub] {
+    def empty[Msg]: Sub[Msg] = Sub.Empty
+    def combineK[Msg](sub1: Sub[Msg], sub2: Sub[Msg]): Sub[Msg] =
+      sub1.combine(sub2)
+  }
+
+  object Sub {
+    type Subscribe[Msg] = (Dispatch[Msg], OnSubscribe) => Unit
+    type OnSubscribe = Option[Unsubscribe] => Unit
+    type Unsubscribe = () => Unit
+
+    case object Empty extends Sub[Nothing] {
+      def map[OtherMsg](f: Nothing => OtherMsg): Sub[OtherMsg] = this
+    }
+
+    case class Combined[+Msg](sub1: Sub[Msg], sub2: Sub[Msg]) extends Sub[Msg] {
+      def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg] =
+        Combined(sub1.map(f), sub2.map(f))
+    }
+
+    case class Impl[Msg](
+        id: String,
+        subscribe: Subscribe[Msg]
+    ) extends Sub[Msg] {
+      def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg] =
+        Impl(
+          id,
+          (dispatch: Dispatch[OtherMsg], onSubscribe) =>
+            subscribe(msg => dispatch(f(msg)), onSubscribe)
+        )
+    }
+
+    final def toMap[Msg](sub: Sub[Msg]): Map[String, Subscribe[Msg]] = {
+      def collect(sub: Sub[Msg]): List[(String, Subscribe[Msg])] =
+        sub match {
+          case Sub.Empty                => Nil
+          case Sub.Combined(sub1, sub2) => collect(sub1) ++ collect(sub2)
+          case Sub.Impl(id, subscribe)  => List((id, subscribe))
+        }
+      collect(sub).toMap
+    }
+
+    def timeout[Msg](duration: FiniteDuration, msg: Msg, id: String): Sub[Msg] =
+      Impl[Msg](
+        id,
+        (dispatch, onSubscribe) => {
+          val handle = js.timers.setTimeout(duration) {
+            dispatch(msg)
+          }
+          val unsubscribe = () => js.timers.clearTimeout(handle)
+          onSubscribe(Some(unsubscribe))
+        }
+      )
+
+    def every(interval: FiniteDuration, id: String): Sub[Long] =
+      Impl[Long](
+        id,
+        (dispatch, onSubscribe) => {
+          val handle = js.timers.setInterval(interval) {
+            dispatch(System.currentTimeMillis())
+          }
+          val unsubscribe = () => js.timers.clearInterval(handle)
+          onSubscribe(Some(unsubscribe))
+        }
+      )
+
+    def fromEvent[Event, Msg](name: String, target: EventTarget)(
+        toMsg: Event => Option[Msg]
+    ): Sub[Msg] =
+      Impl[Msg](
+        name + target.hashCode,
+        (dispatch, onSubscribe) => {
+          val listener: js.Function1[Event, _] =
+            (e: Event) => toMsg(e).map(dispatch(_))
+          target.addEventListener(name, listener)
+
+          val unsubscribe = () => target.removeEventListener(name, listener)
+          onSubscribe(Some(unsubscribe))
+        }
+      )
+  }
 
   class Runtime[Model, Msg](
       container: Element,
@@ -49,7 +141,7 @@ object FunctionalUI {
   ) {
     private val init = program.init(new URL(dom.window.location.href))
     private var state = init._1
-    private val subs: MutableMap[String, Option[Unsubscribe]] = MutableMap()
+    private val subs: MutableMap[String, Option[Sub.Unsubscribe]] = MutableMap()
 
     def dispatch(msg: Msg): Unit = {
       apply(program.update(msg, state))
@@ -61,27 +153,27 @@ object FunctionalUI {
       val (model, cmds) = change
       state = model
 
-      updateSubs(state)
-
       ReactDOM.render(program.view(model, dispatch), container)
 
+      // Run side effects
       for (cmd <- cmds) {
         cmd.unsafeRunAsync {
           case Right(optionMsg) => optionMsg.map(dispatch(_))
           case Left(e) => throw e // IO should return Right even when it fails
         }
       }
+      updateSubs(state)
     }
 
     def updateSubs(model: Model): Unit = {
-      val newSubs = program.subscriptions(model)
-      val keysToAdd = newSubs.keySet.diff(subs.keySet)
-      val keysToRemove = subs.keySet.diff(newSubs.keySet)
+      val nextSubs = Sub.toMap(program.subscriptions(model))
+      val keysToAdd = nextSubs.keySet.diff(subs.keySet)
+      val keysToRemove = subs.keySet.diff(nextSubs.keySet)
       keysToAdd.foreach(key => {
         // subscribe and hold `unsubscribe` function
-        newSubs.get(key) match {
-          case Some(sub) => sub(dispatch, subs(key) = _)
-          case None      => subs(key) = None
+        nextSubs.get(key) match {
+          case Some(subscribe) => subscribe(dispatch, subs.update(key, _))
+          case None            => subs.update(key, None)
         }
       })
       keysToRemove.foreach(key => {
