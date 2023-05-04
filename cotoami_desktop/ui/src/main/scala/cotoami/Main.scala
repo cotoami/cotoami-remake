@@ -18,9 +18,9 @@ object Main {
   // MODEL
   //
 
-  case class Model(messages: Seq[String], input: String)
+  case class Model(messages: Seq[String] = Seq.empty, input: String = "")
 
-  def init(url: URL): (Model, Cmds[Msg]) = (Model(Seq.empty, ""), Seq.empty)
+  def init(url: URL): (Model, Seq[Cmd[Msg]]) = (Model(), Seq.empty)
 
   //
   // UPDATE
@@ -30,7 +30,7 @@ object Main {
   case class Input(input: String) extends Msg
   case object Send extends Msg
 
-  def update(msg: Msg, model: Model): (Model, Cmds[Msg]) =
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
       case Input(input) =>
         (model.copy(input = input), Seq.empty)

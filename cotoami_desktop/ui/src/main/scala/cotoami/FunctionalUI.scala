@@ -29,17 +29,14 @@ import io.circe.syntax._
 
 object FunctionalUI {
   case class Program[Model, Msg](
-      init: (URL) => (Model, Cmds[Msg]),
+      init: (URL) => (Model, Seq[Cmd[Msg]]),
       view: (Model, Msg => Unit) => ReactElement,
-      update: (Msg, Model) => (Model, Cmds[Msg]),
+      update: (Msg, Model) => (Model, Seq[Cmd[Msg]]),
       subscriptions: Model => Sub[Msg] = (model: Model) => Sub.Empty,
       onUrlChange: Option[URL => Msg] = None
   )
 
   type Cmd[Msg] = IO[Option[Msg]]
-  type Cmds[Msg] = Seq[Cmd[Msg]]
-
-  type Dispatch[Msg] = Msg => Unit
 
   sealed trait Sub[+Msg] {
     def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg]
@@ -60,7 +57,7 @@ object FunctionalUI {
   }
 
   object Sub {
-    type Subscribe[Msg] = (Dispatch[Msg], OnSubscribe) => Unit
+    type Subscribe[Msg] = (Msg => Unit, OnSubscribe) => Unit
     type OnSubscribe = Option[Unsubscribe] => Unit
     type Unsubscribe = () => Unit
 
@@ -80,7 +77,7 @@ object FunctionalUI {
       def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg] =
         Impl(
           id,
-          (dispatch: Dispatch[OtherMsg], onSubscribe) =>
+          (dispatch: OtherMsg => Unit, onSubscribe) =>
             subscribe(msg => dispatch(f(msg)), onSubscribe)
         )
     }
@@ -147,7 +144,7 @@ object FunctionalUI {
       apply(program.update(msg, state))
     }
 
-    def apply(change: (Model, Cmds[Msg])): Unit = {
+    def apply(change: (Model, Seq[Cmd[Msg]])): Unit = {
       import cats.effect.unsafe.implicits.global
 
       val (model, cmds) = change
