@@ -1,4 +1,5 @@
 [workspace]
 members = [
   "cotoami_desktop/tauri",
+  "cotoami_db",
 ]
