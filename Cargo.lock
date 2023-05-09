@@ -381,10 +381,14 @@ name = "cotoami_db"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "derive-new",
  "diesel",
  "diesel_migrations",
  "dotenvy",
  "libsqlite3-sys",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]
@@ -564,6 +568,17 @@ dependencies = [
  "darling_core",
  "quote",
  "syn 2.0.15",
+]
+
+[[package]]
+name = "derive-new"
+version = "0.5.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3418329ca0ad70234b9735dc4ceed10af4df60eff9c8e7b06cb5e520d92c3535"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -3136,6 +3151,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4dad5567ad0cf5b760e5665964bec1b47dfd077ba8a2544b513f3556d3d239a2"
 dependencies = [
  "getrandom 0.2.9",
+ "serde",
 ]
 
 [[package]]
