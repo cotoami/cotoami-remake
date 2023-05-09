@@ -27,7 +27,12 @@ use uuid::Uuid;
 #[diesel(sql_type = Text)]
 pub struct Id<T> {
     value: Uuid,
-    _marker: PhantomData<T>,
+
+    // `fn() -> T`
+    // has the same variance as T
+    // but not to own data of type T
+    // unlike *const T, it implements both Send and Sync
+    _marker: PhantomData<fn() -> T>,
 }
 
 impl<T> Id<T> {
