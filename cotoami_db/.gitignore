@@ -1,3 +1,4 @@
 /target
+/src/schema-generated.rs
+.env
 *.db
-*-generated.rs
