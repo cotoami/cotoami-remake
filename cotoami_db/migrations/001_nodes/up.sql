@@ -21,5 +21,8 @@ CREATE TABLE nodes (
   -- 0 (false) and 1 (true)
   can_edit_links INTEGER DEFAULT FALSE NOT NULL,
 
+  -- Version of node info
+  version INTEGER DEFAULT 1 NOT NULL,
+
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL -- UTC
 );
