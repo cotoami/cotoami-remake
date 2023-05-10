@@ -10,8 +10,9 @@ diesel::table! {
         icon -> Nullable<Binary>,
         url_prefix -> Nullable<Text>,
         password -> Nullable<Text>,
-        can_edit_links -> Integer,
+        can_edit_links -> Bool,
         version -> Integer,
         created_at -> Timestamp,
+        inserted_at -> Timestamp,
     }
 }

@@ -27,5 +27,10 @@ CREATE TABLE nodes (
   -- Version of node info
   version INTEGER DEFAULT 1 NOT NULL,
 
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL -- UTC
+  -- Creation date of this node
+  -- Should not change in any database as long as the ID is the same
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+
+  -- Registration date in this database
+  inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL -- UTC
 );
