@@ -7,6 +7,7 @@ diesel::table! {
         rowid -> BigInt,
         uuid -> Text,
         name -> Nullable<Text>,
+        icon -> Nullable<Binary>,
         url_prefix -> Nullable<Text>,
         password -> Nullable<Text>,
         can_edit_links -> Integer,

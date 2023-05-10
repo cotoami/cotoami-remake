@@ -11,6 +11,9 @@ CREATE TABLE nodes (
   -- Display name
   name TEXT,
 
+  -- Icon image
+  icon BLOB,
+
   -- For nodes being connected from this node
   url_prefix TEXT,
 
