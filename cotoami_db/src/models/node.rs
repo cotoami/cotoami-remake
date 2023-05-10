@@ -1,5 +1,9 @@
 use super::Id;
 use crate::schema::nodes;
+use anyhow::{anyhow, Result};
+use argon2::password_hash::rand_core::OsRng;
+use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::Argon2;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 
@@ -35,7 +39,7 @@ pub struct Node {
     pub url_prefix: Option<String>,
 
     /// For authenticating nodes connecting to this node
-    pub password: Option<String>,
+    pub password_hash: Option<String>,
 
     /// Permission to edit links in the database of this node.
     pub can_edit_links: bool,
@@ -51,11 +55,69 @@ pub struct Node {
 }
 
 impl Node {
+    pub const ROWID_FOR_SELF: i64 = 1;
+
     pub fn created_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.created_at)
     }
 
     pub fn inserted_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.inserted_at)
+    }
+
+    pub fn update_password<'a>(&mut self, password: &'a str) -> Result<()> {
+        let password_hash = Self::hash_password(password.as_bytes())?;
+        self.password_hash = Some(password_hash);
+        Ok(())
+    }
+
+    pub fn verify_password<'a>(&self, password: &'a str) -> Result<()> {
+        let password_hash = self
+            .password_hash
+            .as_ref()
+            .ok_or(anyhow!("This node has no password assigned."))?;
+        let parsed_hash = PasswordHash::new(&password_hash)?;
+        Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
+        Ok(())
+    }
+
+    fn hash_password(password: &[u8]) -> Result<String> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2.hash_password(password, &salt)?.to_string();
+        Ok(password_hash)
+    }
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = nodes)]
+pub struct NewNode<'a> {
+    rowid: Option<i64>,
+    uuid: Id<Node>,
+    name: Option<&'a str>,
+    icon: Option<&'a [u8]>,
+    url_prefix: Option<&'a str>,
+    password_hash: Option<&'a str>,
+    can_edit_links: bool,
+    version: i32,
+    created_at: Option<NaiveDateTime>,
+    inserted_at: Option<NaiveDateTime>,
+}
+
+impl<'a> NewNode<'a> {
+    /// Create an `Insertable` node that represents **this** database.
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            rowid: Some(Node::ROWID_FOR_SELF),
+            uuid: Id::generate(),
+            name: None,
+            icon: None,
+            url_prefix: None,
+            password_hash: None,
+            can_edit_links: true,
+            version: 1,
+            created_at: None,
+            inserted_at: None,
+        })
     }
 }

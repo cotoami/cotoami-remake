@@ -18,7 +18,7 @@ CREATE TABLE nodes (
   url_prefix TEXT,
 
   -- For nodes connecting to this node
-  password TEXT,
+  password_hash TEXT,
 
   -- Permission to edit links in the database of this node.
   -- 0 (false) and 1 (true)
