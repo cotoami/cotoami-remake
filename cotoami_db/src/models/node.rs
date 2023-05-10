@@ -66,7 +66,7 @@ impl Node {
     }
 
     pub fn update_password<'a>(&mut self, password: &'a str) -> Result<()> {
-        let password_hash = Self::hash_password(password.as_bytes())?;
+        let password_hash = hash_password(password.as_bytes())?;
         self.password_hash = Some(password_hash);
         Ok(())
     }
@@ -80,13 +80,6 @@ impl Node {
         Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
         Ok(())
     }
-
-    fn hash_password(password: &[u8]) -> Result<String> {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(password, &salt)?.to_string();
-        Ok(password_hash)
-    }
 }
 
 #[derive(Insertable)]
@@ -97,7 +90,7 @@ pub struct NewNode<'a> {
     name: Option<&'a str>,
     icon: Option<&'a [u8]>,
     url_prefix: Option<&'a str>,
-    password_hash: Option<&'a str>,
+    password_hash: Option<String>,
     can_edit_links: bool,
     version: i32,
     created_at: Option<NaiveDateTime>,
@@ -105,9 +98,9 @@ pub struct NewNode<'a> {
 }
 
 impl<'a> NewNode<'a> {
-    /// Create an `Insertable` node that represents **this** database.
-    pub fn new() -> Result<Self> {
-        Ok(Self {
+    /// Create a desktop node that represents **this** database.
+    pub fn new_desktop() -> Self {
+        Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid: Id::generate(),
             name: None,
@@ -118,6 +111,30 @@ impl<'a> NewNode<'a> {
             version: 1,
             created_at: None,
             inserted_at: None,
+        }
+    }
+
+    /// Create a server node that represents **this** database.
+    pub fn new_server(password: &'a str) -> Result<Self> {
+        let password_hash = hash_password(password.as_bytes())?;
+        Ok(Self {
+            rowid: Some(Node::ROWID_FOR_SELF),
+            uuid: Id::generate(),
+            name: None,
+            icon: None,
+            url_prefix: None,
+            password_hash: Some(password_hash),
+            can_edit_links: true,
+            version: 1,
+            created_at: None,
+            inserted_at: None,
         })
     }
+}
+
+fn hash_password(password: &[u8]) -> Result<String> {
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    let password_hash = argon2.hash_password(password, &salt)?.to_string();
+    Ok(password_hash)
 }
