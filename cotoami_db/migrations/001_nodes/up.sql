@@ -1,11 +1,13 @@
+--
 -- A node is a single cotoami database that has connections to/from other databases(nodes).
 -- `nodes` table contains all the nodes appeared in the database of this node.
+--
 CREATE TABLE nodes (
   -- An alias for the SQLite rowid (so-called "integer primary key")
   -- The row with rowid `1` represents this node.
   rowid INTEGER NOT NULL PRIMARY KEY,
 
-  -- Node ID
+  -- Universally unique node ID
   uuid TEXT NOT NULL UNIQUE,
 
   -- Display name

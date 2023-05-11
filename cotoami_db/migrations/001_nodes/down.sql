@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS nodes;
+DROP TABLE nodes;

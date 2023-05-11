@@ -1,0 +1,130 @@
+--
+-- A coto is a unit of data in a cotoami database.
+--
+CREATE TABLE cotos (
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  rowid INTEGER NOT NULL PRIMARY KEY,
+
+  -- Universally unique coto ID
+  uuid TEXT NOT NULL UNIQUE,
+
+  -- UUID of the node in which this coto was created
+  node_id TEXT NOT NULL,
+
+  -- UUID of the cotonoma in which this coto was posted,
+  -- or NULL if it is the root cotonoma.
+  posted_in_id TEXT,
+
+  -- UUID of the node whose owner has posted this coto
+  posted_by_id TEXT NOT NULL,
+
+  -- Content of this coto
+  -- NULL if this is a repost.
+  content TEXT,
+
+  -- Optional summary of the content for compact display
+  summary TEXT,
+
+  -- TRUE if this coto is a cotonoma
+  -- 0 (false) and 1 (true)
+  is_cotonoma INTEGER DEFAULT FALSE NOT NULL,
+
+  -- UUID of the original coto of this repost,
+  -- or NULL if it is not a repost.
+  repost_of_id TEXT,
+
+  -- Comma-separated UUIDs of the cotonomas in which this coto was reposted
+  reposted_in_ids TEXT,
+
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
+  FOREIGN KEY(posted_in_id) REFERENCES cotonomas(uuid) ON DELETE RESTRICT,
+  FOREIGN KEY(posted_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
+  FOREIGN KEY(repost_of_id) REFERENCES cotos(uuid) ON DELETE RESTRICT
+);
+
+CREATE INDEX cotos_node_id ON cotos(node_id);
+CREATE INDEX cotos_posted_in_id ON cotos(posted_in_id);
+CREATE INDEX cotos_posted_by_id ON cotos(posted_by_id);
+CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
+
+CREATE TRIGGER coto_updated AFTER UPDATE ON cotos BEGIN
+  update cotos set updated_at=CURRENT_TIMESTAMP where id=OLD.id;
+END;
+
+
+--
+-- A cotonoma is a specific type of coto in which other cotos are posted. 
+--
+CREATE TABLE cotonomas (
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  rowid INTEGER NOT NULL PRIMARY KEY,
+
+  -- Universally unique cotonoma ID
+  uuid TEXT NOT NULL UNIQUE,
+
+  -- UUID of the node in which this cotonoma was created
+  node_id TEXT NOT NULL,
+
+  -- Coto UUID of this cotonoma
+  coto_id TEXT NOT NULL,
+
+  -- Name of this cotonoma
+  name TEXT NOT NULL,
+
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+
+  UNIQUE(node_id, name),
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
+  FOREIGN KEY(coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
+);
+
+CREATE INDEX cotonomas_node_id ON cotonomas(node_id);
+CREATE INDEX cotonomas_coto_id ON cotonomas(coto_id);
+
+CREATE TRIGGER cotonoma_updated AFTER UPDATE ON cotonomas BEGIN
+  update cotonomas set updated_at=CURRENT_TIMESTAMP where id=OLD.id;
+END;
+
+
+--
+-- A link is a directed edge connecting two cotos.
+--
+CREATE TABLE links (
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  rowid INTEGER NOT NULL PRIMARY KEY,
+
+  -- Universally unique link ID
+  uuid TEXT NOT NULL UNIQUE,
+
+  -- UUID of the node in which this link was created
+  node_id TEXT NOT NULL,
+
+  -- UUID of the coto at the tail of this link
+  tail_coto_id TEXT NOT NULL,
+
+  -- UUID of the coto at the head of this link
+  head_coto_id TEXT NOT NULL,
+
+  -- Linkng phrase to express the relationship between the two cotos
+  linking_phrase TEXT,
+
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+
+  UNIQUE(tail_coto_id, head_coto_id),
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
+  FOREIGN KEY(tail_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE,
+  FOREIGN KEY(head_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
+);
+
+CREATE INDEX links_node_id ON links(node_id);
+CREATE INDEX links_tail_coto_id ON links(tail_coto_id);
+CREATE INDEX links_head_coto_id ON links(head_coto_id);
+
+CREATE TRIGGER link_updated AFTER UPDATE ON links BEGIN
+  update links set updated_at=CURRENT_TIMESTAMP where id=OLD.id;
+END;

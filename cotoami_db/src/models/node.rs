@@ -27,7 +27,7 @@ pub struct Node {
     #[serde(skip_serializing, skip_deserializing)]
     pub rowid: i64,
 
-    /// Globally unique node ID
+    /// Universally unique node ID
     pub uuid: Id<Node>,
 
     /// Display name
