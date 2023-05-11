@@ -9,10 +9,10 @@ CREATE TABLE nodes (
   uuid TEXT NOT NULL UNIQUE,
 
   -- Display name
-  name TEXT,
+  name TEXT NOT NULL,
 
   -- Icon image
-  icon BLOB,
+  icon BLOB NOT NULL,
 
   -- For nodes being connected from this node
   url_prefix TEXT,

@@ -31,10 +31,10 @@ pub struct Node {
     pub uuid: Id<Node>,
 
     /// Display name
-    pub name: Option<String>,
+    pub name: String,
 
     /// Icon image
-    pub icon: Option<Vec<u8>>,
+    pub icon: Vec<u8>,
 
     /// For nodes being connected from this node
     pub url_prefix: Option<String>,
@@ -66,16 +66,6 @@ impl Node {
         Local.from_utc_datetime(&self.inserted_at)
     }
 
-    pub fn update_name<'a>(&mut self, name: &'a str) -> Result<()> {
-        self.name = Some(name.into());
-        if self.icon.is_none() {
-            let icon = Identicon::new(name);
-            let icon_binary = icon.export_png_data()?;
-            self.icon = Some(icon_binary);
-        }
-        Ok(())
-    }
-
     pub fn update_password<'a>(&mut self, password: &'a str) -> Result<()> {
         let password_hash = hash_password(password.as_bytes())?;
         self.password_hash = Some(password_hash);
@@ -98,8 +88,8 @@ impl Node {
 pub struct NewNode<'a> {
     rowid: Option<i64>,
     uuid: Id<Node>,
-    name: Option<&'a str>,
-    icon: Option<&'a [u8]>,
+    name: &'a str,
+    icon: Vec<u8>,
     url_prefix: Option<&'a str>,
     password_hash: Option<String>,
     can_edit_links: bool,
@@ -110,29 +100,31 @@ pub struct NewNode<'a> {
 
 impl<'a> NewNode<'a> {
     /// Create a desktop node that represents **this** database.
-    pub fn new_desktop() -> Self {
-        Self {
+    pub fn new_desktop(name: &'a str) -> Result<Self> {
+        let icon_binary = generate_identicon(name)?;
+        Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid: Id::generate(),
-            name: None,
-            icon: None,
+            name,
+            icon: icon_binary,
             url_prefix: None,
             password_hash: None,
             can_edit_links: true,
             version: 1,
             created_at: None,
             inserted_at: None,
-        }
+        })
     }
 
     /// Create a server node that represents **this** database.
-    pub fn new_server(password: &'a str) -> Result<Self> {
+    pub fn new_server(name: &'a str, password: &'a str) -> Result<Self> {
+        let icon_binary = generate_identicon(name)?;
         let password_hash = hash_password(password.as_bytes())?;
         Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid: Id::generate(),
-            name: None,
-            icon: None,
+            name,
+            icon: icon_binary,
             url_prefix: None,
             password_hash: Some(password_hash),
             can_edit_links: true,
@@ -141,6 +133,11 @@ impl<'a> NewNode<'a> {
             inserted_at: None,
         })
     }
+}
+
+fn generate_identicon<'a>(name: &'a str) -> Result<Vec<u8>> {
+    let icon_binary = Identicon::new(name).export_png_data()?;
+    Ok(icon_binary)
 }
 
 fn hash_password(password: &[u8]) -> Result<String> {

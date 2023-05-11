@@ -6,8 +6,8 @@ diesel::table! {
     nodes (rowid) {
         rowid -> BigInt,
         uuid -> Text,
-        name -> Nullable<Text>,
-        icon -> Nullable<Binary>,
+        name -> Text,
+        icon -> Binary,
         url_prefix -> Nullable<Text>,
         password_hash -> Nullable<Text>,
         can_edit_links -> Bool,
