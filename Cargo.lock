@@ -423,6 +423,7 @@ dependencies = [
  "libsqlite3-sys",
  "serde",
  "serde_json",
+ "thiserror",
  "uuid",
 ]
 
