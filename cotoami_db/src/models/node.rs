@@ -6,6 +6,7 @@ use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, Salt
 use argon2::Argon2;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
+use identicon_rs::Identicon;
 
 /// A node is a single cotoami database that has connections to/from other databases(nodes).
 ///
@@ -63,6 +64,16 @@ impl Node {
 
     pub fn inserted_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.inserted_at)
+    }
+
+    pub fn update_name<'a>(&mut self, name: &'a str) -> Result<()> {
+        self.name = Some(name.into());
+        if self.icon.is_none() {
+            let icon = Identicon::new(name);
+            let icon_binary = icon.export_png_data()?;
+            self.icon = Some(icon_binary);
+        }
+        Ok(())
     }
 
     pub fn update_password<'a>(&mut self, password: &'a str) -> Result<()> {
