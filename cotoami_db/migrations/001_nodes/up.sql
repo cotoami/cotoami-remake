@@ -40,6 +40,9 @@ CREATE TABLE parent_nodes (
   -- URL prefix of a parent node 
   url_prefix TEXT,
 
+  -- Date when this connection was created
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 
@@ -62,6 +65,9 @@ CREATE TABLE child_nodes (
   -- 0 (false) and 1 (true)
   can_edit_links INTEGER DEFAULT FALSE NOT NULL,
 
+  -- Date when this connection was created
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 
@@ -76,6 +82,9 @@ CREATE TABLE imported_nodes (
 
   -- UUID of a child node of this node
   node_id TEXT NOT NULL UNIQUE,
+
+  -- Date when this node was imported
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
