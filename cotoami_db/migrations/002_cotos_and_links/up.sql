@@ -65,7 +65,7 @@ CREATE TABLE cotonomas (
   node_id TEXT NOT NULL,
 
   -- Coto UUID of this cotonoma
-  coto_id TEXT NOT NULL,
+  coto_id TEXT NOT NULL UNIQUE,
 
   -- Name of this cotonoma
   name TEXT NOT NULL,
