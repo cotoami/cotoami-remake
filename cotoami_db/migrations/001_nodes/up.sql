@@ -66,3 +66,18 @@ CREATE TABLE child_nodes (
 );
 
 CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
+
+--
+-- This table contains all nodes imported (directly or indirectly) in this database.
+--
+CREATE TABLE imported_nodes (
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  rowid INTEGER NOT NULL PRIMARY KEY,
+
+  -- UUID of a child node of this node
+  node_id TEXT NOT NULL UNIQUE,
+
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
+);
+
+CREATE INDEX imported_nodes_node_id ON imported_nodes(node_id);
