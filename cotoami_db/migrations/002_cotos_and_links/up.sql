@@ -50,10 +50,6 @@ CREATE INDEX cotos_posted_in_id ON cotos(posted_in_id);
 CREATE INDEX cotos_posted_by_id ON cotos(posted_by_id);
 CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
 
-CREATE TRIGGER coto_updated AFTER UPDATE ON cotos BEGIN
-  update cotos set updated_at=CURRENT_TIMESTAMP where id=OLD.id;
-END;
-
 
 --
 -- A cotonoma is a specific type of coto in which other cotos are posted. 
@@ -84,10 +80,6 @@ CREATE TABLE cotonomas (
 
 CREATE INDEX cotonomas_node_id ON cotonomas(node_id);
 CREATE INDEX cotonomas_coto_id ON cotonomas(coto_id);
-
-CREATE TRIGGER cotonoma_updated AFTER UPDATE ON cotonomas BEGIN
-  update cotonomas set updated_at=CURRENT_TIMESTAMP where id=OLD.id;
-END;
 
 
 --
@@ -124,7 +116,3 @@ CREATE TABLE links (
 CREATE INDEX links_node_id ON links(node_id);
 CREATE INDEX links_tail_coto_id ON links(tail_coto_id);
 CREATE INDEX links_head_coto_id ON links(head_coto_id);
-
-CREATE TRIGGER link_updated AFTER UPDATE ON links BEGIN
-  update links set updated_at=CURRENT_TIMESTAMP where id=OLD.id;
-END;
