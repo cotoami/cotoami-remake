@@ -27,6 +27,7 @@ CREATE TABLE nodes (
   inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL -- UTC
 );
 
+
 --
 -- A parent node is a server node to which this node is connecting.
 --
@@ -47,6 +48,7 @@ CREATE TABLE parent_nodes (
 );
 
 CREATE INDEX parent_nodes_node_id ON parent_nodes(node_id);
+
 
 --
 -- A child node is a client node connecting to this node.
@@ -72,6 +74,7 @@ CREATE TABLE child_nodes (
 );
 
 CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
+
 
 --
 -- This table contains all nodes imported (directly or indirectly) in this database.
