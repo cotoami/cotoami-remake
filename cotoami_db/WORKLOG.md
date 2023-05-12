@@ -16,7 +16,8 @@
     * dotenvy `0.15`
     * chrono `0.4.23`
 5. Install Diesel CLI
-    * `cargo install diesel_cli --no-default-features --features sqlite`
+    * `cargo install diesel_cli --no-default-features --features sqlite-bundled`
+        * set feature `sqlite-bundled` to fix the sqlite version
 6. Test migrations
 
     ````shell
