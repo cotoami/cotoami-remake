@@ -40,10 +40,10 @@ CREATE TABLE parent_nodes (
   -- An alias for the SQLite rowid (so-called "integer primary key")
   rowid INTEGER NOT NULL PRIMARY KEY,
 
-  -- UUID of a parent node of this node
+  -- UUID of a parent node
   node_id TEXT NOT NULL UNIQUE,
 
-  -- URL prefix of a parent node 
+  -- URL prefix to connect to this parent node 
   url_prefix TEXT,
 
   -- Date when this connection was created
@@ -62,13 +62,13 @@ CREATE TABLE child_nodes (
   -- An alias for the SQLite rowid (so-called "integer primary key")
   rowid INTEGER NOT NULL PRIMARY KEY,
 
-  -- UUID of a child node of this node
+  -- UUID of a child node
   node_id TEXT NOT NULL UNIQUE,
 
   -- Password for authentication
   password_hash TEXT NOT NULL,
 
-  -- Permission to edit links in the database of this node.
+  -- Permission to edit links in this database
   -- 0 (false) and 1 (true)
   can_edit_links INTEGER DEFAULT FALSE NOT NULL,
 
@@ -82,13 +82,13 @@ CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
 
 
 --
--- This table contains all nodes imported (directly or indirectly) in this database.
+-- This table contains all the nodes imported (directly or indirectly) in this database.
 --
 CREATE TABLE imported_nodes (
   -- An alias for the SQLite rowid (so-called "integer primary key")
   rowid INTEGER NOT NULL PRIMARY KEY,
 
-  -- UUID of a child node of this node
+  -- UUID of a node imported in this database
   node_id TEXT NOT NULL UNIQUE,
 
   -- Date when this node was imported
