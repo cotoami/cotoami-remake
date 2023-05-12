@@ -16,9 +16,6 @@ CREATE TABLE nodes (
   -- Icon image
   icon BLOB NOT NULL,
 
-  -- For nodes being connected from this node
-  url_prefix TEXT,
-
   -- For nodes connecting to this node
   password_hash TEXT,
 
@@ -36,3 +33,21 @@ CREATE TABLE nodes (
   -- Registration date in this database
   inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL -- UTC
 );
+
+--
+-- A parent node is a server node to which this node is connecting.
+--
+CREATE TABLE parent_nodes (
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  rowid INTEGER NOT NULL PRIMARY KEY,
+
+  -- UUID of a parent node of this node
+  node_id TEXT NOT NULL UNIQUE,
+
+  -- URL prefix of a parent node 
+  url_prefix TEXT,
+
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
+);
+
+CREATE INDEX parent_nodes_node_id ON parent_nodes(node_id);
