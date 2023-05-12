@@ -4,7 +4,7 @@
 --
 CREATE TABLE nodes (
   -- An alias for the SQLite rowid (so-called "integer primary key")
-  -- The row with rowid `1` represents this node.
+  -- The row with rowid `1` represents this node ("self node record").
   rowid INTEGER NOT NULL PRIMARY KEY,
 
   -- Universally unique node ID
@@ -17,7 +17,8 @@ CREATE TABLE nodes (
   icon BLOB NOT NULL,
 
   -- Password for owner authentication of this node
-  -- This value must not be sent to other nodes.
+  -- This value can be set only in "self node record", 
+  -- therefore, it must not be sent to other nodes.
   owner_password_hash TEXT,
 
   -- Version of node info
