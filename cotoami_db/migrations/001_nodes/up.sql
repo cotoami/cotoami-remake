@@ -16,6 +16,10 @@ CREATE TABLE nodes (
   -- Icon image
   icon BLOB NOT NULL,
 
+  -- Password for owner authentication of this node
+  -- This value must not be sent to other nodes.
+  owner_password_hash TEXT,
+
   -- Version of node info
   version INTEGER DEFAULT 1 NOT NULL,
 
@@ -61,7 +65,7 @@ CREATE TABLE child_nodes (
   node_id TEXT NOT NULL UNIQUE,
 
   -- Password for authentication
-  password_hash TEXT,
+  password_hash TEXT NOT NULL,
 
   -- Permission to edit links in the database of this node.
   -- 0 (false) and 1 (true)
