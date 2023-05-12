@@ -8,3 +8,9 @@ DROP TABLE nodes;
 --
 DROP INDEX parent_nodes_node_id;
 DROP TABLE parent_nodes;
+
+--
+-- child_nodes
+--
+DROP INDEX child_nodes_node_id;
+DROP TABLE child_nodes;

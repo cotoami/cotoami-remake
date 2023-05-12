@@ -16,13 +16,6 @@ CREATE TABLE nodes (
   -- Icon image
   icon BLOB NOT NULL,
 
-  -- For nodes connecting to this node
-  password_hash TEXT,
-
-  -- Permission to edit links in the database of this node.
-  -- 0 (false) and 1 (true)
-  can_edit_links INTEGER DEFAULT FALSE NOT NULL,
-
   -- Version of node info
   version INTEGER DEFAULT 1 NOT NULL,
 
@@ -51,3 +44,25 @@ CREATE TABLE parent_nodes (
 );
 
 CREATE INDEX parent_nodes_node_id ON parent_nodes(node_id);
+
+--
+-- A child node is a client node connecting to this node.
+--
+CREATE TABLE child_nodes (
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  rowid INTEGER NOT NULL PRIMARY KEY,
+
+  -- UUID of a child node of this node
+  node_id TEXT NOT NULL UNIQUE,
+
+  -- Password for authentication
+  password_hash TEXT,
+
+  -- Permission to edit links in the database of this node.
+  -- 0 (false) and 1 (true)
+  can_edit_links INTEGER DEFAULT FALSE NOT NULL,
+
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
+);
+
+CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
