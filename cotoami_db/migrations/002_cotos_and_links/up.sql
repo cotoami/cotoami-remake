@@ -95,6 +95,9 @@ CREATE TABLE links (
   -- UUID of the node in which this link was created
   node_id TEXT NOT NULL,
 
+  -- UUID of the node whose owner has created this link
+  created_by_id TEXT NOT NULL,
+
   -- UUID of the coto at the tail of this link
   tail_coto_id TEXT NOT NULL,
 
@@ -109,10 +112,12 @@ CREATE TABLE links (
 
   UNIQUE(tail_coto_id, head_coto_id),
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
+  FOREIGN KEY(created_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(tail_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE,
   FOREIGN KEY(head_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
 );
 
 CREATE INDEX links_node_id ON links(node_id);
+CREATE INDEX links_created_by_id ON links(created_by_id);
 CREATE INDEX links_tail_coto_id ON links(tail_coto_id);
 CREATE INDEX links_head_coto_id ON links(head_coto_id);

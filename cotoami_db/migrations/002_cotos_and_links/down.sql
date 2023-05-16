@@ -20,6 +20,7 @@ DROP TABLE cotonomas;
 -- links
 --
 DROP INDEX links_node_id;
+DROP INDEX links_created_by_id;
 DROP INDEX links_tail_coto_id;
 DROP INDEX links_head_coto_id;
 
