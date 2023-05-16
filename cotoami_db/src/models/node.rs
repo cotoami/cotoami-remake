@@ -1,3 +1,4 @@
+use super::coto::Cotonoma;
 use super::Id;
 use crate::schema::nodes;
 use anyhow::{anyhow, Result};
@@ -36,14 +37,12 @@ pub struct Node {
     /// Icon image
     pub icon: Vec<u8>,
 
-    /// For nodes being connected from this node
-    pub url_prefix: Option<String>,
+    pub root_cotonoma_id: Option<Id<Cotonoma>>,
 
-    /// For authenticating nodes connecting to this node
-    pub password_hash: Option<String>,
-
-    /// Permission to edit links in the database of this node.
-    pub can_edit_links: bool,
+    /// Password for owner authentication of this node
+    /// This value can be set only in "self node record (rowid = 1)".
+    #[serde(skip_serializing, skip_deserializing)]
+    pub owner_password_hash: Option<String>,
 
     /// Version of node info for synchronizing among databases
     pub version: i32,
@@ -56,6 +55,7 @@ pub struct Node {
 }
 
 impl Node {
+    // rowid for "self node record"
     pub const ROWID_FOR_SELF: i64 = 1;
 
     pub fn created_at(&self) -> DateTime<Local> {
@@ -66,15 +66,21 @@ impl Node {
         Local.from_utc_datetime(&self.inserted_at)
     }
 
-    pub fn update_password<'a>(&mut self, password: &'a str) -> Result<()> {
+    pub fn update_owner_password<'a>(&mut self, password: &'a str) -> Result<()> {
+        if self.rowid != Self::ROWID_FOR_SELF {
+            return Err(anyhow!(
+                "Owner password cannot be set to this node (rowid: {:?})",
+                self.rowid
+            ));
+        }
         let password_hash = hash_password(password.as_bytes())?;
-        self.password_hash = Some(password_hash);
+        self.owner_password_hash = Some(password_hash);
         Ok(())
     }
 
-    pub fn verify_password<'a>(&self, password: &'a str) -> Result<()> {
+    pub fn verify_owner_password<'a>(&self, password: &'a str) -> Result<()> {
         let password_hash = self
-            .password_hash
+            .owner_password_hash
             .as_ref()
             .ok_or(anyhow!("This node has no password assigned."))?;
         let parsed_hash = PasswordHash::new(&password_hash)?;
@@ -90,9 +96,8 @@ pub struct NewNode<'a> {
     uuid: Id<Node>,
     name: &'a str,
     icon: Vec<u8>,
-    url_prefix: Option<&'a str>,
-    password_hash: Option<String>,
-    can_edit_links: bool,
+    root_cotonoma_id: Option<Id<Cotonoma>>,
+    owner_password_hash: Option<String>,
     version: i32,
     created_at: Option<NaiveDateTime>,
     inserted_at: Option<NaiveDateTime>,
@@ -101,15 +106,15 @@ pub struct NewNode<'a> {
 impl<'a> NewNode<'a> {
     /// Create a desktop node that represents **this** database.
     pub fn new_desktop(name: &'a str) -> Result<Self> {
-        let icon_binary = generate_identicon(name)?;
+        let uuid = Id::generate();
+        let icon_binary = generate_identicon(&uuid.to_string())?;
         Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
-            uuid: Id::generate(),
+            uuid,
             name,
             icon: icon_binary,
-            url_prefix: None,
-            password_hash: None,
-            can_edit_links: true,
+            root_cotonoma_id: None,
+            owner_password_hash: None,
             version: 1,
             created_at: None,
             inserted_at: None,
@@ -118,16 +123,16 @@ impl<'a> NewNode<'a> {
 
     /// Create a server node that represents **this** database.
     pub fn new_server(name: &'a str, password: &'a str) -> Result<Self> {
-        let icon_binary = generate_identicon(name)?;
+        let uuid = Id::generate();
+        let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = hash_password(password.as_bytes())?;
         Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
-            uuid: Id::generate(),
+            uuid,
             name,
             icon: icon_binary,
-            url_prefix: None,
-            password_hash: Some(password_hash),
-            can_edit_links: true,
+            root_cotonoma_id: None,
+            owner_password_hash: Some(password_hash),
             version: 1,
             created_at: None,
             inserted_at: None,

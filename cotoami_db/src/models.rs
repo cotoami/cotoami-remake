@@ -10,6 +10,7 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use uuid::Uuid;
 
+pub mod coto;
 pub mod node;
 
 /// A generic entity ID

@@ -8,11 +8,12 @@ diesel::table! {
         uuid -> Text,
         name -> Text,
         icon -> Binary,
-        url_prefix -> Nullable<Text>,
-        password_hash -> Nullable<Text>,
-        can_edit_links -> Bool,
+        root_cotonoma_id -> Nullable<Text>,
+        owner_password_hash -> Nullable<Text>,
         version -> Integer,
         created_at -> Timestamp,
         inserted_at -> Timestamp,
     }
 }
+
+diesel::allow_tables_to_appear_in_same_query!(nodes,);
