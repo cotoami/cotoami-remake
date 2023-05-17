@@ -4,8 +4,8 @@ CREATE TABLE changelog (
   -- ROWID will be filled automatically with an unused integer, 
   -- usually one more than the largest ROWID currently in use.
   --
-  -- If it is possible for entries to be deleted (no, for the time being), 
-  -- we probably should add an `AUTOINCREMENT` keyword to prevent the reuse of ROWIDs 
+  -- If it is possible for an entry with the largest ROWID to be deleted, 
+  -- we should add an `AUTOINCREMENT` keyword to prevent the reuse of ROWIDs 
   -- from previously deleted rows. - https://www.sqlite.org/autoinc.html
   --
   -- When replicating a database in another node, that node must ensure to 
