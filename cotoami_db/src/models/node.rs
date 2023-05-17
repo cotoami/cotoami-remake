@@ -10,17 +10,16 @@ use diesel::prelude::*;
 use identicon_rs::Identicon;
 
 /// A node is a single cotoami database that has connections to/from other databases(nodes).
-///
-/// Identifiable:
-/// * This struct represents a single row in a database table `nodes`.
-/// * It will assume that the table name is the plural `snake_case` form of this struct name.
-/// * It allows you to pass this struct to `update`.
-///
-/// Queryable:
-/// * This struct represents the result of a SQL query.
-/// * It assumes that the order of fields on this struct matches the columns of `nodes` in `schema.rs`.
 #[derive(
-    Debug, Clone, Eq, PartialEq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    Identifiable,
+    AsChangeset,
+    Queryable,
+    serde::Serialize,
+    serde::Deserialize,
 )]
 #[diesel(primary_key(rowid))]
 pub struct Node {
@@ -31,12 +30,13 @@ pub struct Node {
     /// Universally unique node ID
     pub uuid: Id<Node>,
 
-    /// Display name
-    pub name: String,
-
     /// Icon image
     pub icon: Vec<u8>,
 
+    /// Display name
+    pub name: String,
+
+    /// UUID of the root cotonoma of this node
     pub root_cotonoma_id: Option<Id<Cotonoma>>,
 
     /// Password for owner authentication of this node
@@ -87,15 +87,40 @@ impl Node {
         Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
         Ok(())
     }
+
+    /// Converting a foreign node into an importable data.
+    ///
+    /// - It assumes the node data came from another node (parent node).
+    /// - `owner_password_hash` will be `None` (it should not be sent in the first place).
+    /// - `created_at` is the original date of the node creation, so it should be kept.
+    pub fn to_import(self) -> NewNode {
+        NewNode {
+            rowid: None,
+            uuid: self.uuid,
+            icon: self.icon,
+            name: self.name,
+            root_cotonoma_id: self.root_cotonoma_id,
+            owner_password_hash: None,
+            version: self.version,
+            created_at: Some(self.created_at),
+            inserted_at: None,
+        }
+    }
 }
 
+/// An `Insertable` node data for importing
+///
+/// Every field in this struct is an owned value in order to implement a consuming
+/// conversion: `Node::to_import`. We think `clone`s in the `new_` constructors are
+/// trivial because the constructors will be called only once at the first launch
+/// while `Node::to_import` will be likely more frequent.
 #[derive(Insertable)]
 #[diesel(table_name = nodes)]
-pub struct NewNode<'a> {
+pub struct NewNode {
     rowid: Option<i64>,
     uuid: Id<Node>,
-    name: &'a str,
     icon: Vec<u8>,
+    name: String,
     root_cotonoma_id: Option<Id<Cotonoma>>,
     owner_password_hash: Option<String>,
     version: i32,
@@ -103,17 +128,17 @@ pub struct NewNode<'a> {
     inserted_at: Option<NaiveDateTime>,
 }
 
-impl<'a> NewNode<'a> {
+impl NewNode {
     /// Create a desktop node that represents **this** database.
-    pub fn new_desktop(name: &'a str) -> Result<Self> {
+    pub fn new_desktop<'a>(root_cotonoma: &'a Cotonoma) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid,
-            name,
             icon: icon_binary,
-            root_cotonoma_id: None,
+            name: root_cotonoma.name.clone(),
+            root_cotonoma_id: Some(root_cotonoma.uuid.clone()),
             owner_password_hash: None,
             version: 1,
             created_at: None,
@@ -121,22 +146,31 @@ impl<'a> NewNode<'a> {
         })
     }
 
-    /// Create a server node that represents **this** database.
-    pub fn new_server(name: &'a str, password: &'a str) -> Result<Self> {
+    /// Create a server node that represents **this** database without its root cotonoma
+    /// (empty database), which is mainly for replication.
+    pub fn new_empty_server<'a>(password: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = hash_password(password.as_bytes())?;
         Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid,
-            name,
             icon: icon_binary,
+            name: "".into(), // an empty database has an empty string as its name
             root_cotonoma_id: None,
             owner_password_hash: Some(password_hash),
             version: 1,
             created_at: None,
             inserted_at: None,
         })
+    }
+
+    /// Create a server node that represents **this** database.
+    pub fn new_server<'a>(password: &'a str, root_cotonoma: &'a Cotonoma) -> Result<Self> {
+        let mut empty_server = Self::new_empty_server(password)?;
+        empty_server.name = root_cotonoma.name.clone();
+        empty_server.root_cotonoma_id = Some(root_cotonoma.uuid.clone());
+        Ok(empty_server)
     }
 }
 

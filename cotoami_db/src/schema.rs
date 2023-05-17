@@ -6,8 +6,8 @@ diesel::table! {
     nodes (rowid) {
         rowid -> BigInt,
         uuid -> Text,
-        name -> Text,
         icon -> Binary,
+        name -> Text,
         root_cotonoma_id -> Nullable<Text>,
         owner_password_hash -> Nullable<Text>,
         version -> Integer,
@@ -16,4 +16,47 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(nodes,);
+diesel::table! {
+    cotos (rowid) {
+        rowid -> BigInt,
+        uuid -> Text,
+        node_id -> Text,
+        posted_in_id -> Nullable<Text>,
+        posted_by_id -> Text,
+        content -> Nullable<Text>,
+        summary -> Nullable<Text>,
+        is_cotonoma -> Bool,
+        repost_of_id -> Nullable<Text>,
+        reposted_in_ids -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    cotonomas (rowid) {
+        rowid -> BigInt,
+        uuid -> Text,
+        node_id -> Text,
+        coto_id -> Text,
+        name -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    links (rowid) {
+        rowid -> BigInt,
+        uuid -> Text,
+        node_id -> Text,
+        created_by_id -> Text,
+        tail_coto_id -> Text,
+        head_coto_id -> Text,
+        linking_phrase -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(nodes, cotos, cotonomas, links);

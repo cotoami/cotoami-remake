@@ -10,11 +10,11 @@ CREATE TABLE nodes (
   -- Universally unique node ID
   uuid TEXT NOT NULL UNIQUE,
 
-  -- Display name
-  name TEXT NOT NULL,
-
   -- Icon image
   icon BLOB NOT NULL,
+
+  -- Display name
+  name TEXT NOT NULL,
 
   -- Password for owner authentication of this node
   -- This value can be set only in "self node record", 

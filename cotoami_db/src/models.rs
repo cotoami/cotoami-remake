@@ -1,6 +1,6 @@
 use derive_new::new;
 use diesel::backend::RawValue;
-use diesel::deserialize::{FromSql, FromSqlRow};
+use diesel::deserialize::FromSql;
 use diesel::expression::AsExpression;
 use diesel::serialize::ToSql;
 use diesel::sql_types::Text;
@@ -15,17 +15,7 @@ pub mod node;
 
 /// A generic entity ID
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    FromSqlRow,
-    AsExpression,
-    Hash,
-    Eq,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    new,
+    Debug, Clone, Copy, AsExpression, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize, new,
 )]
 #[diesel(sql_type = Text)]
 pub struct Id<T> {
@@ -62,11 +52,12 @@ impl<T> FromStr for Id<T> {
 }
 
 impl<T: Debug> ToSql<Text, Sqlite> for Id<T> {
-    fn to_sql<'b>(
-        &'b self,
-        out: &mut diesel::serialize::Output<'b, '_, Sqlite>,
+    fn to_sql<'a>(
+        &'a self,
+        out: &mut diesel::serialize::Output<'a, '_, Sqlite>,
     ) -> diesel::serialize::Result {
         let string = self.as_uuid().as_hyphenated().to_string();
+        // https://diesel.rs/guides/migration_guide.html#changed-tosql-implementations
         out.set_value(string);
         Ok(diesel::serialize::IsNull::No)
     }
@@ -78,5 +69,39 @@ impl<T> FromSql<Text, Sqlite> for Id<T> {
         Uuid::parse_str(&string)
             .map(Self::new)
             .map_err(|e| e.into())
+    }
+}
+
+/// A list of entity IDs
+#[derive(Debug, Clone, AsExpression, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[diesel(sql_type = Text)]
+pub struct Ids<T>(Vec<Id<T>>);
+
+impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {
+    fn to_sql<'a>(
+        &'a self,
+        out: &mut diesel::serialize::Output<'a, '_, Sqlite>,
+    ) -> diesel::serialize::Result {
+        let string = self
+            .0
+            .iter()
+            .map(|id| id.as_uuid().as_hyphenated().to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        // https://diesel.rs/guides/migration_guide.html#changed-tosql-implementations
+        out.set_value(string);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+impl<T> FromSql<Text, Sqlite> for Ids<T> {
+    fn from_sql(bytes: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
+        let raw_value = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
+        let str_ids = raw_value.split(",");
+        let mut ids: Vec<Id<T>> = Vec::new();
+        for str_id in str_ids {
+            ids.push(str_id.to_string().parse()?);
+        }
+        Ok(Self(ids))
     }
 }
