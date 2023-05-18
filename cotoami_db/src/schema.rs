@@ -1,10 +1,10 @@
-//! Diesel Schema Definition
+//! Diesel schema definition
 //!
-//! https://diesel.rs/guides/schema-in-depth.html
+//! <https://diesel.rs/guides/schema-in-depth.html>
 
 // In SQLite, INTEGER PRIMARY KEY is treated differently and is always 64-bit
-// according to https://sqlite.org/autoinc.html.
-// https://github.com/diesel-rs/diesel/issues/852
+// according to <https://sqlite.org/autoinc.html>.
+// <https://github.com/diesel-rs/diesel/issues/852>
 
 diesel::allow_tables_to_appear_in_same_query!(
     nodes,
