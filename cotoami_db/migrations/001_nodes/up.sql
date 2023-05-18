@@ -44,7 +44,7 @@ CREATE TABLE parent_nodes (
   node_id TEXT NOT NULL UNIQUE,
 
   -- URL prefix to connect to this parent node 
-  url_prefix TEXT,
+  url_prefix TEXT NOT NULL,
 
   -- Date when this connection was created
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
