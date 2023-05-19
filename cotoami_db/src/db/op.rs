@@ -1,3 +1,5 @@
+//! Framework of composable database operations
+
 use anyhow::Result;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::sqlite::SqliteConnection;

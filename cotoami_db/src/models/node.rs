@@ -1,3 +1,5 @@
+//! A node is a single Cotoami database that has connections to/from other databases(nodes).
+
 use super::coto::Cotonoma;
 use super::Id;
 use crate::schema::nodes;
@@ -9,7 +11,7 @@ use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use identicon_rs::Identicon;
 
-/// A node is a single cotoami database that has connections to/from other databases(nodes).
+/// A row in `nodes` table
 #[derive(
     Debug,
     Clone,
@@ -108,7 +110,7 @@ impl Node {
     }
 }
 
-/// An `Insertable` node data for importing
+/// An `Insertable` node data for importing a foreign node
 ///
 /// Every field in this struct is an owned value in order to implement a consuming
 /// conversion: `Node::to_import`. We think `clone`s in the `new_` constructors are

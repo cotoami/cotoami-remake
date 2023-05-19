@@ -1,3 +1,5 @@
+//! Data structure that represents a Cotoami database
+
 use derive_new::new;
 use diesel::backend::RawValue;
 use diesel::deserialize::FromSql;

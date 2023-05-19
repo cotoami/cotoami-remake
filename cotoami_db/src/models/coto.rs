@@ -1,3 +1,5 @@
+//! Core concepts in a Cotoami database (Coto, Cotonoma, Link)
+
 use super::node::Node;
 use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
