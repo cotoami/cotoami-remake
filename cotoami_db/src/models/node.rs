@@ -2,7 +2,7 @@
 
 use super::coto::Cotonoma;
 use super::Id;
-use crate::schema::{child_nodes, nodes, parent_nodes};
+use crate::schema::{child_nodes, imported_nodes, nodes, parent_nodes};
 use anyhow::{anyhow, Result};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
@@ -11,6 +11,10 @@ use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
+
+//
+// nodes
+//
 
 /// A row in `nodes` table
 #[derive(
@@ -106,7 +110,6 @@ impl Node {
             owner_password_hash: None,
             version: self.version,
             created_at: Some(self.created_at),
-            inserted_at: None,
         }
     }
 }
@@ -128,7 +131,6 @@ pub struct NewNode {
     owner_password_hash: Option<String>,
     version: i32,
     created_at: Option<NaiveDateTime>,
-    inserted_at: Option<NaiveDateTime>,
 }
 
 impl NewNode {
@@ -145,7 +147,6 @@ impl NewNode {
             owner_password_hash: None,
             version: 1,
             created_at: None,
-            inserted_at: None,
         })
     }
 
@@ -164,7 +165,6 @@ impl NewNode {
             owner_password_hash: Some(password_hash),
             version: 1,
             created_at: None,
-            inserted_at: None,
         })
     }
 
@@ -188,6 +188,10 @@ fn hash_password(password: &[u8]) -> Result<String> {
     let password_hash = argon2.hash_password(password, &salt)?.to_string();
     Ok(password_hash)
 }
+
+//
+// parent_nodes
+//
 
 /// A row in `parent_nodes` table
 #[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
@@ -213,6 +217,10 @@ pub struct NewParentNode<'a> {
     pub url_prefix: &'a str,
 }
 
+//
+// child_nodes
+//
+
 /// A row in `child_nodes` table
 #[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
 #[diesel(primary_key(rowid))]
@@ -228,6 +236,8 @@ pub struct ChildNode {
 
     /// Permission to edit links in this database
     pub can_edit_links: bool,
+
+    pub created_at: NaiveDateTime,
 }
 
 /// An `Insertable` child node data
@@ -240,4 +250,28 @@ pub struct NewChildNode<'a> {
     // https://github.com/nrc/derive-new
     #[new(value = "false")]
     pub can_edit_links: bool,
+}
+
+//
+// imported_nodes
+//
+
+/// A row in `imported_nodes` table
+#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
+#[diesel(primary_key(rowid))]
+pub struct ImportedNode {
+    /// SQLite rowid (so-called "integer primary key")
+    pub rowid: i64,
+
+    /// UUID of this node imported in this database
+    pub node_id: Id<Node>,
+
+    pub created_at: NaiveDateTime,
+}
+
+/// An `Insertable` imported node data
+#[derive(Insertable, new)]
+#[diesel(table_name = imported_nodes)]
+pub struct NewImportedNode<'a> {
+    pub node_id: &'a Id<Node>,
 }
