@@ -2,7 +2,7 @@
 
 use super::coto::Cotonoma;
 use super::Id;
-use crate::schema::{nodes, parent_nodes};
+use crate::schema::{child_nodes, nodes, parent_nodes};
 use anyhow::{anyhow, Result};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
@@ -211,4 +211,33 @@ pub struct ParentNode {
 pub struct NewParentNode<'a> {
     pub node_id: &'a Id<Node>,
     pub url_prefix: &'a str,
+}
+
+/// A row in `child_nodes` table
+#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
+#[diesel(primary_key(rowid))]
+pub struct ChildNode {
+    /// SQLite rowid (so-called "integer primary key")
+    pub rowid: i64,
+
+    /// UUID of this child node
+    pub node_id: Id<Node>,
+
+    /// Password for authentication
+    pub password_hash: String,
+
+    /// Permission to edit links in this database
+    pub can_edit_links: bool,
+}
+
+/// An `Insertable` child node data
+#[derive(Insertable, new)]
+#[diesel(table_name = child_nodes)]
+pub struct NewChildNode<'a> {
+    pub node_id: &'a Id<Node>,
+    pub password_hash: &'a str,
+
+    // https://github.com/nrc/derive-new
+    #[new(value = "false")]
+    pub can_edit_links: bool,
 }
