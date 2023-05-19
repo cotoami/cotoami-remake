@@ -116,10 +116,12 @@ impl Node {
 
 /// An `Insertable` node data
 ///
-/// Every field in this struct is an owned value in order to implement a consuming
-/// conversion: `Node::to_import`. We think `clone`s in the `new_` constructors are
-/// trivial because the constructors will be called only once at the first launch
-/// while `Node::to_import` will be likely more frequent.
+/// - `uuid` and `icon` are owned values because they are generated in the `new_` constructors.
+/// - To avoid cloning `icon` in `Node::to_import`, the function must be consuming the
+///   self, which requires every field in this struct is an owned value.
+/// - As a result of it, the constructors need to clone some fields, which we think
+///   is trivial because they will be called only once at the first launch
+///   while `Node::to_import` will be likely more frequent.
 #[derive(Insertable)]
 #[diesel(table_name = nodes)]
 pub struct NewNode {
