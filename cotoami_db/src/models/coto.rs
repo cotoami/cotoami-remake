@@ -10,8 +10,12 @@
 use super::node::Node;
 use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
+
+//
+// cotos
+//
 
 /// A row in `cotos` table
 #[derive(
@@ -68,6 +72,117 @@ pub struct Coto {
     pub updated_at: NaiveDateTime,
 }
 
+impl Coto {
+    pub fn created_at(&self) -> DateTime<Local> {
+        Local.from_utc_datetime(&self.created_at)
+    }
+
+    pub fn updated_at(&self) -> DateTime<Local> {
+        Local.from_utc_datetime(&self.updated_at)
+    }
+
+    pub fn to_import(&self) -> NewCoto {
+        NewCoto {
+            uuid: self.uuid.clone(),
+            node_id: &self.node_id,
+            posted_in_id: self.posted_in_id.as_ref(),
+            posted_by_id: &self.posted_by_id,
+            content: self.content.as_deref(),
+            summary: self.summary.as_deref(),
+            is_cotonoma: self.is_cotonoma,
+            repost_of_id: self.repost_of_id.as_ref(),
+            reposted_in_ids: self.reposted_in_ids.as_ref(),
+            created_at: Some(self.created_at),
+            updated_at: Some(self.updated_at),
+        }
+    }
+}
+
+/// An `Insertable` coto data
+#[derive(Insertable)]
+#[diesel(table_name = cotos)]
+pub struct NewCoto<'a> {
+    uuid: Id<Coto>,
+    node_id: &'a Id<Node>,
+    posted_in_id: Option<&'a Id<Cotonoma>>,
+    posted_by_id: &'a Id<Node>,
+    content: Option<&'a str>,
+    summary: Option<&'a str>,
+    is_cotonoma: bool,
+    repost_of_id: Option<&'a Id<Coto>>,
+    reposted_in_ids: Option<&'a Ids<Cotonoma>>,
+    created_at: Option<NaiveDateTime>,
+    updated_at: Option<NaiveDateTime>,
+}
+
+impl<'a> NewCoto<'a> {
+    pub fn new(
+        node_id: &'a Id<Node>,
+        posted_in_id: &'a Id<Cotonoma>,
+        posted_by_id: &'a Id<Node>,
+        content: &'a str,
+        summary: Option<&'a str>,
+    ) -> Self {
+        let uuid = Id::generate();
+        Self {
+            uuid,
+            node_id,
+            posted_in_id: Some(posted_in_id),
+            posted_by_id,
+            content: Some(content),
+            summary,
+            is_cotonoma: false,
+            repost_of_id: None,
+            reposted_in_ids: None,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+
+    pub fn new_cotonoma(
+        node_id: &'a Id<Node>,
+        posted_in_id: &'a Id<Cotonoma>,
+        posted_by_id: &'a Id<Node>,
+        name: &'a str,
+    ) -> Self {
+        let uuid = Id::generate();
+        Self {
+            uuid,
+            node_id,
+            posted_in_id: Some(posted_in_id),
+            posted_by_id,
+            content: None,
+            summary: Some(name), // a cotonoma name is stored as a summary
+            is_cotonoma: true,
+            repost_of_id: None,
+            reposted_in_ids: None,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+
+    pub fn new_root_cotonoma(node_id: &'a Id<Node>, name: &'a str) -> Self {
+        let uuid = Id::generate();
+        Self {
+            uuid,
+            node_id,
+            posted_in_id: None,
+            posted_by_id: node_id, // a node creates its own root cotonoma
+            content: None,
+            summary: Some(name), // a cotonoma name is stored as a summary
+            is_cotonoma: true,
+            repost_of_id: None,
+            reposted_in_ids: None,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+}
+
+//
+// cotonomas
+//
+
 /// A row in `cotonomas` table
 #[derive(
     Debug,
@@ -101,6 +216,10 @@ pub struct Cotonoma {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
+
+//
+// links
+//
 
 /// A row in `links` table
 #[derive(
