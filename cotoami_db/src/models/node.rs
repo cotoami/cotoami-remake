@@ -2,12 +2,13 @@
 
 use super::coto::Cotonoma;
 use super::Id;
-use crate::schema::nodes;
+use crate::schema::{nodes, parent_nodes};
 use anyhow::{anyhow, Result};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::Argon2;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
 
@@ -186,4 +187,28 @@ fn hash_password(password: &[u8]) -> Result<String> {
     let argon2 = Argon2::default();
     let password_hash = argon2.hash_password(password, &salt)?.to_string();
     Ok(password_hash)
+}
+
+/// A row in `parent_nodes` table
+#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
+#[diesel(primary_key(rowid))]
+pub struct ParentNode {
+    /// SQLite rowid (so-called "integer primary key")
+    pub rowid: i64,
+
+    /// UUID of this parent node
+    pub node_id: Id<Node>,
+
+    /// URL prefix to connect to this parent node
+    pub url_prefix: String,
+
+    pub created_at: NaiveDateTime,
+}
+
+/// An `Insertable` parent node data
+#[derive(Insertable, new)]
+#[diesel(table_name = parent_nodes)]
+pub struct NewParentNode<'a> {
+    pub node_id: &'a Id<Node>,
+    pub url_prefix: &'a str,
 }
