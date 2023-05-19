@@ -111,7 +111,7 @@ impl Node {
     }
 }
 
-/// An `Insertable` node data for importing a foreign node
+/// An `Insertable` node data
 ///
 /// Every field in this struct is an owned value in order to implement a consuming
 /// conversion: `Node::to_import`. We think `clone`s in the `new_` constructors are

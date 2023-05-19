@@ -1,4 +1,11 @@
 //! Core concepts in a Cotoami database (Coto, Cotonoma, Link)
+//!
+//! - Coto
+//!     - A coto is a unit of data in a cotoami database.
+//! - Cotonoma
+//!     - A cotonoma is a specific type of coto in which other cotos are posted.
+//! - Link
+//!     - A link is a directed edge connecting two cotos.
 
 use super::node::Node;
 use super::{Id, Ids};
@@ -6,7 +13,7 @@ use crate::schema::{cotonomas, cotos, links};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-/// A coto is a unit of data in a cotoami database.
+/// A row in `cotos` table
 #[derive(
     Debug,
     Clone,
@@ -61,7 +68,7 @@ pub struct Coto {
     pub updated_at: NaiveDateTime,
 }
 
-/// A cotonoma is a specific type of coto in which other cotos are posted.
+/// A row in `cotonomas` table
 #[derive(
     Debug,
     Clone,
@@ -95,7 +102,7 @@ pub struct Cotonoma {
     pub updated_at: NaiveDateTime,
 }
 
-/// A link is a directed edge connecting two cotos.
+/// A row in `links` table
 #[derive(
     Debug,
     Clone,
