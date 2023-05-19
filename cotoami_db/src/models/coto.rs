@@ -116,21 +116,15 @@ pub struct NewCoto<'a> {
 }
 
 impl<'a> NewCoto<'a> {
-    pub fn new(
-        node_id: &'a Id<Node>,
-        posted_in_id: &'a Id<Cotonoma>,
-        posted_by_id: &'a Id<Node>,
-        content: &'a str,
-        summary: Option<&'a str>,
-    ) -> Self {
+    fn new_base(node_id: &'a Id<Node>, posted_by_id: &'a Id<Node>) -> Self {
         let uuid = Id::generate();
         Self {
             uuid,
             node_id,
-            posted_in_id: Some(posted_in_id),
+            posted_in_id: None,
             posted_by_id,
-            content: Some(content),
-            summary,
+            content: None,
+            summary: None,
             is_cotonoma: false,
             repost_of_id: None,
             reposted_in_ids: None,
@@ -139,43 +133,38 @@ impl<'a> NewCoto<'a> {
         }
     }
 
+    pub fn new(
+        node_id: &'a Id<Node>,
+        posted_in_id: &'a Id<Cotonoma>,
+        posted_by_id: &'a Id<Node>,
+        content: &'a str,
+        summary: Option<&'a str>,
+    ) -> Self {
+        let mut coto = Self::new_base(node_id, posted_by_id);
+        coto.posted_in_id = Some(posted_in_id);
+        coto.content = Some(content);
+        coto.summary = summary;
+        coto
+    }
+
     pub fn new_cotonoma(
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
         name: &'a str,
     ) -> Self {
-        let uuid = Id::generate();
-        Self {
-            uuid,
-            node_id,
-            posted_in_id: Some(posted_in_id),
-            posted_by_id,
-            content: None,
-            summary: Some(name), // a cotonoma name is stored as a summary
-            is_cotonoma: true,
-            repost_of_id: None,
-            reposted_in_ids: None,
-            created_at: None,
-            updated_at: None,
-        }
+        let mut coto = Self::new_base(node_id, posted_by_id);
+        coto.posted_in_id = Some(posted_in_id);
+        coto.summary = Some(name); // a cotonoma name is stored as a summary
+        coto.is_cotonoma = true;
+        coto
     }
 
     pub fn new_root_cotonoma(node_id: &'a Id<Node>, name: &'a str) -> Self {
-        let uuid = Id::generate();
-        Self {
-            uuid,
-            node_id,
-            posted_in_id: None,
-            posted_by_id: node_id, // a node creates its own root cotonoma
-            content: None,
-            summary: Some(name), // a cotonoma name is stored as a summary
-            is_cotonoma: true,
-            repost_of_id: None,
-            reposted_in_ids: None,
-            created_at: None,
-            updated_at: None,
-        }
+        let mut coto = Self::new_base(node_id, node_id);
+        coto.summary = Some(name); // a cotonoma name is stored as a summary
+        coto.is_cotonoma = true;
+        coto
     }
 }
 
