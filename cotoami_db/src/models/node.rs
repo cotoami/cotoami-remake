@@ -213,8 +213,8 @@ pub struct ParentNode {
 #[derive(Insertable, new)]
 #[diesel(table_name = parent_nodes)]
 pub struct NewParentNode<'a> {
-    pub node_id: &'a Id<Node>,
-    pub url_prefix: &'a str,
+    node_id: &'a Id<Node>,
+    url_prefix: &'a str,
 }
 
 //
@@ -244,12 +244,12 @@ pub struct ChildNode {
 #[derive(Insertable, new)]
 #[diesel(table_name = child_nodes)]
 pub struct NewChildNode<'a> {
-    pub node_id: &'a Id<Node>,
-    pub password_hash: &'a str,
+    node_id: &'a Id<Node>,
+    password_hash: &'a str,
 
     // https://github.com/nrc/derive-new
     #[new(value = "false")]
-    pub can_edit_links: bool,
+    can_edit_links: bool,
 }
 
 //
@@ -273,5 +273,5 @@ pub struct ImportedNode {
 #[derive(Insertable, new)]
 #[diesel(table_name = imported_nodes)]
 pub struct NewImportedNode<'a> {
-    pub node_id: &'a Id<Node>,
+    node_id: &'a Id<Node>,
 }
