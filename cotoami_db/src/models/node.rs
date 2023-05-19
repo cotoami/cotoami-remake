@@ -137,24 +137,23 @@ pub struct NewNode {
 
 impl NewNode {
     /// Create a desktop node that represents **this** database.
-    pub fn new_desktop<'a>(root_cotonoma: &'a Cotonoma) -> Result<Self> {
+    pub fn new_desktop<'a>(name: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         Ok(Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid,
             icon: icon_binary,
-            name: root_cotonoma.name.clone(),
-            root_cotonoma_id: Some(root_cotonoma.uuid.clone()),
+            name: name.to_string(),
+            root_cotonoma_id: None,
             owner_password_hash: None,
             version: 1,
             created_at: None,
         })
     }
 
-    /// Create a server node that represents **this** database without its root cotonoma
-    /// (empty database), which is mainly for replication.
-    pub fn new_empty_server<'a>(password: &'a str) -> Result<Self> {
+    /// Create a server node that represents **this** database.
+    pub fn new_server<'a>(name: &'a str, password: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = hash_password(password.as_bytes())?;
@@ -162,20 +161,12 @@ impl NewNode {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid,
             icon: icon_binary,
-            name: "".into(), // an empty database has an empty string as its name
+            name: name.to_string(),
             root_cotonoma_id: None,
             owner_password_hash: Some(password_hash),
             version: 1,
             created_at: None,
         })
-    }
-
-    /// Create a server node that represents **this** database.
-    pub fn new_server<'a>(password: &'a str, root_cotonoma: &'a Cotonoma) -> Result<Self> {
-        let mut empty_server = Self::new_empty_server(password)?;
-        empty_server.name = root_cotonoma.name.clone();
-        empty_server.root_cotonoma_id = Some(root_cotonoma.uuid.clone());
-        Ok(empty_server)
     }
 }
 
