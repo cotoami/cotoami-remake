@@ -15,6 +15,10 @@ use uuid::Uuid;
 pub mod coto;
 pub mod node;
 
+/////////////////////////////////////////////////////////////////////////////
+// Id<T>
+/////////////////////////////////////////////////////////////////////////////
+
 /// A generic entity ID
 #[derive(
     Debug, Clone, Copy, AsExpression, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize, new,
@@ -74,7 +78,11 @@ impl<T> FromSql<Text, Sqlite> for Id<T> {
     }
 }
 
-/// A list of entity IDs
+/////////////////////////////////////////////////////////////////////////////
+// Ids<T>
+/////////////////////////////////////////////////////////////////////////////
+
+/// A list of entity IDs stored as a comma-separated text in a database
 #[derive(Debug, Clone, AsExpression, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[diesel(sql_type = Text)]
 pub struct Ids<T>(Vec<Id<T>>);
