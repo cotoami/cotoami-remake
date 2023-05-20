@@ -13,9 +13,9 @@ use crate::schema::{cotonomas, cotos, links};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 
-//
+/////////////////////////////////////////////////////////////////////////////
 // cotos
-//
+/////////////////////////////////////////////////////////////////////////////
 
 /// A row in `cotos` table
 #[derive(
@@ -168,9 +168,9 @@ impl<'a> NewCoto<'a> {
     }
 }
 
-//
+/////////////////////////////////////////////////////////////////////////////
 // cotonomas
-//
+/////////////////////////////////////////////////////////////////////////////
 
 /// A row in `cotonomas` table
 #[derive(
@@ -206,9 +206,56 @@ pub struct Cotonoma {
     pub updated_at: NaiveDateTime,
 }
 
-//
+impl Cotonoma {
+    pub fn created_at(&self) -> DateTime<Local> {
+        Local.from_utc_datetime(&self.created_at)
+    }
+
+    pub fn updated_at(&self) -> DateTime<Local> {
+        Local.from_utc_datetime(&self.updated_at)
+    }
+
+    pub fn to_import(&self) -> NewCotonoma {
+        NewCotonoma {
+            uuid: self.uuid.clone(),
+            node_id: &self.node_id,
+            coto_id: &self.coto_id,
+            name: &self.name,
+            created_at: Some(self.created_at),
+            updated_at: Some(self.updated_at),
+        }
+    }
+}
+
+/// An `Insertable` cotonoma data
+#[derive(Insertable)]
+#[diesel(table_name = cotonomas)]
+pub struct NewCotonoma<'a> {
+    uuid: Id<Cotonoma>,
+    node_id: &'a Id<Node>,
+    coto_id: &'a Id<Coto>,
+    name: &'a str,
+    created_at: Option<NaiveDateTime>,
+    updated_at: Option<NaiveDateTime>,
+}
+
+impl<'a> NewCotonoma<'a> {
+    pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Self {
+        let uuid = Id::generate();
+        Self {
+            uuid,
+            node_id,
+            coto_id,
+            name,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // links
-//
+/////////////////////////////////////////////////////////////////////////////
 
 /// A row in `links` table
 #[derive(
