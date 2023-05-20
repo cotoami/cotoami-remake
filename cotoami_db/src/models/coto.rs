@@ -296,3 +296,62 @@ pub struct Link {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
+
+impl Link {
+    pub fn created_at(&self) -> DateTime<Local> {
+        Local.from_utc_datetime(&self.created_at)
+    }
+
+    pub fn updated_at(&self) -> DateTime<Local> {
+        Local.from_utc_datetime(&self.updated_at)
+    }
+
+    pub fn to_import(&self) -> NewLink {
+        NewLink {
+            uuid: self.uuid.clone(),
+            node_id: &self.node_id,
+            created_by_id: &self.created_by_id,
+            tail_coto_id: &self.tail_coto_id,
+            head_coto_id: &self.head_coto_id,
+            linking_phrase: self.linking_phrase.as_deref(),
+            created_at: Some(self.created_at),
+            updated_at: Some(self.updated_at),
+        }
+    }
+}
+
+/// An `Insertable` link data
+#[derive(Insertable)]
+#[diesel(table_name = links)]
+pub struct NewLink<'a> {
+    uuid: Id<Link>,
+    node_id: &'a Id<Node>,
+    created_by_id: &'a Id<Node>,
+    tail_coto_id: &'a Id<Coto>,
+    head_coto_id: &'a Id<Coto>,
+    linking_phrase: Option<&'a str>,
+    created_at: Option<NaiveDateTime>,
+    updated_at: Option<NaiveDateTime>,
+}
+
+impl<'a> NewLink<'a> {
+    pub fn new(
+        node_id: &'a Id<Node>,
+        created_by_id: &'a Id<Node>,
+        tail_coto_id: &'a Id<Coto>,
+        head_coto_id: &'a Id<Coto>,
+        linking_phrase: Option<&'a str>,
+    ) -> Self {
+        let uuid = Id::generate();
+        Self {
+            uuid,
+            node_id,
+            created_by_id,
+            tail_coto_id,
+            head_coto_id,
+            linking_phrase,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+}
