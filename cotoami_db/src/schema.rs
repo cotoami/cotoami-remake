@@ -13,7 +13,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     imported_nodes,
     cotos,
     cotonomas,
-    links
+    links,
+    changelog
 );
 
 /////////////////////////////////////////////////////////////////////////////
@@ -105,5 +106,20 @@ diesel::table! {
         linking_phrase -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Changelog (related structs are in `models::changelog`)
+/////////////////////////////////////////////////////////////////////////////
+
+diesel::table! {
+    changelog (serial_number) {
+        serial_number -> BigInt,
+        uuid -> Text,
+        parent_node_id -> Nullable<Text>,
+        parent_serial_number -> Nullable<BigInt>,
+        change -> Text,
+        inserted_at -> Timestamp,
     }
 }

@@ -1,3 +1,7 @@
+--
+-- A changelog is a series of changes in a Cotoami database recorded 
+-- for state machine replication.
+--
 CREATE TABLE changelog (
   -- Serial number of a changelog entry based on SQLite ROWID
   --
@@ -8,17 +12,20 @@ CREATE TABLE changelog (
   -- we should add an `AUTOINCREMENT` keyword to prevent the reuse of ROWIDs 
   -- from previously deleted rows. - https://www.sqlite.org/autoinc.html
   --
-  -- When replicating a database in another node, that node must ensure to 
+  -- When replicating a database to another node, that node must ensure to 
   -- apply the changelog entries in the serial number order (state machine replication).
   serial_number INTEGER NOT NULL PRIMARY KEY,
   
   -- Universally unique changelog ID
   uuid TEXT NOT NULL UNIQUE,
 
-  -- a remote node ID to which this change belongs
+  -- UUID of the parent node from which this change came
   -- NULL if it is a local change
-  remote_node_id TEXT,
-  remote_serial_number INTEGER,
+  parent_node_id TEXT,
+
+  -- Original serial number in the parent node
+  -- NULL if it is a local change
+  parent_serial_number INTEGER,
 
   -- Change enum value in JSON-serialized form
   change TEXT NOT NULL,
@@ -26,14 +33,14 @@ CREATE TABLE changelog (
   -- Registration date in this database
   inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
 
-  FOREIGN KEY(remote_node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
+  FOREIGN KEY(parent_node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 
 -- https://sqlite.org/partialindex.html
-CREATE UNIQUE INDEX changelog_remote 
-ON changelog(remote_node_id, remote_serial_number) 
+CREATE UNIQUE INDEX changelog_parent
+ON changelog(parent_node_id, parent_serial_number) 
 WHERE 
-  remote_node_id IS NOT NULL AND 
-  remote_serial_number IS NOT NULL;
+  parent_node_id IS NOT NULL AND 
+  parent_serial_number IS NOT NULL;
 
-CREATE INDEX changelog_remote_node_id ON changelog(remote_node_id);
+CREATE INDEX changelog_parent_node_id ON changelog(parent_node_id);

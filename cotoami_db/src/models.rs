@@ -12,6 +12,7 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 use uuid::Uuid;
 
+pub mod changelog;
 pub mod coto;
 pub mod node;
 

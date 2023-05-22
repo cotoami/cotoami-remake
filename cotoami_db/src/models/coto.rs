@@ -126,9 +126,8 @@ pub struct NewCoto<'a> {
 
 impl<'a> NewCoto<'a> {
     fn new_base(node_id: &'a Id<Node>, posted_by_id: &'a Id<Node>) -> Self {
-        let uuid = Id::generate();
         Self {
-            uuid,
+            uuid: Id::generate(),
             node_id,
             posted_in_id: None,
             posted_by_id,
@@ -255,9 +254,8 @@ pub struct NewCotonoma<'a> {
 
 impl<'a> NewCotonoma<'a> {
     pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Self {
-        let uuid = Id::generate();
         Self {
-            uuid,
+            uuid: Id::generate(),
             node_id,
             coto_id,
             name,
@@ -361,9 +359,8 @@ impl<'a> NewLink<'a> {
         head_coto_id: &'a Id<Coto>,
         linking_phrase: Option<&'a str>,
     ) -> Self {
-        let uuid = Id::generate();
         Self {
-            uuid,
+            uuid: Id::generate(),
             node_id,
             created_by_id,
             tail_coto_id,

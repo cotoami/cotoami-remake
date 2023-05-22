@@ -1,5 +1,5 @@
 --
--- A node is a single cotoami database that has connections to/from other databases(nodes).
+-- A node is a single Cotoami database that has connections to/from other databases(nodes).
 -- `nodes` table contains all the nodes appeared in the database of this node.
 --
 CREATE TABLE nodes (
