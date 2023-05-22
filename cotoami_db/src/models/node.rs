@@ -11,6 +11,7 @@ use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
+use validator::Validate;
 
 /////////////////////////////////////////////////////////////////////////////
 // nodes
@@ -25,6 +26,7 @@ use identicon_rs::Identicon;
     Identifiable,
     AsChangeset,
     Queryable,
+    Validate,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -38,9 +40,11 @@ pub struct Node {
     pub uuid: Id<Node>,
 
     /// Icon image
+    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     pub icon: Vec<u8>,
 
     /// Display name
+    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     pub name: String,
 
     /// UUID of the root cotonoma of this node
@@ -64,6 +68,9 @@ pub struct Node {
 impl Node {
     // rowid for "self node record"
     pub const ROWID_FOR_SELF: i64 = 1;
+
+    pub const ICON_MAX_LENGTH: usize = 5_000_000; // 5MB
+    pub const NAME_MAX_LENGTH: usize = Cotonoma::NAME_MAX_LENGTH;
 
     pub fn created_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.created_at)
@@ -122,12 +129,14 @@ impl Node {
 /// - As a result of it, the constructors need to clone some fields, which we think
 ///   is trivial because they will be called only once at the first launch
 ///   while `Node::to_import` will be likely more frequent.
-#[derive(Insertable)]
+#[derive(Insertable, Validate)]
 #[diesel(table_name = nodes)]
 pub struct NewNode {
     rowid: Option<i64>,
     uuid: Id<Node>,
+    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     icon: Vec<u8>,
+    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     name: String,
     root_cotonoma_id: Option<Id<Cotonoma>>,
     owner_password_hash: Option<String>,
@@ -140,7 +149,7 @@ impl NewNode {
     pub fn new_desktop<'a>(name: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
-        Ok(Self {
+        let new_node = Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid,
             icon: icon_binary,
@@ -149,7 +158,9 @@ impl NewNode {
             owner_password_hash: None,
             version: 1,
             created_at: None,
-        })
+        };
+        new_node.validate()?;
+        Ok(new_node)
     }
 
     /// Create a server node that represents **this** database.
@@ -157,7 +168,7 @@ impl NewNode {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = hash_password(password.as_bytes())?;
-        Ok(Self {
+        let new_node = Self {
             rowid: Some(Node::ROWID_FOR_SELF),
             uuid,
             icon: icon_binary,
@@ -166,7 +177,9 @@ impl NewNode {
             owner_password_hash: Some(password_hash),
             version: 1,
             created_at: None,
-        })
+        };
+        new_node.validate()?;
+        Ok(new_node)
     }
 }
 
@@ -187,7 +200,7 @@ fn hash_password(password: &[u8]) -> Result<String> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A row in `parent_nodes` table
-#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
+#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Validate)]
 #[diesel(primary_key(rowid))]
 pub struct ParentNode {
     /// SQLite rowid (so-called "integer primary key")
@@ -197,16 +210,24 @@ pub struct ParentNode {
     pub node_id: Id<Node>,
 
     /// URL prefix to connect to this parent node
+    #[validate(url, length(max = "ParentNode::URL_PREFIX_MAX_LENGTH"))]
     pub url_prefix: String,
 
     pub created_at: NaiveDateTime,
 }
 
+impl ParentNode {
+    // 2000 characters minus 500 for an API path after the prefix
+    // cf. https://stackoverflow.com/a/417184
+    pub const URL_PREFIX_MAX_LENGTH: usize = 1500;
+}
+
 /// An `Insertable` parent node data
-#[derive(Insertable, new)]
+#[derive(Insertable, Validate, new)]
 #[diesel(table_name = parent_nodes)]
 pub struct NewParentNode<'a> {
     node_id: &'a Id<Node>,
+    #[validate(url, length(max = "ParentNode::URL_PREFIX_MAX_LENGTH"))]
     url_prefix: &'a str,
 }
 
@@ -239,9 +260,7 @@ pub struct ChildNode {
 pub struct NewChildNode<'a> {
     node_id: &'a Id<Node>,
     password_hash: &'a str,
-
-    // https://github.com/nrc/derive-new
-    #[new(value = "false")]
+    #[new(value = "false")] // https://github.com/nrc/derive-new
     can_edit_links: bool,
 }
 
