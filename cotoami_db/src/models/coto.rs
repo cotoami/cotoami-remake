@@ -12,6 +12,7 @@ use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
+use validator::Validate;
 
 /////////////////////////////////////////////////////////////////////////////
 // cotos
@@ -26,6 +27,7 @@ use diesel::prelude::*;
     Identifiable,
     AsChangeset,
     Queryable,
+    Validate,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -52,9 +54,11 @@ pub struct Coto {
     /// Content of this coto
     ///
     /// `None` if it is a repost.
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     pub content: Option<String>,
 
     /// Optional summary of the content for compact display
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     pub summary: Option<String>,
 
     /// TRUE if this coto is a cotonoma
@@ -73,6 +77,9 @@ pub struct Coto {
 }
 
 impl Coto {
+    pub const CONTENT_MAX_LENGTH: usize = 1_000_000;
+    pub const SUMMARY_MAX_LENGTH: usize = 200;
+
     pub fn created_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.created_at)
     }
@@ -99,14 +106,16 @@ impl Coto {
 }
 
 /// An `Insertable` coto data
-#[derive(Insertable)]
+#[derive(Insertable, Validate)]
 #[diesel(table_name = cotos)]
 pub struct NewCoto<'a> {
     uuid: Id<Coto>,
     node_id: &'a Id<Node>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
     posted_by_id: &'a Id<Node>,
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     content: Option<&'a str>,
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     summary: Option<&'a str>,
     is_cotonoma: bool,
     repost_of_id: Option<&'a Id<Coto>>,
@@ -181,6 +190,7 @@ impl<'a> NewCoto<'a> {
     Identifiable,
     AsChangeset,
     Queryable,
+    Validate,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -200,6 +210,7 @@ pub struct Cotonoma {
     pub coto_id: Id<Coto>,
 
     /// Name of this cotonoma
+    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
     pub name: String,
 
     pub created_at: NaiveDateTime,
@@ -230,12 +241,13 @@ impl Cotonoma {
 }
 
 /// An `Insertable` cotonoma data
-#[derive(Insertable)]
+#[derive(Insertable, Validate)]
 #[diesel(table_name = cotonomas)]
 pub struct NewCotonoma<'a> {
     uuid: Id<Cotonoma>,
     node_id: &'a Id<Node>,
     coto_id: &'a Id<Coto>,
+    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
     name: &'a str,
     created_at: Option<NaiveDateTime>,
     updated_at: Option<NaiveDateTime>,
@@ -268,6 +280,7 @@ impl<'a> NewCotonoma<'a> {
     Identifiable,
     AsChangeset,
     Queryable,
+    Validate,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -293,6 +306,7 @@ pub struct Link {
     pub head_coto_id: Id<Coto>,
 
     /// Linkng phrase to express the relationship between the two cotos
+    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     pub linking_phrase: Option<String>,
 
     pub created_at: NaiveDateTime,
@@ -300,6 +314,8 @@ pub struct Link {
 }
 
 impl Link {
+    pub const LINKING_PHRASE_MAX_LENGTH: usize = 200;
+
     pub fn created_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.created_at)
     }
@@ -323,7 +339,7 @@ impl Link {
 }
 
 /// An `Insertable` link data
-#[derive(Insertable)]
+#[derive(Insertable, Validate)]
 #[diesel(table_name = links)]
 pub struct NewLink<'a> {
     uuid: Id<Link>,
@@ -331,6 +347,7 @@ pub struct NewLink<'a> {
     created_by_id: &'a Id<Node>,
     tail_coto_id: &'a Id<Coto>,
     head_coto_id: &'a Id<Coto>,
+    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     linking_phrase: Option<&'a str>,
     created_at: Option<NaiveDateTime>,
     updated_at: Option<NaiveDateTime>,
