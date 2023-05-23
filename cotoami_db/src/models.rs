@@ -21,7 +21,7 @@ pub mod node;
 /////////////////////////////////////////////////////////////////////////////
 
 /// A generic entity ID
-#[derive(Debug, Clone, Copy, AsExpression, Hash, Eq, PartialEq, serde::Deserialize, new)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, AsExpression, Hash, serde::Deserialize, new)]
 #[diesel(sql_type = Text)]
 #[serde(try_from = "&str")]
 pub struct Id<T> {
@@ -102,7 +102,7 @@ impl<T> FromSql<Text, Sqlite> for Id<T> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A list of entity IDs stored as a comma-separated text in a database
-#[derive(Debug, Clone, AsExpression, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, AsExpression, Hash, serde::Serialize, serde::Deserialize)]
 #[diesel(sql_type = Text)]
 pub struct Ids<T>(Vec<Id<T>>);
 

@@ -21,8 +21,8 @@ use validator::Validate;
 #[derive(
     Debug,
     Clone,
-    Eq,
     PartialEq,
+    Eq,
     Identifiable,
     AsChangeset,
     Queryable,
@@ -236,7 +236,7 @@ pub struct NewParentNode<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A row in `child_nodes` table
-#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
+#[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]
 #[diesel(primary_key(rowid))]
 pub struct ChildNode {
     /// SQLite rowid (so-called "integer primary key")
@@ -269,7 +269,7 @@ pub struct NewChildNode<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A row in `imported_nodes` table
-#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable)]
+#[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]
 #[diesel(primary_key(rowid))]
 pub struct ImportedNode {
     /// SQLite rowid (so-called "integer primary key")

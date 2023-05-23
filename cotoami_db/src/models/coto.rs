@@ -184,8 +184,8 @@ impl<'a> NewCoto<'a> {
 #[derive(
     Debug,
     Clone,
-    Eq,
     PartialEq,
+    Eq,
     Identifiable,
     AsChangeset,
     Queryable,
