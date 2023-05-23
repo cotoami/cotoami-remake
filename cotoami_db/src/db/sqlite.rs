@@ -45,7 +45,7 @@ pub fn enable_wal(conn: &mut SqliteConnection) -> Result<()> {
 /// <https://www.sqlite.org/c3ref/busy_timeout.html>
 pub fn set_busy_timeout(conn: &mut SqliteConnection, duration: Duration) -> Result<()> {
     // Prepared statement didn't work with PRAGMA for some reason.
-    diesel::sql_query(&format!("PRAGMA busy_timeout = {};", duration.as_millis())).execute(conn)?;
+    diesel::sql_query(format!("PRAGMA busy_timeout = {};", duration.as_millis())).execute(conn)?;
     Ok(())
 }
 

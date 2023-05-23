@@ -6,7 +6,7 @@ use diesel::sqlite::SqliteConnection;
 use std::ops::{Deref, DerefMut};
 
 pub trait Operation<Conn, T> {
-    fn run<'a, 'b>(&self, ctx: &'a mut Context<'b, Conn>) -> Result<T>;
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
 }
 
 pub struct Context<'a, Conn: 'a> {
@@ -17,7 +17,7 @@ pub struct Context<'a, Conn: 'a> {
 impl<'a, 'b, Conn> Context<'b, Conn> {
     // private constructor
     fn new(conn: &'b mut Conn) -> Self {
-        Context { conn: conn }
+        Context { conn }
     }
 
     fn conn(&'a mut self) -> &'a mut Conn {
@@ -35,16 +35,16 @@ pub struct CompositeOp<F> {
 
 impl<Conn, T, F> Operation<Conn, T> for CompositeOp<F>
 where
-    for<'a, 'b> F: Fn(&'a mut Context<'b, Conn>) -> Result<T>,
+    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
 {
-    fn run<'a, 'b>(&self, ctx: &'a mut Context<'b, Conn>) -> Result<T> {
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
         (self.f)(ctx)
     }
 }
 
 pub fn composite_op<Conn, F, T>(f: F) -> CompositeOp<F>
 where
-    for<'a, 'b> F: Fn(&'a mut Context<'b, Conn>) -> Result<T>,
+    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
 {
     CompositeOp { f }
 }
@@ -61,7 +61,7 @@ impl<T, F> Operation<SqliteConnection, T> for ReadOp<F>
 where
     F: Fn(&mut SqliteConnection) -> Result<T>,
 {
-    fn run<'a, 'b>(&self, ctx: &'a mut Context<'b, SqliteConnection>) -> Result<T> {
+    fn run(&self, ctx: &mut Context<'_, SqliteConnection>) -> Result<T> {
         (self.f)(ctx.conn())
     }
 }
@@ -73,7 +73,7 @@ where
     ReadOp { f }
 }
 
-pub fn run<'a, Op, T>(conn: &'a mut SqliteConnection, op: Op) -> Result<T>
+pub fn run<Op, T>(conn: &mut SqliteConnection, op: Op) -> Result<T>
 where
     Op: Operation<SqliteConnection, T>,
 {
@@ -86,7 +86,7 @@ where
 
 pub struct WritableConnection(pub SqliteConnection);
 
-impl<'a> Deref for WritableConnection {
+impl Deref for WritableConnection {
     type Target = SqliteConnection;
 
     fn deref(&self) -> &Self::Target {
@@ -94,7 +94,7 @@ impl<'a> Deref for WritableConnection {
     }
 }
 
-impl<'a> DerefMut for WritableConnection {
+impl DerefMut for WritableConnection {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -132,7 +132,7 @@ impl<T, F> Operation<WritableConnection, T> for ReadOp<F>
 where
     F: Fn(&mut SqliteConnection) -> Result<T>,
 {
-    fn run<'a, 'b>(&self, ctx: &'a mut Context<'b, WritableConnection>) -> Result<T> {
+    fn run(&self, ctx: &mut Context<'_, WritableConnection>) -> Result<T> {
         (self.f)(ctx.conn())
     }
 }
@@ -158,7 +158,7 @@ impl<T, F> Operation<WritableConnection, T> for WriteOp<F>
 where
     F: Fn(&mut WritableConnection) -> Result<T>,
 {
-    fn run<'a, 'b>(&self, ctx: &'a mut Context<'b, WritableConnection>) -> Result<T> {
+    fn run(&self, ctx: &mut Context<'_, WritableConnection>) -> Result<T> {
         (self.f)(ctx.conn())
     }
 }
@@ -170,7 +170,7 @@ where
     WriteOp { f }
 }
 
-pub fn run_in_transaction<'a, Op, T>(conn: &'a mut WritableConnection, op: Op) -> Result<T>
+pub fn run_in_transaction<Op, T>(conn: &mut WritableConnection, op: Op) -> Result<T>
 where
     Op: Operation<WritableConnection, T>,
 {

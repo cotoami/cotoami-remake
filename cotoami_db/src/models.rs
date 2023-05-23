@@ -126,7 +126,7 @@ impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {
 impl<T> FromSql<Text, Sqlite> for Ids<T> {
     fn from_sql(bytes: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
         let raw_value = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
-        let str_ids = raw_value.split(",");
+        let str_ids = raw_value.split(',');
         let mut ids: Vec<Id<T>> = Vec::new();
         for str_id in str_ids {
             ids.push(str_id.to_string().parse()?);

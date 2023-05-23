@@ -80,7 +80,7 @@ impl Node {
         Local.from_utc_datetime(&self.inserted_at)
     }
 
-    pub fn update_owner_password<'a>(&mut self, password: &'a str) -> Result<()> {
+    pub fn update_owner_password(&mut self, password: &str) -> Result<()> {
         if self.rowid != Self::ROWID_FOR_SELF {
             return Err(anyhow!(
                 "Owner password cannot be set to this node (rowid: {:?})",
@@ -92,12 +92,12 @@ impl Node {
         Ok(())
     }
 
-    pub fn verify_owner_password<'a>(&self, password: &'a str) -> Result<()> {
+    pub fn verify_owner_password(&self, password: &str) -> Result<()> {
         let password_hash = self
             .owner_password_hash
             .as_ref()
             .ok_or(anyhow!("This node has no password assigned."))?;
-        let parsed_hash = PasswordHash::new(&password_hash)?;
+        let parsed_hash = PasswordHash::new(password_hash)?;
         Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
         Ok(())
     }
@@ -146,7 +146,7 @@ pub struct NewNode {
 
 impl NewNode {
     /// Create a desktop node that represents **this** database.
-    pub fn new_desktop<'a>(name: &'a str) -> Result<Self> {
+    pub fn new_desktop(name: &str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let new_node = Self {
@@ -183,7 +183,7 @@ impl NewNode {
     }
 }
 
-fn generate_identicon<'a>(name: &'a str) -> Result<Vec<u8>> {
+fn generate_identicon(name: &str) -> Result<Vec<u8>> {
     let icon_binary = Identicon::new(name).export_png_data()?;
     Ok(icon_binary)
 }
