@@ -8,12 +8,14 @@ use diesel::serialize::ToSql;
 use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
 use std::fmt::{Debug, Display};
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::str::FromStr;
 use uuid::Uuid;
 
 pub mod changelog;
 pub mod coto;
+pub mod graph;
 pub mod node;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -21,7 +23,7 @@ pub mod node;
 /////////////////////////////////////////////////////////////////////////////
 
 /// A generic entity ID
-#[derive(Debug, Clone, Copy, PartialEq, Eq, AsExpression, Hash, serde::Deserialize, new)]
+#[derive(Debug, PartialEq, Eq, AsExpression, serde::Deserialize, new)]
 #[diesel(sql_type = Text)]
 #[serde(try_from = "&str")]
 pub struct Id<T> {
@@ -94,6 +96,25 @@ impl<T> FromSql<Text, Sqlite> for Id<T> {
         Uuid::parse_str(&string)
             .map(Self::new)
             .map_err(|e| e.into())
+    }
+}
+
+//
+// The following impls can't be automatically derived due to the limitation of #[derive]
+// https://github.com/rust-lang/rust/issues/26925
+//
+
+impl<T> Copy for Id<T> {}
+
+impl<T> Clone for Id<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<T> Hash for Id<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
     }
 }
 
