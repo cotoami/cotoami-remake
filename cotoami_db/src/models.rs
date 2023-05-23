@@ -21,10 +21,9 @@ pub mod node;
 /////////////////////////////////////////////////////////////////////////////
 
 /// A generic entity ID
-#[derive(
-    Debug, Clone, Copy, AsExpression, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize, new,
-)]
+#[derive(Debug, Clone, Copy, AsExpression, Hash, Eq, PartialEq, serde::Deserialize, new)]
 #[diesel(sql_type = Text)]
+#[serde(try_from = "&str")]
 pub struct Id<T> {
     value: Uuid,
 
@@ -51,10 +50,29 @@ impl<T> Display for Id<T> {
     }
 }
 
+impl<T> serde::Serialize for Id<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.as_uuid().serialize(serializer)
+    }
+}
+
+/// Convert: &str -> Id<T> or error
 impl<T> FromStr for Id<T> {
     type Err = uuid::Error;
     fn from_str(uuid: &str) -> Result<Self, Self::Err> {
         Ok(Id::new(Uuid::from_str(uuid)?))
+    }
+}
+
+/// Convert: &str -> Id<T> or error
+impl<T> TryFrom<&str> for Id<T> {
+    type Error = uuid::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::from_str(value)
     }
 }
 

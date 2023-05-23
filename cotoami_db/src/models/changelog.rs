@@ -26,7 +26,7 @@ use diesel::sqlite::Sqlite;
 /// - A `ChangelogEntry` must not be updated once it's inserted, so it
 ///   shouldn't impl `AsChangeset`.
 #[derive(
-    Debug, Clone, Eq, PartialEq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
+    Debug, Clone, PartialEq, Eq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(table_name = changelog, primary_key(serial_number))]
 pub struct ChangelogEntry {
@@ -85,7 +85,7 @@ pub struct NewChangelogEntry<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A serializable form of an atomic change in a Cotoami database
-#[derive(Debug, Clone, Eq, PartialEq, AsExpression, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, AsExpression, serde::Serialize, serde::Deserialize)]
 #[diesel(sql_type = Text)]
 pub enum Change {
     None,
@@ -138,5 +138,49 @@ impl FromSql<Text, Sqlite> for Change {
     fn from_sql(bytes: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
         let json_string = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
         Ok(serde_json::from_str(&json_string)?)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// tests
+/////////////////////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use chrono::NaiveDateTime;
+    use indoc::indoc;
+    use std::str::FromStr;
+
+    #[test]
+    fn changelog_entry_as_json() -> Result<()> {
+        let changelog_entry = ChangelogEntry {
+            serial_number: 1,
+            uuid: Id::from_str("00000000-0000-0000-0000-000000000001")?,
+            parent_node_id: None,
+            parent_serial_number: None,
+            change: Change::None,
+            inserted_at: NaiveDateTime::parse_from_str("2023-01-02 03:04:05", "%Y-%m-%d %H:%M:%S")?,
+        };
+
+        // serialize
+        let json_string = serde_json::to_string_pretty(&changelog_entry).unwrap();
+        assert_eq!(
+            json_string,
+            indoc! {r#"
+            {
+              "serial_number": 1,
+              "uuid": "00000000-0000-0000-0000-000000000001",
+              "change": "None",
+              "inserted_at": "2023-01-02T03:04:05"
+            }"#}
+        );
+
+        // deserialize
+        let changelog_entry2: ChangelogEntry = serde_json::from_str(&json_string)?;
+        assert_eq!(changelog_entry2, changelog_entry);
+
+        Ok(())
     }
 }
