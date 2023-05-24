@@ -58,6 +58,7 @@ pub struct Coto {
     pub content: Option<String>,
 
     /// Optional summary of the content for compact display
+    /// If this coto is a cotonoma, the summary should be the same as the cotonoma name.
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     pub summary: Option<String>,
 
@@ -86,6 +87,18 @@ impl Coto {
 
     pub fn updated_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.updated_at)
+    }
+
+    /// Returns the cotonoma name if this coto is cotonoma
+    pub fn name_as_cotonoma(&self) -> Option<&str> {
+        if self.is_cotonoma {
+            // The summary should be the same as the cotonoma name.
+            // The summary might be NULL if the data has been imported from the previous versions,
+            // so, to support that case, the content will be used instead.
+            self.summary.as_deref().or(self.content.as_deref())
+        } else {
+            None
+        }
     }
 
     pub fn to_import(&self) -> NewCoto {
