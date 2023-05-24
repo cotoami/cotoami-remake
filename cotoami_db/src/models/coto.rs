@@ -104,7 +104,7 @@ impl Coto {
 
     pub fn to_import(&self) -> NewCoto {
         NewCoto {
-            uuid: self.uuid.clone(),
+            uuid: self.uuid,
             node_id: &self.node_id,
             posted_in_id: self.posted_in_id.as_ref(),
             posted_by_id: &self.posted_by_id,
@@ -257,7 +257,7 @@ impl Cotonoma {
 
     pub fn to_import(&self) -> NewCotonoma {
         NewCotonoma {
-            uuid: self.uuid.clone(),
+            uuid: self.uuid,
             node_id: &self.node_id,
             coto_id: &self.coto_id,
             name: &self.name,
@@ -352,7 +352,7 @@ impl Link {
 
     pub fn to_import(&self) -> NewLink {
         NewLink {
-            uuid: self.uuid.clone(),
+            uuid: self.uuid,
             node_id: &self.node_id,
             created_by_id: &self.created_by_id,
             tail_coto_id: &self.tail_coto_id,

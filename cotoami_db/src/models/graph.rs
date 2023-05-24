@@ -2,13 +2,15 @@
 
 use super::coto::{Coto, Cotonoma, Link};
 use super::Id;
+use petgraph::prelude::Graph as Petgraph;
+use petgraph::prelude::NodeIndex;
 use std::collections::HashMap;
 
 /// A graph is a set of cotos that are connected with links
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Graph {
     /// Root cotonoma
-    cotonoma: Cotonoma,
+    root_cotonoma: Cotonoma,
 
     /// All the cotos in this graph, each of which is mapped by its ID
     cotos: HashMap<Id<Coto>, Coto>,
@@ -18,16 +20,22 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn new(cotonoma: Cotonoma) -> Self {
-        Graph {
-            cotonoma,
+    /// Creates a graph with a root cotonoma
+    pub fn new(root_cotonoma: (Cotonoma, Coto)) -> Self {
+        let (cotonoma, cotonoma_coto) = root_cotonoma;
+        assert_eq!(cotonoma.coto_id, cotonoma_coto.uuid);
+
+        let mut graph = Graph {
+            root_cotonoma: cotonoma,
             cotos: HashMap::default(),
             links: HashMap::default(),
-        }
+        };
+        graph.add_coto(cotonoma_coto);
+        graph
     }
 
-    pub fn cotonoma(&self) -> &Cotonoma {
-        &self.cotonoma
+    pub fn root_cotonoma(&self) -> &Cotonoma {
+        &self.root_cotonoma
     }
 
     pub fn add_coto(&mut self, coto: Coto) {
@@ -41,7 +49,35 @@ impl Graph {
     pub fn add_link(&mut self, link: Link) {
         self.links
             .entry(link.tail_coto_id)
-            .or_insert_with(|| vec![])
+            .or_insert_with(Vec::new)
             .push(link);
+    }
+
+    /// Converts it into a petgraph mainly for debug purposes
+    pub fn into_petgraph(&self) -> Petgraph<String, &str> {
+        let mut petgraph = Petgraph::<String, &str>::new();
+
+        // cotos
+        let mut cotos: Vec<&Coto> = self.cotos.values().collect();
+        cotos.sort_by_key(|coto| coto.rowid);
+        let mut node_indexes: HashMap<Id<Coto>, NodeIndex> = HashMap::new();
+        for coto in cotos.iter() {
+            let node_index = petgraph.add_node(coto.to_string());
+            node_indexes.insert(coto.uuid, node_index);
+        }
+
+        // edges
+        let mut links: Vec<&Link> = self.links.values().flatten().collect();
+        links.sort_by_key(|link| link.rowid);
+        for link in links.iter() {
+            let tail_index = node_indexes.get(&link.tail_coto_id).unwrap();
+            let head_index = node_indexes.get(&link.head_coto_id).unwrap();
+            petgraph.add_edge(
+                *tail_index,
+                *head_index,
+                link.linking_phrase.as_deref().unwrap_or_default(),
+            );
+        }
+        petgraph
     }
 }

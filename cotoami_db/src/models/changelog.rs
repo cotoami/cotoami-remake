@@ -62,7 +62,7 @@ impl ChangelogEntry {
 
     pub fn as_import_from<'a>(&'a self, parent_node_id: &'a Id<Node>) -> NewChangelogEntry {
         NewChangelogEntry {
-            uuid: self.uuid.clone(),
+            uuid: self.uuid,
             parent_node_id: Some(parent_node_id),
             parent_serial_number: Some(self.serial_number),
             change: &self.change,
