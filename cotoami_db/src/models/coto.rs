@@ -12,6 +12,7 @@ use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
+use std::fmt::Display;
 use validator::Validate;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -114,6 +115,20 @@ impl Coto {
             reposted_in_ids: self.reposted_in_ids.as_ref(),
             created_at: Some(self.created_at),
             updated_at: Some(self.updated_at),
+        }
+    }
+}
+
+impl Display for Coto {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_cotonoma {
+            write!(f, "[[{:?}]]", self.name_as_cotonoma().unwrap_or_default())
+        } else {
+            let content = self.content.as_deref().unwrap_or_default();
+            match self.summary.as_deref() {
+                Some(summary) => write!(f, "[{:?}] {:?}", summary, content),
+                None => write!(f, "{:?}", content),
+            }
         }
     }
 }
