@@ -20,7 +20,7 @@ impl<'a, 'b, Conn> Context<'b, Conn> {
         Context { conn }
     }
 
-    fn conn(&'a mut self) -> &'a mut Conn {
+    pub fn conn(&'a mut self) -> &'a mut Conn {
         self.conn
     }
 }

@@ -107,76 +107,73 @@ impl Node {
     /// - It assumes the node data came from another node (parent node).
     /// - `owner_password_hash` will be `None` (it should not be sent in the first place).
     /// - `created_at` is the original date of the node creation, so it should be kept.
-    pub fn to_import(self) -> NewNode {
-        NewNode {
-            rowid: None,
-            uuid: self.uuid,
-            icon: self.icon,
-            name: self.name,
-            root_cotonoma_id: self.root_cotonoma_id,
-            owner_password_hash: None,
+    pub fn to_import(&self) -> ImportNode {
+        ImportNode {
+            uuid: &self.uuid,
+            icon: &self.icon,
+            name: &self.name,
+            root_cotonoma_id: self.root_cotonoma_id.as_ref(),
             version: self.version,
-            created_at: Some(self.created_at),
+            created_at: &self.created_at,
         }
     }
 }
 
-/// An `Insertable` node data
-///
-/// - `uuid` and `icon` are owned values because they are generated in the `new_` constructors.
-/// - To avoid cloning `icon` in `Node::to_import`, the function must be consuming the
-///   self, which requires every field in this struct is an owned value.
-/// - As a result of it, the constructors need to clone some fields, which we think
-///   is trivial because they will be called only once at the first launch
-///   while `Node::to_import` will be likely more frequent.
+/// An `Insertable/AsChangeset` node data for importing/upgrading a remote node
+#[derive(Insertable, AsChangeset, Identifiable)]
+#[diesel(table_name = nodes, primary_key(uuid))]
+pub struct ImportNode<'a> {
+    uuid: &'a Id<Node>,
+    icon: &'a Vec<u8>,
+    name: &'a str,
+    root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    version: i32,
+    created_at: &'a NaiveDateTime,
+}
+
+/// An `Insertable` node data for launching a new node
 #[derive(Insertable, Validate)]
 #[diesel(table_name = nodes)]
-pub struct NewNode {
-    rowid: Option<i64>,
+pub struct NewNode<'a> {
+    rowid: i64,
     uuid: Id<Node>,
     #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     icon: Vec<u8>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
-    name: String,
-    root_cotonoma_id: Option<Id<Cotonoma>>,
+    name: &'a str,
     owner_password_hash: Option<String>,
     version: i32,
-    created_at: Option<NaiveDateTime>,
 }
 
-impl NewNode {
+impl<'a> NewNode<'a> {
     /// Create a desktop node that represents **this** database.
-    pub fn new_desktop(name: &str) -> Result<Self> {
+    pub fn new_desktop(name: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let new_node = Self {
-            rowid: Some(Node::ROWID_FOR_SELF),
+            rowid: Node::ROWID_FOR_SELF,
             uuid,
             icon: icon_binary,
-            name: name.to_string(),
-            root_cotonoma_id: None,
+            name,
             owner_password_hash: None,
             version: 1,
-            created_at: None,
         };
         new_node.validate()?;
         Ok(new_node)
     }
 
     /// Create a server node that represents **this** database.
-    pub fn new_server<'a>(name: &'a str, password: &'a str) -> Result<Self> {
+    pub fn new_server(name: &'a str, password: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = hash_password(password.as_bytes())?;
         let new_node = Self {
-            rowid: Some(Node::ROWID_FOR_SELF),
+            rowid: Node::ROWID_FOR_SELF,
             uuid,
             icon: icon_binary,
-            name: name.to_string(),
-            root_cotonoma_id: None,
+            name,
             owner_password_hash: Some(password_hash),
             version: 1,
-            created_at: None,
         };
         new_node.validate()?;
         Ok(new_node)

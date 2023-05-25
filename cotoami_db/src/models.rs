@@ -7,6 +7,7 @@ use diesel::expression::AsExpression;
 use diesel::serialize::ToSql;
 use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
+use diesel::FromSqlRow;
 use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
@@ -23,7 +24,7 @@ pub mod node;
 /////////////////////////////////////////////////////////////////////////////
 
 /// A generic entity ID
-#[derive(Debug, PartialEq, Eq, AsExpression, serde::Deserialize, new)]
+#[derive(Debug, PartialEq, Eq, AsExpression, FromSqlRow, serde::Deserialize, new)]
 #[diesel(sql_type = Text)]
 #[serde(try_from = "&str")]
 pub struct Id<T> {
@@ -123,7 +124,9 @@ impl<T> Hash for Id<T> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A list of entity IDs stored as a comma-separated text in a database
-#[derive(Debug, Clone, PartialEq, Eq, AsExpression, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
+)]
 #[diesel(sql_type = Text)]
 pub struct Ids<T>(Vec<Id<T>>);
 
