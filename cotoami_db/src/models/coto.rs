@@ -113,8 +113,8 @@ impl Coto {
             is_cotonoma: self.is_cotonoma,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
-            created_at: Some(self.created_at),
-            updated_at: Some(self.updated_at),
+            created_at: Some(&self.created_at),
+            updated_at: Some(&self.updated_at),
         }
     }
 }
@@ -148,8 +148,8 @@ pub struct NewCoto<'a> {
     is_cotonoma: bool,
     repost_of_id: Option<&'a Id<Coto>>,
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
-    created_at: Option<NaiveDateTime>,
-    updated_at: Option<NaiveDateTime>,
+    created_at: Option<&'a NaiveDateTime>,
+    updated_at: Option<&'a NaiveDateTime>,
 }
 
 impl<'a> NewCoto<'a> {
