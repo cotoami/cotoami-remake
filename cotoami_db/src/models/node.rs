@@ -51,7 +51,7 @@ pub struct Node {
     pub root_cotonoma_id: Option<Id<Cotonoma>>,
 
     /// Password for owner authentication of this node
-    /// This value can be set only in "self node record (rowid = 1)".
+    /// This value can be set only in "self node row (rowid = 1)".
     #[serde(skip_serializing, skip_deserializing)]
     pub owner_password_hash: Option<String>,
 
@@ -66,7 +66,7 @@ pub struct Node {
 }
 
 impl Node {
-    // rowid for "self node record"
+    // rowid for "self node row"
     pub const ROWID_FOR_SELF: i64 = 1;
 
     pub const ICON_MAX_LENGTH: usize = 5_000_000; // 5MB

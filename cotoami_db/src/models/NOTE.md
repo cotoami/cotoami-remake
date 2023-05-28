@@ -1,4 +1,4 @@
-# Notes
+# Notes on cotoami_db::models
 
 ## `ToSql` implementation
 
