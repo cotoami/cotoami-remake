@@ -36,6 +36,21 @@ pub fn create_root<'a>(
     })
 }
 
+pub fn create<'a>(
+    node_id: &'a Id<Node>,
+    posted_in_id: &'a Id<Cotonoma>,
+    posted_by_id: &'a Id<Node>,
+    name: &'a str,
+) -> impl Operation<WritableConnection, (Cotonoma, Coto)> + 'a {
+    composite_op::<WritableConnection, _, _>(move |ctx| {
+        let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, name);
+        let inserted_coto = coto_ops::insert_new(&new_coto).run(ctx)?;
+        let new_cotonoma = NewCotonoma::new(node_id, &inserted_coto.uuid, name);
+        let inserted_cotonoma = insert_new(&new_cotonoma).run(ctx)?;
+        Ok((inserted_cotonoma, inserted_coto))
+    })
+}
+
 fn insert_new<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
 ) -> impl Operation<WritableConnection, Cotonoma> + 'a {
