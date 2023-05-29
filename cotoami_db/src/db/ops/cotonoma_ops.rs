@@ -1,9 +1,7 @@
 //! Cotonoma related operations
 
 use super::coto_ops;
-use crate::db::op::{
-    composite_op, read_op, write_op, Operation, ReadOperation, WritableConnection,
-};
+use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma};
 use crate::models::node::Node;
 use crate::models::Id;

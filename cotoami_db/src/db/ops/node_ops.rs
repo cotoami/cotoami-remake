@@ -1,8 +1,6 @@
 //! Node related operations
 
-use crate::db::op::{
-    composite_op, read_op, write_op, Operation, ReadOperation, WritableConnection,
-};
+use crate::db::op::*;
 use crate::models::node::{NewNode, Node};
 use crate::models::Id;
 use diesel::prelude::*;

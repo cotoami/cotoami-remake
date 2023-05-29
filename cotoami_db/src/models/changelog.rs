@@ -16,6 +16,7 @@ use diesel::prelude::*;
 use diesel::serialize::ToSql;
 use diesel::sql_types::Text;
 use diesel::sqlite::Sqlite;
+use diesel::FromSqlRow;
 
 /////////////////////////////////////////////////////////////////////////////
 // changelog
@@ -32,9 +33,6 @@ use diesel::sqlite::Sqlite;
 pub struct ChangelogEntry {
     /// Serial number of a changelog entry based on SQLite ROWID
     pub serial_number: i64,
-
-    /// Universally unique changelog ID
-    pub uuid: Id<ChangelogEntry>,
 
     /// UUID of the parent node from which this change came
     ///
@@ -62,7 +60,6 @@ impl ChangelogEntry {
 
     pub fn as_import_from<'a>(&'a self, parent_node_id: &'a Id<Node>) -> NewChangelogEntry {
         NewChangelogEntry {
-            uuid: self.uuid,
             parent_node_id: Some(parent_node_id),
             parent_serial_number: Some(self.serial_number),
             change: &self.change,
@@ -74,7 +71,6 @@ impl ChangelogEntry {
 #[derive(Insertable)]
 #[diesel(table_name = changelog)]
 pub struct NewChangelogEntry<'a> {
-    uuid: Id<ChangelogEntry>,
     parent_node_id: Option<&'a Id<Node>>,
     parent_serial_number: Option<i64>,
     change: &'a Change,
@@ -85,7 +81,9 @@ pub struct NewChangelogEntry<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A serializable form of an atomic change in a Cotoami database
-#[derive(Debug, Clone, PartialEq, Eq, AsExpression, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
+)]
 #[diesel(sql_type = Text)]
 pub enum Change {
     None,
@@ -114,7 +112,6 @@ pub enum Change {
 impl Change {
     pub fn new_changelog_entry(&self) -> NewChangelogEntry {
         NewChangelogEntry {
-            uuid: Id::generate(),
             parent_node_id: None,
             parent_serial_number: None,
             change: self,
@@ -151,13 +148,11 @@ mod tests {
     use anyhow::Result;
     use chrono::NaiveDateTime;
     use indoc::indoc;
-    use std::str::FromStr;
 
     #[test]
     fn changelog_entry_as_json() -> Result<()> {
         let changelog_entry = ChangelogEntry {
             serial_number: 1,
-            uuid: Id::from_str("00000000-0000-0000-0000-000000000001")?,
             parent_node_id: None,
             parent_serial_number: None,
             change: Change::None,
@@ -171,7 +166,6 @@ mod tests {
             indoc! {r#"
             {
               "serial_number": 1,
-              "uuid": "00000000-0000-0000-0000-000000000001",
               "change": "None",
               "inserted_at": "2023-01-02T03:04:05"
             }"#}

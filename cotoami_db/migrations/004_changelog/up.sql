@@ -16,9 +16,6 @@ CREATE TABLE changelog (
   -- from previously deleted rows. - https://www.sqlite.org/autoinc.html
   serial_number INTEGER NOT NULL PRIMARY KEY,
   
-  -- Universally unique changelog ID
-  uuid TEXT NOT NULL UNIQUE,
-
   -- UUID of the parent node from which this change came
   -- NULL if it is a local change
   parent_node_id TEXT,

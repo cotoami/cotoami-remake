@@ -117,7 +117,6 @@ diesel::joinable!(links -> nodes (node_id));
 diesel::table! {
     changelog (serial_number) {
         serial_number -> BigInt,
-        uuid -> Text,
         parent_node_id -> Nullable<Text>,
         parent_serial_number -> Nullable<BigInt>,
         change -> Text,

@@ -1,6 +1,6 @@
 //! Coto related operations
 
-use crate::db::op::{read_op, write_op, Operation, ReadOperation, WritableConnection};
+use crate::db::op::*;
 use crate::models::coto::{Coto, NewCoto};
 use crate::models::Id;
 use diesel::prelude::*;
