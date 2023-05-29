@@ -1,9 +1,14 @@
 //! Cotonoma related operations
 
-use crate::db::op::{read_op, ReadOperation};
-use crate::models::coto::{Coto, Cotonoma};
+use super::coto_ops;
+use crate::db::op::{
+    composite_op, read_op, write_op, Operation, ReadOperation, WritableConnection,
+};
+use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma};
+use crate::models::node::Node;
 use crate::models::Id;
 use diesel::prelude::*;
+use std::ops::DerefMut;
 
 pub fn get(cotonoma_id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, Coto)>> + '_ {
     use crate::schema::{cotonomas, cotos};
@@ -14,6 +19,31 @@ pub fn get(cotonoma_id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, C
             .select((Cotonoma::as_select(), Coto::as_select()))
             .first(conn)
             .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn create_root<'a>(
+    node_id: &'a Id<Node>,
+    name: &'a str,
+) -> impl Operation<WritableConnection, (Cotonoma, Coto)> + 'a {
+    composite_op::<WritableConnection, _, _>(move |ctx| {
+        let new_coto = NewCoto::new_root_cotonoma(node_id, name);
+        let inserted_coto = coto_ops::insert_new(&new_coto).run(ctx)?;
+        let new_cotonoma = NewCotonoma::new(node_id, &inserted_coto.uuid, name);
+        let inserted_cotonoma = insert_new(&new_cotonoma).run(ctx)?;
+        Ok((inserted_cotonoma, inserted_coto))
+    })
+}
+
+fn insert_new<'a>(
+    new_cotonoma: &'a NewCotonoma<'a>,
+) -> impl Operation<WritableConnection, Cotonoma> + 'a {
+    use crate::schema::cotonomas::dsl::*;
+    write_op(move |conn| {
+        diesel::insert_into(cotonomas)
+            .values(new_cotonoma)
+            .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
 }
