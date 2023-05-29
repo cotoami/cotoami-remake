@@ -97,7 +97,7 @@ pub enum Change {
         summary: Option<String>,
         updated_at: NaiveDateTime,
     },
-    CreateCotonoma(Coto, Cotonoma),
+    CreateCotonoma(Cotonoma, Coto),
     RenameCotonoma {
         uuid: Id<Cotonoma>,
         name: String,

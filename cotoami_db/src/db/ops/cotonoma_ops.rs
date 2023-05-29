@@ -51,7 +51,7 @@ pub fn create<'a>(
     })
 }
 
-fn insert_new<'a>(
+pub fn insert_new<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
 ) -> impl Operation<WritableConnection, Cotonoma> + 'a {
     use crate::schema::cotonomas::dsl::*;
