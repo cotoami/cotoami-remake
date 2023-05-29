@@ -22,7 +22,7 @@ pub fn get(node_id: &Id<Node>) -> impl ReadOperation<Option<Node>> + '_ {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
         nodes
-            .filter(uuid.eq(node_id))
+            .find(node_id)
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)

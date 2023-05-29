@@ -10,7 +10,7 @@ pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     use crate::schema::cotos::dsl::*;
     read_op(move |conn| {
         cotos
-            .filter(uuid.eq(coto_id))
+            .find(coto_id)
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
