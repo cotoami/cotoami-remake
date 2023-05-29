@@ -21,6 +21,13 @@
     * When we write `update(post)`, that’s equivalent to writing `update(posts.find(post.id))`, or `update(posts.filter(id.eq(post.id)))`.
     * <https://diesel.rs/guides/all-about-updates.html>
 
+### [Selectable](https://docs.diesel.rs/2.0.x/diesel/expression/trait.Selectable.html)
+
+* Types which implement Selectable represent the select clause of a SQL query. 
+    * `SelectableHelper::as_select()` to construct the select clause
+* It assumes that the table name is the plural `snake_case` form of the struct name.
+* It assumes that every field name matches the name of the corresponding column in `schema.rs`
+
 ### Deserialization
 
 #### [Queryable](https://docs.diesel.rs/2.0.x/diesel/prelude/trait.Queryable.html)
