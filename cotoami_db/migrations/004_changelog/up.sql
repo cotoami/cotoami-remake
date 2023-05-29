@@ -8,12 +8,12 @@ CREATE TABLE changelog (
   -- ROWID will be filled automatically with an unused integer, 
   -- usually one more than the largest ROWID currently in use.
   --
+  -- When replicating a database to another node, that node must ensure to 
+  -- apply the changelog entries in the serial number order (state machine replication).
+  --
   -- If it is possible for an entry with the largest ROWID to be deleted, 
   -- we should add an `AUTOINCREMENT` keyword to prevent the reuse of ROWIDs 
   -- from previously deleted rows. - https://www.sqlite.org/autoinc.html
-  --
-  -- When replicating a database to another node, that node must ensure to 
-  -- apply the changelog entries in the serial number order (state machine replication).
   serial_number INTEGER NOT NULL PRIMARY KEY,
   
   -- Universally unique changelog ID

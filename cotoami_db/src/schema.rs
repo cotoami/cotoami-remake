@@ -22,9 +22,9 @@ diesel::allow_tables_to_appear_in_same_query!(
 /////////////////////////////////////////////////////////////////////////////
 
 diesel::table! {
-    nodes (rowid) {
-        rowid -> BigInt,
+    nodes (uuid) {
         uuid -> Text,
+        rowid -> BigInt,
         icon -> Binary,
         name -> Text,
         root_cotonoma_id -> Nullable<Text>,
@@ -36,39 +36,38 @@ diesel::table! {
 }
 
 diesel::table! {
-    parent_nodes (rowid) {
-        rowid -> BigInt,
+    parent_nodes (node_id) {
         node_id -> Text,
         url_prefix -> Text,
         created_at -> Timestamp,
     }
 }
+diesel::joinable!(parent_nodes -> nodes (node_id));
 
 diesel::table! {
-    child_nodes (rowid) {
-        rowid -> BigInt,
+    child_nodes (node_id) {
         node_id -> Text,
         password_hash -> Text,
         can_edit_links -> Bool,
         created_at -> Timestamp,
     }
 }
+diesel::joinable!(child_nodes -> nodes (node_id));
 
 diesel::table! {
-    imported_nodes (rowid) {
-        rowid -> BigInt,
+    imported_nodes (node_id) {
         node_id -> Text,
         created_at -> Timestamp,
     }
 }
+diesel::joinable!(imported_nodes -> nodes (node_id));
 
 /////////////////////////////////////////////////////////////////////////////
 // Coto graph (related structs are in `models::coto`)
 /////////////////////////////////////////////////////////////////////////////
 
 diesel::table! {
-    cotos (rowid) {
-        rowid -> BigInt,
+    cotos (uuid) {
         uuid -> Text,
         node_id -> Text,
         posted_in_id -> Nullable<Text>,
@@ -82,10 +81,10 @@ diesel::table! {
         updated_at -> Timestamp,
     }
 }
+diesel::joinable!(cotos -> nodes (node_id));
 
 diesel::table! {
-    cotonomas (rowid) {
-        rowid -> BigInt,
+    cotonomas (uuid) {
         uuid -> Text,
         node_id -> Text,
         coto_id -> Text,
@@ -94,10 +93,11 @@ diesel::table! {
         updated_at -> Timestamp,
     }
 }
+diesel::joinable!(cotonomas -> nodes (node_id));
+diesel::joinable!(cotonomas -> cotos (coto_id));
 
 diesel::table! {
-    links (rowid) {
-        rowid -> BigInt,
+    links (uuid) {
         uuid -> Text,
         node_id -> Text,
         created_by_id -> Text,
@@ -108,6 +108,7 @@ diesel::table! {
         updated_at -> Timestamp,
     }
 }
+diesel::joinable!(links -> nodes (node_id));
 
 /////////////////////////////////////////////////////////////////////////////
 // Changelog (related structs are in `models::changelog`)

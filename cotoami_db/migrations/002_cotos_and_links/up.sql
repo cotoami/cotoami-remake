@@ -1,12 +1,12 @@
 --
 -- A coto is a unit of data in a cotoami database.
 --
+-- The average size of a single row in this table could become larger than the
+-- optimal size for a WITHOUT ROWID table (https://www.sqlite.org/withoutrowid.html).
+--
 CREATE TABLE cotos (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- Universally unique coto ID
-  uuid TEXT NOT NULL UNIQUE,
+  uuid TEXT NOT NULL PRIMARY KEY,
 
   -- UUID of the node in which this coto was created
   node_id TEXT NOT NULL,
@@ -55,11 +55,8 @@ CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
 -- A cotonoma is a specific type of coto in which other cotos are posted. 
 --
 CREATE TABLE cotonomas (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- Universally unique cotonoma ID
-  uuid TEXT NOT NULL UNIQUE,
+  uuid TEXT NOT NULL PRIMARY KEY,
 
   -- UUID of the node in which this cotonoma was created
   node_id TEXT NOT NULL,
@@ -76,7 +73,7 @@ CREATE TABLE cotonomas (
   UNIQUE(node_id, name),
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
-);
+) WITHOUT ROWID;
 
 CREATE INDEX cotonomas_node_id ON cotonomas(node_id);
 CREATE INDEX cotonomas_coto_id ON cotonomas(coto_id);
@@ -86,11 +83,8 @@ CREATE INDEX cotonomas_coto_id ON cotonomas(coto_id);
 -- A link is a directed edge connecting two cotos.
 --
 CREATE TABLE links (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- Universally unique link ID
-  uuid TEXT NOT NULL UNIQUE,
+  uuid TEXT NOT NULL PRIMARY KEY,
 
   -- UUID of the node in which this link was created
   node_id TEXT NOT NULL,
@@ -115,7 +109,7 @@ CREATE TABLE links (
   FOREIGN KEY(created_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(tail_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE,
   FOREIGN KEY(head_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
-);
+) WITHOUT ROWID;
 
 CREATE INDEX links_node_id ON links(node_id);
 CREATE INDEX links_created_by_id ON links(created_by_id);

@@ -32,12 +32,8 @@ use validator::Validate;
     serde::Serialize,
     serde::Deserialize,
 )]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(uuid))]
 pub struct Coto {
-    /// SQLite rowid (so-called "integer primary key")
-    #[serde(skip_serializing, skip_deserializing)]
-    pub rowid: i64,
-
     /// Universally unique coto ID
     pub uuid: Id<Coto>,
 
@@ -221,12 +217,8 @@ impl<'a> NewCoto<'a> {
     serde::Serialize,
     serde::Deserialize,
 )]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(uuid))]
 pub struct Cotonoma {
-    /// SQLite rowid (so-called "integer primary key")
-    #[serde(skip_serializing, skip_deserializing)]
-    pub rowid: i64,
-
     /// Universally unique cotonoma ID
     pub uuid: Id<Cotonoma>,
 
@@ -310,12 +302,8 @@ impl<'a> NewCotonoma<'a> {
     serde::Serialize,
     serde::Deserialize,
 )]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(uuid))]
 pub struct Link {
-    /// SQLite rowid (so-called "integer primary key")
-    #[serde(skip_serializing, skip_deserializing)]
-    pub rowid: i64,
-
     /// Universally unique link ID
     pub uuid: Id<Link>,
 

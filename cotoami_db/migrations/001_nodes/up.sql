@@ -3,12 +3,13 @@
 -- `nodes` table contains all the nodes appeared in the database of this node.
 --
 CREATE TABLE nodes (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  -- The row with rowid `1` represents this node ("self node row").
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- Universally unique node ID
+  -- This column is used as a primary key in the Diesel models.
   uuid TEXT NOT NULL UNIQUE,
+
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  -- The rowid `1` denotes a "self node row".
+  rowid INTEGER NOT NULL PRIMARY KEY,
 
   -- Icon image
   icon BLOB NOT NULL,
@@ -37,11 +38,8 @@ CREATE TABLE nodes (
 -- A parent node is a server node to which this node is connecting.
 --
 CREATE TABLE parent_nodes (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- UUID of a parent node
-  node_id TEXT NOT NULL UNIQUE,
+  node_id TEXT NOT NULL PRIMARY KEY,
 
   -- URL prefix to connect to this parent node 
   url_prefix TEXT NOT NULL,
@@ -50,7 +48,7 @@ CREATE TABLE parent_nodes (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
-);
+) WITHOUT ROWID;
 
 CREATE INDEX parent_nodes_node_id ON parent_nodes(node_id);
 
@@ -59,11 +57,8 @@ CREATE INDEX parent_nodes_node_id ON parent_nodes(node_id);
 -- A child node is a client node connecting to this node.
 --
 CREATE TABLE child_nodes (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- UUID of a child node
-  node_id TEXT NOT NULL UNIQUE,
+  node_id TEXT NOT NULL PRIMARY KEY,
 
   -- Password for authentication
   password_hash TEXT NOT NULL,
@@ -76,7 +71,7 @@ CREATE TABLE child_nodes (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
-);
+) WITHOUT ROWID;
 
 CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
 
@@ -85,16 +80,13 @@ CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
 -- This table contains all the nodes imported (directly or indirectly) in this database.
 --
 CREATE TABLE imported_nodes (
-  -- An alias for the SQLite rowid (so-called "integer primary key")
-  rowid INTEGER NOT NULL PRIMARY KEY,
-
   -- UUID of a node imported in this database
-  node_id TEXT NOT NULL UNIQUE,
+  node_id TEXT NOT NULL PRIMARY KEY,
 
   -- Date when this node was imported
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
-);
+) WITHOUT ROWID;
 
 CREATE INDEX imported_nodes_node_id ON imported_nodes(node_id);

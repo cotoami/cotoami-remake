@@ -59,7 +59,7 @@ impl Graph {
 
         // cotos
         let mut cotos: Vec<&Coto> = self.cotos.values().collect();
-        cotos.sort_by_key(|coto| coto.rowid);
+        cotos.sort_by_key(|coto| coto.created_at);
         let mut node_indexes: HashMap<Id<Coto>, NodeIndex> = HashMap::new();
         for coto in cotos.iter() {
             let node_index = petgraph.add_node(coto.to_string());
@@ -68,7 +68,7 @@ impl Graph {
 
         // edges
         let mut links: Vec<&Link> = self.links.values().flatten().collect();
-        links.sort_by_key(|link| link.rowid);
+        links.sort_by_key(|link| link.created_at);
         for link in links.iter() {
             let tail_index = node_indexes.get(&link.tail_coto_id).unwrap();
             let head_index = node_indexes.get(&link.head_coto_id).unwrap();

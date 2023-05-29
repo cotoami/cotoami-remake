@@ -30,14 +30,15 @@ use validator::Validate;
     serde::Serialize,
     serde::Deserialize,
 )]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(uuid))]
 pub struct Node {
-    /// SQLite rowid (so-called "integer primary key")
-    #[serde(skip_serializing, skip_deserializing)]
-    pub rowid: i64,
-
     /// Universally unique node ID
     pub uuid: Id<Node>,
+
+    /// SQLite rowid (so-called "integer primary key")
+    /// The rowid `1` denotes a "self node row".
+    #[serde(skip_serializing, skip_deserializing)]
+    pub rowid: i64,
 
     /// Icon image
     #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
@@ -135,8 +136,8 @@ pub struct ImportNode<'a> {
 #[derive(Insertable, Validate)]
 #[diesel(table_name = nodes)]
 pub struct NewNode<'a> {
-    rowid: i64,
     uuid: Id<Node>,
+    rowid: i64,
     #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     icon: Vec<u8>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
@@ -151,8 +152,8 @@ impl<'a> NewNode<'a> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let new_node = Self {
-            rowid: Node::ROWID_FOR_SELF,
             uuid,
+            rowid: Node::ROWID_FOR_SELF,
             icon: icon_binary,
             name,
             owner_password_hash: None,
@@ -168,8 +169,8 @@ impl<'a> NewNode<'a> {
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = hash_password(password.as_bytes())?;
         let new_node = Self {
-            rowid: Node::ROWID_FOR_SELF,
             uuid,
+            rowid: Node::ROWID_FOR_SELF,
             icon: icon_binary,
             name,
             owner_password_hash: Some(password_hash),
@@ -198,11 +199,8 @@ fn hash_password(password: &[u8]) -> Result<String> {
 
 /// A row in `parent_nodes` table
 #[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Validate)]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(node_id))]
 pub struct ParentNode {
-    /// SQLite rowid (so-called "integer primary key")
-    pub rowid: i64,
-
     /// UUID of this parent node
     pub node_id: Id<Node>,
 
@@ -234,11 +232,8 @@ pub struct NewParentNode<'a> {
 
 /// A row in `child_nodes` table
 #[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(node_id))]
 pub struct ChildNode {
-    /// SQLite rowid (so-called "integer primary key")
-    pub rowid: i64,
-
     /// UUID of this child node
     pub node_id: Id<Node>,
 
@@ -267,11 +262,8 @@ pub struct NewChildNode<'a> {
 
 /// A row in `imported_nodes` table
 #[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]
-#[diesel(primary_key(rowid))]
+#[diesel(primary_key(node_id))]
 pub struct ImportedNode {
-    /// SQLite rowid (so-called "integer primary key")
-    pub rowid: i64,
-
     /// UUID of this node imported in this database
     pub node_id: Id<Node>,
 
