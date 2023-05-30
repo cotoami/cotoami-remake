@@ -1,5 +1,6 @@
 //! Changelog related operations
 
+use super::coto_ops;
 use crate::db::error::DatabaseError;
 use crate::db::op::*;
 use crate::models::changelog::{Change, ChangelogEntry, NewChangelogEntry};
@@ -76,7 +77,16 @@ pub fn import_change<'a>(
 
 fn apply_change<'a>(change: &'a Change) -> impl Operation<WritableConnection, ()> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
-        // TODO: implement it!
+        // match change {
+        //     Change::None => (),
+        //     Change::CreateCoto(coto) => {
+        //         let new_coto = coto.to_import();
+        //         coto_ops::insert_new(&new_coto).run(ctx)?;
+        //     }
+        //     Change::DeleteCoto(id) => {
+        //         coto_ops::delete(id).run(ctx)?;
+        //     }
+        // }
         Ok(())
     })
 }

@@ -26,3 +26,12 @@ pub fn insert_new<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConne
             .map_err(anyhow::Error::from)
     })
 }
+
+pub fn delete<'a>(coto_id: &'a Id<Coto>) -> impl Operation<WritableConnection, ()> + 'a {
+    use crate::schema::cotos::dsl::*;
+    write_op(move |conn| {
+        // The links connected to this node will be also deleted by FOREIGN KEY ON DELETE CASCADE
+        diesel::delete(cotos.find(coto_id)).execute(conn.deref_mut())?;
+        Ok(())
+    })
+}
