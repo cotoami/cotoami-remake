@@ -4,6 +4,7 @@ use super::coto_ops;
 use crate::db::error::DatabaseError;
 use crate::db::op::*;
 use crate::models::changelog::{Change, ChangelogEntry, NewChangelogEntry};
+use crate::models::coto::UpdateCoto;
 use crate::models::node::Node;
 use crate::models::Id;
 use diesel::prelude::*;
@@ -85,6 +86,21 @@ fn apply_change<'a>(change: &'a Change) -> impl Operation<WritableConnection, ()
         //     }
         //     Change::DeleteCoto(id) => {
         //         coto_ops::delete(id).run(ctx)?;
+        //     }
+        //     Change::UpdateCoto {
+        //         uuid,
+        //         content,
+        //         summary,
+        //         updated_at,
+        //     } => {
+        //         let coto = coto_ops::get(uuid).run(ctx)?.unwrap();
+        //         let update_coto = UpdateCoto {
+        //             content: content.as_deref(),
+        //             summary: summary.as_deref(),
+        //             updated_at: &updated_at,
+        //             ..coto.to_update()
+        //         };
+        //         coto_ops::update(&update_coto).run(ctx)?;
         //     }
         // }
         Ok(())

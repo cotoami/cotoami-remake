@@ -1,7 +1,7 @@
 //! Coto related operations
 
 use crate::db::op::*;
-use crate::models::coto::{Coto, NewCoto};
+use crate::models::coto::{Coto, NewCoto, UpdateCoto};
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
@@ -22,6 +22,15 @@ pub fn insert_new<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConne
     write_op(move |conn| {
         diesel::insert_into(cotos)
             .values(new_coto)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConnection, Coto> + 'a {
+    write_op(move |conn| {
+        diesel::update(update_coto)
+            .set(update_coto)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })

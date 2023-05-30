@@ -10,6 +10,7 @@
 use super::node::Node;
 use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
+use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use std::fmt::Display;
@@ -26,10 +27,8 @@ use validator::Validate;
     Eq,
     PartialEq,
     Identifiable,
-    AsChangeset,
     Queryable,
     Selectable,
-    Validate,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -52,12 +51,10 @@ pub struct Coto {
     /// Content of this coto
     ///
     /// `None` if it is a repost.
-    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     pub content: Option<String>,
 
     /// Optional summary of the content for compact display
     /// If this coto is a cotonoma, the summary should be the same as the cotonoma name.
-    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     pub summary: Option<String>,
 
     /// TRUE if this coto is a cotonoma
@@ -99,6 +96,18 @@ impl Coto {
         }
     }
 
+    pub fn to_update(&self) -> UpdateCoto {
+        UpdateCoto {
+            uuid: &self.uuid,
+            content: self.content.as_deref(),
+            summary: self.summary.as_deref(),
+            is_cotonoma: self.is_cotonoma,
+            repost_of_id: self.repost_of_id.as_ref(),
+            reposted_in_ids: self.reposted_in_ids.as_ref(),
+            updated_at: &self.updated_at,
+        }
+    }
+
     pub fn to_import(&self) -> NewCoto {
         NewCoto {
             uuid: self.uuid,
@@ -131,7 +140,7 @@ impl Display for Coto {
 }
 
 /// An `Insertable` coto data
-#[derive(Insertable, Validate)]
+#[derive(Debug, Insertable, Validate)]
 #[diesel(table_name = cotos)]
 pub struct NewCoto<'a> {
     uuid: Id<Coto>,
@@ -172,12 +181,13 @@ impl<'a> NewCoto<'a> {
         posted_by_id: &'a Id<Node>,
         content: &'a str,
         summary: Option<&'a str>,
-    ) -> Self {
+    ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
         coto.posted_in_id = Some(posted_in_id);
         coto.content = Some(content);
         coto.summary = summary;
-        coto
+        coto.validate()?;
+        Ok(coto)
     }
 
     pub fn new_cotonoma(
@@ -185,20 +195,37 @@ impl<'a> NewCoto<'a> {
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
         name: &'a str,
-    ) -> Self {
+    ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
         coto.posted_in_id = Some(posted_in_id);
         coto.summary = Some(name); // a cotonoma name is stored as a summary
         coto.is_cotonoma = true;
-        coto
+        coto.validate()?;
+        Ok(coto)
     }
 
-    pub fn new_root_cotonoma(node_id: &'a Id<Node>, name: &'a str) -> Self {
+    pub fn new_root_cotonoma(node_id: &'a Id<Node>, name: &'a str) -> Result<Self> {
         let mut coto = Self::new_base(node_id, node_id);
         coto.summary = Some(name); // a cotonoma name is stored as a summary
         coto.is_cotonoma = true;
-        coto
+        coto.validate()?;
+        Ok(coto)
     }
+}
+
+/// A changeset of a coto for update
+#[derive(Debug, Identifiable, AsChangeset, Validate)]
+#[diesel(table_name = cotos, primary_key(uuid))]
+pub struct UpdateCoto<'a> {
+    uuid: &'a Id<Coto>,
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    pub content: Option<&'a str>,
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    pub summary: Option<&'a str>,
+    pub is_cotonoma: bool,
+    pub repost_of_id: Option<&'a Id<Coto>>,
+    pub reposted_in_ids: Option<&'a Ids<Cotonoma>>,
+    pub updated_at: &'a NaiveDateTime,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -275,15 +302,17 @@ pub struct NewCotonoma<'a> {
 }
 
 impl<'a> NewCotonoma<'a> {
-    pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Self {
-        Self {
+    pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Result<Self> {
+        let cotonoma = Self {
             uuid: Id::generate(),
             node_id,
             coto_id,
             name,
             created_at: None,
             updated_at: None,
-        }
+        };
+        cotonoma.validate()?;
+        Ok(cotonoma)
     }
 }
 
@@ -376,8 +405,8 @@ impl<'a> NewLink<'a> {
         tail_coto_id: &'a Id<Coto>,
         head_coto_id: &'a Id<Coto>,
         linking_phrase: Option<&'a str>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self> {
+        let link = Self {
             uuid: Id::generate(),
             node_id,
             created_by_id,
@@ -386,6 +415,8 @@ impl<'a> NewLink<'a> {
             linking_phrase,
             created_at: None,
             updated_at: None,
-        }
+        };
+        link.validate()?;
+        Ok(link)
     }
 }
