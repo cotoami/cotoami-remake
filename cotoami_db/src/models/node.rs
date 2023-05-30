@@ -283,7 +283,7 @@ pub struct NewChildNode<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A row in `imported_nodes` table
-#[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]
+#[derive(Debug, Clone, PartialEq, Eq, Identifiable, Queryable)]
 #[diesel(primary_key(node_id))]
 pub struct ImportedNode {
     /// UUID of this node imported in this database
