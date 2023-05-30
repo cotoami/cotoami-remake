@@ -1,7 +1,7 @@
 //! Node related operations
 
 use crate::db::op::*;
-use crate::models::node::{NewNode, Node};
+use crate::models::node::{NewNode, Node, UpdateNode};
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
@@ -37,10 +37,10 @@ pub fn insert_new<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConne
     })
 }
 
-pub fn update(node: &Node) -> impl Operation<WritableConnection, Node> + '_ {
+pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConnection, Node> + 'a {
     write_op(move |conn| {
-        diesel::update(node)
-            .set(node)
+        diesel::update(update_node)
+            .set(update_node)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })

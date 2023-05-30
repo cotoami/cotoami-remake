@@ -24,9 +24,8 @@ use validator::Validate;
     PartialEq,
     Eq,
     Identifiable,
-    AsChangeset,
     Queryable,
-    Validate,
+    Selectable,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -41,11 +40,9 @@ pub struct Node {
     pub rowid: i64,
 
     /// Icon image
-    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     pub icon: Vec<u8>,
 
     /// Display name
-    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     pub name: String,
 
     /// UUID of the root cotonoma of this node
@@ -101,6 +98,17 @@ impl Node {
         let parsed_hash = PasswordHash::new(password_hash)?;
         Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
         Ok(())
+    }
+
+    pub fn to_update(&self) -> UpdateNode {
+        UpdateNode {
+            uuid: &self.uuid,
+            icon: &self.icon,
+            name: &self.name,
+            root_cotonoma_id: self.root_cotonoma_id.as_ref(),
+            owner_password_hash: self.owner_password_hash.as_deref(),
+            version: self.version + 1,
+        }
     }
 
     /// Converting a foreign node into an importable data.
@@ -191,6 +199,20 @@ fn hash_password(password: &[u8]) -> Result<String> {
     let argon2 = Argon2::default();
     let password_hash = argon2.hash_password(password, &salt)?.to_string();
     Ok(password_hash)
+}
+
+/// A changeset of a coto for update
+#[derive(Debug, Identifiable, AsChangeset, Validate)]
+#[diesel(table_name = nodes, primary_key(uuid))]
+pub struct UpdateNode<'a> {
+    uuid: &'a Id<Node>,
+    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
+    icon: &'a Vec<u8>,
+    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
+    name: &'a str,
+    root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    owner_password_hash: Option<&'a str>,
+    version: i32,
 }
 
 /////////////////////////////////////////////////////////////////////////////

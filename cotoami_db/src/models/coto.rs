@@ -24,8 +24,8 @@ use validator::Validate;
 #[derive(
     Debug,
     Clone,
-    Eq,
     PartialEq,
+    Eq,
     Identifiable,
     Queryable,
     Selectable,
