@@ -201,17 +201,17 @@ fn hash_password(password: &[u8]) -> Result<String> {
     Ok(password_hash)
 }
 
-/// A changeset of a coto for update
+/// A changeset of a node for update
 #[derive(Debug, Identifiable, AsChangeset, Validate)]
 #[diesel(table_name = nodes, primary_key(uuid))]
 pub struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
     #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
-    icon: &'a Vec<u8>,
+    pub icon: &'a Vec<u8>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
-    name: &'a str,
-    root_cotonoma_id: Option<&'a Id<Cotonoma>>,
-    owner_password_hash: Option<&'a str>,
+    pub name: &'a str,
+    pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    pub owner_password_hash: Option<&'a str>,
     version: i32,
 }
 
