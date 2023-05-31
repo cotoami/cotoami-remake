@@ -2,7 +2,7 @@
 
 use super::coto_ops;
 use crate::db::op::*;
-use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma};
+use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma};
 use crate::models::node::Node;
 use crate::models::Id;
 use diesel::prelude::*;
@@ -56,6 +56,17 @@ pub fn insert_new<'a>(
     write_op(move |conn| {
         diesel::insert_into(cotonomas)
             .values(new_cotonoma)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn update<'a>(
+    update_cotonoma: &'a UpdateCotonoma,
+) -> impl Operation<WritableConnection, Cotonoma> + 'a {
+    write_op(move |conn| {
+        diesel::update(update_cotonoma)
+            .set(update_cotonoma)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })

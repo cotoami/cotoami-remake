@@ -276,14 +276,22 @@ impl Cotonoma {
         Local.from_utc_datetime(&self.updated_at)
     }
 
+    pub fn to_update(&self) -> UpdateCotonoma {
+        UpdateCotonoma {
+            uuid: &self.uuid,
+            name: &self.name,
+            updated_at: &self.updated_at,
+        }
+    }
+
     pub fn to_import(&self) -> NewCotonoma {
         NewCotonoma {
             uuid: self.uuid,
             node_id: &self.node_id,
             coto_id: &self.coto_id,
             name: &self.name,
-            created_at: Some(self.created_at),
-            updated_at: Some(self.updated_at),
+            created_at: Some(&self.created_at),
+            updated_at: Some(&self.updated_at),
         }
     }
 }
@@ -297,8 +305,8 @@ pub struct NewCotonoma<'a> {
     coto_id: &'a Id<Coto>,
     #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
     name: &'a str,
-    created_at: Option<NaiveDateTime>,
-    updated_at: Option<NaiveDateTime>,
+    created_at: Option<&'a NaiveDateTime>,
+    updated_at: Option<&'a NaiveDateTime>,
 }
 
 impl<'a> NewCotonoma<'a> {
@@ -314,6 +322,15 @@ impl<'a> NewCotonoma<'a> {
         cotonoma.validate()?;
         Ok(cotonoma)
     }
+}
+
+#[derive(Debug, Identifiable, AsChangeset, Validate)]
+#[diesel(table_name = cotonomas, primary_key(uuid))]
+pub struct UpdateCotonoma<'a> {
+    uuid: &'a Id<Cotonoma>,
+    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
+    pub name: &'a str,
+    pub updated_at: &'a NaiveDateTime,
 }
 
 /////////////////////////////////////////////////////////////////////////////
