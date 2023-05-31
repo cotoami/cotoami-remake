@@ -71,3 +71,11 @@ pub fn update<'a>(
             .map_err(anyhow::Error::from)
     })
 }
+
+pub fn delete<'a>(cotonoma_id: &'a Id<Cotonoma>) -> impl Operation<WritableConnection, ()> + 'a {
+    use crate::schema::cotonomas::dsl::*;
+    write_op(move |conn| {
+        diesel::delete(cotonomas.find(cotonoma_id)).execute(conn.deref_mut())?;
+        Ok(())
+    })
+}
