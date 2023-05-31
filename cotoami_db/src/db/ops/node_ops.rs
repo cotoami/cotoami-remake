@@ -5,6 +5,7 @@ use crate::models::node::{NewNode, Node, UpdateNode};
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
+use validator::Validate;
 
 pub fn all() -> impl ReadOperation<Vec<Node>> {
     use crate::schema::nodes::dsl::*;
@@ -39,6 +40,7 @@ pub fn insert_new<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConne
 
 pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConnection, Node> + 'a {
     write_op(move |conn| {
+        update_node.validate()?;
         diesel::update(update_node)
             .set(update_node)
             .get_result(conn.deref_mut())

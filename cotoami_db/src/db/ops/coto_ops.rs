@@ -5,6 +5,7 @@ use crate::models::coto::{Coto, NewCoto, UpdateCoto};
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
+use validator::Validate;
 
 pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     use crate::schema::cotos::dsl::*;
@@ -29,6 +30,7 @@ pub fn insert_new<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConne
 
 pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConnection, Coto> + 'a {
     write_op(move |conn| {
+        update_coto.validate()?;
         diesel::update(update_coto)
             .set(update_coto)
             .get_result(conn.deref_mut())

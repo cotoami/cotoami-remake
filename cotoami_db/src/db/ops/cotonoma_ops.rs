@@ -7,6 +7,7 @@ use crate::models::node::Node;
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
+use validator::Validate;
 
 pub fn get(cotonoma_id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, Coto)>> + '_ {
     use crate::schema::{cotonomas, cotos};
@@ -65,6 +66,7 @@ pub fn update<'a>(
     update_cotonoma: &'a UpdateCotonoma,
 ) -> impl Operation<WritableConnection, Cotonoma> + 'a {
     write_op(move |conn| {
+        update_cotonoma.validate()?;
         diesel::update(update_cotonoma)
             .set(update_cotonoma)
             .get_result(conn.deref_mut())
