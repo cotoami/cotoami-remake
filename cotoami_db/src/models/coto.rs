@@ -386,6 +386,14 @@ impl Link {
         Local.from_utc_datetime(&self.updated_at)
     }
 
+    pub fn to_update(&self) -> UpdateLink {
+        UpdateLink {
+            uuid: &self.uuid,
+            linking_phrase: self.linking_phrase.as_deref(),
+            updated_at: &self.updated_at,
+        }
+    }
+
     pub fn to_import(&self) -> NewLink {
         NewLink {
             uuid: self.uuid,
@@ -394,8 +402,8 @@ impl Link {
             tail_coto_id: &self.tail_coto_id,
             head_coto_id: &self.head_coto_id,
             linking_phrase: self.linking_phrase.as_deref(),
-            created_at: Some(self.created_at),
-            updated_at: Some(self.updated_at),
+            created_at: Some(&self.created_at),
+            updated_at: Some(&self.updated_at),
         }
     }
 }
@@ -411,8 +419,8 @@ pub struct NewLink<'a> {
     head_coto_id: &'a Id<Coto>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     linking_phrase: Option<&'a str>,
-    created_at: Option<NaiveDateTime>,
-    updated_at: Option<NaiveDateTime>,
+    created_at: Option<&'a NaiveDateTime>,
+    updated_at: Option<&'a NaiveDateTime>,
 }
 
 impl<'a> NewLink<'a> {
@@ -436,4 +444,13 @@ impl<'a> NewLink<'a> {
         link.validate()?;
         Ok(link)
     }
+}
+
+#[derive(Debug, Identifiable, AsChangeset, Validate)]
+#[diesel(table_name = links, primary_key(uuid))]
+pub struct UpdateLink<'a> {
+    uuid: &'a Id<Link>,
+    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
+    pub linking_phrase: Option<&'a str>,
+    pub updated_at: &'a NaiveDateTime,
 }
