@@ -148,6 +148,7 @@ mod tests {
     use anyhow::Result;
     use chrono::NaiveDateTime;
     use indoc::indoc;
+    use std::str::FromStr;
 
     #[test]
     fn changelog_entry_as_json() -> Result<()> {
@@ -155,7 +156,7 @@ mod tests {
             serial_number: 1,
             parent_node_id: None,
             parent_serial_number: None,
-            change: Change::None,
+            change: Change::DeleteCoto(Id::from_str("00000000-0000-0000-0000-000000000001")?),
             inserted_at: NaiveDateTime::parse_from_str("2023-01-02 03:04:05", "%Y-%m-%d %H:%M:%S")?,
         };
 
@@ -166,14 +167,16 @@ mod tests {
             indoc! {r#"
             {
               "serial_number": 1,
-              "change": "None",
+              "change": {
+                "DeleteCoto": "00000000-0000-0000-0000-000000000001"
+              },
               "inserted_at": "2023-01-02T03:04:05"
             }"#}
         );
 
         // deserialize
-        let changelog_entry2: ChangelogEntry = serde_json::from_str(&json_string)?;
-        assert_eq!(changelog_entry2, changelog_entry);
+        let deserialized: ChangelogEntry = serde_json::from_str(&json_string)?;
+        assert_eq!(deserialized, changelog_entry);
 
         Ok(())
     }
