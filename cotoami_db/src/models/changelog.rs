@@ -183,9 +183,10 @@ mod tests {
 
     #[test]
     fn message_pack_serialization() -> Result<()> {
-        let msgpack_bytes = rmp_serde::to_vec(&Change::None)?;
+        let change = Change::DeleteCotonoma(Id::from_str("00000000-0000-0000-0000-000000000001")?);
+        let msgpack_bytes = rmp_serde::to_vec(&change)?;
         let deserialized: Change = rmp_serde::from_slice(&msgpack_bytes)?;
-        assert_eq!(deserialized, Change::None);
+        assert_eq!(deserialized, change);
         Ok(())
     }
 }

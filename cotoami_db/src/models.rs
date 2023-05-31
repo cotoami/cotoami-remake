@@ -24,9 +24,11 @@ pub mod node;
 /////////////////////////////////////////////////////////////////////////////
 
 /// A generic entity ID
-#[derive(Debug, PartialEq, Eq, AsExpression, FromSqlRow, serde::Deserialize, new)]
+#[derive(
+    Debug, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize, new,
+)]
 #[diesel(sql_type = Text)]
-#[serde(try_from = "&str")]
+#[serde(transparent)]
 pub struct Id<T> {
     value: Uuid,
 
@@ -53,16 +55,6 @@ impl<T> Display for Id<T> {
     }
 }
 
-impl<T> serde::Serialize for Id<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.as_uuid().serialize(serializer)
-    }
-}
-
-/// Convert: &str -> Id<T> or error
 impl<T> FromStr for Id<T> {
     type Err = uuid::Error;
     fn from_str(uuid: &str) -> Result<Self, Self::Err> {
@@ -70,7 +62,6 @@ impl<T> FromStr for Id<T> {
     }
 }
 
-/// Convert: &str -> Id<T> or error
 impl<T> TryFrom<&str> for Id<T> {
     type Error = uuid::Error;
 
@@ -156,5 +147,41 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
             ids.push(str_id.to_string().parse()?);
         }
         Ok(Self(ids))
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// tests
+/////////////////////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+
+    #[derive(Debug, PartialEq, Eq)]
+    struct Foo();
+
+    #[test]
+    fn json_serialization() -> Result<()> {
+        let id: Id<Foo> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+
+        let json_string = serde_json::to_string(&id)?;
+        assert_eq!(json_string, r#""00000000-0000-0000-0000-000000000001""#);
+        println!("json_string size: {}", json_string.as_bytes().len());
+
+        let deserialized: Id<Foo> = serde_json::from_str(&json_string)?;
+        assert_eq!(deserialized, id);
+        Ok(())
+    }
+
+    #[test]
+    fn message_pack_serialization() -> Result<()> {
+        let id: Id<Foo> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let msgpack_bytes = rmp_serde::to_vec(&id)?;
+        println!("msgpack_bytes size: {}", msgpack_bytes.len());
+        let deserialized: Id<Foo> = rmp_serde::from_slice(&msgpack_bytes)?;
+        assert_eq!(deserialized, id);
+        Ok(())
     }
 }
