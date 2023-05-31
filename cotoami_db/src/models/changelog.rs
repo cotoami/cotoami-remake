@@ -177,4 +177,12 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn message_pack_serialization() -> Result<()> {
+        let msgpack_bytes = rmp_serde::to_vec(&Change::None)?;
+        let deserialized: Change = rmp_serde::from_slice(&msgpack_bytes)?;
+        assert_eq!(deserialized, Change::None);
+        Ok(())
+    }
 }
