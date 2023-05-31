@@ -18,7 +18,7 @@ pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     })
 }
 
-pub fn insert_new<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConnection, Coto> + 'a {
+pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConnection, Coto> + 'a {
     use crate::schema::cotos::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(cotos)

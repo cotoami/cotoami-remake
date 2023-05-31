@@ -18,7 +18,7 @@ pub fn get(link_id: &Id<Link>) -> impl ReadOperation<Option<Link>> + '_ {
     })
 }
 
-pub fn insert_new<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConnection, Link> + 'a {
+pub fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConnection, Link> + 'a {
     use crate::schema::links::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(links)
