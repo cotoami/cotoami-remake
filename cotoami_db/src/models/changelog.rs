@@ -14,7 +14,7 @@ use diesel::deserialize::FromSql;
 use diesel::expression::AsExpression;
 use diesel::prelude::*;
 use diesel::serialize::ToSql;
-use diesel::sql_types::Text;
+use diesel::sql_types::Binary;
 use diesel::sqlite::Sqlite;
 use diesel::FromSqlRow;
 
@@ -84,7 +84,7 @@ pub struct NewChangelogEntry<'a> {
 #[derive(
     Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
-#[diesel(sql_type = Text)]
+#[diesel(sql_type = Binary)]
 pub enum Change {
     None,
     CreateCoto(Coto),
@@ -119,22 +119,22 @@ impl Change {
     }
 }
 
-impl ToSql<Text, Sqlite> for Change {
+impl ToSql<Binary, Sqlite> for Change {
     fn to_sql<'b>(
         &'b self,
         out: &mut diesel::serialize::Output<'b, '_, Sqlite>,
     ) -> diesel::serialize::Result {
-        let json_string = serde_json::to_string(&self)?;
+        let msgpack_bytes = rmp_serde::to_vec(&self)?;
         // https://diesel.rs/guides/migration_guide.html#changed-tosql-implementations
-        out.set_value(json_string);
+        out.set_value(msgpack_bytes);
         Ok(diesel::serialize::IsNull::No)
     }
 }
 
-impl FromSql<Text, Sqlite> for Change {
-    fn from_sql(bytes: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
-        let json_string = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
-        Ok(serde_json::from_str(&json_string)?)
+impl FromSql<Binary, Sqlite> for Change {
+    fn from_sql(value: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
+        let msgpack_bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(value)?;
+        Ok(rmp_serde::from_slice(&msgpack_bytes)?)
     }
 }
 

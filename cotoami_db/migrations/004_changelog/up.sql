@@ -24,8 +24,8 @@ CREATE TABLE changelog (
   -- NULL if it is a local change
   parent_serial_number INTEGER,
 
-  -- Change enum value in JSON-serialized form
-  change TEXT NOT NULL,
+  -- Change (cotoami_db::models::changelog::Change) value in MessagePack form
+  change BLOB NOT NULL,
 
   -- Registration date in this database
   inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC

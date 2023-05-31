@@ -119,7 +119,7 @@ diesel::table! {
         serial_number -> BigInt,
         parent_node_id -> Nullable<Text>,
         parent_serial_number -> Nullable<BigInt>,
-        change -> Text,
+        change -> Binary,
         inserted_at -> Timestamp,
     }
 }
