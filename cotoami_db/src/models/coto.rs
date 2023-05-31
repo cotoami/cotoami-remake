@@ -11,6 +11,7 @@ use super::node::Node;
 use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
 use anyhow::Result;
+use chrono::offset::Utc;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use std::fmt::Display;
@@ -104,7 +105,7 @@ impl Coto {
             is_cotonoma: self.is_cotonoma,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
-            updated_at: &self.updated_at,
+            updated_at: Utc::now().naive_utc(), // set update date/time (now)
         }
     }
 
@@ -225,7 +226,7 @@ pub struct UpdateCoto<'a> {
     pub is_cotonoma: bool,
     pub repost_of_id: Option<&'a Id<Coto>>,
     pub reposted_in_ids: Option<&'a Ids<Cotonoma>>,
-    pub updated_at: &'a NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -280,7 +281,7 @@ impl Cotonoma {
         UpdateCotonoma {
             uuid: &self.uuid,
             name: &self.name,
-            updated_at: &self.updated_at,
+            updated_at: Utc::now().naive_utc(), // set update date/time (now)
         }
     }
 
@@ -330,7 +331,7 @@ pub struct UpdateCotonoma<'a> {
     uuid: &'a Id<Cotonoma>,
     #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
     pub name: &'a str,
-    pub updated_at: &'a NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -390,7 +391,7 @@ impl Link {
         UpdateLink {
             uuid: &self.uuid,
             linking_phrase: self.linking_phrase.as_deref(),
-            updated_at: &self.updated_at,
+            updated_at: Utc::now().naive_utc(), // set update date/time (now)
         }
     }
 
@@ -452,5 +453,5 @@ pub struct UpdateLink<'a> {
     uuid: &'a Id<Link>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     pub linking_phrase: Option<&'a str>,
-    pub updated_at: &'a NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }

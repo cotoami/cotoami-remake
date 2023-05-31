@@ -107,7 +107,7 @@ impl Node {
             name: &self.name,
             root_cotonoma_id: self.root_cotonoma_id.as_ref(),
             owner_password_hash: self.owner_password_hash.as_deref(),
-            version: self.version + 1,
+            version: self.version + 1, // increment the version
         }
     }
 
