@@ -21,7 +21,7 @@ pub fn get(number: i64) -> impl ReadOperation<Option<ChangelogEntry>> {
     })
 }
 
-pub fn get_last_change_number<'a>(node_id: &'a Id<Node>) -> impl ReadOperation<Option<i64>> + 'a {
+pub fn get_last_change_number(node_id: &Id<Node>) -> impl ReadOperation<Option<i64>> + '_ {
     use crate::schema::changelog::dsl::*;
     use diesel::dsl::max;
     read_op(move |conn| {
@@ -76,7 +76,7 @@ pub fn import_change<'a>(
     })
 }
 
-fn apply_change<'a>(change: &'a Change) -> impl Operation<WritableConnection, ()> + 'a {
+fn apply_change(change: &Change) -> impl Operation<WritableConnection, ()> + '_ {
     composite_op::<WritableConnection, _, _>(move |ctx| {
         // match change {
         //     Change::None => (),

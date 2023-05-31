@@ -72,7 +72,7 @@ pub fn update<'a>(
     })
 }
 
-pub fn delete<'a>(cotonoma_id: &'a Id<Cotonoma>) -> impl Operation<WritableConnection, ()> + 'a {
+pub fn delete(cotonoma_id: &Id<Cotonoma>) -> impl Operation<WritableConnection, ()> + '_ {
     use crate::schema::cotonomas::dsl::*;
     write_op(move |conn| {
         diesel::delete(cotonomas.find(cotonoma_id)).execute(conn.deref_mut())?;
