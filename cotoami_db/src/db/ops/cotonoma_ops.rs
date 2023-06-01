@@ -87,21 +87,20 @@ pub fn rename<'a>(
     name: &'a str,
 ) -> impl Operation<WritableConnection, Option<(Cotonoma, Coto)>> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
-        match get(cotonoma_id).run(ctx)? {
-            None => Ok(None),
-            Some((cotonoma, coto)) => {
-                // Update coto
-                let mut update_coto = coto.to_update();
-                update_coto.summary = Some(name);
-                let updated_coto = coto_ops::update(&update_coto).run(ctx)?;
+        if let Some((cotonoma, coto)) = get(cotonoma_id).run(ctx)? {
+            // Update coto
+            let mut coto = coto.to_update();
+            coto.summary = Some(name);
+            let updated_coto = coto_ops::update(&coto).run(ctx)?;
 
-                // Update cotonoma
-                let mut update_cotonoma = cotonoma.to_update();
-                update_cotonoma.name = name;
-                let updated_cotonoma = update(&update_cotonoma).run(ctx)?;
+            // Update cotonoma
+            let mut cotonoma = cotonoma.to_update();
+            cotonoma.name = name;
+            let updated_cotonoma = update(&cotonoma).run(ctx)?;
 
-                Ok(Some((updated_cotonoma, updated_coto)))
-            }
+            Ok(Some((updated_cotonoma, updated_coto)))
+        } else {
+            Ok(None)
         }
     })
 }
