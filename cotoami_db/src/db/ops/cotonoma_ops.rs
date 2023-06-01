@@ -5,7 +5,6 @@ use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma};
 use crate::models::node::Node;
 use crate::models::Id;
-use chrono::offset::Utc;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use std::ops::DerefMut;
@@ -90,7 +89,7 @@ pub fn rename<'a>(
     updated_at: Option<NaiveDateTime>,
 ) -> impl Operation<WritableConnection, Option<(Cotonoma, Coto)>> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
-        let updated_at = updated_at.unwrap_or(Utc::now().naive_utc());
+        let updated_at = updated_at.unwrap_or(crate::current_datetime());
         if let Some((cotonoma, coto)) = get(cotonoma_id).run(ctx)? {
             // Update coto
             let mut coto = coto.to_update();

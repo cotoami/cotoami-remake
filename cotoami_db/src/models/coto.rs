@@ -11,7 +11,6 @@ use super::node::Node;
 use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
 use anyhow::Result;
-use chrono::offset::Utc;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use std::fmt::Display;
@@ -105,7 +104,7 @@ impl Coto {
             is_cotonoma: self.is_cotonoma,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
-            updated_at: Utc::now().naive_utc(), // set update date/time (now)
+            updated_at: crate::current_datetime(),
         }
     }
 
@@ -281,7 +280,7 @@ impl Cotonoma {
         UpdateCotonoma {
             uuid: &self.uuid,
             name: &self.name,
-            updated_at: Utc::now().naive_utc(), // set update date/time (now)
+            updated_at: crate::current_datetime(),
         }
     }
 
@@ -391,7 +390,7 @@ impl Link {
         UpdateLink {
             uuid: &self.uuid,
             linking_phrase: self.linking_phrase.as_deref(),
-            updated_at: Utc::now().naive_utc(), // set update date/time (now)
+            updated_at: crate::current_datetime(),
         }
     }
 
