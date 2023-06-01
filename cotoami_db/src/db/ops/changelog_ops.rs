@@ -4,7 +4,6 @@ use super::{coto_ops, cotonoma_ops, link_ops};
 use crate::db::error::DatabaseError;
 use crate::db::op::*;
 use crate::models::changelog::{Change, ChangelogEntry, NewChangelogEntry};
-use crate::models::coto::UpdateCoto;
 use crate::models::node::Node;
 use crate::models::Id;
 use diesel::prelude::*;
@@ -121,8 +120,9 @@ fn apply_change(change: &Change) -> impl Operation<WritableConnection, ()> + '_ 
             Change::UpdateLink {
                 uuid,
                 linking_phrase,
+                updated_at,
             } => {
-                // TODO
+                link_ops::update_linking_phrase(uuid, linking_phrase.as_deref(), Some(*updated_at));
             }
             Change::DeleteLink(id) => {
                 link_ops::delete(id).run(ctx)?;

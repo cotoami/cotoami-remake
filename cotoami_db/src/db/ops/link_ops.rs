@@ -3,6 +3,7 @@
 use crate::db::op::*;
 use crate::models::coto::{Link, NewLink, UpdateLink};
 use crate::models::Id;
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
@@ -43,5 +44,24 @@ pub fn delete(link_id: &Id<Link>) -> impl Operation<WritableConnection, ()> + '_
     write_op(move |conn| {
         diesel::delete(links.find(link_id)).execute(conn.deref_mut())?;
         Ok(())
+    })
+}
+
+pub fn update_linking_phrase<'a>(
+    link_id: &'a Id<Link>,
+    linking_phrase: Option<&'a str>,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConnection, Option<Link>> + 'a {
+    composite_op::<WritableConnection, _, _>(move |ctx| {
+        let updated_at = updated_at.unwrap_or(crate::current_datetime());
+        if let Some(link) = get(link_id).run(ctx)? {
+            let mut link = link.to_update();
+            link.linking_phrase = linking_phrase;
+            link.updated_at = updated_at;
+            let updated_link = update(&link).run(ctx)?;
+            Ok(Some(updated_link))
+        } else {
+            Ok(None)
+        }
     })
 }

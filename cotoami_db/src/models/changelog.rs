@@ -106,6 +106,7 @@ pub enum Change {
     UpdateLink {
         uuid: Id<Link>,
         linking_phrase: Option<String>,
+        updated_at: NaiveDateTime,
     },
     DeleteLink(Id<Link>),
 }
