@@ -5,6 +5,7 @@ use diesel::sqlite::SqliteConnection;
 use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
+use log::info;
 use op::WritableConnection;
 use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
@@ -26,7 +27,7 @@ pub struct Database {
     /// This URI should follow the spec described in the SQLite documentation.
     /// - https://www.sqlite.org/uri.html
     /// - https://www.sqlite.org/c3ref/open.html
-    uri: String,
+    file_uri: String,
 
     /// A SqliteConnection for both read and write operations
     ///
@@ -39,6 +40,29 @@ impl Database {
     const DATABASE_FILE_NAME: &'static str = "cotoami.db";
     const SQLITE_BUSY_TIMEOUT: Duration = Duration::from_millis(10_000);
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
+    pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Self> {
+        let root_dir = root_dir.as_ref().canonicalize()?;
+        if !root_dir.is_dir() {
+            return Err(DatabaseError::InvalidRootDir(root_dir))?;
+        }
+
+        let file_uri = Self::to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
+        let rw_conn = Self::create_rw_conn(&file_uri)?;
+
+        let db = Self {
+            root_dir,
+            file_uri,
+            rw_conn: Mutex::new(rw_conn),
+        };
+        db.run_migrations()?;
+
+        info!("Database launched:");
+        info!("  root_dir: {}", db.root_dir.display());
+        info!("  file_uri: {}", db.file_uri);
+
+        Ok(db)
+    }
 
     pub fn create_session<'a>(&'a self) -> Result<DatabaseSession<'a>> {
         Ok(DatabaseSession {
@@ -76,7 +100,7 @@ impl Database {
     }
 
     fn run_migrations(&self) -> Result<()> {
-        let mut conn = SqliteConnection::establish(&self.uri)?;
+        let mut conn = SqliteConnection::establish(&self.file_uri)?;
         conn.run_pending_migrations(Self::MIGRATIONS).unwrap();
         Ok(())
     }
@@ -86,7 +110,7 @@ impl Database {
     }
 
     fn get_ro_conn(&self) -> Result<SqliteConnection> {
-        let database_uri = format!("{}?mode=ro&_txlock=deferred", &self.uri);
+        let database_uri = format!("{}?mode=ro&_txlock=deferred", &self.file_uri);
         let ro_conn = SqliteConnection::establish(&database_uri)?;
         Ok(ro_conn)
     }
