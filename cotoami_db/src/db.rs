@@ -1,5 +1,6 @@
 //! Database operations and transactions
 
+use crate::models::node::Node;
 use anyhow::Result;
 use diesel::sqlite::SqliteConnection;
 use diesel::Connection;
@@ -11,6 +12,8 @@ use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use url::Url;
+
+use self::ops::node_ops;
 
 pub mod error;
 pub mod op;
@@ -60,6 +63,7 @@ impl Database {
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
         info!("  file_uri: {}", db.file_uri);
+        info!("  node: {:?}", db.create_session()?.as_node());
 
         Ok(db)
     }
@@ -121,4 +125,8 @@ pub struct DatabaseSession<'a> {
     ro_conn: SqliteConnection,
 }
 
-impl<'a> DatabaseSession<'a> {}
+impl<'a> DatabaseSession<'a> {
+    pub fn as_node(&mut self) -> Result<Option<Node>> {
+        op::run(&mut self.ro_conn, node_ops::get_self())
+    }
+}
