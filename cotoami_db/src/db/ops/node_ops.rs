@@ -28,6 +28,17 @@ pub fn get(node_id: &Id<Node>) -> impl ReadOperation<Option<Node>> + '_ {
     })
 }
 
+pub fn get_self() -> impl ReadOperation<Option<Node>> {
+    use crate::schema::nodes::dsl::*;
+    read_op(move |conn| {
+        nodes
+            .filter(rowid.eq(Node::ROWID_FOR_SELF))
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConnection, Node> + 'a {
     use crate::schema::nodes::dsl::*;
     write_op(move |conn| {
