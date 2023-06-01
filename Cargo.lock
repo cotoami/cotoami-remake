@@ -422,6 +422,7 @@ dependencies = [
  "identicon-rs",
  "indoc",
  "libsqlite3-sys",
+ "parking_lot",
  "petgraph",
  "rmp-serde",
  "serde",
