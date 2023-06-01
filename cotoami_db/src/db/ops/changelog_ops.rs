@@ -1,6 +1,6 @@
 //! Changelog related operations
 
-use super::coto_ops;
+use super::{coto_ops, cotonoma_ops, link_ops};
 use crate::db::error::DatabaseError;
 use crate::db::op::*;
 use crate::models::changelog::{Change, ChangelogEntry, NewChangelogEntry};
@@ -78,31 +78,52 @@ pub fn import_change<'a>(
 
 fn apply_change(change: &Change) -> impl Operation<WritableConnection, ()> + '_ {
     composite_op::<WritableConnection, _, _>(move |ctx| {
-        // match change {
-        //     Change::None => (),
-        //     Change::CreateCoto(coto) => {
-        //         let new_coto = coto.to_import();
-        //         coto_ops::insert_new(&new_coto).run(ctx)?;
-        //     }
-        //     Change::DeleteCoto(id) => {
-        //         coto_ops::delete(id).run(ctx)?;
-        //     }
-        //     Change::UpdateCoto {
-        //         uuid,
-        //         content,
-        //         summary,
-        //         updated_at,
-        //     } => {
-        //         let coto = coto_ops::get(uuid).run(ctx)?.unwrap();
-        //         let update_coto = UpdateCoto {
-        //             content: content.as_deref(),
-        //             summary: summary.as_deref(),
-        //             updated_at: &updated_at,
-        //             ..coto.to_update()
-        //         };
-        //         coto_ops::update(&update_coto).run(ctx)?;
-        //     }
-        // }
+        match change {
+            Change::None => (),
+            Change::CreateCoto(coto) => {
+                let new_coto = coto.to_import();
+                coto_ops::insert(&new_coto).run(ctx)?;
+            }
+            Change::DeleteCoto(id) => {
+                coto_ops::delete(id).run(ctx)?;
+            }
+            Change::UpdateCoto {
+                uuid,
+                content,
+                summary,
+                updated_at,
+            } => {
+                let coto = coto_ops::get(uuid).run(ctx)?.unwrap();
+                let mut update_coto = coto.to_update();
+                update_coto.content = content.as_deref();
+                update_coto.summary = summary.as_deref();
+                update_coto.updated_at = *updated_at;
+                coto_ops::update(&update_coto).run(ctx)?;
+            }
+            Change::CreateCotonoma(cotonoma, coto) => {
+                coto_ops::insert(&coto.to_import()).run(ctx)?;
+                cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
+            }
+            Change::RenameCotonoma { uuid, name } => {
+                cotonoma_ops::rename(uuid, name).run(ctx)?;
+            }
+            Change::DeleteCotonoma(id) => {
+                cotonoma_ops::delete(id).run(ctx)?;
+            }
+            Change::CreateLink(link) => {
+                let new_link = link.to_import();
+                link_ops::insert(&new_link).run(ctx)?;
+            }
+            Change::UpdateLink {
+                uuid,
+                linking_phrase,
+            } => {
+                // TODO
+            }
+            Change::DeleteLink(id) => {
+                link_ops::delete(id).run(ctx)?;
+            }
+        }
         Ok(())
     })
 }
