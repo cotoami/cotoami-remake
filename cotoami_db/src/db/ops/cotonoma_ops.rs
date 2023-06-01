@@ -5,6 +5,8 @@ use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma};
 use crate::models::node::Node;
 use crate::models::Id;
+use chrono::offset::Utc;
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
@@ -85,17 +87,21 @@ pub fn delete(cotonoma_id: &Id<Cotonoma>) -> impl Operation<WritableConnection, 
 pub fn rename<'a>(
     cotonoma_id: &'a Id<Cotonoma>,
     name: &'a str,
+    updated_at: Option<NaiveDateTime>,
 ) -> impl Operation<WritableConnection, Option<(Cotonoma, Coto)>> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
+        let updated_at = updated_at.unwrap_or(Utc::now().naive_utc());
         if let Some((cotonoma, coto)) = get(cotonoma_id).run(ctx)? {
             // Update coto
             let mut coto = coto.to_update();
             coto.summary = Some(name);
+            coto.updated_at = updated_at;
             let updated_coto = coto_ops::update(&coto).run(ctx)?;
 
             // Update cotonoma
             let mut cotonoma = cotonoma.to_update();
             cotonoma.name = name;
+            cotonoma.updated_at = updated_at;
             let updated_cotonoma = update(&cotonoma).run(ctx)?;
 
             Ok(Some((updated_cotonoma, updated_coto)))

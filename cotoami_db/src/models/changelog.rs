@@ -99,6 +99,7 @@ pub enum Change {
     RenameCotonoma {
         uuid: Id<Cotonoma>,
         name: String,
+        updated_at: NaiveDateTime,
     },
     DeleteCotonoma(Id<Cotonoma>),
     CreateLink(Link),

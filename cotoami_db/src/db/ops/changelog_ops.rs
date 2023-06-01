@@ -104,8 +104,12 @@ fn apply_change(change: &Change) -> impl Operation<WritableConnection, ()> + '_ 
                 coto_ops::insert(&coto.to_import()).run(ctx)?;
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             }
-            Change::RenameCotonoma { uuid, name } => {
-                cotonoma_ops::rename(uuid, name).run(ctx)?;
+            Change::RenameCotonoma {
+                uuid,
+                name,
+                updated_at,
+            } => {
+                cotonoma_ops::rename(uuid, name, Some(*updated_at)).run(ctx)?;
             }
             Change::DeleteCotonoma(id) => {
                 cotonoma_ops::delete(id).run(ctx)?;
