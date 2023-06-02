@@ -155,33 +155,21 @@ pub struct NewNode<'a> {
 }
 
 impl<'a> NewNode<'a> {
-    /// Create a desktop node that represents **this** database.
-    pub fn new_desktop(name: &'a str) -> Result<Self> {
+    /// Create a node that represents **this** database.
+    pub fn new(name: &'a str, password: Option<&'a str>) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
-        let new_node = Self {
-            uuid,
-            rowid: Node::ROWID_FOR_SELF,
-            icon: icon_binary,
-            name,
-            owner_password_hash: None,
-            version: 1,
+        let password_hash = if let Some(p) = password {
+            Some(hash_password(p.as_bytes())?)
+        } else {
+            None
         };
-        new_node.validate()?;
-        Ok(new_node)
-    }
-
-    /// Create a server node that represents **this** database.
-    pub fn new_server(name: &'a str, password: &'a str) -> Result<Self> {
-        let uuid = Id::generate();
-        let icon_binary = generate_identicon(&uuid.to_string())?;
-        let password_hash = hash_password(password.as_bytes())?;
         let new_node = Self {
             uuid,
             rowid: Node::ROWID_FOR_SELF,
             icon: icon_binary,
             name,
-            owner_password_hash: Some(password_hash),
+            owner_password_hash: password_hash,
             version: 1,
         };
         new_node.validate()?;
