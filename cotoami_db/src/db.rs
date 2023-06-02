@@ -80,7 +80,7 @@ impl Database {
         sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
         sqlite::enable_wal(&mut rw_conn)?;
         sqlite::set_busy_timeout(&mut rw_conn, Self::SQLITE_BUSY_TIMEOUT)?;
-        Ok(WritableConnection(rw_conn))
+        Ok(WritableConnection::new(rw_conn))
     }
 
     fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {

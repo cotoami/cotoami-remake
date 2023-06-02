@@ -1,33 +1,39 @@
 //! Framework of composable database operations
 
 use anyhow::Result;
+use derive_new::new;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::sqlite::SqliteConnection;
 use std::ops::{Deref, DerefMut};
 
+/// A runnable unit of database operation
 pub trait Operation<Conn, T> {
+    /// Runs this operation with a `Context`
     fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
 }
 
+/// A `Context` is practically a database connection needed to run an `Operation`.
+///
+/// It doesn't have public constructors so that a client of this module has to use
+/// the functions such as `run` or `run_in_transaction` in this module to invoke an Operation.
 pub struct Context<'a, Conn: 'a> {
     conn: &'a mut Conn,
 }
 
-// TODO: why do I have to delare two lifetime parameters here?
-impl<'a, 'b, Conn> Context<'b, Conn> {
-    // private constructor
-    fn new(conn: &'b mut Conn) -> Self {
+impl<'a, Conn> Context<'a, Conn> {
+    /// Private constructor
+    fn new(conn: &'a mut Conn) -> Self {
         Context { conn }
     }
 
-    pub fn conn(&'a mut self) -> &'a mut Conn {
+    pub fn conn(&mut self) -> &mut Conn {
         self.conn
     }
 }
 
-//
+/////////////////////////////////////////////////////////////////////////////
 // Composite Operation
-//
+/////////////////////////////////////////////////////////////////////////////
 
 pub struct CompositeOp<F> {
     f: F,
@@ -49,42 +55,12 @@ where
     CompositeOp { f }
 }
 
-//
-// Read Operation
-//
-
-pub struct ReadOp<F> {
-    f: F,
-}
-
-impl<T, F> Operation<SqliteConnection, T> for ReadOp<F>
-where
-    F: Fn(&mut SqliteConnection) -> Result<T>,
-{
-    fn run(&self, ctx: &mut Context<'_, SqliteConnection>) -> Result<T> {
-        (self.f)(ctx.conn())
-    }
-}
-
-pub fn read_op<T, F>(f: F) -> ReadOp<F>
-where
-    F: Fn(&mut SqliteConnection) -> Result<T>,
-{
-    ReadOp { f }
-}
-
-pub fn run<Op, T>(conn: &mut SqliteConnection, op: Op) -> Result<T>
-where
-    Op: Operation<SqliteConnection, T>,
-{
-    op.run(&mut Context::new(conn))
-}
-
-//
+/////////////////////////////////////////////////////////////////////////////
 // WritableConnection
-//
+/////////////////////////////////////////////////////////////////////////////
 
-pub struct WritableConnection(pub SqliteConnection);
+#[derive(new)]
+pub struct WritableConnection(SqliteConnection);
 
 impl Deref for WritableConnection {
     type Target = SqliteConnection;
@@ -101,6 +77,16 @@ impl DerefMut for WritableConnection {
 }
 
 impl WritableConnection {
+    // Copying and pasting the functions from `diesel::sqlite::SqliteConnection` as a workaround
+    // for the following issue:
+
+    // It is not possible to use `immediate_transaction` of the inner connection because it will
+    // cause mutable borrowing twice in one call.
+
+    /// Runs a transaction with `BEGIN IMMEDIATE`
+    ///
+    /// Same implementation as `diesel::sqlite::SqliteConnection`:
+    /// <https://github.com/diesel-rs/diesel/blob/v2.1.0/diesel/src/sqlite/connection/mod.rs#L248-L254>
     pub fn immediate_transaction<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
@@ -109,6 +95,10 @@ impl WritableConnection {
         self.transaction_sql(f, "BEGIN IMMEDIATE")
     }
 
+    /// Runs `f` as a transaction activated by `sql`
+    ///
+    /// Same implementation as `diesel::sqlite::SqliteConnection`:
+    /// <https://github.com/diesel-rs/diesel/blob/v2.1.0/diesel/src/sqlite/connection/mod.rs#L285-L301>
     fn transaction_sql<T, E, F>(&mut self, f: F, sql: &str) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
@@ -125,6 +115,23 @@ impl WritableConnection {
                 Err(e)
             }
         }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Read Operation
+/////////////////////////////////////////////////////////////////////////////
+
+pub struct ReadOp<F> {
+    f: F,
+}
+
+impl<T, F> Operation<SqliteConnection, T> for ReadOp<F>
+where
+    F: Fn(&mut SqliteConnection) -> Result<T>,
+{
+    fn run(&self, ctx: &mut Context<'_, SqliteConnection>) -> Result<T> {
+        (self.f)(ctx.conn())
     }
 }
 
@@ -146,9 +153,23 @@ pub trait ReadOperation<T>:
 
 impl<T, F> ReadOperation<T> for ReadOp<F> where F: Fn(&mut SqliteConnection) -> Result<T> {}
 
-//
+pub fn read_op<T, F>(f: F) -> ReadOp<F>
+where
+    F: Fn(&mut SqliteConnection) -> Result<T>,
+{
+    ReadOp { f }
+}
+
+pub fn run<Op, T>(conn: &mut SqliteConnection, op: Op) -> Result<T>
+where
+    Op: Operation<SqliteConnection, T>,
+{
+    op.run(&mut Context::new(conn))
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Write Operation
-//
+/////////////////////////////////////////////////////////////////////////////
 
 pub struct WriteOp<F> {
     f: F,
