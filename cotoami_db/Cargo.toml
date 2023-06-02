@@ -33,3 +33,7 @@ diesel_migrations = {version = "2.0.0", features = ["sqlite"]}
 # SQLite version is 3.41.2
 # https://github.com/rusqlite/rusqlite/blob/v0.29.0/libsqlite3-sys/sqlite3/bindgen_bundled_version.rs#L3
 libsqlite3-sys = {version = "0.26.0", features = ["bundled"]}
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+tempfile = "3"
