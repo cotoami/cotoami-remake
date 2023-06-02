@@ -28,8 +28,8 @@ pub struct Database {
     /// Database file URI
     ///
     /// This URI should follow the spec described in the SQLite documentation.
-    /// - https://www.sqlite.org/uri.html
-    /// - https://www.sqlite.org/c3ref/open.html
+    /// - <https://www.sqlite.org/uri.html>
+    /// - <https://www.sqlite.org/c3ref/open.html>
     file_uri: String,
 
     /// A SqliteConnection for both read and write operations
