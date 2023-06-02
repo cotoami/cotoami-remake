@@ -15,7 +15,7 @@ pub trait Operation<Conn, T> {
 /// A `Context` is practically a database connection needed to run an `Operation`.
 ///
 /// It doesn't have public constructors so that a client of this module has to use
-/// the functions such as `run` or `run_in_transaction` in this module to invoke an Operation.
+/// the functions such as `run` or `run_in_transaction` in this module to invoke an `Operation`.
 pub struct Context<'a, Conn: 'a> {
     conn: &'a mut Conn,
 }
