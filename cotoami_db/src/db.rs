@@ -68,7 +68,7 @@ impl Database {
         Ok(db)
     }
 
-    pub fn create_session<'a>(&'a self) -> Result<DatabaseSession<'a>> {
+    pub fn create_session(&self) -> Result<DatabaseSession<'_>> {
         Ok(DatabaseSession {
             get_rw_conn: Box::new(move || self.get_rw_conn()),
             ro_conn: self.get_ro_conn()?,
@@ -109,7 +109,7 @@ impl Database {
         Ok(())
     }
 
-    fn get_rw_conn<'a>(&'a self) -> MutexGuard<'a, WritableConnection> {
+    fn get_rw_conn(&self) -> MutexGuard<'_, WritableConnection> {
         self.rw_conn.lock()
     }
 
