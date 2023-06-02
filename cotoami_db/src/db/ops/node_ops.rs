@@ -49,6 +49,15 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConnectio
     })
 }
 
+pub fn create_self<'a>(
+    name: &'a str,
+    password: Option<&'a str>,
+) -> impl Operation<WritableConnection, Node> + 'a {
+    composite_op::<WritableConnection, _, _>(move |ctx| {
+        insert(&NewNode::new(name, password)?).run(ctx)
+    })
+}
+
 pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConnection, Node> + 'a {
     write_op(move |conn| {
         update_node.validate()?;

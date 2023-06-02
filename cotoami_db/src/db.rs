@@ -129,4 +129,9 @@ impl<'a> DatabaseSession<'a> {
     pub fn as_node(&mut self) -> Result<Option<Node>> {
         op::run(&mut self.ro_conn, node_ops::get_self())
     }
+
+    pub fn init_as_node(&mut self, name: &'a str, password: Option<&'a str>) -> Result<Node> {
+        let op = node_ops::create_self(name, password);
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+    }
 }
