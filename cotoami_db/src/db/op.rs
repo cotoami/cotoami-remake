@@ -48,6 +48,7 @@ where
     }
 }
 
+/// Defines a composite operation sharing a single `Context`
 pub fn composite_op<Conn, F, T>(f: F) -> CompositeOp<F>
 where
     F: Fn(&mut Context<'_, Conn>) -> Result<T>,
@@ -153,6 +154,7 @@ pub trait ReadOperation<T>:
 
 impl<T, F> ReadOperation<T> for ReadOp<F> where F: Fn(&mut SqliteConnection) -> Result<T> {}
 
+/// Defines a read-only operation using a raw `SqliteConnection`
 pub fn read_op<T, F>(f: F) -> ReadOp<F>
 where
     F: Fn(&mut SqliteConnection) -> Result<T>,
@@ -160,6 +162,7 @@ where
     ReadOp { f }
 }
 
+/// Runs a read-only operation
 pub fn run<Op, T>(conn: &mut SqliteConnection, op: Op) -> Result<T>
 where
     Op: Operation<SqliteConnection, T>,
@@ -184,6 +187,7 @@ where
     }
 }
 
+/// Defines a read/write operation using a `WritableConnection`
 pub fn write_op<T, F>(f: F) -> WriteOp<F>
 where
     F: Fn(&mut WritableConnection) -> Result<T>,
@@ -191,6 +195,7 @@ where
     WriteOp { f }
 }
 
+/// Runs a read/write operation in a transaction
 pub fn run_in_transaction<Op, T>(conn: &mut WritableConnection, op: Op) -> Result<T>
 where
     Op: Operation<WritableConnection, T>,
