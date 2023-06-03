@@ -177,8 +177,17 @@ impl<'a> NewNode<'a> {
     }
 }
 
-fn generate_identicon(name: &str) -> Result<Vec<u8>> {
-    let icon_binary = Identicon::new(name).export_png_data()?;
+/// Generates a new identicon from an input value.
+///
+/// The defaults are:
+/// - border: 50
+/// - size: 5
+/// - scale: 500
+/// - background_color: (240, 240, 240)
+/// - mirrored: true
+/// <https://github.com/conways-glider/identicon-rs/blob/main/src/lib.rs#L54>
+fn generate_identicon(id: &str) -> Result<Vec<u8>> {
+    let icon_binary = Identicon::new(id).export_png_data()?;
     Ok(icon_binary)
 }
 

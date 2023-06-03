@@ -427,6 +427,7 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "identicon-rs",
+ "image",
  "indoc",
  "libsqlite3-sys",
  "log",

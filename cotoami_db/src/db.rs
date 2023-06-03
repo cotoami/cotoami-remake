@@ -1,6 +1,7 @@
 //! Database operations and transactions
 
 use crate::models::node::Node;
+use crate::models::Id;
 use anyhow::Result;
 use diesel::sqlite::SqliteConnection;
 use diesel::Connection;
@@ -8,12 +9,11 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
 use log::info;
 use op::WritableConnection;
+use ops::node_ops;
 use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use url::Url;
-
-use self::ops::node_ops;
 
 pub mod error;
 pub mod op;
@@ -133,5 +133,13 @@ impl<'a> DatabaseSession<'a> {
     pub fn init_as_node(&mut self, name: &'a str, password: Option<&'a str>) -> Result<Node> {
         let op = node_ops::create_self(name, password);
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+    }
+
+    pub fn all_nodes(&mut self) -> Result<Vec<Node>> {
+        op::run(&mut self.ro_conn, node_ops::all())
+    }
+
+    pub fn get_node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
+        op::run(&mut self.ro_conn, node_ops::get(node_id))
     }
 }
