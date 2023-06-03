@@ -1,4 +1,10 @@
 //! Framework of composable database operations
+//!
+//! The main purpose of this module is to separate the responsibilities of database
+//! operation into two phases: defining the content of an operation and
+//! running it (as a transaction). With this separation, we can reuse and combine
+//! operations without worrying about a unit of transaction, which can be decided
+//! afterwards safely thanks to the types.
 
 use anyhow::Result;
 use derive_new::new;
@@ -14,8 +20,8 @@ pub trait Operation<Conn, T> {
 
 /// A `Context` is practically a database connection needed to run an [Operation].
 ///
-/// It doesn't have public constructors so that a client of this module has to use
-/// the functions such as `run` or `run_in_transaction` in this module to invoke an [Operation].
+/// Since it doesn't have public constructors, a client of this module has to use
+/// the functions such as [run()] or [run_in_transaction()] to invoke an [Operation].
 pub struct Context<'a, Conn: 'a> {
     conn: &'a mut Conn,
 }
