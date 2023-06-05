@@ -8,12 +8,14 @@ use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
 use log::info;
-use op::WritableConnection;
+use op::{composite_op, Operation, WritableConnection};
 use ops::node_ops;
 use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use url::Url;
+
+use self::ops::cotonoma_ops;
 
 pub mod error;
 pub mod op;
@@ -130,8 +132,20 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::get_self())
     }
 
+    pub fn init_as_empty_node(&mut self, password: Option<&'a str>) -> Result<Node> {
+        let op = node_ops::create_self("", password);
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+    }
+
     pub fn init_as_node(&mut self, name: &'a str, password: Option<&'a str>) -> Result<Node> {
-        let op = node_ops::create_self(name, password);
+        let op = composite_op::<WritableConnection, _, _>(move |ctx| {
+            let node = node_ops::create_self(name, password).run(ctx)?;
+            let (cotonoma, _) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
+            let mut update_node = node.to_update();
+            update_node.root_cotonoma_id = Some(&cotonoma.uuid);
+            let node = node_ops::update(&update_node).run(ctx)?;
+            Ok(node)
+        });
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 

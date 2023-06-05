@@ -21,14 +21,14 @@ fn default_state() -> Result<()> {
 }
 
 #[test]
-fn init_as_node() -> Result<()> {
+fn init_as_empty_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
     let mut session = db.create_session()?;
 
     // when
-    let node = session.init_as_node("My Database", None)?;
+    let node = session.init_as_empty_node(None)?;
 
     // then
     assert_matches!(
@@ -40,7 +40,7 @@ fn init_as_node() -> Result<()> {
             owner_password_hash: None,
             version: 1,
             ..
-        } if name == "My Database"
+        } if name == ""
     );
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
