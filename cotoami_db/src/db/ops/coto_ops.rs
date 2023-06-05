@@ -1,7 +1,7 @@
 //! Coto related operations
 
 use crate::db::op::*;
-use crate::models::coto::{Coto, NewCoto, UpdateCoto};
+use crate::models::coto::{Coto, Cotonoma, NewCoto, UpdateCoto};
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
@@ -14,6 +14,20 @@ pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
             .find(coto_id)
             .first(conn)
             .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn list(posted_in_id: Option<&Id<Cotonoma>>) -> impl ReadOperation<Vec<Coto>> + '_ {
+    use crate::schema::cotos;
+    read_op(move |conn| {
+        let mut query = cotos::table.into_boxed();
+        if let Some(p) = posted_in_id {
+            query = query.filter(cotos::posted_in_id.eq(p));
+        }
+        query
+            .order(cotos::created_at.desc())
+            .load::<Coto>(conn)
             .map_err(anyhow::Error::from)
     })
 }
