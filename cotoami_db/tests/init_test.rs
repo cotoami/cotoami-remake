@@ -73,3 +73,19 @@ fn duplicate_node() -> Result<()> {
     );
     Ok(())
 }
+
+#[test]
+fn owner_password() -> Result<()> {
+    // setup
+    let root_dir = tempdir()?;
+    let db = Database::new(&root_dir)?;
+    let mut session = db.create_session()?;
+
+    // when
+    let node = session.init_as_empty_node(Some("foo"))?;
+
+    // then
+    assert!(node.verify_owner_password("foo").is_ok());
+    assert!(node.verify_owner_password("bar").is_err());
+    Ok(())
+}
