@@ -54,3 +54,22 @@ fn init_as_empty_node() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn duplicate_node() -> Result<()> {
+    // setup
+    let root_dir = tempdir()?;
+    let db = Database::new(&root_dir)?;
+    let mut session = db.create_session()?;
+    session.init_as_empty_node(None)?;
+
+    // when
+    let result = session.init_as_empty_node(None);
+
+    // then
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "UNIQUE constraint failed: nodes.rowid"
+    );
+    Ok(())
+}
