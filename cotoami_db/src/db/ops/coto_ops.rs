@@ -1,5 +1,6 @@
 //! Coto related operations
 
+use super::Paginated;
 use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, UpdateCoto};
 use crate::models::Id;
@@ -18,17 +19,20 @@ pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     })
 }
 
-pub fn list(posted_in_id: Option<&Id<Cotonoma>>) -> impl ReadOperation<Vec<Coto>> + '_ {
+pub fn list(
+    posted_in_id: Option<&Id<Cotonoma>>,
+    page_size: i64,
+    page_index: i64,
+) -> impl ReadOperation<Paginated<Coto>> + '_ {
     use crate::schema::cotos;
     read_op(move |conn| {
-        let mut query = cotos::table.into_boxed();
-        if let Some(p) = posted_in_id {
-            query = query.filter(cotos::posted_in_id.eq(p));
-        }
-        query
-            .order(cotos::created_at.desc())
-            .load::<Coto>(conn)
-            .map_err(anyhow::Error::from)
+        super::paginate(conn, page_size, page_index, || {
+            let mut query = cotos::table.into_boxed();
+            if let Some(p) = posted_in_id {
+                query = query.filter(cotos::posted_in_id.eq(p));
+            }
+            query.order(cotos::created_at.desc())
+        })
     })
 }
 
