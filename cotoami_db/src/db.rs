@@ -65,7 +65,7 @@ impl Database {
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
         info!("  file_uri: {}", db.file_uri);
-        info!("  node: {:?}", db.create_session()?.as_node());
+        info!("  node: {:?}", db.create_session()?.as_node()?);
 
         Ok(db)
     }
