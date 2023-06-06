@@ -39,6 +39,9 @@ pub struct Database {
     /// To avoid handling possible SQLITE_BUSY on concurrent writes,
     /// it keeps hold of a single read-write connection in the process.
     rw_conn: Mutex<WritableConnection>,
+
+    /// Globally shared information
+    globals: Mutex<Globals>,
 }
 
 impl Database {
@@ -59,21 +62,26 @@ impl Database {
             root_dir,
             file_uri,
             rw_conn: Mutex::new(rw_conn),
+            globals: Mutex::new(Globals::default()),
         };
         db.run_migrations()?;
+
+        let node = db.create_session()?.as_node()?;
+        db.globals.lock().node_id = node.map(|n| n.uuid);
 
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
         info!("  file_uri: {}", db.file_uri);
-        info!("  node: {:?}", db.create_session()?.as_node()?);
+        info!("  globals: {:?}", db.globals.lock());
 
         Ok(db)
     }
 
     pub fn create_session(&self) -> Result<DatabaseSession<'_>> {
         Ok(DatabaseSession {
-            get_rw_conn: Box::new(move || self.get_rw_conn()),
-            ro_conn: self.get_ro_conn()?,
+            ro_conn: self.create_ro_conn()?,
+            get_rw_conn: Box::new(move || self.rw_conn.lock()),
+            get_globals: Box::new(move || self.globals.lock()),
         })
     }
 
@@ -111,20 +119,24 @@ impl Database {
         Ok(())
     }
 
-    fn get_rw_conn(&self) -> MutexGuard<'_, WritableConnection> {
-        self.rw_conn.lock()
-    }
-
-    fn get_ro_conn(&self) -> Result<SqliteConnection> {
+    fn create_ro_conn(&self) -> Result<SqliteConnection> {
         let database_uri = format!("{}?mode=ro&_txlock=deferred", &self.file_uri);
         let ro_conn = SqliteConnection::establish(&database_uri)?;
         Ok(ro_conn)
     }
 }
 
+/// Global information shared among sessions in a database
+#[derive(Debug, Default)]
+struct Globals {
+    /// ID of this node
+    node_id: Option<Id<Node>>,
+}
+
 pub struct DatabaseSession<'a> {
-    get_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConnection> + 'a>,
     ro_conn: SqliteConnection,
+    get_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConnection> + 'a>,
+    get_globals: Box<dyn Fn() -> MutexGuard<'a, Globals> + 'a>,
 }
 
 impl<'a> DatabaseSession<'a> {
@@ -134,7 +146,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn init_as_empty_node(&mut self, password: Option<&'a str>) -> Result<Node> {
         let op = node_ops::create_self("", password);
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
+            (self.get_globals)().node_id = Some(node.uuid);
+            node
+        })
     }
 
     pub fn init_as_node(&mut self, name: &'a str, password: Option<&'a str>) -> Result<Node> {
@@ -146,7 +161,10 @@ impl<'a> DatabaseSession<'a> {
             let node = node_ops::update(&update_node).run(ctx)?;
             Ok(node)
         });
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
+            (self.get_globals)().node_id = Some(node.uuid);
+            node
+        })
     }
 
     pub fn all_nodes(&mut self) -> Result<Vec<Node>> {
