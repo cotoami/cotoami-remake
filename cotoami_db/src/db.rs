@@ -1,15 +1,16 @@
 //! Database operations and transactions
 
+use crate::models::coto::{Coto, Cotonoma, NewCoto};
 use crate::models::node::Node;
 use crate::models::Id;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use diesel::sqlite::SqliteConnection;
 use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
 use log::info;
 use op::{composite_op, Operation, WritableConnection};
-use ops::node_ops;
+use ops::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -140,6 +141,10 @@ pub struct DatabaseSession<'a> {
 }
 
 impl<'a> DatabaseSession<'a> {
+    /////////////////////////////////////////////////////////////////////////////
+    // nodes
+    /////////////////////////////////////////////////////////////////////////////
+
     pub fn as_node(&mut self) -> Result<Option<Node>> {
         op::run(&mut self.ro_conn, node_ops::get_self())
     }
@@ -173,5 +178,28 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn get_node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
         op::run(&mut self.ro_conn, node_ops::get(node_id))
+    }
+
+    fn self_node_id(&self) -> Result<Id<Node>> {
+        (self.get_globals)()
+            .node_id
+            .ok_or(anyhow!("Self node row (rowid=1) has not yet been created."))
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // cotos
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn create_coto(
+        &mut self,
+        posted_in_id: &'a Id<Cotonoma>,
+        posted_by_id: &'a Id<Node>,
+        content: &'a str,
+        summary: Option<&'a str>,
+    ) -> Result<Coto> {
+        let node_id = self.self_node_id()?;
+        let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
+        let op = coto_ops::insert(&new_coto);
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 }
