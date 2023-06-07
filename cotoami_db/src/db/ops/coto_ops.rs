@@ -19,7 +19,7 @@ pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     })
 }
 
-pub fn list(
+pub fn recent(
     posted_in_id: Option<&Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,

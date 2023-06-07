@@ -218,4 +218,16 @@ impl<'a> DatabaseSession<'a> {
         });
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
+
+    pub fn recent_cotos(
+        &mut self,
+        posted_in_id: Option<&Id<Cotonoma>>,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Coto>> {
+        op::run(
+            &mut self.ro_conn,
+            coto_ops::recent(posted_in_id, page_size, page_index),
+        )
+    }
 }
