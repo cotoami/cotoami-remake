@@ -1,6 +1,7 @@
 //! Cotonoma related operations
 
 use super::coto_ops;
+use super::Paginated;
 use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma};
 use crate::models::node::Node;
@@ -20,6 +21,23 @@ pub fn get(cotonoma_id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, C
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn recent(
+    node_id: Option<&Id<Node>>,
+    page_size: i64,
+    page_index: i64,
+) -> impl ReadOperation<Paginated<Cotonoma>> + '_ {
+    use crate::schema::cotonomas;
+    read_op(move |conn| {
+        super::paginate(conn, page_size, page_index, || {
+            let mut query = cotonomas::table.into_boxed();
+            if let Some(n) = node_id {
+                query = query.filter(cotonomas::node_id.eq(n));
+            }
+            query.order(cotonomas::updated_at.desc())
+        })
     })
 }
 
