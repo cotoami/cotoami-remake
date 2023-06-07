@@ -3,6 +3,7 @@
 use super::Paginated;
 use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, UpdateCoto};
+use crate::models::node::Node;
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
@@ -19,17 +20,21 @@ pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     })
 }
 
-pub fn recent(
-    posted_in_id: Option<&Id<Cotonoma>>,
+pub fn recent<'a>(
+    node_id: Option<&'a Id<Node>>,
+    posted_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> impl ReadOperation<Paginated<Coto>> + '_ {
+) -> impl ReadOperation<Paginated<Coto>> + 'a {
     use crate::schema::cotos;
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let mut query = cotos::table.into_boxed();
-            if let Some(p) = posted_in_id {
-                query = query.filter(cotos::posted_in_id.eq(p));
+            if let Some(id) = node_id {
+                query = query.filter(cotos::node_id.eq(id));
+            }
+            if let Some(id) = posted_in_id {
+                query = query.filter(cotos::posted_in_id.eq(id));
             }
             query.order(cotos::created_at.desc())
         })

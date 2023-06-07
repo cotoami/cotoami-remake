@@ -33,8 +33,8 @@ pub fn recent(
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let mut query = cotonomas::table.into_boxed();
-            if let Some(n) = node_id {
-                query = query.filter(cotonomas::node_id.eq(n));
+            if let Some(id) = node_id {
+                query = query.filter(cotonomas::node_id.eq(id));
             }
             query.order(cotonomas::updated_at.desc())
         })
