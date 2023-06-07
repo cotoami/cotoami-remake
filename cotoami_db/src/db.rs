@@ -158,18 +158,28 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn init_as_node(&mut self, name: &'a str, password: Option<&'a str>) -> Result<Node> {
+    pub fn init_as_node(
+        &mut self,
+        name: &'a str,
+        password: Option<&'a str>,
+    ) -> Result<(Node, ChangelogEntry)> {
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
             let node = node_ops::create_self(name, password).run(ctx)?;
-            let (cotonoma, _) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
+
+            let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
+
             let mut update_node = node.to_update();
             update_node.root_cotonoma_id = Some(&cotonoma.uuid);
             let node = node_ops::update(&update_node).run(ctx)?;
-            Ok(node)
+
+            let change = Change::CreateCotonoma(cotonoma, coto);
+            let changelog = changelog_ops::log_change(&change).run(ctx)?;
+
+            Ok((node, changelog))
         });
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|(node, changelog)| {
             (self.get_globals)().node_id = Some(node.uuid);
-            node
+            (node, changelog)
         })
     }
 
