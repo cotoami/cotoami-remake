@@ -1,5 +1,6 @@
 //! Database operations and transactions
 
+use crate::models::changelog::{Change, ChangelogEntry};
 use crate::models::coto::{Coto, Cotonoma, NewCoto};
 use crate::models::node::Node;
 use crate::models::Id;
@@ -196,10 +197,15 @@ impl<'a> DatabaseSession<'a> {
         posted_by_id: &'a Id<Node>,
         content: &'a str,
         summary: Option<&'a str>,
-    ) -> Result<Coto> {
+    ) -> Result<(Coto, ChangelogEntry)> {
         let node_id = self.self_node_id()?;
         let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
-        let op = coto_ops::insert(&new_coto);
+        let op = composite_op::<WritableConnection, _, _>(move |ctx| {
+            let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
+            let change = Change::CreateCoto(inserted_coto.clone());
+            let changelog = changelog_ops::log_change(&change).run(ctx)?;
+            Ok((inserted_coto, changelog))
+        });
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 }
