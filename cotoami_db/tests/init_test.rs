@@ -1,6 +1,6 @@
 use anyhow::Result;
 use assert_matches::assert_matches;
-use cotoami_db::{Database, Node};
+use cotoami_db::{Change, ChangelogEntry, Coto, Cotonoma, Database, Node};
 use image::ImageFormat;
 use tempfile::tempdir;
 
@@ -42,12 +42,9 @@ fn init_as_empty_node() -> Result<()> {
             ..
         } if name == ""
     );
+    assert_icon_generated(&node)?;
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
-
-    let image = image::load_from_memory_with_format(&node.icon, ImageFormat::Png)?;
-    assert_eq!(image.width(), 600);
-    assert_eq!(image.height(), 600);
 
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node]);
@@ -87,5 +84,73 @@ fn owner_password() -> Result<()> {
     // then
     assert!(node.verify_owner_password("foo").is_ok());
     assert!(node.verify_owner_password("bar").is_err());
+    Ok(())
+}
+
+#[test]
+fn init_as_node() -> Result<()> {
+    // setup
+    let root_dir = tempdir()?;
+    let db = Database::new(&root_dir)?;
+    let mut session = db.create_session()?;
+
+    // when
+    let (node, changelog) = session.init_as_node("My Node", None)?;
+
+    // then
+    assert_matches!(
+        node,
+        Node {
+            rowid: 1,
+            ref name,
+            // root_cotonoma_id: None,
+            owner_password_hash: None,
+            version: 2,  // upgraded once with root_cotonoma_id
+            ..
+        } if name == "My Node"
+    );
+    assert_icon_generated(&node)?;
+    common::assert_approximately_now(&node.created_at());
+    common::assert_approximately_now(&node.inserted_at());
+
+    assert_matches!(
+        changelog,
+        ChangelogEntry {
+            serial_number: 1,
+            parent_node_id: None,
+            parent_serial_number: None,
+            change: Change::CreateCotonoma(
+                Cotonoma {
+                    node_id: cotonoma_node_id,
+                    ref name,
+                    ..
+                },
+                Coto {
+                    node_id: coto_node_id,
+                    posted_in_id: None,
+                    posted_by_id,
+                    content: None,
+                    summary: Some(ref summary),
+                    is_cotonoma: true,
+                    repost_of_id: None,
+                    reposted_in_ids: None,
+                    ..
+                }
+            ),
+            ..
+        } if cotonoma_node_id == node.uuid &&
+             name == "My Node" &&
+             coto_node_id == node.uuid &&
+             posted_by_id == node.uuid &&
+             summary == "My Node"
+    );
+
+    Ok(())
+}
+
+fn assert_icon_generated(node: &Node) -> Result<()> {
+    let image = image::load_from_memory_with_format(&node.icon, ImageFormat::Png)?;
+    assert_eq!(image.width(), 600);
+    assert_eq!(image.height(), 600);
     Ok(())
 }

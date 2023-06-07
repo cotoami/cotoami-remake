@@ -1,6 +1,8 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
 pub use db::{Database, DatabaseSession};
+pub use models::changelog::{Change, ChangelogEntry};
+pub use models::coto::{Coto, Cotonoma};
 pub use models::node::Node;
 pub use models::Id;
 
