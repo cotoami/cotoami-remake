@@ -150,7 +150,7 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::get_self())
     }
 
-    pub fn init_as_empty_node(&mut self, password: Option<&'a str>) -> Result<Node> {
+    pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<Node> {
         let op = node_ops::create_self("", password);
         op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
             (self.get_globals)().node_id = Some(node.uuid);
@@ -158,10 +158,10 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn init_as_node(
+    pub fn init_as_node<'b>(
         &mut self,
-        name: &'a str,
-        password: Option<&'a str>,
+        name: &'b str,
+        password: Option<&'b str>,
     ) -> Result<(Node, ChangelogEntry)> {
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
             let node = node_ops::create_self(name, password).run(ctx)?;
@@ -201,12 +201,12 @@ impl<'a> DatabaseSession<'a> {
     // cotos
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn create_coto(
+    pub fn create_coto<'b>(
         &mut self,
-        posted_in_id: &'a Id<Cotonoma>,
-        posted_by_id: &'a Id<Node>,
-        content: &'a str,
-        summary: Option<&'a str>,
+        posted_in_id: &'b Id<Cotonoma>,
+        posted_by_id: &'b Id<Node>,
+        content: &'b str,
+        summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
         let node_id = self.self_node_id()?;
         let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
@@ -219,10 +219,10 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 
-    pub fn recent_cotos(
+    pub fn recent_cotos<'b>(
         &mut self,
-        node_id: Option<&'a Id<Node>>,
-        posted_in_id: Option<&'a Id<Cotonoma>>,
+        node_id: Option<&'b Id<Node>>,
+        posted_in_id: Option<&'b Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
     ) -> Result<Paginated<Coto>> {
