@@ -231,4 +231,20 @@ impl<'a> DatabaseSession<'a> {
             coto_ops::recent(node_id, posted_in_id, page_size, page_index),
         )
     }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // cotonomas
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn recent_cotonomas<'b>(
+        &mut self,
+        node_id: Option<&'b Id<Node>>,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Cotonoma>> {
+        op::run(
+            &mut self.ro_conn,
+            cotonoma_ops::recent(node_id, page_size, page_index),
+        )
+    }
 }
