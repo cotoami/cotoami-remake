@@ -29,6 +29,12 @@ impl<T> Paginated<T> {
     }
 }
 
+/// Returns a paginated results of a query built by `query_builder`.
+///
+/// Since boxed queries are not cloneable, this function requires a function
+/// `query_builder` to create a same query multiple times. It will be possibly
+/// called twice, one is to fetch rows and another is to count the total.
+/// <https://github.com/diesel-rs/diesel/issues/1698>
 pub fn paginate<'a, R, F, Q>(
     conn: &mut SqliteConnection,
     page_size: i64,
