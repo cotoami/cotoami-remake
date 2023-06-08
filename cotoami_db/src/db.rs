@@ -208,7 +208,7 @@ impl<'a> DatabaseSession<'a> {
     // cotos
     /////////////////////////////////////////////////////////////////////////////
 
-    /// Post a coto in the specified cotonoma (`posted_in_id`).
+    /// Posts a coto in the specified cotonoma (`posted_in_id`).
     ///
     /// The target cotonoma has to belong to this node,
     /// otherwise a change should be made via [Self::import_change()].
