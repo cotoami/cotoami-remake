@@ -46,6 +46,7 @@ fn init_as_empty_node() -> Result<()> {
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
 
+    assert_eq!(session.as_node()?, Some(node.clone()));
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node]);
 
@@ -112,6 +113,10 @@ fn init_as_node() -> Result<()> {
     assert_icon_generated(&node)?;
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
+
+    assert_eq!(session.as_node()?, Some(node.clone()));
+    assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
+    assert_eq!(session.all_nodes()?, vec![node.clone()]);
 
     let all_cotonomas = session.recent_cotonomas(None, 5, 0)?;
     assert_eq!(all_cotonomas.rows.len(), 1);
