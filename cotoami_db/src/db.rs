@@ -192,10 +192,27 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /////////////////////////////////////////////////////////////////////////////
+    // changelog
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn import_change<'b>(
+        &self,
+        parent_node_id: &'b Id<Node>,
+        log: &'b ChangelogEntry,
+    ) -> Result<ChangelogEntry> {
+        let op = changelog_ops::import_change(parent_node_id, log);
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
     // cotos
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn create_coto<'b>(
+    /// Post a coto in the specified cotonoma (`posted_in_id`).
+    ///
+    /// The target cotonoma has to belong to this node,
+    /// otherwise a change should be made via [Self::import_change()].
+    pub fn post_coto<'b>(
         &mut self,
         posted_in_id: &'b Id<Cotonoma>,
         posted_by_id: &'b Id<Node>,
