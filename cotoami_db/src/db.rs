@@ -191,12 +191,6 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::get(node_id))
     }
 
-    fn self_node_id(&self) -> Result<Id<Node>> {
-        (self.get_globals)()
-            .node_id
-            .ok_or(anyhow!("Self node row (rowid=1) has not yet been created."))
-    }
-
     /////////////////////////////////////////////////////////////////////////////
     // cotos
     /////////////////////////////////////////////////////////////////////////////
@@ -209,6 +203,7 @@ impl<'a> DatabaseSession<'a> {
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
         let node_id = self.self_node_id()?;
+        self.ensure_cotonoma_belongs_to_node(posted_in_id, &node_id)?;
         let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
             let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
@@ -236,6 +231,10 @@ impl<'a> DatabaseSession<'a> {
     // cotonomas
     /////////////////////////////////////////////////////////////////////////////
 
+    pub fn get_cotonoma(&mut self, cotonoma_id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
+        op::run(&mut self.ro_conn, cotonoma_ops::get(cotonoma_id))
+    }
+
     pub fn recent_cotonomas<'b>(
         &mut self,
         node_id: Option<&'b Id<Node>>,
@@ -246,5 +245,33 @@ impl<'a> DatabaseSession<'a> {
             &mut self.ro_conn,
             cotonoma_ops::recent(node_id, page_size, page_index),
         )
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // internals
+    /////////////////////////////////////////////////////////////////////////////
+
+    fn self_node_id(&self) -> Result<Id<Node>> {
+        (self.get_globals)()
+            .node_id
+            .ok_or(anyhow!("Self node row (rowid=1) has not yet been created."))
+    }
+
+    fn ensure_cotonoma_belongs_to_node<'b>(
+        &mut self,
+        cotonoma_id: &'b Id<Cotonoma>,
+        node_id: &'b Id<Node>,
+    ) -> Result<()> {
+        let (cotonoma, _coto) = self
+            .get_cotonoma(cotonoma_id)?
+            .ok_or(anyhow!("Cotonoma `{:?}` not found", cotonoma_id))?;
+        if cotonoma.node_id != *node_id {
+            return Err(anyhow!(
+                "Cotonoma `{:?}` does not belong to Node `{:?}`",
+                cotonoma.name,
+                node_id,
+            ));
+        }
+        Ok(())
     }
 }
