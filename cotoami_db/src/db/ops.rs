@@ -54,7 +54,7 @@ where
         .load::<R>(conn)?;
 
     let count_rows = rows.len() as i64;
-    let total_rows = if count_rows < page_size {
+    let total_rows = if page_index == 0 && count_rows < page_size {
         count_rows
     } else {
         query_builder()

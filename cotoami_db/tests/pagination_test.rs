@@ -43,6 +43,27 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_rows, 2);
     assert_eq!(paginated.total_pages(), 1);
 
+    // when
+    session.post_coto(&root_cotonoma_id, None, "3", None)?;
+    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 0)?;
+
+    // then
+    assert_eq!(into_content_vec(&paginated.rows), vec!["3", "2"]);
+    assert_eq!(paginated.page_size, 2);
+    assert_eq!(paginated.page_index, 0);
+    assert_eq!(paginated.total_rows, 3);
+    assert_eq!(paginated.total_pages(), 2);
+
+    // when
+    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 1)?;
+
+    // then
+    assert_eq!(into_content_vec(&paginated.rows), vec!["1"]);
+    assert_eq!(paginated.page_size, 2);
+    assert_eq!(paginated.page_index, 1);
+    assert_eq!(paginated.total_rows, 3);
+    assert_eq!(paginated.total_pages(), 2);
+
     Ok(())
 }
 
