@@ -119,8 +119,8 @@ impl Coto {
             is_cotonoma: self.is_cotonoma,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
-            created_at: Some(&self.created_at),
-            updated_at: Some(&self.updated_at),
+            created_at: self.created_at,
+            updated_at: self.updated_at,
         }
     }
 }
@@ -154,12 +154,13 @@ pub struct NewCoto<'a> {
     is_cotonoma: bool,
     repost_of_id: Option<&'a Id<Coto>>,
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
-    created_at: Option<&'a NaiveDateTime>,
-    updated_at: Option<&'a NaiveDateTime>,
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
 }
 
 impl<'a> NewCoto<'a> {
     fn new_base(node_id: &'a Id<Node>, posted_by_id: &'a Id<Node>) -> Self {
+        let now = crate::current_datetime();
         Self {
             uuid: Id::generate(),
             node_id,
@@ -170,8 +171,8 @@ impl<'a> NewCoto<'a> {
             is_cotonoma: false,
             repost_of_id: None,
             reposted_in_ids: None,
-            created_at: None,
-            updated_at: None,
+            created_at: now,
+            updated_at: now,
         }
     }
 
@@ -290,8 +291,8 @@ impl Cotonoma {
             node_id: &self.node_id,
             coto_id: &self.coto_id,
             name: &self.name,
-            created_at: Some(&self.created_at),
-            updated_at: Some(&self.updated_at),
+            created_at: self.created_at,
+            updated_at: self.updated_at,
         }
     }
 }
@@ -305,19 +306,20 @@ pub struct NewCotonoma<'a> {
     coto_id: &'a Id<Coto>,
     #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
     name: &'a str,
-    created_at: Option<&'a NaiveDateTime>,
-    updated_at: Option<&'a NaiveDateTime>,
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
 }
 
 impl<'a> NewCotonoma<'a> {
     pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Result<Self> {
+        let now = crate::current_datetime();
         let cotonoma = Self {
             uuid: Id::generate(),
             node_id,
             coto_id,
             name,
-            created_at: None,
-            updated_at: None,
+            created_at: now,
+            updated_at: now,
         };
         cotonoma.validate()?;
         Ok(cotonoma)
@@ -402,8 +404,8 @@ impl Link {
             tail_coto_id: &self.tail_coto_id,
             head_coto_id: &self.head_coto_id,
             linking_phrase: self.linking_phrase.as_deref(),
-            created_at: Some(&self.created_at),
-            updated_at: Some(&self.updated_at),
+            created_at: self.created_at,
+            updated_at: self.updated_at,
         }
     }
 }
@@ -419,8 +421,8 @@ pub struct NewLink<'a> {
     head_coto_id: &'a Id<Coto>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     linking_phrase: Option<&'a str>,
-    created_at: Option<&'a NaiveDateTime>,
-    updated_at: Option<&'a NaiveDateTime>,
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
 }
 
 impl<'a> NewLink<'a> {
@@ -431,6 +433,7 @@ impl<'a> NewLink<'a> {
         head_coto_id: &'a Id<Coto>,
         linking_phrase: Option<&'a str>,
     ) -> Result<Self> {
+        let now = crate::current_datetime();
         let link = Self {
             uuid: Id::generate(),
             node_id,
@@ -438,8 +441,8 @@ impl<'a> NewLink<'a> {
             tail_coto_id,
             head_coto_id,
             linking_phrase,
-            created_at: None,
-            updated_at: None,
+            created_at: now,
+            updated_at: now,
         };
         link.validate()?;
         Ok(link)

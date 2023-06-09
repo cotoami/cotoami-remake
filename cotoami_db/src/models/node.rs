@@ -8,7 +8,6 @@ use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::Argon2;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
-use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
 use validator::Validate;
@@ -152,6 +151,8 @@ pub struct NewNode<'a> {
     name: &'a str,
     owner_password_hash: Option<String>,
     version: i32,
+    created_at: NaiveDateTime,
+    inserted_at: NaiveDateTime,
 }
 
 impl<'a> NewNode<'a> {
@@ -164,6 +165,7 @@ impl<'a> NewNode<'a> {
         } else {
             None
         };
+        let now = crate::current_datetime();
         let new_node = Self {
             uuid,
             rowid: Node::ROWID_FOR_SELF,
@@ -171,6 +173,8 @@ impl<'a> NewNode<'a> {
             name,
             owner_password_hash: password_hash,
             version: 1,
+            created_at: now,
+            inserted_at: now,
         };
         new_node.validate()?;
         Ok(new_node)
@@ -237,12 +241,25 @@ impl ParentNode {
 }
 
 /// An `Insertable` parent node data
-#[derive(Insertable, Validate, new)]
+#[derive(Insertable, Validate)]
 #[diesel(table_name = parent_nodes)]
 pub struct NewParentNode<'a> {
     node_id: &'a Id<Node>,
     #[validate(url, length(max = "ParentNode::URL_PREFIX_MAX_LENGTH"))]
     url_prefix: &'a str,
+    created_at: NaiveDateTime,
+}
+
+impl<'a> NewParentNode<'a> {
+    pub fn new(node_id: &'a Id<Node>, url_prefix: &'a str) -> Result<Self> {
+        let parent_node = Self {
+            node_id,
+            url_prefix,
+            created_at: crate::current_datetime(),
+        };
+        parent_node.validate()?;
+        Ok(parent_node)
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -266,13 +283,24 @@ pub struct ChildNode {
 }
 
 /// An `Insertable` child node data
-#[derive(Insertable, new)]
+#[derive(Insertable)]
 #[diesel(table_name = child_nodes)]
 pub struct NewChildNode<'a> {
     node_id: &'a Id<Node>,
     password_hash: &'a str,
-    #[new(value = "false")] // https://github.com/nrc/derive-new
     can_edit_links: bool,
+    created_at: NaiveDateTime,
+}
+
+impl<'a> NewChildNode<'a> {
+    pub fn new(node_id: &'a Id<Node>, password_hash: &'a str) -> Self {
+        Self {
+            node_id,
+            password_hash,
+            can_edit_links: false,
+            created_at: crate::current_datetime(),
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -290,8 +318,18 @@ pub struct ImportedNode {
 }
 
 /// An `Insertable` imported node data
-#[derive(Insertable, new)]
+#[derive(Insertable)]
 #[diesel(table_name = imported_nodes)]
 pub struct NewImportedNode<'a> {
     node_id: &'a Id<Node>,
+    created_at: NaiveDateTime,
+}
+
+impl<'a> NewImportedNode<'a> {
+    pub fn new(node_id: &'a Id<Node>) -> Self {
+        Self {
+            node_id,
+            created_at: crate::current_datetime(),
+        }
+    }
 }

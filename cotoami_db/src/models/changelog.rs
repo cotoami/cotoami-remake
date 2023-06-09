@@ -63,6 +63,7 @@ impl ChangelogEntry {
             parent_node_id: Some(parent_node_id),
             parent_serial_number: Some(self.serial_number),
             change: &self.change,
+            inserted_at: None,
         }
     }
 }
@@ -74,6 +75,7 @@ pub struct NewChangelogEntry<'a> {
     parent_node_id: Option<&'a Id<Node>>,
     parent_serial_number: Option<i64>,
     change: &'a Change,
+    inserted_at: Option<NaiveDateTime>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -117,6 +119,7 @@ impl Change {
             parent_node_id: None,
             parent_serial_number: None,
             change: self,
+            inserted_at: Some(crate::current_datetime()),
         }
     }
 }

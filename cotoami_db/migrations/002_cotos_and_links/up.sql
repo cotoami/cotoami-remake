@@ -36,8 +36,8 @@ CREATE TABLE cotos (
   -- Comma-separated UUIDs of the cotonomas in which this coto was reposted
   reposted_in_ids TEXT,
 
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
+  updated_at DATETIME NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(posted_in_id) REFERENCES cotonomas(uuid) ON DELETE RESTRICT,
@@ -67,8 +67,8 @@ CREATE TABLE cotonomas (
   -- Name of this cotonoma
   name TEXT NOT NULL,
 
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
+  updated_at DATETIME NOT NULL, -- UTC
 
   UNIQUE(node_id, name),
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
@@ -101,8 +101,8 @@ CREATE TABLE links (
   -- Linkng phrase to express the relationship between the two cotos
   linking_phrase TEXT,
 
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
+  updated_at DATETIME NOT NULL, -- UTC
 
   UNIQUE(tail_coto_id, head_coto_id),
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,

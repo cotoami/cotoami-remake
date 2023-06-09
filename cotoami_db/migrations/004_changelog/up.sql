@@ -28,7 +28,7 @@ CREATE TABLE changelog (
   change BLOB NOT NULL,
 
   -- Registration date in this database
-  inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  inserted_at DATETIME NOT NULL, -- UTC
 
   FOREIGN KEY(parent_node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );

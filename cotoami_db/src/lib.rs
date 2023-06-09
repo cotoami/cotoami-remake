@@ -14,7 +14,6 @@ pub mod models;
 mod schema;
 
 /// Returns the current datetime in UTC.
-/// It is to recreate SQLite's `CURRENT_TIMESTAMP` in the Rust side.
 fn current_datetime() -> NaiveDateTime {
     Utc::now().naive_utc()
 }

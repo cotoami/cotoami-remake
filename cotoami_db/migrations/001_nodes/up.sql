@@ -27,10 +27,10 @@ CREATE TABLE nodes (
 
   -- Creation date of this node
   -- Should not change in any database as long as the ID is the same
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
 
   -- Registration date in this database
-  inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL -- UTC
+  inserted_at DATETIME NOT NULL -- UTC
 );
 
 
@@ -45,7 +45,7 @@ CREATE TABLE parent_nodes (
   url_prefix TEXT NOT NULL,
 
   -- Date when this connection was created
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
@@ -68,7 +68,7 @@ CREATE TABLE child_nodes (
   can_edit_links INTEGER DEFAULT FALSE NOT NULL,
 
   -- Date when this connection was created
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
@@ -84,7 +84,7 @@ CREATE TABLE imported_nodes (
   node_id TEXT NOT NULL PRIMARY KEY,
 
   -- Date when this node was imported
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, -- UTC
+  created_at DATETIME NOT NULL, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
