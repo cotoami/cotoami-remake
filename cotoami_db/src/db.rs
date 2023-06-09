@@ -215,12 +215,13 @@ impl<'a> DatabaseSession<'a> {
     pub fn post_coto<'b>(
         &mut self,
         posted_in_id: &'b Id<Cotonoma>,
-        posted_by_id: &'b Id<Node>,
+        posted_by_id: Option<&'b Id<Node>>,
         content: &'b str,
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
         let node_id = self.self_node_id()?;
         self.ensure_cotonoma_belongs_to_node(posted_in_id, &node_id)?;
+        let posted_by_id = posted_by_id.unwrap_or(&node_id);
         let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
             let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
