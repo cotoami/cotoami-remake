@@ -69,6 +69,7 @@ diesel::joinable!(imported_nodes -> nodes (node_id));
 diesel::table! {
     cotos (uuid) {
         uuid -> Text,
+        rowid -> BigInt,
         node_id -> Text,
         posted_in_id -> Nullable<Text>,
         posted_by_id -> Text,

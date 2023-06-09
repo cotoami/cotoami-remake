@@ -1,12 +1,14 @@
 --
 -- A coto is a unit of data in a cotoami database.
 --
--- The average size of a single row in this table could become larger than the
--- optimal size for a WITHOUT ROWID table (https://www.sqlite.org/withoutrowid.html).
---
 CREATE TABLE cotos (
   -- Universally unique coto ID
-  uuid TEXT NOT NULL PRIMARY KEY,
+  -- This column is used as a primary key in the Diesel models.
+  uuid TEXT NOT NULL UNIQUE,
+
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  -- This serial number is used to return cotos in registration order.
+  rowid INTEGER NOT NULL PRIMARY KEY,
 
   -- UUID of the node in which this coto was created
   node_id TEXT NOT NULL,

@@ -37,6 +37,11 @@ pub struct Coto {
     /// Universally unique coto ID
     pub uuid: Id<Coto>,
 
+    /// SQLite rowid (so-called "integer primary key")
+    /// It is used to return cotos in registration order.
+    #[serde(skip_serializing, skip_deserializing)]
+    pub rowid: i64,
+
     /// UUID of the node in which this coto was created
     pub node_id: Id<Node>,
 

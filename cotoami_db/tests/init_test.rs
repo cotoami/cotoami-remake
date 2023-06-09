@@ -162,7 +162,7 @@ fn init_as_node() -> Result<()> {
             change: Change::CreateCotonoma(cotonoma, coto),
             ..
         } if cotonoma == all_cotonomas.rows[0] &&
-             coto == all_cotos.rows[0]
+             coto == Coto { rowid: 0, ..all_cotos.rows[0].clone() }
     );
 
     Ok(())
