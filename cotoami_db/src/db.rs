@@ -253,9 +253,9 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, cotonoma_ops::get(cotonoma_id))
     }
 
-    pub fn recent_cotonomas<'b>(
+    pub fn recent_cotonomas(
         &mut self,
-        node_id: Option<&'b Id<Node>>,
+        node_id: Option<&Id<Node>>,
         page_size: i64,
         page_index: i64,
     ) -> Result<Paginated<Cotonoma>> {
