@@ -13,6 +13,7 @@ use diesel::sqlite::SqliteConnection;
 use std::ops::{Deref, DerefMut};
 
 /// A runnable unit of database operation
+#[must_use]
 pub trait Operation<Conn, T> {
     /// Runs this operation with a `Context`
     fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;

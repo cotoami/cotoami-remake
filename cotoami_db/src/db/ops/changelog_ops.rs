@@ -122,7 +122,8 @@ fn apply_change(change: &Change) -> impl Operation<WritableConnection, ()> + '_ 
                 linking_phrase,
                 updated_at,
             } => {
-                link_ops::update_linking_phrase(uuid, linking_phrase.as_deref(), Some(*updated_at));
+                link_ops::update_linking_phrase(uuid, linking_phrase.as_deref(), Some(*updated_at))
+                    .run(ctx)?;
             }
             Change::DeleteLink(id) => {
                 link_ops::delete(id).run(ctx)?;
