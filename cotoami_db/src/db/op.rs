@@ -10,25 +10,14 @@ use anyhow::Result;
 use derive_new::new;
 use diesel::connection::{AnsiTransactionManager, TransactionManager};
 use diesel::sqlite::SqliteConnection;
+use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
-/// A runnable unit of database operation
-#[must_use]
-pub trait Operation<Conn, T> {
-    /// Runs this operation with a `Context`
-    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
-}
+/////////////////////////////////////////////////////////////////////////////
+// Context
+/////////////////////////////////////////////////////////////////////////////
 
-impl<Conn, T, F> Operation<Conn, T> for F
-where
-    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
-{
-    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
-        self(ctx)
-    }
-}
-
-/// A `Context` is practically a database connection needed to run an [Operation].
+/// A `Context` holds a database connection needed to run an [Operation].
 ///
 /// Since it doesn't have public constructors, a client of this module has to use
 /// the functions such as [run()] or [run_in_transaction()] to invoke an [Operation].
@@ -44,6 +33,58 @@ impl<'a, Conn> Context<'a, Conn> {
 
     pub fn conn(&mut self) -> &mut Conn {
         self.conn
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Operation
+/////////////////////////////////////////////////////////////////////////////
+
+/// A runnable unit of database operation
+#[must_use]
+pub trait Operation<Conn, T> {
+    /// Runs this operation with a `Context`
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
+
+    /// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function
+    fn map<U, F>(self, f: F) -> Map<Self, T, F>
+    where
+        F: Fn(T) -> U,
+        Self: Sized,
+    {
+        Map {
+            op: self,
+            f,
+            _marker: PhantomData,
+        }
+    }
+}
+
+#[derive(Debug)]
+#[must_use]
+pub struct Map<Op, T, F> {
+    op: Op,
+    f: F,
+    _marker: PhantomData<fn() -> T>,
+}
+
+impl<Op, Conn, T, U, F> Operation<Conn, U> for Map<Op, T, F>
+where
+    Op: Operation<Conn, T>,
+    F: Fn(T) -> U,
+{
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<U> {
+        let Map { ref op, ref f, .. } = self;
+        op.run(ctx).map(f)
+    }
+}
+
+impl<Conn, T, F> Operation<Conn, T> for F
+where
+    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
+{
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
+        self(ctx)
     }
 }
 
