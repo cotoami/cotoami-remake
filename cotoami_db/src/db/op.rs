@@ -19,6 +19,15 @@ pub trait Operation<Conn, T> {
     fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
 }
 
+impl<Conn, T, F> Operation<Conn, T> for F
+where
+    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
+{
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
+        self(ctx)
+    }
+}
+
 /// A `Context` is practically a database connection needed to run an [Operation].
 ///
 /// Since it doesn't have public constructors, a client of this module has to use
