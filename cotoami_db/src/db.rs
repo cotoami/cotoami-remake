@@ -87,7 +87,7 @@ impl Database {
         })
     }
 
-    fn create_rw_conn(uri: &str) -> Result<WritableConnection> {
+    pub fn create_rw_conn(uri: &str) -> Result<WritableConnection> {
         let mut rw_conn = SqliteConnection::establish(uri)?;
         sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
         sqlite::enable_wal(&mut rw_conn)?;
@@ -95,7 +95,7 @@ impl Database {
         Ok(WritableConnection::new(rw_conn))
     }
 
-    fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {
+    pub fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {
         let path = path.as_ref();
         if path.is_dir() {
             Err(DatabaseError::InvalidFilePath {
