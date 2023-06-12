@@ -113,6 +113,7 @@ where
     }
 }
 
+/// A function that takes a [Context] as a parameter can be used as an [Operation]
 impl<Conn, T, F> Operation<Conn, T> for F
 where
     F: Fn(&mut Context<'_, Conn>) -> Result<T>,
