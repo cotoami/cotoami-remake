@@ -4,7 +4,7 @@ use cotoami_db::{Change, ChangelogEntry, Coto, Cotonoma, Database, Node};
 use image::ImageFormat;
 use tempfile::tempdir;
 
-mod common;
+pub mod common;
 
 #[test]
 fn default_state() -> Result<()> {
