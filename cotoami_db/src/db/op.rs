@@ -47,35 +47,69 @@ pub trait Operation<Conn, T> {
     fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
 
     /// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function
-    fn map<U, F>(self, f: F) -> Map<Self, T, F>
+    fn map<U, F>(self, f: F) -> MappedOp<Self, T, F>
     where
         F: Fn(T) -> U,
         Self: Sized,
     {
-        Map {
+        MappedOp {
             op: self,
+            _t: PhantomData,
             f,
-            _marker: PhantomData,
+        }
+    }
+
+    /// Creates a chain with another operation that depends on the result of this operation
+    fn and_then<Op, U, F>(self, f: F) -> AndThenOp<Self, T, F>
+    where
+        F: Fn(T) -> Op,
+        Op: Operation<Conn, U>,
+        Self: Sized,
+    {
+        AndThenOp {
+            op: self,
+            _t: PhantomData,
+            f,
         }
     }
 }
 
 #[derive(Debug)]
 #[must_use]
-pub struct Map<Op, T, F> {
+pub struct MappedOp<Op, T, F> {
     op: Op,
+    _t: PhantomData<fn() -> T>,
     f: F,
-    _marker: PhantomData<fn() -> T>,
 }
 
-impl<Op, Conn, T, U, F> Operation<Conn, U> for Map<Op, T, F>
+impl<Op, Conn, T, U, F> Operation<Conn, U> for MappedOp<Op, T, F>
 where
     Op: Operation<Conn, T>,
     F: Fn(T) -> U,
 {
     fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<U> {
-        let Map { ref op, ref f, .. } = self;
+        let MappedOp { ref op, ref f, .. } = self;
         op.run(ctx).map(f)
+    }
+}
+
+#[derive(Debug)]
+#[must_use]
+pub struct AndThenOp<Op1, T, F> {
+    op: Op1,
+    _t: PhantomData<fn() -> T>,
+    f: F,
+}
+
+impl<Op1, Op2, Conn, T, U, F> Operation<Conn, U> for AndThenOp<Op1, T, F>
+where
+    Op1: Operation<Conn, T>,
+    Op2: Operation<Conn, U>,
+    F: Fn(T) -> Op2,
+{
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<U> {
+        let AndThenOp { ref op, ref f, .. } = self;
+        op.run(ctx).and_then(|t| f(t).run(ctx))
     }
 }
 
