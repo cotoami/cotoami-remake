@@ -1,9 +1,9 @@
-name: main-desktop
+name: release
 
 on:
   push:
     branches:
-    - main
+    - release
 
 jobs:
   build:
@@ -27,13 +27,6 @@ jobs:
 
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
-
-    - name: Run tests
-      # WARN: actions-rs has been unmaintained for quite a while
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --release --all-features
 
     - name: Setup JDK
       uses: actions/setup-java@v3

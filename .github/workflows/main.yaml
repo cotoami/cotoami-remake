@@ -1,0 +1,24 @@
+name: main
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Run tests
+      # WARN: actions-rs has been unmaintained for quite a while
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --release --all-features
