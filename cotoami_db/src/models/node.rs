@@ -156,8 +156,8 @@ pub struct NewNode<'a> {
 }
 
 impl<'a> NewNode<'a> {
-    /// Create a node that represents **this** database.
-    pub fn new(name: &'a str, password: Option<&'a str>) -> Result<Self> {
+    /// Create a local node
+    pub fn new_local(name: &'a str, password: Option<&'a str>) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
         let password_hash = if let Some(p) = password {

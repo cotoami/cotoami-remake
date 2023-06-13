@@ -147,11 +147,11 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn local_node(&mut self) -> Result<Option<Node>> {
-        op::run(&mut self.ro_conn, node_ops::local_node())
+        op::run(&mut self.ro_conn, node_ops::local())
     }
 
     pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<Node> {
-        let op = node_ops::create_self("", password);
+        let op = node_ops::create_local("", password);
         op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
             (self.get_globals)().local_node_id = Some(node.uuid);
             node
@@ -164,7 +164,7 @@ impl<'a> DatabaseSession<'a> {
         password: Option<&'b str>,
     ) -> Result<(Node, ChangelogEntry)> {
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
-            let node = node_ops::create_self(name, password).run(ctx)?;
+            let node = node_ops::create_local(name, password).run(ctx)?;
 
             let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
 

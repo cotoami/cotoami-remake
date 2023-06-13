@@ -28,7 +28,7 @@ pub fn get(node_id: &Id<Node>) -> impl ReadOperation<Option<Node>> + '_ {
     })
 }
 
-pub fn local_node() -> impl ReadOperation<Option<Node>> {
+pub fn local() -> impl ReadOperation<Option<Node>> {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
         nodes
@@ -49,12 +49,12 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConnectio
     })
 }
 
-pub fn create_self<'a>(
+pub fn create_local<'a>(
     name: &'a str,
     password: Option<&'a str>,
 ) -> impl Operation<WritableConnection, Node> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
-        insert(&NewNode::new(name, password)?).run(ctx)
+        insert(&NewNode::new_local(name, password)?).run(ctx)
     })
 }
 
