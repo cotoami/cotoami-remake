@@ -11,12 +11,12 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn get(cotonoma_id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, Coto)>> + '_ {
+pub fn get(id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, Coto)>> + '_ {
     use crate::schema::{cotonomas, cotos};
     read_op(move |conn| {
         cotonomas::table
             .inner_join(cotos::table)
-            .filter(cotonomas::uuid.eq(cotonoma_id))
+            .filter(cotonomas::uuid.eq(id))
             .select((Cotonoma::as_select(), Coto::as_select()))
             .first(conn)
             .optional()
@@ -93,22 +93,22 @@ pub fn update<'a>(
     })
 }
 
-pub fn delete(cotonoma_id: &Id<Cotonoma>) -> impl Operation<WritableConnection, bool> + '_ {
+pub fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConnection, bool> + '_ {
     use crate::schema::cotonomas::dsl::*;
     write_op(move |conn| {
-        let affected = diesel::delete(cotonomas.find(cotonoma_id)).execute(conn.deref_mut())?;
+        let affected = diesel::delete(cotonomas.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
     })
 }
 
 pub fn rename<'a>(
-    cotonoma_id: &'a Id<Cotonoma>,
+    id: &'a Id<Cotonoma>,
     name: &'a str,
     updated_at: Option<NaiveDateTime>,
 ) -> impl Operation<WritableConnection, Option<(Cotonoma, Coto)>> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
-        if let Some((cotonoma, coto)) = get(cotonoma_id).run(ctx)? {
+        if let Some((cotonoma, coto)) = get(id).run(ctx)? {
             // Update coto
             let mut coto = coto.to_update();
             coto.summary = Some(name);

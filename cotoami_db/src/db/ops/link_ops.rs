@@ -8,11 +8,11 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn get(link_id: &Id<Link>) -> impl ReadOperation<Option<Link>> + '_ {
+pub fn get(id: &Id<Link>) -> impl ReadOperation<Option<Link>> + '_ {
     use crate::schema::links::dsl::*;
     read_op(move |conn| {
         links
-            .find(link_id)
+            .find(id)
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
@@ -39,22 +39,22 @@ pub fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConnect
     })
 }
 
-pub fn delete(link_id: &Id<Link>) -> impl Operation<WritableConnection, bool> + '_ {
+pub fn delete(id: &Id<Link>) -> impl Operation<WritableConnection, bool> + '_ {
     use crate::schema::links::dsl::*;
     write_op(move |conn| {
-        let affected = diesel::delete(links.find(link_id)).execute(conn.deref_mut())?;
+        let affected = diesel::delete(links.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
     })
 }
 
 pub fn update_linking_phrase<'a>(
-    link_id: &'a Id<Link>,
+    id: &'a Id<Link>,
     linking_phrase: Option<&'a str>,
     updated_at: Option<NaiveDateTime>,
 ) -> impl Operation<WritableConnection, Option<Link>> + 'a {
     composite_op::<WritableConnection, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
-        if let Some(link) = get(link_id).run(ctx)? {
+        if let Some(link) = get(id).run(ctx)? {
             let mut link = link.to_update();
             link.linking_phrase = linking_phrase;
             link.updated_at = updated_at;

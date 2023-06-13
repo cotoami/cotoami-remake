@@ -233,6 +233,10 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 
+    pub fn get_coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
+        op::run(&mut self.ro_conn, coto_ops::get(id))
+    }
+
     pub fn recent_cotos<'b>(
         &mut self,
         node_id: Option<&'b Id<Node>>,
@@ -250,8 +254,8 @@ impl<'a> DatabaseSession<'a> {
     // cotonomas
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn get_cotonoma(&mut self, cotonoma_id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
-        op::run(&mut self.ro_conn, cotonoma_ops::get(cotonoma_id))
+    pub fn get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
+        op::run(&mut self.ro_conn, cotonoma_ops::get(id))
     }
 
     pub fn recent_cotonomas(

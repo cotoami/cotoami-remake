@@ -9,11 +9,11 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn get(coto_id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
+pub fn get(id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     use crate::schema::cotos::dsl::*;
     read_op(move |conn| {
         cotos
-            .find(coto_id)
+            .find(id)
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
@@ -61,13 +61,13 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConnect
     })
 }
 
-pub fn delete(coto_id: &Id<Coto>) -> impl Operation<WritableConnection, bool> + '_ {
+pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConnection, bool> + '_ {
     use crate::schema::cotos::dsl::*;
     write_op(move |conn| {
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
         // FOREIGN KEY ON DELETE CASCADE.
-        let affected = diesel::delete(cotos.find(coto_id)).execute(conn.deref_mut())?;
+        let affected = diesel::delete(cotos.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
     })
 }
