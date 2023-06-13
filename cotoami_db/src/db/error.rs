@@ -13,4 +13,7 @@ pub enum DatabaseError {
 
     #[error("Unexpected change number (expected {expected:?}, actual {actual:?})")]
     UnexpectedChangeNumber { expected: i64, actual: i64 },
+
+    #[error("Not found: {kind:?} ({id:?})")]
+    EntityNotFound { kind: String, id: String },
 }

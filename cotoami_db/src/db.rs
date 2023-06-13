@@ -100,7 +100,7 @@ impl Database {
         if path.is_dir() {
             Err(DatabaseError::InvalidFilePath {
                 path: path.to_path_buf(),
-                reason: "The path is a directory".to_owned(),
+                reason: "The path is a directory".into(),
             })?
         } else {
             // Url::from_file_path
@@ -109,7 +109,7 @@ impl Database {
             // https://docs.rs/url/2.2.2/url/struct.Url.html#method.from_file_path
             let uri = Url::from_file_path(path).or(Err(DatabaseError::InvalidFilePath {
                 path: path.to_path_buf(),
-                reason: "Invalid path".to_owned(),
+                reason: "Invalid path".into(),
             }))?;
             Ok(uri.as_str().to_owned())
         }
@@ -210,7 +210,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Posts a coto in the specified cotonoma (`posted_in_id`).
     ///
-    /// The target cotonoma has to belong to this node,
+    /// The target cotonoma has to belong to the local node,
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto<'b>(
         &mut self,
@@ -221,9 +221,9 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(Coto, ChangelogEntry)> {
         self.ensure_cotonoma_belongs_to_local_node(posted_in_id)?;
 
-        let node_id = self.local_node_id()?;
-        let posted_by_id = posted_by_id.unwrap_or(&node_id);
-        let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
+        let local_node_id = self.local_node_id()?;
+        let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
+        let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
             let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
@@ -248,6 +248,24 @@ impl<'a> DatabaseSession<'a> {
             &mut self.ro_conn,
             coto_ops::recent(node_id, posted_in_id, page_size, page_index),
         )
+    }
+
+    pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {
+        let coto = self.ensure_to_get_coto(id)?;
+        self.ensure_to_be_local_node(&coto.node_id)?;
+        let op = composite_op::<WritableConnection, _, _>(move |ctx| {
+            if coto_ops::delete(id).run(ctx)? {
+                let change = Change::DeleteCoto(*id);
+                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                Ok(changelog)
+            } else {
+                Err(DatabaseError::EntityNotFound {
+                    kind: "Coto".into(),
+                    id: id.to_string(),
+                })?
+            }
+        });
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -280,20 +298,34 @@ impl<'a> DatabaseSession<'a> {
         ))
     }
 
+    fn ensure_to_get_coto(&mut self, id: &Id<Coto>) -> Result<Coto> {
+        let coto = self.get_coto(id)?.ok_or(DatabaseError::EntityNotFound {
+            kind: "Coto".into(),
+            id: id.to_string(),
+        })?;
+        Ok(coto)
+    }
+
+    fn ensure_to_be_local_node(&self, node_id: &Id<Node>) -> Result<()> {
+        if *node_id != self.local_node_id()? {
+            return Err(anyhow!(
+                "This operation can be executed only against an object in the local node."
+            ));
+        }
+        Ok(())
+    }
+
     fn ensure_cotonoma_belongs_to_local_node<'b>(
         &mut self,
         cotonoma_id: &'b Id<Cotonoma>,
     ) -> Result<()> {
-        let node_id = self.local_node_id()?;
-        let (cotonoma, _) = self
-            .get_cotonoma(cotonoma_id)?
-            .ok_or(anyhow!("Cotonoma `{:?}` not found", cotonoma_id))?;
-        if cotonoma.node_id != node_id {
-            return Err(anyhow!(
-                "Cotonoma `{:?}` does not belong to the local node",
-                cotonoma.name,
-            ));
-        }
+        let (cotonoma, _) =
+            self.get_cotonoma(cotonoma_id)?
+                .ok_or(DatabaseError::EntityNotFound {
+                    kind: "Cotonoma".into(),
+                    id: cotonoma_id.to_string(),
+                })?;
+        self.ensure_to_be_local_node(&cotonoma.node_id)?;
         Ok(())
     }
 }
