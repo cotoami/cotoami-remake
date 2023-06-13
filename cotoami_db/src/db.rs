@@ -68,8 +68,8 @@ impl Database {
         };
         db.run_migrations()?;
 
-        let node = db.create_session()?.as_node()?;
-        db.globals.lock().node_id = node.map(|n| n.uuid);
+        let node = db.create_session()?.local_node()?;
+        db.globals.lock().local_node_id = node.map(|n| n.uuid);
 
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
@@ -131,8 +131,8 @@ impl Database {
 /// Global information shared among sessions in a database
 #[derive(Debug, Default)]
 struct Globals {
-    /// ID of this node
-    node_id: Option<Id<Node>>,
+    /// ID of the local node
+    local_node_id: Option<Id<Node>>,
 }
 
 pub struct DatabaseSession<'a> {
@@ -146,14 +146,14 @@ impl<'a> DatabaseSession<'a> {
     // nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn as_node(&mut self) -> Result<Option<Node>> {
-        op::run(&mut self.ro_conn, node_ops::get_self())
+    pub fn local_node(&mut self) -> Result<Option<Node>> {
+        op::run(&mut self.ro_conn, node_ops::local_node())
     }
 
     pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<Node> {
         let op = node_ops::create_self("", password);
         op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
-            (self.get_globals)().node_id = Some(node.uuid);
+            (self.get_globals)().local_node_id = Some(node.uuid);
             node
         })
     }
@@ -178,7 +178,7 @@ impl<'a> DatabaseSession<'a> {
             Ok((node, changelog))
         });
         op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|(node, changelog)| {
-            (self.get_globals)().node_id = Some(node.uuid);
+            (self.get_globals)().local_node_id = Some(node.uuid);
             (node, changelog)
         })
     }
@@ -219,9 +219,9 @@ impl<'a> DatabaseSession<'a> {
         content: &'b str,
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.ensure_cotonoma_belongs_to_this_node(posted_in_id)?;
+        self.ensure_cotonoma_belongs_to_local_node(posted_in_id)?;
 
-        let node_id = self.self_node_id()?;
+        let node_id = self.local_node_id()?;
         let posted_by_id = posted_by_id.unwrap_or(&node_id);
         let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
@@ -270,17 +270,17 @@ impl<'a> DatabaseSession<'a> {
     // internals
     /////////////////////////////////////////////////////////////////////////////
 
-    fn self_node_id(&self) -> Result<Id<Node>> {
-        (self.get_globals)()
-            .node_id
-            .ok_or(anyhow!("Self node row (rowid=1) has not yet been created."))
+    fn local_node_id(&self) -> Result<Id<Node>> {
+        (self.get_globals)().local_node_id.ok_or(anyhow!(
+            "Local node row (rowid=1) has not yet been created."
+        ))
     }
 
-    fn ensure_cotonoma_belongs_to_this_node<'b>(
+    fn ensure_cotonoma_belongs_to_local_node<'b>(
         &mut self,
         cotonoma_id: &'b Id<Cotonoma>,
     ) -> Result<()> {
-        let node_id = self.self_node_id()?;
+        let node_id = self.local_node_id()?;
         let (cotonoma, _) = self
             .get_cotonoma(cotonoma_id)?
             .ok_or(anyhow!("Cotonoma `{:?}` not found", cotonoma_id))?;

@@ -28,11 +28,11 @@ pub fn get(node_id: &Id<Node>) -> impl ReadOperation<Option<Node>> + '_ {
     })
 }
 
-pub fn get_self() -> impl ReadOperation<Option<Node>> {
+pub fn local_node() -> impl ReadOperation<Option<Node>> {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
         nodes
-            .filter(rowid.eq(Node::ROWID_FOR_SELF))
+            .filter(rowid.eq(Node::ROWID_FOR_LOCAL))
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)

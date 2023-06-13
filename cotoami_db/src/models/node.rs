@@ -34,7 +34,7 @@ pub struct Node {
     pub uuid: Id<Node>,
 
     /// SQLite rowid (so-called "integer primary key")
-    /// The rowid `1` denotes a "self node row".
+    /// The rowid `1` denotes a "local node row".
     #[serde(skip_serializing, skip_deserializing)]
     pub rowid: i64,
 
@@ -48,7 +48,7 @@ pub struct Node {
     pub root_cotonoma_id: Option<Id<Cotonoma>>,
 
     /// Password for owner authentication of this node
-    /// This value can be set only in "self node row (rowid = 1)".
+    /// This value can be set only in "local node row (rowid = 1)".
     #[serde(skip_serializing, skip_deserializing)]
     pub owner_password_hash: Option<String>,
 
@@ -63,8 +63,8 @@ pub struct Node {
 }
 
 impl Node {
-    // rowid for "self node row"
-    pub const ROWID_FOR_SELF: i64 = 1;
+    // rowid for "local node row"
+    pub const ROWID_FOR_LOCAL: i64 = 1;
 
     pub const ICON_MAX_LENGTH: usize = 5_000_000; // 5MB
     pub const NAME_MAX_LENGTH: usize = Cotonoma::NAME_MAX_LENGTH;
@@ -78,7 +78,7 @@ impl Node {
     }
 
     pub fn update_owner_password(&mut self, password: &str) -> Result<()> {
-        if self.rowid != Self::ROWID_FOR_SELF {
+        if self.rowid != Self::ROWID_FOR_LOCAL {
             return Err(anyhow!(
                 "Owner password cannot be set to this node (rowid: {:?})",
                 self.rowid
@@ -168,7 +168,7 @@ impl<'a> NewNode<'a> {
         let now = crate::current_datetime();
         let new_node = Self {
             uuid,
-            rowid: Node::ROWID_FOR_SELF,
+            rowid: Node::ROWID_FOR_LOCAL,
             icon: icon_binary,
             name,
             owner_password_hash: password_hash,

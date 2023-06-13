@@ -14,7 +14,7 @@ fn default_state() -> Result<()> {
     let mut session = db.create_session()?;
 
     // then
-    assert_eq!(session.as_node()?, None);
+    assert_eq!(session.local_node()?, None);
     assert!(session.all_nodes()?.is_empty());
 
     Ok(())
@@ -46,7 +46,7 @@ fn init_as_empty_node() -> Result<()> {
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
 
-    assert_eq!(session.as_node()?, Some(node.clone()));
+    assert_eq!(session.local_node()?, Some(node.clone()));
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node]);
 
@@ -114,7 +114,7 @@ fn init_as_node() -> Result<()> {
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
 
-    assert_eq!(session.as_node()?, Some(node.clone()));
+    assert_eq!(session.local_node()?, Some(node.clone()));
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node.clone()]);
 

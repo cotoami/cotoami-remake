@@ -8,7 +8,7 @@ CREATE TABLE nodes (
   uuid TEXT NOT NULL UNIQUE,
 
   -- An alias for the SQLite rowid (so-called "integer primary key")
-  -- The rowid `1` denotes a "self node row".
+  -- The rowid `1` denotes a "local node row".
   rowid INTEGER NOT NULL PRIMARY KEY,
 
   -- Icon image
@@ -18,7 +18,7 @@ CREATE TABLE nodes (
   name TEXT NOT NULL,
 
   -- Password for owner authentication of this node
-  -- This value can be set only in "self node row", 
+  -- This value can be set only in "local node row", 
   -- therefore, it must not be sent to other nodes.
   owner_password_hash TEXT,
 
