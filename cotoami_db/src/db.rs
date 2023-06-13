@@ -219,8 +219,9 @@ impl<'a> DatabaseSession<'a> {
         content: &'b str,
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
+        self.ensure_cotonoma_belongs_to_this_node(posted_in_id)?;
+
         let node_id = self.self_node_id()?;
-        self.ensure_cotonoma_belongs_to_node(posted_in_id, &node_id)?;
         let posted_by_id = posted_by_id.unwrap_or(&node_id);
         let new_coto = NewCoto::new(&node_id, posted_in_id, posted_by_id, content, summary)?;
         let op = composite_op::<WritableConnection, _, _>(move |ctx| {
@@ -275,19 +276,18 @@ impl<'a> DatabaseSession<'a> {
             .ok_or(anyhow!("Self node row (rowid=1) has not yet been created."))
     }
 
-    fn ensure_cotonoma_belongs_to_node<'b>(
+    fn ensure_cotonoma_belongs_to_this_node<'b>(
         &mut self,
         cotonoma_id: &'b Id<Cotonoma>,
-        node_id: &'b Id<Node>,
     ) -> Result<()> {
-        let (cotonoma, _coto) = self
+        let node_id = self.self_node_id()?;
+        let (cotonoma, _) = self
             .get_cotonoma(cotonoma_id)?
             .ok_or(anyhow!("Cotonoma `{:?}` not found", cotonoma_id))?;
-        if cotonoma.node_id != *node_id {
+        if cotonoma.node_id != node_id {
             return Err(anyhow!(
-                "Cotonoma `{:?}` does not belong to Node `{:?}`",
+                "Cotonoma `{:?}` does not belong to the local node",
                 cotonoma.name,
-                node_id,
             ));
         }
         Ok(())
