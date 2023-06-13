@@ -67,7 +67,7 @@ pub fn delete(coto_id: &Id<Coto>) -> impl Operation<WritableConnection, bool> + 
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
         // FOREIGN KEY ON DELETE CASCADE.
-        let affected_rows = diesel::delete(cotos.find(coto_id)).execute(conn.deref_mut())?;
-        Ok(affected_rows > 0)
+        let affected = diesel::delete(cotos.find(coto_id)).execute(conn.deref_mut())?;
+        Ok(affected > 0)
     })
 }

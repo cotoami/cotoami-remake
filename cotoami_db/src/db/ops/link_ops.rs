@@ -39,11 +39,11 @@ pub fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConnect
     })
 }
 
-pub fn delete(link_id: &Id<Link>) -> impl Operation<WritableConnection, ()> + '_ {
+pub fn delete(link_id: &Id<Link>) -> impl Operation<WritableConnection, bool> + '_ {
     use crate::schema::links::dsl::*;
     write_op(move |conn| {
-        diesel::delete(links.find(link_id)).execute(conn.deref_mut())?;
-        Ok(())
+        let affected = diesel::delete(links.find(link_id)).execute(conn.deref_mut())?;
+        Ok(affected > 0)
     })
 }
 
