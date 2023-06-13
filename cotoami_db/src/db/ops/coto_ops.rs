@@ -61,13 +61,13 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConnect
     })
 }
 
-pub fn delete(coto_id: &Id<Coto>) -> impl Operation<WritableConnection, ()> + '_ {
+pub fn delete(coto_id: &Id<Coto>) -> impl Operation<WritableConnection, bool> + '_ {
     use crate::schema::cotos::dsl::*;
     write_op(move |conn| {
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
         // FOREIGN KEY ON DELETE CASCADE.
-        diesel::delete(cotos.find(coto_id)).execute(conn.deref_mut())?;
-        Ok(())
+        let affected_rows = diesel::delete(cotos.find(coto_id)).execute(conn.deref_mut())?;
+        Ok(affected_rows > 0)
     })
 }
