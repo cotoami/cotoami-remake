@@ -1,6 +1,6 @@
 --
 -- A node is a single Cotoami database that has connections to/from other databases(nodes).
--- `nodes` table contains all the nodes appeared in the database of this node.
+-- `nodes` table should contain all nodes appeared in this database.
 --
 CREATE TABLE nodes (
   -- Universally unique node ID
@@ -8,7 +8,7 @@ CREATE TABLE nodes (
   uuid TEXT NOT NULL UNIQUE,
 
   -- An alias for the SQLite rowid (so-called "integer primary key")
-  -- The rowid `1` denotes a "local node row".
+  -- The rowid `1` denotes the "local node row".
   rowid INTEGER NOT NULL PRIMARY KEY,
 
   -- Icon image
@@ -18,8 +18,8 @@ CREATE TABLE nodes (
   name TEXT NOT NULL,
 
   -- Password for owner authentication of this node
-  -- This value can be set only in "local node row", 
-  -- therefore, it must not be sent to other nodes.
+  -- This value can be set only in "local node row", therefore, 
+  -- it must not be sent to other nodes.
   owner_password_hash TEXT,
 
   -- Version of node info
