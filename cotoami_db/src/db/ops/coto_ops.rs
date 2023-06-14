@@ -1,6 +1,7 @@
 //! Coto related operations
 
 use super::Paginated;
+use crate::db::error::DatabaseError;
 use crate::db::op::*;
 use crate::models::coto::{Coto, Cotonoma, NewCoto, UpdateCoto};
 use crate::models::node::Node;
@@ -17,6 +18,17 @@ pub fn get(id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn ensure_to_get(id: &Id<Coto>) -> impl Operation<SqliteConnection, Coto> + '_ {
+    composite_op::<SqliteConnection, _, _>(move |ctx| {
+        let coto = get(id).run(ctx)?;
+        let coto = coto.ok_or(DatabaseError::EntityNotFound {
+            kind: "Coto".into(),
+            id: id.to_string(),
+        })?;
+        Ok(coto)
     })
 }
 
