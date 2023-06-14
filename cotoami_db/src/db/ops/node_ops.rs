@@ -71,25 +71,23 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConnect
 pub fn import_or_upgrade(
     received_node: &Node,
 ) -> impl Operation<WritableConnection, Option<Node>> + '_ {
-    composite_op::<WritableConnection, _, _>(move |ctx| {
-        match get(&received_node.uuid).run(ctx)? {
-            Some(local_row) => {
-                if received_node.version > local_row.version {
-                    let upgraded_node = diesel::update(&local_row)
-                        .set(received_node.to_import())
-                        .get_result(ctx.conn().deref_mut())?;
-                    Ok(Some(upgraded_node))
-                } else {
-                    Ok(None)
-                }
-            }
-            None => {
-                use crate::schema::nodes::dsl::*;
-                let imported_node: Node = diesel::insert_into(nodes)
-                    .values(received_node.to_import())
+    composite_op::<WritableConnection, _, _>(|ctx| match get(&received_node.uuid).run(ctx)? {
+        Some(local_row) => {
+            if received_node.version > local_row.version {
+                let upgraded_node = diesel::update(&local_row)
+                    .set(received_node.to_import())
                     .get_result(ctx.conn().deref_mut())?;
-                Ok(Some(imported_node))
+                Ok(Some(upgraded_node))
+            } else {
+                Ok(None)
             }
+        }
+        None => {
+            use crate::schema::nodes::dsl::*;
+            let imported_node: Node = diesel::insert_into(nodes)
+                .values(received_node.to_import())
+                .get_result(ctx.conn().deref_mut())?;
+            Ok(Some(imported_node))
         }
     })
 }

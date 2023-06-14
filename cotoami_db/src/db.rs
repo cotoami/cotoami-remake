@@ -163,7 +163,7 @@ impl<'a> DatabaseSession<'a> {
         name: &'b str,
         password: Option<&'b str>,
     ) -> Result<(Node, ChangelogEntry)> {
-        let op = composite_op::<WritableConnection, _, _>(move |ctx| {
+        let op = composite_op::<WritableConnection, _, _>(|ctx| {
             let node = node_ops::create_local(name, password).run(ctx)?;
 
             let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
@@ -224,7 +224,7 @@ impl<'a> DatabaseSession<'a> {
         let local_node_id = self.local_node_id()?;
         let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
         let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
-        let op = composite_op::<WritableConnection, _, _>(move |ctx| {
+        let op = composite_op::<WritableConnection, _, _>(|ctx| {
             let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
             let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -253,7 +253,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {
         let coto = self.ensure_to_get_coto(id)?;
         self.ensure_to_be_local_node(&coto.node_id)?;
-        let op = composite_op::<WritableConnection, _, _>(move |ctx| {
+        let op = composite_op::<WritableConnection, _, _>(|ctx| {
             if coto_ops::delete(id).run(ctx)? {
                 let change = Change::DeleteCoto(*id);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
