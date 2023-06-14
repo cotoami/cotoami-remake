@@ -52,11 +52,7 @@ pub trait Operation<Conn, T> {
         F: Fn(T) -> U,
         Self: Sized,
     {
-        MappedOp {
-            op: self,
-            _t: PhantomData,
-            f,
-        }
+        map(self, f)
     }
 
     /// Creates a chain with another operation that depends on the result of this operation
@@ -66,11 +62,20 @@ pub trait Operation<Conn, T> {
         Op: Operation<Conn, U>,
         Self: Sized,
     {
-        AndThenOp {
-            op: self,
-            _t: PhantomData,
-            f,
-        }
+        and_then(self, f)
+    }
+}
+
+/// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function
+pub fn map<Op, Conn, T, U, F>(op: Op, f: F) -> MappedOp<Op, T, F>
+where
+    Op: Operation<Conn, T>,
+    F: Fn(T) -> U,
+{
+    MappedOp {
+        op,
+        _t: PhantomData,
+        f,
     }
 }
 
@@ -90,6 +95,20 @@ where
     fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<U> {
         let MappedOp { ref op, ref f, .. } = self;
         op.run(ctx).map(f)
+    }
+}
+
+/// Creates a chain with another operation that depends on the result of this operation
+fn and_then<Op1, Op2, Conn, T, U, F>(op: Op1, f: F) -> AndThenOp<Op1, T, F>
+where
+    Op1: Operation<Conn, T>,
+    Op2: Operation<Conn, U>,
+    F: Fn(T) -> Op2,
+{
+    AndThenOp {
+        op,
+        _t: PhantomData,
+        f,
     }
 }
 
