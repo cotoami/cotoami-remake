@@ -10,7 +10,7 @@ use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
 use log::info;
-use op::{composite_op, Operation, WritableConnection};
+use op::{composite_op, Operation, WritableConn};
 use ops::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
@@ -40,7 +40,7 @@ pub struct Database {
     ///
     /// To avoid handling possible SQLITE_BUSY on concurrent writes,
     /// it keeps hold of a single read-write connection in the process.
-    rw_conn: Mutex<WritableConnection>,
+    rw_conn: Mutex<WritableConn>,
 
     /// Globally shared information
     globals: Mutex<Globals>,
@@ -87,12 +87,12 @@ impl Database {
         })
     }
 
-    pub fn create_rw_conn(uri: &str) -> Result<WritableConnection> {
+    pub fn create_rw_conn(uri: &str) -> Result<WritableConn> {
         let mut rw_conn = SqliteConnection::establish(uri)?;
         sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
         sqlite::enable_wal(&mut rw_conn)?;
         sqlite::set_busy_timeout(&mut rw_conn, Self::SQLITE_BUSY_TIMEOUT)?;
-        Ok(WritableConnection::new(rw_conn))
+        Ok(WritableConn::new(rw_conn))
     }
 
     pub fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {
@@ -137,7 +137,7 @@ struct Globals {
 
 pub struct DatabaseSession<'a> {
     ro_conn: SqliteConnection,
-    get_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConnection> + 'a>,
+    get_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
     get_globals: Box<dyn Fn() -> MutexGuard<'a, Globals> + 'a>,
 }
 
@@ -163,7 +163,7 @@ impl<'a> DatabaseSession<'a> {
         name: &'b str,
         password: Option<&'b str>,
     ) -> Result<(Node, ChangelogEntry)> {
-        let op = composite_op::<WritableConnection, _, _>(|ctx| {
+        let op = composite_op::<WritableConn, _, _>(|ctx| {
             let node = node_ops::create_local(name, password).run(ctx)?;
 
             let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
@@ -224,7 +224,7 @@ impl<'a> DatabaseSession<'a> {
         let local_node_id = self.local_node_id()?;
         let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
         let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
-        let op = composite_op::<WritableConnection, _, _>(|ctx| {
+        let op = composite_op::<WritableConn, _, _>(|ctx| {
             let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
             let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -253,7 +253,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {
         let coto = self.ensure_to_get_coto(id)?;
         self.ensure_to_be_local_node(&coto.node_id)?;
-        let op = composite_op::<WritableConnection, _, _>(|ctx| {
+        let op = composite_op::<WritableConn, _, _>(|ctx| {
             if coto_ops::delete(id).run(ctx)? {
                 let change = Change::DeleteCoto(*id);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;

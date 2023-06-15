@@ -39,7 +39,7 @@ pub fn local() -> impl ReadOperation<Option<Node>> {
     })
 }
 
-pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConnection, Node> + 'a {
+pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Node> + 'a {
     use crate::schema::nodes::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(nodes)
@@ -52,13 +52,13 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConnectio
 pub fn create_local<'a>(
     name: &'a str,
     password: Option<&'a str>,
-) -> impl Operation<WritableConnection, Node> + 'a {
-    composite_op::<WritableConnection, _, _>(move |ctx| {
+) -> impl Operation<WritableConn, Node> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
         insert(&NewNode::new_local(name, password)?).run(ctx)
     })
 }
 
-pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConnection, Node> + 'a {
+pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, Node> + 'a {
     write_op(move |conn| {
         update_node.validate()?;
         diesel::update(update_node)
@@ -68,10 +68,8 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConnect
     })
 }
 
-pub fn import_or_upgrade(
-    received_node: &Node,
-) -> impl Operation<WritableConnection, Option<Node>> + '_ {
-    composite_op::<WritableConnection, _, _>(|ctx| match get(&received_node.uuid).run(ctx)? {
+pub fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
+    composite_op::<WritableConn, _, _>(|ctx| match get(&received_node.uuid).run(ctx)? {
         Some(local_row) => {
             if received_node.version > local_row.version {
                 let upgraded_node = diesel::update(&local_row)

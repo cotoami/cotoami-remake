@@ -88,13 +88,13 @@ where
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// WritableConnection
+// WritableConn
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(new)]
-pub struct WritableConnection(SqliteConnection);
+pub struct WritableConn(SqliteConnection);
 
-impl Deref for WritableConnection {
+impl Deref for WritableConn {
     type Target = SqliteConnection;
 
     fn deref(&self) -> &Self::Target {
@@ -102,7 +102,7 @@ impl Deref for WritableConnection {
     }
 }
 
-impl DerefMut for WritableConnection {
+impl DerefMut for WritableConn {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -111,7 +111,7 @@ impl DerefMut for WritableConnection {
 /// The following functions is copied-and-pasted from [SqliteConnection].
 /// It doesn't seem to be possible to use `immediate_transaction` of the inner [SqliteConnection]
 /// because it will cause mutable borrowing twice in one call.
-impl WritableConnection {
+impl WritableConn {
     /// Runs a transaction with `BEGIN IMMEDIATE`
     ///
     /// Same implementation as [SqliteConnection]:
@@ -164,21 +164,18 @@ where
     }
 }
 
-impl<T, F> Operation<WritableConnection, T> for ReadOp<F>
+impl<T, F> Operation<WritableConn, T> for ReadOp<F>
 where
     F: Fn(&mut SqliteConnection) -> Result<T>,
 {
-    fn run(&self, ctx: &mut Context<'_, WritableConnection>) -> Result<T> {
+    fn run(&self, ctx: &mut Context<'_, WritableConn>) -> Result<T> {
         (self.f)(ctx.conn())
     }
 }
 
 // Workaround to implement trait alias until trait_alias is fully introduced
 // https://doc.rust-lang.org/beta/unstable-book/language-features/trait-alias.html
-pub trait ReadOperation<T>:
-    Operation<SqliteConnection, T> + Operation<WritableConnection, T>
-{
-}
+pub trait ReadOperation<T>: Operation<SqliteConnection, T> + Operation<WritableConn, T> {}
 
 impl<T, F> ReadOperation<T> for ReadOp<F> where F: Fn(&mut SqliteConnection) -> Result<T> {}
 
@@ -206,27 +203,27 @@ pub struct WriteOp<F> {
     f: F,
 }
 
-impl<T, F> Operation<WritableConnection, T> for WriteOp<F>
+impl<T, F> Operation<WritableConn, T> for WriteOp<F>
 where
-    F: Fn(&mut WritableConnection) -> Result<T>,
+    F: Fn(&mut WritableConn) -> Result<T>,
 {
-    fn run(&self, ctx: &mut Context<'_, WritableConnection>) -> Result<T> {
+    fn run(&self, ctx: &mut Context<'_, WritableConn>) -> Result<T> {
         (self.f)(ctx.conn())
     }
 }
 
-/// Defines a read/write operation using a [WritableConnection]
+/// Defines a read/write operation using a [WritableConn]
 pub fn write_op<T, F>(f: F) -> WriteOp<F>
 where
-    F: Fn(&mut WritableConnection) -> Result<T>,
+    F: Fn(&mut WritableConn) -> Result<T>,
 {
     WriteOp { f }
 }
 
 /// Runs a read/write operation in a transaction
-pub fn run_in_transaction<Op, T>(conn: &mut WritableConnection, op: Op) -> Result<T>
+pub fn run_in_transaction<Op, T>(conn: &mut WritableConn, op: Op) -> Result<T>
 where
-    Op: Operation<WritableConnection, T>,
+    Op: Operation<WritableConn, T>,
 {
     conn.immediate_transaction(|conn| op.run(&mut Context::new(conn)))
 }

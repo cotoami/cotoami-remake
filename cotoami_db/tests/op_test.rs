@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use cotoami_db::db::op;
-use cotoami_db::db::op::{Context, Operation, ReadOperation, WritableConnection};
+use cotoami_db::db::op::{Context, Operation, ReadOperation, WritableConn};
 use cotoami_db::Database;
 use derive_new::new;
 use diesel::prelude::*;
@@ -17,29 +17,23 @@ fn operation() -> Result<()> {
     create_table(&mut conn)?;
 
     // when: successful transaction
-    op::run_in_transaction(
-        &mut conn,
-        move |ctx: &mut Context<'_, WritableConnection>| {
-            insert("Cloud").run(ctx)?;
-            insert("Aerith").run(ctx)?;
-            Ok(())
-        },
-    )?;
+    op::run_in_transaction(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
+        insert("Cloud").run(ctx)?;
+        insert("Aerith").run(ctx)?;
+        Ok(())
+    })?;
 
     // then
     let rows = op::run(conn.deref_mut(), all())?;
     assert_eq!(into_values(&rows), vec!["Cloud", "Aerith"]);
 
     // when: failing transaction
-    let result = op::run_in_transaction(
-        &mut conn,
-        move |ctx: &mut Context<'_, WritableConnection>| {
-            insert("Tifa").run(ctx)?;
-            Err(anyhow!("An error occurred during a transaction."))?;
-            insert("Barret").run(ctx)?;
-            Ok(())
-        },
-    );
+    let result = op::run_in_transaction(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
+        insert("Tifa").run(ctx)?;
+        Err(anyhow!("An error occurred during a transaction."))?;
+        insert("Barret").run(ctx)?;
+        Ok(())
+    });
 
     // then
     let rows = op::run(conn.deref_mut(), all())?;
@@ -102,12 +96,12 @@ pub struct TestRow {
     pub value: String,
 }
 
-fn create_table(conn: &mut WritableConnection) -> Result<()> {
+fn create_table(conn: &mut WritableConn) -> Result<()> {
     diesel::sql_query(TABLE_DDL).execute(conn.deref_mut())?;
     Ok(())
 }
 
-fn insert<T: Into<String>>(value: T) -> impl Operation<WritableConnection, TestRow> {
+fn insert<T: Into<String>>(value: T) -> impl Operation<WritableConn, TestRow> {
     let new_row = NewTestRow::new(value.into());
     op::write_op(move |conn| {
         diesel::insert_into(test::table)

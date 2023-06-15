@@ -53,7 +53,7 @@ pub fn recent<'a>(
     })
 }
 
-pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConnection, Coto> + 'a {
+pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
     use crate::schema::cotos::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(cotos)
@@ -63,7 +63,7 @@ pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConnectio
     })
 }
 
-pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConnection, Coto> + 'a {
+pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, Coto> + 'a {
     write_op(move |conn| {
         update_coto.validate()?;
         diesel::update(update_coto)
@@ -73,7 +73,7 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConnect
     })
 }
 
-pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConnection, bool> + '_ {
+pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
     use crate::schema::cotos::dsl::*;
     write_op(move |conn| {
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.

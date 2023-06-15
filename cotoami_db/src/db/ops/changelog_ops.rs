@@ -32,17 +32,15 @@ pub fn get_last_change_number(node_id: &Id<Node>) -> impl ReadOperation<Option<i
     })
 }
 
-pub fn log_change(change: &Change) -> impl Operation<WritableConnection, ChangelogEntry> + '_ {
+pub fn log_change(change: &Change) -> impl Operation<WritableConn, ChangelogEntry> + '_ {
     // insert_new can't return the result directly since the value would
     // reference the local variable `change.new_changelog_entry()`
-    composite_op::<WritableConnection, _, _>(|ctx| {
-        insert_new(&change.new_changelog_entry()).run(ctx)
-    })
+    composite_op::<WritableConn, _, _>(|ctx| insert_new(&change.new_changelog_entry()).run(ctx))
 }
 
 pub fn insert_new<'a>(
     new_entry: &'a NewChangelogEntry<'a>,
-) -> impl Operation<WritableConnection, ChangelogEntry> + 'a {
+) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
     use crate::schema::changelog::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(changelog)
@@ -55,8 +53,8 @@ pub fn insert_new<'a>(
 pub fn import_change<'a>(
     parent_node_id: &'a Id<Node>,
     log: &'a ChangelogEntry,
-) -> impl Operation<WritableConnection, ChangelogEntry> + 'a {
-    composite_op::<WritableConnection, _, _>(|ctx| {
+) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
+    composite_op::<WritableConn, _, _>(|ctx| {
         // check the serial number of the change
         let last_number = get_last_change_number(parent_node_id).run(ctx)?;
         let expected_number = last_number.map(|n| n + 1).unwrap_or(1);
@@ -75,8 +73,8 @@ pub fn import_change<'a>(
     })
 }
 
-fn apply_change(change: &Change) -> impl Operation<WritableConnection, ()> + '_ {
-    composite_op::<WritableConnection, _, _>(move |ctx| {
+fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
         match change {
             Change::None => (),
             Change::CreateCoto(coto) => {

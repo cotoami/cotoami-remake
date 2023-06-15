@@ -44,8 +44,8 @@ pub fn recent(
 pub fn create_root<'a>(
     node_id: &'a Id<Node>,
     name: &'a str,
-) -> impl Operation<WritableConnection, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConnection, _, _>(|ctx| {
+) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WritableConn, _, _>(|ctx| {
         let new_coto = NewCoto::new_root_cotonoma(node_id, name)?;
         let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
         let new_cotonoma = NewCotonoma::new(node_id, &inserted_coto.uuid, name)?;
@@ -59,8 +59,8 @@ pub fn create<'a>(
     posted_in_id: &'a Id<Cotonoma>,
     posted_by_id: &'a Id<Node>,
     name: &'a str,
-) -> impl Operation<WritableConnection, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConnection, _, _>(|ctx| {
+) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WritableConn, _, _>(|ctx| {
         let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, name)?;
         let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
         let new_cotonoma = NewCotonoma::new(node_id, &inserted_coto.uuid, name)?;
@@ -71,7 +71,7 @@ pub fn create<'a>(
 
 pub fn insert<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
-) -> impl Operation<WritableConnection, Cotonoma> + 'a {
+) -> impl Operation<WritableConn, Cotonoma> + 'a {
     use crate::schema::cotonomas::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(cotonomas)
@@ -83,7 +83,7 @@ pub fn insert<'a>(
 
 pub fn update<'a>(
     update_cotonoma: &'a UpdateCotonoma,
-) -> impl Operation<WritableConnection, Cotonoma> + 'a {
+) -> impl Operation<WritableConn, Cotonoma> + 'a {
     write_op(move |conn| {
         update_cotonoma.validate()?;
         diesel::update(update_cotonoma)
@@ -93,7 +93,7 @@ pub fn update<'a>(
     })
 }
 
-pub fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConnection, bool> + '_ {
+pub fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConn, bool> + '_ {
     use crate::schema::cotonomas::dsl::*;
     write_op(move |conn| {
         let affected = diesel::delete(cotonomas.find(id)).execute(conn.deref_mut())?;
@@ -105,8 +105,8 @@ pub fn rename<'a>(
     id: &'a Id<Cotonoma>,
     name: &'a str,
     updated_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConnection, Option<(Cotonoma, Coto)>> + 'a {
-    composite_op::<WritableConnection, _, _>(move |ctx| {
+) -> impl Operation<WritableConn, Option<(Cotonoma, Coto)>> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
         if let Some((cotonoma, coto)) = get(id).run(ctx)? {
             // Update coto
