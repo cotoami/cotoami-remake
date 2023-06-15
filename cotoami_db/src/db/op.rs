@@ -17,33 +17,6 @@ use std::ops::{Deref, DerefMut};
 pub mod and_then;
 pub mod map;
 
-/////////////////////////////////////////////////////////////////////////////
-// Context
-/////////////////////////////////////////////////////////////////////////////
-
-/// A `Context` holds a database connection needed to run an [Operation].
-///
-/// Since it doesn't have public constructors, a client of this module has to use
-/// the functions such as [run()] or [run_in_transaction()] to invoke an [Operation].
-pub struct Context<'a, Conn: 'a> {
-    conn: &'a mut Conn,
-}
-
-impl<'a, Conn> Context<'a, Conn> {
-    /// Private constructor
-    fn new(conn: &'a mut Conn) -> Self {
-        Context { conn }
-    }
-
-    pub fn conn(&mut self) -> &mut Conn {
-        self.conn
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Operation
-/////////////////////////////////////////////////////////////////////////////
-
 /// A runnable unit of database operation
 #[must_use]
 pub trait Operation<Conn, T> {
@@ -67,6 +40,25 @@ pub trait Operation<Conn, T> {
         Self: Sized,
     {
         and_then(self, f)
+    }
+}
+
+/// A `Context` holds a database connection needed to run an [Operation].
+///
+/// Since it doesn't have public constructors, a client of this module has to use
+/// the functions such as [run()] or [run_in_transaction()] to invoke an [Operation].
+pub struct Context<'a, Conn: 'a> {
+    conn: &'a mut Conn,
+}
+
+impl<'a, Conn> Context<'a, Conn> {
+    /// Private constructor
+    fn new(conn: &'a mut Conn) -> Self {
+        Context { conn }
+    }
+
+    pub fn conn(&mut self) -> &mut Conn {
+        self.conn
     }
 }
 
