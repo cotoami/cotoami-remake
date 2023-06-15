@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn get(id: &Id<Link>) -> impl ReadOperation<Option<Link>> + '_ {
+pub fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<Link>> + '_ {
     use crate::schema::links::dsl::*;
     read_op(move |conn| {
         links

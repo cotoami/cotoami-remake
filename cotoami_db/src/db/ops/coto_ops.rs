@@ -10,7 +10,7 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn get(id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
+pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
     use crate::schema::cotos::dsl::*;
     read_op(move |conn| {
         cotos
@@ -21,8 +21,8 @@ pub fn get(id: &Id<Coto>) -> impl ReadOperation<Option<Coto>> + '_ {
     })
 }
 
-pub fn ensure_to_get(id: &Id<Coto>) -> impl Operation<SqliteConnection, Coto> + '_ {
-    composite_op::<SqliteConnection, _, _>(move |ctx| {
+pub fn ensure_to_get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Coto> + '_ {
+    composite_op::<Conn, _, _>(move |ctx| {
         let coto = get(id).run(ctx)?;
         let coto = coto.ok_or(DatabaseError::EntityNotFound {
             kind: "Coto".into(),
@@ -32,12 +32,12 @@ pub fn ensure_to_get(id: &Id<Coto>) -> impl Operation<SqliteConnection, Coto> + 
     })
 }
 
-pub fn recent<'a>(
+pub fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> impl ReadOperation<Paginated<Coto>> + 'a {
+) -> impl Operation<Conn, Paginated<Coto>> + 'a {
     use crate::schema::cotos;
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {

@@ -11,7 +11,9 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn get(id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, Coto)>> + '_ {
+pub fn get<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
     use crate::schema::{cotonomas, cotos};
     read_op(move |conn| {
         cotonomas::table
@@ -24,11 +26,11 @@ pub fn get(id: &Id<Cotonoma>) -> impl ReadOperation<Option<(Cotonoma, Coto)>> + 
     })
 }
 
-pub fn recent(
+pub fn recent<Conn: AsReadableConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,
     page_index: i64,
-) -> impl ReadOperation<Paginated<Cotonoma>> + '_ {
+) -> impl Operation<Conn, Paginated<Cotonoma>> + '_ {
     use crate::schema::cotonomas;
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {

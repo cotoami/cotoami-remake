@@ -9,7 +9,7 @@ use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
 
-pub fn get(number: i64) -> impl ReadOperation<Option<ChangelogEntry>> {
+pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<ChangelogEntry>> {
     use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
         changelog
@@ -20,7 +20,9 @@ pub fn get(number: i64) -> impl ReadOperation<Option<ChangelogEntry>> {
     })
 }
 
-pub fn get_last_change_number(node_id: &Id<Node>) -> impl ReadOperation<Option<i64>> + '_ {
+pub fn get_last_change_number<Conn: AsReadableConn>(
+    node_id: &Id<Node>,
+) -> impl Operation<Conn, Option<i64>> + '_ {
     use crate::schema::changelog::dsl::*;
     use diesel::dsl::max;
     read_op(move |conn| {

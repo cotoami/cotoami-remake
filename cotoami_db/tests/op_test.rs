@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use cotoami_db::db::op;
-use cotoami_db::db::op::{Context, Operation, ReadOperation, WritableConn};
+use cotoami_db::db::op::{AsReadableConn, Context, Operation, WritableConn};
 use cotoami_db::Database;
 use derive_new::new;
 use diesel::prelude::*;
@@ -111,7 +111,7 @@ fn insert<T: Into<String>>(value: T) -> impl Operation<WritableConn, TestRow> {
     })
 }
 
-fn get(rowid: i64) -> impl ReadOperation<Option<TestRow>> {
+fn get<Conn: AsReadableConn>(rowid: i64) -> impl Operation<Conn, Option<TestRow>> {
     op::read_op(move |conn| {
         test::table
             .find(rowid)

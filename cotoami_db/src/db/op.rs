@@ -151,33 +151,35 @@ impl WritableConn {
 // Read Operation
 /////////////////////////////////////////////////////////////////////////////
 
+pub trait AsReadableConn {
+    fn readable(&mut self) -> &mut SqliteConnection;
+}
+
+impl AsReadableConn for SqliteConnection {
+    fn readable(&mut self) -> &mut SqliteConnection {
+        self
+    }
+}
+
+impl AsReadableConn for WritableConn {
+    fn readable(&mut self) -> &mut SqliteConnection {
+        &mut self.0
+    }
+}
+
 pub struct ReadOp<F> {
     f: F,
 }
 
-impl<T, F> Operation<SqliteConnection, T> for ReadOp<F>
+impl<Conn, T, F> Operation<Conn, T> for ReadOp<F>
 where
+    Conn: AsReadableConn,
     F: Fn(&mut SqliteConnection) -> Result<T>,
 {
-    fn run(&self, ctx: &mut Context<'_, SqliteConnection>) -> Result<T> {
-        (self.f)(ctx.conn())
+    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
+        (self.f)(ctx.conn().readable())
     }
 }
-
-impl<T, F> Operation<WritableConn, T> for ReadOp<F>
-where
-    F: Fn(&mut SqliteConnection) -> Result<T>,
-{
-    fn run(&self, ctx: &mut Context<'_, WritableConn>) -> Result<T> {
-        (self.f)(ctx.conn())
-    }
-}
-
-// Workaround to implement trait alias until trait_alias is fully introduced
-// https://doc.rust-lang.org/beta/unstable-book/language-features/trait-alias.html
-pub trait ReadOperation<T>: Operation<SqliteConnection, T> + Operation<WritableConn, T> {}
-
-impl<T, F> ReadOperation<T> for ReadOp<F> where F: Fn(&mut SqliteConnection) -> Result<T> {}
 
 /// Defines a read-only operation using a raw [SqliteConnection]
 pub fn read_op<T, F>(f: F) -> ReadOp<F>
