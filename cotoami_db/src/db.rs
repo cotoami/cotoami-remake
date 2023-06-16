@@ -251,9 +251,9 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {
-        let coto = self.ensure_to_get_coto(id)?;
-        self.ensure_to_be_local_node(&coto.node_id)?;
         let op = composite_op::<WritableConn, _, _>(|ctx| {
+            let coto = coto_ops::ensure_to_get(id).run(ctx)??;
+            self.ensure_to_be_local_node(&coto.node_id)?;
             if coto_ops::delete(id).run(ctx)? {
                 let change = Change::DeleteCoto(*id);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -296,14 +296,6 @@ impl<'a> DatabaseSession<'a> {
         (self.get_globals)().local_node_id.ok_or(anyhow!(
             "Local node row (rowid=1) has not yet been created."
         ))
-    }
-
-    fn ensure_to_get_coto(&mut self, id: &Id<Coto>) -> Result<Coto> {
-        let coto = self.get_coto(id)?.ok_or(DatabaseError::EntityNotFound {
-            kind: "Coto".into(),
-            id: id.to_string(),
-        })?;
-        Ok(coto)
     }
 
     fn ensure_to_be_local_node(&self, node_id: &Id<Node>) -> Result<()> {
