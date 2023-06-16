@@ -16,11 +16,18 @@ jobs:
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
 
+    # https://tauri.app/v1/guides/getting-started/prerequisites#setting-up-linux
     - name: Install packages
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y libgtk-3-dev
-        sudo apt-get install -y libsoup2.4-dev
+        sudo apt update
+        sudo apt install libwebkit2gtk-4.0-dev \
+          build-essential \
+          curl \
+          wget \
+          libssl-dev \
+          libgtk-3-dev \
+          libayatana-appindicator3-dev \
+          librsvg2-dev
 
     - name: Run tests
       # WARN: actions-rs has been unmaintained for quite a while
