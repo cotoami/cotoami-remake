@@ -10,7 +10,7 @@ use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
 use log::info;
-use op::{composite_op, Operation, WritableConn};
+use op::{Context, Operation, WritableConn};
 use ops::*;
 use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
@@ -163,21 +163,24 @@ impl<'a> DatabaseSession<'a> {
         name: &'b str,
         password: Option<&'b str>,
     ) -> Result<(Node, ChangelogEntry)> {
-        let op = composite_op::<WritableConn, _, _>(|ctx| {
-            let node = node_ops::create_local(name, password).run(ctx)?;
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let node = node_ops::create_local(name, password).run(ctx)?;
 
-            let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
+                let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
 
-            let mut update_node = node.to_update();
-            update_node.root_cotonoma_id = Some(&cotonoma.uuid);
-            let node = node_ops::update(&update_node).run(ctx)?;
+                let mut update_node = node.to_update();
+                update_node.root_cotonoma_id = Some(&cotonoma.uuid);
+                let node = node_ops::update(&update_node).run(ctx)?;
 
-            let change = Change::CreateCotonoma(cotonoma, coto);
-            let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                let change = Change::CreateCotonoma(cotonoma, coto);
+                let changelog = changelog_ops::log_change(&change).run(ctx)?;
 
-            Ok((node, changelog))
-        });
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|(node, changelog)| {
+                Ok((node, changelog))
+            },
+        )
+        .map(|(node, changelog)| {
             (self.get_globals)().local_node_id = Some(node.uuid);
             (node, changelog)
         })
@@ -200,8 +203,10 @@ impl<'a> DatabaseSession<'a> {
         parent_node_id: &'b Id<Node>,
         log: &'b ChangelogEntry,
     ) -> Result<ChangelogEntry> {
-        let op = changelog_ops::import_change(parent_node_id, log);
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            changelog_ops::import_change(parent_node_id, log),
+        )
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -241,13 +246,15 @@ impl<'a> DatabaseSession<'a> {
         let local_node_id = self.local_node_id()?;
         let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
         let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
-        let op = composite_op::<WritableConn, _, _>(|ctx| {
-            let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
-            let change = Change::CreateCoto(inserted_coto.clone());
-            let changelog = changelog_ops::log_change(&change).run(ctx)?;
-            Ok((inserted_coto, changelog))
-        });
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
+                let change = Change::CreateCoto(inserted_coto.clone());
+                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                Ok((inserted_coto, changelog))
+            },
+        )
     }
 
     pub fn edit_coto<'b>(
@@ -256,41 +263,45 @@ impl<'a> DatabaseSession<'a> {
         content: Option<&'b str>,
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
-        let op = composite_op::<WritableConn, _, _>(|ctx| {
-            let coto = coto_ops::ensure_to_get(id).run(ctx)??;
-            self.ensure_to_be_local_node(&coto.node_id)?;
-            let mut update_coto = coto.to_update();
-            update_coto.content = content;
-            update_coto.summary = summary;
-            let coto = coto_ops::update(&update_coto).run(ctx)?;
-            let change = Change::UpdateCoto {
-                uuid: *id,
-                content: coto.content.clone(),
-                summary: coto.summary.clone(),
-                updated_at: coto.updated_at,
-            };
-            let changelog = changelog_ops::log_change(&change).run(ctx)?;
-            Ok((coto, changelog))
-        });
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let coto = coto_ops::ensure_to_get(id).run(ctx)??;
+                self.ensure_to_be_local_node(&coto.node_id)?;
+                let mut update_coto = coto.to_update();
+                update_coto.content = content;
+                update_coto.summary = summary;
+                let coto = coto_ops::update(&update_coto).run(ctx)?;
+                let change = Change::UpdateCoto {
+                    uuid: *id,
+                    content: coto.content.clone(),
+                    summary: coto.summary.clone(),
+                    updated_at: coto.updated_at,
+                };
+                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                Ok((coto, changelog))
+            },
+        )
     }
 
     pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {
-        let op = composite_op::<WritableConn, _, _>(|ctx| {
-            let coto = coto_ops::ensure_to_get(id).run(ctx)??;
-            self.ensure_to_be_local_node(&coto.node_id)?;
-            if coto_ops::delete(id).run(ctx)? {
-                let change = Change::DeleteCoto(*id);
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
-                Ok(changelog)
-            } else {
-                Err(DatabaseError::EntityNotFound {
-                    kind: "Coto".into(),
-                    id: id.to_string(),
-                })?
-            }
-        });
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let coto = coto_ops::ensure_to_get(id).run(ctx)??;
+                self.ensure_to_be_local_node(&coto.node_id)?;
+                if coto_ops::delete(id).run(ctx)? {
+                    let change = Change::DeleteCoto(*id);
+                    let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                    Ok(changelog)
+                } else {
+                    Err(DatabaseError::EntityNotFound {
+                        kind: "Coto".into(),
+                        id: id.to_string(),
+                    })?
+                }
+            },
+        )
     }
 
     /////////////////////////////////////////////////////////////////////////////
