@@ -117,7 +117,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 let new_link = link.to_import();
                 link_ops::insert(&new_link).run(ctx)?;
             }
-            Change::UpdateLink {
+            Change::EditLink {
                 uuid,
                 linking_phrase,
                 updated_at,

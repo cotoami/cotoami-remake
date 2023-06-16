@@ -105,7 +105,7 @@ pub enum Change {
     },
     DeleteCotonoma(Id<Cotonoma>),
     CreateLink(Link),
-    UpdateLink {
+    EditLink {
         uuid: Id<Link>,
         linking_phrase: Option<String>,
         updated_at: NaiveDateTime,
