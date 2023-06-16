@@ -21,14 +21,14 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<C
     })
 }
 
-pub fn ensure_to_get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Coto> + '_ {
-    composite_op::<Conn, _, _>(move |ctx| {
-        let coto = get(id).run(ctx)?;
-        let coto = coto.ok_or(DatabaseError::EntityNotFound {
+pub fn ensure_to_get<Conn: AsReadableConn>(
+    id: &Id<Coto>,
+) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
+    get(id).map(|coto| {
+        coto.ok_or(DatabaseError::EntityNotFound {
             kind: "Coto".into(),
             id: id.to_string(),
-        })?;
-        Ok(coto)
+        })
     })
 }
 
