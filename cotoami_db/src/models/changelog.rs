@@ -90,7 +90,7 @@ pub struct NewChangelogEntry<'a> {
 pub enum Change {
     None,
     CreateCoto(Coto),
-    UpdateCoto {
+    EditCoto {
         uuid: Id<Coto>,
         content: Option<String>,
         summary: Option<String>,

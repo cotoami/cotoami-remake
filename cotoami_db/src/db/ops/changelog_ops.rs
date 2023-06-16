@@ -83,7 +83,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 let new_coto = coto.to_import();
                 coto_ops::insert(&new_coto).run(ctx)?;
             }
-            Change::UpdateCoto {
+            Change::EditCoto {
                 uuid,
                 content,
                 summary,

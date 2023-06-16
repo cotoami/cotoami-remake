@@ -272,7 +272,7 @@ impl<'a> DatabaseSession<'a> {
                 update_coto.content = content;
                 update_coto.summary = summary;
                 let coto = coto_ops::update(&update_coto).run(ctx)?;
-                let change = Change::UpdateCoto {
+                let change = Change::EditCoto {
                     uuid: *id,
                     content: coto.content.clone(),
                     summary: coto.summary.clone(),
