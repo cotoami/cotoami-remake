@@ -1,0 +1,120 @@
+use anyhow::Result;
+use assert_matches::assert_matches;
+use cotoami_db::{Change, ChangelogEntry, Coto};
+
+pub mod common;
+
+#[test]
+fn crud_operations() -> Result<()> {
+    // setup
+    let (_root_dir, db, node) = common::setup_db()?;
+    let mut session = db.create_session()?;
+    let cotonoma_id = node.root_cotonoma_id.unwrap();
+
+    // when: post_coto
+    let (coto, changelog2) = session.post_coto(&cotonoma_id, None, "hello", None)?;
+
+    // then
+    assert_matches!(
+        coto,
+        Coto {
+            node_id,
+            posted_in_id,
+            posted_by_id,
+            content: Some(ref content),
+            summary: None,
+            is_cotonoma: false,
+            repost_of_id: None,
+            reposted_in_ids: None,
+            ..
+        } if node_id == node.uuid &&
+             posted_in_id == Some(cotonoma_id) &&
+             posted_by_id == node.uuid &&
+             content == "hello"
+    );
+    common::assert_approximately_now(&coto.created_at());
+    common::assert_approximately_now(&coto.updated_at());
+
+    assert_eq!(session.get_coto(&coto.uuid)?, Some(coto.clone()));
+
+    let all_cotos = session.recent_cotos(None, Some(&cotonoma_id), 5, 0)?;
+    assert_eq!(all_cotos.rows.len(), 1);
+    assert_eq!(all_cotos.rows[0], coto);
+
+    assert_matches!(
+        changelog2,
+        ChangelogEntry {
+            serial_number: 2,
+            parent_node_id: None,
+            parent_serial_number: None,
+            change: Change::CreateCoto(change_coto),
+            ..
+        } if change_coto == Coto { rowid: 0, ..coto }
+    );
+
+    // when: edit_coto
+    let (edited_coto, changelog3) = session.edit_coto(&coto.uuid, "bar", Some("foo"))?;
+
+    // then
+    assert_matches!(
+        edited_coto,
+        Coto {
+            node_id,
+            posted_in_id,
+            posted_by_id,
+            content: Some(ref content),
+            summary: Some(ref summary),
+            is_cotonoma: false,
+            repost_of_id: None,
+            reposted_in_ids: None,
+            ..
+        } if node_id == node.uuid &&
+             posted_in_id == Some(cotonoma_id) &&
+             posted_by_id == node.uuid &&
+             content == "bar" &&
+             summary == "foo"
+    );
+    common::assert_approximately_now(&edited_coto.updated_at());
+
+    assert_eq!(session.get_coto(&coto.uuid)?, Some(edited_coto.clone()));
+
+    assert_matches!(
+        changelog3,
+        ChangelogEntry {
+            serial_number: 3,
+            parent_node_id: None,
+            parent_serial_number: None,
+            change: Change::EditCoto {
+                uuid,
+                content: Some(ref content),
+                summary: Some(ref summary),
+                updated_at,
+            },
+            ..
+        } if uuid == coto.uuid &&
+             content == "bar" &&
+             summary == "foo" &&
+             updated_at == edited_coto.updated_at
+    );
+
+    // when: delete_coto
+    let changelog4 = session.delete_coto(&coto.uuid)?;
+
+    // then
+    assert_eq!(session.get_coto(&coto.uuid)?, None);
+    let all_cotos = session.recent_cotos(None, Some(&cotonoma_id), 5, 0)?;
+    assert_eq!(all_cotos.rows.len(), 0);
+
+    assert_matches!(
+        changelog4,
+        ChangelogEntry {
+            serial_number: 4,
+            parent_node_id: None,
+            parent_serial_number: None,
+            change: Change::DeleteCoto (change_coto_id),
+            ..
+        } if change_coto_id == coto.uuid
+    );
+
+    Ok(())
+}

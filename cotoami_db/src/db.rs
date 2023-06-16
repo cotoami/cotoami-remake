@@ -260,7 +260,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn edit_coto<'b>(
         &mut self,
         id: &'b Id<Coto>,
-        content: Option<&'b str>,
+        content: &'b str,
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
         op::run_in_transaction(
@@ -269,7 +269,7 @@ impl<'a> DatabaseSession<'a> {
                 let coto = coto_ops::ensure_to_get(id).run(ctx)??;
                 self.ensure_to_be_local_node(&coto.node_id)?;
                 let mut update_coto = coto.to_update();
-                update_coto.content = content;
+                update_coto.content = Some(content);
                 update_coto.summary = summary;
                 let coto = coto_ops::update(&update_coto).run(ctx)?;
                 let change = Change::EditCoto {

@@ -1,18 +1,17 @@
 use anyhow::Result;
-use cotoami_db::{Coto, Database};
-use tempfile::tempdir;
+use cotoami_db::Coto;
+
+pub mod common;
 
 #[test]
 fn pagination() -> Result<()> {
     // setup
-    let root_dir = tempdir()?;
-    let db = Database::new(&root_dir)?;
+    let (_root_dir, db, node) = common::setup_db()?;
     let mut session = db.create_session()?;
-    let (node, _) = session.init_as_node("My Node", None)?;
-    let root_cotonoma_id = node.root_cotonoma_id.unwrap();
+    let cotonoma_id = node.root_cotonoma_id.unwrap();
 
     // when
-    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 0)?;
+    let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then
     assert_eq!(paginated.rows.len(), 0);
@@ -22,8 +21,8 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 0);
 
     // when
-    session.post_coto(&root_cotonoma_id, None, "1", None)?;
-    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 0)?;
+    session.post_coto(&cotonoma_id, None, "1", None)?;
+    let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then
     assert_eq!(into_content_vec(&paginated.rows), vec!["1"]);
@@ -33,8 +32,8 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    session.post_coto(&root_cotonoma_id, None, "2", None)?;
-    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 0)?;
+    session.post_coto(&cotonoma_id, None, "2", None)?;
+    let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then
     assert_eq!(into_content_vec(&paginated.rows), vec!["2", "1"]);
@@ -44,8 +43,8 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    session.post_coto(&root_cotonoma_id, None, "3", None)?;
-    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 0)?;
+    session.post_coto(&cotonoma_id, None, "3", None)?;
+    let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then
     assert_eq!(into_content_vec(&paginated.rows), vec!["3", "2"]);
@@ -55,7 +54,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 2);
 
     // when
-    let paginated = session.recent_cotos(None, Some(&root_cotonoma_id), 2, 1)?;
+    let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 1)?;
 
     // then
     assert_eq!(into_content_vec(&paginated.rows), vec!["1"]);

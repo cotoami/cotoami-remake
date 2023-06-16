@@ -1,6 +1,16 @@
 use anyhow::Result;
 use chrono::{DateTime, Duration, Local};
-use tempfile::{NamedTempFile, TempPath};
+use cotoami_db::{Database, Node};
+use tempfile::{tempdir, NamedTempFile, TempDir, TempPath};
+
+pub fn setup_db<'a>() -> Result<(TempDir, Database, Node)> {
+    let root_dir = tempdir()?;
+    let db = Database::new(&root_dir)?;
+    let mut session = db.create_session()?;
+    let (node, _) = session.init_as_node("My Node", None)?;
+    drop(session);
+    Ok((root_dir, db, node))
+}
 
 pub fn assert_approximately_now(datetime: &DateTime<Local>) {
     let now = chrono::offset::Local::now();

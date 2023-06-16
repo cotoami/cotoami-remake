@@ -104,11 +104,12 @@ fn init_as_node() -> Result<()> {
         Node {
             rowid: 1,
             ref name,
-            // root_cotonoma_id: None,
+            root_cotonoma_id,
             owner_password_hash: None,
-            version: 2,  // upgraded once with root_cotonoma_id
+            version: 2,  // root_cotonoma_id has been updated
             ..
-        } if name == "My Node"
+        } if name == "My Node" &&
+             root_cotonoma_id.is_some()
     );
     assert_icon_generated(&node)?;
     common::assert_approximately_now(&node.created_at());
@@ -123,10 +124,12 @@ fn init_as_node() -> Result<()> {
     assert_matches!(
         all_cotonomas.rows[0],
         Cotonoma {
+            uuid,
             node_id,
             ref name,
             ..
-        } if node_id == node.uuid &&
+        } if Some(uuid) == node.root_cotonoma_id &&
+             node_id == node.uuid &&
              name == "My Node"
     );
     common::assert_approximately_now(&all_cotonomas.rows[0].created_at());
