@@ -83,6 +83,9 @@ pub struct NewChangelogEntry<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A serializable form of an atomic change in a Cotoami database
+///
+/// The variants are defined in terms of data change, so they do not necessarily match
+/// the operations in the user-facing API.
 #[derive(
     Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
