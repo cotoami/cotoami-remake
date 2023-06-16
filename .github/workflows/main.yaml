@@ -16,8 +16,11 @@ jobs:
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Install libgtk-3-dev
-      run: sudo apt-get install -y libgtk-3-dev
+    - name: Install packages
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y libgtk-3-dev
+        sudo apt-get install -y libsoup2.4-dev
 
     - name: Run tests
       # WARN: actions-rs has been unmaintained for quite a while
