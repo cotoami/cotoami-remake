@@ -208,6 +208,23 @@ impl<'a> DatabaseSession<'a> {
     // cotos
     /////////////////////////////////////////////////////////////////////////////
 
+    pub fn get_coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
+        op::run(&mut self.ro_conn, coto_ops::get(id))
+    }
+
+    pub fn recent_cotos<'b>(
+        &mut self,
+        node_id: Option<&'b Id<Node>>,
+        posted_in_id: Option<&'b Id<Cotonoma>>,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Coto>> {
+        op::run(
+            &mut self.ro_conn,
+            coto_ops::recent(node_id, posted_in_id, page_size, page_index),
+        )
+    }
+
     /// Posts a coto in the specified cotonoma (`posted_in_id`).
     ///
     /// The target cotonoma has to belong to the local node,
@@ -233,21 +250,29 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 
-    pub fn get_coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
-        op::run(&mut self.ro_conn, coto_ops::get(id))
-    }
-
-    pub fn recent_cotos<'b>(
+    pub fn edit_coto<'b>(
         &mut self,
-        node_id: Option<&'b Id<Node>>,
-        posted_in_id: Option<&'b Id<Cotonoma>>,
-        page_size: i64,
-        page_index: i64,
-    ) -> Result<Paginated<Coto>> {
-        op::run(
-            &mut self.ro_conn,
-            coto_ops::recent(node_id, posted_in_id, page_size, page_index),
-        )
+        id: &'b Id<Coto>,
+        content: Option<&'b str>,
+        summary: Option<&'b str>,
+    ) -> Result<(Coto, ChangelogEntry)> {
+        let op = composite_op::<WritableConn, _, _>(|ctx| {
+            let coto = coto_ops::ensure_to_get(id).run(ctx)??;
+            self.ensure_to_be_local_node(&coto.node_id)?;
+            let mut update_coto = coto.to_update();
+            update_coto.content = content;
+            update_coto.summary = summary;
+            let coto = coto_ops::update(&update_coto).run(ctx)?;
+            let change = Change::UpdateCoto {
+                uuid: *id,
+                content: coto.content.clone(),
+                summary: coto.summary.clone(),
+                updated_at: coto.updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change).run(ctx)?;
+            Ok((coto, changelog))
+        });
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 
     pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {

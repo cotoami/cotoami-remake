@@ -83,9 +83,6 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 let new_coto = coto.to_import();
                 coto_ops::insert(&new_coto).run(ctx)?;
             }
-            Change::DeleteCoto(id) => {
-                coto_ops::delete(id).run(ctx)?;
-            }
             Change::UpdateCoto {
                 uuid,
                 content,
@@ -98,6 +95,9 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 update_coto.summary = summary.as_deref();
                 update_coto.updated_at = *updated_at;
                 coto_ops::update(&update_coto).run(ctx)?;
+            }
+            Change::DeleteCoto(id) => {
+                coto_ops::delete(id).run(ctx)?;
             }
             Change::CreateCotonoma(cotonoma, coto) => {
                 coto_ops::insert(&coto.to_import()).run(ctx)?;

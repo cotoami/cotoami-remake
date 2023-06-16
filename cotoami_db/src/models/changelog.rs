@@ -90,13 +90,13 @@ pub struct NewChangelogEntry<'a> {
 pub enum Change {
     None,
     CreateCoto(Coto),
-    DeleteCoto(Id<Coto>),
     UpdateCoto {
         uuid: Id<Coto>,
         content: Option<String>,
         summary: Option<String>,
         updated_at: NaiveDateTime,
     },
+    DeleteCoto(Id<Coto>),
     CreateCotonoma(Cotonoma, Coto),
     RenameCotonoma {
         uuid: Id<Cotonoma>,
