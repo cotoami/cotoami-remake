@@ -26,6 +26,16 @@ pub fn get<Conn: AsReadableConn>(
     })
 }
 
+pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
+    use crate::schema::cotonomas::dsl::*;
+    read_op(move |conn| {
+        cotonomas
+            .order(created_at.asc())
+            .load::<Cotonoma>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn recent<Conn: AsReadableConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,

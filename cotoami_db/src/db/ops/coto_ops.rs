@@ -32,6 +32,16 @@ pub fn ensure_to_get<Conn: AsReadableConn>(
     })
 }
 
+pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
+    use crate::schema::cotos::dsl::*;
+    read_op(move |conn| {
+        cotos
+            .order(rowid.asc())
+            .load::<Coto>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,

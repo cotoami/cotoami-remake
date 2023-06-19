@@ -8,16 +8,6 @@ use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
 
-pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
-    use crate::schema::nodes::dsl::*;
-    read_op(move |conn| {
-        nodes
-            .order(rowid.asc())
-            .load::<Node>(conn)
-            .map_err(anyhow::Error::from)
-    })
-}
-
 pub fn get<Conn: AsReadableConn>(node_id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
@@ -36,6 +26,16 @@ pub fn local<Conn: AsReadableConn>() -> impl Operation<Conn, Option<Node>> {
             .filter(rowid.eq(Node::ROWID_FOR_LOCAL))
             .first(conn)
             .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
+    use crate::schema::nodes::dsl::*;
+    read_op(move |conn| {
+        nodes
+            .order(rowid.asc())
+            .load::<Node>(conn)
             .map_err(anyhow::Error::from)
     })
 }

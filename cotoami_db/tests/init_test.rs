@@ -119,26 +119,32 @@ fn init_as_node() -> Result<()> {
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node.clone()]);
 
-    let all_cotonomas = session.recent_cotonomas(None, 5, 0)?;
-    assert_eq!(all_cotonomas.rows.len(), 1);
+    let (root_cotonoma, root_coto) = session
+        .get_cotonoma(&node.root_cotonoma_id.unwrap())?
+        .unwrap();
+
     assert_matches!(
-        all_cotonomas.rows[0],
+        root_cotonoma,
         Cotonoma {
             uuid,
             node_id,
+            coto_id,
             ref name,
             ..
         } if Some(uuid) == node.root_cotonoma_id &&
              node_id == node.uuid &&
+             coto_id == root_coto.uuid &&
              name == "My Node"
     );
-    common::assert_approximately_now(&all_cotonomas.rows[0].created_at());
-    common::assert_approximately_now(&all_cotonomas.rows[0].updated_at());
+    common::assert_approximately_now(&root_cotonoma.created_at());
+    common::assert_approximately_now(&root_cotonoma.updated_at());
 
-    let all_cotos = session.recent_cotos(None, None, 5, 0)?;
-    assert_eq!(all_cotos.rows.len(), 1);
+    let all_cotonomas = session.all_cotonomas()?;
+    assert_eq!(all_cotonomas.len(), 1);
+    assert_eq!(all_cotonomas[0], root_cotonoma);
+
     assert_matches!(
-        all_cotos.rows[0],
+        root_coto,
         Coto {
             node_id,
             posted_in_id: None,
@@ -153,8 +159,12 @@ fn init_as_node() -> Result<()> {
              posted_by_id == node.uuid &&
              summary == "My Node"
     );
-    common::assert_approximately_now(&all_cotos.rows[0].created_at());
-    common::assert_approximately_now(&all_cotos.rows[0].updated_at());
+    common::assert_approximately_now(&root_coto.created_at());
+    common::assert_approximately_now(&root_coto.updated_at());
+
+    let all_cotos = session.all_cotos()?;
+    assert_eq!(all_cotos.len(), 1);
+    assert_eq!(all_cotos[0], root_coto);
 
     assert_matches!(
         changelog,
@@ -164,8 +174,8 @@ fn init_as_node() -> Result<()> {
             parent_serial_number: None,
             change: Change::CreateCotonoma(cotonoma, coto),
             ..
-        } if cotonoma == all_cotonomas.rows[0] &&
-             coto == Coto { rowid: 0, ..all_cotos.rows[0].clone() }
+        } if cotonoma == all_cotonomas[0] &&
+             coto == Coto { rowid: 0, ..all_cotos[0].clone() }
     );
 
     Ok(())

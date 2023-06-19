@@ -37,9 +37,9 @@ fn crud_operations() -> Result<()> {
 
     assert_eq!(session.get_coto(&coto.uuid)?, Some(coto.clone()));
 
-    let all_cotos = session.recent_cotos(None, Some(&cotonoma_id), 5, 0)?;
-    assert_eq!(all_cotos.rows.len(), 1);
-    assert_eq!(all_cotos.rows[0], coto);
+    let recent_cotos = session.recent_cotos(None, Some(&cotonoma_id), 5, 0)?;
+    assert_eq!(recent_cotos.rows.len(), 1);
+    assert_eq!(recent_cotos.rows[0], coto);
 
     assert_matches!(
         changelog2,

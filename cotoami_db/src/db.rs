@@ -189,12 +189,12 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn all_nodes(&mut self) -> Result<Vec<Node>> {
-        op::run(&mut self.ro_conn, node_ops::all())
-    }
-
     pub fn get_node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
         op::run(&mut self.ro_conn, node_ops::get(node_id))
+    }
+
+    pub fn all_nodes(&mut self) -> Result<Vec<Node>> {
+        op::run(&mut self.ro_conn, node_ops::all())
     }
 
     pub fn import_nodes(&mut self, received_nodes: &Vec<Node>) -> Result<Vec<Option<Node>>> {
@@ -225,6 +225,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn get_coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
         op::run(&mut self.ro_conn, coto_ops::get(id))
+    }
+
+    pub fn all_cotos(&mut self) -> Result<Vec<Coto>> {
+        op::run(&mut self.ro_conn, coto_ops::all())
     }
 
     pub fn recent_cotos<'b>(
@@ -320,6 +324,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
         op::run(&mut self.ro_conn, cotonoma_ops::get(id))
+    }
+
+    pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
+        op::run(&mut self.ro_conn, cotonoma_ops::all())
     }
 
     pub fn recent_cotonomas(
