@@ -3,6 +3,7 @@
 use crate::db::op::*;
 use crate::models::node::{NewNode, Node, UpdateNode};
 use crate::models::Id;
+use anyhow::anyhow;
 use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
@@ -68,7 +69,22 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, N
     })
 }
 
-pub fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
+pub fn batch_import(
+    received_nodes: &Vec<Node>,
+) -> impl Operation<WritableConn, Vec<Option<Node>>> + '_ {
+    composite_op::<WritableConn, _, _>(|ctx| {
+        local().run(ctx)?.ok_or(anyhow!(
+            "Local node must be created before importing nodes."
+        ))?;
+        let mut results = Vec::new();
+        for node in received_nodes.iter() {
+            results.push(import_or_upgrade(&node).run(ctx)?);
+        }
+        Ok(results)
+    })
+}
+
+fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
     composite_op::<WritableConn, _, _>(|ctx| match get(&received_node.uuid).run(ctx)? {
         Some(local_row) => {
             if received_node.version > local_row.version {
@@ -87,17 +103,5 @@ pub fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, O
                 .get_result(ctx.conn().deref_mut())?;
             Ok(Some(imported_node))
         }
-    })
-}
-
-pub fn batch_import(
-    received_nodes: &Vec<Node>,
-) -> impl Operation<WritableConn, Vec<Option<Node>>> + '_ {
-    composite_op::<WritableConn, _, _>(|ctx| {
-        let mut results = Vec::new();
-        for node in received_nodes.iter() {
-            results.push(import_or_upgrade(&node).run(ctx)?);
-        }
-        Ok(results)
     })
 }
