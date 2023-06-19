@@ -89,3 +89,15 @@ pub fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, O
         }
     })
 }
+
+pub fn batch_import(
+    received_nodes: &Vec<Node>,
+) -> impl Operation<WritableConn, Vec<Option<Node>>> + '_ {
+    composite_op::<WritableConn, _, _>(|ctx| {
+        let mut results = Vec::new();
+        for node in received_nodes.iter() {
+            results.push(import_or_upgrade(&node).run(ctx)?);
+        }
+        Ok(results)
+    })
+}
