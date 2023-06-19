@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::Coto;
+use cotoami_db::prelude::*;
 
 pub mod common;
 

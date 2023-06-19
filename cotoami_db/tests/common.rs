@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::{DateTime, Duration, Local};
-use cotoami_db::{Database, Node};
+use cotoami_db::prelude::*;
 use tempfile::{tempdir, NamedTempFile, TempDir, TempPath};
 
 pub fn setup_db<'a>() -> Result<(TempDir, Database, Node)> {

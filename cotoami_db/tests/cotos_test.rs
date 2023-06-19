@@ -1,6 +1,6 @@
 use anyhow::Result;
 use assert_matches::assert_matches;
-use cotoami_db::{Change, ChangelogEntry, Coto};
+use cotoami_db::prelude::*;
 
 pub mod common;
 

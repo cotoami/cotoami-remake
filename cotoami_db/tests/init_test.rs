@@ -1,6 +1,6 @@
 use anyhow::Result;
 use assert_matches::assert_matches;
-use cotoami_db::{Change, ChangelogEntry, Coto, Cotonoma, Database, Node};
+use cotoami_db::prelude::*;
 use image::ImageFormat;
 use tempfile::tempdir;
 

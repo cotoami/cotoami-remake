@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use cotoami_db::db::op;
 use cotoami_db::db::op::{AsReadableConn, Context, Operation, WritableConn};
-use cotoami_db::Database;
+use cotoami_db::prelude::*;
 use derive_new::new;
 use diesel::prelude::*;
 use schema::test;

@@ -1,10 +1,12 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
-pub use db::{Database, DatabaseSession};
-pub use models::changelog::{Change, ChangelogEntry};
-pub use models::coto::{Coto, Cotonoma};
-pub use models::node::Node;
-pub use models::Id;
+pub mod prelude {
+    pub use super::db::{Database, DatabaseSession};
+    pub use super::models::changelog::{Change, ChangelogEntry};
+    pub use super::models::coto::{Coto, Cotonoma};
+    pub use super::models::node::Node;
+    pub use super::models::Id;
+}
 
 use chrono::offset::Utc;
 use chrono::NaiveDateTime;
