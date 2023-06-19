@@ -23,10 +23,16 @@ fn import_changes() -> Result<()> {
     let mut session2 = db2.create_session()?;
 
     // when: import change1
-    let db2_change1 = session2.import_change(&node.uuid, &db1_change1)?;
+    let db2_change1 = session2.import_change(&node.uuid, &through_serialization(&db1_change1)?)?;
 
     // then
     assert_eq!(db2_change1, db1_change1);
 
     Ok(())
+}
+
+fn through_serialization(log: &ChangelogEntry) -> Result<ChangelogEntry> {
+    let json_string = serde_json::to_string(log)?;
+    let deserialized = serde_json::from_str(&json_string)?;
+    Ok(deserialized)
 }
