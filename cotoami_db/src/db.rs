@@ -194,6 +194,13 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::get(node_id))
     }
 
+    pub fn import_nodes(&mut self, received_nodes: &Vec<Node>) -> Result<Vec<Option<Node>>> {
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            node_ops::batch_import(received_nodes),
+        )
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // changelog
     /////////////////////////////////////////////////////////////////////////////
