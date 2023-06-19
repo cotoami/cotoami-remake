@@ -50,6 +50,10 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Nod
     })
 }
 
+/// Creates a local node
+///
+/// This operation can be executed only once for each database.
+/// A UNIQUE constraint error will be returned when a local node has already existed.
 pub fn create_local<'a>(
     name: &'a str,
     password: Option<&'a str>,

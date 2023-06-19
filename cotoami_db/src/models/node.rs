@@ -123,6 +123,7 @@ impl Node {
             root_cotonoma_id: self.root_cotonoma_id.as_ref(),
             version: self.version,
             created_at: &self.created_at,
+            inserted_at: crate::current_datetime(),
         }
     }
 }
@@ -137,6 +138,7 @@ pub struct ImportNode<'a> {
     root_cotonoma_id: Option<&'a Id<Cotonoma>>,
     version: i32,
     created_at: &'a NaiveDateTime,
+    inserted_at: NaiveDateTime,
 }
 
 /// An `Insertable` node data for launching a new node

@@ -151,8 +151,11 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<Node> {
-        let op = node_ops::create_local("", password);
-        op::run_in_transaction(&mut (self.get_rw_conn)(), op).map(|node| {
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            node_ops::create_local("", password),
+        )
+        .map(|node| {
             (self.get_globals)().local_node_id = Some(node.uuid);
             node
         })
