@@ -1,7 +1,7 @@
 //! Data structure that represents a Cotoami database
 
 use derive_new::new;
-use diesel::backend::RawValue;
+use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::expression::AsExpression;
 use diesel::serialize::ToSql;
@@ -83,7 +83,7 @@ impl<T: Debug> ToSql<Text, Sqlite> for Id<T> {
 }
 
 impl<T> FromSql<Text, Sqlite> for Id<T> {
-    fn from_sql(bytes: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
+    fn from_sql(bytes: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let string = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
         Uuid::parse_str(&string)
             .map(Self::new)
@@ -139,7 +139,7 @@ impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {
 }
 
 impl<T> FromSql<Text, Sqlite> for Ids<T> {
-    fn from_sql(bytes: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
+    fn from_sql(bytes: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let raw_value = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
         let str_ids = raw_value.split(',');
         let mut ids: Vec<Id<T>> = Vec::new();

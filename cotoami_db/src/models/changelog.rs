@@ -9,7 +9,7 @@ use super::node::Node;
 use super::Id;
 use crate::schema::changelog;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
-use diesel::backend::RawValue;
+use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::expression::AsExpression;
 use diesel::prelude::*;
@@ -140,7 +140,7 @@ impl ToSql<Binary, Sqlite> for Change {
 }
 
 impl FromSql<Binary, Sqlite> for Change {
-    fn from_sql(value: RawValue<Sqlite>) -> diesel::deserialize::Result<Self> {
+    fn from_sql(value: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let msgpack_bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(value)?;
         Ok(rmp_serde::from_slice(&msgpack_bytes)?)
     }

@@ -25,11 +25,11 @@ uuid = {version = "1.3.2", features = ["v4", "serde"]}
 validator = {version = "0.15", features = ["derive"]}
 
 # Add support for RETURNING expressions for Sqlite via the returning_clauses_for_sqlite_3_35 feature
-diesel = {version = "2.0.4", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"]}
-diesel_migrations = {version = "2.0.0", features = ["sqlite"]}
+diesel = {version = "2.1.0", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"]}
+diesel_migrations = {version = "2.1.0", features = ["sqlite"]}
 
-# diesel 2.0.4 -> libsqlite3-sys >=0.17.2, <0.27.0
-# https://github.com/diesel-rs/diesel/blob/v2.0.4/diesel/Cargo.toml#L19
+# diesel 2.1.0 -> libsqlite3-sys >=0.17.2, <0.27.0
+# https://github.com/diesel-rs/diesel/blob/v2.1.0/diesel/Cargo.toml#L19
 # SQLite version is 3.41.2
 # https://github.com/rusqlite/rusqlite/blob/v0.29.0/libsqlite3-sys/sqlite3/bindgen_bundled_version.rs#L3
 libsqlite3-sys = {version = "0.26.0", features = ["bundled"]}
