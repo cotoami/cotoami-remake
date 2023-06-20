@@ -16,7 +16,7 @@ DROP INDEX child_nodes_node_id;
 DROP TABLE child_nodes;
 
 --
--- imported_nodes
+-- incorporated_nodes
 --
-DROP INDEX imported_nodes_node_id;
-DROP TABLE imported_nodes;
+DROP INDEX incorporated_nodes_node_id;
+DROP TABLE incorporated_nodes;

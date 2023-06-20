@@ -2,7 +2,7 @@
 
 use super::coto::Cotonoma;
 use super::Id;
-use crate::schema::{child_nodes, imported_nodes, nodes, parent_nodes};
+use crate::schema::{child_nodes, incorporated_nodes, nodes, parent_nodes};
 use anyhow::{anyhow, Result};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
@@ -306,28 +306,28 @@ impl<'a> NewChildNode<'a> {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// imported_nodes
+// incorporated_nodes
 /////////////////////////////////////////////////////////////////////////////
 
-/// A row in `imported_nodes` table
+/// A row in `incorporated_nodes` table
 #[derive(Debug, Clone, PartialEq, Eq, Identifiable, Queryable)]
 #[diesel(primary_key(node_id))]
-pub struct ImportedNode {
-    /// UUID of this node imported in this database
+pub struct IncorporatedNode {
+    /// UUID of this node incorporated in this database
     pub node_id: Id<Node>,
 
     pub created_at: NaiveDateTime,
 }
 
-/// An `Insertable` imported node data
+/// An `Insertable` incorporated node data
 #[derive(Insertable)]
-#[diesel(table_name = imported_nodes)]
-pub struct NewImportedNode<'a> {
+#[diesel(table_name = incorporated_nodes)]
+pub struct NewIncorporatedNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
 }
 
-impl<'a> NewImportedNode<'a> {
+impl<'a> NewIncorporatedNode<'a> {
     pub fn new(node_id: &'a Id<Node>) -> Self {
         Self {
             node_id,
