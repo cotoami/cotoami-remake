@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 pub fn map<Op, Conn, T, U, F>(op: Op, f: F) -> MappedOp<Op, T, F>
 where
     Op: Operation<Conn, T>,
-    F: Fn(T) -> U,
+    F: FnOnce(T) -> U,
 {
     MappedOp {
         op,
@@ -26,10 +26,10 @@ pub struct MappedOp<Op, T, F> {
 impl<Op, Conn, T, U, F> Operation<Conn, U> for MappedOp<Op, T, F>
 where
     Op: Operation<Conn, T>,
-    F: Fn(T) -> U,
+    F: FnOnce(T) -> U,
 {
-    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<U> {
-        let MappedOp { ref op, ref f, .. } = self;
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<U> {
+        let MappedOp { op, f, .. } = self;
         op.run(ctx).map(f)
     }
 }

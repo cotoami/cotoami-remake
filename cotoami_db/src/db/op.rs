@@ -21,12 +21,12 @@ pub mod map;
 #[must_use]
 pub trait Operation<Conn, T> {
     /// Runs this operation with a `Context`
-    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T>;
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T>;
 
     /// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function
     fn map<U, F>(self, f: F) -> MappedOp<Self, T, F>
     where
-        F: Fn(T) -> U,
+        F: FnOnce(T) -> U,
         Self: Sized,
     {
         map(self, f)
@@ -35,7 +35,7 @@ pub trait Operation<Conn, T> {
     /// Creates a chain with another operation that depends on the result of this operation
     fn and_then<Op, U, F>(self, f: F) -> AndThenOp<Self, T, F>
     where
-        F: Fn(T) -> Op,
+        F: FnOnce(T) -> Op,
         Op: Operation<Conn, U>,
         Self: Sized,
     {
@@ -72,9 +72,9 @@ pub struct CompositeOp<F> {
 
 impl<Conn, T, F> Operation<Conn, T> for CompositeOp<F>
 where
-    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
+    F: FnOnce(&mut Context<'_, Conn>) -> Result<T>,
 {
-    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> {
         (self.f)(ctx)
     }
 }
@@ -82,7 +82,7 @@ where
 /// Defines a composite operation sharing a single [Context]
 pub fn composite_op<Conn, F, T>(f: F) -> CompositeOp<F>
 where
-    F: Fn(&mut Context<'_, Conn>) -> Result<T>,
+    F: FnOnce(&mut Context<'_, Conn>) -> Result<T>,
 {
     CompositeOp { f }
 }
@@ -174,9 +174,9 @@ pub struct ReadOp<F> {
 impl<Conn, T, F> Operation<Conn, T> for ReadOp<F>
 where
     Conn: AsReadableConn,
-    F: Fn(&mut SqliteConnection) -> Result<T>,
+    F: FnOnce(&mut SqliteConnection) -> Result<T>,
 {
-    fn run(&self, ctx: &mut Context<'_, Conn>) -> Result<T> {
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> {
         (self.f)(ctx.conn().readable())
     }
 }
@@ -184,7 +184,7 @@ where
 /// Defines a read-only operation using a raw [SqliteConnection]
 pub fn read_op<T, F>(f: F) -> ReadOp<F>
 where
-    F: Fn(&mut SqliteConnection) -> Result<T>,
+    F: FnOnce(&mut SqliteConnection) -> Result<T>,
 {
     ReadOp { f }
 }
@@ -207,9 +207,9 @@ pub struct WriteOp<F> {
 
 impl<T, F> Operation<WritableConn, T> for WriteOp<F>
 where
-    F: Fn(&mut WritableConn) -> Result<T>,
+    F: FnOnce(&mut WritableConn) -> Result<T>,
 {
-    fn run(&self, ctx: &mut Context<'_, WritableConn>) -> Result<T> {
+    fn run(self, ctx: &mut Context<'_, WritableConn>) -> Result<T> {
         (self.f)(ctx.conn())
     }
 }
@@ -217,7 +217,7 @@ where
 /// Defines a read/write operation using a [WritableConn]
 pub fn write_op<T, F>(f: F) -> WriteOp<F>
 where
-    F: Fn(&mut WritableConn) -> Result<T>,
+    F: FnOnce(&mut WritableConn) -> Result<T>,
 {
     WriteOp { f }
 }
