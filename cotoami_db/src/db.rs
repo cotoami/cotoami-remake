@@ -2,7 +2,7 @@
 
 use crate::models::changelog::{Change, ChangelogEntry};
 use crate::models::coto::{Coto, Cotonoma, NewCoto};
-use crate::models::node::Node;
+use crate::models::node::{LocalNode, Node};
 use crate::models::Id;
 use anyhow::{anyhow, Result};
 use diesel::sqlite::SqliteConnection;
@@ -68,8 +68,10 @@ impl Database {
         };
         db.run_migrations()?;
 
-        let node = db.create_session()?.local_node()?;
-        db.globals.lock().local_node_id = node.map(|n| n.uuid);
+        db.globals.lock().local_node = db
+            .create_session()?
+            .local_node()?
+            .map(|(local_node, _)| local_node);
 
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
@@ -131,8 +133,8 @@ impl Database {
 /// Global information shared among sessions in a database
 #[derive(Debug, Default)]
 struct Globals {
-    /// ID of the local node
-    local_node_id: Option<Id<Node>>,
+    /// Local node
+    local_node: Option<LocalNode>,
 }
 
 pub struct DatabaseSession<'a> {
@@ -146,18 +148,18 @@ impl<'a> DatabaseSession<'a> {
     // nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn local_node(&mut self) -> Result<Option<Node>> {
+    pub fn local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
         op::run(&mut self.ro_conn, node_ops::local())
     }
 
-    pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<Node> {
+    pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<(LocalNode, Node)> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             node_ops::create_local("", password),
         )
-        .map(|node| {
-            (self.get_globals)().local_node_id = Some(node.uuid);
-            node
+        .map(|(local_node, node)| {
+            (self.get_globals)().local_node = Some(local_node.clone());
+            (local_node, node)
         })
     }
 
@@ -165,11 +167,11 @@ impl<'a> DatabaseSession<'a> {
         &mut self,
         name: &'b str,
         password: Option<&'b str>,
-    ) -> Result<(Node, ChangelogEntry)> {
+    ) -> Result<((LocalNode, Node), ChangelogEntry)> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let node = node_ops::create_local(name, password).run(ctx)?;
+                let (local_node, node) = node_ops::create_local(name, password).run(ctx)?;
 
                 let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
 
@@ -180,12 +182,12 @@ impl<'a> DatabaseSession<'a> {
                 let change = Change::CreateCotonoma(cotonoma, coto);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
 
-                Ok((node, changelog))
+                Ok(((local_node, node), changelog))
             },
         )
-        .map(|(node, changelog)| {
-            (self.get_globals)().local_node_id = Some(node.uuid);
-            (node, changelog)
+        .map(|((local_node, node), changelog)| {
+            (self.get_globals)().local_node = Some(local_node.clone());
+            ((local_node, node), changelog)
         })
     }
 
@@ -347,9 +349,11 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     fn local_node_id(&self) -> Result<Id<Node>> {
-        (self.get_globals)().local_node_id.ok_or(anyhow!(
-            "Local node row (rowid=1) has not yet been created."
-        ))
+        (self.get_globals)()
+            .local_node
+            .as_ref()
+            .map(|n| n.node_id)
+            .ok_or(anyhow!("A local node has not yet been created."))
     }
 
     fn ensure_to_be_local_node(&self, node_id: &Id<Node>) -> Result<()> {

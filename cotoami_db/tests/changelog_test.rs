@@ -12,7 +12,7 @@ fn import_changes() -> Result<()> {
     let db1 = Database::new(&db1_dir)?;
     let mut session1 = db1.create_session()?;
 
-    let (node1, db1_change1) = session1.init_as_node("My Node", None)?;
+    let ((_, node1), db1_change1) = session1.init_as_node("My Node", None)?;
     let node1_root_cotonoma_id = node1.root_cotonoma_id.unwrap();
     let (node1_root_cotonoma, node1_root_coto) =
         session1.get_cotonoma(&node1_root_cotonoma_id)?.unwrap();

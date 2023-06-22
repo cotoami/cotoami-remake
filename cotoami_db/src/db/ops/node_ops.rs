@@ -1,9 +1,8 @@
 //! Node related operations
 
 use crate::db::op::*;
-use crate::models::node::{NewNode, Node, UpdateNode};
+use crate::models::node::{LocalNode, NewLocalNode, NewNode, Node, UpdateNode};
 use crate::models::Id;
-use anyhow::anyhow;
 use diesel::prelude::*;
 use std::ops::DerefMut;
 use validator::Validate;
@@ -19,11 +18,12 @@ pub fn get<Conn: AsReadableConn>(node_id: &Id<Node>) -> impl Operation<Conn, Opt
     })
 }
 
-pub fn local<Conn: AsReadableConn>() -> impl Operation<Conn, Option<Node>> {
-    use crate::schema::nodes::dsl::*;
+pub fn local<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
+    use crate::schema::{local_node, nodes};
     read_op(move |conn| {
-        nodes
-            .filter(rowid.eq(Node::ROWID_FOR_LOCAL))
+        local_node::table
+            .inner_join(nodes::table)
+            .select((LocalNode::as_select(), Node::as_select()))
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
@@ -57,9 +57,15 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Nod
 pub fn create_local<'a>(
     name: &'a str,
     password: Option<&'a str>,
-) -> impl Operation<WritableConn, Node> + 'a {
+) -> impl Operation<WritableConn, (LocalNode, Node)> + 'a {
+    use crate::schema::local_node;
     composite_op::<WritableConn, _, _>(move |ctx| {
-        insert(&NewNode::new_local(name, password)?).run(ctx)
+        let node = insert(&NewNode::new_local(name)?).run(ctx)?;
+        let new_local_node = NewLocalNode::new(&node.uuid, password)?;
+        let local_node: LocalNode = diesel::insert_into(local_node::table)
+            .values(new_local_node)
+            .get_result(ctx.conn().deref_mut())?;
+        Ok((local_node, node))
     })
 }
 
@@ -77,9 +83,6 @@ pub fn batch_import(
     received_nodes: &Vec<Node>,
 ) -> impl Operation<WritableConn, Vec<Option<Node>>> + '_ {
     composite_op::<WritableConn, _, _>(|ctx| {
-        local().run(ctx)?.ok_or(anyhow!(
-            "Local node must be created before importing nodes."
-        ))?;
         let mut results = Vec::new();
         for node in received_nodes.iter() {
             results.push(import_or_upgrade(&node).run(ctx)?);

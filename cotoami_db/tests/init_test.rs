@@ -28,7 +28,7 @@ fn init_as_empty_node() -> Result<()> {
     let mut session = db.create_session()?;
 
     // when
-    let node = session.init_as_empty_node(None)?;
+    let (local_node, node) = session.init_as_empty_node(None)?;
 
     // then
     assert_matches!(
@@ -37,7 +37,6 @@ fn init_as_empty_node() -> Result<()> {
             rowid: 1,
             ref name,
             root_cotonoma_id: None,
-            owner_password_hash: None,
             version: 1,
             ..
         } if name == ""
@@ -46,7 +45,22 @@ fn init_as_empty_node() -> Result<()> {
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
 
-    assert_eq!(session.local_node()?, Some(node.clone()));
+    assert_matches!(
+        local_node,
+        LocalNode {
+            node_id,
+            rowid: 1,
+            owner_password_hash: None,
+            owner_session_key: None,
+            owner_session_expires_at: None,
+            ..
+        } if node_id == node.uuid
+    );
+
+    assert_eq!(
+        session.local_node()?,
+        Some((local_node.clone(), node.clone()))
+    );
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node]);
 
@@ -67,7 +81,7 @@ fn duplicate_node() -> Result<()> {
     // then
     assert_eq!(
         result.unwrap_err().to_string(),
-        "UNIQUE constraint failed: nodes.rowid"
+        "UNIQUE constraint failed: local_node.rowid"
     );
     Ok(())
 }
@@ -80,11 +94,11 @@ fn owner_password() -> Result<()> {
     let mut session = db.create_session()?;
 
     // when
-    let node = session.init_as_empty_node(Some("foo"))?;
+    let (local_node, _) = session.init_as_empty_node(Some("foo"))?;
 
     // then
-    assert!(node.verify_owner_password("foo").is_ok());
-    assert!(node.verify_owner_password("bar").is_err());
+    assert!(local_node.verify_owner_password("foo").is_ok());
+    assert!(local_node.verify_owner_password("bar").is_err());
     Ok(())
 }
 
@@ -96,7 +110,7 @@ fn init_as_node() -> Result<()> {
     let mut session = db.create_session()?;
 
     // when
-    let (node, changelog) = session.init_as_node("My Node", None)?;
+    let ((local_node, node), changelog) = session.init_as_node("My Node", None)?;
 
     // then
     assert_matches!(
@@ -105,7 +119,6 @@ fn init_as_node() -> Result<()> {
             rowid: 1,
             ref name,
             root_cotonoma_id,
-            owner_password_hash: None,
             version: 2,  // root_cotonoma_id has been updated
             ..
         } if name == "My Node" &&
@@ -115,7 +128,22 @@ fn init_as_node() -> Result<()> {
     common::assert_approximately_now(&node.created_at());
     common::assert_approximately_now(&node.inserted_at());
 
-    assert_eq!(session.local_node()?, Some(node.clone()));
+    assert_matches!(
+        local_node,
+        LocalNode {
+            node_id,
+            rowid: 1,
+            owner_password_hash: None,
+            owner_session_key: None,
+            owner_session_expires_at: None,
+            ..
+        } if node_id == node.uuid
+    );
+
+    assert_eq!(
+        session.local_node()?,
+        Some((local_node.clone(), node.clone()))
+    );
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
     assert_eq!(session.all_nodes()?, vec![node.clone()]);
 

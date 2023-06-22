@@ -8,7 +8,7 @@ CREATE TABLE nodes (
   uuid TEXT NOT NULL UNIQUE,
 
   -- An alias for the SQLite rowid (so-called "integer primary key")
-  -- The rowid `1` denotes the "local node row".
+  -- This serial number is used to return nodes in registration order.
   rowid INTEGER NOT NULL PRIMARY KEY,
 
   -- Icon image
@@ -16,11 +16,6 @@ CREATE TABLE nodes (
 
   -- Display name
   name TEXT NOT NULL,
-
-  -- Password for owner authentication of this node
-  -- This value can be set only in "local node row", therefore, 
-  -- it must not be sent to other nodes.
-  owner_password_hash TEXT,
 
   -- Version of node info
   version INTEGER DEFAULT 1 NOT NULL,
@@ -31,6 +26,31 @@ CREATE TABLE nodes (
 
   -- Registration date in this database
   inserted_at DATETIME NOT NULL -- UTC
+);
+
+
+--
+-- A database instance self-references itself as a "local node".
+-- This table can have only one row that represents the local node.
+--
+CREATE TABLE local_node (
+  -- UUID of a local node
+  node_id TEXT NOT NULL UNIQUE,
+
+  -- An alias for the SQLite rowid (so-called "integer primary key")
+  -- With the CHECK constraint, it enforces that you can't insert more than one row.
+  rowid INTEGER NOT NULL PRIMARY KEY CHECK(rowid = 1),
+
+  -- Password for owner authentication of this local node
+  owner_password_hash TEXT,
+
+  -- Node owner's session key
+  owner_session_key TEXT,
+
+  -- Expiration date of node owner's session
+  owner_session_expires_at DATETIME,
+
+  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 
 
@@ -49,8 +69,6 @@ CREATE TABLE parent_nodes (
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
-
-CREATE INDEX parent_nodes_node_id ON parent_nodes(node_id);
 
 
 --
@@ -73,8 +91,6 @@ CREATE TABLE child_nodes (
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
 
-CREATE INDEX child_nodes_node_id ON child_nodes(node_id);
-
 
 --
 -- This table contains all the nodes whose databases have been incorporated 
@@ -89,5 +105,3 @@ CREATE TABLE incorporated_nodes (
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
-
-CREATE INDEX incorporated_nodes_node_id ON incorporated_nodes(node_id);

@@ -1,22 +1,5 @@
---
--- nodes
---
 DROP TABLE nodes;
-
---
--- parent_nodes
---
-DROP INDEX parent_nodes_node_id;
+DROP TABLE local_node;
 DROP TABLE parent_nodes;
-
---
--- child_nodes
---
-DROP INDEX child_nodes_node_id;
 DROP TABLE child_nodes;
-
---
--- incorporated_nodes
---
-DROP INDEX incorporated_nodes_node_id;
 DROP TABLE incorporated_nodes;

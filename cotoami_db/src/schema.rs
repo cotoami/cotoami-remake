@@ -8,6 +8,7 @@
 
 diesel::allow_tables_to_appear_in_same_query!(
     nodes,
+    local_node,
     parent_nodes,
     child_nodes,
     incorporated_nodes,
@@ -28,12 +29,22 @@ diesel::table! {
         icon -> Binary,
         name -> Text,
         root_cotonoma_id -> Nullable<Text>,
-        owner_password_hash -> Nullable<Text>,
         version -> Integer,
         created_at -> Timestamp,
         inserted_at -> Timestamp,
     }
 }
+
+diesel::table! {
+    local_node (rowid) {
+        node_id -> Text,
+        rowid -> BigInt,
+        owner_password_hash -> Nullable<Text>,
+        owner_session_key -> Nullable<Text>,
+        owner_session_expires_at -> Nullable<Timestamp>,
+    }
+}
+diesel::joinable!(local_node -> nodes (node_id));
 
 diesel::table! {
     parent_nodes (node_id) {
