@@ -4,7 +4,8 @@ pub mod prelude {
     pub use super::db::{Database, DatabaseSession};
     pub use super::models::changelog::{Change, ChangelogEntry};
     pub use super::models::coto::{Coto, Cotonoma};
-    pub use super::models::node::{LocalNode, Node};
+    pub use super::models::node::local::LocalNode;
+    pub use super::models::node::Node;
     pub use super::models::Id;
 }
 

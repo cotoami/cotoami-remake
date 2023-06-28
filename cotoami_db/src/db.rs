@@ -2,7 +2,8 @@
 
 use crate::models::changelog::{Change, ChangelogEntry};
 use crate::models::coto::{Coto, Cotonoma, NewCoto};
-use crate::models::node::{LocalNode, Node};
+use crate::models::node::local::LocalNode;
+use crate::models::node::Node;
 use crate::models::Id;
 use anyhow::{anyhow, Result};
 use diesel::sqlite::SqliteConnection;

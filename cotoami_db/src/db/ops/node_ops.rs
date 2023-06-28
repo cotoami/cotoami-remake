@@ -1,7 +1,8 @@
 //! Node related operations
 
 use crate::db::op::*;
-use crate::models::node::{LocalNode, NewLocalNode, NewNode, Node, UpdateNode};
+use crate::models::node::local::{LocalNode, NewLocalNode};
+use crate::models::node::{NewNode, Node, UpdateNode};
 use crate::models::Id;
 use diesel::prelude::*;
 use std::ops::DerefMut;
