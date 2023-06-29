@@ -2,7 +2,7 @@
 
 use super::coto::Cotonoma;
 use super::Id;
-use crate::schema::{incorporated_nodes, nodes};
+use crate::schema::nodes;
 use anyhow::Result;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
@@ -13,12 +13,9 @@ use identicon_rs::Identicon;
 use validator::Validate;
 
 pub mod child;
+pub mod incorporated;
 pub mod local;
 pub mod parent;
-
-/////////////////////////////////////////////////////////////////////////////
-// nodes
-/////////////////////////////////////////////////////////////////////////////
 
 /// A row in `nodes` table
 #[derive(
@@ -146,6 +143,19 @@ impl<'a> NewNode<'a> {
     }
 }
 
+/// A changeset of a node for update
+#[derive(Debug, Identifiable, AsChangeset, Validate)]
+#[diesel(table_name = nodes, primary_key(uuid))]
+pub struct UpdateNode<'a> {
+    uuid: &'a Id<Node>,
+    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
+    pub icon: &'a Vec<u8>,
+    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
+    pub name: &'a str,
+    pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    version: i32,
+}
+
 /// Generates a new identicon from an input value.
 ///
 /// The defaults are:
@@ -160,19 +170,6 @@ fn generate_identicon(id: &str) -> Result<Vec<u8>> {
     Ok(icon_binary)
 }
 
-/// A changeset of a node for update
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = nodes, primary_key(uuid))]
-pub struct UpdateNode<'a> {
-    uuid: &'a Id<Node>,
-    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
-    pub icon: &'a Vec<u8>,
-    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
-    pub name: &'a str,
-    pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,
-    version: i32,
-}
-
 fn hash_password(password: &[u8]) -> Result<String> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -184,35 +181,4 @@ fn verify_password(password: &str, password_hash: &str) -> Result<()> {
     let parsed_hash = PasswordHash::new(password_hash)?;
     Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
     Ok(())
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// incorporated_nodes
-/////////////////////////////////////////////////////////////////////////////
-
-/// A row in `incorporated_nodes` table
-#[derive(Debug, Clone, PartialEq, Eq, Identifiable, Queryable)]
-#[diesel(primary_key(node_id))]
-pub struct IncorporatedNode {
-    /// UUID of this node incorporated in this database
-    pub node_id: Id<Node>,
-
-    pub created_at: NaiveDateTime,
-}
-
-/// An `Insertable` incorporated node data
-#[derive(Insertable)]
-#[diesel(table_name = incorporated_nodes)]
-pub struct NewIncorporatedNode<'a> {
-    node_id: &'a Id<Node>,
-    created_at: NaiveDateTime,
-}
-
-impl<'a> NewIncorporatedNode<'a> {
-    pub fn new(node_id: &'a Id<Node>) -> Self {
-        Self {
-            node_id,
-            created_at: crate::current_datetime(),
-        }
-    }
 }
