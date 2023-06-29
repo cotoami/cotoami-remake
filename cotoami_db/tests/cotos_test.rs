@@ -32,8 +32,8 @@ fn crud_operations() -> Result<()> {
              posted_by_id == node.uuid &&
              content == "hello"
     );
-    common::assert_approximately_now(&coto.created_at());
-    common::assert_approximately_now(&coto.updated_at());
+    common::assert_approximately_now(coto.created_at());
+    common::assert_approximately_now(coto.updated_at());
 
     assert_eq!(session.get_coto(&coto.uuid)?, Some(coto.clone()));
 
@@ -74,7 +74,7 @@ fn crud_operations() -> Result<()> {
              content == "bar" &&
              summary == "foo"
     );
-    common::assert_approximately_now(&edited_coto.updated_at());
+    common::assert_approximately_now(edited_coto.updated_at());
 
     assert_eq!(session.get_coto(&coto.uuid)?, Some(edited_coto.clone()));
 

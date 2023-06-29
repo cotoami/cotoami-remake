@@ -1,5 +1,8 @@
 use anyhow::Result;
 use assert_matches::assert_matches;
+use chrono::offset::Utc;
+use chrono::Duration;
+use common::assert_approximately_now;
 use cotoami_db::prelude::*;
 use image::ImageFormat;
 use tempfile::tempdir;
@@ -42,8 +45,8 @@ fn init_as_empty_node() -> Result<()> {
         } if name == ""
     );
     assert_icon_generated(&node)?;
-    common::assert_approximately_now(&node.created_at());
-    common::assert_approximately_now(&node.inserted_at());
+    assert_approximately_now(node.created_at());
+    assert_approximately_now(node.inserted_at());
 
     assert_matches!(
         local_node,
@@ -87,18 +90,55 @@ fn duplicate_node() -> Result<()> {
 }
 
 #[test]
-fn owner_password() -> Result<()> {
+fn owner_session() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
     let mut session = db.create_session()?;
+    let duration = Duration::minutes(30);
 
     // when
-    let (local_node, _) = session.init_as_empty_node(Some("foo"))?;
+    let (mut local_node, _) = session.init_as_empty_node(Some("foo"))?;
 
     // then
-    assert!(local_node.verify_owner_password("foo").is_ok());
-    assert!(local_node.verify_owner_password("bar").is_err());
+    assert!(local_node.start_owner_session("bar", duration).is_err());
+
+    let key = local_node.start_owner_session("foo", duration)?.to_owned();
+    assert_eq!(local_node.owner_session_key.as_deref().unwrap(), &key);
+    assert_approximately_now(local_node.owner_session_expires_at().unwrap() - duration);
+    local_node.verify_owner_session(&key)?;
+    assert_eq!(
+        local_node
+            .verify_owner_session("nosuchkey")
+            .unwrap_err()
+            .to_string(),
+        "The passed session key is invalid."
+    );
+
+    // when
+    local_node.owner_session_expires_at = Some(Utc::now().naive_utc() - Duration::seconds(1));
+
+    // then
+    assert_eq!(
+        local_node
+            .verify_owner_session(&key)
+            .unwrap_err()
+            .to_string(),
+        "Owner session has been expired."
+    );
+
+    // when
+    local_node.clear_owner_session();
+
+    // then
+    assert_eq!(
+        local_node
+            .verify_owner_session(&key)
+            .unwrap_err()
+            .to_string(),
+        "Owner session doesn't exist."
+    );
+
     Ok(())
 }
 
@@ -125,8 +165,8 @@ fn init_as_node() -> Result<()> {
              root_cotonoma_id.is_some()
     );
     assert_icon_generated(&node)?;
-    common::assert_approximately_now(&node.created_at());
-    common::assert_approximately_now(&node.inserted_at());
+    assert_approximately_now(node.created_at());
+    assert_approximately_now(node.inserted_at());
 
     assert_matches!(
         local_node,
@@ -164,8 +204,8 @@ fn init_as_node() -> Result<()> {
              coto_id == root_coto.uuid &&
              name == "My Node"
     );
-    common::assert_approximately_now(&root_cotonoma.created_at());
-    common::assert_approximately_now(&root_cotonoma.updated_at());
+    assert_approximately_now(root_cotonoma.created_at());
+    assert_approximately_now(root_cotonoma.updated_at());
 
     let all_cotonomas = session.all_cotonomas()?;
     assert_eq!(all_cotonomas.len(), 1);
@@ -187,8 +227,8 @@ fn init_as_node() -> Result<()> {
              posted_by_id == node.uuid &&
              summary == "My Node"
     );
-    common::assert_approximately_now(&root_coto.created_at());
-    common::assert_approximately_now(&root_coto.updated_at());
+    assert_approximately_now(root_coto.created_at());
+    assert_approximately_now(root_coto.updated_at());
 
     let all_cotos = session.all_cotos()?;
     assert_eq!(all_cotos.len(), 1);

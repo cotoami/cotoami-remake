@@ -40,14 +40,6 @@ impl LocalNode {
         Ok(())
     }
 
-    pub fn verify_owner_password(&self, password: &str) -> Result<()> {
-        let password_hash = self
-            .owner_password_hash
-            .as_ref()
-            .ok_or(anyhow!("No owner password assigned."))?;
-        super::verify_password(password, password_hash)
-    }
-
     pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
         self.verify_owner_password(password)?;
         self.owner_session_key = Some(generate_session_key());
@@ -74,6 +66,14 @@ impl LocalNode {
     pub fn clear_owner_session(&mut self) {
         self.owner_session_key = None;
         self.owner_session_expires_at = None;
+    }
+
+    fn verify_owner_password(&self, password: &str) -> Result<()> {
+        let password_hash = self
+            .owner_password_hash
+            .as_ref()
+            .ok_or(anyhow!("No owner password assigned."))?;
+        super::verify_password(password, password_hash)
     }
 }
 
@@ -111,4 +111,32 @@ fn generate_session_key() -> String {
         .take(32)
         .map(char::from)
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use std::str::FromStr;
+
+    #[test]
+    fn owner_password() -> Result<()> {
+        // setup
+        let mut local_node = LocalNode {
+            node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
+            rowid: 1,
+            owner_password_hash: None,
+            owner_session_key: None,
+            owner_session_expires_at: None,
+        };
+
+        // when
+        local_node.update_owner_password("foo")?;
+
+        // then
+        assert!(local_node.verify_owner_password("foo").is_ok());
+        assert!(local_node.verify_owner_password("bar").is_err());
+
+        Ok(())
+    }
 }
