@@ -61,7 +61,7 @@ pub fn create_local<'a>(
 ) -> impl Operation<WritableConn, (LocalNode, Node)> + 'a {
     use crate::schema::local_node;
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let node = insert(&NewNode::new_local(name)?).run(ctx)?;
+        let node = insert(&NewNode::new(name)?).run(ctx)?;
         let new_local_node = NewLocalNode::new(&node.uuid, password)?;
         let local_node: LocalNode = diesel::insert_into(local_node::table)
             .values(new_local_node)
@@ -80,24 +80,12 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, N
     })
 }
 
-pub fn batch_import(
-    received_nodes: &Vec<Node>,
-) -> impl Operation<WritableConn, Vec<Option<Node>>> + '_ {
-    composite_op::<WritableConn, _, _>(|ctx| {
-        let mut results = Vec::new();
-        for node in received_nodes.iter() {
-            results.push(import_or_upgrade(&node).run(ctx)?);
-        }
-        Ok(results)
-    })
-}
-
-fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
-    composite_op::<WritableConn, _, _>(|ctx| match get(&received_node.uuid).run(ctx)? {
+pub fn import(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
+    composite_op::<WritableConn, _, _>(|ctx| match get(&node.uuid).run(ctx)? {
         Some(local_row) => {
-            if received_node.version > local_row.version {
+            if node.version > local_row.version {
                 let upgraded_node = diesel::update(&local_row)
-                    .set(received_node.to_import())
+                    .set(node.to_import())
                     .get_result(ctx.conn().deref_mut())?;
                 Ok(Some(upgraded_node))
             } else {
@@ -107,7 +95,7 @@ fn import_or_upgrade(received_node: &Node) -> impl Operation<WritableConn, Optio
         None => {
             use crate::schema::nodes::dsl::*;
             let imported_node: Node = diesel::insert_into(nodes)
-                .values(received_node.to_import())
+                .values(node.to_import())
                 .get_result(ctx.conn().deref_mut())?;
             Ok(Some(imported_node))
         }

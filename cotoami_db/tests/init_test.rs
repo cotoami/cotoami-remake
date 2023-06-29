@@ -31,7 +31,7 @@ fn init_as_empty_node() -> Result<()> {
     let mut session = db.create_session()?;
 
     // when
-    let (local_node, node) = session.init_as_empty_node(None)?;
+    let ((local_node, node), changelog) = session.init_as_empty_node(None)?;
 
     // then
     assert_matches!(
@@ -46,7 +46,6 @@ fn init_as_empty_node() -> Result<()> {
     );
     assert_icon_generated(&node)?;
     assert_approximately_now(node.created_at());
-    assert_approximately_now(node.inserted_at());
 
     assert_matches!(
         local_node,
@@ -60,12 +59,23 @@ fn init_as_empty_node() -> Result<()> {
         } if node_id == node.uuid
     );
 
-    assert_eq!(
+    assert_matches!(
         session.local_node()?,
-        Some((local_node.clone(), node.clone()))
+        Some((a, b)) if a == local_node && b == node
     );
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
-    assert_eq!(session.all_nodes()?, vec![node]);
+    assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
+
+    assert_matches!(
+        changelog,
+        ChangelogEntry {
+            serial_number: 1,
+            parent_node_id: None,
+            parent_serial_number: None,
+            change: Change::ImportNode(a),
+            ..
+        } if a == Node { rowid: 0, ..node }
+    );
 
     Ok(())
 }
@@ -98,7 +108,7 @@ fn owner_session() -> Result<()> {
     let duration = Duration::minutes(30);
 
     // when
-    let (mut local_node, _) = session.init_as_empty_node(Some("foo"))?;
+    let ((mut local_node, _), _) = session.init_as_empty_node(Some("foo"))?;
 
     // then
     assert!(local_node.start_owner_session("bar", duration).is_err());
@@ -153,20 +163,20 @@ fn init_as_node() -> Result<()> {
     let ((local_node, node), changelog) = session.init_as_node("My Node", None)?;
 
     // then
+    let root_cotonoma_id = node.root_cotonoma_id.unwrap();
+    let (root_cotonoma, root_coto) = session.get_cotonoma(&root_cotonoma_id)?.unwrap();
+
     assert_matches!(
         node,
         Node {
             rowid: 1,
             ref name,
-            root_cotonoma_id,
             version: 2,  // root_cotonoma_id has been updated
             ..
-        } if name == "My Node" &&
-             root_cotonoma_id.is_some()
+        } if name == "My Node"
     );
     assert_icon_generated(&node)?;
     assert_approximately_now(node.created_at());
-    assert_approximately_now(node.inserted_at());
 
     assert_matches!(
         local_node,
@@ -180,16 +190,12 @@ fn init_as_node() -> Result<()> {
         } if node_id == node.uuid
     );
 
-    assert_eq!(
+    assert_matches!(
         session.local_node()?,
-        Some((local_node.clone(), node.clone()))
+        Some((a, b)) if a == local_node && b == node
     );
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
-    assert_eq!(session.all_nodes()?, vec![node.clone()]);
-
-    let (root_cotonoma, root_coto) = session
-        .get_cotonoma(&node.root_cotonoma_id.unwrap())?
-        .unwrap();
+    assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
 
     assert_matches!(
         root_cotonoma,
@@ -199,17 +205,14 @@ fn init_as_node() -> Result<()> {
             coto_id,
             ref name,
             ..
-        } if Some(uuid) == node.root_cotonoma_id &&
+        } if uuid == root_cotonoma_id &&
              node_id == node.uuid &&
              coto_id == root_coto.uuid &&
              name == "My Node"
     );
     assert_approximately_now(root_cotonoma.created_at());
     assert_approximately_now(root_cotonoma.updated_at());
-
-    let all_cotonomas = session.all_cotonomas()?;
-    assert_eq!(all_cotonomas.len(), 1);
-    assert_eq!(all_cotonomas[0], root_cotonoma);
+    assert_matches!(&session.all_cotonomas()?[..], [a] if a == &root_cotonoma);
 
     assert_matches!(
         root_coto,
@@ -229,10 +232,7 @@ fn init_as_node() -> Result<()> {
     );
     assert_approximately_now(root_coto.created_at());
     assert_approximately_now(root_coto.updated_at());
-
-    let all_cotos = session.all_cotos()?;
-    assert_eq!(all_cotos.len(), 1);
-    assert_eq!(all_cotos[0], root_coto);
+    assert_matches!(&session.all_cotos()?[..], [a] if a == &root_coto);
 
     assert_matches!(
         changelog,
@@ -240,10 +240,11 @@ fn init_as_node() -> Result<()> {
             serial_number: 1,
             parent_node_id: None,
             parent_serial_number: None,
-            change: Change::CreateCotonoma(cotonoma, coto),
+            change: Change::InitNode(a, b, c),
             ..
-        } if cotonoma == all_cotonomas[0] &&
-             coto == Coto { rowid: 0, ..all_cotos[0].clone() }
+        } if a == Node { rowid: 0, ..node } &&
+             b == root_cotonoma &&
+             c == Coto { rowid: 0, ..root_coto }
     );
 
     Ok(())

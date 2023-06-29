@@ -31,7 +31,6 @@ diesel::table! {
         root_cotonoma_id -> Nullable<Text>,
         version -> Integer,
         created_at -> Timestamp,
-        inserted_at -> Timestamp,
     }
 }
 

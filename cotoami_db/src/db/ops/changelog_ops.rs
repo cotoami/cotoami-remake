@@ -1,6 +1,6 @@
 //! Changelog related operations
 
-use super::{coto_ops, cotonoma_ops, link_ops};
+use super::{coto_ops, cotonoma_ops, link_ops, node_ops};
 use crate::db::error::DatabaseError;
 use crate::db::op::*;
 use crate::models::changelog::{Change, ChangelogEntry, NewChangelogEntry};
@@ -79,6 +79,14 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         match change {
             Change::None => (),
+            Change::ImportNode(node) => {
+                node_ops::import(&node).run(ctx)?;
+            }
+            Change::InitNode(node, cotonoma, coto) => {
+                node_ops::import(&node).run(ctx)?;
+                coto_ops::insert(&coto.to_import()).run(ctx)?;
+                cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
+            }
             Change::CreateCoto(coto) => {
                 let new_coto = coto.to_import();
                 coto_ops::insert(&new_coto).run(ctx)?;

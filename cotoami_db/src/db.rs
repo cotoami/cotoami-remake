@@ -153,14 +153,25 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::local())
     }
 
-    pub fn init_as_empty_node(&mut self, password: Option<&str>) -> Result<(LocalNode, Node)> {
+    pub fn init_as_empty_node(
+        &mut self,
+        password: Option<&str>,
+    ) -> Result<((LocalNode, Node), ChangelogEntry)> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
-            node_ops::create_local("", password),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let (local_node, node) = node_ops::create_local("", password).run(ctx)?;
+
+                let change = Change::ImportNode(node);
+                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+
+                let Change::ImportNode(node) = change else { panic!() };
+                Ok(((local_node, node), changelog))
+            },
         )
-        .map(|(local_node, node)| {
+        .map(|((local_node, node), changelog)| {
             (self.get_globals)().local_node = Some(local_node.clone());
-            (local_node, node)
+            ((local_node, node), changelog)
         })
     }
 
@@ -180,9 +191,10 @@ impl<'a> DatabaseSession<'a> {
                 update_node.root_cotonoma_id = Some(&cotonoma.uuid);
                 let node = node_ops::update(&update_node).run(ctx)?;
 
-                let change = Change::CreateCotonoma(cotonoma, coto);
+                let change = Change::InitNode(node, cotonoma, coto);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
 
+                let Change::InitNode(node, _, _) = change else { panic!() };
                 Ok(((local_node, node), changelog))
             },
         )
@@ -200,11 +212,8 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::all())
     }
 
-    pub fn import_nodes(&mut self, received_nodes: &Vec<Node>) -> Result<Vec<Option<Node>>> {
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            node_ops::batch_import(received_nodes),
-        )
+    pub fn import_node(&mut self, node: &Node) -> Result<Option<Node>> {
+        op::run_in_transaction(&mut (self.get_rw_conn)(), node_ops::import(node))
     }
 
     /////////////////////////////////////////////////////////////////////////////

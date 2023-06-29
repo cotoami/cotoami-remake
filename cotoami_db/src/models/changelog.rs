@@ -84,14 +84,16 @@ pub struct NewChangelogEntry<'a> {
 
 /// A serializable form of an atomic change in a Cotoami database
 ///
-/// The variants are defined in terms of data change, so they do not necessarily match
-/// the operations in the user-facing API.
+/// The variants are defined in terms of data change that can be shared with other nodes,
+/// so they do not necessarily match the operations in the user-facing API.
 #[derive(
     Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(sql_type = Binary)]
 pub enum Change {
     None,
+    ImportNode(Node),
+    InitNode(Node, Cotonoma, Coto),
     CreateCoto(Coto),
     EditCoto {
         uuid: Id<Coto>,

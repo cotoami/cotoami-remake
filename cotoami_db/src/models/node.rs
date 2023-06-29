@@ -52,9 +52,6 @@ pub struct Node {
 
     /// Creation date of this node
     pub created_at: NaiveDateTime,
-
-    /// Registration date in this database
-    pub inserted_at: NaiveDateTime,
 }
 
 impl Node {
@@ -63,10 +60,6 @@ impl Node {
 
     pub fn created_at(&self) -> DateTime<Local> {
         Local.from_utc_datetime(&self.created_at)
-    }
-
-    pub fn inserted_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.inserted_at)
     }
 
     pub fn to_update(&self) -> UpdateNode {
@@ -92,7 +85,6 @@ impl Node {
             root_cotonoma_id: self.root_cotonoma_id.as_ref(),
             version: self.version,
             created_at: &self.created_at,
-            inserted_at: crate::current_datetime(),
         }
     }
 }
@@ -108,22 +100,18 @@ pub struct NewNode<'a> {
     name: &'a str,
     version: i32,
     created_at: NaiveDateTime,
-    inserted_at: NaiveDateTime,
 }
 
 impl<'a> NewNode<'a> {
-    /// Create a local node
-    pub fn new_local(name: &'a str) -> Result<Self> {
+    pub fn new(name: &'a str) -> Result<Self> {
         let uuid = Id::generate();
         let icon_binary = generate_identicon(&uuid.to_string())?;
-        let now = crate::current_datetime();
         let new_node = Self {
             uuid,
             icon: icon_binary,
             name,
             version: 1,
-            created_at: now,
-            inserted_at: now,
+            created_at: crate::current_datetime(),
         };
         new_node.validate()?;
         Ok(new_node)
@@ -140,7 +128,6 @@ pub struct ImportNode<'a> {
     root_cotonoma_id: Option<&'a Id<Cotonoma>>,
     version: i32,
     created_at: &'a NaiveDateTime,
-    inserted_at: NaiveDateTime,
 }
 
 /// A changeset of a node for update
