@@ -97,19 +97,6 @@ impl Node {
     }
 }
 
-/// An `Insertable/AsChangeset` node data for importing/upgrading a remote node
-#[derive(Insertable, AsChangeset, Identifiable)]
-#[diesel(table_name = nodes, primary_key(uuid))]
-pub struct ImportNode<'a> {
-    uuid: &'a Id<Node>,
-    icon: &'a Vec<u8>,
-    name: &'a str,
-    root_cotonoma_id: Option<&'a Id<Cotonoma>>,
-    version: i32,
-    created_at: &'a NaiveDateTime,
-    inserted_at: NaiveDateTime,
-}
-
 /// An `Insertable` new node
 #[derive(Insertable, Validate)]
 #[diesel(table_name = nodes)]
@@ -141,6 +128,19 @@ impl<'a> NewNode<'a> {
         new_node.validate()?;
         Ok(new_node)
     }
+}
+
+/// An `Insertable/AsChangeset` node data for importing/upgrading a remote node
+#[derive(Insertable, AsChangeset, Identifiable)]
+#[diesel(table_name = nodes, primary_key(uuid))]
+pub struct ImportNode<'a> {
+    uuid: &'a Id<Node>,
+    icon: &'a Vec<u8>,
+    name: &'a str,
+    root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    version: i32,
+    created_at: &'a NaiveDateTime,
+    inserted_at: NaiveDateTime,
 }
 
 /// A changeset of a node for update
