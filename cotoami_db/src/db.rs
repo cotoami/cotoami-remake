@@ -212,8 +212,20 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::all())
     }
 
-    pub fn import_node(&mut self, node: &Node) -> Result<Option<Node>> {
-        op::run_in_transaction(&mut (self.get_rw_conn)(), node_ops::import(node))
+    pub fn import_node(&mut self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                if let Some(node) = node_ops::import(node).run(ctx)? {
+                    let change = Change::ImportNode(node);
+                    let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                    let Change::ImportNode(node) = change else { panic!() };
+                    Ok(Some((node, changelog)))
+                } else {
+                    Ok(None)
+                }
+            },
+        )
     }
 
     /////////////////////////////////////////////////////////////////////////////

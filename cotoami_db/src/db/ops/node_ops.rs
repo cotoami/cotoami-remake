@@ -80,6 +80,9 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, N
     })
 }
 
+/// Importing a node is an UPSERT-like operation that inserts or updates a node based on
+/// a [Node] data. The update will be done only when the version of the passed node is
+/// larger than the existing one (upgrade).
 pub fn import(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
     composite_op::<WritableConn, _, _>(|ctx| match get(&node.uuid).run(ctx)? {
         Some(local_row) => {
