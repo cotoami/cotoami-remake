@@ -150,7 +150,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
-        op::run(&mut self.ro_conn, node_ops::local())
+        op::run(&mut self.ro_conn, local_node_ops::get())
     }
 
     pub fn init_as_empty_node(
@@ -160,7 +160,7 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let (local_node, node) = node_ops::create_local("", password).run(ctx)?;
+                let (local_node, node) = local_node_ops::create("", password).run(ctx)?;
 
                 let change = Change::ImportNode(node);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -183,7 +183,7 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let (local_node, node) = node_ops::create_local(name, password).run(ctx)?;
+                let (local_node, node) = local_node_ops::create(name, password).run(ctx)?;
 
                 let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
 
