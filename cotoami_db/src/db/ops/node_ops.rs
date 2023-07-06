@@ -1,6 +1,7 @@
 //! Node related operations
 
 use crate::db::op::*;
+use crate::models::coto::Cotonoma;
 use crate::models::node::{NewNode, Node, UpdateNode};
 use crate::models::Id;
 use diesel::prelude::*;
@@ -43,6 +44,23 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, N
         update_node.validate()?;
         diesel::update(update_node)
             .set(update_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn update_root_cotonoma<'a>(
+    id: &'a Id<Node>,
+    root_cotonoma_id: &'a Id<Cotonoma>,
+) -> impl Operation<WritableConn, Node> + 'a {
+    use crate::schema::nodes;
+    write_op(move |conn| {
+        diesel::update(nodes::table)
+            .filter(nodes::uuid.eq(id))
+            .set((
+                nodes::root_cotonoma_id.eq(root_cotonoma_id),
+                nodes::version.eq(nodes::version + 1),
+            ))
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })

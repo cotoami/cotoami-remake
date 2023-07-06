@@ -184,12 +184,8 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let (local_node, node) = local_node_ops::create(name, password).run(ctx)?;
-
                 let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
-
-                let mut update_node = node.to_update();
-                update_node.root_cotonoma_id = Some(&cotonoma.uuid);
-                let node = node_ops::update(&update_node).run(ctx)?;
+                let node = node_ops::update_root_cotonoma(&node.uuid, &cotonoma.uuid).run(ctx)?;
 
                 let change = Change::InitNode(node, cotonoma, coto);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
