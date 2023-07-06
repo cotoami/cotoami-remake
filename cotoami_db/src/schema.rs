@@ -35,7 +35,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    local_node (rowid) {
+    local_node (node_id) {
         node_id -> Text,
         rowid -> BigInt,
         owner_password_hash -> Nullable<Text>,

@@ -32,6 +32,7 @@ CREATE TABLE nodes (
 --
 CREATE TABLE local_node (
   -- UUID of a local node
+  -- This column is used as a primary key in the Diesel models.
   node_id TEXT NOT NULL UNIQUE,
 
   -- An alias for the SQLite rowid (so-called "integer primary key")

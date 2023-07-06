@@ -37,3 +37,12 @@ pub fn create<'a>(
         Ok((local_node, node))
     })
 }
+
+pub fn update<'a>(local_node: &'a LocalNode) -> impl Operation<WritableConn, LocalNode> + 'a {
+    write_op(move |conn| {
+        diesel::update(local_node)
+            .set(local_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
