@@ -17,7 +17,7 @@ fn default_state() -> Result<()> {
     let mut session = db.create_session()?;
 
     // then
-    assert_eq!(session.local_node()?, None);
+    assert_eq!(session.get_local_node()?, None);
     assert!(session.all_nodes()?.is_empty());
 
     Ok(())
@@ -60,7 +60,7 @@ fn init_as_empty_node() -> Result<()> {
     );
 
     assert_matches!(
-        session.local_node()?,
+        session.get_local_node()?,
         Some((a, b)) if a == local_node && b == node
     );
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
@@ -191,7 +191,7 @@ fn init_as_node() -> Result<()> {
     );
 
     assert_matches!(
-        session.local_node()?,
+        session.get_local_node()?,
         Some((a, b)) if a == local_node && b == node
     );
     assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);

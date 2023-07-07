@@ -13,7 +13,7 @@ use error::DatabaseError;
 use log::info;
 use op::{Context, Operation, WritableConn};
 use ops::*;
-use parking_lot::{Mutex, MutexGuard};
+use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use url::Url;
@@ -69,10 +69,7 @@ impl Database {
         };
         db.run_migrations()?;
 
-        db.globals.lock().local_node = db
-            .create_session()?
-            .local_node()?
-            .map(|(local_node, _)| local_node);
+        db.globals.lock().local_node = db.create_session()?.get_local_node()?.map(|x| x.0);
 
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
@@ -134,7 +131,6 @@ impl Database {
 /// Global information shared among sessions in a database
 #[derive(Debug, Default)]
 struct Globals {
-    /// Local node
     local_node: Option<LocalNode>,
 }
 
@@ -149,7 +145,7 @@ impl<'a> DatabaseSession<'a> {
     // nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
+    pub fn get_local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
         op::run(&mut self.ro_conn, local_node_ops::get())
     }
 
