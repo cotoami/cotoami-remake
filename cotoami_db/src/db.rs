@@ -304,7 +304,7 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let coto = coto_ops::ensure_to_get(id).run(ctx)??;
+                let coto = coto_ops::get_or_err(id).run(ctx)??;
                 self.check_if_local_node(&coto.node_id)?;
                 let mut update_coto = coto.to_update();
                 update_coto.content = Some(content);
@@ -326,7 +326,7 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let coto = coto_ops::ensure_to_get(id).run(ctx)??;
+                let coto = coto_ops::get_or_err(id).run(ctx)??;
                 self.check_if_local_node(&coto.node_id)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);

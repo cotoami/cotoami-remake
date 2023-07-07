@@ -21,7 +21,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<C
     })
 }
 
-pub fn ensure_to_get<Conn: AsReadableConn>(
+pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
     get(id).map(|coto| {
