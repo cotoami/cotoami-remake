@@ -143,6 +143,10 @@ pub struct UpdateNode<'a> {
     version: i32,
 }
 
+pub trait BelongsToNode {
+    fn node_id(&self) -> &Id<Node>;
+}
+
 /// Generates a new identicon from an input value.
 ///
 /// The defaults are:

@@ -7,7 +7,7 @@
 //! - Link
 //!     - A link is a directed edge connecting two cotos.
 
-use super::node::Node;
+use super::node::{BelongsToNode, Node};
 use super::{Id, Ids};
 use crate::schema::{cotonomas, cotos, links};
 use anyhow::Result;
@@ -141,6 +141,12 @@ impl Display for Coto {
                 None => write!(f, "{:?}", content),
             }
         }
+    }
+}
+
+impl BelongsToNode for Coto {
+    fn node_id(&self) -> &Id<Node> {
+        &self.node_id
     }
 }
 
@@ -302,6 +308,12 @@ impl Cotonoma {
     }
 }
 
+impl BelongsToNode for Cotonoma {
+    fn node_id(&self) -> &Id<Node> {
+        &self.node_id
+    }
+}
+
 /// An `Insertable` cotonoma data
 #[derive(Insertable, Validate)]
 #[diesel(table_name = cotonomas)]
@@ -412,6 +424,12 @@ impl Link {
             created_at: self.created_at,
             updated_at: self.updated_at,
         }
+    }
+}
+
+impl BelongsToNode for Link {
+    fn node_id(&self) -> &Id<Node> {
+        &self.node_id
     }
 }
 

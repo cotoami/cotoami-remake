@@ -3,7 +3,7 @@
 use crate::models::changelog::{Change, ChangelogEntry};
 use crate::models::coto::{Coto, Cotonoma, NewCoto};
 use crate::models::node::local::LocalNode;
-use crate::models::node::Node;
+use crate::models::node::{BelongsToNode, Node};
 use crate::models::Id;
 use anyhow::{anyhow, Result};
 use diesel::sqlite::SqliteConnection;
@@ -305,7 +305,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.check_if_local_node(&coto.node_id)?;
+                self.check_if_belongs_to_local_node(&coto)?;
                 let mut update_coto = coto.to_update();
                 update_coto.content = Some(content);
                 update_coto.summary = summary;
@@ -327,7 +327,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.check_if_local_node(&coto.node_id)?;
+                self.check_if_belongs_to_local_node(&coto)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -370,11 +370,15 @@ impl<'a> DatabaseSession<'a> {
     // internals
     /////////////////////////////////////////////////////////////////////////////
 
-    fn check_if_local_node(&self, node_id: &Id<Node>) -> Result<()> {
+    fn check_if_belongs_to_local_node<T: BelongsToNode + std::fmt::Debug>(
+        &self,
+        entity: &T,
+    ) -> Result<()> {
         let local_node_id = (self.get_globals)().require_local_node()?.node_id;
-        if *node_id != local_node_id {
+        if *entity.node_id() != local_node_id {
             return Err(anyhow!(
-                "This operation can be executed only against objects belonging to the local node."
+                "The entity doesn't belong to the local node: {:?}",
+                entity
             ));
         }
         Ok(())
@@ -390,7 +394,7 @@ impl<'a> DatabaseSession<'a> {
                     kind: "Cotonoma".into(),
                     id: cotonoma_id.to_string(),
                 })?;
-        self.check_if_local_node(&cotonoma.node_id)?;
+        self.check_if_belongs_to_local_node(&cotonoma)?;
         Ok(())
     }
 }
