@@ -13,7 +13,7 @@ use error::DatabaseError;
 use log::info;
 use op::{Context, Operation, WritableConn};
 use ops::*;
-use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
+use parking_lot::{Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use url::Url;
@@ -132,6 +132,14 @@ impl Database {
 #[derive(Debug, Default)]
 struct Globals {
     local_node: Option<LocalNode>,
+}
+
+impl Globals {
+    pub fn require_local_node(&self) -> Result<&LocalNode> {
+        self.local_node
+            .as_ref()
+            .ok_or(anyhow!("A local node has not yet been created."))
+    }
 }
 
 pub struct DatabaseSession<'a> {
@@ -271,9 +279,9 @@ impl<'a> DatabaseSession<'a> {
         content: &'b str,
         summary: Option<&'b str>,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.ensure_cotonoma_belongs_to_local_node(posted_in_id)?;
+        self.check_if_cotonoma_belongs_to_local_node(posted_in_id)?;
 
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = (self.get_globals)().require_local_node()?.node_id;
         let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
         let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
         op::run_in_transaction(
@@ -297,7 +305,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::ensure_to_get(id).run(ctx)??;
-                self.ensure_to_be_local_node(&coto.node_id)?;
+                self.check_if_local_node(&coto.node_id)?;
                 let mut update_coto = coto.to_update();
                 update_coto.content = Some(content);
                 update_coto.summary = summary;
@@ -319,7 +327,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::ensure_to_get(id).run(ctx)??;
-                self.ensure_to_be_local_node(&coto.node_id)?;
+                self.check_if_local_node(&coto.node_id)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -362,24 +370,17 @@ impl<'a> DatabaseSession<'a> {
     // internals
     /////////////////////////////////////////////////////////////////////////////
 
-    fn local_node_id(&self) -> Result<Id<Node>> {
-        (self.get_globals)()
-            .local_node
-            .as_ref()
-            .map(|n| n.node_id)
-            .ok_or(anyhow!("A local node has not yet been created."))
-    }
-
-    fn ensure_to_be_local_node(&self, node_id: &Id<Node>) -> Result<()> {
-        if *node_id != self.local_node_id()? {
+    fn check_if_local_node(&self, node_id: &Id<Node>) -> Result<()> {
+        let local_node_id = (self.get_globals)().require_local_node()?.node_id;
+        if *node_id != local_node_id {
             return Err(anyhow!(
-                "This operation can be executed only against an object in the local node."
+                "This operation can be executed only against objects belonging to the local node."
             ));
         }
         Ok(())
     }
 
-    fn ensure_cotonoma_belongs_to_local_node<'b>(
+    fn check_if_cotonoma_belongs_to_local_node<'b>(
         &mut self,
         cotonoma_id: &'b Id<Cotonoma>,
     ) -> Result<()> {
@@ -389,7 +390,7 @@ impl<'a> DatabaseSession<'a> {
                     kind: "Cotonoma".into(),
                     id: cotonoma_id.to_string(),
                 })?;
-        self.ensure_to_be_local_node(&cotonoma.node_id)?;
+        self.check_if_local_node(&cotonoma.node_id)?;
         Ok(())
     }
 }
