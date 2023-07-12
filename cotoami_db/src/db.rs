@@ -6,6 +6,7 @@ use crate::models::node::local::LocalNode;
 use crate::models::node::{BelongsToNode, Node};
 use crate::models::Id;
 use anyhow::{anyhow, Result};
+use core::time::Duration;
 use diesel::sqlite::SqliteConnection;
 use diesel::Connection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -13,9 +14,8 @@ use error::DatabaseError;
 use log::info;
 use op::{Context, Operation, WritableConn};
 use ops::*;
-use parking_lot::{Mutex, MutexGuard};
+use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 use url::Url;
 
 use self::ops::cotonoma_ops;
@@ -132,14 +132,6 @@ impl Database {
 #[derive(Debug, Default)]
 struct Globals {
     local_node: Option<LocalNode>,
-}
-
-impl Globals {
-    pub fn require_local_node(&self) -> Result<&LocalNode> {
-        self.local_node
-            .as_ref()
-            .ok_or(anyhow!("A local node has not yet been created."))
-    }
 }
 
 pub struct DatabaseSession<'a> {
@@ -281,7 +273,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(Coto, ChangelogEntry)> {
         self.check_if_cotonoma_belongs_to_local_node(posted_in_id)?;
 
-        let local_node_id = (self.get_globals)().require_local_node()?.node_id;
+        let local_node_id = self.require_local_node()?.node_id;
         let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
         let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
         op::run_in_transaction(
@@ -370,11 +362,16 @@ impl<'a> DatabaseSession<'a> {
     // internals
     /////////////////////////////////////////////////////////////////////////////
 
+    fn require_local_node(&self) -> Result<MappedMutexGuard<LocalNode>> {
+        MutexGuard::try_map((self.get_globals)(), |g| g.local_node.as_mut())
+            .map_err(|_| anyhow!("A local node has not yet been created."))
+    }
+
     fn check_if_belongs_to_local_node<T: BelongsToNode + std::fmt::Debug>(
         &self,
         entity: &T,
     ) -> Result<()> {
-        let local_node_id = (self.get_globals)().require_local_node()?.node_id;
+        let local_node_id = self.require_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
             return Err(anyhow!(
                 "The entity doesn't belong to the local node: {:?}",
