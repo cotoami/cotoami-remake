@@ -237,6 +237,11 @@ impl<'a> DatabaseSession<'a> {
         Ok(key)
     }
 
+    pub fn verify_owner_session(&self, key: &str) -> Result<()> {
+        let local_node = self.require_local_node()?;
+        local_node.verify_owner_session(key)
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // changelog
     /////////////////////////////////////////////////////////////////////////////
