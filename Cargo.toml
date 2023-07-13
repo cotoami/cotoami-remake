@@ -2,4 +2,5 @@
 members = [
   "cotoami_desktop/tauri",
   "cotoami_db",
+  "cotoami_node",
 ]
