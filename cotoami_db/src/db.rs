@@ -242,6 +242,16 @@ impl<'a> DatabaseSession<'a> {
         local_node.verify_owner_session(key)
     }
 
+    pub fn clear_owner_session(&mut self) -> Result<()> {
+        let mut local_node = self.require_local_node()?;
+        local_node.clear_owner_session();
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            local_node_ops::update(&local_node),
+        )?;
+        Ok(())
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // changelog
     /////////////////////////////////////////////////////////////////////////////
