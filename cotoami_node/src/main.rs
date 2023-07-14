@@ -1,17 +1,18 @@
 use anyhow::Result;
 use axum::{http::Uri, response::IntoResponse, routing::get, Router, Server};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::SocketAddr;
 
 const DEFAULT_PORT: u16 = 5103;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    env_logger::init(); // ex. export RUST_LOG=debug
+    // install global collector configured based on RUST_LOG env var.
+    tracing_subscriber::fmt::init();
 
     let app = Router::new().fallback(fallback).route("/", get(root));
 
-    let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), DEFAULT_PORT);
-    Server::bind(&socket)
+    let addr = SocketAddr::from(([0, 0, 0, 0], DEFAULT_PORT));
+    Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
