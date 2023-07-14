@@ -4,6 +4,8 @@ use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tracing::info;
 
+pub mod pubsub;
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Install global collector configured based on RUST_LOG env var.
