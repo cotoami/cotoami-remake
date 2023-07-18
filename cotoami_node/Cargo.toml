@@ -9,6 +9,8 @@ version = "0.1.0"
 anyhow = "1.0" 
 axum = "0.6" 
 axum-macros = "0.3.7" 
+cotoami_db = {path = "../cotoami_db"} 
+dirs = "5.0.1" 
 dotenvy = "0.15.7" 
 envy = "0.4" # seems unmaintained
 futures = "0.3.28" 
