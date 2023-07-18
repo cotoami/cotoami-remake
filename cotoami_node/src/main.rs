@@ -1,7 +1,6 @@
 use anyhow::Result;
 use axum::{
     http::StatusCode,
-    http::Uri,
     response::sse::Event,
     response::{IntoResponse, Response},
     routing::get,
@@ -17,7 +16,8 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tracing::{error, info};
 
-pub mod pubsub;
+mod api;
+mod pubsub;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -26,7 +26,8 @@ async fn main() -> Result<()> {
 
     let config = Config::load()?;
     info!("Config loaded: {:?}", config);
-    let port = config.port; // save it before moving to the state
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
 
     let pubsub = Publisher::<Result<Event, Infallible>>::new();
 
@@ -40,12 +41,13 @@ async fn main() -> Result<()> {
         db: Arc::new(db),
     };
 
-    let app = Router::new()
-        .fallback(fallback)
-        .route("/", get(root))
+    let api_routes = Router::new()
+        .fallback(api::fallback)
+        .route("/", get(api::root))
+        .nest("/nodes", api::nodes::routes(state.clone()))
         .with_state(state);
+    let app = Router::new().nest("/api", api_routes);
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -144,21 +146,4 @@ struct AppState {
     config: Arc<Config>,
     pubsub: Arc<Mutex<Publisher<Result<Event, Infallible>>>>,
     db: Arc<Database>,
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Handlers
-/////////////////////////////////////////////////////////////////////////////
-
-/// axum handler for any request that fails to match the router routes.
-/// This implementation returns HTTP status code Not Found (404).
-async fn fallback(uri: Uri) -> impl IntoResponse {
-    (
-        axum::http::StatusCode::NOT_FOUND,
-        format!("No route {}", uri),
-    )
-}
-
-async fn root() -> &'static str {
-    "Hello, World!"
 }
