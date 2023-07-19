@@ -105,15 +105,15 @@ impl Config {
 // https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
 
 enum WebError {
-    AnyhowError(anyhow::Error),
+    AppError(anyhow::Error),
     Status((StatusCode, String)),
 }
 
-// Tell axum how to convert `AppError` into a response.
+// Tell axum how to convert `WebError` into a response.
 impl IntoResponse for WebError {
     fn into_response(self) -> Response {
         match self {
-            WebError::AnyhowError(e) => {
+            WebError::AppError(e) => {
                 error!("Something went wrong: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -133,7 +133,7 @@ where
     E: Into<anyhow::Error>,
 {
     fn from(err: E) -> Self {
-        WebError::AnyhowError(err.into())
+        WebError::AppError(err.into())
     }
 }
 
