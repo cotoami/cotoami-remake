@@ -1,11 +1,8 @@
 use anyhow::Result;
-use axum::{
-    http::StatusCode,
-    response::sse::Event,
-    response::{IntoResponse, Response},
-    routing::get,
-    Router, Server,
-};
+use axum::http::Uri;
+use axum::response::sse::Event;
+use axum::response::IntoResponse;
+use axum::{Router, Server};
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use pubsub::Publisher;
@@ -14,7 +11,7 @@ use std::fs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use tracing::{error, info};
+use tracing::info;
 
 mod api;
 mod pubsub;
@@ -41,19 +38,26 @@ async fn main() -> Result<()> {
         db: Arc::new(db),
     };
 
-    let api_routes = Router::new()
-        .fallback(api::fallback)
-        .route("/", get(api::root))
-        .nest("/nodes", api::nodes::routes(state.clone()))
+    let router = Router::new()
+        .nest("/api", api::routes())
+        .fallback(fallback)
         .with_state(state);
-    let app = Router::new().nest("/api", api_routes);
 
     Server::bind(&addr)
-        .serve(app.into_make_service())
+        .serve(router.into_make_service())
         .await
         .unwrap();
 
     Ok(())
+}
+
+/// axum handler for any request that fails to match the router routes.
+/// This implementation returns HTTP status code Not Found (404).
+async fn fallback(uri: Uri) -> impl IntoResponse {
+    (
+        axum::http::StatusCode::NOT_FOUND,
+        format!("No route {}", uri),
+    )
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -94,46 +98,6 @@ impl Config {
                     })
                     .unwrap_or(PathBuf::from(Self::DEFAULT_DB_DIR_NAME))
             })
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Error
-/////////////////////////////////////////////////////////////////////////////
-
-// A slightly revised version of the official example
-// https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
-
-enum WebError {
-    AppError(anyhow::Error),
-    Status((StatusCode, String)),
-}
-
-// Tell axum how to convert `WebError` into a response.
-impl IntoResponse for WebError {
-    fn into_response(self) -> Response {
-        match self {
-            WebError::AppError(e) => {
-                error!("Something went wrong: {}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Something went wrong: {}", e),
-                )
-                    .into_response()
-            }
-            WebError::Status(status) => status.into_response(),
-        }
-    }
-}
-
-// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
-// `Result<_, WebError>`. That way you don't need to do that manually.
-impl<E> From<E> for WebError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        WebError::AppError(err.into())
     }
 }
 
