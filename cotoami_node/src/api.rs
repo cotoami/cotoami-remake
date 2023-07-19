@@ -87,6 +87,12 @@ struct ClientError {
     message: String,
 }
 
+impl ClientError {
+    fn into_result<T>(self) -> Result<T, WebError> {
+        into_result(self)
+    }
+}
+
 impl From<ClientError> for ClientErrors {
     fn from(err: ClientError) -> Self {
         Self {
