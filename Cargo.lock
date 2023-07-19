@@ -534,6 +534,7 @@ dependencies = [
  "axum",
  "axum-macros",
  "cotoami_db",
+ "derive-new",
  "dirs",
  "dotenvy",
  "envy",

@@ -3,7 +3,8 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
+use derive_new::new;
 use tracing::error;
 
 mod nodes;
@@ -19,14 +20,15 @@ pub(super) async fn root(State(_): State<AppState>) -> &'static str {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Handler's error
+// Errors
 /////////////////////////////////////////////////////////////////////////////
 
 // A slightly revised version of the official example
 // https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
 
 enum WebError {
-    AppError(anyhow::Error),
+    ServerSide(anyhow::Error),
+    ClientSide(ClientErrors),
     Status((StatusCode, String)),
 }
 
@@ -34,7 +36,7 @@ enum WebError {
 impl IntoResponse for WebError {
     fn into_response(self) -> Response {
         match self {
-            WebError::AppError(e) => {
+            WebError::ServerSide(e) => {
                 error!("Something went wrong: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -42,6 +44,7 @@ impl IntoResponse for WebError {
                 )
                     .into_response()
             }
+            WebError::ClientSide(errors) => (StatusCode::BAD_REQUEST, Json(errors)).into_response(),
             WebError::Status(status) => status.into_response(),
         }
     }
@@ -54,6 +57,41 @@ where
     E: Into<anyhow::Error>,
 {
     fn from(err: E) -> Self {
-        WebError::AppError(err.into())
+        WebError::ServerSide(err.into())
+    }
+}
+
+#[derive(new, serde::Serialize)]
+struct ClientErrors {
+    message: String,
+    errors: Vec<ClientError>,
+}
+
+impl ClientErrors {
+    fn into_result<T>(self) -> Result<T, WebError> {
+        into_result(self)
+    }
+}
+
+fn into_result<T, E>(e: E) -> Result<T, WebError>
+where
+    E: Into<ClientErrors>,
+{
+    Err(WebError::ClientSide(e.into()))
+}
+
+#[derive(new, serde::Serialize)]
+struct ClientError {
+    code: String,
+    args: Vec<String>,
+    message: String,
+}
+
+impl From<ClientError> for ClientErrors {
+    fn from(err: ClientError) -> Self {
+        Self {
+            message: err.message.clone(),
+            errors: vec![err],
+        }
     }
 }

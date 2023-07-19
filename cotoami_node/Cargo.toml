@@ -10,6 +10,7 @@ anyhow = "1.0"
 axum = "0.6" 
 axum-macros = "0.3.7" 
 cotoami_db = {path = "../cotoami_db"} 
+derive-new = "0.5" 
 dirs = "5.0.1" 
 dotenvy = "0.15.7" 
 envy = "0.4" # seems unmaintained
