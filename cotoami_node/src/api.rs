@@ -75,7 +75,7 @@ impl ClientErrors {
         }
     }
 
-    fn from_validation_errors(v_errors: ValidationErrors, resource: &str) -> Self {
+    fn from_validation_errors(resource: &str, v_errors: ValidationErrors) -> Self {
         let mut c_errors = ClientErrors::new("Validation failed");
         for (field, errors_kind) in v_errors.into_errors().into_iter() {
             if let ValidationErrorsKind::Field(f_errors) = errors_kind {
