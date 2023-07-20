@@ -4,9 +4,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
-use derive_new::new;
 use tracing::error;
-use validator::ValidationError;
+use validator::{ValidationErrors, ValidationErrorsKind};
 
 mod nodes;
 
@@ -62,13 +61,34 @@ where
     }
 }
 
-#[derive(new, serde::Serialize)]
+#[derive(serde::Serialize)]
 struct ClientErrors {
     description: String,
     errors: Vec<ClientError>,
 }
 
 impl ClientErrors {
+    fn new(description: impl Into<String>) -> Self {
+        Self {
+            description: description.into(),
+            errors: Vec::new(),
+        }
+    }
+
+    fn from_validation_errors(v_errors: ValidationErrors, resource: &str) -> Self {
+        let mut c_errors = ClientErrors::new("Validation failed");
+        for (field, errors_kind) in v_errors.into_errors().into_iter() {
+            if let ValidationErrorsKind::Field(f_errors) = errors_kind {
+                for f_error in f_errors.into_iter() {
+                    let c_error = ClientError::field(resource, field, f_error.code);
+                    c_errors.errors.push(c_error);
+                }
+            }
+            // It doesn't support Struct/List in ValidationErrorsKind
+        }
+        c_errors
+    }
+
     fn into_result<T>(self) -> Result<T, WebError> {
         into_result(self)
     }
