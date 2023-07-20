@@ -9,7 +9,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 pub(super) fn routes() -> Router<AppState> {
-    Router::new().route("/local", get(local_get).put(local_put))
+    Router::new().route("/local", get(get_local_node).put(init_local_node))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ struct LocalNode {
     name: String,
 }
 
-async fn local_get(State(state): State<AppState>) -> Result<Json<LocalNode>, WebError> {
+async fn get_local_node(State(state): State<AppState>) -> Result<Json<LocalNode>, WebError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         if let Some((local_node, node)) = db.get_local_node()? {
@@ -44,7 +44,7 @@ struct InitNode {
     name: Option<String>,
 }
 
-async fn local_put(
+async fn init_local_node(
     State(state): State<AppState>,
     Form(init_node): Form<InitNode>,
 ) -> Result<Json<LocalNode>, WebError> {

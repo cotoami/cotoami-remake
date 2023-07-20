@@ -1,9 +1,12 @@
 use crate::AppState;
 use axum::extract::State;
 use axum::http::StatusCode;
+use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
+use futures::stream::Stream;
+use std::convert::Infallible;
 use tracing::error;
 use validator::{ValidationErrors, ValidationErrorsKind};
 
@@ -12,11 +15,19 @@ mod nodes;
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(root))
+        .route("/events", get(stream_events))
         .nest("/nodes", nodes::routes())
 }
 
 pub(super) async fn root(State(_): State<AppState>) -> &'static str {
-    "Hello, World!"
+    "Cotoami Node API"
+}
+
+async fn stream_events(
+    State(state): State<AppState>,
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    let sub = state.pubsub.lock().subscribe();
+    Sse::new(sub).keep_alive(KeepAlive::default())
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -29,7 +40,6 @@ pub(super) async fn root(State(_): State<AppState>) -> &'static str {
 enum WebError {
     ServerSide(anyhow::Error),
     ClientSide(ClientErrors),
-    Status((StatusCode, String)),
 }
 
 // Tell axum how to convert `WebError` into a response.
@@ -45,7 +55,6 @@ impl IntoResponse for WebError {
                     .into_response()
             }
             WebError::ClientSide(errors) => (StatusCode::BAD_REQUEST, Json(errors)).into_response(),
-            WebError::Status(status) => status.into_response(),
         }
     }
 }

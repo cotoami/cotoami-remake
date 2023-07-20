@@ -5,12 +5,13 @@ use axum::response::IntoResponse;
 use axum::{Router, Server};
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
+use parking_lot::Mutex;
 use pubsub::Publisher;
 use std::convert::Infallible;
 use std::fs;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tracing::info;
 
 mod api;
