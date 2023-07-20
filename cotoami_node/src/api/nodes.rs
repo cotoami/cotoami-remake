@@ -24,7 +24,7 @@ async fn local_get(State(state): State<AppState>) -> Result<Json<LocalNode>, Web
         if let Some((local_node, node)) = db.get_local_node()? {
             Ok(Json(LocalNode::new(local_node.node_id, node.name)))
         } else {
-            ClientError::new("local-node".into(), None, "not-yet-created".into()).into_result()
+            ClientError::resource("local-node", "not-yet-created").into_result()
         }
     })
     .await?

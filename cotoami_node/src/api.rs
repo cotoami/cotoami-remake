@@ -6,6 +6,7 @@ use axum::routing::get;
 use axum::{Json, Router};
 use derive_new::new;
 use tracing::error;
+use validator::ValidationError;
 
 mod nodes;
 
@@ -80,7 +81,7 @@ where
     Err(WebError::ClientSide(e.into()))
 }
 
-#[derive(new, serde::Serialize)]
+#[derive(serde::Serialize)]
 struct ClientError {
     resource: String,
     field: Option<String>,
@@ -88,6 +89,26 @@ struct ClientError {
 }
 
 impl ClientError {
+    fn resource(resource: impl Into<String>, code: impl Into<String>) -> Self {
+        Self {
+            resource: resource.into(),
+            field: None,
+            code: code.into(),
+        }
+    }
+
+    fn field(
+        resource: impl Into<String>,
+        field: impl Into<String>,
+        code: impl Into<String>,
+    ) -> Self {
+        Self {
+            resource: resource.into(),
+            field: Some(field.into()),
+            code: code.into(),
+        }
+    }
+
     fn into_result<T>(self) -> Result<T, WebError> {
         into_result(self)
     }
