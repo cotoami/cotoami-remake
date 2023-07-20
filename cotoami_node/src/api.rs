@@ -63,7 +63,7 @@ where
 
 #[derive(new, serde::Serialize)]
 struct ClientErrors {
-    message: String,
+    description: String,
     errors: Vec<ClientError>,
 }
 
@@ -82,9 +82,9 @@ where
 
 #[derive(new, serde::Serialize)]
 struct ClientError {
+    resource: String,
+    field: Option<String>,
     code: String,
-    args: Vec<String>,
-    message: String,
 }
 
 impl ClientError {
@@ -94,10 +94,14 @@ impl ClientError {
 }
 
 impl From<ClientError> for ClientErrors {
-    fn from(err: ClientError) -> Self {
+    fn from(e: ClientError) -> Self {
         Self {
-            message: err.message.clone(),
-            errors: vec![err],
+            description: if let Some(field) = e.field.as_deref() {
+                format!("{} / {}: {}", e.resource, field, e.code)
+            } else {
+                format!("{}: {}", e.resource, e.code)
+            },
+            errors: vec![e],
         }
     }
 }

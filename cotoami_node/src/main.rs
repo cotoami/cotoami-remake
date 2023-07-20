@@ -69,6 +69,7 @@ struct Config {
     #[serde(default = "Config::default_port")]
     port: u16,
     db_dir: Option<String>,
+    owner_password: Option<String>,
 }
 
 impl Config {
