@@ -6,6 +6,8 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
 use futures::stream::Stream;
+use serde_json::value::Value;
+use std::collections::HashMap;
 use std::convert::Infallible;
 use tracing::error;
 use validator::{Validate, ValidationErrors, ValidationErrorsKind};
@@ -95,11 +97,14 @@ impl ClientErrors {
         for (field, errors_kind) in v_errors.into_errors().into_iter() {
             if let ValidationErrorsKind::Field(f_errors) = errors_kind {
                 for f_error in f_errors.into_iter() {
-                    let c_error = ClientError::field(resource, field, f_error.code);
+                    let mut c_error = ClientError::field(resource, field, f_error.code);
+                    for (key, value) in f_error.params {
+                        c_error.insert_param(key, value);
+                    }
                     c_errors.errors.push(c_error);
                 }
             }
-            // It doesn't support Struct/List in ValidationErrorsKind
+            // It doesn't support Struct/List variants in ValidationErrorsKind
         }
         c_errors
     }
@@ -125,6 +130,7 @@ struct ClientError {
     resource: String,
     field: Option<String>,
     code: String,
+    params: HashMap<String, Value>,
 }
 
 impl ClientError {
@@ -133,6 +139,7 @@ impl ClientError {
             resource: resource.into(),
             field: None,
             code: code.into(),
+            params: HashMap::default(),
         }
     }
 
@@ -145,7 +152,17 @@ impl ClientError {
             resource: resource.into(),
             field: Some(field.into()),
             code: code.into(),
+            params: HashMap::default(),
         }
+    }
+
+    fn insert_param(&mut self, key: impl Into<String>, value: Value) {
+        self.params.insert(key.into(), value);
+    }
+
+    fn with_param(mut self, key: impl Into<String>, value: Value) -> Self {
+        self.insert_param(key, value);
+        self
     }
 
     fn into_result<T>(self) -> Result<T, WebError> {
@@ -157,7 +174,7 @@ impl From<ClientError> for ClientErrors {
     fn from(e: ClientError) -> Self {
         Self {
             description: if let Some(field) = e.field.as_deref() {
-                format!("{} / {}: {}", e.resource, field, e.code)
+                format!("{}/{}: {}", e.resource, field, e.code)
             } else {
                 format!("{}: {}", e.resource, e.code)
             },
