@@ -10,6 +10,7 @@ use std::convert::Infallible;
 use tracing::error;
 use validator::{ValidationErrors, ValidationErrorsKind};
 
+mod cotos;
 mod nodes;
 
 pub(super) fn routes() -> Router<AppState> {
@@ -17,6 +18,7 @@ pub(super) fn routes() -> Router<AppState> {
         .route("/", get(root))
         .route("/events", get(stream_events))
         .nest("/nodes", nodes::routes())
+        .nest("/cotos", cotos::routes())
 }
 
 pub(super) async fn root(State(_): State<AppState>) -> &'static str {
@@ -162,4 +164,15 @@ impl From<ClientError> for ClientErrors {
             errors: vec![e],
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Pagination Query
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Deserialize)]
+struct Pagination {
+    #[serde(default)]
+    page: i64,
+    page_size: Option<i64>,
 }

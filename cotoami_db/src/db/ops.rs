@@ -17,6 +17,7 @@ pub mod node_ops;
 // Pagination
 /////////////////////////////////////////////////////////////////////////////
 
+#[derive(serde::Serialize)]
 pub struct Paginated<T> {
     pub rows: Vec<T>,
     pub page_size: i64,

@@ -1,6 +1,7 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
 pub mod prelude {
+    pub use super::db::ops::Paginated;
     pub use super::db::{Database, DatabaseSession};
     pub use super::models::changelog::{Change, ChangelogEntry};
     pub use super::models::coto::{Coto, Cotonoma};
