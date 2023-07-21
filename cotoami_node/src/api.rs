@@ -8,7 +8,7 @@ use axum::{Json, Router};
 use futures::stream::Stream;
 use std::convert::Infallible;
 use tracing::error;
-use validator::{ValidationErrors, ValidationErrorsKind};
+use validator::{Validate, ValidationErrors, ValidationErrorsKind};
 
 mod cotos;
 mod nodes;
@@ -170,9 +170,10 @@ impl From<ClientError> for ClientErrors {
 // Pagination Query
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Validate)]
 struct Pagination {
     #[serde(default)]
     page: i64,
+    #[validate(range(min = 1, max = 1000))]
     page_size: Option<i64>,
 }
