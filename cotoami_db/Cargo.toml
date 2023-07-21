@@ -8,6 +8,7 @@ version = "0.1.0"
 [dependencies]
 anyhow = "1.0"
 argon2 = {version = "0.5.0", features = ["std"]}
+base64 = "0.21.2"
 chrono = {version = "0.4.23", features = ["serde"]}
 derive-new = "0.5"
 dotenvy = "0.15"
