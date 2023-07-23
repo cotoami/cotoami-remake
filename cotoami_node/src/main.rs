@@ -113,3 +113,11 @@ struct AppState {
     pubsub: Arc<Mutex<Publisher<Result<Event, Infallible>>>>,
     db: Arc<Database>,
 }
+
+impl AppState {
+    fn publish_change(&self, changelog: ChangelogEntry) -> Result<()> {
+        let event = Event::default().event("change").json_data(changelog)?;
+        self.pubsub.lock().publish(&Ok(event));
+        Ok(())
+    }
+}

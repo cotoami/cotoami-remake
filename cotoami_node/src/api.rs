@@ -191,6 +191,7 @@ impl From<ClientError> for ClientErrors {
 struct Pagination {
     #[serde(default)]
     page: i64,
+
     #[validate(range(min = 1, max = 1000))]
     page_size: Option<i64>,
 }

@@ -39,9 +39,9 @@ struct InitNode {
 
 async fn init_local_node(
     State(state): State<AppState>,
-    Form(init_node): Form<InitNode>,
+    Form(form): Form<InitNode>,
 ) -> Result<Json<Node>, WebError> {
-    if let Err(errors) = init_node.validate() {
+    if let Err(errors) = form.validate() {
         return ClientErrors::from_validation_errors("local-node", errors).into_result();
     }
     spawn_blocking(move || {
@@ -49,7 +49,7 @@ async fn init_local_node(
         if db.get_local_node()?.is_some() {
             ClientError::resource("local-node", "already_exists").into_result()
         } else {
-            let ((_, node), _) = if let Some(name) = init_node.name {
+            let ((_, node), _) = if let Some(name) = form.name {
                 db.init_as_node(&name, state.config.owner_password.as_deref())?
             } else {
                 db.init_as_empty_node(state.config.owner_password.as_deref())?

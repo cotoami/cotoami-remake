@@ -22,6 +22,7 @@ impl<Message: Clone> Publisher<Message> {
         }
     }
 
+    #[allow(dead_code)] // used only in tests
     pub fn count_subscribers(&self) -> usize {
         self.state.lock().subscribers.len()
     }
