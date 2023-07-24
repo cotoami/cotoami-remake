@@ -1,18 +1,19 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
 pub mod prelude {
-    pub use super::db::ops::Paginated;
-    pub use super::db::{Database, DatabaseSession};
-    pub use super::models::changelog::{Change, ChangelogEntry};
-    pub use super::models::coto::{Coto, Cotonoma};
-    pub use super::models::node::local::LocalNode;
-    pub use super::models::node::Node;
-    pub use super::models::Id;
+    pub use super::{
+        db::{ops::Paginated, Database, DatabaseSession},
+        models::{
+            changelog::{Change, ChangelogEntry},
+            coto::{Coto, Cotonoma},
+            node::{local::LocalNode, Node},
+            Id,
+        },
+    };
 }
 
 use base64::Engine;
-use chrono::offset::Utc;
-use chrono::NaiveDateTime;
+use chrono::{offset::Utc, NaiveDateTime};
 use serde::{Deserialize, Deserializer, Serializer};
 
 pub mod db;
