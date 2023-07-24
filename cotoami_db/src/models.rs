@@ -1,17 +1,17 @@
 //! Data structure that represents a Cotoami database
 
+use std::{
+    fmt::{Debug, Display},
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+    str::FromStr,
+};
+
 use derive_new::new;
-use diesel::backend::Backend;
-use diesel::deserialize::FromSql;
-use diesel::expression::AsExpression;
-use diesel::serialize::ToSql;
-use diesel::sql_types::Text;
-use diesel::sqlite::Sqlite;
-use diesel::FromSqlRow;
-use std::fmt::{Debug, Display};
-use std::hash::{Hash, Hasher};
-use std::marker::PhantomData;
-use std::str::FromStr;
+use diesel::{
+    backend::Backend, deserialize::FromSql, expression::AsExpression, serialize::ToSql,
+    sql_types::Text, sqlite::Sqlite, FromSqlRow,
+};
 use uuid::Uuid;
 
 pub mod changelog;
@@ -156,8 +156,9 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use anyhow::Result;
+
+    use super::*;
 
     #[derive(Debug, PartialEq, Eq)]
     struct Foo();

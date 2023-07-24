@@ -1,24 +1,26 @@
 //! Database operations and transactions
 
+use core::time::Duration;
+use std::path::{Path, PathBuf};
+
+use anyhow::{anyhow, Result};
+use diesel::{sqlite::SqliteConnection, Connection};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use log::info;
+use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
+use url::Url;
+
+use self::{
+    error::DatabaseError,
+    op::{Context, Operation, WritableConn},
+    ops::{cotonoma_ops, *},
+};
 use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, Cotonoma, NewCoto},
     node::{local::LocalNode, BelongsToNode, Node},
     Id,
 };
-use anyhow::{anyhow, Result};
-use core::time::Duration;
-use diesel::{sqlite::SqliteConnection, Connection};
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use error::DatabaseError;
-use log::info;
-use op::{Context, Operation, WritableConn};
-use ops::*;
-use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
-use std::path::{Path, PathBuf};
-use url::Url;
-
-use self::ops::cotonoma_ops;
 
 pub mod error;
 pub mod op;

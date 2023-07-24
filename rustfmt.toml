@@ -1,1 +1,5 @@
+# As of 2023/07, rust-analyzer doesn't seem to respect this file 
+# unless specifying "+nightly" in the `Rustfmt: Extra Args` config.
+
+group_imports = "StdExternalCrate"
 imports_granularity = "Crate"
