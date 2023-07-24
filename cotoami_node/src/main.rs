@@ -1,17 +1,14 @@
 use anyhow::Result;
-use axum::http::Uri;
-use axum::response::sse::Event;
-use axum::response::IntoResponse;
-use axum::{Router, Server};
+use axum::{
+    http::Uri,
+    response::{sse::Event, IntoResponse},
+    Router, Server,
+};
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use parking_lot::Mutex;
 use pubsub::Publisher;
-use std::convert::Infallible;
-use std::fs;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use tracing::info;
 
 mod api;
