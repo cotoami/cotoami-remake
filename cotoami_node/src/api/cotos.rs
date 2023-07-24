@@ -1,11 +1,16 @@
-use crate::api::{ClientErrors, Pagination, WebError};
-use crate::AppState;
-use axum::extract::{Query, State};
-use axum::routing::get;
-use axum::{Form, Json, Router};
+use axum::{
+    extract::{Query, State},
+    routing::get,
+    Form, Json, Router,
+};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use validator::Validate;
+
+use crate::{
+    api::{ClientErrors, Pagination, WebError},
+    AppState,
+};
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new().route("/", get(recent_cotos).post(post_coto))

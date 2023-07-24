@@ -1,16 +1,21 @@
-use crate::AppState;
-use axum::extract::State;
-use axum::http::StatusCode;
-use axum::response::sse::{Event, KeepAlive, Sse};
-use axum::response::{IntoResponse, Response};
-use axum::routing::get;
-use axum::{Json, Router};
+use std::{collections::HashMap, convert::Infallible};
+
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{
+        sse::{Event, KeepAlive, Sse},
+        IntoResponse, Response,
+    },
+    routing::get,
+    Json, Router,
+};
 use futures::stream::Stream;
 use serde_json::value::Value;
-use std::collections::HashMap;
-use std::convert::Infallible;
 use tracing::error;
 use validator::{Validate, ValidationErrors, ValidationErrorsKind};
+
+use crate::AppState;
 
 mod cotos;
 mod nodes;

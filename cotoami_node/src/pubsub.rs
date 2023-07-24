@@ -1,11 +1,15 @@
-use futures::task::{Context, Poll, Waker};
-use futures::Stream;
+use std::{
+    collections::{HashMap, VecDeque},
+    pin::Pin,
+    sync::{Arc, Weak},
+};
+
+use futures::{
+    task::{Context, Poll, Waker},
+    Stream,
+};
 use parking_lot::Mutex;
 use smallvec::SmallVec;
-use std::collections::{HashMap, VecDeque};
-use std::pin::Pin;
-use std::sync::Arc;
-use std::sync::Weak;
 
 pub struct Publisher<Message> {
     state: Arc<Mutex<PublisherState<Message>>>,
@@ -133,8 +137,9 @@ impl<Message> SubscriberState<Message> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use futures::StreamExt;
+
+    use super::*;
 
     #[tokio::test]
     async fn pubsub() {

@@ -1,3 +1,5 @@
+use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
+
 use anyhow::Result;
 use axum::{
     http::Uri,
@@ -8,7 +10,6 @@ use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use parking_lot::Mutex;
 use pubsub::Publisher;
-use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use tracing::info;
 
 mod api;

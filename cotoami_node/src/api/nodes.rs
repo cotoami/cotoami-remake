@@ -1,11 +1,12 @@
-use crate::api::{ClientError, ClientErrors, WebError};
-use crate::AppState;
-use axum::extract::State;
-use axum::routing::get;
-use axum::{Form, Json, Router};
+use axum::{extract::State, routing::get, Form, Json, Router};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use validator::Validate;
+
+use crate::{
+    api::{ClientError, ClientErrors, WebError},
+    AppState,
+};
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new().route("/local", get(get_local_node).put(init_local_node))
