@@ -1,14 +1,14 @@
 //! Database operations and transactions
 
-use crate::models::changelog::{Change, ChangelogEntry};
-use crate::models::coto::{Coto, Cotonoma, NewCoto};
-use crate::models::node::local::LocalNode;
-use crate::models::node::{BelongsToNode, Node};
-use crate::models::Id;
+use crate::models::{
+    changelog::{Change, ChangelogEntry},
+    coto::{Coto, Cotonoma, NewCoto},
+    node::{local::LocalNode, BelongsToNode, Node},
+    Id,
+};
 use anyhow::{anyhow, Result};
 use core::time::Duration;
-use diesel::sqlite::SqliteConnection;
-use diesel::Connection;
+use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use error::DatabaseError;
 use log::info;
@@ -161,7 +161,9 @@ impl<'a> DatabaseSession<'a> {
                 let change = Change::ImportNode(node);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
 
-                let Change::ImportNode(node) = change else { panic!() };
+                let Change::ImportNode(node) = change else {
+                    panic!()
+                };
                 Ok(((local_node, node), changelog))
             },
         )
@@ -186,7 +188,9 @@ impl<'a> DatabaseSession<'a> {
                 let change = Change::InitNode(node, cotonoma, coto);
                 let changelog = changelog_ops::log_change(&change).run(ctx)?;
 
-                let Change::InitNode(node, _, _) = change else { panic!() };
+                let Change::InitNode(node, _, _) = change else {
+                    panic!()
+                };
                 Ok(((local_node, node), changelog))
             },
         )
@@ -211,7 +215,9 @@ impl<'a> DatabaseSession<'a> {
                 if let Some(node) = node_ops::import(node).run(ctx)? {
                     let change = Change::ImportNode(node);
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;
-                    let Change::ImportNode(node) = change else { panic!() };
+                    let Change::ImportNode(node) = change else {
+                        panic!()
+                    };
                     Ok(Some((node, changelog)))
                 } else {
                     Ok(None)
