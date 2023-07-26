@@ -66,7 +66,7 @@ fn check_custom_header(headers: &HeaderMap<HeaderValue>) -> Result<()> {
     if headers.contains_key(CUSTOM_HEADER) {
         Ok(())
     } else {
-        Err(anyhow!("Custom header {} is not found", CUSTOM_HEADER))
+        Err(anyhow!("custom header {} is not found", CUSTOM_HEADER))
     }
 }
 
@@ -77,12 +77,12 @@ fn check_origin(origin: &Origin, config: &Arc<Config>) -> Result<()> {
             && origin.hostname() == config.url_host
             && origin.port() == config.url_port))
         .then_some(())
-        .ok_or(anyhow!("Invalid origin header: {}", origin))
+        .ok_or(anyhow!("invalid origin header: {}", origin))
 }
 
 /// Prevent DNS rebinding attack.
 fn check_host(host: &Host, config: &Arc<Config>) -> Result<()> {
     (host.hostname() == config.url_host && host.port() == config.url_port)
         .then_some(())
-        .ok_or(anyhow!("Invalid host header: {}", host))
+        .ok_or(anyhow!("invalid host header: {}", host))
 }
