@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use validator::Validate;
 
 use super::Node;
@@ -20,8 +19,8 @@ pub struct LocalNode {
     /// Password for owner authentication of this local node
     pub owner_password_hash: Option<String>,
 
-    /// Node owner's session key
-    pub owner_session_key: Option<String>,
+    /// Node owner's session token
+    pub owner_session_token: Option<String>,
 
     /// Expiration date of node owner's session
     pub owner_session_expires_at: Option<NaiveDateTime>,
@@ -41,20 +40,20 @@ impl LocalNode {
 
     pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
         self.verify_owner_password(password)?;
-        self.owner_session_key = Some(generate_session_key());
+        self.owner_session_token = Some(crate::generate_session_token());
         self.owner_session_expires_at = Some(crate::current_datetime() + duration);
-        Ok(self.owner_session_key.as_ref().unwrap())
+        Ok(self.owner_session_token.as_ref().unwrap())
     }
 
-    pub fn verify_owner_session(&self, key: &str) -> Result<()> {
+    pub fn verify_owner_session(&self, token: &str) -> Result<()> {
         if let Some(expires_at) = self.owner_session_expires_at {
             if expires_at < crate::current_datetime() {
                 return Err(anyhow!("Owner session has been expired."));
             }
         }
-        if let Some(session_key) = self.owner_session_key.as_ref() {
-            if key != session_key {
-                return Err(anyhow!("The passed session key is invalid."));
+        if let Some(session_token) = self.owner_session_token.as_ref() {
+            if token != session_token {
+                return Err(anyhow!("The passed session token is invalid."));
             }
         } else {
             return Err(anyhow!("Owner session doesn't exist."));
@@ -63,7 +62,7 @@ impl LocalNode {
     }
 
     pub fn clear_owner_session(&mut self) {
-        self.owner_session_key = None;
+        self.owner_session_token = None;
         self.owner_session_expires_at = None;
     }
 
@@ -103,15 +102,6 @@ impl<'a> NewLocalNode<'a> {
     }
 }
 
-fn generate_session_key() -> String {
-    // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-alphanumeric-characters
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
@@ -127,7 +117,7 @@ mod tests {
             node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
             rowid: 1,
             owner_password_hash: None,
-            owner_session_key: None,
+            owner_session_token: None,
             owner_session_expires_at: None,
         };
 

@@ -52,7 +52,7 @@ fn init_as_empty_node() -> Result<()> {
             node_id,
             rowid: 1,
             owner_password_hash: None,
-            owner_session_key: None,
+            owner_session_token: None,
             owner_session_expires_at: None,
             ..
         } if node_id == node.uuid
@@ -112,16 +112,19 @@ fn owner_session() -> Result<()> {
     // then
     assert!(local_node.start_owner_session("bar", duration).is_err());
 
-    let key = local_node.start_owner_session("foo", duration)?.to_owned();
-    assert_eq!(local_node.owner_session_key.as_deref().unwrap(), &key);
+    let session_id = local_node.start_owner_session("foo", duration)?.to_owned();
+    assert_eq!(
+        local_node.owner_session_token.as_deref().unwrap(),
+        &session_id
+    );
     assert_approximately_now(local_node.owner_session_expires_at().unwrap() - duration);
-    local_node.verify_owner_session(&key)?;
+    local_node.verify_owner_session(&session_id)?;
     assert_eq!(
         local_node
-            .verify_owner_session("nosuchkey")
+            .verify_owner_session("invalid-token")
             .unwrap_err()
             .to_string(),
-        "The passed session key is invalid."
+        "The passed session token is invalid."
     );
 
     // when
@@ -130,7 +133,7 @@ fn owner_session() -> Result<()> {
     // then
     assert_eq!(
         local_node
-            .verify_owner_session(&key)
+            .verify_owner_session(&session_id)
             .unwrap_err()
             .to_string(),
         "Owner session has been expired."
@@ -142,7 +145,7 @@ fn owner_session() -> Result<()> {
     // then
     assert_eq!(
         local_node
-            .verify_owner_session(&key)
+            .verify_owner_session(&session_id)
             .unwrap_err()
             .to_string(),
         "Owner session doesn't exist."
@@ -183,7 +186,7 @@ fn init_as_node() -> Result<()> {
             node_id,
             rowid: 1,
             owner_password_hash: None,
-            owner_session_key: None,
+            owner_session_token: None,
             owner_session_expires_at: None,
             ..
         } if node_id == node.uuid

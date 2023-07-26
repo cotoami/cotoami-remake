@@ -14,6 +14,7 @@ pub mod prelude {
 
 use base64::Engine;
 use chrono::{offset::Utc, NaiveDateTime};
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Deserializer, Serializer};
 
 pub mod db;
@@ -22,6 +23,15 @@ mod schema;
 
 /// Returns the current datetime in UTC.
 fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }
+
+fn generate_session_token() -> String {
+    // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-alphanumeric-characters
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .map(char::from)
+        .collect()
+}
 
 /// Base64 serialization in serde
 ///

@@ -42,8 +42,8 @@ CREATE TABLE local_node (
   -- Password for owner authentication of this local node
   owner_password_hash TEXT,
 
-  -- Node owner's session key
-  owner_session_key TEXT,
+  -- Node owner's session token
+  owner_session_token TEXT,
 
   -- Expiration date of node owner's session
   owner_session_expires_at DATETIME,

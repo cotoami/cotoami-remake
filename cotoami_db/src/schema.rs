@@ -39,7 +39,7 @@ diesel::table! {
         node_id -> Text,
         rowid -> BigInt,
         owner_password_hash -> Nullable<Text>,
-        owner_session_key -> Nullable<Text>,
+        owner_session_token -> Nullable<Text>,
         owner_session_expires_at -> Nullable<Timestamp>,
     }
 }
