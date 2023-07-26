@@ -1,15 +1,20 @@
 //! Cotonoma related operations
 
-use super::coto_ops;
-use super::Paginated;
-use crate::db::op::*;
-use crate::models::coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma};
-use crate::models::node::Node;
-use crate::models::Id;
+use std::ops::DerefMut;
+
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use std::ops::DerefMut;
 use validator::Validate;
+
+use super::{coto_ops, Paginated};
+use crate::{
+    db::op::*,
+    models::{
+        coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma},
+        node::Node,
+        Id,
+    },
+};
 
 pub fn get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,

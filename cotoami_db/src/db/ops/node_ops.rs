@@ -1,12 +1,18 @@
 //! Node related operations
 
-use crate::db::op::*;
-use crate::models::coto::Cotonoma;
-use crate::models::node::{NewNode, Node, UpdateNode};
-use crate::models::Id;
-use diesel::prelude::*;
 use std::ops::DerefMut;
+
+use diesel::prelude::*;
 use validator::Validate;
+
+use crate::{
+    db::op::*,
+    models::{
+        coto::Cotonoma,
+        node::{NewNode, Node, UpdateNode},
+        Id,
+    },
+};
 
 pub fn get<Conn: AsReadableConn>(node_id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
     use crate::schema::nodes::dsl::*;

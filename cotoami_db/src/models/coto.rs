@@ -7,14 +7,18 @@
 //! - Link
 //!     - A link is a directed edge connecting two cotos.
 
-use super::node::{BelongsToNode, Node};
-use super::{Id, Ids};
-use crate::schema::{cotonomas, cotos, links};
+use std::fmt::Display;
+
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
-use std::fmt::Display;
 use validator::Validate;
+
+use super::{
+    node::{BelongsToNode, Node},
+    Id, Ids,
+};
+use crate::schema::{cotonomas, cotos, links};
 
 /////////////////////////////////////////////////////////////////////////////
 // cotos
@@ -81,13 +85,9 @@ impl Coto {
     pub const CONTENT_MAX_LENGTH: usize = 1_000_000;
     pub const SUMMARY_MAX_LENGTH: usize = 200;
 
-    pub fn created_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.created_at)
-    }
+    pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub fn updated_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.updated_at)
-    }
+    pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
     /// Returns the cotonoma name if this coto is cotonoma
     pub fn name_as_cotonoma(&self) -> Option<&str> {
@@ -145,9 +145,7 @@ impl Display for Coto {
 }
 
 impl BelongsToNode for Coto {
-    fn node_id(&self) -> &Id<Node> {
-        &self.node_id
-    }
+    fn node_id(&self) -> &Id<Node> { &self.node_id }
 }
 
 /// An `Insertable` coto data
@@ -280,13 +278,9 @@ pub struct Cotonoma {
 impl Cotonoma {
     pub const NAME_MAX_LENGTH: usize = 50;
 
-    pub fn created_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.created_at)
-    }
+    pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub fn updated_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.updated_at)
-    }
+    pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
     pub fn to_update(&self) -> UpdateCotonoma {
         UpdateCotonoma {
@@ -309,9 +303,7 @@ impl Cotonoma {
 }
 
 impl BelongsToNode for Cotonoma {
-    fn node_id(&self) -> &Id<Node> {
-        &self.node_id
-    }
+    fn node_id(&self) -> &Id<Node> { &self.node_id }
 }
 
 /// An `Insertable` cotonoma data
@@ -397,13 +389,9 @@ pub struct Link {
 impl Link {
     pub const LINKING_PHRASE_MAX_LENGTH: usize = 200;
 
-    pub fn created_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.created_at)
-    }
+    pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub fn updated_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.updated_at)
-    }
+    pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
     pub fn to_update(&self) -> UpdateLink {
         UpdateLink {
@@ -428,9 +416,7 @@ impl Link {
 }
 
 impl BelongsToNode for Link {
-    fn node_id(&self) -> &Id<Node> {
-        &self.node_id
-    }
+    fn node_id(&self) -> &Id<Node> { &self.node_id }
 }
 
 /// An `Insertable` link data

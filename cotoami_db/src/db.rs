@@ -206,9 +206,7 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, node_ops::get(node_id))
     }
 
-    pub fn all_nodes(&mut self) -> Result<Vec<Node>> {
-        op::run(&mut self.ro_conn, node_ops::all())
-    }
+    pub fn all_nodes(&mut self) -> Result<Vec<Node>> { op::run(&mut self.ro_conn, node_ops::all()) }
 
     pub fn import_node(&mut self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
         op::run_in_transaction(
@@ -283,9 +281,7 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, coto_ops::get(id))
     }
 
-    pub fn all_cotos(&mut self) -> Result<Vec<Coto>> {
-        op::run(&mut self.ro_conn, coto_ops::all())
-    }
+    pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { op::run(&mut self.ro_conn, coto_ops::all()) }
 
     pub fn recent_cotos<'b>(
         &mut self,
@@ -366,7 +362,7 @@ impl<'a> DatabaseSession<'a> {
                     Ok(changelog)
                 } else {
                     Err(DatabaseError::EntityNotFound {
-                        kind: "Coto".into(),
+                        kind: "coto".into(),
                         id: id.to_string(),
                     })?
                 }
@@ -404,7 +400,7 @@ impl<'a> DatabaseSession<'a> {
 
     fn require_local_node(&self) -> Result<MappedMutexGuard<LocalNode>> {
         MutexGuard::try_map((self.get_globals)(), |g| g.local_node.as_mut())
-            .map_err(|_| anyhow!("A local node has not yet been created."))
+            .map_err(|_| anyhow!("Local node has not yet been created."))
     }
 
     fn check_if_belongs_to_local_node<T: BelongsToNode + std::fmt::Debug>(
@@ -428,7 +424,7 @@ impl<'a> DatabaseSession<'a> {
         let (cotonoma, _) =
             self.get_cotonoma(cotonoma_id)?
                 .ok_or(DatabaseError::EntityNotFound {
-                    kind: "Cotonoma".into(),
+                    kind: "cotonoma".into(),
                     id: cotonoma_id.to_string(),
                 })?;
         self.check_if_belongs_to_local_node(&cotonoma)?;

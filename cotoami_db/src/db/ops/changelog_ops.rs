@@ -1,13 +1,18 @@
 //! Changelog related operations
 
-use super::{coto_ops, cotonoma_ops, link_ops, node_ops};
-use crate::db::error::DatabaseError;
-use crate::db::op::*;
-use crate::models::changelog::{Change, ChangelogEntry, NewChangelogEntry};
-use crate::models::node::Node;
-use crate::models::Id;
-use diesel::prelude::*;
 use std::ops::DerefMut;
+
+use diesel::prelude::*;
+
+use super::{coto_ops, cotonoma_ops, link_ops, node_ops};
+use crate::{
+    db::{error::DatabaseError, op::*},
+    models::{
+        changelog::{Change, ChangelogEntry, NewChangelogEntry},
+        node::Node,
+        Id,
+    },
+};
 
 pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<ChangelogEntry>> {
     use crate::schema::changelog::dsl::*;
@@ -23,8 +28,9 @@ pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<Cha
 pub fn get_last_change_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
-    use crate::schema::changelog::dsl::*;
     use diesel::dsl::max;
+
+    use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
         changelog
             .select(max(parent_serial_number))

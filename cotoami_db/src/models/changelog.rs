@@ -4,19 +4,18 @@
 //! When replicating a database to another node, that node must ensure to
 //! apply the changelog entries in the serial number order.
 
-use super::coto::{Coto, Cotonoma, Link};
-use super::node::Node;
-use super::Id;
-use crate::schema::changelog;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
-use diesel::backend::Backend;
-use diesel::deserialize::FromSql;
-use diesel::expression::AsExpression;
-use diesel::prelude::*;
-use diesel::serialize::ToSql;
-use diesel::sql_types::Binary;
-use diesel::sqlite::Sqlite;
-use diesel::FromSqlRow;
+use diesel::{
+    backend::Backend, deserialize::FromSql, expression::AsExpression, prelude::*, serialize::ToSql,
+    sql_types::Binary, sqlite::Sqlite, FromSqlRow,
+};
+
+use super::{
+    coto::{Coto, Cotonoma, Link},
+    node::Node,
+    Id,
+};
+use crate::schema::changelog;
 
 /////////////////////////////////////////////////////////////////////////////
 // changelog
@@ -54,9 +53,7 @@ pub struct ChangelogEntry {
 }
 
 impl ChangelogEntry {
-    pub fn inserted_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.inserted_at)
-    }
+    pub fn inserted_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.inserted_at) }
 
     pub fn as_import_from<'a>(&'a self, parent_node_id: &'a Id<Node>) -> NewChangelogEntry {
         NewChangelogEntry {
@@ -154,11 +151,13 @@ impl FromSql<Binary, Sqlite> for Change {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::str::FromStr;
+
     use anyhow::Result;
     use chrono::NaiveDateTime;
     use indoc::indoc;
-    use std::str::FromStr;
+
+    use super::*;
 
     #[test]
     fn changelog_entry_as_json() -> Result<()> {

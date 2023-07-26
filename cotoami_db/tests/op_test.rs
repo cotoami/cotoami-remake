@@ -1,11 +1,16 @@
+use std::ops::DerefMut;
+
 use anyhow::{anyhow, Result};
-use cotoami_db::db::op;
-use cotoami_db::db::op::{AsReadableConn, Context, Operation, WritableConn};
-use cotoami_db::prelude::*;
+use cotoami_db::{
+    db::{
+        op,
+        op::{AsReadableConn, Context, Operation, WritableConn},
+    },
+    prelude::*,
+};
 use derive_new::new;
 use diesel::prelude::*;
 use schema::test;
-use std::ops::DerefMut;
 
 pub mod common;
 

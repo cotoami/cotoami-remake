@@ -1,7 +1,6 @@
 use anyhow::Result;
 use assert_matches::assert_matches;
-use chrono::offset::Utc;
-use chrono::Duration;
+use chrono::{offset::Utc, Duration};
 use common::assert_approximately_now;
 use cotoami_db::prelude::*;
 use image::ImageFormat;

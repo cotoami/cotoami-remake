@@ -1,6 +1,8 @@
-use super::{Context, Operation};
-use anyhow::Result;
 use std::marker::PhantomData;
+
+use anyhow::Result;
+
+use super::{Context, Operation};
 
 /// Maps an `Operation<Conn, T>` to `Operation<Conn, U>` by applying a function
 pub fn map<Op, Conn, T, U, F>(op: Op, f: F) -> MappedOp<Op, T, F>

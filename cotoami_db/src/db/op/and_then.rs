@@ -1,6 +1,8 @@
-use super::{Context, Operation};
-use anyhow::Result;
 use std::marker::PhantomData;
+
+use anyhow::Result;
+
+use super::{Context, Operation};
 
 /// Creates a chain with another operation that depends on the result of this operation
 pub fn and_then<Op1, Op2, Conn, T, U, F>(op: Op1, f: F) -> AndThenOp<Op1, T, F>
@@ -41,7 +43,5 @@ impl<Conn, T, F> Operation<Conn, T> for F
 where
     F: FnOnce(&mut Context<'_, Conn>) -> Result<T>,
 {
-    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> {
-        self(ctx)
-    }
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { self(ctx) }
 }

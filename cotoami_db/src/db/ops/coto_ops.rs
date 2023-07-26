@@ -1,14 +1,19 @@
 //! Coto related operations
 
-use super::Paginated;
-use crate::db::error::DatabaseError;
-use crate::db::op::*;
-use crate::models::coto::{Coto, Cotonoma, NewCoto, UpdateCoto};
-use crate::models::node::Node;
-use crate::models::Id;
-use diesel::prelude::*;
 use std::ops::DerefMut;
+
+use diesel::prelude::*;
 use validator::Validate;
+
+use super::Paginated;
+use crate::{
+    db::{error::DatabaseError, op::*},
+    models::{
+        coto::{Coto, Cotonoma, NewCoto, UpdateCoto},
+        node::Node,
+        Id,
+    },
+};
 
 pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
     use crate::schema::cotos::dsl::*;
@@ -26,7 +31,7 @@ pub fn get_or_err<Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
     get(id).map(|coto| {
         coto.ok_or(DatabaseError::EntityNotFound {
-            kind: "Coto".into(),
+            kind: "coto".into(),
             id: id.to_string(),
         })
     })

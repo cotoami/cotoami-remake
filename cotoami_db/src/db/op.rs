@@ -6,13 +6,17 @@
 //! operations without worrying about a unit of transaction, which can be decided
 //! afterwards safely thanks to the types.
 
+use std::ops::{Deref, DerefMut};
+
 use and_then::*;
 use anyhow::Result;
 use derive_new::new;
-use diesel::connection::{AnsiTransactionManager, TransactionManager};
-use diesel::sqlite::SqliteConnection;
-use map::*;
-use std::ops::{Deref, DerefMut};
+use diesel::{
+    connection::{AnsiTransactionManager, TransactionManager},
+    sqlite::SqliteConnection,
+};
+
+use self::map::*;
 
 pub mod and_then;
 pub mod map;
@@ -53,13 +57,9 @@ pub struct Context<'a, Conn: 'a> {
 
 impl<'a, Conn> Context<'a, Conn> {
     /// Private constructor
-    fn new(conn: &'a mut Conn) -> Self {
-        Context { conn }
-    }
+    fn new(conn: &'a mut Conn) -> Self { Context { conn } }
 
-    pub fn conn(&mut self) -> &mut Conn {
-        self.conn
-    }
+    pub fn conn(&mut self) -> &mut Conn { self.conn }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -74,9 +74,7 @@ impl<Conn, T, F> Operation<Conn, T> for CompositeOp<F>
 where
     F: FnOnce(&mut Context<'_, Conn>) -> Result<T>,
 {
-    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> {
-        (self.f)(ctx)
-    }
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { (self.f)(ctx) }
 }
 
 /// Defines a composite operation sharing a single [Context]
@@ -97,15 +95,11 @@ pub struct WritableConn(SqliteConnection);
 impl Deref for WritableConn {
     type Target = SqliteConnection;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl DerefMut for WritableConn {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 
 /// The following functions is copied-and-pasted from [SqliteConnection].
@@ -156,15 +150,11 @@ pub trait AsReadableConn {
 }
 
 impl AsReadableConn for SqliteConnection {
-    fn readable(&mut self) -> &mut SqliteConnection {
-        self
-    }
+    fn readable(&mut self) -> &mut SqliteConnection { self }
 }
 
 impl AsReadableConn for WritableConn {
-    fn readable(&mut self) -> &mut SqliteConnection {
-        &mut self.0
-    }
+    fn readable(&mut self) -> &mut SqliteConnection { &mut self.0 }
 }
 
 pub struct ReadOp<F> {
@@ -176,9 +166,7 @@ where
     Conn: AsReadableConn,
     F: FnOnce(&mut SqliteConnection) -> Result<T>,
 {
-    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> {
-        (self.f)(ctx.conn().readable())
-    }
+    fn run(self, ctx: &mut Context<'_, Conn>) -> Result<T> { (self.f)(ctx.conn().readable()) }
 }
 
 /// Defines a read-only operation using a raw [SqliteConnection]
@@ -209,9 +197,7 @@ impl<T, F> Operation<WritableConn, T> for WriteOp<F>
 where
     F: FnOnce(&mut WritableConn) -> Result<T>,
 {
-    fn run(self, ctx: &mut Context<'_, WritableConn>) -> Result<T> {
-        (self.f)(ctx.conn())
-    }
+    fn run(self, ctx: &mut Context<'_, WritableConn>) -> Result<T> { (self.f)(ctx.conn()) }
 }
 
 /// Defines a read/write operation using a [WritableConn]

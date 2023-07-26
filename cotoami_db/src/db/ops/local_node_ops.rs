@@ -1,11 +1,17 @@
 //! LocalNode related operations
 
-use super::node_ops;
-use crate::db::op::*;
-use crate::models::node::local::{LocalNode, NewLocalNode};
-use crate::models::node::{NewNode, Node};
-use diesel::prelude::*;
 use std::ops::DerefMut;
+
+use diesel::prelude::*;
+
+use super::node_ops;
+use crate::{
+    db::op::*,
+    models::node::{
+        local::{LocalNode, NewLocalNode},
+        NewNode, Node,
+    },
+};
 
 pub fn get<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
     use crate::schema::{local_node, nodes};

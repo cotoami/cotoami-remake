@@ -1,12 +1,11 @@
-use super::Node;
-use crate::models::Id;
-use crate::schema::local_node;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use validator::Validate;
+
+use super::Node;
+use crate::{models::Id, schema::local_node};
 
 /// A row in `local_node` table
 #[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Selectable)]
@@ -115,9 +114,11 @@ fn generate_session_key() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use anyhow::Result;
     use std::str::FromStr;
+
+    use anyhow::Result;
+
+    use super::*;
 
     #[test]
     fn owner_password() -> Result<()> {

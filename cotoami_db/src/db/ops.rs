@@ -1,10 +1,12 @@
 //! Basic database operations
 
 use anyhow::Result;
-use diesel::dsl::CountStar;
-use diesel::query_dsl::methods::{LimitDsl, LoadQuery, OffsetDsl, SelectDsl};
-use diesel::sqlite::SqliteConnection;
-use diesel::RunQueryDsl;
+use diesel::{
+    dsl::CountStar,
+    query_dsl::methods::{LimitDsl, LoadQuery, OffsetDsl, SelectDsl},
+    sqlite::SqliteConnection,
+    RunQueryDsl,
+};
 
 pub mod changelog_ops;
 pub mod coto_ops;

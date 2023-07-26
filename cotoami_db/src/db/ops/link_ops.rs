@@ -1,12 +1,18 @@
 //! Link related operations
 
-use crate::db::op::*;
-use crate::models::coto::{Link, NewLink, UpdateLink};
-use crate::models::Id;
+use std::ops::DerefMut;
+
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use std::ops::DerefMut;
 use validator::Validate;
+
+use crate::{
+    db::op::*,
+    models::{
+        coto::{Link, NewLink, UpdateLink},
+        Id,
+    },
+};
 
 pub fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<Link>> + '_ {
     use crate::schema::links::dsl::*;

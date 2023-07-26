@@ -1,10 +1,13 @@
 //! Graph-related data structure and operations
 
-use super::coto::{Coto, Cotonoma, Link};
-use super::Id;
-use petgraph::prelude::Graph as Petgraph;
-use petgraph::prelude::NodeIndex;
 use std::collections::HashMap;
+
+use petgraph::prelude::{Graph as Petgraph, NodeIndex};
+
+use super::{
+    coto::{Coto, Cotonoma, Link},
+    Id,
+};
 
 /// A graph is a set of cotos that are connected with links
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -34,17 +37,11 @@ impl Graph {
         graph
     }
 
-    pub fn root_cotonoma(&self) -> &Cotonoma {
-        &self.root_cotonoma
-    }
+    pub fn root_cotonoma(&self) -> &Cotonoma { &self.root_cotonoma }
 
-    pub fn add_coto(&mut self, coto: Coto) {
-        self.cotos.insert(coto.uuid, coto);
-    }
+    pub fn add_coto(&mut self, coto: Coto) { self.cotos.insert(coto.uuid, coto); }
 
-    pub fn contains(&self, coto_id: &Id<Coto>) -> bool {
-        self.cotos.contains_key(coto_id)
-    }
+    pub fn contains(&self, coto_id: &Id<Coto>) -> bool { self.cotos.contains_key(coto_id) }
 
     pub fn add_link(&mut self, link: Link) {
         self.links

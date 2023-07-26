@@ -1,8 +1,8 @@
-use super::Node;
-use crate::models::Id;
-use crate::schema::child_nodes;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+
+use super::Node;
+use crate::{models::Id, schema::child_nodes};
 
 /// A row in `child_nodes` table
 #[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]

@@ -40,13 +40,9 @@ pub struct Id<T> {
 }
 
 impl<T> Id<T> {
-    pub fn generate() -> Self {
-        Id::new(Uuid::new_v4())
-    }
+    pub fn generate() -> Self { Id::new(Uuid::new_v4()) }
 
-    pub fn as_uuid(&self) -> Uuid {
-        self.value
-    }
+    pub fn as_uuid(&self) -> Uuid { self.value }
 }
 
 impl<T> Display for Id<T> {
@@ -57,17 +53,13 @@ impl<T> Display for Id<T> {
 
 impl<T> FromStr for Id<T> {
     type Err = uuid::Error;
-    fn from_str(uuid: &str) -> Result<Self, Self::Err> {
-        Ok(Id::new(Uuid::from_str(uuid)?))
-    }
+    fn from_str(uuid: &str) -> Result<Self, Self::Err> { Ok(Id::new(Uuid::from_str(uuid)?)) }
 }
 
 impl<T> TryFrom<&str> for Id<T> {
     type Error = uuid::Error;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::from_str(value)
-    }
+    fn try_from(value: &str) -> Result<Self, Self::Error> { Self::from_str(value) }
 }
 
 impl<T: Debug> ToSql<Text, Sqlite> for Id<T> {
@@ -99,15 +91,11 @@ impl<T> FromSql<Text, Sqlite> for Id<T> {
 impl<T> Copy for Id<T> {}
 
 impl<T> Clone for Id<T> {
-    fn clone(&self) -> Self {
-        *self
-    }
+    fn clone(&self) -> Self { *self }
 }
 
 impl<T> Hash for Id<T> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.value.hash(state);
-    }
+    fn hash<H: Hasher>(&self, state: &mut H) { self.value.hash(state); }
 }
 
 /////////////////////////////////////////////////////////////////////////////

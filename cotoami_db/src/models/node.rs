@@ -1,16 +1,17 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
-use super::coto::Cotonoma;
-use super::Id;
-use crate::schema::nodes;
 use anyhow::Result;
-use argon2::password_hash::rand_core::OsRng;
-use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
-use argon2::Argon2;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use identicon_rs::Identicon;
 use validator::Validate;
+
+use super::{coto::Cotonoma, Id};
+use crate::schema::nodes;
 
 pub mod child;
 pub mod incorporated;
@@ -62,9 +63,7 @@ impl Node {
     pub const ICON_MAX_LENGTH: usize = 5_000_000; // 5MB
     pub const NAME_MAX_LENGTH: usize = Cotonoma::NAME_MAX_LENGTH;
 
-    pub fn created_at(&self) -> DateTime<Local> {
-        Local.from_utc_datetime(&self.created_at)
-    }
+    pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
     pub fn to_update(&self) -> UpdateNode {
         UpdateNode {

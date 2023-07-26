@@ -21,9 +21,7 @@ pub mod models;
 mod schema;
 
 /// Returns the current datetime in UTC.
-fn current_datetime() -> NaiveDateTime {
-    Utc::now().naive_utc()
-}
+fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }
 
 /// Base64 serialization in serde
 ///

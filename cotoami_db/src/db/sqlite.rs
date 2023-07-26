@@ -9,10 +9,10 @@
 //!
 //! <https://github.com/mattn/go-sqlite3/issues/959#issuecomment-890371852>
 
-use anyhow::Result;
-use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
 use std::time::Duration;
+
+use anyhow::Result;
+use diesel::{prelude::*, sqlite::SqliteConnection};
 
 /// Returns an in-memory database URI supporting concurrent queries
 /// <https://github.com/mattn/go-sqlite3/issues/959#issuecomment-890371852>
