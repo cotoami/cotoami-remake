@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0" 
-axum = "0.6" 
+axum = {version = "0.6", features = ["headers"]} 
 axum-macros = "0.3.7" 
 cotoami_db = {path = "../cotoami_db"} 
 derive-new = "0.5" 

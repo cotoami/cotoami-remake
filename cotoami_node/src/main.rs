@@ -3,6 +3,7 @@ use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use anyhow::Result;
 use axum::{
     http::Uri,
+    middleware,
     response::{sse::Event, IntoResponse},
     Router, Server,
 };
@@ -13,6 +14,7 @@ use pubsub::Publisher;
 use tracing::info;
 
 mod api;
+mod csrf;
 mod pubsub;
 
 #[tokio::main]
@@ -40,6 +42,10 @@ async fn main() -> Result<()> {
     let router = Router::new()
         .nest("/api", api::routes())
         .fallback(fallback)
+        .layer(middleware::from_fn_with_state(
+            state.config.clone(),
+            csrf::protect_from_forgery,
+        ))
         .with_state(state);
 
     Server::bind(&addr)
@@ -65,9 +71,23 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 
 #[derive(Debug, serde::Deserialize)]
 struct Config {
+    // COTOAMI_PORT
     #[serde(default = "Config::default_port")]
     port: u16,
+
+    // COTOAMI_URL_SCHEME
+    #[serde(default = "Config::default_url_scheme")]
+    url_scheme: String,
+    // COTOAMI_URL_HOST
+    #[serde(default = "Config::default_url_host")]
+    url_host: String,
+    // COTOAMI_URL_PORT
+    url_port: Option<u16>,
+
+    // COTOAMI_DB_DIR
     db_dir: Option<String>,
+
+    // COTOAMI_OWNER_PASSWORD
     owner_password: Option<String>,
 }
 
@@ -82,9 +102,9 @@ impl Config {
 
     // Functions returning a default value as a workaround for the issue:
     // https://github.com/serde-rs/serde/issues/368
-    fn default_port() -> u16 {
-        5103
-    }
+    fn default_port() -> u16 { 5103 }
+    fn default_url_scheme() -> String { "http".into() }
+    fn default_url_host() -> String { "localhost".into() }
 
     fn db_dir(&self) -> PathBuf {
         self.db_dir
