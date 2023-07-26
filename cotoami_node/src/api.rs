@@ -10,6 +10,7 @@ use axum::{
     routing::get,
     Json, Router,
 };
+use cotoami_db::prelude::*;
 use futures::stream::Stream;
 use serde_json::value::Value;
 use tracing::error;
@@ -28,9 +29,7 @@ pub(super) fn routes() -> Router<AppState> {
         .nest("/cotos", cotos::routes())
 }
 
-pub(super) async fn root(State(_): State<AppState>) -> &'static str {
-    "Cotoami Node API"
-}
+pub(super) async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
 
 async fn stream_events(
     State(state): State<AppState>,
@@ -75,7 +74,15 @@ where
     E: Into<anyhow::Error>,
 {
     fn from(err: E) -> Self {
-        WebError::ServerSide(err.into())
+        let anyhow_err = err.into();
+        match anyhow_err.downcast_ref::<DatabaseError>() {
+            Some(DatabaseError::EntityNotFound { kind, id }) => WebError::ClientSide(
+                ClientError::resource(kind, "not-found")
+                    .with_param("id", Value::String(id.into()))
+                    .into(),
+            ),
+            _ => WebError::ServerSide(anyhow_err),
+        }
     }
 }
 
@@ -114,9 +121,7 @@ impl ClientErrors {
         c_errors
     }
 
-    fn into_result<T>(self) -> Result<T, WebError> {
-        into_result(self)
-    }
+    fn into_result<T>(self) -> Result<T, WebError> { into_result(self) }
 }
 
 fn into_result<T, E>(e: E) -> Result<T, WebError>
@@ -170,9 +175,7 @@ impl ClientError {
         self
     }
 
-    fn into_result<T>(self) -> Result<T, WebError> {
-        into_result(self)
-    }
+    fn into_result<T>(self) -> Result<T, WebError> { into_result(self) }
 }
 
 impl From<ClientError> for ClientErrors {
