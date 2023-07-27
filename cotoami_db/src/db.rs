@@ -13,7 +13,7 @@ use url::Url;
 use self::{
     error::DatabaseError,
     op::{Context, Operation, WritableConn},
-    ops::{cotonoma_ops, *},
+    ops::*,
 };
 use crate::models::{
     changelog::{Change, ChangelogEntry},
@@ -254,6 +254,30 @@ impl<'a> DatabaseSession<'a> {
             local_node_ops::update(&local_node),
         )?;
         Ok(())
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // operator
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn get_operator_in_session(&mut self, token: &str) -> Result<Option<Operator>> {
+        // one of child nodes?
+        if let Some(child_node) = op::run(
+            &mut self.ro_conn,
+            child_node_ops::get_by_session_token(token),
+        )? {
+            if child_node.verify_session(token).is_ok() {
+                return Ok(Some(Operator::ChildNode(child_node)));
+            }
+        }
+
+        // the owner of local node?
+        let local_node = self.require_local_node()?;
+        if local_node.verify_session(token).is_ok() {
+            return Ok(Some(Operator::Owner));
+        }
+
+        Ok(None) // no session
     }
 
     /////////////////////////////////////////////////////////////////////////////

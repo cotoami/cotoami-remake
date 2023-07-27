@@ -21,9 +21,9 @@ pub fn insert<'a>(
     })
 }
 
-pub fn get_by_session_token<'a>(
-    token: &'a str,
-) -> impl Operation<WritableConn, Option<ChildNode>> + 'a {
+pub fn get_by_session_token<Conn: AsReadableConn>(
+    token: &str,
+) -> impl Operation<Conn, Option<ChildNode>> + '_ {
     use crate::schema::child_nodes::dsl::*;
     read_op(move |conn| {
         child_nodes
