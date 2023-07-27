@@ -1,11 +1,11 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use identicon_rs::Identicon;
 use validator::Validate;
@@ -148,6 +148,66 @@ pub struct UpdateNode<'a> {
 
 pub trait BelongsToNode {
     fn node_id(&self) -> &Id<Node>;
+}
+
+pub trait Principal {
+    fn password_hash(&self) -> Option<&str>;
+
+    fn set_password_hash(&mut self, hash: Option<String>);
+
+    fn session_token(&self) -> Option<&str>;
+
+    fn set_session_token(&mut self, token: Option<String>);
+
+    fn session_expires_at(&self) -> Option<&NaiveDateTime>;
+
+    fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>);
+
+    fn session_expires_at_as_local_time(&self) -> Option<DateTime<Local>> {
+        self.session_expires_at()
+            .map(|expires_at| Local.from_utc_datetime(&expires_at))
+    }
+
+    fn update_password(&mut self, password: &str) -> Result<()> {
+        let hash = hash_password(password.as_bytes())?;
+        self.set_password_hash(Some(hash));
+        Ok(())
+    }
+
+    fn start_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
+        self.verify_password(password)?;
+        self.set_session_token(Some(crate::generate_session_token()));
+        self.set_session_expires_at(Some(crate::current_datetime() + duration));
+        Ok(self.session_token().unwrap())
+    }
+
+    fn verify_session(&self, token: &str) -> Result<()> {
+        if let Some(expires_at) = self.session_expires_at() {
+            if *expires_at < crate::current_datetime() {
+                return Err(anyhow!("Session has been expired."));
+            }
+        }
+        if let Some(session_token) = self.session_token() {
+            if token != session_token {
+                return Err(anyhow!("The passed session token is invalid."));
+            }
+        } else {
+            return Err(anyhow!("Session doesn't exist."));
+        }
+        Ok(())
+    }
+
+    fn clear_session(&mut self) {
+        self.set_session_token(None);
+        self.set_session_expires_at(None);
+    }
+
+    fn verify_password(&self, password: &str) -> Result<()> {
+        let password_hash = self
+            .password_hash()
+            .ok_or(anyhow!("No owner password assigned."))?;
+        verify_password(password, password_hash)
+    }
 }
 
 /// Generates a new identicon from an input value.

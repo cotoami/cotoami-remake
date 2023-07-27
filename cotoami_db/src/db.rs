@@ -18,7 +18,7 @@ use self::{
 use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, Cotonoma, NewCoto},
-    node::{local::LocalNode, BelongsToNode, Node},
+    node::{local::LocalNode, BelongsToNode, Node, Principal},
     Id,
 };
 
@@ -233,9 +233,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<String> {
         let mut local_node = self.require_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
-        let token = local_node
-            .start_owner_session(password, duration)?
-            .to_string();
+        let token = local_node.start_session(password, duration)?.to_string();
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             local_node_ops::update(&local_node),
@@ -245,12 +243,12 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn verify_owner_session(&self, token: &str) -> Result<()> {
         let local_node = self.require_local_node()?;
-        local_node.verify_owner_session(token)
+        local_node.verify_session(token)
     }
 
     pub fn clear_owner_session(&mut self) -> Result<()> {
         let mut local_node = self.require_local_node()?;
-        local_node.clear_owner_session();
+        local_node.clear_session();
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             local_node_ops::update(&local_node),

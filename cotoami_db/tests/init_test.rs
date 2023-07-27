@@ -110,18 +110,18 @@ fn owner_session() -> Result<()> {
     let ((mut local_node, _), _) = session.init_as_empty_node(Some("foo"))?;
 
     // then
-    assert!(local_node.start_owner_session("bar", duration).is_err());
+    assert!(local_node.start_session("bar", duration).is_err());
 
-    let session_id = local_node.start_owner_session("foo", duration)?.to_owned();
+    let session_id = local_node.start_session("foo", duration)?.to_owned();
     assert_eq!(
         local_node.owner_session_token.as_deref().unwrap(),
         &session_id
     );
-    assert_approximately_now(local_node.owner_session_expires_at().unwrap() - duration);
-    local_node.verify_owner_session(&session_id)?;
+    assert_approximately_now(local_node.session_expires_at_as_local_time().unwrap() - duration);
+    local_node.verify_session(&session_id)?;
     assert_eq!(
         local_node
-            .verify_owner_session("invalid-token")
+            .verify_session("invalid-token")
             .unwrap_err()
             .to_string(),
         "The passed session token is invalid."
@@ -133,22 +133,22 @@ fn owner_session() -> Result<()> {
     // then
     assert_eq!(
         local_node
-            .verify_owner_session(&session_id)
+            .verify_session(&session_id)
             .unwrap_err()
             .to_string(),
-        "Owner session has been expired."
+        "Session has been expired."
     );
 
     // when
-    local_node.clear_owner_session();
+    local_node.clear_session();
 
     // then
     assert_eq!(
         local_node
-            .verify_owner_session(&session_id)
+            .verify_session(&session_id)
             .unwrap_err()
             .to_string(),
-        "Owner session doesn't exist."
+        "Session doesn't exist."
     );
 
     Ok(())

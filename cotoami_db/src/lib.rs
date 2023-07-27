@@ -6,7 +6,7 @@ pub mod prelude {
         models::{
             changelog::{Change, ChangelogEntry},
             coto::{Coto, Cotonoma},
-            node::{local::LocalNode, Node},
+            node::{local::LocalNode, Node, Principal},
             Id,
         },
     };

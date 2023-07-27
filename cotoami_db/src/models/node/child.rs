@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Result};
-use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
+use anyhow::Result;
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use super::Node;
+use super::{Node, Principal};
 use crate::{models::Id, schema::child_nodes};
 
 /// A row in `child_nodes` table
@@ -30,47 +30,21 @@ pub struct ChildNode {
     pub created_at: NaiveDateTime,
 }
 
-impl ChildNode {
-    pub fn session_expires_at(&self) -> Option<DateTime<Local>> {
-        self.session_expires_at
-            .map(|expires_at| Local.from_utc_datetime(&expires_at))
+impl Principal for ChildNode {
+    fn password_hash(&self) -> Option<&str> { Some(&self.password_hash) }
+
+    fn set_password_hash(&mut self, hash: Option<String>) {
+        self.password_hash = hash.unwrap_or_default();
     }
 
-    pub fn update_password(&mut self, password: &str) -> Result<()> {
-        self.password_hash = super::hash_password(password.as_bytes())?;
-        Ok(())
-    }
+    fn session_token(&self) -> Option<&str> { self.session_token.as_deref() }
 
-    pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
-        self.verify_password(password)?;
-        self.session_token = Some(crate::generate_session_token());
-        self.session_expires_at = Some(crate::current_datetime() + duration);
-        Ok(self.session_token.as_deref().unwrap())
-    }
+    fn set_session_token(&mut self, token: Option<String>) { self.session_token = token; }
 
-    pub fn verify_session(&self, token: &str) -> Result<()> {
-        if let Some(expires_at) = self.session_expires_at {
-            if expires_at < crate::current_datetime() {
-                return Err(anyhow!("Session has been expired."));
-            }
-        }
-        if let Some(session_token) = self.session_token.as_deref() {
-            if token != session_token {
-                return Err(anyhow!("The passed session token is invalid."));
-            }
-        } else {
-            return Err(anyhow!("Session doesn't exist."));
-        }
-        Ok(())
-    }
+    fn session_expires_at(&self) -> Option<&NaiveDateTime> { self.session_expires_at.as_ref() }
 
-    pub fn clear_session(&mut self) {
-        self.session_token = None;
-        self.session_expires_at = None;
-    }
-
-    fn verify_password(&self, password: &str) -> Result<()> {
-        super::verify_password(password, &self.password_hash)
+    fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>) {
+        self.session_expires_at = expires_at;
     }
 }
 

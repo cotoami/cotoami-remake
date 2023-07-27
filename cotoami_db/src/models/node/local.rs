@@ -1,9 +1,9 @@
-use anyhow::{anyhow, Result};
-use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
+use anyhow::Result;
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::Node;
+use super::{Node, Principal};
 use crate::{models::Id, schema::local_node};
 
 /// A row in `local_node` table
@@ -26,52 +26,21 @@ pub struct LocalNode {
     pub owner_session_expires_at: Option<NaiveDateTime>,
 }
 
-impl LocalNode {
-    pub fn owner_session_expires_at(&self) -> Option<DateTime<Local>> {
-        self.owner_session_expires_at
-            .map(|expires_at| Local.from_utc_datetime(&expires_at))
+impl Principal for LocalNode {
+    fn password_hash(&self) -> Option<&str> { self.owner_password_hash.as_deref() }
+
+    fn set_password_hash(&mut self, hash: Option<String>) { self.owner_password_hash = hash; }
+
+    fn session_token(&self) -> Option<&str> { self.owner_session_token.as_deref() }
+
+    fn set_session_token(&mut self, token: Option<String>) { self.owner_session_token = token; }
+
+    fn session_expires_at(&self) -> Option<&NaiveDateTime> {
+        self.owner_session_expires_at.as_ref()
     }
 
-    pub fn update_owner_password(&mut self, password: &str) -> Result<()> {
-        let password_hash = super::hash_password(password.as_bytes())?;
-        self.owner_password_hash = Some(password_hash);
-        Ok(())
-    }
-
-    pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
-        self.verify_owner_password(password)?;
-        self.owner_session_token = Some(crate::generate_session_token());
-        self.owner_session_expires_at = Some(crate::current_datetime() + duration);
-        Ok(self.owner_session_token.as_deref().unwrap())
-    }
-
-    pub fn verify_owner_session(&self, token: &str) -> Result<()> {
-        if let Some(expires_at) = self.owner_session_expires_at {
-            if expires_at < crate::current_datetime() {
-                return Err(anyhow!("Owner session has been expired."));
-            }
-        }
-        if let Some(session_token) = self.owner_session_token.as_deref() {
-            if token != session_token {
-                return Err(anyhow!("The passed session token is invalid."));
-            }
-        } else {
-            return Err(anyhow!("Owner session doesn't exist."));
-        }
-        Ok(())
-    }
-
-    pub fn clear_owner_session(&mut self) {
-        self.owner_session_token = None;
-        self.owner_session_expires_at = None;
-    }
-
-    fn verify_owner_password(&self, password: &str) -> Result<()> {
-        let password_hash = self
-            .owner_password_hash
-            .as_ref()
-            .ok_or(anyhow!("No owner password assigned."))?;
-        super::verify_password(password, password_hash)
+    fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>) {
+        self.owner_session_expires_at = expires_at;
     }
 }
 
@@ -122,11 +91,11 @@ mod tests {
         };
 
         // when
-        local_node.update_owner_password("foo")?;
+        local_node.update_password("foo")?;
 
         // then
-        assert!(local_node.verify_owner_password("foo").is_ok());
-        assert!(local_node.verify_owner_password("bar").is_err());
+        assert!(local_node.verify_password("foo").is_ok());
+        assert!(local_node.verify_password("bar").is_err());
 
         Ok(())
     }
