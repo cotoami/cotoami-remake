@@ -8,6 +8,8 @@ use diesel::{
     RunQueryDsl,
 };
 
+use crate::models::node::child::ChildNode;
+
 pub mod changelog_ops;
 pub mod child_node_ops;
 pub mod coto_ops;
@@ -15,6 +17,15 @@ pub mod cotonoma_ops;
 pub mod link_ops;
 pub mod local_node_ops;
 pub mod node_ops;
+
+/////////////////////////////////////////////////////////////////////////////
+// Operator
+/////////////////////////////////////////////////////////////////////////////
+
+pub enum Operator {
+    Owner,
+    ChildNode(ChildNode),
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination

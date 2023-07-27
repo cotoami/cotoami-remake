@@ -18,7 +18,7 @@ use self::{
 use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, Cotonoma, NewCoto},
-    node::{child::ChildNode, local::LocalNode, BelongsToNode, Node, Principal},
+    node::{local::LocalNode, BelongsToNode, Node, Principal},
     Id,
 };
 
@@ -452,9 +452,4 @@ impl<'a> DatabaseSession<'a> {
         self.check_if_belongs_to_local_node(&cotonoma)?;
         Ok(())
     }
-}
-
-pub enum Operator {
-    Owner,
-    ChildNode(ChildNode),
 }
