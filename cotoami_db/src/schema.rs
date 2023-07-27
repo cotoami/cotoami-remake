@@ -58,6 +58,9 @@ diesel::table! {
     child_nodes (node_id) {
         node_id -> Text,
         password_hash -> Text,
+        session_token -> Nullable<Text>,
+        session_expires_at -> Nullable<Timestamp>,
+        as_owner -> Bool,
         can_edit_links -> Bool,
         created_at -> Timestamp,
     }

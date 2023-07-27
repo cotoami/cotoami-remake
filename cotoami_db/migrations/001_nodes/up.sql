@@ -46,7 +46,7 @@ CREATE TABLE local_node (
   owner_session_token TEXT,
 
   -- Expiration date of node owner's session
-  owner_session_expires_at DATETIME,
+  owner_session_expires_at DATETIME, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
@@ -78,6 +78,16 @@ CREATE TABLE child_nodes (
 
   -- Password for authentication
   password_hash TEXT NOT NULL,
+
+  -- Login session token
+  session_token TEXT UNIQUE,
+
+  -- Expiration date of login session
+  session_expires_at DATETIME, -- UTC
+
+  -- TRUE if this node has the same permission as the owner
+  -- 0 (false) and 1 (true)
+  as_owner INTEGER DEFAULT FALSE NOT NULL,
 
   -- Permission to edit links in this database
   -- 0 (false) and 1 (true)

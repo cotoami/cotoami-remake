@@ -42,7 +42,7 @@ impl LocalNode {
         self.verify_owner_password(password)?;
         self.owner_session_token = Some(crate::generate_session_token());
         self.owner_session_expires_at = Some(crate::current_datetime() + duration);
-        Ok(self.owner_session_token.as_ref().unwrap())
+        Ok(self.owner_session_token.as_deref().unwrap())
     }
 
     pub fn verify_owner_session(&self, token: &str) -> Result<()> {
@@ -51,7 +51,7 @@ impl LocalNode {
                 return Err(anyhow!("Owner session has been expired."));
             }
         }
-        if let Some(session_token) = self.owner_session_token.as_ref() {
+        if let Some(session_token) = self.owner_session_token.as_deref() {
             if token != session_token {
                 return Err(anyhow!("The passed session token is invalid."));
             }
