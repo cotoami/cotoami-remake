@@ -17,4 +17,11 @@ pub enum DatabaseError {
 
     #[error("Not found: {kind:?} ({id:?})")]
     EntityNotFound { kind: String, id: String },
+
+    #[error("Permission denied: {kind:?} ({id:?}) - {code:?}")]
+    PermissionDenied {
+        kind: String,
+        id: String,
+        code: String,
+    },
 }

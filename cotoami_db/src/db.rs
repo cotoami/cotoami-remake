@@ -18,7 +18,7 @@ use self::{
 use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, Cotonoma, NewCoto},
-    node::{local::LocalNode, BelongsToNode, Node, Principal},
+    node::{child::ChildNode, local::LocalNode, BelongsToNode, Node, Principal},
     Id,
 };
 
@@ -26,6 +26,10 @@ pub mod error;
 pub mod op;
 pub mod ops;
 pub mod sqlite;
+
+/////////////////////////////////////////////////////////////////////////////
+// Database
+/////////////////////////////////////////////////////////////////////////////
 
 /// A Cotoami database instance based on SQLite
 pub struct Database {
@@ -130,11 +134,56 @@ impl Database {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Globals
+/////////////////////////////////////////////////////////////////////////////
+
 /// Global information shared among sessions in a database
 #[derive(Debug, Default)]
 struct Globals {
     local_node: Option<LocalNode>,
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// Operator
+/////////////////////////////////////////////////////////////////////////////
+
+pub enum Operator {
+    Owner(Id<Node>),
+    ChildNode(ChildNode),
+}
+
+impl Operator {
+    pub fn node_id(&self) -> Id<Node> {
+        match self {
+            Operator::Owner(node_id) => *node_id,
+            Operator::ChildNode(child_node) => child_node.node_id,
+        }
+    }
+
+    pub fn has_owner_permission(&self) -> bool {
+        match self {
+            Operator::Owner(_) => true,
+            Operator::ChildNode(child_node) => child_node.as_owner,
+        }
+    }
+
+    pub fn can_update_coto(&self, coto: &Coto) -> Result<()> {
+        if self.node_id() == coto.posted_by_id {
+            Ok(())
+        } else {
+            Err(DatabaseError::PermissionDenied {
+                kind: "coto".into(),
+                id: coto.uuid.to_string(),
+                code: "no-permission-to-update".into(),
+            })?
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// DatabaseSession
+/////////////////////////////////////////////////////////////////////////////
 
 pub struct DatabaseSession<'a> {
     ro_conn: SqliteConnection,
@@ -274,7 +323,7 @@ impl<'a> DatabaseSession<'a> {
         // the owner of local node?
         let local_node = self.require_local_node()?;
         if local_node.verify_session(token).is_ok() {
-            return Ok(Some(Operator::Owner));
+            return Ok(Some(Operator::Owner(local_node.node_id)));
         }
 
         Ok(None) // no session
