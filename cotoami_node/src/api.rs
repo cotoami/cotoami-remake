@@ -39,22 +39,22 @@ async fn stream_events(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// WebError
+// ApiError
 /////////////////////////////////////////////////////////////////////////////
 
 // A slightly revised version of the official example
 // https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
 
-enum WebError {
+enum ApiError {
     ServerSide(anyhow::Error),
     ClientSide(ClientErrors),
 }
 
-// Tell axum how to convert `WebError` into a response.
-impl IntoResponse for WebError {
+// Tell axum how to convert `ApiError` into a response.
+impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         match self {
-            WebError::ServerSide(e) => {
+            ApiError::ServerSide(e) => {
                 error!("Something went wrong: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -62,26 +62,26 @@ impl IntoResponse for WebError {
                 )
                     .into_response()
             }
-            WebError::ClientSide(errors) => (StatusCode::BAD_REQUEST, Json(errors)).into_response(),
+            ApiError::ClientSide(errors) => (StatusCode::BAD_REQUEST, Json(errors)).into_response(),
         }
     }
 }
 
 // This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
-// `Result<_, WebError>`. That way you don't need to do that manually.
-impl<E> From<E> for WebError
+// `Result<_, ApiError>`. That way you don't need to do that manually.
+impl<E> From<E> for ApiError
 where
     E: Into<anyhow::Error>,
 {
     fn from(err: E) -> Self {
         let anyhow_err = err.into();
         match anyhow_err.downcast_ref::<DatabaseError>() {
-            Some(DatabaseError::EntityNotFound { kind, id }) => WebError::ClientSide(
+            Some(DatabaseError::EntityNotFound { kind, id }) => ApiError::ClientSide(
                 ClientError::resource(kind, "not-found")
                     .with_param("id", Value::String(id.into()))
                     .into(),
             ),
-            _ => WebError::ServerSide(anyhow_err),
+            _ => ApiError::ServerSide(anyhow_err),
         }
     }
 }
@@ -121,14 +121,14 @@ impl ClientErrors {
         c_errors
     }
 
-    fn into_result<T>(self) -> Result<T, WebError> { into_result(self) }
+    fn into_result<T>(self) -> Result<T, ApiError> { into_result(self) }
 }
 
-fn into_result<T, E>(e: E) -> Result<T, WebError>
+fn into_result<T, E>(e: E) -> Result<T, ApiError>
 where
     E: Into<ClientErrors>,
 {
-    Err(WebError::ClientSide(e.into()))
+    Err(ApiError::ClientSide(e.into()))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -175,7 +175,7 @@ impl ClientError {
         self
     }
 
-    fn into_result<T>(self) -> Result<T, WebError> { into_result(self) }
+    fn into_result<T>(self) -> Result<T, ApiError> { into_result(self) }
 }
 
 impl From<ClientError> for ClientErrors {

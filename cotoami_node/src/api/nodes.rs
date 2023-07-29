@@ -4,7 +4,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{ClientError, ClientErrors, WebError},
+    api::{ApiError, ClientError, ClientErrors},
     AppState,
 };
 
@@ -16,7 +16,7 @@ pub(super) fn routes() -> Router<AppState> {
 // GET /api/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, WebError> {
+async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         if let Some((_, node)) = db.get_local_node()? {
@@ -41,7 +41,7 @@ struct InitNode {
 async fn init_local_node(
     State(state): State<AppState>,
     Form(form): Form<InitNode>,
-) -> Result<Json<Node>, WebError> {
+) -> Result<Json<Node>, ApiError> {
     if let Err(errors) = form.validate() {
         return ClientErrors::from_validation_errors("local-node", errors).into_result();
     }
