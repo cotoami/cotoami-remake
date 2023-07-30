@@ -3,7 +3,7 @@
 use core::time::Duration;
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::info;
@@ -477,10 +477,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<()> {
         let local_node_id = self.require_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
-            return Err(anyhow!(
-                "The entity doesn't belong to the local node: {:?}",
-                entity
-            ));
+            bail!("The entity doesn't belong to the local node: {:?}", entity);
         }
         Ok(())
     }

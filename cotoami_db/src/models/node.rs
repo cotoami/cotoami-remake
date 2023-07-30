@@ -1,6 +1,6 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
@@ -184,15 +184,15 @@ pub trait Principal {
     fn verify_session(&self, token: &str) -> Result<()> {
         if let Some(expires_at) = self.session_expires_at() {
             if *expires_at < crate::current_datetime() {
-                return Err(anyhow!("Session has been expired."));
+                bail!("Session has been expired.");
             }
         }
         if let Some(session_token) = self.session_token() {
             if token != session_token {
-                return Err(anyhow!("The passed session token is invalid."));
+                bail!("The passed session token is invalid.");
             }
         } else {
-            return Err(anyhow!("Session doesn't exist."));
+            bail!("Session doesn't exist.");
         }
         Ok(())
     }

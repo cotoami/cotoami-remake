@@ -1,6 +1,6 @@
 use std::ops::DerefMut;
 
-use anyhow::{anyhow, Result};
+use anyhow::{bail, Result};
 use cotoami_db::{
     db::{
         op,
@@ -33,12 +33,12 @@ fn operation() -> Result<()> {
     assert_eq!(into_values(&rows), vec!["Cloud", "Aerith"]);
 
     // when: failing transaction
-    let result = op::run_in_transaction(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
-        insert("Tifa").run(ctx)?;
-        Err(anyhow!("An error occurred during a transaction."))?;
-        insert("Barret").run(ctx)?;
-        Ok(())
-    });
+    let result: Result<()> =
+        op::run_in_transaction(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
+            insert("Tifa").run(ctx)?;
+            insert("Barret").run(ctx)?;
+            bail!("An error occurred during a transaction.");
+        });
 
     // then
     let rows = op::run(conn.deref_mut(), all())?;
