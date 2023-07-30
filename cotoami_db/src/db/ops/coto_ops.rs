@@ -7,7 +7,7 @@ use validator::Validate;
 
 use super::Paginated;
 use crate::{
-    db::{error::DatabaseError, op::*},
+    db::{error::*, op::*},
     models::{
         coto::{Coto, Cotonoma, NewCoto, UpdateCoto},
         node::Node,
@@ -29,12 +29,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<C
 pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
-    get(id).map(|coto| {
-        coto.ok_or(DatabaseError::EntityNotFound {
-            kind: "coto".into(),
-            id: id.to_string(),
-        })
-    })
+    get(id).map(|coto| coto.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {

@@ -11,7 +11,7 @@ use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use url::Url;
 
 use self::{
-    error::DatabaseError,
+    error::*,
     op::{Context, Operation, WritableConn},
     ops::*,
 };
@@ -172,11 +172,11 @@ impl Operator {
         if self.node_id() == coto.posted_by_id {
             Ok(())
         } else {
-            Err(DatabaseError::PermissionDenied {
-                kind: "coto".into(),
-                id: coto.uuid.to_string(),
-                code: "no-permission-to-update".into(),
-            })?
+            Err(DatabaseError::permission_denied(
+                EntityKind::Coto,
+                Some(coto.uuid),
+                OpKind::Update,
+            ))?
         }
     }
 }
@@ -432,10 +432,7 @@ impl<'a> DatabaseSession<'a> {
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;
                     Ok(changelog)
                 } else {
-                    Err(DatabaseError::EntityNotFound {
-                        kind: "coto".into(),
-                        id: id.to_string(),
-                    })?
+                    Err(DatabaseError::not_found(EntityKind::Coto, *id))?
                 }
             },
         )
@@ -492,12 +489,9 @@ impl<'a> DatabaseSession<'a> {
         &mut self,
         cotonoma_id: &'b Id<Cotonoma>,
     ) -> Result<()> {
-        let (cotonoma, _) =
-            self.get_cotonoma(cotonoma_id)?
-                .ok_or(DatabaseError::EntityNotFound {
-                    kind: "cotonoma".into(),
-                    id: cotonoma_id.to_string(),
-                })?;
+        let (cotonoma, _) = self
+            .get_cotonoma(cotonoma_id)?
+            .ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *cotonoma_id))?;
         self.check_if_belongs_to_local_node(&cotonoma)?;
         Ok(())
     }

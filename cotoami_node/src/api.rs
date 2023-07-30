@@ -46,7 +46,9 @@ async fn stream_events(
 // https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
 
 enum ApiError {
-    ServerSide(anyhow::Error),
+    Server(anyhow::Error),
+    Request(RequestError),
+    Permission(PermissionError),
     ClientSide(ClientErrors),
 }
 
@@ -54,7 +56,7 @@ enum ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         match self {
-            ApiError::ServerSide(e) => {
+            ApiError::Server(e) => {
                 error!("Something went wrong: {}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -62,6 +64,8 @@ impl IntoResponse for ApiError {
                 )
                     .into_response()
             }
+            ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+            ApiError::Permission(e) => (StatusCode::FORBIDDEN, Json(e)).into_response(),
             ApiError::ClientSide(errors) => (StatusCode::BAD_REQUEST, Json(errors)).into_response(),
         }
     }
@@ -81,14 +85,22 @@ where
                     .with_param("id", Value::String(id.into()))
                     .into(),
             ),
-            _ => ApiError::ServerSide(anyhow_err),
+            _ => ApiError::Server(anyhow_err),
         }
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// ClientErrors
-/////////////////////////////////////////////////////////////////////////////
+#[derive(serde::Serialize)]
+struct RequestError {
+    code: String,
+}
+
+#[derive(serde::Serialize)]
+struct PermissionError {
+    resource: String,
+    id: Option<String>,
+    op: String,
+}
 
 #[derive(serde::Serialize)]
 struct ClientErrors {
@@ -130,10 +142,6 @@ where
 {
     Err(ApiError::ClientSide(e.into()))
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// ClientError
-/////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize)]
 struct ClientError {

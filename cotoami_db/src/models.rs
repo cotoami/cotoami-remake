@@ -51,6 +51,10 @@ impl<T> Display for Id<T> {
     }
 }
 
+impl<T> From<Id<T>> for String {
+    fn from(id: Id<T>) -> Self { id.to_string() }
+}
+
 impl<T> FromStr for Id<T> {
     type Err = uuid::Error;
     fn from_str(uuid: &str) -> Result<Self, Self::Err> { Ok(Id::new(Uuid::from_str(uuid)?)) }
