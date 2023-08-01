@@ -4,7 +4,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{ApiError, ClientError, ClientErrors},
+    api::{ApiError, IntoApiResult, RequestError},
     AppState,
 };
 
@@ -22,7 +22,7 @@ async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, Api
         if let Some((_, node)) = db.get_local_node()? {
             Ok(Json(node))
         } else {
-            ClientError::resource("local-node", "not-yet-created").into_result()
+            RequestError::new("local-node-not-yet-created").into_result()
         }
     })
     .await?
@@ -43,12 +43,12 @@ async fn init_local_node(
     Form(form): Form<InitNode>,
 ) -> Result<Json<Node>, ApiError> {
     if let Err(errors) = form.validate() {
-        return ClientErrors::from_validation_errors("local-node", errors).into_result();
+        return ("local-node", errors).into_result();
     }
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         if db.get_local_node()?.is_some() {
-            ClientError::resource("local-node", "already_exists").into_result()
+            RequestError::new("local-node-already-exists").into_result()
         } else {
             let ((_, node), _) = if let Some(name) = form.name {
                 db.init_as_node(&name, state.config.owner_password.as_deref())?

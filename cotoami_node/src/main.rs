@@ -2,7 +2,7 @@ use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use anyhow::Result;
 use axum::{
-    http::Uri,
+    http::{StatusCode, Uri},
     middleware,
     response::{sse::Event, IntoResponse},
     Router, Server,
@@ -59,10 +59,7 @@ async fn main() -> Result<()> {
 /// axum handler for any request that fails to match the router routes.
 /// This implementation returns HTTP status code Not Found (404).
 async fn fallback(uri: Uri) -> impl IntoResponse {
-    (
-        axum::http::StatusCode::NOT_FOUND,
-        format!("No route {}", uri),
-    )
+    (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
 }
 
 /////////////////////////////////////////////////////////////////////////////

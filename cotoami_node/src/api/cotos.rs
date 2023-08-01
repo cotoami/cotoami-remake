@@ -8,7 +8,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{ApiError, ClientErrors, Pagination},
+    api::{ApiError, IntoApiResult, Pagination},
     AppState,
 };
 
@@ -27,7 +27,7 @@ async fn recent_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Coto>>, ApiError> {
     if let Err(errors) = pagination.validate() {
-        return ClientErrors::from_validation_errors("cotos", errors).into_result();
+        return ("cotos", errors).into_result();
     }
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
@@ -62,7 +62,7 @@ async fn post_coto(
     Form(form): Form<PostCoto>,
 ) -> Result<Json<Coto>, ApiError> {
     if let Err(errors) = form.validate() {
-        return ClientErrors::from_validation_errors("coto", errors).into_result();
+        return ("coto", errors).into_result();
     }
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
