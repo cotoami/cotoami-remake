@@ -48,13 +48,14 @@ async fn recent_cotos(
 
 #[derive(serde::Deserialize, Validate)]
 struct PostCoto {
-    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    content: String,
+    #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    content: Option<String>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     summary: Option<String>,
 
-    cotonoma_id: Id<Cotonoma>,
+    #[validate(required)]
+    cotonoma_id: Option<Id<Cotonoma>>,
 }
 
 async fn post_coto(
@@ -67,9 +68,9 @@ async fn post_coto(
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         let (coto, changelog) = db.post_coto(
-            &form.cotonoma_id,
-            None, // TODO: set node_id
-            &form.content,
+            &form.cotonoma_id.unwrap(), // validated to be Some
+            None,                       // TODO: set node_id
+            &form.content.unwrap(),     // validated to be Some
             form.summary.as_deref(),
         )?;
         state.publish_change(changelog)?;
