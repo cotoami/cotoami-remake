@@ -1,35 +1,21 @@
-use std::convert::Infallible;
-
-use axum::{
-    extract::State,
-    response::sse::{Event, KeepAlive, Sse},
-    routing::get,
-    Router,
-};
-use futures::stream::Stream;
+use axum::{extract::State, routing::get, Router};
 use validator::Validate;
 
 use crate::AppState;
 
 mod cotos;
+mod events;
 mod nodes;
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(root))
-        .route("/events", get(stream_events))
+        .nest("/events", events::routes())
         .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
 }
 
 pub(super) async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
-
-async fn stream_events(
-    State(state): State<AppState>,
-) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let sub = state.pubsub.lock().subscribe();
-    Sse::new(sub).keep_alive(KeepAlive::default())
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination Query
