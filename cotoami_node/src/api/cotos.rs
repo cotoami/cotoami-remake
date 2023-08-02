@@ -8,7 +8,8 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{ApiError, IntoApiResult, Pagination},
+    api::Pagination,
+    error::{ApiError, IntoApiResult},
     AppState,
 };
 

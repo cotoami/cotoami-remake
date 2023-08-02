@@ -15,6 +15,7 @@ use tracing::info;
 
 mod api;
 mod csrf;
+mod error;
 mod pubsub;
 
 #[tokio::main]

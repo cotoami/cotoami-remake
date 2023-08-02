@@ -4,7 +4,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{ApiError, IntoApiResult, RequestError},
+    error::{ApiError, IntoApiResult, RequestError},
     AppState,
 };
 
