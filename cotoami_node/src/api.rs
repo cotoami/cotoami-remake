@@ -15,7 +15,7 @@ pub(super) fn routes() -> Router<AppState> {
         .nest("/cotos", cotos::routes())
 }
 
-pub(super) async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
+async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination Query
