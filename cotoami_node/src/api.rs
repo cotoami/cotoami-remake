@@ -1,4 +1,12 @@
-use axum::{extract::State, routing::get, Router};
+use axum::{
+    extract::State,
+    http::{Request, StatusCode},
+    middleware::Next,
+    response::{IntoResponse, Response},
+    routing::get,
+    Router,
+};
+use axum_extra::extract::cookie::CookieJar;
 use validator::Validate;
 
 use crate::AppState;
@@ -16,6 +24,14 @@ pub(super) fn routes() -> Router<AppState> {
 }
 
 async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
+
+async fn auth<B>(jar: CookieJar, request: Request<B>, next: Next<B>) -> Response {
+    if let Some(session_token) = jar.get("session_token") {
+        next.run(request).await.into_response()
+    } else {
+        StatusCode::UNAUTHORIZED.into_response()
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination Query
