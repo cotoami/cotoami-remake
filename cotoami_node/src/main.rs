@@ -5,7 +5,7 @@ use axum::{
     http::{StatusCode, Uri},
     middleware,
     response::{sse::Event, IntoResponse},
-    Router, Server,
+    Extension, Router, Server,
 };
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
@@ -43,10 +43,8 @@ async fn main() -> Result<()> {
     let router = Router::new()
         .nest("/api", api::routes())
         .fallback(fallback)
-        .layer(middleware::from_fn_with_state(
-            state.config.clone(),
-            csrf::protect_from_forgery,
-        ))
+        .layer(middleware::from_fn(csrf::protect_from_forgery))
+        .layer(Extension(state.clone())) // for middleware
         .with_state(state);
 
     Server::bind(&addr)

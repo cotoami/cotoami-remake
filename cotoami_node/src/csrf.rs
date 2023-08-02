@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use axum::{
-    extract::State,
     headers::{HeaderMapExt, Host, Origin},
     http::{
         header::{HeaderMap, HeaderName, HeaderValue},
@@ -10,20 +9,21 @@ use axum::{
     },
     middleware::Next,
     response::{IntoResponse, Response},
+    Extension,
 };
 use tracing::info;
 
-use super::Config;
+use super::{AppState, Config};
 
 const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTIONS];
 const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
 pub(super) async fn protect_from_forgery<B>(
-    State(config): State<Arc<Config>>,
+    Extension(state): Extension<AppState>,
     request: Request<B>,
     next: Next<B>,
 ) -> Response {
-    if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &config) {
+    if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &state.config) {
         next.run(request).await.into_response()
     } else {
         StatusCode::FORBIDDEN.into_response()
