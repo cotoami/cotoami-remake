@@ -85,6 +85,10 @@ struct Config {
 
     // COTOAMI_OWNER_PASSWORD
     owner_password: Option<String>,
+
+    // COTOAMI_SESSION_MINUTES
+    #[serde(default = "Config::default_session_minutes")]
+    session_minutes: u64,
 }
 
 impl Config {
@@ -101,6 +105,7 @@ impl Config {
     fn default_port() -> u16 { 5103 }
     fn default_url_scheme() -> String { "http".into() }
     fn default_url_host() -> String { "localhost".into() }
+    fn default_session_minutes() -> u64 { 60 }
 
     fn db_dir(&self) -> PathBuf {
         self.db_dir
@@ -115,6 +120,8 @@ impl Config {
                     .unwrap_or(PathBuf::from(Self::DEFAULT_DB_DIR_NAME))
             })
     }
+
+    fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
 }
 
 /////////////////////////////////////////////////////////////////////////////

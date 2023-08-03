@@ -7,7 +7,7 @@ use axum::{
     Extension, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
-use tracing::debug;
+use tracing::info;
 use validator::Validate;
 
 use crate::{error::ApiError, AppState};
@@ -15,10 +15,12 @@ use crate::{error::ApiError, AppState};
 mod cotos;
 mod events;
 mod nodes;
+mod session;
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(root))
+        .nest("/session", session::routes())
         .nest("/events", events::routes())
         .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
@@ -62,7 +64,7 @@ async fn require_session<B>(
     };
 
     if let Some(operator) = operator {
-        debug!("identify the operator: {:?}", operator);
+        info!("Identified the operator: {:?}", operator);
         request.extensions_mut().insert(operator);
         Ok(next.run(request).await)
     } else {

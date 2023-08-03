@@ -58,6 +58,9 @@ where
                     .with_param("value", Value::String(id.to_string()))
                     .into(),
             ),
+            Some(DatabaseError::AuthenticationFailed) => {
+                ApiError::Request(RequestError::new("authentication-failed"))
+            }
             Some(DatabaseError::PermissionDenied { entity, id, op }) => ApiError::Permission(
                 PermissionError::new(entity.to_string(), id.as_ref(), op.to_string()),
             ),

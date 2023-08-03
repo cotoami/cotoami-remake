@@ -3,7 +3,7 @@
 use core::time::Duration;
 use std::path::{Path, PathBuf};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context as _, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::info;
@@ -280,15 +280,17 @@ impl<'a> DatabaseSession<'a> {
     // node owner
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<String> {
+    pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<LocalNode> {
         let mut local_node = self.require_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
-        let token = local_node.start_session(password, duration)?.to_string();
+        local_node
+            .start_session(password, duration)
+            .context(DatabaseError::AuthenticationFailed)?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             local_node_ops::update(&local_node),
         )?;
-        Ok(token)
+        Ok(local_node.clone())
     }
 
     pub fn verify_owner_session(&self, token: &str) -> Result<()> {
