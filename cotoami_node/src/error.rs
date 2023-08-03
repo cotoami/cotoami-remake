@@ -23,6 +23,7 @@ pub(crate) enum ApiError {
     Permission(PermissionError),
     Input(InputErrors),
     NotFound,
+    Unauthorized,
 }
 
 // Tell axum how to convert `ApiError` into a response.
@@ -38,6 +39,7 @@ impl IntoResponse for ApiError {
             ApiError::Permission(e) => (StatusCode::FORBIDDEN, Json(e)).into_response(),
             ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
             ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
         }
     }
 }

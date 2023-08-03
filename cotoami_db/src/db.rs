@@ -148,6 +148,7 @@ struct Globals {
 // Operator
 /////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug)]
 pub enum Operator {
     Owner(Id<Node>),
     ChildNode(ChildNode),

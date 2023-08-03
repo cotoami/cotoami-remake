@@ -24,7 +24,7 @@ pub(super) async fn protect_from_forgery<B>(
     next: Next<B>,
 ) -> Response {
     if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &state.config) {
-        next.run(request).await.into_response()
+        next.run(request).await
     } else {
         StatusCode::FORBIDDEN.into_response()
     }

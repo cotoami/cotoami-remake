@@ -2,6 +2,7 @@ use std::convert::Infallible;
 
 use axum::{
     extract::State,
+    middleware,
     response::sse::{Event, KeepAlive, Sse},
     routing::get,
     Router,
@@ -10,7 +11,11 @@ use futures::stream::Stream;
 
 use crate::AppState;
 
-pub(super) fn routes() -> Router<AppState> { Router::new().route("/", get(stream_events)) }
+pub(super) fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/", get(stream_events))
+        .layer(middleware::from_fn(super::require_session))
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/events

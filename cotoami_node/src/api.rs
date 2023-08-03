@@ -1,15 +1,16 @@
 use axum::{
     extract::State,
-    http::{Request, StatusCode},
+    http::{header::HeaderName, Request},
     middleware::Next,
-    response::{IntoResponse, Response},
+    response::Response,
     routing::get,
-    Router,
+    Extension, Router,
 };
-use axum_extra::extract::cookie::CookieJar;
+use axum_extra::extract::cookie::{Cookie, CookieJar};
+use tracing::debug;
 use validator::Validate;
 
-use crate::AppState;
+use crate::{error::ApiError, AppState};
 
 mod cotos;
 mod events;
@@ -25,11 +26,47 @@ pub(super) fn routes() -> Router<AppState> {
 
 async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
 
-async fn auth<B>(jar: CookieJar, request: Request<B>, next: Next<B>) -> Response {
-    if let Some(session_token) = jar.get("session_token") {
-        next.run(request).await.into_response()
+/////////////////////////////////////////////////////////////////////////////
+// Session
+/////////////////////////////////////////////////////////////////////////////
+
+const SESSION_COOKIE_NAME: &str = "session_token";
+const SESSION_HEADER_NAME: HeaderName = HeaderName::from_static("x-cotoami-session-token");
+
+/// A middleware function to identify the operator from a session.
+async fn require_session<B>(
+    Extension(state): Extension<AppState>,
+    // CookieJar extractor will never reject a request
+    // https://docs.rs/axum-extra/0.7.5/src/axum_extra/extract/cookie/mod.rs.html#96
+    // https://docs.rs/axum/latest/axum/extract/index.html#optional-extractors
+    jar: CookieJar,
+    mut request: Request<B>,
+    next: Next<B>,
+) -> Result<Response, ApiError> {
+    let cookie_value = jar.get(SESSION_COOKIE_NAME).map(Cookie::value);
+    let header_value = request
+        .headers()
+        .get(SESSION_HEADER_NAME)
+        .and_then(|v| v.to_str().ok());
+
+    let token = if let Some(token) = cookie_value.or(header_value) {
+        token
     } else {
-        StatusCode::UNAUTHORIZED.into_response()
+        return Err(ApiError::Unauthorized); // missing session token
+    };
+
+    let operator = {
+        // ensure the scope of `db` not to overlap with `next.run`
+        let mut db = state.db.create_session()?;
+        db.get_operator_in_session(token)?
+    };
+
+    if let Some(operator) = operator {
+        debug!("identify the operator: {:?}", operator);
+        request.extensions_mut().insert(operator);
+        Ok(next.run(request).await)
+    } else {
+        Err(ApiError::Unauthorized) // invalid token (session expired, etc.)
     }
 }
 

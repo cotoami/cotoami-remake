@@ -1,4 +1,4 @@
-use axum::{extract::State, routing::get, Form, Json, Router};
+use axum::{extract::State, middleware, routing::get, Form, Json, Router};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use validator::Validate;
@@ -9,7 +9,9 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<AppState> {
-    Router::new().route("/local", get(get_local_node).put(init_local_node))
+    Router::new()
+        .route("/local", get(get_local_node).put(init_local_node))
+        .layer(middleware::from_fn(super::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////

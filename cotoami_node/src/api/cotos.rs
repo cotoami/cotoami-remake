@@ -1,5 +1,6 @@
 use axum::{
     extract::{Query, State},
+    middleware,
     routing::get,
     Form, Json, Router,
 };
@@ -14,7 +15,9 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<AppState> {
-    Router::new().route("/", get(recent_cotos).post(post_coto))
+    Router::new()
+        .route("/", get(recent_cotos).post(post_coto))
+        .layer(middleware::from_fn(super::require_session))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
