@@ -1,11 +1,18 @@
 use core::time::Duration;
 
 use anyhow::Result;
-use axum::{extract::State, routing::put, Form, Json, Router};
+use axum::{
+    extract::State,
+    middleware,
+    routing::{delete, put},
+    Extension, Form, Json, Router,
+};
 use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
 use chrono::NaiveDateTime;
+use cotoami_db::prelude::Operator;
 use time::OffsetDateTime;
 use tokio::task::spawn_blocking;
+use tracing::info;
 use validator::Validate;
 
 use crate::{
@@ -13,7 +20,12 @@ use crate::{
     AppState,
 };
 
-pub(super) fn routes() -> Router<AppState> { Router::new().route("/owner", put(auth_as_owner)) }
+pub(super) fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/", delete(delete_session))
+        .route_layer(middleware::from_fn(super::require_session))
+        .route("/owner", put(auth_as_owner))
+}
 
 #[derive(serde::Serialize)]
 struct Session {
@@ -33,6 +45,27 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
         .same_site(SameSite::Lax)
         .expires(expiration)
         .finish()
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// DELETE /api/session
+/////////////////////////////////////////////////////////////////////////////
+
+async fn delete_session(
+    jar: CookieJar,
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+) -> Result<CookieJar, ApiError> {
+    spawn_blocking(move || {
+        let mut db = state.db.create_session()?;
+        match &operator {
+            Operator::Owner(_) => db.clear_owner_session()?,
+            Operator::ChildNode(child) => db.clear_child_session(&child.node_id)?,
+        }
+        info!("Deleted a session as: {:?}", operator);
+        Ok(jar.remove(Cookie::named(super::SESSION_COOKIE_NAME)))
+    })
+    .await?
 }
 
 /////////////////////////////////////////////////////////////////////////////

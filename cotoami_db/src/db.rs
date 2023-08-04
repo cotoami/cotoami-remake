@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, bail, Context as _, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use log::info;
+use log::{debug, info};
 use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
 use url::Url;
 
@@ -148,7 +148,7 @@ struct Globals {
 // Operator
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Operator {
     Owner(Id<Node>),
     ChildNode(ChildNode),
@@ -304,6 +304,42 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /////////////////////////////////////////////////////////////////////////////
+    // child nodes
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn start_child_session(
+        &mut self,
+        id: &Id<Node>,
+        password: &str,
+        duration: Duration,
+    ) -> Result<ChildNode> {
+        let duration = chrono::Duration::from_std(duration)?;
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
+                child_node
+                    .start_session(password, duration)
+                    .context(DatabaseError::AuthenticationFailed)?;
+                child_node = child_node_ops::update(&child_node).run(ctx)?;
+                Ok(child_node)
+            },
+        )
+    }
+
+    pub fn clear_child_session(&mut self, id: &Id<Node>) -> Result<()> {
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
+                child_node.clear_session();
+                child_node_ops::update(&child_node).run(ctx)?;
+                Ok(())
+            },
+        )
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
     // operator
     /////////////////////////////////////////////////////////////////////////////
 
@@ -313,15 +349,17 @@ impl<'a> DatabaseSession<'a> {
             &mut self.ro_conn,
             child_node_ops::get_by_session_token(token),
         )? {
-            if child_node.verify_session(token).is_ok() {
-                return Ok(Some(Operator::ChildNode(child_node)));
+            match child_node.verify_session(token) {
+                Ok(_) => return Ok(Some(Operator::ChildNode(child_node))),
+                Err(e) => debug!("ChildNode: {}", e),
             }
         }
 
         // the owner of local node?
         let local_node = self.require_local_node()?;
-        if local_node.verify_session(token).is_ok() {
-            return Ok(Some(Operator::Owner(local_node.node_id)));
+        match local_node.verify_session(token) {
+            Ok(_) => return Ok(Some(Operator::Owner(local_node.node_id))),
+            Err(e) => debug!("Owner: {}", e),
         }
 
         Ok(None) // no session

@@ -8,7 +8,7 @@ use crate::{models::Id, schema::local_node};
 
 /// A row in `local_node` table
 #[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Selectable)]
-#[diesel(table_name = local_node, primary_key(node_id))]
+#[diesel(table_name = local_node, primary_key(node_id), treat_none_as_null = true)]
 pub struct LocalNode {
     /// UUID of a local node
     pub node_id: Id<Node>,
