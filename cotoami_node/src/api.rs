@@ -7,6 +7,8 @@ use axum::{
     Extension, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
+use cotoami_db::prelude::Operator;
+use tokio::task::spawn_blocking;
 use tracing::info;
 use validator::Validate;
 
@@ -52,16 +54,17 @@ async fn require_session<B>(
         .and_then(|v| v.to_str().ok());
 
     let token = if let Some(token) = cookie_value.or(header_value) {
-        token
+        token.to_string() // create an owned string to be used in spawn_blocking
     } else {
         return Err(ApiError::Unauthorized); // missing session token
     };
 
-    let operator = {
-        // ensure the scope of `db` not to overlap with `next.run`
+    let operator = spawn_blocking(move || {
         let mut db = state.db.create_session()?;
-        db.get_operator_in_session(token)?
-    };
+        // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
+        Ok::<Option<Operator>, ApiError>(db.get_operator_in_session(&token)?)
+    })
+    .await??;
 
     if let Some(operator) = operator {
         info!("Identified the operator: {:?}", operator);
