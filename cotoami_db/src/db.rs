@@ -293,11 +293,6 @@ impl<'a> DatabaseSession<'a> {
         Ok(local_node.clone())
     }
 
-    pub fn verify_owner_session(&self, token: &str) -> Result<()> {
-        let local_node = self.require_local_node()?;
-        local_node.verify_session(token)
-    }
-
     pub fn clear_owner_session(&mut self) -> Result<()> {
         let mut local_node = self.require_local_node()?;
         local_node.clear_session();
