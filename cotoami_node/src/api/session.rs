@@ -3,6 +3,7 @@ use core::time::Duration;
 use anyhow::Result;
 use axum::{
     extract::State,
+    http::StatusCode,
     middleware,
     routing::{delete, put},
     Extension, Form, Json, Router,
@@ -24,7 +25,7 @@ pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", delete(delete_session))
         .route_layer(middleware::from_fn(super::require_session))
-        .route("/owner", put(auth_as_owner))
+        .route("/owner", put(create_owner_session))
 }
 
 #[derive(serde::Serialize)]
@@ -78,11 +79,11 @@ struct AuthAsOwner {
     password: Option<String>,
 }
 
-async fn auth_as_owner(
+async fn create_owner_session(
     jar: CookieJar,
     State(state): State<AppState>,
     Form(form): Form<AuthAsOwner>,
-) -> Result<(CookieJar, Json<Session>), ApiError> {
+) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("session/owner", errors).into_result();
     }
@@ -97,7 +98,7 @@ async fn auth_as_owner(
             expires_at: local_node.owner_session_expires_at.unwrap(),
         };
         let cookie = create_cookie(&session);
-        Ok((jar.add(cookie), Json(session)))
+        Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
     })
     .await?
 }
