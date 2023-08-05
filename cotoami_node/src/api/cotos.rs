@@ -1,5 +1,6 @@
 use axum::{
     extract::{Query, State},
+    http::StatusCode,
     middleware,
     routing::get,
     Form, Json, Router,
@@ -65,7 +66,7 @@ struct PostCoto {
 async fn post_coto(
     State(state): State<AppState>,
     Form(form): Form<PostCoto>,
-) -> Result<Json<Coto>, ApiError> {
+) -> Result<(StatusCode, Json<Coto>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
@@ -78,7 +79,7 @@ async fn post_coto(
             form.summary.as_deref(),
         )?;
         state.publish_change(changelog)?;
-        Ok(Json(coto))
+        Ok((StatusCode::CREATED, Json(coto)))
     })
     .await?
 }
