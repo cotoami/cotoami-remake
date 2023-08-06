@@ -10,7 +10,7 @@ use axum::{
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
 use chrono::NaiveDateTime;
-use cotoami_db::prelude::Operator;
+use cotoami_db::prelude::*;
 use time::OffsetDateTime;
 use tokio::task::spawn_blocking;
 use tracing::info;
@@ -26,6 +26,7 @@ pub(super) fn routes() -> Router<AppState> {
         .route("/", delete(delete_session))
         .route_layer(middleware::from_fn(super::require_session))
         .route("/owner", put(create_owner_session))
+        .route("/child", put(create_child_session))
 }
 
 #[derive(serde::Serialize)]
@@ -74,7 +75,7 @@ async fn delete_session(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-struct AuthAsOwner {
+struct CreateOwnerSession {
     #[validate(required)]
     password: Option<String>,
 }
@@ -82,7 +83,7 @@ struct AuthAsOwner {
 async fn create_owner_session(
     jar: CookieJar,
     State(state): State<AppState>,
-    Form(form): Form<AuthAsOwner>,
+    Form(form): Form<CreateOwnerSession>,
 ) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("session/owner", errors).into_result();
@@ -96,6 +97,44 @@ async fn create_owner_session(
         let session = Session {
             token: local_node.owner_session_token.unwrap(),
             expires_at: local_node.owner_session_expires_at.unwrap(),
+        };
+        let cookie = create_cookie(&session);
+        Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
+    })
+    .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/session/child
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Deserialize, Validate)]
+struct CreateChildSession {
+    #[validate(required)]
+    node_id: Option<Id<Node>>,
+
+    #[validate(required)]
+    password: Option<String>,
+}
+
+async fn create_child_session(
+    jar: CookieJar,
+    State(state): State<AppState>,
+    Form(form): Form<CreateChildSession>,
+) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
+    if let Err(errors) = form.validate() {
+        return ("session/child", errors).into_result();
+    }
+    spawn_blocking(move || {
+        let mut db = state.db.create_session()?;
+        let child_node = db.start_child_session(
+            &form.node_id.unwrap(),  // validated to be Some
+            &form.password.unwrap(), // validated to be Some
+            Duration::from_secs(state.config.session_seconds()),
+        )?;
+        let session = Session {
+            token: child_node.session_token.unwrap(),
+            expires_at: child_node.session_expires_at.unwrap(),
         };
         let cookie = create_cookie(&session);
         Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))

@@ -317,7 +317,10 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
+                let mut child_node = child_node_ops::get_or_err(id)
+                    .run(ctx)?
+                    // Hide a not-found error for a security reason
+                    .context(DatabaseError::AuthenticationFailed)?;
                 child_node
                     .start_session(password, duration)
                     .context(DatabaseError::AuthenticationFailed)?;
