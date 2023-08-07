@@ -2,7 +2,7 @@ use core::time::Duration;
 
 use anyhow::Result;
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     middleware,
     routing::{delete, put},
@@ -54,9 +54,9 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 async fn delete_session(
-    jar: CookieJar,
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
+    jar: CookieJar,
 ) -> Result<CookieJar, ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
@@ -81,8 +81,8 @@ struct CreateOwnerSession {
 }
 
 async fn create_owner_session(
-    jar: CookieJar,
     State(state): State<AppState>,
+    jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
 ) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
     if let Err(errors) = form.validate() {
@@ -105,21 +105,19 @@ async fn create_owner_session(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PUT /api/session/child
+// PUT /api/session/child/:node_id
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
 struct CreateChildSession {
     #[validate(required)]
-    node_id: Option<Id<Node>>,
-
-    #[validate(required)]
     password: Option<String>,
 }
 
 async fn create_child_session(
-    jar: CookieJar,
     State(state): State<AppState>,
+    Path(node_id): Path<Id<Node>>,
+    jar: CookieJar,
     Form(form): Form<CreateChildSession>,
 ) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
     if let Err(errors) = form.validate() {
@@ -128,7 +126,7 @@ async fn create_child_session(
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         let child_node = db.start_child_session(
-            &form.node_id.unwrap(),  // validated to be Some
+            &node_id,
             &form.password.unwrap(), // validated to be Some
             Duration::from_secs(state.config.session_seconds()),
         )?;
