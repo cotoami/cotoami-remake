@@ -8,6 +8,7 @@ fn pagination() -> Result<()> {
     // setup
     let (_root_dir, db, node) = common::setup_db()?;
     let mut session = db.create_session()?;
+    let operator = session.local_node_as_operator()?;
     let cotonoma_id = node.root_cotonoma_id.unwrap();
 
     // when
@@ -21,7 +22,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 0);
 
     // when
-    session.post_coto(&cotonoma_id, None, "1", None)?;
+    session.post_coto("1", None, &cotonoma_id, &operator)?;
     let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then
@@ -32,7 +33,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    session.post_coto(&cotonoma_id, None, "2", None)?;
+    session.post_coto("2", None, &cotonoma_id, &operator)?;
     let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then
@@ -43,7 +44,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    session.post_coto(&cotonoma_id, None, "3", None)?;
+    session.post_coto("3", None, &cotonoma_id, &operator)?;
     let paginated = session.recent_cotos(None, Some(&cotonoma_id), 2, 0)?;
 
     // then

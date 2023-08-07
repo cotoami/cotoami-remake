@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
     middleware,
     routing::get,
-    Form, Json, Router,
+    Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
@@ -65,18 +65,23 @@ struct PostCoto {
 
 async fn post_coto(
     State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
     Form(form): Form<PostCoto>,
 ) -> Result<(StatusCode, Json<Coto>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
+
+    // TODO: if form.cotonoma_id is not local, the target of the post should be one of the parent nodes.
+    // In that case, be sure not to run a query for the cotonoma more than once.
+
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         let (coto, changelog) = db.post_coto(
-            &form.cotonoma_id.unwrap(), // validated to be Some
-            None,                       // TODO: set node_id
-            &form.content.unwrap(),     // validated to be Some
+            &form.content.unwrap(), // validated to be Some
             form.summary.as_deref(),
+            &form.cotonoma_id.unwrap(), // validated to be Some
+            &operator,
         )?;
         state.publish_change(changelog)?;
         Ok((StatusCode::CREATED, Json(coto)))

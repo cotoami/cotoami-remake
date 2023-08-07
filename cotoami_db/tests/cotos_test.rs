@@ -9,10 +9,11 @@ fn crud_operations() -> Result<()> {
     // setup
     let (_root_dir, db, node) = common::setup_db()?;
     let mut session = db.create_session()?;
+    let operator = session.local_node_as_operator()?;
     let cotonoma_id = node.root_cotonoma_id.unwrap();
 
     // when: post_coto
-    let (coto, changelog2) = session.post_coto(&cotonoma_id, None, "hello", None)?;
+    let (coto, changelog2) = session.post_coto("hello", None, &cotonoma_id, &operator)?;
 
     // then
     assert_matches!(

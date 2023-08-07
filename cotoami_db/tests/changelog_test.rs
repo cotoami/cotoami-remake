@@ -13,12 +13,13 @@ fn import_changes() -> Result<()> {
     let mut session1 = db1.create_session()?;
 
     let ((_, node1), db1_change1) = session1.init_as_node("My Node", None)?;
+    let operator = session1.local_node_as_operator()?;
     let node1_root_cotonoma_id = node1.root_cotonoma_id.unwrap();
     let (node1_root_cotonoma, node1_root_coto) =
         session1.get_cotonoma(&node1_root_cotonoma_id)?.unwrap();
 
     let (db1_coto, db1_change2) =
-        session1.post_coto(&node1_root_cotonoma_id, None, "hello", None)?;
+        session1.post_coto("hello", None, &node1_root_cotonoma_id, &operator)?;
     let (db1_edited_coto, db1_change3) = session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"))?;
     let db1_change4 = session1.delete_coto(&db1_coto.uuid)?;
 

@@ -346,6 +346,11 @@ impl<'a> DatabaseSession<'a> {
     // operator
     /////////////////////////////////////////////////////////////////////////////
 
+    pub fn local_node_as_operator(&self) -> Result<Operator> {
+        let local_node_id = self.require_local_node()?.node_id;
+        Ok(Operator::Owner(local_node_id))
+    }
+
     pub fn get_operator_in_session(&mut self, token: &str) -> Result<Option<Operator>> {
         // one of child nodes?
         if let Some(child_node) = op::run(
@@ -412,16 +417,22 @@ impl<'a> DatabaseSession<'a> {
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto<'b>(
         &mut self,
-        posted_in_id: &'b Id<Cotonoma>,
-        posted_by_id: Option<&'b Id<Node>>,
         content: &'b str,
         summary: Option<&'b str>,
+        posted_in_id: &'b Id<Cotonoma>,
+        operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.check_if_cotonoma_belongs_to_local_node(posted_in_id)?;
+        self.ensure_cotonoma_belongs_to_local_node(posted_in_id)?;
 
         let local_node_id = self.require_local_node()?.node_id;
-        let posted_by_id = posted_by_id.unwrap_or(&local_node_id);
-        let new_coto = NewCoto::new(&local_node_id, posted_in_id, posted_by_id, content, summary)?;
+        let posted_by_id = operator.node_id();
+        let new_coto = NewCoto::new(
+            &local_node_id,
+            posted_in_id,
+            &posted_by_id,
+            content,
+            summary,
+        )?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
@@ -443,7 +454,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.check_if_belongs_to_local_node(&coto)?;
+                self.ensure_it_belongs_to_local_node(&coto)?;
                 let mut update_coto = coto.to_update();
                 update_coto.content = Some(content);
                 update_coto.summary = summary;
@@ -465,7 +476,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.check_if_belongs_to_local_node(&coto)?;
+                self.ensure_it_belongs_to_local_node(&coto)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -510,7 +521,7 @@ impl<'a> DatabaseSession<'a> {
             .map_err(|_| anyhow!("Local node has not yet been created."))
     }
 
-    fn check_if_belongs_to_local_node<T: BelongsToNode + std::fmt::Debug>(
+    fn ensure_it_belongs_to_local_node<T: BelongsToNode + std::fmt::Debug>(
         &self,
         entity: &T,
     ) -> Result<()> {
@@ -521,14 +532,14 @@ impl<'a> DatabaseSession<'a> {
         Ok(())
     }
 
-    fn check_if_cotonoma_belongs_to_local_node<'b>(
+    fn ensure_cotonoma_belongs_to_local_node<'b>(
         &mut self,
         cotonoma_id: &'b Id<Cotonoma>,
     ) -> Result<()> {
         let (cotonoma, _) = self
             .get_cotonoma(cotonoma_id)?
             .ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *cotonoma_id))?;
-        self.check_if_belongs_to_local_node(&cotonoma)?;
+        self.ensure_it_belongs_to_local_node(&cotonoma)?;
         Ok(())
     }
 }
