@@ -420,7 +420,7 @@ impl<'a> DatabaseSession<'a> {
         content: &'b str,
         summary: Option<&'b str>,
         posted_in_id: &'b Id<Cotonoma>,
-        operator: &Operator,
+        operator: &'b Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.ensure_cotonoma_belongs_to_local_node(posted_in_id)?;
 
