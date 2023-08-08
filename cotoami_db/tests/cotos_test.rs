@@ -10,10 +10,12 @@ fn crud_operations() -> Result<()> {
     let (_root_dir, db, node) = common::setup_db()?;
     let mut session = db.create_session()?;
     let operator = session.local_node_as_operator()?;
-    let cotonoma_id = node.root_cotonoma_id.unwrap();
+    let (root_cotonoma, _) = session
+        .get_cotonoma(&node.root_cotonoma_id.unwrap())?
+        .unwrap();
 
     // when: post_coto
-    let (coto, changelog2) = session.post_coto("hello", None, &cotonoma_id, &operator)?;
+    let (coto, changelog2) = session.post_coto("hello", None, &root_cotonoma, &operator)?;
 
     // then
     assert_matches!(
@@ -29,7 +31,7 @@ fn crud_operations() -> Result<()> {
             reposted_in_ids: None,
             ..
         } if node_id == node.uuid &&
-             posted_in_id == Some(cotonoma_id) &&
+             posted_in_id == Some(root_cotonoma.uuid) &&
              posted_by_id == node.uuid &&
              content == "hello"
     );
@@ -38,7 +40,7 @@ fn crud_operations() -> Result<()> {
 
     assert_eq!(session.get_coto(&coto.uuid)?, Some(coto.clone()));
 
-    let recent_cotos = session.recent_cotos(None, Some(&cotonoma_id), 5, 0)?;
+    let recent_cotos = session.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(recent_cotos.rows.len(), 1);
     assert_eq!(recent_cotos.rows[0], coto);
 
@@ -70,7 +72,7 @@ fn crud_operations() -> Result<()> {
             reposted_in_ids: None,
             ..
         } if node_id == node.uuid &&
-             posted_in_id == Some(cotonoma_id) &&
+             posted_in_id == Some(root_cotonoma.uuid) &&
              posted_by_id == node.uuid &&
              content == "bar" &&
              summary == "foo"
@@ -103,7 +105,7 @@ fn crud_operations() -> Result<()> {
 
     // then
     assert_eq!(session.get_coto(&coto.uuid)?, None);
-    let all_cotos = session.recent_cotos(None, Some(&cotonoma_id), 5, 0)?;
+    let all_cotos = session.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(all_cotos.rows.len(), 0);
 
     assert_matches!(

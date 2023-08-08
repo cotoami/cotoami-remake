@@ -29,7 +29,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<C
 pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ChildNode, DatabaseError>> + '_ {
-    get(id).map(|node| node.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
+    get(id).map(|n| n.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
 }
 
 pub fn get_by_session_token<Conn: AsReadableConn>(

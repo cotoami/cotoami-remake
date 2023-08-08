@@ -158,11 +158,15 @@ pub struct DatabaseSession<'a> {
 
 impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
-    // nodes
+    // local node
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn get_local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
         op::run(&mut self.ro_conn, local_node_ops::get())
+    }
+
+    pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
+        self.ensure_local(entity).is_ok()
     }
 
     pub fn init_as_empty_node(
@@ -215,6 +219,10 @@ impl<'a> DatabaseSession<'a> {
             ((local_node, node), changelog)
         })
     }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // nodes
+    /////////////////////////////////////////////////////////////////////////////
 
     pub fn get_node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
         op::run(&mut self.ro_conn, node_ops::get(node_id))
@@ -375,7 +383,7 @@ impl<'a> DatabaseSession<'a> {
         )
     }
 
-    /// Posts a coto in the specified cotonoma (`posted_in_id`).
+    /// Posts a coto in the specified cotonoma.
     ///
     /// The target cotonoma has to belong to the local node,
     /// otherwise a change should be made via [Self::import_change()].
@@ -383,16 +391,16 @@ impl<'a> DatabaseSession<'a> {
         &mut self,
         content: &'b str,
         summary: Option<&'b str>,
-        posted_in_id: &'b Id<Cotonoma>,
+        posted_in: &'b Cotonoma,
         operator: &'b Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.ensure_local_cotonoma(posted_in_id)?;
+        self.ensure_local(posted_in)?;
 
         let local_node_id = self.require_local_node()?.node_id;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
             &local_node_id,
-            posted_in_id,
+            &posted_in.uuid,
             &posted_by_id,
             content,
             summary,
@@ -460,6 +468,11 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, cotonoma_ops::get(id))
     }
 
+    pub fn get_cotonoma_or_err(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
+        let cotonoma = op::run(&mut self.ro_conn, cotonoma_ops::get_or_err(id))??;
+        Ok(cotonoma)
+    }
+
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
         op::run(&mut self.ro_conn, cotonoma_ops::all())
     }
@@ -490,14 +503,6 @@ impl<'a> DatabaseSession<'a> {
         if *entity.node_id() != local_node_id {
             bail!("The entity doesn't belong to the local node: {:?}", entity);
         }
-        Ok(())
-    }
-
-    fn ensure_local_cotonoma<'b>(&mut self, cotonoma_id: &'b Id<Cotonoma>) -> Result<()> {
-        let (cotonoma, _) = self
-            .get_cotonoma(cotonoma_id)?
-            .ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *cotonoma_id))?;
-        self.ensure_local(&cotonoma)?;
         Ok(())
     }
 }

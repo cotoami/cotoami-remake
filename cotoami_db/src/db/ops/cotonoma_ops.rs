@@ -8,7 +8,7 @@ use validator::Validate;
 
 use super::{coto_ops, Paginated};
 use crate::{
-    db::op::*,
+    db::{error::*, op::*},
     models::{
         coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma},
         node::Node,
@@ -29,6 +29,12 @@ pub fn get<Conn: AsReadableConn>(
             .optional()
             .map_err(anyhow::Error::from)
     })
+}
+
+pub fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
+    get(id).map(|c| c.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {

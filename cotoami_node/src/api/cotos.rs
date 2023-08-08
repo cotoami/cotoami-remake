@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use axum::{
     extract::{Query, State},
     http::StatusCode,
@@ -72,19 +73,31 @@ async fn post_coto(
         return ("coto", errors).into_result();
     }
 
-    // TODO: if form.cotonoma_id is not local, the target of the post should be one of the parent nodes.
-    // In that case, be sure not to run a query for the cotonoma more than once.
-
-    spawn_blocking(move || {
+    let local_post: Result<Option<Coto>> = spawn_blocking(move || {
         let mut db = state.db.create_session()?;
-        let (coto, changelog) = db.post_coto(
-            &form.content.unwrap(), // validated to be Some
-            form.summary.as_deref(),
-            &form.cotonoma_id.unwrap(), // validated to be Some
-            &operator,
-        )?;
-        state.publish_change(changelog)?;
-        Ok((StatusCode::CREATED, Json(coto)))
+
+        let cotonoma_id = form.cotonoma_id.unwrap(); // validated to be Some
+        let (cotonoma, _) = db.get_cotonoma_or_err(&cotonoma_id)?;
+
+        if db.is_local(&cotonoma) {
+            let (coto, changelog) = db.post_coto(
+                &form.content.unwrap(), // validated to be Some
+                form.summary.as_deref(),
+                &cotonoma,
+                &operator,
+            )?;
+            state.publish_change(changelog)?;
+            Ok(Some(coto))
+        } else {
+            Ok(None)
+        }
     })
-    .await?
+    .await?;
+
+    if let Some(coto) = local_post? {
+        Ok((StatusCode::CREATED, Json(coto)))
+    } else {
+        // send a request to one of the parents
+        Err(anyhow!("Not yet implemented"))?
+    }
 }
