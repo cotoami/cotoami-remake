@@ -101,7 +101,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // when: delete_coto
-    let changelog4 = session.delete_coto(&coto.uuid)?;
+    let changelog4 = session.delete_coto(&coto.uuid, &operator)?;
 
     // then
     assert_eq!(session.get_coto(&coto.uuid)?, None);

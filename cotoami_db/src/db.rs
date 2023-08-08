@@ -442,12 +442,17 @@ impl<'a> DatabaseSession<'a> {
         )
     }
 
-    pub fn delete_coto(&mut self, id: &Id<Coto>) -> Result<ChangelogEntry> {
+    pub fn delete_coto<'b>(
+        &mut self,
+        id: &'b Id<Coto>,
+        operator: &'b Operator,
+    ) -> Result<ChangelogEntry> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
                 self.ensure_local(&coto)?;
+                operator.can_delete_coto(&coto)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;

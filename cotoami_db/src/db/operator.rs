@@ -41,4 +41,16 @@ impl Operator {
             ))?
         }
     }
+
+    pub fn can_delete_coto(&self, coto: &Coto) -> Result<()> {
+        if self.node_id() == coto.posted_by_id || self.has_owner_permission() {
+            Ok(())
+        } else {
+            Err(DatabaseError::permission_denied(
+                EntityKind::Coto,
+                Some(coto.uuid),
+                OpKind::Delete,
+            ))?
+        }
+    }
 }

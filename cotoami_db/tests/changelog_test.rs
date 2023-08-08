@@ -22,7 +22,7 @@ fn import_changes() -> Result<()> {
         session1.post_coto("hello", None, &node1_root_cotonoma, &operator)?;
     let (db1_edited_coto, db1_change3) =
         session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &operator)?;
-    let db1_change4 = session1.delete_coto(&db1_coto.uuid)?;
+    let db1_change4 = session1.delete_coto(&db1_coto.uuid, &operator)?;
 
     let db2_dir = tempdir()?;
     let db2 = Database::new(&db2_dir)?;
