@@ -386,7 +386,7 @@ impl<'a> DatabaseSession<'a> {
         posted_in_id: &'b Id<Cotonoma>,
         operator: &'b Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.ensure_cotonoma_belongs_to_local_node(posted_in_id)?;
+        self.ensure_local_cotonoma(posted_in_id)?;
 
         let local_node_id = self.require_local_node()?.node_id;
         let posted_by_id = operator.node_id();
@@ -418,7 +418,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.ensure_it_belongs_to_local_node(&coto)?;
+                self.ensure_local(&coto)?;
                 let mut update_coto = coto.to_update();
                 update_coto.content = Some(content);
                 update_coto.summary = summary;
@@ -440,7 +440,7 @@ impl<'a> DatabaseSession<'a> {
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.ensure_it_belongs_to_local_node(&coto)?;
+                self.ensure_local(&coto)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);
                     let changelog = changelog_ops::log_change(&change).run(ctx)?;
@@ -485,10 +485,7 @@ impl<'a> DatabaseSession<'a> {
             .map_err(|_| anyhow!("Local node has not yet been created."))
     }
 
-    fn ensure_it_belongs_to_local_node<T: BelongsToNode + std::fmt::Debug>(
-        &self,
-        entity: &T,
-    ) -> Result<()> {
+    fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
         let local_node_id = self.require_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
             bail!("The entity doesn't belong to the local node: {:?}", entity);
@@ -496,14 +493,11 @@ impl<'a> DatabaseSession<'a> {
         Ok(())
     }
 
-    fn ensure_cotonoma_belongs_to_local_node<'b>(
-        &mut self,
-        cotonoma_id: &'b Id<Cotonoma>,
-    ) -> Result<()> {
+    fn ensure_local_cotonoma<'b>(&mut self, cotonoma_id: &'b Id<Cotonoma>) -> Result<()> {
         let (cotonoma, _) = self
             .get_cotonoma(cotonoma_id)?
             .ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *cotonoma_id))?;
-        self.ensure_it_belongs_to_local_node(&cotonoma)?;
+        self.ensure_local(&cotonoma)?;
         Ok(())
     }
 }
