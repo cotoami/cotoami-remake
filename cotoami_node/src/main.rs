@@ -12,6 +12,7 @@ use dotenvy::dotenv;
 use parking_lot::Mutex;
 use pubsub::Publisher;
 use tracing::info;
+use validator::Validate;
 
 mod api;
 mod csrf;
@@ -44,6 +45,7 @@ async fn main() -> Result<()> {
 
 fn build_state() -> Result<AppState> {
     let config = Config::load()?;
+    config.validate()?;
     info!("Config loaded: {:?}", config);
 
     let pubsub = Publisher::<Result<Event, Infallible>>::new();
@@ -69,7 +71,7 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 // Config
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, Validate)]
 struct Config {
     // COTOAMI_PORT
     #[serde(default = "Config::default_port")]
@@ -86,8 +88,10 @@ struct Config {
 
     // COTOAMI_DB_DIR
     db_dir: Option<String>,
-    // COTOAMI_DB_NAME
-    db_name: Option<String>,
+
+    // COTOAMI_NODE_NAME
+    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
+    node_name: Option<String>,
 
     // COTOAMI_OWNER_PASSWORD
     owner_password: Option<String>,
