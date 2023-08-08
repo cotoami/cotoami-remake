@@ -421,12 +421,14 @@ impl<'a> DatabaseSession<'a> {
         id: &'b Id<Coto>,
         content: &'b str,
         summary: Option<&'b str>,
+        operator: &'b Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
                 self.ensure_local(&coto)?;
+                operator.can_update_coto(&coto)?;
                 let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
                 let change = Change::EditCoto {
                     uuid: *id,

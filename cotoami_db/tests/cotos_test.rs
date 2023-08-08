@@ -56,7 +56,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // when: edit_coto
-    let (edited_coto, changelog3) = session.edit_coto(&coto.uuid, "bar", Some("foo"))?;
+    let (edited_coto, changelog3) = session.edit_coto(&coto.uuid, "bar", Some("foo"), &operator)?;
 
     // then
     assert_matches!(

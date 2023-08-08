@@ -20,7 +20,8 @@ fn import_changes() -> Result<()> {
 
     let (db1_coto, db1_change2) =
         session1.post_coto("hello", None, &node1_root_cotonoma, &operator)?;
-    let (db1_edited_coto, db1_change3) = session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"))?;
+    let (db1_edited_coto, db1_change3) =
+        session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &operator)?;
     let db1_change4 = session1.delete_coto(&db1_coto.uuid)?;
 
     let db2_dir = tempdir()?;
