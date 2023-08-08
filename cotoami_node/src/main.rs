@@ -23,23 +23,8 @@ async fn main() -> Result<()> {
     // Install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
 
-    let config = Config::load()?;
-    let port = config.port;
-    info!("Config loaded: {:?}", config);
-
-    let pubsub = Publisher::<Result<Event, Infallible>>::new();
-
-    let db_dir = config.db_dir();
-    fs::create_dir(&db_dir).ok();
-    let db = Database::new(db_dir)?;
-
-    // TODO: initialize node
-
-    let state = AppState {
-        config: Arc::new(config),
-        pubsub: Arc::new(Mutex::new(pubsub)),
-        db: Arc::new(db),
-    };
+    let state = build_state()?;
+    let port = state.config.port;
 
     let router = Router::new()
         .nest("/api", api::routes())
@@ -55,6 +40,23 @@ async fn main() -> Result<()> {
         .unwrap();
 
     Ok(())
+}
+
+fn build_state() -> Result<AppState> {
+    let config = Config::load()?;
+    info!("Config loaded: {:?}", config);
+
+    let pubsub = Publisher::<Result<Event, Infallible>>::new();
+
+    let db_dir = config.db_dir();
+    fs::create_dir(&db_dir).ok();
+    let db = Database::new(db_dir)?;
+
+    Ok(AppState {
+        config: Arc::new(config),
+        pubsub: Arc::new(Mutex::new(pubsub)),
+        db: Arc::new(db),
+    })
 }
 
 /// axum handler for any request that fails to match the router routes.
