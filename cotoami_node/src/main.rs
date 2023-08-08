@@ -24,15 +24,16 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let config = Config::load()?;
+    let port = config.port;
     info!("Config loaded: {:?}", config);
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
 
     let pubsub = Publisher::<Result<Event, Infallible>>::new();
 
     let db_dir = config.db_dir();
     fs::create_dir(&db_dir).ok();
     let db = Database::new(db_dir)?;
+
+    // TODO: initialize node
 
     let state = AppState {
         config: Arc::new(config),
@@ -47,6 +48,7 @@ async fn main() -> Result<()> {
         .layer(Extension(state.clone())) // for middleware
         .with_state(state);
 
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     Server::bind(&addr)
         .serve(router.into_make_service())
         .await
@@ -82,6 +84,8 @@ struct Config {
 
     // COTOAMI_DB_DIR
     db_dir: Option<String>,
+    // COTOAMI_DB_NAME
+    db_name: Option<String>,
 
     // COTOAMI_OWNER_PASSWORD
     owner_password: Option<String>,
