@@ -427,10 +427,7 @@ impl<'a> DatabaseSession<'a> {
             |ctx: &mut Context<'_, WritableConn>| {
                 let coto = coto_ops::get_or_err(id).run(ctx)??;
                 self.ensure_local(&coto)?;
-                let mut update_coto = coto.to_update();
-                update_coto.content = Some(content);
-                update_coto.summary = summary;
-                let coto = coto_ops::update(&update_coto).run(ctx)?;
+                let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
                 let change = Change::EditCoto {
                     uuid: *id,
                     content: coto.content.clone(),
