@@ -2,7 +2,7 @@
 
 pub mod prelude {
     pub use super::{
-        db::{error::*, ops::Paginated, Database, DatabaseSession, Operator},
+        db::{error::*, operator::Operator, ops::Paginated, Database, DatabaseSession},
         models::{
             changelog::{Change, ChangelogEntry},
             coto::{Coto, Cotonoma},
