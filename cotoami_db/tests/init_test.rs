@@ -30,7 +30,7 @@ fn init_as_empty_node() -> Result<()> {
     let mut session = db.create_session()?;
 
     // when
-    let ((local_node, node), changelog) = session.init_as_empty_node(None)?;
+    let ((local_node, node), changelog) = session.init_as_node(None, None)?;
 
     // then
     assert_matches!(
@@ -85,10 +85,10 @@ fn duplicate_node() -> Result<()> {
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
     let mut session = db.create_session()?;
-    session.init_as_empty_node(None)?;
+    session.init_as_node(None, None)?;
 
     // when
-    let result = session.init_as_empty_node(None);
+    let result = session.init_as_node(None, None);
 
     // then
     assert_eq!(
@@ -107,7 +107,7 @@ fn owner_session() -> Result<()> {
     let duration = Duration::minutes(30);
 
     // when
-    let ((mut local_node, _), _) = session.init_as_empty_node(Some("foo"))?;
+    let ((mut local_node, _), _) = session.init_as_node(None, Some("foo"))?;
 
     // then
     assert!(local_node.start_session("bar", duration).is_err());
@@ -162,7 +162,7 @@ fn init_as_node() -> Result<()> {
     let mut session = db.create_session()?;
 
     // when
-    let ((local_node, node), changelog) = session.init_as_node("My Node", None)?;
+    let ((local_node, node), changelog) = session.init_as_node(Some("My Node"), None)?;
 
     // then
     let root_cotonoma_id = node.root_cotonoma_id.unwrap();

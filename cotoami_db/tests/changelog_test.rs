@@ -12,7 +12,7 @@ fn import_changes() -> Result<()> {
     let db1 = Database::new(&db1_dir)?;
     let mut session1 = db1.create_session()?;
 
-    let ((_, node1), db1_change1) = session1.init_as_node("My Node", None)?;
+    let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
     let operator = session1.local_node_as_operator()?;
     let (node1_root_cotonoma, node1_root_coto) = session1
         .get_cotonoma(&node1.root_cotonoma_id.unwrap())?
@@ -27,7 +27,7 @@ fn import_changes() -> Result<()> {
     let db2_dir = tempdir()?;
     let db2 = Database::new(&db2_dir)?;
     let mut session2 = db2.create_session()?;
-    let ((_, _node2), _db2_change1) = session2.init_as_empty_node(None)?;
+    let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
 
     // when: import change1 (init_as_node)
     let db2_change2 = session2.import_change(&node1.uuid, &via_serialization(&db1_change1)?)?;

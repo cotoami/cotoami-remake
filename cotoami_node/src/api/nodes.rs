@@ -52,11 +52,8 @@ async fn init_local_node(
         if db.get_local_node()?.is_some() {
             RequestError::new("local-node-already-exists").into_result()
         } else {
-            let ((_, node), _) = if let Some(name) = form.name {
-                db.init_as_node(&name, state.config.owner_password.as_deref())?
-            } else {
-                db.init_as_empty_node(state.config.owner_password.as_deref())?
-            };
+            let ((_, node), _) =
+                db.init_as_node(form.name.as_deref(), state.config.owner_password.as_deref())?;
             Ok(Json(node))
         }
     })

@@ -169,48 +169,27 @@ impl<'a> DatabaseSession<'a> {
         self.ensure_local(entity).is_ok()
     }
 
-    pub fn init_as_empty_node(
-        &mut self,
-        password: Option<&str>,
-    ) -> Result<((LocalNode, Node), ChangelogEntry)> {
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let (local_node, node) = local_node_ops::create("", password).run(ctx)?;
-
-                let change = Change::ImportNode(node);
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
-
-                let Change::ImportNode(node) = change else {
-                    panic!()
-                };
-                Ok(((local_node, node), changelog))
-            },
-        )
-        .map(|((local_node, node), changelog)| {
-            (self.get_globals)().local_node = Some(local_node.clone());
-            ((local_node, node), changelog)
-        })
-    }
-
     pub fn init_as_node<'b>(
         &mut self,
-        name: &'b str,
+        name: Option<&'b str>,
         password: Option<&'b str>,
     ) -> Result<((LocalNode, Node), ChangelogEntry)> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let (local_node, node) = local_node_ops::create(name, password).run(ctx)?;
-                let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
-                let node = node_ops::update_root_cotonoma(&node.uuid, &cotonoma.uuid).run(ctx)?;
+                let (local_node, mut node) =
+                    local_node_ops::create(name.unwrap_or_default(), password).run(ctx)?;
 
-                let change = Change::InitNode(node, cotonoma, coto);
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
-
-                let Change::InitNode(node, _, _) = change else {
-                    panic!()
+                // Create a root cotonoma if the `name` is not None
+                let change = if let Some(name) = name {
+                    let (cotonoma, coto) = cotonoma_ops::create_root(&node.uuid, name).run(ctx)?;
+                    node = node_ops::update_root_cotonoma(&node.uuid, &cotonoma.uuid).run(ctx)?;
+                    Change::InitNode(node.clone(), cotonoma, coto)
+                } else {
+                    Change::ImportNode(node.clone())
                 };
+
+                let changelog = changelog_ops::log_change(&change).run(ctx)?;
                 Ok(((local_node, node), changelog))
             },
         )
