@@ -128,25 +128,23 @@ pub fn rename<'a>(
     id: &'a Id<Cotonoma>,
     name: &'a str,
     updated_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, Option<(Cotonoma, Coto)>> + 'a {
+) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
-        if let Some((cotonoma, coto)) = get(id).run(ctx)? {
-            // Update coto
-            let mut coto = coto.to_update();
-            coto.summary = Some(name);
-            coto.updated_at = updated_at;
-            let updated_coto = coto_ops::update(&coto).run(ctx)?;
+        let (cotonoma, coto) = get_or_err(id).run(ctx)??;
 
-            // Update cotonoma
-            let mut cotonoma = cotonoma.to_update();
-            cotonoma.name = name;
-            cotonoma.updated_at = updated_at;
-            let updated_cotonoma = update(&cotonoma).run(ctx)?;
+        // Update coto
+        let mut coto = coto.to_update();
+        coto.summary = Some(name);
+        coto.updated_at = updated_at;
+        let coto_updated = coto_ops::update(&coto).run(ctx)?;
 
-            Ok(Some((updated_cotonoma, updated_coto)))
-        } else {
-            Ok(None)
-        }
+        // Update cotonoma
+        let mut cotonoma = cotonoma.to_update();
+        cotonoma.name = name;
+        cotonoma.updated_at = updated_at;
+        let cotonoma_updated = update(&cotonoma).run(ctx)?;
+
+        Ok((cotonoma_updated, coto_updated))
     })
 }

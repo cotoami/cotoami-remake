@@ -89,8 +89,13 @@ pub struct NewChangelogEntry<'a> {
 #[diesel(sql_type = Binary)]
 pub enum Change {
     None,
+    CreateNode(Node, Option<(Cotonoma, Coto)>),
     ImportNode(Node),
-    InitNode(Node, Cotonoma, Coto),
+    RenameNode {
+        uuid: Id<Node>,
+        name: String,
+        updated_at: NaiveDateTime,
+    },
     CreateCoto(Coto),
     EditCoto {
         uuid: Id<Coto>,

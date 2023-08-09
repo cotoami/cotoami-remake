@@ -71,7 +71,7 @@ fn init_as_empty_node() -> Result<()> {
             serial_number: 1,
             parent_node_id: None,
             parent_serial_number: None,
-            change: Change::ImportNode(a),
+            change: Change::CreateNode(a, None),
             ..
         } if a == Node { rowid: 0, ..node }
     );
@@ -242,7 +242,7 @@ fn init_as_node() -> Result<()> {
             serial_number: 1,
             parent_node_id: None,
             parent_serial_number: None,
-            change: Change::InitNode(a, b, c),
+            change: Change::CreateNode(a, Some((b, c))),
             ..
         } if a == Node { rowid: 0, ..node } &&
              b == root_cotonoma &&

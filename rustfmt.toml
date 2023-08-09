@@ -4,3 +4,4 @@
 fn_single_line = true
 group_imports = "StdExternalCrate"
 imports_granularity = "Crate"
+single_line_let_else_max_width = 100

@@ -85,13 +85,22 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         match change {
             Change::None => (),
+            Change::CreateNode(node, root_cotonoma) => {
+                node_ops::import(&node).run(ctx)?;
+                if let Some((cotonoma, coto)) = root_cotonoma {
+                    coto_ops::insert(&coto.to_import()).run(ctx)?;
+                    cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
+                }
+            }
             Change::ImportNode(node) => {
                 node_ops::import(&node).run(ctx)?;
             }
-            Change::InitNode(node, cotonoma, coto) => {
-                node_ops::import(&node).run(ctx)?;
-                coto_ops::insert(&coto.to_import()).run(ctx)?;
-                cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
+            Change::RenameNode {
+                uuid,
+                name,
+                updated_at,
+            } => {
+                node_ops::rename(uuid, name, Some(*updated_at)).run(ctx)?;
             }
             Change::CreateCoto(coto) => {
                 let new_coto = coto.to_import();

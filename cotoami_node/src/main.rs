@@ -1,6 +1,6 @@
 use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use axum::{
     http::{StatusCode, Uri},
     middleware,
@@ -26,6 +26,9 @@ async fn main() -> Result<()> {
 
     let state = build_state()?;
     let port = state.config.port;
+
+    // Should this be in `spawn_blocking`?
+    state.init_local_node()?;
 
     let router = Router::new()
         .nest("/api", api::routes())
@@ -90,7 +93,7 @@ struct Config {
     db_dir: Option<String>,
 
     // COTOAMI_NODE_NAME
-    #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
+    #[validate(length(min = 1, max = "Node::NAME_MAX_LENGTH"))]
     node_name: Option<String>,
 
     // COTOAMI_OWNER_PASSWORD
@@ -146,6 +149,34 @@ struct AppState {
 }
 
 impl AppState {
+    fn init_local_node(&self) -> Result<()> {
+        let mut db = self.db.create_session()?;
+
+        // If the local node already exists,
+        // its name and password can be changed via config
+        if db.is_local_node_initialized() {
+            if let Some(name) = self.config.node_name.as_deref() {
+                db.rename_local_node(name)?;
+                info!("The node name has been changed via COTOAMI_NODE_NAME.");
+            }
+            if let Some(password) = self.config.owner_password.as_deref() {
+                db.change_owner_password(password)?;
+                info!("The owner password has been changed via COTOAMI_OWNER_PASSWORD.");
+            }
+            return Ok(());
+        }
+
+        // Create a local node
+        if let Some(password) = self.config.owner_password.as_deref() {
+            let name = self.config.node_name.as_deref();
+            let ((_, node), _) = db.init_as_node(name, Some(password))?;
+            info!("The local node [{}] has been created", node.name);
+        } else {
+            bail!("COTOAMI_OWNER_PASSWORD must be set for the first startup.");
+        }
+        Ok(())
+    }
+
     fn publish_change(&self, changelog: ChangelogEntry) -> Result<()> {
         let event = Event::default().event("change").json_data(changelog)?;
         self.pubsub.lock().publish(&Ok(event));

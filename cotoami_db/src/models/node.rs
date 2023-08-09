@@ -77,8 +77,7 @@ impl Node {
 
     /// Converting a foreign node into an importable data.
     ///
-    /// - It assumes the node data came from another node (parent node).
-    /// - `owner_password_hash` will be `None` (it should not be sent in the first place).
+    /// - It assumes the node data came from another node.
     /// - `created_at` is the original date of the node creation, so it should be kept.
     pub fn to_import(&self) -> ImportNode {
         ImportNode {

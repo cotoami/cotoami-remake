@@ -2,13 +2,16 @@
 
 use std::ops::DerefMut;
 
+use anyhow::bail;
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
+use super::cotonoma_ops;
 use crate::{
     db::op::*,
     models::{
-        coto::Cotonoma,
+        coto::{Coto, Cotonoma},
         node::{NewNode, Node, UpdateNode},
         Id,
     },
@@ -55,7 +58,34 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, N
     })
 }
 
-pub fn update_root_cotonoma<'a>(
+pub fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableConn, Node> + 'a {
+    use crate::schema::nodes;
+    write_op(move |conn| {
+        diesel::update(nodes::table)
+            .filter(nodes::uuid.eq(id))
+            .set((nodes::name.eq(name), nodes::version.eq(nodes::version + 1)))
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn rename<'a>(
+    id: &'a Id<Node>,
+    name: &'a str,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Node> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let node = set_name(id, name).run(ctx)?;
+        if let Some(cotonoma_id) = node.root_cotonoma_id {
+            cotonoma_ops::rename(&cotonoma_id, name, updated_at).run(ctx)?;
+            Ok(node)
+        } else {
+            bail!("A node without a root cotonoma cannot be renamed.");
+        }
+    })
+}
+
+pub fn set_root_cotonoma<'a>(
     id: &'a Id<Node>,
     root_cotonoma_id: &'a Id<Cotonoma>,
 ) -> impl Operation<WritableConn, Node> + 'a {
@@ -72,9 +102,20 @@ pub fn update_root_cotonoma<'a>(
     })
 }
 
-/// Importing a node is an UPSERT-like operation that inserts or updates a node based on
-/// a [Node] data. The update will be done only when the version of the passed node is
-/// larger than the existing one (upgrade).
+pub fn create_root_cotonoma<'a>(
+    node_id: &'a Id<Node>,
+    name: &'a str,
+) -> impl Operation<WritableConn, (Node, Cotonoma, Coto)> + 'a {
+    composite_op::<WritableConn, _, _>(|ctx| {
+        let (cotonoma, coto) = cotonoma_ops::create_root(node_id, name).run(ctx)?;
+        let node = set_root_cotonoma(node_id, &cotonoma.uuid).run(ctx)?;
+        Ok((node, cotonoma, coto))
+    })
+}
+
+/// Importing a node is an UPSERT-like idempotent operation that inserts or updates a node
+/// based on a [Node] data. The update will be done only when the version of the passed node
+/// is larger than the existing one (upgrade).
 pub fn import(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
     composite_op::<WritableConn, _, _>(|ctx| match get(&node.uuid).run(ctx)? {
         Some(local_row) => {
