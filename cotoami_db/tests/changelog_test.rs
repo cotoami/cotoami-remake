@@ -29,20 +29,23 @@ fn import_changes() -> Result<()> {
     let mut session2 = db2.create_session()?;
     let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
 
+    let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
+    session2.add_parent_node(&node1.uuid, "https://node1.db")?;
+
     // when: import change1 (init_as_node)
-    let db2_change2 = session2.import_change(&node1.uuid, &via_serialization(&db1_change1)?)?;
+    let db2_change3 = session2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
 
     // then
     assert_matches!(
-        db2_change2,
+        db2_change3,
         ChangelogEntry {
-            serial_number: 2,
-            parent_node_id,
-            parent_serial_number,
+            serial_number: 3,
+            origin_node_id,
+            origin_serial_number,
             change,
             ..
-        } if parent_node_id == Some(node1.uuid) &&
-             parent_serial_number == Some(db1_change1.serial_number) &&
+        } if origin_node_id == node1.uuid &&
+             origin_serial_number == db1_change1.origin_serial_number &&
              change == db1_change1.change
     );
 
@@ -66,19 +69,19 @@ fn import_changes() -> Result<()> {
     );
 
     // when: import change2 (post_coto)
-    let db2_change3 = session2.import_change(&node1.uuid, &via_serialization(&db1_change2)?)?;
+    let db2_change4 = session2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
 
     // then
     assert_matches!(
-        db2_change3,
+        db2_change4,
         ChangelogEntry {
-            serial_number: 3,
-            parent_node_id,
-            parent_serial_number,
+            serial_number: 4,
+            origin_node_id,
+            origin_serial_number,
             change,
             ..
-        } if parent_node_id == Some(node1.uuid) &&
-             parent_serial_number == Some(db1_change2.serial_number) &&
+        } if origin_node_id == node1.uuid &&
+             origin_serial_number == db1_change2.origin_serial_number &&
              change == db1_change2.change
     );
     assert_matches!(
@@ -88,19 +91,19 @@ fn import_changes() -> Result<()> {
     );
 
     // when: import change3 (edit_coto)
-    let db2_change4 = session2.import_change(&node1.uuid, &via_serialization(&db1_change3)?)?;
+    let db2_change5 = session2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
 
     // then
     assert_matches!(
-        db2_change4,
+        db2_change5,
         ChangelogEntry {
-            serial_number: 4,
-            parent_node_id,
-            parent_serial_number,
+            serial_number: 5,
+            origin_node_id,
+            origin_serial_number,
             change,
             ..
-        } if parent_node_id == Some(node1.uuid) &&
-             parent_serial_number == Some(db1_change3.serial_number) &&
+        } if origin_node_id == node1.uuid &&
+             origin_serial_number == db1_change3.origin_serial_number &&
              change == db1_change3.change
     );
     assert_matches!(
@@ -110,19 +113,19 @@ fn import_changes() -> Result<()> {
     );
 
     // when: import change4 (delete_coto)
-    let db2_change5 = session2.import_change(&node1.uuid, &via_serialization(&db1_change4)?)?;
+    let db2_change6 = session2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
 
     // then
     assert_matches!(
-        db2_change5,
+        db2_change6,
         ChangelogEntry {
-            serial_number: 5,
-            parent_node_id,
-            parent_serial_number,
+            serial_number: 6,
+            origin_node_id,
+            origin_serial_number,
             change,
             ..
-        } if parent_node_id == Some(node1.uuid) &&
-             parent_serial_number == Some(db1_change4.serial_number) &&
+        } if origin_node_id == node1.uuid &&
+             origin_serial_number == db1_change4.origin_serial_number &&
              change == db1_change4.change
     );
     assert_matches!(

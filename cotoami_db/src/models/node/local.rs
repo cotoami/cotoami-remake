@@ -24,6 +24,9 @@ pub struct LocalNode {
 
     /// Expiration date of node owner's session
     pub owner_session_expires_at: Option<NaiveDateTime>,
+
+    /// Number of changes applied to this local node
+    pub changes_applied: i64,
 }
 
 impl Principal for LocalNode {
@@ -88,6 +91,7 @@ mod tests {
             owner_password_hash: None,
             owner_session_token: None,
             owner_session_expires_at: None,
+            changes_applied: 0,
         };
 
         // when

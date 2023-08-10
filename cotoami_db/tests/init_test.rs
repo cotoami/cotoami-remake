@@ -69,11 +69,12 @@ fn init_as_empty_node() -> Result<()> {
         changelog,
         ChangelogEntry {
             serial_number: 1,
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id,
+            origin_serial_number: 1,
             change: Change::CreateNode(a, None),
             ..
-        } if a == Node { rowid: 0, ..node }
+        } if origin_node_id == node.uuid &&
+             a == Node { rowid: 0, ..node }
     );
 
     Ok(())
@@ -240,11 +241,12 @@ fn init_as_node() -> Result<()> {
         changelog,
         ChangelogEntry {
             serial_number: 1,
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id,
+            origin_serial_number: 1,
             change: Change::CreateNode(a, Some((b, c))),
             ..
-        } if a == Node { rowid: 0, ..node } &&
+        } if origin_node_id == node.uuid &&
+             a == Node { rowid: 0, ..node } &&
              b == root_cotonoma &&
              c == Coto { rowid: 0, ..root_coto }
     );

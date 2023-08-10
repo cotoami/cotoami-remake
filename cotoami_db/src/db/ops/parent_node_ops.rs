@@ -1,0 +1,63 @@
+//! ParentNode related operations
+
+use std::ops::DerefMut;
+
+use chrono::NaiveDateTime;
+use diesel::prelude::*;
+
+use crate::{
+    db::op::*,
+    models::{
+        node::{
+            parent::{NewParentNode, ParentNode},
+            Node,
+        },
+        Id,
+    },
+};
+
+pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
+    use crate::schema::parent_nodes::dsl::*;
+    read_op(move |conn| {
+        parent_nodes
+            .order(created_at.desc())
+            .load::<ParentNode>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn insert<'a>(
+    new_parent_node: &'a NewParentNode<'a>,
+) -> impl Operation<WritableConn, ParentNode> + 'a {
+    use crate::schema::parent_nodes::dsl::*;
+    write_op(move |conn| {
+        diesel::insert_into(parent_nodes)
+            .values(new_parent_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn set_changes_received<'a>(
+    id: &'a Id<Node>,
+    number: i64,
+    received_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, ParentNode> + 'a {
+    use crate::schema::parent_nodes;
+    let received_at = received_at.unwrap_or(crate::current_datetime());
+    write_op(move |conn| {
+        diesel::update(parent_nodes::table)
+            .filter(
+                parent_nodes::node_id
+                    .eq(id)
+                    // ensure the `number` is +1 increment
+                    .and(parent_nodes::changes_received.eq(number - 1)),
+            )
+            .set((
+                parent_nodes::changes_received.eq(number),
+                parent_nodes::last_change_received_at.eq(Some(received_at)),
+            ))
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}

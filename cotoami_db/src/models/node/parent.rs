@@ -18,6 +18,12 @@ pub struct ParentNode {
     pub url_prefix: String,
 
     pub created_at: NaiveDateTime,
+
+    /// Number of changes received from this parent node
+    pub changes_received: i64,
+
+    /// Date when received the last change from this parent node
+    pub last_change_received_at: Option<NaiveDateTime>,
 }
 
 impl ParentNode {

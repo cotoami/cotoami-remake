@@ -48,11 +48,12 @@ fn crud_operations() -> Result<()> {
         changelog2,
         ChangelogEntry {
             serial_number: 2,
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id,
+            origin_serial_number: 2,
             change: Change::CreateCoto(change_coto),
             ..
-        } if change_coto == Coto { rowid: 0, ..coto }
+        } if origin_node_id == node.uuid &&
+             change_coto == Coto { rowid: 0, ..coto }
     );
 
     // when: edit_coto
@@ -85,8 +86,8 @@ fn crud_operations() -> Result<()> {
         changelog3,
         ChangelogEntry {
             serial_number: 3,
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id,
+            origin_serial_number: 3,
             change: Change::EditCoto {
                 uuid,
                 content: Some(ref content),
@@ -94,7 +95,8 @@ fn crud_operations() -> Result<()> {
                 updated_at,
             },
             ..
-        } if uuid == coto.uuid &&
+        } if origin_node_id == node.uuid &&
+             uuid == coto.uuid &&
              content == "bar" &&
              summary == "foo" &&
              updated_at == edited_coto.updated_at
@@ -112,11 +114,12 @@ fn crud_operations() -> Result<()> {
         changelog4,
         ChangelogEntry {
             serial_number: 4,
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id,
+            origin_serial_number: 4,
             change: Change::DeleteCoto (change_coto_id),
             ..
-        } if change_coto_id == coto.uuid
+        } if origin_node_id == node.uuid &&
+             change_coto_id == coto.uuid
     );
 
     Ok(())

@@ -2,6 +2,11 @@
 -- A changelog is a series of changes in a Cotoami database recorded 
 -- for state machine replication.
 --
+-- A node (database) could incorporate a same node more than once via 
+-- different parents, therefore it could receive a same changelog entry 
+-- more than once. The pair of `origin_node_id` and `origin_serial_number` with 
+-- a unique constraint is a way to avoid duplicate entries inserted in changelog.
+--
 CREATE TABLE changelog (
   -- Serial number of a changelog entry based on SQLite ROWID
   --
@@ -16,13 +21,11 @@ CREATE TABLE changelog (
   -- from previously deleted rows. - https://www.sqlite.org/autoinc.html
   serial_number INTEGER NOT NULL PRIMARY KEY,
   
-  -- UUID of the parent node from which this change came
-  -- NULL if it is a local change
-  parent_node_id TEXT,
+  -- UUID of the node in which this change has been originally created
+  origin_node_id TEXT NOT NULL,
 
-  -- Original serial number in the parent node
-  -- NULL if it is a local change
-  parent_serial_number INTEGER,
+  -- Serial number among changes created in the origin node
+  origin_serial_number INTEGER NOT NULL,
 
   -- Change (cotoami_db::models::changelog::Change) value in MessagePack form
   change BLOB NOT NULL,
@@ -30,14 +33,5 @@ CREATE TABLE changelog (
   -- Registration date in this database
   inserted_at DATETIME NOT NULL, -- UTC
 
-  FOREIGN KEY(parent_node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
+  UNIQUE(origin_node_id, origin_serial_number)
 );
-
--- https://sqlite.org/partialindex.html
-CREATE UNIQUE INDEX changelog_parent
-ON changelog(parent_node_id, parent_serial_number) 
-WHERE 
-  parent_node_id IS NOT NULL AND 
-  parent_serial_number IS NOT NULL;
-
-CREATE INDEX changelog_parent_node_id ON changelog(parent_node_id);

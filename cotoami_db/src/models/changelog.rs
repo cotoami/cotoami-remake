@@ -29,17 +29,11 @@ pub struct ChangelogEntry {
     /// Serial number of a changelog entry based on SQLite ROWID
     pub serial_number: i64,
 
-    /// UUID of the parent node from which this change came
-    ///
-    /// `None` if it is a local change
-    #[serde(skip_serializing, skip_deserializing)]
-    pub parent_node_id: Option<Id<Node>>,
+    /// UUID of the node in which this change has been originally created
+    pub origin_node_id: Id<Node>,
 
-    /// Original serial number in the parent node
-    ///
-    /// `None` if it is a local change
-    #[serde(skip_serializing, skip_deserializing)]
-    pub parent_serial_number: Option<i64>,
+    /// Serial number among changes created in the origin node
+    pub origin_serial_number: i64,
 
     /// The content of this change
     pub change: Change,
@@ -51,10 +45,10 @@ pub struct ChangelogEntry {
 impl ChangelogEntry {
     pub fn inserted_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.inserted_at) }
 
-    pub fn as_import_from<'a>(&'a self, parent_node_id: &'a Id<Node>) -> NewChangelogEntry {
+    pub fn to_import(&self) -> NewChangelogEntry {
         NewChangelogEntry {
-            parent_node_id: Some(parent_node_id),
-            parent_serial_number: Some(self.serial_number),
+            origin_node_id: &self.origin_node_id,
+            origin_serial_number: self.origin_serial_number,
             change: &self.change,
             inserted_at: crate::current_datetime(),
         }
@@ -65,8 +59,8 @@ impl ChangelogEntry {
 #[derive(Insertable)]
 #[diesel(table_name = changelog)]
 pub struct NewChangelogEntry<'a> {
-    parent_node_id: Option<&'a Id<Node>>,
-    parent_serial_number: Option<i64>,
+    origin_node_id: &'a Id<Node>,
+    origin_serial_number: i64,
     change: &'a Change,
     inserted_at: NaiveDateTime,
 }
@@ -117,10 +111,14 @@ pub enum Change {
 }
 
 impl Change {
-    pub fn new_changelog_entry(&self) -> NewChangelogEntry {
+    pub fn new_changelog_entry<'a>(
+        &'a self,
+        local_node_id: &'a Id<Node>,
+        serial_number: i64,
+    ) -> NewChangelogEntry {
         NewChangelogEntry {
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id: local_node_id,
+            origin_serial_number: serial_number,
             change: self,
             inserted_at: crate::current_datetime(),
         }
@@ -164,8 +162,8 @@ mod tests {
     fn changelog_entry_as_json() -> Result<()> {
         let changelog_entry = ChangelogEntry {
             serial_number: 1,
-            parent_node_id: None,
-            parent_serial_number: None,
+            origin_node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
+            origin_serial_number: 1,
             change: Change::DeleteCoto(Id::from_str("00000000-0000-0000-0000-000000000001")?),
             inserted_at: NaiveDateTime::parse_from_str("2023-01-02 03:04:05", "%Y-%m-%d %H:%M:%S")?,
         };
@@ -177,6 +175,8 @@ mod tests {
             indoc! {r#"
             {
               "serial_number": 1,
+              "origin_node_id": "00000000-0000-0000-0000-000000000001",
+              "origin_serial_number": 1,
               "change": {
                 "DeleteCoto": "00000000-0000-0000-0000-000000000001"
               },

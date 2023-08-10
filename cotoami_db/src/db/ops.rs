@@ -15,6 +15,7 @@ pub mod cotonoma_ops;
 pub mod link_ops;
 pub mod local_node_ops;
 pub mod node_ops;
+pub mod parent_node_ops;
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination

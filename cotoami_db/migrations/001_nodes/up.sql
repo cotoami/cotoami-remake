@@ -48,6 +48,10 @@ CREATE TABLE local_node (
   -- Expiration date of node owner's session
   owner_session_expires_at DATETIME, -- UTC
 
+  -- Number of changes applied to this local node
+  -- This number corresponds to `changelog.serial_number`.
+  changes_applied INTEGER DEFAULT 0 NOT NULL,
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 
@@ -64,6 +68,13 @@ CREATE TABLE parent_nodes (
 
   -- Date when this connection was created
   created_at DATETIME NOT NULL, -- UTC
+
+  -- Number of changes received from this parent node
+  -- This number corresponds to `changelog.serial_number` in the parent node.
+  changes_received INTEGER DEFAULT 0 NOT NULL,
+
+  -- Date when received the last change from this parent node
+  last_change_received_at DATETIME, -- UTC
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;

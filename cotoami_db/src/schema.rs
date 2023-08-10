@@ -41,6 +41,7 @@ diesel::table! {
         owner_password_hash -> Nullable<Text>,
         owner_session_token -> Nullable<Text>,
         owner_session_expires_at -> Nullable<Timestamp>,
+        changes_applied -> BigInt,
     }
 }
 diesel::joinable!(local_node -> nodes (node_id));
@@ -50,6 +51,8 @@ diesel::table! {
         node_id -> Text,
         url_prefix -> Text,
         created_at -> Timestamp,
+        changes_received -> BigInt,
+        last_change_received_at -> Nullable<Timestamp>,
     }
 }
 diesel::joinable!(parent_nodes -> nodes (node_id));
@@ -139,8 +142,8 @@ diesel::joinable!(links -> nodes (node_id));
 diesel::table! {
     changelog (serial_number) {
         serial_number -> BigInt,
-        parent_node_id -> Nullable<Text>,
-        parent_serial_number -> Nullable<BigInt>,
+        origin_node_id -> Text,
+        origin_serial_number -> BigInt,
         change -> Binary,
         inserted_at -> Timestamp,
     }

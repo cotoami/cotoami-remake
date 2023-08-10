@@ -12,9 +12,6 @@ pub enum DatabaseError {
     #[error("Invalid file path: {path} ({reason})")]
     InvalidFilePath { path: PathBuf, reason: String },
 
-    #[error("Unexpected change number (expected {expected}, actual {actual})")]
-    UnexpectedChangeNumber { expected: i64, actual: i64 },
-
     #[error("Not found: {kind} ({id})")]
     EntityNotFound { kind: EntityKind, id: String },
 

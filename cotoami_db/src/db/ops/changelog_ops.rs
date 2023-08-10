@@ -2,14 +2,15 @@
 
 use std::ops::DerefMut;
 
+use anyhow::ensure;
 use diesel::prelude::*;
 
-use super::{coto_ops, cotonoma_ops, link_ops, node_ops};
+use super::{coto_ops, cotonoma_ops, link_ops, node_ops, parent_node_ops};
 use crate::{
-    db::{error::DatabaseError, op::*},
+    db::op::*,
     models::{
         changelog::{Change, ChangelogEntry, NewChangelogEntry},
-        node::Node,
+        node::{parent::ParentNode, Node},
         Id,
     },
 };
@@ -25,7 +26,7 @@ pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<Cha
     })
 }
 
-pub fn get_last_change_number<Conn: AsReadableConn>(
+pub fn get_last_serial_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
     use diesel::dsl::max;
@@ -33,20 +34,27 @@ pub fn get_last_change_number<Conn: AsReadableConn>(
     use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
         changelog
-            .select(max(parent_serial_number))
-            .filter(parent_node_id.eq(node_id))
+            .select(max(origin_serial_number))
+            .filter(origin_node_id.eq(node_id))
             .first(conn)
             .map_err(anyhow::Error::from)
     })
 }
 
-pub fn log_change(change: &Change) -> impl Operation<WritableConn, ChangelogEntry> + '_ {
-    // insert_new can't return the result directly since the value would
+pub fn log_change<'a>(
+    change: &'a Change,
+    local_node_id: &'a Id<Node>,
+) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
+    // `insert` can't return the result directly since the value would
     // reference the local variable `change.new_changelog_entry()`
-    composite_op::<WritableConn, _, _>(|ctx| insert_new(&change.new_changelog_entry()).run(ctx))
+    composite_op::<WritableConn, _, _>(|ctx| {
+        let last_number = get_last_serial_number(local_node_id).run(ctx)?.unwrap_or(0);
+        let new_entry = change.new_changelog_entry(local_node_id, last_number + 1);
+        insert(&new_entry).run(ctx)
+    })
 }
 
-pub fn insert_new<'a>(
+pub fn insert<'a>(
     new_entry: &'a NewChangelogEntry<'a>,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
     use crate::schema::changelog::dsl::*;
@@ -59,25 +67,34 @@ pub fn insert_new<'a>(
 }
 
 pub fn import_change<'a>(
-    parent_node_id: &'a Id<Node>,
     log: &'a ChangelogEntry,
+    parent_node: &'a mut ParentNode,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
-    composite_op::<WritableConn, _, _>(|ctx| {
+    composite_op::<WritableConn, _, _>(move |ctx| {
         // check the serial number of the change
-        let last_number = get_last_change_number(parent_node_id).run(ctx)?;
-        let expected_number = last_number.map(|n| n + 1).unwrap_or(1);
-        if log.serial_number != expected_number {
-            Err(DatabaseError::UnexpectedChangeNumber {
-                expected: expected_number,
-                actual: log.serial_number,
-            })?
-        }
+        let expected_number = parent_node.changes_received + 1;
+        ensure!(
+            log.serial_number == expected_number,
+            "Unexpected change number (expected {}, actual {})",
+            expected_number,
+            log.serial_number
+        );
 
         // apply the change
         apply_change(&log.change).run(ctx)?;
 
         // import the remote changelog entry
-        insert_new(&log.as_import_from(parent_node_id)).run(ctx)
+        let log_entry = insert(&log.to_import()).run(ctx)?;
+
+        // increment the count of received changes
+        *parent_node = parent_node_ops::set_changes_received(
+            &parent_node.node_id,
+            expected_number,
+            Some(log_entry.inserted_at),
+        )
+        .run(ctx)?;
+
+        Ok(log_entry)
     })
 }
 

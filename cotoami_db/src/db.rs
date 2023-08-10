@@ -1,7 +1,10 @@
 //! Database operations and transactions
 
 use core::time::Duration;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{anyhow, bail, Context as _, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
@@ -20,7 +23,12 @@ use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, NewCoto},
     cotonoma::Cotonoma,
-    node::{child::ChildNode, local::LocalNode, BelongsToNode, Node, Principal},
+    node::{
+        child::ChildNode,
+        local::LocalNode,
+        parent::{NewParentNode, ParentNode},
+        BelongsToNode, Node, Principal,
+    },
     Id,
 };
 
@@ -77,8 +85,7 @@ impl Database {
             globals: Mutex::new(Globals::default()),
         };
         db.run_migrations()?;
-
-        db.globals.lock().local_node = db.create_session()?.get_local_node()?.map(|x| x.0);
+        db.load_globals()?;
 
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
@@ -135,6 +142,18 @@ impl Database {
         let ro_conn = SqliteConnection::establish(&database_uri)?;
         Ok(ro_conn)
     }
+
+    fn load_globals(&self) -> Result<()> {
+        let mut db = self.create_session()?;
+        let mut globals = self.globals.lock();
+        globals.local_node = db.get_local_node()?.map(|x| x.0);
+        globals.parent_nodes = db
+            .all_parent_nodes()?
+            .into_iter()
+            .map(|p| (p.node_id, p))
+            .collect::<HashMap<_, _>>();
+        Ok(())
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -145,6 +164,7 @@ impl Database {
 #[derive(Debug, Default)]
 struct Globals {
     local_node: Option<LocalNode>,
+    parent_nodes: HashMap<Id<Node>, ParentNode>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -172,10 +192,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn is_local_node_initialized(&self) -> bool { self.require_local_node().is_ok() }
 
-    pub fn init_as_node<'b>(
+    pub fn init_as_node(
         &mut self,
-        name: Option<&'b str>,
-        password: Option<&'b str>,
+        name: Option<&str>,
+        password: Option<&str>,
     ) -> Result<((LocalNode, Node), ChangelogEntry)> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
@@ -193,7 +213,7 @@ impl<'a> DatabaseSession<'a> {
                     Change::CreateNode(node, None)
                 };
 
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
 
                 let Change::CreateNode(node, _) = change else { panic!() };
                 Ok(((local_node, node), changelog))
@@ -217,7 +237,7 @@ impl<'a> DatabaseSession<'a> {
                     name: name.into(),
                     updated_at,
                 };
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok((node, changelog))
             },
         )
@@ -233,14 +253,15 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn all_nodes(&mut self) -> Result<Vec<Node>> { op::run(&mut self.ro_conn, node_ops::all()) }
 
-    /// Import a node data sent from one of the child nodes.
+    /// Import a node data sent from a child or parent node.
     pub fn import_node(&mut self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
+        let local_node_id = self.require_local_node()?.node_id;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
                 if let Some(node) = node_ops::import(node).run(ctx)? {
                     let change = Change::ImportNode(node);
-                    let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                    let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                     let Change::ImportNode(node) = change else { panic!() };
                     Ok(Some((node, changelog)))
                 } else {
@@ -285,6 +306,28 @@ impl<'a> DatabaseSession<'a> {
             local_node_ops::update(&local_node),
         )?;
         Ok(())
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // parent nodes
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn all_parent_nodes(&mut self) -> Result<Vec<ParentNode>> {
+        op::run(&mut self.ro_conn, parent_node_ops::all())
+    }
+
+    pub fn add_parent_node(&mut self, id: &Id<Node>, url_prefix: &str) -> Result<ParentNode> {
+        let new_parent_node = NewParentNode::new(id, url_prefix)?;
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
+                (self.get_globals)()
+                    .parent_nodes
+                    .insert(*id, parent_node.clone());
+                Ok(parent_node)
+            },
+        )
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -361,14 +404,15 @@ impl<'a> DatabaseSession<'a> {
     // changelog
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn import_change<'b>(
+    pub fn import_change(
         &self,
-        parent_node_id: &'b Id<Node>,
-        log: &'b ChangelogEntry,
+        log: &ChangelogEntry,
+        parent_node_id: &Id<Node>,
     ) -> Result<ChangelogEntry> {
+        let mut parent_node = self.require_parent_node(parent_node_id)?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
-            changelog_ops::import_change(parent_node_id, log),
+            changelog_ops::import_change(log, &mut parent_node),
         )
     }
 
@@ -382,10 +426,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { op::run(&mut self.ro_conn, coto_ops::all()) }
 
-    pub fn recent_cotos<'b>(
+    pub fn recent_cotos(
         &mut self,
-        node_id: Option<&'b Id<Node>>,
-        posted_in_id: Option<&'b Id<Cotonoma>>,
+        node_id: Option<&Id<Node>>,
+        posted_in_id: Option<&Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
     ) -> Result<Paginated<Coto>> {
@@ -399,12 +443,12 @@ impl<'a> DatabaseSession<'a> {
     ///
     /// The target cotonoma has to belong to the local node,
     /// otherwise a change should be made via [Self::import_change()].
-    pub fn post_coto<'b>(
+    pub fn post_coto(
         &mut self,
-        content: &'b str,
-        summary: Option<&'b str>,
-        posted_in: &'b Cotonoma,
-        operator: &'b Operator,
+        content: &str,
+        summary: Option<&str>,
+        posted_in: &Cotonoma,
+        operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.ensure_local(posted_in)?;
 
@@ -422,19 +466,20 @@ impl<'a> DatabaseSession<'a> {
             |ctx: &mut Context<'_, WritableConn>| {
                 let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
                 let change = Change::CreateCoto(inserted_coto.clone());
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok((inserted_coto, changelog))
             },
         )
     }
 
-    pub fn edit_coto<'b>(
+    pub fn edit_coto(
         &mut self,
-        id: &'b Id<Coto>,
-        content: &'b str,
-        summary: Option<&'b str>,
-        operator: &'b Operator,
+        id: &Id<Coto>,
+        content: &str,
+        summary: Option<&str>,
+        operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
+        let local_node_id = self.require_local_node()?.node_id;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
@@ -448,17 +493,14 @@ impl<'a> DatabaseSession<'a> {
                     summary: coto.summary.clone(),
                     updated_at: coto.updated_at,
                 };
-                let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok((coto, changelog))
             },
         )
     }
 
-    pub fn delete_coto<'b>(
-        &mut self,
-        id: &'b Id<Coto>,
-        operator: &'b Operator,
-    ) -> Result<ChangelogEntry> {
+    pub fn delete_coto(&mut self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
+        let local_node_id = self.require_local_node()?.node_id;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
@@ -467,7 +509,7 @@ impl<'a> DatabaseSession<'a> {
                 operator.can_delete_coto(&coto)?;
                 if coto_ops::delete(id).run(ctx)? {
                     let change = Change::DeleteCoto(*id);
-                    let changelog = changelog_ops::log_change(&change).run(ctx)?;
+                    let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                     Ok(changelog)
                 } else {
                     Err(DatabaseError::not_found(EntityKind::Coto, *id))?
@@ -512,6 +554,11 @@ impl<'a> DatabaseSession<'a> {
     fn require_local_node(&self) -> Result<MappedMutexGuard<LocalNode>> {
         MutexGuard::try_map((self.get_globals)(), |g| g.local_node.as_mut())
             .map_err(|_| anyhow!("Local node has not yet been created."))
+    }
+
+    fn require_parent_node(&self, id: &Id<Node>) -> Result<MappedMutexGuard<ParentNode>> {
+        MutexGuard::try_map((self.get_globals)(), |g| g.parent_nodes.get_mut(id))
+            .map_err(|_| anyhow!("Parent node {} was not found in the globals.", id))
     }
 
     fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
