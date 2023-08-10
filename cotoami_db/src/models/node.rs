@@ -149,6 +149,8 @@ pub trait BelongsToNode {
     fn node_id(&self) -> &Id<Node>;
 }
 
+/// Principal represents an entity that can authenticate itself by a password
+/// or a session token.
 pub trait Principal {
     fn password_hash(&self) -> Option<&str>;
 
