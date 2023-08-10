@@ -1,11 +1,4 @@
-//! Core concepts in a Cotoami database (Coto, Cotonoma, Link)
-//!
-//! - Coto
-//!     - A coto is a unit of data in a cotoami database.
-//! - Cotonoma
-//!     - A cotonoma is a specific type of coto in which other cotos are posted.
-//! - Link
-//!     - A link is a directed edge connecting two cotos.
+//! A coto is a unit of data in a cotoami database.
 
 use std::fmt::Display;
 
@@ -15,13 +8,14 @@ use diesel::prelude::*;
 use validator::Validate;
 
 use super::{
+    cotonoma::Cotonoma,
     node::{BelongsToNode, Node},
     Id, Ids,
 };
-use crate::schema::{cotonomas, cotos, links};
+use crate::schema::cotos;
 
 /////////////////////////////////////////////////////////////////////////////
-// cotos
+// Coto
 /////////////////////////////////////////////////////////////////////////////
 
 /// A row in `cotos` table
@@ -155,6 +149,10 @@ impl BelongsToNode for Coto {
     fn node_id(&self) -> &Id<Node> { &self.node_id }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// NewCoto
+/////////////////////////////////////////////////////////////////////////////
+
 /// An `Insertable` coto data
 #[derive(Debug, Insertable, Validate)]
 #[diesel(table_name = cotos)]
@@ -230,6 +228,10 @@ impl<'a> NewCoto<'a> {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// UpdateCoto
+/////////////////////////////////////////////////////////////////////////////
+
 /// A changeset of a coto for update
 #[derive(Debug, Identifiable, AsChangeset, Validate)]
 #[diesel(table_name = cotos, primary_key(uuid))]
@@ -242,234 +244,5 @@ pub struct UpdateCoto<'a> {
     pub is_cotonoma: bool,
     pub repost_of_id: Option<&'a Id<Coto>>,
     pub reposted_in_ids: Option<&'a Ids<Cotonoma>>,
-    pub updated_at: NaiveDateTime,
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// cotonomas
-/////////////////////////////////////////////////////////////////////////////
-
-/// A row in `cotonomas` table
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Identifiable,
-    AsChangeset,
-    Queryable,
-    Selectable,
-    Validate,
-    serde::Serialize,
-    serde::Deserialize,
-)]
-#[diesel(primary_key(uuid))]
-pub struct Cotonoma {
-    /// Universally unique cotonoma ID
-    pub uuid: Id<Cotonoma>,
-
-    /// UUID of the node in which this cotonoma was created
-    pub node_id: Id<Node>,
-
-    /// Coto UUID of this cotonoma
-    pub coto_id: Id<Coto>,
-
-    /// Name of this cotonoma
-    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
-    pub name: String,
-
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-}
-
-impl Cotonoma {
-    pub const NAME_MAX_LENGTH: usize = 50;
-
-    pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
-
-    pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
-
-    pub fn to_update(&self) -> UpdateCotonoma {
-        UpdateCotonoma {
-            uuid: &self.uuid,
-            name: &self.name,
-            updated_at: crate::current_datetime(),
-        }
-    }
-
-    pub fn to_import(&self) -> NewCotonoma {
-        NewCotonoma {
-            uuid: self.uuid,
-            node_id: &self.node_id,
-            coto_id: &self.coto_id,
-            name: &self.name,
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-        }
-    }
-}
-
-impl BelongsToNode for Cotonoma {
-    fn node_id(&self) -> &Id<Node> { &self.node_id }
-}
-
-/// An `Insertable` cotonoma data
-#[derive(Insertable, Validate)]
-#[diesel(table_name = cotonomas)]
-pub struct NewCotonoma<'a> {
-    uuid: Id<Cotonoma>,
-    node_id: &'a Id<Node>,
-    coto_id: &'a Id<Coto>,
-    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
-    name: &'a str,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
-}
-
-impl<'a> NewCotonoma<'a> {
-    pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Result<Self> {
-        let now = crate::current_datetime();
-        let cotonoma = Self {
-            uuid: Id::generate(),
-            node_id,
-            coto_id,
-            name,
-            created_at: now,
-            updated_at: now,
-        };
-        cotonoma.validate()?;
-        Ok(cotonoma)
-    }
-}
-
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = cotonomas, primary_key(uuid))]
-pub struct UpdateCotonoma<'a> {
-    uuid: &'a Id<Cotonoma>,
-    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
-    pub name: &'a str,
-    pub updated_at: NaiveDateTime,
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// links
-/////////////////////////////////////////////////////////////////////////////
-
-/// A row in `links` table
-#[derive(
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    Identifiable,
-    AsChangeset,
-    Queryable,
-    Validate,
-    serde::Serialize,
-    serde::Deserialize,
-)]
-#[diesel(primary_key(uuid))]
-pub struct Link {
-    /// Universally unique link ID
-    pub uuid: Id<Link>,
-
-    /// UUID of the node in which this link was created
-    pub node_id: Id<Node>,
-
-    /// UUID of the node whose owner has created this link
-    pub created_by_id: Id<Node>,
-
-    /// UUID of the coto at the tail of this link
-    pub tail_coto_id: Id<Coto>,
-
-    /// UUID of the coto at the head of this link
-    pub head_coto_id: Id<Coto>,
-
-    /// Linkng phrase to express the relationship between the two cotos
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    pub linking_phrase: Option<String>,
-
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-}
-
-impl Link {
-    pub const LINKING_PHRASE_MAX_LENGTH: usize = 200;
-
-    pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
-
-    pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
-
-    pub fn to_update(&self) -> UpdateLink {
-        UpdateLink {
-            uuid: &self.uuid,
-            linking_phrase: self.linking_phrase.as_deref(),
-            updated_at: crate::current_datetime(),
-        }
-    }
-
-    pub fn to_import(&self) -> NewLink {
-        NewLink {
-            uuid: self.uuid,
-            node_id: &self.node_id,
-            created_by_id: &self.created_by_id,
-            tail_coto_id: &self.tail_coto_id,
-            head_coto_id: &self.head_coto_id,
-            linking_phrase: self.linking_phrase.as_deref(),
-            created_at: self.created_at,
-            updated_at: self.updated_at,
-        }
-    }
-}
-
-impl BelongsToNode for Link {
-    fn node_id(&self) -> &Id<Node> { &self.node_id }
-}
-
-/// An `Insertable` link data
-#[derive(Insertable, Validate)]
-#[diesel(table_name = links)]
-pub struct NewLink<'a> {
-    uuid: Id<Link>,
-    node_id: &'a Id<Node>,
-    created_by_id: &'a Id<Node>,
-    tail_coto_id: &'a Id<Coto>,
-    head_coto_id: &'a Id<Coto>,
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    linking_phrase: Option<&'a str>,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
-}
-
-impl<'a> NewLink<'a> {
-    pub fn new(
-        node_id: &'a Id<Node>,
-        created_by_id: &'a Id<Node>,
-        tail_coto_id: &'a Id<Coto>,
-        head_coto_id: &'a Id<Coto>,
-        linking_phrase: Option<&'a str>,
-    ) -> Result<Self> {
-        let now = crate::current_datetime();
-        let link = Self {
-            uuid: Id::generate(),
-            node_id,
-            created_by_id,
-            tail_coto_id,
-            head_coto_id,
-            linking_phrase,
-            created_at: now,
-            updated_at: now,
-        };
-        link.validate()?;
-        Ok(link)
-    }
-}
-
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = links, primary_key(uuid))]
-pub struct UpdateLink<'a> {
-    uuid: &'a Id<Link>,
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    pub linking_phrase: Option<&'a str>,
     pub updated_at: NaiveDateTime,
 }

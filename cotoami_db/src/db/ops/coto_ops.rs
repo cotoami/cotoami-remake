@@ -9,7 +9,8 @@ use super::Paginated;
 use crate::{
     db::{error::*, op::*},
     models::{
-        coto::{Coto, Cotonoma, NewCoto, UpdateCoto},
+        coto::{Coto, NewCoto, UpdateCoto},
+        cotonoma::Cotonoma,
         node::Node,
         Id,
     },

@@ -9,7 +9,7 @@ use validator::Validate;
 use crate::{
     db::op::*,
     models::{
-        coto::{Link, NewLink, UpdateLink},
+        link::{Link, NewLink, UpdateLink},
         Id,
     },
 };

@@ -10,7 +10,7 @@ use diesel::prelude::*;
 use identicon_rs::Identicon;
 use validator::Validate;
 
-use super::{coto::Cotonoma, Id};
+use super::{cotonoma::Cotonoma, Id};
 use crate::schema::nodes;
 
 pub mod child;

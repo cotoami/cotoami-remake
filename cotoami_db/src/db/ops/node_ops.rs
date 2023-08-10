@@ -11,7 +11,8 @@ use super::cotonoma_ops;
 use crate::{
     db::op::*,
     models::{
-        coto::{Coto, Cotonoma},
+        coto::Coto,
+        cotonoma::Cotonoma,
         node::{NewNode, Node, UpdateNode},
         Id,
     },

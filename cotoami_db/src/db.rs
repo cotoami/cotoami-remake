@@ -18,7 +18,8 @@ use self::{
 };
 use crate::models::{
     changelog::{Change, ChangelogEntry},
-    coto::{Coto, Cotonoma, NewCoto},
+    coto::{Coto, NewCoto},
+    cotonoma::Cotonoma,
     node::{child::ChildNode, local::LocalNode, BelongsToNode, Node, Principal},
     Id,
 };

@@ -10,11 +10,7 @@ use diesel::{
     sql_types::Binary, sqlite::Sqlite, FromSqlRow,
 };
 
-use super::{
-    coto::{Coto, Cotonoma, Link},
-    node::Node,
-    Id,
-};
+use super::{coto::Coto, cotonoma::Cotonoma, link::Link, node::Node, Id};
 use crate::schema::changelog;
 
 /////////////////////////////////////////////////////////////////////////////

@@ -16,7 +16,9 @@ use uuid::Uuid;
 
 pub mod changelog;
 pub mod coto;
+pub mod cotonoma;
 pub mod graph;
+pub mod link;
 pub mod node;
 
 /////////////////////////////////////////////////////////////////////////////

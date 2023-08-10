@@ -4,10 +4,7 @@ use std::collections::HashMap;
 
 use petgraph::prelude::{Graph as Petgraph, NodeIndex};
 
-use super::{
-    coto::{Coto, Cotonoma, Link},
-    Id,
-};
+use super::{coto::Coto, cotonoma::Cotonoma, link::Link, Id};
 
 /// A graph is a set of cotos that are connected with links
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

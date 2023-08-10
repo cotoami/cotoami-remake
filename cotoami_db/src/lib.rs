@@ -1,11 +1,13 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
 pub mod prelude {
-    pub use super::{
+    pub use crate::{
         db::{error::*, operator::Operator, ops::Paginated, Database, DatabaseSession},
         models::{
             changelog::{Change, ChangelogEntry},
-            coto::{Coto, Cotonoma},
+            coto::Coto,
+            cotonoma::Cotonoma,
+            link::Link,
             node::{local::LocalNode, Node, Principal},
             Id,
         },

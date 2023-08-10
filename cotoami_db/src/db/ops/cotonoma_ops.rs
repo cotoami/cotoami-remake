@@ -10,7 +10,8 @@ use super::{coto_ops, Paginated};
 use crate::{
     db::{error::*, op::*},
     models::{
-        coto::{Coto, Cotonoma, NewCoto, NewCotonoma, UpdateCotonoma},
+        coto::{Coto, NewCoto},
+        cotonoma::{Cotonoma, NewCotonoma, UpdateCotonoma},
         node::Node,
         Id,
     },
