@@ -330,6 +330,10 @@ impl<'a> DatabaseSession<'a> {
         )
     }
 
+    pub fn get_parent_node(&mut self, id: &Id<Node>) -> Result<ParentNode> {
+        Ok(self.require_parent_node(id)?.clone())
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // child nodes
     /////////////////////////////////////////////////////////////////////////////

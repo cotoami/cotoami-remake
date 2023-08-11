@@ -30,12 +30,14 @@ fn import_changes() -> Result<()> {
     let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
 
     let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
-    session2.add_parent_node(&node1.uuid, "https://node1.db")?;
+    let parent = session2.add_parent_node(&node1.uuid, "https://node1.db")?;
+    assert_eq!(parent.changes_received, 0);
 
     // when: import change1 (init_as_node)
     let db2_change3 = session2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
 
     // then
+    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 1);
     assert_matches!(
         db2_change3,
         ChangelogEntry {
@@ -72,6 +74,7 @@ fn import_changes() -> Result<()> {
     let db2_change4 = session2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
 
     // then
+    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 2);
     assert_matches!(
         db2_change4,
         ChangelogEntry {
@@ -94,6 +97,7 @@ fn import_changes() -> Result<()> {
     let db2_change5 = session2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
 
     // then
+    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 3);
     assert_matches!(
         db2_change5,
         ChangelogEntry {
@@ -116,6 +120,7 @@ fn import_changes() -> Result<()> {
     let db2_change6 = session2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
 
     // then
+    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 4);
     assert_matches!(
         db2_change6,
         ChangelogEntry {
