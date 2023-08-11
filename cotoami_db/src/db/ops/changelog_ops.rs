@@ -75,9 +75,10 @@ pub fn import_change<'a>(
         let expected_number = parent_node.changes_received + 1;
         ensure!(
             log.serial_number == expected_number,
-            "Unexpected change number (expected {}, actual {})",
+            "Unexpected change number (expected {}, actual {}) from {}",
             expected_number,
-            log.serial_number
+            log.serial_number,
+            parent_node.node_id
         );
 
         // apply the change
