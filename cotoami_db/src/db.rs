@@ -163,7 +163,9 @@ impl Database {
 // Globals
 /////////////////////////////////////////////////////////////////////////////
 
-/// Global information shared among sessions in a database
+/// Global information shared among sessions in a database.
+/// Most of the fields are cached database rows or column values frequently used internally.
+/// For example, [LocalNode] will be used every time when authentication is needed.
 #[derive(Debug, Default)]
 struct Globals {
     local_node: Option<LocalNode>,
