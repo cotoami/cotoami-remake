@@ -146,7 +146,10 @@ impl Database {
     fn load_globals(&self) -> Result<()> {
         let mut db = self.create_session()?;
         let mut globals = self.globals.lock();
-        globals.local_node = db.get_local_node()?.map(|x| x.0);
+        if let Some((local_node, node)) = db.get_local_node()? {
+            globals.local_node = Some(local_node);
+            globals.root_cotonoma_id = node.root_cotonoma_id;
+        }
         globals.parent_nodes = db
             .all_parent_nodes()?
             .into_iter()
@@ -164,6 +167,7 @@ impl Database {
 #[derive(Debug, Default)]
 struct Globals {
     local_node: Option<LocalNode>,
+    root_cotonoma_id: Option<Id<Cotonoma>>,
     parent_nodes: HashMap<Id<Node>, ParentNode>,
 }
 
@@ -220,7 +224,9 @@ impl<'a> DatabaseSession<'a> {
             },
         )
         .map(|((local_node, node), changelog)| {
-            (self.get_globals)().local_node = Some(local_node.clone());
+            let mut globals = (self.get_globals)();
+            globals.local_node = Some(local_node.clone());
+            globals.root_cotonoma_id = node.root_cotonoma_id;
             ((local_node, node), changelog)
         })
     }
@@ -525,6 +531,14 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
     // cotonomas
     /////////////////////////////////////////////////////////////////////////////
+
+    pub fn get_root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
+        if let Some(id) = (self.get_globals)().root_cotonoma_id {
+            self.get_cotonoma(&id)
+        } else {
+            Ok(None)
+        }
+    }
 
     pub fn get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
         op::run(&mut self.ro_conn, cotonoma_ops::get(id))

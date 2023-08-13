@@ -166,8 +166,7 @@ fn init_as_node() -> Result<()> {
     let ((local_node, node), changelog) = session.init_as_node(Some("My Node"), None)?;
 
     // then
-    let root_cotonoma_id = node.root_cotonoma_id.unwrap();
-    let (root_cotonoma, root_coto) = session.get_cotonoma(&root_cotonoma_id)?.unwrap();
+    let (root_cotonoma, root_coto) = session.get_root_cotonoma()?.unwrap();
 
     assert_matches!(
         node,
@@ -208,7 +207,7 @@ fn init_as_node() -> Result<()> {
             coto_id,
             ref name,
             ..
-        } if uuid == root_cotonoma_id &&
+        } if Some(uuid) == node.root_cotonoma_id &&
              node_id == node.uuid &&
              coto_id == root_coto.uuid &&
              name == "My Node"

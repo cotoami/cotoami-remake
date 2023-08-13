@@ -10,9 +10,7 @@ fn crud_operations() -> Result<()> {
     let (_root_dir, db, node) = common::setup_db()?;
     let mut session = db.create_session()?;
     let operator = session.local_node_as_operator()?;
-    let (root_cotonoma, _) = session
-        .get_cotonoma(&node.root_cotonoma_id.unwrap())?
-        .unwrap();
+    let (root_cotonoma, _) = session.get_root_cotonoma()?.unwrap();
 
     // when: post_coto
     let (coto, changelog2) = session.post_coto("hello", None, &root_cotonoma, &operator)?;

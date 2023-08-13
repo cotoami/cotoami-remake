@@ -14,9 +14,7 @@ fn import_changes() -> Result<()> {
 
     let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
     let operator = session1.local_node_as_operator()?;
-    let (node1_root_cotonoma, node1_root_coto) = session1
-        .get_cotonoma(&node1.root_cotonoma_id.unwrap())?
-        .unwrap();
+    let (node1_root_cotonoma, node1_root_coto) = session1.get_root_cotonoma()?.unwrap();
 
     let (db1_coto, db1_change2) =
         session1.post_coto("hello", None, &node1_root_cotonoma, &operator)?;
