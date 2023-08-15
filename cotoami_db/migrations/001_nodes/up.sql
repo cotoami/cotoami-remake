@@ -48,10 +48,6 @@ CREATE TABLE local_node (
   -- Expiration date of node owner's session
   owner_session_expires_at DATETIME, -- UTC
 
-  -- Number of changes applied to this local node
-  -- This number corresponds to `changelog.serial_number`.
-  changes_applied INTEGER DEFAULT 0 NOT NULL,
-
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 

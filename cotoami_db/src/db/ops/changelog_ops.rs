@@ -45,8 +45,6 @@ pub fn log_change<'a>(
     change: &'a Change,
     local_node_id: &'a Id<Node>,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
-    // `insert` can't return the result directly since the value would
-    // reference the local variable `change.new_changelog_entry()`
     composite_op::<WritableConn, _, _>(|ctx| {
         let last_number = get_last_serial_number(local_node_id).run(ctx)?.unwrap_or(0);
         let new_entry = change.new_changelog_entry(local_node_id, last_number + 1);

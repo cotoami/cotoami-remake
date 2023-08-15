@@ -41,7 +41,6 @@ diesel::table! {
         owner_password_hash -> Nullable<Text>,
         owner_session_token -> Nullable<Text>,
         owner_session_expires_at -> Nullable<Timestamp>,
-        changes_applied -> BigInt,
     }
 }
 diesel::joinable!(local_node -> nodes (node_id));
