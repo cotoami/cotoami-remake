@@ -360,6 +360,19 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, child_node_ops::all_pairs())
     }
 
+    pub fn recent_child_nodes(
+        &mut self,
+        page_size: i64,
+        page_index: i64,
+        operator: &Operator,
+    ) -> Result<Paginated<(ChildNode, Node)>> {
+        operator.requires_to_be_owner(EntityKind::ChildNode, OpKind::Read)?;
+        op::run(
+            &mut self.ro_conn,
+            child_node_ops::recent_pairs(page_size, page_index),
+        )
+    }
+
     /// Add a child node by its ID.
     ///
     /// This operation is assumed to be invoked by a node owner to allow another node

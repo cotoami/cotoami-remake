@@ -33,6 +33,34 @@ impl<T> Paginated<T> {
     pub fn total_pages(&self) -> i64 {
         (self.total_rows as f64 / self.page_size as f64).ceil() as i64
     }
+
+    pub fn map<U, F>(self, f: F) -> MappedPage<T, F>
+    where
+        Self: Sized,
+        F: FnMut(T) -> U,
+    {
+        MappedPage { page: self, f }
+    }
+}
+
+#[must_use]
+pub struct MappedPage<T, F> {
+    page: Paginated<T>,
+    f: F,
+}
+
+impl<T, U, F> From<MappedPage<T, F>> for Paginated<U>
+where
+    F: FnMut(T) -> U,
+{
+    fn from(MappedPage { page, f }: MappedPage<T, F>) -> Self {
+        Paginated {
+            rows: page.rows.into_iter().map(f).collect(),
+            page_size: page.page_size,
+            page_index: page.page_index,
+            total_rows: page.total_rows,
+        }
+    }
 }
 
 /// Returns a paginated results of a query built by `query_builder`.

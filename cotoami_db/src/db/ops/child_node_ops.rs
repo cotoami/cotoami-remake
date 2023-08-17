@@ -4,6 +4,7 @@ use std::ops::DerefMut;
 
 use diesel::prelude::*;
 
+use super::Paginated;
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -24,6 +25,21 @@ pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ChildNode,
             .order(child_nodes::created_at.desc())
             .load::<(ChildNode, Node)>(conn)
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn recent_pairs<'a, Conn: AsReadableConn>(
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<(ChildNode, Node)>> + 'a {
+    use crate::schema::{child_nodes, nodes};
+    read_op(move |conn| {
+        super::paginate(conn, page_size, page_index, || {
+            child_nodes::table
+                .inner_join(nodes::table)
+                .select((ChildNode::as_select(), Node::as_select()))
+                .order(child_nodes::created_at.desc())
+        })
     })
 }
 
