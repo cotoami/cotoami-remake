@@ -30,27 +30,11 @@ impl Operator {
         }
     }
 
-    pub fn can_add_parent_node(&self) -> Result<()> {
+    pub fn requires_to_be_owner(&self, entity: EntityKind, op: OpKind) -> Result<()> {
         if self.has_owner_permission() {
             Ok(())
         } else {
-            Err(DatabaseError::permission_denied(
-                EntityKind::ParentNode,
-                None::<&str>,
-                OpKind::Create,
-            ))?
-        }
-    }
-
-    pub fn can_add_child_node(&self) -> Result<()> {
-        if self.has_owner_permission() {
-            Ok(())
-        } else {
-            Err(DatabaseError::permission_denied(
-                EntityKind::ChildNode,
-                None::<&str>,
-                OpKind::Create,
-            ))?
+            Err(DatabaseError::permission_denied(entity, None::<&str>, op))?
         }
     }
 

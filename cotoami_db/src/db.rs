@@ -319,7 +319,8 @@ impl<'a> DatabaseSession<'a> {
     // parent nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn all_parent_nodes(&mut self) -> Result<Vec<(ParentNode, Node)>> {
+    pub fn all_parent_nodes(&mut self, operator: &Operator) -> Result<Vec<(ParentNode, Node)>> {
+        operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Read)?;
         op::run(&mut self.ro_conn, parent_node_ops::all_pairs())
     }
 
@@ -332,7 +333,7 @@ impl<'a> DatabaseSession<'a> {
         url_prefix: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
-        operator.can_add_parent_node()?;
+        operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Create)?;
         let new_parent_node = NewParentNode::new(id, url_prefix)?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
@@ -354,7 +355,8 @@ impl<'a> DatabaseSession<'a> {
     // child nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn all_child_nodes(&mut self) -> Result<Vec<(ChildNode, Node)>> {
+    pub fn all_child_nodes(&mut self, operator: &Operator) -> Result<Vec<(ChildNode, Node)>> {
+        operator.requires_to_be_owner(EntityKind::ChildNode, OpKind::Read)?;
         op::run(&mut self.ro_conn, child_node_ops::all_pairs())
     }
 
@@ -374,7 +376,7 @@ impl<'a> DatabaseSession<'a> {
         can_edit_links: bool,
         operator: &Operator,
     ) -> Result<ChildNode> {
-        operator.can_add_child_node()?;
+        operator.requires_to_be_owner(EntityKind::ChildNode, OpKind::Create)?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
