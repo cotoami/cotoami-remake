@@ -354,6 +354,10 @@ impl<'a> DatabaseSession<'a> {
     // child nodes
     /////////////////////////////////////////////////////////////////////////////
 
+    pub fn all_child_nodes(&mut self) -> Result<Vec<(ChildNode, Node)>> {
+        op::run(&mut self.ro_conn, child_node_ops::all_pairs())
+    }
+
     /// Add a child node by its ID.
     ///
     /// This operation is assumed to be invoked by a node owner to allow another node
