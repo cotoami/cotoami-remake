@@ -121,17 +121,14 @@ impl Config {
     fn default_session_minutes() -> u64 { 60 }
 
     fn db_dir(&self) -> PathBuf {
-        self.db_dir
-            .as_ref()
-            .map(|path| PathBuf::from(path))
-            .unwrap_or_else(|| {
-                dirs::home_dir()
-                    .map(|mut path| {
-                        path.push(Self::DEFAULT_DB_DIR_NAME);
-                        path
-                    })
-                    .unwrap_or(PathBuf::from(Self::DEFAULT_DB_DIR_NAME))
-            })
+        self.db_dir.as_ref().map(PathBuf::from).unwrap_or_else(|| {
+            dirs::home_dir()
+                .map(|mut path| {
+                    path.push(Self::DEFAULT_DB_DIR_NAME);
+                    path
+                })
+                .unwrap_or(PathBuf::from(Self::DEFAULT_DB_DIR_NAME))
+        })
     }
 
     fn session_seconds(&self) -> u64 { self.session_minutes * 60 }

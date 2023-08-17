@@ -44,7 +44,7 @@ pub fn create<'a>(
     })
 }
 
-pub fn update<'a>(local_node: &'a LocalNode) -> impl Operation<WritableConn, LocalNode> + 'a {
+pub fn update(local_node: &LocalNode) -> impl Operation<WritableConn, LocalNode> + '_ {
     write_op(move |conn| {
         diesel::update(local_node)
             .set(local_node)

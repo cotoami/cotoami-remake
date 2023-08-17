@@ -16,6 +16,9 @@ use tracing::info;
 use super::{AppState, Config};
 
 const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTIONS];
+
+// https://github.com/rust-lang/rust-clippy/issues/9776
+#[allow(clippy::declare_interior_mutable_const)]
 const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
 pub(super) async fn protect_from_forgery<B>(
@@ -51,6 +54,8 @@ fn check_custom_header(headers: &HeaderMap<HeaderValue>) -> Result<()> {
     if headers.contains_key(CUSTOM_HEADER) {
         Ok(())
     } else {
+        // https://github.com/rust-lang/rust-clippy/issues/5812
+        #[allow(clippy::borrow_interior_mutable_const)]
         Err(anyhow!("custom header {} was missing", CUSTOM_HEADER))
     }
 }

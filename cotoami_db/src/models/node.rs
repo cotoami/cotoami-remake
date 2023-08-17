@@ -166,7 +166,7 @@ pub trait Principal {
 
     fn session_expires_at_as_local_time(&self) -> Option<DateTime<Local>> {
         self.session_expires_at()
-            .map(|expires_at| Local.from_utc_datetime(&expires_at))
+            .map(|expires_at| Local.from_utc_datetime(expires_at))
     }
 
     fn update_password(&mut self, password: &str) -> Result<()> {

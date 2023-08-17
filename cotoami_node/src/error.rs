@@ -22,7 +22,7 @@ pub(crate) enum ApiError {
     Request(RequestError),
     Permission(PermissionError),
     Input(InputErrors),
-    NotFound,
+    // NotFound,
     Unauthorized,
 }
 
@@ -38,7 +38,7 @@ impl IntoResponse for ApiError {
             ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
             ApiError::Permission(e) => (StatusCode::FORBIDDEN, Json(e)).into_response(),
             ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
-            ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            // ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
             ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
         }
     }
@@ -135,7 +135,7 @@ impl From<(&str, ValidationErrors)> for InputErrors {
         let dst = src
             .into_errors()
             .into_iter()
-            .map(|(field, errors_kind)| {
+            .flat_map(|(field, errors_kind)| {
                 // ignore Struct and List variants in ValidationErrorsKind for now
                 if let ValidationErrorsKind::Field(errors) = errors_kind {
                     errors
@@ -146,7 +146,6 @@ impl From<(&str, ValidationErrors)> for InputErrors {
                     Vec::new()
                 }
             })
-            .flatten()
             .collect();
         InputErrors(dst)
     }

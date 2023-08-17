@@ -57,7 +57,7 @@ pub fn insert<'a>(
     })
 }
 
-pub fn update<'a>(child_node: &'a ChildNode) -> impl Operation<WritableConn, ChildNode> + 'a {
+pub fn update(child_node: &ChildNode) -> impl Operation<WritableConn, ChildNode> + '_ {
     write_op(move |conn| {
         diesel::update(child_node)
             .set(child_node)

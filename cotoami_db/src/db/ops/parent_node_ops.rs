@@ -38,11 +38,11 @@ pub fn insert<'a>(
     })
 }
 
-pub fn set_changes_received<'a>(
-    id: &'a Id<Node>,
+pub fn set_changes_received(
+    id: &Id<Node>,
     number: i64,
     received_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, ParentNode> + 'a {
+) -> impl Operation<WritableConn, ParentNode> + '_ {
     use crate::schema::parent_nodes;
     let received_at = received_at.unwrap_or(crate::current_datetime());
     write_op(move |conn| {
