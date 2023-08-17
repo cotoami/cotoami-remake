@@ -30,6 +30,30 @@ impl Operator {
         }
     }
 
+    pub fn can_add_parent_node(&self) -> Result<()> {
+        if self.has_owner_permission() {
+            Ok(())
+        } else {
+            Err(DatabaseError::permission_denied(
+                EntityKind::ParentNode,
+                None::<&str>,
+                OpKind::Create,
+            ))?
+        }
+    }
+
+    pub fn can_add_child_node(&self) -> Result<()> {
+        if self.has_owner_permission() {
+            Ok(())
+        } else {
+            Err(DatabaseError::permission_denied(
+                EntityKind::ChildNode,
+                None::<&str>,
+                OpKind::Create,
+            ))?
+        }
+    }
+
     pub fn can_update_coto(&self, coto: &Coto) -> Result<()> {
         if self.node_id() == coto.posted_by_id {
             Ok(())

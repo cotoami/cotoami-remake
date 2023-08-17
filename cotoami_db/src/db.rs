@@ -24,7 +24,7 @@ use crate::models::{
     coto::{Coto, NewCoto},
     cotonoma::Cotonoma,
     node::{
-        child::ChildNode,
+        child::{ChildNode, NewChildNode},
         local::LocalNode,
         parent::{NewParentNode, ParentNode},
         BelongsToNode, Node, Principal,
@@ -324,7 +324,16 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, parent_node_ops::all())
     }
 
-    pub fn add_parent_node(&mut self, id: &Id<Node>, url_prefix: &str) -> Result<ParentNode> {
+    /// Add a parent node by its ID.
+    ///
+    /// The node specified by the ID has to be imported before added as a parent.
+    pub fn add_parent_node(
+        &mut self,
+        id: &Id<Node>,
+        url_prefix: &str,
+        operator: &Operator,
+    ) -> Result<ParentNode> {
+        operator.can_add_parent_node()?;
         let new_parent_node = NewParentNode::new(id, url_prefix)?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
@@ -345,6 +354,33 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
     // child nodes
     /////////////////////////////////////////////////////////////////////////////
+
+    /// Add a child node by its ID.
+    ///
+    /// This operation is assumed to be invoked by a node owner to allow another node
+    /// to connect to this node.
+    ///
+    /// If the node specified by the ID doesn't exist in this database,
+    /// this function will create a placeholder row in the `nodes` table to be
+    /// replace with real data, which will be sent from the node when logging in later.
+    pub fn add_child_node(
+        &mut self,
+        id: Id<Node>,
+        password: &str,
+        as_owner: bool,
+        can_edit_links: bool,
+        operator: &Operator,
+    ) -> Result<ChildNode> {
+        operator.can_add_child_node()?;
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
+                let new_child = NewChildNode::new(&node.uuid, password, as_owner, can_edit_links)?;
+                child_node_ops::insert(&new_child).run(ctx)
+            },
+        )
+    }
 
     pub fn start_child_session(
         &mut self,

@@ -18,11 +18,11 @@ use crate::{
     },
 };
 
-pub fn get<Conn: AsReadableConn>(node_id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
+pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
         nodes
-            .find(node_id)
+            .find(id)
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
@@ -46,6 +46,16 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Nod
             .values(new_node)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn get_or_insert_placeholder<'a>(id: Id<Node>) -> impl Operation<WritableConn, Node> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        if let Some(node) = get(&id).run(ctx)? {
+            Ok(node)
+        } else {
+            insert(&NewNode::new_placeholder(id)).run(ctx)
+        }
     })
 }
 

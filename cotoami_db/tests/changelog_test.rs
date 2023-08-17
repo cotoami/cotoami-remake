@@ -28,7 +28,7 @@ fn import_changes() -> Result<()> {
     let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
 
     let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
-    let parent = session2.add_parent_node(&node1.uuid, "https://node1")?;
+    let parent = session2.add_parent_node(&node1.uuid, "https://node1", &operator)?;
     assert_eq!(parent.changes_received, 0);
 
     // when: import change1 (init_as_node)

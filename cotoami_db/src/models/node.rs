@@ -118,6 +118,16 @@ impl<'a> NewNode<'a> {
         new_node.validate()?;
         Ok(new_node)
     }
+
+    pub fn new_placeholder(uuid: Id<Node>) -> Self {
+        Self {
+            uuid,
+            icon: Vec::default(),
+            name: "",
+            version: 0,
+            created_at: crate::current_datetime(),
+        }
+    }
 }
 
 /// An `Insertable/AsChangeset` node data for importing/upgrading a remote node
