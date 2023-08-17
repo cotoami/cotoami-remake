@@ -6,7 +6,7 @@ use super::{Node, Principal};
 use crate::{models::Id, schema::child_nodes};
 
 /// A row in `child_nodes` table
-#[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable)]
+#[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable, Selectable)]
 #[diesel(primary_key(node_id), treat_none_as_null = true)]
 pub struct ChildNode {
     /// UUID of this child node

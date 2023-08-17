@@ -15,11 +15,15 @@ use crate::{
     },
 };
 
-pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ChildNode>> + '_ {
-    use crate::schema::child_nodes::dsl::*;
+pub fn get<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Option<(ChildNode, Node)>> + '_ {
+    use crate::schema::{child_nodes, nodes};
     read_op(move |conn| {
-        child_nodes
+        child_nodes::table
             .find(id)
+            .inner_join(nodes::table)
+            .select((ChildNode::as_select(), Node::as_select()))
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
@@ -28,7 +32,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<C
 
 pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
-) -> impl Operation<Conn, Result<ChildNode, DatabaseError>> + '_ {
+) -> impl Operation<Conn, Result<(ChildNode, Node), DatabaseError>> + '_ {
     get(id).map(|n| n.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
 }
 
