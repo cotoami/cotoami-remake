@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-pub fn get<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
+pub fn get_pair<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
     use crate::schema::{local_node, nodes};
     read_op(move |conn| {
         local_node::table

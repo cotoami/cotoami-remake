@@ -150,8 +150,7 @@ impl Database {
             globals.local_node = Some(local_node);
             globals.root_cotonoma_id = node.root_cotonoma_id;
         }
-        globals.parent_nodes = db
-            .all_parent_nodes()?
+        globals.parent_nodes = op::run(&mut db.ro_conn, parent_node_ops::all())?
             .into_iter()
             .map(|p| (p.node_id, p))
             .collect::<HashMap<_, _>>();
@@ -189,7 +188,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn get_local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
-        op::run(&mut self.ro_conn, local_node_ops::get())
+        op::run(&mut self.ro_conn, local_node_ops::get_pair())
     }
 
     pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
@@ -320,8 +319,8 @@ impl<'a> DatabaseSession<'a> {
     // parent nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn all_parent_nodes(&mut self) -> Result<Vec<ParentNode>> {
-        op::run(&mut self.ro_conn, parent_node_ops::all())
+    pub fn all_parent_nodes(&mut self) -> Result<Vec<(ParentNode, Node)>> {
+        op::run(&mut self.ro_conn, parent_node_ops::all_pairs())
     }
 
     /// Add a parent node by its ID.
@@ -392,7 +391,7 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let (mut child_node, _) = child_node_ops::get_or_err(id)
+                let mut child_node = child_node_ops::get_or_err(id)
                     .run(ctx)?
                     // Hide a not-found error for a security reason
                     .context(DatabaseError::AuthenticationFailed)?;
@@ -409,7 +408,7 @@ impl<'a> DatabaseSession<'a> {
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
             |ctx: &mut Context<'_, WritableConn>| {
-                let (mut child_node, _) = child_node_ops::get_or_err(id).run(ctx)??;
+                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
                 child_node.clear_session();
                 child_node_ops::update(&child_node).run(ctx)?;
                 Ok(())

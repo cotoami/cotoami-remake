@@ -15,7 +15,36 @@ use crate::{
     },
 };
 
-pub fn get<Conn: AsReadableConn>(
+pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ChildNode, Node)>> {
+    use crate::schema::{child_nodes, nodes};
+    read_op(move |conn| {
+        child_nodes::table
+            .inner_join(nodes::table)
+            .select((ChildNode::as_select(), Node::as_select()))
+            .order(child_nodes::created_at.desc())
+            .load::<(ChildNode, Node)>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ChildNode>> + '_ {
+    use crate::schema::child_nodes;
+    read_op(move |conn| {
+        child_nodes::table
+            .find(id)
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Result<ChildNode, DatabaseError>> + '_ {
+    get(id).map(|n| n.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
+}
+
+pub fn get_pair<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Option<(ChildNode, Node)>> + '_ {
     use crate::schema::{child_nodes, nodes};
@@ -30,10 +59,10 @@ pub fn get<Conn: AsReadableConn>(
     })
 }
 
-pub fn get_or_err<Conn: AsReadableConn>(
+pub fn get_pair_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<(ChildNode, Node), DatabaseError>> + '_ {
-    get(id).map(|n| n.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
+    get_pair(id).map(|n| n.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
 }
 
 pub fn get_by_session_token<Conn: AsReadableConn>(

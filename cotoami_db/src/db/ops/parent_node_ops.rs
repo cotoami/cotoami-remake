@@ -26,6 +26,18 @@ pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
     })
 }
 
+pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ParentNode, Node)>> {
+    use crate::schema::{nodes, parent_nodes};
+    read_op(move |conn| {
+        parent_nodes::table
+            .inner_join(nodes::table)
+            .select((ParentNode::as_select(), Node::as_select()))
+            .order(parent_nodes::created_at.desc())
+            .load::<(ParentNode, Node)>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn insert<'a>(
     new_parent_node: &'a NewParentNode<'a>,
 ) -> impl Operation<WritableConn, ParentNode> + 'a {
