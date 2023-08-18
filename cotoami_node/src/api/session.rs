@@ -2,7 +2,7 @@ use core::time::Duration;
 
 use anyhow::Result;
 use axum::{
-    extract::{Path, State},
+    extract::State,
     http::StatusCode,
     middleware,
     routing::{delete, put},
@@ -105,29 +105,33 @@ async fn create_owner_session(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PUT /api/session/child/:node_id
+// PUT /api/session/child
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize, Validate)]
+#[derive(serde::Deserialize)]
 struct CreateChildSession {
-    #[validate(required)]
-    password: Option<String>,
+    password: String,
+    child: Node,
+}
+
+#[derive(serde::Serialize)]
+struct ChildSessionCreated {
+    session: Session,
+    parent: Node,
 }
 
 async fn create_child_session(
     State(state): State<AppState>,
-    Path(node_id): Path<Id<Node>>,
     jar: CookieJar,
-    Form(form): Form<CreateChildSession>,
-) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
-    if let Err(errors) = form.validate() {
-        return ("session/child", errors).into_result();
-    }
+    Json(payload): Json<CreateChildSession>,
+) -> Result<(StatusCode, CookieJar, Json<ChildSessionCreated>), ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
+
+        // start session
         let child_node = db.start_child_session(
-            &node_id,
-            &form.password.unwrap(), // validated to be Some
+            &payload.child.uuid,
+            &payload.password, // validated to be Some
             Duration::from_secs(state.config.session_seconds()),
         )?;
         let session = Session {
@@ -135,7 +139,17 @@ async fn create_child_session(
             expires_at: child_node.session_expires_at.unwrap(),
         };
         let cookie = create_cookie(&session);
-        Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
+
+        // import the child node
+        if let Some((_, changelog)) = db.import_node(&payload.child)? {
+            state.publish_change(changelog)?;
+        }
+
+        // make response body
+        let (_, parent) = db.get_local_node()?.unwrap();
+        let result = ChildSessionCreated { session, parent };
+
+        Ok((StatusCode::CREATED, jar.add(cookie), Json(result)))
     })
     .await?
 }
