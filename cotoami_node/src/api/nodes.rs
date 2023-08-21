@@ -18,6 +18,7 @@ use crate::{
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/local", get(get_local_node))
+        .route("/parents", get(all_parent_nodes))
         .route("/children", get(recent_child_nodes).post(add_child_node))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -36,6 +37,26 @@ async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, Api
         } else {
             RequestError::new("local-node-not-yet-created").into_result()
         }
+    })
+    .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/parents
+/////////////////////////////////////////////////////////////////////////////
+
+async fn all_parent_nodes(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+) -> Result<Json<Vec<Node>>, ApiError> {
+    spawn_blocking(move || {
+        let mut db = state.db.create_session()?;
+        let nodes = db
+            .all_parent_nodes(&operator)?
+            .into_iter()
+            .map(|(_, node)| node)
+            .collect();
+        Ok(Json(nodes))
     })
     .await?
 }
