@@ -1,10 +1,24 @@
+use aes_gcm::{
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+    Aes256Gcm, Key,
+};
 use anyhow::Result;
+use argon2::Argon2;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel::{
+    backend::Backend, deserialize::FromSql, expression::AsExpression, prelude::*, serialize::ToSql,
+    sql_types::Binary, sqlite::Sqlite, FromSqlRow,
+};
+use generic_array::GenericArray;
+use uuid::Uuid;
 use validator::Validate;
 
 use super::Node;
 use crate::{models::Id, schema::parent_nodes};
+
+/////////////////////////////////////////////////////////////////////////////
+// ParentNode
+/////////////////////////////////////////////////////////////////////////////
 
 /// A row in `parent_nodes` table
 #[derive(
@@ -21,6 +35,9 @@ pub struct ParentNode {
 
     pub created_at: NaiveDateTime,
 
+    /// Saved password to connect to this parent node
+    pub encrypted_password: Option<EncryptedPassword>,
+
     /// Number of changes received from this parent node
     pub changes_received: i64,
 
@@ -32,7 +49,58 @@ impl ParentNode {
     // 2000 characters minus 500 for an API path after the prefix
     // cf. https://stackoverflow.com/a/417184
     pub const URL_PREFIX_MAX_LENGTH: usize = 1500;
+
+    pub fn save_password(&mut self, plaintext: &str, encryption_password: &str) -> Result<()> {
+        self.encrypted_password = Some(encrypt_password(plaintext, encryption_password)?);
+        Ok(())
+    }
+
+    pub fn password(&self, encryption_password: &str) -> Result<Option<String>> {
+        if let Some(ref encrypted_password) = self.encrypted_password {
+            let plaintext = decrypt_password(encrypted_password, encryption_password)?;
+            Ok(Some(plaintext))
+        } else {
+            Ok(None)
+        }
+    }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// EncryptedPassword
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(
+    Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
+)]
+#[diesel(sql_type = Binary)]
+pub struct EncryptedPassword {
+    salt: [u8; 16],
+    nonce: Vec<u8>,
+    ciphertext: Vec<u8>,
+}
+
+impl ToSql<Binary, Sqlite> for EncryptedPassword {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, Sqlite>,
+    ) -> diesel::serialize::Result {
+        let msgpack_bytes = rmp_serde::to_vec(&self)?;
+        // https://diesel.rs/guides/migration_guide.html#changed-tosql-implementations
+        out.set_value(msgpack_bytes);
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+impl FromSql<Binary, Sqlite> for EncryptedPassword {
+    fn from_sql(value: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        let msgpack_bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(value)?;
+        Ok(rmp_serde::from_slice(&msgpack_bytes)?)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// NewParentNode
+/////////////////////////////////////////////////////////////////////////////
 
 /// An `Insertable` parent node data
 #[derive(Insertable, Validate)]
@@ -54,4 +122,51 @@ impl<'a> NewParentNode<'a> {
         parent_node.validate()?;
         Ok(parent_node)
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Internal functions
+/////////////////////////////////////////////////////////////////////////////
+
+fn encrypt_password(plaintext: &str, encryption_password: &str) -> Result<EncryptedPassword> {
+    // Generate a salt
+    // A random salt is fine for that as long as its length is sufficient;
+    // a 16-byte salt would work well (by definition, UUID are very good salts).
+    // https://docs.rs/password-hash/0.5.0/password_hash/struct.Salt.html
+    let salt = Uuid::new_v4().into_bytes();
+
+    // Transform an `encryption_password` into an encryption key
+    let mut key = [0u8; 32];
+    Argon2::default().hash_password_into(encryption_password.as_bytes(), &salt, &mut key)?;
+    let key: &Key<Aes256Gcm> = &key.into();
+
+    // Encrypt the password
+    let cipher = Aes256Gcm::new(&key);
+    let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+    let ciphertext = cipher.encrypt(&nonce, plaintext.as_bytes())?;
+    Ok(EncryptedPassword {
+        salt,
+        nonce: nonce.to_vec(),
+        ciphertext,
+    })
+}
+
+fn decrypt_password(
+    encrypted_password: &EncryptedPassword,
+    encryption_password: &str,
+) -> Result<String> {
+    // Transform an `encryption_password` into an encryption key
+    let mut key = [0u8; 32];
+    Argon2::default().hash_password_into(
+        encryption_password.as_bytes(),
+        &encrypted_password.salt,
+        &mut key,
+    )?;
+    let key: &Key<Aes256Gcm> = &key.into();
+
+    // Decrypt the password
+    let cipher = Aes256Gcm::new(&key);
+    let nonce = GenericArray::from_slice(&encrypted_password.nonce[..]);
+    let plaintext = cipher.decrypt(&nonce, encrypted_password.ciphertext.as_ref())?;
+    Ok(String::from_utf8(plaintext)?)
 }

@@ -80,10 +80,25 @@ pub(crate) trait IntoApiResult<T> {
 #[derive(serde::Serialize)]
 pub(crate) struct RequestError {
     code: String,
+    params: HashMap<String, Value>,
 }
 
 impl RequestError {
-    pub fn new(code: impl Into<String>) -> Self { Self { code: code.into() } }
+    pub fn new(code: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            params: HashMap::default(),
+        }
+    }
+
+    pub fn insert_param(&mut self, key: impl Into<String>, value: Value) {
+        self.params.insert(key.into(), value);
+    }
+
+    pub fn with_param(mut self, key: impl Into<String>, value: Value) -> Self {
+        self.insert_param(key, value);
+        self
+    }
 }
 
 impl<T> IntoApiResult<T> for RequestError {

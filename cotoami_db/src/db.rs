@@ -351,6 +351,22 @@ impl<'a> DatabaseSession<'a> {
         Ok(self.require_parent_node(id)?.clone())
     }
 
+    pub fn save_parent_node_password(
+        &mut self,
+        id: &Id<Node>,
+        password: &str,
+        encryption_password: &str,
+        operator: &Operator,
+    ) -> Result<ParentNode> {
+        operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
+        let mut parent_node = self.require_parent_node(id)?;
+        parent_node.save_password(password, encryption_password)?;
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            parent_node_ops::update(&parent_node),
+        )
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // child nodes
     /////////////////////////////////////////////////////////////////////////////
@@ -429,6 +445,18 @@ impl<'a> DatabaseSession<'a> {
             |ctx: &mut Context<'_, WritableConn>| {
                 let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
                 child_node.clear_session();
+                child_node_ops::update(&child_node).run(ctx)?;
+                Ok(())
+            },
+        )
+    }
+
+    pub fn change_child_password(&mut self, id: &Id<Node>, password: &str) -> Result<()> {
+        op::run_in_transaction(
+            &mut (self.get_rw_conn)(),
+            |ctx: &mut Context<'_, WritableConn>| {
+                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
+                child_node.update_password(password)?;
                 child_node_ops::update(&child_node).run(ctx)?;
                 Ok(())
             },

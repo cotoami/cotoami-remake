@@ -13,22 +13,24 @@ fn import_changes() -> Result<()> {
     let mut session1 = db1.create_session()?;
 
     let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
-    let operator = session1.local_node_as_operator()?;
+    let operator1 = session1.local_node_as_operator()?;
     let (node1_root_cotonoma, node1_root_coto) = session1.get_root_cotonoma()?.unwrap();
 
     let (db1_coto, db1_change2) =
-        session1.post_coto("hello", None, &node1_root_cotonoma, &operator)?;
+        session1.post_coto("hello", None, &node1_root_cotonoma, &operator1)?;
     let (db1_edited_coto, db1_change3) =
-        session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &operator)?;
-    let db1_change4 = session1.delete_coto(&db1_coto.uuid, &operator)?;
+        session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &operator1)?;
+    let db1_change4 = session1.delete_coto(&db1_coto.uuid, &operator1)?;
 
     let db2_dir = tempdir()?;
     let db2 = Database::new(&db2_dir)?;
     let mut session2 = db2.create_session()?;
+
     let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
+    let operator2 = session2.local_node_as_operator()?;
 
     let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
-    let parent = session2.add_parent_node(&node1.uuid, "https://node1", &operator)?;
+    let parent = session2.add_parent_node(&node1.uuid, "https://node1", &operator2)?;
     assert_eq!(parent.changes_received, 0);
 
     // when: import change1 (init_as_node)

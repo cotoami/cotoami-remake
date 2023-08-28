@@ -7,7 +7,7 @@ pub mod common;
 #[test]
 fn crud_operations() -> Result<()> {
     // setup
-    let (_root_dir, db, node) = common::setup_db()?;
+    let (_root_dir, db, node) = common::setup_db("My Node")?;
     let mut session = db.create_session()?;
     let operator = session.local_node_as_operator()?;
     let (root_cotonoma, _) = session.get_root_cotonoma()?.unwrap();

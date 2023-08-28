@@ -29,10 +29,10 @@ pub(super) fn routes() -> Router<AppState> {
         .route("/child", put(create_child_session))
 }
 
-#[derive(serde::Serialize)]
-struct Session {
-    token: String,
-    expires_at: NaiveDateTime, // UTC
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct Session {
+    pub token: String,
+    pub expires_at: NaiveDateTime, // UTC
 }
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
@@ -108,16 +108,17 @@ async fn create_owner_session(
 // PUT /api/session/child
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize)]
-struct CreateChildSession {
-    password: String,
-    child: Node,
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct CreateChildSession {
+    pub password: String,
+    pub new_password: Option<String>,
+    pub child: Node,
 }
 
-#[derive(serde::Serialize)]
-struct ChildSessionCreated {
-    session: Session,
-    parent: Node,
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct ChildSessionCreated {
+    pub session: Session,
+    pub parent: Node,
 }
 
 async fn create_child_session(
@@ -139,6 +140,11 @@ async fn create_child_session(
             expires_at: child_node.session_expires_at.unwrap(),
         };
         let cookie = create_cookie(&session);
+
+        // change password
+        if let Some(new_password) = payload.new_password {
+            db.change_child_password(&payload.child.uuid, &new_password)?;
+        }
 
         // import the child node
         if let Some((_, changelog)) = db.import_node(&payload.child)? {

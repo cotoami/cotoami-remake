@@ -50,6 +50,7 @@ diesel::table! {
         node_id -> Text,
         url_prefix -> Text,
         created_at -> Timestamp,
+        encrypted_password -> Nullable<Binary>,
         changes_received -> BigInt,
         last_change_received_at -> Nullable<Timestamp>,
     }

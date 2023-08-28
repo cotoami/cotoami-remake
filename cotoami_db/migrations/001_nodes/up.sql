@@ -65,6 +65,9 @@ CREATE TABLE parent_nodes (
   -- Date when this connection was created
   created_at DATETIME NOT NULL, -- UTC
 
+  -- Saved password to connect to this parent node
+  encrypted_password BLOB,
+
   -- Number of changes received from this parent node
   -- This number corresponds to `changelog.serial_number` in the parent node.
   changes_received INTEGER DEFAULT 0 NOT NULL,

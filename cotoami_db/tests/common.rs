@@ -3,11 +3,11 @@ use chrono::{DateTime, Duration, Local};
 use cotoami_db::prelude::*;
 use tempfile::{tempdir, NamedTempFile, TempDir, TempPath};
 
-pub fn setup_db<'a>() -> Result<(TempDir, Database, Node)> {
+pub fn setup_db<'a>(name: &str) -> Result<(TempDir, Database, Node)> {
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
     let mut session = db.create_session()?;
-    let ((_, node), _) = session.init_as_node(Some("My Node"), None)?;
+    let ((_, node), _) = session.init_as_node(Some(name), None)?;
     drop(session);
     Ok((root_dir, db, node))
 }

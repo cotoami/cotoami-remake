@@ -50,6 +50,15 @@ pub fn insert<'a>(
     })
 }
 
+pub fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, ParentNode> + '_ {
+    write_op(move |conn| {
+        diesel::update(parent_node)
+            .set(parent_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn set_changes_received(
     id: &Id<Node>,
     number: i64,

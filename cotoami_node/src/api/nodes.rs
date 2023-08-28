@@ -6,9 +6,12 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
+use reqwest::Url;
+use serde_json::json;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
+use super::session::{ChildSessionCreated, CreateChildSession};
 use crate::{
     api::Pagination,
     error::{ApiError, IntoApiResult, RequestError},
@@ -18,7 +21,7 @@ use crate::{
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/local", get(get_local_node))
-        .route("/parents", get(all_parent_nodes))
+        .route("/parents", get(all_parent_nodes).post(add_parent_node))
         .route("/children", get(recent_child_nodes).post(add_child_node))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -59,6 +62,77 @@ async fn all_parent_nodes(
         Ok(Json(nodes))
     })
     .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// POST /api/nodes/parents
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Deserialize, Validate)]
+struct AddParentNode {
+    #[validate(required, url)]
+    url_prefix: Option<String>,
+
+    #[validate(required)]
+    password: Option<String>,
+}
+
+async fn add_parent_node(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+    Form(form): Form<AddParentNode>,
+) -> Result<StatusCode, ApiError> {
+    if let Err(errors) = form.validate() {
+        return ("nodes/parent", errors).into_result();
+    }
+
+    // Get the local node
+    let db = state.db.clone();
+    let (_, node) = spawn_blocking(move || db.create_session()?.get_local_node())
+        .await??
+        .unwrap();
+
+    // Attempt to log in to the parent node
+    let url_prefix = form.url_prefix.unwrap(); // validated to be Some
+    let url = Url::parse(&url_prefix)?.join("/api/session/child")?;
+    let password = form.password.unwrap(); // validated to be Some
+    let req_body = CreateChildSession {
+        password: password.clone(),
+        new_password: None, // TODO
+        child: node,
+    };
+    let client = reqwest::Client::new();
+    let response = client.put(url).json(&req_body).send().await?;
+
+    // Handle response error
+    if response.status() != reqwest::StatusCode::CREATED {
+        return RequestError::new("parent-node-error")
+            .with_param("url", json!(response.url().to_string()))
+            .with_param("status", json!(response.status().as_u16()))
+            .with_param("body", json!(response.text().await?))
+            .into_result();
+    }
+
+    // Register the parent node
+    let res_body = response.json::<ChildSessionCreated>().await?;
+    spawn_blocking(move || {
+        let parent_id = &res_body.parent.uuid;
+        let owner_password = state.config.owner_password.as_deref().unwrap();
+        let mut db = state.db.create_session()?;
+        db.import_node(&res_body.parent)?;
+        // TODO: add_parent_node should be upsert
+        db.add_parent_node(parent_id, &url_prefix, &operator)?;
+        db.save_parent_node_password(parent_id, &password, owner_password, &operator)?;
+        db.get_parent_node(parent_id)
+    })
+    .await?
+    .ok();
+
+    // Save the session token
+    // Import the changelog
+    // Connect to the event stream
+
+    Ok(StatusCode::CREATED)
 }
 
 /////////////////////////////////////////////////////////////////////////////
