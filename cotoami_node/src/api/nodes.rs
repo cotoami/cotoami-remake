@@ -21,7 +21,7 @@ use crate::{
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/local", get(get_local_node))
-        .route("/parents", get(all_parent_nodes).post(add_parent_node))
+        .route("/parents", get(all_parent_nodes).put(put_parent_node))
         .route("/children", get(recent_child_nodes).post(add_child_node))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -65,11 +65,11 @@ async fn all_parent_nodes(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// POST /api/nodes/parents
+// PUT /api/nodes/parents
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-struct AddParentNode {
+struct PutParentNode {
     #[validate(required, url)]
     url_prefix: Option<String>,
 
@@ -77,10 +77,10 @@ struct AddParentNode {
     password: Option<String>,
 }
 
-async fn add_parent_node(
+async fn put_parent_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
-    Form(form): Form<AddParentNode>,
+    Form(form): Form<PutParentNode>,
 ) -> Result<StatusCode, ApiError> {
     if let Err(errors) = form.validate() {
         return ("nodes/parent", errors).into_result();
