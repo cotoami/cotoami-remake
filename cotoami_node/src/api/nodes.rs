@@ -120,10 +120,8 @@ async fn add_parent_node(
         let owner_password = state.config.owner_password.as_deref().unwrap();
         let mut db = state.db.create_session()?;
         db.import_node(&res_body.parent)?;
-        // TODO: add_parent_node should be upsert
-        db.add_parent_node(parent_id, &url_prefix, &operator)?;
-        db.save_parent_node_password(parent_id, &password, owner_password, &operator)?;
-        db.get_parent_node(parent_id)
+        db.put_parent_node(parent_id, &url_prefix, &operator)?;
+        db.save_parent_node_password(parent_id, &password, owner_password, &operator)
     })
     .await?
     .ok();

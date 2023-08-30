@@ -324,27 +324,36 @@ impl<'a> DatabaseSession<'a> {
         op::run(&mut self.ro_conn, parent_node_ops::all_pairs())
     }
 
-    /// Add a parent node by its ID.
+    /// Insert or update a parent node. It is an idempotent operation.
     ///
-    /// The node specified by the ID has to be imported before added as a parent.
-    pub fn add_parent_node(
+    /// The node has to be imported before registered as a parent.
+    pub fn put_parent_node(
         &mut self,
         id: &Id<Node>,
         url_prefix: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
-        operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Create)?;
-        let new_parent_node = NewParentNode::new(id, url_prefix)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
-                (self.get_globals)()
-                    .parent_nodes
-                    .insert(*id, parent_node.clone());
-                Ok(parent_node)
-            },
-        )
+        if let Some(parent_node) = (self.get_globals)().parent_nodes.get_mut(id) {
+            operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
+            parent_node.url_prefix = url_prefix.into();
+            op::run_in_transaction(
+                &mut (self.get_rw_conn)(),
+                parent_node_ops::update(&parent_node),
+            )
+        } else {
+            operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Create)?;
+            let new_parent_node = NewParentNode::new(id, url_prefix)?;
+            op::run_in_transaction(
+                &mut (self.get_rw_conn)(),
+                |ctx: &mut Context<'_, WritableConn>| {
+                    let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
+                    (self.get_globals)()
+                        .parent_nodes
+                        .insert(*id, parent_node.clone());
+                    Ok(parent_node)
+                },
+            )
+        }
     }
 
     pub fn get_parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
