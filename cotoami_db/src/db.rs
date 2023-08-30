@@ -347,8 +347,8 @@ impl<'a> DatabaseSession<'a> {
         )
     }
 
-    pub fn get_parent_node(&mut self, id: &Id<Node>) -> Result<ParentNode> {
-        Ok(self.require_parent_node(id)?.clone())
+    pub fn get_parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
+        (self.get_globals)().parent_nodes.get(id).map(|n| n.clone())
     }
 
     pub fn save_parent_node_password(

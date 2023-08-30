@@ -23,7 +23,7 @@ fn save_password() -> Result<()> {
     )?;
 
     // then
-    let parent_node = session1.get_parent_node(&node2.uuid)?;
+    let parent_node = session1.get_parent_node(&node2.uuid).unwrap();
     assert_eq!(
         parent_node
             .password("invalid-password")

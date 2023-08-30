@@ -37,7 +37,13 @@ fn import_changes() -> Result<()> {
     let db2_change3 = session2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
 
     // then
-    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 1);
+    assert_eq!(
+        session2
+            .get_parent_node(&node1.uuid)
+            .unwrap()
+            .changes_received,
+        1
+    );
     assert_matches!(
         db2_change3,
         ChangelogEntry {
@@ -74,7 +80,13 @@ fn import_changes() -> Result<()> {
     let db2_change4 = session2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
 
     // then
-    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 2);
+    assert_eq!(
+        session2
+            .get_parent_node(&node1.uuid)
+            .unwrap()
+            .changes_received,
+        2
+    );
     assert_matches!(
         db2_change4,
         ChangelogEntry {
@@ -97,7 +109,13 @@ fn import_changes() -> Result<()> {
     let db2_change5 = session2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
 
     // then
-    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 3);
+    assert_eq!(
+        session2
+            .get_parent_node(&node1.uuid)
+            .unwrap()
+            .changes_received,
+        3
+    );
     assert_matches!(
         db2_change5,
         ChangelogEntry {
@@ -120,7 +138,13 @@ fn import_changes() -> Result<()> {
     let db2_change6 = session2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
 
     // then
-    assert_eq!(session2.get_parent_node(&node1.uuid)?.changes_received, 4);
+    assert_eq!(
+        session2
+            .get_parent_node(&node1.uuid)
+            .unwrap()
+            .changes_received,
+        4
+    );
     assert_matches!(
         db2_change6,
         ChangelogEntry {
