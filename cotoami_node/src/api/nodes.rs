@@ -115,18 +115,23 @@ async fn put_parent_node(
 
     // Register the parent node
     let res_body = response.json::<ChildSessionCreated>().await?;
+    let parent_id = res_body.parent.uuid;
     spawn_blocking(move || {
-        let parent_id = &res_body.parent.uuid;
         let owner_password = state.config.owner_password.as_deref().unwrap();
         let mut db = state.db.create_session()?;
         db.import_node(&res_body.parent)?;
-        db.put_parent_node(parent_id, &url_prefix, &operator)?;
-        db.save_parent_node_password(parent_id, &password, owner_password, &operator)
+        db.put_parent_node(&parent_id, &url_prefix, &operator)?;
+        db.save_parent_node_password(&parent_id, &password, owner_password, &operator)
     })
     .await?
     .ok();
 
     // Save the session token
+    state
+        .parent_sessions
+        .lock()
+        .insert(parent_id, Ok(res_body.session));
+
     // Import the changelog
     // Connect to the event stream
 

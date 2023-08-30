@@ -1,4 +1,6 @@
-use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{
+    collections::HashMap, convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc,
+};
 
 use anyhow::{bail, Result};
 use axum::{
@@ -13,6 +15,8 @@ use parking_lot::Mutex;
 use pubsub::Publisher;
 use tracing::info;
 use validator::Validate;
+
+use crate::api::session::Session;
 
 mod api;
 mod csrf;
@@ -57,10 +61,14 @@ fn build_state() -> Result<AppState> {
     fs::create_dir(&db_dir).ok();
     let db = Database::new(db_dir)?;
 
+    let parent_sessions = HashMap::default();
+    // TODO restore sessions
+
     Ok(AppState {
         config: Arc::new(config),
         pubsub: Arc::new(Mutex::new(pubsub)),
         db: Arc::new(db),
+        parent_sessions: Arc::new(Mutex::new(parent_sessions)),
     })
 }
 
@@ -143,6 +151,7 @@ struct AppState {
     config: Arc<Config>,
     pubsub: Arc<Mutex<Publisher<Result<Event, Infallible>>>>,
     db: Arc<Database>,
+    parent_sessions: Arc<Mutex<HashMap<Id<Node>, Result<Session>>>>,
 }
 
 impl AppState {

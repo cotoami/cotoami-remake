@@ -17,7 +17,7 @@ use crate::{error::ApiError, AppState};
 mod cotos;
 mod events;
 mod nodes;
-mod session;
+pub(crate) mod session;
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
