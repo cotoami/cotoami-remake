@@ -1,9 +1,11 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use assert_matches::assert_matches;
 use cotoami_db::prelude::*;
 use tempfile::tempdir;
-
 pub mod common;
+use chrono::offset::Utc;
 
 #[test]
 fn import_changes() -> Result<()> {
@@ -173,4 +175,61 @@ where
     let json_string = serde_json::to_string(log)?;
     let deserialized = serde_json::from_str(&json_string)?;
     Ok(deserialized)
+}
+
+#[test]
+fn duplicate_changes_from_different_parents() -> Result<()> {
+    // setup
+    let (_dir1, db1, _) = common::setup_db("Node1")?;
+    let (_dir2, _, node2) = common::setup_db("Node2")?;
+    let (_dir3, _, node3) = common::setup_db("Node3")?;
+
+    let mut session = db1.create_session()?;
+    let operator = session.local_node_as_operator()?;
+    session.import_node(&node2)?;
+    session.put_parent_node(&node2.uuid, "https://node2", &operator)?;
+    session.import_node(&node3)?;
+    session.put_parent_node(&node3.uuid, "https://node3", &operator)?;
+
+    let origin_node_id = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+    let src_change = ChangelogEntry {
+        serial_number: 1,
+        origin_node_id,
+        origin_serial_number: 1,
+        change: Change::None,
+        inserted_at: Utc::now().naive_utc(),
+    };
+
+    let imported_change1 = session.import_change(&src_change, &node2.uuid)?;
+    assert_matches!(
+        imported_change1,
+        Some(ChangelogEntry {
+            serial_number: 4,
+            origin_node_id,
+            origin_serial_number: 1,
+            ..
+        }) if origin_node_id == origin_node_id
+    );
+    assert_eq!(
+        session
+            .get_parent_node(&node2.uuid)
+            .unwrap()
+            .changes_received,
+        1
+    );
+
+    // when
+    let imported_change2 = session.import_change(&src_change, &node3.uuid)?;
+
+    // then
+    assert!(imported_change2.is_none());
+    assert_eq!(
+        session
+            .get_parent_node(&node3.uuid)
+            .unwrap()
+            .changes_received,
+        1
+    );
+
+    Ok(())
 }
