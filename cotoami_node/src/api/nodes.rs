@@ -6,14 +6,14 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
-use reqwest::Url;
 use serde_json::json;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
-use super::session::{ChildSessionCreated, CreateChildSession};
+use super::session::ChildSessionCreated;
 use crate::{
     api::Pagination,
+    client::Server,
     error::{ApiError, IntoApiResult, RequestError},
     AppState,
 };
@@ -93,16 +93,15 @@ async fn put_parent_node(
         .unwrap();
 
     // Attempt to log in to the parent node
-    let url_prefix = form.url_prefix.unwrap(); // validated to be Some
-    let url = Url::parse(&url_prefix)?.join("/api/session/child")?;
-    let password = form.password.unwrap(); // validated to be Some
-    let req_body = CreateChildSession {
-        password: password.clone(),
-        new_password: None, // TODO
-        child: node,
-    };
-    let client = reqwest::Client::new();
-    let response = client.put(url).json(&req_body).send().await?;
+    let password = form.password.unwrap();
+    let server = Server::new(form.url_prefix.unwrap());
+    let response = server
+        .create_child_session(
+            password.clone(),
+            None, // TODO
+            node,
+        )
+        .await?;
 
     // Handle response error
     if response.status() != reqwest::StatusCode::CREATED {
@@ -120,7 +119,7 @@ async fn put_parent_node(
         let owner_password = state.config.owner_password.as_deref().unwrap();
         let mut db = state.db.create_session()?;
         db.import_node(&res_body.parent)?;
-        db.put_parent_node(&parent_id, &url_prefix, &operator)?;
+        db.put_parent_node(&parent_id, server.url_prefix(), &operator)?;
         db.save_parent_node_password(&parent_id, &password, owner_password, &operator)
     })
     .await?

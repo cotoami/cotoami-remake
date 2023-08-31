@@ -19,6 +19,7 @@ use validator::Validate;
 use crate::api::session::Session;
 
 mod api;
+mod client;
 mod csrf;
 mod error;
 mod pubsub;
