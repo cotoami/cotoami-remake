@@ -88,7 +88,7 @@ fn crud_operations() -> Result<()> {
             origin_serial_number: 3,
             change: Change::EditCoto {
                 uuid,
-                content: Some(ref content),
+                content,
                 summary: Some(ref summary),
                 updated_at,
             },

@@ -591,8 +591,8 @@ impl<'a> DatabaseSession<'a> {
                 let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
                 let change = Change::EditCoto {
                     uuid: *id,
-                    content: coto.content.clone(),
-                    summary: coto.summary.clone(),
+                    content: content.into(),
+                    summary: summary.map(String::from),
                     updated_at: coto.updated_at,
                 };
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;

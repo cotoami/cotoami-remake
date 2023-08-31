@@ -89,7 +89,7 @@ pub enum Change {
     CreateCoto(Coto),
     EditCoto {
         uuid: Id<Coto>,
-        content: Option<String>,
+        content: String,
         summary: Option<String>,
         updated_at: NaiveDateTime,
     },
