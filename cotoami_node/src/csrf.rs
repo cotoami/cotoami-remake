@@ -19,7 +19,7 @@ const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTI
 
 // https://github.com/rust-lang/rust-clippy/issues/9776
 #[allow(clippy::declare_interior_mutable_const)]
-const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
+pub(crate) const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
 pub(super) async fn protect_from_forgery<B>(
     Extension(state): Extension<AppState>,

@@ -1,8 +1,14 @@
 use anyhow::Result;
 use cotoami_db::prelude::Node;
-use reqwest::{Client, Response, Url};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Client, Response, Url,
+};
 
-use crate::api::session::CreateChildSession;
+use crate::{
+    api::{session::CreateChildSession, SESSION_HEADER_NAME},
+    csrf,
+};
 
 pub(crate) struct Server {
     client: Client,
@@ -10,11 +16,21 @@ pub(crate) struct Server {
 }
 
 impl Server {
-    pub fn new(url_prefix: String) -> Self {
-        Self {
-            client: Client::new(),
-            url_prefix,
-        }
+    pub fn new(url_prefix: String, session_token: Option<&str>) -> Result<Self> {
+        // Default request headers
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            csrf::CUSTOM_HEADER,
+            HeaderValue::from_static("cotoami_node"),
+        );
+        if let Some(token) = session_token {
+            let mut token = HeaderValue::from_str(token)?;
+            token.set_sensitive(true);
+            headers.insert(SESSION_HEADER_NAME, token);
+        };
+
+        let client = Client::builder().default_headers(headers).build()?;
+        Ok(Self { client, url_prefix })
     }
 
     pub fn url_prefix(&self) -> &str { &self.url_prefix }

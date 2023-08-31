@@ -38,7 +38,8 @@ const SESSION_COOKIE_NAME: &str = "session_token";
 
 // https://github.com/rust-lang/rust-clippy/issues/9776
 #[allow(clippy::declare_interior_mutable_const)]
-const SESSION_HEADER_NAME: HeaderName = HeaderName::from_static("x-cotoami-session-token");
+pub(crate) const SESSION_HEADER_NAME: HeaderName =
+    HeaderName::from_static("x-cotoami-session-token");
 
 /// A middleware function to identify the operator from a session.
 async fn require_session<B>(
