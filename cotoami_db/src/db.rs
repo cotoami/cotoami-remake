@@ -333,7 +333,8 @@ impl<'a> DatabaseSession<'a> {
         url_prefix: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
-        if let Some(parent_node) = (self.get_globals)().parent_nodes.get_mut(id) {
+        let mut globals = (self.get_globals)();
+        if let Some(parent_node) = globals.parent_nodes.get_mut(id) {
             operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
             parent_node.url_prefix = url_prefix.into();
             op::run_in_transaction(
@@ -347,9 +348,7 @@ impl<'a> DatabaseSession<'a> {
                 &mut (self.get_rw_conn)(),
                 |ctx: &mut Context<'_, WritableConn>| {
                     let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
-                    (self.get_globals)()
-                        .parent_nodes
-                        .insert(*id, parent_node.clone());
+                    globals.parent_nodes.insert(*id, parent_node.clone());
                     Ok(parent_node)
                 },
             )
