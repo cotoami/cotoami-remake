@@ -26,7 +26,7 @@ pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<Cha
     })
 }
 
-pub fn get_last_serial_number<Conn: AsReadableConn>(
+pub fn get_last_origin_serial_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
     use diesel::dsl::max;
@@ -46,7 +46,9 @@ pub fn log_change<'a>(
     local_node_id: &'a Id<Node>,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
     composite_op::<WritableConn, _, _>(|ctx| {
-        let last_number = get_last_serial_number(local_node_id).run(ctx)?.unwrap_or(0);
+        let last_number = get_last_origin_serial_number(local_node_id)
+            .run(ctx)?
+            .unwrap_or(0);
         let new_entry = change.new_changelog_entry(local_node_id, last_number + 1);
         insert(&new_entry).run(ctx)
     })
