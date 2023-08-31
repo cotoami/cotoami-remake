@@ -7,7 +7,7 @@ pub mod common;
 
 #[test]
 fn import_changes() -> Result<()> {
-    // setup
+    // setup: db1
     let db1_dir = tempdir()?;
     let db1 = Database::new(&db1_dir)?;
     let mut session1 = db1.create_session()?;
@@ -22,6 +22,7 @@ fn import_changes() -> Result<()> {
         session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &operator1)?;
     let db1_change4 = session1.delete_coto(&db1_coto.uuid, &operator1)?;
 
+    // setup: db2
     let db2_dir = tempdir()?;
     let db2 = Database::new(&db2_dir)?;
     let mut session2 = db2.create_session()?;

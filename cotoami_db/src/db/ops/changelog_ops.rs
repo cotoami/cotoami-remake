@@ -64,6 +64,20 @@ pub fn insert<'a>(
     })
 }
 
+pub fn contains_change<Conn: AsReadableConn>(
+    log: &ChangelogEntry,
+) -> impl Operation<Conn, bool> + '_ {
+    use crate::schema::changelog::dsl::*;
+    read_op(move |conn| {
+        changelog
+            .count()
+            .filter(origin_node_id.eq(log.origin_node_id))
+            .get_result(conn)
+            .map(|c: i64| c > 0)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn import_change<'a>(
     log: &'a ChangelogEntry,
     parent_node: &'a mut ParentNode,
