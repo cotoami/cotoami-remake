@@ -47,13 +47,13 @@ fn import_changes() -> Result<()> {
     );
     assert_matches!(
         db2_change3,
-        ChangelogEntry {
+        Some(ChangelogEntry {
             serial_number: 3,
             origin_node_id,
             origin_serial_number,
             change,
             ..
-        } if origin_node_id == node1.uuid &&
+        }) if origin_node_id == node1.uuid &&
              origin_serial_number == db1_change1.origin_serial_number &&
              change == db1_change1.change
     );
@@ -90,13 +90,13 @@ fn import_changes() -> Result<()> {
     );
     assert_matches!(
         db2_change4,
-        ChangelogEntry {
+        Some(ChangelogEntry {
             serial_number: 4,
             origin_node_id,
             origin_serial_number,
             change,
             ..
-        } if origin_node_id == node1.uuid &&
+        }) if origin_node_id == node1.uuid &&
              origin_serial_number == db1_change2.origin_serial_number &&
              change == db1_change2.change
     );
@@ -119,13 +119,13 @@ fn import_changes() -> Result<()> {
     );
     assert_matches!(
         db2_change5,
-        ChangelogEntry {
+        Some(ChangelogEntry {
             serial_number: 5,
             origin_node_id,
             origin_serial_number,
             change,
             ..
-        } if origin_node_id == node1.uuid &&
+        }) if origin_node_id == node1.uuid &&
              origin_serial_number == db1_change3.origin_serial_number &&
              change == db1_change3.change
     );
@@ -148,13 +148,13 @@ fn import_changes() -> Result<()> {
     );
     assert_matches!(
         db2_change6,
-        ChangelogEntry {
+        Some(ChangelogEntry {
             serial_number: 6,
             origin_node_id,
             origin_serial_number,
             change,
             ..
-        } if origin_node_id == node1.uuid &&
+        }) if origin_node_id == node1.uuid &&
              origin_serial_number == db1_change4.origin_serial_number &&
              change == db1_change4.change
     );

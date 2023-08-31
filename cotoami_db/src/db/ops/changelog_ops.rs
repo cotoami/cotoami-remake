@@ -71,19 +71,37 @@ pub fn contains_change<Conn: AsReadableConn>(
     read_op(move |conn| {
         changelog
             .count()
-            .filter(origin_node_id.eq(log.origin_node_id))
+            .filter(
+                origin_node_id
+                    .eq(log.origin_node_id)
+                    .and(origin_serial_number.eq(log.origin_serial_number)),
+            )
             .get_result(conn)
             .map(|c: i64| c > 0)
             .map_err(anyhow::Error::from)
     })
 }
 
+/// Import a change sent from the `parent_node`.
+///
+/// ## Ensure to apply changes in order of the serial number for each `parent_node`
+///
+/// The serial number of the change has to be the value of
+/// [ParentNode::changes_received] plus one, otherwise an error will be returned.
+/// After the change has been accepted successfully, the value of
+/// [ParentNode::changes_received] will be incremented and saved in the database.
+///
+/// ## The possibility of the same changes from multiple parent nodes
+///
+/// The same changes (with the same serial number in the same origin) could be sent
+/// from multiple parent nodes. If the database already contains the same change,
+/// the change will be ignored yet the `changes_received` will be incremented.
 pub fn import_change<'a>(
     log: &'a ChangelogEntry,
     parent_node: &'a mut ParentNode,
-) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
+) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        // check the serial number of the change
+        // Check the serial number of the change
         let expected_number = parent_node.changes_received + 1;
         ensure!(
             log.serial_number == expected_number,
@@ -93,17 +111,20 @@ pub fn import_change<'a>(
             parent_node.node_id
         );
 
-        // apply the change
-        apply_change(&log.change).run(ctx)?;
+        // Import the change only if the same change has not yet been imported before.
+        let log_entry = if contains_change(&log).run(ctx)? {
+            None
+        } else {
+            apply_change(&log.change).run(ctx)?;
+            let log_entry = insert(&log.to_import()).run(ctx)?;
+            Some(log_entry)
+        };
 
-        // import the remote changelog entry
-        let log_entry = insert(&log.to_import()).run(ctx)?;
-
-        // increment the count of received changes
+        // Increment the count of received changes
         *parent_node = parent_node_ops::set_changes_received(
             &parent_node.node_id,
             expected_number,
-            Some(log_entry.inserted_at),
+            log_entry.as_ref().map(|e| e.inserted_at),
         )
         .run(ctx)?;
 

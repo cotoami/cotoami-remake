@@ -510,7 +510,7 @@ impl<'a> DatabaseSession<'a> {
         &self,
         log: &ChangelogEntry,
         parent_node_id: &Id<Node>,
-    ) -> Result<ChangelogEntry> {
+    ) -> Result<Option<ChangelogEntry>> {
         let mut parent_node = self.require_parent_node(parent_node_id)?;
         op::run_in_transaction(
             &mut (self.get_rw_conn)(),
