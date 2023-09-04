@@ -117,7 +117,7 @@ async fn put_parent_node(
     let parent_id = res_body.parent.uuid;
     spawn_blocking(move || {
         let owner_password = state.config.owner_password.as_deref().unwrap();
-        let mut db = state.db.create_session()?;
+        let db = state.db.create_session()?;
         db.import_node(&res_body.parent)?;
         db.put_parent_node(&parent_id, server.url_prefix(), &operator)?;
         db.save_parent_node_password(&parent_id, &password, owner_password, &operator)
@@ -190,7 +190,7 @@ async fn add_child_node(
         return ("nodes/child", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let db = state.db.create_session()?;
         db.add_child_node(
             form.id.unwrap(),        // validated to be Some
             &form.password.unwrap(), // validated to be Some

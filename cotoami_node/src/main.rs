@@ -157,7 +157,7 @@ struct AppState {
 
 impl AppState {
     fn init_local_node(&self) -> Result<()> {
-        let mut db = self.db.create_session()?;
+        let db = self.db.create_session()?;
 
         // If the local node already exists,
         // its name and password can be changed via config

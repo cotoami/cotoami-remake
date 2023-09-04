@@ -85,7 +85,7 @@ fn duplicate_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.create_session()?;
+    let session = db.create_session()?;
     session.init_as_node(None, None)?;
 
     // when
@@ -104,7 +104,7 @@ fn owner_session() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.create_session()?;
+    let session = db.create_session()?;
     let duration = Duration::minutes(30);
 
     // when

@@ -198,32 +198,29 @@ impl<'a> DatabaseSession<'a> {
     pub fn is_local_node_initialized(&self) -> bool { self.require_local_node().is_ok() }
 
     pub fn init_as_node(
-        &mut self,
+        &self,
         name: Option<&str>,
         password: Option<&str>,
     ) -> Result<((LocalNode, Node), ChangelogEntry)> {
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let (local_node, mut node) =
-                    local_node_ops::create(name.unwrap_or_default(), password).run(ctx)?;
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let (local_node, mut node) =
+                local_node_ops::create(name.unwrap_or_default(), password).run(ctx)?;
 
-                // Create a root cotonoma if the `name` is not None
-                let change = if let Some(name) = name {
-                    let (node_updated, cotonoma, coto) =
-                        node_ops::create_root_cotonoma(&node.uuid, name).run(ctx)?;
-                    node = node_updated;
-                    Change::CreateNode(node, Some((cotonoma, coto)))
-                } else {
-                    Change::CreateNode(node, None)
-                };
+            // Create a root cotonoma if the `name` is not None
+            let change = if let Some(name) = name {
+                let (node_updated, cotonoma, coto) =
+                    node_ops::create_root_cotonoma(&node.uuid, name).run(ctx)?;
+                node = node_updated;
+                Change::CreateNode(node, Some((cotonoma, coto)))
+            } else {
+                Change::CreateNode(node, None)
+            };
 
-                let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
+            let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
 
-                let Change::CreateNode(node, _) = change else { panic!() };
-                Ok(((local_node, node), changelog))
-            },
-        )
+            let Change::CreateNode(node, _) = change else { panic!() };
+            Ok(((local_node, node), changelog))
+        })
         .map(|((local_node, node), changelog)| {
             let mut globals = (self.get_globals)();
             globals.local_node = Some(local_node.clone());
@@ -232,22 +229,19 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn rename_local_node(&mut self, name: &str) -> Result<(Node, ChangelogEntry)> {
+    pub fn rename_local_node(&self, name: &str) -> Result<(Node, ChangelogEntry)> {
         let local_node_id = self.require_local_node()?.node_id;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let updated_at = crate::current_datetime();
-                let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
-                let change = Change::RenameNode {
-                    uuid: local_node_id,
-                    name: name.into(),
-                    updated_at,
-                };
-                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                Ok((node, changelog))
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let updated_at = crate::current_datetime();
+            let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
+            let change = Change::RenameNode {
+                uuid: local_node_id,
+                name: name.into(),
+                updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((node, changelog))
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -261,57 +255,45 @@ impl<'a> DatabaseSession<'a> {
     pub fn all_nodes(&mut self) -> Result<Vec<Node>> { self.run(node_ops::all()) }
 
     /// Import a node data sent from a child or parent node.
-    pub fn import_node(&mut self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
+    pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
         let local_node_id = self.require_local_node()?.node_id;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                if let Some(node) = node_ops::import(node).run(ctx)? {
-                    let change = Change::ImportNode(node);
-                    let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                    let Change::ImportNode(node) = change else { panic!() };
-                    Ok(Some((node, changelog)))
-                } else {
-                    Ok(None)
-                }
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            if let Some(node) = node_ops::import(node).run(ctx)? {
+                let change = Change::ImportNode(node);
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+                let Change::ImportNode(node) = change else { panic!() };
+                Ok(Some((node, changelog)))
+            } else {
+                Ok(None)
+            }
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
     // node owner
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn start_owner_session(&mut self, password: &str, duration: Duration) -> Result<LocalNode> {
+    pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
         let mut local_node = self.require_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
         local_node
             .start_session(password, duration)
             .context(DatabaseError::AuthenticationFailed)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            local_node_ops::update(&local_node),
-        )?;
+        self.transaction(local_node_ops::update(&local_node))?;
         Ok(local_node.clone())
     }
 
-    pub fn clear_owner_session(&mut self) -> Result<()> {
+    pub fn clear_owner_session(&self) -> Result<()> {
         let mut local_node = self.require_local_node()?;
         local_node.clear_session();
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            local_node_ops::update(&local_node),
-        )?;
+        self.transaction(local_node_ops::update(&local_node))?;
         Ok(())
     }
 
-    pub fn change_owner_password(&mut self, password: &str) -> Result<()> {
+    pub fn change_owner_password(&self, password: &str) -> Result<()> {
         let mut local_node = self.require_local_node()?;
         local_node.update_password(password)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            local_node_ops::update(&local_node),
-        )?;
+        self.transaction(local_node_ops::update(&local_node))?;
         Ok(())
     }
 
@@ -328,7 +310,7 @@ impl<'a> DatabaseSession<'a> {
     ///
     /// The node has to be imported before registered as a parent.
     pub fn put_parent_node(
-        &mut self,
+        &self,
         id: &Id<Node>,
         url_prefix: &str,
         operator: &Operator,
@@ -337,21 +319,15 @@ impl<'a> DatabaseSession<'a> {
         if let Some(parent_node) = globals.parent_nodes.get_mut(id) {
             operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
             parent_node.url_prefix = url_prefix.into();
-            op::run_in_transaction(
-                &mut (self.get_rw_conn)(),
-                parent_node_ops::update(&parent_node),
-            )
+            self.transaction(parent_node_ops::update(&parent_node))
         } else {
             operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Create)?;
             let new_parent_node = NewParentNode::new(id, url_prefix)?;
-            op::run_in_transaction(
-                &mut (self.get_rw_conn)(),
-                |ctx: &mut Context<'_, WritableConn>| {
-                    let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
-                    globals.parent_nodes.insert(*id, parent_node.clone());
-                    Ok(parent_node)
-                },
-            )
+            self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+                let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
+                globals.parent_nodes.insert(*id, parent_node.clone());
+                Ok(parent_node)
+            })
         }
     }
 
@@ -360,7 +336,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn save_parent_node_password(
-        &mut self,
+        &self,
         id: &Id<Node>,
         password: &str,
         encryption_password: &str,
@@ -369,10 +345,7 @@ impl<'a> DatabaseSession<'a> {
         operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
         let mut parent_node = self.require_parent_node(id)?;
         parent_node.save_password(password, encryption_password)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            parent_node_ops::update(&parent_node),
-        )
+        self.transaction(parent_node_ops::update(&parent_node))
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -403,7 +376,7 @@ impl<'a> DatabaseSession<'a> {
     /// this function will create a placeholder row in the `nodes` table to be
     /// replace with real data, which will be sent from the node when logging in later.
     pub fn add_child_node(
-        &mut self,
+        &self,
         id: Id<Node>,
         password: &str,
         as_owner: bool,
@@ -411,61 +384,49 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<ChildNode> {
         operator.requires_to_be_owner(EntityKind::ChildNode, OpKind::Create)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
-                let new_child = NewChildNode::new(&node.uuid, password, as_owner, can_edit_links)?;
-                child_node_ops::insert(&new_child).run(ctx)
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
+            let new_child = NewChildNode::new(&node.uuid, password, as_owner, can_edit_links)?;
+            child_node_ops::insert(&new_child).run(ctx)
+        })
     }
 
     pub fn start_child_session(
-        &mut self,
+        &self,
         id: &Id<Node>,
         password: &str,
         duration: Duration,
     ) -> Result<ChildNode> {
         let duration = chrono::Duration::from_std(duration)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let mut child_node = child_node_ops::get_or_err(id)
-                    .run(ctx)?
-                    // Hide a not-found error for a security reason
-                    .context(DatabaseError::AuthenticationFailed)?;
-                child_node
-                    .start_session(password, duration)
-                    .context(DatabaseError::AuthenticationFailed)?;
-                child_node = child_node_ops::update(&child_node).run(ctx)?;
-                Ok(child_node)
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let mut child_node = child_node_ops::get_or_err(id)
+                .run(ctx)?
+                // Hide a not-found error for a security reason
+                .context(DatabaseError::AuthenticationFailed)?;
+            child_node
+                .start_session(password, duration)
+                .context(DatabaseError::AuthenticationFailed)?;
+            child_node = child_node_ops::update(&child_node).run(ctx)?;
+            Ok(child_node)
+        })
     }
 
-    pub fn clear_child_session(&mut self, id: &Id<Node>) -> Result<()> {
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
-                child_node.clear_session();
-                child_node_ops::update(&child_node).run(ctx)?;
-                Ok(())
-            },
-        )
+    pub fn clear_child_session(&self, id: &Id<Node>) -> Result<()> {
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
+            child_node.clear_session();
+            child_node_ops::update(&child_node).run(ctx)?;
+            Ok(())
+        })
     }
 
-    pub fn change_child_password(&mut self, id: &Id<Node>, password: &str) -> Result<()> {
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
-                child_node.update_password(password)?;
-                child_node_ops::update(&child_node).run(ctx)?;
-                Ok(())
-            },
-        )
+    pub fn change_child_password(&self, id: &Id<Node>, password: &str) -> Result<()> {
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let mut child_node = child_node_ops::get_or_err(id).run(ctx)??;
+            child_node.update_password(password)?;
+            child_node_ops::update(&child_node).run(ctx)?;
+            Ok(())
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -479,10 +440,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn get_operator_in_session(&mut self, token: &str) -> Result<Option<Operator>> {
         // one of child nodes?
-        if let Some(child_node) = op::run(
-            &mut self.ro_conn,
-            child_node_ops::get_by_session_token(token),
-        )? {
+        if let Some(child_node) = self.run(child_node_ops::get_by_session_token(token))? {
             match child_node.verify_session(token) {
                 Ok(_) => return Ok(Some(Operator::ChildNode(child_node))),
                 Err(e) => debug!("ChildNode: {}", e),
@@ -509,10 +467,7 @@ impl<'a> DatabaseSession<'a> {
         parent_node_id: &Id<Node>,
     ) -> Result<Option<ChangelogEntry>> {
         let mut parent_node = self.require_parent_node(parent_node_id)?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            changelog_ops::import_change(log, &mut parent_node),
-        )
+        self.transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -545,7 +500,7 @@ impl<'a> DatabaseSession<'a> {
     /// The target cotonoma has to belong to the local node,
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
-        &mut self,
+        &self,
         content: &str,
         summary: Option<&str>,
         posted_in: &Cotonoma,
@@ -562,61 +517,52 @@ impl<'a> DatabaseSession<'a> {
             content,
             summary,
         )?;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
-                let change = Change::CreateCoto(inserted_coto.clone());
-                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                Ok((inserted_coto, changelog))
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
+            let change = Change::CreateCoto(inserted_coto.clone());
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((inserted_coto, changelog))
+        })
     }
 
     pub fn edit_coto(
-        &mut self,
+        &self,
         id: &Id<Coto>,
         content: &str,
         summary: Option<&str>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         let local_node_id = self.require_local_node()?.node_id;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.ensure_local(&coto)?;
-                operator.can_update_coto(&coto)?;
-                let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
-                let change = Change::EditCoto {
-                    uuid: *id,
-                    content: content.into(),
-                    summary: summary.map(String::from),
-                    updated_at: coto.updated_at,
-                };
-                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                Ok((coto, changelog))
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let coto = coto_ops::get_or_err(id).run(ctx)??;
+            self.ensure_local(&coto)?;
+            operator.can_update_coto(&coto)?;
+            let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
+            let change = Change::EditCoto {
+                uuid: *id,
+                content: content.into(),
+                summary: summary.map(String::from),
+                updated_at: coto.updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((coto, changelog))
+        })
     }
 
-    pub fn delete_coto(&mut self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
+    pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
         let local_node_id = self.require_local_node()?.node_id;
-        op::run_in_transaction(
-            &mut (self.get_rw_conn)(),
-            |ctx: &mut Context<'_, WritableConn>| {
-                let coto = coto_ops::get_or_err(id).run(ctx)??;
-                self.ensure_local(&coto)?;
-                operator.can_delete_coto(&coto)?;
-                if coto_ops::delete(id).run(ctx)? {
-                    let change = Change::DeleteCoto(*id);
-                    let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                    Ok(changelog)
-                } else {
-                    Err(DatabaseError::not_found(EntityKind::Coto, *id))?
-                }
-            },
-        )
+        self.transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let coto = coto_ops::get_or_err(id).run(ctx)??;
+            self.ensure_local(&coto)?;
+            operator.can_delete_coto(&coto)?;
+            if coto_ops::delete(id).run(ctx)? {
+                let change = Change::DeleteCoto(*id);
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+                Ok(changelog)
+            } else {
+                Err(DatabaseError::not_found(EntityKind::Coto, *id))?
+            }
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -660,6 +606,13 @@ impl<'a> DatabaseSession<'a> {
         Op: Operation<SqliteConnection, T>,
     {
         op::run(&mut self.ro_conn, op)
+    }
+
+    fn transaction<Op, T>(&self, op: Op) -> Result<T>
+    where
+        Op: Operation<WritableConn, T>,
+    {
+        op::run_in_transaction(&mut (self.get_rw_conn)(), op)
     }
 
     fn require_local_node(&self) -> Result<MappedMutexGuard<LocalNode>> {
