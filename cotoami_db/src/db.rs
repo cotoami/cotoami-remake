@@ -188,7 +188,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn get_local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
-        op::run(&mut self.ro_conn, local_node_ops::get_pair())
+        self.run(local_node_ops::get_pair())
     }
 
     pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
@@ -255,10 +255,10 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn get_node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
-        op::run(&mut self.ro_conn, node_ops::get(node_id))
+        self.run(node_ops::get(node_id))
     }
 
-    pub fn all_nodes(&mut self) -> Result<Vec<Node>> { op::run(&mut self.ro_conn, node_ops::all()) }
+    pub fn all_nodes(&mut self) -> Result<Vec<Node>> { self.run(node_ops::all()) }
 
     /// Import a node data sent from a child or parent node.
     pub fn import_node(&mut self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
@@ -321,7 +321,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn all_parent_nodes(&mut self, operator: &Operator) -> Result<Vec<(ParentNode, Node)>> {
         operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Read)?;
-        op::run(&mut self.ro_conn, parent_node_ops::all_pairs())
+        self.run(parent_node_ops::all_pairs())
     }
 
     /// Insert or update a parent node. It is an idempotent operation.
@@ -381,7 +381,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn all_child_nodes(&mut self, operator: &Operator) -> Result<Vec<(ChildNode, Node)>> {
         operator.requires_to_be_owner(EntityKind::ChildNode, OpKind::Read)?;
-        op::run(&mut self.ro_conn, child_node_ops::all_pairs())
+        self.run(child_node_ops::all_pairs())
     }
 
     pub fn recent_child_nodes(
@@ -391,10 +391,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<Paginated<(ChildNode, Node)>> {
         operator.requires_to_be_owner(EntityKind::ChildNode, OpKind::Read)?;
-        op::run(
-            &mut self.ro_conn,
-            child_node_ops::recent_pairs(page_size, page_index),
-        )
+        self.run(child_node_ops::recent_pairs(page_size, page_index))
     }
 
     /// Add a child node by its ID.
@@ -523,10 +520,10 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn get_coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
-        op::run(&mut self.ro_conn, coto_ops::get(id))
+        self.run(coto_ops::get(id))
     }
 
-    pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { op::run(&mut self.ro_conn, coto_ops::all()) }
+    pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { self.run(coto_ops::all()) }
 
     pub fn recent_cotos(
         &mut self,
@@ -535,10 +532,12 @@ impl<'a> DatabaseSession<'a> {
         page_size: i64,
         page_index: i64,
     ) -> Result<Paginated<Coto>> {
-        op::run(
-            &mut self.ro_conn,
-            coto_ops::recent(node_id, posted_in_id, page_size, page_index),
-        )
+        self.run(coto_ops::recent(
+            node_id,
+            posted_in_id,
+            page_size,
+            page_index,
+        ))
     }
 
     /// Posts a coto in the specified cotonoma.
@@ -637,13 +636,11 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn get_cotonoma_or_err(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
-        let cotonoma = op::run(&mut self.ro_conn, cotonoma_ops::get_or_err(id))??;
+        let cotonoma = self.run(cotonoma_ops::get_or_err(id))??;
         Ok(cotonoma)
     }
 
-    pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
-        op::run(&mut self.ro_conn, cotonoma_ops::all())
-    }
+    pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> { self.run(cotonoma_ops::all()) }
 
     pub fn recent_cotonomas(
         &mut self,
@@ -651,15 +648,19 @@ impl<'a> DatabaseSession<'a> {
         page_size: i64,
         page_index: i64,
     ) -> Result<Paginated<Cotonoma>> {
-        op::run(
-            &mut self.ro_conn,
-            cotonoma_ops::recent(node_id, page_size, page_index),
-        )
+        self.run(cotonoma_ops::recent(node_id, page_size, page_index))
     }
 
     /////////////////////////////////////////////////////////////////////////////
     // internals
     /////////////////////////////////////////////////////////////////////////////
+
+    fn run<Op, T>(&mut self, op: Op) -> Result<T>
+    where
+        Op: Operation<SqliteConnection, T>,
+    {
+        op::run(&mut self.ro_conn, op)
+    }
 
     fn require_local_node(&self) -> Result<MappedMutexGuard<LocalNode>> {
         MutexGuard::try_map((self.get_globals)(), |g| g.local_node.as_mut())
