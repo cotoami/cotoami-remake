@@ -66,7 +66,7 @@ async fn require_session<B>(
     let operator = spawn_blocking(move || {
         let mut db = state.db.create_session()?;
         // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
-        Ok::<Option<Operator>, ApiError>(db.get_operator_in_session(&token)?)
+        Ok::<Option<Operator>, ApiError>(db.operator_in_session(&token)?)
     })
     .await??;
 

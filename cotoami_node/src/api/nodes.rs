@@ -35,7 +35,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
-        if let Some((_, node)) = db.get_local_node()? {
+        if let Some((_, node)) = db.local_node()? {
             Ok(Json(node))
         } else {
             RequestError::new("local-node-not-yet-created").into_result()
@@ -88,7 +88,7 @@ async fn put_parent_node(
 
     // Get the local node
     let db = state.db.clone();
-    let (_, node) = spawn_blocking(move || db.create_session()?.get_local_node())
+    let (_, node) = spawn_blocking(move || db.create_session()?.local_node())
         .await??
         .unwrap();
 

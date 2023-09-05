@@ -10,7 +10,7 @@ fn crud_operations() -> Result<()> {
     let (_root_dir, db, node) = common::setup_db("My Node")?;
     let mut session = db.create_session()?;
     let operator = session.local_node_as_operator()?;
-    let (root_cotonoma, _) = session.get_root_cotonoma()?.unwrap();
+    let (root_cotonoma, _) = session.root_cotonoma()?.unwrap();
 
     // when: post_coto
     let (coto, changelog2) = session.post_coto("hello", None, &root_cotonoma, &operator)?;
@@ -36,7 +36,7 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(coto.created_at());
     common::assert_approximately_now(coto.updated_at());
 
-    assert_eq!(session.get_coto(&coto.uuid)?, Some(coto.clone()));
+    assert_eq!(session.coto(&coto.uuid)?, Some(coto.clone()));
 
     let recent_cotos = session.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(recent_cotos.rows.len(), 1);
@@ -78,7 +78,7 @@ fn crud_operations() -> Result<()> {
     );
     common::assert_approximately_now(edited_coto.updated_at());
 
-    assert_eq!(session.get_coto(&coto.uuid)?, Some(edited_coto.clone()));
+    assert_eq!(session.coto(&coto.uuid)?, Some(edited_coto.clone()));
 
     assert_matches!(
         changelog3,
@@ -104,7 +104,7 @@ fn crud_operations() -> Result<()> {
     let changelog4 = session.delete_coto(&coto.uuid, &operator)?;
 
     // then
-    assert_eq!(session.get_coto(&coto.uuid)?, None);
+    assert_eq!(session.coto(&coto.uuid)?, None);
     let all_cotos = session.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(all_cotos.rows.len(), 0);
 

@@ -77,7 +77,7 @@ async fn post_coto(
         let mut db = state.db.create_session()?;
 
         let cotonoma_id = form.cotonoma_id.unwrap(); // validated to be Some
-        let (cotonoma, _) = db.get_cotonoma_or_err(&cotonoma_id)?;
+        let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
 
         if db.is_local(&cotonoma) {
             let (coto, changelog) = db.post_coto(

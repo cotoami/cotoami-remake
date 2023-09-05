@@ -16,7 +16,7 @@ fn import_changes() -> Result<()> {
 
     let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
     let operator1 = session1.local_node_as_operator()?;
-    let (node1_root_cotonoma, node1_root_coto) = session1.get_root_cotonoma()?.unwrap();
+    let (node1_root_cotonoma, node1_root_coto) = session1.root_cotonoma()?.unwrap();
 
     let (db1_coto, db1_change2) =
         session1.post_coto("hello", None, &node1_root_cotonoma, &operator1)?;
@@ -41,10 +41,7 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2
-            .get_parent_node(&node1.uuid)
-            .unwrap()
-            .changes_received,
+        session2.parent_node(&node1.uuid).unwrap().changes_received,
         1
     );
     assert_matches!(
@@ -61,13 +58,13 @@ fn import_changes() -> Result<()> {
     );
 
     assert_eq!(
-        session2.get_node(&node1.uuid)?.unwrap(),
+        session2.node(&node1.uuid)?.unwrap(),
         Node {
             rowid: 2, // rowid=1 is db2's local node
             ..node1.clone()
         }
     );
-    let (cotonoma, coto) = session2.get_cotonoma(&node1_root_cotonoma.uuid)?.unwrap();
+    let (cotonoma, coto) = session2.cotonoma(&node1_root_cotonoma.uuid)?.unwrap();
     assert_eq!(cotonoma, node1_root_cotonoma);
     assert_eq!(coto, node1_root_coto);
     assert_matches!(
@@ -84,10 +81,7 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2
-            .get_parent_node(&node1.uuid)
-            .unwrap()
-            .changes_received,
+        session2.parent_node(&node1.uuid).unwrap().changes_received,
         2
     );
     assert_matches!(
@@ -113,10 +107,7 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2
-            .get_parent_node(&node1.uuid)
-            .unwrap()
-            .changes_received,
+        session2.parent_node(&node1.uuid).unwrap().changes_received,
         3
     );
     assert_matches!(
@@ -142,10 +133,7 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2
-            .get_parent_node(&node1.uuid)
-            .unwrap()
-            .changes_received,
+        session2.parent_node(&node1.uuid).unwrap().changes_received,
         4
     );
     assert_matches!(
@@ -211,10 +199,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         }) if origin_node_id == origin_node_id
     );
     assert_eq!(
-        session
-            .get_parent_node(&node2.uuid)
-            .unwrap()
-            .changes_received,
+        session.parent_node(&node2.uuid).unwrap().changes_received,
         1
     );
 
@@ -224,10 +209,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     // then
     assert!(imported_change2.is_none());
     assert_eq!(
-        session
-            .get_parent_node(&node3.uuid)
-            .unwrap()
-            .changes_received,
+        session.parent_node(&node3.uuid).unwrap().changes_received,
         1
     );
 

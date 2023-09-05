@@ -16,7 +16,7 @@ fn default_state() -> Result<()> {
     let mut session = db.create_session()?;
 
     // then
-    assert_eq!(session.get_local_node()?, None);
+    assert_eq!(session.local_node()?, None);
     assert!(session.all_nodes()?.is_empty());
 
     Ok(())
@@ -59,10 +59,10 @@ fn init_as_empty_node() -> Result<()> {
     );
 
     assert_matches!(
-        session.get_local_node()?,
+        session.local_node()?,
         Some((a, b)) if a == local_node && b == node
     );
-    assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
+    assert_eq!(session.node(&node.uuid)?.unwrap(), node);
     assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
 
     assert_matches!(
@@ -166,7 +166,7 @@ fn init_as_node() -> Result<()> {
     let ((local_node, node), changelog) = session.init_as_node(Some("My Node"), None)?;
 
     // then
-    let (root_cotonoma, root_coto) = session.get_root_cotonoma()?.unwrap();
+    let (root_cotonoma, root_coto) = session.root_cotonoma()?.unwrap();
 
     assert_matches!(
         node,
@@ -193,10 +193,10 @@ fn init_as_node() -> Result<()> {
     );
 
     assert_matches!(
-        session.get_local_node()?,
+        session.local_node()?,
         Some((a, b)) if a == local_node && b == node
     );
-    assert_eq!(session.get_node(&node.uuid)?.unwrap(), node);
+    assert_eq!(session.node(&node.uuid)?.unwrap(), node);
     assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
 
     assert_matches!(

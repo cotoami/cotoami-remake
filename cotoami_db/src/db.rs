@@ -146,7 +146,7 @@ impl Database {
     fn load_globals(&self) -> Result<()> {
         let mut db = self.create_session()?;
         let mut globals = self.globals.lock();
-        if let Some((local_node, node)) = db.get_local_node()? {
+        if let Some((local_node, node)) = db.local_node()? {
             globals.local_node = Some(local_node);
             globals.root_cotonoma_id = node.root_cotonoma_id;
         }
@@ -187,7 +187,7 @@ impl<'a> DatabaseSession<'a> {
     // local node
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn get_local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
+    pub fn local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
         self.run(local_node_ops::get_pair())
     }
 
@@ -248,7 +248,7 @@ impl<'a> DatabaseSession<'a> {
     // nodes
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn get_node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
+    pub fn node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
         self.run(node_ops::get(node_id))
     }
 
@@ -331,7 +331,7 @@ impl<'a> DatabaseSession<'a> {
         }
     }
 
-    pub fn get_parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
+    pub fn parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
         (self.get_globals)().parent_nodes.get(id).map(|n| n.clone())
     }
 
@@ -438,7 +438,7 @@ impl<'a> DatabaseSession<'a> {
         Ok(Operator::Owner(local_node_id))
     }
 
-    pub fn get_operator_in_session(&mut self, token: &str) -> Result<Option<Operator>> {
+    pub fn operator_in_session(&mut self, token: &str) -> Result<Option<Operator>> {
         // one of child nodes?
         if let Some(child_node) = self.run(child_node_ops::get_by_session_token(token))? {
             match child_node.verify_session(token) {
@@ -478,9 +478,7 @@ impl<'a> DatabaseSession<'a> {
     // cotos
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn get_coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> {
-        self.run(coto_ops::get(id))
-    }
+    pub fn coto(&mut self, id: &Id<Coto>) -> Result<Option<Coto>> { self.run(coto_ops::get(id)) }
 
     pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { self.run(coto_ops::all()) }
 
@@ -573,19 +571,19 @@ impl<'a> DatabaseSession<'a> {
     // cotonomas
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn get_root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
+    pub fn root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
         if let Some(id) = (self.get_globals)().root_cotonoma_id {
-            self.get_cotonoma(&id)
+            self.cotonoma(&id)
         } else {
             Ok(None)
         }
     }
 
-    pub fn get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
+    pub fn cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
         op::run(&mut self.ro_conn, cotonoma_ops::get(id))
     }
 
-    pub fn get_cotonoma_or_err(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
+    pub fn cotonoma_or_err(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
         let cotonoma = self.run(cotonoma_ops::get_or_err(id))??;
         Ok(cotonoma)
     }
