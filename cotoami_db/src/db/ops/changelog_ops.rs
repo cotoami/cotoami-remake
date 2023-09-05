@@ -53,6 +53,21 @@ pub fn get_last_origin_serial_number<Conn: AsReadableConn>(
     })
 }
 
+pub fn sequence<Conn: AsReadableConn>(
+    from: i64,
+    limit: i64,
+) -> impl Operation<Conn, Vec<ChangelogEntry>> {
+    use crate::schema::changelog::dsl::*;
+    read_op(move |conn| {
+        changelog
+            .filter(serial_number.ge(from))
+            .order(serial_number.asc())
+            .limit(limit)
+            .load::<ChangelogEntry>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn log_change<'a>(
     change: &'a Change,
     local_node_id: &'a Id<Node>,
