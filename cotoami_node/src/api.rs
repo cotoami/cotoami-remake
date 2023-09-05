@@ -14,6 +14,7 @@ use validator::Validate;
 
 use crate::{error::ApiError, AppState};
 
+pub(crate) mod changes;
 mod cotos;
 mod events;
 mod nodes;
@@ -24,6 +25,7 @@ pub(super) fn routes() -> Router<AppState> {
         .route("/", get(root))
         .nest("/session", session::routes())
         .nest("/events", events::routes())
+        .nest("/changes", changes::routes())
         .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
 }
