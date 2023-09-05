@@ -2,12 +2,17 @@ use anyhow::Result;
 use cotoami_db::prelude::Node;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    Client, Response, Url,
+    Client, Url,
 };
+use serde_json::json;
 
 use crate::{
-    api::{session::CreateChildSession, SESSION_HEADER_NAME},
+    api::{
+        session::{ChildSessionCreated, CreateChildSession},
+        SESSION_HEADER_NAME,
+    },
     csrf,
+    error::{ApiError, IntoApiResult, RequestError},
 };
 
 pub(crate) struct Server {
@@ -40,7 +45,7 @@ impl Server {
         password: String,
         new_password: Option<String>,
         child: Node,
-    ) -> Result<Response> {
+    ) -> Result<ChildSessionCreated, ApiError> {
         let url = Url::parse(&self.url_prefix)?.join("/api/session/child")?;
         let req_body = CreateChildSession {
             password,
@@ -48,6 +53,13 @@ impl Server {
             child,
         };
         let response = self.client.put(url).json(&req_body).send().await?;
-        Ok(response)
+        if response.status() != reqwest::StatusCode::CREATED {
+            return RequestError::new("parent-node-error")
+                .with_param("url", json!(response.url().to_string()))
+                .with_param("status", json!(response.status().as_u16()))
+                .with_param("body", json!(response.text().await?))
+                .into_result();
+        }
+        Ok(response.json::<ChildSessionCreated>().await?)
     }
 }

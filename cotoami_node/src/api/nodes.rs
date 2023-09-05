@@ -6,11 +6,9 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
-use serde_json::json;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
-use super::session::ChildSessionCreated;
 use crate::{
     api::Pagination,
     client::Server,
@@ -95,7 +93,7 @@ async fn put_parent_node(
     // Attempt to log in to the parent node
     let password = form.password.unwrap();
     let server = Server::new(form.url_prefix.unwrap(), None)?;
-    let response = server
+    let child_session = server
         .create_child_session(
             password.clone(),
             None, // TODO
@@ -103,22 +101,12 @@ async fn put_parent_node(
         )
         .await?;
 
-    // Handle response error
-    if response.status() != reqwest::StatusCode::CREATED {
-        return RequestError::new("parent-node-error")
-            .with_param("url", json!(response.url().to_string()))
-            .with_param("status", json!(response.status().as_u16()))
-            .with_param("body", json!(response.text().await?))
-            .into_result();
-    }
-
     // Register the parent node
-    let res_body = response.json::<ChildSessionCreated>().await?;
-    let parent_id = res_body.parent.uuid;
+    let parent_id = child_session.parent.uuid;
     spawn_blocking(move || {
         let owner_password = state.config.owner_password.as_deref().unwrap();
         let db = state.db.create_session()?;
-        db.import_node(&res_body.parent)?;
+        db.import_node(&child_session.parent)?;
         db.put_parent_node(&parent_id, server.url_prefix(), &operator)?;
         db.save_parent_node_password(&parent_id, &password, owner_password, &operator)
     })
@@ -129,7 +117,7 @@ async fn put_parent_node(
     state
         .parent_sessions
         .lock()
-        .insert(parent_id, Ok(res_body.session));
+        .insert(parent_id, Ok(child_session.session));
 
     // Import the changelog
     // Connect to the event stream
