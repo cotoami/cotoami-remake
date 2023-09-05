@@ -15,7 +15,7 @@ pub struct Graph {
     /// All the cotos in this graph, each of which is mapped by its ID
     cotos: HashMap<Id<Coto>, Coto>,
 
-    /// All the links in this graph, each of which is mapped by the ID of the tail coto
+    /// All the links in this graph, each of which is mapped by the ID of the source coto
     links: HashMap<Id<Coto>, Vec<Link>>,
 }
 
@@ -42,7 +42,7 @@ impl Graph {
 
     pub fn add_link(&mut self, link: Link) {
         self.links
-            .entry(link.tail_coto_id)
+            .entry(link.source_coto_id)
             .or_insert_with(Vec::new)
             .push(link);
     }
@@ -64,11 +64,11 @@ impl Graph {
         let mut links: Vec<&Link> = self.links.values().flatten().collect();
         links.sort_by_key(|link| link.created_at);
         for link in links.iter() {
-            let tail_index = node_indexes.get(&link.tail_coto_id).unwrap();
-            let head_index = node_indexes.get(&link.head_coto_id).unwrap();
+            let source_index = node_indexes.get(&link.source_coto_id).unwrap();
+            let target_index = node_indexes.get(&link.target_coto_id).unwrap();
             petgraph.add_edge(
-                *tail_index,
-                *head_index,
+                *source_index,
+                *target_index,
                 link.linking_phrase.as_deref().unwrap_or_default(),
             );
         }

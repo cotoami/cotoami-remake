@@ -40,11 +40,11 @@ pub struct Link {
     /// UUID of the node whose owner has created this link
     pub created_by_id: Id<Node>,
 
-    /// UUID of the coto at the tail of this link
-    pub tail_coto_id: Id<Coto>,
+    /// UUID of the coto at the source of this link
+    pub source_coto_id: Id<Coto>,
 
-    /// UUID of the coto at the head of this link
-    pub head_coto_id: Id<Coto>,
+    /// UUID of the coto at the target of this link
+    pub target_coto_id: Id<Coto>,
 
     /// Linkng phrase to express the relationship between the two cotos
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
@@ -74,8 +74,8 @@ impl Link {
             uuid: self.uuid,
             node_id: &self.node_id,
             created_by_id: &self.created_by_id,
-            tail_coto_id: &self.tail_coto_id,
-            head_coto_id: &self.head_coto_id,
+            source_coto_id: &self.source_coto_id,
+            target_coto_id: &self.target_coto_id,
             linking_phrase: self.linking_phrase.as_deref(),
             created_at: self.created_at,
             updated_at: self.updated_at,
@@ -98,8 +98,8 @@ pub struct NewLink<'a> {
     uuid: Id<Link>,
     node_id: &'a Id<Node>,
     created_by_id: &'a Id<Node>,
-    tail_coto_id: &'a Id<Coto>,
-    head_coto_id: &'a Id<Coto>,
+    source_coto_id: &'a Id<Coto>,
+    target_coto_id: &'a Id<Coto>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     linking_phrase: Option<&'a str>,
     created_at: NaiveDateTime,
@@ -110,8 +110,8 @@ impl<'a> NewLink<'a> {
     pub fn new(
         node_id: &'a Id<Node>,
         created_by_id: &'a Id<Node>,
-        tail_coto_id: &'a Id<Coto>,
-        head_coto_id: &'a Id<Coto>,
+        source_coto_id: &'a Id<Coto>,
+        target_coto_id: &'a Id<Coto>,
         linking_phrase: Option<&'a str>,
     ) -> Result<Self> {
         let now = crate::current_datetime();
@@ -119,8 +119,8 @@ impl<'a> NewLink<'a> {
             uuid: Id::generate(),
             node_id,
             created_by_id,
-            tail_coto_id,
-            head_coto_id,
+            source_coto_id,
+            target_coto_id,
             linking_phrase,
             created_at: now,
             updated_at: now,

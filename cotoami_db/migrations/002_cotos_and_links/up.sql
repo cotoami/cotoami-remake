@@ -94,11 +94,11 @@ CREATE TABLE links (
   -- UUID of the node whose owner has created this link
   created_by_id TEXT NOT NULL,
 
-  -- UUID of the coto at the tail of this link
-  tail_coto_id TEXT NOT NULL,
+  -- UUID of the coto at the source of this link
+  source_coto_id TEXT NOT NULL,
 
-  -- UUID of the coto at the head of this link
-  head_coto_id TEXT NOT NULL,
+  -- UUID of the coto at the target of this link
+  target_coto_id TEXT NOT NULL,
 
   -- Linkng phrase to express the relationship between the two cotos
   linking_phrase TEXT,
@@ -106,14 +106,14 @@ CREATE TABLE links (
   created_at DATETIME NOT NULL, -- UTC
   updated_at DATETIME NOT NULL, -- UTC
 
-  UNIQUE(tail_coto_id, head_coto_id),
+  UNIQUE(source_coto_id, target_coto_id),
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(created_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
-  FOREIGN KEY(tail_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE,
-  FOREIGN KEY(head_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
+  FOREIGN KEY(source_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE,
+  FOREIGN KEY(target_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
 ) WITHOUT ROWID;
 
 CREATE INDEX links_node_id ON links(node_id);
 CREATE INDEX links_created_by_id ON links(created_by_id);
-CREATE INDEX links_tail_coto_id ON links(tail_coto_id);
-CREATE INDEX links_head_coto_id ON links(head_coto_id);
+CREATE INDEX links_source_coto_id ON links(source_coto_id);
+CREATE INDEX links_target_coto_id ON links(target_coto_id);
