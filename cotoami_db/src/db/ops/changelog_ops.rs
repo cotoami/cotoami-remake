@@ -26,6 +26,18 @@ pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<Cha
     })
 }
 
+pub fn get_last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option<i64>> {
+    use diesel::dsl::max;
+
+    use crate::schema::changelog::dsl::*;
+    read_op(move |conn| {
+        changelog
+            .select(max(serial_number))
+            .first(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub fn get_last_origin_serial_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
