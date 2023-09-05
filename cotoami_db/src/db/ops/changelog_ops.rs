@@ -7,7 +7,7 @@ use diesel::prelude::*;
 
 use super::{coto_ops, cotonoma_ops, link_ops, node_ops, parent_node_ops};
 use crate::{
-    db::op::*,
+    db::{error::*, op::*},
     models::{
         changelog::{Change, ChangelogEntry, NewChangelogEntry},
         node::{parent::ParentNode, Node},
@@ -56,15 +56,26 @@ pub fn last_origin_serial_number<Conn: AsReadableConn>(
 pub fn sequence<Conn: AsReadableConn>(
     from: i64,
     limit: i64,
-) -> impl Operation<Conn, Vec<ChangelogEntry>> {
+) -> impl Operation<Conn, (Vec<ChangelogEntry>, i64)> {
     use crate::schema::changelog::dsl::*;
-    read_op(move |conn| {
-        changelog
-            .filter(serial_number.ge(from))
-            .order(serial_number.asc())
-            .limit(limit)
-            .load::<ChangelogEntry>(conn)
-            .map_err(anyhow::Error::from)
+    composite_op::<Conn, _, _>(move |ctx| {
+        let last = last_serial_number().run(ctx)?.unwrap_or(0);
+        if from >= 1 && from <= last {
+            Ok((
+                changelog
+                    .filter(serial_number.ge(from))
+                    .order(serial_number.asc())
+                    .limit(limit)
+                    .load::<ChangelogEntry>(ctx.conn().readable())
+                    .map_err(anyhow::Error::from)?,
+                last,
+            ))
+        } else {
+            Err(DatabaseError::ChangeNumberOutOfRange {
+                number: from,
+                max: last,
+            })?
+        }
     })
 }
 

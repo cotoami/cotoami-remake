@@ -24,6 +24,9 @@ pub enum DatabaseError {
         id: Option<String>,
         op: OpKind,
     },
+
+    #[error("Change number out of range: {number} (max: {max})")]
+    ChangeNumberOutOfRange { number: i64, max: i64 },
 }
 
 impl DatabaseError {

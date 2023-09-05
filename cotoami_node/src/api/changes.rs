@@ -48,8 +48,8 @@ async fn sequence_of_changes(
     }
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
-        let changes = db.sequence_of_changes(range.from.unwrap(), range.limit.unwrap())?;
-        let last_serial_number = db.last_serial_number_of_changes()?.unwrap_or(0);
+        let (changes, last_serial_number) =
+            db.sequence_of_changes(range.from.unwrap(), range.limit.unwrap())?;
         Ok(Json(Changes {
             sequence: changes,
             last_serial_number,

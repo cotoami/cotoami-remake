@@ -470,11 +470,11 @@ impl<'a> DatabaseSession<'a> {
         self.transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 
-    pub fn last_serial_number_of_changes(&mut self) -> Result<Option<i64>> {
-        self.run(changelog_ops::last_serial_number())
-    }
-
-    pub fn sequence_of_changes(&mut self, from: i64, limit: i64) -> Result<Vec<ChangelogEntry>> {
+    pub fn sequence_of_changes(
+        &mut self,
+        from: i64,
+        limit: i64,
+    ) -> Result<(Vec<ChangelogEntry>, i64)> {
         self.run(changelog_ops::sequence(from, limit))
     }
 
