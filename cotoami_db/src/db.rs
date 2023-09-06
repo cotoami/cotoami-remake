@@ -470,12 +470,12 @@ impl<'a> DatabaseSession<'a> {
         self.transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 
-    pub fn sequence_of_changes(
+    pub fn chunk_of_changes(
         &mut self,
         from: i64,
         limit: i64,
     ) -> Result<(Vec<ChangelogEntry>, i64)> {
-        self.run(changelog_ops::sequence(from, limit))
+        self.run(changelog_ops::chunk(from, limit))
     }
 
     /////////////////////////////////////////////////////////////////////////////

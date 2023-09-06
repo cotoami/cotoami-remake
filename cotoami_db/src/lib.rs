@@ -8,7 +8,7 @@ pub mod prelude {
             coto::Coto,
             cotonoma::Cotonoma,
             link::Link,
-            node::{local::LocalNode, Node, Principal},
+            node::{local::LocalNode, parent::ParentNode, Node, Principal},
             Id,
         },
     };

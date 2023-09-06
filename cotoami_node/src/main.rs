@@ -56,7 +56,7 @@ fn build_state() -> Result<AppState> {
     config.validate()?;
     info!("Config loaded: {:?}", config);
 
-    let pubsub = Publisher::<Result<Event, Infallible>>::new();
+    let pubsub = Pubsub::new();
 
     let db_dir = config.db_dir();
     fs::create_dir(&db_dir).ok();
@@ -111,6 +111,10 @@ struct Config {
     // COTOAMI_SESSION_MINUTES
     #[serde(default = "Config::default_session_minutes")]
     session_minutes: u64,
+
+    // COTOAMI_CHANGES_CHUNK_SIZE
+    #[serde(default = "Config::default_changes_chunk_size")]
+    changes_chunk_size: i64,
 }
 
 impl Config {
@@ -128,6 +132,7 @@ impl Config {
     fn default_url_scheme() -> String { "http".into() }
     fn default_url_host() -> String { "localhost".into() }
     fn default_session_minutes() -> u64 { 60 }
+    fn default_changes_chunk_size() -> i64 { 1000 }
 
     fn db_dir(&self) -> PathBuf {
         self.db_dir.as_ref().map(PathBuf::from).unwrap_or_else(|| {
@@ -147,10 +152,12 @@ impl Config {
 // AppState
 /////////////////////////////////////////////////////////////////////////////
 
+type Pubsub = Publisher<Result<Event, Infallible>>;
+
 #[derive(Clone)]
 struct AppState {
     config: Arc<Config>,
-    pubsub: Arc<Mutex<Publisher<Result<Event, Infallible>>>>,
+    pubsub: Arc<Mutex<Pubsub>>,
     db: Arc<Database>,
     parent_sessions: Arc<Mutex<HashMap<Id<Node>, Result<Session>>>>,
 }

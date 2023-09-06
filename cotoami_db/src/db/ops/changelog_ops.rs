@@ -53,13 +53,14 @@ pub fn last_origin_serial_number<Conn: AsReadableConn>(
     })
 }
 
-pub fn sequence<Conn: AsReadableConn>(
+pub fn chunk<Conn: AsReadableConn>(
     from: i64,
     limit: i64,
 ) -> impl Operation<Conn, (Vec<ChangelogEntry>, i64)> {
     use crate::schema::changelog::dsl::*;
     composite_op::<Conn, _, _>(move |ctx| {
         let last = last_serial_number().run(ctx)?.unwrap_or(0);
+        // TODO: someone might add a change at this time
         if from >= 1 && from <= last {
             Ok((
                 changelog

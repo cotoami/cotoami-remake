@@ -7,6 +7,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
+use tracing::info;
 use validator::Validate;
 
 use crate::{
@@ -100,18 +101,22 @@ async fn put_parent_node(
             node,
         )
         .await?;
+    info!("Successfully logged in to {}", server.url_prefix());
 
     // Register the parent node
+    let config = state.config.clone();
+    let db = state.db.clone();
     let parent_id = child_session.parent.uuid;
-    spawn_blocking(move || {
-        let owner_password = state.config.owner_password.as_deref().unwrap();
-        let db = state.db.create_session()?;
+    let url_prefix = server.url_prefix().to_string();
+    let parent_node = spawn_blocking(move || {
+        let owner_password = config.owner_password.as_deref().unwrap();
+        let db = db.create_session()?;
         db.import_node(&child_session.parent)?;
-        db.put_parent_node(&parent_id, server.url_prefix(), &operator)?;
+        db.put_parent_node(&parent_id, &url_prefix, &operator)?;
         db.save_parent_node_password(&parent_id, &password, owner_password, &operator)
     })
-    .await?
-    .ok();
+    .await??;
+    info!("Parent node {} saved.", parent_node.node_id);
 
     // Save the session token
     state
@@ -120,6 +125,14 @@ async fn put_parent_node(
         .insert(parent_id, Ok(child_session.session));
 
     // Import the changelog
+    let (first, last) = server.import_changes(&state, &parent_node).await?;
+    info!(
+        "Imported changes {}-{} from {}",
+        first,
+        last,
+        server.url_prefix()
+    );
+
     // Connect to the event stream
 
     Ok(StatusCode::CREATED)
