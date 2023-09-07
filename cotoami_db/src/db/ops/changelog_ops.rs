@@ -60,7 +60,6 @@ pub fn chunk<Conn: AsReadableConn>(
     use crate::schema::changelog::dsl::*;
     composite_op::<Conn, _, _>(move |ctx| {
         let last = last_serial_number().run(ctx)?.unwrap_or(0);
-        // TODO: someone might add a change at this time
         if from >= 1 && from <= last {
             Ok((
                 changelog
@@ -123,7 +122,7 @@ pub fn contains_change<Conn: AsReadableConn>(
     })
 }
 
-/// Import a change sent from the `parent_node`.
+/// Imports a change sent from the `parent_node`.
 ///
 /// ## Ensure to apply changes in order of the serial number for each `parent_node`
 ///

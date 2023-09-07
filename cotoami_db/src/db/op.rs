@@ -14,6 +14,7 @@ use derive_new::new;
 use diesel::{
     connection::{AnsiTransactionManager, TransactionManager},
     sqlite::SqliteConnection,
+    Connection,
 };
 
 use self::map::*;
@@ -50,7 +51,7 @@ pub trait Operation<Conn, T> {
 /// A `Context` holds a database connection needed to run an [Operation].
 ///
 /// Since it doesn't have public constructors, a client of this module has to use
-/// the functions such as [run()] or [run_in_transaction()] to invoke an [Operation].
+/// the functions such as [run_read()] or [run_write()] to invoke an [Operation].
 pub struct Context<'a, Conn: 'a> {
     conn: &'a mut Conn,
 }
@@ -177,12 +178,29 @@ where
     ReadOp { f }
 }
 
-/// Runs a read-only operation
-pub fn run<Op, T>(conn: &mut SqliteConnection, op: Op) -> Result<T>
+/// Runs a read operation.
+///
+/// The operation will be run in a `DEFERRED` transaction, which is an only way to explicitly
+/// start a read transaction in SQLite (precisely, a transaction will be started by the
+/// first `SELECT` statement after `BEGIN DEFERRED`).
+///
+/// Snapshot Isolation:
+/// **In WAL mode**, SQLite exhibits "snapshot isolation". When a read transaction starts,
+/// that reader continues to see an unchanging "snapshot" of the database file as it existed
+/// at the moment in time when the read transaction started. Any write transactions that
+/// commit while the read transaction is active are still invisible to the read transaction,
+/// because the reader is seeing a snapshot of database file from a prior moment in time.
+/// - <https://www.sqlite.org/isolation.html>
+///
+/// A write operation can be run in a `DEFERRED` transaction, but it could cause an
+/// `SQLITE_BUSY_SNAPSHOT` error (<https://www.sqlite.org/rescode.html#busy_snapshot>),
+/// therefore, this function should be used only for read operations.
+///
+pub fn run_read<Op, T>(conn: &mut SqliteConnection, op: Op) -> Result<T>
 where
     Op: Operation<SqliteConnection, T>,
 {
-    op.run(&mut Context::new(conn))
+    conn.transaction(|conn| op.run(&mut Context::new(conn)))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -208,8 +226,12 @@ where
     WriteOp { f }
 }
 
-/// Runs a read/write operation in a transaction
-pub fn run_in_transaction<Op, T>(conn: &mut WritableConn, op: Op) -> Result<T>
+/// Runs a read/write operation.
+///
+/// The operation will be run in a `IMMEDIATE` transaction, which immediately
+/// starts a write transaction and prevents other database connections from writing
+/// the database.
+pub fn run_write<Op, T>(conn: &mut WritableConn, op: Op) -> Result<T>
 where
     Op: Operation<WritableConn, T>,
 {

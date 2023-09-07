@@ -22,26 +22,26 @@ fn operation() -> Result<()> {
     create_table(&mut conn)?;
 
     // when: successful transaction
-    op::run_in_transaction(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
+    op::run_write(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
         insert("Cloud").run(ctx)?;
         insert("Aerith").run(ctx)?;
         Ok(())
     })?;
 
     // then
-    let rows = op::run(conn.deref_mut(), all())?;
+    let rows = op::run_read(conn.deref_mut(), all())?;
     assert_eq!(into_values(&rows), vec!["Cloud", "Aerith"]);
 
     // when: failing transaction
     let result: Result<()> =
-        op::run_in_transaction(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
+        op::run_write(&mut conn, move |ctx: &mut Context<'_, WritableConn>| {
             insert("Tifa").run(ctx)?;
             insert("Barret").run(ctx)?;
             bail!("An error occurred during a transaction.");
         });
 
     // then
-    let rows = op::run(conn.deref_mut(), all())?;
+    let rows = op::run_read(conn.deref_mut(), all())?;
     assert_eq!(into_values(&rows), vec!["Cloud", "Aerith"]);
     assert!(result.is_err());
 
@@ -53,7 +53,7 @@ fn operation() -> Result<()> {
     });
 
     // then
-    let values = op::run(conn.deref_mut(), mapped_op)?;
+    let values = op::run_read(conn.deref_mut(), mapped_op)?;
     let values = Vec::from_iter(values.iter().map(String::as_str));
     assert_eq!(values, vec!["Hello, Cloud!", "Hello, Aerith!"]);
 
@@ -61,10 +61,10 @@ fn operation() -> Result<()> {
     let and_then_op = get(1).and_then(|row: Option<TestRow>| {
         insert(format!("{} is a protagonist.", row.unwrap().value))
     });
-    op::run_in_transaction(&mut conn, and_then_op)?;
+    op::run_write(&mut conn, and_then_op)?;
 
     // then
-    let rows = op::run(conn.deref_mut(), all())?;
+    let rows = op::run_read(conn.deref_mut(), all())?;
     assert_eq!(
         into_values(&rows),
         vec!["Cloud", "Aerith", "Cloud is a protagonist."]
