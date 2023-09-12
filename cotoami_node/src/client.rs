@@ -1,11 +1,18 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use cotoami_db::prelude::*;
+use eventsource_stream::Event;
+use futures::StreamExt;
+use parking_lot::Mutex;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, Response, Url,
 };
-use serde_json::json;
+use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
+use thiserror::Error;
 use tokio::task::spawn_blocking;
+use tracing::{debug, info};
 
 use crate::{
     api::{
@@ -13,11 +20,14 @@ use crate::{
         session::{ChildSessionCreated, CreateChildSession},
         SESSION_HEADER_NAME,
     },
-    csrf,
-    error::{ApiError, IntoApiResult, RequestError},
-    AppState,
+    csrf, ChangePub, Pubsub,
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// Server
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone)]
 pub(crate) struct Server {
     client: Client,
     url_prefix: String,
@@ -48,8 +58,8 @@ impl Server {
         password: String,
         new_password: Option<String>,
         child: Node,
-    ) -> Result<ChildSessionCreated, ApiError> {
-        let url = Url::parse(&self.url_prefix)?.join("/api/session/child")?;
+    ) -> Result<ChildSessionCreated> {
+        let url = self.make_url("/api/session/child")?;
         let req_body = CreateChildSession {
             password,
             new_password,
@@ -62,8 +72,8 @@ impl Server {
         Ok(response.json::<ChildSessionCreated>().await?)
     }
 
-    pub async fn chunk_of_changes(&self, from: i64) -> Result<Changes, ApiError> {
-        let mut url = Url::parse(&self.url_prefix)?.join("/api/changes")?;
+    pub async fn chunk_of_changes(&self, from: i64) -> Result<Changes> {
+        let mut url = self.make_url("/api/changes")?;
         url.query_pairs_mut().append_pair("from", &from.to_string());
         let response = self.client.get(url).send().await?;
         if response.status() != reqwest::StatusCode::OK {
@@ -74,25 +84,30 @@ impl Server {
 
     pub async fn import_changes(
         &self,
-        state: &AppState,
-        parent_node: &ParentNode,
-    ) -> Result<(i64, i64), ApiError> {
+        db: Arc<Database>,
+        pubsub: Arc<Mutex<Pubsub>>,
+        parent_node_id: Id<Node>,
+    ) -> Result<(i64, i64)> {
+        let parent_node = db.create_session()?.parent_node_or_err(&parent_node_id)?;
         let import_from = parent_node.changes_received + 1;
+        debug!("import_changes from {}", import_from);
         let mut from = import_from;
         loop {
+            debug!("chunk of changes from {}", from);
+
             // Get a chunk of changelog entries from the server
             let changes = self.chunk_of_changes(from).await?;
             let is_last_chunk = changes.is_last_chunk();
             let last_number_of_chunk = changes.last_serial_number_of_chunk();
 
             // Import the changes to the local database
-            let state = state.clone();
-            let parent_node_id = parent_node.node_id;
+            let db = db.clone();
+            let pubsub = pubsub.clone();
             let chunk_imported: Result<()> = spawn_blocking(move || {
-                let db = state.db.create_session()?;
+                let db = db.create_session()?;
                 for change in changes.chunk {
                     if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
-                        state.publish_change(imported_change)?;
+                        pubsub.lock().publish_change(imported_change)?;
                     }
                 }
                 Ok(())
@@ -109,11 +124,134 @@ impl Server {
         }
     }
 
-    async fn into_err<T>(response: Response) -> Result<T, ApiError> {
-        RequestError::new("parent-node-error")
-            .with_param("url", json!(response.url().to_string()))
-            .with_param("status", json!(response.status().as_u16()))
-            .with_param("body", json!(response.text().await?))
-            .into_result()
+    pub async fn create_event_handler(
+        &self,
+        parent_node_id: Id<Node>,
+        db: Arc<Database>,
+        pubsub: Arc<Mutex<Pubsub>>,
+    ) -> Result<EventHandler> {
+        EventHandler::new(self.clone(), parent_node_id, db, pubsub)
     }
+
+    fn make_url(&self, path: &str) -> Result<Url> { Ok(Url::parse(&self.url_prefix)?.join(path)?) }
+
+    async fn into_err<T>(response: Response) -> Result<T, ResponseError> {
+        Err(ResponseError {
+            url: response.url().to_string(),
+            status: response.status().as_u16(),
+            body: response.text().await.unwrap_or_else(|e| e.to_string()),
+        })
+    }
+}
+
+#[derive(Error, Debug)]
+#[error("Error response ({status}) from {url}")]
+pub(crate) struct ResponseError {
+    pub url: String,
+    pub status: u16,
+    pub body: String,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// EventHandler
+/////////////////////////////////////////////////////////////////////////////
+
+pub(crate) struct EventHandler {
+    server: Server,
+    parent_node_id: Id<Node>,
+    db: Arc<Database>,
+    pubsub: Arc<Mutex<Pubsub>>,
+    event_source: EventSource,
+    pub error: Option<anyhow::Error>,
+}
+
+impl EventHandler {
+    fn new(
+        server: Server,
+        parent_node_id: Id<Node>,
+        db: Arc<Database>,
+        pubsub: Arc<Mutex<Pubsub>>,
+    ) -> Result<Self> {
+        let url = server.make_url("/api/events")?;
+        Ok(Self {
+            server,
+            parent_node_id,
+            db,
+            pubsub,
+            event_source: EventSource::get(url),
+            error: None,
+        })
+    }
+
+    pub async fn start(&mut self) {
+        while let Some(item) = self.event_source.next().await {
+            match item {
+                Ok(ESItem::Open) => info!("Event stream opened: {}", self.server.url_prefix()),
+                Ok(ESItem::Message(event)) => {
+                    if let Err(err) = self.handle_event(&event).await {
+                        self.event_source.close();
+                        self.error = Some(anyhow::Error::from(err));
+                        debug!(
+                            "Event stream {} closed because of an error in handling an event: {}",
+                            self.server.url_prefix(),
+                            self.error.as_ref().unwrap()
+                        );
+                    }
+                }
+                Err(err) => {
+                    self.event_source.close();
+                    self.error = Some(anyhow::Error::from(err));
+                    debug!(
+                        "Event stream {} closed because of a stream error: {}",
+                        self.server.url_prefix(),
+                        self.error.as_ref().unwrap()
+                    );
+                }
+            }
+        }
+    }
+
+    async fn handle_event(&mut self, event: &Event) -> Result<()> {
+        let change = serde_json::from_str::<ChangelogEntry>(&event.data)?;
+        let db = self.db.clone();
+        let parent_node_id = self.parent_node_id;
+        let import_result: Result<Option<ChangelogEntry>> =
+            spawn_blocking(move || db.create_session()?.import_change(&change, &parent_node_id))
+                .await?;
+        match import_result {
+            Err(anyhow_err) => {
+                if let Some(DatabaseError::UnexpectedChangeNumber {
+                    expected, actual, ..
+                }) = anyhow_err.downcast_ref::<DatabaseError>()
+                {
+                    info!(
+                        "Unexpected change number {} (expected {}) from {}",
+                        actual,
+                        expected,
+                        self.server.url_prefix()
+                    );
+                    debug!("Importing the changes from {}", self.server.url_prefix());
+                    let (first, last) = self
+                        .server
+                        .import_changes(self.db.clone(), self.pubsub.clone(), self.parent_node_id)
+                        .await?;
+                    info!(
+                        "Imported changes {}-{} from {}",
+                        first,
+                        last,
+                        self.server.url_prefix()
+                    );
+                } else {
+                    return Err(anyhow_err);
+                }
+            }
+            Ok(Some(imported_change)) => {
+                self.pubsub.lock().publish_change(imported_change)?;
+            }
+            Ok(None) => (),
+        }
+        Ok(())
+    }
+
+    pub fn get_state(&self) -> ReadyState { self.event_source.ready_state() }
 }

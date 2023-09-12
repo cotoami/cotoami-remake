@@ -145,10 +145,11 @@ pub fn import_change<'a>(
         let expected_number = parent_node.changes_received + 1;
         ensure!(
             log.serial_number == expected_number,
-            "Unexpected change number (expected {}, actual {}) from {}",
-            expected_number,
-            log.serial_number,
-            parent_node.node_id
+            DatabaseError::UnexpectedChangeNumber {
+                expected: expected_number,
+                actual: log.serial_number,
+                parent_node_id: parent_node.node_id.into(),
+            }
         );
 
         // Import the change only if the same change has not yet been imported before.

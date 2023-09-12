@@ -25,6 +25,13 @@ pub enum DatabaseError {
         op: OpKind,
     },
 
+    #[error("Unexpected change number (expected {expected:?}, actual {actual:?}) from {parent_node_id:?}")]
+    UnexpectedChangeNumber {
+        expected: i64,
+        actual: i64,
+        parent_node_id: String,
+    },
+
     #[error("Change number out of range: {number} (max: {max})")]
     ChangeNumberOutOfRange { number: i64, max: i64 },
 }

@@ -172,6 +172,12 @@ struct Globals {
     parent_nodes: HashMap<Id<Node>, ParentNode>,
 }
 
+impl Globals {
+    pub fn parent_node(&self, id: &Id<Node>) -> Option<ParentNode> {
+        self.parent_nodes.get(id).map(|n| n.clone())
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // DatabaseSession
 /////////////////////////////////////////////////////////////////////////////
@@ -332,7 +338,12 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
-        (self.get_globals)().parent_nodes.get(id).map(|n| n.clone())
+        (self.get_globals)().parent_node(id)
+    }
+
+    pub fn parent_node_or_err(&mut self, id: &Id<Node>) -> Result<ParentNode> {
+        self.parent_node(id)
+            .ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id).into())
     }
 
     pub fn save_parent_node_password(

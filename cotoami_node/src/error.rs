@@ -6,9 +6,11 @@ use axum::{
     Json,
 };
 use cotoami_db::prelude::*;
-use serde_json::value::Value;
+use serde_json::{json, value::Value};
 use tracing::error;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
+
+use crate::client::ResponseError;
 
 /////////////////////////////////////////////////////////////////////////////
 // ApiError
@@ -64,7 +66,20 @@ where
             Some(DatabaseError::PermissionDenied { entity, id, op }) => ApiError::Permission(
                 PermissionError::new(entity.to_string(), id.as_ref(), op.to_string()),
             ),
-            _ => ApiError::Server(anyhow_err),
+            _ => {
+                if let Some(ResponseError { url, status, body }) =
+                    anyhow_err.downcast_ref::<ResponseError>()
+                {
+                    ApiError::Request(
+                        RequestError::new("parent-node-error")
+                            .with_param("url", json!(url))
+                            .with_param("status", json!(status))
+                            .with_param("body", json!(body)),
+                    )
+                } else {
+                    ApiError::Server(anyhow_err)
+                }
+            }
         }
     }
 }

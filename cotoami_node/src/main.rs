@@ -56,19 +56,19 @@ fn build_state() -> Result<AppState> {
     config.validate()?;
     info!("Config loaded: {:?}", config);
 
-    let pubsub = Pubsub::new();
-
     let db_dir = config.db_dir();
     fs::create_dir(&db_dir).ok();
     let db = Database::new(db_dir)?;
+
+    let pubsub = Pubsub::new();
 
     let parent_sessions = HashMap::default();
     // TODO restore sessions
 
     Ok(AppState {
         config: Arc::new(config),
-        pubsub: Arc::new(Mutex::new(pubsub)),
         db: Arc::new(db),
+        pubsub: Arc::new(Mutex::new(pubsub)),
         parent_sessions: Arc::new(Mutex::new(parent_sessions)),
     })
 }
@@ -149,16 +149,32 @@ impl Config {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// AppState
+// Pubsub
 /////////////////////////////////////////////////////////////////////////////
 
 type Pubsub = Publisher<Result<Event, Infallible>>;
 
+trait ChangePub {
+    fn publish_change(&mut self, changelog: ChangelogEntry) -> Result<()>;
+}
+
+impl ChangePub for Pubsub {
+    fn publish_change(&mut self, changelog: ChangelogEntry) -> Result<()> {
+        let event = Event::default().event("change").json_data(changelog)?;
+        self.publish(&Ok(event));
+        Ok(())
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// AppState
+/////////////////////////////////////////////////////////////////////////////
+
 #[derive(Clone)]
 struct AppState {
     config: Arc<Config>,
-    pubsub: Arc<Mutex<Pubsub>>,
     db: Arc<Database>,
+    pubsub: Arc<Mutex<Pubsub>>,
     parent_sessions: Arc<Mutex<HashMap<Id<Node>, Result<Session>>>>,
 }
 
@@ -188,12 +204,6 @@ impl AppState {
         } else {
             bail!("COTOAMI_OWNER_PASSWORD must be set for the first startup.");
         }
-        Ok(())
-    }
-
-    fn publish_change(&self, changelog: ChangelogEntry) -> Result<()> {
-        let event = Event::default().event("change").json_data(changelog)?;
-        self.pubsub.lock().publish(&Ok(event));
         Ok(())
     }
 }

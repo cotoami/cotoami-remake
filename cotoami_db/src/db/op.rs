@@ -180,7 +180,7 @@ where
 
 /// Runs a read operation.
 ///
-/// The operation will be run in a `DEFERRED` transaction, which is an only way to explicitly
+/// The operation will be run in a `DEFERRED` transaction, which is the only way to explicitly
 /// start a read transaction in SQLite (precisely, a transaction will be started by the
 /// first `SELECT` statement after `BEGIN DEFERRED`).
 ///

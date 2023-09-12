@@ -125,7 +125,9 @@ async fn put_parent_node(
         .insert(parent_id, Ok(child_session.session));
 
     // Import the changelog
-    let (first, last) = server.import_changes(&state, &parent_node).await?;
+    let (first, last) = server
+        .import_changes(state.db, state.pubsub, parent_node.node_id)
+        .await?;
     info!(
         "Imported changes {}-{} from {}",
         first,
