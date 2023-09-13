@@ -10,13 +10,15 @@ use axum::{
     Extension, Router, Server,
 };
 use cotoami_db::prelude::*;
+use derive_new::new;
 use dotenvy::dotenv;
 use parking_lot::Mutex;
 use pubsub::Publisher;
+use reqwest_eventsource::ReadyState;
 use tracing::info;
 use validator::Validate;
 
-use crate::api::session::Session;
+use crate::{api::session::Session, client::EventLoop};
 
 mod api;
 mod client;
@@ -62,14 +64,14 @@ fn build_state() -> Result<AppState> {
 
     let pubsub = Pubsub::new();
 
-    let parent_sessions = HashMap::default();
+    let parent_conns = HashMap::default();
     // TODO restore sessions
 
     Ok(AppState {
         config: Arc::new(config),
         db: Arc::new(db),
         pubsub: Arc::new(Mutex::new(pubsub)),
-        parent_sessions: Arc::new(Mutex::new(parent_sessions)),
+        parent_conns: Arc::new(Mutex::new(parent_conns)),
     })
 }
 
@@ -167,6 +169,24 @@ impl ChangePub for Pubsub {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// ParentConn
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(new)]
+struct ParentConn {
+    session: Session,
+    event_loop: EventLoop,
+}
+
+impl ParentConn {
+    pub fn event_loop_state(&self) -> (ReadyState, Option<&anyhow::Error>) {
+        (self.event_loop.state(), self.event_loop.error())
+    }
+}
+
+type ParentConns = HashMap<Id<Node>, ParentConn>;
+
+/////////////////////////////////////////////////////////////////////////////
 // AppState
 /////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +195,7 @@ struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Arc<Mutex<Pubsub>>,
-    parent_sessions: Arc<Mutex<HashMap<Id<Node>, Result<Session>>>>,
+    parent_conns: Arc<Mutex<ParentConns>>,
 }
 
 impl AppState {
@@ -205,5 +225,11 @@ impl AppState {
             bail!("COTOAMI_OWNER_PASSWORD must be set for the first startup.");
         }
         Ok(())
+    }
+
+    pub fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
+        self.parent_conns
+            .lock()
+            .insert(*parent_id, ParentConn::new(session, event_loop));
     }
 }

@@ -118,15 +118,9 @@ async fn put_parent_node(
     .await??;
     info!("Parent node {} saved.", parent_node.node_id);
 
-    // Save the session token
-    state
-        .parent_sessions
-        .lock()
-        .insert(parent_id, Ok(child_session.session));
-
     // Import the changelog
     let (first, last) = server
-        .import_changes(state.db, state.pubsub, parent_node.node_id)
+        .import_changes(state.db.clone(), state.pubsub.clone(), parent_node.node_id)
         .await?;
     info!(
         "Imported changes {}-{} from {}",
@@ -136,6 +130,12 @@ async fn put_parent_node(
     );
 
     // Connect to the event stream
+    let event_loop = server
+        .create_event_loop(parent_node.node_id, state.db.clone(), state.pubsub.clone())
+        .await?;
+
+    // Store the parent connection
+    state.put_parent_conn(&parent_node.node_id, child_session.session, event_loop);
 
     Ok(StatusCode::CREATED)
 }

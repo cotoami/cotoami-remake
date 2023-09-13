@@ -124,13 +124,13 @@ impl Server {
         }
     }
 
-    pub async fn create_event_handler(
+    pub async fn create_event_loop(
         &self,
         parent_node_id: Id<Node>,
         db: Arc<Database>,
         pubsub: Arc<Mutex<Pubsub>>,
-    ) -> Result<EventHandler> {
-        EventHandler::new(self.clone(), parent_node_id, db, pubsub)
+    ) -> Result<EventLoop> {
+        EventLoop::new(self.clone(), parent_node_id, db, pubsub)
     }
 
     fn make_url(&self, path: &str) -> Result<Url> { Ok(Url::parse(&self.url_prefix)?.join(path)?) }
@@ -153,19 +153,19 @@ pub(crate) struct ResponseError {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// EventHandler
+// EventLoop
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) struct EventHandler {
+pub(crate) struct EventLoop {
     server: Server,
     parent_node_id: Id<Node>,
     db: Arc<Database>,
     pubsub: Arc<Mutex<Pubsub>>,
     event_source: EventSource,
-    pub error: Option<anyhow::Error>,
+    error: Option<anyhow::Error>,
 }
 
-impl EventHandler {
+impl EventLoop {
     fn new(
         server: Server,
         parent_node_id: Id<Node>,
@@ -183,7 +183,7 @@ impl EventHandler {
         })
     }
 
-    pub async fn start(&mut self) {
+    pub async fn run(&mut self) {
         while let Some(item) = self.event_source.next().await {
             match item {
                 Ok(ESItem::Open) => info!("Event stream opened: {}", self.server.url_prefix()),
@@ -253,5 +253,7 @@ impl EventHandler {
         Ok(())
     }
 
-    pub fn get_state(&self) -> ReadyState { self.event_source.ready_state() }
+    pub fn state(&self) -> ReadyState { self.event_source.ready_state() }
+
+    pub fn error(&self) -> Option<&anyhow::Error> { self.error.as_ref() }
 }
