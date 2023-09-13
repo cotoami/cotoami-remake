@@ -4,7 +4,7 @@ use anyhow::Result;
 use cotoami_db::prelude::*;
 use eventsource_stream::Event;
 use futures::StreamExt;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, Response, Url,
@@ -156,13 +156,31 @@ pub(crate) struct ResponseError {
 // EventLoop
 /////////////////////////////////////////////////////////////////////////////
 
+pub(crate) struct EventLoopState {
+    ready_state: ReadyState,
+    error: Option<anyhow::Error>,
+    end_loop: bool,
+}
+
+impl EventLoopState {
+    fn new(ready_state: ReadyState) -> Self {
+        Self {
+            ready_state,
+            error: None,
+            end_loop: false,
+        }
+    }
+
+    pub fn end(&mut self) { self.end_loop = true; }
+}
+
 pub(crate) struct EventLoop {
     server: Server,
     parent_node_id: Id<Node>,
     db: Arc<Database>,
     pubsub: Arc<Mutex<Pubsub>>,
     event_source: EventSource,
-    error: Option<anyhow::Error>,
+    state: Arc<RwLock<EventLoopState>>,
 }
 
 impl EventLoop {
@@ -173,41 +191,57 @@ impl EventLoop {
         pubsub: Arc<Mutex<Pubsub>>,
     ) -> Result<Self> {
         let url = server.make_url("/api/events")?;
+        let event_source = EventSource::get(url);
+        let state = EventLoopState::new(event_source.ready_state());
         Ok(Self {
             server,
             parent_node_id,
             db,
             pubsub,
-            event_source: EventSource::get(url),
-            error: None,
+            event_source,
+            state: Arc::new(RwLock::new(state)),
         })
     }
 
-    pub async fn run(&mut self) {
+    fn set_ready_state(&mut self, ready_state: ReadyState) {
+        self.state.write().ready_state = ready_state;
+    }
+
+    fn set_error(&mut self, error: anyhow::Error) { self.state.write().error = Some(error); }
+
+    pub fn state(&self) -> Arc<RwLock<EventLoopState>> { self.state.clone() }
+
+    pub async fn start(&mut self) {
         while let Some(item) = self.event_source.next().await {
             match item {
                 Ok(ESItem::Open) => info!("Event stream opened: {}", self.server.url_prefix()),
                 Ok(ESItem::Message(event)) => {
                     if let Err(err) = self.handle_event(&event).await {
-                        self.event_source.close();
-                        self.error = Some(anyhow::Error::from(err));
                         debug!(
                             "Event stream {} closed because of an error in handling an event: {}",
                             self.server.url_prefix(),
-                            self.error.as_ref().unwrap()
+                            &err
                         );
+                        self.event_source.close();
+                        self.set_error(anyhow::Error::from(err));
                     }
                 }
                 Err(err) => {
-                    self.event_source.close();
-                    self.error = Some(anyhow::Error::from(err));
                     debug!(
                         "Event stream {} closed because of a stream error: {}",
                         self.server.url_prefix(),
-                        self.error.as_ref().unwrap()
+                        &err
                     );
+                    self.event_source.close();
+                    self.set_error(anyhow::Error::from(err));
                 }
             }
+
+            if self.state.read().end_loop {
+                self.event_source.close();
+                info!("Event stream closed: {}", self.server.url_prefix());
+            }
+            self.set_ready_state(self.event_source.ready_state());
         }
     }
 
@@ -252,8 +286,4 @@ impl EventLoop {
         }
         Ok(())
     }
-
-    pub fn state(&self) -> ReadyState { self.event_source.ready_state() }
-
-    pub fn error(&self) -> Option<&anyhow::Error> { self.error.as_ref() }
 }

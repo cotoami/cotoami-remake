@@ -12,13 +12,15 @@ use axum::{
 use cotoami_db::prelude::*;
 use derive_new::new;
 use dotenvy::dotenv;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 use pubsub::Publisher;
-use reqwest_eventsource::ReadyState;
 use tracing::info;
 use validator::Validate;
 
-use crate::{api::session::Session, client::EventLoop};
+use crate::{
+    api::session::Session,
+    client::{EventLoop, EventLoopState},
+};
 
 mod api;
 mod client;
@@ -175,13 +177,11 @@ impl ChangePub for Pubsub {
 #[derive(new)]
 struct ParentConn {
     session: Session,
-    event_loop: EventLoop,
+    event_loop_state: Arc<RwLock<EventLoopState>>,
 }
 
 impl ParentConn {
-    pub fn event_loop_state(&self) -> (ReadyState, Option<&anyhow::Error>) {
-        (self.event_loop.state(), self.event_loop.error())
-    }
+    pub fn end_event_loop(&self) { self.event_loop_state.write().end(); }
 }
 
 type ParentConns = HashMap<Id<Node>, ParentConn>;
@@ -227,9 +227,17 @@ impl AppState {
         Ok(())
     }
 
-    pub fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
+    pub fn put_parent_conn(
+        &self,
+        parent_id: &Id<Node>,
+        session: Session,
+        mut event_loop: EventLoop,
+    ) {
         self.parent_conns
             .lock()
-            .insert(*parent_id, ParentConn::new(session, event_loop));
+            .insert(*parent_id, ParentConn::new(session, event_loop.state()));
+        tokio::spawn(async move {
+            event_loop.start().await;
+        });
     }
 }

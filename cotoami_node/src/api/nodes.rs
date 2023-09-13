@@ -129,7 +129,7 @@ async fn put_parent_node(
         server.url_prefix()
     );
 
-    // Connect to the event stream
+    // Create an event stream
     let event_loop = server
         .create_event_loop(parent_node.node_id, state.db.clone(), state.pubsub.clone())
         .await?;
