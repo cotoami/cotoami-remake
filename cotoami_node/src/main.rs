@@ -174,14 +174,23 @@ impl ChangePub for Pubsub {
 // ParentConn
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(new)]
-struct ParentConn {
-    session: Session,
-    event_loop_state: Arc<RwLock<EventLoopState>>,
+enum ParentConn {
+    Failed(anyhow::Error),
+    Connected {
+        session: Session,
+        event_loop_state: Arc<RwLock<EventLoopState>>,
+    },
 }
 
 impl ParentConn {
-    pub fn end_event_loop(&self) { self.event_loop_state.write().end(); }
+    pub fn end_event_loop(&self) {
+        if let ParentConn::Connected {
+            event_loop_state, ..
+        } = self
+        {
+            event_loop_state.write().end();
+        }
+    }
 }
 
 type ParentConns = HashMap<Id<Node>, ParentConn>;
@@ -233,9 +242,11 @@ impl AppState {
         session: Session,
         mut event_loop: EventLoop,
     ) {
-        self.parent_conns
-            .lock()
-            .insert(*parent_id, ParentConn::new(session, event_loop.state()));
+        let parent_conn = ParentConn::Connected {
+            session,
+            event_loop_state: event_loop.state(),
+        };
+        self.parent_conns.lock().insert(*parent_id, parent_conn);
         tokio::spawn(async move {
             event_loop.start().await;
         });
