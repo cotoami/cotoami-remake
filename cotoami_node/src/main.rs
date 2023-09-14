@@ -10,7 +10,6 @@ use axum::{
     Extension, Router, Server,
 };
 use cotoami_db::prelude::*;
-use derive_new::new;
 use dotenvy::dotenv;
 use parking_lot::{Mutex, RwLock};
 use pubsub::Publisher;
@@ -33,7 +32,7 @@ async fn main() -> Result<()> {
     // Install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
 
-    let state = build_state()?;
+    let state = AppState::load()?;
     let port = state.config.port;
 
     // Should this be in `spawn_blocking`?
@@ -53,28 +52,6 @@ async fn main() -> Result<()> {
         .unwrap();
 
     Ok(())
-}
-
-fn build_state() -> Result<AppState> {
-    let config = Config::load()?;
-    config.validate()?;
-    info!("Config loaded: {:?}", config);
-
-    let db_dir = config.db_dir();
-    fs::create_dir(&db_dir).ok();
-    let db = Database::new(db_dir)?;
-
-    let pubsub = Pubsub::new();
-
-    let parent_conns = HashMap::default();
-    // TODO restore sessions
-
-    Ok(AppState {
-        config: Arc::new(config),
-        db: Arc::new(db),
-        pubsub: Arc::new(Mutex::new(pubsub)),
-        parent_conns: Arc::new(Mutex::new(parent_conns)),
-    })
 }
 
 /// axum handler for any request that fails to match the router routes.
@@ -208,6 +185,28 @@ struct AppState {
 }
 
 impl AppState {
+    fn load() -> Result<Self> {
+        let config = Config::load()?;
+        config.validate()?;
+        info!("Config loaded: {:?}", config);
+
+        let db_dir = config.db_dir();
+        fs::create_dir(&db_dir).ok();
+        let db = Database::new(db_dir)?;
+
+        let pubsub = Pubsub::new();
+
+        let parent_conns = HashMap::default();
+        // TODO restore sessions
+
+        Ok(AppState {
+            config: Arc::new(config),
+            db: Arc::new(db),
+            pubsub: Arc::new(Mutex::new(pubsub)),
+            parent_conns: Arc::new(Mutex::new(parent_conns)),
+        })
+    }
+
     fn init_local_node(&self) -> Result<()> {
         let db = self.db.create_session()?;
 
