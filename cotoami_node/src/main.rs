@@ -1,10 +1,17 @@
 use anyhow::Result;
+use cotoami_node::Config;
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
-    let (handle, _shutdown_trigger) = cotoami_node::run_server().await?;
+
+    let config = Config::load_from_env()?;
+    info!("Config loaded: {:?}", config);
+
+    let (handle, _shutdown_trigger) = cotoami_node::run_server(config).await?;
     handle.await??;
+
     Ok(())
 }

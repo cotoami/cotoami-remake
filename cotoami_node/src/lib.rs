@@ -31,8 +31,8 @@ mod csrf;
 mod error;
 mod pubsub;
 
-pub async fn run_server() -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    let state = AppState::load()?;
+pub async fn run_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
+    let state = AppState::new(config)?;
     let port = state.config.port;
 
     // Should this be in `spawn_blocking`?
@@ -72,44 +72,44 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, serde::Deserialize, Validate)]
-struct Config {
+pub struct Config {
     // COTOAMI_PORT
     #[serde(default = "Config::default_port")]
-    port: u16,
+    pub port: u16,
 
     // COTOAMI_URL_SCHEME
     #[serde(default = "Config::default_url_scheme")]
-    url_scheme: String,
+    pub url_scheme: String,
     // COTOAMI_URL_HOST
     #[serde(default = "Config::default_url_host")]
-    url_host: String,
+    pub url_host: String,
     // COTOAMI_URL_PORT
-    url_port: Option<u16>,
+    pub url_port: Option<u16>,
 
     // COTOAMI_DB_DIR
-    db_dir: Option<String>,
+    pub db_dir: Option<String>,
 
     // COTOAMI_NODE_NAME
     #[validate(length(min = 1, max = "Node::NAME_MAX_LENGTH"))]
-    node_name: Option<String>,
+    pub node_name: Option<String>,
 
     // COTOAMI_OWNER_PASSWORD
-    owner_password: Option<String>,
+    pub owner_password: Option<String>,
 
     // COTOAMI_SESSION_MINUTES
     #[serde(default = "Config::default_session_minutes")]
-    session_minutes: u64,
+    pub session_minutes: u64,
 
     // COTOAMI_CHANGES_CHUNK_SIZE
     #[serde(default = "Config::default_changes_chunk_size")]
-    changes_chunk_size: i64,
+    pub changes_chunk_size: i64,
 }
 
 impl Config {
     const ENV_PREFXI: &str = "COTOAMI_";
     const DEFAULT_DB_DIR_NAME: &str = "cotoami";
 
-    fn load() -> Result<Config, envy::Error> {
+    pub fn load_from_env() -> Result<Config, envy::Error> {
         dotenv().ok();
         envy::prefixed(Self::ENV_PREFXI).from_env::<Config>()
     }
@@ -192,10 +192,8 @@ struct AppState {
 }
 
 impl AppState {
-    fn load() -> Result<Self> {
-        let config = Config::load()?;
+    fn new(config: Config) -> Result<Self> {
         config.validate()?;
-        info!("Config loaded: {:?}", config);
 
         let db_dir = config.db_dir();
         fs::create_dir(&db_dir).ok();
