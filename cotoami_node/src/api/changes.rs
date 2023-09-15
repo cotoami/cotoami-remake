@@ -31,6 +31,12 @@ pub(crate) struct Position {
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) enum ChangesResult {
+    Fetched(Changes),
+    OutOfRange { max: i64 },
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct Changes {
     pub chunk: Vec<ChangelogEntry>,
     pub last_serial_number: i64,
@@ -56,18 +62,30 @@ impl Changes {
 async fn chunk_of_changes(
     State(state): State<AppState>,
     Query(position): Query<Position>,
-) -> Result<Json<Changes>, ApiError> {
+) -> Result<Json<ChangesResult>, ApiError> {
     if let Err(errors) = position.validate() {
         return ("changes", errors).into_result();
     }
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
-        let (chunk, last_serial_number) =
-            db.chunk_of_changes(position.from.unwrap(), state.config.changes_chunk_size)?;
-        Ok(Json(Changes {
-            chunk,
-            last_serial_number,
-        }))
+        match db.chunk_of_changes(position.from.unwrap(), state.config.changes_chunk_size) {
+            Ok((chunk, last_serial_number)) => {
+                let changes = Changes {
+                    chunk,
+                    last_serial_number,
+                };
+                Ok(Json(ChangesResult::Fetched(changes)))
+            }
+            Err(anyhow_err) => {
+                if let Some(DatabaseError::ChangeNumberOutOfRange { max, .. }) =
+                    anyhow_err.downcast_ref::<DatabaseError>()
+                {
+                    Ok(Json(ChangesResult::OutOfRange { max: *max }))
+                } else {
+                    Err(anyhow_err.into())
+                }
+            }
+        }
     })
     .await?
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use eventsource_stream::Event;
 use futures::StreamExt;
@@ -16,7 +16,7 @@ use tracing::{debug, info};
 
 use crate::{
     api::{
-        changes::Changes,
+        changes::ChangesResult,
         session::{ChildSessionCreated, CreateChildSession},
         SESSION_HEADER_NAME,
     },
@@ -72,14 +72,14 @@ impl Server {
         Ok(response.json::<ChildSessionCreated>().await?)
     }
 
-    pub async fn chunk_of_changes(&self, from: i64) -> Result<Changes> {
+    pub async fn chunk_of_changes(&self, from: i64) -> Result<ChangesResult> {
         let mut url = self.make_url("/api/changes")?;
         url.query_pairs_mut().append_pair("from", &from.to_string());
         let response = self.client.get(url).send().await?;
         if response.status() != reqwest::StatusCode::OK {
             return Self::into_err(response).await?;
         }
-        Ok(response.json::<Changes>().await?)
+        Ok(response.json::<ChangesResult>().await?)
     }
 
     pub async fn import_changes(
@@ -87,16 +87,34 @@ impl Server {
         db: Arc<Database>,
         pubsub: Arc<Mutex<Pubsub>>,
         parent_node_id: Id<Node>,
-    ) -> Result<(i64, i64)> {
+    ) -> Result<Option<(i64, i64)>> {
         let parent_node = db.create_session()?.parent_node_or_err(&parent_node_id)?;
         let import_from = parent_node.changes_received + 1;
-        debug!("import_changes from {}", import_from);
+        debug!("Importing changes from {}...", import_from);
         let mut from = import_from;
         loop {
-            debug!("Importing a chunk of changes from {}", from);
-
             // Get a chunk of changelog entries from the server
-            let changes = self.chunk_of_changes(from).await?;
+            let changes = match self.chunk_of_changes(from).await? {
+                ChangesResult::Fetched(changes) => {
+                    debug!("Fetched a chunk of changes from {}.", from);
+                    changes
+                }
+                ChangesResult::OutOfRange { max } => {
+                    if from == import_from && parent_node.changes_received == max {
+                        // A case where the local has already synced with the parent
+                        return Ok(None);
+                    } else {
+                        // The number of `parent_node.changes_received` is larger than
+                        // the actual last number of the changes in the parent node for some reason.
+                        // That means the replication has broken between the two nodes.
+                        bail!(
+                            "Tried to import from {}, but the last number was {}.",
+                            from,
+                            max
+                        );
+                    }
+                }
+            };
             let is_last_chunk = changes.is_last_chunk();
             let last_number_of_chunk = changes.last_serial_number_of_chunk();
 
@@ -104,6 +122,7 @@ impl Server {
             let db = db.clone();
             let pubsub = pubsub.clone();
             let chunk_imported: Result<()> = spawn_blocking(move || {
+                debug!("Importing the chunk...");
                 let db = db.create_session()?;
                 for change in changes.chunk {
                     if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
@@ -117,7 +136,7 @@ impl Server {
 
             // Next chunk or finish import
             if is_last_chunk {
-                return Ok((import_from, last_number_of_chunk));
+                return Ok(Some((import_from, last_number_of_chunk)));
             } else {
                 from = last_number_of_chunk + 1;
             }
@@ -265,16 +284,18 @@ impl EventLoop {
                         self.server.url_prefix()
                     );
                     debug!("Importing the changes from {}", self.server.url_prefix());
-                    let (first, last) = self
+                    if let Some((first, last)) = self
                         .server
                         .import_changes(self.db.clone(), self.pubsub.clone(), self.parent_node_id)
-                        .await?;
-                    info!(
-                        "Imported changes {}-{} from {}",
-                        first,
-                        last,
-                        self.server.url_prefix()
-                    );
+                        .await?
+                    {
+                        info!(
+                            "Imported changes {}-{} from {}",
+                            first,
+                            last,
+                            self.server.url_prefix()
+                        );
+                    }
                 } else {
                     return Err(anyhow_err);
                 }
