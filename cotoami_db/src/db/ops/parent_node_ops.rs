@@ -59,9 +59,11 @@ pub fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, ParentNo
     })
 }
 
-pub fn set_changes_received(
+/// Update `parent_nodes::changes_received` with a number that must be the current value + 1.
+/// If the `incremented_number` is not an expected value, `Err(NotFound)` will be returned.
+pub fn increment_changes_received(
     id: &Id<Node>,
-    number: i64,
+    incremented_number: i64,
     received_at: Option<NaiveDateTime>,
 ) -> impl Operation<WritableConn, ParentNode> + '_ {
     use crate::schema::parent_nodes;
@@ -72,10 +74,10 @@ pub fn set_changes_received(
                 parent_nodes::node_id
                     .eq(id)
                     // ensure the `number` is +1 increment
-                    .and(parent_nodes::changes_received.eq(number - 1)),
+                    .and(parent_nodes::changes_received.eq(incremented_number - 1)),
             )
             .set((
-                parent_nodes::changes_received.eq(number),
+                parent_nodes::changes_received.eq(incremented_number),
                 parent_nodes::last_change_received_at.eq(Some(received_at)),
             ))
             .get_result(conn.deref_mut())

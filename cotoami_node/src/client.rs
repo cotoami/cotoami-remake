@@ -93,7 +93,7 @@ impl Server {
         debug!("import_changes from {}", import_from);
         let mut from = import_from;
         loop {
-            debug!("chunk of changes from {}", from);
+            debug!("Importing a chunk of changes from {}", from);
 
             // Get a chunk of changelog entries from the server
             let changes = self.chunk_of_changes(from).await?;

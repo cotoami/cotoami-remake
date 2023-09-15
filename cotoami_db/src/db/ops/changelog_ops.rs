@@ -162,7 +162,7 @@ pub fn import_change<'a>(
         };
 
         // Increment the count of received changes
-        *parent_node = parent_node_ops::set_changes_received(
+        *parent_node = parent_node_ops::increment_changes_received(
             &parent_node.node_id,
             expected_number,
             log_entry.as_ref().map(|e| e.inserted_at),
