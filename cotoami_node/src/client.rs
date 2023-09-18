@@ -88,27 +88,25 @@ impl Server {
         pubsub: Arc<Mutex<Pubsub>>,
         parent_node_id: Id<Node>,
     ) -> Result<Option<(i64, i64)>> {
+        info!("Importing the changes from {}", self.url_prefix());
         let parent_node = db.create_session()?.parent_node_or_err(&parent_node_id)?;
         let import_from = parent_node.changes_received + 1;
-        debug!("Importing changes from {}...", import_from);
         let mut from = import_from;
         loop {
             // Get a chunk of changelog entries from the server
             let changes = match self.chunk_of_changes(from).await? {
-                ChangesResult::Fetched(changes) => {
-                    debug!("Fetched a chunk of changes from {}.", from);
-                    changes
-                }
+                ChangesResult::Fetched(changes) => changes,
                 ChangesResult::OutOfRange { max } => {
                     if from == import_from && parent_node.changes_received == max {
                         // A case where the local has already synced with the parent
+                        info!("Already synced with: {}", self.url_prefix());
                         return Ok(None);
                     } else {
                         // The number of `parent_node.changes_received` is larger than
                         // the actual last number of the changes in the parent node for some reason.
                         // That means the replication has broken between the two nodes.
                         bail!(
-                            "Tried to import from {}, but the last number was {}.",
+                            "Tried to import from {}, but the last change number was {}.",
                             from,
                             max
                         );
@@ -117,6 +115,11 @@ impl Server {
             };
             let is_last_chunk = changes.is_last_chunk();
             let last_number_of_chunk = changes.last_serial_number_of_chunk();
+
+            debug!(
+                "Fetched a chunk of changes: {}-{} (is_last: {}, max: {})",
+                from, last_number_of_chunk, is_last_chunk, changes.last_serial_number
+            );
 
             // Import the changes to the local database
             let db = db.clone();
@@ -136,6 +139,12 @@ impl Server {
 
             // Next chunk or finish import
             if is_last_chunk {
+                info!(
+                    "Imported changes {}-{} from {}",
+                    import_from,
+                    last_number_of_chunk,
+                    self.url_prefix()
+                );
                 return Ok(Some((import_from, last_number_of_chunk)));
             } else {
                 from = last_number_of_chunk + 1;
@@ -265,6 +274,7 @@ impl EventLoop {
     }
 
     async fn handle_event(&mut self, event: &Event) -> Result<()> {
+        debug!("Handling a server event: {:?}", event);
         let change = serde_json::from_str::<ChangelogEntry>(&event.data)?;
         let db = self.db.clone();
         let parent_node_id = self.parent_node_id;
@@ -278,24 +288,14 @@ impl EventLoop {
                 }) = anyhow_err.downcast_ref::<DatabaseError>()
                 {
                     info!(
-                        "Unexpected change number {} (expected {}) from {}",
+                        "Out of sync with {} (received: {}, expected {})",
+                        self.server.url_prefix(),
                         actual,
                         expected,
-                        self.server.url_prefix()
                     );
-                    debug!("Importing the changes from {}", self.server.url_prefix());
-                    if let Some((first, last)) = self
-                        .server
+                    self.server
                         .import_changes(self.db.clone(), self.pubsub.clone(), self.parent_node_id)
-                        .await?
-                    {
-                        info!(
-                            "Imported changes {}-{} from {}",
-                            first,
-                            last,
-                            self.server.url_prefix()
-                        );
-                    }
+                        .await?;
                 } else {
                     return Err(anyhow_err);
                 }

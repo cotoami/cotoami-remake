@@ -119,17 +119,9 @@ async fn put_parent_node(
     info!("Parent node {} saved.", parent_node.node_id);
 
     // Import the changelog
-    if let Some((first, last)) = server
+    server
         .import_changes(state.db.clone(), state.pubsub.clone(), parent_node.node_id)
-        .await?
-    {
-        info!(
-            "Imported changes {}-{} from {}",
-            first,
-            last,
-            server.url_prefix()
-        );
-    }
+        .await?;
 
     // Create an event stream
     let event_loop = server
