@@ -68,6 +68,84 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// AppState
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone)]
+struct AppState {
+    config: Arc<Config>,
+    db: Arc<Database>,
+    pubsub: Arc<Mutex<Pubsub>>,
+    parent_conns: Arc<Mutex<ParentConns>>,
+}
+
+impl AppState {
+    fn new(config: Config) -> Result<Self> {
+        config.validate()?;
+
+        let db_dir = config.db_dir();
+        fs::create_dir(&db_dir).ok();
+        let db = Database::new(db_dir)?;
+
+        let pubsub = Pubsub::new();
+
+        let parent_conns = HashMap::default();
+        // TODO restore sessions
+
+        Ok(AppState {
+            config: Arc::new(config),
+            db: Arc::new(db),
+            pubsub: Arc::new(Mutex::new(pubsub)),
+            parent_conns: Arc::new(Mutex::new(parent_conns)),
+        })
+    }
+
+    fn init_local_node(&self) -> Result<()> {
+        let db = self.db.create_session()?;
+
+        // If the local node already exists,
+        // its name and password can be changed via config
+        if db.is_local_node_initialized() {
+            if let Some(name) = self.config.node_name.as_deref() {
+                db.rename_local_node(name)?;
+                info!("The node name has been changed via COTOAMI_NODE_NAME.");
+            }
+            if let Some(password) = self.config.owner_password.as_deref() {
+                db.change_owner_password(password)?;
+                info!("The owner password has been changed via COTOAMI_OWNER_PASSWORD.");
+            }
+            return Ok(());
+        }
+
+        // Create a local node
+        if let Some(password) = self.config.owner_password.as_deref() {
+            let name = self.config.node_name.as_deref();
+            let ((_, node), _) = db.init_as_node(name, Some(password))?;
+            info!("The local node [{}] has been created", node.name);
+        } else {
+            bail!("COTOAMI_OWNER_PASSWORD must be set for the first startup.");
+        }
+        Ok(())
+    }
+
+    pub fn put_parent_conn(
+        &self,
+        parent_id: &Id<Node>,
+        session: Session,
+        mut event_loop: EventLoop,
+    ) {
+        let parent_conn = ParentConn::Connected {
+            session,
+            event_loop_state: event_loop.state(),
+        };
+        self.parent_conns.lock().insert(*parent_id, parent_conn);
+        tokio::spawn(async move {
+            event_loop.start().await;
+        });
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Config
 /////////////////////////////////////////////////////////////////////////////
 
@@ -178,81 +256,3 @@ impl ParentConn {
 }
 
 type ParentConns = HashMap<Id<Node>, ParentConn>;
-
-/////////////////////////////////////////////////////////////////////////////
-// AppState
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(Clone)]
-struct AppState {
-    config: Arc<Config>,
-    db: Arc<Database>,
-    pubsub: Arc<Mutex<Pubsub>>,
-    parent_conns: Arc<Mutex<ParentConns>>,
-}
-
-impl AppState {
-    fn new(config: Config) -> Result<Self> {
-        config.validate()?;
-
-        let db_dir = config.db_dir();
-        fs::create_dir(&db_dir).ok();
-        let db = Database::new(db_dir)?;
-
-        let pubsub = Pubsub::new();
-
-        let parent_conns = HashMap::default();
-        // TODO restore sessions
-
-        Ok(AppState {
-            config: Arc::new(config),
-            db: Arc::new(db),
-            pubsub: Arc::new(Mutex::new(pubsub)),
-            parent_conns: Arc::new(Mutex::new(parent_conns)),
-        })
-    }
-
-    fn init_local_node(&self) -> Result<()> {
-        let db = self.db.create_session()?;
-
-        // If the local node already exists,
-        // its name and password can be changed via config
-        if db.is_local_node_initialized() {
-            if let Some(name) = self.config.node_name.as_deref() {
-                db.rename_local_node(name)?;
-                info!("The node name has been changed via COTOAMI_NODE_NAME.");
-            }
-            if let Some(password) = self.config.owner_password.as_deref() {
-                db.change_owner_password(password)?;
-                info!("The owner password has been changed via COTOAMI_OWNER_PASSWORD.");
-            }
-            return Ok(());
-        }
-
-        // Create a local node
-        if let Some(password) = self.config.owner_password.as_deref() {
-            let name = self.config.node_name.as_deref();
-            let ((_, node), _) = db.init_as_node(name, Some(password))?;
-            info!("The local node [{}] has been created", node.name);
-        } else {
-            bail!("COTOAMI_OWNER_PASSWORD must be set for the first startup.");
-        }
-        Ok(())
-    }
-
-    pub fn put_parent_conn(
-        &self,
-        parent_id: &Id<Node>,
-        session: Session,
-        mut event_loop: EventLoop,
-    ) {
-        let parent_conn = ParentConn::Connected {
-            session,
-            event_loop_state: event_loop.state(),
-        };
-        self.parent_conns.lock().insert(*parent_id, parent_conn);
-        tokio::spawn(async move {
-            event_loop.start().await;
-        });
-    }
-}
