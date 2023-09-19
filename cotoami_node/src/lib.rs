@@ -31,7 +31,7 @@ mod csrf;
 mod error;
 mod pubsub;
 
-pub async fn run_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
+pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     let state = AppState::new(config)?;
     let port = state.config.port;
 
@@ -171,7 +171,12 @@ pub struct Config {
     #[validate(length(min = 1, max = "Node::NAME_MAX_LENGTH"))]
     pub node_name: Option<String>,
 
-    // COTOAMI_OWNER_PASSWORD
+    /// The owner password is used for owner authentication and
+    /// as a master password to encrypt other passwords.
+    ///
+    /// This value can be set via `COTOAMI_OWNER_PASSWORD` and
+    /// is required to launch a node server.
+    #[validate(required)]
     pub owner_password: Option<String>,
 
     // COTOAMI_SESSION_MINUTES
@@ -210,6 +215,8 @@ impl Config {
                 .unwrap_or(PathBuf::from(Self::DEFAULT_DB_DIR_NAME))
         })
     }
+
+    pub fn owner_password(&self) -> &str { self.owner_password.as_deref().unwrap() }
 
     fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
 }
