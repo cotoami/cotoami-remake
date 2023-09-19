@@ -98,7 +98,7 @@ async fn put_parent_node(
         .create_child_session(
             password.clone(),
             None, // TODO
-            node,
+            &node,
         )
         .await?;
     info!("Successfully logged in to {}", server.url_prefix());

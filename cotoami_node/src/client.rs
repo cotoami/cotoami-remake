@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
@@ -57,13 +57,13 @@ impl Server {
         &self,
         password: String,
         new_password: Option<String>,
-        child: Node,
+        child: &Node,
     ) -> Result<ChildSessionCreated> {
         let url = self.make_url("/api/session/child")?;
         let req_body = CreateChildSession {
             password,
             new_password,
-            child,
+            child: Cow::Borrowed(child),
         };
         let response = self.client.put(url).json(&req_body).send().await?;
         if response.status() != reqwest::StatusCode::CREATED {

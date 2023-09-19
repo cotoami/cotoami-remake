@@ -1,4 +1,5 @@
 use core::time::Duration;
+use std::borrow::Cow;
 
 use anyhow::Result;
 use axum::{
@@ -109,10 +110,10 @@ async fn create_owner_session(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct CreateChildSession {
+pub(crate) struct CreateChildSession<'a> {
     pub password: String,
     pub new_password: Option<String>,
-    pub child: Node,
+    pub child: Cow<'a, Node>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -124,7 +125,7 @@ pub(crate) struct ChildSessionCreated {
 async fn create_child_session(
     State(state): State<AppState>,
     jar: CookieJar,
-    Json(payload): Json<CreateChildSession>,
+    Json(payload): Json<CreateChildSession<'static>>,
 ) -> Result<(StatusCode, CookieJar, Json<ChildSessionCreated>), ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
