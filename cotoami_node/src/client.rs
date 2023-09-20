@@ -7,7 +7,7 @@ use futures::StreamExt;
 use parking_lot::{Mutex, RwLock};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    Client, Response, Url,
+    Client, IntoUrl, RequestBuilder, Response, Url,
 };
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use thiserror::Error;
@@ -31,33 +31,32 @@ use crate::{
 pub(crate) struct Server {
     client: Client,
     url_prefix: String,
+    headers: HeaderMap,
 }
 
 impl Server {
-    pub fn new(url_prefix: String, session_token: Option<&str>) -> Result<Self> {
-        let headers = Self::default_headers(session_token)?;
-        let client = Client::builder().default_headers(headers).build()?;
-        Ok(Self { client, url_prefix })
-    }
-
-    fn default_headers(session_token: Option<&str>) -> Result<HeaderMap> {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            csrf::CUSTOM_HEADER,
-            HeaderValue::from_static("cotoami_node"),
-        );
-        if let Some(token) = session_token {
-            let mut token = HeaderValue::from_str(token)?;
-            token.set_sensitive(true);
-            headers.insert(SESSION_HEADER_NAME, token);
-        };
-        Ok(headers)
+    pub fn new(url_prefix: String) -> Result<Self> {
+        let client = Client::builder()
+            .default_headers(Self::default_headers())
+            .build()?;
+        Ok(Self {
+            client,
+            url_prefix,
+            headers: HeaderMap::new(),
+        })
     }
 
     pub fn url_prefix(&self) -> &str { &self.url_prefix }
 
+    pub fn set_session_token(&mut self, token: &str) -> Result<()> {
+        let mut token = HeaderValue::from_str(token)?;
+        token.set_sensitive(true);
+        self.headers.insert(SESSION_HEADER_NAME, token);
+        Ok(())
+    }
+
     pub async fn create_child_session(
-        &self,
+        &mut self,
         password: String,
         new_password: Option<String>,
         child: &Node,
@@ -68,17 +67,19 @@ impl Server {
             new_password,
             child: Cow::Borrowed(child),
         };
-        let response = self.client.put(url).json(&req_body).send().await?;
+        let response = self.put(url).json(&req_body).send().await?;
         if response.status() != reqwest::StatusCode::CREATED {
             return Self::into_err(response).await?;
         }
-        Ok(response.json::<ChildSessionCreated>().await?)
+        let child_session = response.json::<ChildSessionCreated>().await?;
+        self.set_session_token(&child_session.session.token)?;
+        Ok(child_session)
     }
 
     pub async fn chunk_of_changes(&self, from: i64) -> Result<ChangesResult> {
         let mut url = self.make_url("/api/changes")?;
         url.query_pairs_mut().append_pair("from", &from.to_string());
-        let response = self.client.get(url).send().await?;
+        let response = self.get(url).send().await?;
         if response.status() != reqwest::StatusCode::OK {
             return Self::into_err(response).await?;
         }
@@ -164,7 +165,24 @@ impl Server {
         EventLoop::new(self.clone(), parent_node_id, db, pubsub)
     }
 
+    fn default_headers() -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            csrf::CUSTOM_HEADER,
+            HeaderValue::from_static("cotoami_node"),
+        );
+        headers
+    }
+
     fn make_url(&self, path: &str) -> Result<Url> { Ok(Url::parse(&self.url_prefix)?.join(path)?) }
+
+    fn get<U: IntoUrl>(&self, url: U) -> RequestBuilder {
+        self.client.get(url).headers(self.headers.clone())
+    }
+
+    fn put<U: IntoUrl>(&self, url: U) -> RequestBuilder {
+        self.client.put(url).headers(self.headers.clone())
+    }
 
     async fn into_err<T>(response: Response) -> Result<T, ResponseError> {
         Err(ResponseError {

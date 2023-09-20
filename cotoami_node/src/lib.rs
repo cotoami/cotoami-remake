@@ -285,7 +285,7 @@ impl ParentConn {
         db: Arc<Database>,
         pubsub: Arc<Mutex<Pubsub>>,
     ) -> Result<Self> {
-        let server = Server::new(parent_node.url_prefix.clone(), None)?;
+        let mut server = Server::new(parent_node.url_prefix.clone())?;
 
         // Attempt to log in to the parent node
         let password = parent_node

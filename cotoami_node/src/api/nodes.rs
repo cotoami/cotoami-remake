@@ -93,7 +93,7 @@ async fn put_parent_node(
 
     // Attempt to log in to the parent node
     let password = form.password.unwrap();
-    let server = Server::new(form.url_prefix.unwrap(), None)?;
+    let mut server = Server::new(form.url_prefix.unwrap())?;
     let child_session = server
         .create_child_session(
             password.clone(),
