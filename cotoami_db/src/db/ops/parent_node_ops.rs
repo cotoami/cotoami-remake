@@ -9,7 +9,7 @@ use crate::{
     db::op::*,
     models::{
         node::{
-            parent::{NewParentNode, ParentNode},
+            parent::{ClearParentPassword, NewParentNode, ParentNode},
             Node,
         },
         Id,
@@ -81,6 +81,16 @@ pub fn increment_changes_received(
                 parent_nodes::last_change_received_at.eq(Some(received_at)),
             ))
             .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
+    use crate::schema::parent_nodes;
+    write_op(move |conn| {
+        diesel::update(parent_nodes::table)
+            .set(ClearParentPassword::new())
+            .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
 }

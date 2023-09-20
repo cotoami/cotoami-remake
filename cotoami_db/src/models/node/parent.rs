@@ -99,6 +99,30 @@ impl FromSql<Binary, Sqlite> for EncryptedPassword {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// ClearParentPassword
+/////////////////////////////////////////////////////////////////////////////
+
+/// Changeset to set NULL to [parent_nodes::encrypted_password].
+///
+/// I couldn't find a straightforward way to set NULL to a field in UPDATE dsl.
+/// In the document (<https://diesel.rs/guides/all-about-updates.html>), the only way
+/// introduced is to use an [AsChangeset] struct with `#[diesel(treat_none_as_null = true)]`
+/// or to have the field be of type `Option<Option<T>>`.
+#[derive(AsChangeset)]
+#[diesel(table_name = parent_nodes, treat_none_as_null = true)]
+pub struct ClearParentPassword {
+    encrypted_password: Option<EncryptedPassword>,
+}
+
+impl ClearParentPassword {
+    pub fn new() -> Self {
+        Self {
+            encrypted_password: None,
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // NewParentNode
 /////////////////////////////////////////////////////////////////////////////
 
