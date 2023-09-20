@@ -176,6 +176,12 @@ impl Globals {
     pub fn parent_node(&self, id: &Id<Node>) -> Option<ParentNode> {
         self.parent_nodes.get(id).map(|n| n.clone())
     }
+
+    pub fn clear_parent_passwords(&mut self) {
+        for parent in self.parent_nodes.values_mut() {
+            parent.encrypted_password = None;
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -357,6 +363,12 @@ impl<'a> DatabaseSession<'a> {
         let mut parent_node = self.require_parent_node(id)?;
         parent_node.save_password(password, encryption_password)?;
         self.write_transaction(parent_node_ops::update(&parent_node))
+    }
+
+    pub fn clear_parent_passwords(&self) -> Result<()> {
+        self.write_transaction(parent_node_ops::clear_all_passwords())?;
+        (self.get_globals)().clear_parent_passwords();
+        Ok(())
     }
 
     /////////////////////////////////////////////////////////////////////////////
