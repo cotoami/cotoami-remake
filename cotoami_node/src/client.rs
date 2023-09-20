@@ -35,7 +35,12 @@ pub(crate) struct Server {
 
 impl Server {
     pub fn new(url_prefix: String, session_token: Option<&str>) -> Result<Self> {
-        // Default request headers
+        let headers = Self::default_headers(session_token)?;
+        let client = Client::builder().default_headers(headers).build()?;
+        Ok(Self { client, url_prefix })
+    }
+
+    fn default_headers(session_token: Option<&str>) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
         headers.insert(
             csrf::CUSTOM_HEADER,
@@ -46,9 +51,7 @@ impl Server {
             token.set_sensitive(true);
             headers.insert(SESSION_HEADER_NAME, token);
         };
-
-        let client = Client::builder().default_headers(headers).build()?;
-        Ok(Self { client, url_prefix })
+        Ok(headers)
     }
 
     pub fn url_prefix(&self) -> &str { &self.url_prefix }

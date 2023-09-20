@@ -2,12 +2,12 @@ use std::{
     collections::HashMap, convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use axum::{
     http::{StatusCode, Uri},
     middleware,
     response::{sse::Event, IntoResponse},
-    Extension, Router, Server,
+    Extension, Router,
 };
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
@@ -22,7 +22,7 @@ use validator::Validate;
 
 use crate::{
     api::session::Session,
-    client::{EventLoop, EventLoopState},
+    client::{EventLoop, EventLoopState, Server},
 };
 
 mod api;
@@ -46,7 +46,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    let server = Server::bind(&addr).serve(router.into_make_service());
+    let server = axum::Server::bind(&addr).serve(router.into_make_service());
 
     let (tx, rx) = oneshot::channel::<()>();
     let server = server.with_graceful_shutdown(async {
@@ -265,6 +265,45 @@ enum ParentConn {
 }
 
 impl ParentConn {
+    pub async fn new(
+        parent_node: &ParentNode,
+        local_node: &Node,
+        config: Arc<Config>,
+        db: Arc<Database>,
+        pubsub: Arc<Mutex<Pubsub>>,
+    ) -> Self {
+        match Self::connect(parent_node, local_node, config, db, pubsub).await {
+            Ok(conn) => conn,
+            Err(err) => ParentConn::Failed(err),
+        }
+    }
+
+    async fn connect(
+        parent_node: &ParentNode,
+        local_node: &Node,
+        config: Arc<Config>,
+        db: Arc<Database>,
+        pubsub: Arc<Mutex<Pubsub>>,
+    ) -> Result<Self> {
+        let server = Server::new(parent_node.url_prefix.clone(), None)?;
+
+        // Attempt to log in to the parent node
+        let password = parent_node
+            .password(config.owner_password())?
+            .ok_or(anyhow!("Parent password is missing."))?;
+        let child_session = server
+            .create_child_session(password, None, &local_node)
+            .await?;
+        info!("Successfully logged in to {}", server.url_prefix());
+
+        // Import the changelog
+        server
+            .import_changes(db.clone(), pubsub.clone(), parent_node.node_id)
+            .await?;
+
+        Err(anyhow!("Not yet implemented"))
+    }
+
     pub fn end_event_loop(&self) {
         if let ParentConn::Connected {
             event_loop_state, ..
