@@ -352,7 +352,7 @@ impl<'a> DatabaseSession<'a> {
             .ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id).into())
     }
 
-    pub fn save_parent_node_password(
+    pub fn save_parent_password(
         &self,
         id: &Id<Node>,
         password: &str,

@@ -15,12 +15,7 @@ fn save_password() -> Result<()> {
     session1.put_parent_node(&node2.uuid, "https://node2", &operator)?;
 
     // when
-    session1.save_parent_node_password(
-        &node2.uuid,
-        "node2-password",
-        "master-password",
-        &operator,
-    )?;
+    session1.save_parent_password(&node2.uuid, "node2-password", "master-password", &operator)?;
 
     // then
     let parent_node = session1.parent_node(&node2.uuid).unwrap();

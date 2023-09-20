@@ -113,7 +113,7 @@ async fn put_parent_node(
         let db = db.create_session()?;
         db.import_node(&child_session.parent)?;
         db.put_parent_node(&parent_id, &url_prefix, &operator)?;
-        db.save_parent_node_password(&parent_id, &password, owner_password, &operator)
+        db.save_parent_password(&parent_id, &password, owner_password, &operator)
     })
     .await??;
     info!("Parent node {} saved.", parent_node.node_id);
