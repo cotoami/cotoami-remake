@@ -76,7 +76,7 @@ struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Arc<Mutex<Pubsub>>,
-    parent_conns: Arc<Mutex<ParentConns>>,
+    parent_conns: Arc<Mutex<HashMap<Id<Node>, ParentConn>>>,
 }
 
 impl AppState {
@@ -130,20 +130,9 @@ impl AppState {
         Ok(())
     }
 
-    pub fn put_parent_conn(
-        &self,
-        parent_id: &Id<Node>,
-        session: Session,
-        mut event_loop: EventLoop,
-    ) {
-        let parent_conn = ParentConn::Connected {
-            session,
-            event_loop_state: event_loop.state(),
-        };
+    pub fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
+        let parent_conn = ParentConn::new(session, event_loop);
         self.parent_conns.lock().insert(*parent_id, parent_conn);
-        tokio::spawn(async move {
-            event_loop.start().await;
-        });
     }
 }
 
@@ -265,20 +254,31 @@ enum ParentConn {
 }
 
 impl ParentConn {
-    pub async fn new(
+    pub fn new(session: Session, mut event_loop: EventLoop) -> Self {
+        let parent_conn = ParentConn::Connected {
+            session,
+            event_loop_state: event_loop.state(),
+        };
+        tokio::spawn(async move {
+            event_loop.start().await;
+        });
+        parent_conn
+    }
+
+    pub async fn connect(
         parent_node: &ParentNode,
         local_node: &Node,
         config: Arc<Config>,
         db: Arc<Database>,
         pubsub: Arc<Mutex<Pubsub>>,
     ) -> Self {
-        match Self::connect(parent_node, local_node, config, db, pubsub).await {
+        match Self::try_connect(parent_node, local_node, config, db, pubsub).await {
             Ok(conn) => conn,
             Err(err) => ParentConn::Failed(err),
         }
     }
 
-    async fn connect(
+    async fn try_connect(
         parent_node: &ParentNode,
         local_node: &Node,
         config: Arc<Config>,
@@ -301,7 +301,12 @@ impl ParentConn {
             .import_changes(db.clone(), pubsub.clone(), parent_node.node_id)
             .await?;
 
-        Err(anyhow!("Not yet implemented"))
+        // Create an event stream
+        let event_loop = server
+            .create_event_loop(parent_node.node_id, db.clone(), pubsub.clone())
+            .await?;
+
+        Ok(Self::new(child_session.session, event_loop))
     }
 
     pub fn end_event_loop(&self) {
@@ -313,5 +318,3 @@ impl ParentConn {
         }
     }
 }
-
-type ParentConns = HashMap<Id<Node>, ParentConn>;
