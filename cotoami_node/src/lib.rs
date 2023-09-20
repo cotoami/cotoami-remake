@@ -2,7 +2,7 @@ use std::{
     collections::HashMap, convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc,
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Context, Result};
 use axum::{
     http::{StatusCode, Uri},
     middleware,
@@ -102,28 +102,30 @@ impl AppState {
 
     fn init_local_node(&self) -> Result<()> {
         let db = self.db.create_session()?;
+        let owner_password = self.config.owner_password();
 
-        // If the local node already exists,
-        // its name and password can be changed via config
-        if db.is_local_node_initialized() {
+        if let Some(local_node) = db.local_node() {
+            // If the local node already exists,
+            // its name and password can be changed via config
+
             if let Some(name) = self.config.node_name.as_deref() {
                 db.rename_local_node(name)?;
-                info!("The node name has been changed via COTOAMI_NODE_NAME.");
+                info!("The node name has been changed to {}.", name);
             }
-            if let Some(password) = self.config.owner_password.as_deref() {
-                db.change_owner_password(password)?;
-                info!("The owner password has been changed via COTOAMI_OWNER_PASSWORD.");
-            }
-            return Ok(());
-        }
 
-        // Create a local node
-        if let Some(password) = self.config.owner_password.as_deref() {
-            let name = self.config.node_name.as_deref();
-            let ((_, node), _) = db.init_as_node(name, Some(password))?;
-            info!("The local node [{}] has been created", node.name);
+            if self.config.change_owner_password {
+                db.change_owner_password(owner_password)?;
+                info!("The owner password has been changed.");
+            } else {
+                local_node
+                    .verify_password(owner_password)
+                    .context("Config::owner_password couldn't be verified.")?;
+            }
         } else {
-            bail!("COTOAMI_OWNER_PASSWORD must be set for the first startup.");
+            // Initialize the local node
+            let name = self.config.node_name.as_deref();
+            let ((_, node), _) = db.init_as_node(name, Some(owner_password))?;
+            info!("The local node [{}] has been created", node.name);
         }
         Ok(())
     }
@@ -174,10 +176,20 @@ pub struct Config {
     /// The owner password is used for owner authentication and
     /// as a master password to encrypt other passwords.
     ///
-    /// This value can be set via `COTOAMI_OWNER_PASSWORD` and
-    /// is required to launch a node server.
+    /// * This value is required to launch a node server.
+    /// * This value can be set via the environment variable:
+    /// `COTOAMI_OWNER_PASSWORD`.
     #[validate(required)]
     pub owner_password: Option<String>,
+
+    /// The owner password will be changed to the value of [Config::owner_password] if:
+    /// 1. This value is true.
+    /// 2. The local node has already been initialized (meaning there's an existing password).
+    ///
+    /// * This value can be set via the environment variable:
+    /// `COTOAMI_CHANGE_OWNER_PASSWORD`.
+    #[serde(default = "Config::default_change_owner_password")]
+    pub change_owner_password: bool,
 
     // COTOAMI_SESSION_MINUTES
     #[serde(default = "Config::default_session_minutes")]
@@ -202,6 +214,7 @@ impl Config {
     fn default_port() -> u16 { 5103 }
     fn default_url_scheme() -> String { "http".into() }
     fn default_url_host() -> String { "localhost".into() }
+    fn default_change_owner_password() -> bool { false }
     fn default_session_minutes() -> u64 { 60 }
     fn default_changes_chunk_size() -> i64 { 1000 }
 

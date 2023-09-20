@@ -146,7 +146,7 @@ impl Database {
     fn load_globals(&self) -> Result<()> {
         let mut db = self.create_session()?;
         let mut globals = self.globals.lock();
-        if let Some((local_node, node)) = db.local_node()? {
+        if let Some((local_node, node)) = db.local_node_pair()? {
             globals.local_node = Some(local_node);
             globals.root_cotonoma_id = node.root_cotonoma_id;
         }
@@ -199,15 +199,17 @@ impl<'a> DatabaseSession<'a> {
     // local node
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn local_node(&mut self) -> Result<Option<(LocalNode, Node)>> {
+    pub fn local_node(&self) -> Option<LocalNode> {
+        (self.get_globals)().local_node.as_ref().map(|n| n.clone())
+    }
+
+    pub fn local_node_pair(&mut self) -> Result<Option<(LocalNode, Node)>> {
         self.read_transaction(local_node_ops::get_pair())
     }
 
     pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
         self.ensure_local(entity).is_ok()
     }
-
-    pub fn is_local_node_initialized(&self) -> bool { self.require_local_node().is_ok() }
 
     pub fn init_as_node(
         &self,
@@ -306,6 +308,7 @@ impl<'a> DatabaseSession<'a> {
         let mut local_node = self.require_local_node()?;
         local_node.update_password(password)?;
         self.write_transaction(local_node_ops::update(&local_node))?;
+        self.clear_parent_passwords()?;
         Ok(())
     }
 

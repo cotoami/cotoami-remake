@@ -34,7 +34,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.create_session()?;
-        if let Some((_, node)) = db.local_node()? {
+        if let Some((_, node)) = db.local_node_pair()? {
             Ok(Json(node))
         } else {
             RequestError::new("local-node-not-yet-created").into_result()
@@ -87,7 +87,7 @@ async fn put_parent_node(
 
     // Get the local node
     let db = state.db.clone();
-    let (_, node) = spawn_blocking(move || db.create_session()?.local_node())
+    let (_, node) = spawn_blocking(move || db.create_session()?.local_node_pair())
         .await??
         .unwrap();
 
@@ -109,7 +109,7 @@ async fn put_parent_node(
     let parent_id = child_session.parent.uuid;
     let url_prefix = server.url_prefix().to_string();
     let parent_node = spawn_blocking(move || {
-        let owner_password = config.owner_password.as_deref().unwrap();
+        let owner_password = config.owner_password();
         let db = db.create_session()?;
         db.import_node(&child_session.parent)?;
         db.put_parent_node(&parent_id, &url_prefix, &operator)?;
