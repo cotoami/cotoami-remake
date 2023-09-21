@@ -35,7 +35,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     let state = AppState::new(config)?;
     let port = state.config.port;
 
-    state.init_local_node()?;
+    state.init_local_node().await?;
     state.restore_parent_conns().await?;
 
     let router = Router::new()
@@ -99,34 +99,38 @@ impl AppState {
         })
     }
 
-    fn init_local_node(&self) -> Result<()> {
-        let db = self.db.create_session()?;
-        let owner_password = self.config.owner_password();
+    async fn init_local_node(&self) -> Result<()> {
+        let (config, db) = (self.config.clone(), self.db.clone());
+        spawn_blocking(move || {
+            let db = db.create_session()?;
+            let owner_password = config.owner_password();
 
-        if let Some(local_node) = db.local_node() {
-            // If the local node already exists,
-            // its name and password can be changed via config
+            if let Some(local_node) = db.local_node() {
+                // If the local node already exists,
+                // its name and password can be changed via config
 
-            if let Some(name) = self.config.node_name.as_deref() {
-                db.rename_local_node(name)?;
-                info!("The node name has been changed to {}.", name);
-            }
+                if let Some(name) = config.node_name.as_deref() {
+                    db.rename_local_node(name)?;
+                    info!("The node name has been changed to {}.", name);
+                }
 
-            if self.config.change_owner_password {
-                db.change_owner_password(owner_password)?;
-                info!("The owner password has been changed.");
+                if config.change_owner_password {
+                    db.change_owner_password(owner_password)?;
+                    info!("The owner password has been changed.");
+                } else {
+                    local_node
+                        .verify_password(owner_password)
+                        .context("Config::owner_password couldn't be verified.")?;
+                }
             } else {
-                local_node
-                    .verify_password(owner_password)
-                    .context("Config::owner_password couldn't be verified.")?;
+                // Initialize the local node
+                let name = config.node_name.as_deref();
+                let ((_, node), _) = db.init_as_node(name, Some(owner_password))?;
+                info!("The local node [{}] has been created", node.name);
             }
-        } else {
-            // Initialize the local node
-            let name = self.config.node_name.as_deref();
-            let ((_, node), _) = db.init_as_node(name, Some(owner_password))?;
-            info!("The local node [{}] has been created", node.name);
-        }
-        Ok(())
+            Ok(())
+        })
+        .await?
     }
 
     fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
