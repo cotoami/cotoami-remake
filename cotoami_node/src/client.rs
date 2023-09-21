@@ -88,8 +88,8 @@ impl Server {
 
     pub async fn import_changes(
         &self,
-        db: Arc<Database>,
-        pubsub: Arc<Mutex<Pubsub>>,
+        db: &Arc<Database>,
+        pubsub: &Arc<Mutex<Pubsub>>,
         parent_node_id: Id<Node>,
     ) -> Result<Option<(i64, i64)>> {
         info!("Importing the changes from {}", self.url_prefix());
@@ -158,8 +158,8 @@ impl Server {
     pub async fn create_event_loop(
         &self,
         parent_node_id: Id<Node>,
-        db: Arc<Database>,
-        pubsub: Arc<Mutex<Pubsub>>,
+        db: &Arc<Database>,
+        pubsub: &Arc<Mutex<Pubsub>>,
     ) -> Result<EventLoop> {
         EventLoop::new(self.clone(), parent_node_id, db, pubsub)
     }
@@ -235,8 +235,8 @@ impl EventLoop {
     fn new(
         server: Server,
         parent_node_id: Id<Node>,
-        db: Arc<Database>,
-        pubsub: Arc<Mutex<Pubsub>>,
+        db: &Arc<Database>,
+        pubsub: &Arc<Mutex<Pubsub>>,
     ) -> Result<Self> {
         let url = server.make_url("/api/events")?;
         let event_source = EventSource::get(url);
@@ -244,8 +244,8 @@ impl EventLoop {
         Ok(Self {
             server,
             parent_node_id,
-            db,
-            pubsub,
+            db: db.clone(),
+            pubsub: pubsub.clone(),
             event_source,
             state: Arc::new(RwLock::new(state)),
         })
@@ -314,7 +314,7 @@ impl EventLoop {
                         expected,
                     );
                     self.server
-                        .import_changes(self.db.clone(), self.pubsub.clone(), self.parent_node_id)
+                        .import_changes(&self.db, &self.pubsub, self.parent_node_id)
                         .await?;
                 } else {
                     return Err(anyhow_err);

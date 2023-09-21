@@ -119,12 +119,12 @@ async fn put_parent_node(
 
     // Import the changelog
     server
-        .import_changes(state.db.clone(), state.pubsub.clone(), parent_node.node_id)
+        .import_changes(&state.db, &state.pubsub, parent_node.node_id)
         .await?;
 
     // Create an event stream
     let event_loop = server
-        .create_event_loop(parent_node.node_id, state.db.clone(), state.pubsub.clone())
+        .create_event_loop(parent_node.node_id, &state.db, &state.pubsub)
         .await?;
 
     // Store the parent connection
