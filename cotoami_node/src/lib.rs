@@ -285,7 +285,7 @@ enum ParentConn {
 }
 
 impl ParentConn {
-    pub fn new(session: Session, mut event_loop: EventLoop) -> Self {
+    fn new(session: Session, mut event_loop: EventLoop) -> Self {
         let parent_conn = ParentConn::Connected {
             session,
             event_loop_state: event_loop.state(),
@@ -296,7 +296,7 @@ impl ParentConn {
         parent_conn
     }
 
-    pub async fn connect(
+    async fn connect(
         parent_node: &ParentNode,
         local_node: &Node,
         config: &Config,
