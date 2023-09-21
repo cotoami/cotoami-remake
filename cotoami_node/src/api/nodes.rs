@@ -104,8 +104,7 @@ async fn put_parent_node(
     info!("Successfully logged in to {}", server.url_prefix());
 
     // Register the parent node
-    let config = state.config.clone();
-    let db = state.db.clone();
+    let (config, db) = (state.config.clone(), state.db.clone());
     let parent_id = child_session.parent.uuid;
     let url_prefix = server.url_prefix().to_string();
     let parent_node = spawn_blocking(move || {

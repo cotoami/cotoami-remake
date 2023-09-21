@@ -126,8 +126,7 @@ impl Server {
             );
 
             // Import the changes to the local database
-            let db = db.clone();
-            let pubsub = pubsub.clone();
+            let (db, pubsub) = (db.clone(), pubsub.clone());
             let chunk_imported: Result<()> = spawn_blocking(move || {
                 debug!("Importing the chunk...");
                 let db = db.create_session()?;
