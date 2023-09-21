@@ -76,7 +76,7 @@ struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Arc<Mutex<Pubsub>>,
-    parent_conns: Arc<Mutex<HashMap<Id<Node>, ParentConn>>>,
+    parent_conns: Arc<Mutex<ParentConns>>,
 }
 
 impl AppState {
@@ -130,7 +130,7 @@ impl AppState {
         Ok(())
     }
 
-    pub fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
+    fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
         let parent_conn = ParentConn::new(session, event_loop);
         self.parent_conns.lock().insert(*parent_id, parent_conn);
     }
@@ -318,3 +318,5 @@ impl ParentConn {
         }
     }
 }
+
+type ParentConns = HashMap<Id<Node>, ParentConn>;
