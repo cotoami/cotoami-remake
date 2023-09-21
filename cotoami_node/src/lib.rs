@@ -15,7 +15,7 @@ use parking_lot::{Mutex, RwLock};
 use pubsub::Publisher;
 use tokio::{
     sync::{oneshot, oneshot::Sender},
-    task::JoinHandle,
+    task::{spawn_blocking, JoinHandle},
 };
 use tracing::info;
 use validator::Validate;
@@ -35,8 +35,8 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     let state = AppState::new(config)?;
     let port = state.config.port;
 
-    // Should this be in `spawn_blocking`?
     state.init_local_node()?;
+    state.restore_parent_conns().await?;
 
     let router = Router::new()
         .nest("/api", api::routes())
@@ -90,7 +90,6 @@ impl AppState {
         let pubsub = Pubsub::new();
 
         let parent_conns = HashMap::default();
-        // TODO restore sessions
 
         Ok(AppState {
             config: Arc::new(config),
@@ -133,6 +132,34 @@ impl AppState {
     fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
         let parent_conn = ParentConn::new(session, event_loop);
         self.parent_conns.lock().insert(*parent_id, parent_conn);
+    }
+
+    async fn restore_parent_conns(&self) -> Result<()> {
+        let db = self.db.clone();
+        let (local_node, parent_nodes) = spawn_blocking(move || {
+            let mut db = db.create_session()?;
+            let operator = db.local_node_as_operator()?;
+            Ok::<_, anyhow::Error>((
+                db.local_node_pair()?.unwrap().1,
+                db.all_parent_nodes(&operator)?,
+            ))
+        })
+        .await??;
+
+        let mut parent_conns = self.parent_conns.lock();
+        parent_conns.clear();
+        for (parent_node, _) in parent_nodes.iter() {
+            let parent_conn = ParentConn::connect(
+                parent_node,
+                &local_node,
+                &self.config,
+                &self.db,
+                &self.pubsub,
+            )
+            .await;
+            parent_conns.insert(parent_node.node_id, parent_conn);
+        }
+        Ok(())
     }
 }
 
@@ -268,9 +295,9 @@ impl ParentConn {
     pub async fn connect(
         parent_node: &ParentNode,
         local_node: &Node,
-        config: Arc<Config>,
-        db: Arc<Database>,
-        pubsub: Arc<Mutex<Pubsub>>,
+        config: &Config,
+        db: &Arc<Database>,
+        pubsub: &Arc<Mutex<Pubsub>>,
     ) -> Self {
         match Self::try_connect(parent_node, local_node, config, db, pubsub).await {
             Ok(conn) => conn,
@@ -281,9 +308,9 @@ impl ParentConn {
     async fn try_connect(
         parent_node: &ParentNode,
         local_node: &Node,
-        config: Arc<Config>,
-        db: Arc<Database>,
-        pubsub: Arc<Mutex<Pubsub>>,
+        config: &Config,
+        db: &Arc<Database>,
+        pubsub: &Arc<Mutex<Pubsub>>,
     ) -> Result<Self> {
         let mut server = Server::new(parent_node.url_prefix.clone())?;
 
