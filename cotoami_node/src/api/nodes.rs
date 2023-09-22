@@ -6,6 +6,7 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
+use derive_new::new;
 use tokio::task::spawn_blocking;
 use tracing::info;
 use validator::Validate;
@@ -14,13 +15,13 @@ use crate::{
     api::Pagination,
     client::Server,
     error::{ApiError, IntoApiResult, RequestError},
-    AppState,
+    AppState, ParentConn,
 };
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/local", get(get_local_node))
-        .route("/parents", get(all_parent_nodes).put(put_parent_node))
+        .route("/parents", get(all_parents).put(put_parent_node))
         .route("/children", get(recent_child_nodes).post(add_child_node))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -47,16 +48,28 @@ async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, Api
 // GET /api/nodes/parents
 /////////////////////////////////////////////////////////////////////////////
 
-async fn all_parent_nodes(
+#[derive(serde::Serialize, new)]
+struct Parent {
+    node: Node,
+    connected: bool,
+    conn_error: Option<String>,
+}
+
+async fn all_parents(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
-) -> Result<Json<Vec<Node>>, ApiError> {
+) -> Result<Json<Vec<Parent>>, ApiError> {
     spawn_blocking(move || {
+        let conns = state.parent_conns.read();
         let mut db = state.db.create_session()?;
         let nodes = db
             .all_parent_nodes(&operator)?
             .into_iter()
-            .map(|(_, node)| node)
+            .map(|(_, node)| match conns.get(&node.uuid) {
+                None => Parent::new(node, false, None),
+                Some(ParentConn::Failed(e)) => Parent::new(node, false, Some(e.to_string())),
+                Some(ParentConn::Connected { .. }) => Parent::new(node, true, None),
+            })
             .collect();
         Ok(Json(nodes))
     })
