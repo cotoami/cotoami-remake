@@ -101,9 +101,9 @@ impl Database {
     pub fn create_session(&self) -> Result<DatabaseSession<'_>> {
         Ok(DatabaseSession {
             ro_conn: self.create_ro_conn()?,
-            get_rw_conn: Box::new(move || self.rw_conn.lock()),
-            read_globals: Box::new(move || self.globals.read()),
-            write_globals: Box::new(move || self.globals.write()),
+            get_rw_conn: Box::new(|| self.rw_conn.lock()),
+            read_globals: Box::new(|| self.globals.read()),
+            write_globals: Box::new(|| self.globals.write()),
         })
     }
 
