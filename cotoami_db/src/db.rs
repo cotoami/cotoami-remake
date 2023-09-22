@@ -358,8 +358,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn parent_node_or_err(&mut self, id: &Id<Node>) -> Result<ParentNode> {
-        self.parent_node(id)
-            .ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id).into())
+        self.read_parent_node(id).map(|n| n.clone())
     }
 
     pub fn save_parent_password(
