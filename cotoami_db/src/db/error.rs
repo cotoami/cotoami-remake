@@ -12,6 +12,9 @@ pub enum DatabaseError {
     #[error("Invalid file path: {path} ({reason})")]
     InvalidFilePath { path: PathBuf, reason: String },
 
+    #[error("Local node has not yet been created")]
+    LocalNodeNotYetInitialized,
+
     #[error("Not found: {kind} ({id})")]
     EntityNotFound { kind: EntityKind, id: String },
 

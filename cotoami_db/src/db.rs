@@ -10,7 +10,10 @@ use anyhow::{anyhow, bail, Context as _, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::{debug, info};
-use parking_lot::{MappedMutexGuard, Mutex, MutexGuard};
+use parking_lot::{
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, Mutex, MutexGuard, RwLock, RwLockReadGuard,
+    RwLockWriteGuard,
+};
 use url::Url;
 
 use self::{
@@ -61,7 +64,7 @@ pub struct Database {
     rw_conn: Mutex<WritableConn>,
 
     /// Globally shared information
-    globals: Mutex<Globals>,
+    globals: RwLock<Globals>,
 }
 
 impl Database {
@@ -82,7 +85,7 @@ impl Database {
             root_dir,
             file_uri,
             rw_conn: Mutex::new(rw_conn),
-            globals: Mutex::new(Globals::default()),
+            globals: RwLock::new(Globals::default()),
         };
         db.run_migrations()?;
         db.load_globals()?;
@@ -90,7 +93,7 @@ impl Database {
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
         info!("  file_uri: {}", db.file_uri);
-        info!("  globals: {:?}", db.globals.lock());
+        info!("  globals: {:?}", db.globals.read());
 
         Ok(db)
     }
@@ -99,7 +102,8 @@ impl Database {
         Ok(DatabaseSession {
             ro_conn: self.create_ro_conn()?,
             get_rw_conn: Box::new(move || self.rw_conn.lock()),
-            get_globals: Box::new(move || self.globals.lock()),
+            read_globals: Box::new(move || self.globals.read()),
+            write_globals: Box::new(move || self.globals.write()),
         })
     }
 
@@ -145,7 +149,7 @@ impl Database {
 
     fn load_globals(&self) -> Result<()> {
         let mut db = self.create_session()?;
-        let mut globals = self.globals.lock();
+        let mut globals = self.globals.write();
         if let Some((local_node, node)) = db.local_node_pair()? {
             globals.local_node = Some(local_node);
             globals.root_cotonoma_id = node.root_cotonoma_id;
@@ -191,7 +195,8 @@ impl Globals {
 pub struct DatabaseSession<'a> {
     ro_conn: SqliteConnection,
     get_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
-    get_globals: Box<dyn Fn() -> MutexGuard<'a, Globals> + 'a>,
+    read_globals: Box<dyn Fn() -> RwLockReadGuard<'a, Globals> + 'a>,
+    write_globals: Box<dyn Fn() -> RwLockWriteGuard<'a, Globals> + 'a>,
 }
 
 impl<'a> DatabaseSession<'a> {
@@ -200,12 +205,14 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn local_node(&self) -> Option<LocalNode> {
-        (self.get_globals)().local_node.as_ref().map(|n| n.clone())
+        (self.read_globals)().local_node.as_ref().map(|n| n.clone())
     }
 
     pub fn local_node_pair(&mut self) -> Result<Option<(LocalNode, Node)>> {
         self.read_transaction(local_node_ops::get_pair())
     }
+
+    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node()?.node_id) }
 
     pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
         self.ensure_local(entity).is_ok()
@@ -236,7 +243,7 @@ impl<'a> DatabaseSession<'a> {
             Ok(((local_node, node), changelog))
         })
         .map(|((local_node, node), changelog)| {
-            let mut globals = (self.get_globals)();
+            let mut globals = (self.write_globals)();
             globals.local_node = Some(local_node.clone());
             globals.root_cotonoma_id = node.root_cotonoma_id;
             ((local_node, node), changelog)
@@ -244,7 +251,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn rename_local_node(&self, name: &str) -> Result<(Node, ChangelogEntry)> {
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let updated_at = crate::current_datetime();
             let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
@@ -270,7 +277,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Import a node data sent from a child or parent node.
     pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             if let Some(node) = node_ops::import(node).run(ctx)? {
                 let change = Change::ImportNode(node);
@@ -288,7 +295,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
-        let mut local_node = self.require_local_node()?;
+        let mut local_node = self.write_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
         local_node
             .start_session(password, duration)
@@ -298,14 +305,14 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
-        let mut local_node = self.require_local_node()?;
+        let mut local_node = self.write_local_node()?;
         local_node.clear_session();
         self.write_transaction(local_node_ops::update(&local_node))?;
         Ok(())
     }
 
     pub fn change_owner_password(&self, password: &str) -> Result<()> {
-        let mut local_node = self.require_local_node()?;
+        let mut local_node = self.write_local_node()?;
         local_node.update_password(password)?;
         self.write_transaction(local_node_ops::update(&local_node))?;
         self.clear_parent_passwords()?;
@@ -330,7 +337,7 @@ impl<'a> DatabaseSession<'a> {
         url_prefix: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
-        let mut globals = (self.get_globals)();
+        let mut globals = (self.write_globals)();
         if let Some(parent_node) = globals.parent_nodes.get_mut(id) {
             operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
             parent_node.url_prefix = url_prefix.into();
@@ -347,7 +354,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
-        (self.get_globals)().parent_node(id)
+        (self.read_globals)().parent_node(id)
     }
 
     pub fn parent_node_or_err(&mut self, id: &Id<Node>) -> Result<ParentNode> {
@@ -363,14 +370,14 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<ParentNode> {
         operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
-        let mut parent_node = self.require_parent_node(id)?;
+        let mut parent_node = self.write_parent_node(id)?;
         parent_node.save_password(password, encryption_password)?;
         self.write_transaction(parent_node_ops::update(&parent_node))
     }
 
     pub fn clear_parent_passwords(&self) -> Result<()> {
         self.write_transaction(parent_node_ops::clear_all_passwords())?;
-        (self.get_globals)().clear_parent_passwords();
+        (self.write_globals)().clear_parent_passwords();
         Ok(())
     }
 
@@ -460,7 +467,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn local_node_as_operator(&self) -> Result<Operator> {
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.local_node_id()?;
         Ok(Operator::Owner(local_node_id))
     }
 
@@ -476,7 +483,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // the owner of local node?
-        let local_node = self.require_local_node()?;
+        let local_node = self.read_local_node()?;
         match local_node.verify_session(token) {
             Ok(_) => return Ok(Some(Operator::Owner(local_node.node_id))),
             Err(e) => debug!("Owner: {}", e),
@@ -494,7 +501,7 @@ impl<'a> DatabaseSession<'a> {
         log: &ChangelogEntry,
         parent_node_id: &Id<Node>,
     ) -> Result<Option<ChangelogEntry>> {
-        let mut parent_node = self.require_parent_node(parent_node_id)?;
+        let mut parent_node = self.write_parent_node(parent_node_id)?;
         self.write_transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 
@@ -544,7 +551,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(Coto, ChangelogEntry)> {
         self.ensure_local(posted_in)?;
 
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.local_node_id()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
             &local_node_id,
@@ -568,7 +575,7 @@ impl<'a> DatabaseSession<'a> {
         summary: Option<&str>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::get_or_err(id).run(ctx)??;
             self.ensure_local(&coto)?;
@@ -586,7 +593,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::get_or_err(id).run(ctx)??;
             self.ensure_local(&coto)?;
@@ -606,7 +613,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
-        if let Some(id) = (self.get_globals)().root_cotonoma_id {
+        if let Some(id) = (self.read_globals)().root_cotonoma_id {
             self.cotonoma(&id)
         } else {
             Ok(None)
@@ -655,18 +662,28 @@ impl<'a> DatabaseSession<'a> {
         op::run_write(&mut (self.get_rw_conn)(), op)
     }
 
-    fn require_local_node(&self) -> Result<MappedMutexGuard<LocalNode>> {
-        MutexGuard::try_map((self.get_globals)(), |g| g.local_node.as_mut())
-            .map_err(|_| anyhow!("Local node has not yet been created."))
+    fn read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
+        RwLockReadGuard::try_map((self.read_globals)(), |g| g.local_node.as_ref())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
     }
 
-    fn require_parent_node(&self, id: &Id<Node>) -> Result<MappedMutexGuard<ParentNode>> {
-        MutexGuard::try_map((self.get_globals)(), |g| g.parent_nodes.get_mut(id))
-            .map_err(|_| anyhow!("Parent node {} was not found in the globals.", id))
+    fn write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
+        RwLockWriteGuard::try_map((self.write_globals)(), |g| g.local_node.as_mut())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    fn read_parent_node(&self, id: &Id<Node>) -> Result<MappedRwLockReadGuard<ParentNode>> {
+        RwLockReadGuard::try_map((self.read_globals)(), |g| g.parent_nodes.get(id))
+            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
+    }
+
+    fn write_parent_node(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
+        RwLockWriteGuard::try_map((self.write_globals)(), |g| g.parent_nodes.get_mut(id))
+            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
     }
 
     fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
-        let local_node_id = self.require_local_node()?.node_id;
+        let local_node_id = self.read_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
             bail!("The entity doesn't belong to the local node: {:?}", entity);
         }
