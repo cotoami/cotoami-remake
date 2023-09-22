@@ -76,7 +76,7 @@ struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Arc<Mutex<Pubsub>>,
-    parent_conns: Arc<Mutex<ParentConns>>,
+    parent_conns: Arc<RwLock<ParentConns>>,
 }
 
 impl AppState {
@@ -95,7 +95,7 @@ impl AppState {
             config: Arc::new(config),
             db: Arc::new(db),
             pubsub: Arc::new(Mutex::new(pubsub)),
-            parent_conns: Arc::new(Mutex::new(parent_conns)),
+            parent_conns: Arc::new(RwLock::new(parent_conns)),
         })
     }
 
@@ -135,7 +135,7 @@ impl AppState {
 
     fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
         let parent_conn = ParentConn::new(session, event_loop);
-        self.parent_conns.lock().insert(*parent_id, parent_conn);
+        self.parent_conns.write().insert(*parent_id, parent_conn);
     }
 
     async fn restore_parent_conns(&self) -> Result<()> {
@@ -150,7 +150,7 @@ impl AppState {
         })
         .await??;
 
-        let mut parent_conns = self.parent_conns.lock();
+        let mut parent_conns = self.parent_conns.write();
         parent_conns.clear();
         for (parent_node, _) in parent_nodes.iter() {
             let parent_conn = ParentConn::connect(
@@ -340,7 +340,7 @@ impl ParentConn {
         Ok(Self::new(child_session.session, event_loop))
     }
 
-    pub fn end_event_loop(&self) {
+    fn end_event_loop(&self) {
         if let ParentConn::Connected {
             event_loop_state, ..
         } = self
