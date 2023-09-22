@@ -266,7 +266,7 @@ impl EventLoop {
                 Ok(ESItem::Message(event)) => {
                     if let Err(err) = self.handle_event(&event).await {
                         debug!(
-                            "Event stream {} closed because of an error in handling an event: {}",
+                            "Event stream {} closed because of an error during handling an event: {}",
                             self.server.url_prefix(),
                             &err
                         );
@@ -295,7 +295,14 @@ impl EventLoop {
 
     async fn handle_event(&mut self, event: &Event) -> Result<()> {
         debug!("Handling a server event: {:?}", event);
+
         let change = serde_json::from_str::<ChangelogEntry>(&event.data)?;
+        info!(
+            "Received a change {} from {}",
+            change.serial_number,
+            self.server.url_prefix()
+        );
+
         let db = self.db.clone();
         let parent_node_id = self.parent_node_id;
         let import_result: Result<Option<ChangelogEntry>> =
