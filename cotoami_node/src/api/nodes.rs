@@ -100,14 +100,14 @@ async fn put_parent_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<PutParentNode>,
-) -> Result<StatusCode, ApiError> {
+) -> Result<(StatusCode, Json<Parent>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("nodes/parent", errors).into_result();
     }
 
     // Get the local node
     let db = state.db.clone();
-    let (_, node) = spawn_blocking(move || db.new_session()?.local_node_pair())
+    let (_, local_node) = spawn_blocking(move || db.new_session()?.local_node_pair())
         .await??
         .unwrap();
 
@@ -118,7 +118,7 @@ async fn put_parent_node(
         .create_child_session(
             password.clone(),
             None, // TODO
-            &node,
+            &local_node,
         )
         .await?;
     info!("Successfully logged in to {}", server.url_prefix());
@@ -129,28 +129,37 @@ async fn put_parent_node(
     let url_prefix = server.url_prefix().to_string();
     let parent_node = spawn_blocking(move || {
         let owner_password = config.owner_password();
-        let db = db.new_session()?;
+        let mut db = db.new_session()?;
         db.import_node(&child_session.parent)?;
         db.put_parent_node(&parent_id, &url_prefix, &operator)?;
-        db.save_parent_password(&parent_id, &password, owner_password, &operator)
+        db.save_parent_password(&parent_id, &password, owner_password, &operator)?;
+        let node = db.node(&parent_id)?.unwrap_or_else(|| unreachable!());
+        Ok::<_, ApiError>(node)
     })
     .await??;
-    info!("Parent node {} saved.", parent_node.node_id);
+    info!("Parent node {} saved.", parent_node.uuid);
 
     // Import the changelog
     server
-        .import_changes(&state.db, &state.pubsub, parent_node.node_id)
+        .import_changes(&state.db, &state.pubsub, parent_node.uuid)
         .await?;
 
     // Create an event stream
     let event_loop = server
-        .create_event_loop(parent_node.node_id, &state.db, &state.pubsub)
+        .create_event_loop(parent_node.uuid, &state.db, &state.pubsub)
         .await?;
 
     // Store the parent connection
-    state.put_parent_conn(&parent_node.node_id, child_session.session, event_loop);
+    state.put_parent_conn(&parent_node.uuid, child_session.session, event_loop);
 
-    Ok(StatusCode::CREATED)
+    // Make response body
+    let parent = {
+        let conns = state.parent_conns.read();
+        let conn = conns.get(&parent_node.uuid);
+        new_parent(parent_node, conn)
+    };
+
+    Ok((StatusCode::CREATED, Json(parent)))
 }
 
 /////////////////////////////////////////////////////////////////////////////

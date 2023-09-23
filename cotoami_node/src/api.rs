@@ -7,7 +7,6 @@ use axum::{
     Extension, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
-use cotoami_db::prelude::Operator;
 use tokio::task::spawn_blocking;
 use tracing::info;
 use validator::Validate;
@@ -68,7 +67,7 @@ async fn require_session<B>(
     let operator = spawn_blocking(move || {
         let mut db = state.db.new_session()?;
         // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
-        Ok::<Option<Operator>, ApiError>(db.operator_in_session(&token)?)
+        Ok::<_, ApiError>(db.operator_in_session(&token)?)
     })
     .await??;
 
