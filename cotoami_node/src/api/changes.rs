@@ -67,7 +67,7 @@ async fn chunk_of_changes(
         return ("changes", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
         match db.chunk_of_changes(position.from.unwrap(), state.config.changes_chunk_size) {
             Ok((chunk, last_serial_number)) => {
                 let changes = Changes {

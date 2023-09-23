@@ -36,7 +36,7 @@ async fn recent_cotos(
         return ("cotos", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
         let cotos = db.recent_cotos(
             None,
             None,
@@ -74,7 +74,7 @@ async fn post_coto(
     }
 
     let local_post: Result<Option<Coto>> = spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
 
         let cotonoma_id = form.cotonoma_id.unwrap(); // validated to be Some
         let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;

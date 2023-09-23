@@ -18,7 +18,7 @@ pub mod common;
 fn operation() -> Result<()> {
     // setup
     let db_file = common::temp_file_path()?;
-    let mut conn = Database::create_rw_conn(&Database::to_file_uri(&db_file)?)?;
+    let mut conn = Database::new_rw_conn(&Database::to_file_uri(&db_file)?)?;
     create_table(&mut conn)?;
 
     // when: successful transaction

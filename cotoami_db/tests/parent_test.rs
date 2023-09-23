@@ -8,7 +8,7 @@ fn save_password() -> Result<()> {
     let (_dir1, db1, _node1) = common::setup_db("Node1")?;
     let (_dir2, _db2, node2) = common::setup_db("Node2")?;
 
-    let mut session1 = db1.create_session()?;
+    let mut session1 = db1.new_session()?;
     let operator = session1.local_node_as_operator()?;
 
     session1.import_node(&node2)?;

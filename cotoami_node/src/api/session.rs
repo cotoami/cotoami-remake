@@ -60,7 +60,7 @@ async fn delete_session(
     jar: CookieJar,
 ) -> Result<CookieJar, ApiError> {
     spawn_blocking(move || {
-        let db = state.db.create_session()?;
+        let db = state.db.new_session()?;
         match &operator {
             Operator::Owner(_) => db.clear_owner_session()?,
             Operator::ChildNode(child) => db.clear_child_session(&child.node_id)?,
@@ -90,7 +90,7 @@ async fn create_owner_session(
         return ("session/owner", errors).into_result();
     }
     spawn_blocking(move || {
-        let db = state.db.create_session()?;
+        let db = state.db.new_session()?;
         let local_node = db.start_owner_session(
             &form.password.unwrap(), // validated to be Some
             Duration::from_secs(state.config.session_seconds()),
@@ -128,7 +128,7 @@ async fn create_child_session(
     Json(payload): Json<CreateChildSession<'static>>,
 ) -> Result<(StatusCode, CookieJar, Json<ChildSessionCreated>), ApiError> {
     spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
 
         // start session
         let child_node = db.start_child_session(

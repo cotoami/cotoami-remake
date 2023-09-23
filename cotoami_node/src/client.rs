@@ -93,7 +93,7 @@ impl Server {
         parent_node_id: Id<Node>,
     ) -> Result<Option<(i64, i64)>> {
         info!("Importing the changes from {}", self.url_prefix());
-        let parent_node = db.create_session()?.parent_node_or_err(&parent_node_id)?;
+        let parent_node = db.new_session()?.parent_node_or_err(&parent_node_id)?;
         let import_from = parent_node.changes_received + 1;
         let mut from = import_from;
         loop {
@@ -129,7 +129,7 @@ impl Server {
             let (db, pubsub) = (db.clone(), pubsub.clone());
             let chunk_imported: Result<()> = spawn_blocking(move || {
                 debug!("Importing the chunk...");
-                let db = db.create_session()?;
+                let db = db.new_session()?;
                 for change in changes.chunk {
                     if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
                         pubsub.lock().publish_change(imported_change)?;
@@ -306,7 +306,7 @@ impl EventLoop {
         let db = self.db.clone();
         let parent_node_id = self.parent_node_id;
         let import_result: Result<Option<ChangelogEntry>> =
-            spawn_blocking(move || db.create_session()?.import_change(&change, &parent_node_id))
+            spawn_blocking(move || db.new_session()?.import_change(&change, &parent_node_id))
                 .await?;
         match import_result {
             Err(anyhow_err) => {

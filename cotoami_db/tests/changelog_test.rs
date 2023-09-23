@@ -12,7 +12,7 @@ fn import_changes() -> Result<()> {
     // setup: db1
     let db1_dir = tempdir()?;
     let db1 = Database::new(&db1_dir)?;
-    let mut session1 = db1.create_session()?;
+    let mut session1 = db1.new_session()?;
 
     let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
     let operator1 = session1.local_node_as_operator()?;
@@ -27,7 +27,7 @@ fn import_changes() -> Result<()> {
     // setup: db2
     let db2_dir = tempdir()?;
     let db2 = Database::new(&db2_dir)?;
-    let mut session2 = db2.create_session()?;
+    let mut session2 = db2.new_session()?;
 
     let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
     let operator2 = session2.local_node_as_operator()?;
@@ -172,7 +172,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     let (_dir2, _, node2) = common::setup_db("Node2")?;
     let (_dir3, _, node3) = common::setup_db("Node3")?;
 
-    let mut session = db1.create_session()?;
+    let mut session = db1.new_session()?;
     let operator = session.local_node_as_operator()?;
     session.import_node(&node2)?;
     session.put_parent_node(&node2.uuid, "https://node2", &operator)?;

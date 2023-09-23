@@ -34,7 +34,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 
 async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
         if let Some((_, node)) = db.local_node_pair()? {
             Ok(Json(node))
         } else {
@@ -61,7 +61,7 @@ async fn all_parents(
 ) -> Result<Json<Vec<Parent>>, ApiError> {
     spawn_blocking(move || {
         let conns = state.parent_conns.read();
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
         let nodes = db
             .all_parent_nodes(&operator)?
             .into_iter()
@@ -100,7 +100,7 @@ async fn put_parent_node(
 
     // Get the local node
     let db = state.db.clone();
-    let (_, node) = spawn_blocking(move || db.create_session()?.local_node_pair())
+    let (_, node) = spawn_blocking(move || db.new_session()?.local_node_pair())
         .await??
         .unwrap();
 
@@ -122,7 +122,7 @@ async fn put_parent_node(
     let url_prefix = server.url_prefix().to_string();
     let parent_node = spawn_blocking(move || {
         let owner_password = config.owner_password();
-        let db = db.create_session()?;
+        let db = db.new_session()?;
         db.import_node(&child_session.parent)?;
         db.put_parent_node(&parent_id, &url_prefix, &operator)?;
         db.save_parent_password(&parent_id, &password, owner_password, &operator)
@@ -159,7 +159,7 @@ async fn recent_child_nodes(
         return ("nodes/children", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.create_session()?;
+        let mut db = state.db.new_session()?;
         let nodes = db
             .recent_child_nodes(
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
@@ -199,7 +199,7 @@ async fn add_child_node(
         return ("nodes/child", errors).into_result();
     }
     spawn_blocking(move || {
-        let db = state.db.create_session()?;
+        let db = state.db.new_session()?;
         db.add_child_node(
             form.id.unwrap(),        // validated to be Some
             &form.password.unwrap(), // validated to be Some

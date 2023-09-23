@@ -102,7 +102,7 @@ impl AppState {
     async fn init_local_node(&self) -> Result<()> {
         let (config, db) = (self.config.clone(), self.db.clone());
         spawn_blocking(move || {
-            let db = db.create_session()?;
+            let db = db.new_session()?;
             let owner_password = config.owner_password();
 
             if let Some(local_node) = db.local_node() {
@@ -141,7 +141,7 @@ impl AppState {
     async fn restore_parent_conns(&self) -> Result<()> {
         let db = self.db.clone();
         let (local_node, parent_nodes) = spawn_blocking(move || {
-            let mut db = db.create_session()?;
+            let mut db = db.new_session()?;
             let operator = db.local_node_as_operator()?;
             Ok::<_, anyhow::Error>((
                 db.local_node_pair()?.unwrap().1,

@@ -10,6 +10,7 @@ use anyhow::{anyhow, bail, Context as _, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::{debug, info};
+use once_cell::unsync::OnceCell;
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, Mutex, MutexGuard, RwLock, RwLockReadGuard,
     RwLockWriteGuard,
@@ -79,7 +80,7 @@ impl Database {
         }
 
         let file_uri = Self::to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
-        let rw_conn = Self::create_rw_conn(&file_uri)?;
+        let rw_conn = Self::new_rw_conn(&file_uri)?;
 
         let db = Self {
             root_dir,
@@ -98,16 +99,17 @@ impl Database {
         Ok(db)
     }
 
-    pub fn create_session(&self) -> Result<DatabaseSession<'_>> {
+    pub fn new_session(&self) -> Result<DatabaseSession<'_>> {
         Ok(DatabaseSession {
-            ro_conn: self.create_ro_conn()?,
-            get_rw_conn: Box::new(|| self.rw_conn.lock()),
+            ro_conn: OnceCell::new(),
+            new_ro_conn: Box::new(|| self.new_ro_conn()),
+            rw_conn: Box::new(|| self.rw_conn.lock()),
             read_globals: Box::new(|| self.globals.read()),
             write_globals: Box::new(|| self.globals.write()),
         })
     }
 
-    pub fn create_rw_conn(uri: &str) -> Result<WritableConn> {
+    pub fn new_rw_conn(uri: &str) -> Result<WritableConn> {
         let mut rw_conn = SqliteConnection::establish(uri)?;
         sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
         sqlite::enable_wal(&mut rw_conn)?;
@@ -141,20 +143,20 @@ impl Database {
         Ok(())
     }
 
-    fn create_ro_conn(&self) -> Result<SqliteConnection> {
+    fn new_ro_conn(&self) -> Result<SqliteConnection> {
         let database_uri = format!("{}?mode=ro&_txlock=deferred", &self.file_uri);
         let ro_conn = SqliteConnection::establish(&database_uri)?;
         Ok(ro_conn)
     }
 
     fn load_globals(&self) -> Result<()> {
-        let mut db = self.create_session()?;
+        let mut db = self.new_session()?;
         let mut globals = self.globals.write();
         if let Some((local_node, node)) = db.local_node_pair()? {
             globals.local_node = Some(local_node);
             globals.root_cotonoma_id = node.root_cotonoma_id;
         }
-        globals.parent_nodes = op::run_read(&mut db.ro_conn, parent_node_ops::all())?
+        globals.parent_nodes = op::run_read(db.ro_conn()?, parent_node_ops::all())?
             .into_iter()
             .map(|p| (p.node_id, p))
             .collect::<HashMap<_, _>>();
@@ -193,8 +195,9 @@ impl Globals {
 /////////////////////////////////////////////////////////////////////////////
 
 pub struct DatabaseSession<'a> {
-    ro_conn: SqliteConnection,
-    get_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
+    ro_conn: OnceCell<SqliteConnection>,
+    new_ro_conn: Box<dyn Fn() -> Result<SqliteConnection> + 'a>,
+    rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
     read_globals: Box<dyn Fn() -> RwLockReadGuard<'a, Globals> + 'a>,
     write_globals: Box<dyn Fn() -> RwLockWriteGuard<'a, Globals> + 'a>,
 }
@@ -645,12 +648,18 @@ impl<'a> DatabaseSession<'a> {
     // internals
     /////////////////////////////////////////////////////////////////////////////
 
+    fn ro_conn(&mut self) -> Result<&mut SqliteConnection> {
+        // https://github.com/matklad/once_cell/issues/194
+        let _ = self.ro_conn.get_or_try_init(|| (self.new_ro_conn)())?;
+        Ok(self.ro_conn.get_mut().unwrap_or_else(|| unreachable!()))
+    }
+
     /// Runs a read operation in snapshot isolation.
     fn read_transaction<Op, T>(&mut self, op: Op) -> Result<T>
     where
         Op: Operation<SqliteConnection, T>,
     {
-        op::run_read(&mut self.ro_conn, op)
+        op::run_read(self.ro_conn()?, op)
     }
 
     /// Runs a read/write operation.
@@ -658,7 +667,7 @@ impl<'a> DatabaseSession<'a> {
     where
         Op: Operation<WritableConn, T>,
     {
-        op::run_write(&mut (self.get_rw_conn)(), op)
+        op::run_write(&mut (self.rw_conn)(), op)
     }
 
     fn read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {

@@ -13,7 +13,7 @@ fn default_state() -> Result<()> {
     // when
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.create_session()?;
+    let mut session = db.new_session()?;
 
     // then
     assert_eq!(session.local_node(), None);
@@ -27,7 +27,7 @@ fn init_as_empty_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.create_session()?;
+    let mut session = db.new_session()?;
 
     // when
     let ((local_node, node), changelog) = session.init_as_node(None, None)?;
@@ -85,7 +85,7 @@ fn duplicate_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let session = db.create_session()?;
+    let session = db.new_session()?;
     session.init_as_node(None, None)?;
 
     // when
@@ -104,7 +104,7 @@ fn owner_session() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let session = db.create_session()?;
+    let session = db.new_session()?;
     let duration = Duration::minutes(30);
 
     // when
@@ -160,7 +160,7 @@ fn init_as_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.create_session()?;
+    let mut session = db.new_session()?;
 
     // when
     let ((local_node, node), changelog) = session.init_as_node(Some("My Node"), None)?;
