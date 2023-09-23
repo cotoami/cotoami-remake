@@ -65,15 +65,22 @@ async fn all_parents(
         let nodes = db
             .all_parent_nodes(&operator)?
             .into_iter()
-            .map(|(_, node)| match conns.get(&node.uuid) {
-                None => Parent::new(node, false, None),
-                Some(ParentConn::Failed(e)) => Parent::new(node, false, Some(e.to_string())),
-                Some(ParentConn::Connected { .. }) => Parent::new(node, true, None),
+            .map(|(_, node)| {
+                let conn = conns.get(&node.uuid);
+                new_parent(node, conn)
             })
             .collect();
         Ok(Json(nodes))
     })
     .await?
+}
+
+fn new_parent(node: Node, parent_conn: Option<&ParentConn>) -> Parent {
+    match parent_conn {
+        None => Parent::new(node, false, None),
+        Some(ParentConn::Failed(e)) => Parent::new(node, false, Some(e.to_string())),
+        Some(ParentConn::Connected { .. }) => Parent::new(node, true, None),
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
