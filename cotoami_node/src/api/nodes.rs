@@ -137,7 +137,7 @@ async fn put_parent_node(
         Ok::<_, ApiError>(node)
     })
     .await??;
-    info!("Parent node {} saved.", parent_node.uuid);
+    info!("Parent node [{}] imported.", parent_node.name);
 
     // Import the changelog
     server
