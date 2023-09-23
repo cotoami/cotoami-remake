@@ -102,16 +102,17 @@ impl AppState {
     async fn init_local_node(&self) -> Result<()> {
         let (config, db) = (self.config.clone(), self.db.clone());
         spawn_blocking(move || {
-            let db = db.new_session()?;
+            let mut db = db.new_session()?;
             let owner_password = config.owner_password();
 
-            if let Some(local_node) = db.local_node() {
-                // If the local node already exists,
-                // its name and password can be changed via config
-
+            // If the local node already exists,
+            // its name and password can be changed via config
+            if let Some((local_node, node)) = db.local_node_pair()? {
                 if let Some(name) = config.node_name.as_deref() {
-                    db.rename_local_node(name)?;
-                    info!("The node name has been changed to {}.", name);
+                    if name != node.name {
+                        db.rename_local_node(name)?;
+                        info!("The node name has been changed to [{}].", name);
+                    }
                 }
 
                 if config.change_owner_password {
@@ -122,12 +123,13 @@ impl AppState {
                         .verify_password(owner_password)
                         .context("Config::owner_password couldn't be verified.")?;
                 }
-            } else {
-                // Initialize the local node
-                let name = config.node_name.as_deref();
-                let ((_, node), _) = db.init_as_node(name, Some(owner_password))?;
-                info!("The local node [{}] has been created", node.name);
+                return Ok(());
             }
+
+            // Initialize the local node
+            let name = config.node_name.as_deref();
+            let ((_, node), _) = db.init_as_node(name, Some(owner_password))?;
+            info!("The local node [{}] has been created", node.name);
             Ok(())
         })
         .await?
