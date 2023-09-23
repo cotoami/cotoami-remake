@@ -129,7 +129,10 @@ impl AppState {
             // Initialize the local node
             let name = config.node_name.as_deref();
             let ((_, node), _) = db.init_as_node(name, Some(owner_password))?;
-            info!("The local node [{}] has been created", node.name);
+            info!(
+                "The local node [{}]({}) has been created",
+                node.name, node.uuid
+            );
             Ok(())
         })
         .await?
