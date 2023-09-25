@@ -59,7 +59,7 @@ pub fn recent<'a, Conn: AsReadableConn>(
             if let Some(id) = posted_in_id {
                 query = query.filter(cotos::posted_in_id.eq(id));
             }
-            query.order(cotos::rowid.desc())
+            query.order(cotos::created_at.desc())
         })
     })
 }
