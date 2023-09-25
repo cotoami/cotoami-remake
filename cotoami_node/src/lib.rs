@@ -282,7 +282,7 @@ impl ChangePub for Pubsub {
 /////////////////////////////////////////////////////////////////////////////
 
 enum ParentConn {
-    Failed(anyhow::Error),
+    InitFailed(anyhow::Error),
     Connected {
         session: Session,
         event_loop_state: Arc<RwLock<EventLoopState>>,
@@ -310,7 +310,7 @@ impl ParentConn {
     ) -> Self {
         match Self::try_connect(parent_node, local_node, config, db, pubsub).await {
             Ok(conn) => conn,
-            Err(err) => ParentConn::Failed(err),
+            Err(err) => ParentConn::InitFailed(err),
         }
     }
 

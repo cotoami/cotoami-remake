@@ -6,8 +6,8 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
-use derive_new::new;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use reqwest_eventsource::ReadyState;
 use tokio::task::spawn_blocking;
 use tracing::info;
 use validator::Validate;
@@ -49,11 +49,40 @@ async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, Api
 // GET /api/nodes/parents
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize, new)]
+#[derive(serde::Serialize)]
 struct Parent {
     node: Node,
     connected: bool,
     conn_error: Option<String>,
+}
+
+impl Parent {
+    fn new(node: Node, parent_conn: Option<&ParentConn>) -> Self {
+        match parent_conn {
+            None => Self {
+                node,
+                connected: false,
+                conn_error: None,
+            },
+            Some(ParentConn::InitFailed(e)) => Self {
+                node,
+                connected: false,
+                conn_error: Some(e.to_string()),
+            },
+            Some(ParentConn::Connected {
+                event_loop_state, ..
+            }) => {
+                let state = event_loop_state.read();
+                let connected = state.ready_state == ReadyState::Open;
+                let conn_error = state.error.as_ref().map(|e| e.to_string());
+                Self {
+                    node,
+                    connected,
+                    conn_error,
+                }
+            }
+        }
+    }
 }
 
 async fn all_parents(
@@ -68,20 +97,12 @@ async fn all_parents(
             .into_iter()
             .map(|(_, node)| {
                 let conn = conns.get(&node.uuid);
-                new_parent(node, conn)
+                Parent::new(node, conn)
             })
             .collect();
         Ok(Json(nodes))
     })
     .await?
-}
-
-fn new_parent(node: Node, parent_conn: Option<&ParentConn>) -> Parent {
-    match parent_conn {
-        None => Parent::new(node, false, None),
-        Some(ParentConn::Failed(e)) => Parent::new(node, false, Some(e.to_string())),
-        Some(ParentConn::Connected { .. }) => Parent::new(node, true, None),
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -157,7 +178,7 @@ async fn put_parent_node(
     let parent = {
         let conns = state.parent_conns.read();
         let conn = conns.get(&parent_node.uuid);
-        new_parent(parent_node, conn)
+        Parent::new(parent_node, conn)
     };
 
     Ok((StatusCode::CREATED, Json(parent)))

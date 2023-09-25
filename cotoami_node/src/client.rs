@@ -205,8 +205,8 @@ pub(crate) struct ResponseError {
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) struct EventLoopState {
-    ready_state: ReadyState,
-    error: Option<anyhow::Error>,
+    pub ready_state: ReadyState,
+    pub error: Option<anyhow::Error>,
     end_loop: bool,
 }
 
