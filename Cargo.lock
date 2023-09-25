@@ -641,6 +641,7 @@ dependencies = [
  "eventsource-stream",
  "futures",
  "parking_lot",
+ "rand 0.8.5",
  "reqwest",
  "reqwest-eventsource",
  "serde",

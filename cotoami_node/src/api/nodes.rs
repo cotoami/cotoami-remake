@@ -7,6 +7,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use derive_new::new;
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use tokio::task::spawn_blocking;
 use tracing::info;
 use validator::Validate;
@@ -198,32 +199,46 @@ struct AddChildNode {
     #[validate(required)]
     id: Option<Id<Node>>,
 
-    #[validate(required)]
-    password: Option<String>,
-
     as_owner: Option<bool>,
 
     can_edit_links: Option<bool>,
+}
+
+#[derive(serde::Serialize)]
+struct ChildNodeAdded {
+    /// Generated password
+    password: String,
 }
 
 async fn add_child_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddChildNode>,
-) -> Result<StatusCode, ApiError> {
+) -> Result<(StatusCode, Json<ChildNodeAdded>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("nodes/child", errors).into_result();
     }
     spawn_blocking(move || {
         let db = state.db.new_session()?;
+        let password = generate_password();
         db.add_child_node(
-            form.id.unwrap(),        // validated to be Some
-            &form.password.unwrap(), // validated to be Some
+            form.id.unwrap(), // validated to be Some
+            &password,
             form.as_owner.unwrap_or(false),
             form.can_edit_links.unwrap_or(false),
             &operator,
         )?;
-        Ok(StatusCode::CREATED)
+        let response_body = ChildNodeAdded { password };
+        Ok((StatusCode::CREATED, Json(response_body)))
     })
     .await?
+}
+
+fn generate_password() -> String {
+    // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-alphanumeric-characters
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .map(char::from)
+        .collect()
 }

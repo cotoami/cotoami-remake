@@ -19,6 +19,7 @@ envy = "0.4" # seems unmaintained
 eventsource-stream = "0.2.3" 
 futures = "0.3.28" 
 parking_lot = "0.12.1" 
+rand = "0.8.5" 
 reqwest = {version = "0.11", features = ["json"]} 
 reqwest-eventsource = "0.4.0" 
 serde = {version = "1.0", features = ["derive"]} 
