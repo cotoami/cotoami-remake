@@ -8,7 +8,7 @@ use axum::{
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
-use tracing::info;
+use tracing::debug;
 use validator::Validate;
 
 use crate::{error::ApiError, AppState};
@@ -72,7 +72,7 @@ async fn require_session<B>(
     .await??;
 
     if let Some(operator) = operator {
-        info!("Identified the operator: {:?}", operator);
+        debug!("Identified the operator: {:?}", operator);
         request.extensions_mut().insert(operator);
         Ok(next.run(request).await)
     } else {
