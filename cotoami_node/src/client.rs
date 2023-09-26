@@ -55,6 +55,10 @@ impl Server {
         Ok(())
     }
 
+    /// Creates a new child session via `/api/session/child`.
+    ///
+    /// If it succeeds to create a session, the session token will be saved in
+    /// this client and used as a request header in subsequent requests.
     pub async fn create_child_session(
         &mut self,
         password: String,
@@ -247,7 +251,10 @@ impl EventLoop {
         pubsub: &Arc<Mutex<Pubsub>>,
     ) -> Result<Self> {
         let url = server.make_url("/api/events", None)?;
-        let event_source = EventSource::get(url);
+        // To inherit request headers (ex. session token) from the `server`,
+        // an event source has to be constructed via [EventSource::new] with a
+        // [RequestBuilder] constructed by the `server`.
+        let event_source = EventSource::new(server.get(url))?;
         let state = EventLoopState::new(event_source.ready_state());
         Ok(Self {
             server,
