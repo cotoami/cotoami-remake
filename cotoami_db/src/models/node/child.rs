@@ -6,16 +6,20 @@ use super::{Node, Principal};
 use crate::{models::Id, schema::child_nodes};
 
 /// A row in `child_nodes` table
-#[derive(Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable, Selectable)]
+#[derive(
+    derive_more::Debug, Clone, PartialEq, Eq, Identifiable, AsChangeset, Queryable, Selectable,
+)]
 #[diesel(primary_key(node_id), treat_none_as_null = true)]
 pub struct ChildNode {
     /// UUID of this child node
     pub node_id: Id<Node>,
 
     /// Password for authentication
+    #[debug(skip)]
     pub password_hash: String,
 
     /// Login session token
+    #[debug(skip)]
     pub session_token: Option<String>,
 
     /// Expiration date of login session
