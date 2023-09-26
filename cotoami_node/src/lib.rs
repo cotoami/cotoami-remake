@@ -17,7 +17,7 @@ use tokio::{
     sync::{oneshot, oneshot::Sender},
     task::{spawn_blocking, JoinHandle},
 };
-use tracing::info;
+use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
@@ -310,7 +310,10 @@ impl ParentConn {
     ) -> Self {
         match Self::try_connect(parent_node, local_node, config, db, pubsub).await {
             Ok(conn) => conn,
-            Err(err) => ParentConn::InitFailed(err),
+            Err(err) => {
+                debug!("Failed to initialize a parent connection: {:?}", err);
+                ParentConn::InitFailed(err)
+            }
         }
     }
 

@@ -72,7 +72,7 @@ async fn require_session<B>(
     .await??;
 
     if let Some(operator) = operator {
-        debug!("Identified the operator: {:?}", operator);
+        debug!("Operator in session: {:?}", operator);
         request.extensions_mut().insert(operator);
         Ok(next.run(request).await)
     } else {

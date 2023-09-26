@@ -110,7 +110,7 @@ impl Server {
                         return Ok(None);
                     } else {
                         // The number of `parent_node.changes_received` is larger than
-                        // the actual last number of the changes in the parent node for some reason.
+                        // the last number of the changes in the parent node for some reason.
                         // That means the replication has broken between the two nodes.
                         bail!(
                             "Tried to import from {}, but the last change number was {}.",
@@ -131,9 +131,9 @@ impl Server {
             // Import the changes to the local database
             let (db, pubsub) = (db.clone(), pubsub.clone());
             let chunk_imported: Result<()> = spawn_blocking(move || {
-                debug!("Importing the chunk...");
                 let db = db.new_session()?;
                 for change in changes.chunk {
+                    debug!("Importing number {} ...", change.serial_number);
                     if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
                         pubsub.lock().publish_change(imported_change)?;
                     }
@@ -291,7 +291,7 @@ impl EventLoop {
                 }
                 Err(err) => {
                     debug!(
-                        "Event stream {} closed because of a stream error: {}",
+                        "Event stream {} closed because of a stream error: {:?}",
                         self.server.url_prefix(),
                         &err
                     );
