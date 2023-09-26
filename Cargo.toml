@@ -4,3 +4,4 @@ members = [
   "cotoami_db",
   "cotoami_node",
 ]
+resolver = "2"
