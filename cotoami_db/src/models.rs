@@ -27,7 +27,14 @@ pub mod node;
 
 /// A generic entity ID
 #[derive(
-    Debug, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize, new,
+    derive_more::Debug,
+    PartialEq,
+    Eq,
+    AsExpression,
+    FromSqlRow,
+    serde::Serialize,
+    serde::Deserialize,
+    new,
 )]
 #[diesel(sql_type = Text)]
 #[serde(transparent)]
@@ -38,6 +45,7 @@ pub struct Id<T> {
     // has the same variance as T
     // but not to own data of type T
     // unlike *const T, it implements both Send and Sync
+    #[debug(skip)]
     _marker: PhantomData<fn() -> T>,
 }
 

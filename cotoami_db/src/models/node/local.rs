@@ -7,7 +7,9 @@ use super::{Node, Principal};
 use crate::{models::Id, schema::local_node};
 
 /// A row in `local_node` table
-#[derive(Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Selectable)]
+#[derive(
+    derive_more::Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Selectable,
+)]
 #[diesel(table_name = local_node, primary_key(node_id), treat_none_as_null = true)]
 pub struct LocalNode {
     /// UUID of a local node
@@ -17,9 +19,11 @@ pub struct LocalNode {
     pub rowid: i64,
 
     /// Password for owner authentication of this local node
+    #[debug(skip)]
     pub owner_password_hash: Option<String>,
 
     /// Node owner's session token
+    #[debug(skip)]
     pub owner_session_token: Option<String>,
 
     /// Expiration date of node owner's session

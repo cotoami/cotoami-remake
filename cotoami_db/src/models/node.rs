@@ -24,7 +24,7 @@ pub mod parent;
 
 /// A row in `nodes` table
 #[derive(
-    Debug,
+    derive_more::Debug,
     Clone,
     PartialEq,
     Eq,
@@ -48,6 +48,7 @@ pub struct Node {
         serialize_with = "crate::as_base64",
         deserialize_with = "crate::from_base64"
     )]
+    #[debug(skip)]
     pub icon: Vec<u8>,
 
     /// Display name

@@ -22,7 +22,15 @@ use crate::{models::Id, schema::parent_nodes};
 
 /// A row in `parent_nodes` table
 #[derive(
-    Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Selectable, Validate,
+    derive_more::Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    Identifiable,
+    AsChangeset,
+    Queryable,
+    Selectable,
+    Validate,
 )]
 #[diesel(primary_key(node_id))]
 pub struct ParentNode {
@@ -36,6 +44,7 @@ pub struct ParentNode {
     pub created_at: NaiveDateTime,
 
     /// Saved password to connect to this parent node
+    #[debug(skip)]
     pub encrypted_password: Option<EncryptedPassword>,
 
     /// Number of changes received from this parent node
