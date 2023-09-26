@@ -4,6 +4,7 @@ use std::ops::DerefMut;
 
 use anyhow::ensure;
 use diesel::prelude::*;
+use tracing::debug;
 
 use super::{coto_ops, cotonoma_ops, link_ops, node_ops, parent_node_ops};
 use crate::{
@@ -154,6 +155,10 @@ pub fn import_change<'a>(
 
         // Import the change only if the same change has not yet been imported before.
         let log_entry = if contains_change(&log).run(ctx)? {
+            debug!(
+                "Change {} skipped (origin node: {}, origin number: {})",
+                log.serial_number, log.origin_node_id, log.origin_serial_number
+            );
             None
         } else {
             apply_change(&log.change).run(ctx)?;

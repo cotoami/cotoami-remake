@@ -9,12 +9,12 @@ use std::{
 use anyhow::{anyhow, bail, Context as _, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use log::{debug, info};
 use once_cell::unsync::OnceCell;
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, Mutex, MutexGuard, RwLock, RwLockReadGuard,
     RwLockWriteGuard,
 };
+use tracing::{debug, info};
 use url::Url;
 
 use self::{
