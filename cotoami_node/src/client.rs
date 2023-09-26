@@ -61,7 +61,7 @@ impl Server {
         new_password: Option<String>,
         child: &Node,
     ) -> Result<ChildSessionCreated> {
-        let url = self.make_url("/api/session/child")?;
+        let url = self.make_url("/api/session/child", None)?;
         let req_body = CreateChildSession {
             password,
             new_password,
@@ -77,8 +77,7 @@ impl Server {
     }
 
     pub async fn chunk_of_changes(&self, from: i64) -> Result<ChangesResult> {
-        let mut url = self.make_url("/api/changes")?;
-        url.query_pairs_mut().append_pair("from", &from.to_string());
+        let url = self.make_url("/api/changes", Some(vec![("from", &from.to_string())]))?;
         let response = self.get(url).send().await?;
         if response.status() != reqwest::StatusCode::OK {
             return Self::into_err(response).await?;
@@ -173,7 +172,16 @@ impl Server {
         headers
     }
 
-    fn make_url(&self, path: &str) -> Result<Url> { Ok(Url::parse(&self.url_prefix)?.join(path)?) }
+    fn make_url(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> Result<Url> {
+        let mut url = Url::parse(&self.url_prefix)?.join(path)?;
+        if let Some(query) = query {
+            let mut pairs = url.query_pairs_mut();
+            for (name, value) in query.iter() {
+                pairs.append_pair(name, value);
+            }
+        }
+        Ok(url)
+    }
 
     fn get<U: IntoUrl>(&self, url: U) -> RequestBuilder {
         self.client.get(url).headers(self.headers.clone())
@@ -238,7 +246,7 @@ impl EventLoop {
         db: &Arc<Database>,
         pubsub: &Arc<Mutex<Pubsub>>,
     ) -> Result<Self> {
-        let url = server.make_url("/api/events")?;
+        let url = server.make_url("/api/events", None)?;
         let event_source = EventSource::get(url);
         let state = EventLoopState::new(event_source.ready_state());
         Ok(Self {
