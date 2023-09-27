@@ -221,7 +221,7 @@ impl<'a> DatabaseSession<'a> {
         self.ensure_local(entity).is_ok()
     }
 
-    /// Create initial data that represents a local node and its root cotonoma.
+    /// Creates initial data that represents a local node and its root cotonoma.
     ///
     /// Majority of the database operations require this operation to be called in advance
     /// because every database entity belongs to a node.

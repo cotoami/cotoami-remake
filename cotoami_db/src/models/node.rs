@@ -51,7 +51,9 @@ pub struct Node {
     #[debug(skip)]
     pub icon: Vec<u8>,
 
-    /// Display name
+    /// Display name which syncs with the name of the root cotonoma.
+    ///
+    /// The value will be an empty string if `root_cotonoma_id` is None.
     pub name: String,
 
     /// UUID of the root cotonoma of this node
