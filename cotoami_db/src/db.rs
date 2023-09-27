@@ -221,6 +221,14 @@ impl<'a> DatabaseSession<'a> {
         self.ensure_local(entity).is_ok()
     }
 
+    /// Create initial data that represents a local node and its root cotonoma.
+    ///
+    /// Majority of the database operations require this operation to be called in advance
+    /// because every database entity belongs to a node.
+    ///
+    /// A root cotonoma will be created only if some `name` is specified,
+    /// otherwise the local node will be initialized as cotonoma-less and its name
+    /// will be set to empty string.
     pub fn init_as_node(
         &self,
         name: Option<&str>,
