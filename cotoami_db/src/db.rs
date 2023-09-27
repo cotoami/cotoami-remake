@@ -242,7 +242,7 @@ impl<'a> DatabaseSession<'a> {
 
             let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
 
-            let Change::CreateNode(node, _) = change else { panic!() };
+            let Change::CreateNode(node, _) = change else { unreachable!() };
             Ok(((local_node, node), changelog))
         })
         .map(|((local_node, node), changelog)| {
