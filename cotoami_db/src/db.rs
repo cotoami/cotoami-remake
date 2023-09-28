@@ -346,7 +346,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Inserts or updates a parent node. It is an idempotent operation.
     ///
-    /// The node data has to be imported before registered as a parent.
+    /// The node data ([Node]) has to be imported before registered as a parent ([ParentNode]).
     pub fn put_parent_node(
         &self,
         id: &Id<Node>,
