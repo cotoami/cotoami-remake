@@ -62,6 +62,8 @@ impl DatabaseError {
 
 #[derive(strum_macros::Display, Debug)]
 pub enum EntityKind {
+    #[strum(serialize = "node")]
+    Node,
     #[strum(serialize = "parent_node")]
     ParentNode,
     #[strum(serialize = "child_node")]

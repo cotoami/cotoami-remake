@@ -9,7 +9,7 @@ use validator::Validate;
 
 use super::cotonoma_ops;
 use crate::{
-    db::op::*,
+    db::{error::*, op::*},
     models::{
         coto::Coto,
         cotonoma::Cotonoma,
@@ -27,6 +27,12 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<N
             .optional()
             .map_err(anyhow::Error::from)
     })
+}
+
+pub fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Result<Node, DatabaseError>> + '_ {
+    get(id).map(|c| c.ok_or(DatabaseError::not_found(EntityKind::Node, *id)))
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
@@ -96,20 +102,20 @@ pub fn rename<'a>(
     })
 }
 
+/// Updates the `root_cotonoma_id` of the specified node.
+///
+/// The node name will be updated to the name of the root cotonoma.
 pub fn set_root_cotonoma<'a>(
     id: &'a Id<Node>,
     root_cotonoma_id: &'a Id<Cotonoma>,
 ) -> impl Operation<WritableConn, Node> + 'a {
-    use crate::schema::nodes;
-    write_op(move |conn| {
-        diesel::update(nodes::table)
-            .filter(nodes::uuid.eq(id))
-            .set((
-                nodes::root_cotonoma_id.eq(root_cotonoma_id),
-                nodes::version.eq(nodes::version + 1),
-            ))
-            .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let (cotonoma, _) = cotonoma_ops::get_or_err(root_cotonoma_id).run(ctx)??;
+        let node = get_or_err(id).run(ctx)??;
+        let mut update_node = node.to_update();
+        update_node.name = &cotonoma.name;
+        update_node.root_cotonoma_id = Some(&cotonoma.uuid);
+        update(&update_node).run(ctx)
     })
 }
 
