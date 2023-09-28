@@ -25,6 +25,7 @@ use crate::schema::changelog;
     Debug, Clone, PartialEq, Eq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(table_name = changelog, primary_key(serial_number))]
+#[must_use]
 pub struct ChangelogEntry {
     /// Serial number of a changelog entry based on SQLite ROWID
     pub serial_number: i64,

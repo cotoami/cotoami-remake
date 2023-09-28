@@ -86,7 +86,7 @@ fn duplicate_node() -> Result<()> {
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
     let session = db.new_session()?;
-    session.init_as_node(None, None)?;
+    let _ = session.init_as_node(None, None)?;
 
     // when
     let result = session.init_as_node(None, None);

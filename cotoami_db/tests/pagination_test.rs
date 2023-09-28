@@ -21,7 +21,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 0);
 
     // when
-    session.post_coto("1", None, &root_cotonoma, &operator)?;
+    let _ = session.post_coto("1", None, &root_cotonoma, &operator)?;
     let paginated = session.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
 
     // then
@@ -32,7 +32,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    session.post_coto("2", None, &root_cotonoma, &operator)?;
+    let _ = session.post_coto("2", None, &root_cotonoma, &operator)?;
     let paginated = session.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
 
     // then
@@ -43,7 +43,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    session.post_coto("3", None, &root_cotonoma, &operator)?;
+    let _ = session.post_coto("3", None, &root_cotonoma, &operator)?;
     let paginated = session.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
 
     // then
