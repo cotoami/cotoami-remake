@@ -86,6 +86,13 @@ pub fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableC
     })
 }
 
+/// Renames the specified node.
+///
+/// The name of the root cotonoma will be also updated to the same name.
+/// If the node doesn't have a root cotonoma, an error will be returned.
+///
+/// If the `updated_at` has some value, it will be used to set
+/// [Cotonoma::updated_at] when updating it.
 pub fn rename<'a>(
     id: &'a Id<Node>,
     name: &'a str,
