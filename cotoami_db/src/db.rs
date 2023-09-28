@@ -234,7 +234,7 @@ impl<'a> DatabaseSession<'a> {
         name: Option<&str>,
         password: Option<&str>,
     ) -> Result<((LocalNode, Node), ChangelogEntry)> {
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+        let result = self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let (local_node, mut node) =
                 local_node_ops::create(name.unwrap_or_default(), password).run(ctx)?;
 
@@ -250,15 +250,20 @@ impl<'a> DatabaseSession<'a> {
 
             let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
 
+            // Take the node data back from the `change` struct
             let Change::CreateNode(node, _) = change else { unreachable!() };
+
             Ok(((local_node, node), changelog))
-        })
-        .map(|((local_node, node), changelog)| {
+        });
+
+        // Put the local node data in the global cache
+        if let Ok(((local_node, node), _)) = &result {
             let mut globals = (self.write_globals)();
             globals.local_node = Some(local_node.clone());
             globals.root_cotonoma_id = node.root_cotonoma_id;
-            ((local_node, node), changelog)
-        })
+        }
+
+        result
     }
 
     pub fn rename_local_node(&self, name: &str) -> Result<(Node, ChangelogEntry)> {
@@ -341,7 +346,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Inserts or updates a parent node. It is an idempotent operation.
     ///
-    /// The node has to be imported before registered as a parent.
+    /// The node data has to be imported before registered as a parent.
     pub fn put_parent_node(
         &self,
         id: &Id<Node>,
@@ -355,12 +360,11 @@ impl<'a> DatabaseSession<'a> {
             self.write_transaction(parent_node_ops::update(&parent_node))
         } else {
             operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Create)?;
-            let new_parent_node = NewParentNode::new(id, url_prefix)?;
-            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-                let parent_node = parent_node_ops::insert(&new_parent_node).run(ctx)?;
-                globals.parent_nodes.insert(*id, parent_node.clone());
-                Ok(parent_node)
-            })
+            let parent_node = self.write_transaction(parent_node_ops::insert(
+                &NewParentNode::new(id, url_prefix)?,
+            ))?;
+            globals.parent_nodes.insert(*id, parent_node.clone());
+            Ok(parent_node)
         }
     }
 
