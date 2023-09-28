@@ -86,6 +86,10 @@ pub enum Change {
         name: String,
         updated_at: NaiveDateTime,
     },
+    SetRootCotonoma {
+        uuid: Id<Node>,
+        cotonoma_id: Id<Cotonoma>,
+    },
     CreateCoto(Coto),
     EditCoto {
         uuid: Id<Coto>,

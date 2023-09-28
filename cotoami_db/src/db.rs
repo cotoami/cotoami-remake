@@ -281,6 +281,19 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn set_root_cotonoma(&self, cotonoma_id: &Id<Cotonoma>) -> Result<(Node, ChangelogEntry)> {
+        let local_node_id = self.local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;
+            let change = Change::SetRootCotonoma {
+                uuid: local_node_id,
+                cotonoma_id: *cotonoma_id,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((node, changelog))
+        })
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // nodes
     /////////////////////////////////////////////////////////////////////////////

@@ -114,10 +114,10 @@ pub fn rename<'a>(
 /// The node name will be updated to the name of the root cotonoma.
 pub fn set_root_cotonoma<'a>(
     id: &'a Id<Node>,
-    root_cotonoma_id: &'a Id<Cotonoma>,
+    cotonoma_id: &'a Id<Cotonoma>,
 ) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let (cotonoma, _) = cotonoma_ops::get_or_err(root_cotonoma_id).run(ctx)??;
+        let (cotonoma, _) = cotonoma_ops::get_or_err(cotonoma_id).run(ctx)??;
         let node = get_or_err(id).run(ctx)??;
         let mut update_node = node.to_update();
         update_node.name = &cotonoma.name;

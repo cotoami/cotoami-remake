@@ -199,6 +199,9 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             } => {
                 node_ops::rename(uuid, name, Some(*updated_at)).run(ctx)?;
             }
+            Change::SetRootCotonoma { uuid, cotonoma_id } => {
+                node_ops::set_root_cotonoma(uuid, cotonoma_id).run(ctx)?;
+            }
             Change::CreateCoto(coto) => {
                 let new_coto = coto.to_import();
                 coto_ops::insert(&new_coto).run(ctx)?;
