@@ -137,10 +137,12 @@ pub fn create_root_cotonoma<'a>(
     })
 }
 
-/// Importing a node is an UPSERT-like idempotent operation that inserts or updates a node
-/// based on a [Node] data. The update will be done only when the version of the passed node
-/// is larger than the existing one (upgrade).
-pub fn import(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
+/// Upserting a node is an idempotent operation that inserts or updates a node
+/// based on the specified [Node] data.
+///
+/// The update will be done only when the ID of the passed data already exists
+/// in the local database and the version of it is larger than the existing one.
+pub fn upsert(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
     composite_op::<WritableConn, _, _>(|ctx| match get(&node.uuid).run(ctx)? {
         Some(local_row) => {
             if node.version > local_row.version {

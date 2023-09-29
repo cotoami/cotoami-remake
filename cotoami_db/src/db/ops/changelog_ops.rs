@@ -183,14 +183,14 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
         match change {
             Change::None => (),
             Change::CreateNode(node, root_cotonoma) => {
-                node_ops::import(node).run(ctx)?;
+                node_ops::upsert(node).run(ctx)?;
                 if let Some((cotonoma, coto)) = root_cotonoma {
                     coto_ops::insert(&coto.to_import()).run(ctx)?;
                     cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
                 }
             }
-            Change::ImportNode(node) => {
-                node_ops::import(node).run(ctx)?;
+            Change::UpsertNode(node) => {
+                node_ops::upsert(node).run(ctx)?;
             }
             Change::RenameNode {
                 uuid,

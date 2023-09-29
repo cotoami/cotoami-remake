@@ -308,10 +308,10 @@ impl<'a> DatabaseSession<'a> {
     pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
         let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            if let Some(node) = node_ops::import(node).run(ctx)? {
-                let change = Change::ImportNode(node);
+            if let Some(node) = node_ops::upsert(node).run(ctx)? {
+                let change = Change::UpsertNode(node);
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                let Change::ImportNode(node) = change else { panic!() };
+                let Change::UpsertNode(node) = change else { unreachable!() };
                 Ok(Some((node, changelog)))
             } else {
                 Ok(None)

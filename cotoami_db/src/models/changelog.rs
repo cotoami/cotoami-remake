@@ -81,7 +81,7 @@ pub struct NewChangelogEntry<'a> {
 pub enum Change {
     None,
     CreateNode(Node, Option<(Cotonoma, Coto)>),
-    ImportNode(Node),
+    UpsertNode(Node),
     RenameNode {
         uuid: Id<Node>,
         name: String,
