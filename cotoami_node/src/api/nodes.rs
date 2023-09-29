@@ -16,7 +16,7 @@ use crate::{
     api::Pagination,
     client::Server,
     error::{ApiError, IntoApiResult, RequestError},
-    AppState, ParentConn,
+    AppState, ChangePub, ParentConn,
 };
 
 pub(super) fn routes() -> Router<AppState> {
@@ -116,6 +116,10 @@ struct PutParentNode {
 
     #[validate(required)]
     password: Option<String>,
+
+    /// Set true if you want to turn this node into a replica of the parent node,
+    /// which means the root cotonoma will be changed to that of the parent node.
+    replicate: Option<bool>,
 }
 
 async fn put_parent_node(
@@ -165,6 +169,24 @@ async fn put_parent_node(
     server
         .import_changes(&state.db, &state.pubsub, parent_node.uuid)
         .await?;
+
+    // Create a link to the parent root cotonoma or become a replica of the parent
+    if form.replicate.unwrap_or(false) {
+        if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
+            let (db, pubsub) = (state.db.clone(), state.pubsub.clone());
+            let parent_node_name = parent_node.name.clone();
+            let _ = spawn_blocking(move || {
+                let db = db.new_session()?;
+                let (local_node, change) = db.set_root_cotonoma(&parent_cotonoma_id)?;
+                pubsub.lock().publish_change(change)?;
+                info!("This node is now replicating [{}].", parent_node_name);
+                Ok::<_, ApiError>(local_node)
+            })
+            .await??;
+        }
+    } else {
+        // TODO: create a link
+    }
 
     // Create an event stream
     let event_loop = server

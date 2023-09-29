@@ -80,13 +80,13 @@ async fn post_coto(
         let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
 
         if db.is_local(&cotonoma) {
-            let (coto, changelog) = db.post_coto(
+            let (coto, change) = db.post_coto(
                 &form.content.unwrap(), // validated to be Some
                 form.summary.as_deref(),
                 &cotonoma,
                 &operator,
             )?;
-            state.pubsub.lock().publish_change(changelog)?;
+            state.pubsub.lock().publish_change(change)?;
             Ok(Some(coto))
         } else {
             Ok(None)
