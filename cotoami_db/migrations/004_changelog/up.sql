@@ -27,6 +27,9 @@ CREATE TABLE changelog (
   -- Serial number among changes created in the origin node
   origin_serial_number INTEGER NOT NULL,
 
+  -- Number to distinguish between different change types (Change::type_number())
+  type_number INTEGER NOT NULL,
+
   -- Change (cotoami_db::models::changelog::Change) value in MessagePack form
   change BLOB NOT NULL,
 

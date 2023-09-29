@@ -144,6 +144,7 @@ diesel::table! {
         serial_number -> BigInt,
         origin_node_id -> Text,
         origin_serial_number -> BigInt,
+        type_number -> SmallInt,
         change -> Binary,
         inserted_at -> Timestamp,
     }

@@ -36,6 +36,12 @@ pub struct ChangelogEntry {
     /// Serial number among changes created in the origin node
     pub origin_serial_number: i64,
 
+    /// Number to distinguish between different change types
+    ///
+    /// The source type is `u8` (Change::type_number()), but we had to pick `i16` instead
+    /// because there is no sqlite type to represent `u8`.
+    pub type_number: i16,
+
     /// The content of this change
     pub change: Change,
 
@@ -50,6 +56,7 @@ impl ChangelogEntry {
         NewChangelogEntry {
             origin_node_id: &self.origin_node_id,
             origin_serial_number: self.origin_serial_number,
+            type_number: self.type_number,
             change: &self.change,
             inserted_at: crate::current_datetime(),
         }
@@ -62,6 +69,7 @@ impl ChangelogEntry {
 pub struct NewChangelogEntry<'a> {
     origin_node_id: &'a Id<Node>,
     origin_serial_number: i64,
+    type_number: i16,
     change: &'a Change,
     inserted_at: NaiveDateTime,
 }
@@ -78,41 +86,42 @@ pub struct NewChangelogEntry<'a> {
     Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(sql_type = Binary)]
+#[repr(u8)]
 pub enum Change {
-    None,
-    CreateNode(Node, Option<(Cotonoma, Coto)>),
-    UpsertNode(Node),
+    None = 0,
+    CreateNode(Node, Option<(Cotonoma, Coto)>) = 1,
+    UpsertNode(Node) = 2,
     RenameNode {
         uuid: Id<Node>,
         name: String,
         updated_at: NaiveDateTime,
-    },
+    } = 3,
     SetRootCotonoma {
         uuid: Id<Node>,
         cotonoma_id: Id<Cotonoma>,
-    },
-    CreateCoto(Coto),
+    } = 4,
+    CreateCoto(Coto) = 5,
     EditCoto {
         uuid: Id<Coto>,
         content: String,
         summary: Option<String>,
         updated_at: NaiveDateTime,
-    },
-    DeleteCoto(Id<Coto>),
-    CreateCotonoma(Cotonoma, Coto),
+    } = 6,
+    DeleteCoto(Id<Coto>) = 7,
+    CreateCotonoma(Cotonoma, Coto) = 8,
     RenameCotonoma {
         uuid: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    },
-    DeleteCotonoma(Id<Cotonoma>),
-    CreateLink(Link),
+    } = 9,
+    DeleteCotonoma(Id<Cotonoma>) = 10,
+    CreateLink(Link) = 11,
     EditLink {
         uuid: Id<Link>,
         linking_phrase: Option<String>,
         updated_at: NaiveDateTime,
-    },
-    DeleteLink(Id<Link>),
+    } = 12,
+    DeleteLink(Id<Link>) = 13,
 }
 
 impl Change {
@@ -124,9 +133,25 @@ impl Change {
         NewChangelogEntry {
             origin_node_id: local_node_id,
             origin_serial_number: serial_number,
+            type_number: self.type_number() as i16,
             change: self,
             inserted_at: crate::current_datetime(),
         }
+    }
+
+    pub fn type_number(&self) -> u8 {
+        // There seems to be no "safe" way to get a discriminant value of an enum with fields
+        // other than the nightly-only experimental `core::intrinsics::discriminant_value`.
+        //
+        // "Rust provides no language-level way to access the raw discriminant of an enum with fields.
+        // Instead, currently unsafe code must be used to inspect the discriminant of an enum with fields.
+        // Since this feature is intended for use with cross-language FFI where unsafe code is already
+        // necessary, this should hopefully not be too much of an extra burden."
+        // https://blog.rust-lang.org/2022/12/15/Rust-1.66.0.html#explicit-discriminants-on-enums-with-fields
+        //
+        // Pointer casting:
+        // https://doc.rust-lang.org/reference/items/enumerations.html#pointer-casting
+        unsafe { *(self as *const Self as *const u8) }
     }
 }
 
@@ -165,11 +190,13 @@ mod tests {
 
     #[test]
     fn changelog_entry_as_json() -> Result<()> {
+        let change = Change::DeleteCoto(Id::from_str("00000000-0000-0000-0000-000000000001")?);
         let changelog_entry = ChangelogEntry {
             serial_number: 1,
             origin_node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
             origin_serial_number: 1,
-            change: Change::DeleteCoto(Id::from_str("00000000-0000-0000-0000-000000000001")?),
+            type_number: change.type_number() as i16,
+            change,
             inserted_at: NaiveDateTime::parse_from_str("2023-01-02 03:04:05", "%Y-%m-%d %H:%M:%S")?,
         };
 
@@ -182,6 +209,7 @@ mod tests {
               "serial_number": 1,
               "origin_node_id": "00000000-0000-0000-0000-000000000001",
               "origin_serial_number": 1,
+              "type_number": 7,
               "change": {
                 "DeleteCoto": "00000000-0000-0000-0000-000000000001"
               },
