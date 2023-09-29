@@ -60,30 +60,30 @@ impl DatabaseError {
     }
 }
 
-#[derive(strum_macros::Display, Debug)]
+#[derive(Debug, derive_more::Display)]
 pub enum EntityKind {
-    #[strum(serialize = "node")]
+    #[display("node")]
     Node,
-    #[strum(serialize = "parent_node")]
+    #[display("parent_node")]
     ParentNode,
-    #[strum(serialize = "child_node")]
+    #[display("child_node")]
     ChildNode,
-    #[strum(serialize = "coto")]
+    #[display("coto")]
     Coto,
-    #[strum(serialize = "cotonoma")]
+    #[display("cotonoma")]
     Cotonoma,
-    #[strum(serialize = "link")]
+    #[display("link")]
     Link,
 }
 
-#[derive(strum_macros::Display, Debug)]
+#[derive(Debug, derive_more::Display)]
 pub enum OpKind {
-    #[strum(serialize = "create")]
+    #[display("create")]
     Create,
-    #[strum(serialize = "read")]
+    #[display("read")]
     Read,
-    #[strum(serialize = "update")]
+    #[display("update")]
     Update,
-    #[strum(serialize = "delete")]
+    #[display("delete")]
     Delete,
 }
