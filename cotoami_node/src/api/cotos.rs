@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use axum::{
     extract::{Query, State},
     http::StatusCode,
@@ -73,31 +73,31 @@ async fn post_coto(
         return ("coto", errors).into_result();
     }
 
-    let local_post: Result<Option<Coto>> = spawn_blocking(move || {
+    let local_post = spawn_blocking(move || {
         let mut db = state.db.new_session()?;
 
-        let cotonoma_id = form.cotonoma_id.unwrap(); // validated to be Some
+        let cotonoma_id = form.cotonoma_id.unwrap_or_else(|| unreachable!());
         let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
 
         if db.is_local(&cotonoma) {
             let (coto, change) = db.post_coto(
-                &form.content.unwrap(), // validated to be Some
+                &form.content.unwrap_or_else(|| unreachable!()),
                 form.summary.as_deref(),
                 &cotonoma,
                 &operator,
             )?;
             state.pubsub.lock().publish_change(change)?;
-            Ok(Some(coto))
+            Ok::<_, ApiError>(Some(coto))
         } else {
-            Ok(None)
+            Ok::<_, ApiError>(None)
         }
     })
-    .await?;
+    .await??;
 
-    if let Some(coto) = local_post? {
+    if let Some(coto) = local_post {
         Ok((StatusCode::CREATED, Json(coto)))
     } else {
         // send a request to one of the parents
-        Err(anyhow!("Not yet implemented"))?
+        unimplemented!();
     }
 }
