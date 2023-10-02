@@ -53,6 +53,7 @@ diesel::table! {
         encrypted_password -> Nullable<Binary>,
         changes_received -> BigInt,
         last_change_received_at -> Nullable<Timestamp>,
+        disabled -> Bool,
     }
 }
 diesel::joinable!(parent_nodes -> nodes (node_id));

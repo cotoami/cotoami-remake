@@ -75,6 +75,9 @@ CREATE TABLE parent_nodes (
   -- Date when received the last change from this parent node
   last_change_received_at DATETIME, -- UTC
 
+  -- Local node won't connect to this parent node if the value is TRUE
+  disabled INTEGER DEFAULT FALSE NOT NULL,
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
 

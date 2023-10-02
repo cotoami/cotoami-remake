@@ -52,6 +52,9 @@ pub struct ParentNode {
 
     /// Date when received the last change from this parent node
     pub last_change_received_at: Option<NaiveDateTime>,
+
+    /// Local node won't connect to this parent node if the value is TRUE
+    pub disabled: bool,
 }
 
 impl ParentNode {
