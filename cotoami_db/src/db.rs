@@ -408,6 +408,13 @@ impl<'a> DatabaseSession<'a> {
         Ok(())
     }
 
+    pub fn disable_parent(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
+        operator.requires_to_be_owner(EntityKind::ParentNode, OpKind::Update)?;
+        let mut parent_node = self.write_parent_node(id)?;
+        parent_node.disabled = true;
+        self.write_transaction(parent_node_ops::update(&parent_node))
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // child nodes
     /////////////////////////////////////////////////////////////////////////////
