@@ -110,8 +110,10 @@ impl AppState {
             if let Some((local_node, node)) = db.local_node_pair()? {
                 if let Some(name) = config.node_name.as_deref() {
                     if name != node.name {
-                        db.rename_local_node(name)?;
-                        info!("The node name has been changed to [{}].", name);
+                        // Ignoring the changelog since this function is called during
+                        // the server startup (there should be no child nodes connected).
+                        let (node, _) = db.rename_local_node(name)?;
+                        info!("The node name has been changed to [{}].", node.name);
                     }
                 }
 
