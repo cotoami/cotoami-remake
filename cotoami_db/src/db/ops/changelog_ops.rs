@@ -142,9 +142,9 @@ pub fn import_change<'a>(
     parent_node: &'a mut ParentNode,
 ) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        // Check if the parent node has been forked or not
+        // Check if the local node has been forked from the parent
         if parent_node.forked {
-            bail!(DatabaseError::ParentAlreadyForked {
+            bail!(DatabaseError::AlreadyForkedFromParent {
                 parent_node_id: parent_node.node_id
             });
         }

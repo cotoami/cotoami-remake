@@ -42,8 +42,8 @@ pub enum DatabaseError {
     #[error("Change number out of range: {number} (max: {max})")]
     ChangeNumberOutOfRange { number: i64, max: i64 },
 
-    #[error("Parent already forked: {parent_node_id}")]
-    ParentAlreadyForked { parent_node_id: Id<Node> },
+    #[error("Local node has already been forked from: {parent_node_id}")]
+    AlreadyForkedFromParent { parent_node_id: Id<Node> },
 }
 
 impl DatabaseError {
