@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use thiserror::Error;
 
+use crate::models::{node::Node, Id};
+
 #[derive(Error, Debug)]
 pub enum DatabaseError {
     #[error("Invalid directory path: {0}")]
@@ -28,15 +30,20 @@ pub enum DatabaseError {
         op: OpKind,
     },
 
-    #[error("Unexpected change number (expected {expected:?}, actual {actual:?}) from {parent_node_id:?}")]
+    #[error(
+        "Unexpected change number (expected {expected}, actual {actual}) from {parent_node_id}"
+    )]
     UnexpectedChangeNumber {
         expected: i64,
         actual: i64,
-        parent_node_id: String,
+        parent_node_id: Id<Node>,
     },
 
     #[error("Change number out of range: {number} (max: {max})")]
     ChangeNumberOutOfRange { number: i64, max: i64 },
+
+    #[error("Parent already forked: {parent_node_id}")]
+    ParentAlreadyForked { parent_node_id: Id<Node> },
 }
 
 impl DatabaseError {

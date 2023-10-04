@@ -2,7 +2,7 @@
 
 use std::ops::DerefMut;
 
-use anyhow::ensure;
+use anyhow::{bail, ensure};
 use diesel::prelude::*;
 use tracing::debug;
 
@@ -142,6 +142,13 @@ pub fn import_change<'a>(
     parent_node: &'a mut ParentNode,
 ) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
+        // Check if the parent node has been forked or not
+        if parent_node.forked {
+            bail!(DatabaseError::ParentAlreadyForked {
+                parent_node_id: parent_node.node_id
+            });
+        }
+
         // Check the serial number of the change
         let expected_number = parent_node.changes_received + 1;
         ensure!(
@@ -149,7 +156,7 @@ pub fn import_change<'a>(
             DatabaseError::UnexpectedChangeNumber {
                 expected: expected_number,
                 actual: log.serial_number,
-                parent_node_id: parent_node.node_id.into(),
+                parent_node_id: parent_node.node_id,
             }
         );
 
