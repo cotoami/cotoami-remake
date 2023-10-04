@@ -6,7 +6,6 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
-use derive_new::new;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use reqwest_eventsource::ReadyState;
 use tokio::task::spawn_blocking;
@@ -68,12 +67,12 @@ impl Parent {
             Some(ParentConn::Disabled) => Self {
                 node,
                 connected: false,
-                error: Some(ParentError::code("disabled")),
+                error: Some(ParentError::Disabled),
             },
             Some(ParentConn::InitFailed(e)) => Self {
                 node,
                 connected: false,
-                error: Some(ParentError::code("init-failed").with(e.to_string())),
+                error: Some(ParentError::InitFailed(e.to_string())),
             },
             Some(ParentConn::Connected {
                 event_loop_state, ..
@@ -83,10 +82,10 @@ impl Parent {
                 let error = if let Some(event_loop_error) = state.error.as_ref() {
                     match event_loop_error {
                         EventLoopError::StreamFailed(e) => {
-                            Some(ParentError::code("stream-failed").with(e.to_string()))
+                            Some(ParentError::StreamFailed(e.to_string()))
                         }
                         EventLoopError::EventHandlingFailed(e) => {
-                            Some(ParentError::code("event-handling-failed").with(e.to_string()))
+                            Some(ParentError::EventHandlingFailed(e.to_string()))
                         }
                     }
                 } else {
@@ -102,24 +101,13 @@ impl Parent {
     }
 }
 
-#[derive(serde::Serialize, new)]
-struct ParentError {
-    code: String,
-    details: Option<String>,
-}
-
-impl ParentError {
-    fn code(code: impl Into<String>) -> Self {
-        Self {
-            code: code.into(),
-            details: None,
-        }
-    }
-
-    fn with(mut self, details: impl Into<String>) -> Self {
-        self.details = Some(details.into());
-        self
-    }
+#[derive(serde::Serialize)]
+#[serde(tag = "code", content = "details")]
+enum ParentError {
+    Disabled,
+    InitFailed(String),
+    StreamFailed(String),
+    EventHandlingFailed(String),
 }
 
 async fn all_parents(
