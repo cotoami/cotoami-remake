@@ -6,6 +6,7 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
+use derive_new::new;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use reqwest_eventsource::ReadyState;
 use tokio::task::spawn_blocking;
@@ -53,7 +54,7 @@ async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, Api
 struct Parent {
     node: Node,
     connected: bool,
-    conn_error: Option<String>,
+    error: Option<ParentError>,
 }
 
 impl Parent {
@@ -62,27 +63,42 @@ impl Parent {
             None => Self {
                 node,
                 connected: false,
-                conn_error: None,
+                error: None,
+            },
+            Some(ParentConn::Disabled) => Self {
+                node,
+                connected: false,
+                error: Some(ParentError::new("disabled".into(), None)),
             },
             Some(ParentConn::InitFailed(e)) => Self {
                 node,
                 connected: false,
-                conn_error: Some(e.to_string()),
+                error: Some(ParentError::new("init-failed".into(), Some(e.to_string()))),
             },
             Some(ParentConn::Connected {
                 event_loop_state, ..
             }) => {
                 let state = event_loop_state.read();
                 let connected = state.ready_state == ReadyState::Open;
-                let conn_error = state.error.as_ref().map(|e| e.to_string());
+                let error = if let Some(err_msg) = state.error.as_ref().map(|e| e.to_string()) {
+                    Some(ParentError::new("event-loop-failed".into(), Some(err_msg)))
+                } else {
+                    None
+                };
                 Self {
                     node,
                     connected,
-                    conn_error,
+                    error,
                 }
             }
         }
     }
+}
+
+#[derive(serde::Serialize, new)]
+struct ParentError {
+    code: String,
+    details: Option<String>,
 }
 
 async fn all_parents(

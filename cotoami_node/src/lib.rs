@@ -160,14 +160,18 @@ impl AppState {
         let mut parent_conns = self.parent_conns.write();
         parent_conns.clear();
         for (parent_node, _) in parent_nodes.iter() {
-            let parent_conn = ParentConn::connect(
-                parent_node,
-                &local_node,
-                &self.config,
-                &self.db,
-                &self.pubsub,
-            )
-            .await;
+            let parent_conn = if parent_node.disabled {
+                ParentConn::Disabled
+            } else {
+                ParentConn::connect(
+                    parent_node,
+                    &local_node,
+                    &self.config,
+                    &self.db,
+                    &self.pubsub,
+                )
+                .await
+            };
             parent_conns.insert(parent_node.node_id, parent_conn);
         }
         Ok(())
@@ -284,6 +288,7 @@ impl ChangePub for Pubsub {
 /////////////////////////////////////////////////////////////////////////////
 
 enum ParentConn {
+    Disabled,
     InitFailed(anyhow::Error),
     Connected {
         session: Session,
