@@ -1,0 +1,207 @@
+use axum::{
+    extract::State, http::StatusCode, middleware, routing::get, Extension, Form, Json, Router,
+};
+use cotoami_db::prelude::*;
+use reqwest_eventsource::ReadyState;
+use tokio::task::spawn_blocking;
+use tracing::info;
+use validator::Validate;
+
+use crate::{
+    api::require_session,
+    client::{EventLoopError, Server},
+    error::{ApiError, IntoApiResult},
+    AppState, ChangePub, ParentConn,
+};
+
+pub(super) fn routes() -> Router<AppState> {
+    Router::new()
+        .route("/", get(all_parents).put(put_parent_node))
+        .layer(middleware::from_fn(require_session))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/parents
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Serialize)]
+struct Parent {
+    node: Node,
+    connected: bool,
+    error: Option<ParentError>,
+}
+
+impl Parent {
+    fn new(node: Node, parent_conn: Option<&ParentConn>) -> Self {
+        match parent_conn {
+            None => Self {
+                node,
+                connected: false,
+                error: None,
+            },
+            Some(ParentConn::Disabled) => Self {
+                node,
+                connected: false,
+                error: Some(ParentError::Disabled),
+            },
+            Some(ParentConn::InitFailed(e)) => Self {
+                node,
+                connected: false,
+                error: Some(ParentError::InitFailed(e.to_string())),
+            },
+            Some(ParentConn::Connected {
+                event_loop_state, ..
+            }) => {
+                let state = event_loop_state.read();
+                let connected = state.ready_state == ReadyState::Open;
+                let error = if let Some(event_loop_error) = state.error.as_ref() {
+                    match event_loop_error {
+                        EventLoopError::StreamFailed(e) => {
+                            Some(ParentError::StreamFailed(e.to_string()))
+                        }
+                        EventLoopError::EventHandlingFailed(e) => {
+                            Some(ParentError::EventHandlingFailed(e.to_string()))
+                        }
+                    }
+                } else {
+                    None
+                };
+                Self {
+                    node,
+                    connected,
+                    error,
+                }
+            }
+        }
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(tag = "code", content = "details")]
+enum ParentError {
+    Disabled,
+    InitFailed(String),
+    StreamFailed(String),
+    EventHandlingFailed(String),
+}
+
+async fn all_parents(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+) -> Result<Json<Vec<Parent>>, ApiError> {
+    spawn_blocking(move || {
+        let conns = state.parent_conns.read();
+        let mut db = state.db.new_session()?;
+        let nodes = db
+            .all_parent_nodes(&operator)?
+            .into_iter()
+            .map(|(_, node)| {
+                let conn = conns.get(&node.uuid);
+                Parent::new(node, conn)
+            })
+            .collect();
+        Ok(Json(nodes))
+    })
+    .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/nodes/parents
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Deserialize, Validate)]
+struct PutParentNode {
+    #[validate(required, url)]
+    url_prefix: Option<String>,
+
+    #[validate(required)]
+    password: Option<String>,
+
+    /// Set true if you want to turn this node into a replica of the parent node,
+    /// which means the root cotonoma will be changed to that of the parent node.
+    replicate: Option<bool>,
+}
+
+async fn put_parent_node(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+    Form(form): Form<PutParentNode>,
+) -> Result<(StatusCode, Json<Parent>), ApiError> {
+    if let Err(errors) = form.validate() {
+        return ("nodes/parent", errors).into_result();
+    }
+
+    // Get the local node
+    let db = state.db.clone();
+    let (_, local_node) = spawn_blocking(move || db.new_session()?.local_node_pair())
+        .await??
+        .unwrap();
+
+    // Attempt to log in to the parent node
+    let password = form.password.unwrap();
+    let mut server = Server::new(form.url_prefix.unwrap())?;
+    let child_session = server
+        .create_child_session(
+            password.clone(),
+            None, // TODO
+            &local_node,
+        )
+        .await?;
+    info!("Successfully logged in to {}", server.url_prefix());
+
+    // Register the parent node
+    let (config, db) = (state.config.clone(), state.db.clone());
+    let parent_id = child_session.parent.uuid;
+    let url_prefix = server.url_prefix().to_string();
+    let parent_node = spawn_blocking(move || {
+        let owner_password = config.owner_password();
+        let mut db = db.new_session()?;
+        db.import_node(&child_session.parent)?;
+        db.put_parent_node(&parent_id, &url_prefix, &operator)?;
+        db.save_parent_password(&parent_id, &password, owner_password, &operator)?;
+        let node = db.node(&parent_id)?.unwrap_or_else(|| unreachable!());
+        Ok::<_, ApiError>(node)
+    })
+    .await??;
+    info!("Parent node [{}] registered.", parent_node.name);
+
+    // Import the changelog
+    server
+        .import_changes(&state.db, &state.pubsub, parent_node.uuid)
+        .await?;
+
+    // Create a link to the parent root cotonoma or become a replica of the parent
+    if form.replicate.unwrap_or(false) {
+        if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
+            let (db, pubsub) = (state.db.clone(), state.pubsub.clone());
+            let parent_node_name = parent_node.name.clone();
+            let _ = spawn_blocking(move || {
+                let db = db.new_session()?;
+                let (local_node, change) = db.set_root_cotonoma(&parent_cotonoma_id)?;
+                pubsub.lock().publish_change(change)?;
+                info!("This node is now replicating [{}].", parent_node_name);
+                Ok::<_, ApiError>(local_node)
+            })
+            .await??;
+        }
+    } else {
+        // TODO: create a link
+    }
+
+    // Create an event stream
+    let event_loop = server
+        .create_event_loop(parent_node.uuid, &state.db, &state.pubsub)
+        .await?;
+
+    // Store the parent connection
+    state.put_parent_conn(&parent_node.uuid, child_session.session, event_loop);
+
+    // Make response body
+    let parent = {
+        let conns = state.parent_conns.read();
+        let conn = conns.get(&parent_node.uuid);
+        Parent::new(parent_node, conn)
+    };
+
+    Ok((StatusCode::CREATED, Json(parent)))
+}
