@@ -218,7 +218,7 @@ pub(crate) struct ResponseError {
 
 pub(crate) struct EventLoopState {
     pub ready_state: ReadyState,
-    pub error: Option<anyhow::Error>,
+    pub error: Option<EventLoopError>,
     end_loop: bool,
 }
 
@@ -232,6 +232,11 @@ impl EventLoopState {
     }
 
     pub fn end(&mut self) { self.end_loop = true; }
+}
+
+pub(crate) enum EventLoopError {
+    StreamFailed(reqwest_eventsource::Error),
+    EventHandlingFailed(anyhow::Error),
 }
 
 pub(crate) struct EventLoop {
@@ -270,7 +275,7 @@ impl EventLoop {
         self.state.write().ready_state = ready_state;
     }
 
-    fn set_error(&mut self, error: anyhow::Error) { self.state.write().error = Some(error); }
+    fn set_error(&mut self, error: EventLoopError) { self.state.write().error = Some(error); }
 
     pub fn state(&self) -> Arc<RwLock<EventLoopState>> { self.state.clone() }
 
@@ -286,7 +291,7 @@ impl EventLoop {
                             &err
                         );
                         self.event_source.close();
-                        self.set_error(anyhow::Error::from(err));
+                        self.set_error(EventLoopError::EventHandlingFailed(err));
                     }
                 }
                 Err(err) => {
@@ -296,7 +301,7 @@ impl EventLoop {
                         &err
                     );
                     self.event_source.close();
-                    self.set_error(anyhow::Error::from(err));
+                    self.set_error(EventLoopError::StreamFailed(err));
                 }
             }
 

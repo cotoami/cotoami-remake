@@ -15,7 +15,7 @@ use validator::Validate;
 
 use crate::{
     api::Pagination,
-    client::Server,
+    client::{EventLoopError, Server},
     error::{ApiError, IntoApiResult, RequestError},
     AppState, ChangePub, ParentConn,
 };
@@ -68,20 +68,27 @@ impl Parent {
             Some(ParentConn::Disabled) => Self {
                 node,
                 connected: false,
-                error: Some(ParentError::new("disabled".into(), None)),
+                error: Some(ParentError::code("disabled")),
             },
             Some(ParentConn::InitFailed(e)) => Self {
                 node,
                 connected: false,
-                error: Some(ParentError::new("init-failed".into(), Some(e.to_string()))),
+                error: Some(ParentError::code("init-failed").with(e.to_string())),
             },
             Some(ParentConn::Connected {
                 event_loop_state, ..
             }) => {
                 let state = event_loop_state.read();
                 let connected = state.ready_state == ReadyState::Open;
-                let error = if let Some(err_msg) = state.error.as_ref().map(|e| e.to_string()) {
-                    Some(ParentError::new("event-loop-failed".into(), Some(err_msg)))
+                let error = if let Some(event_loop_error) = state.error.as_ref() {
+                    match event_loop_error {
+                        EventLoopError::StreamFailed(e) => {
+                            Some(ParentError::code("stream-failed").with(e.to_string()))
+                        }
+                        EventLoopError::EventHandlingFailed(e) => {
+                            Some(ParentError::code("event-handling-failed").with(e.to_string()))
+                        }
+                    }
                 } else {
                     None
                 };
@@ -99,6 +106,20 @@ impl Parent {
 struct ParentError {
     code: String,
     details: Option<String>,
+}
+
+impl ParentError {
+    fn code(code: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            details: None,
+        }
+    }
+
+    fn with(mut self, details: impl Into<String>) -> Self {
+        self.details = Some(details.into());
+        self
+    }
 }
 
 async fn all_parents(
