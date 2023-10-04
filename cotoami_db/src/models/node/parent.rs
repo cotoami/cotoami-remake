@@ -55,6 +55,12 @@ pub struct ParentNode {
 
     /// Local node won't connect to this parent node if the value is TRUE
     pub disabled: bool,
+
+    /// TRUE if the local node has been forked from this parent node.
+    ///
+    /// A forked child can never connect to or accept changes
+    /// (directly or indirectly) from the parent again.
+    pub forked: bool,
 }
 
 impl ParentNode {

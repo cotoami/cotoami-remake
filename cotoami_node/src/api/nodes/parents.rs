@@ -118,7 +118,7 @@ struct PutParentNode {
     password: Option<String>,
 
     /// Set true if you want to turn this node into a replica of the parent node,
-    /// which means the root cotonoma will be changed to that of the parent node.
+    /// which means the root cotonoma will be changed to that of the parent.
     replicate: Option<bool>,
 }
 

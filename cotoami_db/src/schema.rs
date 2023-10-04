@@ -54,6 +54,7 @@ diesel::table! {
         changes_received -> BigInt,
         last_change_received_at -> Nullable<Timestamp>,
         disabled -> Bool,
+        forked -> Bool,
     }
 }
 diesel::joinable!(parent_nodes -> nodes (node_id));

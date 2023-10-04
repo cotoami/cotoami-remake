@@ -75,8 +75,13 @@ CREATE TABLE parent_nodes (
   -- Date when received the last change from this parent node
   last_change_received_at DATETIME, -- UTC
 
-  -- Local node won't connect to this parent node if the value is TRUE
+  -- Local node won't connect to this parent node if the value is TRUE.
   disabled INTEGER DEFAULT FALSE NOT NULL,
+
+  -- TRUE if the local node has been forked from this parent node.
+  -- A forked child can never connect to or accept changes 
+  -- (directly or indirectly) from the parent again.
+  forked INTEGER DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
