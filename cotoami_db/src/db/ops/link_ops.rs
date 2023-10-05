@@ -10,14 +10,15 @@ use crate::{
     db::op::*,
     models::{
         link::{Link, NewLink, UpdateLink},
+        node::Node,
         Id,
     },
+    schema::links,
 };
 
 pub fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<Link>> + '_ {
-    use crate::schema::links::dsl::*;
     read_op(move |conn| {
-        links
+        links::table
             .find(id)
             .first(conn)
             .optional()
@@ -26,9 +27,8 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<L
 }
 
 pub fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
-    use crate::schema::links::dsl::*;
     write_op(move |conn| {
-        diesel::insert_into(links)
+        diesel::insert_into(links::table)
             .values(new_link)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
@@ -46,9 +46,8 @@ pub fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConn, L
 }
 
 pub fn delete(id: &Id<Link>) -> impl Operation<WritableConn, bool> + '_ {
-    use crate::schema::links::dsl::*;
     write_op(move |conn| {
-        let affected = diesel::delete(links.find(id)).execute(conn.deref_mut())?;
+        let affected = diesel::delete(links::table.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
     })
 }
@@ -69,5 +68,18 @@ pub fn update_linking_phrase<'a>(
         } else {
             Ok(None)
         }
+    })
+}
+
+pub fn change_node<'a>(
+    from: &'a Id<Node>,
+    to: &'a Id<Node>,
+) -> impl Operation<WritableConn, usize> + 'a {
+    write_op(move |conn| {
+        diesel::update(links::table)
+            .filter(links::node_id.eq(from))
+            .set(links::node_id.eq(to))
+            .execute(conn.deref_mut())
+            .map_err(anyhow::Error::from)
     })
 }
