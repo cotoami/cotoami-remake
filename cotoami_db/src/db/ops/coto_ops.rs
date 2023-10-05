@@ -84,6 +84,17 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, C
     })
 }
 
+pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
+    use crate::schema::cotos;
+    write_op(move |conn| {
+        // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
+        // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
+        // FOREIGN KEY ON DELETE CASCADE.
+        let affected = diesel::delete(cotos::table.find(id)).execute(conn.deref_mut())?;
+        Ok(affected > 0)
+    })
+}
+
 pub fn change_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
@@ -95,16 +106,5 @@ pub fn change_node<'a>(
             .set(cotos::node_id.eq(to))
             .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
-    })
-}
-
-pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
-    use crate::schema::cotos;
-    write_op(move |conn| {
-        // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
-        // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
-        // FOREIGN KEY ON DELETE CASCADE.
-        let affected = diesel::delete(cotos::table.find(id)).execute(conn.deref_mut())?;
-        Ok(affected > 0)
     })
 }

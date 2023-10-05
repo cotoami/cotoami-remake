@@ -39,10 +39,10 @@ pub fn get_or_err<Conn: AsReadableConn>(
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
-    use crate::schema::cotonomas::dsl::*;
+    use crate::schema::cotonomas;
     read_op(move |conn| {
-        cotonomas
-            .order(created_at.asc())
+        cotonomas::table
+            .order(cotonomas::created_at.asc())
             .load::<Cotonoma>(conn)
             .map_err(anyhow::Error::from)
     })
@@ -96,9 +96,9 @@ pub fn create<'a>(
 pub fn insert<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
 ) -> impl Operation<WritableConn, Cotonoma> + 'a {
-    use crate::schema::cotonomas::dsl::*;
+    use crate::schema::cotonomas;
     write_op(move |conn| {
-        diesel::insert_into(cotonomas)
+        diesel::insert_into(cotonomas::table)
             .values(new_cotonoma)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
@@ -118,9 +118,9 @@ pub fn update<'a>(
 }
 
 pub fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConn, bool> + '_ {
-    use crate::schema::cotonomas::dsl::*;
+    use crate::schema::cotonomas;
     write_op(move |conn| {
-        let affected = diesel::delete(cotonomas.find(id)).execute(conn.deref_mut())?;
+        let affected = diesel::delete(cotonomas::table.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
     })
 }
@@ -147,5 +147,19 @@ pub fn rename<'a>(
         let cotonoma_updated = update(&cotonoma).run(ctx)?;
 
         Ok((cotonoma_updated, coto_updated))
+    })
+}
+
+pub fn change_node<'a>(
+    from: &'a Id<Node>,
+    to: &'a Id<Node>,
+) -> impl Operation<WritableConn, usize> + 'a {
+    use crate::schema::cotonomas;
+    write_op(move |conn| {
+        diesel::update(cotonomas::table)
+            .filter(cotonomas::node_id.eq(from))
+            .set(cotonomas::node_id.eq(to))
+            .execute(conn.deref_mut())
+            .map_err(anyhow::Error::from)
     })
 }
