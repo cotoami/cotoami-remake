@@ -3,7 +3,7 @@
 use std::ops::DerefMut;
 
 use anyhow::{bail, ensure};
-use diesel::prelude::*;
+use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 
 use super::{coto_ops, cotonoma_ops, link_ops, node_ops, parent_node_ops};
@@ -14,12 +14,12 @@ use crate::{
         node::{parent::ParentNode, Node},
         Id,
     },
+    schema::changelog,
 };
 
 pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<ChangelogEntry>> {
-    use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
-        changelog
+        changelog::table
             .find(number)
             .first(conn)
             .optional()
@@ -28,12 +28,9 @@ pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<Cha
 }
 
 pub fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option<i64>> {
-    use diesel::dsl::max;
-
-    use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
-        changelog
-            .select(max(serial_number))
+        changelog::table
+            .select(max(changelog::serial_number))
             .first(conn)
             .map_err(anyhow::Error::from)
     })
@@ -42,13 +39,10 @@ pub fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option
 pub fn last_origin_serial_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
-    use diesel::dsl::max;
-
-    use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
-        changelog
-            .select(max(origin_serial_number))
-            .filter(origin_node_id.eq(node_id))
+        changelog::table
+            .select(max(changelog::origin_serial_number))
+            .filter(changelog::origin_node_id.eq(node_id))
             .first(conn)
             .map_err(anyhow::Error::from)
     })
@@ -58,14 +52,13 @@ pub fn chunk<Conn: AsReadableConn>(
     from: i64,
     limit: i64,
 ) -> impl Operation<Conn, (Vec<ChangelogEntry>, i64)> {
-    use crate::schema::changelog::dsl::*;
     composite_op::<Conn, _, _>(move |ctx| {
         let last = last_serial_number().run(ctx)?.unwrap_or(0);
         if from >= 1 && from <= last {
             Ok((
-                changelog
-                    .filter(serial_number.ge(from))
-                    .order(serial_number.asc())
+                changelog::table
+                    .filter(changelog::serial_number.ge(from))
+                    .order(changelog::serial_number.asc())
                     .limit(limit)
                     .load::<ChangelogEntry>(ctx.conn().readable())
                     .map_err(anyhow::Error::from)?,
@@ -96,9 +89,8 @@ pub fn log_change<'a>(
 pub fn insert<'a>(
     new_entry: &'a NewChangelogEntry<'a>,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
-    use crate::schema::changelog::dsl::*;
     write_op(move |conn| {
-        diesel::insert_into(changelog)
+        diesel::insert_into(changelog::table)
             .values(new_entry)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
@@ -108,14 +100,13 @@ pub fn insert<'a>(
 pub fn contains_change<Conn: AsReadableConn>(
     log: &ChangelogEntry,
 ) -> impl Operation<Conn, bool> + '_ {
-    use crate::schema::changelog::dsl::*;
     read_op(move |conn| {
-        changelog
+        changelog::table
             .count()
             .filter(
-                origin_node_id
+                changelog::origin_node_id
                     .eq(log.origin_node_id)
-                    .and(origin_serial_number.eq(log.origin_serial_number)),
+                    .and(changelog::origin_serial_number.eq(log.origin_serial_number)),
             )
             .get_result(conn)
             .map(|c: i64| c > 0)

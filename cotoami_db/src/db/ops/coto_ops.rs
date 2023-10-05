@@ -14,10 +14,10 @@ use crate::{
         node::Node,
         Id,
     },
+    schema::cotos,
 };
 
 pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
-    use crate::schema::cotos;
     read_op(move |conn| {
         cotos::table
             .find(id)
@@ -34,7 +34,6 @@ pub fn get_or_err<Conn: AsReadableConn>(
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
-    use crate::schema::cotos;
     read_op(move |conn| {
         cotos::table
             .order(cotos::rowid.asc())
@@ -49,7 +48,6 @@ pub fn recent<'a, Conn: AsReadableConn>(
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Paginated<Coto>> + 'a {
-    use crate::schema::cotos;
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let mut query = cotos::table.into_boxed();
@@ -65,7 +63,6 @@ pub fn recent<'a, Conn: AsReadableConn>(
 }
 
 pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
-    use crate::schema::cotos;
     write_op(move |conn| {
         diesel::insert_into(cotos::table)
             .values(new_coto)
@@ -85,7 +82,6 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, C
 }
 
 pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
-    use crate::schema::cotos;
     write_op(move |conn| {
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
@@ -99,7 +95,6 @@ pub fn change_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {
-    use crate::schema::cotos;
     write_op(move |conn| {
         diesel::update(cotos::table)
             .filter(cotos::node_id.eq(from))

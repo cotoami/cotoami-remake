@@ -15,12 +15,12 @@ use crate::{
         node::Node,
         Id,
     },
+    schema::{cotonomas, cotos},
 };
 
 pub fn get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
-    use crate::schema::{cotonomas, cotos};
     read_op(move |conn| {
         cotonomas::table
             .inner_join(cotos::table)
@@ -39,7 +39,6 @@ pub fn get_or_err<Conn: AsReadableConn>(
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
-    use crate::schema::cotonomas;
     read_op(move |conn| {
         cotonomas::table
             .order(cotonomas::created_at.asc())
@@ -53,7 +52,6 @@ pub fn recent<Conn: AsReadableConn>(
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Paginated<Cotonoma>> + '_ {
-    use crate::schema::cotonomas;
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let mut query = cotonomas::table.into_boxed();
@@ -96,7 +94,6 @@ pub fn create<'a>(
 pub fn insert<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
 ) -> impl Operation<WritableConn, Cotonoma> + 'a {
-    use crate::schema::cotonomas;
     write_op(move |conn| {
         diesel::insert_into(cotonomas::table)
             .values(new_cotonoma)
@@ -118,7 +115,6 @@ pub fn update<'a>(
 }
 
 pub fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConn, bool> + '_ {
-    use crate::schema::cotonomas;
     write_op(move |conn| {
         let affected = diesel::delete(cotonomas::table.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
@@ -154,7 +150,6 @@ pub fn change_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {
-    use crate::schema::cotonomas;
     write_op(move |conn| {
         diesel::update(cotonomas::table)
             .filter(cotonomas::node_id.eq(from))
