@@ -146,7 +146,7 @@ pub fn rename<'a>(
     })
 }
 
-pub fn change_node<'a>(
+pub fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {

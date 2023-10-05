@@ -71,7 +71,7 @@ pub fn update_linking_phrase<'a>(
     })
 }
 
-pub fn change_node<'a>(
+pub fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {
