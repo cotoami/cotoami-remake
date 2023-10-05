@@ -6,7 +6,7 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 use crate::{
-    db::op::*,
+    db::{error::*, op::*},
     models::{
         node::{
             parent::{ClearParentPassword, NewParentNode, ParentNode},
@@ -16,6 +16,22 @@ use crate::{
     },
     schema::{nodes, parent_nodes},
 };
+
+pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ParentNode>> + '_ {
+    read_op(move |conn| {
+        parent_nodes::table
+            .find(id)
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Result<ParentNode, DatabaseError>> + '_ {
+    get(id).map(|c| c.ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id)))
+}
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
     read_op(move |conn| {
