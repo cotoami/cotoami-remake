@@ -11,10 +11,10 @@ use crate::{
         local::{LocalNode, NewLocalNode},
         NewNode, Node,
     },
+    schema::{local_node, nodes},
 };
 
 pub fn get_pair<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
-    use crate::schema::{local_node, nodes};
     read_op(move |conn| {
         local_node::table
             .inner_join(nodes::table)
@@ -33,7 +33,6 @@ pub fn create<'a>(
     name: &'a str,
     password: Option<&'a str>,
 ) -> impl Operation<WritableConn, (LocalNode, Node)> + 'a {
-    use crate::schema::local_node;
     composite_op::<WritableConn, _, _>(move |ctx| {
         let node = node_ops::insert(&NewNode::new(name)?).run(ctx)?;
         let new_local_node = NewLocalNode::new(&node.uuid, password)?;
