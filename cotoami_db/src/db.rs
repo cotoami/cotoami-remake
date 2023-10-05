@@ -151,8 +151,11 @@ impl Database {
 
     fn load_globals(&self) -> Result<()> {
         let mut db = self.new_session()?;
+        let maybe_operator = db.local_node_as_operator().ok();
+
         let mut globals = self.globals.write();
-        if let Some((local_node, node)) = db.local_node_pair()? {
+        if let Some(operator) = maybe_operator {
+            let (local_node, node) = db.local_node_pair(&operator)?;
             globals.local_node = Some(local_node);
             globals.root_cotonoma_id = node.root_cotonoma_id;
         }
@@ -160,6 +163,7 @@ impl Database {
             .into_iter()
             .map(|p| (p.node_id, p))
             .collect::<HashMap<_, _>>();
+
         Ok(())
     }
 }
@@ -207,20 +211,6 @@ impl<'a> DatabaseSession<'a> {
     // local node
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn local_node(&self) -> Option<LocalNode> {
-        (self.read_globals)().local_node.as_ref().map(|n| n.clone())
-    }
-
-    pub fn local_node_pair(&mut self) -> Result<Option<(LocalNode, Node)>> {
-        self.read_transaction(local_node_ops::get_pair())
-    }
-
-    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node()?.node_id) }
-
-    pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
-        self.ensure_local(entity).is_ok()
-    }
-
     /// Creates initial data that represents a local node and its root cotonoma.
     ///
     /// Majority of the database operations require this operation to be called in advance
@@ -266,7 +256,33 @@ impl<'a> DatabaseSession<'a> {
         result
     }
 
-    pub fn rename_local_node(&self, name: &str) -> Result<(Node, ChangelogEntry)> {
+    pub fn local_node(&mut self) -> Result<Option<Node>> {
+        Ok(self
+            .read_transaction(local_node_ops::get_pair())?
+            .map(|pair| pair.1))
+    }
+
+    pub fn local_node_pair(&mut self, operator: &Operator) -> Result<(LocalNode, Node)> {
+        operator.requires_to_be_owner(EntityKind::LocalNode, OpKind::Read)?;
+        let pair = self
+            .read_transaction(local_node_ops::get_pair())?
+            // Any operator doesn't exist without the local node initialized
+            .unwrap_or_else(|| unreachable!());
+        Ok(pair)
+    }
+
+    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node()?.node_id) }
+
+    pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
+        self.ensure_local(entity).is_ok()
+    }
+
+    pub fn rename_local_node(
+        &self,
+        name: &str,
+        operator: &Operator,
+    ) -> Result<(Node, ChangelogEntry)> {
+        operator.requires_to_be_owner(EntityKind::LocalNode, OpKind::Update)?;
         let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let updated_at = crate::current_datetime();
@@ -281,7 +297,12 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn set_root_cotonoma(&self, cotonoma_id: &Id<Cotonoma>) -> Result<(Node, ChangelogEntry)> {
+    pub fn set_root_cotonoma(
+        &self,
+        cotonoma_id: &Id<Cotonoma>,
+        operator: &Operator,
+    ) -> Result<(Node, ChangelogEntry)> {
+        operator.requires_to_be_owner(EntityKind::LocalNode, OpKind::Update)?;
         let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;

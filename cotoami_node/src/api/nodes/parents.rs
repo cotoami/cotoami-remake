@@ -133,9 +133,9 @@ async fn put_parent_node(
 
     // Get the local node
     let db = state.db.clone();
-    let (_, local_node) = spawn_blocking(move || db.new_session()?.local_node_pair())
+    let local_node = spawn_blocking(move || db.new_session()?.local_node())
         .await??
-        .unwrap();
+        .unwrap_or_else(|| unreachable!());
 
     // Attempt to log in to the parent node
     let password = form.password.unwrap();
@@ -151,14 +151,15 @@ async fn put_parent_node(
 
     // Register the parent node
     let (config, db) = (state.config.clone(), state.db.clone());
+    let op = operator.clone();
     let parent_id = child_session.parent.uuid;
     let url_prefix = server.url_prefix().to_string();
     let parent_node = spawn_blocking(move || {
         let owner_password = config.owner_password();
         let mut db = db.new_session()?;
         db.import_node(&child_session.parent)?;
-        db.put_parent_node(&parent_id, &url_prefix, &operator)?;
-        db.save_parent_password(&parent_id, &password, owner_password, &operator)?;
+        db.put_parent_node(&parent_id, &url_prefix, &op)?;
+        db.save_parent_password(&parent_id, &password, owner_password, &op)?;
         let node = db.node(&parent_id)?.unwrap_or_else(|| unreachable!());
         Ok::<_, ApiError>(node)
     })
@@ -177,7 +178,7 @@ async fn put_parent_node(
             let parent_node_name = parent_node.name.clone();
             let _ = spawn_blocking(move || {
                 let db = db.new_session()?;
-                let (local_node, change) = db.set_root_cotonoma(&parent_cotonoma_id)?;
+                let (local_node, change) = db.set_root_cotonoma(&parent_cotonoma_id, &operator)?;
                 pubsub.lock().publish_change(change)?;
                 info!("This node is now replicating [{}].", parent_node_name);
                 Ok::<_, ApiError>(local_node)

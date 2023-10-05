@@ -25,7 +25,7 @@ pub(super) fn routes() -> Router<AppState> {
 async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.new_session()?;
-        if let Some((_, node)) = db.local_node_pair()? {
+        if let Some(node) = db.local_node()? {
             Ok(Json(node))
         } else {
             RequestError::new("local-node-not-yet-created").into_result()

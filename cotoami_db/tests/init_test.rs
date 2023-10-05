@@ -16,7 +16,7 @@ fn default_state() -> Result<()> {
     let mut session = db.new_session()?;
 
     // then
-    assert_eq!(session.local_node(), None);
+    assert_eq!(session.local_node()?, None);
     assert!(session.all_nodes()?.is_empty());
 
     Ok(())
@@ -58,9 +58,10 @@ fn init_as_empty_node() -> Result<()> {
         } if node_id == node.uuid
     );
 
+    let operator = session.local_node_as_operator()?;
     assert_matches!(
-        session.local_node_pair()?,
-        Some((a, b)) if a == local_node && b == node
+        session.local_node_pair(&operator)?,
+        (a, b) if a == local_node && b == node
     );
     assert_eq!(session.node(&node.uuid)?.unwrap(), node);
     assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
@@ -192,9 +193,10 @@ fn init_as_node() -> Result<()> {
         } if node_id == node.uuid
     );
 
+    let operator = session.local_node_as_operator()?;
     assert_matches!(
-        session.local_node_pair()?,
-        Some((a, b)) if a == local_node && b == node
+        session.local_node_pair(&operator)?,
+        (a, b) if a == local_node && b == node
     );
     assert_eq!(session.node(&node.uuid)?.unwrap(), node);
     assert_matches!(&session.all_nodes()?[..], [a] if a == &node);

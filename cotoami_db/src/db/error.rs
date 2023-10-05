@@ -71,6 +71,8 @@ impl DatabaseError {
 pub enum EntityKind {
     #[display("node")]
     Node,
+    #[display("local_node")]
+    LocalNode,
     #[display("parent_node")]
     ParentNode,
     #[display("child_node")]
