@@ -14,10 +14,10 @@ use crate::{
         },
         Id,
     },
+    schema::{child_nodes, nodes},
 };
 
 pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ChildNode, Node)>> {
-    use crate::schema::{child_nodes, nodes};
     read_op(move |conn| {
         child_nodes::table
             .inner_join(nodes::table)
@@ -32,7 +32,6 @@ pub fn recent_pairs<'a, Conn: AsReadableConn>(
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Paginated<(ChildNode, Node)>> + 'a {
-    use crate::schema::{child_nodes, nodes};
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             child_nodes::table
@@ -44,7 +43,6 @@ pub fn recent_pairs<'a, Conn: AsReadableConn>(
 }
 
 pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ChildNode>> + '_ {
-    use crate::schema::child_nodes;
     read_op(move |conn| {
         child_nodes::table
             .find(id)
@@ -63,7 +61,6 @@ pub fn get_or_err<Conn: AsReadableConn>(
 pub fn get_pair<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Option<(ChildNode, Node)>> + '_ {
-    use crate::schema::{child_nodes, nodes};
     read_op(move |conn| {
         child_nodes::table
             .find(id)
@@ -84,10 +81,9 @@ pub fn get_pair_or_err<Conn: AsReadableConn>(
 pub fn get_by_session_token<Conn: AsReadableConn>(
     token: &str,
 ) -> impl Operation<Conn, Option<ChildNode>> + '_ {
-    use crate::schema::child_nodes::dsl::*;
     read_op(move |conn| {
-        child_nodes
-            .filter(session_token.eq(token))
+        child_nodes::table
+            .filter(child_nodes::session_token.eq(token))
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
@@ -97,9 +93,8 @@ pub fn get_by_session_token<Conn: AsReadableConn>(
 pub fn insert<'a>(
     new_child_node: &'a NewChildNode<'a>,
 ) -> impl Operation<WritableConn, ChildNode> + 'a {
-    use crate::schema::child_nodes::dsl::*;
     write_op(move |conn| {
-        diesel::insert_into(child_nodes)
+        diesel::insert_into(child_nodes::table)
             .values(new_child_node)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
