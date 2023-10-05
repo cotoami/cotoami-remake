@@ -6,7 +6,7 @@ use anyhow::{bail, ensure};
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 
-use super::{coto_ops, cotonoma_ops, link_ops, node_ops, parent_node_ops};
+use super::{coto_ops, cotonoma_ops, graph_ops, link_ops, node_ops, parent_node_ops};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -246,6 +246,21 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             }
             Change::DeleteLink(id) => {
                 link_ops::delete(id).run(ctx)?;
+            }
+            Change::ChangeOwnerNode {
+                from,
+                to,
+                last_change_number,
+            } => {
+                let last_change_number_in_local = last_origin_serial_number(from)
+                    .run(ctx)?
+                    .unwrap_or_else(|| unreachable!());
+                if last_change_number_in_local == *last_change_number {
+                    graph_ops::change_owner_node(from, to).run(ctx)?;
+                } else {
+                    bail!("Couldn't change the owner node due to version mismatching (expected: {}, actual: {}).", 
+                        last_change_number, last_change_number_in_local);
+                }
             }
         }
         Ok(())
