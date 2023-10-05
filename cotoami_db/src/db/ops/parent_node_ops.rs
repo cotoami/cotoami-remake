@@ -14,20 +14,19 @@ use crate::{
         },
         Id,
     },
+    schema::{nodes, parent_nodes},
 };
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
-    use crate::schema::parent_nodes::dsl::*;
     read_op(move |conn| {
-        parent_nodes
-            .order(created_at.desc())
+        parent_nodes::table
+            .order(parent_nodes::created_at.desc())
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
     })
 }
 
 pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ParentNode, Node)>> {
-    use crate::schema::{nodes, parent_nodes};
     read_op(move |conn| {
         parent_nodes::table
             .inner_join(nodes::table)
@@ -41,9 +40,8 @@ pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ParentNode
 pub fn insert<'a>(
     new_parent_node: &'a NewParentNode<'a>,
 ) -> impl Operation<WritableConn, ParentNode> + 'a {
-    use crate::schema::parent_nodes::dsl::*;
     write_op(move |conn| {
-        diesel::insert_into(parent_nodes)
+        diesel::insert_into(parent_nodes::table)
             .values(new_parent_node)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
@@ -66,7 +64,6 @@ pub fn increment_changes_received(
     incremented_number: i64,
     received_at: Option<NaiveDateTime>,
 ) -> impl Operation<WritableConn, ParentNode> + '_ {
-    use crate::schema::parent_nodes;
     let received_at = received_at.unwrap_or(crate::current_datetime());
     write_op(move |conn| {
         diesel::update(parent_nodes::table)
@@ -86,7 +83,6 @@ pub fn increment_changes_received(
 }
 
 pub fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
-    use crate::schema::parent_nodes;
     write_op(move |conn| {
         diesel::update(parent_nodes::table)
             .set(ClearParentPassword::new())
