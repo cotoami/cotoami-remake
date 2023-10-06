@@ -82,8 +82,8 @@ async fn add_child_node(
     spawn_blocking(move || {
         let db = state.db.new_session()?;
         let password = generate_password();
-        db.add_child_node(
-            form.id.unwrap(), // validated to be Some
+        db.register_child_node(
+            form.id.unwrap_or_else(|| unreachable!()),
             &password,
             form.as_owner.unwrap_or(false),
             form.can_edit_links.unwrap_or(false),

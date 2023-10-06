@@ -440,15 +440,15 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(child_node_ops::recent_pairs(page_size, page_index))
     }
 
-    /// Adds a child node by its ID.
+    /// Registers the specified node as a child.
     ///
     /// This operation is assumed to be invoked by a node owner to allow another node
     /// to connect to this node.
     ///
-    /// If the node specified by the ID doesn't exist in this database,
-    /// this function will create a placeholder row in the `nodes` table to be
-    /// replaced with real data, which will be sent from the node when logging in later.
-    pub fn add_child_node(
+    /// If the node specified by the ID doesn't exist in this database (normally it doesn't),
+    /// this function will create a placeholder row in the `nodes` table. The row will be
+    /// updated with real data when the child node connects to this node.
+    pub fn register_child_node(
         &self,
         id: Id<Node>,
         password: &str,
