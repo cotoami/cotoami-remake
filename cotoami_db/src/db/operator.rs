@@ -30,11 +30,11 @@ impl Operator {
         }
     }
 
-    pub fn requires_to_be_owner(&self, entity: EntityKind, op: OpKind) -> Result<()> {
+    pub fn requires_to_be_owner(&self, op: OpKind, entity: Option<EntityKind>) -> Result<()> {
         if self.has_owner_permission() {
             Ok(())
         } else {
-            Err(DatabaseError::permission_denied(entity, None::<&str>, op))?
+            Err(DatabaseError::permission_denied(op, entity, None::<&str>))?
         }
     }
 
@@ -43,9 +43,9 @@ impl Operator {
             Ok(())
         } else {
             Err(DatabaseError::permission_denied(
-                EntityKind::Coto,
-                Some(coto.uuid),
                 OpKind::Update,
+                Some(EntityKind::Coto),
+                Some(coto.uuid),
             ))?
         }
     }
@@ -55,9 +55,9 @@ impl Operator {
             Ok(())
         } else {
             Err(DatabaseError::permission_denied(
-                EntityKind::Coto,
-                Some(coto.uuid),
                 OpKind::Delete,
+                Some(EntityKind::Coto),
+                Some(coto.uuid),
             ))?
         }
     }

@@ -23,11 +23,11 @@ pub enum DatabaseError {
     #[error("Authentication failed")]
     AuthenticationFailed,
 
-    #[error("Permission denied: {entity} ({id:?}) - {op}")]
+    #[error("Permission denied: {op} - {entity:?} ({id:?})")]
     PermissionDenied {
-        entity: EntityKind,
-        id: Option<String>,
         op: OpKind,
+        entity: Option<EntityKind>,
+        id: Option<String>,
     },
 
     #[error(
@@ -42,7 +42,7 @@ pub enum DatabaseError {
     #[error("Change number out of range: {number} (max: {max})")]
     ChangeNumberOutOfRange { number: i64, max: i64 },
 
-    #[error("Local node has already been forked from: {parent_node_id}")]
+    #[error("The local node has already been forked from: {parent_node_id}")]
     AlreadyForkedFromParent { parent_node_id: Id<Node> },
 }
 
@@ -55,14 +55,14 @@ impl DatabaseError {
     }
 
     pub fn permission_denied(
-        entity: EntityKind,
-        id: Option<impl Into<String>>,
         op: OpKind,
+        entity: Option<EntityKind>,
+        id: Option<impl Into<String>>,
     ) -> Self {
         DatabaseError::PermissionDenied {
+            op,
             entity,
             id: id.map(Into::into),
-            op,
         }
     }
 }
@@ -95,4 +95,6 @@ pub enum OpKind {
     Update,
     #[display("delete")]
     Delete,
+    #[display("inherit")]
+    Inherit,
 }
