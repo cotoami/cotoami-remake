@@ -179,7 +179,7 @@ struct Globals {
 }
 
 impl Globals {
-    pub fn parent_node(&self, id: &Id<Node>) -> Option<ParentNode> {
+    pub fn parent_node_attrs(&self, id: &Id<Node>) -> Option<ParentNode> {
         self.parent_nodes.read().get(id).map(|n| n.clone())
     }
 
@@ -397,12 +397,14 @@ impl<'a> DatabaseSession<'a> {
         }
     }
 
-    pub fn parent_node(&mut self, id: &Id<Node>) -> Option<ParentNode> {
-        self.globals.parent_node(id)
-    }
-
-    pub fn parent_node_or_err(&mut self, id: &Id<Node>) -> Result<ParentNode> {
-        self.read_parent_node(id).map(|n| n.clone())
+    pub fn parent_node_attrs(&mut self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
+        operator.requires_to_be_owner()?;
+        self.globals
+            .parent_node_attrs(id)
+            .ok_or(anyhow!(DatabaseError::not_found(
+                EntityKind::ParentNode,
+                *id
+            )))
     }
 
     pub fn save_parent_password(

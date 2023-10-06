@@ -15,14 +15,13 @@ fn import_changes() -> Result<()> {
     let mut session1 = db1.new_session()?;
 
     let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
-    let operator1 = session1.local_node_as_operator()?;
+    let opr1 = session1.local_node_as_operator()?;
     let (node1_root_cotonoma, node1_root_coto) = session1.root_cotonoma()?.unwrap();
 
-    let (db1_coto, db1_change2) =
-        session1.post_coto("hello", None, &node1_root_cotonoma, &operator1)?;
+    let (db1_coto, db1_change2) = session1.post_coto("hello", None, &node1_root_cotonoma, &opr1)?;
     let (db1_edited_coto, db1_change3) =
-        session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &operator1)?;
-    let db1_change4 = session1.delete_coto(&db1_coto.uuid, &operator1)?;
+        session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &opr1)?;
+    let db1_change4 = session1.delete_coto(&db1_coto.uuid, &opr1)?;
 
     // setup: db2
     let db2_dir = tempdir()?;
@@ -30,10 +29,10 @@ fn import_changes() -> Result<()> {
     let mut session2 = db2.new_session()?;
 
     let ((_, _node2), _db2_change1) = session2.init_as_node(None, None)?;
-    let operator2 = session2.local_node_as_operator()?;
+    let opr2 = session2.local_node_as_operator()?;
 
     let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
-    let parent = session2.put_parent_node(&node1.uuid, "https://node1", &operator2)?;
+    let parent = session2.put_parent_node(&node1.uuid, "https://node1", &opr2)?;
     assert_eq!(parent.changes_received, 0);
 
     // when: import change1 (init_as_node)
@@ -41,7 +40,9 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2.parent_node(&node1.uuid).unwrap().changes_received,
+        session2
+            .parent_node_attrs(&node1.uuid, &opr2)?
+            .changes_received,
         1
     );
     assert_matches!(
@@ -81,7 +82,9 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2.parent_node(&node1.uuid).unwrap().changes_received,
+        session2
+            .parent_node_attrs(&node1.uuid, &opr2)?
+            .changes_received,
         2
     );
     assert_matches!(
@@ -107,7 +110,9 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2.parent_node(&node1.uuid).unwrap().changes_received,
+        session2
+            .parent_node_attrs(&node1.uuid, &opr2)?
+            .changes_received,
         3
     );
     assert_matches!(
@@ -133,7 +138,9 @@ fn import_changes() -> Result<()> {
 
     // then
     assert_eq!(
-        session2.parent_node(&node1.uuid).unwrap().changes_received,
+        session2
+            .parent_node_attrs(&node1.uuid, &opr2)?
+            .changes_received,
         4
     );
     assert_matches!(
@@ -173,11 +180,11 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     let (_dir3, _, node3) = common::setup_db("Node3")?;
 
     let mut session = db1.new_session()?;
-    let operator = session.local_node_as_operator()?;
+    let opr = session.local_node_as_operator()?;
     session.import_node(&node2)?;
-    session.put_parent_node(&node2.uuid, "https://node2", &operator)?;
+    session.put_parent_node(&node2.uuid, "https://node2", &opr)?;
     session.import_node(&node3)?;
-    session.put_parent_node(&node3.uuid, "https://node3", &operator)?;
+    session.put_parent_node(&node3.uuid, "https://node3", &opr)?;
 
     let origin_node_id = Id::from_str("00000000-0000-0000-0000-000000000001")?;
     let src_change = ChangelogEntry {
@@ -200,7 +207,9 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         }) if origin_node_id == origin_node_id
     );
     assert_eq!(
-        session.parent_node(&node2.uuid).unwrap().changes_received,
+        session
+            .parent_node_attrs(&node2.uuid, &opr)?
+            .changes_received,
         1
     );
 
@@ -210,7 +219,9 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     // then
     assert!(imported_change2.is_none());
     assert_eq!(
-        session.parent_node(&node3.uuid).unwrap().changes_received,
+        session
+            .parent_node_attrs(&node3.uuid, &opr)?
+            .changes_received,
         1
     );
 
