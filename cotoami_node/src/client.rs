@@ -96,7 +96,11 @@ impl Server {
         parent_node_id: Id<Node>,
     ) -> Result<Option<(i64, i64)>> {
         info!("Importing the changes from {}", self.url_prefix());
-        let parent_node = db.new_session()?.parent_node_or_err(&parent_node_id)?;
+        let parent_node = {
+            let mut db = db.new_session()?;
+            let opr = db.local_node_as_operator()?;
+            db.parent_node_ext(&parent_node_id, &opr)?
+        };
         let import_from = parent_node.changes_received + 1;
         let mut from = import_from;
         loop {

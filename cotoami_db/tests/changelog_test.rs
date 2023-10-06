@@ -32,8 +32,8 @@ fn import_changes() -> Result<()> {
     let opr2 = session2.local_node_as_operator()?;
 
     let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
-    let parent = session2.put_parent_node(&node1.uuid, "https://node1", &opr2)?;
-    assert_eq!(parent.changes_received, 0);
+    let parent_ext = session2.put_parent_node(&node1.uuid, "https://node1", &opr2)?;
+    assert_eq!(parent_ext.changes_received, 0);
 
     // when: import change1 (init_as_node)
     let db2_change3 = session2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
@@ -41,7 +41,7 @@ fn import_changes() -> Result<()> {
     // then
     assert_eq!(
         session2
-            .parent_node_attrs(&node1.uuid, &opr2)?
+            .parent_node_ext(&node1.uuid, &opr2)?
             .changes_received,
         1
     );
@@ -83,7 +83,7 @@ fn import_changes() -> Result<()> {
     // then
     assert_eq!(
         session2
-            .parent_node_attrs(&node1.uuid, &opr2)?
+            .parent_node_ext(&node1.uuid, &opr2)?
             .changes_received,
         2
     );
@@ -111,7 +111,7 @@ fn import_changes() -> Result<()> {
     // then
     assert_eq!(
         session2
-            .parent_node_attrs(&node1.uuid, &opr2)?
+            .parent_node_ext(&node1.uuid, &opr2)?
             .changes_received,
         3
     );
@@ -139,7 +139,7 @@ fn import_changes() -> Result<()> {
     // then
     assert_eq!(
         session2
-            .parent_node_attrs(&node1.uuid, &opr2)?
+            .parent_node_ext(&node1.uuid, &opr2)?
             .changes_received,
         4
     );
@@ -207,9 +207,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         }) if origin_node_id == origin_node_id
     );
     assert_eq!(
-        session
-            .parent_node_attrs(&node2.uuid, &opr)?
-            .changes_received,
+        session.parent_node_ext(&node2.uuid, &opr)?.changes_received,
         1
     );
 
@@ -219,9 +217,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     // then
     assert!(imported_change2.is_none());
     assert_eq!(
-        session
-            .parent_node_attrs(&node3.uuid, &opr)?
-            .changes_received,
+        session.parent_node_ext(&node3.uuid, &opr)?.changes_received,
         1
     );
 

@@ -18,7 +18,7 @@ fn save_password() -> Result<()> {
     session1.save_parent_password(&node2.uuid, "node2-password", "master-password", &opr)?;
 
     // then
-    let parent_node = session1.parent_node_attrs(&node2.uuid, &opr)?;
+    let parent_node = session1.parent_node_ext(&node2.uuid, &opr)?;
     assert_eq!(
         parent_node
             .password("invalid-password")

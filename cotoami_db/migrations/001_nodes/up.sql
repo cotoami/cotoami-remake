@@ -28,8 +28,8 @@ CREATE TABLE nodes (
 
 --
 -- A database instance self-references itself as a "local node".
--- This table can have only one row that has a node ID pointing to the local node and 
--- additional attributes.
+-- This table can have only one row that has a node ID pointing to the local node 
+-- and its extended attributes.
 --
 CREATE TABLE local_node (
   -- UUID of a local node
@@ -55,7 +55,7 @@ CREATE TABLE local_node (
 
 --
 -- A parent node is a server node to which this node is connecting.
--- A row of this table has a node ID pointing to a parent node and additional attributes.
+-- A row of this table has a node ID pointing to a parent node and its extended attributes.
 --
 CREATE TABLE parent_nodes (
   -- UUID of a parent node
@@ -91,7 +91,7 @@ CREATE TABLE parent_nodes (
 
 --
 -- A child node is a client node connecting to this node.
--- A row of this table has a node ID pointing to a child node and additional attributes.
+-- A row of this table has a node ID pointing to a child node and its extended attributes.
 --
 CREATE TABLE child_nodes (
   -- UUID of a child node
