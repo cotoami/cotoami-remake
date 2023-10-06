@@ -23,12 +23,8 @@ pub enum DatabaseError {
     #[error("Authentication failed")]
     AuthenticationFailed,
 
-    #[error("Permission denied: {op} - {entity:?} ({id:?})")]
-    PermissionDenied {
-        op: OpKind,
-        entity: Option<EntityKind>,
-        id: Option<String>,
-    },
+    #[error("Permission denied")]
+    PermissionDenied,
 
     #[error(
         "Unexpected change number (expected {expected}, actual {actual}) from {parent_node_id}"
@@ -53,18 +49,6 @@ impl DatabaseError {
             id: id.into(),
         }
     }
-
-    pub fn permission_denied(
-        op: OpKind,
-        entity: Option<EntityKind>,
-        id: Option<impl Into<String>>,
-    ) -> Self {
-        DatabaseError::PermissionDenied {
-            op,
-            entity,
-            id: id.map(Into::into),
-        }
-    }
 }
 
 #[derive(Debug, derive_more::Display)]
@@ -83,18 +67,4 @@ pub enum EntityKind {
     Cotonoma,
     #[display("link")]
     Link,
-}
-
-#[derive(Debug, derive_more::Display)]
-pub enum OpKind {
-    #[display("create")]
-    Create,
-    #[display("read")]
-    Read,
-    #[display("update")]
-    Update,
-    #[display("delete")]
-    Delete,
-    #[display("inherit")]
-    Inherit,
 }

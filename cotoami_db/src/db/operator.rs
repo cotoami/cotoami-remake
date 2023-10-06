@@ -30,35 +30,27 @@ impl Operator {
         }
     }
 
-    pub fn requires_to_be_owner(&self, op: OpKind, entity: Option<EntityKind>) -> Result<()> {
+    pub fn requires_to_be_owner(&self) -> Result<(), DatabaseError> {
         if self.has_owner_permission() {
             Ok(())
         } else {
-            Err(DatabaseError::permission_denied(op, entity, None::<&str>))?
+            Err(DatabaseError::PermissionDenied)
         }
     }
 
-    pub fn can_update_coto(&self, coto: &Coto) -> Result<()> {
+    pub fn can_update_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
         if self.node_id() == coto.posted_by_id {
             Ok(())
         } else {
-            Err(DatabaseError::permission_denied(
-                OpKind::Update,
-                Some(EntityKind::Coto),
-                Some(coto.uuid),
-            ))?
+            Err(DatabaseError::PermissionDenied)
         }
     }
 
-    pub fn can_delete_coto(&self, coto: &Coto) -> Result<()> {
+    pub fn can_delete_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
         if self.node_id() == coto.posted_by_id || self.has_owner_permission() {
             Ok(())
         } else {
-            Err(DatabaseError::permission_denied(
-                OpKind::Delete,
-                Some(EntityKind::Coto),
-                Some(coto.uuid),
-            ))?
+            Err(DatabaseError::PermissionDenied)
         }
     }
 }

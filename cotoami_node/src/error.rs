@@ -22,7 +22,7 @@ use crate::client::ResponseError;
 pub(crate) enum ApiError {
     Server(anyhow::Error),
     Request(RequestError),
-    Permission(PermissionError),
+    Permission,
     Input(InputErrors),
     // NotFound,
     Unauthorized,
@@ -38,7 +38,7 @@ impl IntoResponse for ApiError {
                 (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
             }
             ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-            ApiError::Permission(e) => (StatusCode::FORBIDDEN, Json(e)).into_response(),
+            ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
             ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
             // ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
             ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
@@ -63,9 +63,7 @@ where
             Some(DatabaseError::AuthenticationFailed) => {
                 ApiError::Request(RequestError::new("authentication-failed"))
             }
-            Some(DatabaseError::PermissionDenied { entity, id, op }) => ApiError::Permission(
-                PermissionError::new(entity.to_string(), id.as_ref(), op.to_string()),
-            ),
+            Some(DatabaseError::PermissionDenied) => ApiError::Permission,
             _ => {
                 if let Some(ResponseError { url, status, body }) =
                     anyhow_err.downcast_ref::<ResponseError>()
@@ -118,31 +116,6 @@ impl RequestError {
 
 impl<T> IntoApiResult<T> for RequestError {
     fn into_result(self) -> Result<T, ApiError> { Err(ApiError::Request(self)) }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// ApiError / PermissionError
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Serialize)]
-pub(crate) struct PermissionError {
-    resource: String,
-    id: Option<String>,
-    op: String,
-}
-
-impl PermissionError {
-    pub fn new(
-        resource: impl Into<String>,
-        id: Option<impl Into<String>>,
-        op: impl Into<String>,
-    ) -> Self {
-        Self {
-            resource: resource.into(),
-            id: id.map(Into::into),
-            op: op.into(),
-        }
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

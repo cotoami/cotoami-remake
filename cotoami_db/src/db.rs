@@ -257,7 +257,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn local_node_pair(&mut self, operator: &Operator) -> Result<(LocalNode, Node)> {
-        operator.requires_to_be_owner(OpKind::Read, Some(EntityKind::LocalNode))?;
+        operator.requires_to_be_owner()?;
         let pair = self
             .read_transaction(local_node_ops::get_pair())?
             // Any operator doesn't exist without the local node initialized
@@ -276,7 +276,7 @@ impl<'a> DatabaseSession<'a> {
         name: &str,
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
-        operator.requires_to_be_owner(OpKind::Update, Some(EntityKind::LocalNode))?;
+        operator.requires_to_be_owner()?;
         let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let updated_at = crate::current_datetime();
@@ -296,7 +296,7 @@ impl<'a> DatabaseSession<'a> {
         cotonoma_id: &Id<Cotonoma>,
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
-        operator.requires_to_be_owner(OpKind::Update, Some(EntityKind::LocalNode))?;
+        operator.requires_to_be_owner()?;
         let local_node_id = self.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;
@@ -368,7 +368,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn all_parent_nodes(&mut self, operator: &Operator) -> Result<Vec<(ParentNode, Node)>> {
-        operator.requires_to_be_owner(OpKind::Read, Some(EntityKind::ParentNode))?;
+        operator.requires_to_be_owner()?;
         self.read_transaction(parent_node_ops::all_pairs())
     }
 
@@ -381,12 +381,11 @@ impl<'a> DatabaseSession<'a> {
         url_prefix: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
+        operator.requires_to_be_owner()?;
         if let Ok(parent_node) = self.write_parent_node(id).as_mut() {
-            operator.requires_to_be_owner(OpKind::Update, Some(EntityKind::ParentNode))?;
             parent_node.url_prefix = url_prefix.into();
             self.write_transaction(parent_node_ops::update(&parent_node))
         } else {
-            operator.requires_to_be_owner(OpKind::Create, Some(EntityKind::ParentNode))?;
             let parent_node = self.write_transaction(parent_node_ops::insert(
                 &NewParentNode::new(id, url_prefix)?,
             ))?;
@@ -413,7 +412,7 @@ impl<'a> DatabaseSession<'a> {
         encryption_password: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
-        operator.requires_to_be_owner(OpKind::Update, Some(EntityKind::ParentNode))?;
+        operator.requires_to_be_owner()?;
         let mut parent_node = self.write_parent_node(id)?;
         parent_node.save_password(password, encryption_password)?;
         self.write_transaction(parent_node_ops::update(&parent_node))
@@ -426,7 +425,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn disable_parent(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
-        operator.requires_to_be_owner(OpKind::Update, Some(EntityKind::ParentNode))?;
+        operator.requires_to_be_owner()?;
         let mut parent_node = self.write_parent_node(id)?;
         parent_node.disabled = true;
         self.write_transaction(parent_node_ops::update(&parent_node))
@@ -437,7 +436,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn all_child_nodes(&mut self, operator: &Operator) -> Result<Vec<(ChildNode, Node)>> {
-        operator.requires_to_be_owner(OpKind::Read, Some(EntityKind::ChildNode))?;
+        operator.requires_to_be_owner()?;
         self.read_transaction(child_node_ops::all_pairs())
     }
 
@@ -447,7 +446,7 @@ impl<'a> DatabaseSession<'a> {
         page_index: i64,
         operator: &Operator,
     ) -> Result<Paginated<(ChildNode, Node)>> {
-        operator.requires_to_be_owner(OpKind::Read, Some(EntityKind::ChildNode))?;
+        operator.requires_to_be_owner()?;
         self.read_transaction(child_node_ops::recent_pairs(page_size, page_index))
     }
 
@@ -467,7 +466,7 @@ impl<'a> DatabaseSession<'a> {
         can_edit_links: bool,
         operator: &Operator,
     ) -> Result<ChildNode> {
-        operator.requires_to_be_owner(OpKind::Create, Some(EntityKind::ChildNode))?;
+        operator.requires_to_be_owner()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
             let new_child = NewChildNode::new(&node.uuid, password, as_owner, can_edit_links)?;
