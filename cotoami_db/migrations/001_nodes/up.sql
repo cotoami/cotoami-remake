@@ -28,7 +28,7 @@ CREATE TABLE nodes (
 
 --
 -- A database instance self-references itself as a "local node".
--- This table can have only one row that represents the local node.
+-- This table can have only one row that contains local node related data.
 --
 CREATE TABLE local_node (
   -- UUID of a local node
