@@ -32,7 +32,7 @@ fn import_changes() -> Result<()> {
     let opr2 = session2.local_node_as_operator()?;
 
     let Some((_, _db2_change2)) = session2.import_node(&node1)? else { panic!() };
-    let parent_ext = session2.put_parent_node(&node1.uuid, "https://node1", &opr2)?;
+    let parent_ext = session2.register_parent_node(&node1.uuid, "https://node1", &opr2)?;
     assert_eq!(parent_ext.changes_received, 0);
 
     // when: import change1 (init_as_node)
@@ -182,9 +182,9 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     let mut session = db1.new_session()?;
     let opr = session.local_node_as_operator()?;
     session.import_node(&node2)?;
-    session.put_parent_node(&node2.uuid, "https://node2", &opr)?;
+    session.register_parent_node(&node2.uuid, "https://node2", &opr)?;
     session.import_node(&node3)?;
-    session.put_parent_node(&node3.uuid, "https://node3", &opr)?;
+    session.register_parent_node(&node3.uuid, "https://node3", &opr)?;
 
     let origin_node_id = Id::from_str("00000000-0000-0000-0000-000000000001")?;
     let src_change = ChangelogEntry {

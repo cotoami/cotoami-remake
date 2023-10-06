@@ -16,7 +16,7 @@ use crate::{
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
-        .route("/", get(all_parents).put(put_parent_node))
+        .route("/", get(all_parents).post(add_parent_node))
         .layer(middleware::from_fn(require_session))
 }
 
@@ -106,11 +106,11 @@ async fn all_parents(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PUT /api/nodes/parents
+// POST /api/nodes/parents
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-struct PutParentNode {
+struct AddParentNode {
     #[validate(required, url)]
     url_prefix: Option<String>,
 
@@ -122,10 +122,10 @@ struct PutParentNode {
     replicate: Option<bool>,
 }
 
-async fn put_parent_node(
+async fn add_parent_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
-    Form(form): Form<PutParentNode>,
+    Form(form): Form<AddParentNode>,
 ) -> Result<(StatusCode, Json<Parent>), ApiError> {
     if let Err(errors) = form.validate() {
         return ("nodes/parent", errors).into_result();
@@ -164,7 +164,7 @@ async fn put_parent_node(
         }
 
         // Register a [ParentNode] and save the password into it
-        db.put_parent_node(&parent_id, &url_prefix, &op)?;
+        db.register_parent_node(&parent_id, &url_prefix, &op)?;
         db.save_parent_password(&parent_id, &password, owner_password, &op)?;
 
         // Get the imported node data

@@ -12,7 +12,7 @@ fn save_password() -> Result<()> {
     let opr = session1.local_node_as_operator()?;
 
     session1.import_node(&node2)?;
-    session1.put_parent_node(&node2.uuid, "https://node2", &opr)?;
+    session1.register_parent_node(&node2.uuid, "https://node2", &opr)?;
 
     // when
     session1.save_parent_password(&node2.uuid, "node2-password", "master-password", &opr)?;

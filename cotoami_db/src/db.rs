@@ -369,29 +369,25 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(parent_node_ops::all_pairs())
     }
 
-    /// Inserts or updates a parent node. It is an idempotent operation.
+    /// Registers the specified node as a parent.
     ///
-    /// The node data ([Node]) has to be imported before registered as a parent ([ParentNode]).
-    pub fn put_parent_node(
+    /// * The [Node] data has to be imported before registered as a [ParentNode].
+    /// * A unique constraint error will be returned if the specified node has already been
+    ///   registered as a parent.
+    pub fn register_parent_node(
         &self,
         id: &Id<Node>,
         url_prefix: &str,
         operator: &Operator,
     ) -> Result<ParentNode> {
         operator.requires_to_be_owner()?;
-        if let Ok(parent_node) = self.write_parent_node_ext(id).as_mut() {
-            parent_node.url_prefix = url_prefix.into();
-            self.write_transaction(parent_node_ops::update(&parent_node))
-        } else {
-            let parent_node = self.write_transaction(parent_node_ops::insert(
-                &NewParentNode::new(id, url_prefix)?,
-            ))?;
-            self.globals
-                .parent_node_exts
-                .write()
-                .insert(*id, parent_node.clone());
-            Ok(parent_node)
-        }
+        let new_parent_node = NewParentNode::new(id, url_prefix)?;
+        let parent_node = self.write_transaction(parent_node_ops::insert(&new_parent_node))?;
+        self.globals
+            .parent_node_exts
+            .write()
+            .insert(*id, parent_node.clone());
+        Ok(parent_node)
     }
 
     pub fn parent_node_ext(&mut self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
@@ -451,7 +447,7 @@ impl<'a> DatabaseSession<'a> {
     ///
     /// If the node specified by the ID doesn't exist in this database,
     /// this function will create a placeholder row in the `nodes` table to be
-    /// replace with real data, which will be sent from the node when logging in later.
+    /// replaced with real data, which will be sent from the node when logging in later.
     pub fn add_child_node(
         &self,
         id: Id<Node>,
