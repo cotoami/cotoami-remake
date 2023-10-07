@@ -119,18 +119,3 @@ CREATE TABLE child_nodes (
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
-
-
---
--- This table contains all the nodes whose databases have been incorporated 
--- (directly or indirectly) in the coto graph.
---
-CREATE TABLE incorporated_nodes (
-  -- UUID of a node incorporated in this database
-  node_id TEXT NOT NULL PRIMARY KEY,
-
-  -- Date when this node was incorporated
-  created_at DATETIME NOT NULL, -- UTC
-
-  FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
-) WITHOUT ROWID;

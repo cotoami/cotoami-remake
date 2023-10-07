@@ -11,7 +11,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     local_node,
     parent_nodes,
     child_nodes,
-    incorporated_nodes,
     cotos,
     cotonomas,
     links,
@@ -71,14 +70,6 @@ diesel::table! {
     }
 }
 diesel::joinable!(child_nodes -> nodes (node_id));
-
-diesel::table! {
-    incorporated_nodes (node_id) {
-        node_id -> Text,
-        created_at -> Timestamp,
-    }
-}
-diesel::joinable!(incorporated_nodes -> nodes (node_id));
 
 /////////////////////////////////////////////////////////////////////////////
 // Coto (related structs are in `models::coto`)

@@ -14,7 +14,6 @@ use super::{cotonoma::Cotonoma, Id};
 use crate::schema::nodes;
 
 pub mod child;
-pub mod incorporated;
 pub mod local;
 pub mod parent;
 
