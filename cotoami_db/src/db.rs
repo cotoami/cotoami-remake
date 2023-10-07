@@ -421,6 +421,36 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(parent_node_ops::update(&parent_node))
     }
 
+    pub fn inherit_from(
+        &self,
+        parent_node_id: &Id<Node>,
+        operator: &Operator,
+    ) -> Result<(usize, ChangelogEntry)> {
+        operator.requires_to_be_owner()?;
+        let local_node_id = self.local_node_id()?;
+        let mut parent_node = self.write_parent_node_ext(parent_node_id)?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            // Ensure to get the latest parent node data in the transaction
+            *parent_node = parent_node_ops::get_or_err(parent_node_id).run(ctx)??;
+
+            // Disable the parent not to be connected anymore
+            parent_node.disabled = true;
+            parent_node.forked = true;
+            parent_node_ops::update(&parent_node).run(ctx)?;
+
+            let affected = graph_ops::change_owner_node(parent_node_id, &local_node_id).run(ctx)?;
+
+            let change = Change::ChangeOwnerNode {
+                from: local_node_id,
+                to: *parent_node_id,
+                last_change_number: parent_node.changes_received,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+
+            Ok((affected, changelog))
+        })
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // child nodes
     /////////////////////////////////////////////////////////////////////////////
