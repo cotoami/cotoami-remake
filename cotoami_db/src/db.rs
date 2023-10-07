@@ -441,8 +441,8 @@ impl<'a> DatabaseSession<'a> {
             let affected = graph_ops::change_owner_node(parent_node_id, &local_node_id).run(ctx)?;
 
             let change = Change::ChangeOwnerNode {
-                from: local_node_id,
-                to: *parent_node_id,
+                from: *parent_node_id,
+                to: local_node_id,
                 last_change_number: parent_node.changes_received,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
