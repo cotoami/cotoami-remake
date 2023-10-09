@@ -421,7 +421,20 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(parent_node_ops::update(&parent_node))
     }
 
-    pub fn inherit_from(
+    /// In Cotoami, `fork` means disconnecting from a parent node and taking the ownership of
+    /// entities (cotos/cotonomas/links) owned by the parent until then. It also means that
+    /// update requests to those entities won't be relayed to the parent anymore, instead
+    /// the local node will handle them.
+    ///
+    /// Note that target entities by this function are only those that are owned by the specified
+    /// parent, not by nodes indirectly connected via the parent. So if the parent has other nodes
+    /// as its parent (grand parents), the local node won't receive the changes from those nodes anymore.
+    ///
+    /// This method is assumed to be used in the following situations:
+    /// * Promoting a replica node to a primary/master node.
+    /// * When there's a need for an intermediate node to take over the role of its parent node
+    ///   because of the outage/retirement of the parent.
+    pub fn fork_from(
         &self,
         parent_node_id: &Id<Node>,
         operator: &Operator,
@@ -438,6 +451,7 @@ impl<'a> DatabaseSession<'a> {
             parent_node.forked = true;
             parent_node_ops::update(&parent_node).run(ctx)?;
 
+            // Change the owner of every entity created in the parent node to the local node
             let affected = graph_ops::change_owner_node(parent_node_id, &local_node_id).run(ctx)?;
 
             let change = Change::ChangeOwnerNode {
