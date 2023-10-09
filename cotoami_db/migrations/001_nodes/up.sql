@@ -1,6 +1,8 @@
 --
 -- A node is a single Cotoami database that has connections to/from other databases(nodes).
--- `nodes` table should contain all nodes appeared in this database.
+-- 
+-- `nodes` table should contain all nodes that appears in the attributes of entities
+--- (cotos/cotonomas/links) in this database.
 --
 CREATE TABLE nodes (
   -- Universally unique node ID
