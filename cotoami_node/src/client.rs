@@ -221,21 +221,32 @@ pub(crate) struct ResponseError {
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) struct EventLoopState {
-    pub ready_state: ReadyState,
+    pub event_source_state: ReadyState,
     pub error: Option<EventLoopError>,
-    end_loop: bool,
+    disabled: bool,
 }
 
 impl EventLoopState {
-    fn new(ready_state: ReadyState) -> Self {
+    fn new(event_source_state: ReadyState) -> Self {
         Self {
-            ready_state,
+            event_source_state,
             error: None,
-            end_loop: false,
+            disabled: false,
         }
     }
 
-    pub fn end(&mut self) { self.end_loop = true; }
+    fn set_error(&mut self, error: EventLoopError) { self.error = Some(error); }
+
+    pub fn stop(&mut self) { self.disabled = true; }
+
+    pub fn restart_if_possible(&mut self) -> bool {
+        if self.event_source_state != ReadyState::Closed {
+            self.disabled = false;
+            true
+        } else {
+            false
+        }
+    }
 }
 
 pub(crate) enum EventLoopError {
@@ -275,45 +286,49 @@ impl EventLoop {
         })
     }
 
-    fn set_ready_state(&mut self, ready_state: ReadyState) {
-        self.state.write().ready_state = ready_state;
-    }
-
-    fn set_error(&mut self, error: EventLoopError) { self.state.write().error = Some(error); }
-
     pub fn state(&self) -> Arc<RwLock<EventLoopState>> { self.state.clone() }
 
     pub async fn start(&mut self) {
         while let Some(item) = self.event_source.next().await {
-            match item {
-                Ok(ESItem::Open) => info!("Event stream opened: {}", self.server.url_prefix()),
-                Ok(ESItem::Message(event)) => {
-                    if let Err(err) = self.handle_event(&event).await {
+            if self.state.read().disabled {
+                // Close the event source and reload the state of it
+                //
+                // NOTE: this operation needs to be atomic on `self.state`, otherwise
+                // clients of [EventLoopState] could read illegal state.
+                let mut state = self.state.write();
+                self.event_source.close();
+                state.event_source_state = self.event_source.ready_state();
+                info!("Event source closed: {}", self.server.url_prefix());
+            } else {
+                match item {
+                    Ok(ESItem::Open) => info!("Event source opened: {}", self.server.url_prefix()),
+                    Ok(ESItem::Message(event)) => {
+                        if let Err(err) = self.handle_event(&event).await {
+                            debug!(
+                                "Event source {} closed because of an event handling error: {}",
+                                self.server.url_prefix(),
+                                &err
+                            );
+                            self.event_source.close();
+                            self.state
+                                .write()
+                                .set_error(EventLoopError::EventHandlingFailed(err));
+                        }
+                    }
+                    Err(err) => {
                         debug!(
-                            "Event stream {} closed because of an error during handling an event: {}",
+                            "Event source {} closed because of a stream error: {:?}",
                             self.server.url_prefix(),
                             &err
                         );
                         self.event_source.close();
-                        self.set_error(EventLoopError::EventHandlingFailed(err));
+                        self.state
+                            .write()
+                            .set_error(EventLoopError::StreamFailed(err));
                     }
                 }
-                Err(err) => {
-                    debug!(
-                        "Event stream {} closed because of a stream error: {:?}",
-                        self.server.url_prefix(),
-                        &err
-                    );
-                    self.event_source.close();
-                    self.set_error(EventLoopError::StreamFailed(err));
-                }
+                self.state.write().event_source_state = self.event_source.ready_state();
             }
-
-            if self.state.read().end_loop {
-                self.event_source.close();
-                info!("Event stream closed: {}", self.server.url_prefix());
-            }
-            self.set_ready_state(self.event_source.ready_state());
         }
     }
 

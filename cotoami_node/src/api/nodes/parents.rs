@@ -59,7 +59,7 @@ impl Parent {
                 event_loop_state, ..
             }) => {
                 let state = event_loop_state.read();
-                let connected = state.ready_state == ReadyState::Open;
+                let connected = state.event_source_state == ReadyState::Open;
                 let error = if let Some(event_loop_error) = state.error.as_ref() {
                     match event_loop_error {
                         EventLoopError::StreamFailed(e) => {
@@ -250,8 +250,6 @@ async fn set_parent_disabled(
     state: &AppState,
     operator: Operator,
 ) -> Result<()> {
-    debug!("Set the parent {} to be disabled: {}", parent_id, disabled);
-
     // Update the attribute of the parent node
     let db = state.db.clone();
     let (local_node, parent_node) = spawn_blocking(move || {
@@ -263,21 +261,31 @@ async fn set_parent_disabled(
     })
     .await??;
 
-    // Stop the running event loop
-    state.get_parent_conn(&parent_id)?.end_event_loop();
+    // Disconnect from the parent
+    if disabled {
+        debug!("Stopping the event loop for {}", parent_id);
+        state.parent_conn(&parent_id)?.stop_event_loop();
 
-    // Start a new connection if `disabled` is false and
-    // the local node has not been forked from the parent
-    if !disabled && !parent_node.forked {
-        let conn = ParentConn::connect(
-            &parent_node,
-            &local_node,
-            &state.config,
-            &state.db,
-            &state.pubsub,
-        )
-        .await;
-        state.parent_conns.write().insert(parent_id, conn);
+    // Or connect to the parent again (if not forked from the parent)
+    } else if !parent_node.forked {
+        if state
+            .parent_conn(&parent_id)?
+            .restart_event_loop_if_possible()
+        {
+            debug!("Restarting the event loop for {}", parent_id);
+        } else {
+            debug!("Creating a new parent connection for {}", parent_id);
+            let conn = ParentConn::connect(
+                &parent_node,
+                &local_node,
+                &state.config,
+                &state.db,
+                &state.pubsub,
+            )
+            .await;
+            state.parent_conns.write().insert(parent_id, conn);
+        }
     }
+
     Ok(())
 }

@@ -141,7 +141,7 @@ impl AppState {
         .await?
     }
 
-    fn get_parent_conn(&self, parent_id: &Id<Node>) -> Result<MappedRwLockReadGuard<ParentConn>> {
+    fn parent_conn(&self, parent_id: &Id<Node>) -> Result<MappedRwLockReadGuard<ParentConn>> {
         RwLockReadGuard::try_map(self.parent_conns.read(), |conns| conns.get(parent_id))
             .map_err(|_| anyhow!("ParentConn for {} not found", parent_id))
     }
@@ -361,12 +361,23 @@ impl ParentConn {
         Ok(Self::new(child_session.session, event_loop))
     }
 
-    fn end_event_loop(&self) {
+    fn stop_event_loop(&self) {
         if let ParentConn::Connected {
             event_loop_state, ..
         } = self
         {
-            event_loop_state.write().end();
+            event_loop_state.write().stop();
+        }
+    }
+
+    fn restart_event_loop_if_possible(&self) -> bool {
+        if let ParentConn::Connected {
+            event_loop_state, ..
+        } = self
+        {
+            event_loop_state.write().restart_if_possible()
+        } else {
+            false
         }
     }
 }
