@@ -2,10 +2,7 @@ use axum::{extract::State, middleware, routing::get, Json, Router};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
-use crate::{
-    error::{ApiError, IntoApiResult, RequestError},
-    AppState,
-};
+use crate::{error::ApiError, AppState};
 
 mod children;
 mod parents;
@@ -25,11 +22,7 @@ pub(super) fn routes() -> Router<AppState> {
 async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     spawn_blocking(move || {
         let mut db = state.db.new_session()?;
-        if let Some(node) = db.local_node()? {
-            Ok(Json(node))
-        } else {
-            RequestError::new("local-node-not-yet-created").into_result()
-        }
+        Ok(Json(db.local_node()?))
     })
     .await?
 }

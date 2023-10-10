@@ -247,10 +247,16 @@ impl<'a> DatabaseSession<'a> {
         result
     }
 
-    pub fn local_node(&mut self) -> Result<Option<Node>> {
-        Ok(self
-            .read_transaction(local_node_ops::get_pair())?
-            .map(|pair| pair.1))
+    pub fn has_local_node_initialized(&self) -> bool {
+        self.globals.local_node_ext.read().is_some()
+    }
+
+    pub fn local_node(&mut self) -> Result<Node> {
+        if let Some((_, node)) = self.read_transaction(local_node_ops::get_pair())? {
+            Ok(node)
+        } else {
+            bail!(DatabaseError::LocalNodeNotYetInitialized)
+        }
     }
 
     pub fn local_node_pair(&mut self, operator: &Operator) -> Result<(LocalNode, Node)> {

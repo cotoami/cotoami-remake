@@ -11,7 +11,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
 use pubsub::Publisher;
 use tokio::{
     sync::{oneshot, oneshot::Sender},
@@ -107,13 +107,14 @@ impl AppState {
 
             // If the local node already exists,
             // its name and password can be changed via config
-            if let Ok(operator) = db.local_node_as_operator() {
-                let (local_node, node) = db.local_node_pair(&operator)?;
+            if db.has_local_node_initialized() {
+                let opr = db.local_node_as_operator()?;
+                let (ext, node) = db.local_node_pair(&opr)?;
                 if let Some(name) = config.node_name.as_deref() {
                     if name != node.name {
                         // Ignoring the changelog since this function is called during
                         // the server startup (there should be no child nodes connected).
-                        let (node, _) = db.rename_local_node(name, &operator)?;
+                        let (node, _) = db.rename_local_node(name, &opr)?;
                         info!("The node name has been changed to [{}].", node.name);
                     }
                 }
@@ -122,8 +123,7 @@ impl AppState {
                     db.change_owner_password(owner_password)?;
                     info!("The owner password has been changed.");
                 } else {
-                    local_node
-                        .verify_password(owner_password)
+                    ext.verify_password(owner_password)
                         .context("Config::owner_password couldn't be verified.")?;
                 }
                 return Ok(());
@@ -139,6 +139,11 @@ impl AppState {
             Ok(())
         })
         .await?
+    }
+
+    fn get_parent_conn(&self, parent_id: &Id<Node>) -> Result<MappedRwLockReadGuard<ParentConn>> {
+        RwLockReadGuard::try_map(self.parent_conns.read(), |conns| conns.get(parent_id))
+            .map_err(|_| anyhow!("ParentConn for {} not found", parent_id))
     }
 
     fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {

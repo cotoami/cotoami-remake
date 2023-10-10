@@ -1,3 +1,4 @@
+use anyhow::Result;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -8,7 +9,7 @@ use axum::{
 use cotoami_db::prelude::*;
 use reqwest_eventsource::ReadyState;
 use tokio::task::spawn_blocking;
-use tracing::info;
+use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
@@ -138,9 +139,7 @@ async fn add_parent_node(
 
     // Get the local node
     let db = state.db.clone();
-    let local_node = spawn_blocking(move || db.new_session()?.local_node())
-        .await??
-        .unwrap_or_else(|| unreachable!());
+    let local_node = spawn_blocking(move || db.new_session()?.local_node()).await??;
 
     // Attempt to log in to the parent node
     let password = form.password.unwrap();
@@ -239,10 +238,46 @@ async fn update_parent_node(
     if let Err(errors) = form.validate() {
         return ("nodes/parent", errors).into_result();
     }
-
     if let Some(disabled) = form.disabled {
-        //
+        set_parent_disabled(node_id, disabled, &state, operator).await?;
     }
+    Ok(StatusCode::OK)
+}
 
-    unimplemented!();
+async fn set_parent_disabled(
+    parent_id: Id<Node>,
+    disabled: bool,
+    state: &AppState,
+    operator: Operator,
+) -> Result<()> {
+    debug!("Set the parent {} to be disabled: {}", parent_id, disabled);
+
+    // Update the attribute of the parent node
+    let db = state.db.clone();
+    let (local_node, parent_node) = spawn_blocking(move || {
+        let mut db = db.new_session()?;
+        Ok::<_, anyhow::Error>((
+            db.local_node()?,
+            db.set_parent_disabled(&parent_id, disabled, &operator)?,
+        ))
+    })
+    .await??;
+
+    // Stop the running event loop
+    state.get_parent_conn(&parent_id)?.end_event_loop();
+
+    // Start a new connection if `disabled` is false and
+    // the local node has not been forked from the parent
+    if !disabled && !parent_node.forked {
+        let conn = ParentConn::connect(
+            &parent_node,
+            &local_node,
+            &state.config,
+            &state.db,
+            &state.pubsub,
+        )
+        .await;
+        state.parent_conns.write().insert(parent_id, conn);
+    }
+    Ok(())
 }

@@ -153,8 +153,10 @@ async fn create_child_session(
         }
 
         // make response body
-        let parent = db.local_node()?.unwrap_or_else(|| unreachable!());
-        let response_body = ChildSessionCreated { session, parent };
+        let response_body = ChildSessionCreated {
+            session,
+            parent: db.local_node()?,
+        };
 
         Ok((StatusCode::CREATED, jar.add(cookie), Json(response_body)))
     })
