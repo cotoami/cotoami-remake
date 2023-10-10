@@ -1,5 +1,9 @@
 use axum::{
-    extract::State, http::StatusCode, middleware, routing::get, Extension, Form, Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    middleware,
+    routing::{get, put},
+    Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
 use reqwest_eventsource::ReadyState;
@@ -17,6 +21,7 @@ use crate::{
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(all_parents).post(add_parent_node))
+        .route("/:node_id", put(update_parent_node))
         .layer(middleware::from_fn(require_session))
 }
 
@@ -213,4 +218,31 @@ async fn add_parent_node(
     };
 
     Ok((StatusCode::CREATED, Json(parent)))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/nodes/parents/:node_id
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Deserialize, Validate)]
+struct UpdateParentNode {
+    disabled: Option<bool>,
+    // TODO: url_prefix
+}
+
+async fn update_parent_node(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+    Path(node_id): Path<Id<Node>>,
+    Form(form): Form<UpdateParentNode>,
+) -> Result<StatusCode, ApiError> {
+    if let Err(errors) = form.validate() {
+        return ("nodes/parent", errors).into_result();
+    }
+
+    if let Some(disabled) = form.disabled {
+        //
+    }
+
+    unimplemented!();
 }

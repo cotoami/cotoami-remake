@@ -414,10 +414,24 @@ impl<'a> DatabaseSession<'a> {
         Ok(())
     }
 
-    pub fn disable_parent(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
+    pub fn set_parent_disabled(
+        &self,
+        id: &Id<Node>,
+        disabled: bool,
+        operator: &Operator,
+    ) -> Result<ParentNode> {
         operator.requires_to_be_owner()?;
+
         let mut parent_node = self.write_parent_node_ext(id)?;
-        parent_node.disabled = true;
+
+        // A forked parent can't be enabled
+        if !disabled && parent_node.forked {
+            bail!(DatabaseError::AlreadyForkedFromParent {
+                parent_node_id: parent_node.node_id
+            });
+        }
+
+        parent_node.disabled = disabled;
         self.write_transaction(parent_node_ops::update(&parent_node))
     }
 
