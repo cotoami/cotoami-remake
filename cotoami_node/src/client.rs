@@ -242,9 +242,14 @@ impl EventLoopState {
     /// source will never be closed if no events come in the loop.
     pub fn disable(&mut self) { self.disabled = true; }
 
+    /// Returns true if this event loop is accepting events.
+    pub fn is_running(&self) -> bool {
+        !self.disabled && self.event_source_state == ReadyState::Open
+    }
+
     /// Enable this event loop only if the event source is not closed.
     /// It returns true if the result state of the event loop is `running`
-    /// (enabled and connecting).
+    /// (enabled and connected) or `connecting`.
     pub fn restart_if_possible(&mut self) -> bool {
         if self.event_source_state != ReadyState::Closed {
             self.disabled = false;
