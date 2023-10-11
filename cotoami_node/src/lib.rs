@@ -361,12 +361,12 @@ impl ParentConn {
         Ok(Self::new(child_session.session, event_loop))
     }
 
-    fn stop_event_loop(&self) {
+    fn disable_event_loop(&self) {
         if let ParentConn::Connected {
             event_loop_state, ..
         } = self
         {
-            event_loop_state.write().stop();
+            event_loop_state.write().disable();
         }
     }
 

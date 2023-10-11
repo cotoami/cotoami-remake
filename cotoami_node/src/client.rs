@@ -237,7 +237,10 @@ impl EventLoopState {
 
     fn set_error(&mut self, error: EventLoopError) { self.error = Some(error); }
 
-    pub fn stop(&mut self) { self.disabled = true; }
+    /// Disable this event loop. A disabled loop will close the event source when
+    /// the next event comes. In other words, the event source will never be closed
+    /// if no events come in the loop.
+    pub fn disable(&mut self) { self.disabled = true; }
 
     pub fn restart_if_possible(&mut self) -> bool {
         if self.event_source_state != ReadyState::Closed {

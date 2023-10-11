@@ -264,7 +264,7 @@ async fn set_parent_disabled(
     // Disconnect from the parent
     if disabled {
         debug!("Stopping the event loop for {}", parent_id);
-        state.parent_conn(&parent_id)?.stop_event_loop();
+        state.parent_conn(&parent_id)?.disable_event_loop();
 
     // Or connect to the parent again (if not forked from the parent)
     } else if !parent_node.forked {
