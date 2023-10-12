@@ -242,6 +242,8 @@ impl EventLoopState {
     /// source will never be closed if no events come in the loop.
     pub fn disable(&mut self) { self.disabled = true; }
 
+    pub fn is_disabled(&self) -> bool { self.disabled }
+
     /// Returns true if this event loop is accepting events.
     pub fn is_running(&self) -> bool {
         !self.disabled && self.event_source_state == ReadyState::Open

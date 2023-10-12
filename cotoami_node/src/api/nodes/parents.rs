@@ -63,6 +63,8 @@ impl Parent {
                             Some(ParentError::EventHandlingFailed(e.to_string()))
                         }
                     }
+                } else if state.is_disabled() {
+                    Some(ParentError::Disabled)
                 } else {
                     None
                 };
