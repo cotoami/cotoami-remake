@@ -37,26 +37,21 @@ struct Parent {
 }
 
 impl Parent {
-    fn new(node: Node, parent_conn: Option<&ParentConn>) -> Self {
+    fn new(node: Node, parent_conn: &ParentConn) -> Self {
         match parent_conn {
-            None => Self {
-                node,
-                connected: false,
-                error: None,
-            },
-            Some(ParentConn::Disabled) => Self {
+            ParentConn::Disabled => Self {
                 node,
                 connected: false,
                 error: Some(ParentError::Disabled),
             },
-            Some(ParentConn::InitFailed(e)) => Self {
+            ParentConn::InitFailed(e) => Self {
                 node,
                 connected: false,
                 error: Some(ParentError::InitFailed(e.to_string())),
             },
-            Some(ParentConn::Connected {
+            ParentConn::Connected {
                 event_loop_state, ..
-            }) => {
+            } => {
                 let state = event_loop_state.read();
                 let connected = state.is_running();
                 let error = if let Some(event_loop_error) = state.error.as_ref() {
@@ -101,7 +96,7 @@ async fn all_parents(
             .all_parent_nodes(&operator)?
             .into_iter()
             .map(|(_, node)| {
-                let conn = conns.get(&node.uuid);
+                let conn = conns.get(&node.uuid).unwrap_or_else(|| unreachable!());
                 Parent::new(node, conn)
             })
             .collect();
@@ -211,7 +206,9 @@ async fn add_parent_node(
     // Make response body
     let parent = {
         let conns = state.parent_conns.read();
-        let conn = conns.get(&parent_node.uuid);
+        let conn = conns
+            .get(&parent_node.uuid)
+            .unwrap_or_else(|| unreachable!());
         Parent::new(parent_node, conn)
     };
 
