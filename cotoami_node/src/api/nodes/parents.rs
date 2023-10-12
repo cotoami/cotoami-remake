@@ -7,7 +7,6 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
-use reqwest_eventsource::ReadyState;
 use tokio::task::spawn_blocking;
 use tracing::{debug, info};
 use validator::Validate;
@@ -59,7 +58,7 @@ impl Parent {
                 event_loop_state, ..
             }) => {
                 let state = event_loop_state.read();
-                let connected = state.event_source_state == ReadyState::Open;
+                let connected = state.is_running();
                 let error = if let Some(event_loop_error) = state.error.as_ref() {
                     match event_loop_error {
                         EventLoopError::StreamFailed(e) => {
