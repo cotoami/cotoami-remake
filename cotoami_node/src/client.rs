@@ -304,11 +304,7 @@ impl EventLoop {
     pub async fn start(&mut self) {
         while let Some(item) = self.event_source.next().await {
             if self.state.read().disabled {
-                // Close the event source and reload the state of it
-                //
-                // NOTE: this operation needs to be atomic on `self.state`, otherwise
-                // clients of [EventLoopState] could read illegal state.
-                let mut state = self.state.write();
+                let mut state = self.state.write(); // Lock the state
                 self.event_source.close();
                 state.event_source_state = self.event_source.ready_state();
                 info!("Event source closed: {}", self.server.url_prefix());
@@ -322,10 +318,11 @@ impl EventLoop {
                                 self.server.url_prefix(),
                                 &err
                             );
+
+                            let mut state = self.state.write(); // Lock the state
+                            state.set_error(EventLoopError::EventHandlingFailed(err));
                             self.event_source.close();
-                            self.state
-                                .write()
-                                .set_error(EventLoopError::EventHandlingFailed(err));
+                            state.event_source_state = self.event_source.ready_state();
                         }
                     }
                     Err(err) => {
@@ -334,13 +331,13 @@ impl EventLoop {
                             self.server.url_prefix(),
                             &err
                         );
+
+                        let mut state = self.state.write(); // Lock the state
+                        state.set_error(EventLoopError::StreamFailed(err));
                         self.event_source.close();
-                        self.state
-                            .write()
-                            .set_error(EventLoopError::StreamFailed(err));
+                        state.event_source_state = self.event_source.ready_state();
                     }
                 }
-                self.state.write().event_source_state = self.event_source.ready_state();
             }
         }
     }
