@@ -32,14 +32,14 @@ pub(super) fn routes() -> Router<AppState> {
 #[derive(serde::Serialize)]
 struct Parent {
     node: Node,
-    disconnected: Option<Disconnected>,
+    not_connected: Option<NotConnected>,
 }
 
 impl Parent {
     fn new(node: Node, parent_conn: &ParentConn) -> Self {
-        let disconnected = match parent_conn {
-            ParentConn::Disabled => Some(Disconnected::Disabled),
-            ParentConn::InitFailed(e) => Some(Disconnected::InitFailed(e.to_string())),
+        let not_connected = match parent_conn {
+            ParentConn::Disabled => Some(NotConnected::Disabled),
+            ParentConn::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
             ParentConn::Connected {
                 event_loop_state, ..
             } => {
@@ -50,28 +50,34 @@ impl Parent {
                     if let Some(error) = state.error.as_ref() {
                         match error {
                             EventLoopError::StreamFailed(e) => {
-                                Some(Disconnected::StreamFailed(e.to_string()))
+                                Some(NotConnected::StreamFailed(e.to_string()))
                             }
                             EventLoopError::EventHandlingFailed(e) => {
-                                Some(Disconnected::EventHandlingFailed(e.to_string()))
+                                Some(NotConnected::EventHandlingFailed(e.to_string()))
                             }
                         }
                     } else if state.is_disabled() {
-                        Some(Disconnected::Disabled)
+                        Some(NotConnected::Disabled)
+                    } else if state.is_connecting() {
+                        Some(NotConnected::Connecting)
                     } else {
-                        Some(Disconnected::Unknown)
+                        Some(NotConnected::Unknown)
                     }
                 }
             }
         };
-        Self { node, disconnected }
+        Self {
+            node,
+            not_connected,
+        }
     }
 }
 
 #[derive(serde::Serialize)]
 #[serde(tag = "reason", content = "details")]
-enum Disconnected {
+enum NotConnected {
     Disabled,
+    Connecting,
     InitFailed(String),
     StreamFailed(String),
     EventHandlingFailed(String),

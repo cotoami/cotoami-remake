@@ -249,6 +249,9 @@ impl EventLoopState {
         !self.disabled && self.event_source_state == ReadyState::Open
     }
 
+    /// Returns true if the [EventSource] is waiting on a response from the endpoint
+    pub fn is_connecting(&self) -> bool { self.event_source_state == ReadyState::Connecting }
+
     /// Enable this event loop only if the event source is not closed.
     /// It returns true if the result state of the event loop is `running`
     /// (enabled and connected) or `connecting`.
