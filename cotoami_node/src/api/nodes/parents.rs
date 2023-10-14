@@ -32,59 +32,50 @@ pub(super) fn routes() -> Router<AppState> {
 #[derive(serde::Serialize)]
 struct Parent {
     node: Node,
-    connected: bool,
-    error: Option<ParentError>,
+    disconnected: Option<Disconnected>,
 }
 
 impl Parent {
     fn new(node: Node, parent_conn: &ParentConn) -> Self {
-        match parent_conn {
-            ParentConn::Disabled => Self {
-                node,
-                connected: false,
-                error: Some(ParentError::Disabled),
-            },
-            ParentConn::InitFailed(e) => Self {
-                node,
-                connected: false,
-                error: Some(ParentError::InitFailed(e.to_string())),
-            },
+        let disconnected = match parent_conn {
+            ParentConn::Disabled => Some(Disconnected::Disabled),
+            ParentConn::InitFailed(e) => Some(Disconnected::InitFailed(e.to_string())),
             ParentConn::Connected {
                 event_loop_state, ..
             } => {
                 let state = event_loop_state.read();
-                let connected = state.is_running();
-                let error = if let Some(event_loop_error) = state.error.as_ref() {
-                    match event_loop_error {
-                        EventLoopError::StreamFailed(e) => {
-                            Some(ParentError::StreamFailed(e.to_string()))
-                        }
-                        EventLoopError::EventHandlingFailed(e) => {
-                            Some(ParentError::EventHandlingFailed(e.to_string()))
-                        }
-                    }
-                } else if state.is_disabled() {
-                    Some(ParentError::Disabled)
+                if state.is_running() {
+                    None // not disconnected
                 } else {
-                    None
-                };
-                Self {
-                    node,
-                    connected,
-                    error,
+                    if let Some(error) = state.error.as_ref() {
+                        match error {
+                            EventLoopError::StreamFailed(e) => {
+                                Some(Disconnected::StreamFailed(e.to_string()))
+                            }
+                            EventLoopError::EventHandlingFailed(e) => {
+                                Some(Disconnected::EventHandlingFailed(e.to_string()))
+                            }
+                        }
+                    } else if state.is_disabled() {
+                        Some(Disconnected::Disabled)
+                    } else {
+                        Some(Disconnected::Unknown)
+                    }
                 }
             }
-        }
+        };
+        Self { node, disconnected }
     }
 }
 
 #[derive(serde::Serialize)]
-#[serde(tag = "code", content = "details")]
-enum ParentError {
+#[serde(tag = "reason", content = "details")]
+enum Disconnected {
     Disabled,
     InitFailed(String),
     StreamFailed(String),
     EventHandlingFailed(String),
+    Unknown,
 }
 
 async fn all_parents(
