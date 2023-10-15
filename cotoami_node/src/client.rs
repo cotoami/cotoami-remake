@@ -220,6 +220,8 @@ pub(crate) struct ResponseError {
 // EventLoop
 /////////////////////////////////////////////////////////////////////////////
 
+/// The state of an [EventLoop] that can be shared between threads. This struct
+/// is needed because [EventSource] is not [Sync].
 pub(crate) struct EventLoopState {
     pub event_source_state: ReadyState,
     pub error: Option<EventLoopError>,
