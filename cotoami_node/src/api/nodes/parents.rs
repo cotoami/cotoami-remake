@@ -45,7 +45,7 @@ impl Parent {
             } => {
                 let state = event_loop_state.read();
                 if state.is_running() {
-                    None // not disconnected
+                    None // connected
                 } else {
                     if let Some(error) = state.error.as_ref() {
                         match error {
