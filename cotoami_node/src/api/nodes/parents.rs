@@ -22,6 +22,7 @@ pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(all_parents).post(add_parent_node))
         .route("/:node_id", put(update_parent_node))
+        .route("/:node_id/fork", put(fork_from_parent))
         .layer(middleware::from_fn(require_session))
 }
 
@@ -287,4 +288,31 @@ async fn set_parent_disabled(
     }
 
     Ok(())
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/nodes/parents/:node_id/fork
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Serialize)]
+struct Forked {
+    affected: usize,
+}
+
+async fn fork_from_parent(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Json<Forked>, ApiError> {
+    state.parent_conn(&node_id)?.disable_event_loop();
+
+    let (affected, change) = spawn_blocking(move || {
+        let db = state.db.new_session()?;
+        db.set_parent_disabled(&node_id, true, &operator)?;
+        db.fork_from(&node_id, &operator)
+    })
+    .await??;
+    state.pubsub.lock().publish_change(change)?;
+
+    Ok(Json(Forked { affected }))
 }
