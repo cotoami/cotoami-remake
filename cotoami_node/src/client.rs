@@ -220,58 +220,7 @@ pub(crate) struct ResponseError {
 // EventLoop
 /////////////////////////////////////////////////////////////////////////////
 
-/// The state of an [EventLoop] that can be shared between threads. This struct
-/// is needed because [EventSource] is not [Sync].
-pub(crate) struct EventLoopState {
-    pub event_source_state: ReadyState,
-    pub error: Option<EventLoopError>,
-    disabled: bool,
-}
-
-impl EventLoopState {
-    fn new(event_source_state: ReadyState) -> Self {
-        Self {
-            event_source_state,
-            error: None,
-            disabled: false,
-        }
-    }
-
-    fn set_error(&mut self, error: EventLoopError) { self.error = Some(error); }
-
-    /// Disable this event loop. A disabled loop will close the event source when
-    /// the next event comes (this event will be ignored). In other words, the event
-    /// source will never be closed if no events come in the loop.
-    pub fn disable(&mut self) { self.disabled = true; }
-
-    pub fn is_disabled(&self) -> bool { self.disabled }
-
-    /// Returns true if this event loop is accepting events.
-    pub fn is_running(&self) -> bool {
-        !self.disabled && self.event_source_state == ReadyState::Open
-    }
-
-    /// Returns true if the [EventSource] is waiting on a response from the endpoint
-    pub fn is_connecting(&self) -> bool { self.event_source_state == ReadyState::Connecting }
-
-    /// Enable this event loop only if the event source is not closed.
-    /// It returns true if the result state of the event loop is `running`
-    /// (enabled and connected) or `connecting`.
-    pub fn restart_if_possible(&mut self) -> bool {
-        if self.event_source_state != ReadyState::Closed {
-            self.disabled = false;
-            true
-        } else {
-            false
-        }
-    }
-}
-
-pub(crate) enum EventLoopError {
-    StreamFailed(reqwest_eventsource::Error),
-    EventHandlingFailed(anyhow::Error),
-}
-
+/// An [EventLoop] handles events streamed from an [EventSource].
 pub(crate) struct EventLoop {
     server: Server,
     parent_node_id: Id<Node>,
@@ -308,10 +257,8 @@ impl EventLoop {
 
     pub async fn start(&mut self) {
         while let Some(item) = self.event_source.next().await {
-            if self.state.read().disabled {
-                let mut state = self.state.write(); // Lock the state
+            if self.is_disabled() {
                 self.event_source.close();
-                state.event_source_state = self.event_source.ready_state();
                 info!("Event source closed: {}", self.server.url_prefix());
             } else {
                 match item {
@@ -323,28 +270,44 @@ impl EventLoop {
                                 self.server.url_prefix(),
                                 &err
                             );
-
-                            let mut state = self.state.write(); // Lock the state
-                            state.set_error(EventLoopError::EventHandlingFailed(err));
+                            self.set_error(EventLoopError::EventHandlingFailed(err));
                             self.event_source.close();
-                            state.event_source_state = self.event_source.ready_state();
                         }
                     }
                     Err(err) => {
-                        debug!(
-                            "Event source {} closed because of a stream error: {:?}",
-                            self.server.url_prefix(),
-                            &err
-                        );
-
-                        let mut state = self.state.write(); // Lock the state
-                        state.set_error(EventLoopError::StreamFailed(err));
-                        self.event_source.close();
-                        state.event_source_state = self.event_source.ready_state();
+                        if self.event_source.ready_state() == ReadyState::Closed {
+                            debug!(
+                                "Event source {} closed because of a stream error: {:?}",
+                                self.server.url_prefix(),
+                                &err
+                            );
+                        } else {
+                            debug!(
+                                "Reconnecting to {} after an error: {:?}",
+                                self.server.url_prefix(),
+                                &err
+                            )
+                        }
+                        self.set_error(EventLoopError::StreamFailed(err));
                     }
                 }
             }
+            self.update_event_source_state();
         }
+        // After the end of the stream
+        self.update_event_source_state();
+    }
+
+    fn is_disabled(&self) -> bool { self.state.read().is_disabled() }
+
+    fn update_event_source_state(&mut self) {
+        let mut state = self.state.write();
+        state.event_source_state = self.event_source.ready_state();
+    }
+
+    fn set_error(&mut self, error: EventLoopError) {
+        let mut state = self.state.write();
+        state.error = Some(error);
     }
 
     async fn handle_event(&mut self, event: &Event) -> Result<()> {
@@ -388,4 +351,56 @@ impl EventLoop {
         }
         Ok(())
     }
+}
+
+/// The state of an [EventLoop] that can be shared between threads.
+///
+/// An [EventLoop] has an [EventSource] as its state, but it is not [Sync]. That's
+/// why this struct is needed to put the state in the global state.
+pub(crate) struct EventLoopState {
+    pub event_source_state: ReadyState,
+    pub error: Option<EventLoopError>,
+    disabled: bool,
+}
+
+impl EventLoopState {
+    fn new(event_source_state: ReadyState) -> Self {
+        Self {
+            event_source_state,
+            error: None,
+            disabled: false,
+        }
+    }
+
+    /// Disable this event loop. A disabled loop will close the event source when
+    /// the next event comes (this event will be ignored). In other words, the event
+    /// source will never be closed if no events come in the loop.
+    pub fn disable(&mut self) { self.disabled = true; }
+
+    pub fn is_disabled(&self) -> bool { self.disabled }
+
+    /// Returns true if this event loop is accepting events.
+    pub fn is_running(&self) -> bool {
+        !self.disabled && self.event_source_state == ReadyState::Open
+    }
+
+    /// Returns true if the [EventSource] is waiting on a response from the endpoint
+    pub fn is_connecting(&self) -> bool { self.event_source_state == ReadyState::Connecting }
+
+    /// Enable this event loop only if the event source is not closed.
+    /// It returns true if the result state of the event loop is `running`
+    /// (enabled and connected) or `connecting`.
+    pub fn restart_if_possible(&mut self) -> bool {
+        if self.event_source_state != ReadyState::Closed {
+            self.disabled = false;
+            true
+        } else {
+            false
+        }
+    }
+}
+
+pub(crate) enum EventLoopError {
+    StreamFailed(reqwest_eventsource::Error),
+    EventHandlingFailed(anyhow::Error),
 }
