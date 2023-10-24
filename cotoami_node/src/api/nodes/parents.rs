@@ -46,10 +46,16 @@ impl Parent {
                 let state = event_loop_state.read();
                 if state.is_running() {
                     None // connected
-                } else if state.is_connecting() {
-                    Some(NotConnected::Connecting)
                 } else if state.is_disabled() {
                     Some(NotConnected::Disabled)
+                } else if state.is_connecting() {
+                    let details =
+                        if let Some(EventLoopError::StreamFailed(e)) = state.error.as_ref() {
+                            Some(e.to_string())
+                        } else {
+                            None
+                        };
+                    Some(NotConnected::Connecting(details))
                 } else if let Some(error) = state.error.as_ref() {
                     match error {
                         EventLoopError::StreamFailed(e) => {
@@ -75,7 +81,7 @@ impl Parent {
 #[serde(tag = "reason", content = "details")]
 enum NotConnected {
     Disabled,
-    Connecting,
+    Connecting(Option<String>),
     InitFailed(String),
     StreamFailed(String),
     EventHandlingFailed(String),
