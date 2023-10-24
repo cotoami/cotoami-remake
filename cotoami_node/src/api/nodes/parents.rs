@@ -46,23 +46,21 @@ impl Parent {
                 let state = event_loop_state.read();
                 if state.is_running() {
                     None // connected
-                } else {
-                    if let Some(error) = state.error.as_ref() {
-                        match error {
-                            EventLoopError::StreamFailed(e) => {
-                                Some(NotConnected::StreamFailed(e.to_string()))
-                            }
-                            EventLoopError::EventHandlingFailed(e) => {
-                                Some(NotConnected::EventHandlingFailed(e.to_string()))
-                            }
+                } else if state.is_connecting() {
+                    Some(NotConnected::Connecting)
+                } else if state.is_disabled() {
+                    Some(NotConnected::Disabled)
+                } else if let Some(error) = state.error.as_ref() {
+                    match error {
+                        EventLoopError::StreamFailed(e) => {
+                            Some(NotConnected::StreamFailed(e.to_string()))
                         }
-                    } else if state.is_disabled() {
-                        Some(NotConnected::Disabled)
-                    } else if state.is_connecting() {
-                        Some(NotConnected::Connecting)
-                    } else {
-                        Some(NotConnected::Unknown)
+                        EventLoopError::EventHandlingFailed(e) => {
+                            Some(NotConnected::EventHandlingFailed(e.to_string()))
+                        }
                     }
+                } else {
+                    Some(NotConnected::Unknown)
                 }
             }
         };
