@@ -111,7 +111,7 @@ pub fn rename<'a>(
 
 /// Updates the `root_cotonoma_id` of the specified node.
 ///
-/// The node name will be updated to the name of the root cotonoma.
+/// The node name will be updated to the name of the new root cotonoma.
 pub fn set_root_cotonoma<'a>(
     id: &'a Id<Node>,
     cotonoma_id: &'a Id<Cotonoma>,
