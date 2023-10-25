@@ -5,7 +5,7 @@ use std::ops::DerefMut;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::Paginated;
+use super::{cotonoma_ops, Paginated};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -63,11 +63,17 @@ pub fn recent<'a, Conn: AsReadableConn>(
 }
 
 pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
-    write_op(move |conn| {
-        diesel::insert_into(cotos::table)
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let coto: Coto = diesel::insert_into(cotos::table)
             .values(new_coto)
-            .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)
+            .get_result(ctx.conn().deref_mut())?;
+
+        // Increment the `number_of_posts` in the cotonoma
+        if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
+            cotonoma_ops::update_number_of_posts(posted_in_id, 1).run(ctx)?;
+        }
+
+        Ok(coto)
     })
 }
 

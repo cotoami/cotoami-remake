@@ -166,8 +166,7 @@ pub fn update_number_of_posts(
     write_op(move |conn| {
         let cotonoma: Cotonoma = diesel::update(cotonomas::table.find(id))
             .set(cotonomas::number_of_posts.eq(cotonomas::number_of_posts + delta))
-            .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)?;
+            .get_result(conn.deref_mut())?;
         Ok(cotonoma.number_of_posts)
     })
 }
@@ -179,8 +178,7 @@ pub fn update_number_of_links(
     write_op(move |conn| {
         let cotonoma: Cotonoma = diesel::update(cotonomas::table.find(id))
             .set(cotonomas::number_of_links.eq(cotonomas::number_of_links + delta))
-            .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)?;
+            .get_result(conn.deref_mut())?;
         Ok(cotonoma.number_of_links)
     })
 }
