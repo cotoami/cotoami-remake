@@ -308,7 +308,6 @@ async fn fork_from_parent(
 
     let (affected, change) = spawn_blocking(move || {
         let db = state.db.new_session()?;
-        db.set_parent_disabled(&node_id, true, &operator)?;
         db.fork_from(&node_id, &operator)
     })
     .await??;
