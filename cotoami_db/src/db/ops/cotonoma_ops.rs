@@ -158,3 +158,16 @@ pub fn change_owner_node<'a>(
             .map_err(anyhow::Error::from)
     })
 }
+
+pub fn update_number_of_posts(
+    id: &Id<Cotonoma>,
+    delta: i64,
+) -> impl Operation<WritableConn, i64> + '_ {
+    write_op(move |conn| {
+        let cotonoma: Cotonoma = diesel::update(cotonomas::table.find(id))
+            .set(cotonomas::number_of_posts.eq(cotonomas::number_of_posts + delta))
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)?;
+        Ok(cotonoma.number_of_posts)
+    })
+}
