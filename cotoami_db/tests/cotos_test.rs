@@ -54,6 +54,9 @@ fn crud_operations() -> Result<()> {
              change_coto == Coto { rowid: 0, ..coto }
     );
 
+    let (cotonoma, _) = session.cotonoma_or_err(&root_cotonoma.uuid)?;
+    assert_eq!(cotonoma.number_of_posts, 1);
+
     // when: edit_coto
     let (edited_coto, changelog3) = session.edit_coto(&coto.uuid, "bar", Some("foo"), &operator)?;
 
@@ -119,6 +122,9 @@ fn crud_operations() -> Result<()> {
         } if origin_node_id == node.uuid &&
              change_coto_id == coto.uuid
     );
+
+    let (cotonoma, _) = session.cotonoma_or_err(&root_cotonoma.uuid)?;
+    assert_eq!(cotonoma.number_of_posts, 0);
 
     Ok(())
 }
