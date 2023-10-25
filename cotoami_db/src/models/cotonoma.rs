@@ -47,6 +47,9 @@ pub struct Cotonoma {
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+
+    pub number_of_posts: i64,
+    pub number_of_links: i64,
 }
 
 impl Cotonoma {

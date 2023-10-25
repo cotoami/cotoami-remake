@@ -72,6 +72,12 @@ CREATE TABLE cotonomas (
   created_at DATETIME NOT NULL, -- UTC
   updated_at DATETIME NOT NULL, -- UTC
 
+  -- The number of posts in this cotonoma
+  number_of_posts INTEGER DEFAULT 0 NOT NULL,
+
+  -- The number of links in this cotonoma
+  number_of_links INTEGER DEFAULT 0 NOT NULL,
+
   UNIQUE(node_id, name),
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
