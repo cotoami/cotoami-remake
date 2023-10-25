@@ -88,12 +88,23 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, C
 }
 
 pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
-    write_op(move |conn| {
+    composite_op::<WritableConn, _, _>(move |ctx| {
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
         // FOREIGN KEY ON DELETE CASCADE.
-        let affected = diesel::delete(cotos::table.find(id)).execute(conn.deref_mut())?;
-        Ok(affected > 0)
+        let deleted: Option<Coto> = diesel::delete(cotos::table.find(id))
+            .get_result(ctx.conn().deref_mut())
+            .optional()?;
+
+        if let Some(coto) = deleted {
+            // Decrement the `number_of_posts` in the cotonoma
+            if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
+                cotonoma_ops::update_number_of_posts(posted_in_id, -1).run(ctx)?;
+            }
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     })
 }
 
