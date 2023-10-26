@@ -120,3 +120,15 @@ pub fn change_owner_node<'a>(
             .map_err(anyhow::Error::from)
     })
 }
+
+pub fn update_number_of_outgoing_links(
+    id: &Id<Coto>,
+    delta: i32,
+) -> impl Operation<WritableConn, i32> + '_ {
+    write_op(move |conn| {
+        let coto: Coto = diesel::update(cotos::table.find(id))
+            .set(cotos::outgoing_links.eq(cotos::outgoing_links + delta))
+            .get_result(conn.deref_mut())?;
+        Ok(coto.outgoing_links)
+    })
+}
