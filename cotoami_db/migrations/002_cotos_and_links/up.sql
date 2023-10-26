@@ -97,6 +97,10 @@ CREATE TABLE links (
   -- UUID of the node in which this link was created
   node_id TEXT NOT NULL,
 
+  -- UUID of the cotonoma in which this link was created,
+  -- or NULL if it does not belong to a cotonoma.
+  created_in_id TEXT,
+
   -- UUID of the node whose owner has created this link
   created_by_id TEXT NOT NULL,
 
@@ -108,6 +112,9 @@ CREATE TABLE links (
 
   -- Linkng phrase to express the relationship between the two cotos
   linking_phrase TEXT,
+
+  -- Content attached to this link
+  details TEXT,
 
   created_at DATETIME NOT NULL, -- UTC
   updated_at DATETIME NOT NULL, -- UTC

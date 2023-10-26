@@ -7,6 +7,7 @@ use validator::Validate;
 
 use super::{
     coto::Coto,
+    cotonoma::Cotonoma,
     node::{BelongsToNode, Node},
     Id,
 };
@@ -37,6 +38,10 @@ pub struct Link {
     /// UUID of the node in which this link was created
     pub node_id: Id<Node>,
 
+    /// UUID of the cotonoma in which this link was created,
+    /// or `None` if it does not belong to a cotonoma.
+    pub created_in_id: Option<Id<Cotonoma>>,
+
     /// UUID of the node whose owner has created this link
     pub created_by_id: Id<Node>,
 
@@ -49,6 +54,9 @@ pub struct Link {
     /// Linkng phrase to express the relationship between the two cotos
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     pub linking_phrase: Option<String>,
+
+    /// Content attached to this link
+    pub details: Option<String>,
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

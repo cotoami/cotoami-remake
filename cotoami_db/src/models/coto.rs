@@ -43,8 +43,7 @@ pub struct Coto {
     /// UUID of the node in which this coto was created
     pub node_id: Id<Node>,
 
-    /// UUID of the cotonoma in which this coto was posted
-    ///
+    /// UUID of the cotonoma in which this coto was posted or
     /// `None` if it is the root cotonoma.
     pub posted_in_id: Option<Id<Cotonoma>>,
 
