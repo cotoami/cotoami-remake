@@ -53,9 +53,17 @@ pub fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConn, L
 }
 
 pub fn delete(id: &Id<Link>) -> impl Operation<WritableConn, bool> + '_ {
-    write_op(move |conn| {
-        let affected = diesel::delete(links::table.find(id)).execute(conn.deref_mut())?;
-        Ok(affected > 0)
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let deleted: Option<Link> = diesel::delete(links::table.find(id))
+            .get_result(ctx.conn().deref_mut())
+            .optional()?;
+
+        if let Some(link) = deleted {
+            coto_ops::update_number_of_outgoing_links(&link.source_coto_id, -1).run(ctx)?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     })
 }
 
