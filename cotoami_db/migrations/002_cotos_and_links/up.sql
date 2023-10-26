@@ -99,6 +99,10 @@ CREATE TABLE links (
 
   -- UUID of the cotonoma in which this link was created,
   -- or NULL if it does not belong to a cotonoma.
+  --
+  -- This column is used to fetch links in a cotonoma outside of the graph 
+  -- traversable from the cotonoma's pinned cotos.
+  -- cf. https://github.com/cotoami/cotoami/blob/develop/lib/cotoami/services/coto_graph_service.ex#L55-L59
   created_in_id TEXT,
 
   -- UUID of the node whose owner has created this link

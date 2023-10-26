@@ -19,16 +19,7 @@ use crate::schema::links;
 
 /// A row in `links` table
 #[derive(
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    Identifiable,
-    AsChangeset,
-    Queryable,
-    Validate,
-    serde::Serialize,
-    serde::Deserialize,
+    Debug, Clone, PartialEq, Eq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(primary_key(uuid))]
 pub struct Link {
@@ -52,7 +43,6 @@ pub struct Link {
     pub target_coto_id: Id<Coto>,
 
     /// Linkng phrase to express the relationship between the two cotos
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     pub linking_phrase: Option<String>,
 
     /// Content attached to this link
@@ -64,6 +54,7 @@ pub struct Link {
 
 impl Link {
     pub const LINKING_PHRASE_MAX_LENGTH: usize = 200;
+    pub const DETAILS_MAX_LENGTH: usize = 1_000_000;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
@@ -73,6 +64,7 @@ impl Link {
         UpdateLink {
             uuid: &self.uuid,
             linking_phrase: self.linking_phrase.as_deref(),
+            details: self.details.as_deref(),
             updated_at: crate::current_datetime(),
         }
     }
@@ -81,10 +73,12 @@ impl Link {
         NewLink {
             uuid: self.uuid,
             node_id: &self.node_id,
+            created_in_id: self.created_in_id.as_ref(),
             created_by_id: &self.created_by_id,
             source_coto_id: &self.source_coto_id,
             target_coto_id: &self.target_coto_id,
             linking_phrase: self.linking_phrase.as_deref(),
+            details: self.details.as_deref(),
             created_at: self.created_at,
             updated_at: self.updated_at,
         }
@@ -105,11 +99,14 @@ impl BelongsToNode for Link {
 pub struct NewLink<'a> {
     uuid: Id<Link>,
     node_id: &'a Id<Node>,
+    created_in_id: Option<&'a Id<Cotonoma>>,
     created_by_id: &'a Id<Node>,
     source_coto_id: &'a Id<Coto>,
     target_coto_id: &'a Id<Coto>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     linking_phrase: Option<&'a str>,
+    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    details: Option<&'a str>,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
 }
@@ -117,19 +114,23 @@ pub struct NewLink<'a> {
 impl<'a> NewLink<'a> {
     pub fn new(
         node_id: &'a Id<Node>,
+        created_in_id: Option<&'a Id<Cotonoma>>,
         created_by_id: &'a Id<Node>,
         source_coto_id: &'a Id<Coto>,
         target_coto_id: &'a Id<Coto>,
         linking_phrase: Option<&'a str>,
+        details: Option<&'a str>,
     ) -> Result<Self> {
         let now = crate::current_datetime();
         let link = Self {
             uuid: Id::generate(),
             node_id,
+            created_in_id,
             created_by_id,
             source_coto_id,
             target_coto_id,
             linking_phrase,
+            details,
             created_at: now,
             updated_at: now,
         };
@@ -148,5 +149,7 @@ pub struct UpdateLink<'a> {
     uuid: &'a Id<Link>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
     pub linking_phrase: Option<&'a str>,
+    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    pub details: Option<&'a str>,
     pub updated_at: NaiveDateTime,
 }
