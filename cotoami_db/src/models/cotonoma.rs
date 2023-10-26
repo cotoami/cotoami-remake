@@ -50,9 +50,6 @@ pub struct Cotonoma {
 
     /// The number of posts in this cotonoma
     pub number_of_posts: i64,
-
-    /// The number of links in this cotonoma
-    pub number_of_links: i64,
 }
 
 impl Cotonoma {

@@ -106,7 +106,6 @@ diesel::table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         number_of_posts -> BigInt,
-        number_of_links -> BigInt,
     }
 }
 diesel::joinable!(cotonomas -> nodes (node_id));

@@ -170,15 +170,3 @@ pub fn update_number_of_posts(
         Ok(cotonoma.number_of_posts)
     })
 }
-
-pub fn update_number_of_links(
-    id: &Id<Cotonoma>,
-    delta: i64,
-) -> impl Operation<WritableConn, i64> + '_ {
-    write_op(move |conn| {
-        let cotonoma: Cotonoma = diesel::update(cotonomas::table.find(id))
-            .set(cotonomas::number_of_links.eq(cotonomas::number_of_links + delta))
-            .get_result(conn.deref_mut())?;
-        Ok(cotonoma.number_of_links)
-    })
-}
