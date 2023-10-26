@@ -30,7 +30,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<C
 pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
-    get(id).map(|c| c.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {

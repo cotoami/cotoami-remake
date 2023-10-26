@@ -32,7 +32,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<N
 pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<Node, DatabaseError>> + '_ {
-    get(id).map(|c| c.ok_or(DatabaseError::not_found(EntityKind::Node, *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Node, *id)))
 }
 
 pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {

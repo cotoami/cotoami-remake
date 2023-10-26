@@ -60,7 +60,18 @@ impl Link {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub fn to_update(&self) -> UpdateLink {
+    pub fn edit<'a>(
+        &'a self,
+        linking_phrase: Option<&'a str>,
+        details: Option<&'a str>,
+    ) -> UpdateLink<'a> {
+        let mut update_link = self.to_update();
+        update_link.linking_phrase = linking_phrase;
+        update_link.details = details;
+        update_link
+    }
+
+    pub fn to_update(&self) -> UpdateLink<'_> {
         UpdateLink {
             uuid: &self.uuid,
             linking_phrase: self.linking_phrase.as_deref(),

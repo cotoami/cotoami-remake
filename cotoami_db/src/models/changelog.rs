@@ -119,6 +119,7 @@ pub enum Change {
     EditLink {
         uuid: Id<Link>,
         linking_phrase: Option<String>,
+        details: Option<String>,
         updated_at: NaiveDateTime,
     } = 12,
     DeleteLink(Id<Link>) = 13,

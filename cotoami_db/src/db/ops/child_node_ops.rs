@@ -55,7 +55,7 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<C
 pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ChildNode, DatabaseError>> + '_ {
-    get(id).map(|n| n.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
 }
 
 pub fn get_pair<Conn: AsReadableConn>(
