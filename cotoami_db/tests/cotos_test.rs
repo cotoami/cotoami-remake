@@ -65,9 +65,9 @@ fn crud_operations() -> Result<()> {
              change_coto == Coto { rowid: 0, ..coto }
     );
 
-    // check if the `number_of_posts` in the cotonoma has been incremented
+    // check if the number of posts in the cotonoma has been incremented
     let (cotonoma, _) = session.cotonoma_or_err(&root_cotonoma.uuid)?;
-    assert_eq!(cotonoma.number_of_posts, 1);
+    assert_eq!(cotonoma.posts, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: edit_coto
@@ -150,9 +150,9 @@ fn crud_operations() -> Result<()> {
              change_coto_id == coto.uuid
     );
 
-    // check if the `number_of_posts` in the cotonoma has been decremented
+    // check if the number of posts in the cotonoma has been decremented
     let (cotonoma, _) = session.cotonoma_or_err(&root_cotonoma.uuid)?;
-    assert_eq!(cotonoma.number_of_posts, 0);
+    assert_eq!(cotonoma.posts, 0);
 
     Ok(())
 }

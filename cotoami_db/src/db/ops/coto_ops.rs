@@ -68,7 +68,7 @@ pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Cot
             .values(new_coto)
             .get_result(ctx.conn().deref_mut())?;
 
-        // Increment the `number_of_posts` in the cotonoma
+        // Increment the number of posts in the cotonoma
         if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
             cotonoma_ops::update_number_of_posts(posted_in_id, 1).run(ctx)?;
         }
@@ -97,7 +97,7 @@ pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
             .optional()?;
 
         if let Some(coto) = deleted {
-            // Decrement the `number_of_posts` in the cotonoma
+            // Decrement the number of posts in the cotonoma
             if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
                 cotonoma_ops::update_number_of_posts(posted_in_id, -1).run(ctx)?;
             }
