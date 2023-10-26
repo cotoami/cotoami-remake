@@ -5,6 +5,7 @@ use std::ops::DerefMut;
 use diesel::prelude::*;
 use validator::Validate;
 
+use super::coto_ops;
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -32,11 +33,12 @@ pub fn get_or_err<Conn: AsReadableConn>(
 }
 
 pub fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
-    write_op(move |conn| {
-        diesel::insert_into(links::table)
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let link: Link = diesel::insert_into(links::table)
             .values(new_link)
-            .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)
+            .get_result(ctx.conn().deref_mut())?;
+        coto_ops::update_number_of_outgoing_links(&link.source_coto_id, 1).run(ctx)?;
+        Ok(link)
     })
 }
 
