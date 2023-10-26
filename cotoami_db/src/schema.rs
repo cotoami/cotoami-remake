@@ -89,6 +89,7 @@ diesel::table! {
         reposted_in_ids -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        outgoing_links -> Integer,
     }
 }
 diesel::joinable!(cotos -> nodes (node_id));
