@@ -27,6 +27,7 @@ use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, NewCoto},
     cotonoma::Cotonoma,
+    link::Link,
     node::{
         child::{ChildNode, NewChildNode},
         local::LocalNode,
@@ -744,6 +745,14 @@ impl<'a> DatabaseSession<'a> {
         page_index: i64,
     ) -> Result<Paginated<Cotonoma>> {
         self.read_transaction(cotonoma_ops::recent(node_id, page_size, page_index))
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // links
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn link(&mut self, link_id: &Id<Link>) -> Result<Option<Link>> {
+        self.read_transaction(link_ops::get(link_id))
     }
 
     /////////////////////////////////////////////////////////////////////////////
