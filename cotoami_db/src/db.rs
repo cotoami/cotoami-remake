@@ -27,7 +27,7 @@ use crate::models::{
     changelog::{Change, ChangelogEntry},
     coto::{Coto, NewCoto},
     cotonoma::Cotonoma,
-    link::Link,
+    link::{Link, NewLink},
     node::{
         child::{ChildNode, NewChildNode},
         local::LocalNode,
@@ -768,6 +768,40 @@ impl<'a> DatabaseSession<'a> {
             page_size,
             page_index,
         ))
+    }
+
+    pub fn create_link(
+        &mut self,
+        source_coto_id: &Id<Coto>,
+        target_coto_id: &Id<Coto>,
+        linking_phrase: Option<&str>,
+        details: Option<&str>,
+        created_in: Option<&Cotonoma>,
+        operator: &Operator,
+    ) -> Result<(Link, ChangelogEntry)> {
+        operator.can_edit_links()?;
+
+        if let Some(cotonoma) = created_in {
+            self.ensure_local(cotonoma)?;
+        }
+
+        let local_node_id = self.local_node_id()?;
+        let created_by_id = operator.node_id();
+        let new_link = NewLink::new(
+            &local_node_id,
+            created_in.map(|c| &c.uuid),
+            &created_by_id,
+            source_coto_id,
+            target_coto_id,
+            linking_phrase,
+            details,
+        )?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let inserted_link = link_ops::insert(&new_link).run(ctx)?;
+            let change = Change::CreateLink(inserted_link.clone());
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((inserted_link, changelog))
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
