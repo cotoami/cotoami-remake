@@ -755,6 +755,21 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(link_ops::get(link_id))
     }
 
+    pub fn recent_links(
+        &mut self,
+        node_id: Option<&Id<Node>>,
+        created_in_id: Option<&Id<Cotonoma>>,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Link>> {
+        self.read_transaction(link_ops::recent(
+            node_id,
+            created_in_id,
+            page_size,
+            page_index,
+        ))
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // internals
     /////////////////////////////////////////////////////////////////////////////

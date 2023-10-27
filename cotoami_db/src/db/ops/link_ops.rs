@@ -5,10 +5,11 @@ use std::ops::DerefMut;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::coto_ops;
+use super::{coto_ops, Paginated};
 use crate::{
     db::{error::*, op::*},
     models::{
+        cotonoma::Cotonoma,
         link::{Link, NewLink, UpdateLink},
         node::Node,
         Id,
@@ -30,6 +31,26 @@ pub fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Link>,
 ) -> impl Operation<Conn, Result<Link, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Link, *id)))
+}
+
+pub fn recent<'a, Conn: AsReadableConn>(
+    node_id: Option<&'a Id<Node>>,
+    created_in_id: Option<&'a Id<Cotonoma>>,
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<Link>> + 'a {
+    read_op(move |conn| {
+        super::paginate(conn, page_size, page_index, || {
+            let mut query = links::table.into_boxed();
+            if let Some(id) = node_id {
+                query = query.filter(links::node_id.eq(id));
+            }
+            if let Some(id) = created_in_id {
+                query = query.filter(links::created_in_id.eq(id));
+            }
+            query.order(links::created_at.desc())
+        })
+    })
 }
 
 pub fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
