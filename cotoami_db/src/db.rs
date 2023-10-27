@@ -828,6 +828,22 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn delete_link(&self, id: &Id<Link>, operator: &Operator) -> Result<ChangelogEntry> {
+        operator.can_edit_links()?;
+        let local_node_id = self.local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let link = link_ops::get_or_err(id).run(ctx)??;
+            self.ensure_local(&link)?;
+            if link_ops::delete(id).run(ctx)? {
+                let change = Change::DeleteLink(*id);
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+                Ok(changelog)
+            } else {
+                Err(DatabaseError::not_found(EntityKind::Link, *id))?
+            }
+        })
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // internals
     /////////////////////////////////////////////////////////////////////////////
