@@ -53,4 +53,20 @@ impl Operator {
             Err(DatabaseError::PermissionDenied)
         }
     }
+
+    pub fn can_edit_links(&self) -> Result<(), DatabaseError> {
+        if self.has_owner_permission() {
+            return Ok(());
+        }
+
+        if let Operator::ChildNode(ChildNode {
+            can_edit_links: true,
+            ..
+        }) = self
+        {
+            return Ok(());
+        }
+
+        Err(DatabaseError::PermissionDenied)
+    }
 }
