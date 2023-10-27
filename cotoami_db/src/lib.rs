@@ -61,3 +61,24 @@ where
             .map_err(|e| serde::de::Error::custom(format!("Invalid base64 string: {}, {}", s, e)))
     })
 }
+
+fn blank_to_none(x: Option<&str>) -> Option<&str> {
+    x.and_then(|x| if x.trim().is_empty() { None } else { Some(x) })
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+
+    use super::*;
+
+    #[test]
+    fn test_blank_to_none() -> Result<()> {
+        assert_eq!(blank_to_none(Some("hello")), Some("hello"));
+        assert_eq!(blank_to_none(Some(" hello ")), Some(" hello "));
+        assert_eq!(blank_to_none(Some("")), None);
+        assert_eq!(blank_to_none(Some("   ")), None);
+        assert_eq!(blank_to_none(None), None);
+        Ok(())
+    }
+}

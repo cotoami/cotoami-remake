@@ -100,7 +100,7 @@ impl Coto {
     pub fn edit<'a>(&'a self, content: &'a str, summary: Option<&'a str>) -> UpdateCoto<'a> {
         let mut update_coto = self.to_update();
         update_coto.content = Some(content);
-        update_coto.summary = summary;
+        update_coto.summary = crate::blank_to_none(summary);
         update_coto
     }
 

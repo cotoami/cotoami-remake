@@ -66,8 +66,8 @@ impl Link {
         details: Option<&'a str>,
     ) -> UpdateLink<'a> {
         let mut update_link = self.to_update();
-        update_link.linking_phrase = linking_phrase;
-        update_link.details = details;
+        update_link.linking_phrase = crate::blank_to_none(linking_phrase);
+        update_link.details = crate::blank_to_none(details);
         update_link
     }
 
