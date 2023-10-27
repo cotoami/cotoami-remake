@@ -14,6 +14,7 @@ use validator::Validate;
 use crate::{error::ApiError, AppState};
 
 pub(crate) mod changes;
+mod cotonomas;
 mod cotos;
 mod events;
 mod nodes;
@@ -27,6 +28,7 @@ pub(super) fn routes() -> Router<AppState> {
         .nest("/changes", changes::routes())
         .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
+        .nest("/cotonomas", cotonomas::routes())
 }
 
 async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
