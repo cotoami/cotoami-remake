@@ -804,6 +804,30 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn edit_link(
+        &mut self,
+        id: &Id<Link>,
+        linking_phrase: Option<&str>,
+        details: Option<&str>,
+        operator: &Operator,
+    ) -> Result<(Link, ChangelogEntry)> {
+        operator.can_edit_links()?;
+        let local_node_id = self.local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let link = link_ops::get_or_err(id).run(ctx)??;
+            self.ensure_local(&link)?;
+            let link = link_ops::update(&link.edit(linking_phrase, details)).run(ctx)?;
+            let change = Change::EditLink {
+                uuid: *id,
+                linking_phrase: linking_phrase.map(String::from),
+                details: details.map(String::from),
+                updated_at: link.updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((link, changelog))
+        })
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // internals
     /////////////////////////////////////////////////////////////////////////////
