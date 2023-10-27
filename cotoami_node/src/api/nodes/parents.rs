@@ -176,15 +176,15 @@ async fn add_parent_node(
     .await??;
     info!("Parent node [{}] registered.", parent_node.name);
 
-    // Import the changelog
+    // Import changes from the parent
     server
         .import_changes(&state.db, &state.pubsub, parent_node.uuid)
         .await?;
 
     // Create a link to the parent root cotonoma or become a replica of the parent
-    if form.replicate.unwrap_or(false) {
-        if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
-            let (db, pubsub) = (state.db.clone(), state.pubsub.clone());
+    if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
+        let (db, pubsub) = (state.db.clone(), state.pubsub.clone());
+        if form.replicate.unwrap_or(false) {
             let parent_node_name = parent_node.name.clone();
             let _ = spawn_blocking(move || {
                 let db = db.new_session()?;
@@ -194,9 +194,32 @@ async fn add_parent_node(
                 Ok::<_, ApiError>(local_node)
             })
             .await??;
+        } else {
+            let _ = spawn_blocking(move || {
+                let mut db = db.new_session()?;
+                if let Some((_, local_root)) = db.root_cotonoma()? {
+                    let (_, parent_root) = db.cotonoma_or_err(&parent_cotonoma_id)?;
+                    let (link, change) = db.create_link(
+                        &local_root.uuid,
+                        &parent_root.uuid,
+                        None,
+                        None,
+                        None,
+                        &operator,
+                    )?;
+                    pubsub.lock().publish_change(change)?;
+                    info!(
+                        "A link to a parent root cotonoma [{}] has been created: {}",
+                        parent_root
+                            .name_as_cotonoma()
+                            .unwrap_or_else(|| unreachable!()),
+                        link.uuid
+                    );
+                }
+                Ok::<_, ApiError>(())
+            })
+            .await??;
         }
-    } else {
-        // TODO: create a link
     }
 
     // Create an event stream
