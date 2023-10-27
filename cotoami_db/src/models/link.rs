@@ -155,7 +155,7 @@ impl<'a> NewLink<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = links, primary_key(uuid))]
+#[diesel(table_name = links, primary_key(uuid), treat_none_as_null = true)]
 pub struct UpdateLink<'a> {
     uuid: &'a Id<Link>,
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]

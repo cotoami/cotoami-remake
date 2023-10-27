@@ -236,7 +236,7 @@ impl<'a> NewCoto<'a> {
 
 /// A changeset of a coto for update
 #[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = cotos, primary_key(uuid))]
+#[diesel(table_name = cotos, primary_key(uuid), treat_none_as_null = true)]
 pub struct UpdateCoto<'a> {
     uuid: &'a Id<Coto>,
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
