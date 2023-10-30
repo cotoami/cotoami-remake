@@ -15,10 +15,13 @@ use crate::{
     AppState,
 };
 
+mod cotos;
+
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
+        .nest("/:cotonoma_id/cotos", cotos::routes())
         .layer(middleware::from_fn(super::require_session))
 }
 
