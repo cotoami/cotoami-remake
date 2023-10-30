@@ -7,12 +7,13 @@ use axum::{
     Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
+use serde_json::json;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
     api::{require_session, Pagination},
-    error::{ApiError, IntoApiResult},
+    error::{ApiError, IntoApiResult, RequestError},
     AppState, ChangePub,
 };
 
@@ -25,7 +26,7 @@ pub(super) fn routes() -> Router<AppState> {
 const DEFAULT_PAGE_SIZE: i64 = 30;
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/api/cotonomas/:cotonoma_id/cotos
+// GET /api/cotonomas/:cotonoma_id/cotos
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotos(
@@ -50,7 +51,7 @@ async fn recent_cotos(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// POST /api/api/cotonomas/:cotonoma_id/cotos
+// POST /api/cotonomas/:cotonoma_id/cotos
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
@@ -71,31 +72,27 @@ async fn post_coto(
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
-
-    let local_post = spawn_blocking(move || {
+    spawn_blocking(move || {
         let mut db = state.db.new_session()?;
 
+        // Check if the cotonoma belongs to this node
         let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
-
-        if db.is_local(&cotonoma) {
-            let (coto, change) = db.post_coto(
-                &form.content.unwrap_or_else(|| unreachable!()),
-                form.summary.as_deref(),
-                &cotonoma,
-                &operator,
-            )?;
-            state.pubsub.lock().publish_change(change)?;
-            Ok::<_, ApiError>(Some(coto))
-        } else {
-            Ok::<_, ApiError>(None)
+        if !db.is_local(&cotonoma) {
+            return RequestError::new("not-for-this-node")
+                .with_param("cotonoma_name", json!(cotonoma.name))
+                .into_result();
         }
-    })
-    .await??;
 
-    if let Some(coto) = local_post {
+        // Post a coto
+        let (coto, change) = db.post_coto(
+            &form.content.unwrap_or_else(|| unreachable!()),
+            form.summary.as_deref(),
+            &cotonoma,
+            &operator,
+        )?;
+        state.pubsub.lock().publish_change(change)?;
+
         Ok((StatusCode::CREATED, Json(coto)))
-    } else {
-        // send a request to one of the parents
-        unimplemented!();
-    }
+    })
+    .await?
 }
