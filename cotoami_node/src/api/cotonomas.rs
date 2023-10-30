@@ -1,6 +1,6 @@
 use anyhow::Result;
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     middleware,
     routing::get,
     Json, Router,
@@ -18,6 +18,7 @@ use crate::{
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(recent_cotonomas))
+        .route("/:cotonoma_id", get(get_cotonoma))
         .layer(middleware::from_fn(super::require_session))
 }
 
@@ -42,6 +43,28 @@ async fn recent_cotonomas(
             pagination.page,
         )?;
         Ok(Json(cotonomas))
+    })
+    .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/cotonomas/:cotonoma_id
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Serialize)]
+struct CotonomaDetails {
+    cotonoma: Cotonoma,
+    coto: Coto,
+}
+
+async fn get_cotonoma(
+    State(state): State<AppState>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+) -> Result<Json<CotonomaDetails>, ApiError> {
+    spawn_blocking(move || {
+        let mut db = state.db.new_session()?;
+        let (cotonoma, coto) = db.cotonoma_or_err(&cotonoma_id)?;
+        Ok(Json(CotonomaDetails { cotonoma, coto }))
     })
     .await?
 }
