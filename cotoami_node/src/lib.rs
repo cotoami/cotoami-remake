@@ -275,7 +275,7 @@ impl Config {
 // Pubsub
 /////////////////////////////////////////////////////////////////////////////
 
-type Pubsub = Publisher<Result<Event, Infallible>>;
+type Pubsub = Publisher<Result<Event, Infallible>, String>;
 
 trait ChangePub {
     fn publish_change(&mut self, changelog: ChangelogEntry) -> Result<()>;
@@ -283,8 +283,9 @@ trait ChangePub {
 
 impl ChangePub for Pubsub {
     fn publish_change(&mut self, changelog: ChangelogEntry) -> Result<()> {
-        let event = Event::default().event("change").json_data(changelog)?;
-        self.publish(&Ok(event));
+        let event_type = "change".to_string();
+        let event = Event::default().event(&event_type).json_data(changelog)?;
+        self.publish(&Ok(event), Some(&event_type));
         Ok(())
     }
 }

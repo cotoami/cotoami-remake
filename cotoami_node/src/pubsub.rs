@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, VecDeque},
+    hash::Hash,
     pin::Pin,
     sync::{Arc, Weak},
 };
@@ -11,15 +12,16 @@ use futures::{
 use parking_lot::Mutex;
 use smallvec::SmallVec;
 
-pub struct Publisher<Message> {
-    state: Arc<Mutex<PublisherState<Message>>>,
+pub struct Publisher<Message, Topic> {
+    state: Arc<Mutex<PublisherState<Message, Topic>>>,
 }
 
-impl<Message: Clone> Publisher<Message> {
+impl<Message: Clone, Topic: Eq + Hash> Publisher<Message, Topic> {
     pub fn new() -> Self {
         let state = PublisherState {
             next_subscriber_id: 0,
             subscribers: HashMap::new(),
+            topics: HashMap::new(),
         };
         Publisher {
             state: Arc::new(Mutex::new(state)),
@@ -29,7 +31,7 @@ impl<Message: Clone> Publisher<Message> {
     #[allow(dead_code)] // used only in tests
     pub fn count_subscribers(&self) -> usize { self.state.lock().subscribers.len() }
 
-    pub fn subscribe(&mut self) -> Subscriber<Message> {
+    pub fn subscribe(&mut self, topic: Option<impl Into<Topic>>) -> Subscriber<Message, Topic> {
         let sub_id = {
             let mut state = self.state.lock();
             let id = state.next_subscriber_id;
@@ -48,6 +50,13 @@ impl<Message: Clone> Publisher<Message> {
         {
             let mut state = self.state.lock();
             state.subscribers.insert(sub_id, Arc::clone(&sub_state));
+            if let Some(topic) = topic {
+                state
+                    .topics
+                    .entry(topic.into())
+                    .or_insert_with(|| vec![])
+                    .push(sub_id);
+            }
         }
 
         Subscriber {
@@ -56,12 +65,25 @@ impl<Message: Clone> Publisher<Message> {
         }
     }
 
-    pub fn publish(&mut self, message: &Message) {
+    pub fn publish(&mut self, message: &Message, topic: Option<&Topic>) {
         let state = self.state.lock();
-        let wakers = state
-            .subscribers
+
+        let subscribers = if let Some(topic) = topic {
+            state
+                .topics
+                .get(topic)
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|id| state.subscribers.get(id))
+                .flatten()
+                .collect::<Vec<_>>()
+        } else {
+            state.subscribers.values().collect::<Vec<_>>()
+        };
+
+        let wakers = subscribers
             .iter()
-            .flat_map(|(_id, subscriber)| {
+            .flat_map(|subscriber| {
                 let mut subscriber = subscriber.lock();
                 subscriber.send_message(message.clone())
             })
@@ -70,7 +92,7 @@ impl<Message: Clone> Publisher<Message> {
     }
 }
 
-impl<Message> Drop for Publisher<Message> {
+impl<Message, Topic> Drop for Publisher<Message, Topic> {
     fn drop(&mut self) {
         let state = self.state.lock();
         for subscriber in state.subscribers.values() {
@@ -80,28 +102,38 @@ impl<Message> Drop for Publisher<Message> {
     }
 }
 
-pub struct PublisherState<Message> {
+pub struct PublisherState<Message, Topic> {
     pub next_subscriber_id: usize,
     pub subscribers: HashMap<usize, Arc<Mutex<SubscriberState<Message>>>>,
+    pub topics: HashMap<Topic, Vec<usize>>,
 }
 
-pub struct Subscriber<Message> {
+impl<Message, Topic> PublisherState<Message, Topic> {
+    fn unsubscribe(&mut self, subscriber_id: &usize) {
+        self.subscribers.remove(subscriber_id);
+        for sub_ids in self.topics.values_mut() {
+            sub_ids.retain(|id| id != subscriber_id);
+        }
+    }
+}
+
+pub struct Subscriber<Message, Topic> {
     state: Arc<Mutex<SubscriberState<Message>>>,
-    publisher_state: Weak<Mutex<PublisherState<Message>>>,
+    publisher_state: Weak<Mutex<PublisherState<Message, Topic>>>,
 }
 
-impl<Message> Drop for Subscriber<Message> {
+impl<Message, Topic> Drop for Subscriber<Message, Topic> {
     fn drop(&mut self) {
         // unsubscribe this subscriber
         if let Some(pub_state) = self.publisher_state.upgrade() {
             let mut pub_state = pub_state.lock();
             let sub_state = self.state.lock();
-            pub_state.subscribers.remove(&sub_state.id);
+            pub_state.unsubscribe(&sub_state.id);
         }
     }
 }
 
-impl<Message> Stream for Subscriber<Message> {
+impl<Message, Topic> Stream for Subscriber<Message, Topic> {
     type Item = Message;
 
     fn poll_next(self: Pin<&mut Self>, context: &mut Context) -> Poll<Option<Message>> {
@@ -141,36 +173,40 @@ mod tests {
 
     #[tokio::test]
     async fn pubsub() {
-        let mut publisher = Publisher::<String>::new();
+        let mut publisher = Publisher::<String, String>::new();
 
-        let mut sub1 = publisher.subscribe();
-        let mut sub2 = publisher.subscribe();
+        let mut sub1 = publisher.subscribe(None::<String>);
+        let mut sub2 = publisher.subscribe(Some("animal"));
+        let mut sub3 = publisher.subscribe(Some("plant"));
 
-        publisher.publish(&"hello".into());
-        publisher.publish(&"world".into());
+        publisher.publish(&"hello".into(), None);
+        publisher.publish(&"cat".into(), Some(&"animal".into()));
+        publisher.publish(&"clover".into(), Some(&"plant".into()));
 
         assert_eq!(sub1.next().await, Some("hello".into()));
-        assert_eq!(sub1.next().await, Some("world".into()));
 
         assert_eq!(sub2.next().await, Some("hello".into()));
-        assert_eq!(sub2.next().await, Some("world".into()));
+        assert_eq!(sub2.next().await, Some("cat".into()));
+
+        assert_eq!(sub3.next().await, Some("hello".into()));
+        assert_eq!(sub3.next().await, Some("clover".into()));
     }
 
     #[tokio::test]
     async fn publisher_dropped() {
         let mut sub = {
-            let mut publisher = Publisher::<String>::new();
-            publisher.subscribe()
+            let mut publisher = Publisher::<String, String>::new();
+            publisher.subscribe(None::<String>)
         };
         assert_eq!(sub.next().await, None);
     }
 
     #[tokio::test]
     async fn subscriber_dropped() {
-        let mut publisher = Publisher::<String>::new();
-        let _sub1 = publisher.subscribe();
+        let mut publisher = Publisher::<String, String>::new();
+        let _sub1 = publisher.subscribe(None::<String>);
         {
-            let _sub2 = publisher.subscribe();
+            let _sub2 = publisher.subscribe(None::<String>);
             assert_eq!(publisher.count_subscribers(), 2);
         }
         assert_eq!(publisher.count_subscribers(), 1);

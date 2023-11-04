@@ -24,6 +24,7 @@ pub(super) fn routes() -> Router<AppState> {
 async fn stream_events(
     State(state): State<AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let sub = state.pubsub.lock().subscribe();
+    // FIXME: subscribe to changes or requests
+    let sub = state.pubsub.lock().subscribe(Some("change"));
     Sse::new(sub).keep_alive(KeepAlive::default())
 }
