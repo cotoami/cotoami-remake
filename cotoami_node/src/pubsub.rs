@@ -1,22 +1,30 @@
 use std::{
     collections::{HashMap, VecDeque},
     hash::Hash,
+    marker::Unpin,
     pin::Pin,
     sync::{Arc, Weak},
 };
 
+use anyhow::Result;
 use futures::{
     task::{Context, Poll, Waker},
-    Stream,
+    Stream, StreamExt,
 };
 use parking_lot::Mutex;
 use smallvec::SmallVec;
+use tracing::error;
 
+#[derive(Clone)]
 pub struct Publisher<Message, Topic> {
     state: Arc<Mutex<PublisherState<Message, Topic>>>,
 }
 
-impl<Message: Clone, Topic: Eq + Hash> Publisher<Message, Topic> {
+impl<Message, Topic> Publisher<Message, Topic>
+where
+    Message: Clone + Send + 'static,
+    Topic: Clone + Eq + Hash + Send + 'static,
+{
     pub fn new() -> Self {
         let state = PublisherState {
             next_subscriber_id: 0,
@@ -100,15 +108,22 @@ impl<Message: Clone, Topic: Eq + Hash> Publisher<Message, Topic> {
             .collect::<Vec<_>>();
         wakers.into_iter().for_each(|waker| waker.wake());
     }
-}
 
-impl<Message, Topic> Drop for Publisher<Message, Topic> {
-    fn drop(&mut self) {
-        let state = self.state.lock();
-        for subscriber in state.subscribers.values() {
-            let mut subscriber = subscriber.lock();
-            subscriber.enabled = false; // the end of the stream
-        }
+    pub fn tap_into<T, S, F>(&self, mut stream: S, topic: Option<Topic>, map: F)
+    where
+        T: Send,
+        S: Stream<Item = T> + Send + Unpin + 'static,
+        F: Fn(&T) -> Result<Message> + Send + 'static,
+    {
+        let mut publisher = self.clone();
+        tokio::spawn(async move {
+            while let Some(item) = stream.next().await {
+                match map(&item) {
+                    Ok(message) => publisher.publish(&message, topic.as_ref()),
+                    Err(e) => error!("Message mapping error: {}", e),
+                }
+            }
+        });
     }
 }
 
@@ -123,6 +138,15 @@ impl<Message, Topic> PublisherState<Message, Topic> {
         self.subscribers.remove(subscriber_id);
         for sub_ids in self.topics.values_mut() {
             sub_ids.retain(|id| id != subscriber_id);
+        }
+    }
+}
+
+impl<Message, Topic> Drop for PublisherState<Message, Topic> {
+    fn drop(&mut self) {
+        for subscriber in self.subscribers.values() {
+            let mut subscriber = subscriber.lock();
+            subscriber.enabled = false; // the end of the stream
         }
     }
 }
@@ -222,6 +246,19 @@ mod tests {
 
         assert_eq!(sub.next().await, Some("cat".into()));
         assert_eq!(sub.next().await, None);
+    }
+
+    #[tokio::test]
+    async fn tap_into_stream() {
+        let mut publisher = Publisher::<usize, ()>::new();
+        let mut sub = publisher.subscribe(None::<()>);
+
+        let stream = futures::stream::iter(1..=3);
+        publisher.tap_into(stream, None, |item| Ok(item * item));
+
+        assert_eq!(sub.next().await, Some(1));
+        assert_eq!(sub.next().await, Some(4));
+        assert_eq!(sub.next().await, Some(9));
     }
 
     #[tokio::test]

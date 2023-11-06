@@ -272,15 +272,23 @@ impl Config {
 /////////////////////////////////////////////////////////////////////////////
 
 struct Pubsub {
-    pub sse: Mutex<SsePubsub>,
     pub local_change: Mutex<LocalChangePubsub>,
+    pub sse: Mutex<SsePubsub>,
 }
 
 impl Pubsub {
     fn new() -> Self {
+        let mut local_change = LocalChangePubsub::new();
+        let sse = SsePubsub::new();
+
+        sse.tap_into(local_change.subscribe(None::<()>), None, |change| {
+            let event = Event::default().event("change").json_data(change)?;
+            Ok(Ok(event))
+        });
+
         Self {
-            sse: Mutex::new(SsePubsub::new()),
-            local_change: Mutex::new(LocalChangePubsub::new()),
+            local_change: Mutex::new(local_change),
+            sse: Mutex::new(sse),
         }
     }
 
@@ -289,8 +297,8 @@ impl Pubsub {
     }
 }
 
-type SsePubsub = Publisher<Result<Event, Infallible>, String>;
 type LocalChangePubsub = Publisher<ChangelogEntry, ()>;
+type SsePubsub = Publisher<Result<Event, Infallible>, String>;
 
 /////////////////////////////////////////////////////////////////////////////
 // ParentConn
