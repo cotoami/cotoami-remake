@@ -281,10 +281,14 @@ impl Pubsub {
         let mut local_change = LocalChangePubsub::new();
         let sse = SsePubsub::new();
 
-        sse.tap_into(local_change.subscribe(None::<()>), None, |change| {
-            let event = Event::default().event("change").json_data(change)?;
-            Ok(Ok(event))
-        });
+        sse.tap_into(
+            local_change.subscribe(None::<()>),
+            Some(SsePubsubTopic::Change),
+            |change| {
+                let event = Event::default().event("change").json_data(change)?;
+                Ok(Ok(event))
+            },
+        );
 
         Self {
             local_change: Mutex::new(local_change),
@@ -298,7 +302,12 @@ impl Pubsub {
 }
 
 type LocalChangePubsub = Publisher<ChangelogEntry, ()>;
-type SsePubsub = Publisher<Result<Event, Infallible>, String>;
+type SsePubsub = Publisher<Result<Event, Infallible>, SsePubsubTopic>;
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum SsePubsubTopic {
+    Change,
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // ParentConn
