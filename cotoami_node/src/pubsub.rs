@@ -43,6 +43,7 @@ impl<Message: Clone, Topic: Eq + Hash> Publisher<Message, Topic> {
             id: sub_id,
             message_queue: VecDeque::new(),
             on_message_received: vec![],
+            onetime: false,
             enabled: true,
         };
         let sub_state = Arc::new(Mutex::new(sub_state));
@@ -63,6 +64,15 @@ impl<Message: Clone, Topic: Eq + Hash> Publisher<Message, Topic> {
             state: sub_state,
             publisher_state: Arc::downgrade(&self.state),
         }
+    }
+
+    pub fn subscribe_onetime(
+        &mut self,
+        topic: Option<impl Into<Topic>>,
+    ) -> Subscriber<Message, Topic> {
+        let sub = self.subscribe(topic);
+        sub.state.lock().onetime = true;
+        sub
     }
 
     pub fn publish(&mut self, message: &Message, topic: Option<&Topic>) {
@@ -122,15 +132,20 @@ pub struct Subscriber<Message, Topic> {
     publisher_state: Weak<Mutex<PublisherState<Message, Topic>>>,
 }
 
-impl<Message, Topic> Drop for Subscriber<Message, Topic> {
-    fn drop(&mut self) {
-        // unsubscribe this subscriber
+impl<Message, Topic> Subscriber<Message, Topic> {
+    fn unsubscribe(&self) {
+        let mut sub_state = self.state.lock();
+        sub_state.enabled = false;
+
         if let Some(pub_state) = self.publisher_state.upgrade() {
             let mut pub_state = pub_state.lock();
-            let sub_state = self.state.lock();
             pub_state.unsubscribe(&sub_state.id);
         }
     }
+}
+
+impl<Message, Topic> Drop for Subscriber<Message, Topic> {
+    fn drop(&mut self) { self.unsubscribe(); }
 }
 
 impl<Message, Topic> Stream for Subscriber<Message, Topic> {
@@ -138,10 +153,14 @@ impl<Message, Topic> Stream for Subscriber<Message, Topic> {
 
     fn poll_next(self: Pin<&mut Self>, context: &mut Context) -> Poll<Option<Message>> {
         let mut state = self.state.lock();
-        if let Some(next_message) = state.message_queue.pop_front() {
-            Poll::Ready(Some(next_message))
-        } else if !state.enabled {
+        if !state.enabled {
             Poll::Ready(None)
+        } else if let Some(next_message) = state.message_queue.pop_front() {
+            if state.onetime {
+                drop(state);
+                self.unsubscribe();
+            }
+            Poll::Ready(Some(next_message))
         } else {
             state.on_message_received.push(context.waker().clone());
             Poll::Pending
@@ -153,6 +172,7 @@ pub struct SubscriberState<Message> {
     pub id: usize,
     pub message_queue: VecDeque<Message>,
     pub on_message_received: Vec<Waker>,
+    pub onetime: bool,
     pub enabled: bool,
 }
 
@@ -190,6 +210,18 @@ mod tests {
 
         assert_eq!(sub3.next().await, Some("hello".into()));
         assert_eq!(sub3.next().await, Some("clover".into()));
+    }
+
+    #[tokio::test]
+    async fn onetime_subscriber() {
+        let mut publisher = Publisher::<String, String>::new();
+        let mut sub = publisher.subscribe_onetime(Some("animal"));
+
+        publisher.publish(&"cat".into(), Some(&"animal".into()));
+        publisher.publish(&"dog".into(), Some(&"animal".into()));
+
+        assert_eq!(sub.next().await, Some("cat".into()));
+        assert_eq!(sub.next().await, None);
     }
 
     #[tokio::test]
