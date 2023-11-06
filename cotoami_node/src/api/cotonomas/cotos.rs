@@ -14,7 +14,7 @@ use validator::Validate;
 use crate::{
     api::{require_session, Pagination},
     error::{ApiError, IntoApiResult, RequestError},
-    AppState, ChangePub,
+    AppState,
 };
 
 pub(super) fn routes() -> Router<AppState> {
@@ -90,7 +90,7 @@ async fn post_coto(
             &cotonoma,
             &operator,
         )?;
-        state.pubsub.lock().publish_change(change)?;
+        state.pubsub.publish_change(&change);
 
         Ok((StatusCode::CREATED, Json(coto)))
     })

@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use eventsource_stream::Event;
 use futures::StreamExt;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, IntoUrl, RequestBuilder, Response, Url,
@@ -20,7 +20,7 @@ use crate::{
         session::{ChildSessionCreated, CreateChildSession},
         SESSION_HEADER_NAME,
     },
-    csrf, ChangePub, Pubsub,
+    csrf, Pubsub,
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ impl Server {
     pub async fn import_changes(
         &self,
         db: &Arc<Database>,
-        pubsub: &Arc<Mutex<Pubsub>>,
+        pubsub: &Arc<Pubsub>,
         parent_node_id: Id<Node>,
     ) -> Result<Option<(i64, i64)>> {
         info!("Importing the changes from {}", self.url_prefix());
@@ -139,7 +139,7 @@ impl Server {
                 for change in changes.chunk {
                     debug!("Importing number {} ...", change.serial_number);
                     if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
-                        pubsub.lock().publish_change(imported_change)?;
+                        pubsub.publish_change(&imported_change);
                     }
                 }
                 Ok(())
@@ -166,7 +166,7 @@ impl Server {
         &self,
         parent_node_id: Id<Node>,
         db: &Arc<Database>,
-        pubsub: &Arc<Mutex<Pubsub>>,
+        pubsub: &Arc<Pubsub>,
     ) -> Result<EventLoop> {
         EventLoop::new(self.clone(), parent_node_id, db, pubsub)
     }
@@ -225,7 +225,7 @@ pub(crate) struct EventLoop {
     server: Server,
     parent_node_id: Id<Node>,
     db: Arc<Database>,
-    pubsub: Arc<Mutex<Pubsub>>,
+    pubsub: Arc<Pubsub>,
     event_source: EventSource,
     state: Arc<RwLock<EventLoopState>>,
 }
@@ -235,7 +235,7 @@ impl EventLoop {
         server: Server,
         parent_node_id: Id<Node>,
         db: &Arc<Database>,
-        pubsub: &Arc<Mutex<Pubsub>>,
+        pubsub: &Arc<Pubsub>,
     ) -> Result<Self> {
         let url = server.make_url("/api/events", None)?;
         // To inherit request headers (ex. session token) from the `server`,
@@ -345,7 +345,7 @@ impl EventLoop {
                 }
             }
             Ok(Some(imported_change)) => {
-                self.pubsub.lock().publish_change(imported_change)?;
+                self.pubsub.publish_change(&imported_change);
             }
             Ok(None) => (),
         }

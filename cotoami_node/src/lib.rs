@@ -75,7 +75,7 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
-    pubsub: Arc<Mutex<Pubsub>>,
+    pubsub: Arc<Pubsub>,
     parent_conns: Arc<RwLock<ParentConns>>,
 }
 
@@ -87,15 +87,11 @@ impl AppState {
         fs::create_dir(&db_dir).ok();
         let db = Database::new(db_dir)?;
 
-        let pubsub = Pubsub::new();
-
-        let parent_conns = HashMap::default();
-
         Ok(AppState {
             config: Arc::new(config),
             db: Arc::new(db),
-            pubsub: Arc::new(Mutex::new(pubsub)),
-            parent_conns: Arc::new(RwLock::new(parent_conns)),
+            pubsub: Arc::new(Pubsub::new()),
+            parent_conns: Arc::new(RwLock::new(HashMap::default())),
         })
     }
 
@@ -275,20 +271,26 @@ impl Config {
 // Pubsub
 /////////////////////////////////////////////////////////////////////////////
 
-type Pubsub = Publisher<Result<Event, Infallible>, String>;
-
-trait ChangePub {
-    fn publish_change(&mut self, changelog: ChangelogEntry) -> Result<()>;
+struct Pubsub {
+    pub sse: Mutex<SsePubsub>,
+    pub local_change: Mutex<LocalChangePubsub>,
 }
 
-impl ChangePub for Pubsub {
-    fn publish_change(&mut self, changelog: ChangelogEntry) -> Result<()> {
-        let event_type = "change".to_string();
-        let event = Event::default().event(&event_type).json_data(changelog)?;
-        self.publish(&Ok(event), Some(&event_type));
-        Ok(())
+impl Pubsub {
+    fn new() -> Self {
+        Self {
+            sse: Mutex::new(SsePubsub::new()),
+            local_change: Mutex::new(LocalChangePubsub::new()),
+        }
+    }
+
+    fn publish_change(&self, changelog: &ChangelogEntry) {
+        self.local_change.lock().publish(changelog, None);
     }
 }
+
+type SsePubsub = Publisher<Result<Event, Infallible>, String>;
+type LocalChangePubsub = Publisher<ChangelogEntry, ()>;
 
 /////////////////////////////////////////////////////////////////////////////
 // ParentConn
@@ -320,7 +322,7 @@ impl ParentConn {
         local_node: &Node,
         config: &Config,
         db: &Arc<Database>,
-        pubsub: &Arc<Mutex<Pubsub>>,
+        pubsub: &Arc<Pubsub>,
     ) -> Self {
         match Self::try_connect(parent_node, local_node, config, db, pubsub).await {
             Ok(conn) => conn,
@@ -336,7 +338,7 @@ impl ParentConn {
         local_node: &Node,
         config: &Config,
         db: &Arc<Database>,
-        pubsub: &Arc<Mutex<Pubsub>>,
+        pubsub: &Arc<Pubsub>,
     ) -> Result<Self> {
         let mut server = Server::new(parent_node.url_prefix.clone())?;
 
