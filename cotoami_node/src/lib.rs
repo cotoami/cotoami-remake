@@ -25,9 +25,9 @@ use crate::{
     http::session::Session,
 };
 
+mod api;
 mod client;
 mod csrf;
-mod error;
 mod http;
 mod pubsub;
 mod service;

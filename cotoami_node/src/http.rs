@@ -1,17 +1,17 @@
 use axum::{
     extract::State,
-    http::{header::HeaderName, Request},
+    http::{header::HeaderName, Request, StatusCode},
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Response},
     routing::get,
-    Extension, Router,
+    Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
-use tracing::debug;
+use tracing::{debug, error};
 use validator::Validate;
 
-use crate::{error::ApiError, AppState};
+use crate::{api::error::ApiError, AppState};
 
 pub(crate) mod changes;
 mod cotonomas;
@@ -32,6 +32,28 @@ pub(super) fn routes() -> Router<AppState> {
 }
 
 async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
+
+/////////////////////////////////////////////////////////////////////////////
+// Error
+/////////////////////////////////////////////////////////////////////////////
+
+// Tell axum how to convert `ApiError` into a response.
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        match self {
+            ApiError::Server(e) => {
+                let message = format!("Server error: {}", e);
+                error!(message);
+                (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
+            }
+            ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+            ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
+            ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
+            // ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
+        }
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Session

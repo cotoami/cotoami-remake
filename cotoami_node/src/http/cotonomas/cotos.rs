@@ -12,7 +12,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    error::{ApiError, IntoApiResult, RequestError},
+    api::error::{ApiError, IntoApiResult, RequestError},
     http::{require_session, Pagination},
     AppState,
 };

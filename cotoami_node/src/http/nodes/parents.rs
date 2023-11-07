@@ -12,8 +12,8 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
+    api::error::{ApiError, IntoApiResult},
     client::{EventLoopError, Server},
-    error::{ApiError, IntoApiResult},
     http::require_session,
     AppState, ParentConn,
 };

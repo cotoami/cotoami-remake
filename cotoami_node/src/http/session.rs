@@ -18,7 +18,7 @@ use tracing::info;
 use validator::Validate;
 
 use crate::{
-    error::{ApiError, IntoApiResult},
+    api::error::{ApiError, IntoApiResult},
     AppState,
 };
 
