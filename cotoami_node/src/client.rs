@@ -15,12 +15,13 @@ use tokio::task::spawn_blocking;
 use tracing::{debug, info};
 
 use crate::{
-    api::{
+    csrf,
+    http::{
         changes::ChangesResult,
         session::{ChildSessionCreated, CreateChildSession},
         SESSION_HEADER_NAME,
     },
-    csrf, Pubsub,
+    Pubsub,
 };
 
 /////////////////////////////////////////////////////////////////////////////

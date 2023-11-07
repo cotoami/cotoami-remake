@@ -10,8 +10,8 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::Pagination,
     error::{ApiError, IntoApiResult},
+    http::Pagination,
     AppState,
 };
 

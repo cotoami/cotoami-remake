@@ -21,14 +21,14 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    api::session::Session,
     client::{EventLoop, EventLoopState, Server},
+    http::session::Session,
 };
 
-mod api;
 mod client;
 mod csrf;
 mod error;
+mod http;
 mod pubsub;
 mod service;
 
@@ -40,7 +40,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     state.restore_parent_conns().await?;
 
     let router = Router::new()
-        .nest("/api", api::routes())
+        .nest("/api", http::routes())
         .fallback(fallback)
         .layer(middleware::from_fn(csrf::protect_from_forgery))
         .layer(Extension(state.clone())) // for middleware
