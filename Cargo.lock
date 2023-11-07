@@ -649,8 +649,10 @@ dependencies = [
  "thiserror",
  "time 0.3.25",
  "tokio",
+ "tower-service",
  "tracing",
  "tracing-subscriber",
+ "uuid",
  "validator",
 ]
 
