@@ -30,7 +30,7 @@ mod client;
 mod csrf;
 mod http;
 mod pubsub;
-mod service;
+pub mod service;
 
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     let state = AppState::new(config)?;

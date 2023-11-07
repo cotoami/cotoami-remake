@@ -8,6 +8,7 @@ use std::{
     task::{Context, Poll},
 };
 
+use bytes::Bytes;
 use cotoami_db::prelude::*;
 use tower_service::Service;
 
@@ -20,16 +21,18 @@ struct NodeApi {
 }
 
 impl NodeApi {
-    async fn handle_request(self, request: &Request) -> Result<Vec<u8>, ApiError> {
+    async fn handle_request(self, request: &Request) -> Result<Bytes, ApiError> {
         match request.body {
             RequestBody::GetLocalNode => nodes::get_local_node(self.db)
                 .await
-                .and_then(Self::to_binary),
+                .and_then(Self::to_bytes),
         }
     }
 
-    fn to_binary<T: serde::Serialize>(t: T) -> Result<Vec<u8>, ApiError> {
-        rmp_serde::to_vec(&t).map_err(ApiError::from)
+    fn to_bytes<T: serde::Serialize>(t: T) -> Result<Bytes, ApiError> {
+        rmp_serde::to_vec(&t)
+            .map(Bytes::from)
+            .map_err(ApiError::from)
     }
 }
 
@@ -45,10 +48,10 @@ impl Service<Request> for NodeApi {
     fn call(&mut self, request: Request) -> Self::Future {
         let this = self.clone();
         Box::pin(async move {
-            Ok(Response {
-                id: request.id,
-                body: this.handle_request(&request).await,
-            })
+            Ok(Response::new(
+                request.id,
+                this.handle_request(&request).await,
+            ))
         })
     }
 }

@@ -14,7 +14,7 @@ use crate::client::ResponseError;
 // https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) enum ApiError {
+pub enum ApiError {
     Server(String),
     Request(RequestError),
     Permission,
@@ -68,7 +68,7 @@ pub(crate) trait IntoApiResult<T> {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct RequestError {
+pub struct RequestError {
     code: String,
     params: HashMap<String, Value>,
 }
@@ -100,7 +100,7 @@ impl<T> IntoApiResult<T> for RequestError {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct InputErrors(Vec<InputError>);
+pub struct InputErrors(Vec<InputError>);
 
 fn into_result<T, E>(e: E) -> Result<T, ApiError>
 where
