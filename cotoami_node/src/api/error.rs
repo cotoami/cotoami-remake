@@ -13,12 +13,13 @@ use crate::client::ResponseError;
 // A slightly revised version of the official example
 // https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum ApiError {
-    Server(anyhow::Error),
+    Server(String),
     Request(RequestError),
     Permission,
     Input(InputErrors),
-    // NotFound,
+    NotFound,
     Unauthorized,
 }
 
@@ -51,7 +52,7 @@ where
                             .with_param("body", json!(body)),
                     )
                 } else {
-                    ApiError::Server(anyhow_err)
+                    ApiError::Server(anyhow_err.to_string())
                 }
             }
         }
@@ -66,7 +67,7 @@ pub(crate) trait IntoApiResult<T> {
 // ApiError / RequestError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct RequestError {
     code: String,
     params: HashMap<String, Value>,
@@ -98,7 +99,7 @@ impl<T> IntoApiResult<T> for RequestError {
 // ApiError / InputErrors
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct InputErrors(Vec<InputError>);
 
 fn into_result<T, E>(e: E) -> Result<T, ApiError>
@@ -138,7 +139,7 @@ impl<T> IntoApiResult<T> for (&str, ValidationErrors) {
 // ApiError / InputErrors / InputError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct InputError {
     resource: String,
     field: String,

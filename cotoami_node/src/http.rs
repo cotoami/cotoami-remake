@@ -49,7 +49,7 @@ impl IntoResponse for ApiError {
             ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
             ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
             ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
-            // ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
             ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
         }
     }

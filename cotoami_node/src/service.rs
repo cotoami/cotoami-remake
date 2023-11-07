@@ -5,6 +5,8 @@
 
 use uuid::Uuid;
 
+use crate::api::error::ApiError;
+
 mod server;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -16,7 +18,7 @@ pub struct Request {
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Response {
     id: Uuid,
-    body: Vec<u8>,
+    body: Result<Vec<u8>, ApiError>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
