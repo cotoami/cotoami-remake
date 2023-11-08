@@ -35,5 +35,6 @@ pub struct Response {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
-    GetLocalNode,
+    LocalNode,
+    ChunkOfChanges { from: i64 },
 }

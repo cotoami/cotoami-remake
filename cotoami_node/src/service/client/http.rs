@@ -75,7 +75,10 @@ impl HttpClient {
 
     async fn handle_request(self, request: &Request) -> Result<Response, reqwest::Error> {
         let http_req = match request.body {
-            RequestBody::GetLocalNode => self.get("/api/nodes/local", None),
+            RequestBody::LocalNode => self.get("/api/nodes/local", None),
+            RequestBody::ChunkOfChanges { from } => {
+                self.get("/api/changes", Some(vec![("from", &from.to_string())]))
+            }
         };
         Self::convert_response(request.id, http_req.send().await?).await
     }

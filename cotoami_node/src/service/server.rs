@@ -13,17 +13,25 @@ use cotoami_db::prelude::*;
 use tower_service::Service;
 
 use super::*;
-use crate::api::{error::ApiError, nodes};
+use crate::{api, api::error::ApiError, Config};
 
 #[derive(Clone)]
 struct NodeApi {
+    config: Arc<Config>,
     db: Arc<Database>,
 }
 
 impl NodeApi {
     async fn handle_request(self, request: &Request) -> Result<Bytes, ApiError> {
         match request.body {
-            RequestBody::GetLocalNode => nodes::local_node(self.db).await.and_then(Self::to_bytes),
+            RequestBody::LocalNode => api::nodes::local_node(self.db)
+                .await
+                .and_then(Self::to_bytes),
+            RequestBody::ChunkOfChanges { from } => {
+                api::changes::chunk_of_changes(from, self.config.changes_chunk_size, self.db)
+                    .await
+                    .and_then(Self::to_bytes)
+            }
         }
     }
 
