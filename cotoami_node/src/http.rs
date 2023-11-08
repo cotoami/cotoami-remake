@@ -1,5 +1,4 @@
 use axum::{
-    extract::State,
     http::{header::HeaderName, Request, StatusCode},
     middleware::Next,
     response::{IntoResponse, Response},
@@ -22,7 +21,7 @@ pub(crate) mod session;
 
 pub(super) fn routes() -> Router<AppState> {
     Router::new()
-        .route("/", get(root))
+        .route("/", get(|| async { "Cotoami Node API" }))
         .nest("/session", session::routes())
         .nest("/events", events::routes())
         .nest("/changes", changes::routes())
@@ -30,8 +29,6 @@ pub(super) fn routes() -> Router<AppState> {
         .nest("/cotos", cotos::routes())
         .nest("/cotonomas", cotonomas::routes())
 }
-
-async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
 
 /////////////////////////////////////////////////////////////////////////////
 // Error
