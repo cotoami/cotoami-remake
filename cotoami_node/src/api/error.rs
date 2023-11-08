@@ -10,10 +10,7 @@ use crate::client::ResponseError;
 // ApiError
 /////////////////////////////////////////////////////////////////////////////
 
-// A slightly revised version of the official example
-// https://github.com/tokio-rs/axum/blob/v0.6.x/examples/anyhow-error-response/src/main.rs
-
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum ApiError {
     Request(RequestError),
     Unauthorized,
@@ -68,7 +65,7 @@ pub(crate) trait IntoApiResult<T> {
 // ApiError / RequestError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct RequestError {
     code: String,
     params: HashMap<String, Value>,
@@ -100,7 +97,7 @@ impl<T> IntoApiResult<T> for RequestError {
 // ApiError / InputErrors
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct InputErrors(Vec<InputError>);
 
 fn into_result<T, E>(e: E) -> Result<T, ApiError>
@@ -140,7 +137,7 @@ impl<T> IntoApiResult<T> for (&str, ValidationErrors) {
 // ApiError / InputErrors / InputError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) struct InputError {
     resource: String,
     field: String,

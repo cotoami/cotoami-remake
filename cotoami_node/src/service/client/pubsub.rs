@@ -1,26 +1,49 @@
 //! Client of Node API Service via SSE/
 
 use std::{
-    convert::Infallible,
     future::Future,
     pin::Pin,
     task::{Context, Poll},
 };
 
-use anyhow::Result;
+use anyhow::{bail, Result};
+use futures::StreamExt;
 use tower_service::Service;
+use uuid::Uuid;
 
-use crate::{api::error::*, pubsub::Publisher, service::*};
+use crate::{pubsub::Publisher, service::*};
 
 #[derive(Clone)]
 pub struct PubsubClient {
-    request_pubsub: Publisher<Request, ()>,
-    response_pubsub: Publisher<Response, ()>,
+    pub request_pubsub: RequestPubsub,
+    pub response_pubsub: ResponsePubsub,
 }
+
+impl PubsubClient {
+    pub fn new() -> Self {
+        Self {
+            request_pubsub: RequestPubsub::new(),
+            response_pubsub: ResponsePubsub::new(),
+        }
+    }
+
+    async fn handle_request(self, request: Request) -> Result<Response> {
+        let mut stream = self.response_pubsub.subscribe_onetime(Some(request.id));
+        self.request_pubsub.publish(request, None);
+        if let Some(response) = stream.next().await {
+            Ok(response)
+        } else {
+            bail!("Missing response.");
+        }
+    }
+}
+
+type RequestPubsub = Publisher<Request, ()>;
+type ResponsePubsub = Publisher<Response, Uuid>;
 
 impl Service<Request> for PubsubClient {
     type Response = Response;
-    type Error = Infallible;
+    type Error = anyhow::Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -29,6 +52,6 @@ impl Service<Request> for PubsubClient {
 
     fn call(&mut self, request: Request) -> Self::Future {
         let this = self.clone();
-        Box::pin(async move { Ok(Response::new(request.id, Err(ApiError::NotFound))) })
+        Box::pin(async move { this.handle_request(request).await })
     }
 }

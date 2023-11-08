@@ -136,11 +136,11 @@ where
         S: Stream<Item = T> + Send + Unpin + 'static,
         F: Fn(&T) -> Result<Message> + Send + 'static,
     {
-        let publisher = self.clone();
+        let this = self.clone();
         tokio::spawn(async move {
             while let Some(item) = stream.next().await {
                 match map(&item) {
-                    Ok(message) => publisher.publish(message, topic.as_ref()),
+                    Ok(message) => this.publish(message, topic.as_ref()),
                     Err(e) => error!("Message mapping error: {}", e),
                 }
             }

@@ -12,7 +12,7 @@ use crate::api::error::ApiError;
 pub mod client;
 mod server;
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
     body: RequestBody,
@@ -27,13 +27,13 @@ impl Request {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, new)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, new)]
 pub struct Response {
     id: Uuid,
     body: Result<Bytes, ApiError>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
     LocalNode,
     ChunkOfChanges { from: i64 },
