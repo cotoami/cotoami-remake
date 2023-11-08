@@ -23,9 +23,7 @@ struct NodeApi {
 impl NodeApi {
     async fn handle_request(self, request: &Request) -> Result<Bytes, ApiError> {
         match request.body {
-            RequestBody::GetLocalNode => nodes::get_local_node(self.db)
-                .await
-                .and_then(Self::to_bytes),
+            RequestBody::GetLocalNode => nodes::local_node(self.db).await.and_then(Self::to_bytes),
         }
     }
 

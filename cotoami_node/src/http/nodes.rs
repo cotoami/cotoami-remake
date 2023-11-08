@@ -10,7 +10,7 @@ pub(super) fn routes() -> Router<AppState> {
         .route(
             "/local",
             get(|State(state): State<AppState>| async {
-                nodes::get_local_node(state.db).await.map(Json)
+                nodes::local_node(state.db).await.map(Json)
             }),
         )
         .nest("/parents", parents::routes())
