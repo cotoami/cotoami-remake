@@ -15,7 +15,7 @@ use reqwest::{
 };
 use tower_service::Service;
 
-use crate::{api::error::*, csrf, http, service::*};
+use crate::{api::error::*, http, http::csrf, service::*};
 
 #[derive(Clone)]
 pub struct HttpClient {

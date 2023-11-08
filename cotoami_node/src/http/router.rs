@@ -9,7 +9,7 @@ use axum::{
 use cotoami_db::prelude::*;
 
 use super::*;
-use crate::{api::nodes, csrf, AppState};
+use crate::{api::nodes, AppState};
 
 pub(crate) fn router(state: AppState) -> Router {
     Router::new()

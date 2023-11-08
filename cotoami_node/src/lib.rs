@@ -22,7 +22,6 @@ use crate::{
 
 mod api;
 mod client;
-mod csrf;
 mod http;
 mod pubsub;
 pub mod service;
