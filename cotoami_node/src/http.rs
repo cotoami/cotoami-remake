@@ -2,8 +2,7 @@ use axum::{
     http::{header::HeaderName, Request, StatusCode},
     middleware::Next,
     response::{IntoResponse, Response},
-    routing::get,
-    Extension, Json, Router,
+    Extension, Json,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
@@ -17,18 +16,10 @@ mod cotonomas;
 mod cotos;
 mod events;
 mod nodes;
+pub(crate) mod router;
 pub(crate) mod session;
 
-pub(super) fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/", get(|| async { "Cotoami Node API" }))
-        .nest("/session", session::routes())
-        .nest("/events", events::routes())
-        .nest("/changes", changes::routes())
-        .nest("/nodes", nodes::routes())
-        .nest("/cotos", cotos::routes())
-        .nest("/cotonomas", cotonomas::routes())
-}
+pub(super) use router::router;
 
 /////////////////////////////////////////////////////////////////////////////
 // Error

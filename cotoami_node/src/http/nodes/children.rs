@@ -16,7 +16,7 @@ use crate::{
     AppState,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(crate) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(recent_child_nodes).post(add_child_node))
         .layer(middleware::from_fn(require_session))

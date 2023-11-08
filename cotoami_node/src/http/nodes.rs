@@ -2,10 +2,10 @@ use axum::{extract::State, middleware, routing::get, Json, Router};
 
 use crate::{api::nodes, AppState};
 
-mod children;
-mod parents;
+pub(crate) mod children;
+pub(crate) mod parents;
 
-pub(super) fn routes() -> Router<AppState> {
+pub(crate) fn routes() -> Router<AppState> {
     Router::new()
         .route(
             "/local",

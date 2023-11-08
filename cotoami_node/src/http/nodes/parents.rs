@@ -18,7 +18,7 @@ use crate::{
     AppState, ParentConn,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(crate) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(all_parents).post(add_parent_node))
         .route("/:node_id", put(update_parent_node))

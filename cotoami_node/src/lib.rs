@@ -3,12 +3,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use axum::{
-    http::{StatusCode, Uri},
-    middleware,
-    response::{sse::Event, IntoResponse},
-    Extension, Router,
-};
+use axum::response::sse::Event;
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
@@ -39,12 +34,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     state.init_local_node().await?;
     state.restore_parent_conns().await?;
 
-    let router = Router::new()
-        .nest("/api", http::routes())
-        .fallback(fallback)
-        .layer(middleware::from_fn(csrf::protect_from_forgery))
-        .layer(Extension(state.clone())) // for middleware
-        .with_state(state);
+    let router = http::router(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let server = axum::Server::bind(&addr).serve(router.into_make_service());
@@ -60,12 +50,6 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     });
 
     Ok((handle, tx))
-}
-
-/// axum handler for any request that fails to match the router routes.
-/// This implementation returns HTTP status code Not Found (404).
-async fn fallback(uri: Uri) -> impl IntoResponse {
-    (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
 }
 
 /////////////////////////////////////////////////////////////////////////////
