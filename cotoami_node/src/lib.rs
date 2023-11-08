@@ -256,13 +256,13 @@ impl Config {
 /////////////////////////////////////////////////////////////////////////////
 
 struct Pubsub {
-    pub local_change: Mutex<LocalChangePubsub>,
-    pub sse: Mutex<SsePubsub>,
+    pub local_change: LocalChangePubsub,
+    pub sse: SsePubsub,
 }
 
 impl Pubsub {
     fn new() -> Self {
-        let mut local_change = LocalChangePubsub::new();
+        let local_change = LocalChangePubsub::new();
         let sse = SsePubsub::new();
 
         sse.tap_into(
@@ -274,14 +274,11 @@ impl Pubsub {
             },
         );
 
-        Self {
-            local_change: Mutex::new(local_change),
-            sse: Mutex::new(sse),
-        }
+        Self { local_change, sse }
     }
 
     fn publish_change(&self, changelog: &ChangelogEntry) {
-        self.local_change.lock().publish(changelog, None);
+        self.local_change.publish(changelog, None);
     }
 }
 
