@@ -277,7 +277,7 @@ impl Pubsub {
         Self { local_change, sse }
     }
 
-    fn publish_change(&self, changelog: &ChangelogEntry) {
+    fn publish_change(&self, changelog: ChangelogEntry) {
         self.local_change.publish(changelog, None);
     }
 }

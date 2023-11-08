@@ -149,7 +149,7 @@ async fn create_child_session(
 
         // import the child node
         if let Some((_, changelog)) = db.import_node(&payload.child)? {
-            state.pubsub.publish_change(&changelog);
+            state.pubsub.publish_change(changelog);
         }
 
         // make response body

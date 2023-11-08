@@ -90,7 +90,7 @@ async fn post_coto(
             &cotonoma,
             &operator,
         )?;
-        state.pubsub.publish_change(&change);
+        state.pubsub.publish_change(change);
 
         Ok((StatusCode::CREATED, Json(coto)))
     })

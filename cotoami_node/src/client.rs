@@ -140,7 +140,7 @@ impl Server {
                 for change in changes.chunk {
                     debug!("Importing number {} ...", change.serial_number);
                     if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
-                        pubsub.publish_change(&imported_change);
+                        pubsub.publish_change(imported_change);
                     }
                 }
                 Ok(())
@@ -346,7 +346,7 @@ impl EventLoop {
                 }
             }
             Ok(Some(imported_change)) => {
-                self.pubsub.publish_change(&imported_change);
+                self.pubsub.publish_change(imported_change);
             }
             Ok(None) => (),
         }

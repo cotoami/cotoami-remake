@@ -89,7 +89,7 @@ where
         sub
     }
 
-    pub fn publish(&self, message: &Message, topic: Option<&Topic>) {
+    pub fn publish(&self, message: Message, topic: Option<&Topic>) {
         let state = self.state.lock();
 
         let subscribers = if let Some(topic) = topic {
@@ -105,11 +105,22 @@ where
             state.subscribers.values().collect::<Vec<_>>()
         };
 
+        // Create message clones for each subscriber
+        let mut message_clones = Vec::<Message>::new();
+        if !subscribers.is_empty() {
+            for _ in 0..(subscribers.len() - 1) {
+                // Create clones only if there are multiple subscribers
+                message_clones.push(message.clone());
+            }
+            message_clones.push(message);
+        }
+
         let wakers = subscribers
             .iter()
             .flat_map(|subscriber| {
                 let mut subscriber = subscriber.lock();
-                subscriber.send_message(message.clone())
+                let message = message_clones.pop().unwrap_or_else(|| unreachable!());
+                subscriber.send_message(message)
             })
             .collect::<Vec<_>>();
         wakers.into_iter().for_each(|waker| waker.wake());
@@ -125,7 +136,7 @@ where
         tokio::spawn(async move {
             while let Some(item) = stream.next().await {
                 match map(&item) {
-                    Ok(message) => publisher.publish(&message, topic.as_ref()),
+                    Ok(message) => publisher.publish(message, topic.as_ref()),
                     Err(e) => error!("Message mapping error: {}", e),
                 }
             }
@@ -229,9 +240,9 @@ mod tests {
         let mut sub2 = publisher.subscribe(Some("animal"));
         let mut sub3 = publisher.subscribe(Some("plant"));
 
-        publisher.publish(&"hello".into(), None);
-        publisher.publish(&"cat".into(), Some(&"animal".into()));
-        publisher.publish(&"clover".into(), Some(&"plant".into()));
+        publisher.publish("hello".into(), None);
+        publisher.publish("cat".into(), Some(&"animal".into()));
+        publisher.publish("clover".into(), Some(&"plant".into()));
 
         assert_eq!(sub1.next().await, Some("hello".into()));
 
@@ -247,8 +258,8 @@ mod tests {
         let publisher = Publisher::<String, String>::new();
         let mut sub = publisher.subscribe_onetime(Some("animal"));
 
-        publisher.publish(&"cat".into(), Some(&"animal".into()));
-        publisher.publish(&"dog".into(), Some(&"animal".into()));
+        publisher.publish("cat".into(), Some(&"animal".into()));
+        publisher.publish("dog".into(), Some(&"animal".into()));
 
         assert_eq!(sub.next().await, Some("cat".into()));
         assert_eq!(sub.next().await, None);
