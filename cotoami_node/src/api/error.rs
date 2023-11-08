@@ -15,12 +15,13 @@ use crate::client::ResponseError;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum ApiError {
-    Server(String),
     Request(RequestError),
-    Permission,
-    Input(InputErrors),
-    NotFound,
     Unauthorized,
+    Permission,
+    NotFound,
+    Input(InputErrors),
+    Server(String),
+    Unknown(String),
 }
 
 // This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into

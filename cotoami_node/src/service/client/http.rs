@@ -11,11 +11,11 @@ use anyhow::Result;
 use parking_lot::RwLock;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    Client, Url,
+    Client, RequestBuilder, StatusCode, Url,
 };
 use tower_service::Service;
 
-use crate::{csrf, http, service::*};
+use crate::{api::error::*, csrf, http, service::*};
 
 #[derive(Clone)]
 pub struct HttpClient {
@@ -68,26 +68,36 @@ impl HttpClient {
         url
     }
 
-    async fn get(
-        &self,
-        path: &str,
-        query: Option<Vec<(&str, &str)>>,
-    ) -> Result<reqwest::Response, reqwest::Error> {
+    fn get(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> RequestBuilder {
         let url = self.url(path, query);
-        self.client
-            .get(url)
-            .headers(self.headers.read().clone())
-            .send()
-            .await
+        self.client.get(url).headers(self.headers.read().clone())
     }
 
     async fn handle_request(self, request: &Request) -> Result<Response, reqwest::Error> {
-        match request.body {
-            RequestBody::GetLocalNode => {
-                let body = self.get("/api/nodes/local", None).await?.bytes().await?;
-                Ok(Response::new(request.id, Ok(body)))
-            }
+        let http_req = match request.body {
+            RequestBody::GetLocalNode => self.get("/api/nodes/local", None),
+        };
+        Self::convert_response(request.id, http_req.send().await?).await
+    }
+
+    async fn convert_response(
+        id: Uuid,
+        from: reqwest::Response,
+    ) -> Result<Response, reqwest::Error> {
+        if from.status().is_success() {
+            return Ok(Response::new(id, Ok(from.bytes().await?)));
         }
+
+        let error = match from.status() {
+            StatusCode::BAD_REQUEST => ApiError::Request(from.json::<RequestError>().await?),
+            StatusCode::UNAUTHORIZED => ApiError::Unauthorized,
+            StatusCode::FORBIDDEN => ApiError::Permission,
+            StatusCode::NOT_FOUND => ApiError::NotFound,
+            StatusCode::UNPROCESSABLE_ENTITY => ApiError::Input(from.json::<InputErrors>().await?),
+            StatusCode::INTERNAL_SERVER_ERROR => ApiError::Server(from.text().await?),
+            _ => ApiError::Unknown("".to_string()),
+        };
+        Ok(Response::new(id, Err(error)))
     }
 }
 

@@ -41,16 +41,17 @@ async fn root(State(_): State<AppState>) -> &'static str { "Cotoami Node API" }
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         match self {
+            ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+            ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
+            ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
+            ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
             ApiError::Server(e) => {
                 let message = format!("Server error: {}", e);
                 error!(message);
                 (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
             }
-            ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-            ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
-            ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
-            ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
-            ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
+            ApiError::Unknown(_) => unreachable!(),
         }
     }
 }
