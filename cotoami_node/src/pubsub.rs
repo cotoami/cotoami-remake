@@ -105,7 +105,11 @@ where
             state.subscribers.values().collect::<Vec<_>>()
         };
 
-        // Create message clones for each subscriber
+        // Create message clones for each subscriber.
+        // If there is only one subscriber, no cloning will occur.
+        //
+        // NOTE: this optimization might not be needed considering the fact that
+        // you can make `Message::clone()` cheaper by sharing its inner data.
         let mut message_clones = Vec::<Message>::new();
         if !subscribers.is_empty() {
             for _ in 0..(subscribers.len() - 1) {
