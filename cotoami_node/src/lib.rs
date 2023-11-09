@@ -6,7 +6,7 @@ use anyhow::{anyhow, Context, Result};
 use axum::response::sse::Event;
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
-use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
+use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use pubsub::Publisher;
 use tokio::{
     sync::{oneshot, oneshot::Sender},

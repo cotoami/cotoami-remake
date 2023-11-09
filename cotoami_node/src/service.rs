@@ -4,6 +4,7 @@
 //! decoupled from the underlying protocol.
 
 use bytes::Bytes;
+use cotoami_db::prelude::{Id, Node};
 use derive_new::new;
 use uuid::Uuid;
 
@@ -15,13 +16,15 @@ mod server;
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
+    to: Id<Node>,
     body: RequestBody,
 }
 
 impl Request {
-    pub fn new(body: RequestBody) -> Self {
+    pub fn new(to: Id<Node>, body: RequestBody) -> Self {
         Self {
             id: Uuid::new_v4(),
+            to,
             body,
         }
     }
