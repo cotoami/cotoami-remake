@@ -28,6 +28,8 @@ impl Request {
             body,
         }
     }
+
+    pub fn to(&self) -> &Id<Node> { &self.to }
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, new)]

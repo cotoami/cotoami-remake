@@ -130,17 +130,18 @@ where
         wakers.into_iter().for_each(|waker| waker.wake());
     }
 
-    pub fn tap_into<T, S, F>(&self, mut stream: S, topic: Option<Topic>, map: F)
+    pub fn tap_into<I, S, T, F>(&self, mut stream: S, topic: T, map: F)
     where
-        T: Send,
-        S: Stream<Item = T> + Send + Unpin + 'static,
-        F: Fn(&T) -> Result<Message> + Send + 'static,
+        I: Send,
+        S: Stream<Item = I> + Send + Unpin + 'static,
+        T: Fn(&I) -> Option<Topic> + Send + 'static,
+        F: Fn(&I) -> Result<Message> + Send + 'static,
     {
         let this = self.clone();
         tokio::spawn(async move {
             while let Some(item) = stream.next().await {
                 match map(&item) {
-                    Ok(message) => this.publish(message, topic.as_ref()),
+                    Ok(message) => this.publish(message, topic(&item).as_ref()),
                     Err(e) => error!("Message mapping error: {}", e),
                 }
             }
@@ -275,7 +276,7 @@ mod tests {
         let mut sub = publisher.subscribe(None::<()>);
 
         let stream = futures::stream::iter(1..=3);
-        publisher.tap_into(stream, None, |item| Ok(item * item));
+        publisher.tap_into(stream, |_| None, |item| Ok(item * item));
 
         assert_eq!(sub.next().await, Some(1));
         assert_eq!(sub.next().await, Some(4));

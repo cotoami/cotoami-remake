@@ -7,7 +7,6 @@ use std::{
 };
 
 use anyhow::{bail, Result};
-use cotoami_db::prelude::{Id, Node};
 use futures::StreamExt;
 use tower_service::Service;
 use uuid::Uuid;
@@ -30,8 +29,7 @@ impl PubsubClient {
 
     async fn handle_request(self, request: Request) -> Result<Response> {
         let mut stream = self.response_pubsub.subscribe_onetime(Some(request.id));
-        let target_node_id = request.to;
-        self.request_pubsub.publish(request, Some(&target_node_id));
+        self.request_pubsub.publish(request, None);
         if let Some(response) = stream.next().await {
             Ok(response)
         } else {
@@ -40,7 +38,7 @@ impl PubsubClient {
     }
 }
 
-type RequestPubsub = Publisher<Request, Id<Node>>;
+type RequestPubsub = Publisher<Request, ()>;
 type ResponsePubsub = Publisher<Response, Uuid>;
 
 impl Service<Request> for PubsubClient {

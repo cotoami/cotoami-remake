@@ -18,6 +18,7 @@ use validator::Validate;
 use crate::{
     client::{EventLoop, EventLoopState, Server},
     http::session::Session,
+    service::client::pubsub::PubsubClient,
 };
 
 mod api;
@@ -60,6 +61,7 @@ struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Arc<Pubsub>,
+    api_client: Arc<PubsubClient>,
     parent_conns: Arc<RwLock<ParentConns>>,
 }
 
@@ -71,10 +73,23 @@ impl AppState {
         fs::create_dir(&db_dir).ok();
         let db = Database::new(db_dir)?;
 
+        let pubsub = Pubsub::new();
+
+        let api_client = PubsubClient::new();
+        pubsub.sse.tap_into(
+            api_client.request_pubsub.subscribe(None::<()>),
+            |request| Some(SsePubsubTopic::Request(*request.to())),
+            |request| {
+                let event = Event::default().event("request").json_data(request)?;
+                Ok(Ok(event))
+            },
+        );
+
         Ok(AppState {
             config: Arc::new(config),
             db: Arc::new(db),
-            pubsub: Arc::new(Pubsub::new()),
+            pubsub: Arc::new(pubsub),
+            api_client: Arc::new(api_client),
             parent_conns: Arc::new(RwLock::new(HashMap::default())),
         })
     }
@@ -267,7 +282,7 @@ impl Pubsub {
 
         sse.tap_into(
             local_change.subscribe(None::<()>),
-            Some(SsePubsubTopic::Change),
+            |_| Some(SsePubsubTopic::Change),
             |change| {
                 let event = Event::default().event("change").json_data(change)?;
                 Ok(Ok(event))
@@ -288,6 +303,7 @@ type SsePubsub = Publisher<Result<Event, Infallible>, SsePubsubTopic>;
 #[derive(Clone, PartialEq, Eq, Hash)]
 enum SsePubsubTopic {
     Change,
+    Request(Id<Node>),
 }
 
 /////////////////////////////////////////////////////////////////////////////
