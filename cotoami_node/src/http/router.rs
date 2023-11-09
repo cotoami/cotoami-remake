@@ -1,18 +1,24 @@
+use std::convert::Infallible;
+
 use axum::{
     extract::{Query, State},
     http::{StatusCode, Uri},
     middleware,
-    response::IntoResponse,
+    response::{
+        sse::{Event, KeepAlive, Sse},
+        IntoResponse,
+    },
     routing::get,
     Extension, Router,
 };
 use cotoami_db::prelude::*;
+use futures::stream::Stream;
 
 use super::*;
 use crate::{
     api,
     api::error::{ApiError, IntoApiResult},
-    AppState,
+    AppState, SsePubsubTopic,
 };
 
 pub(crate) fn router(state: AppState) -> Router {
@@ -28,7 +34,12 @@ fn paths() -> Router<AppState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
         .nest("/session", session::routes())
-        .nest("/events", events::routes())
+        .nest(
+            "/events",
+            Router::new()
+                .route("/", get(stream_events))
+                .layer(middleware::from_fn(super::require_session)),
+        )
         .nest(
             "/changes",
             Router::new()
@@ -51,9 +62,17 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
     (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/local
+/////////////////////////////////////////////////////////////////////////////
+
 async fn local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
     api::nodes::local_node(state.db).await.map(Json)
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/changes
+/////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, serde::Deserialize, Validate)]
 pub(crate) struct Position {
@@ -73,4 +92,16 @@ async fn chunk_of_changes(
     api::changes::chunk_of_changes(from, chunk_size, state.db)
         .await
         .map(Json)
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/events
+/////////////////////////////////////////////////////////////////////////////
+
+async fn stream_events(
+    State(state): State<AppState>,
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    // FIXME: subscribe to changes or requests
+    let sub = state.pubsub.sse.subscribe(Some(SsePubsubTopic::Change));
+    Sse::new(sub).keep_alive(KeepAlive::default())
 }

@@ -14,7 +14,6 @@ use crate::{api::error::ApiError, AppState};
 mod cotonomas;
 mod cotos;
 pub(crate) mod csrf;
-mod events;
 mod nodes;
 pub(crate) mod router;
 pub(crate) mod session;
