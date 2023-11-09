@@ -1,28 +1,10 @@
-use axum::{extract::State, middleware, routing::get, Json, Router};
+use std::sync::Arc;
+
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
-use crate::{error::ApiError, AppState};
+use super::error::ApiError;
 
-mod children;
-mod parents;
-
-pub(super) fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/local", get(get_local_node))
-        .nest("/parents", parents::routes())
-        .nest("/children", children::routes())
-        .layer(middleware::from_fn(super::require_session))
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// GET /api/nodes/local
-/////////////////////////////////////////////////////////////////////////////
-
-async fn get_local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
-    spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
-        Ok(Json(db.local_node()?))
-    })
-    .await?
+pub(crate) async fn local_node(db: Arc<Database>) -> Result<Node, ApiError> {
+    spawn_blocking(move || Ok(db.new_session()?.local_node()?)).await?
 }

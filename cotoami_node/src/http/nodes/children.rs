@@ -11,12 +11,12 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{require_session, Pagination},
-    error::{ApiError, IntoApiResult},
+    api::error::{ApiError, IntoApiResult},
+    http::{require_session, Pagination},
     AppState,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(crate) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(recent_child_nodes).post(add_child_node))
         .layer(middleware::from_fn(require_session))

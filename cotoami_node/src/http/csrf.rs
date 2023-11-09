@@ -13,7 +13,7 @@ use axum::{
 };
 use tracing::info;
 
-use super::{AppState, Config};
+use crate::{AppState, Config};
 
 const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTIONS];
 

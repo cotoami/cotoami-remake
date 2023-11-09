@@ -3,15 +3,10 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use axum::{
-    http::{StatusCode, Uri},
-    middleware,
-    response::{sse::Event, IntoResponse},
-    Extension, Router,
-};
+use axum::response::sse::Event;
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
-use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
+use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use pubsub::Publisher;
 use tokio::{
     sync::{oneshot, oneshot::Sender},
@@ -21,15 +16,16 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    api::session::Session,
     client::{EventLoop, EventLoopState, Server},
+    http::session::Session,
+    service::client::pubsub::PubsubClient,
 };
 
 mod api;
 mod client;
-mod csrf;
-mod error;
+mod http;
 mod pubsub;
+pub mod service;
 
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     let state = AppState::new(config)?;
@@ -38,12 +34,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     state.init_local_node().await?;
     state.restore_parent_conns().await?;
 
-    let router = Router::new()
-        .nest("/api", api::routes())
-        .fallback(fallback)
-        .layer(middleware::from_fn(csrf::protect_from_forgery))
-        .layer(Extension(state.clone())) // for middleware
-        .with_state(state);
+    let router = http::router(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let server = axum::Server::bind(&addr).serve(router.into_make_service());
@@ -61,12 +52,6 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     Ok((handle, tx))
 }
 
-/// axum handler for any request that fails to match the router routes.
-/// This implementation returns HTTP status code Not Found (404).
-async fn fallback(uri: Uri) -> impl IntoResponse {
-    (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // AppState
 /////////////////////////////////////////////////////////////////////////////
@@ -76,6 +61,7 @@ struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Arc<Pubsub>,
+    api_client: Arc<PubsubClient>,
     parent_conns: Arc<RwLock<ParentConns>>,
 }
 
@@ -87,10 +73,23 @@ impl AppState {
         fs::create_dir(&db_dir).ok();
         let db = Database::new(db_dir)?;
 
+        let pubsub = Pubsub::new();
+
+        let api_client = PubsubClient::new();
+        pubsub.sse.tap_into(
+            api_client.request_pubsub.subscribe(None::<()>),
+            |request| Some(SsePubsubTopic::Request(*request.to())),
+            |request| {
+                let event = Event::default().event("request").json_data(request)?;
+                Ok(Ok(event))
+            },
+        );
+
         Ok(AppState {
             config: Arc::new(config),
             db: Arc::new(db),
-            pubsub: Arc::new(Pubsub::new()),
+            pubsub: Arc::new(pubsub),
+            api_client: Arc::new(api_client),
             parent_conns: Arc::new(RwLock::new(HashMap::default())),
         })
     }
@@ -272,32 +271,29 @@ impl Config {
 /////////////////////////////////////////////////////////////////////////////
 
 struct Pubsub {
-    pub local_change: Mutex<LocalChangePubsub>,
-    pub sse: Mutex<SsePubsub>,
+    pub local_change: LocalChangePubsub,
+    pub sse: SsePubsub,
 }
 
 impl Pubsub {
     fn new() -> Self {
-        let mut local_change = LocalChangePubsub::new();
+        let local_change = LocalChangePubsub::new();
         let sse = SsePubsub::new();
 
         sse.tap_into(
             local_change.subscribe(None::<()>),
-            Some(SsePubsubTopic::Change),
+            |_| Some(SsePubsubTopic::Change),
             |change| {
                 let event = Event::default().event("change").json_data(change)?;
                 Ok(Ok(event))
             },
         );
 
-        Self {
-            local_change: Mutex::new(local_change),
-            sse: Mutex::new(sse),
-        }
+        Self { local_change, sse }
     }
 
-    fn publish_change(&self, changelog: &ChangelogEntry) {
-        self.local_change.lock().publish(changelog, None);
+    fn publish_change(&self, changelog: ChangelogEntry) {
+        self.local_change.publish(changelog, None);
     }
 }
 
@@ -307,6 +303,7 @@ type SsePubsub = Publisher<Result<Event, Infallible>, SsePubsubTopic>;
 #[derive(Clone, PartialEq, Eq, Hash)]
 enum SsePubsubTopic {
     Change,
+    Request(Id<Node>),
 }
 
 /////////////////////////////////////////////////////////////////////////////

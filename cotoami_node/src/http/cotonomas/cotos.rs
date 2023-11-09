@@ -12,8 +12,8 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::{require_session, Pagination},
-    error::{ApiError, IntoApiResult, RequestError},
+    api::error::{ApiError, IntoApiResult, RequestError},
+    http::{require_session, Pagination},
     AppState,
 };
 
@@ -90,7 +90,7 @@ async fn post_coto(
             &cotonoma,
             &operator,
         )?;
-        state.pubsub.publish_change(&change);
+        state.pubsub.publish_change(change);
 
         Ok((StatusCode::CREATED, Json(coto)))
     })

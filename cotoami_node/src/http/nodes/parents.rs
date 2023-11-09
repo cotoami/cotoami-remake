@@ -12,13 +12,13 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    api::require_session,
+    api::error::{ApiError, IntoApiResult},
     client::{EventLoopError, Server},
-    error::{ApiError, IntoApiResult},
+    http::require_session,
     AppState, ParentConn,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(crate) fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(all_parents).post(add_parent_node))
         .route("/:node_id", put(update_parent_node))
@@ -162,7 +162,7 @@ async fn add_parent_node(
 
         // Import the parent node data, which is required for registering a [ParentNode]
         if let Some((_, changelog)) = db.import_node(&child_session.parent)? {
-            pubsub.publish_change(&changelog);
+            pubsub.publish_change(changelog);
         }
 
         // Register a [ParentNode] and save the password into it
@@ -189,7 +189,7 @@ async fn add_parent_node(
             let _ = spawn_blocking(move || {
                 let db = db.new_session()?;
                 let (local_node, change) = db.set_root_cotonoma(&parent_cotonoma_id, &operator)?;
-                pubsub.publish_change(&change);
+                pubsub.publish_change(change);
                 info!("This node is now replicating [{}].", parent_node_name);
                 Ok::<_, ApiError>(local_node)
             })
@@ -207,7 +207,7 @@ async fn add_parent_node(
                         None,
                         &operator,
                     )?;
-                    pubsub.publish_change(&change);
+                    pubsub.publish_change(change);
                     info!(
                         "A link to a parent root cotonoma [{}] has been created: {}",
                         parent_root
@@ -334,7 +334,7 @@ async fn fork_from_parent(
         db.fork_from(&node_id, &operator)
     })
     .await??;
-    state.pubsub.publish_change(&change);
+    state.pubsub.publish_change(change);
 
     Ok(Json(Forked { affected }))
 }

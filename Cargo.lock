@@ -354,6 +354,9 @@ name = "bytes"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89b2fd2a0dcf38d7971e2194b6b6eebab45ae01067456a7fd93d5547a61b70be"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "cairo-rs"
@@ -631,6 +634,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "axum-macros",
+ "bytes",
  "chrono",
  "cotoami_db",
  "derive-new",
@@ -643,14 +647,17 @@ dependencies = [
  "rand 0.8.5",
  "reqwest",
  "reqwest-eventsource",
+ "rmp-serde",
  "serde",
  "serde_json",
  "smallvec",
  "thiserror",
  "time 0.3.25",
  "tokio",
+ "tower-service",
  "tracing",
  "tracing-subscriber",
+ "uuid",
  "validator",
 ]
 
@@ -3166,9 +3173,9 @@ dependencies = [
 
 [[package]]
 name = "rmp-serde"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5b13be192e0220b8afb7222aa5813cb62cc269ebb5cac346ca6487681d2913e"
+checksum = "bffea85eea980d8a74453e5d02a8d93028f3c34725de143085a844ebe953258a"
 dependencies = [
  "byteorder",
  "rmp",

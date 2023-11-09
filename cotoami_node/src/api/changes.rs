@@ -1,34 +1,9 @@
-use anyhow::Result;
-use axum::{
-    extract::{Query, State},
-    middleware,
-    routing::get,
-    Json, Router,
-};
+use std::sync::Arc;
+
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use validator::Validate;
 
-use crate::{
-    error::{ApiError, IntoApiResult},
-    AppState,
-};
-
-pub(super) fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/", get(chunk_of_changes))
-        .layer(middleware::from_fn(super::require_session))
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// GET /api/changes
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Serialize, serde::Deserialize, Validate)]
-pub(crate) struct Position {
-    #[validate(required, range(min = 1))]
-    pub from: Option<i64>,
-}
+use super::error::ApiError;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum ChangesResult {
@@ -59,28 +34,26 @@ impl Changes {
     }
 }
 
-async fn chunk_of_changes(
-    State(state): State<AppState>,
-    Query(position): Query<Position>,
-) -> Result<Json<ChangesResult>, ApiError> {
-    if let Err(errors) = position.validate() {
-        return ("changes", errors).into_result();
-    }
+pub(crate) async fn chunk_of_changes(
+    from: i64,
+    chunk_size: i64,
+    db: Arc<Database>,
+) -> Result<ChangesResult, ApiError> {
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
-        match db.chunk_of_changes(position.from.unwrap(), state.config.changes_chunk_size) {
+        let mut db = db.new_session()?;
+        match db.chunk_of_changes(from, chunk_size) {
             Ok((chunk, last_serial_number)) => {
                 let changes = Changes {
                     chunk,
                     last_serial_number,
                 };
-                Ok(Json(ChangesResult::Fetched(changes)))
+                Ok(ChangesResult::Fetched(changes))
             }
             Err(anyhow_err) => {
                 if let Some(DatabaseError::ChangeNumberOutOfRange { max, .. }) =
                     anyhow_err.downcast_ref::<DatabaseError>()
                 {
-                    Ok(Json(ChangesResult::OutOfRange { max: *max }))
+                    Ok(ChangesResult::OutOfRange { max: *max })
                 } else {
                     Err(anyhow_err.into())
                 }

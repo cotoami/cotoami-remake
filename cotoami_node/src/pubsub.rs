@@ -15,9 +15,18 @@ use parking_lot::Mutex;
 use smallvec::SmallVec;
 use tracing::error;
 
-#[derive(Clone)]
 pub struct Publisher<Message, Topic> {
     state: Arc<Mutex<PublisherState<Message, Topic>>>,
+}
+
+/// Manually implementing Clone for Publisher because of the issue:
+/// https://github.com/rust-lang/rust/issues/26925
+impl<Message, Topic> Clone for Publisher<Message, Topic> {
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+        }
+    }
 }
 
 impl<Message, Topic> Publisher<Message, Topic>
@@ -39,7 +48,7 @@ where
     #[allow(dead_code)] // used only in tests
     pub fn count_subscribers(&self) -> usize { self.state.lock().subscribers.len() }
 
-    pub fn subscribe(&mut self, topic: Option<impl Into<Topic>>) -> Subscriber<Message, Topic> {
+    pub fn subscribe(&self, topic: Option<impl Into<Topic>>) -> Subscriber<Message, Topic> {
         let sub_id = {
             let mut state = self.state.lock();
             let id = state.next_subscriber_id;
@@ -74,16 +83,13 @@ where
         }
     }
 
-    pub fn subscribe_onetime(
-        &mut self,
-        topic: Option<impl Into<Topic>>,
-    ) -> Subscriber<Message, Topic> {
+    pub fn subscribe_onetime(&self, topic: Option<impl Into<Topic>>) -> Subscriber<Message, Topic> {
         let sub = self.subscribe(topic);
         sub.state.lock().onetime = true;
         sub
     }
 
-    pub fn publish(&mut self, message: &Message, topic: Option<&Topic>) {
+    pub fn publish(&self, message: Message, topic: Option<&Topic>) {
         let state = self.state.lock();
 
         let subscribers = if let Some(topic) = topic {
@@ -99,27 +105,43 @@ where
             state.subscribers.values().collect::<Vec<_>>()
         };
 
+        // Create message clones for each subscriber.
+        // If there is only one subscriber, no cloning will occur.
+        //
+        // NOTE: this optimization might not be needed considering the fact that
+        // you can make `Message::clone()` cheaper by sharing its inner data.
+        let mut message_clones = Vec::<Message>::new();
+        if !subscribers.is_empty() {
+            for _ in 0..(subscribers.len() - 1) {
+                // Create clones only if there are multiple subscribers
+                message_clones.push(message.clone());
+            }
+            message_clones.push(message);
+        }
+
         let wakers = subscribers
             .iter()
             .flat_map(|subscriber| {
                 let mut subscriber = subscriber.lock();
-                subscriber.send_message(message.clone())
+                let message = message_clones.pop().unwrap_or_else(|| unreachable!());
+                subscriber.send_message(message)
             })
             .collect::<Vec<_>>();
         wakers.into_iter().for_each(|waker| waker.wake());
     }
 
-    pub fn tap_into<T, S, F>(&self, mut stream: S, topic: Option<Topic>, map: F)
+    pub fn tap_into<I, S, T, F>(&self, mut stream: S, topic: T, map: F)
     where
-        T: Send,
-        S: Stream<Item = T> + Send + Unpin + 'static,
-        F: Fn(&T) -> Result<Message> + Send + 'static,
+        I: Send,
+        S: Stream<Item = I> + Send + Unpin + 'static,
+        T: Fn(&I) -> Option<Topic> + Send + 'static,
+        F: Fn(&I) -> Result<Message> + Send + 'static,
     {
-        let mut publisher = self.clone();
+        let this = self.clone();
         tokio::spawn(async move {
             while let Some(item) = stream.next().await {
                 match map(&item) {
-                    Ok(message) => publisher.publish(&message, topic.as_ref()),
+                    Ok(message) => this.publish(message, topic(&item).as_ref()),
                     Err(e) => error!("Message mapping error: {}", e),
                 }
             }
@@ -217,15 +239,15 @@ mod tests {
 
     #[tokio::test]
     async fn pubsub() {
-        let mut publisher = Publisher::<String, String>::new();
+        let publisher = Publisher::<String, String>::new();
 
         let mut sub1 = publisher.subscribe(None::<String>);
         let mut sub2 = publisher.subscribe(Some("animal"));
         let mut sub3 = publisher.subscribe(Some("plant"));
 
-        publisher.publish(&"hello".into(), None);
-        publisher.publish(&"cat".into(), Some(&"animal".into()));
-        publisher.publish(&"clover".into(), Some(&"plant".into()));
+        publisher.publish("hello".into(), None);
+        publisher.publish("cat".into(), Some(&"animal".into()));
+        publisher.publish("clover".into(), Some(&"plant".into()));
 
         assert_eq!(sub1.next().await, Some("hello".into()));
 
@@ -238,11 +260,11 @@ mod tests {
 
     #[tokio::test]
     async fn onetime_subscriber() {
-        let mut publisher = Publisher::<String, String>::new();
+        let publisher = Publisher::<String, String>::new();
         let mut sub = publisher.subscribe_onetime(Some("animal"));
 
-        publisher.publish(&"cat".into(), Some(&"animal".into()));
-        publisher.publish(&"dog".into(), Some(&"animal".into()));
+        publisher.publish("cat".into(), Some(&"animal".into()));
+        publisher.publish("dog".into(), Some(&"animal".into()));
 
         assert_eq!(sub.next().await, Some("cat".into()));
         assert_eq!(sub.next().await, None);
@@ -250,11 +272,11 @@ mod tests {
 
     #[tokio::test]
     async fn tap_into_stream() {
-        let mut publisher = Publisher::<usize, ()>::new();
+        let publisher = Publisher::<usize, ()>::new();
         let mut sub = publisher.subscribe(None::<()>);
 
         let stream = futures::stream::iter(1..=3);
-        publisher.tap_into(stream, None, |item| Ok(item * item));
+        publisher.tap_into(stream, |_| None, |item| Ok(item * item));
 
         assert_eq!(sub.next().await, Some(1));
         assert_eq!(sub.next().await, Some(4));
@@ -264,7 +286,7 @@ mod tests {
     #[tokio::test]
     async fn publisher_dropped() {
         let mut sub = {
-            let mut publisher = Publisher::<String, String>::new();
+            let publisher = Publisher::<String, String>::new();
             publisher.subscribe(None::<String>)
         };
         assert_eq!(sub.next().await, None);
@@ -272,7 +294,7 @@ mod tests {
 
     #[tokio::test]
     async fn subscriber_dropped() {
-        let mut publisher = Publisher::<String, String>::new();
+        let publisher = Publisher::<String, String>::new();
         let _sub1 = publisher.subscribe(None::<String>);
         {
             let _sub2 = publisher.subscribe(None::<String>);
