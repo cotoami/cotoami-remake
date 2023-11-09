@@ -1,4 +1,5 @@
-//! Server-side implemention of Node API Service.
+//! Server-side implemention of Node API Service,
+//! which is intended for non-HTTP protocols such as WebSocket.
 
 use std::{
     convert::Infallible,

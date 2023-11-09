@@ -1,4 +1,7 @@
-//! Client of Node API Service via SSE/
+//! Node API Client via non-HTTP protocols such as WebSocket.
+//!
+//! This client sends requests to [PubsubClient::request_pubsub] and receives
+//! responses from [PubsubClient::response_pubsub], so it is protocol agnostic.
 
 use std::{
     future::Future,

@@ -1,7 +1,17 @@
 //! Node API interface based on [tower_service::Service].
 //!
 //! This module aims to provide Node API functionalities via a commonalized interface
-//! decoupled from the underlying protocol.
+//! decoupled from the underlying protocol. With this abstraction, the parent/child concept
+//! is separated from network concepts and roles such as server/client or protocols.
+//!
+//! Possible implementations of the interface are:
+//!
+//! * Server-side
+//!     * An interface for non-HTTP protocols (ex. WebSocket)
+//! * Client-side
+//!     * via plain HTTP request/response
+//!     * via Server-Sent Events/HTTP request (reversal of client/server)
+//!     * via WebSocket
 
 use bytes::Bytes;
 use cotoami_db::prelude::{Id, Node};
