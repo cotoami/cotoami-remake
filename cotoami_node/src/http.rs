@@ -11,11 +11,12 @@ use validator::Validate;
 
 use crate::{api::error::ApiError, AppState};
 
+pub(crate) mod clients;
 mod cotonomas;
 mod cotos;
 pub(crate) mod csrf;
-mod nodes;
 pub(crate) mod router;
+pub(crate) mod servers;
 pub(crate) mod session;
 
 pub(super) use router::router;
@@ -76,16 +77,16 @@ async fn require_session<B>(
         return Err(ApiError::Unauthorized); // missing session token
     };
 
-    let operator = spawn_blocking(move || {
+    let session = spawn_blocking(move || {
         let mut db = state.db.new_session()?;
         // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
-        Ok::<_, ApiError>(db.operator_in_session(&token)?)
+        Ok::<_, ApiError>(db.client_session(&token)?)
     })
     .await??;
 
-    if let Some(operator) = operator {
-        debug!("Operator in session: {:?}", operator);
-        request.extensions_mut().insert(operator);
+    if let Some(session) = session {
+        debug!("client session: {:?}", session);
+        request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {
         Err(ApiError::Unauthorized) // invalid token (session expired, etc.)
@@ -97,7 +98,7 @@ async fn require_session<B>(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-struct Pagination {
+pub(crate) struct Pagination {
     #[serde(default)]
     page: i64,
 

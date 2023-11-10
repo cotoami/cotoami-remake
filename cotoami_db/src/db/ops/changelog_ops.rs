@@ -6,7 +6,7 @@ use anyhow::{bail, ensure};
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 
-use super::{coto_ops, cotonoma_ops, graph_ops, link_ops, node_ops, parent_node_ops};
+use super::{coto_ops, cotonoma_ops, graph_ops, link_ops, node_ops, node_role_ops::parent_ops};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -17,17 +17,7 @@ use crate::{
     schema::changelog,
 };
 
-pub fn get<Conn: AsReadableConn>(number: i64) -> impl Operation<Conn, Option<ChangelogEntry>> {
-    read_op(move |conn| {
-        changelog::table
-            .find(number)
-            .first(conn)
-            .optional()
-            .map_err(anyhow::Error::from)
-    })
-}
-
-pub fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option<i64>> {
+pub(crate) fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option<i64>> {
     read_op(move |conn| {
         changelog::table
             .select(max(changelog::serial_number))
@@ -36,7 +26,7 @@ pub fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn, Option
     })
 }
 
-pub fn last_origin_serial_number<Conn: AsReadableConn>(
+pub(crate) fn last_origin_serial_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
     read_op(move |conn| {
@@ -48,7 +38,7 @@ pub fn last_origin_serial_number<Conn: AsReadableConn>(
     })
 }
 
-pub fn chunk<Conn: AsReadableConn>(
+pub(crate) fn chunk<Conn: AsReadableConn>(
     from: i64,
     limit: i64,
 ) -> impl Operation<Conn, (Vec<ChangelogEntry>, i64)> {
@@ -73,7 +63,7 @@ pub fn chunk<Conn: AsReadableConn>(
     })
 }
 
-pub fn log_change<'a>(
+pub(crate) fn log_change<'a>(
     change: &'a Change,
     local_node_id: &'a Id<Node>,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
@@ -86,7 +76,7 @@ pub fn log_change<'a>(
     })
 }
 
-pub fn insert<'a>(
+pub(crate) fn insert<'a>(
     new_entry: &'a NewChangelogEntry<'a>,
 ) -> impl Operation<WritableConn, ChangelogEntry> + 'a {
     write_op(move |conn| {
@@ -97,7 +87,7 @@ pub fn insert<'a>(
     })
 }
 
-pub fn contains_change<Conn: AsReadableConn>(
+pub(crate) fn contains_change<Conn: AsReadableConn>(
     log: &ChangelogEntry,
 ) -> impl Operation<Conn, bool> + '_ {
     read_op(move |conn| {
@@ -128,7 +118,7 @@ pub fn contains_change<Conn: AsReadableConn>(
 /// The same changes (with the same serial number in the same origin) could be sent
 /// from multiple parent nodes. If the database already contains the same change,
 /// the change will be ignored yet the `changes_received` will be incremented.
-pub fn import_change<'a>(
+pub(crate) fn import_change<'a>(
     log: &'a ChangelogEntry,
     parent_node: &'a mut ParentNode,
 ) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
@@ -165,7 +155,7 @@ pub fn import_change<'a>(
         };
 
         // Increment the count of received changes
-        *parent_node = parent_node_ops::increment_changes_received(
+        *parent_node = parent_ops::increment_changes_received(
             &parent_node.node_id,
             expected_number,
             log_entry.as_ref().map(|e| e.inserted_at),

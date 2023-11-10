@@ -1,0 +1,152 @@
+//! ClientNode related operations
+
+use core::time::Duration;
+use std::ops::DerefMut;
+
+use anyhow::Context;
+use diesel::prelude::*;
+
+use crate::{
+    db::{error::*, op::*, ops, ops::Paginated},
+    models::{
+        node::{
+            client::{ClientNode, NewClientNode},
+            Node, Principal,
+        },
+        Id,
+    },
+    schema::{client_nodes, nodes},
+};
+
+/// Returns a [ClientNode] by its ID.
+pub(crate) fn get<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Option<ClientNode>> + '_ {
+    read_op(move |conn| {
+        client_nodes::table
+            .find(id)
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Returns a [ClientNode] by its ID or a [DatabaseError::EntityNotFound].
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Result<ClientNode, DatabaseError>> + '_ {
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ClientNode, *id)))
+}
+
+/// Returns a [ClientNode] by its session token.
+pub(crate) fn get_by_session_token<Conn: AsReadableConn>(
+    token: &str,
+) -> impl Operation<Conn, Option<ClientNode>> + '_ {
+    read_op(move |conn| {
+        client_nodes::table
+            .filter(client_nodes::session_token.eq(token))
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Returns all [ClientNode]/[Node] pairs in arbitrary order.
+pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ClientNode, Node)>> {
+    read_op(move |conn| {
+        client_nodes::table
+            .inner_join(nodes::table)
+            .select((ClientNode::as_select(), Node::as_select()))
+            .load::<(ClientNode, Node)>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Returns paginated results of recently inserted [ClientNode]s with their [Node]s.
+pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<(ClientNode, Node)>> + 'a {
+    read_op(move |conn| {
+        ops::paginate(conn, page_size, page_index, || {
+            client_nodes::table
+                .inner_join(nodes::table)
+                .select((ClientNode::as_select(), Node::as_select()))
+                .order(client_nodes::created_at.desc())
+        })
+    })
+}
+
+/// Inserts a new client node represented as a [NewClientNode].
+pub(super) fn insert<'a>(
+    new_client_node: &'a NewClientNode<'a>,
+) -> impl Operation<WritableConn, ClientNode> + 'a {
+    write_op(move |conn| {
+        diesel::insert_into(client_nodes::table)
+            .values(new_client_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Updates a client node row with a [ClientNode].
+pub(crate) fn update(client_node: &ClientNode) -> impl Operation<WritableConn, ClientNode> + '_ {
+    write_op(move |conn| {
+        diesel::update(client_node)
+            .set(client_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(super) fn set_disabled(
+    id: &Id<Node>,
+    disabled: bool,
+) -> impl Operation<WritableConn, ClientNode> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut client = get_or_err(id).run(ctx)??;
+        client.disabled = disabled;
+        client = update(&client).run(ctx)?;
+        Ok(client)
+    })
+}
+
+pub(crate) fn start_session<'a>(
+    id: &'a Id<Node>,
+    password: &'a str,
+    duration: Duration,
+) -> impl Operation<WritableConn, ClientNode> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let duration = chrono::Duration::from_std(duration)?;
+        let mut client = get_or_err(id)
+            .run(ctx)?
+            // Hide a not-found error for a security reason
+            .context(DatabaseError::AuthenticationFailed)?;
+        client
+            .start_session(password, duration)
+            .context(DatabaseError::AuthenticationFailed)?;
+        client = update(&client).run(ctx)?;
+        Ok(client)
+    })
+}
+
+pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WritableConn, ClientNode> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut client = get_or_err(id).run(ctx)??;
+        client.clear_session();
+        update(&client).run(ctx)?;
+        Ok(client)
+    })
+}
+
+pub fn change_password<'a>(
+    id: &'a Id<Node>,
+    password: &'a str,
+) -> impl Operation<WritableConn, ClientNode> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut client = get_or_err(id).run(ctx)??;
+        client.update_password(password)?;
+        update(&client).run(ctx)?;
+        Ok(client)
+    })
+}

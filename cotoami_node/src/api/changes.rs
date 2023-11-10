@@ -1,18 +1,21 @@
 use std::sync::Arc;
 
+use anyhow::Result;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
+use tracing::debug;
 
 use super::error::ApiError;
+use crate::ChangePubsub;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) enum ChangesResult {
+pub enum ChunkOfChanges {
     Fetched(Changes),
     OutOfRange { max: i64 },
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct Changes {
+pub struct Changes {
     pub chunk: Vec<ChangelogEntry>,
     pub last_serial_number: i64,
 }
@@ -38,27 +41,43 @@ pub(crate) async fn chunk_of_changes(
     from: i64,
     chunk_size: i64,
     db: Arc<Database>,
-) -> Result<ChangesResult, ApiError> {
+) -> Result<ChunkOfChanges, ApiError> {
     spawn_blocking(move || {
         let mut db = db.new_session()?;
         match db.chunk_of_changes(from, chunk_size) {
-            Ok((chunk, last_serial_number)) => {
-                let changes = Changes {
-                    chunk,
-                    last_serial_number,
-                };
-                Ok(ChangesResult::Fetched(changes))
-            }
+            Ok((chunk, last_serial_number)) => Ok(ChunkOfChanges::Fetched(Changes {
+                chunk,
+                last_serial_number,
+            })),
             Err(anyhow_err) => {
                 if let Some(DatabaseError::ChangeNumberOutOfRange { max, .. }) =
                     anyhow_err.downcast_ref::<DatabaseError>()
                 {
-                    Ok(ChangesResult::OutOfRange { max: *max })
+                    Ok(ChunkOfChanges::OutOfRange { max: *max })
                 } else {
                     Err(anyhow_err.into())
                 }
             }
         }
+    })
+    .await?
+}
+
+pub(crate) async fn import_changes(
+    parent_node_id: Id<Node>,
+    changes: Changes,
+    db: Arc<Database>,
+    change_pubsub: Arc<ChangePubsub>,
+) -> Result<()> {
+    spawn_blocking(move || {
+        let db = db.new_session()?;
+        for change in changes.chunk {
+            debug!("Importing number {} ...", change.serial_number);
+            if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
+                change_pubsub.publish(imported_change, None);
+            }
+        }
+        Ok(())
     })
     .await?
 }

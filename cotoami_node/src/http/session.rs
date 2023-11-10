@@ -1,16 +1,8 @@
 use core::time::Duration;
-use std::borrow::Cow;
 
 use anyhow::Result;
-use axum::{
-    extract::State,
-    http::StatusCode,
-    middleware,
-    routing::{delete, put},
-    Extension, Form, Json, Router,
-};
+use axum::{extract::State, http::StatusCode, Extension, Form, Json};
 use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
-use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use time::OffsetDateTime;
 use tokio::task::spawn_blocking;
@@ -18,23 +10,13 @@ use tracing::info;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
+    api,
+    api::{
+        error::{ApiError, IntoApiResult},
+        session::*,
+    },
     AppState,
 };
-
-pub(super) fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/", delete(delete_session))
-        .route_layer(middleware::from_fn(super::require_session))
-        .route("/owner", put(create_owner_session))
-        .route("/child", put(create_child_session))
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct Session {
-    pub token: String,
-    pub expires_at: NaiveDateTime, // UTC
-}
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
     let expiration = Expiration::DateTime(
@@ -54,18 +36,25 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
 // DELETE /api/session
 /////////////////////////////////////////////////////////////////////////////
 
-async fn delete_session(
+pub(crate) async fn delete_session(
     State(state): State<AppState>,
-    Extension(operator): Extension<Operator>,
+    Extension(client_session): Extension<ClientSession>,
     jar: CookieJar,
 ) -> Result<CookieJar, ApiError> {
     spawn_blocking(move || {
         let db = state.db.new_session()?;
-        match &operator {
-            Operator::Owner(_) => db.clear_owner_session()?,
-            Operator::ChildNode(child) => db.clear_child_session(&child.node_id)?,
+        match &client_session {
+            ClientSession::Operator(Operator::Owner(_)) => {
+                db.clear_owner_session()?;
+            }
+            ClientSession::Operator(Operator::ChildNode(child)) => {
+                db.clear_client_node_session(&child.node_id)?;
+            }
+            ClientSession::ParentNode(parent) => {
+                db.clear_client_node_session(&parent.node_id)?;
+            }
         }
-        info!("Deleted a session as: {:?}", operator);
+        info!("Deleted a client session: {:?}", client_session);
         Ok(jar.remove(Cookie::named(super::SESSION_COOKIE_NAME)))
     })
     .await?
@@ -76,12 +65,12 @@ async fn delete_session(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-struct CreateOwnerSession {
+pub(crate) struct CreateOwnerSession {
     #[validate(required)]
     password: Option<String>,
 }
 
-async fn create_owner_session(
+pub(crate) async fn create_owner_session(
     State(state): State<AppState>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
@@ -106,59 +95,21 @@ async fn create_owner_session(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PUT /api/session/child
+// PUT /api/session/client-node
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct CreateChildSession<'a> {
-    pub password: String,
-    pub new_password: Option<String>,
-    pub child: Cow<'a, Node>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct ChildSessionCreated {
-    pub session: Session,
-    pub parent: Node,
-}
-
-async fn create_child_session(
+pub(crate) async fn create_client_node_session(
     State(state): State<AppState>,
     jar: CookieJar,
-    Json(payload): Json<CreateChildSession<'static>>,
-) -> Result<(StatusCode, CookieJar, Json<ChildSessionCreated>), ApiError> {
-    spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
-
-        // start session
-        let child_node = db.start_child_session(
-            &payload.child.uuid,
-            &payload.password, // validated to be Some
-            Duration::from_secs(state.config.session_seconds()),
-        )?;
-        let session = Session {
-            token: child_node.session_token.unwrap(),
-            expires_at: child_node.session_expires_at.unwrap(),
-        };
-        let cookie = create_cookie(&session);
-
-        // change password
-        if let Some(new_password) = payload.new_password {
-            db.change_child_password(&payload.child.uuid, &new_password)?;
-        }
-
-        // import the child node
-        if let Some((_, changelog)) = db.import_node(&payload.child)? {
-            state.pubsub.publish_change(changelog);
-        }
-
-        // make response body
-        let response_body = ChildSessionCreated {
-            session,
-            parent: db.local_node()?,
-        };
-
-        Ok((StatusCode::CREATED, jar.add(cookie), Json(response_body)))
-    })
-    .await?
+    Json(payload): Json<CreateClientNodeSession>,
+) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ApiError> {
+    let session = api::session::create_client_node_session(
+        payload,
+        state.config.session_seconds(),
+        state.db,
+        state.pubsub.local_change,
+    )
+    .await?;
+    let cookie = create_cookie(&session.session);
+    Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
 }

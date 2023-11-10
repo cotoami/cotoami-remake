@@ -6,10 +6,10 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 use crate::{
-    db::{error::*, op::*},
+    db::{error::*, op::*, ops, ops::Paginated},
     models::{
         node::{
-            parent::{ClearParentPassword, NewParentNode, ParentNode},
+            parent::{NewParentNode, ParentNode},
             Node,
         },
         Id,
@@ -17,7 +17,10 @@ use crate::{
     schema::{nodes, parent_nodes},
 };
 
-pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<ParentNode>> + '_ {
+/// Returns a [ParentNode] by its ID.
+pub(crate) fn get<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Option<ParentNode>> + '_ {
     read_op(move |conn| {
         parent_nodes::table
             .find(id)
@@ -27,33 +30,43 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<P
     })
 }
 
-pub fn get_or_err<Conn: AsReadableConn>(
+/// Returns a [ParentNode] by its ID or a [DatabaseError::EntityNotFound].
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ParentNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id)))
 }
 
-pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
+/// Returns all [ParentNode]s in arbitrary order.
+pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode>> {
     read_op(move |conn| {
         parent_nodes::table
-            .order(parent_nodes::created_at.desc())
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
     })
 }
 
-pub fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ParentNode, Node)>> {
+/// Returns paginated results of [ParentNode]s that have recently sent a change or
+/// been inserted, with their corresponding [Node]s.
+pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<(ParentNode, Node)>> + 'a {
     read_op(move |conn| {
-        parent_nodes::table
-            .inner_join(nodes::table)
-            .select((ParentNode::as_select(), Node::as_select()))
-            .order(parent_nodes::created_at.desc())
-            .load::<(ParentNode, Node)>(conn)
-            .map_err(anyhow::Error::from)
+        ops::paginate(conn, page_size, page_index, || {
+            parent_nodes::table
+                .inner_join(nodes::table)
+                .select((ParentNode::as_select(), Node::as_select()))
+                .order((
+                    parent_nodes::last_change_received_at.desc(),
+                    parent_nodes::created_at.desc(),
+                ))
+        })
     })
 }
 
-pub fn insert<'a>(
+/// Inserts a new parent node represented as a [NewParentNode].
+pub(super) fn insert<'a>(
     new_parent_node: &'a NewParentNode<'a>,
 ) -> impl Operation<WritableConn, ParentNode> + 'a {
     write_op(move |conn| {
@@ -64,7 +77,8 @@ pub fn insert<'a>(
     })
 }
 
-pub fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, ParentNode> + '_ {
+/// Updates a parent node row with a [ParentNode].
+pub(crate) fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, ParentNode> + '_ {
     write_op(move |conn| {
         diesel::update(parent_node)
             .set(parent_node)
@@ -73,9 +87,18 @@ pub fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, ParentNo
     })
 }
 
-/// Update `parent_nodes::changes_received` with a number that must be the current value + 1.
+pub(super) fn set_forked(id: &Id<Node>) -> impl Operation<WritableConn, ParentNode> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut parent = get_or_err(id).run(ctx)??;
+        parent.forked = true;
+        parent = update(&parent).run(ctx)?;
+        Ok(parent)
+    })
+}
+
+/// Updates [parent_nodes::changes_received] with a number that must be the current value + 1.
 /// If the `incremented_number` is not an expected value, `Err(NotFound)` will be returned.
-pub fn increment_changes_received(
+pub(crate) fn increment_changes_received(
     id: &Id<Node>,
     incremented_number: i64,
     received_at: Option<NaiveDateTime>,
@@ -94,15 +117,6 @@ pub fn increment_changes_received(
                 parent_nodes::last_change_received_at.eq(Some(received_at)),
             ))
             .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)
-    })
-}
-
-pub fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
-    write_op(move |conn| {
-        diesel::update(parent_nodes::table)
-            .set(ClearParentPassword::new())
-            .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
 }

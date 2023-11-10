@@ -1,16 +1,14 @@
 use std::collections::HashMap;
 
 use cotoami_db::prelude::*;
-use serde_json::{json, value::Value};
+use serde_json::value::Value;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
-
-use crate::client::ResponseError;
 
 /////////////////////////////////////////////////////////////////////////////
 // ApiError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ApiError {
     Request(RequestError),
     Unauthorized,
@@ -39,20 +37,7 @@ where
                 ApiError::Request(RequestError::new("authentication-failed"))
             }
             Some(DatabaseError::PermissionDenied) => ApiError::Permission,
-            _ => {
-                if let Some(ResponseError { url, status, body }) =
-                    anyhow_err.downcast_ref::<ResponseError>()
-                {
-                    ApiError::Request(
-                        RequestError::new("parent-node-error")
-                            .with_param("url", json!(url))
-                            .with_param("status", json!(status))
-                            .with_param("body", json!(body)),
-                    )
-                } else {
-                    ApiError::Server(anyhow_err.to_string())
-                }
-            }
+            _ => ApiError::Server(anyhow_err.to_string()),
         }
     }
 }
@@ -65,7 +50,7 @@ pub(crate) trait IntoApiResult<T> {
 // ApiError / RequestError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RequestError {
     code: String,
     params: HashMap<String, Value>,
@@ -97,7 +82,7 @@ impl<T> IntoApiResult<T> for RequestError {
 // ApiError / InputErrors
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct InputErrors(Vec<InputError>);
 
 fn into_result<T, E>(e: E) -> Result<T, ApiError>
@@ -137,7 +122,7 @@ impl<T> IntoApiResult<T> for (&str, ValidationErrors) {
 // ApiError / InputErrors / InputError
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) struct InputError {
     resource: String,
     field: String,

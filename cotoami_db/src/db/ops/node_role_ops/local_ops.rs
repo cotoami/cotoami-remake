@@ -4,9 +4,8 @@ use std::ops::DerefMut;
 
 use diesel::prelude::*;
 
-use super::node_ops;
 use crate::{
-    db::op::*,
+    db::{op::*, ops::node_ops},
     models::node::{
         local::{LocalNode, NewLocalNode},
         NewNode, Node,
@@ -14,7 +13,7 @@ use crate::{
     schema::{local_node, nodes},
 };
 
-pub fn get_pair<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
+pub(crate) fn get_pair<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNode, Node)>> {
     read_op(move |conn| {
         local_node::table
             .inner_join(nodes::table)
@@ -29,7 +28,7 @@ pub fn get_pair<Conn: AsReadableConn>() -> impl Operation<Conn, Option<(LocalNod
 ///
 /// This operation can be executed only once for each database.
 /// A UNIQUE constraint error will be returned when a local node has already existed.
-pub fn create<'a>(
+pub(crate) fn create<'a>(
     name: &'a str,
     password: Option<&'a str>,
 ) -> impl Operation<WritableConn, (LocalNode, Node)> + 'a {
@@ -43,7 +42,7 @@ pub fn create<'a>(
     })
 }
 
-pub fn update(local_node: &LocalNode) -> impl Operation<WritableConn, LocalNode> + '_ {
+pub(crate) fn update(local_node: &LocalNode) -> impl Operation<WritableConn, LocalNode> + '_ {
     write_op(move |conn| {
         diesel::update(local_node)
             .set(local_node)

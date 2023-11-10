@@ -40,6 +40,9 @@ pub enum DatabaseError {
 
     #[error("The local node has already been forked from: {parent_node_id}")]
     AlreadyForkedFromParent { parent_node_id: Id<Node> },
+
+    #[error("Node role conflict")]
+    NodeRoleConflict,
 }
 
 impl DatabaseError {
@@ -55,12 +58,24 @@ impl DatabaseError {
 pub enum EntityKind {
     #[display("node")]
     Node,
+
     #[display("local_node")]
     LocalNode,
+
+    #[display("network_role")]
+    NetworkRole,
+    #[display("server_node")]
+    ServerNode,
+    #[display("client_node")]
+    ClientNode,
+
+    #[display("database_role")]
+    DatabaseRole,
     #[display("parent_node")]
     ParentNode,
     #[display("child_node")]
     ChildNode,
+
     #[display("coto")]
     Coto,
     #[display("cotonoma")]

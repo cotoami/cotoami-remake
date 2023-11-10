@@ -6,7 +6,7 @@ use crate::{
     models::{node::Node, Id},
 };
 
-pub fn change_owner_node<'a>(
+pub(crate) fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {

@@ -9,6 +9,8 @@
 diesel::allow_tables_to_appear_in_same_query!(
     nodes,
     local_node,
+    server_nodes,
+    client_nodes,
     parent_nodes,
     child_nodes,
     cotos,
@@ -45,14 +47,34 @@ diesel::table! {
 diesel::joinable!(local_node -> nodes (node_id));
 
 diesel::table! {
+    server_nodes (node_id) {
+        node_id -> Text,
+        created_at -> Timestamp,
+        url_prefix -> Text,
+        encrypted_password -> Nullable<Binary>,
+        disabled -> Bool,
+    }
+}
+diesel::joinable!(server_nodes -> nodes (node_id));
+
+diesel::table! {
+    client_nodes (node_id) {
+        node_id -> Text,
+        created_at -> Timestamp,
+        password_hash -> Text,
+        session_token -> Nullable<Text>,
+        session_expires_at -> Nullable<Timestamp>,
+        disabled -> Bool,
+    }
+}
+diesel::joinable!(client_nodes -> nodes (node_id));
+
+diesel::table! {
     parent_nodes (node_id) {
         node_id -> Text,
-        url_prefix -> Text,
         created_at -> Timestamp,
-        encrypted_password -> Nullable<Binary>,
         changes_received -> BigInt,
         last_change_received_at -> Nullable<Timestamp>,
-        disabled -> Bool,
         forked -> Bool,
     }
 }
@@ -61,12 +83,9 @@ diesel::joinable!(parent_nodes -> nodes (node_id));
 diesel::table! {
     child_nodes (node_id) {
         node_id -> Text,
-        password_hash -> Text,
-        session_token -> Nullable<Text>,
-        session_expires_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
         as_owner -> Bool,
         can_edit_links -> Bool,
-        created_at -> Timestamp,
     }
 }
 diesel::joinable!(child_nodes -> nodes (node_id));
