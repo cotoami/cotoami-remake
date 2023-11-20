@@ -43,8 +43,9 @@ fn import_changes() -> Result<()> {
     let opr2 = session2.local_node_as_operator()?;
 
     let Some(_) = session2.import_node(&node1)? else { panic!() };
-    let parent_ext = session2.register_parent_node(&node1.uuid, "https://node1", &opr2)?;
-    assert_eq!(parent_ext.changes_received, 0);
+    let (_, parent) =
+        session2.register_server_node_as_parent(&node1.uuid, "https://node1", &opr2)?;
+    assert_eq!(parent.changes_received, 0);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change1 (init_as_node)
@@ -58,7 +59,8 @@ fn import_changes() -> Result<()> {
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
         session2
-            .parent_node_ext(&node1.uuid, &opr2)?
+            .parent_node(&node1.uuid, &opr2)?
+            .unwrap()
             .changes_received,
         1
     );
@@ -111,7 +113,8 @@ fn import_changes() -> Result<()> {
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
         session2
-            .parent_node_ext(&node1.uuid, &opr2)?
+            .parent_node(&node1.uuid, &opr2)?
+            .unwrap()
             .changes_received,
         2
     );
@@ -149,7 +152,8 @@ fn import_changes() -> Result<()> {
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
         session2
-            .parent_node_ext(&node1.uuid, &opr2)?
+            .parent_node(&node1.uuid, &opr2)?
+            .unwrap()
             .changes_received,
         3
     );
@@ -187,7 +191,8 @@ fn import_changes() -> Result<()> {
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
         session2
-            .parent_node_ext(&node1.uuid, &opr2)?
+            .parent_node(&node1.uuid, &opr2)?
+            .unwrap()
             .changes_received,
         4
     );
@@ -231,12 +236,12 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     let (_dir2, _, node2) = common::setup_db("Node2")?;
     let (_dir3, _, node3) = common::setup_db("Node3")?;
 
-    let mut session = db1.new_session()?;
+    let session = db1.new_session()?;
     let opr = session.local_node_as_operator()?;
     session.import_node(&node2)?;
-    session.register_parent_node(&node2.uuid, "https://node2", &opr)?;
+    session.register_server_node_as_parent(&node2.uuid, "https://node2", &opr)?;
     session.import_node(&node3)?;
-    session.register_parent_node(&node3.uuid, "https://node3", &opr)?;
+    session.register_server_node_as_parent(&node3.uuid, "https://node3", &opr)?;
 
     let origin_node_id = Id::from_str("00000000-0000-0000-0000-000000000001")?;
     let src_change = ChangelogEntry {
@@ -259,7 +264,10 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         }) if origin_node_id == origin_node_id
     );
     assert_eq!(
-        session.parent_node_ext(&node2.uuid, &opr)?.changes_received,
+        session
+            .parent_node(&node2.uuid, &opr)?
+            .unwrap()
+            .changes_received,
         1
     );
 
@@ -269,7 +277,10 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     // then
     assert!(imported_change2.is_none());
     assert_eq!(
-        session.parent_node_ext(&node3.uuid, &opr)?.changes_received,
+        session
+            .parent_node(&node3.uuid, &opr)?
+            .unwrap()
+            .changes_received,
         1
     );
 

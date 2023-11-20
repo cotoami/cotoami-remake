@@ -8,15 +8,17 @@ use diesel::{
     RunQueryDsl,
 };
 
-pub mod changelog_ops;
-pub mod child_node_ops;
-pub mod coto_ops;
-pub mod cotonoma_ops;
-pub mod graph_ops;
-pub mod link_ops;
-pub mod local_node_ops;
-pub mod node_ops;
-pub mod parent_node_ops;
+pub(crate) mod changelog_ops;
+pub(crate) mod coto_ops;
+pub(crate) mod cotonoma_ops;
+pub(crate) mod graph_ops;
+pub(crate) mod link_ops;
+pub(crate) mod node_ops;
+pub(crate) mod node_role_ops;
+
+pub(crate) mod prelude {
+    pub use super::{node_role_ops::*, *};
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination
@@ -70,7 +72,7 @@ where
 /// `query_builder` to create a same query multiple times. It will be possibly
 /// called twice, one is to fetch rows and another is to count the total.
 /// <https://github.com/diesel-rs/diesel/issues/1698>
-pub fn paginate<'a, R, F, Q>(
+fn paginate<'a, R, F, Q>(
     conn: &mut SqliteConnection,
     page_size: i64,
     page_index: i64,

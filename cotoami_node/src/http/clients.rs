@@ -1,9 +1,7 @@
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    middleware,
-    routing::get,
-    Extension, Form, Json, Router,
+    Extension, Form, Json,
 };
 use cotoami_db::prelude::*;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -12,34 +10,28 @@ use validator::Validate;
 
 use crate::{
     api::error::{ApiError, IntoApiResult},
-    http::{require_session, Pagination},
+    http::Pagination,
     AppState,
 };
-
-pub(crate) fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/", get(recent_child_nodes).post(add_child_node))
-        .layer(middleware::from_fn(require_session))
-}
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/nodes/children
+// GET /api/nodes/clients
 /////////////////////////////////////////////////////////////////////////////
 
-async fn recent_child_nodes(
+pub(crate) async fn recent_client_nodes(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Node>>, ApiError> {
     if let Err(errors) = pagination.validate() {
-        return ("nodes/children", errors).into_result();
+        return ("nodes/clients", errors).into_result();
     }
     spawn_blocking(move || {
         let mut db = state.db.new_session()?;
         let nodes = db
-            .recent_child_nodes(
+            .recent_client_nodes(
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
                 &operator,
@@ -52,44 +44,50 @@ async fn recent_child_nodes(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// POST /api/nodes/children
+// POST /api/nodes/clients
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-struct AddChildNode {
+pub(crate) struct AddClientNode {
     #[validate(required)]
     id: Option<Id<Node>>,
-
     as_owner: Option<bool>,
-
     can_edit_links: Option<bool>,
+    as_parent: Option<bool>,
 }
 
 #[derive(serde::Serialize)]
-struct ChildNodeAdded {
+pub(crate) struct ClientNodeAdded {
     /// Generated password
     password: String,
 }
 
-async fn add_child_node(
+pub(crate) async fn add_client_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
-    Form(form): Form<AddChildNode>,
-) -> Result<(StatusCode, Json<ChildNodeAdded>), ApiError> {
+    Form(form): Form<AddClientNode>,
+) -> Result<(StatusCode, Json<ClientNodeAdded>), ApiError> {
     if let Err(errors) = form.validate() {
-        return ("nodes/child", errors).into_result();
+        return ("nodes/client", errors).into_result();
     }
     spawn_blocking(move || {
         let db = state.db.new_session()?;
         let password = generate_password();
-        db.register_child_node(
+        let database_role = if form.as_parent.unwrap_or(false) {
+            NewDatabaseRole::Parent
+        } else {
+            NewDatabaseRole::Child {
+                as_owner: form.as_owner.unwrap_or(false),
+                can_edit_links: form.can_edit_links.unwrap_or(false),
+            }
+        };
+        db.register_client_node(
             form.id.unwrap_or_else(|| unreachable!()),
             &password,
-            form.as_owner.unwrap_or(false),
-            form.can_edit_links.unwrap_or(false),
+            database_role,
             &operator,
         )?;
-        let response_body = ChildNodeAdded { password };
+        let response_body = ClientNodeAdded { password };
         Ok((StatusCode::CREATED, Json(response_body)))
     })
     .await?

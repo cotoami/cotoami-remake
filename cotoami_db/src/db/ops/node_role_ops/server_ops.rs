@@ -1,0 +1,105 @@
+//! ServerNode related operations
+
+use std::ops::DerefMut;
+
+use diesel::prelude::*;
+
+use crate::{
+    db::{error::*, op::*},
+    models::{
+        node::{
+            server::{ClearServerPassword, NewServerNode, ServerNode},
+            Node,
+        },
+        Id,
+    },
+    schema::{nodes, server_nodes},
+};
+
+/// Returns a [ServerNode] by its ID.
+pub(crate) fn get<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Option<ServerNode>> + '_ {
+    read_op(move |conn| {
+        server_nodes::table
+            .find(id)
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Returns a [ServerNode] by its ID or a [DatabaseError::EntityNotFound].
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Node>,
+) -> impl Operation<Conn, Result<ServerNode, DatabaseError>> + '_ {
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ServerNode, *id)))
+}
+
+/// Returns all [ServerNode]/[Node] pairs in arbitrary order.
+pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(ServerNode, Node)>> {
+    read_op(move |conn| {
+        server_nodes::table
+            .inner_join(nodes::table)
+            .select((ServerNode::as_select(), Node::as_select()))
+            .load::<(ServerNode, Node)>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Inserts a new server node represented as a [NewServerNode].
+pub(super) fn insert<'a>(
+    new_server_node: &'a NewServerNode<'a>,
+) -> impl Operation<WritableConn, ServerNode> + 'a {
+    write_op(move |conn| {
+        diesel::insert_into(server_nodes::table)
+            .values(new_server_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Updates a server node row with a [ServerNode].
+pub(crate) fn update(server_node: &ServerNode) -> impl Operation<WritableConn, ServerNode> + '_ {
+    write_op(move |conn| {
+        diesel::update(server_node)
+            .set(server_node)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn save_server_password<'a>(
+    id: &'a Id<Node>,
+    password: &'a str,
+    encryption_password: &'a str,
+) -> impl Operation<WritableConn, ServerNode> + 'a {
+    composite_op::<WritableConn, _, _>(|ctx| {
+        let mut server = get_or_err(id).run(ctx)??;
+        server.save_password(password, encryption_password)?;
+        server = update(&server).run(ctx)?;
+        Ok(server)
+    })
+}
+
+pub(super) fn set_disabled(
+    id: &Id<Node>,
+    disabled: bool,
+) -> impl Operation<WritableConn, ServerNode> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut server = get_or_err(id).run(ctx)??;
+        server.disabled = disabled;
+        server = update(&server).run(ctx)?;
+        Ok(server)
+    })
+}
+
+/// Clears the password of every server node in this database.
+pub(crate) fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
+    write_op(move |conn| {
+        diesel::update(server_nodes::table)
+            .set(ClearServerPassword::new())
+            .execute(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}

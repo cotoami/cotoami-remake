@@ -1,14 +1,14 @@
 use std::convert::Infallible;
 
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::{StatusCode, Uri},
     middleware,
     response::{
         sse::{Event, KeepAlive, Sse},
         IntoResponse,
     },
-    routing::get,
+    routing::{delete, get, put},
     Extension, Router,
 };
 use cotoami_db::prelude::*;
@@ -17,8 +17,11 @@ use futures::stream::Stream;
 use super::*;
 use crate::{
     api,
-    api::error::{ApiError, IntoApiResult},
-    AppState, SsePubsubTopic,
+    api::{
+        changes::ChunkOfChanges,
+        error::{ApiError, IntoApiResult},
+    },
+    AppState,
 };
 
 pub(crate) fn router(state: AppState) -> Router {
@@ -33,7 +36,17 @@ pub(crate) fn router(state: AppState) -> Router {
 fn paths() -> Router<AppState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
-        .nest("/session", session::routes())
+        .nest(
+            "/session",
+            Router::new()
+                .route("/", delete(super::session::delete_session))
+                .route_layer(middleware::from_fn(super::require_session))
+                .route("/owner", put(super::session::create_owner_session))
+                .route(
+                    "/client-node",
+                    put(super::session::create_client_node_session),
+                ),
+        )
         .nest(
             "/events",
             Router::new()
@@ -50,8 +63,33 @@ fn paths() -> Router<AppState> {
             "/nodes",
             Router::new()
                 .route("/local", get(local_node))
-                .nest("/parents", super::nodes::parents::routes())
-                .nest("/children", super::nodes::children::routes())
+                .nest(
+                    "/servers",
+                    Router::new()
+                        .route(
+                            "/",
+                            get(super::servers::all_servers).post(super::servers::add_server_node),
+                        )
+                        .route("/:node_id", put(super::servers::update_server_node))
+                        .route("/:node_id/fork", put(fork_from_parent))
+                        .layer(middleware::from_fn(require_session)),
+                )
+                .nest(
+                    "/clients",
+                    Router::new()
+                        .route(
+                            "/",
+                            get(super::clients::recent_client_nodes)
+                                .post(super::clients::add_client_node),
+                        )
+                        .layer(middleware::from_fn(require_session)),
+                )
+                .nest(
+                    "parents",
+                    Router::new()
+                        .route("/:node_id/fork", put(fork_from_parent))
+                        .layer(middleware::from_fn(require_session)),
+                )
                 .layer(middleware::from_fn(super::require_session)),
         )
         .nest("/cotos", cotos::routes())
@@ -83,7 +121,7 @@ pub(crate) struct Position {
 async fn chunk_of_changes(
     State(state): State<AppState>,
     Query(position): Query<Position>,
-) -> Result<Json<api::changes::ChangesResult>, ApiError> {
+) -> Result<Json<ChunkOfChanges>, ApiError> {
     if let Err(errors) = position.validate() {
         return ("changes", errors).into_result();
     }
@@ -100,8 +138,35 @@ async fn chunk_of_changes(
 
 async fn stream_events(
     State(state): State<AppState>,
+    Extension(_session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     // FIXME: subscribe to changes or requests
-    let sub = state.pubsub.sse.subscribe(Some(SsePubsubTopic::Change));
+    let sub = state.pubsub.sse_change.subscribe(None::<()>);
     Sse::new(sub).keep_alive(KeepAlive::default())
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/nodes/parents/:node_id/fork
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Serialize)]
+struct Forked {
+    affected: usize,
+}
+
+async fn fork_from_parent(
+    State(state): State<AppState>,
+    Extension(operator): Extension<Operator>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Json<Forked>, ApiError> {
+    state.server_conn(&node_id)?.disable_sse();
+
+    let (affected, change) = spawn_blocking(move || {
+        let db = state.db.new_session()?;
+        db.fork_from(&node_id, &operator)
+    })
+    .await??;
+    state.pubsub.publish_change(change);
+
+    Ok(Json(Forked { affected }))
 }

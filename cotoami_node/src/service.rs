@@ -13,34 +13,77 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
+use anyhow::Result;
 use bytes::Bytes;
-use cotoami_db::prelude::{Id, Node};
 use derive_new::new;
+use serde::de::DeserializeOwned;
+use thiserror::Error;
+use tower_service::Service;
 use uuid::Uuid;
 
-use crate::api::error::ApiError;
+use crate::{api, api::error::ApiError};
 
 pub mod client;
-mod server;
+mod local_node;
+pub mod service_ext;
+
+pub use service_ext::{NodeServiceExt, RemoteNodeServiceExt};
+
+/////////////////////////////////////////////////////////////////////////////
+// Service
+/////////////////////////////////////////////////////////////////////////////
+
+pub trait NodeService: Service<Request, Response = Response, Error = anyhow::Error>
+where
+    Self::Future: Send,
+{
+    fn description(&self) -> &str;
+}
+
+pub trait RemoteNodeService: NodeService
+where
+    Self::Future: Send,
+{
+    fn set_session_token(&mut self, token: &str) -> Result<()>;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Request
+/////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
-    to: Id<Node>,
     body: RequestBody,
 }
 
 impl Request {
-    pub fn new(to: Id<Node>, body: RequestBody) -> Self {
+    pub fn new(body: RequestBody) -> Self {
         Self {
             id: Uuid::new_v4(),
-            to,
             body,
         }
     }
 
-    pub fn to(&self) -> &Id<Node> { &self.to }
+    pub fn id(&self) -> &Uuid { &self.id }
+
+    pub fn body(&self) -> &RequestBody { &self.body }
 }
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub enum RequestBody {
+    LocalNode,
+    ChunkOfChanges { from: i64 },
+    CreateClientNodeSession(api::session::CreateClientNodeSession),
+}
+
+impl RequestBody {
+    pub fn into_request(self) -> Request { Request::new(self) }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Response
+/////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, new)]
 pub struct Response {
@@ -48,8 +91,13 @@ pub struct Response {
     body: Result<Bytes, ApiError>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub enum RequestBody {
-    LocalNode,
-    ChunkOfChanges { from: i64 },
+impl Response {
+    pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
+        let bytes = self.body.map_err(ApiCallError)?;
+        rmp_serde::from_slice(&bytes).map_err(anyhow::Error::from)
+    }
 }
+
+#[derive(Error, Debug)]
+#[error("API call error: {0:?}")]
+pub struct ApiCallError(ApiError);

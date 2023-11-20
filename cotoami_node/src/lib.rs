@@ -1,6 +1,4 @@
-use std::{
-    collections::HashMap, convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc,
-};
+use std::{convert::Infallible, fs, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use anyhow::{anyhow, Context, Result};
 use axum::response::sse::Event;
@@ -12,17 +10,14 @@ use tokio::{
     sync::{oneshot, oneshot::Sender},
     task::{spawn_blocking, JoinHandle},
 };
-use tracing::{debug, info};
+use tracing::info;
 use validator::Validate;
 
-use crate::{
-    client::{EventLoop, EventLoopState, Server},
-    http::session::Session,
-    service::client::pubsub::PubsubClient,
-};
+use crate::conn::{ServerConnection, ServerConnections};
 
 mod api;
 mod client;
+mod conn;
 mod http;
 mod pubsub;
 pub mod service;
@@ -32,7 +27,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     let port = state.config.port;
 
     state.init_local_node().await?;
-    state.restore_parent_conns().await?;
+    state.restore_server_conns().await?;
 
     let router = http::router(state);
 
@@ -60,9 +55,8 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
 struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
-    pubsub: Arc<Pubsub>,
-    api_client: Arc<PubsubClient>,
-    parent_conns: Arc<RwLock<ParentConns>>,
+    pubsub: Pubsub,
+    server_conns: Arc<RwLock<ServerConnections>>,
 }
 
 impl AppState {
@@ -75,22 +69,11 @@ impl AppState {
 
         let pubsub = Pubsub::new();
 
-        let api_client = PubsubClient::new();
-        pubsub.sse.tap_into(
-            api_client.request_pubsub.subscribe(None::<()>),
-            |request| Some(SsePubsubTopic::Request(*request.to())),
-            |request| {
-                let event = Event::default().event("request").json_data(request)?;
-                Ok(Ok(event))
-            },
-        );
-
         Ok(AppState {
             config: Arc::new(config),
             db: Arc::new(db),
-            pubsub: Arc::new(pubsub),
-            api_client: Arc::new(api_client),
-            parent_conns: Arc::new(RwLock::new(HashMap::default())),
+            pubsub,
+            server_conns: Arc::new(RwLock::new(ServerConnections::default())),
         })
     }
 
@@ -136,44 +119,47 @@ impl AppState {
         .await?
     }
 
-    fn parent_conn(&self, parent_id: &Id<Node>) -> Result<MappedRwLockReadGuard<ParentConn>> {
-        RwLockReadGuard::try_map(self.parent_conns.read(), |conns| conns.get(parent_id))
-            .map_err(|_| anyhow!("ParentConn for {} not found", parent_id))
+    fn server_conn(&self, server_id: &Id<Node>) -> Result<MappedRwLockReadGuard<ServerConnection>> {
+        RwLockReadGuard::try_map(self.server_conns.read(), |conns| conns.get(server_id))
+            .map_err(|_| anyhow!("ServerConnection for {} not found", server_id))
     }
 
-    fn put_parent_conn(&self, parent_id: &Id<Node>, session: Session, event_loop: EventLoop) {
-        let parent_conn = ParentConn::new(session, event_loop);
-        self.parent_conns.write().insert(*parent_id, parent_conn);
+    fn contains_server(&self, server_id: &Id<Node>) -> bool {
+        self.server_conns.read().contains_key(server_id)
     }
 
-    async fn restore_parent_conns(&self) -> Result<()> {
+    fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
+        self.server_conns.write().insert(*server_id, server_conn);
+    }
+
+    async fn restore_server_conns(&self) -> Result<()> {
         let db = self.db.clone();
-        let (local_node, parent_nodes) = spawn_blocking(move || {
+        let (local_node, server_nodes) = spawn_blocking(move || {
             let mut db = db.new_session()?;
             let operator = db.local_node_as_operator()?;
             Ok::<_, anyhow::Error>((
                 db.local_node_pair(&operator)?.1,
-                db.all_parent_nodes(&operator)?,
+                db.all_server_nodes(&operator)?,
             ))
         })
         .await??;
 
-        let mut parent_conns = self.parent_conns.write();
-        parent_conns.clear();
-        for (parent_node, _) in parent_nodes.iter() {
-            let parent_conn = if parent_node.disabled {
-                ParentConn::Disabled
+        let mut server_conns = self.server_conns.write();
+        server_conns.clear();
+        for (server_node, _) in server_nodes.iter() {
+            let server_conn = if server_node.disabled {
+                ServerConnection::Disabled
             } else {
-                ParentConn::connect(
-                    parent_node,
-                    &local_node,
-                    &self.config,
+                ServerConnection::connect(
+                    server_node,
+                    local_node.clone(),
+                    self.config.owner_password(),
                     &self.db,
-                    &self.pubsub,
+                    &self.pubsub.local_change,
                 )
                 .await
             };
-            parent_conns.insert(parent_node.node_id, parent_conn);
+            server_conns.insert(server_node.node_id, server_conn);
         }
         Ok(())
     }
@@ -270,26 +256,30 @@ impl Config {
 // Pubsub
 /////////////////////////////////////////////////////////////////////////////
 
+#[derive(Clone)]
 struct Pubsub {
-    pub local_change: LocalChangePubsub,
-    pub sse: SsePubsub,
+    pub local_change: Arc<ChangePubsub>,
+    pub sse_change: Arc<SsePubsub>,
 }
 
 impl Pubsub {
     fn new() -> Self {
-        let local_change = LocalChangePubsub::new();
-        let sse = SsePubsub::new();
+        let local_change = ChangePubsub::new();
+        let sse_change = SsePubsub::new();
 
-        sse.tap_into(
+        sse_change.tap_into(
             local_change.subscribe(None::<()>),
-            |_| Some(SsePubsubTopic::Change),
+            |_| None,
             |change| {
                 let event = Event::default().event("change").json_data(change)?;
                 Ok(Ok(event))
             },
         );
 
-        Self { local_change, sse }
+        Self {
+            local_change: Arc::new(local_change),
+            sse_change: Arc::new(sse_change),
+        }
     }
 
     fn publish_change(&self, changelog: ChangelogEntry) {
@@ -297,106 +287,5 @@ impl Pubsub {
     }
 }
 
-type LocalChangePubsub = Publisher<ChangelogEntry, ()>;
-type SsePubsub = Publisher<Result<Event, Infallible>, SsePubsubTopic>;
-
-#[derive(Clone, PartialEq, Eq, Hash)]
-enum SsePubsubTopic {
-    Change,
-    Request(Id<Node>),
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// ParentConn
-/////////////////////////////////////////////////////////////////////////////
-
-enum ParentConn {
-    Disabled,
-    InitFailed(anyhow::Error),
-    Connected {
-        session: Session,
-        event_loop_state: Arc<RwLock<EventLoopState>>,
-    },
-}
-
-impl ParentConn {
-    fn new(session: Session, mut event_loop: EventLoop) -> Self {
-        let parent_conn = ParentConn::Connected {
-            session,
-            event_loop_state: event_loop.state(),
-        };
-        tokio::spawn(async move {
-            event_loop.start().await;
-        });
-        parent_conn
-    }
-
-    async fn connect(
-        parent_node: &ParentNode,
-        local_node: &Node,
-        config: &Config,
-        db: &Arc<Database>,
-        pubsub: &Arc<Pubsub>,
-    ) -> Self {
-        match Self::try_connect(parent_node, local_node, config, db, pubsub).await {
-            Ok(conn) => conn,
-            Err(err) => {
-                debug!("Failed to initialize a parent connection: {:?}", err);
-                ParentConn::InitFailed(err)
-            }
-        }
-    }
-
-    async fn try_connect(
-        parent_node: &ParentNode,
-        local_node: &Node,
-        config: &Config,
-        db: &Arc<Database>,
-        pubsub: &Arc<Pubsub>,
-    ) -> Result<Self> {
-        let mut server = Server::new(parent_node.url_prefix.clone())?;
-
-        // Attempt to log in to the parent node
-        let password = parent_node
-            .password(config.owner_password())?
-            .ok_or(anyhow!("Parent password is missing."))?;
-        let child_session = server
-            .create_child_session(password, None, &local_node)
-            .await?;
-        info!("Successfully logged in to {}", server.url_prefix());
-
-        // Import the changelog
-        server
-            .import_changes(db, pubsub, parent_node.node_id)
-            .await?;
-
-        // Create an event stream
-        let event_loop = server
-            .create_event_loop(parent_node.node_id, db, pubsub)
-            .await?;
-
-        Ok(Self::new(child_session.session, event_loop))
-    }
-
-    fn disable_event_loop(&self) {
-        if let ParentConn::Connected {
-            event_loop_state, ..
-        } = self
-        {
-            event_loop_state.write().disable();
-        }
-    }
-
-    fn restart_event_loop_if_possible(&self) -> bool {
-        if let ParentConn::Connected {
-            event_loop_state, ..
-        } = self
-        {
-            event_loop_state.write().restart_if_possible()
-        } else {
-            false
-        }
-    }
-}
-
-type ParentConns = HashMap<Id<Node>, ParentConn>;
+type ChangePubsub = Publisher<ChangelogEntry, ()>;
+type SsePubsub = Publisher<Result<Event, Infallible>, ()>;

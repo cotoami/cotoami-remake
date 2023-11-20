@@ -14,12 +14,28 @@ use diesel::{
 };
 use uuid::Uuid;
 
+use self::{node::parent::ParentNode, operator::Operator};
+
 pub mod changelog;
 pub mod coto;
 pub mod cotonoma;
 pub mod graph;
 pub mod link;
 pub mod node;
+pub mod operator;
+
+pub(crate) mod prelude {
+    pub use super::{
+        changelog::*,
+        coto::*,
+        cotonoma::*,
+        graph::*,
+        link::*,
+        node::{child::*, client::*, local::*, parent::*, server::*, *},
+        operator::*,
+        ClientSession, Id, Ids,
+    };
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Id<T>
@@ -150,6 +166,16 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
         }
         Ok(Self(ids))
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// ClientSession
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone)]
+pub enum ClientSession {
+    Operator(Operator),
+    ParentNode(ParentNode),
 }
 
 /////////////////////////////////////////////////////////////////////////////

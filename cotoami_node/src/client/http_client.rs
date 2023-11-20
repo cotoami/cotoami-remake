@@ -17,9 +17,17 @@ use reqwest::{
     Client, RequestBuilder, StatusCode, Url,
 };
 use tower_service::Service;
+use uuid::Uuid;
 
-use crate::{api::error::*, http, http::csrf, service::*};
+use crate::{
+    api::error::{ApiError, *},
+    http,
+    http::csrf,
+    service::*,
+};
 
+/// You do **not** have to wrap the `HttpClient` in an [`Rc`] or [`Arc`] to **reuse** it,
+/// because it already uses an [`Arc`] internally.
 #[derive(Clone)]
 pub struct HttpClient {
     client: Client,
@@ -40,15 +48,6 @@ impl HttpClient {
     }
 
     pub fn url_prefix(&self) -> &str { &self.url_prefix }
-
-    pub fn set_session_token(&mut self, token: &str) -> Result<()> {
-        let mut token = HeaderValue::from_str(token)?;
-        token.set_sensitive(true);
-        self.headers
-            .write()
-            .insert(http::SESSION_HEADER_NAME, token);
-        Ok(())
-    }
 
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -71,25 +70,30 @@ impl HttpClient {
         url
     }
 
-    fn get(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> RequestBuilder {
+    pub fn get(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> RequestBuilder {
         let url = self.url(path, query);
         self.client.get(url).headers(self.headers.read().clone())
     }
 
-    async fn handle_request(self, request: &Request) -> Result<Response, reqwest::Error> {
-        let http_req = match request.body {
+    pub fn put(&self, path: &str) -> RequestBuilder {
+        let url = self.url(path, None);
+        self.client.put(url).headers(self.headers.read().clone())
+    }
+
+    async fn handle_request(self, request: Request) -> Result<Response> {
+        let http_req = match request.body() {
             RequestBody::LocalNode => self.get("/api/nodes/local", None),
             RequestBody::ChunkOfChanges { from } => {
                 self.get("/api/changes", Some(vec![("from", &from.to_string())]))
             }
+            RequestBody::CreateClientNodeSession(input) => {
+                self.put("/api/session/client-node").json(&input)
+            }
         };
-        Self::convert_response(request.id, http_req.send().await?).await
+        Self::convert_response(*request.id(), http_req.send().await?).await
     }
 
-    async fn convert_response(
-        id: Uuid,
-        from: reqwest::Response,
-    ) -> Result<Response, reqwest::Error> {
+    async fn convert_response(id: Uuid, from: reqwest::Response) -> Result<Response> {
         if from.status().is_success() {
             return Ok(Response::new(id, Ok(from.bytes().await?)));
         }
@@ -109,8 +113,8 @@ impl HttpClient {
 
 impl Service<Request> for HttpClient {
     type Response = Response;
-    type Error = reqwest::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Error = anyhow::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
@@ -118,6 +122,21 @@ impl Service<Request> for HttpClient {
 
     fn call(&mut self, request: Request) -> Self::Future {
         let this = self.clone();
-        Box::pin(async move { this.handle_request(&request).await })
+        Box::pin(async move { this.handle_request(request).await })
+    }
+}
+
+impl NodeService for HttpClient {
+    fn description(&self) -> &str { self.url_prefix() }
+}
+
+impl RemoteNodeService for HttpClient {
+    fn set_session_token(&mut self, token: &str) -> Result<()> {
+        let mut token = HeaderValue::from_str(token)?;
+        token.set_sensitive(true);
+        self.headers
+            .write()
+            .insert(http::SESSION_HEADER_NAME, token);
+        Ok(())
     }
 }

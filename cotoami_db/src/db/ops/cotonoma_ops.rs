@@ -18,7 +18,7 @@ use crate::{
     schema::{cotonomas, cotos},
 };
 
-pub fn get<Conn: AsReadableConn>(
+pub(crate) fn get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
     read_op(move |conn| {
@@ -32,13 +32,13 @@ pub fn get<Conn: AsReadableConn>(
     })
 }
 
-pub fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
-pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
+pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
     read_op(move |conn| {
         cotonomas::table
             .order(cotonomas::created_at.asc())
@@ -47,7 +47,7 @@ pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
     })
 }
 
-pub fn recent<Conn: AsReadableConn>(
+pub(crate) fn recent<Conn: AsReadableConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,
     page_index: i64,
@@ -63,7 +63,7 @@ pub fn recent<Conn: AsReadableConn>(
     })
 }
 
-pub fn create_root<'a>(
+pub(crate) fn create_root<'a>(
     node_id: &'a Id<Node>,
     name: &'a str,
 ) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
@@ -76,7 +76,7 @@ pub fn create_root<'a>(
     })
 }
 
-pub fn create<'a>(
+pub(crate) fn create<'a>(
     node_id: &'a Id<Node>,
     posted_in_id: &'a Id<Cotonoma>,
     posted_by_id: &'a Id<Node>,
@@ -91,7 +91,7 @@ pub fn create<'a>(
     })
 }
 
-pub fn insert<'a>(
+pub(crate) fn insert<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
 ) -> impl Operation<WritableConn, Cotonoma> + 'a {
     write_op(move |conn| {
@@ -102,7 +102,7 @@ pub fn insert<'a>(
     })
 }
 
-pub fn update<'a>(
+pub(crate) fn update<'a>(
     update_cotonoma: &'a UpdateCotonoma,
 ) -> impl Operation<WritableConn, Cotonoma> + 'a {
     write_op(move |conn| {
@@ -114,14 +114,14 @@ pub fn update<'a>(
     })
 }
 
-pub fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConn, bool> + '_ {
+pub(crate) fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConn, bool> + '_ {
     write_op(move |conn| {
         let affected = diesel::delete(cotonomas::table.find(id)).execute(conn.deref_mut())?;
         Ok(affected > 0)
     })
 }
 
-pub fn rename<'a>(
+pub(crate) fn rename<'a>(
     id: &'a Id<Cotonoma>,
     name: &'a str,
     updated_at: Option<NaiveDateTime>,
@@ -146,7 +146,7 @@ pub fn rename<'a>(
     })
 }
 
-pub fn change_owner_node<'a>(
+pub(crate) fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {
@@ -159,7 +159,7 @@ pub fn change_owner_node<'a>(
     })
 }
 
-pub fn update_number_of_posts(
+pub(crate) fn update_number_of_posts(
     id: &Id<Cotonoma>,
     delta: i64,
 ) -> impl Operation<WritableConn, i64> + '_ {

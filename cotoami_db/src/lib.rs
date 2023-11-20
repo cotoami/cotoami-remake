@@ -1,19 +1,5 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
-pub mod prelude {
-    pub use crate::{
-        db::{error::*, operator::Operator, ops::Paginated, Database, DatabaseSession},
-        models::{
-            changelog::{Change, ChangelogEntry},
-            coto::Coto,
-            cotonoma::Cotonoma,
-            link::Link,
-            node::{local::LocalNode, parent::ParentNode, Node, Principal},
-            Id,
-        },
-    };
-}
-
 use base64::Engine;
 use chrono::{offset::Utc, NaiveDateTime};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -22,6 +8,17 @@ use serde::{Deserialize, Deserializer, Serializer};
 pub mod db;
 pub mod models;
 mod schema;
+
+pub mod prelude {
+    pub use crate::{
+        db::{
+            error::*,
+            ops::{node_role_ops::*, Paginated},
+            Database, DatabaseSession,
+        },
+        models::prelude::*,
+    };
+}
 
 /// Returns the current datetime in UTC.
 fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }

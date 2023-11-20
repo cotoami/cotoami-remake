@@ -17,7 +17,7 @@ use crate::{
     schema::links,
 };
 
-pub fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<Link>> + '_ {
+pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<Link>> + '_ {
     read_op(move |conn| {
         links::table
             .find(id)
@@ -27,13 +27,13 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, Option<L
     })
 }
 
-pub fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Link>,
 ) -> impl Operation<Conn, Result<Link, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Link, *id)))
 }
 
-pub fn recent<'a, Conn: AsReadableConn>(
+pub(crate) fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     created_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
@@ -53,7 +53,7 @@ pub fn recent<'a, Conn: AsReadableConn>(
     })
 }
 
-pub fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
+pub(crate) fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let link: Link = diesel::insert_into(links::table)
             .values(new_link)
@@ -63,7 +63,7 @@ pub fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Lin
     })
 }
 
-pub fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConn, Link> + 'a {
+pub(crate) fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConn, Link> + 'a {
     write_op(move |conn| {
         update_link.validate()?;
         diesel::update(update_link)
@@ -73,7 +73,7 @@ pub fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<WritableConn, L
     })
 }
 
-pub fn delete(id: &Id<Link>) -> impl Operation<WritableConn, bool> + '_ {
+pub(crate) fn delete(id: &Id<Link>) -> impl Operation<WritableConn, bool> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let deleted: Option<Link> = diesel::delete(links::table.find(id))
             .get_result(ctx.conn().deref_mut())
@@ -88,7 +88,7 @@ pub fn delete(id: &Id<Link>) -> impl Operation<WritableConn, bool> + '_ {
     })
 }
 
-pub fn change_owner_node<'a>(
+pub(crate) fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {

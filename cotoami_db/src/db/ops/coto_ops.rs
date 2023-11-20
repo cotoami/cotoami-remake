@@ -17,7 +17,7 @@ use crate::{
     schema::cotos,
 };
 
-pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
+pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<Coto>> + '_ {
     read_op(move |conn| {
         cotos::table
             .find(id)
@@ -27,13 +27,13 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, Option<C
     })
 }
 
-pub fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
 }
 
-pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
+pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     read_op(move |conn| {
         cotos::table
             .order(cotos::rowid.asc())
@@ -42,7 +42,7 @@ pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     })
 }
 
-pub fn recent<'a, Conn: AsReadableConn>(
+pub(crate) fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
@@ -62,7 +62,7 @@ pub fn recent<'a, Conn: AsReadableConn>(
     })
 }
 
-pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
+pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto: Coto = diesel::insert_into(cotos::table)
             .values(new_coto)
@@ -77,7 +77,7 @@ pub fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Cot
     })
 }
 
-pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, Coto> + 'a {
+pub(crate) fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, Coto> + 'a {
     write_op(move |conn| {
         update_coto.validate()?;
         diesel::update(update_coto)
@@ -87,7 +87,7 @@ pub fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<WritableConn, C
     })
 }
 
-pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
+pub(crate) fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
@@ -108,7 +108,7 @@ pub fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
     })
 }
 
-pub fn change_owner_node<'a>(
+pub(crate) fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
 ) -> impl Operation<WritableConn, usize> + 'a {
@@ -121,7 +121,7 @@ pub fn change_owner_node<'a>(
     })
 }
 
-pub fn update_number_of_outgoing_links(
+pub(crate) fn update_number_of_outgoing_links(
     id: &Id<Coto>,
     delta: i32,
 ) -> impl Operation<WritableConn, i32> + '_ {

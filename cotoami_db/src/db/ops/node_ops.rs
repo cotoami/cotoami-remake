@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
+pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
         nodes
@@ -29,13 +29,13 @@ pub fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<N
     })
 }
 
-pub fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<Node, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Node, *id)))
 }
 
-pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
+pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
     use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
         nodes
@@ -45,7 +45,7 @@ pub fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
     })
 }
 
-pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Node> + 'a {
+pub(crate) fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Node> + 'a {
     use crate::schema::nodes::dsl::*;
     write_op(move |conn| {
         diesel::insert_into(nodes)
@@ -55,7 +55,9 @@ pub fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Nod
     })
 }
 
-pub fn get_or_insert_placeholder<'a>(id: Id<Node>) -> impl Operation<WritableConn, Node> + 'a {
+pub(crate) fn get_or_insert_placeholder<'a>(
+    id: Id<Node>,
+) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         if let Some(node) = get(&id).run(ctx)? {
             Ok(node)
@@ -65,7 +67,7 @@ pub fn get_or_insert_placeholder<'a>(id: Id<Node>) -> impl Operation<WritableCon
     })
 }
 
-pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, Node> + 'a {
+pub(crate) fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, Node> + 'a {
     write_op(move |conn| {
         update_node.validate()?;
         diesel::update(update_node)
@@ -75,7 +77,10 @@ pub fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<WritableConn, N
     })
 }
 
-pub fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableConn, Node> + 'a {
+pub(crate) fn set_name<'a>(
+    id: &'a Id<Node>,
+    name: &'a str,
+) -> impl Operation<WritableConn, Node> + 'a {
     use crate::schema::nodes;
     write_op(move |conn| {
         diesel::update(nodes::table)
@@ -93,7 +98,7 @@ pub fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableC
 ///
 /// If the `updated_at` has some value, it will be used to set
 /// [Cotonoma::updated_at] when updating it.
-pub fn rename<'a>(
+pub(crate) fn rename<'a>(
     id: &'a Id<Node>,
     name: &'a str,
     updated_at: Option<NaiveDateTime>,
@@ -112,7 +117,7 @@ pub fn rename<'a>(
 /// Updates the `root_cotonoma_id` of the specified node.
 ///
 /// The node name will be updated to the name of the new root cotonoma.
-pub fn set_root_cotonoma<'a>(
+pub(crate) fn set_root_cotonoma<'a>(
     id: &'a Id<Node>,
     cotonoma_id: &'a Id<Cotonoma>,
 ) -> impl Operation<WritableConn, Node> + 'a {
@@ -126,7 +131,7 @@ pub fn set_root_cotonoma<'a>(
     })
 }
 
-pub fn create_root_cotonoma<'a>(
+pub(crate) fn create_root_cotonoma<'a>(
     node_id: &'a Id<Node>,
     name: &'a str,
 ) -> impl Operation<WritableConn, (Node, Cotonoma, Coto)> + 'a {
@@ -142,7 +147,7 @@ pub fn create_root_cotonoma<'a>(
 ///
 /// The update will be done only when the ID of the passed data already exists
 /// in the local database and the version of it is larger than the existing one.
-pub fn upsert(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
+pub(crate) fn upsert(node: &Node) -> impl Operation<WritableConn, Option<Node>> + '_ {
     composite_op::<WritableConn, _, _>(|ctx| match get(&node.uuid).run(ctx)? {
         Some(local_row) => {
             if node.version > local_row.version {
