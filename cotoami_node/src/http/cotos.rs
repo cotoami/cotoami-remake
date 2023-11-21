@@ -35,7 +35,7 @@ async fn recent_cotos(
         return ("cotos", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let cotos = db.recent_cotos(
             None,
             None,
