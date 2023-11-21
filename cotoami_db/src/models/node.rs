@@ -49,7 +49,7 @@ pub struct Node {
     /// Icon image
     #[serde(
         serialize_with = "crate::as_base64",
-        deserialize_with = "crate::from_base64"
+        deserialize_with = "Bytes::from_base64"
     )]
     #[debug(skip)]
     pub icon: Bytes,
@@ -78,7 +78,7 @@ impl Node {
     pub fn to_update(&self) -> UpdateNode {
         UpdateNode {
             uuid: &self.uuid,
-            icon: &self.icon,
+            icon: self.icon.as_ref(),
             name: &self.name,
             root_cotonoma_id: self.root_cotonoma_id.as_ref(),
             version: self.version + 1, // increment the version
@@ -153,7 +153,7 @@ impl<'a> NewNode<'a> {
 #[diesel(table_name = nodes, primary_key(uuid))]
 pub struct ImportNode<'a> {
     uuid: &'a Id<Node>,
-    icon: &'a Vec<u8>,
+    icon: &'a Bytes,
     name: &'a str,
     root_cotonoma_id: Option<&'a Id<Cotonoma>>,
     version: i32,
@@ -170,7 +170,7 @@ pub struct ImportNode<'a> {
 pub struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
     #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
-    pub icon: &'a Vec<u8>,
+    pub icon: &'a [u8],
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     pub name: &'a str,
     pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,

@@ -17,6 +17,7 @@ use diesel::{
     sqlite::Sqlite,
     FromSqlRow,
 };
+use serde::Deserializer;
 use uuid::Uuid;
 
 use self::{node::parent::ParentNode, operator::Operator};
@@ -184,8 +185,17 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
 #[serde(transparent)]
 pub struct Bytes(bytes::Bytes);
 
+impl Bytes {
+    fn from_base64<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        crate::from_base64(deserializer).map(Bytes::from)
+    }
+}
+
 impl AsRef<[u8]> for Bytes {
-    fn as_ref(&self) -> &[u8] { self.as_ref() }
+    fn as_ref(&self) -> &[u8] { self.0.as_ref() }
 }
 
 impl From<Vec<u8>> for Bytes {
