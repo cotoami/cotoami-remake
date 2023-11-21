@@ -10,8 +10,10 @@ use diesel::prelude::*;
 use identicon_rs::Identicon;
 use validator::Validate;
 
-use super::{cotonoma::Cotonoma, Id};
-use crate::schema::nodes;
+use crate::{
+    models::{cotonoma::Cotonoma, Bytes, Id},
+    schema::nodes,
+};
 
 pub mod child;
 pub mod client;
@@ -50,7 +52,7 @@ pub struct Node {
         deserialize_with = "crate::from_base64"
     )]
     #[debug(skip)]
-    pub icon: Vec<u8>,
+    pub icon: Bytes,
 
     /// Display name which syncs with the name of the root cotonoma.
     ///

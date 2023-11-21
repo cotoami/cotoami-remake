@@ -9,8 +9,13 @@ use std::{
 
 use derive_new::new;
 use diesel::{
-    backend::Backend, deserialize::FromSql, expression::AsExpression, serialize::ToSql,
-    sql_types::Text, sqlite::Sqlite, FromSqlRow,
+    backend::Backend,
+    deserialize::FromSql,
+    expression::AsExpression,
+    serialize::ToSql,
+    sql_types::{Binary, Text},
+    sqlite::Sqlite,
+    FromSqlRow,
 };
 use uuid::Uuid;
 
@@ -165,6 +170,43 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
             ids.push(str_id.to_string().parse()?);
         }
         Ok(Self(ids))
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Bytes
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(
+    Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
+)]
+#[diesel(sql_type = Binary)]
+#[serde(transparent)]
+pub struct Bytes(bytes::Bytes);
+
+impl AsRef<[u8]> for Bytes {
+    fn as_ref(&self) -> &[u8] { self.as_ref() }
+}
+
+impl From<Vec<u8>> for Bytes {
+    fn from(vec: Vec<u8>) -> Bytes { Bytes(bytes::Bytes::from(vec)) }
+}
+
+impl ToSql<Binary, Sqlite> for Bytes {
+    fn to_sql<'b>(
+        &'b self,
+        out: &mut diesel::serialize::Output<'b, '_, Sqlite>,
+    ) -> diesel::serialize::Result {
+        // https://diesel.rs/guides/migration_guide.html#changed-tosql-implementations
+        out.set_value(self.as_ref());
+        Ok(diesel::serialize::IsNull::No)
+    }
+}
+
+impl FromSql<Binary, Sqlite> for Bytes {
+    fn from_sql(value: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
+        let bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(value)?;
+        Ok(Bytes(bytes::Bytes::from(bytes)))
     }
 }
 
