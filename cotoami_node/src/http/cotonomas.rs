@@ -39,7 +39,7 @@ async fn recent_cotonomas(
         return ("cotonomas", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let cotonomas = db.recent_cotonomas(
             None,
             pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
@@ -65,7 +65,7 @@ async fn get_cotonoma(
     Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Json<CotonomaDetails>, ApiError> {
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let (cotonoma, coto) = db.cotonoma_or_err(&cotonoma_id)?;
         Ok(Json(CotonomaDetails { cotonoma, coto }))
     })
