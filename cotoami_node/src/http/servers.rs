@@ -35,8 +35,8 @@ pub(crate) async fn all_servers(
     Extension(operator): Extension<Operator>,
 ) -> Result<Json<Vec<Server>>, ApiError> {
     spawn_blocking(move || {
-        let conns = state.server_conns.read();
-        let mut db = state.db.new_session()?;
+        let conns = state.read_server_conns();
+        let mut db = state.db().new_session()?;
         let nodes = db
             .all_server_nodes(&operator)?
             .into_iter()
@@ -84,7 +84,7 @@ pub(crate) async fn add_server_node(
     let as_child = form.as_child.unwrap_or(false);
 
     // Get the local node
-    let db = state.db.clone();
+    let db = state.db().clone();
     let local_node = spawn_blocking(move || db.new_session()?.local_node()).await??;
 
     // Attempt to log into the server node
@@ -100,7 +100,11 @@ pub(crate) async fn add_server_node(
     info!("Successfully logged in to {}", http_client.url_prefix());
 
     // Register the server node
-    let (config, db, pubsub) = (state.config.clone(), state.db.clone(), state.pubsub.clone());
+    let (config, db, pubsub) = (
+        state.config().clone(),
+        state.db().clone(),
+        state.pubsub().clone(),
+    );
     let op = operator.clone();
     let server_id = client_session.server.uuid;
     let url_prefix = http_client.url_prefix().to_string();
@@ -135,27 +139,18 @@ pub(crate) async fn add_server_node(
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
 
-    // Import changes from the parent
+    // Sync with the parent
     if let DatabaseRole::Parent(parent) = server_db_role {
-        http_client
-            .import_changes(parent.node_id, &state.db, &state.pubsub.local_change)
+        state
+            .sync_with_parent(parent.node_id, &mut http_client)
             .await?;
-        api::parents::after_first_import(
-            server_node.clone(),
-            form.replicate.unwrap_or(false),
-            state.db.clone(),
-            state.pubsub.local_change.clone(),
-        )
-        .await?;
+        state
+            .after_first_import(server_node.clone(), form.replicate.unwrap_or(false))
+            .await?;
     }
 
     // Create a SSE client
-    let sse_client = SseClient::new(
-        server_id,
-        http_client.clone(),
-        state.db.clone(),
-        state.pubsub.local_change.clone(),
-    )?;
+    let sse_client = SseClient::new(server_id, http_client.clone(), state.clone())?;
 
     // Store the server connection
     let server_conn = ServerConnection::new(client_session.session, http_client, sse_client);
@@ -200,7 +195,7 @@ async fn set_server_disabled(
     operator: Operator,
 ) -> Result<()> {
     // Set `disabled` to true or false
-    let db = state.db.clone();
+    let db = state.db().clone();
     let (local_node, network_role) = spawn_blocking(move || {
         let mut db = db.new_session()?;
         Ok::<_, anyhow::Error>((
@@ -222,14 +217,7 @@ async fn set_server_disabled(
             debug!("Restarting the SSE event loop of {}", server_id);
         } else {
             debug!("Creating a new server connection for {}", server_id);
-            let server_conn = ServerConnection::connect(
-                &server_node,
-                local_node,
-                state.config.owner_password(),
-                &state.db,
-                &state.pubsub.local_change,
-            )
-            .await;
+            let server_conn = ServerConnection::connect(&server_node, local_node, &state).await;
             state.put_server_conn(&server_id, server_conn);
         }
     }

@@ -76,6 +76,10 @@ impl AppState {
         self.server_conns.write().insert(*server_id, server_conn);
     }
 
+    pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
+        self.server_conns.read()
+    }
+
     pub async fn restore_server_conns(&self) -> Result<()> {
         let db = self.db.clone();
         let (local_node, server_nodes) = spawn_blocking(move || {
@@ -219,7 +223,7 @@ impl Pubsub {
         }
     }
 
-    fn publish_change(&self, changelog: ChangelogEntry) {
+    pub fn publish_change(&self, changelog: ChangelogEntry) {
         self.local_change.publish(changelog, None);
     }
 }
