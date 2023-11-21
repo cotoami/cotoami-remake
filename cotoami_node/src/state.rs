@@ -29,7 +29,7 @@ pub use self::{
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone)]
-pub(crate) struct AppState {
+pub struct AppState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Pubsub,
@@ -198,7 +198,7 @@ impl Config {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone)]
-struct Pubsub {
+pub struct Pubsub {
     pub local_change: Arc<ChangePubsub>,
     pub sse_change: Arc<SsePubsub>,
 }

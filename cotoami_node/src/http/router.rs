@@ -16,12 +16,8 @@ use futures::stream::Stream;
 
 use super::*;
 use crate::{
-    api,
-    api::{
-        changes::ChunkOfChanges,
-        error::{ApiError, IntoApiResult},
-    },
-    AppState,
+    api::error::{ApiError, IntoApiResult},
+    state::{AppState, ChunkOfChanges},
 };
 
 pub(crate) fn router(state: AppState) -> Router {
@@ -142,7 +138,7 @@ async fn stream_events(
     Extension(_session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     // FIXME: subscribe to changes or requests
-    let sub = state.pubsub.sse_change.subscribe(None::<()>);
+    let sub = state.pubsub().sse_change.subscribe(None::<()>);
     Sse::new(sub).keep_alive(KeepAlive::default())
 }
 
@@ -162,12 +158,10 @@ async fn fork_from_parent(
 ) -> Result<Json<Forked>, ApiError> {
     state.server_conn(&node_id)?.disable_sse();
 
-    let (affected, change) = spawn_blocking(move || {
-        let db = state.db.new_session()?;
-        db.fork_from(&node_id, &operator)
-    })
-    .await??;
-    state.pubsub.publish_change(change);
+    let db = state.db().clone();
+    let (affected, change) =
+        spawn_blocking(move || db.new_session()?.fork_from(&node_id, &operator)).await??;
+    state.pubsub().publish_change(change);
 
     Ok(Json(Forked { affected }))
 }

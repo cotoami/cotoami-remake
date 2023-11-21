@@ -15,6 +15,10 @@ mod pubsub;
 pub mod service;
 mod state;
 
+pub mod prelude {
+    pub use crate::state::{AppState, Config};
+}
+
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     let state = AppState::new(config)?;
     let port = state.config().port;
