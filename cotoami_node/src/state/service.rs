@@ -9,9 +9,21 @@ use std::{
 
 use anyhow::Result;
 use bytes::Bytes;
+use cotoami_db::prelude::*;
+use serde_json::value::Value;
 use tower_service::Service;
 
-use crate::{service::*, state::AppState};
+use crate::{
+    service::{
+        error::{InputError, RequestError},
+        *,
+    },
+    state::{error::NodeError, AppState},
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// NodeService implemented for AppState
+/////////////////////////////////////////////////////////////////////////////
 
 impl AppState {
     async fn handle_request(self, request: Request) -> Result<Bytes> {
@@ -58,4 +70,43 @@ impl Service<Request> for AppState {
 
 impl NodeService for AppState {
     fn description(&self) -> &str { "local-node" }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Construct ServiceError from anyhow::Error
+/////////////////////////////////////////////////////////////////////////////
+
+impl<E> From<E> for ServiceError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        let anyhow_err = err.into();
+
+        // NodeError
+        match anyhow_err.downcast_ref::<NodeError>() {
+            Some(NodeError::WrongDatabaseRole) => {
+                return ServiceError::Request(RequestError::new("wrong-database-role"))
+            }
+            _ => (),
+        }
+
+        // DatabaseError
+        match anyhow_err.downcast_ref::<DatabaseError>() {
+            Some(DatabaseError::EntityNotFound { kind, id }) => {
+                return ServiceError::Input(
+                    InputError::new(kind.to_string(), "id", "not-found")
+                        .with_param("value", Value::String(id.to_string()))
+                        .into(),
+                )
+            }
+            Some(DatabaseError::AuthenticationFailed) => {
+                return ServiceError::Request(RequestError::new("authentication-failed"))
+            }
+            Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
+            _ => (),
+        }
+
+        ServiceError::Server(anyhow_err.to_string())
+    }
 }

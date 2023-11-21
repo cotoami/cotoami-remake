@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use cotoami_db::prelude::*;
 use serde_json::value::Value;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
@@ -17,29 +16,6 @@ pub enum ServiceError {
     Input(InputErrors),
     Server(String),
     Unknown(String),
-}
-
-// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
-// `Result<_, ServiceError>`. That way you don't need to do that manually.
-impl<E> From<E> for ServiceError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        let anyhow_err = err.into();
-        match anyhow_err.downcast_ref::<DatabaseError>() {
-            Some(DatabaseError::EntityNotFound { kind, id }) => ServiceError::Input(
-                InputError::new(kind.to_string(), "id", "not-found")
-                    .with_param("value", Value::String(id.to_string()))
-                    .into(),
-            ),
-            Some(DatabaseError::AuthenticationFailed) => {
-                ServiceError::Request(RequestError::new("authentication-failed"))
-            }
-            Some(DatabaseError::PermissionDenied) => ServiceError::Permission,
-            _ => ServiceError::Server(anyhow_err.to_string()),
-        }
-    }
 }
 
 pub(crate) trait IntoServiceResult<T> {
