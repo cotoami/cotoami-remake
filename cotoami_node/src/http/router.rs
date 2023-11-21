@@ -16,7 +16,7 @@ use futures::stream::Stream;
 
 use super::*;
 use crate::{
-    api::error::{ApiError, IntoApiResult},
+    service::{error::IntoServiceResult, ServiceError},
     state::{AppState, ChunkOfChanges},
 };
 
@@ -100,8 +100,12 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 // GET /api/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
-async fn local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
-    state.local_node().await.map(Json).map_err(ApiError::from)
+async fn local_node(State(state): State<AppState>) -> Result<Json<Node>, ServiceError> {
+    state
+        .local_node()
+        .await
+        .map(Json)
+        .map_err(ServiceError::from)
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -117,7 +121,7 @@ pub(crate) struct Position {
 async fn chunk_of_changes(
     State(state): State<AppState>,
     Query(position): Query<Position>,
-) -> Result<Json<ChunkOfChanges>, ApiError> {
+) -> Result<Json<ChunkOfChanges>, ServiceError> {
     if let Err(errors) = position.validate() {
         return ("changes", errors).into_result();
     }
@@ -126,7 +130,7 @@ async fn chunk_of_changes(
         .chunk_of_changes(from)
         .await
         .map(Json)
-        .map_err(ApiError::from)
+        .map_err(ServiceError::from)
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -155,7 +159,7 @@ async fn fork_from_parent(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
-) -> Result<Json<Forked>, ApiError> {
+) -> Result<Json<Forked>, ServiceError> {
     state.server_conn(&node_id)?.disable_sse();
 
     let db = state.db().clone();

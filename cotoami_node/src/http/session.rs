@@ -10,7 +10,7 @@ use tracing::info;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
+    service::{error::IntoServiceResult, ServiceError},
     state::{AppState, ClientNodeSession, CreateClientNodeSession, Session},
 };
 
@@ -36,7 +36,7 @@ pub(crate) async fn delete_session(
     State(state): State<AppState>,
     Extension(client_session): Extension<ClientSession>,
     jar: CookieJar,
-) -> Result<CookieJar, ApiError> {
+) -> Result<CookieJar, ServiceError> {
     spawn_blocking(move || {
         let db = state.db().new_session()?;
         match &client_session {
@@ -70,7 +70,7 @@ pub(crate) async fn create_owner_session(
     State(state): State<AppState>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
-) -> Result<(StatusCode, CookieJar, Json<Session>), ApiError> {
+) -> Result<(StatusCode, CookieJar, Json<Session>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("session/owner", errors).into_result();
     }
@@ -98,7 +98,7 @@ pub(crate) async fn create_client_node_session(
     State(state): State<AppState>,
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
-) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ApiError> {
+) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ServiceError> {
     let session = state.create_client_node_session(payload).await?;
     let cookie = create_cookie(&session.session);
     Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))

@@ -20,10 +20,12 @@ use tower_service::Service;
 use uuid::Uuid;
 
 use crate::{
-    api::error::{ApiError, *},
     http,
     http::csrf,
-    service::*,
+    service::{
+        error::{InputErrors, RequestError},
+        *,
+    },
 };
 
 /// You do **not** have to wrap the `HttpClient` in an [`Rc`] or [`Arc`] to **reuse** it,
@@ -100,13 +102,15 @@ impl HttpClient {
         }
 
         let error = match from.status() {
-            StatusCode::BAD_REQUEST => ApiError::Request(from.json::<RequestError>().await?),
-            StatusCode::UNAUTHORIZED => ApiError::Unauthorized,
-            StatusCode::FORBIDDEN => ApiError::Permission,
-            StatusCode::NOT_FOUND => ApiError::NotFound,
-            StatusCode::UNPROCESSABLE_ENTITY => ApiError::Input(from.json::<InputErrors>().await?),
-            StatusCode::INTERNAL_SERVER_ERROR => ApiError::Server(from.text().await?),
-            _ => ApiError::Unknown("".to_string()),
+            StatusCode::BAD_REQUEST => ServiceError::Request(from.json::<RequestError>().await?),
+            StatusCode::UNAUTHORIZED => ServiceError::Unauthorized,
+            StatusCode::FORBIDDEN => ServiceError::Permission,
+            StatusCode::NOT_FOUND => ServiceError::NotFound,
+            StatusCode::UNPROCESSABLE_ENTITY => {
+                ServiceError::Input(from.json::<InputErrors>().await?)
+            }
+            StatusCode::INTERNAL_SERVER_ERROR => ServiceError::Server(from.text().await?),
+            _ => ServiceError::Unknown("".to_string()),
         };
         Ok(Response::new(id, Err(error)))
     }

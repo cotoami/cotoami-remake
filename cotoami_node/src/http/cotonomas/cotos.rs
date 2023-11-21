@@ -12,8 +12,11 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult, RequestError},
     http::{require_session, Pagination},
+    service::{
+        error::{IntoServiceResult, RequestError},
+        ServiceError,
+    },
     AppState,
 };
 
@@ -33,7 +36,7 @@ async fn recent_cotos(
     State(state): State<AppState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Coto>>, ApiError> {
+) -> Result<Json<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
@@ -68,7 +71,7 @@ async fn post_coto(
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<PostCoto>,
-) -> Result<(StatusCode, Json<Coto>), ApiError> {
+) -> Result<(StatusCode, Json<Coto>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }

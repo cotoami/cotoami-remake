@@ -11,7 +11,7 @@ use anyhow::Result;
 use bytes::Bytes;
 use tower_service::Service;
 
-use crate::{api::error::ApiError, service::*, state::AppState};
+use crate::{service::*, state::AppState};
 
 impl AppState {
     async fn handle_request(self, request: Request) -> Result<Bytes> {
@@ -48,7 +48,9 @@ impl Service<Request> for AppState {
         Box::pin(async move {
             Ok(Response::new(
                 *request.id(),
-                this.handle_request(request).await.map_err(ApiError::from),
+                this.handle_request(request)
+                    .await
+                    .map_err(ServiceError::from),
             ))
         })
     }

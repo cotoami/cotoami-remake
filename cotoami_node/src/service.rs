@@ -21,12 +21,14 @@ use thiserror::Error;
 use tower_service::Service;
 use uuid::Uuid;
 
-use crate::api::error::ApiError;
-
 pub mod client;
+pub mod error;
 pub mod service_ext;
 
-pub use service_ext::{NodeServiceExt, RemoteNodeServiceExt};
+pub use self::{
+    error::ServiceError,
+    service_ext::{NodeServiceExt, RemoteNodeServiceExt},
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // Service
@@ -87,16 +89,16 @@ impl RequestBody {
 #[derive(Clone, serde::Serialize, serde::Deserialize, new)]
 pub struct Response {
     id: Uuid,
-    body: Result<Bytes, ApiError>,
+    body: Result<Bytes, ServiceError>,
 }
 
 impl Response {
     pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
-        let bytes = self.body.map_err(ApiCallError)?;
+        let bytes = self.body.map_err(ServiceStdError)?;
         rmp_serde::from_slice(&bytes).map_err(anyhow::Error::from)
     }
 }
 
 #[derive(Error, Debug)]
-#[error("API call error: {0:?}")]
-pub struct ApiCallError(ApiError);
+#[error("Service error: {0:?}")]
+pub struct ServiceStdError(ServiceError);

@@ -8,7 +8,6 @@ use tokio::{
 
 use crate::state::{AppState, Config};
 
-mod api;
 mod client;
 mod http;
 mod pubsub;

@@ -5,11 +5,11 @@ use serde_json::value::Value;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 /////////////////////////////////////////////////////////////////////////////
-// ApiError
+// ServiceError
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub enum ApiError {
+pub enum ServiceError {
     Request(RequestError),
     Unauthorized,
     Permission,
@@ -20,34 +20,34 @@ pub enum ApiError {
 }
 
 // This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
-// `Result<_, ApiError>`. That way you don't need to do that manually.
-impl<E> From<E> for ApiError
+// `Result<_, ServiceError>`. That way you don't need to do that manually.
+impl<E> From<E> for ServiceError
 where
     E: Into<anyhow::Error>,
 {
     fn from(err: E) -> Self {
         let anyhow_err = err.into();
         match anyhow_err.downcast_ref::<DatabaseError>() {
-            Some(DatabaseError::EntityNotFound { kind, id }) => ApiError::Input(
+            Some(DatabaseError::EntityNotFound { kind, id }) => ServiceError::Input(
                 InputError::new(kind.to_string(), "id", "not-found")
                     .with_param("value", Value::String(id.to_string()))
                     .into(),
             ),
             Some(DatabaseError::AuthenticationFailed) => {
-                ApiError::Request(RequestError::new("authentication-failed"))
+                ServiceError::Request(RequestError::new("authentication-failed"))
             }
-            Some(DatabaseError::PermissionDenied) => ApiError::Permission,
-            _ => ApiError::Server(anyhow_err.to_string()),
+            Some(DatabaseError::PermissionDenied) => ServiceError::Permission,
+            _ => ServiceError::Server(anyhow_err.to_string()),
         }
     }
 }
 
-pub(crate) trait IntoApiResult<T> {
-    fn into_result(self) -> Result<T, ApiError>;
+pub(crate) trait IntoServiceResult<T> {
+    fn into_result(self) -> Result<T, ServiceError>;
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// ApiError / RequestError
+// ServiceError / RequestError
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -74,22 +74,22 @@ impl RequestError {
     }
 }
 
-impl<T> IntoApiResult<T> for RequestError {
-    fn into_result(self) -> Result<T, ApiError> { Err(ApiError::Request(self)) }
+impl<T> IntoServiceResult<T> for RequestError {
+    fn into_result(self) -> Result<T, ServiceError> { Err(ServiceError::Request(self)) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// ApiError / InputErrors
+// ServiceError / InputErrors
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct InputErrors(Vec<InputError>);
 
-fn into_result<T, E>(e: E) -> Result<T, ApiError>
+fn into_result<T, E>(e: E) -> Result<T, ServiceError>
 where
     E: Into<InputErrors>,
 {
-    Err(ApiError::Input(e.into()))
+    Err(ServiceError::Input(e.into()))
 }
 
 /// Create an [InputErrors] from a resource name and [ValidationErrors] as a tuple.
@@ -114,12 +114,12 @@ impl From<(&str, ValidationErrors)> for InputErrors {
     }
 }
 
-impl<T> IntoApiResult<T> for (&str, ValidationErrors) {
-    fn into_result(self) -> Result<T, ApiError> { into_result(self) }
+impl<T> IntoServiceResult<T> for (&str, ValidationErrors) {
+    fn into_result(self) -> Result<T, ServiceError> { into_result(self) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// ApiError / InputErrors / InputError
+// ServiceError / InputErrors / InputError
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -163,8 +163,8 @@ impl InputError {
     }
 }
 
-impl<T> IntoApiResult<T> for InputError {
-    fn into_result(self) -> Result<T, ApiError> { into_result(self) }
+impl<T> IntoServiceResult<T> for InputError {
+    fn into_result(self) -> Result<T, ServiceError> { into_result(self) }
 }
 
 impl From<InputError> for InputErrors {

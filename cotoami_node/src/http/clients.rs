@@ -9,8 +9,8 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
     http::Pagination,
+    service::{error::IntoServiceResult, ServiceError},
     AppState,
 };
 
@@ -24,7 +24,7 @@ pub(crate) async fn recent_client_nodes(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Node>>, ApiError> {
+) -> Result<Json<Paginated<Node>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("nodes/clients", errors).into_result();
     }
@@ -66,7 +66,7 @@ pub(crate) async fn add_client_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddClientNode>,
-) -> Result<(StatusCode, Json<ClientNodeAdded>), ApiError> {
+) -> Result<(StatusCode, Json<ClientNodeAdded>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/client", errors).into_result();
     }

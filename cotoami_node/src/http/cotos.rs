@@ -10,8 +10,8 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
     http::Pagination,
+    service::{error::IntoServiceResult, ServiceError},
     AppState,
 };
 
@@ -30,7 +30,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn recent_cotos(
     State(state): State<AppState>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Coto>>, ApiError> {
+) -> Result<Json<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }

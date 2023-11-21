@@ -11,9 +11,8 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
     client::{HttpClient, SseClient},
-    service::RemoteNodeServiceExt,
+    service::{error::IntoServiceResult, RemoteNodeServiceExt, ServiceError},
     state::{
         conn::{NotConnected, ServerConnection},
         AppState, CreateClientNodeSession,
@@ -33,7 +32,7 @@ pub(crate) struct Server {
 pub(crate) async fn all_servers(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
-) -> Result<Json<Vec<Server>>, ApiError> {
+) -> Result<Json<Vec<Server>>, ServiceError> {
     spawn_blocking(move || {
         let conns = state.read_server_conns();
         let mut db = state.db().new_session()?;
@@ -73,7 +72,7 @@ pub(crate) async fn add_server_node(
     State(state): State<AppState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddServerNode>,
-) -> Result<(StatusCode, Json<Server>), ApiError> {
+) -> Result<(StatusCode, Json<Server>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/server", errors).into_result();
     }
@@ -134,7 +133,7 @@ pub(crate) async fn add_server_node(
 
         // Get the imported node data
         let node = db.node(&server_id)?.unwrap_or_else(|| unreachable!());
-        Ok::<_, ApiError>((node, server_db_role))
+        Ok::<_, ServiceError>((node, server_db_role))
     })
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
@@ -175,12 +174,12 @@ pub(crate) async fn update_server_node(
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
     Form(form): Form<UpdateServerNode>,
-) -> Result<StatusCode, ApiError> {
+) -> Result<StatusCode, ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/server", errors).into_result();
     }
     if !state.contains_server(&node_id) {
-        return Err(ApiError::NotFound);
+        return Err(ServiceError::NotFound);
     }
     if let Some(disabled) = form.disabled {
         set_server_disabled(node_id, disabled, &state, operator).await?;

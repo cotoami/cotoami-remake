@@ -10,8 +10,8 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
     http::Pagination,
+    service::{error::IntoServiceResult, ServiceError},
     AppState,
 };
 
@@ -34,7 +34,7 @@ const DEFAULT_PAGE_SIZE: i64 = 100;
 async fn recent_cotonomas(
     State(state): State<AppState>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Cotonoma>>, ApiError> {
+) -> Result<Json<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotonomas", errors).into_result();
     }
@@ -63,7 +63,7 @@ struct CotonomaDetails {
 async fn get_cotonoma(
     State(state): State<AppState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-) -> Result<Json<CotonomaDetails>, ApiError> {
+) -> Result<Json<CotonomaDetails>, ServiceError> {
     spawn_blocking(move || {
         let mut db = state.db().new_session()?;
         let (cotonoma, coto) = db.cotonoma_or_err(&cotonoma_id)?;

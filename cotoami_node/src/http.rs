@@ -9,7 +9,7 @@ use tokio::task::spawn_blocking;
 use tracing::{debug, error};
 use validator::Validate;
 
-use crate::{api::error::ApiError, AppState};
+use crate::{service::ServiceError, state::AppState};
 
 pub(crate) mod clients;
 mod cotonomas;
@@ -26,20 +26,20 @@ pub(super) use router::router;
 /////////////////////////////////////////////////////////////////////////////
 
 // Tell axum how to convert `ApiError` into a response.
-impl IntoResponse for ApiError {
+impl IntoResponse for ServiceError {
     fn into_response(self) -> Response {
         match self {
-            ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-            ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
-            ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
-            ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
-            ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
-            ApiError::Server(e) => {
+            ServiceError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+            ServiceError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
+            ServiceError::Permission => StatusCode::FORBIDDEN.into_response(),
+            ServiceError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ServiceError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
+            ServiceError::Server(e) => {
                 let message = format!("Server error: {}", e);
                 error!(message);
                 (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
             }
-            ApiError::Unknown(_) => unreachable!(),
+            ServiceError::Unknown(_) => unreachable!(),
         }
     }
 }
@@ -64,7 +64,7 @@ async fn require_session<B>(
     jar: CookieJar,
     mut request: Request<B>,
     next: Next<B>,
-) -> Result<Response, ApiError> {
+) -> Result<Response, ServiceError> {
     let cookie_value = jar.get(SESSION_COOKIE_NAME).map(Cookie::value);
     let header_value = request
         .headers()
@@ -74,13 +74,13 @@ async fn require_session<B>(
     let token = if let Some(token) = cookie_value.or(header_value) {
         token.to_string() // create an owned string to be used in spawn_blocking
     } else {
-        return Err(ApiError::Unauthorized); // missing session token
+        return Err(ServiceError::Unauthorized); // missing session token
     };
 
     let session = spawn_blocking(move || {
         let mut db = state.db().new_session()?;
         // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
-        Ok::<_, ApiError>(db.client_session(&token)?)
+        Ok::<_, ServiceError>(db.client_session(&token)?)
     })
     .await??;
 
@@ -89,7 +89,7 @@ async fn require_session<B>(
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {
-        Err(ApiError::Unauthorized) // invalid token (session expired, etc.)
+        Err(ServiceError::Unauthorized) // invalid token (session expired, etc.)
     }
 }
 
