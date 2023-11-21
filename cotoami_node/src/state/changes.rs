@@ -78,7 +78,7 @@ impl AppState {
     }
 
     pub async fn sync_with_parent<S>(
-        &mut self,
+        &self,
         parent_node_id: Id<Node>,
         parent_service: &mut S,
     ) -> Result<Option<(i64, i64)>>
@@ -145,7 +145,7 @@ impl AppState {
     }
 
     pub async fn handle_parent_change<S>(
-        &mut self,
+        &self,
         parent_node_id: Id<Node>,
         change: ChangelogEntry,
         parent_service: &mut S,

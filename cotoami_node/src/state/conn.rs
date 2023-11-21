@@ -8,8 +8,8 @@ use tracing::{debug, info};
 use crate::{
     api::session::{CreateClientNodeSession, Session},
     client::{HttpClient, SseClient, SseClientError, SseClientState},
-    service::{NodeServiceExt, RemoteNodeServiceExt},
-    state::ChangePubsub,
+    service::RemoteNodeServiceExt,
+    state::AppState,
 };
 
 pub enum ServerConnection {
@@ -35,14 +35,8 @@ impl ServerConnection {
         server_conn
     }
 
-    pub async fn connect(
-        server_node: &ServerNode,
-        local_node: Node,
-        owner_password: &str,
-        db: &Arc<Database>,
-        change_pubsub: &Arc<ChangePubsub>,
-    ) -> Self {
-        match Self::try_connect(server_node, local_node, owner_password, db, change_pubsub).await {
+    pub async fn connect(server_node: &ServerNode, local_node: Node, app_state: &AppState) -> Self {
+        match Self::try_connect(server_node, local_node, app_state).await {
             Ok(conn) => conn,
             Err(err) => {
                 debug!("Failed to initialize a server connection: {:?}", err);
@@ -54,16 +48,17 @@ impl ServerConnection {
     async fn try_connect(
         server_node: &ServerNode,
         local_node: Node,
-        owner_password: &str,
-        db: &Arc<Database>,
-        change_pubsub: &Arc<ChangePubsub>,
+        app_state: &AppState,
     ) -> Result<Self> {
-        let is_server_parent = db.new_session()?.is_parent(&server_node.node_id);
+        let is_server_parent = app_state
+            .db()
+            .new_session()?
+            .is_parent(&server_node.node_id);
         let mut http_client = HttpClient::new(server_node.url_prefix.clone())?;
 
         // Attempt to log into the server node
         let password = server_node
-            .password(owner_password)?
+            .password(app_state.config().owner_password())?
             .ok_or(anyhow!("Server password is missing."))?;
         let client_session = http_client
             .create_client_node_session(CreateClientNodeSession {
@@ -75,20 +70,16 @@ impl ServerConnection {
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
 
-        // Import changes from the parent
+        // Sync with the parent
         if is_server_parent {
-            http_client
-                .import_changes(server_node.node_id, db, change_pubsub)
+            app_state
+                .sync_with_parent(server_node.node_id, &mut http_client)
                 .await?;
         }
 
         // Create a SSE client
-        let sse_client = SseClient::new(
-            server_node.node_id,
-            http_client.clone(),
-            db.clone(),
-            change_pubsub.clone(),
-        )?;
+        let sse_client =
+            SseClient::new(server_node.node_id, http_client.clone(), app_state.clone())?;
 
         Ok(Self::new(client_session.session, http_client, sse_client))
     }

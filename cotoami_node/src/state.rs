@@ -130,14 +130,7 @@ impl AppState {
             let server_conn = if server_node.disabled {
                 ServerConnection::Disabled
             } else {
-                ServerConnection::connect(
-                    server_node,
-                    local_node.clone(),
-                    self.config.owner_password(),
-                    &self.db,
-                    &self.pubsub.local_change,
-                )
-                .await
+                ServerConnection::connect(server_node, local_node.clone(), self).await
             };
             server_conns.insert(server_node.node_id, server_conn);
         }
