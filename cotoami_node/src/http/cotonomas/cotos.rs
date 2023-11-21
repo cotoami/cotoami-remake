@@ -38,7 +38,7 @@ async fn recent_cotos(
         return ("cotos", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let cotos = db.recent_cotos(
             None,
             Some(&cotonoma_id),
@@ -73,7 +73,7 @@ async fn post_coto(
         return ("coto", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
 
         // Check if the cotonoma belongs to this node
         let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
@@ -90,7 +90,7 @@ async fn post_coto(
             &cotonoma,
             &operator,
         )?;
-        state.pubsub.publish_change(change);
+        state.pubsub().publish_change(change);
 
         Ok((StatusCode::CREATED, Json(coto)))
     })
