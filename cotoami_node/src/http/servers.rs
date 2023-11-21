@@ -11,15 +11,13 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    api,
-    api::{
-        error::{ApiError, IntoApiResult},
-        session::CreateClientNodeSession,
-    },
+    api::error::{ApiError, IntoApiResult},
     client::{HttpClient, SseClient},
-    conn::{NotConnected, ServerConnection},
-    service::{NodeServiceExt, RemoteNodeServiceExt},
-    AppState,
+    service::RemoteNodeServiceExt,
+    state::{
+        conn::{NotConnected, ServerConnection},
+        AppState, CreateClientNodeSession,
+    },
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -77,7 +75,7 @@ pub(crate) async fn add_server_node(
     Form(form): Form<AddServerNode>,
 ) -> Result<(StatusCode, Json<Server>), ApiError> {
     if let Err(errors) = form.validate() {
-        return ("nodes/parent", errors).into_result();
+        return ("nodes/server", errors).into_result();
     }
 
     // Inputs
