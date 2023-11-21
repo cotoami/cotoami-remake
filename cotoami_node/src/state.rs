@@ -190,7 +190,7 @@ impl Config {
 
     pub fn owner_password(&self) -> &str { self.owner_password.as_deref().unwrap() }
 
-    fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
+    pub fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
 }
 
 /////////////////////////////////////////////////////////////////////////////

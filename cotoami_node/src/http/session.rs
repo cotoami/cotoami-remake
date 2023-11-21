@@ -38,7 +38,7 @@ pub(crate) async fn delete_session(
     jar: CookieJar,
 ) -> Result<CookieJar, ApiError> {
     spawn_blocking(move || {
-        let db = state.db.new_session()?;
+        let db = state.db().new_session()?;
         match &client_session {
             ClientSession::Operator(Operator::Owner(_)) => {
                 db.clear_owner_session()?;
@@ -75,10 +75,10 @@ pub(crate) async fn create_owner_session(
         return ("session/owner", errors).into_result();
     }
     spawn_blocking(move || {
-        let db = state.db.new_session()?;
+        let db = state.db().new_session()?;
         let local_node = db.start_owner_session(
             &form.password.unwrap(), // validated to be Some
-            Duration::from_secs(state.config.session_seconds()),
+            Duration::from_secs(state.config().session_seconds()),
         )?;
         let session = Session {
             token: local_node.owner_session_token.unwrap(),
