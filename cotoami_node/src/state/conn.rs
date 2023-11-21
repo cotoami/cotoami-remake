@@ -9,7 +9,7 @@ use crate::{
     api::session::{CreateClientNodeSession, Session},
     client::{HttpClient, SseClient, SseClientError, SseClientState},
     service::{NodeServiceExt, RemoteNodeServiceExt},
-    ChangePubsub,
+    state::ChangePubsub,
 };
 
 pub enum ServerConnection {

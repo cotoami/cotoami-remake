@@ -9,12 +9,11 @@ use tokio::task::spawn_blocking;
 use tracing::info;
 use validator::Validate;
 
-use crate::{
-    conn::{ServerConnection, ServerConnections},
-    pubsub::Publisher,
-};
+use self::conn::{ServerConnection, ServerConnections};
+use crate::pubsub::Publisher;
 
 mod changes;
+mod conn;
 mod nodes;
 
 pub use changes::{Changes, ChunkOfChanges};
@@ -268,5 +267,5 @@ impl Pubsub {
     }
 }
 
-type ChangePubsub = Publisher<ChangelogEntry, ()>;
-type SsePubsub = Publisher<Result<Event, Infallible>, ()>;
+pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
+pub(crate) type SsePubsub = Publisher<Result<Event, Infallible>, ()>;

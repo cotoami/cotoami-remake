@@ -10,7 +10,6 @@ use crate::state::{AppState, Config};
 
 mod api;
 mod client;
-mod conn;
 mod http;
 mod pubsub;
 pub mod service;

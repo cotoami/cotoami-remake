@@ -1,9 +1,12 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use tracing::debug;
+use tracing::{debug, info};
 
-use crate::state::AppState;
+use crate::{
+    service::{service_ext::NodeServiceExt, NodeService},
+    state::AppState,
+};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum ChunkOfChanges {
@@ -72,5 +75,72 @@ impl AppState {
             Ok(())
         })
         .await?
+    }
+
+    async fn sync_with_parent<S>(
+        &mut self,
+        parent_node_id: Id<Node>,
+        parent_service: &mut S,
+    ) -> Result<Option<(i64, i64)>>
+    where
+        S: NodeService + Send,
+        S::Future: Send,
+    {
+        info!(
+            "Importing the changes from {}",
+            parent_service.description()
+        );
+        let parent_node = {
+            let db = self.db().new_session()?;
+            db.parent_node_or_err(&parent_node_id, &db.local_node_as_operator()?)?
+        };
+
+        let import_from = parent_node.changes_received + 1;
+        let mut from = import_from;
+        loop {
+            // Get a chunk of changelog entries from the service
+            let changes = match parent_service.chunk_of_changes(from).await? {
+                ChunkOfChanges::Fetched(changes) => changes,
+                ChunkOfChanges::OutOfRange { max } => {
+                    if from == import_from && parent_node.changes_received == max {
+                        // A case where the local has already synced with the parent
+                        info!("Already synced with: {}", parent_service.description());
+                        return Ok(None);
+                    } else {
+                        // The number of `parent_node.changes_received` is larger than
+                        // the last number of the changes in the parent node for some reason.
+                        // That means the replication has broken between the two nodes.
+                        bail!(
+                            "Tried to import from {}, but the last change number was {}.",
+                            from,
+                            max
+                        );
+                    }
+                }
+            };
+            let is_last_chunk = changes.is_last_chunk();
+            let last_number_of_chunk = changes.last_serial_number_of_chunk();
+
+            debug!(
+                "Fetched a chunk of changes: {}-{} (is_last: {}, max: {})",
+                from, last_number_of_chunk, is_last_chunk, changes.last_serial_number
+            );
+
+            // Import the changes to the local database
+            self.import_changes(parent_node_id, changes).await?;
+
+            // Next chunk or finish import
+            if is_last_chunk {
+                info!(
+                    "Imported changes {}-{} from {}",
+                    import_from,
+                    last_number_of_chunk,
+                    parent_service.description()
+                );
+                return Ok(Some((import_from, last_number_of_chunk)));
+            } else {
+                from = last_number_of_chunk + 1;
+            }
+        }
     }
 }

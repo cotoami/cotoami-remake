@@ -78,7 +78,7 @@ async fn require_session<B>(
     };
 
     let session = spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
         Ok::<_, ApiError>(db.client_session(&token)?)
     })
