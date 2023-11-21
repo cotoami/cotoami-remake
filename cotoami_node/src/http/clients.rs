@@ -29,7 +29,7 @@ pub(crate) async fn recent_client_nodes(
         return ("nodes/clients", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let nodes = db
             .recent_client_nodes(
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
@@ -71,7 +71,7 @@ pub(crate) async fn add_client_node(
         return ("nodes/client", errors).into_result();
     }
     spawn_blocking(move || {
-        let db = state.db.new_session()?;
+        let db = state.db().new_session()?;
         let password = generate_password();
         let database_role = if form.as_parent.unwrap_or(false) {
             NewDatabaseRole::Parent
