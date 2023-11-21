@@ -105,7 +105,7 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 /////////////////////////////////////////////////////////////////////////////
 
 async fn local_node(State(state): State<AppState>) -> Result<Json<Node>, ApiError> {
-    api::nodes::local_node(state.db).await.map(Json)
+    state.local_node().await.map(Json).map_err(ApiError::from)
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -126,8 +126,8 @@ async fn chunk_of_changes(
         return ("changes", errors).into_result();
     }
     let from = position.from.unwrap_or_else(|| unreachable!());
-    let chunk_size = state.config.changes_chunk_size;
-    api::changes::chunk_of_changes(from, chunk_size, state.db)
+    let chunk_size = state.config().changes_chunk_size;
+    api::changes::chunk_of_changes(from, chunk_size, state.db().clone())
         .await
         .map(Json)
 }
