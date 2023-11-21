@@ -77,7 +77,7 @@ impl AppState {
         .await?
     }
 
-    async fn sync_with_parent<S>(
+    pub async fn sync_with_parent<S>(
         &mut self,
         parent_node_id: Id<Node>,
         parent_service: &mut S,
@@ -142,5 +142,46 @@ impl AppState {
                 from = last_number_of_chunk + 1;
             }
         }
+    }
+
+    pub async fn handle_parent_change<S>(
+        &mut self,
+        parent_node_id: Id<Node>,
+        change: ChangelogEntry,
+        parent_service: &mut S,
+    ) -> Result<()>
+    where
+        S: NodeService + Send,
+        S::Future: Send,
+    {
+        let import_result = spawn_blocking({
+            let db = self.db().clone();
+            move || db.new_session()?.import_change(&change, &parent_node_id)
+        })
+        .await?;
+        match import_result {
+            Err(anyhow_err) => {
+                if let Some(DatabaseError::UnexpectedChangeNumber {
+                    expected, actual, ..
+                }) = anyhow_err.downcast_ref::<DatabaseError>()
+                {
+                    info!(
+                        "Out of sync with {} (received: {}, expected {})",
+                        parent_service.description(),
+                        actual,
+                        expected,
+                    );
+                    self.sync_with_parent(parent_node_id, parent_service)
+                        .await?;
+                } else {
+                    return Err(anyhow_err);
+                }
+            }
+            Ok(Some(imported_change)) => {
+                self.pubsub().publish_change(imported_change);
+            }
+            Ok(None) => (),
+        }
+        Ok(())
     }
 }
