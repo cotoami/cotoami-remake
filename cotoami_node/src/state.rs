@@ -14,7 +14,10 @@ use crate::{
     pubsub::Publisher,
 };
 
+mod changes;
 mod nodes;
+
+pub use changes::{Changes, ChunkOfChanges};
 
 /////////////////////////////////////////////////////////////////////////////
 // AppState
