@@ -2,9 +2,8 @@ use anyhow::Result;
 use async_trait::async_trait;
 
 use crate::{
-    api::session::{ClientNodeSession, CreateClientNodeSession},
     service::{NodeService, RemoteNodeService, RequestBody},
-    state::ChunkOfChanges,
+    state::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession},
 };
 
 #[async_trait]
