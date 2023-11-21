@@ -10,12 +10,8 @@ use tracing::info;
 use validator::Validate;
 
 use crate::{
-    api,
-    api::{
-        error::{ApiError, IntoApiResult},
-        session::*,
-    },
-    AppState,
+    api::error::{ApiError, IntoApiResult},
+    state::{AppState, ClientNodeSession, CreateClientNodeSession, Session},
 };
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
@@ -103,13 +99,7 @@ pub(crate) async fn create_client_node_session(
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
 ) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ApiError> {
-    let session = api::session::create_client_node_session(
-        payload,
-        state.config.session_seconds(),
-        state.db,
-        state.pubsub.local_change,
-    )
-    .await?;
+    let session = state.create_client_node_session(payload).await?;
     let cookie = create_cookie(&session.session);
     Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
 }

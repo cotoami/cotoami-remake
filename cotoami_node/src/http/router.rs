@@ -126,9 +126,8 @@ async fn chunk_of_changes(
         return ("changes", errors).into_result();
     }
     let from = position.from.unwrap_or_else(|| unreachable!());
-    let chunk_size = state.config().changes_chunk_size;
     state
-        .chunk_of_changes(from, chunk_size)
+        .chunk_of_changes(from)
         .await
         .map(Json)
         .map_err(ApiError::from)

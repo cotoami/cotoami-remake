@@ -6,10 +6,9 @@ use parking_lot::RwLock;
 use tracing::{debug, info};
 
 use crate::{
-    api::session::{CreateClientNodeSession, Session},
     client::{HttpClient, SseClient, SseClientError, SseClientState},
     service::RemoteNodeServiceExt,
-    state::AppState,
+    state::{AppState, CreateClientNodeSession, Session},
 };
 
 pub enum ServerConnection {

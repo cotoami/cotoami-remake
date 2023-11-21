@@ -38,11 +38,12 @@ impl Changes {
 }
 
 impl AppState {
-    pub async fn chunk_of_changes(&self, from: i64, chunk_size: i64) -> Result<ChunkOfChanges> {
+    pub async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges> {
         let db = self.db().clone();
+        let changes_chunk_size = self.config().changes_chunk_size;
         spawn_blocking(move || {
             let mut db = db.new_session()?;
-            match db.chunk_of_changes(from, chunk_size) {
+            match db.chunk_of_changes(from, changes_chunk_size) {
                 Ok((chunk, last_serial_number)) => Ok(ChunkOfChanges::Fetched(Changes {
                     chunk,
                     last_serial_number,

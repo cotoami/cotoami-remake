@@ -14,9 +14,15 @@ use crate::pubsub::Publisher;
 
 mod changes;
 mod conn;
+mod error;
 mod nodes;
+mod service;
+mod session;
 
-pub use changes::{Changes, ChunkOfChanges};
+pub use self::{
+    changes::{Changes, ChunkOfChanges},
+    session::{ClientNodeSession, CreateClientNodeSession, Session},
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // AppState

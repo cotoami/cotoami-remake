@@ -21,10 +21,9 @@ use thiserror::Error;
 use tower_service::Service;
 use uuid::Uuid;
 
-use crate::{api, api::error::ApiError};
+use crate::api::error::ApiError;
 
 pub mod client;
-mod local_node;
 pub mod service_ext;
 
 pub use service_ext::{NodeServiceExt, RemoteNodeServiceExt};
@@ -67,14 +66,14 @@ impl Request {
 
     pub fn id(&self) -> &Uuid { &self.id }
 
-    pub fn body(&self) -> &RequestBody { &self.body }
+    pub fn body(self) -> RequestBody { self.body }
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
     LocalNode,
     ChunkOfChanges { from: i64 },
-    CreateClientNodeSession(api::session::CreateClientNodeSession),
+    CreateClientNodeSession(crate::state::CreateClientNodeSession),
 }
 
 impl RequestBody {
