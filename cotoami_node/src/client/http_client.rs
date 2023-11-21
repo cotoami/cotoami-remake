@@ -81,6 +81,7 @@ impl HttpClient {
     }
 
     async fn handle_request(self, request: Request) -> Result<Response> {
+        let request_id = *request.id();
         let http_req = match request.body() {
             RequestBody::LocalNode => self.get("/api/nodes/local", None),
             RequestBody::ChunkOfChanges { from } => {
@@ -90,7 +91,7 @@ impl HttpClient {
                 self.put("/api/session/client-node").json(&input)
             }
         };
-        Self::convert_response(*request.id(), http_req.send().await?).await
+        Self::convert_response(request_id, http_req.send().await?).await
     }
 
     async fn convert_response(id: Uuid, from: reqwest::Response) -> Result<Response> {

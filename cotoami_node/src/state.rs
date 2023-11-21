@@ -16,6 +16,7 @@ mod changes;
 mod conn;
 mod error;
 mod nodes;
+mod parents;
 mod service;
 mod session;
 
