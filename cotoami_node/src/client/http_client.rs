@@ -20,8 +20,7 @@ use tower_service::Service;
 use uuid::Uuid;
 
 use crate::{
-    http,
-    http::csrf,
+    api::csrf,
     service::{
         error::{InputErrors, RequestError},
         *,
@@ -141,7 +140,7 @@ impl RemoteNodeService for HttpClient {
         token.set_sensitive(true);
         self.headers
             .write()
-            .insert(http::SESSION_HEADER_NAME, token);
+            .insert(crate::api::SESSION_HEADER_NAME, token);
         Ok(())
     }
 }

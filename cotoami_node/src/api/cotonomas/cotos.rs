@@ -12,7 +12,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    http::require_session,
+    api::require_session,
     service::{
         error::{IntoServiceResult, RequestError},
         Pagination, ServiceError,
