@@ -20,31 +20,6 @@ pub async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, Se
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/changes
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Serialize, serde::Deserialize, Validate)]
-pub(crate) struct Position {
-    #[validate(required, range(min = 1))]
-    pub from: Option<i64>,
-}
-
-pub(crate) async fn chunk_of_changes(
-    State(state): State<NodeState>,
-    Query(position): Query<Position>,
-) -> Result<Json<ChunkOfChanges>, ServiceError> {
-    if let Err(errors) = position.validate() {
-        return ("changes", errors).into_result();
-    }
-    let from = position.from.unwrap_or_else(|| unreachable!());
-    state
-        .chunk_of_changes(from)
-        .await
-        .map(Json)
-        .map_err(ServiceError::from)
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // PUT /api/nodes/parents/:node_id/fork
 /////////////////////////////////////////////////////////////////////////////
 

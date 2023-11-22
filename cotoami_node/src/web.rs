@@ -9,10 +9,10 @@ use axum::{
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
 use tracing::{debug, error};
-use validator::Validate;
 
 use crate::{service::ServiceError, state::NodeState};
 
+mod changes;
 pub(crate) mod clients;
 mod cotonomas;
 mod cotos;
@@ -40,12 +40,7 @@ fn routes() -> Router<NodeState> {
         .route("/", get(|| async { "Cotoami Node API" }))
         .nest("/session", session::routes())
         .nest("/events", events::routes())
-        .nest(
-            "/changes",
-            Router::new()
-                .route("/", get(self::router::chunk_of_changes))
-                .layer(middleware::from_fn(require_session)),
-        )
+        .nest("/changes", changes::routes())
         .nest(
             "/nodes",
             Router::new()
