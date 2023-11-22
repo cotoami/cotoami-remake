@@ -21,7 +21,6 @@ use thiserror::Error;
 use tower_service::Service;
 use uuid::Uuid;
 
-pub mod client;
 pub mod error;
 pub mod models;
 pub mod service_ext;
