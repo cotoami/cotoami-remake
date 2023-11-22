@@ -1,3 +1,5 @@
+//! Web API for Node operations based on [NodeState].
+
 use axum::{
     http::{header::HeaderName, Request, StatusCode, Uri},
     middleware,
