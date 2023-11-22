@@ -23,7 +23,7 @@ use crate::{
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
-        .route("/", get(all_servers).post(add_server_node))
+        .route("/", get(all_server_nodes).post(add_server_node))
         .route("/:node_id", put(update_server_node))
         .layer(middleware::from_fn(crate::web::require_session))
 }
@@ -38,7 +38,7 @@ struct Server {
     not_connected: Option<NotConnected>,
 }
 
-async fn all_servers(
+async fn all_server_nodes(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
 ) -> Result<Json<Vec<Server>>, ServiceError> {
