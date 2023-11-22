@@ -1,11 +1,10 @@
 use anyhow::Result;
 use cotoami_db::prelude::*;
-use eventsource_stream::Event;
 use tower_service::Service;
 use tracing::{debug, warn};
 
 use crate::{
-    service::{NodeService, Request, Response},
+    service::{Event, NodeService},
     state::NodeState,
 };
 
@@ -13,16 +12,15 @@ impl NodeState {
     pub async fn handle_event<S>(
         &mut self,
         source_node_id: Id<Node>,
-        event: &Event,
+        event: Event,
         source_service: &mut S,
     ) -> Result<()>
     where
         S: NodeService + Send,
         S::Future: Send,
     {
-        match &*event.event {
-            "change" => {
-                let change = serde_json::from_str::<ChangelogEntry>(&event.data)?;
+        match event {
+            Event::Change(change) => {
                 debug!(
                     "Received a change from {}: {}",
                     source_service.description(),
@@ -31,8 +29,7 @@ impl NodeState {
                 self.handle_parent_change(source_node_id, change, source_service)
                     .await?;
             }
-            "request" => {
-                let request = serde_json::from_str::<Request>(&event.data)?;
+            Event::Request(request) => {
                 debug!(
                     "Received a request from {}: {:?}",
                     source_service.description(),
@@ -42,12 +39,11 @@ impl NodeState {
                 let response = self.call(request).await?;
                 // TODO: POST /api/responses
             }
-            "response" => {
-                let response = serde_json::from_str::<Response>(&event.data)?;
+            Event::Response(response) => {
                 debug!("Received a response from {}", source_service.description());
                 // TODO: Response Pubsub?
             }
-            _ => warn!("Unknown event: {}", event.event),
+            Event::Error(msg) => warn!("Event error: {}", msg),
         }
         Ok(())
     }

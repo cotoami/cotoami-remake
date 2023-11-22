@@ -57,7 +57,7 @@ impl SseClient {
                     Ok(ESItem::Message(event)) => {
                         if let Err(err) = self
                             .node_state
-                            .handle_event(self.server_node_id, &event, &mut self.http_client)
+                            .handle_event(self.server_node_id, event.into(), &mut self.http_client)
                             .await
                         {
                             debug!(
