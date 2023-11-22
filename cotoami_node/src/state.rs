@@ -1,12 +1,14 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
-use std::{fs, sync::Arc};
+use std::{collections::HashMap, fs, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use tokio::task::spawn_blocking;
 use validator::Validate;
+
+use crate::service::NodeService;
 
 mod config;
 mod conn;
@@ -23,6 +25,7 @@ pub struct NodeState {
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
+    parent_services: Arc<RwLock<ParentNodeServices>>,
 }
 
 impl NodeState {
@@ -40,6 +43,7 @@ impl NodeState {
             db: Arc::new(db),
             pubsub,
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
+            parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
         })
     }
 
@@ -94,3 +98,5 @@ impl NodeState {
         Ok(())
     }
 }
+
+type ParentNodeServices = HashMap<Id<Node>, Box<dyn NodeService>>;

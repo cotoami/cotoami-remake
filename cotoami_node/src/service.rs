@@ -16,6 +16,7 @@
 use anyhow::Result;
 use bytes::Bytes;
 use derive_new::new;
+use futures::future::BoxFuture;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
 use tower_service::Service;
@@ -35,19 +36,19 @@ pub use self::{
 // Service
 /////////////////////////////////////////////////////////////////////////////
 
-pub trait NodeService: Service<Request, Response = Response, Error = anyhow::Error>
-where
-    Self::Future: Send,
+pub trait NodeService:
+    Service<Request, Response = Response, Error = anyhow::Error, Future = NodeServiceFuture>
+    + Send
+    + Sync
 {
     fn description(&self) -> &str;
 }
 
-pub trait RemoteNodeService: NodeService
-where
-    Self::Future: Send,
-{
+pub trait RemoteNodeService: NodeService {
     fn set_session_token(&mut self, token: &str) -> Result<()>;
 }
+
+pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::Error>>;
 
 /////////////////////////////////////////////////////////////////////////////
 // Request

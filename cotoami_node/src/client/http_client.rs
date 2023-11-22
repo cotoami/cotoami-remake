@@ -4,13 +4,12 @@
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.
 
 use std::{
-    future::Future,
-    pin::Pin,
     sync::Arc,
     task::{Context, Poll},
 };
 
 use anyhow::Result;
+use futures::future::FutureExt;
 use parking_lot::RwLock;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -21,7 +20,7 @@ use uuid::Uuid;
 
 use crate::service::{
     error::{InputErrors, RequestError},
-    *,
+    NodeServiceFuture, *,
 };
 
 /// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
@@ -118,7 +117,7 @@ impl HttpClient {
 impl Service<Request> for HttpClient {
     type Response = Response;
     type Error = anyhow::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+    type Future = NodeServiceFuture;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
@@ -126,7 +125,7 @@ impl Service<Request> for HttpClient {
 
     fn call(&mut self, request: Request) -> Self::Future {
         let this = self.clone();
-        Box::pin(async move { this.handle_request(request).await })
+        async move { this.handle_request(request).await }.boxed()
     }
 }
 
