@@ -1,3 +1,5 @@
+//! Network client implementations.
+
 mod http_client;
 mod sse_client;
 

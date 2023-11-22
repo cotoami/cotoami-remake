@@ -24,7 +24,10 @@ use crate::service::{
     *,
 };
 
-/// You do **not** have to wrap the `HttpClient` in an [`Rc`] or [`Arc`] to **reuse** it,
+/// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
+/// connecting to a Node Web API server via HTTP/HTTPS.
+///
+/// You do **not** have to wrap the `HttpClient` in an [`Arc`] to **reuse** it,
 /// because it already uses an [`Arc`] internally.
 #[derive(Clone)]
 pub struct HttpClient {
