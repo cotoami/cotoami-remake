@@ -19,12 +19,9 @@ use reqwest::{
 use tower_service::Service;
 use uuid::Uuid;
 
-use crate::{
-    service::{
-        error::{InputErrors, RequestError},
-        *,
-    },
-    web::csrf,
+use crate::service::{
+    error::{InputErrors, RequestError},
+    *,
 };
 
 /// You do **not** have to wrap the `HttpClient` in an [`Rc`] or [`Arc`] to **reuse** it,
@@ -53,7 +50,7 @@ impl HttpClient {
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
-            csrf::CUSTOM_HEADER,
+            crate::web::CSRF_CUSTOM_HEADER,
             HeaderValue::from_static("cotoami_node"),
         );
         headers

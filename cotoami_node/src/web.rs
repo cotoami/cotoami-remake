@@ -16,11 +16,13 @@ mod changes;
 pub(crate) mod clients;
 mod cotonomas;
 mod cotos;
-pub(crate) mod csrf;
+mod csrf;
 mod events;
 pub(crate) mod router;
 pub(crate) mod servers;
 mod session;
+
+pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
 
 /////////////////////////////////////////////////////////////////////////////
 // Router
