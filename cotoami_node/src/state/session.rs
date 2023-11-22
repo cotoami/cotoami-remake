@@ -1,31 +1,12 @@
 use core::time::Duration;
 
 use anyhow::{bail, Result};
-use chrono::NaiveDateTime;
-use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
-use crate::state::{error::NodeError, AppState};
-
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub struct CreateClientNodeSession {
-    pub password: String,
-    pub new_password: Option<String>,
-    pub client: Node,
-    pub as_parent: Option<bool>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Session {
-    pub token: String,
-    pub expires_at: NaiveDateTime, // UTC
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct ClientNodeSession {
-    pub session: Session,
-    pub server: Node,
-}
+use crate::{
+    service::models::{ClientNodeSession, CreateClientNodeSession, Session},
+    state::{error::NodeError, AppState},
+};
 
 impl AppState {
     pub async fn create_client_node_session(

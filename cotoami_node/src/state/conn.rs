@@ -7,8 +7,11 @@ use tracing::{debug, info};
 
 use crate::{
     client::{HttpClient, SseClient, SseClientError, SseClientState},
-    service::RemoteNodeServiceExt,
-    state::{AppState, CreateClientNodeSession, Session},
+    service::{
+        models::{CreateClientNodeSession, Session},
+        RemoteNodeServiceExt,
+    },
+    state::AppState,
 };
 
 pub enum ServerConnection {

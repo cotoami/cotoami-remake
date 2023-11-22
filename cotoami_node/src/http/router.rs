@@ -16,8 +16,8 @@ use futures::stream::Stream;
 
 use super::*;
 use crate::{
-    service::{error::IntoServiceResult, ServiceError},
-    state::{AppState, ChunkOfChanges},
+    service::{error::IntoServiceResult, models::ChunkOfChanges, ServiceError},
+    state::AppState,
 };
 
 pub(crate) fn router(state: AppState) -> Router {

@@ -10,8 +10,12 @@ use tracing::info;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, ServiceError},
-    state::{AppState, ClientNodeSession, CreateClientNodeSession, Session},
+    service::{
+        error::IntoServiceResult,
+        models::{ClientNodeSession, CreateClientNodeSession, Session},
+        ServiceError,
+    },
+    state::AppState,
 };
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {

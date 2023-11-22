@@ -1,9 +1,9 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::{
-    service::{NodeService, RemoteNodeService, RequestBody},
-    state::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession},
+use crate::service::{
+    models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession},
+    NodeService, RemoteNodeService, RequestBody,
 };
 
 #[async_trait]

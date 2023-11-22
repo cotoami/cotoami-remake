@@ -12,10 +12,13 @@ use validator::Validate;
 
 use crate::{
     client::{HttpClient, SseClient},
-    service::{error::IntoServiceResult, RemoteNodeServiceExt, ServiceError},
+    service::{
+        error::IntoServiceResult, models::CreateClientNodeSession, RemoteNodeServiceExt,
+        ServiceError,
+    },
     state::{
         conn::{NotConnected, ServerConnection},
-        AppState, CreateClientNodeSession,
+        AppState,
     },
 };
 

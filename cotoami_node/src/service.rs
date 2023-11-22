@@ -23,10 +23,12 @@ use uuid::Uuid;
 
 pub mod client;
 pub mod error;
+pub mod models;
 pub mod service_ext;
 
 pub use self::{
     error::ServiceError,
+    models::*,
     service_ext::{NodeServiceExt, RemoteNodeServiceExt},
 };
 
@@ -75,7 +77,7 @@ impl Request {
 pub enum RequestBody {
     LocalNode,
     ChunkOfChanges { from: i64 },
-    CreateClientNodeSession(crate::state::CreateClientNodeSession),
+    CreateClientNodeSession(CreateClientNodeSession),
 }
 
 impl RequestBody {
