@@ -17,6 +17,7 @@ pub(crate) mod clients;
 mod cotonomas;
 mod cotos;
 pub(crate) mod csrf;
+mod events;
 pub(crate) mod router;
 pub(crate) mod servers;
 mod session;
@@ -38,12 +39,7 @@ fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
         .nest("/session", session::routes())
-        .nest(
-            "/events",
-            Router::new()
-                .route("/", get(self::router::stream_events))
-                .layer(middleware::from_fn(require_session)),
-        )
+        .nest("/events", events::routes())
         .nest(
             "/changes",
             Router::new()

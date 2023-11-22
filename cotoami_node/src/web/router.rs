@@ -1,11 +1,5 @@
-use std::convert::Infallible;
-
-use axum::{
-    extract::{Path, Query, State},
-    response::sse::{Event, KeepAlive, Sse},
-};
+use axum::extract::{Path, Query, State};
 use cotoami_db::prelude::*;
-use futures::stream::Stream;
 
 use super::*;
 use crate::{
@@ -48,19 +42,6 @@ pub(crate) async fn chunk_of_changes(
         .await
         .map(Json)
         .map_err(ServiceError::from)
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// GET /api/events
-/////////////////////////////////////////////////////////////////////////////
-
-pub async fn stream_events(
-    State(state): State<NodeState>,
-    Extension(_session): Extension<ClientSession>,
-) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    // FIXME: subscribe to changes or requests
-    let sub = state.pubsub().sse_change.subscribe(None::<()>);
-    Sse::new(sub).keep_alive(KeepAlive::default())
 }
 
 /////////////////////////////////////////////////////////////////////////////
