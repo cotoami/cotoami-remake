@@ -6,16 +6,14 @@ use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
-use self::conn::{ServerConnection, ServerConnections};
-
 mod config;
-pub(crate) mod conn;
+mod conn;
 mod error;
 mod impls;
 mod pubsub;
 mod service;
 
-pub use self::{config::Config, pubsub::*};
+pub use self::{config::Config, conn::*, pubsub::*};
 
 #[derive(Clone)]
 pub struct NodeState {

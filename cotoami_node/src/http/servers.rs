@@ -16,10 +16,7 @@ use crate::{
         error::IntoServiceResult, models::CreateClientNodeSession, RemoteNodeServiceExt,
         ServiceError,
     },
-    state::{
-        conn::{NotConnected, ServerConnection},
-        NodeState,
-    },
+    state::{NodeState, NotConnected, ServerConnection},
 };
 
 /////////////////////////////////////////////////////////////////////////////
