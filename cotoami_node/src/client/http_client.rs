@@ -19,14 +19,15 @@ use reqwest::{
 use tower_service::Service;
 use uuid::Uuid;
 
-use crate::{
-    api::error::{ApiError, *},
-    http,
-    http::csrf,
-    service::*,
+use crate::service::{
+    error::{InputErrors, RequestError},
+    *,
 };
 
-/// You do **not** have to wrap the `HttpClient` in an [`Rc`] or [`Arc`] to **reuse** it,
+/// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
+/// connecting to a Node Web API server via HTTP/HTTPS.
+///
+/// You do **not** have to wrap the `HttpClient` in an [`Arc`] to **reuse** it,
 /// because it already uses an [`Arc`] internally.
 #[derive(Clone)]
 pub struct HttpClient {
@@ -52,7 +53,7 @@ impl HttpClient {
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
-            csrf::CUSTOM_HEADER,
+            crate::web::CSRF_CUSTOM_HEADER,
             HeaderValue::from_static("cotoami_node"),
         );
         headers
@@ -81,6 +82,7 @@ impl HttpClient {
     }
 
     async fn handle_request(self, request: Request) -> Result<Response> {
+        let request_id = *request.id();
         let http_req = match request.body() {
             RequestBody::LocalNode => self.get("/api/nodes/local", None),
             RequestBody::ChunkOfChanges { from } => {
@@ -90,7 +92,7 @@ impl HttpClient {
                 self.put("/api/session/client-node").json(&input)
             }
         };
-        Self::convert_response(*request.id(), http_req.send().await?).await
+        Self::convert_response(request_id, http_req.send().await?).await
     }
 
     async fn convert_response(id: Uuid, from: reqwest::Response) -> Result<Response> {
@@ -99,13 +101,15 @@ impl HttpClient {
         }
 
         let error = match from.status() {
-            StatusCode::BAD_REQUEST => ApiError::Request(from.json::<RequestError>().await?),
-            StatusCode::UNAUTHORIZED => ApiError::Unauthorized,
-            StatusCode::FORBIDDEN => ApiError::Permission,
-            StatusCode::NOT_FOUND => ApiError::NotFound,
-            StatusCode::UNPROCESSABLE_ENTITY => ApiError::Input(from.json::<InputErrors>().await?),
-            StatusCode::INTERNAL_SERVER_ERROR => ApiError::Server(from.text().await?),
-            _ => ApiError::Unknown("".to_string()),
+            StatusCode::BAD_REQUEST => ServiceError::Request(from.json::<RequestError>().await?),
+            StatusCode::UNAUTHORIZED => ServiceError::Unauthorized,
+            StatusCode::FORBIDDEN => ServiceError::Permission,
+            StatusCode::NOT_FOUND => ServiceError::NotFound,
+            StatusCode::UNPROCESSABLE_ENTITY => {
+                ServiceError::Input(from.json::<InputErrors>().await?)
+            }
+            StatusCode::INTERNAL_SERVER_ERROR => ServiceError::Server(from.text().await?),
+            _ => ServiceError::Unknown("".to_string()),
         };
         Ok(Response::new(id, Err(error)))
     }
@@ -136,7 +140,7 @@ impl RemoteNodeService for HttpClient {
         token.set_sensitive(true);
         self.headers
             .write()
-            .insert(http::SESSION_HEADER_NAME, token);
+            .insert(crate::web::SESSION_HEADER_NAME, token);
         Ok(())
     }
 }

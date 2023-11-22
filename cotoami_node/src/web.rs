@@ -1,45 +1,76 @@
+//! Web API for Node operations based on [NodeState].
+
 use axum::{
-    http::{header::HeaderName, Request, StatusCode},
+    http::{header::HeaderName, Request, StatusCode, Uri},
+    middleware,
     middleware::Next,
     response::{IntoResponse, Response},
-    Extension, Json,
+    routing::get,
+    Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
 use tracing::{debug, error};
-use validator::Validate;
 
-use crate::{api::error::ApiError, AppState};
+use crate::{service::ServiceError, state::NodeState};
 
-pub(crate) mod clients;
+mod changes;
 mod cotonomas;
 mod cotos;
-pub(crate) mod csrf;
-pub(crate) mod router;
-pub(crate) mod servers;
-pub(crate) mod session;
+mod csrf;
+mod events;
+mod nodes;
+mod session;
 
-pub(super) use router::router;
+pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
+
+/////////////////////////////////////////////////////////////////////////////
+// Router
+/////////////////////////////////////////////////////////////////////////////
+
+pub(super) fn router(state: NodeState) -> Router {
+    Router::new()
+        .nest("/api", routes())
+        .fallback(fallback)
+        .layer(middleware::from_fn(csrf::protect_from_forgery))
+        .layer(Extension(state.clone())) // for middleware
+        .with_state(state)
+}
+
+fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(|| async { "Cotoami Node API" }))
+        .nest("/session", session::routes())
+        .nest("/events", events::routes())
+        .nest("/changes", changes::routes())
+        .nest("/nodes", nodes::routes())
+        .nest("/cotos", cotos::routes())
+        .nest("/cotonomas", cotonomas::routes())
+}
+
+async fn fallback(uri: Uri) -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Error
 /////////////////////////////////////////////////////////////////////////////
 
 // Tell axum how to convert `ApiError` into a response.
-impl IntoResponse for ApiError {
+impl IntoResponse for ServiceError {
     fn into_response(self) -> Response {
         match self {
-            ApiError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
-            ApiError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
-            ApiError::Permission => StatusCode::FORBIDDEN.into_response(),
-            ApiError::NotFound => StatusCode::NOT_FOUND.into_response(),
-            ApiError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
-            ApiError::Server(e) => {
+            ServiceError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+            ServiceError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
+            ServiceError::Permission => StatusCode::FORBIDDEN.into_response(),
+            ServiceError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ServiceError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
+            ServiceError::Server(e) => {
                 let message = format!("Server error: {}", e);
                 error!(message);
                 (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
             }
-            ApiError::Unknown(_) => unreachable!(),
+            ServiceError::Unknown(_) => unreachable!(),
         }
     }
 }
@@ -57,14 +88,14 @@ pub(crate) const SESSION_HEADER_NAME: HeaderName =
 
 /// A middleware function to identify the operator from a session.
 async fn require_session<B>(
-    Extension(state): Extension<AppState>,
+    Extension(state): Extension<NodeState>,
     // CookieJar extractor will never reject a request
     // https://docs.rs/axum-extra/0.7.5/src/axum_extra/extract/cookie/mod.rs.html#96
     // https://docs.rs/axum/latest/axum/extract/index.html#optional-extractors
     jar: CookieJar,
     mut request: Request<B>,
     next: Next<B>,
-) -> Result<Response, ApiError> {
+) -> Result<Response, ServiceError> {
     let cookie_value = jar.get(SESSION_COOKIE_NAME).map(Cookie::value);
     let header_value = request
         .headers()
@@ -74,13 +105,13 @@ async fn require_session<B>(
     let token = if let Some(token) = cookie_value.or(header_value) {
         token.to_string() // create an owned string to be used in spawn_blocking
     } else {
-        return Err(ApiError::Unauthorized); // missing session token
+        return Err(ServiceError::Unauthorized); // missing session token
     };
 
     let session = spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         // https://rust-lang.github.io/async-book/07_workarounds/02_err_in_async_blocks.html
-        Ok::<_, ApiError>(db.client_session(&token)?)
+        Ok::<_, ServiceError>(db.client_session(&token)?)
     })
     .await??;
 
@@ -89,19 +120,6 @@ async fn require_session<B>(
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {
-        Err(ApiError::Unauthorized) // invalid token (session expired, etc.)
+        Err(ServiceError::Unauthorized) // invalid token (session expired, etc.)
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Pagination Query
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Deserialize, Validate)]
-pub(crate) struct Pagination {
-    #[serde(default)]
-    page: i64,
-
-    #[validate(range(min = 1, max = 1000))]
-    page_size: Option<i64>,
 }

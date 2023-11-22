@@ -2,7 +2,9 @@ use anyhow::Result;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    Extension, Form, Json,
+    middleware,
+    routing::{get, put},
+    Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -11,34 +13,38 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    api,
-    api::{
-        error::{ApiError, IntoApiResult},
-        session::CreateClientNodeSession,
-    },
     client::{HttpClient, SseClient},
-    conn::{NotConnected, ServerConnection},
-    service::{NodeServiceExt, RemoteNodeServiceExt},
-    AppState,
+    service::{
+        error::IntoServiceResult, models::CreateClientNodeSession, RemoteNodeServiceExt,
+        ServiceError,
+    },
+    state::{NodeState, NotConnected, ServerConnection},
 };
+
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(all_server_nodes).post(add_server_node))
+        .route("/:node_id", put(update_server_node))
+        .layer(middleware::from_fn(crate::web::require_session))
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/servers
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, new)]
-pub(crate) struct Server {
+struct Server {
     node: Node,
     not_connected: Option<NotConnected>,
 }
 
-pub(crate) async fn all_servers(
-    State(state): State<AppState>,
+async fn all_server_nodes(
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
-) -> Result<Json<Vec<Server>>, ApiError> {
+) -> Result<Json<Vec<Server>>, ServiceError> {
     spawn_blocking(move || {
-        let conns = state.server_conns.read();
-        let mut db = state.db.new_session()?;
+        let conns = state.read_server_conns();
+        let mut db = state.db().new_session()?;
         let nodes = db
             .all_server_nodes(&operator)?
             .into_iter()
@@ -57,7 +63,7 @@ pub(crate) async fn all_servers(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-pub(crate) struct AddServerNode {
+struct AddServerNode {
     #[validate(required, url)]
     url_prefix: Option<String>,
 
@@ -71,13 +77,13 @@ pub(crate) struct AddServerNode {
     replicate: Option<bool>,
 }
 
-pub(crate) async fn add_server_node(
-    State(state): State<AppState>,
+async fn add_server_node(
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddServerNode>,
-) -> Result<(StatusCode, Json<Server>), ApiError> {
+) -> Result<(StatusCode, Json<Server>), ServiceError> {
     if let Err(errors) = form.validate() {
-        return ("nodes/parent", errors).into_result();
+        return ("nodes/server", errors).into_result();
     }
 
     // Inputs
@@ -86,7 +92,7 @@ pub(crate) async fn add_server_node(
     let as_child = form.as_child.unwrap_or(false);
 
     // Get the local node
-    let db = state.db.clone();
+    let db = state.db().clone();
     let local_node = spawn_blocking(move || db.new_session()?.local_node()).await??;
 
     // Attempt to log into the server node
@@ -102,7 +108,11 @@ pub(crate) async fn add_server_node(
     info!("Successfully logged in to {}", http_client.url_prefix());
 
     // Register the server node
-    let (config, db, pubsub) = (state.config.clone(), state.db.clone(), state.pubsub.clone());
+    let (config, db, pubsub) = (
+        state.config().clone(),
+        state.db().clone(),
+        state.pubsub().clone(),
+    );
     let op = operator.clone();
     let server_id = client_session.server.uuid;
     let url_prefix = http_client.url_prefix().to_string();
@@ -132,32 +142,23 @@ pub(crate) async fn add_server_node(
 
         // Get the imported node data
         let node = db.node(&server_id)?.unwrap_or_else(|| unreachable!());
-        Ok::<_, ApiError>((node, server_db_role))
+        Ok::<_, ServiceError>((node, server_db_role))
     })
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
 
-    // Import changes from the parent
+    // Sync with the parent
     if let DatabaseRole::Parent(parent) = server_db_role {
-        http_client
-            .import_changes(parent.node_id, &state.db, &state.pubsub.local_change)
+        state
+            .sync_with_parent(parent.node_id, &mut http_client)
             .await?;
-        api::parents::after_first_import(
-            server_node.clone(),
-            form.replicate.unwrap_or(false),
-            state.db.clone(),
-            state.pubsub.local_change.clone(),
-        )
-        .await?;
+        state
+            .after_first_import(server_node.clone(), form.replicate.unwrap_or(false))
+            .await?;
     }
 
     // Create a SSE client
-    let sse_client = SseClient::new(
-        server_id,
-        http_client.clone(),
-        state.db.clone(),
-        state.pubsub.local_change.clone(),
-    )?;
+    let sse_client = SseClient::new(server_id, http_client.clone(), state.clone())?;
 
     // Store the server connection
     let server_conn = ServerConnection::new(client_session.session, http_client, sse_client);
@@ -172,22 +173,22 @@ pub(crate) async fn add_server_node(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-pub(crate) struct UpdateServerNode {
+struct UpdateServerNode {
     disabled: Option<bool>,
     // TODO: url_prefix
 }
 
-pub(crate) async fn update_server_node(
-    State(state): State<AppState>,
+async fn update_server_node(
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
     Form(form): Form<UpdateServerNode>,
-) -> Result<StatusCode, ApiError> {
+) -> Result<StatusCode, ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/server", errors).into_result();
     }
     if !state.contains_server(&node_id) {
-        return Err(ApiError::NotFound);
+        return Err(ServiceError::NotFound);
     }
     if let Some(disabled) = form.disabled {
         set_server_disabled(node_id, disabled, &state, operator).await?;
@@ -198,11 +199,11 @@ pub(crate) async fn update_server_node(
 async fn set_server_disabled(
     server_id: Id<Node>,
     disabled: bool,
-    state: &AppState,
+    state: &NodeState,
     operator: Operator,
 ) -> Result<()> {
     // Set `disabled` to true or false
-    let db = state.db.clone();
+    let db = state.db().clone();
     let (local_node, network_role) = spawn_blocking(move || {
         let mut db = db.new_session()?;
         Ok::<_, anyhow::Error>((
@@ -224,14 +225,7 @@ async fn set_server_disabled(
             debug!("Restarting the SSE event loop of {}", server_id);
         } else {
             debug!("Creating a new server connection for {}", server_id);
-            let server_conn = ServerConnection::connect(
-                &server_node,
-                local_node,
-                state.config.owner_password(),
-                &state.db,
-                &state.pubsub.local_change,
-            )
-            .await;
+            let server_conn = ServerConnection::connect(&server_node, local_node, &state).await;
             state.put_server_conn(&server_id, server_conn);
         }
     }

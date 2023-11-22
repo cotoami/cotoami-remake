@@ -1,3 +1,5 @@
+//! Generic Pub/Sub framework
+
 use std::{
     collections::{HashMap, VecDeque},
     hash::Hash,

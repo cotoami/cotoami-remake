@@ -2,7 +2,7 @@
 //!
 //! This module aims to provide Node API functionalities via a commonalized interface
 //! decoupled from the underlying protocol. With this abstraction, the parent/child concept
-//! is separated from network concepts and roles such as server/client or protocols.
+//! is separated from network roles such as server/client or protocols.
 //!
 //! Possible implementations of the interface are:
 //!
@@ -21,13 +21,15 @@ use thiserror::Error;
 use tower_service::Service;
 use uuid::Uuid;
 
-use crate::{api, api::error::ApiError};
-
-pub mod client;
-mod local_node;
+pub mod error;
+pub mod models;
 pub mod service_ext;
 
-pub use service_ext::{NodeServiceExt, RemoteNodeServiceExt};
+pub use self::{
+    error::ServiceError,
+    models::*,
+    service_ext::{NodeServiceExt, RemoteNodeServiceExt},
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // Service
@@ -67,14 +69,14 @@ impl Request {
 
     pub fn id(&self) -> &Uuid { &self.id }
 
-    pub fn body(&self) -> &RequestBody { &self.body }
+    pub fn body(self) -> RequestBody { self.body }
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
     LocalNode,
     ChunkOfChanges { from: i64 },
-    CreateClientNodeSession(api::session::CreateClientNodeSession),
+    CreateClientNodeSession(CreateClientNodeSession),
 }
 
 impl RequestBody {
@@ -88,16 +90,16 @@ impl RequestBody {
 #[derive(Clone, serde::Serialize, serde::Deserialize, new)]
 pub struct Response {
     id: Uuid,
-    body: Result<Bytes, ApiError>,
+    body: Result<Bytes, ServiceError>,
 }
 
 impl Response {
     pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
-        let bytes = self.body.map_err(ApiCallError)?;
+        let bytes = self.body.map_err(ServiceStdError)?;
         rmp_serde::from_slice(&bytes).map_err(anyhow::Error::from)
     }
 }
 
 #[derive(Error, Debug)]
-#[error("API call error: {0:?}")]
-pub struct ApiCallError(ApiError);
+#[error("Service error: {0:?}")]
+pub struct ServiceStdError(ServiceError);

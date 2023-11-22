@@ -8,7 +8,7 @@ use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tracing::{debug, info, warn};
 
-use crate::{client::HttpClient, service::NodeServiceExt, ChangePubsub};
+use crate::{client::HttpClient, NodeState};
 
 /// An [SseClient] handles events streamed from an [EventSource].
 pub struct SseClient {
@@ -18,16 +18,14 @@ pub struct SseClient {
     event_source: EventSource,
     state: Arc<RwLock<SseClientState>>,
 
-    db: Arc<Database>,
-    change_pubsub: Arc<ChangePubsub>,
+    node_state: NodeState,
 }
 
 impl SseClient {
     pub fn new(
         server_node_id: Id<Node>,
         http_client: HttpClient,
-        db: Arc<Database>,
-        change_pubsub: Arc<ChangePubsub>,
+        node_state: NodeState,
     ) -> Result<Self> {
         // To inherit request headers (ex. session token) from the `http_client`,
         // an event source has to be constructed via [EventSource::new] with a
@@ -39,8 +37,7 @@ impl SseClient {
             http_client,
             event_source,
             state: Arc::new(RwLock::new(state)),
-            db,
-            change_pubsub,
+            node_state,
         })
     }
 
@@ -112,12 +109,11 @@ impl SseClient {
                     change.serial_number,
                     self.http_client.url_prefix()
                 );
-                self.http_client
+                self.node_state
                     .handle_parent_change(
                         self.server_node_id, // should be a parent
                         change,
-                        self.db.clone(),
-                        &self.change_pubsub,
+                        &mut self.http_client,
                     )
                     .await?;
             }

@@ -12,12 +12,15 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult, RequestError},
-    http::{require_session, Pagination},
-    AppState,
+    service::{
+        error::{IntoServiceResult, RequestError},
+        Pagination, ServiceError,
+    },
+    web::require_session,
+    NodeState,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos).post(post_coto))
         .layer(middleware::from_fn(require_session))
@@ -30,15 +33,15 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotos(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Coto>>, ApiError> {
+) -> Result<Json<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let cotos = db.recent_cotos(
             None,
             Some(&cotonoma_id),
@@ -64,16 +67,16 @@ struct PostCoto {
 }
 
 async fn post_coto(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<PostCoto>,
-) -> Result<(StatusCode, Json<Coto>), ApiError> {
+) -> Result<(StatusCode, Json<Coto>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
 
         // Check if the cotonoma belongs to this node
         let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
@@ -90,7 +93,7 @@ async fn post_coto(
             &cotonoma,
             &operator,
         )?;
-        state.pubsub.publish_change(change);
+        state.pubsub().publish_change(change);
 
         Ok((StatusCode::CREATED, Json(coto)))
     })

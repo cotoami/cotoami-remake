@@ -10,14 +10,13 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::error::{ApiError, IntoApiResult},
-    http::Pagination,
-    AppState,
+    service::{error::IntoServiceResult, Pagination, ServiceError},
+    NodeState,
 };
 
 mod cotos;
 
-pub(super) fn routes() -> Router<AppState> {
+pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
@@ -32,14 +31,14 @@ const DEFAULT_PAGE_SIZE: i64 = 100;
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotonomas(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Cotonoma>>, ApiError> {
+) -> Result<Json<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotonomas", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let cotonomas = db.recent_cotonomas(
             None,
             pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
@@ -61,11 +60,11 @@ struct CotonomaDetails {
 }
 
 async fn get_cotonoma(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-) -> Result<Json<CotonomaDetails>, ApiError> {
+) -> Result<Json<CotonomaDetails>, ServiceError> {
     spawn_blocking(move || {
-        let mut db = state.db.new_session()?;
+        let mut db = state.db().new_session()?;
         let (cotonoma, coto) = db.cotonoma_or_err(&cotonoma_id)?;
         Ok(Json(CotonomaDetails { cotonoma, coto }))
     })

@@ -13,7 +13,7 @@ use axum::{
 };
 use tracing::info;
 
-use crate::{AppState, Config};
+use crate::{Config, NodeState};
 
 const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTIONS];
 
@@ -22,11 +22,11 @@ const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTI
 pub(crate) const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
 pub(super) async fn protect_from_forgery<B>(
-    Extension(state): Extension<AppState>,
+    Extension(state): Extension<NodeState>,
     request: Request<B>,
     next: Next<B>,
 ) -> Response {
-    if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &state.config) {
+    if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &state.config()) {
         next.run(request).await
     } else {
         StatusCode::FORBIDDEN.into_response()

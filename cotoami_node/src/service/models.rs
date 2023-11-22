@@ -1,0 +1,73 @@
+use chrono::NaiveDateTime;
+use cotoami_db::prelude::*;
+use validator::Validate;
+
+/////////////////////////////////////////////////////////////////////////////
+// pagination query
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Deserialize, Validate)]
+pub(crate) struct Pagination {
+    #[serde(default)]
+    pub page: i64,
+
+    #[validate(range(min = 1, max = 1000))]
+    pub page_size: Option<i64>,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// session
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct CreateClientNodeSession {
+    pub password: String,
+    pub new_password: Option<String>,
+    pub client: Node,
+    pub as_parent: Option<bool>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Session {
+    pub token: String,
+    pub expires_at: NaiveDateTime, // UTC
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ClientNodeSession {
+    pub session: Session,
+    pub server: Node,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// changes
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub enum ChunkOfChanges {
+    Fetched(Changes),
+    OutOfRange { max: i64 },
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Changes {
+    pub chunk: Vec<ChangelogEntry>,
+    pub last_serial_number: i64,
+}
+
+impl Changes {
+    pub fn last_serial_number_of_chunk(&self) -> i64 {
+        self.chunk.last().map(|c| c.serial_number).unwrap_or(0)
+    }
+
+    pub fn is_last_chunk(&self) -> bool {
+        if let Some(change) = self.chunk.last() {
+            // For safety's sake (to avoid infinite loop), leave it as the last chunk
+            // if the last serial number of it is equal **or larger than** the
+            // last serial number of all, rather than exactly the same number.
+            change.serial_number >= self.last_serial_number
+        } else {
+            true // empty (no changes) means the last chunk
+        }
+    }
+}

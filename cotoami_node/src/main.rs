@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_node::Config;
+use cotoami_node::prelude::*;
 use tracing::info;
 
 #[tokio::main]
