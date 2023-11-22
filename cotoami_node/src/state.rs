@@ -1,3 +1,5 @@
+//! This module defines the global state ([NodeState]) and functions dealing with it.
+
 use std::{fs, sync::Arc};
 
 use anyhow::{anyhow, Result};
