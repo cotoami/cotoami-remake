@@ -92,16 +92,3 @@ async fn require_session<B>(
         Err(ServiceError::Unauthorized) // invalid token (session expired, etc.)
     }
 }
-
-/////////////////////////////////////////////////////////////////////////////
-// Pagination Query
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Deserialize, Validate)]
-pub(crate) struct Pagination {
-    #[serde(default)]
-    page: i64,
-
-    #[validate(range(min = 1, max = 1000))]
-    page_size: Option<i64>,
-}

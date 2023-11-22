@@ -9,8 +9,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    http::Pagination,
-    service::{error::IntoServiceResult, ServiceError},
+    service::{error::IntoServiceResult, Pagination, ServiceError},
     NodeState,
 };
 
