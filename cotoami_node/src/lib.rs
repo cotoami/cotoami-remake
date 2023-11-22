@@ -8,11 +8,11 @@ use tokio::{
 
 use crate::state::{Config, NodeState};
 
-mod api;
 mod client;
 mod pubsub;
 mod service;
 mod state;
+mod web;
 
 pub mod prelude {
     pub use crate::state::{Config, NodeState};
@@ -25,7 +25,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     state.init_local_node().await?;
     state.restore_server_conns().await?;
 
-    let router = api::router(state);
+    let router = web::router(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let server = axum::Server::bind(&addr).serve(router.into_make_service());

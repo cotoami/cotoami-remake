@@ -20,11 +20,11 @@ use tower_service::Service;
 use uuid::Uuid;
 
 use crate::{
-    api::csrf,
     service::{
         error::{InputErrors, RequestError},
         *,
     },
+    web::csrf,
 };
 
 /// You do **not** have to wrap the `HttpClient` in an [`Rc`] or [`Arc`] to **reuse** it,
