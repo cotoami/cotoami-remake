@@ -3,7 +3,7 @@ use axum::{
     middleware,
     middleware::Next,
     response::{IntoResponse, Response},
-    routing::{delete, get, put},
+    routing::{get, put},
     Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
@@ -19,7 +19,7 @@ mod cotos;
 pub(crate) mod csrf;
 pub(crate) mod router;
 pub(crate) mod servers;
-pub(crate) mod session;
+mod session;
 
 /////////////////////////////////////////////////////////////////////////////
 // Router
@@ -37,17 +37,7 @@ pub(super) fn router(state: NodeState) -> Router {
 fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
-        .nest(
-            "/session",
-            Router::new()
-                .route("/", delete(self::session::delete_session))
-                .route_layer(middleware::from_fn(require_session))
-                .route("/owner", put(self::session::create_owner_session))
-                .route(
-                    "/client-node",
-                    put(self::session::create_client_node_session),
-                ),
-        )
+        .nest("/session", session::routes())
         .nest(
             "/events",
             Router::new()

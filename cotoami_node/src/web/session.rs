@@ -1,7 +1,13 @@
 use core::time::Duration;
 
 use anyhow::Result;
-use axum::{extract::State, http::StatusCode, Extension, Form, Json};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    middleware,
+    routing::{delete, put},
+    Extension, Form, Json, Router,
+};
 use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
 use cotoami_db::prelude::*;
 use time::OffsetDateTime;
@@ -17,6 +23,14 @@ use crate::{
     },
     state::NodeState,
 };
+
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", delete(delete_session))
+        .route_layer(middleware::from_fn(crate::web::require_session))
+        .route("/owner", put(create_owner_session))
+        .route("/client-node", put(create_client_node_session))
+}
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
     let expiration = Expiration::DateTime(
@@ -36,7 +50,7 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
 // DELETE /api/session
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) async fn delete_session(
+async fn delete_session(
     State(state): State<NodeState>,
     Extension(client_session): Extension<ClientSession>,
     jar: CookieJar,
@@ -65,12 +79,12 @@ pub(crate) async fn delete_session(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-pub(crate) struct CreateOwnerSession {
+struct CreateOwnerSession {
     #[validate(required)]
     password: Option<String>,
 }
 
-pub(crate) async fn create_owner_session(
+async fn create_owner_session(
     State(state): State<NodeState>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
@@ -98,7 +112,7 @@ pub(crate) async fn create_owner_session(
 // PUT /api/session/client-node
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) async fn create_client_node_session(
+async fn create_client_node_session(
     State(state): State<NodeState>,
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
