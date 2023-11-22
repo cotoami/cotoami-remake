@@ -18,7 +18,7 @@ use crate::{
     },
     state::{
         conn::{NotConnected, ServerConnection},
-        AppState,
+        NodeState,
     },
 };
 
@@ -33,7 +33,7 @@ pub(crate) struct Server {
 }
 
 pub(crate) async fn all_servers(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
 ) -> Result<Json<Vec<Server>>, ServiceError> {
     spawn_blocking(move || {
@@ -72,7 +72,7 @@ pub(crate) struct AddServerNode {
 }
 
 pub(crate) async fn add_server_node(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddServerNode>,
 ) -> Result<(StatusCode, Json<Server>), ServiceError> {
@@ -173,7 +173,7 @@ pub(crate) struct UpdateServerNode {
 }
 
 pub(crate) async fn update_server_node(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
     Form(form): Form<UpdateServerNode>,
@@ -193,7 +193,7 @@ pub(crate) async fn update_server_node(
 async fn set_server_disabled(
     server_id: Id<Node>,
     disabled: bool,
-    state: &AppState,
+    state: &NodeState,
     operator: Operator,
 ) -> Result<()> {
     // Set `disabled` to true or false

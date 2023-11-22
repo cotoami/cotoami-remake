@@ -20,18 +20,18 @@ mod service;
 mod session;
 
 /////////////////////////////////////////////////////////////////////////////
-// AppState
+// NodeState
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Clone)]
-pub struct AppState {
+pub struct NodeState {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
 }
 
-impl AppState {
+impl NodeState {
     pub fn new(config: Config) -> Result<Self> {
         config.validate()?;
 
@@ -41,7 +41,7 @@ impl AppState {
 
         let pubsub = Pubsub::new();
 
-        Ok(AppState {
+        Ok(NodeState {
             config: Arc::new(config),
             db: Arc::new(db),
             pubsub,

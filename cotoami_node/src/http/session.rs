@@ -15,7 +15,7 @@ use crate::{
         models::{ClientNodeSession, CreateClientNodeSession, Session},
         ServiceError,
     },
-    state::AppState,
+    state::NodeState,
 };
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
@@ -37,7 +37,7 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) async fn delete_session(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(client_session): Extension<ClientSession>,
     jar: CookieJar,
 ) -> Result<CookieJar, ServiceError> {
@@ -71,7 +71,7 @@ pub(crate) struct CreateOwnerSession {
 }
 
 pub(crate) async fn create_owner_session(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
 ) -> Result<(StatusCode, CookieJar, Json<Session>), ServiceError> {
@@ -99,7 +99,7 @@ pub(crate) async fn create_owner_session(
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) async fn create_client_node_session(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
 ) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ServiceError> {

@@ -17,10 +17,10 @@ use futures::stream::Stream;
 use super::*;
 use crate::{
     service::{error::IntoServiceResult, models::ChunkOfChanges, ServiceError},
-    state::AppState,
+    state::NodeState,
 };
 
-pub(crate) fn router(state: AppState) -> Router {
+pub(crate) fn router(state: NodeState) -> Router {
     Router::new()
         .nest("/api", paths())
         .fallback(fallback)
@@ -29,7 +29,7 @@ pub(crate) fn router(state: AppState) -> Router {
         .with_state(state)
 }
 
-fn paths() -> Router<AppState> {
+fn paths() -> Router<NodeState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
         .nest(
@@ -100,7 +100,7 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 // GET /api/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
-async fn local_node(State(state): State<AppState>) -> Result<Json<Node>, ServiceError> {
+async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, ServiceError> {
     state
         .local_node()
         .await
@@ -119,7 +119,7 @@ pub(crate) struct Position {
 }
 
 async fn chunk_of_changes(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Query(position): Query<Position>,
 ) -> Result<Json<ChunkOfChanges>, ServiceError> {
     if let Err(errors) = position.validate() {
@@ -138,7 +138,7 @@ async fn chunk_of_changes(
 /////////////////////////////////////////////////////////////////////////////
 
 async fn stream_events(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(_session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     // FIXME: subscribe to changes or requests
@@ -156,7 +156,7 @@ struct Forked {
 }
 
 async fn fork_from_parent(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
 ) -> Result<Json<Forked>, ServiceError> {

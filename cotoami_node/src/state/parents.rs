@@ -3,9 +3,9 @@ use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::info;
 
-use crate::state::AppState;
+use crate::state::NodeState;
 
-impl AppState {
+impl NodeState {
     pub async fn after_first_import(&self, parent_node: Node, replicate: bool) -> Result<()> {
         let db = self.db().clone();
         let change_pubsub = self.pubsub().local_change.clone();

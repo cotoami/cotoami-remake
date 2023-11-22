@@ -3,9 +3,9 @@ use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::info;
 
-use crate::state::AppState;
+use crate::state::NodeState;
 
-impl AppState {
+impl NodeState {
     pub async fn local_node(&self) -> Result<Node> {
         let db = self.db().clone();
         spawn_blocking(move || Ok(db.new_session()?.local_node()?)).await?

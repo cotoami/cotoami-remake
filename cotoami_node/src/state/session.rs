@@ -5,10 +5,10 @@ use tokio::task::spawn_blocking;
 
 use crate::{
     service::models::{ClientNodeSession, CreateClientNodeSession, Session},
-    state::{error::NodeError, AppState},
+    state::{error::NodeError, NodeState},
 };
 
-impl AppState {
+impl NodeState {
     pub async fn create_client_node_session(
         &self,
         input: CreateClientNodeSession,

@@ -17,10 +17,10 @@ use crate::{
         error::{IntoServiceResult, RequestError},
         ServiceError,
     },
-    AppState,
+    NodeState,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos).post(post_coto))
         .layer(middleware::from_fn(require_session))
@@ -33,7 +33,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotos(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Coto>>, ServiceError> {
@@ -67,7 +67,7 @@ struct PostCoto {
 }
 
 async fn post_coto(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<PostCoto>,

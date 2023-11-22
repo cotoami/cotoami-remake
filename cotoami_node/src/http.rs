@@ -9,7 +9,7 @@ use tokio::task::spawn_blocking;
 use tracing::{debug, error};
 use validator::Validate;
 
-use crate::{service::ServiceError, state::AppState};
+use crate::{service::ServiceError, state::NodeState};
 
 pub(crate) mod clients;
 mod cotonomas;
@@ -57,7 +57,7 @@ pub(crate) const SESSION_HEADER_NAME: HeaderName =
 
 /// A middleware function to identify the operator from a session.
 async fn require_session<B>(
-    Extension(state): Extension<AppState>,
+    Extension(state): Extension<NodeState>,
     // CookieJar extractor will never reject a request
     // https://docs.rs/axum-extra/0.7.5/src/axum_extra/extract/cookie/mod.rs.html#96
     // https://docs.rs/axum/latest/axum/extract/index.html#optional-extractors

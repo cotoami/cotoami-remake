@@ -11,7 +11,7 @@ use validator::Validate;
 use crate::{
     http::Pagination,
     service::{error::IntoServiceResult, ServiceError},
-    AppState,
+    NodeState,
 };
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
@@ -21,7 +21,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) async fn recent_client_nodes(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Node>>, ServiceError> {
@@ -63,7 +63,7 @@ pub(crate) struct ClientNodeAdded {
 }
 
 pub(crate) async fn add_client_node(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddClientNode>,
 ) -> Result<(StatusCode, Json<ClientNodeAdded>), ServiceError> {

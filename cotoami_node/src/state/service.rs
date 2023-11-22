@@ -18,14 +18,14 @@ use crate::{
         error::{InputError, RequestError},
         *,
     },
-    state::{error::NodeError, AppState},
+    state::{error::NodeError, NodeState},
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// NodeService implemented for AppState
+// NodeService implemented for NodeState
 /////////////////////////////////////////////////////////////////////////////
 
-impl AppState {
+impl NodeState {
     async fn handle_request(self, request: Request) -> Result<Bytes> {
         match request.body() {
             RequestBody::LocalNode => self.local_node().await.and_then(Self::to_bytes),
@@ -46,7 +46,7 @@ impl AppState {
     }
 }
 
-impl Service<Request> for AppState {
+impl Service<Request> for NodeState {
     type Response = Response;
     type Error = anyhow::Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
@@ -68,7 +68,7 @@ impl Service<Request> for AppState {
     }
 }
 
-impl NodeService for AppState {
+impl NodeService for NodeState {
     fn description(&self) -> &str { "local-node" }
 }
 

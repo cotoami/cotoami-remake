@@ -12,10 +12,10 @@ use validator::Validate;
 use crate::{
     http::Pagination,
     service::{error::IntoServiceResult, ServiceError},
-    AppState,
+    NodeState,
 };
 
-pub(super) fn routes() -> Router<AppState> {
+pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
         .layer(middleware::from_fn(super::require_session))
@@ -28,7 +28,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotos(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {

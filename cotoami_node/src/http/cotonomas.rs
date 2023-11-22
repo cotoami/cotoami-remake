@@ -12,12 +12,12 @@ use validator::Validate;
 use crate::{
     http::Pagination,
     service::{error::IntoServiceResult, ServiceError},
-    AppState,
+    NodeState,
 };
 
 mod cotos;
 
-pub(super) fn routes() -> Router<AppState> {
+pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
@@ -32,7 +32,7 @@ const DEFAULT_PAGE_SIZE: i64 = 100;
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotonomas(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
@@ -61,7 +61,7 @@ struct CotonomaDetails {
 }
 
 async fn get_cotonoma(
-    State(state): State<AppState>,
+    State(state): State<NodeState>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Json<CotonomaDetails>, ServiceError> {
     spawn_blocking(move || {

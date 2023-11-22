@@ -9,10 +9,10 @@ use crate::{
         service_ext::NodeServiceExt,
         NodeService,
     },
-    state::AppState,
+    state::NodeState,
 };
 
-impl AppState {
+impl NodeState {
     pub async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges> {
         let db = self.db().clone();
         let changes_chunk_size = self.config().changes_chunk_size;

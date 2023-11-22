@@ -6,7 +6,7 @@ use tokio::{
     task::JoinHandle,
 };
 
-use crate::state::{AppState, Config};
+use crate::state::{Config, NodeState};
 
 mod client;
 mod http;
@@ -15,11 +15,11 @@ pub mod service;
 mod state;
 
 pub mod prelude {
-    pub use crate::state::{AppState, Config};
+    pub use crate::state::{Config, NodeState};
 }
 
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    let state = AppState::new(config)?;
+    let state = NodeState::new(config)?;
     let port = state.config().port;
 
     state.init_local_node().await?;

@@ -11,7 +11,7 @@ use crate::{
         models::{CreateClientNodeSession, Session},
         RemoteNodeServiceExt,
     },
-    state::AppState,
+    state::NodeState,
 };
 
 pub enum ServerConnection {
@@ -37,8 +37,12 @@ impl ServerConnection {
         server_conn
     }
 
-    pub async fn connect(server_node: &ServerNode, local_node: Node, app_state: &AppState) -> Self {
-        match Self::try_connect(server_node, local_node, app_state).await {
+    pub async fn connect(
+        server_node: &ServerNode,
+        local_node: Node,
+        node_state: &NodeState,
+    ) -> Self {
+        match Self::try_connect(server_node, local_node, node_state).await {
             Ok(conn) => conn,
             Err(err) => {
                 debug!("Failed to initialize a server connection: {:?}", err);
@@ -50,9 +54,9 @@ impl ServerConnection {
     async fn try_connect(
         server_node: &ServerNode,
         local_node: Node,
-        app_state: &AppState,
+        node_state: &NodeState,
     ) -> Result<Self> {
-        let is_server_parent = app_state
+        let is_server_parent = node_state
             .db()
             .new_session()?
             .is_parent(&server_node.node_id);
@@ -60,7 +64,7 @@ impl ServerConnection {
 
         // Attempt to log into the server node
         let password = server_node
-            .password(app_state.config().owner_password())?
+            .password(node_state.config().owner_password())?
             .ok_or(anyhow!("Server password is missing."))?;
         let client_session = http_client
             .create_client_node_session(CreateClientNodeSession {
@@ -74,14 +78,14 @@ impl ServerConnection {
 
         // Sync with the parent
         if is_server_parent {
-            app_state
+            node_state
                 .sync_with_parent(server_node.node_id, &mut http_client)
                 .await?;
         }
 
         // Create a SSE client
         let sse_client =
-            SseClient::new(server_node.node_id, http_client.clone(), app_state.clone())?;
+            SseClient::new(server_node.node_id, http_client.clone(), node_state.clone())?;
 
         Ok(Self::new(client_session.session, http_client, sse_client))
     }
