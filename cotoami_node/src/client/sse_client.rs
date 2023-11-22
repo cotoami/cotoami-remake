@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
-use eventsource_stream::Event;
 use futures::StreamExt;
 use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 use crate::{client::HttpClient, NodeState};
 
@@ -56,7 +55,11 @@ impl SseClient {
                 match item {
                     Ok(ESItem::Open) => info!("Event source opened: {}", self.url_prefix()),
                     Ok(ESItem::Message(event)) => {
-                        if let Err(err) = self.handle_event(&event).await {
+                        if let Err(err) = self
+                            .node_state
+                            .handle_event(self.server_node_id, &event, &mut self.http_client)
+                            .await
+                        {
                             debug!(
                                 "Event source {} closed because of an event handling error: {}",
                                 self.url_prefix(),
@@ -98,28 +101,6 @@ impl SseClient {
     fn set_error(&mut self, error: SseClientError) {
         let mut state = self.state.write();
         state.error = Some(error);
-    }
-
-    async fn handle_event(&mut self, event: &Event) -> Result<()> {
-        match &*event.event {
-            "change" => {
-                let change = serde_json::from_str::<ChangelogEntry>(&event.data)?;
-                info!(
-                    "Received a change {} from {}",
-                    change.serial_number,
-                    self.http_client.url_prefix()
-                );
-                self.node_state
-                    .handle_parent_change(
-                        self.server_node_id, // should be a parent
-                        change,
-                        &mut self.http_client,
-                    )
-                    .await?;
-            }
-            _ => warn!("Unknown event: {}", event.event),
-        }
-        Ok(())
     }
 }
 
