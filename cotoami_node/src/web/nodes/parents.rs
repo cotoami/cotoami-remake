@@ -1,22 +1,18 @@
-use axum::extract::{Path, Query, State};
-use cotoami_db::prelude::*;
-
-use super::*;
-use crate::{
-    service::{error::IntoServiceResult, models::ChunkOfChanges, ServiceError},
-    state::NodeState,
+use axum::{
+    extract::{Extension, Path, State},
+    middleware,
+    routing::put,
+    Json, Router,
 };
+use cotoami_db::prelude::*;
+use tokio::task::spawn_blocking;
 
-/////////////////////////////////////////////////////////////////////////////
-// GET /api/nodes/local
-/////////////////////////////////////////////////////////////////////////////
+use crate::{service::ServiceError, state::NodeState};
 
-pub async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, ServiceError> {
-    state
-        .local_node()
-        .await
-        .map(Json)
-        .map_err(ServiceError::from)
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/:node_id/fork", put(fork_from_parent))
+        .layer(middleware::from_fn(crate::web::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -24,11 +20,11 @@ pub async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, Se
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize)]
-pub(crate) struct Forked {
+struct Forked {
     affected: usize,
 }
 
-pub(crate) async fn fork_from_parent(
+async fn fork_from_parent(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,

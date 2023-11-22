@@ -3,7 +3,7 @@ use axum::{
     middleware,
     middleware::Next,
     response::{IntoResponse, Response},
-    routing::{get, put},
+    routing::get,
     Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
@@ -18,7 +18,7 @@ mod cotonomas;
 mod cotos;
 mod csrf;
 mod events;
-pub(crate) mod router;
+mod nodes;
 pub(crate) mod servers;
 mod session;
 
@@ -43,38 +43,7 @@ fn routes() -> Router<NodeState> {
         .nest("/session", session::routes())
         .nest("/events", events::routes())
         .nest("/changes", changes::routes())
-        .nest(
-            "/nodes",
-            Router::new()
-                .route("/local", get(self::router::local_node))
-                .nest(
-                    "/servers",
-                    Router::new()
-                        .route(
-                            "/",
-                            get(self::servers::all_servers).post(self::servers::add_server_node),
-                        )
-                        .route("/:node_id", put(self::servers::update_server_node))
-                        .layer(middleware::from_fn(require_session)),
-                )
-                .nest(
-                    "/clients",
-                    Router::new()
-                        .route(
-                            "/",
-                            get(self::clients::recent_client_nodes)
-                                .post(self::clients::add_client_node),
-                        )
-                        .layer(middleware::from_fn(require_session)),
-                )
-                .nest(
-                    "parents",
-                    Router::new()
-                        .route("/:node_id/fork", put(self::router::fork_from_parent))
-                        .layer(middleware::from_fn(require_session)),
-                )
-                .layer(middleware::from_fn(require_session)),
-        )
+        .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
         .nest("/cotonomas", cotonomas::routes())
 }

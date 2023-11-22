@@ -1,13 +1,15 @@
 use std::convert::Infallible;
 
 use axum::{
-    extract::State,
+    extract::{Extension, State},
+    middleware,
     response::sse::{Event, KeepAlive, Sse},
+    routing::get,
+    Router,
 };
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
 
-use super::*;
 use crate::state::NodeState;
 
 pub(super) fn routes() -> Router<NodeState> {
