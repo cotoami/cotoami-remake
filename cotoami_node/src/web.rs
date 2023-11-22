@@ -1,8 +1,10 @@
 use axum::{
-    http::{header::HeaderName, Request, StatusCode},
+    http::{header::HeaderName, Request, StatusCode, Uri},
+    middleware,
     middleware::Next,
     response::{IntoResponse, Response},
-    Extension, Json,
+    routing::{delete, get, put},
+    Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
@@ -19,7 +21,84 @@ pub(crate) mod router;
 pub(crate) mod servers;
 pub(crate) mod session;
 
-pub(super) use router::router;
+/////////////////////////////////////////////////////////////////////////////
+// Router
+/////////////////////////////////////////////////////////////////////////////
+
+pub(super) fn router(state: NodeState) -> Router {
+    Router::new()
+        .nest("/api", routes())
+        .fallback(fallback)
+        .layer(middleware::from_fn(csrf::protect_from_forgery))
+        .layer(Extension(state.clone())) // for middleware
+        .with_state(state)
+}
+
+fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(|| async { "Cotoami Node API" }))
+        .nest(
+            "/session",
+            Router::new()
+                .route("/", delete(self::session::delete_session))
+                .route_layer(middleware::from_fn(require_session))
+                .route("/owner", put(self::session::create_owner_session))
+                .route(
+                    "/client-node",
+                    put(self::session::create_client_node_session),
+                ),
+        )
+        .nest(
+            "/events",
+            Router::new()
+                .route("/", get(self::router::stream_events))
+                .layer(middleware::from_fn(require_session)),
+        )
+        .nest(
+            "/changes",
+            Router::new()
+                .route("/", get(self::router::chunk_of_changes))
+                .layer(middleware::from_fn(require_session)),
+        )
+        .nest(
+            "/nodes",
+            Router::new()
+                .route("/local", get(self::router::local_node))
+                .nest(
+                    "/servers",
+                    Router::new()
+                        .route(
+                            "/",
+                            get(self::servers::all_servers).post(self::servers::add_server_node),
+                        )
+                        .route("/:node_id", put(self::servers::update_server_node))
+                        .layer(middleware::from_fn(require_session)),
+                )
+                .nest(
+                    "/clients",
+                    Router::new()
+                        .route(
+                            "/",
+                            get(self::clients::recent_client_nodes)
+                                .post(self::clients::add_client_node),
+                        )
+                        .layer(middleware::from_fn(require_session)),
+                )
+                .nest(
+                    "parents",
+                    Router::new()
+                        .route("/:node_id/fork", put(self::router::fork_from_parent))
+                        .layer(middleware::from_fn(require_session)),
+                )
+                .layer(middleware::from_fn(require_session)),
+        )
+        .nest("/cotos", cotos::routes())
+        .nest("/cotonomas", cotonomas::routes())
+}
+
+async fn fallback(uri: Uri) -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Error

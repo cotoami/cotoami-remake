@@ -140,7 +140,7 @@ impl RemoteNodeService for HttpClient {
         token.set_sensitive(true);
         self.headers
             .write()
-            .insert(crate::api::SESSION_HEADER_NAME, token);
+            .insert(crate::web::SESSION_HEADER_NAME, token);
         Ok(())
     }
 }

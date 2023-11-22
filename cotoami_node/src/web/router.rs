@@ -2,14 +2,7 @@ use std::convert::Infallible;
 
 use axum::{
     extract::{Path, Query, State},
-    http::{StatusCode, Uri},
-    middleware,
-    response::{
-        sse::{Event, KeepAlive, Sse},
-        IntoResponse,
-    },
-    routing::{delete, get, put},
-    Extension, Router,
+    response::sse::{Event, KeepAlive, Sse},
 };
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
@@ -20,87 +13,11 @@ use crate::{
     state::NodeState,
 };
 
-pub(crate) fn router(state: NodeState) -> Router {
-    Router::new()
-        .nest("/api", paths())
-        .fallback(fallback)
-        .layer(middleware::from_fn(csrf::protect_from_forgery))
-        .layer(Extension(state.clone())) // for middleware
-        .with_state(state)
-}
-
-fn paths() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(|| async { "Cotoami Node API" }))
-        .nest(
-            "/session",
-            Router::new()
-                .route("/", delete(super::session::delete_session))
-                .route_layer(middleware::from_fn(super::require_session))
-                .route("/owner", put(super::session::create_owner_session))
-                .route(
-                    "/client-node",
-                    put(super::session::create_client_node_session),
-                ),
-        )
-        .nest(
-            "/events",
-            Router::new()
-                .route("/", get(stream_events))
-                .layer(middleware::from_fn(super::require_session)),
-        )
-        .nest(
-            "/changes",
-            Router::new()
-                .route("/", get(chunk_of_changes))
-                .layer(middleware::from_fn(super::require_session)),
-        )
-        .nest(
-            "/nodes",
-            Router::new()
-                .route("/local", get(local_node))
-                .nest(
-                    "/servers",
-                    Router::new()
-                        .route(
-                            "/",
-                            get(super::servers::all_servers).post(super::servers::add_server_node),
-                        )
-                        .route("/:node_id", put(super::servers::update_server_node))
-                        .route("/:node_id/fork", put(fork_from_parent))
-                        .layer(middleware::from_fn(require_session)),
-                )
-                .nest(
-                    "/clients",
-                    Router::new()
-                        .route(
-                            "/",
-                            get(super::clients::recent_client_nodes)
-                                .post(super::clients::add_client_node),
-                        )
-                        .layer(middleware::from_fn(require_session)),
-                )
-                .nest(
-                    "parents",
-                    Router::new()
-                        .route("/:node_id/fork", put(fork_from_parent))
-                        .layer(middleware::from_fn(require_session)),
-                )
-                .layer(middleware::from_fn(super::require_session)),
-        )
-        .nest("/cotos", cotos::routes())
-        .nest("/cotonomas", cotonomas::routes())
-}
-
-async fn fallback(uri: Uri) -> impl IntoResponse {
-    (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
-async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, ServiceError> {
+pub async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, ServiceError> {
     state
         .local_node()
         .await
@@ -118,7 +35,7 @@ pub(crate) struct Position {
     pub from: Option<i64>,
 }
 
-async fn chunk_of_changes(
+pub(crate) async fn chunk_of_changes(
     State(state): State<NodeState>,
     Query(position): Query<Position>,
 ) -> Result<Json<ChunkOfChanges>, ServiceError> {
@@ -137,7 +54,7 @@ async fn chunk_of_changes(
 // GET /api/events
 /////////////////////////////////////////////////////////////////////////////
 
-async fn stream_events(
+pub async fn stream_events(
     State(state): State<NodeState>,
     Extension(_session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
@@ -151,11 +68,11 @@ async fn stream_events(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize)]
-struct Forked {
+pub(crate) struct Forked {
     affected: usize,
 }
 
-async fn fork_from_parent(
+pub(crate) async fn fork_from_parent(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,

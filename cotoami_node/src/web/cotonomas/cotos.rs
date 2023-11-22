@@ -12,11 +12,11 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    api::require_session,
     service::{
         error::{IntoServiceResult, RequestError},
         Pagination, ServiceError,
     },
+    web::require_session,
     NodeState,
 };
 
