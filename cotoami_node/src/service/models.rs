@@ -19,7 +19,7 @@ pub(crate) struct Pagination {
 // session
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CreateClientNodeSession {
     pub password: String,
     pub new_password: Option<String>,

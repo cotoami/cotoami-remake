@@ -1,9 +1,13 @@
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use eventsource_stream::Event;
-use tracing::{info, warn};
+use tower_service::Service;
+use tracing::{debug, warn};
 
-use crate::{service::NodeService, state::NodeState};
+use crate::{
+    service::{NodeService, Request},
+    state::NodeState,
+};
 
 impl NodeState {
     pub async fn handle_event<S>(
@@ -19,13 +23,24 @@ impl NodeState {
         match &*event.event {
             "change" => {
                 let change = serde_json::from_str::<ChangelogEntry>(&event.data)?;
-                info!(
-                    "Received a change {} from {}",
-                    change.serial_number,
-                    source_service.description()
+                debug!(
+                    "Received a change from {}: {}",
+                    source_service.description(),
+                    change.serial_number
                 );
                 self.handle_parent_change(source_node_id, change, source_service)
                     .await?;
+            }
+            "request" => {
+                let request = serde_json::from_str::<Request>(&event.data)?;
+                debug!(
+                    "Received a request from {}: {:?}",
+                    source_service.description(),
+                    request
+                );
+                // Handle the request by this node
+                let response = self.call(request).await?;
+                // TODO
             }
             _ => warn!("Unknown event: {}", event.event),
         }

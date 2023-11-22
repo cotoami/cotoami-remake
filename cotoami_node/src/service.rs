@@ -53,7 +53,7 @@ where
 // Request
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
     body: RequestBody,
@@ -72,7 +72,7 @@ impl Request {
     pub fn body(self) -> RequestBody { self.body }
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
     LocalNode,
     ChunkOfChanges { from: i64 },
