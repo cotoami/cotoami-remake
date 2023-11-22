@@ -13,7 +13,6 @@ use tracing::{debug, error};
 use crate::{service::ServiceError, state::NodeState};
 
 mod changes;
-pub(crate) mod clients;
 mod cotonomas;
 mod cotos;
 mod csrf;

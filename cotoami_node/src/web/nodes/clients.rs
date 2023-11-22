@@ -1,7 +1,9 @@
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    Extension, Form, Json,
+    middleware,
+    routing::get,
+    Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -13,13 +15,19 @@ use crate::{
     NodeState,
 };
 
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(recent_client_nodes).post(add_client_node))
+        .layer(middleware::from_fn(crate::web::require_session))
+}
+
 const DEFAULT_PAGE_SIZE: i64 = 30;
 
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/clients
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) async fn recent_client_nodes(
+async fn recent_client_nodes(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Query(pagination): Query<Pagination>,
@@ -47,7 +55,7 @@ pub(crate) async fn recent_client_nodes(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-pub(crate) struct AddClientNode {
+struct AddClientNode {
     #[validate(required)]
     id: Option<Id<Node>>,
     as_owner: Option<bool>,
@@ -56,12 +64,12 @@ pub(crate) struct AddClientNode {
 }
 
 #[derive(serde::Serialize)]
-pub(crate) struct ClientNodeAdded {
+struct ClientNodeAdded {
     /// Generated password
     password: String,
 }
 
-pub(crate) async fn add_client_node(
+async fn add_client_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddClientNode>,
