@@ -8,15 +8,12 @@ use validator::Validate;
 
 use self::conn::{ServerConnection, ServerConnections};
 
-mod changes;
 mod config;
 pub(crate) mod conn;
 mod error;
-mod nodes;
-mod parents;
+mod impls;
 mod pubsub;
 mod service;
-mod session;
 
 pub use self::{config::Config, pubsub::*};
 
