@@ -5,7 +5,7 @@ use tower_service::Service;
 use tracing::{debug, warn};
 
 use crate::{
-    service::{NodeService, Request},
+    service::{NodeService, Request, Response},
     state::NodeState,
 };
 
@@ -40,7 +40,12 @@ impl NodeState {
                 );
                 // Handle the request by this node
                 let response = self.call(request).await?;
-                // TODO
+                // TODO: POST /api/responses
+            }
+            "response" => {
+                let response = serde_json::from_str::<Response>(&event.data)?;
+                debug!("Received a response from {}", source_service.description());
+                // TODO: Response Pubsub?
             }
             _ => warn!("Unknown event: {}", event.event),
         }
