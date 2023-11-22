@@ -2,7 +2,9 @@ use anyhow::Result;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    Extension, Form, Json,
+    middleware,
+    routing::{get, put},
+    Extension, Form, Json, Router,
 };
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -19,17 +21,24 @@ use crate::{
     state::{NodeState, NotConnected, ServerConnection},
 };
 
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(all_servers).post(add_server_node))
+        .route("/:node_id", put(update_server_node))
+        .layer(middleware::from_fn(crate::web::require_session))
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/servers
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, new)]
-pub(crate) struct Server {
+struct Server {
     node: Node,
     not_connected: Option<NotConnected>,
 }
 
-pub(crate) async fn all_servers(
+async fn all_servers(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
 ) -> Result<Json<Vec<Server>>, ServiceError> {
@@ -54,7 +63,7 @@ pub(crate) async fn all_servers(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-pub(crate) struct AddServerNode {
+struct AddServerNode {
     #[validate(required, url)]
     url_prefix: Option<String>,
 
@@ -68,7 +77,7 @@ pub(crate) struct AddServerNode {
     replicate: Option<bool>,
 }
 
-pub(crate) async fn add_server_node(
+async fn add_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Form(form): Form<AddServerNode>,
@@ -164,12 +173,12 @@ pub(crate) async fn add_server_node(
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Deserialize, Validate)]
-pub(crate) struct UpdateServerNode {
+struct UpdateServerNode {
     disabled: Option<bool>,
     // TODO: url_prefix
 }
 
-pub(crate) async fn update_server_node(
+async fn update_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,

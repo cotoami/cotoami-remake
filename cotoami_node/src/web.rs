@@ -19,7 +19,6 @@ mod cotos;
 mod csrf;
 mod events;
 mod nodes;
-pub(crate) mod servers;
 mod session;
 
 pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
