@@ -2,7 +2,7 @@
 //!
 //! This module aims to provide Node API functionalities via a commonalized interface
 //! decoupled from the underlying protocol. With this abstraction, the parent/child concept
-//! is separated from network concepts and roles such as server/client or protocols.
+//! is separated from network roles such as server/client or protocols.
 //!
 //! Possible implementations of the interface are:
 //!
