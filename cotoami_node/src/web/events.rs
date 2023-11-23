@@ -41,20 +41,19 @@ async fn stream_events(
 /////////////////////////////////////////////////////////////////////////////
 
 async fn post_event(
-    State(state): State<NodeState>,
+    State(mut state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
     body: Bytes,
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
         let event: NodeSentEvent = rmp_serde::from_slice(&body)?;
+        let parent_service = state.parent_service_or_err(&parent.node_id)?;
+        state
+            .handle_event(parent.node_id, event, parent_service)
+            .await?;
 
-        // TODO:
-        // state
-        //     .handle_event(parent.node_id, event, source_service)
-        //     .await?;
-
-        // it won't create an "event" resouce, just handle it,
-        // so returns `OK` instead of `Created`q
+        // It won't create an "event" resouce, just handle it,
+        // so returns `OK` instead of `Created`.
         Ok(StatusCode::OK)
     } else {
         // Only a parent node can send an event via HTTP request

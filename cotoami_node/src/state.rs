@@ -85,6 +85,11 @@ impl NodeState {
             .get(parent_id)
             .map(|s| dyn_clone::clone_box(&**s))
     }
+
+    pub fn parent_service_or_err(&self, parent_id: &Id<Node>) -> Result<Box<dyn NodeService>> {
+        self.parent_service(parent_id)
+            .ok_or(anyhow!("Parent disconnected: {}", parent_id))
+    }
 }
 
 type ParentNodeServices = HashMap<Id<Node>, Box<dyn NodeService>>;

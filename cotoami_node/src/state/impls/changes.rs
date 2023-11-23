@@ -53,15 +53,11 @@ impl NodeState {
         .await?
     }
 
-    pub async fn sync_with_parent<S>(
+    pub async fn sync_with_parent(
         &self,
         parent_node_id: Id<Node>,
-        parent_service: &mut S,
-    ) -> Result<Option<(i64, i64)>>
-    where
-        S: NodeService + Send,
-        S::Future: Send,
-    {
+        mut parent_service: Box<dyn NodeService>,
+    ) -> Result<Option<(i64, i64)>> {
         info!(
             "Importing the changes from {}",
             parent_service.description()
@@ -120,16 +116,12 @@ impl NodeState {
         }
     }
 
-    pub async fn handle_parent_change<S>(
+    pub async fn handle_parent_change(
         &self,
         parent_node_id: Id<Node>,
         change: ChangelogEntry,
-        parent_service: &mut S,
-    ) -> Result<()>
-    where
-        S: NodeService + Send,
-        S::Future: Send,
-    {
+        parent_service: Box<dyn NodeService>,
+    ) -> Result<()> {
         let import_result = spawn_blocking({
             let db = self.db().clone();
             move || db.new_session()?.import_change(&change, &parent_node_id)

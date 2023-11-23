@@ -9,16 +9,12 @@ use crate::{
 };
 
 impl NodeState {
-    pub async fn handle_event<S>(
+    pub async fn handle_event(
         &mut self,
         source_node_id: Id<Node>,
         event: NodeSentEvent,
-        source_service: &mut S,
-    ) -> Result<()>
-    where
-        S: NodeService + Send,
-        S::Future: Send,
-    {
+        source_service: Box<dyn NodeService>,
+    ) -> Result<()> {
         match event {
             NodeSentEvent::Change(change) => {
                 debug!(

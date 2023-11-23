@@ -15,7 +15,7 @@ pub trait NodeServiceExt: NodeService {
     }
 }
 
-impl<T> NodeServiceExt for T where T: NodeService {}
+impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}
 
 #[async_trait]
 pub trait RemoteNodeServiceExt: RemoteNodeService {
@@ -31,4 +31,4 @@ pub trait RemoteNodeServiceExt: RemoteNodeService {
     }
 }
 
-impl<T> RemoteNodeServiceExt for T where T: RemoteNodeService {}
+impl<T> RemoteNodeServiceExt for T where T: RemoteNodeService + ?Sized {}

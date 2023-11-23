@@ -79,7 +79,7 @@ impl ServerConnection {
         // Sync with the parent
         if is_server_parent {
             node_state
-                .sync_with_parent(server_node.node_id, &mut http_client)
+                .sync_with_parent(server_node.node_id, Box::new(http_client.clone()))
                 .await?;
         }
 

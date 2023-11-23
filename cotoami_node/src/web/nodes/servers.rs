@@ -150,7 +150,7 @@ async fn add_server_node(
     // Sync with the parent
     if let DatabaseRole::Parent(parent) = server_db_role {
         state
-            .sync_with_parent(parent.node_id, &mut http_client)
+            .sync_with_parent(parent.node_id, Box::new(http_client.clone()))
             .await?;
         state
             .after_first_import(server_node.clone(), form.replicate.unwrap_or(false))
