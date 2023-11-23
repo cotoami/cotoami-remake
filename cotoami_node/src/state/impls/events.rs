@@ -4,7 +4,7 @@ use tower_service::Service;
 use tracing::{debug, warn};
 
 use crate::{
-    service::{Event, NodeService},
+    service::{NodeSentEvent, NodeService},
     state::NodeState,
 };
 
@@ -12,7 +12,7 @@ impl NodeState {
     pub async fn handle_event<S>(
         &mut self,
         source_node_id: Id<Node>,
-        event: Event,
+        event: NodeSentEvent,
         source_service: &mut S,
     ) -> Result<()>
     where
@@ -20,7 +20,7 @@ impl NodeState {
         S::Future: Send,
     {
         match event {
-            Event::Change(change) => {
+            NodeSentEvent::Change(change) => {
                 debug!(
                     "Received a change from {}: {}",
                     source_service.description(),
@@ -29,7 +29,7 @@ impl NodeState {
                 self.handle_parent_change(source_node_id, change, source_service)
                     .await?;
             }
-            Event::Request(request) => {
+            NodeSentEvent::Request(request) => {
                 debug!(
                     "Received a request from {}: {:?}",
                     source_service.description(),
@@ -39,11 +39,11 @@ impl NodeState {
                 let response = self.call(request).await?;
                 // TODO: POST /api/responses
             }
-            Event::Response(response) => {
+            NodeSentEvent::Response(response) => {
                 debug!("Received a response from {}", source_service.description());
                 // TODO: Response Pubsub?
             }
-            Event::Error(msg) => warn!("Event error: {}", msg),
+            NodeSentEvent::Error(msg) => warn!("Event error: {}", msg),
         }
         Ok(())
     }

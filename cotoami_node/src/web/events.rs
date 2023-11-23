@@ -13,7 +13,7 @@ use cotoami_db::prelude::*;
 use futures::stream::Stream;
 
 use crate::{
-    service::{Event, ServiceError},
+    service::{NodeSentEvent, ServiceError},
     NodeState,
 };
 
@@ -46,7 +46,7 @@ async fn post_event(
     body: Bytes,
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
-        let event: Event = rmp_serde::from_slice(&body)?;
+        let event: NodeSentEvent = rmp_serde::from_slice(&body)?;
 
         // TODO:
         // state
@@ -57,7 +57,7 @@ async fn post_event(
         // so returns `OK` instead of `Created`q
         Ok(StatusCode::OK)
     } else {
-        // Only a parent can send an event
+        // Only a parent node can send an event via HTTP request
         Err(ServiceError::Permission)
     }
 }
