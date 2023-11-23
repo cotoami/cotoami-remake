@@ -32,7 +32,7 @@ async fn stream_events(
     Extension(_session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
     // FIXME: subscribe to changes or requests
-    let sub = state.pubsub().sse_change.subscribe(None::<()>);
+    let sub = state.pubsub().sse_changes.subscribe(None::<()>);
     Sse::new(sub).keep_alive(KeepAlive::default())
 }
 

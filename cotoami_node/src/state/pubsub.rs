@@ -1,40 +1,57 @@
 use std::{convert::Infallible, sync::Arc};
 
-use axum::response::sse::Event;
+use axum::response::sse::Event as SseEvent;
 use cotoami_db::prelude::*;
 
 use crate::pubsub::Publisher;
 
 #[derive(Clone)]
 pub struct Pubsub {
-    pub local_change: Arc<ChangePubsub>,
-    pub sse_change: Arc<SsePubsub>,
+    pub local_changes: Arc<ChangePubsub>,
+    pub sse_changes: Arc<SsePubsub>,
+    pub events: Arc<EventPubsub>,
 }
 
 impl Pubsub {
     pub(crate) fn new() -> Self {
-        let local_change = ChangePubsub::new();
-        let sse_change = SsePubsub::new();
+        let local_changes = ChangePubsub::new();
+        let sse_changes = SsePubsub::new();
+        let events = EventPubsub::new();
 
-        sse_change.tap_into(
-            local_change.subscribe(None::<()>),
+        sse_changes.tap_into(
+            local_changes.subscribe(None::<()>),
             |_| None,
             |change| {
-                let event = Event::default().event("change").json_data(change)?;
+                let event = SseEvent::default().event("change").json_data(change)?;
                 Ok(Ok(event))
             },
         );
 
         Self {
-            local_change: Arc::new(local_change),
-            sse_change: Arc::new(sse_change),
+            local_changes: Arc::new(local_changes),
+            sse_changes: Arc::new(sse_changes),
+            events: Arc::new(events),
         }
     }
 
     pub fn publish_change(&self, changelog: ChangelogEntry) {
-        self.local_change.publish(changelog, None);
+        self.local_changes.publish(changelog, None);
     }
 }
 
 pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
-pub(crate) type SsePubsub = Publisher<Result<Event, Infallible>, ()>;
+pub(crate) type SsePubsub = Publisher<Result<SseEvent, Infallible>, ()>;
+
+pub type EventPubsub = Publisher<Event, ()>;
+
+#[derive(Clone)]
+pub enum Event {
+    ServerDisconnected {
+        server_node_id: Id<Node>,
+        reason: Option<String>,
+    },
+    ParentDisconnected {
+        parent_node_id: Id<Node>,
+        reason: Option<String>,
+    },
+}

@@ -39,7 +39,7 @@ impl NodeState {
 
     pub async fn import_changes(&self, parent_node_id: Id<Node>, changes: Changes) -> Result<()> {
         let db = self.db().clone();
-        let change_pubsub = self.pubsub().local_change.clone();
+        let change_pubsub = self.pubsub().local_changes.clone();
         spawn_blocking(move || {
             let db = db.new_session()?;
             for change in changes.chunk {
