@@ -16,6 +16,7 @@
 use anyhow::Result;
 use bytes::Bytes;
 use derive_new::new;
+use dyn_clone::DynClone;
 use futures::future::BoxFuture;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
@@ -40,6 +41,7 @@ pub trait NodeService:
     Service<Request, Response = Response, Error = anyhow::Error, Future = NodeServiceFuture>
     + Send
     + Sync
+    + DynClone
 {
     fn description(&self) -> &str;
 }

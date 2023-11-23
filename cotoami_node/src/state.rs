@@ -80,14 +80,10 @@ impl NodeState {
         self.parent_services.read()
     }
 
-    pub fn parent_service(
-        &self,
-        parent_id: &Id<Node>,
-    ) -> Result<MappedRwLockReadGuard<Box<dyn NodeService>>> {
-        RwLockReadGuard::try_map(self.read_parent_services(), |services| {
-            services.get(parent_id)
-        })
-        .map_err(|_| anyhow!("Parent node service for [{}] not found", parent_id))
+    pub fn parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        self.read_parent_services()
+            .get(parent_id)
+            .map(|s| dyn_clone::clone_box(&**s))
     }
 }
 
