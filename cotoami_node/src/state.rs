@@ -52,10 +52,6 @@ impl NodeState {
 
     pub fn pubsub(&self) -> &Pubsub { &self.pubsub }
 
-    pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
-        self.server_conns.write().insert(*server_id, server_conn);
-    }
-
     pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
         self.server_conns.read().contains_key(server_id)
     }
@@ -72,11 +68,11 @@ impl NodeState {
             .map_err(|_| anyhow!("ServerConnection for [{}] not found", server_id))
     }
 
-    pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
-
-    pub fn put_parent_service(&self, parent_id: &Id<Node>, service: Box<dyn NodeService>) {
-        self.parent_services.write().insert(*parent_id, service);
+    pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
+        self.server_conns.write().insert(*server_id, server_conn);
     }
+
+    pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn read_parent_services(&self) -> RwLockReadGuard<ParentNodeServices> {
         self.parent_services.read()
@@ -91,6 +87,14 @@ impl NodeState {
     pub fn parent_service_or_err(&self, parent_id: &Id<Node>) -> Result<Box<dyn NodeService>> {
         self.parent_service(parent_id)
             .ok_or(anyhow!("Parent disconnected: {}", parent_id))
+    }
+
+    pub fn put_parent_service(&self, parent_id: &Id<Node>, service: Box<dyn NodeService>) {
+        self.parent_services.write().insert(*parent_id, service);
+    }
+
+    pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        self.parent_services.write().remove(parent_id)
     }
 }
 
