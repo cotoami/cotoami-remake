@@ -72,6 +72,8 @@ impl NodeState {
             .map_err(|_| anyhow!("ServerConnection for [{}] not found", server_id))
     }
 
+    pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
+
     pub fn put_parent_service(&self, parent_id: &Id<Node>, service: Box<dyn NodeService>) {
         self.parent_services.write().insert(*parent_id, service);
     }

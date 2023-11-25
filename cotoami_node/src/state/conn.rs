@@ -56,10 +56,7 @@ impl ServerConnection {
         local_node: Node,
         node_state: &NodeState,
     ) -> Result<Self> {
-        let is_server_parent = node_state
-            .db()
-            .new_session()?
-            .is_parent(&server_node.node_id);
+        let is_server_parent = node_state.is_parent(&server_node.node_id);
         let mut http_client = HttpClient::new(server_node.url_prefix.clone())?;
 
         // Attempt to log into the server node

@@ -153,6 +153,8 @@ impl Database {
 
         Ok(())
     }
+
+    pub fn globals(&self) -> &Globals { &self.globals }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,10 +165,14 @@ impl Database {
 /// Most of the fields are cached database rows or column values frequently used internally.
 /// For example, [LocalNode] will be used every time when authentication is needed.
 #[derive(Debug, Default)]
-struct Globals {
+pub struct Globals {
     local_node: RwLock<Option<LocalNode>>,
     root_cotonoma_id: RwLock<Option<Id<Cotonoma>>>,
     parent_nodes: RwLock<HashMap<Id<Node>, ParentNode>>,
+}
+
+impl Globals {
+    pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -528,10 +534,6 @@ impl<'a> DatabaseSession<'a> {
         self.parent_node(id, operator)?
             .ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id))
             .map_err(anyhow::Error::from)
-    }
-
-    pub fn is_parent(&self, id: &Id<Node>) -> bool {
-        self.globals.parent_nodes.read().contains_key(id)
     }
 
     pub fn recent_parent_nodes(
