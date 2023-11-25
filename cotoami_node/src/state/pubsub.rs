@@ -18,6 +18,7 @@ impl Pubsub {
         let sse_changes = SsePubsub::new();
         let events = EventPubsub::new();
 
+        // local_changes -> sse_changes
         sse_changes.tap_into(
             local_changes.subscribe(None::<()>),
             |_| None,
