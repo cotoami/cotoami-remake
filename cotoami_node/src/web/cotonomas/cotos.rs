@@ -77,18 +77,18 @@ async fn post_coto(
         return ("coto", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db().new_session()?;
+        let mut ds = state.db().new_session()?;
 
         // Check if the cotonoma belongs to this node
-        let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
-        if !db.is_local(&cotonoma) {
+        let (cotonoma, _) = ds.cotonoma_or_err(&cotonoma_id)?;
+        if !state.db().globals().is_local(&cotonoma) {
             return RequestError::new("not-for-this-node")
                 .with_param("cotonoma_name", json!(cotonoma.name))
                 .into_result();
         }
 
         // Post a coto
-        let (coto, change) = db.post_coto(
+        let (coto, change) = ds.post_coto(
             &form.content.unwrap_or_else(|| unreachable!()),
             form.summary.as_deref(),
             &cotonoma,

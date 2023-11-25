@@ -205,6 +205,11 @@ impl Globals {
             .write()
             .insert(parent.node_id, parent.clone());
     }
+
+    fn write_parent_node_cache(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
+        RwLockWriteGuard::try_map(self.parent_nodes.write(), |x| x.get_mut(id))
+            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -590,7 +595,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(usize, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
         let local_node_id = self.globals.local_node_id()?;
-        let mut parent_node = self.write_parent_node_cache(parent_node_id)?;
+        let mut parent_node = self.globals.write_parent_node_cache(parent_node_id)?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // Set the parent to be forked
             *parent_node = node_role_ops::fork_from(parent_node_id).run(ctx)?;
@@ -676,7 +681,7 @@ impl<'a> DatabaseSession<'a> {
         log: &ChangelogEntry,
         parent_node_id: &Id<Node>,
     ) -> Result<Option<ChangelogEntry>> {
-        let mut parent_node = self.write_parent_node_cache(parent_node_id)?;
+        let mut parent_node = self.globals.write_parent_node_cache(parent_node_id)?;
         self.write_transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 
@@ -983,11 +988,6 @@ impl<'a> DatabaseSession<'a> {
         Op: Operation<WritableConn, T>,
     {
         op::run_write(&mut (self.rw_conn)(), op)
-    }
-
-    fn write_parent_node_cache(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
-        RwLockWriteGuard::try_map(self.globals.parent_nodes.write(), |cache| cache.get_mut(id))
-            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
     }
 
     fn database_role(&mut self, id: &Id<Node>) -> Result<Option<DatabaseRole>> {
