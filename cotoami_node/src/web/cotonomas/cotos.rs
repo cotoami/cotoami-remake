@@ -14,7 +14,8 @@ use validator::Validate;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        Pagination, ServiceError,
+        models::Pagination,
+        ServiceError,
     },
     web::require_session,
     NodeState,

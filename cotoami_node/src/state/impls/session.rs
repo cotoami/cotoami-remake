@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use tokio::task::spawn_blocking;
 
 use crate::{
-    service::{ClientNodeSession, CreateClientNodeSession, Session},
+    service::models::{ClientNodeSession, CreateClientNodeSession, Session},
     state::{error::NodeError, NodeState},
 };
 

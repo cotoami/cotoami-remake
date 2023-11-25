@@ -13,7 +13,7 @@ use cotoami_db::prelude::*;
 use futures::stream::Stream;
 
 use crate::{
-    service::{NodeSentEvent, ServiceError},
+    service::{models::NodeSentEvent, ServiceError},
     NodeState,
 };
 

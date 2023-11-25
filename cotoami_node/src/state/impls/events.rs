@@ -4,7 +4,7 @@ use tower_service::Service;
 use tracing::{debug, warn};
 
 use crate::{
-    service::{NodeSentEvent, NodeService},
+    service::{models::NodeSentEvent, NodeService},
     state::NodeState,
 };
 

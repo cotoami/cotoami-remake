@@ -27,9 +27,9 @@ pub mod error;
 pub mod models;
 pub mod service_ext;
 
+use self::models::*;
 pub use self::{
     error::ServiceError,
-    models::*,
     service_ext::{NodeServiceExt, RemoteNodeServiceExt},
 };
 

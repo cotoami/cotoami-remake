@@ -11,7 +11,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, Pagination, ServiceError},
+    service::{error::IntoServiceResult, models::Pagination, ServiceError},
     NodeState,
 };
 

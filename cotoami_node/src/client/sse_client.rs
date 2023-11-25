@@ -7,7 +7,7 @@ use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tracing::{debug, info};
 
-use crate::{client::HttpClient, service::NotConnected, NodeState};
+use crate::{client::HttpClient, service::models::NotConnected, NodeState};
 
 /// An [SseClient] handles events streamed from an [EventSource].
 pub struct SseClient {

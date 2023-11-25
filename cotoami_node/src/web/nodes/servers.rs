@@ -15,8 +15,9 @@ use validator::Validate;
 use crate::{
     client::{HttpClient, SseClient},
     service::{
-        error::IntoServiceResult, CreateClientNodeSession, NotConnected, RemoteNodeServiceExt,
-        ServiceError,
+        error::IntoServiceResult,
+        models::{CreateClientNodeSession, NotConnected},
+        RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
 };
