@@ -14,43 +14,42 @@ fn import_changes() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
     let db1_dir = tempdir()?;
     let db1 = Database::new(&db1_dir)?;
-    let mut session1 = db1.new_session()?;
+    let mut ds1 = db1.new_session()?;
 
     // 1. init_as_node
-    let ((_, node1), db1_change1) = session1.init_as_node(Some("My Node"), None)?;
+    let ((_, node1), db1_change1) = ds1.init_as_node(Some("My Node"), None)?;
 
-    let opr1 = session1.local_node_as_operator()?;
-    let (node1_root_cotonoma, node1_root_coto) = session1.root_cotonoma()?.unwrap();
+    let opr1 = db1.globals().local_node_as_operator()?;
+    let (node1_root_cotonoma, node1_root_coto) = ds1.root_cotonoma()?.unwrap();
 
     // 2. post_coto
-    let (db1_coto, db1_change2) = session1.post_coto("hello", None, &node1_root_cotonoma, &opr1)?;
+    let (db1_coto, db1_change2) = ds1.post_coto("hello", None, &node1_root_cotonoma, &opr1)?;
 
     // 3. edit_coto
     let (db1_edited_coto, db1_change3) =
-        session1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &opr1)?;
+        ds1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &opr1)?;
 
     // 4. delete_coto
-    let db1_change4 = session1.delete_coto(&db1_coto.uuid, &opr1)?;
+    let db1_change4 = ds1.delete_coto(&db1_coto.uuid, &opr1)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Setup: prepare db2 to accept changes from db1
     /////////////////////////////////////////////////////////////////////////////
     let db2_dir = tempdir()?;
     let db2 = Database::new(&db2_dir)?;
-    let mut session2 = db2.new_session()?;
+    let mut ds2 = db2.new_session()?;
 
-    let ((_, _node2), _) = session2.init_as_node(None, None)?;
-    let opr2 = session2.local_node_as_operator()?;
+    let ((_, _node2), _) = ds2.init_as_node(None, None)?;
+    let opr2 = db2.globals().local_node_as_operator()?;
 
-    let Some(_) = session2.import_node(&node1)? else { panic!() };
-    let (_, parent) =
-        session2.register_server_node_as_parent(&node1.uuid, "https://node1", &opr2)?;
+    let Some(_) = ds2.import_node(&node1)? else { panic!() };
+    let (_, parent) = ds2.register_server_node_as_parent(&node1.uuid, "https://node1", &opr2)?;
     assert_eq!(parent.changes_received, 0);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change1 (init_as_node)
     /////////////////////////////////////////////////////////////////////////////
-    let db2_change3 = session2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
+    let db2_change3 = ds2.import_change(&via_serialization(&db1_change1)?, &node1.uuid)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -58,8 +57,7 @@ fn import_changes() -> Result<()> {
 
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
-        session2
-            .parent_node(&node1.uuid, &opr2)?
+        ds2.parent_node(&node1.uuid, &opr2)?
             .unwrap()
             .changes_received,
         1
@@ -83,28 +81,28 @@ fn import_changes() -> Result<()> {
     // 1. Node (node1)
     // 2. A pair of Cotonoma and Coto (the root cotonoma of node1)
     assert_eq!(
-        session2.node(&node1.uuid)?.unwrap(),
+        ds2.node(&node1.uuid)?.unwrap(),
         Node {
             rowid: 2, // rowid=1 is db2's local node
             ..node1.clone()
         }
     );
-    let (cotonoma, coto) = session2.cotonoma(&node1_root_cotonoma.uuid)?.unwrap();
+    let (cotonoma, coto) = ds2.cotonoma(&node1_root_cotonoma.uuid)?.unwrap();
     assert_eq!(cotonoma, node1_root_cotonoma);
     assert_eq!(coto, node1_root_coto);
     assert_matches!(
-        &session2.all_cotonomas()?[..],
+        &ds2.all_cotonomas()?[..],
         [a] if a == &node1_root_cotonoma
     );
     assert_matches!(
-        &session2.all_cotos()?[..],
+        &ds2.all_cotos()?[..],
         [a] if a == &node1_root_coto
     );
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change2 (post_coto)
     /////////////////////////////////////////////////////////////////////////////
-    let db2_change4 = session2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
+    let db2_change4 = ds2.import_change(&via_serialization(&db1_change2)?, &node1.uuid)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -112,8 +110,7 @@ fn import_changes() -> Result<()> {
 
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
-        session2
-            .parent_node(&node1.uuid, &opr2)?
+        ds2.parent_node(&node1.uuid, &opr2)?
             .unwrap()
             .changes_received,
         2
@@ -135,7 +132,7 @@ fn import_changes() -> Result<()> {
 
     // check if the change is applied in db2
     assert_matches!(
-        &session2.all_cotos()?[..],
+        &ds2.all_cotos()?[..],
         [a, b] if a == &node1_root_coto &&
                   b == &db1_coto
     );
@@ -143,7 +140,7 @@ fn import_changes() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
     // When: import change3 (edit_coto)
     /////////////////////////////////////////////////////////////////////////////
-    let db2_change5 = session2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
+    let db2_change5 = ds2.import_change(&via_serialization(&db1_change3)?, &node1.uuid)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -151,8 +148,7 @@ fn import_changes() -> Result<()> {
 
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
-        session2
-            .parent_node(&node1.uuid, &opr2)?
+        ds2.parent_node(&node1.uuid, &opr2)?
             .unwrap()
             .changes_received,
         3
@@ -174,7 +170,7 @@ fn import_changes() -> Result<()> {
 
     // check if the change is applied in db2
     assert_matches!(
-        &session2.all_cotos()?[..],
+        &ds2.all_cotos()?[..],
         [a, b] if a == &node1_root_coto &&
                   b == &db1_edited_coto
     );
@@ -182,7 +178,7 @@ fn import_changes() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
     // When: import change4 (delete_coto)
     /////////////////////////////////////////////////////////////////////////////
-    let db2_change6 = session2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
+    let db2_change6 = ds2.import_change(&via_serialization(&db1_change4)?, &node1.uuid)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -190,8 +186,7 @@ fn import_changes() -> Result<()> {
 
     // check if `ParentNode::changes_received` has been incremented
     assert_eq!(
-        session2
-            .parent_node(&node1.uuid, &opr2)?
+        ds2.parent_node(&node1.uuid, &opr2)?
             .unwrap()
             .changes_received,
         4
@@ -213,7 +208,7 @@ fn import_changes() -> Result<()> {
 
     // check if the change is applied in db2
     assert_matches!(
-        &session2.all_cotos()?[..],
+        &ds2.all_cotos()?[..],
         [a] if a == &node1_root_coto
     );
 
@@ -236,12 +231,12 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     let (_dir2, _, node2) = common::setup_db("Node2")?;
     let (_dir3, _, node3) = common::setup_db("Node3")?;
 
-    let session = db1.new_session()?;
-    let opr = session.local_node_as_operator()?;
-    session.import_node(&node2)?;
-    session.register_server_node_as_parent(&node2.uuid, "https://node2", &opr)?;
-    session.import_node(&node3)?;
-    session.register_server_node_as_parent(&node3.uuid, "https://node3", &opr)?;
+    let ds1 = db1.new_session()?;
+    let opr = db1.globals().local_node_as_operator()?;
+    ds1.import_node(&node2)?;
+    ds1.register_server_node_as_parent(&node2.uuid, "https://node2", &opr)?;
+    ds1.import_node(&node3)?;
+    ds1.register_server_node_as_parent(&node3.uuid, "https://node3", &opr)?;
 
     let origin_node_id = Id::from_str("00000000-0000-0000-0000-000000000001")?;
     let src_change = ChangelogEntry {
@@ -253,7 +248,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         inserted_at: Utc::now().naive_utc(),
     };
 
-    let imported_change1 = session.import_change(&src_change, &node2.uuid)?;
+    let imported_change1 = ds1.import_change(&src_change, &node2.uuid)?;
     assert_matches!(
         imported_change1,
         Some(ChangelogEntry {
@@ -264,21 +259,19 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         }) if origin_node_id == origin_node_id
     );
     assert_eq!(
-        session
-            .parent_node(&node2.uuid, &opr)?
+        ds1.parent_node(&node2.uuid, &opr)?
             .unwrap()
             .changes_received,
         1
     );
 
     // when
-    let imported_change2 = session.import_change(&src_change, &node3.uuid)?;
+    let imported_change2 = ds1.import_change(&src_change, &node3.uuid)?;
 
     // then
     assert!(imported_change2.is_none());
     assert_eq!(
-        session
-            .parent_node(&node3.uuid, &opr)?
+        ds1.parent_node(&node3.uuid, &opr)?
             .unwrap()
             .changes_received,
         1

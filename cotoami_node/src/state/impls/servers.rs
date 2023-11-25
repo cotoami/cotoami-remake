@@ -7,11 +7,11 @@ impl NodeState {
     pub async fn restore_server_conns(&self) -> Result<()> {
         let db = self.db.clone();
         let (local_node, server_nodes) = spawn_blocking(move || {
-            let mut db = db.new_session()?;
-            let operator = db.local_node_as_operator()?;
+            let mut ds = db.new_session()?;
+            let operator = db.globals().local_node_as_operator()?;
             Ok::<_, anyhow::Error>((
-                db.local_node_pair(&operator)?.1,
-                db.all_server_nodes(&operator)?,
+                ds.local_node_pair(&operator)?.1,
+                ds.all_server_nodes(&operator)?,
             ))
         })
         .await??;

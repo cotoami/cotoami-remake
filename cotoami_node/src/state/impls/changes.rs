@@ -63,8 +63,11 @@ impl NodeState {
             parent_service.description()
         );
         let parent_node = {
-            let db = self.db().new_session()?;
-            db.parent_node_or_err(&parent_node_id, &db.local_node_as_operator()?)?
+            let ds = self.db().new_session()?;
+            ds.parent_node_or_err(
+                &parent_node_id,
+                &self.db().globals().local_node_as_operator()?,
+            )?
         };
 
         let import_from = parent_node.changes_received + 1;

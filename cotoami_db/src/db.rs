@@ -186,6 +186,10 @@ impl Globals {
 
     pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node()?.node_id) }
 
+    pub fn local_node_as_operator(&self) -> Result<Operator> {
+        Ok(Operator::Owner(self.local_node_id()?))
+    }
+
     pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
         let local_node_id = self.read_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
@@ -329,8 +333,8 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn replicate(&mut self, parent_node: &Node) -> Result<Option<ChangelogEntry>> {
         if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
-            let (_, change) =
-                self.set_root_cotonoma(&parent_cotonoma_id, &self.local_node_as_operator()?)?;
+            let (_, change) = self
+                .set_root_cotonoma(&parent_cotonoma_id, &self.globals.local_node_as_operator()?)?;
             Ok(Some(change))
         } else {
             Ok(None)
@@ -668,10 +672,6 @@ impl<'a> DatabaseSession<'a> {
         Ok(None) // no session
     }
 
-    pub fn local_node_as_operator(&self) -> Result<Operator> {
-        Ok(Operator::Owner(self.globals.local_node_id()?))
-    }
-
     /////////////////////////////////////////////////////////////////////////////
     // changelog
     /////////////////////////////////////////////////////////////////////////////
@@ -953,7 +953,7 @@ impl<'a> DatabaseSession<'a> {
                     None,
                     None,
                     None,
-                    &self.local_node_as_operator()?,
+                    &self.globals.local_node_as_operator()?,
                 )?;
                 Ok(Some((link, parent_root_cotonoma, change)))
             } else {
