@@ -44,6 +44,26 @@ pub(crate) type SsePubsub = Publisher<Result<SseEvent, Infallible>, ()>;
 
 pub type EventPubsub = Publisher<Event, ()>;
 
+impl EventPubsub {
+    pub fn publish_server_disconnected(
+        &self,
+        server_node_id: Id<Node>,
+        reason: NotConnected,
+        is_parent: bool,
+    ) {
+        self.publish(
+            Event::ServerDisconnected {
+                server_node_id,
+                reason,
+            },
+            None,
+        );
+        if is_parent {
+            self.publish(Event::ParentDisconnected(server_node_id), None);
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum Event {
     ServerDisconnected {

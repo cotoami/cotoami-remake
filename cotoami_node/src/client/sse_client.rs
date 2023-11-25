@@ -7,7 +7,7 @@ use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tracing::{debug, info};
 
-use crate::{client::HttpClient, service::models::NotConnected, NodeState};
+use crate::{client::HttpClient, service::models::NotConnected, state::NodeState};
 
 /// An [SseClient] handles events streamed from an [EventSource].
 pub struct SseClient {
@@ -46,6 +46,8 @@ impl SseClient {
 
     pub fn url_prefix(&self) -> &str { self.http_client.url_prefix() }
 
+    pub fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_node_id) }
+
     pub async fn start(&mut self) {
         while let Some(item) = self.event_source.next().await {
             if self.is_disabled() {
@@ -53,7 +55,17 @@ impl SseClient {
                 info!("Event source closed: {}", self.url_prefix());
             } else {
                 match item {
-                    Ok(ESItem::Open) => info!("Event source opened: {}", self.url_prefix()),
+                    Ok(ESItem::Open) => {
+                        info!("Event source opened: {}", self.url_prefix());
+
+                        // Register a parent service when a SSE connection is opened.
+                        if self.is_server_parent() {
+                            self.node_state.put_parent_service(
+                                &self.server_node_id,
+                                Box::new(self.http_client.clone()),
+                            );
+                        }
+                    }
                     Ok(ESItem::Message(event)) => {
                         if let Err(err) = self
                             .node_state
@@ -100,6 +112,15 @@ impl SseClient {
     fn update_event_source_state(&mut self) {
         let mut state = self.state.write();
         state.event_source_state = self.event_source.ready_state();
+
+        // Send an event when the server is disconnected
+        if let Some(not_connected) = state.not_connected() {
+            self.node_state.pubsub().events.publish_server_disconnected(
+                self.server_node_id,
+                not_connected,
+                self.is_server_parent(),
+            );
+        }
     }
 
     fn set_error(&mut self, error: SseClientError) {
