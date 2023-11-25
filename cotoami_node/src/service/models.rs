@@ -110,7 +110,7 @@ impl Changes {
 // Server
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize)]
 #[serde(tag = "reason", content = "details")]
 pub enum NotConnected {
     Disabled,

@@ -3,7 +3,7 @@ use std::{convert::Infallible, sync::Arc};
 use axum::response::sse::Event as SseEvent;
 use cotoami_db::prelude::*;
 
-use crate::pubsub::Publisher;
+use crate::{pubsub::Publisher, service::models::NotConnected};
 
 #[derive(Clone)]
 pub struct Pubsub {
@@ -48,10 +48,7 @@ pub type EventPubsub = Publisher<Event, ()>;
 pub enum Event {
     ServerDisconnected {
         server_node_id: Id<Node>,
-        reason: Option<String>,
+        reason: NotConnected,
     },
-    ParentDisconnected {
-        parent_node_id: Id<Node>,
-        reason: Option<String>,
-    },
+    ParentDisconnected(Id<Node>),
 }
