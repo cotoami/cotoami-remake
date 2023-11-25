@@ -199,6 +199,12 @@ impl Globals {
     }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
+
+    fn cache_parent_node(&self, parent: ParentNode) {
+        self.parent_nodes
+            .write()
+            .insert(parent.node_id, parent.clone());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -434,7 +440,7 @@ impl<'a> DatabaseSession<'a> {
             node_role_ops::register_server_node(id, url_prefix, database_role),
         )?;
         if let DatabaseRole::Parent(parent) = &database_role {
-            self.cache_parent_node(parent.clone());
+            self.globals.cache_parent_node(parent.clone());
         }
         Ok((server, database_role))
     }
@@ -511,7 +517,7 @@ impl<'a> DatabaseSession<'a> {
                 node_role_ops::register_client_node(&node.uuid, password, database_role)
                     .run(ctx)?;
             if let DatabaseRole::Parent(parent) = &database_role {
-                self.cache_parent_node(parent.clone());
+                self.globals.cache_parent_node(parent.clone());
             }
             Ok((client, database_role))
         })
@@ -977,13 +983,6 @@ impl<'a> DatabaseSession<'a> {
         Op: Operation<WritableConn, T>,
     {
         op::run_write(&mut (self.rw_conn)(), op)
-    }
-
-    fn cache_parent_node(&self, parent: ParentNode) {
-        self.globals
-            .parent_nodes
-            .write()
-            .insert(parent.node_id, parent.clone());
     }
 
     fn write_parent_node_cache(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
