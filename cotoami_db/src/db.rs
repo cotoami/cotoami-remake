@@ -175,7 +175,12 @@ impl Globals {
     pub fn has_local_node_initialized(&self) -> bool { self.local_node.read().is_some() }
 
     pub fn read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
-        RwLockReadGuard::try_map(self.local_node.read(), |cache| cache.as_ref())
+        RwLockReadGuard::try_map(self.local_node.read(), |x| x.as_ref())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    fn write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
+        RwLockWriteGuard::try_map(self.local_node.write(), |x| x.as_mut())
             .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
     }
 
@@ -356,7 +361,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
-        let mut local_node = self.write_local_node_cache()?;
+        let mut local_node = self.globals.write_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
         local_node
             .start_session(password, duration)
@@ -366,14 +371,14 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
-        let mut local_node = self.write_local_node_cache()?;
+        let mut local_node = self.globals.write_local_node()?;
         local_node.clear_session();
         self.write_transaction(local_ops::update(&local_node))?;
         Ok(())
     }
 
     pub fn change_owner_password(&self, password: &str) -> Result<()> {
-        let mut local_node = self.write_local_node_cache()?;
+        let mut local_node = self.globals.write_local_node()?;
         local_node.update_password(password)?;
         self.write_transaction(local_ops::update(&local_node))?;
         self.clear_server_passwords()?;
@@ -972,11 +977,6 @@ impl<'a> DatabaseSession<'a> {
         Op: Operation<WritableConn, T>,
     {
         op::run_write(&mut (self.rw_conn)(), op)
-    }
-
-    fn write_local_node_cache(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
-        RwLockWriteGuard::try_map(self.globals.local_node.write(), |cache| cache.as_mut())
-            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
     }
 
     fn cache_parent_node(&self, parent: ParentNode) {
