@@ -7,7 +7,7 @@ use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tracing::{debug, info};
 
-use crate::{client::HttpClient, NodeState};
+use crate::{client::HttpClient, service::NotConnected, NodeState};
 
 /// An [SseClient] handles events streamed from an [EventSource].
 pub struct SseClient {
@@ -141,6 +141,30 @@ impl SseClientState {
 
     /// Returns true if the [EventSource] is waiting on a response from the endpoint
     pub fn is_connecting(&self) -> bool { self.event_source_state == ReadyState::Connecting }
+
+    pub fn not_connected(&self) -> Option<NotConnected> {
+        if self.is_running() {
+            None // connected
+        } else if self.is_disabled() {
+            Some(NotConnected::Disabled)
+        } else if self.is_connecting() {
+            let details = if let Some(SseClientError::StreamFailed(e)) = self.error.as_ref() {
+                Some(e.to_string())
+            } else {
+                None
+            };
+            Some(NotConnected::Connecting(details))
+        } else if let Some(error) = self.error.as_ref() {
+            match error {
+                SseClientError::StreamFailed(e) => Some(NotConnected::StreamFailed(e.to_string())),
+                SseClientError::EventHandlingFailed(e) => {
+                    Some(NotConnected::EventHandlingFailed(e.to_string()))
+                }
+            }
+        } else {
+            Some(NotConnected::Unknown)
+        }
+    }
 
     /// Enable this event loop only if the event source is not closed.
     /// It returns true if the result state of the event loop is `running`

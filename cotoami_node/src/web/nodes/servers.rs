@@ -15,10 +15,10 @@ use validator::Validate;
 use crate::{
     client::{HttpClient, SseClient},
     service::{
-        error::IntoServiceResult, models::CreateClientNodeSession, RemoteNodeServiceExt,
+        error::IntoServiceResult, CreateClientNodeSession, NotConnected, RemoteNodeServiceExt,
         ServiceError,
     },
-    state::{NodeState, NotConnected, ServerConnection},
+    state::{NodeState, ServerConnection},
 };
 
 pub(super) fn routes() -> Router<NodeState> {

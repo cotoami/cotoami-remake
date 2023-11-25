@@ -105,3 +105,18 @@ impl Changes {
         }
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// Server
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(serde::Serialize)]
+#[serde(tag = "reason", content = "details")]
+pub enum NotConnected {
+    Disabled,
+    Connecting(Option<String>),
+    InitFailed(String),
+    StreamFailed(String),
+    EventHandlingFailed(String),
+    Unknown,
+}

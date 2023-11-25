@@ -6,9 +6,9 @@ use parking_lot::RwLock;
 use tracing::{debug, info};
 
 use crate::{
-    client::{HttpClient, SseClient, SseClientError, SseClientState},
+    client::{HttpClient, SseClient, SseClientState},
     service::{
-        models::{CreateClientNodeSession, Session},
+        models::{CreateClientNodeSession, NotConnected, Session},
         RemoteNodeServiceExt,
     },
     state::NodeState,
@@ -110,54 +110,13 @@ impl ServerConnection {
         }
     }
 
-    pub fn not_connected(&self) -> Option<NotConnected> { NotConnected::check_status(self) }
-}
-
-#[derive(serde::Serialize)]
-#[serde(tag = "reason", content = "details")]
-pub enum NotConnected {
-    Disabled,
-    Connecting(Option<String>),
-    InitFailed(String),
-    StreamFailed(String),
-    EventHandlingFailed(String),
-    Unknown,
-}
-
-impl NotConnected {
-    fn check_status(conn: &ServerConnection) -> Option<Self> {
-        match conn {
+    pub fn not_connected(&self) -> Option<NotConnected> {
+        match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
             ServerConnection::Connected {
                 sse_client_state, ..
-            } => {
-                let state = sse_client_state.read();
-                if state.is_running() {
-                    None // connected
-                } else if state.is_disabled() {
-                    Some(NotConnected::Disabled)
-                } else if state.is_connecting() {
-                    let details =
-                        if let Some(SseClientError::StreamFailed(e)) = state.error.as_ref() {
-                            Some(e.to_string())
-                        } else {
-                            None
-                        };
-                    Some(NotConnected::Connecting(details))
-                } else if let Some(error) = state.error.as_ref() {
-                    match error {
-                        SseClientError::StreamFailed(e) => {
-                            Some(NotConnected::StreamFailed(e.to_string()))
-                        }
-                        SseClientError::EventHandlingFailed(e) => {
-                            Some(NotConnected::EventHandlingFailed(e.to_string()))
-                        }
-                    }
-                } else {
-                    Some(NotConnected::Unknown)
-                }
-            }
+            } => sse_client_state.read().not_connected(),
         }
     }
 }
