@@ -172,6 +172,8 @@ pub struct Globals {
 }
 
 impl Globals {
+    pub fn has_local_node_initialized(&self) -> bool { self.local_node.read().is_some() }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 }
 
@@ -234,8 +236,6 @@ impl<'a> DatabaseSession<'a> {
 
         result
     }
-
-    pub fn has_local_node_initialized(&self) -> bool { self.globals.local_node.read().is_some() }
 
     pub fn local_node(&mut self) -> Result<Node> {
         if let Some((_, node)) = self.read_transaction(local_ops::get_pair())? {

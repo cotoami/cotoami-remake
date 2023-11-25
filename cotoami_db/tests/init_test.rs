@@ -16,7 +16,7 @@ fn default_state() -> Result<()> {
     let mut session = db.new_session()?;
 
     // then
-    assert!(!session.has_local_node_initialized());
+    assert!(!db.globals().has_local_node_initialized());
     assert!(session.all_nodes()?.is_empty());
 
     Ok(())
