@@ -49,7 +49,7 @@ async fn post_event(
         let event: NodeSentEvent = rmp_serde::from_slice(&body)?;
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
         state
-            .handle_event(parent.node_id, event, parent_service)
+            .handle_node_sent_event(parent.node_id, event, parent_service)
             .await?;
 
         // It won't create an "event" resouce, just handle it,

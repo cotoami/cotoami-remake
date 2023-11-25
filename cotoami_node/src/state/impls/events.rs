@@ -9,7 +9,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub async fn handle_event(
+    pub async fn handle_node_sent_event(
         &mut self,
         source_node_id: Id<Node>,
         event: NodeSentEvent,
