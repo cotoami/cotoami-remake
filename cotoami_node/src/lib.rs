@@ -19,11 +19,10 @@ pub mod prelude {
 }
 
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    let state = NodeState::new(config)?;
-    let port = state.config().port;
+    let port = config.port;
 
-    state.init_local_node().await?;
-    state.restore_server_conns().await?;
+    let state = NodeState::new(config)?;
+    state.prepare().await?;
 
     let router = web::router(state);
 
