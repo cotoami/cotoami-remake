@@ -225,7 +225,7 @@ impl SseClientState {
     /// Enable this event loop only if the event source is not closed.
     /// It returns true if the result state of the event loop is `running`
     /// (enabled and connected) or `connecting`.
-    pub fn restart_if_possible(&mut self) -> bool {
+    pub fn enable_if_possible(&mut self) -> bool {
         if self.event_source_state != ReadyState::Closed {
             self.disabled = false;
             true

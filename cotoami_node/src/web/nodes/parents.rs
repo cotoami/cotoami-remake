@@ -29,7 +29,7 @@ async fn fork_from_parent(
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
 ) -> Result<Json<Forked>, ServiceError> {
-    state.server_conn(&node_id)?.disable_sse();
+    state.server_conn(&node_id)?.disable();
 
     let db = state.db().clone();
     let (affected, change) =

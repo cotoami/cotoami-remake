@@ -87,7 +87,7 @@ impl ServerConnection {
         Ok(Self::new(client_session.session, http_client, sse_client))
     }
 
-    pub fn disable_sse(&self) {
+    pub fn disable(&self) {
         if let ServerConnection::SseConnected {
             sse_client_state, ..
         } = self
@@ -96,12 +96,12 @@ impl ServerConnection {
         }
     }
 
-    pub fn restart_sse_if_possible(&self) -> bool {
+    pub fn enable_if_possible(&self) -> bool {
         if let ServerConnection::SseConnected {
             sse_client_state, ..
         } = self
         {
-            sse_client_state.write().restart_if_possible()
+            sse_client_state.write().enable_if_possible()
         } else {
             false
         }

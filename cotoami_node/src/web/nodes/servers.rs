@@ -217,13 +217,13 @@ async fn set_server_disabled(
 
     // Disconnect from the server
     if disabled {
-        debug!("Stopping the SSE event loop of: {}", server_id);
-        state.server_conn(&server_id)?.disable_sse();
+        debug!("Disabling the connection to: {}", server_id);
+        state.server_conn(&server_id)?.disable();
 
     // Or connect to the server again
     } else {
-        if state.server_conn(&server_id)?.restart_sse_if_possible() {
-            debug!("Restarting the SSE event loop of {}", server_id);
+        if state.server_conn(&server_id)?.enable_if_possible() {
+            debug!("Enabling the connection to {}", server_id);
         } else {
             debug!("Creating a new server connection for {}", server_id);
             let server_conn = ServerConnection::connect(&server_node, local_node, &state).await;
