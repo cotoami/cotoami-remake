@@ -1,9 +1,9 @@
 //! Network client implementations.
 
-mod http_client;
-mod sse_client;
+mod http;
+mod sse;
 
 pub use self::{
-    http_client::HttpClient,
-    sse_client::{NodeSentEvent, SseClient, SseClientError, SseClientState},
+    http::HttpClient,
+    sse::{NodeSentEvent, SseClient, SseClientError, SseClientState},
 };
