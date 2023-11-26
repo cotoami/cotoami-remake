@@ -4,7 +4,6 @@ use futures::StreamExt;
 use crate::state::{pubsub::Event, NodeState};
 
 mod changes;
-mod events;
 mod nodes;
 mod parents;
 mod servers;

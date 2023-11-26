@@ -97,6 +97,8 @@ pub struct Response {
 }
 
 impl Response {
+    pub fn id(&self) -> &Uuid { &self.id }
+
     pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
         let bytes = self.body.map_err(ServiceStdError)?;
         rmp_serde::from_slice(&bytes).map_err(anyhow::Error::from)

@@ -15,6 +15,7 @@ pub enum ServiceError {
     NotFound,
     Input(InputErrors),
     Server(String),
+    NotImplemented,
     Unknown(String),
 }
 

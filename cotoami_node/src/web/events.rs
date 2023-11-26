@@ -11,8 +11,16 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
+use tracing::debug;
 
-use crate::{client::NodeSentEvent, service::ServiceError, NodeState};
+use crate::{
+    client::NodeSentEvent,
+    service::{
+        error::{IntoServiceResult, RequestError},
+        ServiceError,
+    },
+    NodeState,
+};
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
@@ -38,16 +46,30 @@ async fn stream_events(
 /////////////////////////////////////////////////////////////////////////////
 
 async fn post_event(
-    State(mut state): State<NodeState>,
+    State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
     body: Bytes,
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
-        let event: NodeSentEvent = rmp_serde::from_slice(&body)?;
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
-        state
-            .handle_node_sent_event(parent.node_id, event, parent_service)
-            .await?;
+        match rmp_serde::from_slice(&body)? {
+            NodeSentEvent::Change(change) => {
+                state
+                    .handle_parent_change(parent.node_id, change, parent_service)
+                    .await?;
+            }
+            NodeSentEvent::Request(_) => {
+                // Sending requests via this API is not supported.
+                return Err(ServiceError::NotImplemented);
+            }
+            NodeSentEvent::Response(response) => {
+                debug!("Received a response from {}", parent_service.description());
+                // TODO: Response Pubsub?
+            }
+            NodeSentEvent::Error(msg) => {
+                return Err(ServiceError::Server(msg));
+            }
+        }
 
         // It won't create an "event" resouce, just handle it,
         // so returns `OK` instead of `Created`.

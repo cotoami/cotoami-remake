@@ -65,6 +65,7 @@ impl IntoResponse for ServiceError {
             ServiceError::Permission => StatusCode::FORBIDDEN.into_response(),
             ServiceError::NotFound => StatusCode::NOT_FOUND.into_response(),
             ServiceError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
+            ServiceError::NotImplemented => StatusCode::NOT_IMPLEMENTED.into_response(),
             ServiceError::Server(e) => {
                 let message = format!("Server error: {}", e);
                 error!(message);

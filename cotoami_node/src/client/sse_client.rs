@@ -5,7 +5,8 @@ use cotoami_db::prelude::*;
 use futures::StreamExt;
 use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
-use tracing::{debug, info};
+use tower_service::Service;
+use tracing::{debug, error, info, warn};
 
 use crate::{
     client::HttpClient,
@@ -75,15 +76,7 @@ impl SseClient {
                         }
                     }
                     Ok(ESItem::Message(event)) => {
-                        if let Err(err) = self
-                            .node_state
-                            .handle_node_sent_event(
-                                self.server_node_id,
-                                event.into(),
-                                Box::new(self.http_client.clone()),
-                            )
-                            .await
-                        {
+                        if let Err(err) = self.handle_node_sent_event(event.into()).await {
                             debug!(
                                 "Event source {} closed because of an event handling error: {}",
                                 self.url_prefix(),
@@ -134,6 +127,36 @@ impl SseClient {
     fn set_error(&mut self, error: SseClientError) {
         let mut state = self.state.write();
         state.error = Some(error);
+    }
+
+    async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
+        match event {
+            NodeSentEvent::Change(change) => {
+                self.node_state
+                    .handle_parent_change(
+                        self.server_node_id,
+                        change,
+                        Box::new(self.http_client.clone()),
+                    )
+                    .await?;
+            }
+            NodeSentEvent::Request(request) => {
+                debug!(
+                    "Received a request from {}: {:?}",
+                    self.http_client.url_prefix(),
+                    request
+                );
+                // Handle the request by this node
+                let response = self.node_state.call(request).await?;
+                // TODO: POST /api/responses
+            }
+            NodeSentEvent::Response(response) => {
+                // Not supported
+                warn!("Response event not supported: {:?}", response.id());
+            }
+            NodeSentEvent::Error(msg) => error!("Event error: {}", msg),
+        }
+        Ok(())
     }
 }
 
