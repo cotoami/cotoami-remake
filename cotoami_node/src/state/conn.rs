@@ -17,7 +17,7 @@ use crate::{
 pub enum ServerConnection {
     Disabled,
     InitFailed(anyhow::Error),
-    Connected {
+    SseConnected {
         session: Session,
         http_client: HttpClient,
         sse_client_state: Arc<RwLock<SseClientState>>,
@@ -26,7 +26,7 @@ pub enum ServerConnection {
 
 impl ServerConnection {
     pub fn new(session: Session, http_client: HttpClient, mut sse_client: SseClient) -> Self {
-        let server_conn = ServerConnection::Connected {
+        let server_conn = ServerConnection::SseConnected {
             session,
             http_client,
             sse_client_state: sse_client.state(),
@@ -88,7 +88,7 @@ impl ServerConnection {
     }
 
     pub fn disable_sse(&self) {
-        if let ServerConnection::Connected {
+        if let ServerConnection::SseConnected {
             sse_client_state, ..
         } = self
         {
@@ -97,7 +97,7 @@ impl ServerConnection {
     }
 
     pub fn restart_sse_if_possible(&self) -> bool {
-        if let ServerConnection::Connected {
+        if let ServerConnection::SseConnected {
             sse_client_state, ..
         } = self
         {
@@ -111,7 +111,7 @@ impl ServerConnection {
         match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ServerConnection::Connected {
+            ServerConnection::SseConnected {
                 sse_client_state, ..
             } => sse_client_state.read().not_connected(),
         }
