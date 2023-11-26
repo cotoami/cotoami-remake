@@ -7,7 +7,15 @@ use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tracing::{debug, info};
 
-use crate::{client::HttpClient, service::models::NotConnected, state::NodeState};
+use crate::{
+    client::HttpClient,
+    service::{models::NotConnected, Request, Response},
+    state::NodeState,
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// SseClient
+/////////////////////////////////////////////////////////////////////////////
 
 /// An [SseClient] handles events streamed from an [EventSource].
 pub struct SseClient {
@@ -129,6 +137,10 @@ impl SseClient {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// SseClientState
+/////////////////////////////////////////////////////////////////////////////
+
 /// The state of an [SseClient] that can be shared between threads.
 ///
 /// An [SseClient] has an [EventSource] as its state, but it is not [Sync],
@@ -203,4 +215,36 @@ impl SseClientState {
 pub enum SseClientError {
     StreamFailed(reqwest_eventsource::Error),
     EventHandlingFailed(anyhow::Error),
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// NodeSentEvent
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub enum NodeSentEvent {
+    Change(ChangelogEntry),
+    Request(Request),
+    Response(Response),
+    Error(String),
+}
+
+impl From<eventsource_stream::Event> for NodeSentEvent {
+    fn from(source: eventsource_stream::Event) -> Self {
+        match &*source.event {
+            "change" => match serde_json::from_str::<ChangelogEntry>(&source.data) {
+                Ok(change) => NodeSentEvent::Change(change),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            "request" => match serde_json::from_str::<Request>(&source.data) {
+                Ok(request) => NodeSentEvent::Request(request),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            "response" => match serde_json::from_str::<Response>(&source.data) {
+                Ok(response) => NodeSentEvent::Response(response),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            _ => NodeSentEvent::Error(format!("Unknown event: {}", source.event)),
+        }
+    }
 }

@@ -3,10 +3,7 @@ use cotoami_db::prelude::*;
 use tower_service::Service;
 use tracing::{debug, warn};
 
-use crate::{
-    service::{models::NodeSentEvent, NodeService},
-    state::NodeState,
-};
+use crate::{client::NodeSentEvent, service::NodeService, state::NodeState};
 
 impl NodeState {
     pub async fn handle_node_sent_event(

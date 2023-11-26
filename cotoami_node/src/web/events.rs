@@ -12,10 +12,7 @@ use axum::{
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
 
-use crate::{
-    service::{models::NodeSentEvent, ServiceError},
-    NodeState,
-};
+use crate::{client::NodeSentEvent, service::ServiceError, NodeState};
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()

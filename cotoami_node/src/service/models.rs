@@ -2,8 +2,6 @@ use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use validator::Validate;
 
-use crate::service::{Request, Response};
-
 /////////////////////////////////////////////////////////////////////////////
 // Pagination
 /////////////////////////////////////////////////////////////////////////////
@@ -39,38 +37,6 @@ pub struct Session {
 pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// NodeSentEvent
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub enum NodeSentEvent {
-    Change(ChangelogEntry),
-    Request(Request),
-    Response(Response),
-    Error(String),
-}
-
-impl From<eventsource_stream::Event> for NodeSentEvent {
-    fn from(source: eventsource_stream::Event) -> Self {
-        match &*source.event {
-            "change" => match serde_json::from_str::<ChangelogEntry>(&source.data) {
-                Ok(change) => NodeSentEvent::Change(change),
-                Err(e) => NodeSentEvent::Error(e.to_string()),
-            },
-            "request" => match serde_json::from_str::<Request>(&source.data) {
-                Ok(request) => NodeSentEvent::Request(request),
-                Err(e) => NodeSentEvent::Error(e.to_string()),
-            },
-            "response" => match serde_json::from_str::<Response>(&source.data) {
-                Ok(response) => NodeSentEvent::Response(response),
-                Err(e) => NodeSentEvent::Error(e.to_string()),
-            },
-            _ => NodeSentEvent::Error(format!("Unknown event: {}", source.event)),
-        }
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
