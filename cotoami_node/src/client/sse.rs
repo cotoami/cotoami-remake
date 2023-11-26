@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
+use bytes::Bytes;
 use cotoami_db::prelude::*;
 use futures::StreamExt;
 use parking_lot::RwLock;
@@ -13,6 +14,38 @@ use crate::{
     service::{models::NotConnected, Request, Response},
     state::NodeState,
 };
+
+/////////////////////////////////////////////////////////////////////////////
+// NodeSentEvent
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub enum NodeSentEvent {
+    Change(ChangelogEntry),
+    Request(Request),
+    Response(Response),
+    Error(String),
+}
+
+impl From<eventsource_stream::Event> for NodeSentEvent {
+    fn from(source: eventsource_stream::Event) -> Self {
+        match &*source.event {
+            "change" => match serde_json::from_str::<ChangelogEntry>(&source.data) {
+                Ok(change) => NodeSentEvent::Change(change),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            "request" => match serde_json::from_str::<Request>(&source.data) {
+                Ok(request) => NodeSentEvent::Request(request),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            "response" => match serde_json::from_str::<Response>(&source.data) {
+                Ok(response) => NodeSentEvent::Response(response),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            _ => NodeSentEvent::Error(format!("Unknown event: {}", source.event)),
+        }
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // SseClient
@@ -146,9 +179,10 @@ impl SseClient {
                     self.http_client.url_prefix(),
                     request
                 );
-                // Handle the request by this node
                 let response = self.node_state.call(request).await?;
-                // TODO: POST /api/responses
+                self.http_client
+                    .post_event(&NodeSentEvent::Response(response))
+                    .await?;
             }
             NodeSentEvent::Response(response) => {
                 // Not supported
@@ -241,33 +275,17 @@ pub enum SseClientError {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// NodeSentEvent
+// POST /api/events
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub enum NodeSentEvent {
-    Change(ChangelogEntry),
-    Request(Request),
-    Response(Response),
-    Error(String),
-}
-
-impl From<eventsource_stream::Event> for NodeSentEvent {
-    fn from(source: eventsource_stream::Event) -> Self {
-        match &*source.event {
-            "change" => match serde_json::from_str::<ChangelogEntry>(&source.data) {
-                Ok(change) => NodeSentEvent::Change(change),
-                Err(e) => NodeSentEvent::Error(e.to_string()),
-            },
-            "request" => match serde_json::from_str::<Request>(&source.data) {
-                Ok(request) => NodeSentEvent::Request(request),
-                Err(e) => NodeSentEvent::Error(e.to_string()),
-            },
-            "response" => match serde_json::from_str::<Response>(&source.data) {
-                Ok(response) => NodeSentEvent::Response(response),
-                Err(e) => NodeSentEvent::Error(e.to_string()),
-            },
-            _ => NodeSentEvent::Error(format!("Unknown event: {}", source.event)),
+impl HttpClient {
+    pub async fn post_event(&self, event: &NodeSentEvent) -> Result<()> {
+        let bytes = rmp_serde::to_vec(event).map(Bytes::from)?;
+        let response = self.post("/api/events").body(bytes).send().await?;
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            bail!(response.text().await?);
         }
     }
 }
