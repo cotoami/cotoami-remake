@@ -80,6 +80,11 @@ impl HttpClient {
         self.client.put(url).headers(self.headers.read().clone())
     }
 
+    pub fn post(&self, path: &str) -> RequestBuilder {
+        let url = self.url(path, None);
+        self.client.post(url).headers(self.headers.read().clone())
+    }
+
     async fn handle_request(self, request: Request) -> Result<Response> {
         let request_id = *request.id();
         let http_req = match request.body() {
