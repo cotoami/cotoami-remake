@@ -189,7 +189,6 @@ impl SseClient {
                     .await?;
             }
             NodeSentEvent::Response(response) => {
-                // Not supported
                 warn!("Response event not supported: {:?}", response.id());
             }
             NodeSentEvent::Error(msg) => error!("Event error: {}", msg),
