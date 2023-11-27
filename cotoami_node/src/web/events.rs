@@ -27,11 +27,15 @@ pub(super) fn routes() -> Router<NodeState> {
 
 async fn stream_events(
     State(state): State<NodeState>,
-    Extension(_session): Extension<ClientSession>,
+    Extension(session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
-    // FIXME: subscribe to changes or requests
-    let sub = state.pubsub().sse_changes.subscribe(None::<()>);
-    Sse::new(sub).keep_alive(KeepAlive::default())
+    if let ClientSession::ParentNode(parent) = session {
+        // TODO: pubsub service
+        unimplemented!();
+    } else {
+        let stream = state.pubsub().sse_changes.subscribe(None::<()>);
+        Sse::new(stream).keep_alive(KeepAlive::default())
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

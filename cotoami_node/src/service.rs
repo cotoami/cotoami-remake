@@ -25,11 +25,13 @@ use uuid::Uuid;
 
 pub mod error;
 pub mod models;
+pub mod pubsub;
 pub mod service_ext;
 
 use self::models::*;
 pub use self::{
     error::ServiceError,
+    pubsub::*,
     service_ext::{NodeServiceExt, RemoteNodeServiceExt},
 };
 
