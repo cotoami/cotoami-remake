@@ -52,12 +52,12 @@ impl NodeState {
 
     pub fn pubsub(&self) -> &Pubsub { &self.pubsub }
 
-    pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
-        self.server_conns.read().contains_key(server_id)
-    }
-
     pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
         self.server_conns.read()
+    }
+
+    pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
+        self.read_server_conns().contains_key(server_id)
     }
 
     pub fn server_conn(
