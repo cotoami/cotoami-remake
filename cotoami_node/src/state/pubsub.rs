@@ -5,6 +5,10 @@ use crate::{
     service::{models::NotConnected, pubsub::ResponsePubsub},
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// Pubsub aggregation
+/////////////////////////////////////////////////////////////////////////////
+
 #[derive(Clone)]
 pub struct Pubsub {
     local_changes: ChangePubsub,
@@ -36,9 +40,27 @@ impl Pubsub {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// ChangePubsub
+/////////////////////////////////////////////////////////////////////////////
+
 pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
 
+/////////////////////////////////////////////////////////////////////////////
+// EventPubsub
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone)]
+pub enum Event {
+    ServerDisconnected {
+        server_node_id: Id<Node>,
+        reason: NotConnected,
+    },
+    ParentDisconnected(Id<Node>),
+}
+
 pub type EventPubsub = Publisher<Event, ()>;
+
 impl EventPubsub {
     pub fn publish_server_disconnected(
         &self,
@@ -61,13 +83,4 @@ impl EventPubsub {
     pub fn publish_parent_disconnected(&self, parent_node_id: Id<Node>) {
         self.publish(Event::ParentDisconnected(parent_node_id), None);
     }
-}
-
-#[derive(Clone)]
-pub enum Event {
-    ServerDisconnected {
-        server_node_id: Id<Node>,
-        reason: NotConnected,
-    },
-    ParentDisconnected(Id<Node>),
 }
