@@ -169,6 +169,8 @@ impl SseClient {
     async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
         match event {
             NodeSentEvent::Change(change) => {
+                // `sync_with_parent` can't be run in parallel since events from the
+                // same node will be handled one by one.
                 self.node_state
                     .handle_parent_change(
                         self.server_node_id,

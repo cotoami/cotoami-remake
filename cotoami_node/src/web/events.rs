@@ -100,6 +100,8 @@ async fn post_event(
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
         match rmp_serde::from_slice(&body)? {
             NodeSentEvent::Change(change) => {
+                // `sync_with_parent` could be run in parallel, in such cases,
+                // `DatabaseError::UnexpectedChangeNumber` will be returned.
                 state
                     .handle_parent_change(parent.node_id, change, parent_service)
                     .await?;
