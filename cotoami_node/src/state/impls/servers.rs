@@ -34,24 +34,30 @@ impl NodeState {
     }
 
     pub async fn publish_change_to_child_servers(&self, change: &ChangelogEntry) -> Result<()> {
-        let child_servers: Vec<_> = self
+        // Collect the connections to the child servers
+        let child_conns: Vec<_> = self
             .read_server_conns()
             .iter()
             .filter_map(|(server_id, conn)| {
                 if self.is_parent(server_id) {
-                    return None;
-                }
-                match conn {
-                    ServerConnection::SseConnected { http_client, .. } => Some(http_client.clone()),
-                    _ => None,
+                    None
+                } else {
+                    Some(conn.clone())
                 }
             })
             .collect();
 
-        for child_server in child_servers {
-            child_server
-                .post_event(&NodeSentEvent::Change(change.clone()))
-                .await?;
+        // Sent the change to the child servers
+        for child_conn in child_conns {
+            match child_conn {
+                ServerConnection::SseConnected(sse_conn) => {
+                    sse_conn
+                        .http_client()
+                        .post_event(&NodeSentEvent::Change(change.clone()))
+                        .await?;
+                }
+                _ => (),
+            }
         }
 
         Ok(())

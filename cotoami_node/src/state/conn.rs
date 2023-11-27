@@ -128,6 +128,10 @@ pub struct SseConnection {
 }
 
 impl SseConnection {
+    pub fn session(&self) -> &Session { &self.session }
+
+    pub fn http_client(&self) -> &HttpClient { &self.http_client }
+
     pub fn disable(&self) { self.sse_client_state.write().disable(); }
 
     pub fn enable_if_possible(&self) -> bool { self.sse_client_state.write().enable_if_possible() }
