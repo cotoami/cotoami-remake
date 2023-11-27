@@ -5,6 +5,7 @@ use std::{collections::HashMap, fs, sync::Arc};
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
+use tracing::debug;
 use validator::Validate;
 
 use crate::service::NodeService;
@@ -91,6 +92,7 @@ impl NodeState {
 
     pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
         self.parent_services.write().insert(parent_id, service);
+        debug!("Parent service registered: {}", parent_id);
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
