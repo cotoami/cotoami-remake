@@ -91,11 +91,12 @@ impl NodeState {
     }
 
     pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+        debug!("Parent service being registered: {}", parent_id);
         self.parent_services.write().insert(parent_id, service);
-        debug!("Parent service registered: {}", parent_id);
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        debug!("Parent service being removed: {}", parent_id);
         self.parent_services.write().remove(parent_id)
     }
 }
