@@ -20,7 +20,7 @@ impl NodeState {
     fn set_internal_event_handler(&self) {
         let this = self.clone();
         tokio::spawn(async move {
-            let mut events = this.pubsub().events.subscribe(None::<()>);
+            let mut events = this.pubsub().events().subscribe(None::<()>);
             while let Some(event) = events.next().await {
                 match event {
                     Event::ParentDisconnected(parent_id) => {

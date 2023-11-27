@@ -1,39 +1,35 @@
-use std::{convert::Infallible, sync::Arc};
-
-use axum::response::sse::Event as SseEvent;
 use cotoami_db::prelude::*;
 
-use crate::{pubsub::Publisher, service::models::NotConnected};
+use crate::{
+    pubsub::Publisher,
+    service::{models::NotConnected, pubsub::ResponsePubsub},
+};
 
 #[derive(Clone)]
 pub struct Pubsub {
-    pub local_changes: Arc<ChangePubsub>,
-    pub sse_changes: Arc<SsePubsub>,
-    pub events: Arc<EventPubsub>,
+    local_changes: ChangePubsub,
+    events: EventPubsub,
+    responses: ResponsePubsub,
 }
 
 impl Pubsub {
     pub(crate) fn new() -> Self {
         let local_changes = ChangePubsub::new();
-        let sse_changes = SsePubsub::new();
         let events = EventPubsub::new();
-
-        // local_changes -> sse_changes
-        sse_changes.tap_into(
-            local_changes.subscribe(None::<()>),
-            |_| None,
-            |change| {
-                let event = SseEvent::default().event("change").json_data(change)?;
-                Ok(Ok(event))
-            },
-        );
+        let responses = ResponsePubsub::new();
 
         Self {
-            local_changes: Arc::new(local_changes),
-            sse_changes: Arc::new(sse_changes),
-            events: Arc::new(events),
+            local_changes,
+            events,
+            responses,
         }
     }
+
+    pub fn local_changes(&self) -> &ChangePubsub { &self.local_changes }
+
+    pub fn events(&self) -> &EventPubsub { &self.events }
+
+    pub fn responses(&self) -> &ResponsePubsub { &self.responses }
 
     pub fn publish_change(&self, changelog: ChangelogEntry) {
         self.local_changes.publish(changelog, None);
@@ -41,10 +37,8 @@ impl Pubsub {
 }
 
 pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
-pub(crate) type SsePubsub = Publisher<Result<SseEvent, Infallible>, ()>;
 
 pub type EventPubsub = Publisher<Event, ()>;
-
 impl EventPubsub {
     pub fn publish_server_disconnected(
         &self,

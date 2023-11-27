@@ -3,11 +3,7 @@
 //! This client sends requests to [PubsubService::requests] and receives
 //! responses from [PubsubService::responses], so it is protocol agnostic.
 
-use std::{
-    future::Future,
-    pin::Pin,
-    task::{Context, Poll},
-};
+use std::task::{Context, Poll};
 
 use anyhow::{bail, Result};
 use futures::StreamExt;
@@ -18,13 +14,15 @@ use crate::{pubsub::Publisher, service::*};
 
 #[derive(Clone)]
 pub struct PubsubService {
+    description: String,
     requests: RequestPubsub,
     responses: ResponsePubsub,
 }
 
 impl PubsubService {
-    pub fn new(responses: ResponsePubsub) -> Self {
+    pub fn new(description: impl Into<String>, responses: ResponsePubsub) -> Self {
         Self {
+            description: description.into(),
             requests: RequestPubsub::new(),
             responses,
         }
@@ -49,7 +47,7 @@ pub type ResponsePubsub = Publisher<Response, Uuid>;
 impl Service<Request> for PubsubService {
     type Response = Response;
     type Error = anyhow::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = NodeServiceFuture;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
@@ -59,4 +57,8 @@ impl Service<Request> for PubsubService {
         let this = self.clone();
         Box::pin(async move { this.handle_request(request).await })
     }
+}
+
+impl NodeService for PubsubService {
+    fn description(&self) -> &str { &self.description }
 }

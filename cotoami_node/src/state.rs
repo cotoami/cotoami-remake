@@ -89,8 +89,8 @@ impl NodeState {
             .ok_or(anyhow!("Parent disconnected: {}", parent_id))
     }
 
-    pub fn put_parent_service(&self, parent_id: &Id<Node>, service: Box<dyn NodeService>) {
-        self.parent_services.write().insert(*parent_id, service);
+    pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+        self.parent_services.write().insert(parent_id, service);
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {

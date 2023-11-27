@@ -14,7 +14,7 @@ impl NodeState {
         input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession> {
         let db = self.db().clone();
-        let change_pubsub = self.pubsub().local_changes.clone();
+        let change_pubsub = self.pubsub().local_changes().clone();
         let session_seconds = self.config().session_seconds();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;

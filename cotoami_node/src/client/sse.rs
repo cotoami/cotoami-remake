@@ -42,6 +42,7 @@ impl From<eventsource_stream::Event> for NodeSentEvent {
                 Ok(response) => NodeSentEvent::Response(response),
                 Err(e) => NodeSentEvent::Error(e.to_string()),
             },
+            "error" => NodeSentEvent::Error(source.data),
             _ => NodeSentEvent::Error(format!("Unknown event: {}", source.event)),
         }
     }
@@ -103,7 +104,7 @@ impl SseClient {
                         // Register a parent service when a SSE connection is opened.
                         if self.is_server_parent() {
                             self.node_state.put_parent_service(
-                                &self.server_node_id,
+                                self.server_node_id,
                                 Box::new(self.http_client.clone()),
                             );
                         }
@@ -149,11 +150,14 @@ impl SseClient {
 
         // Send an event when the server is disconnected
         if let Some(not_connected) = state.not_connected() {
-            self.node_state.pubsub().events.publish_server_disconnected(
-                self.server_node_id,
-                not_connected,
-                self.is_server_parent(),
-            );
+            self.node_state
+                .pubsub()
+                .events()
+                .publish_server_disconnected(
+                    self.server_node_id,
+                    not_connected,
+                    self.is_server_parent(),
+                );
         }
     }
 

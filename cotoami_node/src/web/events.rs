@@ -1,5 +1,6 @@
 use std::convert::Infallible;
 
+use async_stream::stream;
 use axum::{
     body::Bytes,
     extract::{Extension, State},
@@ -13,7 +14,12 @@ use cotoami_db::prelude::*;
 use futures::stream::Stream;
 use tracing::debug;
 
-use crate::{client::NodeSentEvent, service::ServiceError, NodeState};
+use crate::{
+    client::NodeSentEvent,
+    service::{PubsubService, ServiceError},
+    state::{Event, EventPubsub},
+    NodeState,
+};
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
@@ -29,13 +35,56 @@ async fn stream_events(
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
-    if let ClientSession::ParentNode(parent) = session {
-        // TODO: pubsub service
-        unimplemented!();
-    } else {
-        let stream = state.pubsub().sse_changes.subscribe(None::<()>);
-        Sse::new(stream).keep_alive(KeepAlive::default())
+    let events = stream! {
+        if let ClientSession::ParentNode(parent) = session {
+            // How to know when Sse connection is closed?
+            // https://github.com/tokio-rs/axum/discussions/1060
+            struct StreamLocal(Id<Node>, EventPubsub);
+            impl Drop for StreamLocal {
+                fn drop(&mut self) {
+                    let Self(parent_id, events) = self;
+                    debug!("SSE client-as-parent stream closed: {}", parent_id);
+                    events.publish(Event::ParentDisconnected(*parent_id), None);
+                }
+            }
+            let _local = StreamLocal(parent.node_id, state.pubsub().events().clone());
+
+            // Register SSE client-as-parent as a service
+            let parent_service = PubsubService::new(
+                format!("SSE client-as-parent: {}", parent.node_id),
+                state.pubsub().responses().clone(),
+            );
+            state.put_parent_service(parent.node_id, Box::new(parent_service.clone()));
+
+            // Stream `request` events
+            let requests = parent_service.requests().subscribe(None::<()>);
+            for await request in requests {
+                yield event("request", request);
+            }
+        } else {
+            // Stream `change` events
+            let changes = state.pubsub().local_changes().subscribe(None::<()>);
+            for await change in changes {
+                yield event("change", change);
+            }
+        }
+    };
+    Sse::new(events).keep_alive(KeepAlive::default())
+}
+
+fn event<T, D>(event_type: T, data: D) -> Result<SseEvent, Infallible>
+where
+    T: AsRef<str>,
+    D: serde::Serialize,
+{
+    match SseEvent::default().event(event_type).json_data(data) {
+        Ok(event) => Ok(event),
+        Err(e) => Ok(error_event(e)),
     }
+}
+
+fn error_event<E: ToString>(e: E) -> SseEvent {
+    SseEvent::default().event("error").data(e.to_string())
 }
 
 /////////////////////////////////////////////////////////////////////////////
