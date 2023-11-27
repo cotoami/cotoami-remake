@@ -50,7 +50,7 @@ pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
 // EventPubsub
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Event {
     ServerDisconnected {
         server_node_id: Id<Node>,

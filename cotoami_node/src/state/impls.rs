@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::StreamExt;
-use tracing::error;
+use tracing::{debug, error};
 
 use crate::state::{pubsub::Event, NodeState};
 
@@ -24,6 +24,7 @@ impl NodeState {
         tokio::spawn(async move {
             let mut events = this.pubsub().events().subscribe(None::<()>);
             while let Some(event) = events.next().await {
+                debug!("Internal event: {:?}", event);
                 match event {
                     Event::ParentDisconnected(parent_id) => {
                         this.remove_parent_service(&parent_id);
