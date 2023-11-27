@@ -110,7 +110,11 @@ async fn post_event(
             }
             NodeSentEvent::Response(response) => {
                 debug!("Received a response from {}", parent_service.description());
-                // TODO: Response Pubsub?
+                let response_id = response.id().clone();
+                state
+                    .pubsub()
+                    .responses()
+                    .publish(response, Some(&response_id))
             }
             NodeSentEvent::Error(msg) => {
                 return Err(ServiceError::Server(msg));
