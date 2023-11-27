@@ -17,7 +17,7 @@ use tracing::debug;
 use crate::{
     client::NodeSentEvent,
     service::{PubsubService, ServiceError},
-    state::{Event, EventPubsub},
+    state::EventPubsub,
     NodeState,
 };
 
@@ -44,7 +44,7 @@ async fn stream_events(
                 fn drop(&mut self) {
                     let Self(parent_id, events) = self;
                     debug!("SSE client-as-parent stream closed: {}", parent_id);
-                    events.publish(Event::ParentDisconnected(*parent_id), None);
+                    events.publish_parent_disconnected(*parent_id);
                 }
             }
             let _local = StreamLocal(parent.node_id, state.pubsub().events().clone());

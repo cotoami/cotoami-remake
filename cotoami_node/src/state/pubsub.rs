@@ -54,8 +54,12 @@ impl EventPubsub {
             None,
         );
         if is_parent {
-            self.publish(Event::ParentDisconnected(server_node_id), None);
+            self.publish_parent_disconnected(server_node_id);
         }
+    }
+
+    pub fn publish_parent_disconnected(&self, parent_node_id: Id<Node>) {
+        self.publish(Event::ParentDisconnected(parent_node_id), None);
     }
 }
 
