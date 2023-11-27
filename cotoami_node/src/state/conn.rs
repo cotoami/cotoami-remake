@@ -14,44 +14,45 @@ use crate::{
     state::NodeState,
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// ServerConnection
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone)]
 pub enum ServerConnection {
     Disabled,
-    InitFailed(anyhow::Error),
-    SseConnected {
-        session: Session,
-        http_client: HttpClient,
-        sse_client_state: Arc<RwLock<SseClientState>>,
-    },
+    InitFailed(Arc<anyhow::Error>),
+    SseConnected(Arc<SseConnection>),
 }
 
 impl ServerConnection {
-    pub fn new(session: Session, http_client: HttpClient, mut sse_client: SseClient) -> Self {
-        let server_conn = ServerConnection::SseConnected {
+    pub fn new_sse(session: Session, http_client: HttpClient, mut sse_client: SseClient) -> Self {
+        let server_conn = ServerConnection::SseConnected(Arc::new(SseConnection {
             session,
             http_client,
             sse_client_state: sse_client.state(),
-        };
+        }));
         tokio::spawn(async move {
             sse_client.start().await;
         });
         server_conn
     }
 
-    pub async fn connect(
+    pub async fn connect_sse(
         server_node: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
     ) -> Self {
-        match Self::try_connect(server_node, local_node, node_state).await {
+        match Self::try_connect_sse(server_node, local_node, node_state).await {
             Ok(conn) => conn,
-            Err(err) => {
-                debug!("Failed to initialize a server connection: {:?}", err);
-                ServerConnection::InitFailed(err)
+            Err(e) => {
+                debug!("Failed to initialize a server connection: {:?}", e);
+                ServerConnection::InitFailed(Arc::new(e))
             }
         }
     }
 
-    async fn try_connect(
+    async fn try_connect_sse(
         server_node: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
@@ -84,26 +85,24 @@ impl ServerConnection {
         let sse_client =
             SseClient::new(server_node.node_id, http_client.clone(), node_state.clone())?;
 
-        Ok(Self::new(client_session.session, http_client, sse_client))
+        Ok(Self::new_sse(
+            client_session.session,
+            http_client,
+            sse_client,
+        ))
     }
 
     pub fn disable(&self) {
-        if let ServerConnection::SseConnected {
-            sse_client_state, ..
-        } = self
-        {
-            sse_client_state.write().disable();
+        match self {
+            ServerConnection::SseConnected(conn) => conn.disable(),
+            _ => (),
         }
     }
 
     pub fn enable_if_possible(&self) -> bool {
-        if let ServerConnection::SseConnected {
-            sse_client_state, ..
-        } = self
-        {
-            sse_client_state.write().enable_if_possible()
-        } else {
-            false
+        match self {
+            ServerConnection::SseConnected(conn) => conn.enable_if_possible(),
+            _ => false,
         }
     }
 
@@ -111,11 +110,29 @@ impl ServerConnection {
         match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ServerConnection::SseConnected {
-                sse_client_state, ..
-            } => sse_client_state.read().not_connected(),
+            ServerConnection::SseConnected(conn) => conn.not_connected(),
         }
     }
 }
 
 pub type ServerConnections = HashMap<Id<Node>, ServerConnection>;
+
+/////////////////////////////////////////////////////////////////////////////
+// SseConnection
+/////////////////////////////////////////////////////////////////////////////
+
+pub struct SseConnection {
+    session: Session,
+    http_client: HttpClient,
+    sse_client_state: Arc<RwLock<SseClientState>>,
+}
+
+impl SseConnection {
+    pub fn disable(&self) { self.sse_client_state.write().disable(); }
+
+    pub fn enable_if_possible(&self) -> bool { self.sse_client_state.write().enable_if_possible() }
+
+    pub fn not_connected(&self) -> Option<NotConnected> {
+        self.sse_client_state.read().not_connected()
+    }
+}

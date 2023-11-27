@@ -26,7 +26,7 @@ impl NodeState {
             let server_conn = if server_node.disabled {
                 ServerConnection::Disabled
             } else {
-                ServerConnection::connect(server_node, local_node.clone(), self).await
+                ServerConnection::connect_sse(server_node, local_node.clone(), self).await
             };
             server_conns.insert(server_node.node_id, server_conn);
         }

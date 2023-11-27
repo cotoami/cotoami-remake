@@ -162,7 +162,7 @@ async fn add_server_node(
     let sse_client = SseClient::new(server_id, http_client.clone(), state.clone())?;
 
     // Store the server connection
-    let server_conn = ServerConnection::new(client_session.session, http_client, sse_client);
+    let server_conn = ServerConnection::new_sse(client_session.session, http_client, sse_client);
     let server = Server::new(server_node, server_conn.not_connected());
     state.put_server_conn(&server_id, server_conn);
 
@@ -226,7 +226,7 @@ async fn set_server_disabled(
             debug!("Enabling the connection to {}", server_id);
         } else {
             debug!("Creating a new server connection for {}", server_id);
-            let server_conn = ServerConnection::connect(&server_node, local_node, &state).await;
+            let server_conn = ServerConnection::connect_sse(&server_node, local_node, &state).await;
             state.put_server_conn(&server_id, server_conn);
         }
     }
