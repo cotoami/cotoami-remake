@@ -9,6 +9,7 @@ use axum::{
     Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
+use cotoami_db::prelude::ClientSession;
 use tokio::task::spawn_blocking;
 use tower::ServiceBuilder;
 use tracing::{debug, error};
@@ -128,5 +129,22 @@ async fn require_session<B>(
         Ok(next.run(request).await)
     } else {
         Err(ServiceError::Unauthorized) // invalid token (session expired, etc.)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Operator
+/////////////////////////////////////////////////////////////////////////////
+
+async fn require_operator<B>(
+    Extension(session): Extension<ClientSession>,
+    mut request: Request<B>,
+    next: Next<B>,
+) -> Result<Response, ServiceError> {
+    if let ClientSession::Operator(operator) = session {
+        request.extensions_mut().insert(operator);
+        Ok(next.run(request).await)
+    } else {
+        Err(ServiceError::Permission)
     }
 }
