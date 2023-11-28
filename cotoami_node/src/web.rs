@@ -36,7 +36,8 @@ pub(super) fn router(state: NodeState) -> Router {
         .layer(middleware::from_fn(csrf::protect_from_forgery))
         // NOTE: the axum doc recommends to use [tower::ServiceBuilder] to apply multiple
         // middleware at once, but as far as I tested, middlewares can't see the `Extension`
-        // set by a preceding middleware in `ServiceBuilder`.
+        // set by a preceding middleware in the same `ServiceBuilder` (it causes "Missing request
+        // extension" error).
         // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
         .layer(Extension(state.clone()))
         .with_state(state)
