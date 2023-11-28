@@ -92,7 +92,7 @@ const SESSION_COOKIE_NAME: &str = "session_token";
 pub(crate) const SESSION_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-session-token");
 
-/// A middleware function to identify the operator from a session.
+/// A middleware function to load the session by a token stored in a cookie or header value
 async fn require_session<B>(
     Extension(state): Extension<NodeState>,
     // CookieJar extractor will never reject a request
@@ -134,6 +134,9 @@ async fn require_session<B>(
 // Operator
 /////////////////////////////////////////////////////////////////////////////
 
+/// A middleware function to identify the operator from a session.
+///
+/// This middleware has to be placed after the [require_session] middleware.
 async fn require_operator<B>(
     Extension(session): Extension<ClientSession>,
     mut request: Request<B>,
