@@ -2,6 +2,7 @@ use core::time::Duration;
 
 use anyhow::{bail, Result};
 use tokio::task::spawn_blocking;
+use tracing::debug;
 
 use crate::{
     service::models::{ClientNodeSession, CreateClientNodeSession, Session},
@@ -25,6 +26,7 @@ impl NodeState {
                 &input.password, // validated to be Some
                 Duration::from_secs(session_seconds),
             )?;
+            debug!("Client session started: {}", client.node_id);
 
             // Check database role
             if input.as_parent.unwrap_or(false) && !db.globals().is_parent(&client.node_id) {
@@ -40,6 +42,7 @@ impl NodeState {
             // Import the client node
             if let Some((_, changelog)) = ds.import_node(&input.client)? {
                 change_pubsub.publish(changelog, None);
+                debug!("Client node imported: {}", client.node_id);
             }
 
             Ok(ClientNodeSession {
