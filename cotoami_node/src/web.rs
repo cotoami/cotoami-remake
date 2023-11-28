@@ -10,6 +10,7 @@ use axum::{
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use tokio::task::spawn_blocking;
+use tower::ServiceBuilder;
 use tracing::{debug, error};
 
 use crate::{service::ServiceError, state::NodeState};
@@ -32,8 +33,13 @@ pub(super) fn router(state: NodeState) -> Router {
     Router::new()
         .nest("/api", routes())
         .fallback(fallback)
-        .layer(middleware::from_fn(csrf::protect_from_forgery))
-        .layer(Extension(state.clone())) // for middleware
+        .layer(
+            // Applying multiple middleware
+            // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(csrf::protect_from_forgery))
+                .layer(Extension(state.clone())), // state for middleware
+        )
         .with_state(state)
 }
 
