@@ -1,7 +1,6 @@
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    middleware,
     routing::get,
     Extension, Form, Json, Router,
 };
@@ -16,9 +15,7 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(recent_client_nodes).post(add_client_node))
-        .layer(middleware::from_fn(crate::web::require_session))
+    Router::new().route("/", get(recent_client_nodes).post(add_client_node))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;

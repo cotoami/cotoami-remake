@@ -2,8 +2,10 @@ use axum::{
     extract::{Query, State},
     middleware,
     routing::get,
-    Json, Router,
+    Extension, Json, Router,
 };
+use cotoami_db::prelude::*;
+use tower::ServiceBuilder;
 use validator::Validate;
 
 use crate::{
@@ -12,9 +14,11 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(chunk_of_changes))
-        .layer(middleware::from_fn(super::require_session))
+    Router::new().route("/", get(chunk_of_changes)).layer(
+        ServiceBuilder::new()
+            .layer(middleware::from_fn(super::require_operator))
+            .layer(middleware::from_fn(super::require_session)),
+    )
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +33,7 @@ struct Position {
 
 async fn chunk_of_changes(
     State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
     Query(position): Query<Position>,
 ) -> Result<Json<ChunkOfChanges>, ServiceError> {
     if let Err(errors) = position.validate() {

@@ -3,10 +3,11 @@ use axum::{
     extract::{Path, Query, State},
     middleware,
     routing::get,
-    Json, Router,
+    Extension, Json, Router,
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
+use tower::ServiceBuilder;
 use validator::Validate;
 
 use crate::{
@@ -21,7 +22,11 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
         .nest("/:cotonoma_id/cotos", cotos::routes())
-        .layer(middleware::from_fn(super::require_session))
+        .layer(
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(super::require_operator))
+                .layer(middleware::from_fn(super::require_session)),
+        )
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 100;
@@ -32,6 +37,7 @@ const DEFAULT_PAGE_SIZE: i64 = 100;
 
 async fn recent_cotonomas(
     State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
@@ -61,6 +67,7 @@ struct CotonomaDetails {
 
 async fn get_cotonoma(
     State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Json<CotonomaDetails>, ServiceError> {
     spawn_blocking(move || {

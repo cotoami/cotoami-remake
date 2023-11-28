@@ -1,6 +1,5 @@
 use axum::{
     extract::{Query, State},
-    middleware,
     routing::get,
     Extension, Json, Router,
 };
@@ -13,11 +12,7 @@ use crate::{
     NodeState,
 };
 
-pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(recent_child_nodes))
-        .layer(middleware::from_fn(crate::web::require_session))
-}
+pub(super) fn routes() -> Router<NodeState> { Router::new().route("/", get(recent_child_nodes)) }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
 

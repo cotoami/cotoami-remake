@@ -2,7 +2,6 @@ use anyhow::Result;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    middleware,
     routing::{get, put},
     Extension, Form, Json, Router,
 };
@@ -26,7 +25,6 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(all_server_nodes).post(add_server_node))
         .route("/:node_id", put(update_server_node))
-        .layer(middleware::from_fn(crate::web::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////

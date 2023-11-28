@@ -3,10 +3,11 @@ use axum::{
     extract::{Query, State},
     middleware,
     routing::get,
-    Json, Router,
+    Extension, Json, Router,
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
+use tower::ServiceBuilder;
 use validator::Validate;
 
 use crate::{
@@ -15,9 +16,11 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(recent_cotos))
-        .layer(middleware::from_fn(super::require_session))
+    Router::new().route("/", get(recent_cotos)).layer(
+        ServiceBuilder::new()
+            .layer(middleware::from_fn(super::require_operator))
+            .layer(middleware::from_fn(super::require_session)),
+    )
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
@@ -28,6 +31,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 
 async fn recent_cotos(
     State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {

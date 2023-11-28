@@ -1,6 +1,5 @@
 use axum::{
     extract::{Extension, Path, State},
-    middleware,
     routing::put,
     Json, Router,
 };
@@ -10,9 +9,7 @@ use tokio::task::spawn_blocking;
 use crate::{service::ServiceError, state::NodeState};
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/:node_id/fork", put(fork_from_parent))
-        .layer(middleware::from_fn(crate::web::require_session))
+    Router::new().route("/:node_id/fork", put(fork_from_parent))
 }
 
 /////////////////////////////////////////////////////////////////////////////

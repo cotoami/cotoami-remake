@@ -1,5 +1,6 @@
-use axum::{extract::State, middleware, routing::get, Json, Router};
+use axum::{extract::State, middleware, routing::get, Extension, Json, Router};
 use cotoami_db::prelude::*;
+use tower::ServiceBuilder;
 
 use crate::{service::ServiceError, state::NodeState};
 
@@ -15,14 +16,21 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/clients", clients::routes())
         .nest("/parents", parents::routes())
         .nest("/children", children::routes())
-        .layer(middleware::from_fn(super::require_session))
+        .layer(
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(super::require_operator))
+                .layer(middleware::from_fn(super::require_session)),
+        )
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
-async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, ServiceError> {
+async fn local_node(
+    State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
+) -> Result<Json<Node>, ServiceError> {
     state
         .local_node()
         .await
