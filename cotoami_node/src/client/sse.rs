@@ -7,7 +7,7 @@ use futures::StreamExt;
 use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tower_service::Service;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 
 use crate::{
     client::HttpClient,
@@ -21,6 +21,7 @@ use crate::{
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum NodeSentEvent {
+    Connected,
     Change(ChangelogEntry),
     Request(Request),
     Response(Response),
@@ -100,13 +101,18 @@ impl SseClient {
                 match item {
                     Ok(ESItem::Open) => {
                         info!("Event source opened: {}", self.url_prefix());
-
-                        // Register a parent service when a SSE connection is opened.
                         if self.is_server_parent() {
                             self.node_state.put_parent_service(
                                 self.server_node_id,
                                 Box::new(self.http_client.clone()),
                             );
+                        } else {
+                            if let Err(err) =
+                                self.http_client.post_event(&NodeSentEvent::Connected).await
+                            {
+                                self.set_error(SseClientError::InitFailed(err));
+                                self.event_source.close();
+                            }
                         }
                     }
                     Ok(ESItem::Message(event)) => {
@@ -168,6 +174,7 @@ impl SseClient {
 
     async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
         match event {
+            NodeSentEvent::Connected => (),
             NodeSentEvent::Change(change) => {
                 // `sync_with_parent` can't be run in parallel since events from the
                 // same node will be handled one by one.
@@ -190,9 +197,7 @@ impl SseClient {
                     .post_event(&NodeSentEvent::Response(response))
                     .await?;
             }
-            NodeSentEvent::Response(response) => {
-                warn!("Response event not supported: {:?}", response.id());
-            }
+            NodeSentEvent::Response(_) => (),
             NodeSentEvent::Error(msg) => error!("Event error: {}", msg),
         }
         Ok(())
@@ -251,6 +256,7 @@ impl SseClientState {
             Some(NotConnected::Connecting(details))
         } else if let Some(error) = self.error.as_ref() {
             match error {
+                SseClientError::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
                 SseClientError::StreamFailed(e) => Some(NotConnected::StreamFailed(e.to_string())),
                 SseClientError::EventHandlingFailed(e) => {
                     Some(NotConnected::EventHandlingFailed(e.to_string()))
@@ -275,6 +281,7 @@ impl SseClientState {
 }
 
 pub enum SseClientError {
+    InitFailed(anyhow::Error),
     StreamFailed(reqwest_eventsource::Error),
     EventHandlingFailed(anyhow::Error),
 }
