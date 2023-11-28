@@ -71,7 +71,9 @@ struct AddServerNode {
 
     as_child: Option<bool>,
 
-    /// Set true if you want to turn this node into a replica of the parent node,
+    // Settings for the server as a parent (`as_child` = false)
+    //
+    /// Set true if you want to turn the local node into a replica of the parent node,
     /// which means the root cotonoma will be changed to that of the parent.
     replicate: Option<bool>,
 }

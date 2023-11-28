@@ -59,7 +59,7 @@ struct AddClientNode {
 
     as_parent: Option<bool>,
 
-    // As a child
+    // Settings for the client as a child (`as_parent` = false)
     as_owner: Option<bool>,
     can_edit_links: Option<bool>,
 }
