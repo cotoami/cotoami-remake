@@ -7,7 +7,6 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use tower::ServiceBuilder;
 use validator::Validate;
 
 use crate::{
@@ -22,11 +21,8 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
         .nest("/:cotonoma_id/cotos", cotos::routes())
-        .layer(
-            ServiceBuilder::new()
-                .layer(middleware::from_fn(super::require_operator))
-                .layer(middleware::from_fn(super::require_session)),
-        )
+        .layer(middleware::from_fn(super::require_operator))
+        .layer(middleware::from_fn(super::require_session))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 100;

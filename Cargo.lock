@@ -680,7 +680,6 @@ dependencies = [
  "thiserror",
  "time 0.3.25",
  "tokio",
- "tower",
  "tower-service",
  "tracing",
  "tracing-subscriber",

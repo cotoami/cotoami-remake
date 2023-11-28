@@ -11,7 +11,6 @@ use axum::{
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use cotoami_db::prelude::ClientSession;
 use tokio::task::spawn_blocking;
-use tower::ServiceBuilder;
 use tracing::{debug, error};
 
 use crate::{service::ServiceError, state::NodeState};
@@ -34,13 +33,12 @@ pub(super) fn router(state: NodeState) -> Router {
     Router::new()
         .nest("/api", routes())
         .fallback(fallback)
-        .layer(
-            // Applying multiple middleware
-            // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
-            ServiceBuilder::new()
-                .layer(middleware::from_fn(csrf::protect_from_forgery))
-                .layer(Extension(state.clone())), // state for middleware
-        )
+        .layer(middleware::from_fn(csrf::protect_from_forgery))
+        // NOTE: the axum doc recommends to use [tower::ServiceBuilder] to apply multiple
+        // middleware at once, but as far as I tested, middlewares can't see the `Extension`
+        // set by a preceding middleware in `ServiceBuilder`.
+        // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
+        .layer(Extension(state.clone()))
         .with_state(state)
 }
 

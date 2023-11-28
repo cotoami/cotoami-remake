@@ -7,7 +7,6 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use tower::ServiceBuilder;
 use validator::Validate;
 
 use crate::{
@@ -16,11 +15,10 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/", get(recent_cotos)).layer(
-        ServiceBuilder::new()
-            .layer(middleware::from_fn(super::require_operator))
-            .layer(middleware::from_fn(super::require_session)),
-    )
+    Router::new()
+        .route("/", get(recent_cotos))
+        .layer(middleware::from_fn(super::require_operator))
+        .layer(middleware::from_fn(super::require_session))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;

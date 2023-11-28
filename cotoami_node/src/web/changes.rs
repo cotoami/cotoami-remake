@@ -5,7 +5,6 @@ use axum::{
     Extension, Json, Router,
 };
 use cotoami_db::prelude::*;
-use tower::ServiceBuilder;
 use validator::Validate;
 
 use crate::{
@@ -14,11 +13,10 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/", get(chunk_of_changes)).layer(
-        ServiceBuilder::new()
-            .layer(middleware::from_fn(super::require_operator))
-            .layer(middleware::from_fn(super::require_session)),
-    )
+    Router::new()
+        .route("/", get(chunk_of_changes))
+        .layer(middleware::from_fn(super::require_operator))
+        .layer(middleware::from_fn(super::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////
