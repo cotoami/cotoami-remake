@@ -123,7 +123,7 @@ async fn require_session<B>(
     .await??;
 
     if let Some(session) = session {
-        debug!("client session: {:?}", session);
+        debug!("Client session: {:?}", session);
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {

@@ -7,6 +7,7 @@ use axum::{
 use cotoami_db::prelude::*;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use tokio::task::spawn_blocking;
+use tracing::debug;
 use validator::Validate;
 
 use crate::{
@@ -55,9 +56,12 @@ async fn recent_client_nodes(
 struct AddClientNode {
     #[validate(required)]
     id: Option<Id<Node>>,
+
+    as_parent: Option<bool>,
+
+    // As a child
     as_owner: Option<bool>,
     can_edit_links: Option<bool>,
-    as_parent: Option<bool>,
 }
 
 #[derive(serde::Serialize)]
@@ -75,9 +79,10 @@ async fn add_client_node(
         return ("nodes/client", errors).into_result();
     }
     spawn_blocking(move || {
+        // Inputs
         let db = state.db().new_session()?;
         let password = generate_password();
-        let database_role = if form.as_parent.unwrap_or(false) {
+        let db_role = if form.as_parent.unwrap_or(false) {
             NewDatabaseRole::Parent
         } else {
             NewDatabaseRole::Child {
@@ -85,14 +90,20 @@ async fn add_client_node(
                 can_edit_links: form.can_edit_links.unwrap_or(false),
             }
         };
-        db.register_client_node(
+
+        // Register the node as a client
+        let (client, db_role) = db.register_client_node(
             form.id.unwrap_or_else(|| unreachable!()),
             &password,
-            database_role,
+            db_role,
             &operator,
         )?;
-        let response_body = ClientNodeAdded { password };
-        Ok((StatusCode::CREATED, Json(response_body)))
+        debug!(
+            "Client node ({}) registered as a {}",
+            client.node_id, db_role
+        );
+
+        Ok((StatusCode::CREATED, Json(ClientNodeAdded { password })))
     })
     .await?
 }
