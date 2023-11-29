@@ -7,10 +7,7 @@ use crate::service::{
 };
 
 #[async_trait]
-pub trait NodeServiceExt: NodeService
-where
-    Self::Future: Send,
-{
+pub trait NodeServiceExt: NodeService {
     async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
         let request = RequestBody::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
@@ -18,18 +15,10 @@ where
     }
 }
 
-impl<T> NodeServiceExt for T
-where
-    T: NodeService,
-    Self::Future: Send,
-{
-}
+impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}
 
 #[async_trait]
-pub trait RemoteNodeServiceExt: RemoteNodeService
-where
-    Self::Future: Send,
-{
+pub trait RemoteNodeServiceExt: RemoteNodeService {
     async fn create_client_node_session(
         &mut self,
         input: CreateClientNodeSession,
@@ -42,9 +31,4 @@ where
     }
 }
 
-impl<T> RemoteNodeServiceExt for T
-where
-    T: RemoteNodeService,
-    Self::Future: Send,
-{
-}
+impl<T> RemoteNodeServiceExt for T where T: RemoteNodeService + ?Sized {}

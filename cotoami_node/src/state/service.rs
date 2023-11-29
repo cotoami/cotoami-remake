@@ -1,22 +1,19 @@
 //! Server-side implemention of Node Service,
 //! which is intended for non-HTTP protocols such as WebSocket.
 
-use std::{
-    future::Future,
-    pin::Pin,
-    task::{Context, Poll},
-};
+use std::task::{Context, Poll};
 
 use anyhow::Result;
 use bytes::Bytes;
 use cotoami_db::prelude::*;
+use futures::future::FutureExt;
 use serde_json::value::Value;
 use tower_service::Service;
 
 use crate::{
     service::{
         error::{InputError, RequestError},
-        *,
+        NodeServiceFuture, *,
     },
     state::{error::NodeError, NodeState},
 };
@@ -49,7 +46,7 @@ impl NodeState {
 impl Service<Request> for NodeState {
     type Response = Response;
     type Error = anyhow::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+    type Future = NodeServiceFuture;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
@@ -57,14 +54,15 @@ impl Service<Request> for NodeState {
 
     fn call(&mut self, request: Request) -> Self::Future {
         let this = self.clone();
-        Box::pin(async move {
+        async move {
             Ok(Response::new(
                 *request.id(),
                 this.handle_request(request)
                     .await
                     .map_err(ServiceError::from),
             ))
-        })
+        }
+        .boxed()
     }
 }
 

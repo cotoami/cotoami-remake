@@ -13,9 +13,11 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use derive_new::new;
+use dyn_clone::DynClone;
+use futures::future::BoxFuture;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
 use tower_service::Service;
@@ -23,11 +25,13 @@ use uuid::Uuid;
 
 pub mod error;
 pub mod models;
+pub mod pubsub;
 pub mod service_ext;
 
+use self::models::*;
 pub use self::{
     error::ServiceError,
-    models::*,
+    pubsub::*,
     service_ext::{NodeServiceExt, RemoteNodeServiceExt},
 };
 
@@ -35,25 +39,26 @@ pub use self::{
 // Service
 /////////////////////////////////////////////////////////////////////////////
 
-pub trait NodeService: Service<Request, Response = Response, Error = anyhow::Error>
-where
-    Self::Future: Send,
+pub trait NodeService:
+    Service<Request, Response = Response, Error = anyhow::Error, Future = NodeServiceFuture>
+    + Send
+    + Sync
+    + DynClone
 {
     fn description(&self) -> &str;
 }
 
-pub trait RemoteNodeService: NodeService
-where
-    Self::Future: Send,
-{
+pub trait RemoteNodeService: NodeService {
     fn set_session_token(&mut self, token: &str) -> Result<()>;
 }
+
+pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::Error>>;
 
 /////////////////////////////////////////////////////////////////////////////
 // Request
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
     body: RequestBody,
@@ -72,7 +77,7 @@ impl Request {
     pub fn body(self) -> RequestBody { self.body }
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
     LocalNode,
     ChunkOfChanges { from: i64 },
@@ -94,9 +99,11 @@ pub struct Response {
 }
 
 impl Response {
+    pub fn id(&self) -> &Uuid { &self.id }
+
     pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
         let bytes = self.body.map_err(ServiceStdError)?;
-        rmp_serde::from_slice(&bytes).map_err(anyhow::Error::from)
+        rmp_serde::from_slice(&bytes).context("Invalid response body")
     }
 }
 

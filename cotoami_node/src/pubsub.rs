@@ -17,18 +17,9 @@ use parking_lot::Mutex;
 use smallvec::SmallVec;
 use tracing::error;
 
+#[derive(Clone)]
 pub struct Publisher<Message, Topic> {
     state: Arc<Mutex<PublisherState<Message, Topic>>>,
-}
-
-/// Manually implementing Clone for Publisher because of the issue:
-/// https://github.com/rust-lang/rust/issues/26925
-impl<Message, Topic> Clone for Publisher<Message, Topic> {
-    fn clone(&self) -> Self {
-        Self {
-            state: self.state.clone(),
-        }
-    }
 }
 
 impl<Message, Topic> Publisher<Message, Topic>

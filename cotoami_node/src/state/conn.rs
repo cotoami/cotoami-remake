@@ -6,60 +6,59 @@ use parking_lot::RwLock;
 use tracing::{debug, info};
 
 use crate::{
-    client::{HttpClient, SseClient, SseClientError, SseClientState},
+    client::{HttpClient, SseClient, SseClientState},
     service::{
-        models::{CreateClientNodeSession, Session},
+        models::{CreateClientNodeSession, NotConnected, Session},
         RemoteNodeServiceExt,
     },
     state::NodeState,
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// ServerConnection
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Clone)]
 pub enum ServerConnection {
     Disabled,
-    InitFailed(anyhow::Error),
-    Connected {
-        session: Session,
-        http_client: HttpClient,
-        sse_client_state: Arc<RwLock<SseClientState>>,
-    },
+    InitFailed(Arc<anyhow::Error>),
+    SseConnected(Arc<SseConnection>),
 }
 
 impl ServerConnection {
-    pub fn new(session: Session, http_client: HttpClient, mut sse_client: SseClient) -> Self {
-        let server_conn = ServerConnection::Connected {
+    pub fn new_sse(session: Session, http_client: HttpClient, mut sse_client: SseClient) -> Self {
+        let server_conn = ServerConnection::SseConnected(Arc::new(SseConnection {
             session,
             http_client,
             sse_client_state: sse_client.state(),
-        };
+        }));
         tokio::spawn(async move {
             sse_client.start().await;
         });
         server_conn
     }
 
-    pub async fn connect(
+    pub async fn connect_sse(
         server_node: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
     ) -> Self {
-        match Self::try_connect(server_node, local_node, node_state).await {
+        match Self::try_connect_sse(server_node, local_node, node_state).await {
             Ok(conn) => conn,
-            Err(err) => {
-                debug!("Failed to initialize a server connection: {:?}", err);
-                ServerConnection::InitFailed(err)
+            Err(e) => {
+                debug!("Failed to initialize a server connection: {:?}", e);
+                ServerConnection::InitFailed(Arc::new(e))
             }
         }
     }
 
-    async fn try_connect(
+    async fn try_connect_sse(
         server_node: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
     ) -> Result<Self> {
-        let is_server_parent = node_state
-            .db()
-            .new_session()?
-            .is_parent(&server_node.node_id);
+        let is_server_parent = node_state.is_parent(&server_node.node_id);
+        let is_local_parent = !is_server_parent; // just for clarity
         let mut http_client = HttpClient::new(server_node.url_prefix.clone())?;
 
         // Attempt to log into the server node
@@ -71,7 +70,7 @@ impl ServerConnection {
                 password,
                 new_password: None,
                 client: local_node,
-                as_parent: Some(is_server_parent),
+                as_parent: Some(is_local_parent),
             })
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
@@ -79,7 +78,7 @@ impl ServerConnection {
         // Sync with the parent
         if is_server_parent {
             node_state
-                .sync_with_parent(server_node.node_id, &mut http_client)
+                .sync_with_parent(server_node.node_id, Box::new(http_client.clone()))
                 .await?;
         }
 
@@ -87,79 +86,58 @@ impl ServerConnection {
         let sse_client =
             SseClient::new(server_node.node_id, http_client.clone(), node_state.clone())?;
 
-        Ok(Self::new(client_session.session, http_client, sse_client))
+        Ok(Self::new_sse(
+            client_session.session,
+            http_client,
+            sse_client,
+        ))
     }
 
-    pub fn disable_sse(&self) {
-        if let ServerConnection::Connected {
-            sse_client_state, ..
-        } = self
-        {
-            sse_client_state.write().disable();
+    pub fn disable(&self) {
+        match self {
+            ServerConnection::SseConnected(conn) => conn.disable(),
+            _ => (),
         }
     }
 
-    pub fn restart_sse_if_possible(&self) -> bool {
-        if let ServerConnection::Connected {
-            sse_client_state, ..
-        } = self
-        {
-            sse_client_state.write().restart_if_possible()
-        } else {
-            false
+    pub fn enable_if_possible(&self) -> bool {
+        match self {
+            ServerConnection::SseConnected(conn) => conn.enable_if_possible(),
+            _ => false,
         }
     }
 
-    pub fn not_connected(&self) -> Option<NotConnected> { NotConnected::check_status(self) }
-}
-
-#[derive(serde::Serialize)]
-#[serde(tag = "reason", content = "details")]
-pub enum NotConnected {
-    Disabled,
-    Connecting(Option<String>),
-    InitFailed(String),
-    StreamFailed(String),
-    EventHandlingFailed(String),
-    Unknown,
-}
-
-impl NotConnected {
-    fn check_status(conn: &ServerConnection) -> Option<Self> {
-        match conn {
+    pub fn not_connected(&self) -> Option<NotConnected> {
+        match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ServerConnection::Connected {
-                sse_client_state, ..
-            } => {
-                let state = sse_client_state.read();
-                if state.is_running() {
-                    None // connected
-                } else if state.is_disabled() {
-                    Some(NotConnected::Disabled)
-                } else if state.is_connecting() {
-                    let details =
-                        if let Some(SseClientError::StreamFailed(e)) = state.error.as_ref() {
-                            Some(e.to_string())
-                        } else {
-                            None
-                        };
-                    Some(NotConnected::Connecting(details))
-                } else if let Some(error) = state.error.as_ref() {
-                    match error {
-                        SseClientError::StreamFailed(e) => {
-                            Some(NotConnected::StreamFailed(e.to_string()))
-                        }
-                        SseClientError::EventHandlingFailed(e) => {
-                            Some(NotConnected::EventHandlingFailed(e.to_string()))
-                        }
-                    }
-                } else {
-                    Some(NotConnected::Unknown)
-                }
-            }
+            ServerConnection::SseConnected(conn) => conn.not_connected(),
         }
     }
 }
 
 pub type ServerConnections = HashMap<Id<Node>, ServerConnection>;
+
+/////////////////////////////////////////////////////////////////////////////
+// SseConnection
+/////////////////////////////////////////////////////////////////////////////
+
+pub struct SseConnection {
+    session: Session,
+    http_client: HttpClient,
+    sse_client_state: Arc<RwLock<SseClientState>>,
+}
+
+impl SseConnection {
+    pub fn session(&self) -> &Session { &self.session }
+
+    pub fn http_client(&self) -> &HttpClient { &self.http_client }
+
+    pub fn disable(&self) { self.sse_client_state.write().disable(); }
+
+    pub fn enable_if_possible(&self) -> bool { self.sse_client_state.write().enable_if_possible() }
+
+    pub fn not_connected(&self) -> Option<NotConnected> {
+        self.sse_client_state.read().not_connected()
+    }
+}

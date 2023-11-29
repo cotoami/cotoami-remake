@@ -1,12 +1,13 @@
 use core::time::Duration;
 
+use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::State,
     http::StatusCode,
     middleware,
     routing::{delete, put},
-    Extension, Form, Json, Router,
+    Extension, Form, Json, Router, TypedHeader,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
 use cotoami_db::prelude::*;
@@ -22,6 +23,7 @@ use crate::{
         ServiceError,
     },
     state::NodeState,
+    web::Content,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -86,9 +88,10 @@ struct CreateOwnerSession {
 
 async fn create_owner_session(
     State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
-) -> Result<(StatusCode, CookieJar, Json<Session>), ServiceError> {
+) -> Result<(StatusCode, CookieJar, Content<Session>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("session/owner", errors).into_result();
     }
@@ -103,7 +106,11 @@ async fn create_owner_session(
             expires_at: local_node.owner_session_expires_at.unwrap(),
         };
         let cookie = create_cookie(&session);
-        Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
+        Ok((
+            StatusCode::CREATED,
+            jar.add(cookie),
+            Content(session, accept),
+        ))
     })
     .await?
 }
@@ -114,10 +121,15 @@ async fn create_owner_session(
 
 async fn create_client_node_session(
     State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
-) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ServiceError> {
+) -> Result<(StatusCode, CookieJar, Content<ClientNodeSession>), ServiceError> {
     let session = state.create_client_node_session(payload).await?;
     let cookie = create_cookie(&session.session);
-    Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
+    Ok((
+        StatusCode::CREATED,
+        jar.add(cookie),
+        Content(session, accept),
+    ))
 }

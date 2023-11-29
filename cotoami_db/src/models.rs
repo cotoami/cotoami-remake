@@ -20,7 +20,10 @@ use diesel::{
 use serde::Deserializer;
 use uuid::Uuid;
 
-use self::{node::parent::ParentNode, operator::Operator};
+use self::{
+    node::{parent::ParentNode, Node},
+    operator::Operator,
+};
 
 pub mod changelog;
 pub mod coto;
@@ -228,6 +231,16 @@ impl FromSql<Binary, Sqlite> for Bytes {
 pub enum ClientSession {
     Operator(Operator),
     ParentNode(ParentNode),
+}
+
+impl ClientSession {
+    pub fn client_node_id(&self) -> Id<Node> {
+        match self {
+            Self::Operator(Operator::Owner(local_node_id)) => *local_node_id,
+            Self::Operator(Operator::ChildNode(child)) => child.node_id,
+            Self::ParentNode(parent) => parent.node_id,
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

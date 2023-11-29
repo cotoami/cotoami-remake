@@ -1,7 +1,8 @@
-use axum::{extract::State, middleware, routing::get, Json, Router};
+use accept_header::Accept;
+use axum::{extract::State, middleware, routing::get, Extension, Router, TypedHeader};
 use cotoami_db::prelude::*;
 
-use crate::{service::ServiceError, state::NodeState};
+use crate::{service::ServiceError, state::NodeState, web::Content};
 
 mod children;
 mod clients;
@@ -15,6 +16,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/clients", clients::routes())
         .nest("/parents", parents::routes())
         .nest("/children", children::routes())
+        .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }
 
@@ -22,10 +24,14 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
-async fn local_node(State(state): State<NodeState>) -> Result<Json<Node>, ServiceError> {
+async fn local_node(
+    State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<Node>, ServiceError> {
     state
         .local_node()
         .await
-        .map(Json)
+        .map(|x| Content(x, accept))
         .map_err(ServiceError::from)
 }

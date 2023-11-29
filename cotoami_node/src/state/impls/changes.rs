@@ -37,38 +37,21 @@ impl NodeState {
         .await?
     }
 
-    pub async fn import_changes(&self, parent_node_id: Id<Node>, changes: Changes) -> Result<()> {
-        let db = self.db().clone();
-        let change_pubsub = self.pubsub().local_change.clone();
-        spawn_blocking(move || {
-            let db = db.new_session()?;
-            for change in changes.chunk {
-                debug!("Importing number {} ...", change.serial_number);
-                if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
-                    change_pubsub.publish(imported_change, None);
-                }
-            }
-            Ok(())
-        })
-        .await?
-    }
-
-    pub async fn sync_with_parent<S>(
+    pub async fn sync_with_parent(
         &self,
         parent_node_id: Id<Node>,
-        parent_service: &mut S,
-    ) -> Result<Option<(i64, i64)>>
-    where
-        S: NodeService + Send,
-        S::Future: Send,
-    {
+        mut parent_service: Box<dyn NodeService>,
+    ) -> Result<Option<(i64, i64)>> {
         info!(
             "Importing the changes from {}",
             parent_service.description()
         );
         let parent_node = {
-            let db = self.db().new_session()?;
-            db.parent_node_or_err(&parent_node_id, &db.local_node_as_operator()?)?
+            let ds = self.db().new_session()?;
+            ds.parent_node_or_err(
+                &parent_node_id,
+                &self.db().globals().local_node_as_operator()?,
+            )?
         };
 
         let import_from = parent_node.changes_received + 1;
@@ -120,16 +103,33 @@ impl NodeState {
         }
     }
 
-    pub async fn handle_parent_change<S>(
+    async fn import_changes(&self, parent_node_id: Id<Node>, changes: Changes) -> Result<()> {
+        let db = self.db().clone();
+        let change_pubsub = self.pubsub().local_changes().clone();
+        spawn_blocking(move || {
+            let db = db.new_session()?;
+            for change in changes.chunk {
+                debug!("Importing number {} ...", change.serial_number);
+                if let Some(imported_change) = db.import_change(&change, &parent_node_id)? {
+                    change_pubsub.publish(imported_change, None);
+                }
+            }
+            Ok(())
+        })
+        .await?
+    }
+
+    pub async fn handle_parent_change(
         &self,
         parent_node_id: Id<Node>,
         change: ChangelogEntry,
-        parent_service: &mut S,
-    ) -> Result<()>
-    where
-        S: NodeService + Send,
-        S::Future: Send,
-    {
+        parent_service: Box<dyn NodeService>,
+    ) -> Result<()> {
+        info!(
+            "Received a change {} from {}",
+            change.serial_number,
+            parent_service.description()
+        );
         let import_result = spawn_blocking({
             let db = self.db().clone();
             move || db.new_session()?.import_change(&change, &parent_node_id)

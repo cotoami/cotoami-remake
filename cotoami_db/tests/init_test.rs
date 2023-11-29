@@ -16,7 +16,7 @@ fn default_state() -> Result<()> {
     let mut session = db.new_session()?;
 
     // then
-    assert!(!session.has_local_node_initialized());
+    assert!(!db.globals().has_local_node_initialized());
     assert!(session.all_nodes()?.is_empty());
 
     Ok(())
@@ -27,10 +27,10 @@ fn init_as_empty_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.new_session()?;
+    let mut ds = db.new_session()?;
 
     // when
-    let ((local_node, node), changelog) = session.init_as_node(None, None)?;
+    let ((local_node, node), changelog) = ds.init_as_node(None, None)?;
 
     // then
     assert_matches!(
@@ -58,13 +58,13 @@ fn init_as_empty_node() -> Result<()> {
         } if node_id == node.uuid
     );
 
-    let operator = session.local_node_as_operator()?;
+    let operator = db.globals().local_node_as_operator()?;
     assert_matches!(
-        session.local_node_pair(&operator)?,
+        ds.local_node_pair(&operator)?,
         (a, b) if a == local_node && b == node
     );
-    assert_eq!(session.node(&node.uuid)?.unwrap(), node);
-    assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
+    assert_eq!(ds.node(&node.uuid)?.unwrap(), node);
+    assert_matches!(&ds.all_nodes()?[..], [a] if a == &node);
 
     assert_matches!(
         changelog,
@@ -86,11 +86,11 @@ fn duplicate_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let session = db.new_session()?;
-    let _ = session.init_as_node(None, None)?;
+    let ds = db.new_session()?;
+    let _ = ds.init_as_node(None, None)?;
 
     // when
-    let result = session.init_as_node(None, None);
+    let result = ds.init_as_node(None, None);
 
     // then
     assert_eq!(
@@ -105,11 +105,11 @@ fn owner_session() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let session = db.new_session()?;
+    let ds = db.new_session()?;
     let duration = Duration::minutes(30);
 
     // when
-    let ((mut local_node, _), _) = session.init_as_node(None, Some("foo"))?;
+    let ((mut local_node, _), _) = ds.init_as_node(None, Some("foo"))?;
 
     // then
     assert!(local_node.start_session("bar", duration).is_err());
@@ -161,13 +161,13 @@ fn init_as_node() -> Result<()> {
     // setup
     let root_dir = tempdir()?;
     let db = Database::new(&root_dir)?;
-    let mut session = db.new_session()?;
+    let mut ds = db.new_session()?;
 
     // when
-    let ((local_node, node), changelog) = session.init_as_node(Some("My Node"), None)?;
+    let ((local_node, node), changelog) = ds.init_as_node(Some("My Node"), None)?;
 
     // then
-    let (root_cotonoma, root_coto) = session.root_cotonoma()?.unwrap();
+    let (root_cotonoma, root_coto) = ds.root_cotonoma()?.unwrap();
 
     assert_matches!(
         node,
@@ -193,13 +193,13 @@ fn init_as_node() -> Result<()> {
         } if node_id == node.uuid
     );
 
-    let operator = session.local_node_as_operator()?;
+    let operator = db.globals().local_node_as_operator()?;
     assert_matches!(
-        session.local_node_pair(&operator)?,
+        ds.local_node_pair(&operator)?,
         (a, b) if a == local_node && b == node
     );
-    assert_eq!(session.node(&node.uuid)?.unwrap(), node);
-    assert_matches!(&session.all_nodes()?[..], [a] if a == &node);
+    assert_eq!(ds.node(&node.uuid)?.unwrap(), node);
+    assert_matches!(&ds.all_nodes()?[..], [a] if a == &node);
 
     assert_matches!(
         root_cotonoma,
@@ -216,7 +216,7 @@ fn init_as_node() -> Result<()> {
     );
     assert_approximately_now(root_cotonoma.created_at());
     assert_approximately_now(root_cotonoma.updated_at());
-    assert_matches!(&session.all_cotonomas()?[..], [a] if a == &root_cotonoma);
+    assert_matches!(&ds.all_cotonomas()?[..], [a] if a == &root_cotonoma);
 
     assert_matches!(
         root_coto,
@@ -236,7 +236,7 @@ fn init_as_node() -> Result<()> {
     );
     assert_approximately_now(root_coto.created_at());
     assert_approximately_now(root_coto.updated_at());
-    assert_matches!(&session.all_cotos()?[..], [a] if a == &root_coto);
+    assert_matches!(&ds.all_cotos()?[..], [a] if a == &root_coto);
 
     assert_matches!(
         changelog,

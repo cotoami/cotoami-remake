@@ -1,7 +1,12 @@
 //! Web API for Node operations based on [NodeState].
 
+use accept_header::Accept;
 use axum::{
-    http::{header::HeaderName, Request, StatusCode, Uri},
+    http::{
+        header,
+        header::{HeaderName, HeaderValue},
+        Request, StatusCode, Uri,
+    },
     middleware,
     middleware::Next,
     response::{IntoResponse, Response},
@@ -9,6 +14,8 @@ use axum::{
     Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
+use bytes::Bytes;
+use cotoami_db::prelude::ClientSession;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error};
 
@@ -33,7 +40,12 @@ pub(super) fn router(state: NodeState) -> Router {
         .nest("/api", routes())
         .fallback(fallback)
         .layer(middleware::from_fn(csrf::protect_from_forgery))
-        .layer(Extension(state.clone())) // for middleware
+        // NOTE: the axum doc recommends to use [tower::ServiceBuilder] to apply multiple
+        // middleware at once, but as far as I tested, middlewares can't see the `Extension`
+        // set by a preceding middleware in the same `ServiceBuilder` (it causes "Missing request
+        // extension" error).
+        // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
+        .layer(Extension(state.clone()))
         .with_state(state)
 }
 
@@ -53,6 +65,46 @@ async fn fallback(uri: Uri) -> impl IntoResponse {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// Response Content
+/////////////////////////////////////////////////////////////////////////////
+struct Content<T>(T, Accept);
+
+impl<T> IntoResponse for Content<T>
+where
+    T: serde::Serialize,
+{
+    fn into_response(self) -> Response {
+        if self
+            .1
+            .media_types()
+            .any(|x| x.mime == mime::APPLICATION_MSGPACK)
+        {
+            match rmp_serde::to_vec(&self.0).map(Bytes::from) {
+                Ok(bytes) => (
+                    [(
+                        header::CONTENT_TYPE,
+                        HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()),
+                    )],
+                    bytes,
+                )
+                    .into_response(),
+                Err(err) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    [(
+                        header::CONTENT_TYPE,
+                        HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()),
+                    )],
+                    err.to_string(),
+                )
+                    .into_response(),
+            }
+        } else {
+            Json(self.0).into_response()
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Error
 /////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +117,7 @@ impl IntoResponse for ServiceError {
             ServiceError::Permission => StatusCode::FORBIDDEN.into_response(),
             ServiceError::NotFound => StatusCode::NOT_FOUND.into_response(),
             ServiceError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
+            ServiceError::NotImplemented => StatusCode::NOT_IMPLEMENTED.into_response(),
             ServiceError::Server(e) => {
                 let message = format!("Server error: {}", e);
                 error!(message);
@@ -86,7 +139,7 @@ const SESSION_COOKIE_NAME: &str = "session_token";
 pub(crate) const SESSION_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-session-token");
 
-/// A middleware function to identify the operator from a session.
+/// A middleware function to load the session by a token stored in a cookie or header value
 async fn require_session<B>(
     Extension(state): Extension<NodeState>,
     // CookieJar extractor will never reject a request
@@ -116,10 +169,30 @@ async fn require_session<B>(
     .await??;
 
     if let Some(session) = session {
-        debug!("client session: {:?}", session);
+        debug!("Client session: {:?}", session);
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {
         Err(ServiceError::Unauthorized) // invalid token (session expired, etc.)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Operator
+/////////////////////////////////////////////////////////////////////////////
+
+/// A middleware function to identify the operator from a session.
+///
+/// This middleware has to be placed after the [require_session] middleware.
+async fn require_operator<B>(
+    Extension(session): Extension<ClientSession>,
+    mut request: Request<B>,
+    next: Next<B>,
+) -> Result<Response, ServiceError> {
+    if let ClientSession::Operator(operator) = session {
+        request.extensions_mut().insert(operator);
+        Ok(next.run(request).await)
+    } else {
+        Err(ServiceError::Permission)
     }
 }

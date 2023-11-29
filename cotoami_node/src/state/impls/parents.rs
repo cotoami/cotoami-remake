@@ -8,7 +8,7 @@ use crate::state::NodeState;
 impl NodeState {
     pub async fn after_first_import(&self, parent_node: Node, replicate: bool) -> Result<()> {
         let db = self.db().clone();
-        let change_pubsub = self.pubsub().local_change.clone();
+        let change_pubsub = self.pubsub().local_changes().clone();
         spawn_blocking(move || {
             let mut db = db.new_session()?;
             if replicate {

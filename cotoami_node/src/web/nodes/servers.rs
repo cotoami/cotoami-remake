@@ -1,10 +1,10 @@
+use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    middleware,
     routing::{get, put},
-    Extension, Form, Json, Router,
+    Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -15,17 +15,18 @@ use validator::Validate;
 use crate::{
     client::{HttpClient, SseClient},
     service::{
-        error::IntoServiceResult, models::CreateClientNodeSession, RemoteNodeServiceExt,
-        ServiceError,
+        error::IntoServiceResult,
+        models::{CreateClientNodeSession, NotConnected},
+        RemoteNodeServiceExt, ServiceError,
     },
-    state::{NodeState, NotConnected, ServerConnection},
+    state::{NodeState, ServerConnection},
+    web::Content,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(all_server_nodes).post(add_server_node))
         .route("/:node_id", put(update_server_node))
-        .layer(middleware::from_fn(crate::web::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,8 @@ struct Server {
 async fn all_server_nodes(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
-) -> Result<Json<Vec<Server>>, ServiceError> {
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<Vec<Server>>, ServiceError> {
     spawn_blocking(move || {
         let conns = state.read_server_conns();
         let mut db = state.db().new_session()?;
@@ -53,7 +55,7 @@ async fn all_server_nodes(
                 Server::new(node, conn.not_connected())
             })
             .collect();
-        Ok(Json(nodes))
+        Ok(Content(nodes, accept))
     })
     .await?
 }
@@ -72,7 +74,9 @@ struct AddServerNode {
 
     as_child: Option<bool>,
 
-    /// Set true if you want to turn this node into a replica of the parent node,
+    // Settings for the server as a parent (`as_child` = false)
+    //
+    /// Set true if you want to turn the local node into a replica of the parent node,
     /// which means the root cotonoma will be changed to that of the parent.
     replicate: Option<bool>,
 }
@@ -80,8 +84,9 @@ struct AddServerNode {
 async fn add_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Form(form): Form<AddServerNode>,
-) -> Result<(StatusCode, Json<Server>), ServiceError> {
+) -> Result<(StatusCode, Content<Server>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/server", errors).into_result();
     }
@@ -89,7 +94,7 @@ async fn add_server_node(
     // Inputs
     let url_prefix = form.url_prefix.unwrap_or_else(|| unreachable!());
     let password = form.password.unwrap_or_else(|| unreachable!());
-    let as_child = form.as_child.unwrap_or(false);
+    let server_as_child = form.as_child.unwrap_or(false);
 
     // Get the local node
     let db = state.db().clone();
@@ -102,7 +107,7 @@ async fn add_server_node(
             password: password.clone(),
             new_password: None, // TODO
             client: local_node,
-            as_parent: form.as_child, // if server=child, then client=parent
+            as_parent: Some(server_as_child),
         })
         .await?;
     info!("Successfully logged in to {}", http_client.url_prefix());
@@ -126,7 +131,7 @@ async fn add_server_node(
         }
 
         // Database role
-        let server_db_role = if as_child {
+        let server_db_role = if server_as_child {
             NewDatabaseRole::Child {
                 as_owner: false,
                 can_edit_links: false,
@@ -150,7 +155,7 @@ async fn add_server_node(
     // Sync with the parent
     if let DatabaseRole::Parent(parent) = server_db_role {
         state
-            .sync_with_parent(parent.node_id, &mut http_client)
+            .sync_with_parent(parent.node_id, Box::new(http_client.clone()))
             .await?;
         state
             .after_first_import(server_node.clone(), form.replicate.unwrap_or(false))
@@ -161,11 +166,11 @@ async fn add_server_node(
     let sse_client = SseClient::new(server_id, http_client.clone(), state.clone())?;
 
     // Store the server connection
-    let server_conn = ServerConnection::new(client_session.session, http_client, sse_client);
+    let server_conn = ServerConnection::new_sse(client_session.session, http_client, sse_client);
     let server = Server::new(server_node, server_conn.not_connected());
     state.put_server_conn(&server_id, server_conn);
 
-    Ok((StatusCode::CREATED, Json(server)))
+    Ok((StatusCode::CREATED, Content(server, accept)))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -216,16 +221,16 @@ async fn set_server_disabled(
 
     // Disconnect from the server
     if disabled {
-        debug!("Stopping the SSE event loop of: {}", server_id);
-        state.server_conn(&server_id)?.disable_sse();
+        debug!("Disabling the connection to: {}", server_id);
+        state.server_conn(&server_id)?.disable();
 
     // Or connect to the server again
     } else {
-        if state.server_conn(&server_id)?.restart_sse_if_possible() {
-            debug!("Restarting the SSE event loop of {}", server_id);
+        if state.server_conn(&server_id)?.enable_if_possible() {
+            debug!("Enabling the connection to {}", server_id);
         } else {
             debug!("Creating a new server connection for {}", server_id);
-            let server_conn = ServerConnection::connect(&server_node, local_node, &state).await;
+            let server_conn = ServerConnection::connect_sse(&server_node, local_node, &state).await;
             state.put_server_conn(&server_id, server_conn);
         }
     }

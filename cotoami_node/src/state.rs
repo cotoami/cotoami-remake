@@ -1,12 +1,14 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
-use std::{fs, sync::Arc};
+use std::{collections::HashMap, fs, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
-use tokio::task::spawn_blocking;
+use tracing::debug;
 use validator::Validate;
+
+use crate::service::NodeService;
 
 mod config;
 mod conn;
@@ -23,6 +25,7 @@ pub struct NodeState {
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
+    parent_services: Arc<RwLock<ParentNodeServices>>,
 }
 
 impl NodeState {
@@ -40,6 +43,7 @@ impl NodeState {
             db: Arc::new(db),
             pubsub,
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
+            parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
         })
     }
 
@@ -49,48 +53,52 @@ impl NodeState {
 
     pub fn pubsub(&self) -> &Pubsub { &self.pubsub }
 
+    pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
+        self.server_conns.read()
+    }
+
+    pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
+        self.read_server_conns().contains_key(server_id)
+    }
+
     pub fn server_conn(
         &self,
         server_id: &Id<Node>,
     ) -> Result<MappedRwLockReadGuard<ServerConnection>> {
-        RwLockReadGuard::try_map(self.server_conns.read(), |conns| conns.get(server_id))
-            .map_err(|_| anyhow!("ServerConnection for {} not found", server_id))
-    }
-
-    pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
-        self.server_conns.read().contains_key(server_id)
+        RwLockReadGuard::try_map(self.read_server_conns(), |conns| conns.get(server_id))
+            .map_err(|_| anyhow!("ServerConnection for [{}] not found", server_id))
     }
 
     pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
         self.server_conns.write().insert(*server_id, server_conn);
     }
 
-    pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
-        self.server_conns.read()
+    pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
+
+    pub fn read_parent_services(&self) -> RwLockReadGuard<ParentNodeServices> {
+        self.parent_services.read()
     }
 
-    pub async fn restore_server_conns(&self) -> Result<()> {
-        let db = self.db.clone();
-        let (local_node, server_nodes) = spawn_blocking(move || {
-            let mut db = db.new_session()?;
-            let operator = db.local_node_as_operator()?;
-            Ok::<_, anyhow::Error>((
-                db.local_node_pair(&operator)?.1,
-                db.all_server_nodes(&operator)?,
-            ))
-        })
-        .await??;
+    pub fn parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        self.read_parent_services()
+            .get(parent_id)
+            .map(|s| dyn_clone::clone_box(&**s))
+    }
 
-        let mut server_conns = self.server_conns.write();
-        server_conns.clear();
-        for (server_node, _) in server_nodes.iter() {
-            let server_conn = if server_node.disabled {
-                ServerConnection::Disabled
-            } else {
-                ServerConnection::connect(server_node, local_node.clone(), self).await
-            };
-            server_conns.insert(server_node.node_id, server_conn);
-        }
-        Ok(())
+    pub fn parent_service_or_err(&self, parent_id: &Id<Node>) -> Result<Box<dyn NodeService>> {
+        self.parent_service(parent_id)
+            .ok_or(anyhow!("Parent disconnected: {}", parent_id))
+    }
+
+    pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+        debug!("Parent service being registered: {}", parent_id);
+        self.parent_services.write().insert(parent_id, service);
+    }
+
+    pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        debug!("Parent service being removed: {}", parent_id);
+        self.parent_services.write().remove(parent_id)
     }
 }
+
+type ParentNodeServices = HashMap<Id<Node>, Box<dyn NodeService>>;

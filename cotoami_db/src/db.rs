@@ -153,6 +153,8 @@ impl Database {
 
         Ok(())
     }
+
+    pub fn globals(&self) -> &Globals { &self.globals }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,10 +165,55 @@ impl Database {
 /// Most of the fields are cached database rows or column values frequently used internally.
 /// For example, [LocalNode] will be used every time when authentication is needed.
 #[derive(Debug, Default)]
-struct Globals {
+pub struct Globals {
     local_node: RwLock<Option<LocalNode>>,
     root_cotonoma_id: RwLock<Option<Id<Cotonoma>>>,
     parent_nodes: RwLock<HashMap<Id<Node>, ParentNode>>,
+}
+
+impl Globals {
+    pub fn has_local_node_initialized(&self) -> bool { self.local_node.read().is_some() }
+
+    pub fn read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
+        RwLockReadGuard::try_map(self.local_node.read(), |x| x.as_ref())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    fn write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
+        RwLockWriteGuard::try_map(self.local_node.write(), |x| x.as_mut())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node()?.node_id) }
+
+    pub fn local_node_as_operator(&self) -> Result<Operator> {
+        Ok(Operator::Owner(self.local_node_id()?))
+    }
+
+    pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
+        let local_node_id = self.read_local_node()?.node_id;
+        if *entity.node_id() != local_node_id {
+            bail!("The entity doesn't belong to the local node: {:?}", entity);
+        }
+        Ok(())
+    }
+
+    pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
+        self.ensure_local(entity).is_ok()
+    }
+
+    pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
+
+    fn cache_parent_node(&self, parent: ParentNode) {
+        self.parent_nodes
+            .write()
+            .insert(parent.node_id, parent.clone());
+    }
+
+    fn write_parent_node_cache(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
+        RwLockWriteGuard::try_map(self.parent_nodes.write(), |x| x.get_mut(id))
+            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -229,8 +276,6 @@ impl<'a> DatabaseSession<'a> {
         result
     }
 
-    pub fn has_local_node_initialized(&self) -> bool { self.globals.local_node.read().is_some() }
-
     pub fn local_node(&mut self) -> Result<Node> {
         if let Some((_, node)) = self.read_transaction(local_ops::get_pair())? {
             Ok(node)
@@ -248,19 +293,13 @@ impl<'a> DatabaseSession<'a> {
         Ok(pair)
     }
 
-    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node_cache()?.node_id) }
-
-    pub fn is_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> bool {
-        self.ensure_local(entity).is_ok()
-    }
-
     pub fn rename_local_node(
         &self,
         name: &str,
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let updated_at = crate::current_datetime();
             let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
@@ -280,7 +319,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;
             let change = Change::SetRootCotonoma {
@@ -294,8 +333,8 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn replicate(&mut self, parent_node: &Node) -> Result<Option<ChangelogEntry>> {
         if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
-            let (_, change) =
-                self.set_root_cotonoma(&parent_cotonoma_id, &self.local_node_as_operator()?)?;
+            let (_, change) = self
+                .set_root_cotonoma(&parent_cotonoma_id, &self.globals.local_node_as_operator()?)?;
             Ok(Some(change))
         } else {
             Ok(None)
@@ -319,7 +358,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Import a node data sent from a child or parent node.
     pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             if let Some(node) = node_ops::upsert(node).run(ctx)? {
                 let change = Change::UpsertNode(node);
@@ -337,7 +376,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
-        let mut local_node = self.write_local_node_cache()?;
+        let mut local_node = self.globals.write_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
         local_node
             .start_session(password, duration)
@@ -347,14 +386,14 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
-        let mut local_node = self.write_local_node_cache()?;
+        let mut local_node = self.globals.write_local_node()?;
         local_node.clear_session();
         self.write_transaction(local_ops::update(&local_node))?;
         Ok(())
     }
 
     pub fn change_owner_password(&self, password: &str) -> Result<()> {
-        let mut local_node = self.write_local_node_cache()?;
+        let mut local_node = self.globals.write_local_node()?;
         local_node.update_password(password)?;
         self.write_transaction(local_ops::update(&local_node))?;
         self.clear_server_passwords()?;
@@ -410,7 +449,7 @@ impl<'a> DatabaseSession<'a> {
             node_role_ops::register_server_node(id, url_prefix, database_role),
         )?;
         if let DatabaseRole::Parent(parent) = &database_role {
-            self.cache_parent_node(parent.clone());
+            self.globals.cache_parent_node(parent.clone());
         }
         Ok((server, database_role))
     }
@@ -487,7 +526,7 @@ impl<'a> DatabaseSession<'a> {
                 node_role_ops::register_client_node(&node.uuid, password, database_role)
                     .run(ctx)?;
             if let DatabaseRole::Parent(parent) = &database_role {
-                self.cache_parent_node(parent.clone());
+                self.globals.cache_parent_node(parent.clone());
             }
             Ok((client, database_role))
         })
@@ -530,10 +569,6 @@ impl<'a> DatabaseSession<'a> {
             .map_err(anyhow::Error::from)
     }
 
-    pub fn is_parent(&self, id: &Id<Node>) -> bool {
-        self.globals.parent_nodes.read().contains_key(id)
-    }
-
     pub fn recent_parent_nodes(
         &mut self,
         page_size: i64,
@@ -563,8 +598,8 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(usize, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
-        let local_node_id = self.local_node_id()?;
-        let mut parent_node = self.write_parent_node_cache(parent_node_id)?;
+        let local_node_id = self.globals.local_node_id()?;
+        let mut parent_node = self.globals.write_parent_node_cache(parent_node_id)?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // Set the parent to be forked
             *parent_node = node_role_ops::fork_from(parent_node_id).run(ctx)?;
@@ -627,7 +662,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // the owner of local node?
-        let local_node = self.read_local_node_cache()?;
+        let local_node = self.globals.read_local_node()?;
         if local_node.verify_session(token).is_ok() {
             return Ok(Some(ClientSession::Operator(Operator::Owner(
                 local_node.node_id,
@@ -635,10 +670,6 @@ impl<'a> DatabaseSession<'a> {
         }
 
         Ok(None) // no session
-    }
-
-    pub fn local_node_as_operator(&self) -> Result<Operator> {
-        Ok(Operator::Owner(self.local_node_id()?))
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -650,7 +681,7 @@ impl<'a> DatabaseSession<'a> {
         log: &ChangelogEntry,
         parent_node_id: &Id<Node>,
     ) -> Result<Option<ChangelogEntry>> {
-        let mut parent_node = self.write_parent_node_cache(parent_node_id)?;
+        let mut parent_node = self.globals.write_parent_node_cache(parent_node_id)?;
         self.write_transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 
@@ -698,9 +729,9 @@ impl<'a> DatabaseSession<'a> {
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.ensure_local(posted_in)?;
+        self.globals.ensure_local(posted_in)?;
 
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
             &local_node_id,
@@ -724,10 +755,10 @@ impl<'a> DatabaseSession<'a> {
         summary: Option<&str>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::get_or_err(id).run(ctx)??;
-            self.ensure_local(&coto)?;
+            self.globals.ensure_local(&coto)?;
             operator.can_update_coto(&coto)?;
             let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
             let change = Change::EditCoto {
@@ -742,10 +773,10 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::get_or_err(id).run(ctx)??;
-            self.ensure_local(&coto)?;
+            self.globals.ensure_local(&coto)?;
             operator.can_delete_coto(&coto)?;
             if coto_ops::delete(id).run(ctx)? {
                 let change = Change::DeleteCoto(*id);
@@ -797,9 +828,9 @@ impl<'a> DatabaseSession<'a> {
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
-        self.ensure_local(posted_in)?;
+        self.globals.ensure_local(posted_in)?;
 
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         let posted_by_id = operator.node_id();
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let (cotonoma, coto) =
@@ -846,10 +877,10 @@ impl<'a> DatabaseSession<'a> {
         operator.can_edit_links()?;
 
         if let Some(cotonoma) = created_in {
-            self.ensure_local(cotonoma)?;
+            self.globals.ensure_local(cotonoma)?;
         }
 
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         let created_by_id = operator.node_id();
         let new_link = NewLink::new(
             &local_node_id,
@@ -876,10 +907,10 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Link, ChangelogEntry)> {
         operator.can_edit_links()?;
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let link = link_ops::get_or_err(id).run(ctx)??;
-            self.ensure_local(&link)?;
+            self.globals.ensure_local(&link)?;
             let link = link_ops::update(&link.edit(linking_phrase, details)).run(ctx)?;
             let change = Change::EditLink {
                 uuid: *id,
@@ -894,10 +925,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn delete_link(&self, id: &Id<Link>, operator: &Operator) -> Result<ChangelogEntry> {
         operator.can_edit_links()?;
-        let local_node_id = self.local_node_id()?;
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let link = link_ops::get_or_err(id).run(ctx)??;
-            self.ensure_local(&link)?;
+            self.globals.ensure_local(&link)?;
             if link_ops::delete(id).run(ctx)? {
                 let change = Change::DeleteLink(*id);
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
@@ -922,7 +953,7 @@ impl<'a> DatabaseSession<'a> {
                     None,
                     None,
                     None,
-                    &self.local_node_as_operator()?,
+                    &self.globals.local_node_as_operator()?,
                 )?;
                 Ok(Some((link, parent_root_cotonoma, change)))
             } else {
@@ -957,36 +988,6 @@ impl<'a> DatabaseSession<'a> {
         Op: Operation<WritableConn, T>,
     {
         op::run_write(&mut (self.rw_conn)(), op)
-    }
-
-    fn read_local_node_cache(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
-        RwLockReadGuard::try_map(self.globals.local_node.read(), |cache| cache.as_ref())
-            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
-    }
-
-    fn write_local_node_cache(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
-        RwLockWriteGuard::try_map(self.globals.local_node.write(), |cache| cache.as_mut())
-            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
-    }
-
-    fn cache_parent_node(&self, parent: ParentNode) {
-        self.globals
-            .parent_nodes
-            .write()
-            .insert(parent.node_id, parent.clone());
-    }
-
-    fn write_parent_node_cache(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
-        RwLockWriteGuard::try_map(self.globals.parent_nodes.write(), |cache| cache.get_mut(id))
-            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
-    }
-
-    fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
-        let local_node_id = self.read_local_node_cache()?.node_id;
-        if *entity.node_id() != local_node_id {
-            bail!("The entity doesn't belong to the local node: {:?}", entity);
-        }
-        Ok(())
     }
 
     fn database_role(&mut self, id: &Id<Node>) -> Result<Option<DatabaseRole>> {

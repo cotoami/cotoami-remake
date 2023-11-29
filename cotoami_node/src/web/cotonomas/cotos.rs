@@ -2,7 +2,6 @@ use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
-    middleware,
     routing::get,
     Extension, Form, Json, Router,
 };
@@ -14,16 +13,14 @@ use validator::Validate;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        Pagination, ServiceError,
+        models::Pagination,
+        ServiceError,
     },
-    web::require_session,
     NodeState,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(recent_cotos).post(post_coto))
-        .layer(middleware::from_fn(require_session))
+    Router::new().route("/", get(recent_cotos).post(post_coto))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
@@ -34,6 +31,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 
 async fn recent_cotos(
     State(state): State<NodeState>,
+    Extension(_operator): Extension<Operator>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Paginated<Coto>>, ServiceError> {
@@ -68,26 +66,26 @@ struct PostCoto {
 
 async fn post_coto(
     State(state): State<NodeState>,
-    Path(cotonoma_id): Path<Id<Cotonoma>>,
     Extension(operator): Extension<Operator>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
     Form(form): Form<PostCoto>,
 ) -> Result<(StatusCode, Json<Coto>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db().new_session()?;
+        let mut ds = state.db().new_session()?;
 
         // Check if the cotonoma belongs to this node
-        let (cotonoma, _) = db.cotonoma_or_err(&cotonoma_id)?;
-        if !db.is_local(&cotonoma) {
+        let (cotonoma, _) = ds.cotonoma_or_err(&cotonoma_id)?;
+        if !state.db().globals().is_local(&cotonoma) {
             return RequestError::new("not-for-this-node")
                 .with_param("cotonoma_name", json!(cotonoma.name))
                 .into_result();
         }
 
         // Post a coto
-        let (coto, change) = db.post_coto(
+        let (coto, change) = ds.post_coto(
             &form.content.unwrap_or_else(|| unreachable!()),
             form.summary.as_deref(),
             &cotonoma,

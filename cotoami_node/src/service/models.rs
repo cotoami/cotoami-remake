@@ -3,10 +3,10 @@ use cotoami_db::prelude::*;
 use validator::Validate;
 
 /////////////////////////////////////////////////////////////////////////////
-// pagination query
+// Pagination
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize, Validate)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub(crate) struct Pagination {
     #[serde(default)]
     pub page: i64,
@@ -16,10 +16,10 @@ pub(crate) struct Pagination {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// session
+// Session
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CreateClientNodeSession {
     pub password: String,
     pub new_password: Option<String>,
@@ -27,29 +27,29 @@ pub struct CreateClientNodeSession {
     pub as_parent: Option<bool>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Session {
     pub token: String,
     pub expires_at: NaiveDateTime, // UTC
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// changes
+// Changes
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ChunkOfChanges {
     Fetched(Changes),
     OutOfRange { max: i64 },
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Changes {
     pub chunk: Vec<ChangelogEntry>,
     pub last_serial_number: i64,
@@ -70,4 +70,19 @@ impl Changes {
             true // empty (no changes) means the last chunk
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Server
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(tag = "reason", content = "details")]
+pub enum NotConnected {
+    Disabled,
+    Connecting(Option<String>),
+    InitFailed(String),
+    StreamFailed(String),
+    EventHandlingFailed(String),
+    Unknown,
 }

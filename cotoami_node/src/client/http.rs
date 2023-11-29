@@ -4,15 +4,15 @@
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.
 
 use std::{
-    future::Future,
-    pin::Pin,
     sync::Arc,
     task::{Context, Poll},
 };
 
 use anyhow::Result;
+use futures::future::FutureExt;
 use parking_lot::RwLock;
 use reqwest::{
+    header,
     header::{HeaderMap, HeaderValue},
     Client, RequestBuilder, StatusCode, Url,
 };
@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 use crate::service::{
     error::{InputErrors, RequestError},
-    *,
+    NodeServiceFuture, *,
 };
 
 /// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
@@ -53,6 +53,10 @@ impl HttpClient {
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
+            header::ACCEPT,
+            HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()),
+        );
+        headers.insert(
             crate::web::CSRF_CUSTOM_HEADER,
             HeaderValue::from_static("cotoami_node"),
         );
@@ -79,6 +83,11 @@ impl HttpClient {
     pub fn put(&self, path: &str) -> RequestBuilder {
         let url = self.url(path, None);
         self.client.put(url).headers(self.headers.read().clone())
+    }
+
+    pub fn post(&self, path: &str) -> RequestBuilder {
+        let url = self.url(path, None);
+        self.client.post(url).headers(self.headers.read().clone())
     }
 
     async fn handle_request(self, request: Request) -> Result<Response> {
@@ -118,7 +127,7 @@ impl HttpClient {
 impl Service<Request> for HttpClient {
     type Response = Response;
     type Error = anyhow::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+    type Future = NodeServiceFuture;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
@@ -126,7 +135,7 @@ impl Service<Request> for HttpClient {
 
     fn call(&mut self, request: Request) -> Self::Future {
         let this = self.clone();
-        Box::pin(async move { this.handle_request(request).await })
+        async move { this.handle_request(request).await }.boxed()
     }
 }
 

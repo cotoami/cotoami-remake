@@ -1,23 +1,20 @@
+use accept_header::Accept;
 use axum::{
     extract::{Query, State},
-    middleware,
     routing::get,
-    Extension, Json, Router,
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, Pagination, ServiceError},
+    service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    web::Content,
     NodeState,
 };
 
-pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(recent_child_nodes))
-        .layer(middleware::from_fn(crate::web::require_session))
-}
+pub(super) fn routes() -> Router<NodeState> { Router::new().route("/", get(recent_child_nodes)) }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
 
@@ -28,8 +25,9 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn recent_child_nodes(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Node>>, ServiceError> {
+) -> Result<Content<Paginated<Node>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("nodes/children", errors).into_result();
     }
@@ -43,7 +41,7 @@ async fn recent_child_nodes(
             )?
             .map(|(_, node)| node)
             .into();
-        Ok(Json(nodes))
+        Ok(Content(nodes, accept))
     })
     .await?
 }

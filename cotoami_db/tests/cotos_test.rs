@@ -10,14 +10,14 @@ fn crud_operations() -> Result<()> {
     // Setup
     /////////////////////////////////////////////////////////////////////////////
     let (_root_dir, db, node) = common::setup_db("My Node")?;
-    let mut session = db.new_session()?;
-    let operator = session.local_node_as_operator()?;
-    let (root_cotonoma, _) = session.root_cotonoma()?.unwrap();
+    let mut ds = db.new_session()?;
+    let operator = db.globals().local_node_as_operator()?;
+    let (root_cotonoma, _) = ds.root_cotonoma()?.unwrap();
 
     /////////////////////////////////////////////////////////////////////////////
     // When: post_coto
     /////////////////////////////////////////////////////////////////////////////
-    let (coto, changelog2) = session.post_coto("hello", None, &root_cotonoma, &operator)?;
+    let (coto, changelog2) = ds.post_coto("hello", None, &root_cotonoma, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -45,10 +45,10 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(coto.updated_at());
 
     // check if it is stored in the db
-    assert_eq!(session.coto(&coto.uuid)?, Some(coto.clone()));
+    assert_eq!(ds.coto(&coto.uuid)?, Some(coto.clone()));
 
     // check if `recent_cotos` contains it
-    let recent_cotos = session.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
+    let recent_cotos = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(recent_cotos.rows.len(), 1);
     assert_eq!(recent_cotos.rows[0], coto);
 
@@ -66,13 +66,13 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of posts in the cotonoma has been incremented
-    let (cotonoma, _) = session.cotonoma_or_err(&root_cotonoma.uuid)?;
+    let (cotonoma, _) = ds.cotonoma_or_err(&root_cotonoma.uuid)?;
     assert_eq!(cotonoma.posts, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: edit_coto
     /////////////////////////////////////////////////////////////////////////////
-    let (edited_coto, changelog3) = session.edit_coto(&coto.uuid, "bar", Some("foo"), &operator)?;
+    let (edited_coto, changelog3) = ds.edit_coto(&coto.uuid, "bar", Some("foo"), &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -100,7 +100,7 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(edited_coto.updated_at());
 
     // check if it is stored in the db
-    assert_eq!(session.coto(&coto.uuid)?, Some(edited_coto.clone()));
+    assert_eq!(ds.coto(&coto.uuid)?, Some(edited_coto.clone()));
 
     // check the content of the ChangelogEntry
     assert_matches!(
@@ -126,15 +126,15 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
     // When: delete_coto
     /////////////////////////////////////////////////////////////////////////////
-    let changelog4 = session.delete_coto(&coto.uuid, &operator)?;
+    let changelog4 = ds.delete_coto(&coto.uuid, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
     /////////////////////////////////////////////////////////////////////////////
 
     // check if it is deleted from the db
-    assert_eq!(session.coto(&coto.uuid)?, None);
-    let all_cotos = session.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
+    assert_eq!(ds.coto(&coto.uuid)?, None);
+    let all_cotos = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(all_cotos.rows.len(), 0);
 
     // check the content of the ChangelogEntry
@@ -151,7 +151,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of posts in the cotonoma has been decremented
-    let (cotonoma, _) = session.cotonoma_or_err(&root_cotonoma.uuid)?;
+    let (cotonoma, _) = ds.cotonoma_or_err(&root_cotonoma.uuid)?;
     assert_eq!(cotonoma.posts, 0);
 
     Ok(())

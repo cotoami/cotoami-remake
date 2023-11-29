@@ -10,18 +10,18 @@ fn crud_operations() -> Result<()> {
     // Setup: create coto1, coto2, coto2
     /////////////////////////////////////////////////////////////////////////////
     let (_root_dir, db, node) = common::setup_db("My Node")?;
-    let mut session = db.new_session()?;
-    let operator = session.local_node_as_operator()?;
-    let (root_cotonoma, _) = session.root_cotonoma()?.unwrap();
+    let mut ds = db.new_session()?;
+    let operator = db.globals().local_node_as_operator()?;
+    let (root_cotonoma, _) = ds.root_cotonoma()?.unwrap();
 
-    let (coto1, _) = session.post_coto("coto1", None, &root_cotonoma, &operator)?;
-    let (coto2, _) = session.post_coto("coto2", None, &root_cotonoma, &operator)?;
-    let (coto3, _) = session.post_coto("coto3", None, &root_cotonoma, &operator)?;
+    let (coto1, _) = ds.post_coto("coto1", None, &root_cotonoma, &operator)?;
+    let (coto2, _) = ds.post_coto("coto2", None, &root_cotonoma, &operator)?;
+    let (coto3, _) = ds.post_coto("coto3", None, &root_cotonoma, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto2
     /////////////////////////////////////////////////////////////////////////////
-    let (link1, changelog1) = session.create_link(
+    let (link1, changelog1) = ds.create_link(
         &coto1.uuid,
         &coto2.uuid,
         Some("hello"),
@@ -57,10 +57,10 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(link1.updated_at());
 
     // check if it is stored in the db
-    assert_eq!(session.link(&link1.uuid)?, Some(link1.clone()));
+    assert_eq!(ds.link(&link1.uuid)?, Some(link1.clone()));
 
     // check if `recent_links` contains it
-    let recent_links = session.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
+    let recent_links = ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(recent_links.rows.len(), 1);
     assert_eq!(recent_links.rows[0], link1);
 
@@ -78,13 +78,13 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of outgoing links has been incremented
-    let Some(coto) = session.coto(&coto1.uuid)? else { panic!() };
+    let Some(coto) = ds.coto(&coto1.uuid)? else { panic!() };
     assert_eq!(coto.outgoing_links, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto3
     /////////////////////////////////////////////////////////////////////////////
-    let (link2, _) = session.create_link(
+    let (link2, _) = ds.create_link(
         &coto1.uuid,
         &coto3.uuid,
         Some("bye"),
@@ -113,23 +113,23 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if it is stored in the db
-    assert_eq!(session.link(&link2.uuid)?, Some(link2.clone()));
+    assert_eq!(ds.link(&link2.uuid)?, Some(link2.clone()));
 
     // check if `recent_links` contains it
-    let recent_links = session.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
+    let recent_links = ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(recent_links.rows.len(), 2);
     assert_eq!(recent_links.rows[0], link2);
     assert_eq!(recent_links.rows[1], link1);
 
     // check if the number of outgoing links has been incremented
-    let Some(coto) = session.coto(&coto1.uuid)? else { panic!() };
+    let Some(coto) = ds.coto(&coto1.uuid)? else { panic!() };
     assert_eq!(coto.outgoing_links, 2);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: edit link1
     /////////////////////////////////////////////////////////////////////////////
     let (edited_link1, changelog2) =
-        session.edit_link(&link1.uuid, Some("hello"), Some("hello details"), &operator)?;
+        ds.edit_link(&link1.uuid, Some("hello"), Some("hello details"), &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
@@ -170,14 +170,14 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
     // When: delete link1
     /////////////////////////////////////////////////////////////////////////////
-    let changelog3 = session.delete_link(&link1.uuid, &operator)?;
+    let changelog3 = ds.delete_link(&link1.uuid, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // Then
     /////////////////////////////////////////////////////////////////////////////
 
     // check if it is deleted from the db
-    assert_eq!(session.link(&link1.uuid)?, None);
+    assert_eq!(ds.link(&link1.uuid)?, None);
 
     // check the content of the ChangelogEntry
     assert_matches!(
@@ -193,7 +193,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of outgoing links has been decremented
-    let Some(coto) = session.coto(&coto1.uuid)? else { panic!() };
+    let Some(coto) = ds.coto(&coto1.uuid)? else { panic!() };
     assert_eq!(coto.outgoing_links, 1);
 
     Ok(())
