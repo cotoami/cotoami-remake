@@ -12,6 +12,7 @@ use anyhow::Result;
 use futures::future::FutureExt;
 use parking_lot::RwLock;
 use reqwest::{
+    header,
     header::{HeaderMap, HeaderValue},
     Client, RequestBuilder, StatusCode, Url,
 };
@@ -51,6 +52,10 @@ impl HttpClient {
 
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
+        headers.insert(
+            header::ACCEPT,
+            HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()),
+        );
         headers.insert(
             crate::web::CSRF_CUSTOM_HEADER,
             HeaderValue::from_static("cotoami_node"),

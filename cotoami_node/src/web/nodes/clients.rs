@@ -1,8 +1,9 @@
+use accept_header::Accept;
 use axum::{
     extract::{Query, State},
     http::StatusCode,
     routing::get,
-    Extension, Form, Json, Router,
+    Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -12,6 +13,7 @@ use validator::Validate;
 
 use crate::{
     service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    web::Content,
     NodeState,
 };
 
@@ -28,8 +30,9 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn recent_client_nodes(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Node>>, ServiceError> {
+) -> Result<Content<Paginated<Node>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("nodes/clients", errors).into_result();
     }
@@ -43,7 +46,7 @@ async fn recent_client_nodes(
             )?
             .map(|(_, node)| node)
             .into();
-        Ok(Json(nodes))
+        Ok(Content(nodes, accept))
     })
     .await?
 }
@@ -73,8 +76,9 @@ struct ClientNodeAdded {
 async fn add_client_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Form(form): Form<AddClientNode>,
-) -> Result<(StatusCode, Json<ClientNodeAdded>), ServiceError> {
+) -> Result<(StatusCode, Content<ClientNodeAdded>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/client", errors).into_result();
     }
@@ -103,7 +107,10 @@ async fn add_client_node(
             client.node_id, db_role
         );
 
-        Ok((StatusCode::CREATED, Json(ClientNodeAdded { password })))
+        Ok((
+            StatusCode::CREATED,
+            Content(ClientNodeAdded { password }, accept),
+        ))
     })
     .await?
 }

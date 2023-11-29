@@ -1,8 +1,9 @@
+use accept_header::Accept;
 use axum::{
     extract::{Query, State},
     middleware,
     routing::get,
-    Extension, Json, Router,
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use validator::Validate;
@@ -10,6 +11,7 @@ use validator::Validate;
 use crate::{
     service::{error::IntoServiceResult, models::ChunkOfChanges, ServiceError},
     state::NodeState,
+    web::Content,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -32,8 +34,9 @@ struct Position {
 async fn chunk_of_changes(
     State(state): State<NodeState>,
     Extension(_operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Query(position): Query<Position>,
-) -> Result<Json<ChunkOfChanges>, ServiceError> {
+) -> Result<Content<ChunkOfChanges>, ServiceError> {
     if let Err(errors) = position.validate() {
         return ("changes", errors).into_result();
     }
@@ -41,6 +44,6 @@ async fn chunk_of_changes(
     state
         .chunk_of_changes(from)
         .await
-        .map(Json)
+        .map(|x| Content(x, accept))
         .map_err(ServiceError::from)
 }

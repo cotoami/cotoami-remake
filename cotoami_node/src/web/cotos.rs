@@ -1,9 +1,10 @@
+use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::{Query, State},
     middleware,
     routing::get,
-    Extension, Json, Router,
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
@@ -11,6 +12,7 @@ use validator::Validate;
 
 use crate::{
     service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    web::Content,
     NodeState,
 };
 
@@ -30,8 +32,9 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn recent_cotos(
     State(state): State<NodeState>,
     Extension(_operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Coto>>, ServiceError> {
+) -> Result<Content<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
@@ -43,7 +46,7 @@ async fn recent_cotos(
             pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
             pagination.page,
         )?;
-        Ok(Json(cotos))
+        Ok(Content(cotos, accept))
     })
     .await?
 }

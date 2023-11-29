@@ -1,7 +1,8 @@
-use axum::{extract::State, middleware, routing::get, Extension, Json, Router};
+use accept_header::Accept;
+use axum::{extract::State, middleware, routing::get, Extension, Router, TypedHeader};
 use cotoami_db::prelude::*;
 
-use crate::{service::ServiceError, state::NodeState};
+use crate::{service::ServiceError, state::NodeState, web::Content};
 
 mod children;
 mod clients;
@@ -26,10 +27,11 @@ pub(super) fn routes() -> Router<NodeState> {
 async fn local_node(
     State(state): State<NodeState>,
     Extension(_operator): Extension<Operator>,
-) -> Result<Json<Node>, ServiceError> {
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<Node>, ServiceError> {
     state
         .local_node()
         .await
-        .map(Json)
+        .map(|x| Content(x, accept))
         .map_err(ServiceError::from)
 }

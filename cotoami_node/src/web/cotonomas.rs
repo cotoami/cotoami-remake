@@ -1,9 +1,10 @@
+use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
     middleware,
     routing::get,
-    Extension, Json, Router,
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
@@ -11,6 +12,7 @@ use validator::Validate;
 
 use crate::{
     service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    web::Content,
     NodeState,
 };
 
@@ -34,8 +36,9 @@ const DEFAULT_PAGE_SIZE: i64 = 100;
 async fn recent_cotonomas(
     State(state): State<NodeState>,
     Extension(_operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Cotonoma>>, ServiceError> {
+) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotonomas", errors).into_result();
     }
@@ -46,7 +49,7 @@ async fn recent_cotonomas(
             pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
             pagination.page,
         )?;
-        Ok(Json(cotonomas))
+        Ok(Content(cotonomas, accept))
     })
     .await?
 }
@@ -64,12 +67,13 @@ struct CotonomaDetails {
 async fn get_cotonoma(
     State(state): State<NodeState>,
     Extension(_operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-) -> Result<Json<CotonomaDetails>, ServiceError> {
+) -> Result<Content<CotonomaDetails>, ServiceError> {
     spawn_blocking(move || {
         let mut db = state.db().new_session()?;
         let (cotonoma, coto) = db.cotonoma_or_err(&cotonoma_id)?;
-        Ok(Json(CotonomaDetails { cotonoma, coto }))
+        Ok(Content(CotonomaDetails { cotonoma, coto }, accept))
     })
     .await?
 }

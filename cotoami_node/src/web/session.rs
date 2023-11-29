@@ -23,6 +23,7 @@ use crate::{
         ServiceError,
     },
     state::NodeState,
+    web::Content,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -90,7 +91,7 @@ async fn create_owner_session(
     TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
-) -> Result<(StatusCode, CookieJar, Json<Session>), ServiceError> {
+) -> Result<(StatusCode, CookieJar, Content<Session>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("session/owner", errors).into_result();
     }
@@ -105,7 +106,11 @@ async fn create_owner_session(
             expires_at: local_node.owner_session_expires_at.unwrap(),
         };
         let cookie = create_cookie(&session);
-        Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
+        Ok((
+            StatusCode::CREATED,
+            jar.add(cookie),
+            Content(session, accept),
+        ))
     })
     .await?
 }
@@ -119,8 +124,12 @@ async fn create_client_node_session(
     TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
-) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ServiceError> {
+) -> Result<(StatusCode, CookieJar, Content<ClientNodeSession>), ServiceError> {
     let session = state.create_client_node_session(payload).await?;
     let cookie = create_cookie(&session.session);
-    Ok((StatusCode::CREATED, jar.add(cookie), Json(session)))
+    Ok((
+        StatusCode::CREATED,
+        jar.add(cookie),
+        Content(session, accept),
+    ))
 }

@@ -1,9 +1,10 @@
+use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     routing::{get, put},
-    Extension, Form, Json, Router,
+    Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -19,6 +20,7 @@ use crate::{
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
+    web::Content,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -40,7 +42,8 @@ struct Server {
 async fn all_server_nodes(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
-) -> Result<Json<Vec<Server>>, ServiceError> {
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<Vec<Server>>, ServiceError> {
     spawn_blocking(move || {
         let conns = state.read_server_conns();
         let mut db = state.db().new_session()?;
@@ -52,7 +55,7 @@ async fn all_server_nodes(
                 Server::new(node, conn.not_connected())
             })
             .collect();
-        Ok(Json(nodes))
+        Ok(Content(nodes, accept))
     })
     .await?
 }
@@ -81,8 +84,9 @@ struct AddServerNode {
 async fn add_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Form(form): Form<AddServerNode>,
-) -> Result<(StatusCode, Json<Server>), ServiceError> {
+) -> Result<(StatusCode, Content<Server>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("nodes/server", errors).into_result();
     }
@@ -166,7 +170,7 @@ async fn add_server_node(
     let server = Server::new(server_node, server_conn.not_connected());
     state.put_server_conn(&server_id, server_conn);
 
-    Ok((StatusCode::CREATED, Json(server)))
+    Ok((StatusCode::CREATED, Content(server, accept)))
 }
 
 /////////////////////////////////////////////////////////////////////////////
