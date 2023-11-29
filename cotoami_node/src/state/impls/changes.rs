@@ -125,6 +125,11 @@ impl NodeState {
         change: ChangelogEntry,
         parent_service: Box<dyn NodeService>,
     ) -> Result<()> {
+        info!(
+            "Received a change {} from {}",
+            change.serial_number,
+            parent_service.description()
+        );
         let import_result = spawn_blocking({
             let db = self.db().clone();
             move || db.new_session()?.import_change(&change, &parent_node_id)
