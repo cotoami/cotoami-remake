@@ -13,7 +13,7 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use derive_new::new;
 use dyn_clone::DynClone;
@@ -103,7 +103,7 @@ impl Response {
 
     pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
         let bytes = self.body.map_err(ServiceStdError)?;
-        rmp_serde::from_slice(&bytes).map_err(anyhow::Error::from)
+        rmp_serde::from_slice(&bytes).context("Invalid response body")
     }
 }
 
