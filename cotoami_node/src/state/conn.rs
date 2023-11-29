@@ -58,6 +58,7 @@ impl ServerConnection {
         node_state: &NodeState,
     ) -> Result<Self> {
         let is_server_parent = node_state.is_parent(&server_node.node_id);
+        let is_local_parent = !is_server_parent; // just for clarity
         let mut http_client = HttpClient::new(server_node.url_prefix.clone())?;
 
         // Attempt to log into the server node
@@ -69,7 +70,7 @@ impl ServerConnection {
                 password,
                 new_password: None,
                 client: local_node,
-                as_parent: Some(is_server_parent),
+                as_parent: Some(is_local_parent),
             })
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
