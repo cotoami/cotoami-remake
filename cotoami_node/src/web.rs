@@ -1,7 +1,12 @@
 //! Web API for Node operations based on [NodeState].
 
+use accept_header::Accept;
 use axum::{
-    http::{header::HeaderName, Request, StatusCode, Uri},
+    http::{
+        header,
+        header::{HeaderName, HeaderValue},
+        Request, StatusCode, Uri,
+    },
     middleware,
     middleware::Next,
     response::{IntoResponse, Response},
@@ -9,6 +14,7 @@ use axum::{
     Extension, Json, Router,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
+use bytes::Bytes;
 use cotoami_db::prelude::ClientSession;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error};
@@ -56,6 +62,46 @@ fn routes() -> Router<NodeState> {
 
 async fn fallback(uri: Uri) -> impl IntoResponse {
     (StatusCode::NOT_FOUND, format!("No route: {}", uri.path()))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Response Content
+/////////////////////////////////////////////////////////////////////////////
+struct Content<T>(T, Accept);
+
+impl<T> IntoResponse for Content<T>
+where
+    T: serde::Serialize,
+{
+    fn into_response(self) -> Response {
+        if self
+            .1
+            .media_types()
+            .any(|x| x.mime == mime::APPLICATION_MSGPACK)
+        {
+            match rmp_serde::to_vec(&self.0).map(Bytes::from) {
+                Ok(bytes) => (
+                    [(
+                        header::CONTENT_TYPE,
+                        HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()),
+                    )],
+                    bytes,
+                )
+                    .into_response(),
+                Err(err) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    [(
+                        header::CONTENT_TYPE,
+                        HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()),
+                    )],
+                    err.to_string(),
+                )
+                    .into_response(),
+            }
+        } else {
+            Json(self.0).into_response()
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

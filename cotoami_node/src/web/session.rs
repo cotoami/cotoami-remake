@@ -1,12 +1,13 @@
 use core::time::Duration;
 
+use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::State,
     http::StatusCode,
     middleware,
     routing::{delete, put},
-    Extension, Form, Json, Router,
+    Extension, Form, Json, Router, TypedHeader,
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
 use cotoami_db::prelude::*;
@@ -86,6 +87,7 @@ struct CreateOwnerSession {
 
 async fn create_owner_session(
     State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
 ) -> Result<(StatusCode, CookieJar, Json<Session>), ServiceError> {
@@ -114,6 +116,7 @@ async fn create_owner_session(
 
 async fn create_client_node_session(
     State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
 ) -> Result<(StatusCode, CookieJar, Json<ClientNodeSession>), ServiceError> {
