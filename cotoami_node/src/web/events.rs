@@ -12,7 +12,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
-use tracing::debug;
+use tracing::{debug, error};
 
 use crate::{
     client::NodeSentEvent,
@@ -100,9 +100,11 @@ async fn post_event(
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
         match rmp_serde::from_slice(&body)? {
             NodeSentEvent::Connected => {
-                state
-                    .sync_with_parent(parent.node_id, parent_service)
-                    .await?;
+                tokio::spawn(async move {
+                    if let Err(e) = state.sync_with_parent(parent.node_id, parent_service).await {
+                        error!("Error during sync with ({}): {}", parent.node_id, e);
+                    }
+                });
             }
             NodeSentEvent::Change(change) => {
                 // `sync_with_parent` could be run in parallel, in such cases,
