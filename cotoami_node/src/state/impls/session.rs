@@ -29,7 +29,8 @@ impl NodeState {
             debug!("Client session started: {}", client.node_id);
 
             // Check database role
-            if input.as_parent.unwrap_or(false) && !db.globals().is_parent(&client.node_id) {
+            let client_as_parent = input.as_parent.unwrap_or(false);
+            if client_as_parent != db.globals().is_parent(&client.node_id) {
                 ds.clear_client_node_session(&client.node_id)?;
                 bail!(NodeError::WrongDatabaseRole);
             }
