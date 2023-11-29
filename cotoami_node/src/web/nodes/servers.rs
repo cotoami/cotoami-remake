@@ -94,7 +94,7 @@ async fn add_server_node(
     // Inputs
     let url_prefix = form.url_prefix.unwrap_or_else(|| unreachable!());
     let password = form.password.unwrap_or_else(|| unreachable!());
-    let as_child = form.as_child.unwrap_or(false);
+    let server_as_child = form.as_child.unwrap_or(false);
 
     // Get the local node
     let db = state.db().clone();
@@ -107,7 +107,7 @@ async fn add_server_node(
             password: password.clone(),
             new_password: None, // TODO
             client: local_node,
-            as_parent: form.as_child, // if server=child, then client=parent
+            as_parent: Some(server_as_child),
         })
         .await?;
     info!("Successfully logged in to {}", http_client.url_prefix());
@@ -131,7 +131,7 @@ async fn add_server_node(
         }
 
         // Database role
-        let server_db_role = if as_child {
+        let server_db_role = if server_as_child {
             NewDatabaseRole::Child {
                 as_owner: false,
                 can_edit_links: false,
