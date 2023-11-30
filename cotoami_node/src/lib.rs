@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 use anyhow::Result;
+use futures::TryFutureExt;
 use tokio::{
     sync::{oneshot, oneshot::Sender},
     task::JoinHandle,
@@ -21,23 +22,22 @@ pub mod prelude {
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     let port = config.port;
 
+    // Build Web API service
     let state = NodeState::new(config)?;
     state.prepare().await?;
+    let web_api = web::router(state);
 
-    let router = web::router(state);
-
+    // Deploy the service to a hyper Server
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    let server = axum::Server::bind(&addr).serve(router.into_make_service());
+    let server = axum::Server::bind(&addr).serve(web_api.into_make_service());
 
+    // Prepare a way to gracefully shutdown a server
+    // https://hyper.rs/guides/0.14/server/graceful-shutdown/
     let (tx, rx) = oneshot::channel::<()>();
     let server = server.with_graceful_shutdown(async {
         rx.await.ok();
     });
 
-    let handle = tokio::spawn(async move {
-        server.await?;
-        Ok(())
-    });
-
-    Ok((handle, tx))
+    // Launch the server
+    Ok((tokio::spawn(server.map_err(anyhow::Error::from)), tx))
 }
