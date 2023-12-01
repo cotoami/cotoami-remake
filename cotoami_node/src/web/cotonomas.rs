@@ -1,4 +1,3 @@
-use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
@@ -12,7 +11,7 @@ use validator::Validate;
 
 use crate::{
     service::{error::IntoServiceResult, models::Pagination, ServiceError},
-    web::Content,
+    web::{Accept, Content},
     NodeState,
 };
 

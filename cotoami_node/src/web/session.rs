@@ -1,6 +1,5 @@
 use core::time::Duration;
 
-use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::State,
@@ -23,7 +22,7 @@ use crate::{
         ServiceError,
     },
     state::NodeState,
-    web::Content,
+    web::{Accept, Content},
 };
 
 pub(super) fn routes() -> Router<NodeState> {

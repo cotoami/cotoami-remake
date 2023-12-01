@@ -1,4 +1,3 @@
-use accept_header::Accept;
 use axum::{
     extract::{Query, State},
     middleware,
@@ -11,7 +10,7 @@ use validator::Validate;
 use crate::{
     service::{error::IntoServiceResult, models::ChunkOfChanges, ServiceError},
     state::NodeState,
-    web::Content,
+    web::{Accept, Content},
 };
 
 pub(super) fn routes() -> Router<NodeState> {

@@ -1,10 +1,9 @@
 //! Web API for Node operations based on [NodeState].
 
-use accept_header::Accept;
 use axum::{
+    headers,
     http::{
-        header,
-        header::{HeaderName, HeaderValue},
+        header::{self, HeaderName, HeaderValue},
         Request, StatusCode, Uri,
     },
     middleware,
@@ -16,6 +15,7 @@ use axum::{
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use bytes::Bytes;
 use cotoami_db::prelude::ClientSession;
+use mime::Mime;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error};
 
@@ -74,12 +74,9 @@ where
     T: serde::Serialize,
 {
     fn into_response(self) -> Response {
-        if self
-            .1
-            .media_types()
-            .any(|x| x.mime == mime::APPLICATION_MSGPACK)
-        {
-            match rmp_serde::to_vec(&self.0).map(Bytes::from) {
+        let Content(content, accept) = self;
+        if accept.contains(mime::APPLICATION_MSGPACK) {
+            match rmp_serde::to_vec(&content).map(Bytes::from) {
                 Ok(bytes) => (
                     [(
                         header::CONTENT_TYPE,
@@ -99,8 +96,47 @@ where
                     .into_response(),
             }
         } else {
-            Json(self.0).into_response()
+            Json(content).into_response()
         }
+    }
+}
+
+/// Accept [headers::Header] implementation to be used with an [axum::TypedHeader] extractor.
+/// It's a just-enough implementation (not involving any parsing) for [Content] to work.
+#[derive(Debug, Clone)]
+struct Accept {
+    value: String,
+}
+
+impl Accept {
+    fn contains(&self, mime: Mime) -> bool { self.value.contains(mime.as_ref()) }
+}
+
+impl headers::Header for Accept {
+    fn name() -> &'static HeaderName { &axum::http::header::ACCEPT }
+
+    fn decode<'i, I>(values: &mut I) -> Result<Self, headers::Error>
+    where
+        Self: Sized,
+        I: Iterator<Item = &'i HeaderValue>,
+    {
+        // `values` contains multiple values if there are multiple headers with the same key `accept`
+        // https://docs.rs/http/0.2.9/http/header/struct.HeaderMap.html#method.get_all
+        // so, it needs only the first value in this case.
+        let value = values.next().ok_or_else(headers::Error::invalid)?;
+
+        // The value may contain opaque bytes
+        let value_str = value.to_str().map_err(|_| headers::Error::invalid())?;
+
+        Ok(Self {
+            value: value_str.to_owned(),
+        })
+    }
+
+    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+        let header_value = HeaderValue::from_str(&self.value)
+            .expect("The value contains only visible ASCII characters.");
+        values.extend(::std::iter::once(header_value));
     }
 }
 

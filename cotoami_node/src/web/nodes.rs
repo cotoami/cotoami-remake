@@ -1,8 +1,11 @@
-use accept_header::Accept;
 use axum::{extract::State, middleware, routing::get, Extension, Router, TypedHeader};
 use cotoami_db::prelude::*;
 
-use crate::{service::ServiceError, state::NodeState, web::Content};
+use crate::{
+    service::ServiceError,
+    state::NodeState,
+    web::{Accept, Content},
+};
 
 mod children;
 mod clients;

@@ -1,4 +1,3 @@
-use accept_header::Accept;
 use anyhow::Result;
 use axum::{
     extract::{Path, State},
@@ -20,7 +19,7 @@ use crate::{
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
-    web::Content,
+    web::{Accept, Content},
 };
 
 pub(super) fn routes() -> Router<NodeState> {
