@@ -66,7 +66,7 @@ impl NodeState {
         server_id: &Id<Node>,
     ) -> Result<MappedRwLockReadGuard<ServerConnection>> {
         RwLockReadGuard::try_map(self.read_server_conns(), |conns| conns.get(server_id))
-            .map_err(|_| anyhow!("ServerConnection for [{}] not found", server_id))
+            .map_err(|_| anyhow!("ServerConnection for [{server_id}] not found"))
     }
 
     pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
@@ -87,16 +87,16 @@ impl NodeState {
 
     pub fn parent_service_or_err(&self, parent_id: &Id<Node>) -> Result<Box<dyn NodeService>> {
         self.parent_service(parent_id)
-            .ok_or(anyhow!("Parent disconnected: {}", parent_id))
+            .ok_or(anyhow!("Parent disconnected: {parent_id}"))
     }
 
     pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
-        debug!("Parent service being registered: {}", parent_id);
+        debug!("Parent service being registered: {parent_id}");
         self.parent_services.write().insert(parent_id, service);
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
-        debug!("Parent service being removed: {}", parent_id);
+        debug!("Parent service being removed: {parent_id}");
         self.parent_services.write().remove(parent_id)
     }
 }

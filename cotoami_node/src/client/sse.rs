@@ -198,7 +198,7 @@ impl SseClient {
                     .await?;
             }
             NodeSentEvent::Response(_) => (),
-            NodeSentEvent::Error(msg) => error!("Event error: {}", msg),
+            NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
         }
         Ok(())
     }

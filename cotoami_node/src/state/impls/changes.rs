@@ -69,11 +69,7 @@ impl NodeState {
                         // The number of `parent_node.changes_received` is larger than
                         // the last number of the changes in the parent node for some reason.
                         // That means the replication has broken between the two nodes.
-                        bail!(
-                            "Tried to import from {}, but the last change number was {}.",
-                            from,
-                            max
-                        );
+                        bail!("Tried to import from {from}, but the last change number was {max}.");
                     }
                 }
             };

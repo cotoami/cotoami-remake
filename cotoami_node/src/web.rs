@@ -155,7 +155,7 @@ impl IntoResponse for ServiceError {
             ServiceError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
             ServiceError::NotImplemented => StatusCode::NOT_IMPLEMENTED.into_response(),
             ServiceError::Server(e) => {
-                let message = format!("Server error: {}", e);
+                let message = format!("Server error: {e}");
                 error!(message);
                 (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
             }
@@ -205,7 +205,7 @@ async fn require_session<B>(
     .await??;
 
     if let Some(session) = session {
-        debug!("Client session: {:?}", session);
+        debug!("Client session: {session:?}");
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {

@@ -24,7 +24,7 @@ impl NodeState {
         tokio::spawn(async move {
             let mut events = this.pubsub().events().subscribe(None::<()>);
             while let Some(event) = events.next().await {
-                debug!("Internal event: {:?}", event);
+                debug!("Internal event: {event:?}");
                 match event {
                     Event::ParentDisconnected(parent_id) => {
                         this.remove_parent_service(&parent_id);
@@ -41,7 +41,7 @@ impl NodeState {
             let mut changes = this.pubsub().local_changes().subscribe(None::<()>);
             while let Some(change) = changes.next().await {
                 if let Err(e) = this.publish_change_to_child_servers(&change).await {
-                    error!("Error during sending a change to child servers: {}", e);
+                    error!("Error during sending a change to child servers: {e}");
                 }
             }
         });

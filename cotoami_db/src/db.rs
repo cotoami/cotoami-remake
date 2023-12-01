@@ -193,7 +193,7 @@ impl Globals {
     pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
         let local_node_id = self.read_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
-            bail!("The entity doesn't belong to the local node: {:?}", entity);
+            bail!("The entity doesn't belong to the local node: {entity:?}");
         }
         Ok(())
     }
