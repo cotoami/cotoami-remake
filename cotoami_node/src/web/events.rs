@@ -98,7 +98,9 @@ async fn post_event(
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
-        match rmp_serde::from_slice(&body)? {
+        let event = rmp_serde::from_slice(&body)
+            .map_err(|_| ServiceError::request("invalid-request-body"))?;
+        match event {
             NodeSentEvent::Connected => {
                 // Run database-syncing in another thread, otherwise a deadlock will occur:
                 // the event loop in the SSE client is blocked until this API responds,

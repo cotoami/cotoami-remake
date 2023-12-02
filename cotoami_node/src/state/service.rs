@@ -11,10 +11,7 @@ use serde_json::value::Value;
 use tower_service::Service;
 
 use crate::{
-    service::{
-        error::{InputError, RequestError},
-        NodeServiceFuture, *,
-    },
+    service::{error::InputError, NodeServiceFuture, *},
     state::{error::NodeError, NodeState},
 };
 
@@ -84,7 +81,7 @@ where
         // NodeError
         match anyhow_err.downcast_ref::<NodeError>() {
             Some(NodeError::WrongDatabaseRole) => {
-                return ServiceError::Request(RequestError::new("wrong-database-role"))
+                return Self::request("wrong-database-role");
             }
             _ => (),
         }
@@ -92,14 +89,12 @@ where
         // DatabaseError
         match anyhow_err.downcast_ref::<DatabaseError>() {
             Some(DatabaseError::EntityNotFound { kind, id }) => {
-                return ServiceError::Input(
-                    InputError::new(kind.to_string(), "id", "not-found")
-                        .with_param("value", Value::String(id.to_string()))
-                        .into(),
-                )
+                return InputError::new(kind.to_string(), "id", "not-found")
+                    .with_param("value", Value::String(id.to_string()))
+                    .into();
             }
             Some(DatabaseError::AuthenticationFailed) => {
-                return ServiceError::Request(RequestError::new("authentication-failed"))
+                return Self::request("authentication-failed");
             }
             Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
             _ => (),
