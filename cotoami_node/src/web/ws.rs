@@ -1,6 +1,6 @@
 use axum::{
     extract::{
-        ws::{WebSocket, WebSocketUpgrade},
+        ws::{Message, WebSocket, WebSocketUpgrade},
         State,
     },
     middleware,
@@ -8,9 +8,12 @@ use axum::{
     routing::get,
     Extension, Router,
 };
+use bytes::Bytes;
 use cotoami_db::prelude::*;
+use futures::StreamExt;
+use tracing::error;
 
-use crate::state::NodeState;
+use crate::{event::NodeSentEvent, state::NodeState};
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
@@ -31,5 +34,27 @@ async fn ws_handler(
 }
 
 async fn handle_socket(mut socket: WebSocket, state: NodeState, session: ClientSession) {
-    unimplemented!()
+    if let ClientSession::ParentNode(parent) = session {
+        // For parent-client
+        unimplemented!();
+    } else {
+        // For child-client
+        let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
+        tokio::spawn(async move {
+            while let Some(change) = changes.next().await {
+                send_event(&mut socket, NodeSentEvent::Change(change)).await;
+            }
+        });
+    }
+}
+
+async fn send_event(socket: &mut WebSocket, event: NodeSentEvent) {
+    match rmp_serde::to_vec(&event).map(Bytes::from) {
+        Ok(bytes) => {
+            if let Err(e) = socket.send(Message::Binary(bytes.into())).await {
+                //
+            }
+        }
+        Err(e) => error!("Event serialization error: {}", e),
+    }
 }
