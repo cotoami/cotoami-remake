@@ -1,4 +1,13 @@
-use axum::{extract::State, middleware, response::IntoResponse, routing::get, Extension, Router};
+use axum::{
+    extract::{
+        ws::{WebSocket, WebSocketUpgrade},
+        State,
+    },
+    middleware,
+    response::IntoResponse,
+    routing::get,
+    Extension, Router,
+};
 use cotoami_db::prelude::*;
 
 use crate::state::NodeState;
@@ -15,8 +24,13 @@ pub(super) fn routes() -> Router<NodeState> {
 /////////////////////////////////////////////////////////////////////////////
 
 async fn ws_handler(
-    State(_state): State<NodeState>,
-    Extension(_operator): Extension<Operator>,
+    ws: WebSocketUpgrade,
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
 ) -> impl IntoResponse {
-    unimplemented!();
+    ws.on_upgrade(move |socket| handle_socket(socket, state, operator))
+}
+
+async fn handle_socket(mut socket: WebSocket, state: NodeState, operator: Operator) {
+    unimplemented!()
 }
