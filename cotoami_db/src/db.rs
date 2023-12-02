@@ -86,12 +86,20 @@ impl Database {
         Ok(db)
     }
 
-    pub fn new_session(&self) -> Result<DatabaseSession<'_>> {
+    pub fn new_session<'a>(
+        &'a self,
+    ) -> Result<
+        DatabaseSession<
+            '_,
+            impl Fn() -> Result<SqliteConnection> + '_,
+            impl Fn() -> MutexGuard<'a, WritableConn> + '_,
+        >,
+    > {
         Ok(DatabaseSession {
             globals: &self.globals,
             ro_conn: OnceCell::new(),
-            new_ro_conn: Box::new(|| self.new_ro_conn()),
-            rw_conn: Box::new(|| self.rw_conn.lock()),
+            new_ro_conn: || self.new_ro_conn(),
+            lock_rw_conn: || self.rw_conn.lock(),
         })
     }
 
@@ -220,14 +228,18 @@ impl Globals {
 // DatabaseSession
 /////////////////////////////////////////////////////////////////////////////
 
-pub struct DatabaseSession<'a> {
+pub struct DatabaseSession<'a, RO, RW> {
     globals: &'a Globals,
     ro_conn: OnceCell<SqliteConnection>,
-    new_ro_conn: Box<dyn Fn() -> Result<SqliteConnection> + 'a>,
-    rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
+    new_ro_conn: RO,
+    lock_rw_conn: RW,
 }
 
-impl<'a> DatabaseSession<'a> {
+impl<'a, RO, RW> DatabaseSession<'a, RO, RW>
+where
+    RO: Fn() -> Result<SqliteConnection> + 'a,
+    RW: Fn() -> MutexGuard<'a, WritableConn> + 'a,
+{
     /////////////////////////////////////////////////////////////////////////////
     // local node
     /////////////////////////////////////////////////////////////////////////////
@@ -987,7 +999,7 @@ impl<'a> DatabaseSession<'a> {
     where
         Op: Operation<WritableConn, T>,
     {
-        op::run_write(&mut (self.rw_conn)(), op)
+        op::run_write(&mut (self.lock_rw_conn)(), op)
     }
 
     fn database_role(&mut self, id: &Id<Node>) -> Result<Option<DatabaseRole>> {
