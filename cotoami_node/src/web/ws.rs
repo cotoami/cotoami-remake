@@ -10,8 +10,9 @@ use axum::{
 };
 use bytes::Bytes;
 use cotoami_db::prelude::*;
-use futures::StreamExt;
-use tracing::error;
+use futures::{SinkExt, StreamExt};
+use futures_util::stream::SplitSink;
+use tracing::{debug, error};
 
 use crate::{event::NodeSentEvent, state::NodeState};
 
@@ -39,29 +40,49 @@ async fn handle_socket(mut socket: WebSocket, state: NodeState, session: ClientS
         unimplemented!();
     } else {
         // For child-client
+        let (mut sender, mut receiver) = socket.split();
 
         // Publish change events
         let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
-        tokio::spawn(async move {
+        let mut send_task = tokio::spawn(async move {
             while let Some(change) = changes.next().await {
-                send_event(&mut socket, NodeSentEvent::Change(change), |_| {}).await;
+                if let Err(e) = send_event(&mut sender, NodeSentEvent::Change(change)).await {
+                    debug!("Client ({}) disconnected: {e}", session.client_node_id());
+                }
             }
         });
 
         // Accept request events
+        let mut recv_task = tokio::spawn(async move {
+            while let Some(Ok(message)) = receiver.next().await {
+                //
+            }
+        });
+
+        // If any one of the tasks exit, abort the other.
+        tokio::select! {
+            result = (&mut send_task) => {
+                if let Err(e) = result {
+                    error!("Error publishing changes: {}", e);
+                }
+                recv_task.abort();
+            },
+            result = (&mut recv_task) => {
+                if let Err(e) = result {
+                    error!("Error accepting requests: {}", e);
+                }
+                send_task.abort();
+            }
+        }
     }
 }
 
-async fn send_event<F>(socket: &mut WebSocket, event: NodeSentEvent, on_disconnected: F)
-where
-    F: Fn(axum::Error),
-{
-    match rmp_serde::to_vec(&event).map(Bytes::from) {
-        Ok(bytes) => {
-            if let Err(e) = socket.send(Message::Binary(bytes.into())).await {
-                on_disconnected(e);
-            }
-        }
-        Err(e) => error!("Event serialization error: {}", e),
-    }
+async fn send_event(
+    sender: &mut SplitSink<WebSocket, Message>,
+    event: NodeSentEvent,
+) -> Result<(), axum::Error> {
+    let bytes = rmp_serde::to_vec(&event)
+        .map(Bytes::from)
+        .expect("A NodeSentEvent should be serializable into MessagePack");
+    sender.send(Message::Binary(bytes.into())).await
 }
