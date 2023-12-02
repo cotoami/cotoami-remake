@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::prelude::*;
+use cotoami_db::{ChangelogEntry, Id, Node};
 use futures::StreamExt;
 use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
@@ -11,6 +11,7 @@ use tracing::{debug, error, info};
 
 use crate::{
     client::HttpClient,
+    event::NodeSentEvent,
     service::{models::NotConnected, Request, Response},
     state::NodeState,
 };
@@ -18,15 +19,6 @@ use crate::{
 /////////////////////////////////////////////////////////////////////////////
 // NodeSentEvent
 /////////////////////////////////////////////////////////////////////////////
-
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub enum NodeSentEvent {
-    Connected,
-    Change(ChangelogEntry),
-    Request(Request),
-    Response(Response),
-    Error(String),
-}
 
 impl From<eventsource_stream::Event> for NodeSentEvent {
     fn from(source: eventsource_stream::Event) -> Self {
@@ -291,7 +283,7 @@ pub enum SseClientError {
 /////////////////////////////////////////////////////////////////////////////
 
 impl HttpClient {
-    pub async fn post_event(&self, event: &NodeSentEvent) -> Result<()> {
+    pub(crate) async fn post_event(&self, event: &NodeSentEvent) -> Result<()> {
         let bytes = rmp_serde::to_vec(event).map(Bytes::from)?;
         let response = self.post("/api/events").body(bytes).send().await?;
         if response.status().is_success() {

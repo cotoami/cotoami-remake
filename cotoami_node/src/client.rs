@@ -5,5 +5,5 @@ mod sse;
 
 pub use self::{
     http::HttpClient,
-    sse::{NodeSentEvent, SseClient, SseClientError, SseClientState},
+    sse::{SseClient, SseClientError, SseClientState},
 };

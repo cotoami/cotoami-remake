@@ -3,7 +3,7 @@ use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
 use crate::{
-    client::NodeSentEvent,
+    event::NodeSentEvent,
     state::{NodeState, ServerConnection},
 };
 

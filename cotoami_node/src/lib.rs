@@ -10,6 +10,7 @@ use tokio::{
 use crate::state::{Config, NodeState};
 
 mod client;
+mod event;
 mod pubsub;
 mod service;
 mod state;
