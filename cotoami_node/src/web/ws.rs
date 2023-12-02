@@ -15,7 +15,6 @@ use crate::state::NodeState;
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(ws_handler))
-        .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }
 
@@ -26,11 +25,11 @@ pub(super) fn routes() -> Router<NodeState> {
 async fn ws_handler(
     ws: WebSocketUpgrade,
     State(state): State<NodeState>,
-    Extension(operator): Extension<Operator>,
+    Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(socket, state, operator))
+    ws.on_upgrade(move |socket| handle_socket(socket, state, session))
 }
 
-async fn handle_socket(mut socket: WebSocket, state: NodeState, operator: Operator) {
+async fn handle_socket(mut socket: WebSocket, state: NodeState, session: ClientSession) {
     unimplemented!()
 }
