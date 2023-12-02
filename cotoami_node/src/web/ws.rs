@@ -42,17 +42,20 @@ async fn handle_socket(mut socket: WebSocket, state: NodeState, session: ClientS
         let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
         tokio::spawn(async move {
             while let Some(change) = changes.next().await {
-                send_event(&mut socket, NodeSentEvent::Change(change)).await;
+                send_event(&mut socket, NodeSentEvent::Change(change), |_| {}).await;
             }
         });
     }
 }
 
-async fn send_event(socket: &mut WebSocket, event: NodeSentEvent) {
+async fn send_event<F>(socket: &mut WebSocket, event: NodeSentEvent, on_disconnected: F)
+where
+    F: Fn(axum::Error),
+{
     match rmp_serde::to_vec(&event).map(Bytes::from) {
         Ok(bytes) => {
             if let Err(e) = socket.send(Message::Binary(bytes.into())).await {
-                //
+                on_disconnected(e);
             }
         }
         Err(e) => error!("Event serialization error: {}", e),
