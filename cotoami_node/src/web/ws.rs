@@ -36,11 +36,11 @@ async fn ws_handler(
 
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
     match session {
-        ClientSession::ParentNode(parent) => {
-            unimplemented!();
-        }
         ClientSession::Operator(operator) => {
             handle_child(socket, state, operator).await;
+        }
+        ClientSession::ParentNode(parent) => {
+            unimplemented!();
         }
     }
 }
