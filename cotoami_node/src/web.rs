@@ -28,6 +28,7 @@ mod csrf;
 mod events;
 mod nodes;
 mod session;
+mod ws;
 
 pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
 
@@ -52,6 +53,7 @@ pub(super) fn router(state: NodeState) -> Router {
 fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
+        .nest("/ws", ws::routes())
         .nest("/session", session::routes())
         .nest("/events", events::routes())
         .nest("/changes", changes::routes())
