@@ -39,12 +39,16 @@ async fn handle_socket(mut socket: WebSocket, state: NodeState, session: ClientS
         unimplemented!();
     } else {
         // For child-client
+
+        // Publish change events
         let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
         tokio::spawn(async move {
             while let Some(change) = changes.next().await {
                 send_event(&mut socket, NodeSentEvent::Change(change), |_| {}).await;
             }
         });
+
+        // Accept request events
     }
 }
 
