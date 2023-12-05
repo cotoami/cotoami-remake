@@ -47,11 +47,11 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
 }
 
 async fn send_event(
-    sender: &mut SplitSink<WebSocket, Message>,
+    socket_sink: &mut SplitSink<WebSocket, Message>,
     event: NodeSentEvent,
 ) -> Result<(), axum::Error> {
     let bytes = rmp_serde::to_vec(&event)
         .map(Bytes::from)
         .expect("A NodeSentEvent should be serializable into MessagePack");
-    sender.send(Message::Binary(bytes.into())).await
+    socket_sink.send(Message::Binary(bytes.into())).await
 }

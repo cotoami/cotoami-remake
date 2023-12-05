@@ -666,6 +666,7 @@ dependencies = [
  "chrono",
  "cotoami_db",
  "derive-new",
+ "derive_more 1.0.0-beta.3",
  "dirs",
  "dotenvy",
  "dyn-clone",

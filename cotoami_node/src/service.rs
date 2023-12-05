@@ -92,9 +92,11 @@ impl RequestBody {
 // Response
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize, new)]
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, new)]
 pub struct Response {
     id: Uuid,
+
+    #[debug(skip)]
     body: Result<Bytes, ServiceError>,
 }
 

@@ -2,7 +2,7 @@ use cotoami_db::ChangelogEntry;
 
 use crate::service::{Request, Response};
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) enum NodeSentEvent {
     Connected,
     Change(ChangelogEntry),
