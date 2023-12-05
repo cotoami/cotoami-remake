@@ -15,6 +15,7 @@
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
+use cotoami_db::Operator;
 use derive_new::new;
 use dyn_clone::DynClone;
 use futures::future::BoxFuture;
@@ -61,6 +62,14 @@ pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
+
+    /// The operator node that sent this request.
+    ///
+    /// This field isn't meant to be sent from a client via network, instead should be
+    /// set by a service impl that keeps track of who is the client.
+    #[serde(skip_serializing, skip_deserializing)]
+    from: Option<Operator>,
+
     body: RequestBody,
 }
 
@@ -68,11 +77,18 @@ impl Request {
     pub fn new(body: RequestBody) -> Self {
         Self {
             id: Uuid::new_v4(),
+            from: None,
             body,
         }
     }
 
     pub fn id(&self) -> &Uuid { &self.id }
+
+    pub fn set_from(&mut self, from: Operator) { self.from = Some(from); }
+
+    pub fn from_or_err(&self) -> Result<&Operator, ServiceError> {
+        self.from.as_ref().ok_or(ServiceError::Unauthorized)
+    }
 
     pub fn body(self) -> RequestBody { self.body }
 }

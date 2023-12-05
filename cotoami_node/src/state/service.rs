@@ -20,16 +20,23 @@ use crate::{
 /////////////////////////////////////////////////////////////////////////////
 
 impl NodeState {
-    async fn handle_request(self, request: Request) -> Result<Bytes> {
+    async fn handle_request(self, request: Request) -> Result<Bytes, ServiceError> {
         match request.body() {
-            RequestBody::LocalNode => self.local_node().await.and_then(Self::to_bytes),
-            RequestBody::ChunkOfChanges { from } => {
-                self.chunk_of_changes(from).await.and_then(Self::to_bytes)
-            }
+            RequestBody::LocalNode => self
+                .local_node()
+                .await
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
+            RequestBody::ChunkOfChanges { from } => self
+                .chunk_of_changes(from)
+                .await
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
             RequestBody::CreateClientNodeSession(input) => self
                 .create_client_node_session(input)
                 .await
-                .and_then(Self::to_bytes),
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
         }
     }
 
@@ -54,9 +61,7 @@ impl Service<Request> for NodeState {
         async move {
             Ok(Response::new(
                 *request.id(),
-                this.handle_request(request)
-                    .await
-                    .map_err(ServiceError::from),
+                this.handle_request(request).await,
             ))
         }
         .boxed()
