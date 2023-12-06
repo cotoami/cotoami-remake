@@ -12,12 +12,12 @@ use tracing::{debug, error, info};
 
 use crate::{event::NodeSentEvent, state::NodeState};
 
-/// Events to be sent in [handle_child]:
+/// Events to be sent in [handle_operator]:
 /// * local changes (which contains the changes from the parents of the local node)
-/// * responses　(correlating with the number of children)
+/// * responses　(correlating with the number of children sending requests)
 const SEND_BUFFER_SIZE: usize = 16;
 
-pub(super) async fn handle_child(socket: WebSocket, mut state: NodeState, opr: Operator) {
+pub(super) async fn handle_operator(socket: WebSocket, mut state: NodeState, opr: Operator) {
     let node_id = opr.node_id();
 
     let (mut sink, mut stream) = socket.split();
@@ -28,25 +28,27 @@ pub(super) async fn handle_child(socket: WebSocket, mut state: NodeState, opr: O
     tasks.spawn(async move {
         while let Some(event) = receiver.recv().await {
             if let Err(e) = super::send_event(&mut sink, event).await {
-                debug!("Child ({}) disconnected: {e}", node_id);
+                debug!("Operator ({}) disconnected: {e}", node_id);
                 break;
             }
         }
     });
 
-    // A task publishing change events
-    tasks.spawn({
-        let sender = sender.clone();
-        let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
-        async move {
-            while let Some(change) = changes.next().await {
-                if let Err(_) = sender.send(NodeSentEvent::Change(change)).await {
-                    // The task above has been terminated
-                    break;
+    // A task publishing change events to a child node
+    if let Operator::ChildNode(_) = opr {
+        tasks.spawn({
+            let sender = sender.clone();
+            let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
+            async move {
+                while let Some(change) = changes.next().await {
+                    if let Err(_) = sender.send(NodeSentEvent::Change(change)).await {
+                        // The task above has been terminated
+                        break;
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     // A task receiving events from the child
     tasks.spawn(async move {
@@ -64,12 +66,12 @@ pub(super) async fn handle_child(socket: WebSocket, mut state: NodeState, opr: O
                     Err(e) => {
                         // A malicious client can send an invalid message intentionally,
                         // so let's not handle it as an error.
-                        info!("Child ({node_id}) sent an invalid binary message: {e}");
+                        info!("Operator ({node_id}) sent an invalid binary message: {e}");
                         break;
                     }
                 },
                 Message::Close(c) => {
-                    info!("Child ({node_id}) sent close with: {c:?}");
+                    info!("Operator ({node_id}) sent close with: {c:?}");
                     break;
                 }
                 the_others => debug!("Message ignored: {:?}", the_others),
