@@ -49,7 +49,7 @@ async fn stream_events(
             }
             let _local = StreamLocal(parent.node_id, state.pubsub().events().clone());
 
-            // Register SSE client-as-parent as a service
+            // Register the SSE client-as-parent as a service
             let parent_service = PubsubService::new(
                 format!("SSE client-as-parent: {}", parent.node_id),
                 state.pubsub().responses().clone(),
@@ -107,13 +107,14 @@ async fn post_event(
                 // which then blocks `sync_with_parent`.
                 tokio::spawn(async move {
                     if let Err(e) = state.sync_with_parent(parent.node_id, parent_service).await {
-                        error!("Error during sync with ({}): {}", parent.node_id, e);
+                        error!("Error syncing with ({}): {}", parent.node_id, e);
                     }
                 });
             }
             NodeSentEvent::Change(change) => {
                 // `sync_with_parent` could be run in parallel, in such cases,
-                // `DatabaseError::UnexpectedChangeNumber` will be returned.
+                // it will return `DatabaseError::UnexpectedChangeNumber`, which
+                // will be converted into an internal server error in HTTP.
                 state
                     .handle_parent_change(parent.node_id, change, parent_service)
                     .await?;

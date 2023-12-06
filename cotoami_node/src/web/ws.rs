@@ -16,6 +16,7 @@ use futures_util::stream::SplitSink;
 use crate::{event::NodeSentEvent, state::NodeState};
 
 mod child;
+mod parent;
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
@@ -37,11 +38,11 @@ async fn ws_handler(
 
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
     match session {
-        ClientSession::Operator(operator) => {
-            child::handle_child(socket, state, operator).await;
+        ClientSession::Operator(opr) => {
+            child::handle_child(socket, state, opr).await;
         }
         ClientSession::ParentNode(parent) => {
-            unimplemented!();
+            parent::handle_parent(socket, state, parent).await;
         }
     }
 }

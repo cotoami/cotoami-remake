@@ -41,7 +41,7 @@ impl NodeState {
             let mut changes = this.pubsub().local_changes().subscribe(None::<()>);
             while let Some(change) = changes.next().await {
                 if let Err(e) = this.publish_change_to_child_servers(&change).await {
-                    error!("Error during sending a change to child servers: {e}");
+                    error!("Error sending a change to child servers: {e}");
                 }
             }
         });

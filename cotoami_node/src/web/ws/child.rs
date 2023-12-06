@@ -1,11 +1,10 @@
+use std::ops::ControlFlow;
+
 use axum::extract::ws::{Message, WebSocket};
-use cotoami_db::prelude::*;
+use cotoami_db::Operator;
 use futures::StreamExt;
 use tokio::{
-    sync::{
-        mpsc,
-        mpsc::{error::SendError, Sender},
-    },
+    sync::mpsc::{self, Sender},
     task::JoinSet,
 };
 use tower_service::Service;
@@ -13,11 +12,16 @@ use tracing::{debug, error, info};
 
 use crate::{event::NodeSentEvent, state::NodeState};
 
-pub(super) async fn handle_child(socket: WebSocket, state: NodeState, operator: Operator) {
-    let node_id = operator.node_id();
+/// Events to be sent in [handle_child]:
+/// * local changes (which contains the changes from the parents of the local node)
+/// * responses　(correlating with the number of children)
+const SEND_BUFFER_SIZE: usize = 16;
+
+pub(super) async fn handle_child(socket: WebSocket, mut state: NodeState, opr: Operator) {
+    let node_id = opr.node_id();
 
     let (mut sink, mut stream) = socket.split();
-    let (sender, mut receiver) = mpsc::channel::<NodeSentEvent>(16); // not sure of an appropriate buffer size
+    let (sender, mut receiver) = mpsc::channel::<NodeSentEvent>(SEND_BUFFER_SIZE);
     let mut tasks = JoinSet::new();
 
     // A task sending events received from the other tasks
@@ -50,15 +54,16 @@ pub(super) async fn handle_child(socket: WebSocket, state: NodeState, operator: 
             match msg {
                 Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
                     Ok(event) => {
-                        if let Err(_) =
-                            handle_event(event, state.clone(), operator.clone(), &sender).await
+                        if handle_event(event, &mut state, opr.clone(), &sender)
+                            .await
+                            .is_break()
                         {
                             break;
                         }
                     }
                     Err(e) => {
-                        // A malicious　client can send invalid message intentionally,
-                        // so let's not handle it as errors.
+                        // A malicious client can send an invalid message intentionally,
+                        // so let's not handle it as an error.
                         info!("Child ({node_id}) sent an invalid binary message: {e}");
                         break;
                     }
@@ -67,7 +72,7 @@ pub(super) async fn handle_child(socket: WebSocket, state: NodeState, operator: 
                     info!("Child ({node_id}) sent close with: {c:?}");
                     break;
                 }
-                _ => debug!(""),
+                the_others => debug!("Message ignored: {:?}", the_others),
             }
         }
     });
@@ -80,20 +85,28 @@ pub(super) async fn handle_child(socket: WebSocket, state: NodeState, operator: 
 
 async fn handle_event(
     event: NodeSentEvent,
-    mut state: NodeState,
-    operator: Operator,
+    state: &mut NodeState,
+    opr: Operator,
     sender: &Sender<NodeSentEvent>,
-) -> Result<(), SendError<NodeSentEvent>> {
+) -> ControlFlow<(), ()> {
     match event {
         NodeSentEvent::Request(mut request) => {
-            debug!("Received a request from: {:?}", operator);
-            request.set_from(operator);
+            debug!("Received a request from: {:?}", opr);
+            request.set_from(opr);
             match state.call(request).await {
                 Ok(response) => {
-                    sender.send(NodeSentEvent::Response(response)).await?;
+                    if sender
+                        .send(NodeSentEvent::Response(response))
+                        .await
+                        .is_err()
+                    {
+                        // Disconnected
+                        return ControlFlow::Break(());
+                    }
                 }
                 Err(e) => {
-                    // An error processing a request should be stored in a response.
+                    // It shouldn't happen: an error processing a request
+                    // should be stored in a response.
                     error!("Unexpected error: {}", e);
                 }
             }
@@ -102,5 +115,5 @@ async fn handle_event(
             info!("Parent doesn't support the event: {:?}", unsupported);
         }
     }
-    Ok(())
+    ControlFlow::Continue(())
 }
