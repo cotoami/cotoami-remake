@@ -85,8 +85,9 @@ async fn handle_event(
     sender: &Sender<NodeSentEvent>,
 ) -> Result<(), SendError<NodeSentEvent>> {
     match event {
-        NodeSentEvent::Request(request) => {
+        NodeSentEvent::Request(mut request) => {
             debug!("Received a request from: {:?}", operator);
+            request.set_from(operator);
             match state.call(request).await {
                 Ok(response) => {
                     sender.send(NodeSentEvent::Response(response)).await?;

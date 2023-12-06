@@ -66,7 +66,7 @@ pub struct Request {
     /// The operator node that sent this request.
     ///
     /// This field isn't meant to be sent from a client via network, instead should be
-    /// set by a service impl that keeps track of who is the client.
+    /// set by a service provider that keeps track of who is the client.
     #[serde(skip_serializing, skip_deserializing)]
     from: Option<Operator>,
 
