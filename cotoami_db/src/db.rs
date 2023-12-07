@@ -561,6 +561,33 @@ where
         self.write_transaction(client_ops::change_password(id, password))
     }
 
+    pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {
+        // a client node?
+        if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
+            if client.verify_session(token).is_ok() {
+                match self.database_role(&client.node_id)? {
+                    Some(DatabaseRole::Parent(parent)) => {
+                        return Ok(Some(ClientSession::ParentNode(parent)));
+                    }
+                    Some(DatabaseRole::Child(child)) => {
+                        return Ok(Some(ClientSession::Operator(Operator::ChildNode(child))));
+                    }
+                    None => (),
+                }
+            }
+        }
+
+        // the owner of local node?
+        let local_node = self.globals.read_local_node()?;
+        if local_node.verify_session(token).is_ok() {
+            return Ok(Some(ClientSession::Operator(Operator::Owner(
+                local_node.node_id,
+            ))));
+        }
+
+        Ok(None) // no session
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // database role / parent
     /////////////////////////////////////////////////////////////////////////////
@@ -654,34 +681,17 @@ where
     }
 
     /////////////////////////////////////////////////////////////////////////////
-    // client session
+    // operator
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {
-        // a client node?
-        if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
-            if client.verify_session(token).is_ok() {
-                match self.database_role(&client.node_id)? {
-                    Some(DatabaseRole::Parent(parent)) => {
-                        return Ok(Some(ClientSession::ParentNode(parent)));
-                    }
-                    Some(DatabaseRole::Child(child)) => {
-                        return Ok(Some(ClientSession::Operator(Operator::ChildNode(child))));
-                    }
-                    None => (),
-                }
-            }
+    pub fn as_operator(&mut self, node_id: Id<Node>) -> Result<Option<Operator>> {
+        if node_id == self.globals.local_node_id()? {
+            return Ok(Some(Operator::Owner(node_id)));
         }
-
-        // the owner of local node?
-        let local_node = self.globals.read_local_node()?;
-        if local_node.verify_session(token).is_ok() {
-            return Ok(Some(ClientSession::Operator(Operator::Owner(
-                local_node.node_id,
-            ))));
+        if let Some(child) = self.read_transaction(child_ops::get(&node_id))? {
+            return Ok(Some(Operator::ChildNode(child)));
         }
-
-        Ok(None) // no session
+        Ok(None)
     }
 
     /////////////////////////////////////////////////////////////////////////////
