@@ -1,4 +1,4 @@
-//! HTTP Client of Node API Service.
+//! HTTP client of Node API Service.
 //!
 //! This client is stateful and belongs to a single server ([HttpClient::url_prefix()]),
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.

@@ -1,3 +1,5 @@
+//! Server-Sent Events client of Node API Service.
+
 use std::sync::Arc;
 
 use anyhow::{bail, Result};
