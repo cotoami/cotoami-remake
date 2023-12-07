@@ -1,6 +1,6 @@
 use std::ops::ControlFlow;
 
-use axum::extract::ws::{Message, WebSocket};
+use axum::extract::ws::WebSocket;
 use cotoami_db::Operator;
 use futures::StreamExt;
 use tokio::{
@@ -17,10 +17,10 @@ use crate::{event::NodeSentEvent, state::NodeState};
 /// * responses　(correlating with the number of children sending requests)
 const SEND_BUFFER_SIZE: usize = 16;
 
-pub(super) async fn handle_operator(socket: WebSocket, mut state: NodeState, opr: Operator) {
+pub(super) async fn handle_operator(socket: WebSocket, state: NodeState, opr: Operator) {
     let node_id = opr.node_id();
 
-    let (mut sink, mut stream) = socket.split();
+    let (mut sink, stream) = socket.split();
     let (sender, mut receiver) = mpsc::channel::<NodeSentEvent>(SEND_BUFFER_SIZE);
     let mut tasks = JoinSet::new();
 
@@ -51,33 +51,11 @@ pub(super) async fn handle_operator(socket: WebSocket, mut state: NodeState, opr
     }
 
     // A task receiving events from the child
-    tasks.spawn(async move {
-        while let Some(Ok(msg)) = stream.next().await {
-            match msg {
-                Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
-                    Ok(event) => {
-                        if handle_event(event, &mut state, opr.clone(), &sender)
-                            .await
-                            .is_break()
-                        {
-                            break;
-                        }
-                    }
-                    Err(e) => {
-                        // A malicious client can send an invalid message intentionally,
-                        // so let's not handle it as an error.
-                        info!("Operator ({node_id}) sent an invalid binary message: {e}");
-                        break;
-                    }
-                },
-                Message::Close(c) => {
-                    info!("Operator ({node_id}) sent close with: {c:?}");
-                    break;
-                }
-                the_others => debug!("Message ignored: {:?}", the_others),
-            }
-        }
-    });
+    tasks.spawn(super::handle_message_stream(
+        stream,
+        node_id,
+        move |event| handle_event(event, state.clone(), opr.clone(), sender.clone()),
+    ));
 
     // If any one of the tasks exit, abort the others.
     if let Some(_) = tasks.join_next().await {
@@ -87,9 +65,9 @@ pub(super) async fn handle_operator(socket: WebSocket, mut state: NodeState, opr
 
 async fn handle_event(
     event: NodeSentEvent,
-    state: &mut NodeState,
+    mut state: NodeState,
     opr: Operator,
-    sender: &Sender<NodeSentEvent>,
+    sender: Sender<NodeSentEvent>,
 ) -> ControlFlow<(), ()> {
     match event {
         NodeSentEvent::Request(mut request) => {

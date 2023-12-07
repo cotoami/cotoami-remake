@@ -1,3 +1,5 @@
+use std::{future::Future, marker::Unpin, ops::ControlFlow};
+
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},
@@ -10,8 +12,9 @@ use axum::{
 };
 use bytes::Bytes;
 use cotoami_db::prelude::*;
-use futures::SinkExt;
+use futures::{SinkExt, Stream, StreamExt};
 use futures_util::stream::SplitSink;
+use tracing::{debug, info};
 
 use crate::{event::NodeSentEvent, state::NodeState};
 
@@ -43,6 +46,36 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
         }
         ClientSession::ParentNode(parent) => {
             parent::handle_parent(socket, state, parent).await;
+        }
+    }
+}
+
+async fn handle_message_stream<S, H, F>(mut stream: S, client_id: Id<Node>, handler: H)
+where
+    S: Stream<Item = Result<Message, axum::Error>> + Unpin,
+    H: Fn(NodeSentEvent) -> F,
+    F: Future<Output = ControlFlow<()>>,
+{
+    while let Some(Ok(msg)) = stream.next().await {
+        match msg {
+            Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
+                Ok(event) => {
+                    if handler(event).await.is_break() {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    // A malicious client can send an invalid message intentionally,
+                    // so let's not handle it as an error.
+                    info!("Client ({client_id}) sent an invalid binary message: {e}");
+                    break;
+                }
+            },
+            Message::Close(c) => {
+                info!("Client ({client_id}) sent close with: {c:?}");
+                break;
+            }
+            the_others => debug!("Message ignored: {:?}", the_others),
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::ops::ControlFlow;
 
-use axum::extract::ws::{Message, WebSocket};
+use axum::extract::ws::WebSocket;
 use cotoami_db::{DatabaseError, Id, Node, ParentNode};
 use futures::StreamExt;
 use tokio::task::JoinSet;
@@ -11,7 +11,7 @@ use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: ParentNode) {
     let parent_id = parent.node_id;
 
-    let (mut sink, mut stream) = socket.split();
+    let (mut sink, stream) = socket.split();
     let mut tasks = JoinSet::new();
 
     // Register the WebSocket client-as-parent as a service
@@ -36,33 +36,10 @@ pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: P
     });
 
     // A task receiving events from the parent
-    tasks.spawn({
-        let mut state = state.clone();
-        async move {
-            while let Some(Ok(msg)) = stream.next().await {
-                match msg {
-                    Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
-                        Ok(event) => {
-                            if handle_event(event, &mut state, parent_id).await.is_break() {
-                                break;
-                            }
-                        }
-                        Err(e) => {
-                            // A malicious client can send an invalid message intentionally,
-                            // so let's not handle it as an error.
-                            info!("Parent ({parent_id}) sent an invalid binary message: {e}");
-                            break;
-                        }
-                    },
-                    Message::Close(c) => {
-                        info!("Parent ({parent_id}) sent close with: {c:?}");
-                        break;
-                    }
-                    the_others => debug!("Message ignored: {:?}", the_others),
-                }
-            }
-        }
-    });
+    tasks.spawn(super::handle_message_stream(stream, parent_id, {
+        let state = state.clone();
+        move |event| handle_event(event, state.clone(), parent_id)
+    }));
 
     // Sync with the parent after tasks are setup.
     //
@@ -91,7 +68,7 @@ pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: P
 
 async fn handle_event(
     event: NodeSentEvent,
-    state: &mut NodeState,
+    state: NodeState,
     parent_id: Id<Node>,
 ) -> ControlFlow<(), ()> {
     match event {
