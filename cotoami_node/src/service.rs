@@ -13,6 +13,8 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
+use std::sync::Arc;
+
 use anyhow::{Context, Result};
 use bytes::Bytes;
 use cotoami_db::Operator;
@@ -63,12 +65,12 @@ pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::
 pub struct Request {
     id: Uuid,
 
-    /// The operator node that sent this request.
+    /// The operator node that has sent this request.
     ///
     /// This field isn't meant to be sent from a client via network, instead should be
     /// set by a service provider that keeps track of who is the client.
     #[serde(skip_serializing, skip_deserializing)]
-    from: Option<Operator>,
+    from: Option<Arc<Operator>>,
 
     body: RequestBody,
 }
@@ -84,9 +86,9 @@ impl Request {
 
     pub fn id(&self) -> &Uuid { &self.id }
 
-    pub fn set_from(&mut self, from: Operator) { self.from = Some(from); }
+    pub fn set_from(&mut self, from: Arc<Operator>) { self.from = Some(from); }
 
-    pub fn from_or_err(&self) -> Result<&Operator, ServiceError> {
+    pub fn from_or_err(&self) -> Result<&Arc<Operator>, ServiceError> {
         self.from.as_ref().ok_or(ServiceError::Unauthorized)
     }
 

@@ -1,4 +1,4 @@
-use std::ops::ControlFlow;
+use std::{ops::ControlFlow, sync::Arc};
 
 use axum::extract::ws::WebSocket;
 use cotoami_db::Operator;
@@ -51,11 +51,12 @@ pub(super) async fn handle_operator(socket: WebSocket, state: NodeState, opr: Op
     }
 
     // A task receiving events from the child
-    tasks.spawn(super::handle_message_stream(
-        stream,
-        node_id,
-        move |event| handle_event(event, state.clone(), opr.clone(), sender.clone()),
-    ));
+    tasks.spawn({
+        let opr = Arc::new(opr);
+        super::handle_message_stream(stream, node_id, move |event| {
+            handle_event(event, state.clone(), opr.clone(), sender.clone())
+        })
+    });
 
     // If any one of the tasks exit, abort the others.
     if let Some(_) = tasks.join_next().await {
@@ -66,7 +67,7 @@ pub(super) async fn handle_operator(socket: WebSocket, state: NodeState, opr: Op
 async fn handle_event(
     event: NodeSentEvent,
     mut state: NodeState,
-    opr: Operator,
+    opr: Arc<Operator>,
     sender: Sender<NodeSentEvent>,
 ) -> ControlFlow<(), ()> {
     match event {
