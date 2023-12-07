@@ -9,7 +9,7 @@ use crate::{
 
 impl NodeState {
     pub async fn restore_server_conns(&self) -> Result<()> {
-        let db = self.db.clone();
+        let db = self.db().clone();
         let (local_node, server_nodes) = spawn_blocking(move || {
             let mut ds = db.new_session()?;
             let operator = db.globals().local_node_as_operator()?;
@@ -20,7 +20,7 @@ impl NodeState {
         })
         .await??;
 
-        let mut server_conns = self.server_conns.write();
+        let mut server_conns = self.write_server_conns();
         server_conns.clear();
         for (server_node, _) in server_nodes.iter() {
             let server_conn = if server_node.disabled {

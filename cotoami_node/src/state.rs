@@ -4,7 +4,7 @@ use std::{collections::HashMap, fs, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
+use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tracing::debug;
 use validator::Validate;
 
@@ -21,6 +21,10 @@ pub use self::{config::Config, conn::*, pubsub::*};
 
 #[derive(Clone)]
 pub struct NodeState {
+    inner: Arc<State>,
+}
+
+struct State {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Pubsub,
@@ -38,23 +42,27 @@ impl NodeState {
 
         let pubsub = Pubsub::new();
 
-        Ok(NodeState {
+        let inner = State {
             config: Arc::new(config),
             db: Arc::new(db),
             pubsub,
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
             parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
+        };
+
+        Ok(NodeState {
+            inner: Arc::new(inner),
         })
     }
 
-    pub fn config(&self) -> &Arc<Config> { &self.config }
+    pub fn config(&self) -> &Arc<Config> { &self.inner.config }
 
-    pub fn db(&self) -> &Arc<Database> { &self.db }
+    pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
-    pub fn pubsub(&self) -> &Pubsub { &self.pubsub }
+    pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
 
     pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
-        self.server_conns.read()
+        self.inner.server_conns.read()
     }
 
     pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
@@ -69,14 +77,18 @@ impl NodeState {
             .map_err(|_| anyhow!("ServerConnection for [{server_id}] not found"))
     }
 
+    pub fn write_server_conns(&self) -> RwLockWriteGuard<ServerConnections> {
+        self.inner.server_conns.write()
+    }
+
     pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
-        self.server_conns.write().insert(*server_id, server_conn);
+        self.write_server_conns().insert(*server_id, server_conn);
     }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn read_parent_services(&self) -> RwLockReadGuard<ParentNodeServices> {
-        self.parent_services.read()
+        self.inner.parent_services.read()
     }
 
     pub fn parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
@@ -92,12 +104,15 @@ impl NodeState {
 
     pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
         debug!("Parent service being registered: {parent_id}");
-        self.parent_services.write().insert(parent_id, service);
+        self.inner
+            .parent_services
+            .write()
+            .insert(parent_id, service);
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         debug!("Parent service being removed: {parent_id}");
-        self.parent_services.write().remove(parent_id)
+        self.inner.parent_services.write().remove(parent_id)
     }
 }
 
