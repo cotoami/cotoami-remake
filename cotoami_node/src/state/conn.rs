@@ -84,7 +84,7 @@ impl ServerConnection {
 
         // Create a SSE client
         let sse_client =
-            SseClient::new(server_node.node_id, http_client.clone(), node_state.clone())?;
+            SseClient::new(server_node.node_id, http_client.clone(), node_state.clone()).await?;
 
         Ok(Self::new_sse(
             client_session.session,

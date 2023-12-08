@@ -4,10 +4,11 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::{ChangelogEntry, Id, Node};
+use cotoami_db::{ChangelogEntry, Id, Node, Operator};
 use futures::StreamExt;
 use parking_lot::RwLock;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
+use tokio::task::spawn_blocking;
 use tower_service::Service;
 use tracing::{debug, error, info};
 
@@ -50,6 +51,7 @@ impl From<eventsource_stream::Event> for NodeSentEvent {
 /// An [SseClient] handles events streamed from an [EventSource].
 pub struct SseClient {
     server_node_id: Id<Node>,
+    server_as_operator: Option<Arc<Operator>>,
 
     http_client: HttpClient,
     event_source: EventSource,
@@ -59,18 +61,28 @@ pub struct SseClient {
 }
 
 impl SseClient {
-    pub fn new(
+    pub async fn new(
         server_node_id: Id<Node>,
         http_client: HttpClient,
         node_state: NodeState,
     ) -> Result<Self> {
+        let server_as_operator = spawn_blocking({
+            let db = node_state.db().clone();
+            move || db.new_session()?.as_operator(server_node_id)
+        })
+        .await??
+        .map(Arc::new);
+
         // To inherit request headers (ex. session token) from the `http_client`,
         // an event source has to be constructed via [EventSource::new] with a
         // [RequestBuilder] constructed by the `http_client`.
         let event_source = EventSource::new(http_client.get("/api/events", None))?;
+
         let state = SseClientState::new(event_source.ready_state());
+
         Ok(Self {
             server_node_id,
+            server_as_operator,
             http_client,
             event_source,
             state: Arc::new(RwLock::new(state)),
@@ -167,32 +179,42 @@ impl SseClient {
     }
 
     async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
-        match event {
-            NodeSentEvent::Connected => (),
-            NodeSentEvent::Change(change) => {
-                // `sync_with_parent` can't be run in parallel since events from the
-                // same node will be handled one by one.
-                self.node_state
-                    .handle_parent_change(
-                        self.server_node_id,
-                        change,
-                        Box::new(self.http_client.clone()),
-                    )
-                    .await?;
+        if let Some(opr) = self.server_as_operator.as_ref() {
+            match event {
+                NodeSentEvent::Request(mut request) => {
+                    debug!(
+                        "Received a request from {}: {request:?}",
+                        self.http_client.url_prefix(),
+                    );
+                    request.set_from(opr.clone());
+                    let response = self.node_state.call(request).await?;
+                    self.http_client
+                        .post_event(&NodeSentEvent::Response(response))
+                        .await?;
+                }
+                NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
+                unsupported => {
+                    info!("SSE client-as-parent doesn't support the event: {unsupported:?}",);
+                }
             }
-            NodeSentEvent::Request(request) => {
-                debug!(
-                    "Received a request from {}: {:?}",
-                    self.http_client.url_prefix(),
-                    request
-                );
-                let response = self.node_state.call(request).await?;
-                self.http_client
-                    .post_event(&NodeSentEvent::Response(response))
-                    .await?;
+        } else {
+            match event {
+                NodeSentEvent::Change(change) => {
+                    // `sync_with_parent` can't be run in parallel since events from the
+                    // same node will be handled one by one.
+                    self.node_state
+                        .handle_parent_change(
+                            self.server_node_id,
+                            change,
+                            Box::new(self.http_client.clone()),
+                        )
+                        .await?;
+                }
+                NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
+                unsupported => {
+                    info!("SSE client-as-child doesn't support the event: {unsupported:?}",);
+                }
             }
-            NodeSentEvent::Response(_) => (),
-            NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
         }
         Ok(())
     }
