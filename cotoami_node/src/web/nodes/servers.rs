@@ -165,7 +165,7 @@ async fn add_server_node(
     let sse_client = SseClient::new(server_id, http_client.clone(), state.clone()).await?;
 
     // Store the server connection
-    let server_conn = ServerConnection::new_sse(client_session.session, http_client, sse_client);
+    let server_conn = ServerConnection::new_sse(sse_client);
     let server = Server::new(server_node, server_conn.not_connected());
     state.put_server_conn(&server_id, server_conn);
 
@@ -206,32 +206,26 @@ async fn set_server_disabled(
     state: &NodeState,
     operator: Operator,
 ) -> Result<()> {
-    // Set `disabled` to true or false
-    let db = state.db().clone();
-    let (local_node, network_role) = spawn_blocking(move || {
-        let mut db = db.new_session()?;
-        Ok::<_, anyhow::Error>((
-            db.local_node()?,
-            db.set_network_disabled(&server_id, disabled, &operator)?,
-        ))
+    // Set `disabled` to true/false
+    spawn_blocking({
+        let db = state.db().clone();
+        move || {
+            let ds = db.new_session()?;
+            ds.set_network_disabled(&server_id, disabled, &operator)?;
+            Ok::<_, anyhow::Error>(())
+        }
     })
     .await??;
-    let NetworkRole::Server(server_node) = network_role else { unreachable!() };
 
     // Disconnect from the server
     if disabled {
         debug!("Disabling the connection to: {}", server_id);
-        state.server_conn(&server_id)?.disable();
+        state.write_server_conn(&server_id)?.disconnect();
 
-    // Or connect to the server again
+    // Or reconnect to the server
     } else {
-        if state.server_conn(&server_id)?.enable_if_possible() {
-            debug!("Enabling the connection to {}", server_id);
-        } else {
-            debug!("Creating a new server connection for {}", server_id);
-            let server_conn = ServerConnection::connect_sse(&server_node, local_node, &state).await;
-            state.put_server_conn(&server_id, server_conn);
-        }
+        debug!("Enabling the connection to {}", server_id);
+        state.write_server_conn(&server_id)?.reconnect();
     }
 
     Ok(())

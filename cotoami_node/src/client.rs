@@ -1,32 +1,37 @@
 //! Network client implementations.
 
-use tokio::task::JoinSet;
-
 mod http;
 mod sse;
 mod ws;
 
-pub use self::{
-    http::HttpClient,
-    sse::{SseClient, SseClientError, SseClientState},
-};
+pub use self::{http::HttpClient, sse::SseClient};
 use crate::service::models::NotConnected;
 
-struct ClientState {
-    tasks: JoinSet<()>,
-    connection: ConnectionState,
+enum ConnectionState {
+    // Newly connecting or reconnecting due to an error.
+    Connecting(Option<anyhow::Error>),
+
+    Connected,
+
+    // Disconnected, which may be a result of an error.
+    Disconnected(Option<ClientError>),
 }
 
-impl ClientState {
-    pub fn disconnect(&mut self) {
-        self.tasks.abort_all();
-        self.connection = ConnectionState::Disconnected(None);
+impl ConnectionState {
+    pub fn init_failed(e: anyhow::Error) -> Self {
+        ConnectionState::Disconnected(Some(ClientError::InitFailed(e)))
     }
 
-    pub fn connection(&self) -> &ConnectionState { &self.connection }
+    pub fn stream_failed(e: anyhow::Error) -> Self {
+        ConnectionState::Disconnected(Some(ClientError::StreamFailed(e)))
+    }
+
+    pub fn event_handling_failed(e: anyhow::Error) -> Self {
+        ConnectionState::Disconnected(Some(ClientError::EventHandlingFailed(e)))
+    }
 
     pub fn not_connected(&self) -> Option<NotConnected> {
-        match self.connection() {
+        match self {
             ConnectionState::Connected => None,
             ConnectionState::Connecting(err) => Some(NotConnected::Connecting(
                 err.as_ref().map(ToString::to_string),
@@ -41,16 +46,6 @@ impl ClientState {
             ConnectionState::Disconnected(None) => Some(NotConnected::Disabled),
         }
     }
-}
-
-enum ConnectionState {
-    // Newly connecting or reconnecting due to an error
-    Connecting(Option<anyhow::Error>),
-
-    Connected,
-
-    // Disconnected, which may be a result of an error
-    Disconnected(Option<ClientError>),
 }
 
 enum ClientError {

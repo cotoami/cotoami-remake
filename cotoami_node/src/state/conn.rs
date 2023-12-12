@@ -6,9 +6,9 @@ use parking_lot::RwLock;
 use tracing::{debug, info};
 
 use crate::{
-    client::{HttpClient, SseClient, SseClientState},
+    client::{HttpClient, SseClient},
     service::{
-        models::{CreateClientNodeSession, NotConnected, Session},
+        models::{CreateClientNodeSession, NotConnected},
         RemoteNodeServiceExt,
     },
     state::NodeState,
@@ -22,20 +22,12 @@ use crate::{
 pub enum ServerConnection {
     Disabled,
     InitFailed(Arc<anyhow::Error>),
-    SseConnected(Arc<SseConnection>),
+    Sse(Arc<RwLock<SseClient>>),
 }
 
 impl ServerConnection {
-    pub fn new_sse(session: Session, http_client: HttpClient, mut sse_client: SseClient) -> Self {
-        let server_conn = ServerConnection::SseConnected(Arc::new(SseConnection {
-            session,
-            http_client,
-            sse_client_state: sse_client.state(),
-        }));
-        tokio::spawn(async move {
-            sse_client.start().await;
-        });
-        server_conn
+    pub fn new_sse(sse_client: SseClient) -> Self {
+        ServerConnection::Sse(Arc::new(RwLock::new(sse_client)))
     }
 
     pub async fn connect_sse(
@@ -65,7 +57,7 @@ impl ServerConnection {
         let password = server_node
             .password(node_state.config().owner_password())?
             .ok_or(anyhow!("Server password is missing."))?;
-        let client_session = http_client
+        let _ = http_client
             .create_client_node_session(CreateClientNodeSession {
                 password,
                 new_password: None,
@@ -86,24 +78,20 @@ impl ServerConnection {
         let sse_client =
             SseClient::new(server_node.node_id, http_client.clone(), node_state.clone()).await?;
 
-        Ok(Self::new_sse(
-            client_session.session,
-            http_client,
-            sse_client,
-        ))
+        Ok(Self::new_sse(sse_client))
     }
 
-    pub fn disable(&self) {
+    pub fn disconnect(&mut self) {
         match self {
-            ServerConnection::SseConnected(conn) => conn.disable(),
+            ServerConnection::Sse(client) => client.write().disconnect(),
             _ => (),
         }
     }
 
-    pub fn enable_if_possible(&self) -> bool {
+    pub fn reconnect(&mut self) {
         match self {
-            ServerConnection::SseConnected(conn) => conn.enable_if_possible(),
-            _ => false,
+            ServerConnection::Sse(client) => client.write().connect(),
+            _ => (),
         }
     }
 
@@ -111,33 +99,9 @@ impl ServerConnection {
         match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ServerConnection::SseConnected(conn) => conn.not_connected(),
+            ServerConnection::Sse(client) => client.read().not_connected(),
         }
     }
 }
 
 pub type ServerConnections = HashMap<Id<Node>, ServerConnection>;
-
-/////////////////////////////////////////////////////////////////////////////
-// SseConnection
-/////////////////////////////////////////////////////////////////////////////
-
-pub struct SseConnection {
-    session: Session,
-    http_client: HttpClient,
-    sse_client_state: Arc<RwLock<SseClientState>>,
-}
-
-impl SseConnection {
-    pub fn session(&self) -> &Session { &self.session }
-
-    pub fn http_client(&self) -> &HttpClient { &self.http_client }
-
-    pub fn disable(&self) { self.sse_client_state.write().disable(); }
-
-    pub fn enable_if_possible(&self) -> bool { self.sse_client_state.write().enable_if_possible() }
-
-    pub fn not_connected(&self) -> Option<NotConnected> {
-        self.sse_client_state.read().not_connected()
-    }
-}

@@ -1,11 +1,7 @@
 use anyhow::Result;
-use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
-use crate::{
-    event::NodeSentEvent,
-    state::{NodeState, ServerConnection},
-};
+use crate::state::{NodeState, ServerConnection};
 
 impl NodeState {
     pub async fn restore_server_conns(&self) -> Result<()> {
@@ -30,36 +26,6 @@ impl NodeState {
             };
             server_conns.insert(server_node.node_id, server_conn);
         }
-        Ok(())
-    }
-
-    pub async fn publish_change_to_child_servers(&self, change: &ChangelogEntry) -> Result<()> {
-        // Collect the connections to the child servers
-        let child_conns: Vec<_> = self
-            .read_server_conns()
-            .iter()
-            .filter_map(|(server_id, conn)| {
-                if self.is_parent(server_id) {
-                    None
-                } else {
-                    Some(conn.clone())
-                }
-            })
-            .collect();
-
-        // Sent the change to the child servers
-        for child_conn in child_conns {
-            match child_conn {
-                ServerConnection::SseConnected(sse_conn) => {
-                    sse_conn
-                        .http_client()
-                        .post_event(&NodeSentEvent::Change(change.clone()))
-                        .await?;
-                }
-                _ => (),
-            }
-        }
-
         Ok(())
     }
 }

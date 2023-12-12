@@ -4,7 +4,7 @@ use std::{collections::HashMap, fs, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tracing::debug;
 use validator::Validate;
 
@@ -69,20 +69,20 @@ impl NodeState {
         self.read_server_conns().contains_key(server_id)
     }
 
-    pub fn server_conn(
-        &self,
-        server_id: &Id<Node>,
-    ) -> Result<MappedRwLockReadGuard<ServerConnection>> {
-        RwLockReadGuard::try_map(self.read_server_conns(), |conns| conns.get(server_id))
-            .map_err(|_| anyhow!("ServerConnection for [{server_id}] not found"))
-    }
-
     pub fn write_server_conns(&self) -> RwLockWriteGuard<ServerConnections> {
         self.inner.server_conns.write()
     }
 
     pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
         self.write_server_conns().insert(*server_id, server_conn);
+    }
+
+    pub fn write_server_conn(
+        &self,
+        server_id: &Id<Node>,
+    ) -> Result<MappedRwLockWriteGuard<ServerConnection>> {
+        RwLockWriteGuard::try_map(self.write_server_conns(), |conns| conns.get_mut(server_id))
+            .map_err(|_| anyhow!("ServerConnection for [{server_id}] not found"))
     }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
