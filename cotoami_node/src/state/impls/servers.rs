@@ -20,13 +20,9 @@ impl NodeState {
 
         let mut server_conns = self.write_server_conns();
         server_conns.clear();
-        for (server_node, _) in server_nodes.iter() {
-            let server_conn = if server_node.disabled {
-                ServerConnection::Disabled
-            } else {
-                ServerConnection::connect_sse(server_node, local_node.clone(), self).await
-            };
-            server_conns.insert(server_node.node_id, server_conn);
+        for (server, _) in server_nodes.iter() {
+            let server_conn = ServerConnection::connect_sse(server, local_node.clone(), self).await;
+            server_conns.insert(server.node_id, server_conn);
         }
         Ok(())
     }

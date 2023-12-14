@@ -35,11 +35,14 @@ impl ServerConnection {
         local_node: Node,
         node_state: &NodeState,
     ) -> Self {
+        if server_node.disabled {
+            return Self::Disabled;
+        }
         match Self::try_connect_sse(server_node, local_node, node_state).await {
             Ok(conn) => conn,
             Err(e) => {
                 debug!("Failed to initialize a server connection: {:?}", e);
-                ServerConnection::InitFailed(Arc::new(e))
+                Self::InitFailed(Arc::new(e))
             }
         }
     }
