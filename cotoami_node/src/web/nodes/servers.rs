@@ -162,7 +162,8 @@ async fn add_server_node(
     }
 
     // Create a SSE client
-    let sse_client = SseClient::new(server_id, http_client.clone(), state.clone()).await?;
+    let mut sse_client = SseClient::new(server_id, http_client.clone(), state.clone()).await?;
+    sse_client.connect();
 
     // Store the server connection
     let server_conn = ServerConnection::new_sse(sse_client);
