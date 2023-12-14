@@ -146,7 +146,7 @@ impl headers::Header for Accept {
 // Error
 /////////////////////////////////////////////////////////////////////////////
 
-// Tell axum how to convert `ApiError` into a response.
+// Tell axum how to convert `ServiceError` into a response.
 impl IntoResponse for ServiceError {
     fn into_response(self) -> Response {
         match self {
