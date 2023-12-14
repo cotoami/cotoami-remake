@@ -35,6 +35,7 @@ pub(super) fn routes() -> Router<NodeState> {
 #[derive(serde::Serialize, new)]
 struct Server {
     node: Node,
+    url_prefix: String,
     not_connected: Option<NotConnected>,
 }
 
@@ -49,9 +50,9 @@ async fn all_server_nodes(
         let nodes = db
             .all_server_nodes(&operator)?
             .into_iter()
-            .map(|(_, node)| {
+            .map(|(server, node)| {
                 let conn = conns.get(&node.uuid).unwrap_or_else(|| unreachable!());
-                Server::new(node, conn.not_connected())
+                Server::new(node, server.url_prefix, conn.not_connected())
             })
             .collect();
         Ok(Content(nodes, accept))
@@ -167,7 +168,11 @@ async fn add_server_node(
 
     // Store the server connection
     let server_conn = ServerConnection::new_sse(sse_client);
-    let server = Server::new(server_node, server_conn.not_connected());
+    let server = Server::new(
+        server_node,
+        http_client.url_prefix().to_string(),
+        server_conn.not_connected(),
+    );
     state.put_server_conn(&server_id, server_conn);
 
     Ok((StatusCode::CREATED, Content(server, accept)))
