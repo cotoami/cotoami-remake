@@ -111,43 +111,41 @@ async fn add_server_node(
         })
         .await?;
     info!("Successfully logged in to {}", http_client.url_prefix());
+    let server_id = client_session.server.uuid;
 
     // Register the server node
-    let (config, db, pubsub) = (
-        state.config().clone(),
-        state.db().clone(),
-        state.pubsub().clone(),
-    );
-    let op = operator.clone();
-    let server_id = client_session.server.uuid;
-    let url_prefix = http_client.url_prefix().to_string();
-    let (server_node, server_db_role) = spawn_blocking(move || {
-        let owner_password = config.owner_password();
-        let mut db = db.new_session()?;
+    let (server_node, server_db_role) = spawn_blocking({
+        let state = state.clone();
+        let operator = operator.clone();
+        let url_prefix = http_client.url_prefix().to_string();
+        move || {
+            let owner_password = state.config().owner_password();
+            let mut ds = state.db().new_session()?;
 
-        // Import the server node data, which is required for registering a [ServerNode]
-        if let Some((_, changelog)) = db.import_node(&client_session.server)? {
-            pubsub.publish_change(changelog);
-        }
-
-        // Database role
-        let server_db_role = if server_as_child {
-            NewDatabaseRole::Child {
-                as_owner: false,
-                can_edit_links: false,
+            // Import the server node data, which is required for registering a [ServerNode]
+            if let Some((_, changelog)) = ds.import_node(&client_session.server)? {
+                state.pubsub().publish_change(changelog);
             }
-        } else {
-            NewDatabaseRole::Parent
-        };
 
-        // Register a [ServerNode] and save the password into it
-        let (_, server_db_role) =
-            db.register_server_node(&server_id, &url_prefix, server_db_role, &op)?;
-        db.save_server_password(&server_id, &password, owner_password, &op)?;
+            // Database role
+            let server_db_role = if server_as_child {
+                NewDatabaseRole::Child {
+                    as_owner: false,
+                    can_edit_links: false,
+                }
+            } else {
+                NewDatabaseRole::Parent
+            };
 
-        // Get the imported node data
-        let node = db.node(&server_id)?.unwrap_or_else(|| unreachable!());
-        Ok::<_, ServiceError>((node, server_db_role))
+            // Register a [ServerNode] and save the password into it
+            let (_, server_db_role) =
+                ds.register_server_node(&server_id, &url_prefix, server_db_role, &operator)?;
+            ds.save_server_password(&server_id, &password, owner_password, &operator)?;
+
+            // Get the imported node data
+            let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());
+            Ok::<_, ServiceError>((node, server_db_role))
+        }
     })
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
