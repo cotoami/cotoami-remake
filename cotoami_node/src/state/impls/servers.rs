@@ -5,14 +5,16 @@ use crate::state::{NodeState, ServerConnection};
 
 impl NodeState {
     pub async fn restore_server_conns(&self) -> Result<()> {
-        let db = self.db().clone();
-        let (local_node, server_nodes) = spawn_blocking(move || {
-            let mut ds = db.new_session()?;
-            let operator = db.globals().local_node_as_operator()?;
-            Ok::<_, anyhow::Error>((
-                ds.local_node_pair(&operator)?.1,
-                ds.all_server_nodes(&operator)?,
-            ))
+        let (local_node, server_nodes) = spawn_blocking({
+            let db = self.db().clone();
+            move || {
+                let mut ds = db.new_session()?;
+                let operator = db.globals().local_node_as_operator()?;
+                Ok::<_, anyhow::Error>((
+                    ds.local_node_pair(&operator)?.1,
+                    ds.all_server_nodes(&operator)?,
+                ))
+            }
         })
         .await??;
 
