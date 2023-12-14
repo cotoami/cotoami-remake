@@ -161,5 +161,5 @@ impl From<InputError> for InputErrors {
 }
 
 impl From<InputError> for ServiceError {
-    fn from(e: InputError) -> Self { e.into() }
+    fn from(e: InputError) -> Self { InputErrors::from(e).into() }
 }
