@@ -36,6 +36,7 @@ pub(super) fn routes() -> Router<NodeState> {
 struct Server {
     node: Node,
     url_prefix: String,
+    is_parent: bool,
     not_connected: Option<NotConnected>,
 }
 
@@ -51,8 +52,13 @@ async fn all_server_nodes(
             .all_server_nodes(&operator)?
             .into_iter()
             .map(|(server, node)| {
-                let conn = conns.get(&node.uuid).unwrap_or_else(|| unreachable!());
-                Server::new(node, server.url_prefix, conn.not_connected())
+                let conn = conns.get(&server.node_id).unwrap_or_else(|| unreachable!());
+                Server::new(
+                    node,
+                    server.url_prefix,
+                    state.is_parent(&server.node_id),
+                    conn.not_connected(),
+                )
             })
             .collect();
         Ok(Content(nodes, accept))
@@ -119,7 +125,6 @@ async fn add_server_node(
         let operator = operator.clone();
         let url_prefix = http_client.url_prefix().to_string();
         move || {
-            let owner_password = state.config().owner_password();
             let mut ds = state.db().new_session()?;
 
             // Import the server node data, which is required for registering a [ServerNode]
@@ -138,6 +143,7 @@ async fn add_server_node(
             };
 
             // Register a [ServerNode] and save the password into it
+            let owner_password = state.config().owner_password();
             let (_, server_db_role) =
                 ds.register_server_node(&server_id, &url_prefix, server_db_role, &operator)?;
             ds.save_server_password(&server_id, &password, owner_password, &operator)?;
@@ -151,7 +157,7 @@ async fn add_server_node(
     info!("ServerNode [{}] registered.", server_node.name);
 
     // Sync with the parent
-    if let DatabaseRole::Parent(parent) = server_db_role {
+    if let DatabaseRole::Parent(parent) = &server_db_role {
         state
             .sync_with_parent(parent.node_id, Box::new(http_client.clone()))
             .await?;
@@ -169,6 +175,7 @@ async fn add_server_node(
     let server = Server::new(
         server_node,
         http_client.url_prefix().to_string(),
+        matches!(server_db_role, DatabaseRole::Parent(_)),
         server_conn.not_connected(),
     );
     state.put_server_conn(&server_id, server_conn);
