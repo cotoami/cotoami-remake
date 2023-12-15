@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::{ChangelogEntry, Id, Node, Operator};
+use cotoami_db::{ChangelogEntry, Id, Node};
 use futures::StreamExt;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;
@@ -43,10 +43,6 @@ impl SseClient {
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
-
-    fn server_as_operator(&self) -> Option<&Arc<Operator>> {
-        self.state.server_as_operator.as_ref()
-    }
 
     fn url_prefix(&self) -> &str { self.http_client.url_prefix() }
 
@@ -175,7 +171,7 @@ impl SseClient {
 
     async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
         // Server-as-child
-        if let Some(opr) = self.server_as_operator() {
+        if let Some(opr) = self.state.server_as_operator.as_ref() {
             match event {
                 NodeSentEvent::Request(mut request) => {
                     debug!("Received a request from {}: {request:?}", self.url_prefix());
