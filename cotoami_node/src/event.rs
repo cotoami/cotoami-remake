@@ -30,7 +30,7 @@ where
 {
     match event {
         NodeSentEvent::Request(mut request) => {
-            debug!("Received a request from: {:?}", opr);
+            debug!("Received a request from: {opr:?}: {request:?}");
             request.set_from(opr);
             match state.call(request).await {
                 Ok(response) => {
@@ -46,6 +46,7 @@ where
                 }
             }
         }
+        NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
         unsupported => {
             info!("Parent doesn't support the event: {:?}", unsupported);
         }
