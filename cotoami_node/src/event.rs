@@ -1,6 +1,6 @@
 use std::{ops::ControlFlow, sync::Arc};
 
-use cotoami_db::{ChangelogEntry, Operator};
+use cotoami_db::{ChangelogEntry, DatabaseError, Id, Node, Operator};
 use futures::{sink::Sink, SinkExt};
 use tower_service::Service;
 use tracing::{debug, error, info};
@@ -48,6 +48,46 @@ where
         }
         unsupported => {
             info!("Parent doesn't support the event: {:?}", unsupported);
+        }
+    }
+    ControlFlow::Continue(())
+}
+
+pub(crate) async fn handle_event_from_parent(
+    event: NodeSentEvent,
+    parent_id: Id<Node>,
+    state: NodeState,
+) -> ControlFlow<(), ()> {
+    match event {
+        NodeSentEvent::Change(change) => {
+            if let Some(parent_service) = state.parent_service(&parent_id) {
+                let r = state
+                    .handle_parent_change(parent_id, change, parent_service)
+                    .await;
+                if let Err(e) = r {
+                    // `sync_with_parent` could be run in parallel, in such cases,
+                    // `DatabaseError::UnexpectedChangeNumber` will be returned.
+                    if let Some(DatabaseError::UnexpectedChangeNumber { .. }) =
+                        e.downcast_ref::<DatabaseError>()
+                    {
+                        info!("Already running sync_with_parent: {e}");
+                    } else {
+                        error!("Error applying a change from the parent ({parent_id}): {e}");
+                        return ControlFlow::Break(());
+                    }
+                }
+            }
+        }
+        NodeSentEvent::Response(response) => {
+            debug!("Received a response from {}", parent_id);
+            let response_id = response.id().clone();
+            state
+                .pubsub()
+                .responses()
+                .publish(response, Some(&response_id))
+        }
+        unsupported => {
+            info!("Child doesn't support the event: {:?}", unsupported);
         }
     }
     ControlFlow::Continue(())

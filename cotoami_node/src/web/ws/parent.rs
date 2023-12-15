@@ -1,12 +1,14 @@
-use std::ops::ControlFlow;
-
 use axum::extract::ws::WebSocket;
-use cotoami_db::{DatabaseError, Id, Node, ParentNode};
+use cotoami_db::ParentNode;
 use futures::StreamExt;
 use tokio::task::JoinSet;
-use tracing::{debug, error, info};
+use tracing::{debug, error};
 
-use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
+use crate::{
+    event::{handle_event_from_parent, NodeSentEvent},
+    service::PubsubService,
+    state::NodeState,
+};
 
 pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: ParentNode) {
     let parent_id = parent.node_id;
@@ -38,7 +40,7 @@ pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: P
     // A task receiving events from the parent
     tasks.spawn(super::handle_message_stream(stream, parent_id, {
         let state = state.clone();
-        move |event| handle_event(event, state.clone(), parent_id)
+        move |event| handle_event_from_parent(event, parent_id, state.clone())
     }));
 
     // Sync with the parent after tasks are setup.
@@ -64,44 +66,4 @@ pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: P
             .events()
             .publish_parent_disconnected(parent_id);
     }
-}
-
-async fn handle_event(
-    event: NodeSentEvent,
-    state: NodeState,
-    parent_id: Id<Node>,
-) -> ControlFlow<(), ()> {
-    match event {
-        NodeSentEvent::Change(change) => {
-            if let Some(parent_service) = state.parent_service(&parent_id) {
-                let r = state
-                    .handle_parent_change(parent_id, change, parent_service)
-                    .await;
-                if let Err(e) = r {
-                    // `sync_with_parent` could be run in parallel, in such cases,
-                    // `DatabaseError::UnexpectedChangeNumber` will be returned.
-                    if let Some(DatabaseError::UnexpectedChangeNumber { .. }) =
-                        e.downcast_ref::<DatabaseError>()
-                    {
-                        info!("Already running sync_with_parent: {e}");
-                    } else {
-                        error!("Error applying a change from the parent ({parent_id}): {e}");
-                        return ControlFlow::Break(());
-                    }
-                }
-            }
-        }
-        NodeSentEvent::Response(response) => {
-            debug!("Received a response from {}", parent_id);
-            let response_id = response.id().clone();
-            state
-                .pubsub()
-                .responses()
-                .publish(response, Some(&response_id))
-        }
-        unsupported => {
-            info!("Child doesn't support the event: {:?}", unsupported);
-        }
-    }
-    ControlFlow::Continue(())
 }
