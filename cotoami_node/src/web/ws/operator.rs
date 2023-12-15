@@ -1,16 +1,16 @@
-use std::{ops::ControlFlow, sync::Arc};
+use std::sync::Arc;
 
 use axum::extract::ws::WebSocket;
 use cotoami_db::Operator;
 use futures::StreamExt;
-use tokio::{
-    sync::mpsc::{self, Sender},
-    task::JoinSet,
-};
-use tower_service::Service;
-use tracing::{debug, error, info};
+use tokio::{sync::mpsc, task::JoinSet};
+use tokio_util::sync::PollSender;
+use tracing::debug;
 
-use crate::{event::NodeSentEvent, state::NodeState};
+use crate::{
+    event::{handle_event_from_operator, NodeSentEvent},
+    state::NodeState,
+};
 
 /// Events to be sent in [handle_operator]:
 /// * local changes (which contains the changes from the parents of the local node)
@@ -54,7 +54,12 @@ pub(super) async fn handle_operator(socket: WebSocket, state: NodeState, opr: Op
     tasks.spawn({
         let opr = Arc::new(opr);
         super::handle_message_stream(stream, node_id, move |event| {
-            handle_event(event, state.clone(), opr.clone(), sender.clone())
+            handle_event_from_operator(
+                event,
+                opr.clone(),
+                state.clone(),
+                PollSender::new(sender.clone()),
+            )
         })
     });
 
@@ -62,39 +67,4 @@ pub(super) async fn handle_operator(socket: WebSocket, state: NodeState, opr: Op
     if let Some(_) = tasks.join_next().await {
         tasks.shutdown().await;
     }
-}
-
-async fn handle_event(
-    event: NodeSentEvent,
-    mut state: NodeState,
-    opr: Arc<Operator>,
-    sender: Sender<NodeSentEvent>,
-) -> ControlFlow<(), ()> {
-    match event {
-        NodeSentEvent::Request(mut request) => {
-            debug!("Received a request from: {:?}", opr);
-            request.set_from(opr);
-            match state.call(request).await {
-                Ok(response) => {
-                    if sender
-                        .send(NodeSentEvent::Response(response))
-                        .await
-                        .is_err()
-                    {
-                        // Disconnected
-                        return ControlFlow::Break(());
-                    }
-                }
-                Err(e) => {
-                    // It shouldn't happen: an error processing a request
-                    // should be stored in a response.
-                    error!("Unexpected error: {}", e);
-                }
-            }
-        }
-        unsupported => {
-            info!("Parent doesn't support the event: {:?}", unsupported);
-        }
-    }
-    ControlFlow::Continue(())
 }
