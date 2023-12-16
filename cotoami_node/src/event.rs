@@ -19,14 +19,15 @@ pub(crate) enum NodeSentEvent {
     Error(String),
 }
 
-pub(crate) async fn handle_event_from_operator<S>(
+pub(crate) async fn handle_event_from_operator<S, E>(
     event: NodeSentEvent,
     opr: Arc<Operator>,
     mut state: NodeState,
     mut sink: S,
-) -> ControlFlow<(), ()>
+) -> ControlFlow<anyhow::Error>
 where
-    S: Sink<NodeSentEvent> + Unpin,
+    S: Sink<NodeSentEvent, Error = E> + Unpin,
+    E: Into<anyhow::Error>,
 {
     match event {
         NodeSentEvent::Request(mut request) => {
@@ -34,9 +35,9 @@ where
             request.set_from(opr);
             match state.call(request).await {
                 Ok(response) => {
-                    if sink.send(NodeSentEvent::Response(response)).await.is_err() {
+                    if let Err(e) = sink.send(NodeSentEvent::Response(response)).await {
                         // Disconnected
-                        return ControlFlow::Break(());
+                        return ControlFlow::Break(e.into().context("Error sending a response."));
                     }
                 }
                 Err(e) => {
@@ -58,7 +59,7 @@ pub(crate) async fn handle_event_from_parent(
     event: NodeSentEvent,
     parent_id: Id<Node>,
     state: NodeState,
-) -> ControlFlow<(), ()> {
+) -> ControlFlow<anyhow::Error> {
     match event {
         NodeSentEvent::Change(change) => {
             if let Some(parent_service) = state.parent_service(&parent_id) {
@@ -74,7 +75,7 @@ pub(crate) async fn handle_event_from_parent(
                         info!("Already running sync_with_parent: {e}");
                     } else {
                         error!("Error applying a change from the parent ({parent_id}): {e}");
-                        return ControlFlow::Break(());
+                        return ControlFlow::Break(e);
                     }
                 }
             }
@@ -87,6 +88,7 @@ pub(crate) async fn handle_event_from_parent(
                 .responses()
                 .publish(response, Some(&response_id))
         }
+        NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
         unsupported => {
             info!("Child doesn't support the event: {:?}", unsupported);
         }

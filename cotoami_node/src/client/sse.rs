@@ -1,6 +1,6 @@
 //! Server-Sent Events client of Node API Service.
 
-use std::sync::Arc;
+use std::{ops::ControlFlow, sync::Arc};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
@@ -8,12 +8,11 @@ use cotoami_db::{ChangelogEntry, Id, Node};
 use futures::StreamExt;
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;
-use tower_service::Service;
 use tracing::{debug, error, info};
 
 use crate::{
     client::{ClientState, ConnectionState, HttpClient},
-    event::NodeSentEvent,
+    event::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
     service::{models::NotConnected, Request, Response},
     state::NodeState,
 };
@@ -104,7 +103,7 @@ impl SseClient {
                         );
                     // Server-as-child
                     } else {
-                        if let Err(e) = self.http_client.post_event(&NodeSentEvent::Connected).await
+                        if let Err(e) = self.http_client.post_event(NodeSentEvent::Connected).await
                         {
                             event_source.close();
                             self.state.set_conn_state(ConnectionState::init_failed(e));
@@ -113,7 +112,7 @@ impl SseClient {
                     }
                 }
                 Ok(ESItem::Message(event)) => {
-                    if let Err(e) = self.handle_node_sent_event(event.into()).await {
+                    if let ControlFlow::Break(e) = self.handle_node_sent_event(event.into()).await {
                         debug!(
                             "Event source {} closed because of an event handling error: {}",
                             self.url_prefix(),
@@ -159,7 +158,7 @@ impl SseClient {
         while let Some(change) = changes.next().await {
             if let Err(e) = self
                 .http_client
-                .post_event(&NodeSentEvent::Change(change.clone()))
+                .post_event(NodeSentEvent::Change(change.clone()))
                 .await
             {
                 // This error won't stop this task as `event_loop` takes
@@ -169,50 +168,14 @@ impl SseClient {
         }
     }
 
-    async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
-        // Server-as-child
+    async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> ControlFlow<anyhow::Error> {
         if let Some(opr) = self.state.server_as_operator.as_ref() {
-            match event {
-                NodeSentEvent::Request(mut request) => {
-                    debug!("Received a request from {}: {request:?}", self.url_prefix());
-                    request.set_from(opr.clone());
-
-                    // Since [tower_service::Service::call] requires a mutable reference of self
-                    // (it doesn't have to be mutable actually because the inner state is wrapped in [Arc]),
-                    // here it clones the [NodeState] to make it mutable.
-                    let mut node_state = self.node_state().clone();
-                    let response = node_state.call(request).await?;
-
-                    self.http_client
-                        .post_event(&NodeSentEvent::Response(response))
-                        .await?;
-                }
-                NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
-                unsupported => {
-                    info!("SSE client-as-parent doesn't support the event: {unsupported:?}");
-                }
-            }
-        // Server-as-parent
+            let sink = self.http_client.as_event_sink();
+            futures::pin_mut!(sink);
+            handle_event_from_operator(event, opr.clone(), self.node_state().clone(), sink).await
         } else {
-            match event {
-                NodeSentEvent::Change(change) => {
-                    // `sync_with_parent` can't be run in parallel since events from the
-                    // same node will be handled one by one.
-                    self.node_state()
-                        .handle_parent_change(
-                            self.state.server_id,
-                            change,
-                            Box::new(self.http_client.clone()),
-                        )
-                        .await?;
-                }
-                NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
-                unsupported => {
-                    info!("SSE client-as-child doesn't support the event: {unsupported:?}");
-                }
-            }
+            handle_event_from_parent(event, self.state.server_id, self.node_state().clone()).await
         }
-        Ok(())
     }
 }
 
@@ -260,13 +223,19 @@ impl From<ReadyState> for ConnectionState {
 /////////////////////////////////////////////////////////////////////////////
 
 impl HttpClient {
-    pub(crate) async fn post_event(&self, event: &NodeSentEvent) -> Result<()> {
-        let bytes = rmp_serde::to_vec(event).map(Bytes::from)?;
+    pub(crate) async fn post_event(&self, event: NodeSentEvent) -> Result<()> {
+        let bytes = rmp_serde::to_vec(&event).map(Bytes::from)?;
         let response = self.post("/api/events").body(bytes).send().await?;
         if response.status().is_success() {
             Ok(())
         } else {
             bail!(response.text().await?);
         }
+    }
+
+    pub(crate) fn as_event_sink(
+        &self,
+    ) -> impl futures::sink::Sink<NodeSentEvent, Error = anyhow::Error> + '_ {
+        futures::sink::unfold((), |(), event: NodeSentEvent| self.post_event(event))
     }
 }

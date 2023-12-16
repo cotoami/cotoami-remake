@@ -54,7 +54,7 @@ async fn handle_message_stream<S, H, F>(mut stream: S, client_id: Id<Node>, hand
 where
     S: Stream<Item = Result<Message, axum::Error>> + Unpin,
     H: Fn(NodeSentEvent) -> F,
-    F: Future<Output = ControlFlow<()>>,
+    F: Future<Output = ControlFlow<anyhow::Error>>,
 {
     while let Some(Ok(msg)) = stream.next().await {
         match msg {
