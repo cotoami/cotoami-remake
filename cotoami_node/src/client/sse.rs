@@ -5,7 +5,7 @@ use std::{ops::ControlFlow, sync::Arc};
 use anyhow::{bail, Result};
 use bytes::Bytes;
 use cotoami_db::{ChangelogEntry, Id, Node};
-use futures::StreamExt;
+use futures::{sink::Sink, StreamExt};
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;
 use tracing::{debug, error, info};
@@ -233,9 +233,7 @@ impl HttpClient {
         }
     }
 
-    pub(crate) fn as_event_sink(
-        &self,
-    ) -> impl futures::sink::Sink<NodeSentEvent, Error = anyhow::Error> + '_ {
+    pub(crate) fn as_event_sink(&self) -> impl Sink<NodeSentEvent, Error = anyhow::Error> + '_ {
         futures::sink::unfold((), |(), event: NodeSentEvent| self.post_event(event))
     }
 }
