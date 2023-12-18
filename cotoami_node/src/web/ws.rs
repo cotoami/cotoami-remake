@@ -27,6 +27,9 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/ws
 /////////////////////////////////////////////////////////////////////////////
 
+/// The handler for the HTTP request (this gets called when the HTTP GET lands at the start
+/// of websocket negotiation). After this completes, the actual switching from HTTP to
+/// websocket protocol will occur.
 async fn ws_handler(
     ws: WebSocketUpgrade,
     State(state): State<NodeState>,
@@ -35,10 +38,12 @@ async fn ws_handler(
     ws.on_upgrade(move |socket| handle_socket(socket, state, session))
 }
 
+/// Actual websocket statemachine (one will be spawned per connection)
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
     let (sink, stream) = socket.split();
 
-    // Convert sink/stream to handle tungstenite messages
+    // Convert axum's sink/stream to handle tungstenite messages
+    // cf. https://github.com/davidpdrsn/axum-tungstenite
     let sink = Box::pin(sink.with(|m: ts::Message| async {
         from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
     }));
@@ -62,8 +67,10 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     }
 }
 
-// This code comes from:
-// https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L591
+/// Convert an axum's [Message] into a tungstenite's [ts::Message].
+///
+/// This code comes from:
+/// <https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L591>
 fn into_tungstenite(msg: Message) -> ts::Message {
     match msg {
         Message::Text(text) => ts::Message::Text(text),
@@ -78,8 +85,10 @@ fn into_tungstenite(msg: Message) -> ts::Message {
     }
 }
 
-// This code comes from:
-// https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L605
+/// Convert a tungstenite's [ts::Message] into an axum's [Message].
+///
+/// This code comes from:
+/// https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L605
 fn from_tungstenite(message: ts::Message) -> Option<Message> {
     match message {
         ts::Message::Text(text) => Some(Message::Text(text)),
