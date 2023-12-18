@@ -1,10 +1,14 @@
-use std::{future::Future, marker::Unpin, ops::ControlFlow};
+use std::{future::Future, marker::Unpin, ops::ControlFlow, sync::Arc};
 
 use bytes::Bytes;
-use cotoami_db::{Id, Node};
+use cotoami_db::{Id, Node, Operator};
 use futures::{Sink, SinkExt, Stream, StreamExt};
-use tokio::task::{AbortHandle, JoinSet};
+use tokio::{
+    sync::mpsc,
+    task::{AbortHandle, JoinSet},
+};
 use tokio_tungstenite::tungstenite::protocol::Message;
+use tokio_util::sync::PollSender;
 use tracing::{debug, error, info};
 
 use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
@@ -64,6 +68,74 @@ pub(crate) async fn handle_parent<TStream, StreamErr, TSink, SinkErr>(
             .pubsub()
             .events()
             .publish_parent_disconnected(parent_id);
+    }
+}
+
+/// Events to be sent in [handle_operator]:
+/// * local changes (which contains the changes from the parents of the local node)
+/// * responses　(correlating with the number of children sending requests)
+const SEND_BUFFER_SIZE: usize = 16;
+
+pub(crate) async fn handle_operator<TStream, StreamErr, TSink, SinkErr>(
+    opr: Operator,
+    stream: TStream,
+    mut sink: TSink,
+    state: &NodeState,
+    abortables: &mut Vec<AbortHandle>,
+) where
+    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
+    StreamErr: Into<anyhow::Error> + Send + 'static,
+    TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
+    SinkErr: Into<anyhow::Error>,
+{
+    let node_id = opr.node_id();
+
+    let (sender, mut receiver) = mpsc::channel::<NodeSentEvent>(SEND_BUFFER_SIZE);
+    let mut tasks = JoinSet::new();
+
+    // A task sending events received from the other tasks
+    abortables.push(tasks.spawn(async move {
+        while let Some(event) = receiver.recv().await {
+            if let Err(e) = send_event(&mut sink, event).await {
+                debug!("Operator ({}) disconnected: {}", node_id, e.into());
+                break;
+            }
+        }
+    }));
+
+    // A task publishing change events to a child node
+    if let Operator::ChildNode(_) = opr {
+        abortables.push(tasks.spawn({
+            let sender = sender.clone();
+            let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
+            async move {
+                while let Some(change) = changes.next().await {
+                    if let Err(_) = sender.send(NodeSentEvent::Change(change)).await {
+                        // The task above has been terminated
+                        break;
+                    }
+                }
+            }
+        }));
+    }
+
+    // A task receiving events from the child
+    abortables.push(tasks.spawn({
+        let opr = Arc::new(opr);
+        let state = state.clone();
+        handle_message_stream(stream, node_id, move |event| {
+            super::handle_event_from_operator(
+                event,
+                opr.clone(),
+                state.clone(),
+                PollSender::new(sender.clone()),
+            )
+        })
+    }));
+
+    // If any one of the tasks exit, abort the others.
+    if let Some(_) = tasks.join_next().await {
+        tasks.shutdown().await;
     }
 }
 

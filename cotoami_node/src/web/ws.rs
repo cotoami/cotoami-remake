@@ -1,5 +1,3 @@
-use std::{future::Future, marker::Unpin, ops::ControlFlow};
-
 use axum::{
     extract::{
         ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade},
@@ -10,16 +8,14 @@ use axum::{
     routing::get,
     Extension, Router,
 };
-use bytes::Bytes;
 use cotoami_db::prelude::*;
-use futures::{Sink, SinkExt, Stream, StreamExt};
+use futures::{SinkExt, StreamExt};
 use tokio_tungstenite::tungstenite as ts;
-use tracing::{debug, info};
 
-use crate::{event::NodeSentEvent, state::NodeState};
-
-mod operator;
-mod parent;
+use crate::{
+    event::tungstenite::{handle_operator, handle_parent},
+    state::NodeState,
+};
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
@@ -40,67 +36,30 @@ async fn ws_handler(
 }
 
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
+    let (sink, stream) = socket.split();
+
+    // Convert sink/stream to handle tungstenite messages
+    let stream = stream.map(|r| r.map(into_tungstenite));
+    let sink = Box::pin(sink.with(|m: ts::Message| async {
+        from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
+    }));
+
     match session {
         ClientSession::Operator(opr) => {
-            operator::handle_operator(socket, state, opr).await;
+            handle_operator(opr, stream, sink, &state, &mut Vec::new()).await;
         }
         ClientSession::ParentNode(parent) => {
-            let (sink, stream) = socket.split();
-            let stream = stream.map(|r| r.map(into_tungstenite));
-            let sink = sink.with(|m: ts::Message| async {
-                from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
-            });
-            crate::event::tungstenite::handle_parent(
+            handle_parent(
                 parent.node_id,
                 &format!("WebSocket client-as-parent: {}", parent.node_id),
                 stream,
-                Box::pin(sink),
+                sink,
                 &state,
                 &mut Vec::new(),
             )
             .await;
         }
     }
-}
-
-async fn handle_message_stream<S, H, F>(mut stream: S, client_id: Id<Node>, handler: H)
-where
-    S: Stream<Item = Result<Message, axum::Error>> + Unpin,
-    H: Fn(NodeSentEvent) -> F,
-    F: Future<Output = ControlFlow<anyhow::Error>>,
-{
-    while let Some(Ok(msg)) = stream.next().await {
-        match msg {
-            Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
-                Ok(event) => {
-                    if handler(event).await.is_break() {
-                        break;
-                    }
-                }
-                Err(e) => {
-                    // A malicious client can send an invalid message intentionally,
-                    // so let's not handle it as an error.
-                    info!("Client ({client_id}) sent an invalid binary message: {e}");
-                    break;
-                }
-            },
-            Message::Close(c) => {
-                info!("Client ({client_id}) sent close with: {c:?}");
-                break;
-            }
-            the_others => debug!("Message ignored: {:?}", the_others),
-        }
-    }
-}
-
-async fn send_event<S, E>(mut message_sink: S, event: NodeSentEvent) -> Result<(), E>
-where
-    S: Sink<Message, Error = E> + Unpin,
-{
-    let bytes = rmp_serde::to_vec(&event)
-        .map(Bytes::from)
-        .expect("A NodeSentEvent should be serializable into MessagePack");
-    message_sink.send(Message::Binary(bytes.into())).await
 }
 
 // This code comes from:
