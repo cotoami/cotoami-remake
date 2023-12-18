@@ -39,21 +39,21 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     let (sink, stream) = socket.split();
 
     // Convert sink/stream to handle tungstenite messages
-    let stream = stream.map(|r| r.map(into_tungstenite));
     let sink = Box::pin(sink.with(|m: ts::Message| async {
         from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
     }));
+    let stream = stream.map(|r| r.map(into_tungstenite));
 
     match session {
         ClientSession::Operator(opr) => {
-            handle_operator(opr, stream, sink, &state, &mut Vec::new()).await;
+            handle_operator(opr, sink, stream, &state, &mut Vec::new()).await;
         }
         ClientSession::ParentNode(parent) => {
             handle_parent(
                 parent.node_id,
                 &format!("WebSocket client-as-parent: {}", parent.node_id),
-                stream,
                 sink,
+                stream,
                 &state,
                 &mut Vec::new(),
             )

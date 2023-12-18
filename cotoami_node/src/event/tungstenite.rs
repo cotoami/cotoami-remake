@@ -13,18 +13,18 @@ use tracing::{debug, error, info};
 
 use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 
-pub(crate) async fn handle_parent<TStream, StreamErr, TSink, SinkErr>(
+pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
     parent_id: Id<Node>,
     description: &str,
-    stream: TStream,
     mut sink: TSink,
+    stream: TStream,
     state: &NodeState,
     abortables: &mut Vec<AbortHandle>,
 ) where
-    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
-    StreamErr: Into<anyhow::Error> + Send + 'static,
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
     SinkErr: Into<anyhow::Error>,
+    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
+    StreamErr: Into<anyhow::Error> + Send + 'static,
 {
     let mut tasks = JoinSet::new();
 
@@ -76,17 +76,17 @@ pub(crate) async fn handle_parent<TStream, StreamErr, TSink, SinkErr>(
 /// * responses　(correlating with the number of children sending requests)
 const SEND_BUFFER_SIZE: usize = 16;
 
-pub(crate) async fn handle_operator<TStream, StreamErr, TSink, SinkErr>(
+pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
     opr: Operator,
-    stream: TStream,
     mut sink: TSink,
+    stream: TStream,
     state: &NodeState,
     abortables: &mut Vec<AbortHandle>,
 ) where
-    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
-    StreamErr: Into<anyhow::Error> + Send + 'static,
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
     SinkErr: Into<anyhow::Error>,
+    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
+    StreamErr: Into<anyhow::Error> + Send + 'static,
 {
     let node_id = opr.node_id();
 
