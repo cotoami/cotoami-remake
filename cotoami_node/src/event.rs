@@ -12,6 +12,7 @@ use crate::{
 
 pub(crate) mod tungstenite;
 
+/// An event to be sent between cotoami nodes.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) enum NodeSentEvent {
     Connected,
@@ -21,6 +22,8 @@ pub(crate) enum NodeSentEvent {
     Error(String),
 }
 
+/// Handle events sent from an entity authenticated as an operator
+/// (a child node or an owner of the local node).
 pub(crate) async fn handle_event_from_operator<S, E>(
     event: NodeSentEvent,
     opr: Arc<Operator>,
@@ -57,6 +60,7 @@ where
     ControlFlow::Continue(())
 }
 
+/// Handle events sent from a parent node.
 pub(crate) async fn handle_event_from_parent(
     event: NodeSentEvent,
     parent_id: Id<Node>,
