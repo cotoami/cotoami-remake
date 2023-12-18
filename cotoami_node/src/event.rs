@@ -10,7 +10,7 @@ use crate::{
     state::NodeState,
 };
 
-mod tungstenite;
+pub(crate) mod tungstenite;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) enum NodeSentEvent {

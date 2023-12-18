@@ -45,7 +45,20 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
             operator::handle_operator(socket, state, opr).await;
         }
         ClientSession::ParentNode(parent) => {
-            parent::handle_parent(socket, state, parent).await;
+            let (sink, stream) = socket.split();
+            let stream = stream.map(|r| r.map(into_tungstenite));
+            let sink = sink.with(|m: ts::Message| async {
+                from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
+            });
+            crate::event::tungstenite::handle_parent(
+                parent.node_id,
+                &format!("WebSocket client-as-parent: {}", parent.node_id),
+                stream,
+                Box::pin(sink),
+                &state,
+                &mut Vec::new(),
+            )
+            .await;
         }
     }
 }
