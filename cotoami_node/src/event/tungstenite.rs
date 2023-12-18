@@ -13,50 +13,6 @@ use tracing::{debug, error, info};
 
 use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 
-/// Send a [NodeSentEvent] to a peer (passed as a [Sink]) by converting it
-/// to a tungstenite's [Message].
-async fn send_event<S, E>(mut message_sink: S, event: NodeSentEvent) -> Result<(), E>
-where
-    S: Sink<Message, Error = E> + Unpin,
-{
-    let bytes = rmp_serde::to_vec(&event)
-        .map(Bytes::from)
-        .expect("A NodeSentEvent should be serializable into MessagePack");
-    message_sink.send(Message::Binary(bytes.into())).await
-}
-
-/// Handle [NodeSentEvent]s streamed from a peer with a specified `handler`.
-async fn handle_message_stream<S, E, H, F>(mut stream: S, peer_id: Id<Node>, handler: H)
-where
-    S: Stream<Item = Result<Message, E>> + Unpin,
-    E: Into<anyhow::Error>,
-    H: Fn(NodeSentEvent) -> F,
-    F: Future<Output = ControlFlow<anyhow::Error>>,
-{
-    while let Some(Ok(msg)) = stream.next().await {
-        match msg {
-            Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
-                Ok(event) => {
-                    if handler(event).await.is_break() {
-                        break;
-                    }
-                }
-                Err(e) => {
-                    // A malicious client can send an invalid message intentionally,
-                    // so let's not handle it as an error.
-                    info!("The peer ({peer_id}) sent an invalid binary message: {e}");
-                    break;
-                }
-            },
-            Message::Close(c) => {
-                info!("The peer ({peer_id}) sent close with: {c:?}");
-                break;
-            }
-            the_others => debug!("Message ignored: {:?}", the_others),
-        }
-    }
-}
-
 /// Spawn tasks to handle a WebSocket connection to a parent node.
 pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
     parent_id: Id<Node>,
@@ -186,3 +142,47 @@ pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
 /// * local changes (which contains the changes from the parents of the local node)
 /// * responses　(correlating with the number of children sending requests)
 const SEND_BUFFER_SIZE: usize = 16;
+
+/// Send a [NodeSentEvent] to a peer (passed as a [Sink]) by converting it
+/// to a tungstenite's [Message].
+async fn send_event<S, E>(mut message_sink: S, event: NodeSentEvent) -> Result<(), E>
+where
+    S: Sink<Message, Error = E> + Unpin,
+{
+    let bytes = rmp_serde::to_vec(&event)
+        .map(Bytes::from)
+        .expect("A NodeSentEvent should be serializable into MessagePack");
+    message_sink.send(Message::Binary(bytes.into())).await
+}
+
+/// Handle [NodeSentEvent]s streamed from a peer with a specified `handler`.
+async fn handle_message_stream<S, E, H, F>(mut stream: S, peer_id: Id<Node>, handler: H)
+where
+    S: Stream<Item = Result<Message, E>> + Unpin,
+    E: Into<anyhow::Error>,
+    H: Fn(NodeSentEvent) -> F,
+    F: Future<Output = ControlFlow<anyhow::Error>>,
+{
+    while let Some(Ok(msg)) = stream.next().await {
+        match msg {
+            Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
+                Ok(event) => {
+                    if handler(event).await.is_break() {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    // A malicious client can send an invalid message intentionally,
+                    // so let's not handle it as an error.
+                    info!("The peer ({peer_id}) sent an invalid binary message: {e}");
+                    break;
+                }
+            },
+            Message::Close(c) => {
+                info!("The peer ({peer_id}) sent close with: {c:?}");
+                break;
+            }
+            the_others => debug!("Message ignored: {:?}", the_others),
+        }
+    }
+}
