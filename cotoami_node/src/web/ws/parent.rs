@@ -44,12 +44,6 @@ pub(super) async fn handle_parent(socket: WebSocket, state: NodeState, parent: P
     }));
 
     // Sync with the parent after tasks are setup.
-    //
-    // NOTE:
-    // Even if the parent_service is available here, the connection could be closed
-    // by this time since deregistering the service will be done below after all the tasks
-    // are shutdown. If the service is corrupted, a request will be timed out in
-    // `sync_with_parent` and all the tasks will be shutdown anyway.
     if let Some(parent_service) = state.parent_service(&parent.node_id) {
         if let Err(e) = state.sync_with_parent(parent_id, parent_service).await {
             error!("Error syncing with ({}): {}", parent.node_id, e);

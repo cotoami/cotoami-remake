@@ -12,8 +12,7 @@ use axum::{
 };
 use bytes::Bytes;
 use cotoami_db::prelude::*;
-use futures::{SinkExt, Stream, StreamExt};
-use futures_util::stream::SplitSink;
+use futures::{Sink, SinkExt, Stream, StreamExt};
 use tracing::{debug, info};
 
 use crate::{event::NodeSentEvent, state::NodeState};
@@ -80,12 +79,12 @@ where
     }
 }
 
-async fn send_event(
-    socket_sink: &mut SplitSink<WebSocket, Message>,
-    event: NodeSentEvent,
-) -> Result<(), axum::Error> {
+async fn send_event<S, E>(mut message_sink: S, event: NodeSentEvent) -> Result<(), E>
+where
+    S: Sink<Message, Error = E> + Unpin,
+{
     let bytes = rmp_serde::to_vec(&event)
         .map(Bytes::from)
         .expect("A NodeSentEvent should be serializable into MessagePack");
-    socket_sink.send(Message::Binary(bytes.into())).await
+    message_sink.send(Message::Binary(bytes.into())).await
 }

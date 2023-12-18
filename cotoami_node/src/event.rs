@@ -1,7 +1,7 @@
 use std::{ops::ControlFlow, sync::Arc};
 
 use cotoami_db::{ChangelogEntry, DatabaseError, Id, Node, Operator};
-use futures::{sink::Sink, SinkExt};
+use futures::{Sink, SinkExt};
 use tower_service::Service;
 use tracing::{debug, error, info};
 
