@@ -30,7 +30,7 @@ pub(crate) async fn handle_event_from_operator<S, E>(
     event: NodeSentEvent,
     opr: Arc<Operator>,
     mut state: NodeState,
-    mut sink: S,
+    mut peer: S,
 ) -> ControlFlow<anyhow::Error>
 where
     S: Sink<NodeSentEvent, Error = E> + Unpin,
@@ -42,7 +42,7 @@ where
             request.set_from(opr);
             match state.call(request).await {
                 Ok(response) => {
-                    if let Err(e) = sink.send(NodeSentEvent::Response(response)).await {
+                    if let Err(e) = peer.send(NodeSentEvent::Response(response)).await {
                         // Disconnected
                         return ControlFlow::Break(e.into().context("Error sending a response."));
                     }
