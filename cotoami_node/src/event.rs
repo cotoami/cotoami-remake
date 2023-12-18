@@ -24,6 +24,8 @@ pub(crate) enum NodeSentEvent {
 
 /// Handle events sent from an entity authenticated as an operator
 /// (a child node or an owner of the local node).
+///
+/// This function is protocol-agnostic as long as the peer can be treated as a [Sink].
 pub(crate) async fn handle_event_from_operator<S, E>(
     event: NodeSentEvent,
     opr: Arc<Operator>,
@@ -61,6 +63,8 @@ where
 }
 
 /// Handle events sent from a parent node.
+///
+/// This function is protocol-agnostic.
 pub(crate) async fn handle_event_from_parent(
     event: NodeSentEvent,
     parent_id: Id<Node>,
