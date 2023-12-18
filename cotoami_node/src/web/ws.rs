@@ -42,7 +42,7 @@ async fn ws_handler(
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
     let (sink, stream) = socket.split();
 
-    // Convert axum's sink/stream to handle tungstenite messages
+    // Adapt axum's sink/stream to handle tungstenite messages
     // cf. https://github.com/davidpdrsn/axum-tungstenite
     let sink = Box::pin(sink.with(|m: ts::Message| async {
         from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
