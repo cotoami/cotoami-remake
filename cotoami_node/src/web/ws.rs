@@ -2,7 +2,7 @@ use std::{future::Future, marker::Unpin, ops::ControlFlow};
 
 use axum::{
     extract::{
-        ws::{Message, WebSocket, WebSocketUpgrade},
+        ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade},
         State,
     },
     middleware,
@@ -13,6 +13,7 @@ use axum::{
 use bytes::Bytes;
 use cotoami_db::prelude::*;
 use futures::{Sink, SinkExt, Stream, StreamExt};
+use tokio_tungstenite::tungstenite as ts;
 use tracing::{debug, info};
 
 use crate::{event::NodeSentEvent, state::NodeState};
@@ -87,4 +88,39 @@ where
         .map(Bytes::from)
         .expect("A NodeSentEvent should be serializable into MessagePack");
     message_sink.send(Message::Binary(bytes.into())).await
+}
+
+// This code comes from:
+// https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L591
+fn into_tungstenite(msg: Message) -> ts::Message {
+    match msg {
+        Message::Text(text) => ts::Message::Text(text),
+        Message::Binary(binary) => ts::Message::Binary(binary),
+        Message::Ping(ping) => ts::Message::Ping(ping),
+        Message::Pong(pong) => ts::Message::Pong(pong),
+        Message::Close(Some(close)) => ts::Message::Close(Some(ts::protocol::CloseFrame {
+            code: ts::protocol::frame::coding::CloseCode::from(close.code),
+            reason: close.reason,
+        })),
+        Message::Close(None) => ts::Message::Close(None),
+    }
+}
+
+// This code comes from:
+// https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L605
+fn from_tungstenite(message: ts::Message) -> Option<Message> {
+    match message {
+        ts::Message::Text(text) => Some(Message::Text(text)),
+        ts::Message::Binary(binary) => Some(Message::Binary(binary)),
+        ts::Message::Ping(ping) => Some(Message::Ping(ping)),
+        ts::Message::Pong(pong) => Some(Message::Pong(pong)),
+        ts::Message::Close(Some(close)) => Some(Message::Close(Some(CloseFrame {
+            code: close.code.into(),
+            reason: close.reason,
+        }))),
+        ts::Message::Close(None) => Some(Message::Close(None)),
+        // we can ignore `Frame` frames as recommended by the tungstenite maintainers
+        // https://github.com/snapview/tungstenite-rs/issues/268
+        ts::Message::Frame(_) => None,
+    }
 }
