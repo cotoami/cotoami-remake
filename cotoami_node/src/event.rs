@@ -1,9 +1,7 @@
 use std::{ops::ControlFlow, sync::Arc};
 
-use bytes::Bytes;
 use cotoami_db::{ChangelogEntry, DatabaseError, Id, Node, Operator};
 use futures::{Sink, SinkExt};
-use tokio_tungstenite::tungstenite::protocol::Message;
 use tower_service::Service;
 use tracing::{debug, error, info};
 
@@ -12,6 +10,8 @@ use crate::{
     state::NodeState,
 };
 
+mod ws;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) enum NodeSentEvent {
     Connected,
@@ -19,16 +19,6 @@ pub(crate) enum NodeSentEvent {
     Request(Request),
     Response(Response),
     Error(String),
-}
-
-pub(crate) async fn send_event<S, E>(mut message_sink: S, event: NodeSentEvent) -> Result<(), E>
-where
-    S: Sink<Message, Error = E> + Unpin,
-{
-    let bytes = rmp_serde::to_vec(&event)
-        .map(Bytes::from)
-        .expect("A NodeSentEvent should be serializable into MessagePack");
-    message_sink.send(Message::Binary(bytes.into())).await
 }
 
 pub(crate) async fn handle_event_from_operator<S, E>(
