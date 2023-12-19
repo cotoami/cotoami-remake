@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
-    event::tungstenite::{handle_operator, handle_parent},
+    event::tungstenite::{communicate_with_operator, communicate_with_parent},
     state::NodeState,
 };
 
@@ -55,10 +55,10 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     let abortables = Arc::new(Mutex::new(Vec::new()));
     match session {
         ClientSession::Operator(opr) => {
-            handle_operator(Arc::new(opr), sink, stream, state, abortables).await;
+            communicate_with_operator(Arc::new(opr), sink, stream, state, abortables).await;
         }
         ClientSession::ParentNode(parent) => {
-            handle_parent(
+            communicate_with_parent(
                 parent.node_id,
                 format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,

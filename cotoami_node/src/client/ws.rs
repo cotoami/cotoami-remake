@@ -11,7 +11,7 @@ use url::Url;
 
 use crate::{
     client::{ClientState, ConnectionState},
-    event::tungstenite::{handle_operator, handle_parent},
+    event::tungstenite::{communicate_with_operator, communicate_with_parent},
     service::models::NotConnected,
     state::NodeState,
 };
@@ -53,7 +53,7 @@ impl WebSocketClient {
 
                 let (sink, stream) = ws_stream.split();
                 if let Some(opr) = self.state.server_as_operator.as_ref() {
-                    tokio::spawn(handle_operator(
+                    tokio::spawn(communicate_with_operator(
                         opr.clone(),
                         sink,
                         stream,
@@ -61,7 +61,7 @@ impl WebSocketClient {
                         self.state.abortables.clone(),
                     ));
                 } else {
-                    tokio::spawn(handle_parent(
+                    tokio::spawn(communicate_with_parent(
                         self.state.server_id,
                         format!("WebSocket server-as-parent: {}", self.ws_url),
                         sink,

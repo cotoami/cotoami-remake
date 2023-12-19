@@ -15,7 +15,7 @@ use tracing::{debug, error, info};
 use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 
 /// Spawn and join tasks to handle a WebSocket connection to a parent node.
-pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
+pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
     parent_id: Id<Node>,
     description: String,
     mut sink: TSink,
@@ -77,7 +77,7 @@ pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
 }
 
 /// Spawn and join tasks to handle a WebSocket connection to a child node.
-pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
+pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr>(
     opr: Arc<Operator>,
     mut sink: TSink,
     stream: TStream,
