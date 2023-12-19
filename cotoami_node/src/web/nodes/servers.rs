@@ -156,16 +156,6 @@ async fn add_server_node(
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
 
-    // Sync with the parent
-    if let DatabaseRole::Parent(parent) = &server_db_role {
-        state
-            .sync_with_parent(parent.node_id, Box::new(http_client.clone()))
-            .await?;
-        state
-            .after_first_import(server_node.clone(), form.replicate.unwrap_or(false))
-            .await?;
-    }
-
     // Create a SSE client
     let mut sse_client = SseClient::new(server_id, http_client.clone(), state.clone()).await?;
     sse_client.connect();

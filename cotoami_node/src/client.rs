@@ -21,7 +21,7 @@ struct ClientState {
     server_as_operator: Option<Arc<Operator>>,
     conn_state: RwLock<ConnectionState>,
     node_state: NodeState,
-    abortables: Mutex<Vec<AbortHandle>>,
+    abortables: Arc<Mutex<Vec<AbortHandle>>>,
 }
 
 impl ClientState {
@@ -38,7 +38,7 @@ impl ClientState {
             server_as_operator,
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
-            abortables: Mutex::new(Vec::new()),
+            abortables: Arc::new(Mutex::new(Vec::new())),
         })
     }
 

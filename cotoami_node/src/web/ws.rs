@@ -12,6 +12,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::{SinkExt, StreamExt};
+use parking_lot::Mutex;
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
@@ -51,18 +52,19 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     }));
     let stream = stream.map(|r| r.map(into_tungstenite));
 
+    let abortables = Arc::new(Mutex::new(Vec::new()));
     match session {
         ClientSession::Operator(opr) => {
-            handle_operator(Arc::new(opr), sink, stream, state, &mut Vec::new()).await;
+            handle_operator(Arc::new(opr), sink, stream, state, abortables).await;
         }
         ClientSession::ParentNode(parent) => {
             handle_parent(
                 parent.node_id,
-                &format!("WebSocket client-as-parent: {}", parent.node_id),
+                format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,
                 stream,
-                &state,
-                &mut Vec::new(),
+                state,
+                abortables,
             )
             .await;
         }

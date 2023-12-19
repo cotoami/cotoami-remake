@@ -3,6 +3,7 @@ use std::{future::Future, marker::Unpin, ops::ControlFlow, sync::Arc};
 use bytes::Bytes;
 use cotoami_db::{Id, Node, Operator};
 use futures::{Sink, SinkExt, Stream, StreamExt};
+use parking_lot::Mutex;
 use tokio::{
     sync::mpsc,
     task::{AbortHandle, JoinSet},
@@ -13,14 +14,14 @@ use tracing::{debug, error, info};
 
 use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 
-/// Spawn tasks to handle a WebSocket connection to a parent node.
+/// Spawn and join tasks to handle a WebSocket connection to a parent node.
 pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
     parent_id: Id<Node>,
-    description: &str,
+    description: String,
     mut sink: TSink,
     stream: TStream,
-    state: &NodeState,
-    abortables: &mut Vec<AbortHandle>,
+    state: NodeState,
+    abortables: Arc<Mutex<Vec<AbortHandle>>>,
 ) where
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
     SinkErr: Into<anyhow::Error>,
@@ -30,11 +31,12 @@ pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
     let mut tasks = JoinSet::new();
 
     // Register a parent service
-    let parent_service = PubsubService::new(description, state.pubsub().responses().clone());
+    let parent_service =
+        PubsubService::new(description.clone(), state.pubsub().responses().clone());
     state.put_parent_service(parent_id, Box::new(parent_service.clone()));
 
     // A task sending request events
-    abortables.push(tasks.spawn({
+    abortables.lock().push(tasks.spawn({
         let mut requests = parent_service.requests().subscribe(None::<()>);
         async move {
             while let Some(request) = requests.next().await {
@@ -48,10 +50,12 @@ pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
     }));
 
     // A task receiving events from the parent
-    abortables.push(tasks.spawn(handle_message_stream(stream, parent_id, {
-        let state = state.clone();
-        move |event| super::handle_event_from_parent(event, parent_id, state.clone())
-    })));
+    abortables
+        .lock()
+        .push(tasks.spawn(handle_message_stream(stream, parent_id, {
+            let state = state.clone();
+            move |event| super::handle_event_from_parent(event, parent_id, state.clone())
+        })));
 
     // Sync with the parent after tasks are setup.
     if let Some(parent_service) = state.parent_service(&parent_id) {
@@ -72,13 +76,13 @@ pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
     }
 }
 
-/// Spawn tasks to handle a WebSocket connection to a child node.
+/// Spawn and join tasks to handle a WebSocket connection to a child node.
 pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
     opr: Arc<Operator>,
     mut sink: TSink,
     stream: TStream,
     state: NodeState,
-    abortables: &mut Vec<AbortHandle>,
+    abortables: Arc<Mutex<Vec<AbortHandle>>>,
 ) where
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
     SinkErr: Into<anyhow::Error>,
@@ -91,7 +95,7 @@ pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
     let mut tasks = JoinSet::new();
 
     // A task sending events received from the other tasks
-    abortables.push(tasks.spawn(async move {
+    abortables.lock().push(tasks.spawn(async move {
         while let Some(event) = receiver.recv().await {
             if let Err(e) = send_event(&mut sink, event).await {
                 debug!("Operator ({}) disconnected: {}", node_id, e.into());
@@ -102,7 +106,7 @@ pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
 
     // A task publishing change events to a child node
     if let Operator::ChildNode(_) = *opr {
-        abortables.push(tasks.spawn({
+        abortables.lock().push(tasks.spawn({
             let sender = sender.clone();
             let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
             async move {
@@ -117,7 +121,7 @@ pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
     }
 
     // A task receiving events from the child
-    abortables.push(tasks.spawn({
+    abortables.lock().push(tasks.spawn({
         handle_message_stream(stream, node_id, move |event| {
             super::handle_event_from_operator(
                 event,
