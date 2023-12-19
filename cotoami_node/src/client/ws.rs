@@ -6,6 +6,7 @@ use anyhow::Result;
 use cotoami_db::{Id, Node};
 use futures::StreamExt;
 use tokio_tungstenite::connect_async;
+use tracing::info;
 use url::Url;
 
 use crate::{
@@ -47,6 +48,9 @@ impl WebSocketClient {
                     .set_conn_state(ConnectionState::init_failed(e.into()));
             }
             Ok((ws_stream, _)) => {
+                info!("WebSocket connection opened: {}", self.ws_url);
+                self.state.set_conn_state(ConnectionState::Connected);
+
                 let (sink, stream) = ws_stream.split();
                 if let Some(opr) = self.state.server_as_operator.as_ref() {
                     handle_operator(
