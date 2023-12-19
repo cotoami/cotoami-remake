@@ -55,7 +55,15 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     let abortables = Arc::new(Mutex::new(Vec::new()));
     match session {
         ClientSession::Operator(opr) => {
-            communicate_with_operator(state, Arc::new(opr), sink, stream, abortables).await;
+            communicate_with_operator(
+                state,
+                Arc::new(opr),
+                sink,
+                stream,
+                futures::sink::drain(),
+                abortables,
+            )
+            .await;
         }
         ClientSession::ParentNode(parent) => {
             communicate_with_parent(
@@ -64,6 +72,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,
                 stream,
+                futures::sink::drain(),
                 abortables,
             )
             .await;

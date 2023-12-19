@@ -22,6 +22,13 @@ pub(crate) enum NodeSentEvent {
     Error(String),
 }
 
+#[derive(Debug)]
+pub(crate) enum EventLoopError {
+    InitFailed(anyhow::Error),
+    CommunicationFailed(anyhow::Error),
+    EventHandlingFailed(anyhow::Error),
+}
+
 /// Handle events sent from an entity authenticated as an operator
 /// (a child node or an owner of the local node).
 ///
