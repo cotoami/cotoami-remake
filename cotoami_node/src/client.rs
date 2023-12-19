@@ -8,7 +8,7 @@ use parking_lot::{Mutex, RwLock};
 use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::info;
 
-use crate::{service::models::NotConnected, state::NodeState};
+use crate::{event::EventLoopError, service::models::NotConnected, state::NodeState};
 
 mod http;
 mod sse;
@@ -85,20 +85,20 @@ enum ConnectionState {
     Connected,
 
     // Disconnected, which may be a result of an error.
-    Disconnected(Option<ClientError>),
+    Disconnected(Option<EventLoopError>),
 }
 
 impl ConnectionState {
     pub fn init_failed(e: anyhow::Error) -> Self {
-        ConnectionState::Disconnected(Some(ClientError::InitFailed(e)))
+        ConnectionState::Disconnected(Some(EventLoopError::InitFailed(e)))
     }
 
     pub fn stream_failed(e: anyhow::Error) -> Self {
-        ConnectionState::Disconnected(Some(ClientError::StreamFailed(e)))
+        ConnectionState::Disconnected(Some(EventLoopError::CommunicationFailed(e)))
     }
 
     pub fn event_handling_failed(e: anyhow::Error) -> Self {
-        ConnectionState::Disconnected(Some(ClientError::EventHandlingFailed(e)))
+        ConnectionState::Disconnected(Some(EventLoopError::EventHandlingFailed(e)))
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> {
@@ -108,19 +108,15 @@ impl ConnectionState {
                 err.as_ref().map(ToString::to_string),
             )),
             ConnectionState::Disconnected(Some(err)) => match err {
-                ClientError::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-                ClientError::StreamFailed(e) => Some(NotConnected::StreamFailed(e.to_string())),
-                ClientError::EventHandlingFailed(e) => {
+                EventLoopError::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
+                EventLoopError::CommunicationFailed(e) => {
+                    Some(NotConnected::CommunicationFailed(e.to_string()))
+                }
+                EventLoopError::EventHandlingFailed(e) => {
                     Some(NotConnected::EventHandlingFailed(e.to_string()))
                 }
             },
             ConnectionState::Disconnected(None) => Some(NotConnected::Disabled),
         }
     }
-}
-
-enum ClientError {
-    InitFailed(anyhow::Error),
-    StreamFailed(anyhow::Error),
-    EventHandlingFailed(anyhow::Error),
 }
