@@ -54,19 +54,19 @@ impl WebSocketClient {
                 let (sink, stream) = ws_stream.split();
                 if let Some(opr) = self.state.server_as_operator.as_ref() {
                     tokio::spawn(communicate_with_operator(
+                        self.state.node_state.clone(),
                         opr.clone(),
                         sink,
                         stream,
-                        self.state.node_state.clone(),
                         self.state.abortables.clone(),
                     ));
                 } else {
                     tokio::spawn(communicate_with_parent(
+                        self.state.node_state.clone(),
                         self.state.server_id,
                         format!("WebSocket server-as-parent: {}", self.ws_url),
                         sink,
                         stream,
-                        self.state.node_state.clone(),
                         self.state.abortables.clone(),
                     ));
                 }

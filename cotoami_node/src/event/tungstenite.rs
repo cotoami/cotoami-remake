@@ -16,11 +16,11 @@ use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 
 /// Spawn and join tasks to handle a WebSocket connection to a parent node.
 pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
+    node_state: NodeState,
     parent_id: Id<Node>,
     description: String,
     mut sink: TSink,
     stream: TStream,
-    state: NodeState,
     abortables: Arc<Mutex<Vec<AbortHandle>>>,
 ) where
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
@@ -32,8 +32,8 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
 
     // Register a parent service
     let parent_service =
-        PubsubService::new(description.clone(), state.pubsub().responses().clone());
-    state.put_parent_service(parent_id, Box::new(parent_service.clone()));
+        PubsubService::new(description.clone(), node_state.pubsub().responses().clone());
+    node_state.put_parent_service(parent_id, Box::new(parent_service.clone()));
 
     // A task sending request events
     abortables.lock().push(tasks.spawn({
@@ -53,13 +53,13 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
     abortables
         .lock()
         .push(tasks.spawn(handle_message_stream(stream, parent_id, {
-            let state = state.clone();
-            move |event| super::handle_event_from_parent(event, parent_id, state.clone())
+            let node_state = node_state.clone();
+            move |event| super::handle_event_from_parent(event, parent_id, node_state.clone())
         })));
 
     // Sync with the parent after tasks are setup.
-    if let Some(parent_service) = state.parent_service(&parent_id) {
-        if let Err(e) = state.sync_with_parent(parent_id, parent_service).await {
+    if let Some(parent_service) = node_state.parent_service(&parent_id) {
+        if let Err(e) = node_state.sync_with_parent(parent_id, parent_service).await {
             error!("Error syncing with ({}): {}", description, e);
             tasks.shutdown().await;
             return;
@@ -69,7 +69,7 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
     // If any one of the tasks exit, abort the other.
     if let Some(_) = tasks.join_next().await {
         tasks.shutdown().await;
-        state
+        node_state
             .pubsub()
             .events()
             .publish_parent_disconnected(parent_id);
@@ -78,10 +78,10 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
 
 /// Spawn and join tasks to handle a WebSocket connection to a child node.
 pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr>(
+    node_state: NodeState,
     opr: Arc<Operator>,
     mut sink: TSink,
     stream: TStream,
-    state: NodeState,
     abortables: Arc<Mutex<Vec<AbortHandle>>>,
 ) where
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
@@ -108,7 +108,7 @@ pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr
     if let Operator::ChildNode(_) = *opr {
         abortables.lock().push(tasks.spawn({
             let sender = sender.clone();
-            let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
+            let mut changes = node_state.pubsub().local_changes().subscribe(None::<()>);
             async move {
                 while let Some(change) = changes.next().await {
                     if let Err(_) = sender.send(NodeSentEvent::Change(change)).await {
@@ -126,7 +126,7 @@ pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr
             super::handle_event_from_operator(
                 event,
                 opr.clone(),
-                state.clone(),
+                node_state.clone(),
                 PollSender::new(sender.clone()),
             )
         })
