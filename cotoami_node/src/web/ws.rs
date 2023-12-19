@@ -101,7 +101,7 @@ fn into_tungstenite(msg: Message) -> ts::Message {
 /// Convert a tungstenite's [ts::Message] into an axum's [Message].
 ///
 /// This code comes from:
-/// https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L605
+/// <https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L605>
 fn from_tungstenite(message: ts::Message) -> Option<Message> {
     match message {
         ts::Message::Text(text) => Some(Message::Text(text)),
