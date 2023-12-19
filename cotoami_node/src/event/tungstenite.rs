@@ -74,10 +74,10 @@ pub(crate) async fn handle_parent<TSink, SinkErr, TStream, StreamErr>(
 
 /// Spawn tasks to handle a WebSocket connection to a child node.
 pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
-    opr: Operator,
+    opr: Arc<Operator>,
     mut sink: TSink,
     stream: TStream,
-    state: &NodeState,
+    state: NodeState,
     abortables: &mut Vec<AbortHandle>,
 ) where
     TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
@@ -101,7 +101,7 @@ pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
     }));
 
     // A task publishing change events to a child node
-    if let Operator::ChildNode(_) = opr {
+    if let Operator::ChildNode(_) = *opr {
         abortables.push(tasks.spawn({
             let sender = sender.clone();
             let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
@@ -118,8 +118,6 @@ pub(crate) async fn handle_operator<TSink, SinkErr, TStream, StreamErr>(
 
     // A task receiving events from the child
     abortables.push(tasks.spawn({
-        let opr = Arc::new(opr);
-        let state = state.clone();
         handle_message_stream(stream, node_id, move |event| {
             super::handle_event_from_operator(
                 event,

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{
         ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade},
@@ -51,7 +53,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
 
     match session {
         ClientSession::Operator(opr) => {
-            handle_operator(opr, sink, stream, &state, &mut Vec::new()).await;
+            handle_operator(Arc::new(opr), sink, stream, state, &mut Vec::new()).await;
         }
         ClientSession::ParentNode(parent) => {
             handle_parent(

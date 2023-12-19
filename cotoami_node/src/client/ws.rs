@@ -3,15 +3,14 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use bytes::Bytes;
 use cotoami_db::{Id, Node};
-use futures::{Sink, SinkExt, StreamExt};
-use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+use futures::StreamExt;
+use tokio_tungstenite::connect_async;
 use url::Url;
 
 use crate::{
     client::{ClientState, ConnectionState},
-    event::NodeSentEvent,
+    event::tungstenite::{handle_operator, handle_parent},
     service::models::NotConnected,
     state::NodeState,
 };
@@ -49,6 +48,26 @@ impl WebSocketClient {
             }
             Ok((ws_stream, _)) => {
                 let (sink, stream) = ws_stream.split();
+                if let Some(opr) = self.state.server_as_operator.as_ref() {
+                    handle_operator(
+                        opr.clone(),
+                        sink,
+                        stream,
+                        self.state.node_state.clone(),
+                        self.state.abortables.lock().as_mut(),
+                    )
+                    .await;
+                } else {
+                    handle_parent(
+                        self.state.server_id,
+                        &format!("WebSocket server-as-parent: {}", self.ws_url),
+                        sink,
+                        stream,
+                        &self.state.node_state,
+                        self.state.abortables.lock().as_mut(),
+                    )
+                    .await;
+                }
             }
         }
     }
