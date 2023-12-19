@@ -15,18 +15,18 @@ use tracing::{debug, error, info};
 use crate::{event::NodeSentEvent, service::PubsubService, state::NodeState};
 
 /// Spawn and join tasks to handle a WebSocket connection to a parent node.
-pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
+pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgStreamErr>(
     node_state: NodeState,
     parent_id: Id<Node>,
     description: String,
-    mut sink: TSink,
-    stream: TStream,
+    mut msg_sink: MsgSink,
+    msg_stream: MsgStream,
     abortables: Arc<Mutex<Vec<AbortHandle>>>,
 ) where
-    TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
-    SinkErr: Into<anyhow::Error>,
-    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
-    StreamErr: Into<anyhow::Error> + Send + 'static,
+    MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
+    MsgSinkErr: Into<anyhow::Error>,
+    MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
+    MsgStreamErr: Into<anyhow::Error> + Send + 'static,
 {
     let mut tasks = JoinSet::new();
 
@@ -41,7 +41,7 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
         async move {
             while let Some(request) = requests.next().await {
                 let event = NodeSentEvent::Request(request);
-                if let Err(e) = send_event(&mut sink, event).await {
+                if let Err(e) = send_event(&mut msg_sink, event).await {
                     debug!("Parent ({}) disconnected: {}", parent_id, e.into());
                     break;
                 }
@@ -52,7 +52,7 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
     // A task receiving events from the parent
     abortables
         .lock()
-        .push(tasks.spawn(handle_message_stream(stream, parent_id, {
+        .push(tasks.spawn(handle_message_stream(msg_stream, parent_id, {
             let node_state = node_state.clone();
             move |event| super::handle_event_from_parent(event, parent_id, node_state.clone())
         })));
@@ -77,17 +77,17 @@ pub(crate) async fn communicate_with_parent<TSink, SinkErr, TStream, StreamErr>(
 }
 
 /// Spawn and join tasks to handle a WebSocket connection to a child node.
-pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr>(
+pub(crate) async fn communicate_with_operator<MsgSink, MsgSinkErr, MsgStream, MsgStreamErr>(
     node_state: NodeState,
     opr: Arc<Operator>,
-    mut sink: TSink,
-    stream: TStream,
+    mut msg_sink: MsgSink,
+    msg_stream: MsgStream,
     abortables: Arc<Mutex<Vec<AbortHandle>>>,
 ) where
-    TSink: Sink<Message, Error = SinkErr> + Unpin + Send + 'static,
-    SinkErr: Into<anyhow::Error>,
-    TStream: Stream<Item = Result<Message, StreamErr>> + Unpin + Send + 'static,
-    StreamErr: Into<anyhow::Error> + Send + 'static,
+    MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
+    MsgSinkErr: Into<anyhow::Error>,
+    MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
+    MsgStreamErr: Into<anyhow::Error> + Send + 'static,
 {
     let node_id = opr.node_id();
 
@@ -97,7 +97,7 @@ pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr
     // A task sending events received from the other tasks
     abortables.lock().push(tasks.spawn(async move {
         while let Some(event) = receiver.recv().await {
-            if let Err(e) = send_event(&mut sink, event).await {
+            if let Err(e) = send_event(&mut msg_sink, event).await {
                 debug!("Operator ({}) disconnected: {}", node_id, e.into());
                 break;
             }
@@ -122,7 +122,7 @@ pub(crate) async fn communicate_with_operator<TSink, SinkErr, TStream, StreamErr
 
     // A task receiving events from the child
     abortables.lock().push(tasks.spawn({
-        handle_message_stream(stream, node_id, move |event| {
+        handle_message_stream(msg_stream, node_id, move |event| {
             super::handle_event_from_operator(
                 event,
                 opr.clone(),
