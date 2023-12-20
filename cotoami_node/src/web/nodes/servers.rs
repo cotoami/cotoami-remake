@@ -120,7 +120,7 @@ async fn add_server_node(
     let server_id = client_session.server.uuid;
 
     // Register the server node
-    let (server_node, server_db_role) = spawn_blocking({
+    let (server, server_node, server_db_role) = spawn_blocking({
         let state = state.clone();
         let operator = operator.clone();
         let url_prefix = http_client.url_prefix().to_string();
@@ -146,30 +146,28 @@ async fn add_server_node(
             let owner_password = state.config().owner_password();
             let (_, server_db_role) =
                 ds.register_server_node(&server_id, &url_prefix, server_db_role, &operator)?;
-            ds.save_server_password(&server_id, &password, owner_password, &operator)?;
+            let server =
+                ds.save_server_password(&server_id, &password, owner_password, &operator)?;
 
             // Get the imported node data
             let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());
-            Ok::<_, ServiceError>((node, server_db_role))
+            Ok::<_, ServiceError>((server, node, server_db_role))
         }
     })
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
 
-    // Create a SSE client
-    let mut sse_client = SseClient::new(server_id, http_client.clone(), state.clone()).await?;
-    sse_client.connect();
+    // Create a ServerConnection
+    let server_conn = ServerConnection::new(&server, http_client.clone(), &state).await?;
+    state.put_server_conn(&server_id, server_conn.clone());
 
-    // Store the server connection
-    let server_conn = ServerConnection::new_sse(sse_client);
+    // Return a Server as a response
     let server = Server::new(
         server_node,
         http_client.url_prefix().to_string(),
         matches!(server_db_role, DatabaseRole::Parent(_)),
         server_conn.not_connected(),
     );
-    state.put_server_conn(&server_id, server_conn);
-
     Ok((StatusCode::CREATED, Content(server, accept)))
 }
 
@@ -226,7 +224,7 @@ async fn set_server_disabled(
     // Or reconnect to the server
     } else {
         debug!("Enabling the connection to {}", server_id);
-        state.write_server_conn(&server_id)?.reconnect();
+        state.write_server_conn(&server_id)?.reconnect().await?;
     }
 
     Ok(())
