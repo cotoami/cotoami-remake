@@ -81,7 +81,10 @@ pub(crate) async fn communicate_with_parent<
         if let Err(e) = node_state.sync_with_parent(parent_id, parent_service).await {
             error!("Error syncing with ({}): {}", description, e);
             tasks.shutdown().await;
-            on_disconnect.send(Some(EventLoopError::InitFailed(e)));
+            on_disconnect
+                .send(Some(EventLoopError::InitFailed(e)))
+                .await
+                .ok();
             return;
         }
     }
@@ -89,7 +92,10 @@ pub(crate) async fn communicate_with_parent<
     // If any one of the tasks exit, abort the other.
     if let Some(_) = tasks.join_next().await {
         tasks.shutdown().await;
-        on_disconnect.send(Arc::try_unwrap(task_error).unwrap().into_inner());
+        on_disconnect
+            .send(Arc::try_unwrap(task_error).unwrap().into_inner())
+            .await
+            .ok();
     }
 }
 
@@ -166,7 +172,10 @@ pub(crate) async fn communicate_with_operator<
     // If any one of the tasks exit, abort the others.
     if let Some(_) = tasks.join_next().await {
         tasks.shutdown().await;
-        on_disconnect.send(Arc::try_unwrap(task_error).unwrap().into_inner());
+        on_disconnect
+            .send(Arc::try_unwrap(task_error).unwrap().into_inner())
+            .await
+            .ok();
     }
 }
 

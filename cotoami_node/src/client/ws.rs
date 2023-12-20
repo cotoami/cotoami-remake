@@ -4,14 +4,19 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::{Id, Node};
-use futures::StreamExt;
+use futures::{Sink, StreamExt};
+use tokio::sync::mpsc;
 use tokio_tungstenite::connect_async;
+use tokio_util::sync::PollSender;
 use tracing::info;
 use url::Url;
 
 use crate::{
     client::{ClientState, ConnectionState},
-    event::tungstenite::{communicate_with_operator, communicate_with_parent},
+    event::{
+        tungstenite::{communicate_with_operator, communicate_with_parent},
+        EventLoopError,
+    },
     service::models::NotConnected,
     state::NodeState,
 };
@@ -38,10 +43,29 @@ impl WebSocketClient {
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 
-    pub async fn connect(&mut self) {
+    pub fn connect(&mut self) {
         if self.state.has_running_tasks() {
             return;
         }
+        let (sender, mut receiver) = mpsc::channel::<Option<EventLoopError>>(1);
+        tokio::spawn({
+            let mut this = self.clone();
+            async move {
+                this.do_connect(PollSender::new(sender)).await;
+                while let Some(err) = receiver.recv().await {
+                    this.state
+                        .set_conn_state(ConnectionState::Disconnected(err));
+                    this.state.publish_server_disconnected();
+                    // TODO: reconnect
+                }
+            }
+        });
+    }
+
+    async fn do_connect<S>(&mut self, on_disconnect: S)
+    where
+        S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
+    {
         match connect_async(&self.ws_url).await {
             Err(e) => {
                 self.state
@@ -58,6 +82,7 @@ impl WebSocketClient {
                         opr.clone(),
                         sink,
                         stream,
+                        on_disconnect,
                         self.state.abortables.clone(),
                     ));
                 } else {
@@ -67,6 +92,7 @@ impl WebSocketClient {
                         format!("WebSocket server-as-parent: {}", self.ws_url),
                         sink,
                         stream,
+                        on_disconnect,
                         self.state.abortables.clone(),
                     ));
                 }
