@@ -2,7 +2,6 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
-use parking_lot::RwLock;
 use tracing::{debug, info};
 
 use crate::{
@@ -22,8 +21,8 @@ use crate::{
 pub enum ServerConnection {
     Disabled,
     InitFailed(Arc<anyhow::Error>),
-    WebSocket(Arc<RwLock<WebSocketClient>>),
-    Sse(Arc<RwLock<SseClient>>),
+    WebSocket(WebSocketClient),
+    Sse(SseClient),
 }
 
 impl ServerConnection {
@@ -40,22 +39,14 @@ impl ServerConnection {
         )
         .await?;
         if let Ok(_) = ws_client.connect().await {
-            Ok(Self::new_ws(ws_client))
+            Ok(Self::WebSocket(ws_client))
         } else {
             // Fallback to SSE
             let mut sse_client =
                 SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
             sse_client.connect();
-            Ok(Self::new_sse(sse_client))
+            Ok(Self::Sse(sse_client))
         }
-    }
-
-    fn new_ws(ws_client: WebSocketClient) -> Self {
-        ServerConnection::WebSocket(Arc::new(RwLock::new(ws_client)))
-    }
-
-    fn new_sse(sse_client: SseClient) -> Self {
-        ServerConnection::Sse(Arc::new(RwLock::new(sse_client)))
     }
 
     pub async fn connect(
@@ -103,8 +94,8 @@ impl ServerConnection {
 
     pub fn disconnect(&mut self) {
         match self {
-            ServerConnection::WebSocket(client) => client.write().disconnect(),
-            ServerConnection::Sse(client) => client.write().disconnect(),
+            ServerConnection::WebSocket(client) => client.disconnect(),
+            ServerConnection::Sse(client) => client.disconnect(),
             _ => (),
         }
     }
@@ -112,9 +103,9 @@ impl ServerConnection {
     pub async fn reconnect(&mut self) -> Result<()> {
         match self {
             ServerConnection::WebSocket(client) => {
-                client.write().connect().await?;
+                client.connect().await?;
             }
-            ServerConnection::Sse(client) => client.write().connect(),
+            ServerConnection::Sse(client) => client.connect(),
             _ => (),
         }
         Ok(())
@@ -124,8 +115,8 @@ impl ServerConnection {
         match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ServerConnection::WebSocket(client) => client.read().not_connected(),
-            ServerConnection::Sse(client) => client.read().not_connected(),
+            ServerConnection::WebSocket(client) => client.not_connected(),
+            ServerConnection::Sse(client) => client.not_connected(),
         }
     }
 }

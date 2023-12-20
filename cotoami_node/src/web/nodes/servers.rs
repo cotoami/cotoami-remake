@@ -12,7 +12,7 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    client::{HttpClient, SseClient},
+    client::HttpClient,
     service::{
         error::IntoServiceResult,
         models::{CreateClientNodeSession, NotConnected},
@@ -181,6 +181,7 @@ struct UpdateServerNode {
     // TODO: url_prefix
 }
 
+#[axum_macros::debug_handler]
 async fn update_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
@@ -219,12 +220,12 @@ async fn set_server_disabled(
     // Disconnect from the server
     if disabled {
         debug!("Disabling the connection to: {}", server_id);
-        state.write_server_conn(&server_id)?.disconnect();
+        state.server_conn(&server_id)?.disconnect();
 
     // Or reconnect to the server
     } else {
         debug!("Enabling the connection to {}", server_id);
-        state.write_server_conn(&server_id)?.reconnect().await?;
+        state.server_conn(&server_id)?.reconnect().await?;
     }
 
     Ok(())
