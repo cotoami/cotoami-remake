@@ -14,7 +14,7 @@ mod http;
 mod sse;
 mod ws;
 
-pub use self::{http::HttpClient, sse::SseClient};
+pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 
 struct ClientState {
     server_id: Id<Node>,

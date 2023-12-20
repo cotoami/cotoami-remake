@@ -21,7 +21,7 @@ impl NodeState {
         let mut server_conns = self.write_server_conns();
         server_conns.clear();
         for (server, _) in server_nodes.iter() {
-            let server_conn = ServerConnection::connect_sse(server, local_node.clone(), self).await;
+            let server_conn = ServerConnection::connect(server, local_node.clone(), self).await;
             server_conns.insert(server.node_id, server_conn);
         }
         Ok(())

@@ -6,7 +6,7 @@ use parking_lot::RwLock;
 use tracing::{debug, info};
 
 use crate::{
-    client::{HttpClient, SseClient},
+    client::{HttpClient, SseClient, WebSocketClient},
     service::{
         models::{CreateClientNodeSession, NotConnected},
         RemoteNodeServiceExt,
@@ -22,15 +22,20 @@ use crate::{
 pub enum ServerConnection {
     Disabled,
     InitFailed(Arc<anyhow::Error>),
+    WebSocket(Arc<RwLock<WebSocketClient>>),
     Sse(Arc<RwLock<SseClient>>),
 }
 
 impl ServerConnection {
+    pub fn new_ws(ws_client: WebSocketClient) -> Self {
+        ServerConnection::WebSocket(Arc::new(RwLock::new(ws_client)))
+    }
+
     pub fn new_sse(sse_client: SseClient) -> Self {
         ServerConnection::Sse(Arc::new(RwLock::new(sse_client)))
     }
 
-    pub async fn connect_sse(
+    pub async fn connect(
         server_node: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
@@ -38,7 +43,7 @@ impl ServerConnection {
         if server_node.disabled {
             return Self::Disabled;
         }
-        match Self::try_connect_sse(server_node, local_node, node_state).await {
+        match Self::try_connect(server_node, local_node, node_state).await {
             Ok(conn) => conn,
             Err(e) => {
                 debug!("Failed to initialize a server connection: {:?}", e);
@@ -47,7 +52,7 @@ impl ServerConnection {
         }
     }
 
-    async fn try_connect_sse(
+    async fn try_connect(
         server_node: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
@@ -70,12 +75,7 @@ impl ServerConnection {
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
 
-        // Sync with the parent
-        if is_server_parent {
-            node_state
-                .sync_with_parent(server_node.node_id, Box::new(http_client.clone()))
-                .await?;
-        }
+        // TODO: Try to connect via WebSocket
 
         // Create a SSE client
         let mut sse_client =
@@ -103,6 +103,7 @@ impl ServerConnection {
         match self {
             ServerConnection::Disabled => Some(NotConnected::Disabled),
             ServerConnection::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
+            ServerConnection::WebSocket(client) => client.read().not_connected(),
             ServerConnection::Sse(client) => client.read().not_connected(),
         }
     }
