@@ -10,7 +10,7 @@ use tokio::{
 };
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_util::sync::PollSender;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 use crate::{
     event::{EventLoopError, NodeSentEvent},
@@ -43,12 +43,11 @@ pub(crate) async fn communicate_with_parent<
     let mut tasks = JoinSet::new();
     let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
 
-    // Register a parent service
+    // Create a parent service.
     let parent_service =
         PubsubService::new(description.clone(), node_state.pubsub().responses().clone());
-    node_state.put_parent_service(parent_id, Box::new(parent_service.clone()));
 
-    // A task sending request events
+    // A task sending request events.
     abortables.lock().push(tasks.spawn({
         let mut requests = parent_service.requests().subscribe(None::<()>);
         let task_error = task_error.clone();
@@ -65,7 +64,7 @@ pub(crate) async fn communicate_with_parent<
         }
     }));
 
-    // A task receiving events from the parent
+    // A task receiving events from the parent.
     abortables.lock().push(tasks.spawn(handle_message_stream(
         msg_stream,
         parent_id,
@@ -76,18 +75,8 @@ pub(crate) async fn communicate_with_parent<
         },
     )));
 
-    // Sync with the parent after tasks are setup.
-    if let Some(parent_service) = node_state.parent_service(&parent_id) {
-        if let Err(e) = node_state.sync_with_parent(parent_id, parent_service).await {
-            error!("Error syncing with ({}): {}", description, e);
-            tasks.shutdown().await;
-            on_disconnect
-                .send(Some(EventLoopError::InitFailed(e)))
-                .await
-                .ok();
-            return;
-        }
-    }
+    // Register the parent service after wired up by tasks.
+    node_state.register_parent_service(parent_id, Box::new(parent_service.clone()));
 
     // If any one of the tasks exit, abort the other.
     if let Some(_) = tasks.join_next().await {

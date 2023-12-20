@@ -15,7 +15,6 @@ pub(crate) mod tungstenite;
 /// An event to be sent between cotoami nodes.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) enum NodeSentEvent {
-    Connected,
     Change(ChangelogEntry),
     Request(Request),
     Response(Response),

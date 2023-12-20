@@ -91,33 +91,10 @@ impl SseClient {
                 Ok(ESItem::Open) => {
                     info!("Event source opened: {}", self.url_prefix());
                     self.state.set_conn_state(ConnectionState::Connected);
-
-                    // Server-as-parent
                     if self.state.is_server_parent() {
-                        // Register a parent service
                         let parent_service = Box::new(self.http_client.clone());
                         self.node_state()
-                            .put_parent_service(self.state.server_id, parent_service.clone());
-
-                        // Sync with the parent
-                        if let Err(e) = self
-                            .node_state()
-                            .sync_with_parent(self.state.server_id, parent_service)
-                            .await
-                        {
-                            event_source.close();
-                            self.state.set_conn_state(ConnectionState::init_failed(e));
-                            break;
-                        }
-
-                    // Server-as-child
-                    } else {
-                        if let Err(e) = self.http_client.post_event(NodeSentEvent::Connected).await
-                        {
-                            event_source.close();
-                            self.state.set_conn_state(ConnectionState::init_failed(e));
-                            break;
-                        }
+                            .register_parent_service(self.state.server_id, parent_service);
                     }
                 }
                 Ok(ESItem::Message(event)) => {

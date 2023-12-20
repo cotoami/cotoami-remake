@@ -12,7 +12,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
-use tracing::{debug, error};
+use tracing::debug;
 
 use crate::{
     event::NodeSentEvent,
@@ -49,15 +49,17 @@ async fn stream_events(
             }
             let _local = StreamLocal(parent.node_id, state.pubsub().events().clone());
 
-            // Register the SSE client-as-parent as a service
+            // Create a SSE client-as-parent service
             let parent_service = PubsubService::new(
                 format!("SSE client-as-parent: {}", parent.node_id),
                 state.pubsub().responses().clone(),
             );
-            state.put_parent_service(parent.node_id, Box::new(parent_service.clone()));
+            let requests = parent_service.requests().subscribe(None::<()>);
+
+            // Register the parent service
+            state.register_parent_service(parent.node_id, Box::new(parent_service.clone()));
 
             // Stream `request` events
-            let requests = parent_service.requests().subscribe(None::<()>);
             for await request in requests {
                 yield event("request", request);
             }
@@ -101,16 +103,6 @@ async fn post_event(
         let event = rmp_serde::from_slice(&body)
             .map_err(|_| ServiceError::request("invalid-request-body"))?;
         match event {
-            NodeSentEvent::Connected => {
-                // Run database-syncing in another thread, otherwise a deadlock will occur:
-                // the event loop in the SSE client is blocked until this API responds,
-                // which then blocks `sync_with_parent`.
-                tokio::spawn(async move {
-                    if let Err(e) = state.sync_with_parent(parent.node_id, parent_service).await {
-                        error!("Error syncing with ({}): {}", parent.node_id, e);
-                    }
-                });
-            }
             NodeSentEvent::Change(change) => {
                 // `sync_with_parent` could be run in parallel, in such cases,
                 // it will return `DatabaseError::UnexpectedChangeNumber`, which

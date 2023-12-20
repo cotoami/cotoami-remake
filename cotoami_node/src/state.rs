@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs, sync::Arc};
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use tracing::debug;
+use tracing::{debug, error};
 use validator::Validate;
 
 use crate::service::NodeService;
@@ -104,12 +104,30 @@ impl NodeState {
             .ok_or(anyhow!("Parent disconnected: {parent_id}"))
     }
 
-    pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+    pub fn register_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
         debug!("Parent service being registered: {parent_id}");
         self.inner
             .parent_services
             .write()
-            .insert(parent_id, service);
+            .insert(parent_id, dyn_clone::clone_box(&*service));
+
+        // A task syncing with the parent
+        tokio::spawn({
+            let this = self.clone();
+            async move {
+                let description = service.description().to_string();
+                match this.sync_with_parent(parent_id, service).await {
+                    Ok(Some(_)) => (),
+                    Ok(None) => (),
+                    Err(e) => {
+                        if let Ok(mut conn) = this.server_conn(&parent_id) {
+                            error!("Error syncing with ({description}): {e:?}");
+                            conn.disconnect();
+                        }
+                    }
+                }
+            }
+        });
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {

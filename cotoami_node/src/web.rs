@@ -1,6 +1,7 @@
 //! Web API for Node operations based on [NodeState].
 
 use axum::{
+    extract::OriginalUri,
     headers,
     http::{
         header::{self, HeaderName, HeaderValue},
@@ -207,7 +208,11 @@ async fn require_session<B>(
     .await??;
 
     if let Some(session) = session {
-        debug!("Client session: {session:?}");
+        debug!(
+            "Client session [{} {}]: {session:?}",
+            request.method(),
+            request.extensions().get::<OriginalUri>().unwrap().0
+        );
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {
