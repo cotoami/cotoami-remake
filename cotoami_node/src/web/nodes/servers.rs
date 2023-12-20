@@ -111,7 +111,7 @@ async fn add_server_node(
     let client_session = http_client
         .create_client_node_session(CreateClientNodeSession {
             password: password.clone(),
-            new_password: None, // TODO
+            new_password: None, // TODO: change the password on the first login
             client: local_node,
             as_parent: Some(server_as_child),
         })

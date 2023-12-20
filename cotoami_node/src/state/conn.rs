@@ -27,11 +27,34 @@ pub enum ServerConnection {
 }
 
 impl ServerConnection {
-    pub fn new_ws(ws_client: WebSocketClient) -> Self {
+    pub async fn new(
+        server: &ServerNode,
+        http_client: HttpClient,
+        node_state: &NodeState,
+    ) -> Result<Self> {
+        // Try to connect via WebSocket first
+        let mut ws_client = WebSocketClient::new(
+            server.node_id,
+            server.url_prefix.clone(),
+            node_state.clone(),
+        )
+        .await?;
+        if let Ok(_) = ws_client.connect().await {
+            Ok(Self::new_ws(ws_client))
+        } else {
+            // Fallback to SSE
+            let mut sse_client =
+                SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
+            sse_client.connect();
+            Ok(Self::new_sse(sse_client))
+        }
+    }
+
+    fn new_ws(ws_client: WebSocketClient) -> Self {
         ServerConnection::WebSocket(Arc::new(RwLock::new(ws_client)))
     }
 
-    pub fn new_sse(sse_client: SseClient) -> Self {
+    fn new_sse(sse_client: SseClient) -> Self {
         ServerConnection::Sse(Arc::new(RwLock::new(sse_client)))
     }
 
@@ -75,22 +98,7 @@ impl ServerConnection {
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
 
-        // Try to connect via WebSocket first
-        let mut ws_client = WebSocketClient::new(
-            server.node_id,
-            server.url_prefix.clone(),
-            node_state.clone(),
-        )
-        .await?;
-        if let Ok(_) = ws_client.connect().await {
-            Ok(Self::new_ws(ws_client))
-        } else {
-            // Fallback to SSE
-            let mut sse_client =
-                SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
-            sse_client.connect();
-            Ok(Self::new_sse(sse_client))
-        }
+        Self::new(server, http_client, node_state).await
     }
 
     pub fn disconnect(&mut self) {
