@@ -32,12 +32,9 @@ impl ServerConnection {
         node_state: &NodeState,
     ) -> Result<Self> {
         // Try to connect via WebSocket first
-        let mut ws_client = WebSocketClient::new(
-            server.node_id,
-            server.url_prefix.clone(),
-            node_state.clone(),
-        )
-        .await?;
+        let mut ws_client =
+            WebSocketClient::new(server.node_id, server.ws_url_prefix(), node_state.clone())
+                .await?;
         match ws_client.connect().await {
             Ok(_) => Ok(Self::WebSocket(ws_client)),
             Err(e) => {

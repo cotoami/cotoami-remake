@@ -57,6 +57,16 @@ impl ServerNode {
     // cf. https://stackoverflow.com/a/417184
     pub const URL_PREFIX_MAX_LENGTH: usize = 1500;
 
+    pub fn ws_url_prefix(&self) -> String {
+        if self.url_prefix.starts_with("http:") {
+            self.url_prefix.replace("http://", "ws://")
+        } else if self.url_prefix.starts_with("https:") {
+            self.url_prefix.replace("https://", "wss://")
+        } else {
+            unreachable!();
+        }
+    }
+
     pub fn save_password(&mut self, plaintext: &str, encryption_password: &str) -> Result<()> {
         self.encrypted_password = Some(encrypt_password(plaintext, encryption_password)?);
         Ok(())
