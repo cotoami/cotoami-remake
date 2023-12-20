@@ -53,16 +53,16 @@ impl ServerConnection {
     }
 
     async fn try_connect(
-        server_node: &ServerNode,
+        server: &ServerNode,
         local_node: Node,
         node_state: &NodeState,
     ) -> Result<Self> {
-        let is_server_parent = node_state.is_parent(&server_node.node_id);
+        let is_server_parent = node_state.is_parent(&server.node_id);
         let is_local_parent = !is_server_parent; // just for clarity
-        let mut http_client = HttpClient::new(server_node.url_prefix.clone())?;
+        let mut http_client = HttpClient::new(server.url_prefix.clone())?;
 
         // Attempt to log into the server node
-        let password = server_node
+        let password = server
             .password(node_state.config().owner_password())?
             .ok_or(anyhow!("Server password is missing."))?;
         let _ = http_client
@@ -75,28 +75,41 @@ impl ServerConnection {
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
 
-        // TODO: Try to connect via WebSocket
-
-        // Create a SSE client
-        let mut sse_client =
-            SseClient::new(server_node.node_id, http_client.clone(), node_state.clone()).await?;
-        sse_client.connect();
-
-        Ok(Self::new_sse(sse_client))
+        // Try to connect via WebSocket first
+        let mut ws_client = WebSocketClient::new(
+            server.node_id,
+            server.url_prefix.clone(),
+            node_state.clone(),
+        )
+        .await?;
+        if let Ok(_) = ws_client.connect().await {
+            Ok(Self::new_ws(ws_client))
+        } else {
+            // Fallback to SSE
+            let mut sse_client =
+                SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
+            sse_client.connect();
+            Ok(Self::new_sse(sse_client))
+        }
     }
 
     pub fn disconnect(&mut self) {
         match self {
+            ServerConnection::WebSocket(client) => client.write().disconnect(),
             ServerConnection::Sse(client) => client.write().disconnect(),
             _ => (),
         }
     }
 
-    pub fn reconnect(&mut self) {
+    pub async fn reconnect(&mut self) -> Result<()> {
         match self {
+            ServerConnection::WebSocket(client) => {
+                client.write().connect().await?;
+            }
             ServerConnection::Sse(client) => client.write().connect(),
             _ => (),
         }
+        Ok(())
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> {
