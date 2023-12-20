@@ -47,43 +47,40 @@ impl SseClient {
 
     fn node_state(&self) -> &NodeState { &self.state.node_state }
 
-    fn new_event_source(&self) -> Result<EventSource> {
+    fn new_event_source(&self) -> EventSource {
         // To inherit request headers (ex. session token) from the `http_client`,
         // an event source has to be constructed via [EventSource::new] with a
         // [RequestBuilder] constructed by the `http_client`.
-        EventSource::new(self.http_client.get("/api/events", None)).map_err(anyhow::Error::from)
+        EventSource::new(self.http_client.get("/api/events", None))
+            .unwrap_or_else(|_| unreachable!())
     }
 
     pub fn connect(&mut self) {
         if self.state.has_running_tasks() {
             return;
         }
-        match self.new_event_source() {
-            Err(e) => {
-                self.state.set_conn_state(ConnectionState::init_failed(e));
-            }
-            Ok(event_source) => {
-                let this = self.clone();
-                tokio::spawn(async move {
-                    let mut tasks = JoinSet::new();
+        tokio::spawn({
+            let this = self.clone();
+            async move {
+                let event_source = this.new_event_source();
+                let mut tasks = JoinSet::new();
 
-                    // A task: event_loop
+                // A task: event_loop
+                this.state
+                    .add_abortable(tasks.spawn(this.clone().event_loop(event_source)));
+
+                // A task: stream_changes_to_server
+                if !this.state.is_server_parent() {
                     this.state
-                        .add_abortable(tasks.spawn(this.clone().event_loop(event_source)));
+                        .add_abortable(tasks.spawn(this.clone().stream_changes_to_server()));
+                }
 
-                    // A task: stream_changes_to_server
-                    if !this.state.is_server_parent() {
-                        this.state
-                            .add_abortable(tasks.spawn(this.clone().stream_changes_to_server()));
-                    }
-
-                    // If any one of the tasks exit, abort the others.
-                    if let Some(_) = tasks.join_next().await {
-                        tasks.shutdown().await;
-                    }
-                });
+                // If any one of the tasks exit, abort the others.
+                if let Some(_) = tasks.join_next().await {
+                    tasks.shutdown().await;
+                }
             }
-        }
+        });
     }
 
     pub fn disconnect(&mut self) { self.state.disconnect(); }
