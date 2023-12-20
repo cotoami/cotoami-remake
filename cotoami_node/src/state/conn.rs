@@ -38,14 +38,16 @@ impl ServerConnection {
             node_state.clone(),
         )
         .await?;
-        if let Ok(_) = ws_client.connect().await {
-            Ok(Self::WebSocket(ws_client))
-        } else {
-            // Fallback to SSE
-            let mut sse_client =
-                SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
-            sse_client.connect();
-            Ok(Self::Sse(sse_client))
+        match ws_client.connect().await {
+            Ok(_) => Ok(Self::WebSocket(ws_client)),
+            Err(e) => {
+                // Fallback to SSE
+                info!("Falling back to SSE due to: {e:?}");
+                let mut sse_client =
+                    SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
+                sse_client.connect();
+                Ok(Self::Sse(sse_client))
+            }
         }
     }
 
