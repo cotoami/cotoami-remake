@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use cotoami_db::{Id, Node};
 use futures::{Sink, StreamExt};
 use tokio::sync::mpsc;
@@ -43,15 +43,15 @@ impl WebSocketClient {
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 
-    pub fn connect(&mut self) {
+    pub async fn connect(&mut self) -> Result<()> {
         if self.state.has_running_tasks() {
-            return;
+            bail!("Already connected");
         }
         let (sender, mut receiver) = mpsc::channel::<Option<EventLoopError>>(1);
+        self.do_connect(PollSender::new(sender)).await?;
         tokio::spawn({
-            let mut this = self.clone();
+            let this = self.clone();
             async move {
-                this.do_connect(PollSender::new(sender)).await;
                 while let Some(err) = receiver.recv().await {
                     this.state
                         .set_conn_state(ConnectionState::Disconnected(err));
@@ -60,44 +60,39 @@ impl WebSocketClient {
                 }
             }
         });
+        Ok(())
     }
 
-    async fn do_connect<S>(&mut self, on_disconnect: S)
+    async fn do_connect<S>(&mut self, on_disconnect: S) -> Result<()>
     where
         S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
     {
-        match connect_async(&self.ws_url).await {
-            Err(e) => {
-                self.state
-                    .set_conn_state(ConnectionState::init_failed(e.into()));
-            }
-            Ok((ws_stream, _)) => {
-                info!("WebSocket connection opened: {}", self.ws_url);
-                self.state.set_conn_state(ConnectionState::Connected);
+        let (ws_stream, _) = connect_async(&self.ws_url).await?;
+        info!("WebSocket connection opened: {}", self.ws_url);
+        self.state.set_conn_state(ConnectionState::Connected);
 
-                let (sink, stream) = ws_stream.split();
-                if let Some(opr) = self.state.server_as_operator.as_ref() {
-                    tokio::spawn(communicate_with_operator(
-                        self.state.node_state.clone(),
-                        opr.clone(),
-                        sink,
-                        stream,
-                        on_disconnect,
-                        self.state.abortables.clone(),
-                    ));
-                } else {
-                    tokio::spawn(communicate_with_parent(
-                        self.state.node_state.clone(),
-                        self.state.server_id,
-                        format!("WebSocket server-as-parent: {}", self.ws_url),
-                        sink,
-                        stream,
-                        on_disconnect,
-                        self.state.abortables.clone(),
-                    ));
-                }
-            }
+        let (sink, stream) = ws_stream.split();
+        if let Some(opr) = self.state.server_as_operator.as_ref() {
+            tokio::spawn(communicate_with_operator(
+                self.state.node_state.clone(),
+                opr.clone(),
+                sink,
+                stream,
+                on_disconnect,
+                self.state.abortables.clone(),
+            ));
+        } else {
+            tokio::spawn(communicate_with_parent(
+                self.state.node_state.clone(),
+                self.state.server_id,
+                format!("WebSocket server-as-parent: {}", self.ws_url),
+                sink,
+                stream,
+                on_disconnect,
+                self.state.abortables.clone(),
+            ));
         }
+        Ok(())
     }
 
     pub fn disconnect(&mut self) { self.state.disconnect(); }
