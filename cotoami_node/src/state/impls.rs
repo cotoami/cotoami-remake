@@ -5,7 +5,7 @@ use tracing::debug;
 use crate::state::{pubsub::Event, NodeState};
 
 mod changes;
-mod nodes;
+mod local_node;
 mod parents;
 mod servers;
 mod session;
