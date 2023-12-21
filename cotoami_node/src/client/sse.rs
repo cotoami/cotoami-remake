@@ -1,32 +1,173 @@
-use std::sync::Arc;
+//! Server-Sent Events client of Node API Service.
+
+use std::{ops::ControlFlow, sync::Arc};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::prelude::*;
-use futures::StreamExt;
-use parking_lot::RwLock;
+use cotoami_db::{ChangelogEntry, Id, Node};
+use futures::{sink::Sink, StreamExt};
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
-use tower_service::Service;
+use tokio::task::JoinSet;
 use tracing::{debug, error, info};
 
 use crate::{
-    client::HttpClient,
+    client::{ClientState, ConnectionState, HttpClient},
+    event::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
     service::{models::NotConnected, Request, Response},
     state::NodeState,
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// NodeSentEvent
+// SseClient
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub enum NodeSentEvent {
-    Connected,
-    Change(ChangelogEntry),
-    Request(Request),
-    Response(Response),
-    Error(String),
+/// An [SseClient] handles events streamed from an [EventSource].
+#[derive(Clone)]
+pub struct SseClient {
+    state: Arc<ClientState>,
+    http_client: HttpClient,
 }
+
+impl SseClient {
+    pub async fn new(
+        server_id: Id<Node>,
+        http_client: HttpClient,
+        node_state: NodeState,
+    ) -> Result<Self> {
+        let state = ClientState::new(server_id, node_state).await?;
+        Ok(Self {
+            state: Arc::new(state),
+            http_client,
+        })
+    }
+
+    pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
+
+    fn url_prefix(&self) -> &str { self.http_client.url_prefix() }
+
+    fn node_state(&self) -> &NodeState { &self.state.node_state }
+
+    fn new_event_source(&self) -> EventSource {
+        // To inherit request headers (ex. session token) from the `http_client`,
+        // an event source has to be constructed via [EventSource::new] with a
+        // [RequestBuilder] constructed by the `http_client`.
+        EventSource::new(self.http_client.get("/api/events", None))
+            .unwrap_or_else(|_| unreachable!())
+    }
+
+    pub fn connect(&mut self) {
+        if self.state.has_running_tasks() {
+            return;
+        }
+        tokio::spawn({
+            let this = self.clone();
+            async move {
+                let event_source = this.new_event_source();
+                let mut tasks = JoinSet::new();
+
+                // A task: event_loop
+                this.state
+                    .add_abortable(tasks.spawn(this.clone().event_loop(event_source)));
+
+                // A task: stream_changes_to_server
+                if !this.state.is_server_parent() {
+                    this.state
+                        .add_abortable(tasks.spawn(this.clone().stream_changes_to_server()));
+                }
+
+                // If any one of the tasks exit, abort the others.
+                if let Some(_) = tasks.join_next().await {
+                    tasks.shutdown().await;
+                }
+            }
+        });
+    }
+
+    pub fn disconnect(&mut self) { self.state.disconnect(); }
+
+    async fn event_loop(mut self, mut event_source: EventSource) {
+        while let Some(item) = event_source.next().await {
+            match item {
+                Ok(ESItem::Open) => {
+                    info!("Event source opened: {}", self.url_prefix());
+                    self.state.set_conn_state(ConnectionState::Connected);
+                    if self.state.is_server_parent() {
+                        let parent_service = Box::new(self.http_client.clone());
+                        self.node_state()
+                            .register_parent_service(self.state.server_id, parent_service);
+                    }
+                }
+                Ok(ESItem::Message(event)) => {
+                    if let ControlFlow::Break(e) = self.handle_node_sent_event(event.into()).await {
+                        debug!(
+                            "Event source {} closed because of an event handling error: {}",
+                            self.url_prefix(),
+                            &e
+                        );
+                        event_source.close();
+                        self.state
+                            .set_conn_state(ConnectionState::event_handling_failed(e));
+                        break;
+                    }
+                }
+                Err(e) => {
+                    if event_source.ready_state() == ReadyState::Closed {
+                        debug!(
+                            "Event source {} closed because of a stream error: {:?}",
+                            self.url_prefix(),
+                            &e
+                        );
+                        self.state
+                            .set_conn_state(ConnectionState::communication_failed(e.into()));
+                        break;
+                    } else {
+                        debug!(
+                            "Reconnecting to {} after an error: {:?}",
+                            self.url_prefix(),
+                            &e
+                        );
+                        self.state
+                            .set_conn_state(ConnectionState::Connecting(Some(e.into())));
+                    }
+                }
+            }
+        }
+        self.state.publish_server_disconnected();
+    }
+
+    async fn stream_changes_to_server(self) {
+        let mut changes = self
+            .node_state()
+            .pubsub()
+            .local_changes()
+            .subscribe(None::<()>);
+        while let Some(change) = changes.next().await {
+            if let Err(e) = self
+                .http_client
+                .post_event(NodeSentEvent::Change(change.clone()))
+                .await
+            {
+                // This error won't stop this task as `event_loop` takes
+                // responsibility for maintaining the connection.
+                error!("Error sending a change to child servers: {e}");
+            }
+        }
+    }
+
+    async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> ControlFlow<anyhow::Error> {
+        if let Some(opr) = self.state.server_as_operator.as_ref() {
+            let sink = self.http_client.as_event_sink();
+            futures::pin_mut!(sink);
+            handle_event_from_operator(event, opr.clone(), self.node_state().clone(), sink).await
+        } else {
+            handle_event_from_parent(event, self.state.server_id, self.node_state().clone()).await
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// NodeSentEvent
+/////////////////////////////////////////////////////////////////////////////
 
 impl From<eventsource_stream::Event> for NodeSentEvent {
     fn from(source: eventsource_stream::Event) -> Self {
@@ -50,240 +191,17 @@ impl From<eventsource_stream::Event> for NodeSentEvent {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// SseClient
+// ReadyState -> ConnectionState
 /////////////////////////////////////////////////////////////////////////////
 
-/// An [SseClient] handles events streamed from an [EventSource].
-pub struct SseClient {
-    server_node_id: Id<Node>,
-
-    http_client: HttpClient,
-    event_source: EventSource,
-    state: Arc<RwLock<SseClientState>>,
-
-    node_state: NodeState,
-}
-
-impl SseClient {
-    pub fn new(
-        server_node_id: Id<Node>,
-        http_client: HttpClient,
-        node_state: NodeState,
-    ) -> Result<Self> {
-        // To inherit request headers (ex. session token) from the `http_client`,
-        // an event source has to be constructed via [EventSource::new] with a
-        // [RequestBuilder] constructed by the `http_client`.
-        let event_source = EventSource::new(http_client.get("/api/events", None))?;
-        let state = SseClientState::new(event_source.ready_state());
-        Ok(Self {
-            server_node_id,
-            http_client,
-            event_source,
-            state: Arc::new(RwLock::new(state)),
-            node_state,
-        })
-    }
-
-    pub fn state(&self) -> Arc<RwLock<SseClientState>> { self.state.clone() }
-
-    pub fn is_disabled(&self) -> bool { self.state.read().is_disabled() }
-
-    pub fn url_prefix(&self) -> &str { self.http_client.url_prefix() }
-
-    pub fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_node_id) }
-
-    pub async fn start(&mut self) {
-        while let Some(item) = self.event_source.next().await {
-            if self.is_disabled() {
-                self.event_source.close();
-                info!("Event source closed: {}", self.url_prefix());
-            } else {
-                match item {
-                    Ok(ESItem::Open) => {
-                        info!("Event source opened: {}", self.url_prefix());
-                        if self.is_server_parent() {
-                            self.node_state.put_parent_service(
-                                self.server_node_id,
-                                Box::new(self.http_client.clone()),
-                            );
-                        } else {
-                            if let Err(err) =
-                                self.http_client.post_event(&NodeSentEvent::Connected).await
-                            {
-                                self.set_error(SseClientError::InitFailed(err));
-                                self.event_source.close();
-                            }
-                        }
-                    }
-                    Ok(ESItem::Message(event)) => {
-                        if let Err(err) = self.handle_node_sent_event(event.into()).await {
-                            debug!(
-                                "Event source {} closed because of an event handling error: {}",
-                                self.url_prefix(),
-                                &err
-                            );
-                            self.set_error(SseClientError::EventHandlingFailed(err));
-                            self.event_source.close();
-                        }
-                    }
-                    Err(err) => {
-                        if self.event_source.ready_state() == ReadyState::Closed {
-                            debug!(
-                                "Event source {} closed because of a stream error: {:?}",
-                                self.url_prefix(),
-                                &err
-                            );
-                        } else {
-                            debug!(
-                                "Reconnecting to {} after an error: {:?}",
-                                self.url_prefix(),
-                                &err
-                            )
-                        }
-                        self.set_error(SseClientError::StreamFailed(err));
-                    }
-                }
-            }
-            self.update_event_source_state();
-        }
-        // After the end of the stream
-        self.update_event_source_state();
-    }
-
-    fn update_event_source_state(&mut self) {
-        let mut state = self.state.write();
-        state.event_source_state = self.event_source.ready_state();
-
-        // Send an event when the server is disconnected
-        if let Some(not_connected) = state.not_connected() {
-            self.node_state
-                .pubsub()
-                .events()
-                .publish_server_disconnected(
-                    self.server_node_id,
-                    not_connected,
-                    self.is_server_parent(),
-                );
+impl From<ReadyState> for ConnectionState {
+    fn from(src: ReadyState) -> Self {
+        match src {
+            ReadyState::Connecting => Self::Connecting(None),
+            ReadyState::Open => Self::Connected,
+            ReadyState::Closed => Self::Disconnected(None),
         }
     }
-
-    fn set_error(&mut self, error: SseClientError) {
-        let mut state = self.state.write();
-        state.error = Some(error);
-    }
-
-    async fn handle_node_sent_event(&mut self, event: NodeSentEvent) -> Result<()> {
-        match event {
-            NodeSentEvent::Connected => (),
-            NodeSentEvent::Change(change) => {
-                // `sync_with_parent` can't be run in parallel since events from the
-                // same node will be handled one by one.
-                self.node_state
-                    .handle_parent_change(
-                        self.server_node_id,
-                        change,
-                        Box::new(self.http_client.clone()),
-                    )
-                    .await?;
-            }
-            NodeSentEvent::Request(request) => {
-                debug!(
-                    "Received a request from {}: {:?}",
-                    self.http_client.url_prefix(),
-                    request
-                );
-                let response = self.node_state.call(request).await?;
-                self.http_client
-                    .post_event(&NodeSentEvent::Response(response))
-                    .await?;
-            }
-            NodeSentEvent::Response(_) => (),
-            NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
-        }
-        Ok(())
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// SseClientState
-/////////////////////////////////////////////////////////////////////////////
-
-/// The state of an [SseClient] that can be shared between threads.
-///
-/// An [SseClient] has an [EventSource] as its state, but it is not [Sync],
-/// so this struct is needed to put the state in the global state.
-pub struct SseClientState {
-    pub event_source_state: ReadyState,
-    pub error: Option<SseClientError>,
-    disabled: bool,
-}
-
-impl SseClientState {
-    fn new(event_source_state: ReadyState) -> Self {
-        Self {
-            event_source_state,
-            error: None,
-            disabled: false,
-        }
-    }
-
-    /// Disable this event loop. A disabled loop will close the event source when
-    /// the next event comes (this event will be ignored). In other words, the event
-    /// source will never be closed if no events come in the loop.
-    pub fn disable(&mut self) { self.disabled = true; }
-
-    pub fn is_disabled(&self) -> bool { self.disabled }
-
-    /// Returns true if this event loop is accepting events.
-    pub fn is_running(&self) -> bool {
-        !self.disabled && self.event_source_state == ReadyState::Open
-    }
-
-    /// Returns true if the [EventSource] is waiting on a response from the endpoint
-    pub fn is_connecting(&self) -> bool { self.event_source_state == ReadyState::Connecting }
-
-    pub fn not_connected(&self) -> Option<NotConnected> {
-        if self.is_running() {
-            None // connected
-        } else if self.is_disabled() {
-            Some(NotConnected::Disabled)
-        } else if self.is_connecting() {
-            let details = if let Some(SseClientError::StreamFailed(e)) = self.error.as_ref() {
-                Some(e.to_string())
-            } else {
-                None
-            };
-            Some(NotConnected::Connecting(details))
-        } else if let Some(error) = self.error.as_ref() {
-            match error {
-                SseClientError::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-                SseClientError::StreamFailed(e) => Some(NotConnected::StreamFailed(e.to_string())),
-                SseClientError::EventHandlingFailed(e) => {
-                    Some(NotConnected::EventHandlingFailed(e.to_string()))
-                }
-            }
-        } else {
-            Some(NotConnected::Unknown)
-        }
-    }
-
-    /// Enable this event loop only if the event source is not closed.
-    /// It returns true if the result state of the event loop is `running`
-    /// (enabled and connected) or `connecting`.
-    pub fn enable_if_possible(&mut self) -> bool {
-        if self.event_source_state != ReadyState::Closed {
-            self.disabled = false;
-            true
-        } else {
-            false
-        }
-    }
-}
-
-pub enum SseClientError {
-    InitFailed(anyhow::Error),
-    StreamFailed(reqwest_eventsource::Error),
-    EventHandlingFailed(anyhow::Error),
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -291,13 +209,17 @@ pub enum SseClientError {
 /////////////////////////////////////////////////////////////////////////////
 
 impl HttpClient {
-    pub async fn post_event(&self, event: &NodeSentEvent) -> Result<()> {
-        let bytes = rmp_serde::to_vec(event).map(Bytes::from)?;
+    pub(crate) async fn post_event(&self, event: NodeSentEvent) -> Result<()> {
+        let bytes = rmp_serde::to_vec(&event).map(Bytes::from)?;
         let response = self.post("/api/events").body(bytes).send().await?;
         if response.status().is_success() {
             Ok(())
         } else {
             bail!(response.text().await?);
         }
+    }
+
+    pub(crate) fn as_event_sink(&self) -> impl Sink<NodeSentEvent, Error = anyhow::Error> + '_ {
+        futures::sink::unfold((), |(), event: NodeSentEvent| self.post_event(event))
     }
 }

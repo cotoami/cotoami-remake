@@ -86,12 +86,20 @@ impl Database {
         Ok(db)
     }
 
-    pub fn new_session(&self) -> Result<DatabaseSession<'_>> {
+    pub fn new_session<'a>(
+        &'a self,
+    ) -> Result<
+        DatabaseSession<
+            '_,
+            impl Fn() -> Result<SqliteConnection> + '_,
+            impl Fn() -> MutexGuard<'a, WritableConn> + '_,
+        >,
+    > {
         Ok(DatabaseSession {
             globals: &self.globals,
             ro_conn: OnceCell::new(),
-            new_ro_conn: Box::new(|| self.new_ro_conn()),
-            rw_conn: Box::new(|| self.rw_conn.lock()),
+            new_ro_conn: || self.new_ro_conn(),
+            lock_rw_conn: || self.rw_conn.lock(),
         })
     }
 
@@ -220,14 +228,18 @@ impl Globals {
 // DatabaseSession
 /////////////////////////////////////////////////////////////////////////////
 
-pub struct DatabaseSession<'a> {
+pub struct DatabaseSession<'a, RO, RW> {
     globals: &'a Globals,
     ro_conn: OnceCell<SqliteConnection>,
-    new_ro_conn: Box<dyn Fn() -> Result<SqliteConnection> + 'a>,
-    rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
+    new_ro_conn: RO,
+    lock_rw_conn: RW,
 }
 
-impl<'a> DatabaseSession<'a> {
+impl<'a, RO, RW> DatabaseSession<'a, RO, RW>
+where
+    RO: Fn() -> Result<SqliteConnection> + 'a,
+    RW: Fn() -> MutexGuard<'a, WritableConn> + 'a,
+{
     /////////////////////////////////////////////////////////////////////////////
     // local node
     /////////////////////////////////////////////////////////////////////////////
@@ -549,6 +561,33 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(client_ops::change_password(id, password))
     }
 
+    pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {
+        // a client node?
+        if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
+            if client.verify_session(token).is_ok() {
+                match self.database_role(&client.node_id)? {
+                    Some(DatabaseRole::Parent(parent)) => {
+                        return Ok(Some(ClientSession::ParentNode(parent)));
+                    }
+                    Some(DatabaseRole::Child(child)) => {
+                        return Ok(Some(ClientSession::Operator(Operator::ChildNode(child))));
+                    }
+                    None => (),
+                }
+            }
+        }
+
+        // the owner of local node?
+        let local_node = self.globals.read_local_node()?;
+        if local_node.verify_session(token).is_ok() {
+            return Ok(Some(ClientSession::Operator(Operator::Owner(
+                local_node.node_id,
+            ))));
+        }
+
+        Ok(None) // no session
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // database role / parent
     /////////////////////////////////////////////////////////////////////////////
@@ -642,34 +681,17 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /////////////////////////////////////////////////////////////////////////////
-    // client session
+    // operator
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {
-        // a client node?
-        if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
-            if client.verify_session(token).is_ok() {
-                match self.database_role(&client.node_id)? {
-                    Some(DatabaseRole::Parent(parent)) => {
-                        return Ok(Some(ClientSession::ParentNode(parent)));
-                    }
-                    Some(DatabaseRole::Child(child)) => {
-                        return Ok(Some(ClientSession::Operator(Operator::ChildNode(child))));
-                    }
-                    None => (),
-                }
-            }
+    pub fn as_operator(&mut self, node_id: Id<Node>) -> Result<Option<Operator>> {
+        if node_id == self.globals.local_node_id()? {
+            return Ok(Some(Operator::Owner(node_id)));
         }
-
-        // the owner of local node?
-        let local_node = self.globals.read_local_node()?;
-        if local_node.verify_session(token).is_ok() {
-            return Ok(Some(ClientSession::Operator(Operator::Owner(
-                local_node.node_id,
-            ))));
+        if let Some(child) = self.read_transaction(child_ops::get(&node_id))? {
+            return Ok(Some(Operator::ChildNode(child)));
         }
-
-        Ok(None) // no session
+        Ok(None)
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -941,27 +963,38 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn create_link_to_parent_root(
         &mut self,
-        parent_node: &Node,
+        parent_id: &Id<Node>,
     ) -> Result<Option<(Link, Cotonoma, ChangelogEntry)>> {
-        if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
-            if let Some((_, local_root_coto)) = self.root_cotonoma()? {
-                let (parent_root_cotonoma, parent_root_coto) =
-                    self.cotonoma_or_err(&parent_cotonoma_id)?;
-                let (link, change) = self.create_link(
-                    &local_root_coto.uuid,
-                    &parent_root_coto.uuid,
-                    None,
-                    None,
-                    None,
-                    &self.globals.local_node_as_operator()?,
-                )?;
-                Ok(Some((link, parent_root_cotonoma, change)))
-            } else {
-                Ok(None)
-            }
-        } else {
-            Ok(None)
+        if !self.globals.is_parent(parent_id) {
+            bail!("The specified node is not a parent: {parent_id}");
         }
+
+        // Local root cotonoma
+        let local_root_coto = if let Some((_, coto)) = self.root_cotonoma()? {
+            coto
+        } else {
+            return Ok(None);
+        };
+
+        // Parent root cotonoma
+        let parent_node = self.node_or_err(parent_id)?;
+        let (parent_root_cotonoma, parent_root_coto) =
+            if let Some(parent_root_id) = parent_node.root_cotonoma_id {
+                self.cotonoma_or_err(&parent_root_id)?
+            } else {
+                return Ok(None);
+            };
+
+        // Create a link between the two.
+        let (link, change) = self.create_link(
+            &local_root_coto.uuid,
+            &parent_root_coto.uuid,
+            None,
+            None,
+            None,
+            &self.globals.local_node_as_operator()?,
+        )?;
+        Ok(Some((link, parent_root_cotonoma, change)))
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -987,7 +1020,7 @@ impl<'a> DatabaseSession<'a> {
     where
         Op: Operation<WritableConn, T>,
     {
-        op::run_write(&mut (self.rw_conn)(), op)
+        op::run_write(&mut (self.lock_rw_conn)(), op)
     }
 
     fn database_role(&mut self, id: &Id<Node>) -> Result<Option<DatabaseRole>> {

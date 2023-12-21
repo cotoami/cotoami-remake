@@ -19,6 +19,7 @@ pub mod prelude {
         models::prelude::*,
     };
 }
+pub use crate::prelude::*;
 
 /// Returns the current datetime in UTC.
 fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }

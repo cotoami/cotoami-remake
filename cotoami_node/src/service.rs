@@ -13,8 +13,11 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
+use std::sync::Arc;
+
 use anyhow::{Context, Result};
 use bytes::Bytes;
+use cotoami_db::Operator;
 use derive_new::new;
 use dyn_clone::DynClone;
 use futures::future::BoxFuture;
@@ -61,6 +64,14 @@ pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     id: Uuid,
+
+    /// The operator node that has sent this request.
+    ///
+    /// This field isn't meant to be sent from a client via network, instead should be
+    /// set by a service provider that keeps track of who is the client.
+    #[serde(skip_serializing, skip_deserializing)]
+    from: Option<Arc<Operator>>,
+
     body: RequestBody,
 }
 
@@ -68,11 +79,18 @@ impl Request {
     pub fn new(body: RequestBody) -> Self {
         Self {
             id: Uuid::new_v4(),
+            from: None,
             body,
         }
     }
 
     pub fn id(&self) -> &Uuid { &self.id }
+
+    pub fn set_from(&mut self, from: Arc<Operator>) { self.from = Some(from); }
+
+    pub fn from_or_err(&self) -> Result<&Arc<Operator>, ServiceError> {
+        self.from.as_ref().ok_or(ServiceError::Unauthorized)
+    }
 
     pub fn body(self) -> RequestBody { self.body }
 }
@@ -92,9 +110,11 @@ impl RequestBody {
 // Response
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, serde::Serialize, serde::Deserialize, new)]
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, new)]
 pub struct Response {
     id: Uuid,
+
+    #[debug(skip)]
     body: Result<Bytes, ServiceError>,
 }
 

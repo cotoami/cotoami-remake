@@ -11,10 +11,7 @@ use serde_json::value::Value;
 use tower_service::Service;
 
 use crate::{
-    service::{
-        error::{InputError, RequestError},
-        NodeServiceFuture, *,
-    },
+    service::{error::InputError, NodeServiceFuture, *},
     state::{error::NodeError, NodeState},
 };
 
@@ -23,16 +20,23 @@ use crate::{
 /////////////////////////////////////////////////////////////////////////////
 
 impl NodeState {
-    async fn handle_request(self, request: Request) -> Result<Bytes> {
+    async fn handle_request(self, request: Request) -> Result<Bytes, ServiceError> {
         match request.body() {
-            RequestBody::LocalNode => self.local_node().await.and_then(Self::to_bytes),
-            RequestBody::ChunkOfChanges { from } => {
-                self.chunk_of_changes(from).await.and_then(Self::to_bytes)
-            }
+            RequestBody::LocalNode => self
+                .local_node()
+                .await
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
+            RequestBody::ChunkOfChanges { from } => self
+                .chunk_of_changes(from)
+                .await
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
             RequestBody::CreateClientNodeSession(input) => self
                 .create_client_node_session(input)
                 .await
-                .and_then(Self::to_bytes),
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
         }
     }
 
@@ -57,9 +61,7 @@ impl Service<Request> for NodeState {
         async move {
             Ok(Response::new(
                 *request.id(),
-                this.handle_request(request)
-                    .await
-                    .map_err(ServiceError::from),
+                this.handle_request(request).await,
             ))
         }
         .boxed()
@@ -84,7 +86,7 @@ where
         // NodeError
         match anyhow_err.downcast_ref::<NodeError>() {
             Some(NodeError::WrongDatabaseRole) => {
-                return ServiceError::Request(RequestError::new("wrong-database-role"))
+                return Self::request("wrong-database-role");
             }
             _ => (),
         }
@@ -92,14 +94,12 @@ where
         // DatabaseError
         match anyhow_err.downcast_ref::<DatabaseError>() {
             Some(DatabaseError::EntityNotFound { kind, id }) => {
-                return ServiceError::Input(
-                    InputError::new(kind.to_string(), "id", "not-found")
-                        .with_param("value", Value::String(id.to_string()))
-                        .into(),
-                )
+                return InputError::new(kind.to_string(), "id", "not-found")
+                    .with_param("value", Value::String(id.to_string()))
+                    .into();
             }
             Some(DatabaseError::AuthenticationFailed) => {
-                return ServiceError::Request(RequestError::new("authentication-failed"))
+                return Self::request("authentication-failed");
             }
             Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
             _ => (),

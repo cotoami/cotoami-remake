@@ -12,10 +12,10 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::stream::Stream;
-use tracing::{debug, error};
+use tracing::debug;
 
 use crate::{
-    client::NodeSentEvent,
+    event::NodeSentEvent,
     service::{PubsubService, ServiceError},
     state::EventPubsub,
     NodeState,
@@ -49,15 +49,17 @@ async fn stream_events(
             }
             let _local = StreamLocal(parent.node_id, state.pubsub().events().clone());
 
-            // Register SSE client-as-parent as a service
+            // Create a SSE client-as-parent service
             let parent_service = PubsubService::new(
                 format!("SSE client-as-parent: {}", parent.node_id),
                 state.pubsub().responses().clone(),
             );
-            state.put_parent_service(parent.node_id, Box::new(parent_service.clone()));
+            let requests = parent_service.requests().subscribe(None::<()>);
+
+            // Register the parent service
+            state.register_parent_service(parent.node_id, Box::new(parent_service.clone()));
 
             // Stream `request` events
-            let requests = parent_service.requests().subscribe(None::<()>);
             for await request in requests {
                 yield event("request", request);
             }
@@ -98,20 +100,13 @@ async fn post_event(
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
-        match rmp_serde::from_slice(&body)? {
-            NodeSentEvent::Connected => {
-                // Run database-syncing in another thread, otherwise a deadlock will occur:
-                // the event loop in the SSE client is blocked until this API responds,
-                // which then blocks `sync_with_parent`.
-                tokio::spawn(async move {
-                    if let Err(e) = state.sync_with_parent(parent.node_id, parent_service).await {
-                        error!("Error during sync with ({}): {}", parent.node_id, e);
-                    }
-                });
-            }
+        let event = rmp_serde::from_slice(&body)
+            .map_err(|_| ServiceError::request("invalid-request-body"))?;
+        match event {
             NodeSentEvent::Change(change) => {
                 // `sync_with_parent` could be run in parallel, in such cases,
-                // `DatabaseError::UnexpectedChangeNumber` will be returned.
+                // it will return `DatabaseError::UnexpectedChangeNumber`, which
+                // will be converted into an internal server error in HTTP.
                 state
                     .handle_parent_change(parent.node_id, change, parent_service)
                     .await?;

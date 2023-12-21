@@ -12,7 +12,7 @@ use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
-    client::{HttpClient, SseClient},
+    client::HttpClient,
     service::{
         error::IntoServiceResult,
         models::{CreateClientNodeSession, NotConnected},
@@ -35,6 +35,8 @@ pub(super) fn routes() -> Router<NodeState> {
 #[derive(serde::Serialize, new)]
 struct Server {
     node: Node,
+    url_prefix: String,
+    is_parent: bool,
     not_connected: Option<NotConnected>,
 }
 
@@ -49,9 +51,14 @@ async fn all_server_nodes(
         let nodes = db
             .all_server_nodes(&operator)?
             .into_iter()
-            .map(|(_, node)| {
-                let conn = conns.get(&node.uuid).unwrap_or_else(|| unreachable!());
-                Server::new(node, conn.not_connected())
+            .map(|(server, node)| {
+                let conn = conns.get(&server.node_id).unwrap_or_else(|| unreachable!());
+                Server::new(
+                    node,
+                    server.url_prefix,
+                    state.is_parent(&server.node_id),
+                    conn.not_connected(),
+                )
             })
             .collect();
         Ok(Content(nodes, accept))
@@ -72,12 +79,6 @@ struct AddServerNode {
     password: Option<String>,
 
     as_child: Option<bool>,
-
-    // Settings for the server as a parent (`as_child` = false)
-    //
-    /// Set true if you want to turn the local node into a replica of the parent node,
-    /// which means the root cotonoma will be changed to that of the parent.
-    replicate: Option<bool>,
 }
 
 async fn add_server_node(
@@ -104,71 +105,63 @@ async fn add_server_node(
     let client_session = http_client
         .create_client_node_session(CreateClientNodeSession {
             password: password.clone(),
-            new_password: None, // TODO
+            new_password: None, // TODO: change the password on the first login
             client: local_node,
             as_parent: Some(server_as_child),
         })
         .await?;
     info!("Successfully logged in to {}", http_client.url_prefix());
+    let server_id = client_session.server.uuid;
 
     // Register the server node
-    let (config, db, pubsub) = (
-        state.config().clone(),
-        state.db().clone(),
-        state.pubsub().clone(),
-    );
-    let op = operator.clone();
-    let server_id = client_session.server.uuid;
-    let url_prefix = http_client.url_prefix().to_string();
-    let (server_node, server_db_role) = spawn_blocking(move || {
-        let owner_password = config.owner_password();
-        let mut db = db.new_session()?;
+    let (server, server_node, server_db_role) = spawn_blocking({
+        let state = state.clone();
+        let operator = operator.clone();
+        let url_prefix = http_client.url_prefix().to_string();
+        move || {
+            let mut ds = state.db().new_session()?;
 
-        // Import the server node data, which is required for registering a [ServerNode]
-        if let Some((_, changelog)) = db.import_node(&client_session.server)? {
-            pubsub.publish_change(changelog);
-        }
-
-        // Database role
-        let server_db_role = if server_as_child {
-            NewDatabaseRole::Child {
-                as_owner: false,
-                can_edit_links: false,
+            // Import the server node data, which is required for registering a [ServerNode]
+            if let Some((_, changelog)) = ds.import_node(&client_session.server)? {
+                state.pubsub().publish_change(changelog);
             }
-        } else {
-            NewDatabaseRole::Parent
-        };
 
-        // Register a [ServerNode] and save the password into it
-        let (_, server_db_role) =
-            db.register_server_node(&server_id, &url_prefix, server_db_role, &op)?;
-        db.save_server_password(&server_id, &password, owner_password, &op)?;
+            // Database role
+            let server_db_role = if server_as_child {
+                NewDatabaseRole::Child {
+                    as_owner: false,
+                    can_edit_links: false,
+                }
+            } else {
+                NewDatabaseRole::Parent
+            };
 
-        // Get the imported node data
-        let node = db.node(&server_id)?.unwrap_or_else(|| unreachable!());
-        Ok::<_, ServiceError>((node, server_db_role))
+            // Register a [ServerNode] and save the password into it
+            let owner_password = state.config().owner_password();
+            let (_, server_db_role) =
+                ds.register_server_node(&server_id, &url_prefix, server_db_role, &operator)?;
+            let server =
+                ds.save_server_password(&server_id, &password, owner_password, &operator)?;
+
+            // Get the imported node data
+            let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());
+            Ok::<_, ServiceError>((server, node, server_db_role))
+        }
     })
     .await??;
     info!("ServerNode [{}] registered.", server_node.name);
 
-    // Sync with the parent
-    if let DatabaseRole::Parent(parent) = server_db_role {
-        state
-            .sync_with_parent(parent.node_id, Box::new(http_client.clone()))
-            .await?;
-        state
-            .after_first_import(server_node.clone(), form.replicate.unwrap_or(false))
-            .await?;
-    }
+    // Create a ServerConnection
+    let server_conn = ServerConnection::new(&server, http_client.clone(), &state).await?;
+    state.put_server_conn(&server_id, server_conn.clone());
 
-    // Create a SSE client
-    let sse_client = SseClient::new(server_id, http_client.clone(), state.clone())?;
-
-    // Store the server connection
-    let server_conn = ServerConnection::new_sse(client_session.session, http_client, sse_client);
-    let server = Server::new(server_node, server_conn.not_connected());
-    state.put_server_conn(&server_id, server_conn);
-
+    // Return a Server as a response
+    let server = Server::new(
+        server_node,
+        http_client.url_prefix().to_string(),
+        matches!(server_db_role, DatabaseRole::Parent(_)),
+        server_conn.not_connected(),
+    );
     Ok((StatusCode::CREATED, Content(server, accept)))
 }
 
@@ -182,6 +175,7 @@ struct UpdateServerNode {
     // TODO: url_prefix
 }
 
+#[axum_macros::debug_handler]
 async fn update_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
@@ -206,32 +200,26 @@ async fn set_server_disabled(
     state: &NodeState,
     operator: Operator,
 ) -> Result<()> {
-    // Set `disabled` to true or false
-    let db = state.db().clone();
-    let (local_node, network_role) = spawn_blocking(move || {
-        let mut db = db.new_session()?;
-        Ok::<_, anyhow::Error>((
-            db.local_node()?,
-            db.set_network_disabled(&server_id, disabled, &operator)?,
-        ))
+    // Set `disabled` to true/false
+    spawn_blocking({
+        let db = state.db().clone();
+        move || {
+            let ds = db.new_session()?;
+            ds.set_network_disabled(&server_id, disabled, &operator)?;
+            Ok::<_, anyhow::Error>(())
+        }
     })
     .await??;
-    let NetworkRole::Server(server_node) = network_role else { unreachable!() };
 
     // Disconnect from the server
     if disabled {
         debug!("Disabling the connection to: {}", server_id);
-        state.server_conn(&server_id)?.disable();
+        state.server_conn(&server_id)?.disconnect();
 
-    // Or connect to the server again
+    // Or reconnect to the server
     } else {
-        if state.server_conn(&server_id)?.enable_if_possible() {
-            debug!("Enabling the connection to {}", server_id);
-        } else {
-            debug!("Creating a new server connection for {}", server_id);
-            let server_conn = ServerConnection::connect_sse(&server_node, local_node, &state).await;
-            state.put_server_conn(&server_id, server_conn);
-        }
+        debug!("Enabling the connection to {}", server_id);
+        state.server_conn(&server_id)?.reconnect().await?;
     }
 
     Ok(())

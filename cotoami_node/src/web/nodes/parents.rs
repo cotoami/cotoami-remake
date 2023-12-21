@@ -31,11 +31,13 @@ async fn fork_from_parent(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,
 ) -> Result<Content<Forked>, ServiceError> {
-    state.server_conn(&node_id)?.disable();
+    state.server_conn(&node_id)?.disconnect();
 
-    let db = state.db().clone();
-    let (affected, change) =
-        spawn_blocking(move || db.new_session()?.fork_from(&node_id, &operator)).await??;
+    let (affected, change) = spawn_blocking({
+        let db = state.db().clone();
+        move || db.new_session()?.fork_from(&node_id, &operator)
+    })
+    .await??;
     state.pubsub().publish_change(change);
 
     Ok(Content(Forked { affected }, accept))

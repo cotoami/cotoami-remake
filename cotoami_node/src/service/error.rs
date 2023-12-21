@@ -19,6 +19,10 @@ pub enum ServiceError {
     Unknown(String),
 }
 
+impl ServiceError {
+    pub fn request(code: impl Into<String>) -> Self { RequestError::new(code).into() }
+}
+
 pub(crate) trait IntoServiceResult<T> {
     fn into_result(self) -> Result<T, ServiceError>;
 }
@@ -53,6 +57,10 @@ impl RequestError {
 
 impl<T> IntoServiceResult<T> for RequestError {
     fn into_result(self) -> Result<T, ServiceError> { Err(ServiceError::Request(self)) }
+}
+
+impl From<RequestError> for ServiceError {
+    fn from(e: RequestError) -> Self { ServiceError::Request(e) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -93,6 +101,10 @@ impl From<(&str, ValidationErrors)> for InputErrors {
 
 impl<T> IntoServiceResult<T> for (&str, ValidationErrors) {
     fn into_result(self) -> Result<T, ServiceError> { into_result(self) }
+}
+
+impl From<InputErrors> for ServiceError {
+    fn from(e: InputErrors) -> Self { ServiceError::Input(e) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -146,4 +158,8 @@ impl<T> IntoServiceResult<T> for InputError {
 
 impl From<InputError> for InputErrors {
     fn from(e: InputError) -> Self { Self(vec![e]) }
+}
+
+impl From<InputError> for ServiceError {
+    fn from(e: InputError) -> Self { InputErrors::from(e).into() }
 }

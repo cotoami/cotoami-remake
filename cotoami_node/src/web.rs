@@ -1,6 +1,7 @@
 //! Web API for Node operations based on [NodeState].
 
 use axum::{
+    extract::OriginalUri,
     headers,
     http::{
         header::{self, HeaderName, HeaderValue},
@@ -28,6 +29,7 @@ mod csrf;
 mod events;
 mod nodes;
 mod session;
+mod ws;
 
 pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
 
@@ -52,6 +54,7 @@ pub(super) fn router(state: NodeState) -> Router {
 fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
+        .nest("/ws", ws::routes())
         .nest("/session", session::routes())
         .nest("/events", events::routes())
         .nest("/changes", changes::routes())
@@ -144,7 +147,7 @@ impl headers::Header for Accept {
 // Error
 /////////////////////////////////////////////////////////////////////////////
 
-// Tell axum how to convert `ApiError` into a response.
+// Tell axum how to convert `ServiceError` into a response.
 impl IntoResponse for ServiceError {
     fn into_response(self) -> Response {
         match self {
@@ -205,7 +208,11 @@ async fn require_session<B>(
     .await??;
 
     if let Some(session) = session {
-        debug!("Client session: {session:?}");
+        debug!(
+            "Client session [{} {}]: {session:?}",
+            request.method(),
+            request.extensions().get::<OriginalUri>().unwrap().0
+        );
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {

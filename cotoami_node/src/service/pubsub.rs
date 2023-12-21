@@ -33,6 +33,11 @@ impl PubsubService {
     async fn handle_request(self, request: Request) -> Result<Response> {
         let mut stream = self.responses.subscribe_onetime(Some(request.id));
         self.requests.publish(request, None);
+        // TODO: should be set timeout for the response
+        // https://github.com/hyperium/hyper/issues/2132
+        // https://docs.rs/tower/latest/tower/struct.ServiceBuilder.html
+        //     - check timeout and map_err
+        // https://docs.rs/tower/latest/tower/timeout/error/struct.Elapsed.html
         if let Some(response) = stream.next().await {
             Ok(response)
         } else {

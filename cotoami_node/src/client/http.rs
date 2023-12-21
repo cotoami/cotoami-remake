@@ -1,4 +1,4 @@
-//! HTTP Client of Node API Service.
+//! HTTP client of Node API Service.
 //!
 //! This client is stateful and belongs to a single server ([HttpClient::url_prefix()]),
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.
@@ -60,6 +60,13 @@ impl HttpClient {
             crate::web::CSRF_CUSTOM_HEADER,
             HeaderValue::from_static("cotoami_node"),
         );
+        headers
+    }
+
+    pub(crate) fn all_headers(&self) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.extend(Self::default_headers());
+        headers.extend(self.headers.read().clone());
         headers
     }
 

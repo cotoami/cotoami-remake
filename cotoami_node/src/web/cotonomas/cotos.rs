@@ -3,7 +3,7 @@ use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     routing::get,
-    Extension, Form, Json, Router,
+    Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use serde_json::json;
@@ -16,6 +16,7 @@ use crate::{
         models::Pagination,
         ServiceError,
     },
+    web::{Accept, Content},
     NodeState,
 };
 
@@ -32,21 +33,22 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 async fn recent_cotos(
     State(state): State<NodeState>,
     Extension(_operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Json<Paginated<Coto>>, ServiceError> {
+) -> Result<Content<Paginated<Coto>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
     spawn_blocking(move || {
-        let mut db = state.db().new_session()?;
-        let cotos = db.recent_cotos(
+        let mut ds = state.db().new_session()?;
+        let cotos = ds.recent_cotos(
             None,
             Some(&cotonoma_id),
             pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
             pagination.page,
         )?;
-        Ok(Json(cotos))
+        Ok(Content(cotos, accept))
     })
     .await?
 }
@@ -67,9 +69,10 @@ struct PostCoto {
 async fn post_coto(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Form(form): Form<PostCoto>,
-) -> Result<(StatusCode, Json<Coto>), ServiceError> {
+) -> Result<(StatusCode, Content<Coto>), ServiceError> {
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
@@ -93,7 +96,7 @@ async fn post_coto(
         )?;
         state.pubsub().publish_change(change);
 
-        Ok((StatusCode::CREATED, Json(coto)))
+        Ok((StatusCode::CREATED, Content(coto, accept)))
     })
     .await?
 }

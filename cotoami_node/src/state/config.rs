@@ -54,8 +54,8 @@ pub struct Config {
 }
 
 impl Config {
-    const ENV_PREFXI: &str = "COTOAMI_";
-    const DEFAULT_DB_DIR_NAME: &str = "cotoami";
+    const ENV_PREFXI: &'static str = "COTOAMI_";
+    const DEFAULT_DB_DIR_NAME: &'static str = "cotoami";
 
     pub fn load_from_env() -> Result<Config, envy::Error> {
         dotenv().ok();

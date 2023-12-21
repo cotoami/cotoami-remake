@@ -82,7 +82,5 @@ pub enum NotConnected {
     Disabled,
     Connecting(Option<String>),
     InitFailed(String),
-    StreamFailed(String),
-    EventHandlingFailed(String),
-    Unknown,
+    Disconnected(Option<String>),
 }

@@ -4,8 +4,8 @@ use std::{collections::HashMap, fs, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
-use tracing::debug;
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tracing::{debug, error};
 use validator::Validate;
 
 use crate::service::NodeService;
@@ -21,6 +21,10 @@ pub use self::{config::Config, conn::*, pubsub::*};
 
 #[derive(Clone)]
 pub struct NodeState {
+    inner: Arc<State>,
+}
+
+struct State {
     config: Arc<Config>,
     db: Arc<Database>,
     pubsub: Pubsub,
@@ -38,45 +42,55 @@ impl NodeState {
 
         let pubsub = Pubsub::new();
 
-        Ok(NodeState {
+        let inner = State {
             config: Arc::new(config),
             db: Arc::new(db),
             pubsub,
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
             parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
+        };
+
+        Ok(NodeState {
+            inner: Arc::new(inner),
         })
     }
 
-    pub fn config(&self) -> &Arc<Config> { &self.config }
+    pub fn config(&self) -> &Arc<Config> { &self.inner.config }
 
-    pub fn db(&self) -> &Arc<Database> { &self.db }
+    pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
-    pub fn pubsub(&self) -> &Pubsub { &self.pubsub }
+    pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
 
     pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
-        self.server_conns.read()
+        self.inner.server_conns.read()
     }
 
     pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
         self.read_server_conns().contains_key(server_id)
     }
 
-    pub fn server_conn(
-        &self,
-        server_id: &Id<Node>,
-    ) -> Result<MappedRwLockReadGuard<ServerConnection>> {
-        RwLockReadGuard::try_map(self.read_server_conns(), |conns| conns.get(server_id))
-            .map_err(|_| anyhow!("ServerConnection for [{server_id}] not found"))
+    pub fn server_conn(&self, server_id: &Id<Node>) -> Result<ServerConnection> {
+        self.read_server_conns()
+            .get(server_id)
+            .ok_or(anyhow!(DatabaseError::not_found(
+                EntityKind::ServerNode,
+                *server_id,
+            )))
+            .map(Clone::clone)
+    }
+
+    pub fn write_server_conns(&self) -> RwLockWriteGuard<ServerConnections> {
+        self.inner.server_conns.write()
     }
 
     pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
-        self.server_conns.write().insert(*server_id, server_conn);
+        self.write_server_conns().insert(*server_id, server_conn);
     }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn read_parent_services(&self) -> RwLockReadGuard<ParentNodeServices> {
-        self.parent_services.read()
+        self.inner.parent_services.read()
     }
 
     pub fn parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
@@ -90,14 +104,43 @@ impl NodeState {
             .ok_or(anyhow!("Parent disconnected: {parent_id}"))
     }
 
-    pub fn put_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+    pub fn register_parent_service(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
         debug!("Parent service being registered: {parent_id}");
-        self.parent_services.write().insert(parent_id, service);
+        self.inner
+            .parent_services
+            .write()
+            .insert(parent_id, dyn_clone::clone_box(&*service));
+
+        // A task syncing with the parent
+        tokio::spawn({
+            let this = self.clone();
+            async move {
+                let description = service.description().to_string();
+                match this.sync_with_parent(parent_id, service).await {
+                    Ok(Some((import_from, _))) => {
+                        // Create a link to the parent cotonoma after the first import.
+                        if import_from == 1 {
+                            debug!("The first import has been completed.");
+                            if let Err(e) = this.create_link_to_parent_root(parent_id).await {
+                                error!("Error creating a link: {e:?}");
+                            }
+                        }
+                    }
+                    Ok(None) => (),
+                    Err(e) => {
+                        if let Ok(mut conn) = this.server_conn(&parent_id) {
+                            error!("Error syncing with ({description}): {e:?}");
+                            conn.disconnect();
+                        }
+                    }
+                }
+            }
+        });
     }
 
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         debug!("Parent service being removed: {parent_id}");
-        self.parent_services.write().remove(parent_id)
+        self.inner.parent_services.write().remove(parent_id)
     }
 }
 
