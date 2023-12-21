@@ -117,7 +117,15 @@ impl NodeState {
             async move {
                 let description = service.description().to_string();
                 match this.sync_with_parent(parent_id, service).await {
-                    Ok(Some(_)) => (),
+                    Ok(Some((import_from, _))) => {
+                        // Create a link to the parent cotonoma after the first import.
+                        if import_from == 1 {
+                            debug!("The first import has been completed.");
+                            if let Err(e) = this.create_link_to_parent_root(parent_id).await {
+                                error!("Error creating a link: {e:?}");
+                            }
+                        }
+                    }
                     Ok(None) => (),
                     Err(e) => {
                         if let Ok(mut conn) = this.server_conn(&parent_id) {

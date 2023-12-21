@@ -963,27 +963,38 @@ where
 
     pub fn create_link_to_parent_root(
         &mut self,
-        parent_node: &Node,
+        parent_id: &Id<Node>,
     ) -> Result<Option<(Link, Cotonoma, ChangelogEntry)>> {
-        if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
-            if let Some((_, local_root_coto)) = self.root_cotonoma()? {
-                let (parent_root_cotonoma, parent_root_coto) =
-                    self.cotonoma_or_err(&parent_cotonoma_id)?;
-                let (link, change) = self.create_link(
-                    &local_root_coto.uuid,
-                    &parent_root_coto.uuid,
-                    None,
-                    None,
-                    None,
-                    &self.globals.local_node_as_operator()?,
-                )?;
-                Ok(Some((link, parent_root_cotonoma, change)))
-            } else {
-                Ok(None)
-            }
-        } else {
-            Ok(None)
+        if !self.globals.is_parent(parent_id) {
+            bail!("The specified node is not a parent: {parent_id}");
         }
+
+        // Local root cotonoma
+        let local_root_coto = if let Some((_, coto)) = self.root_cotonoma()? {
+            coto
+        } else {
+            return Ok(None);
+        };
+
+        // Parent root cotonoma
+        let parent_node = self.node_or_err(parent_id)?;
+        let (parent_root_cotonoma, parent_root_coto) =
+            if let Some(parent_root_id) = parent_node.root_cotonoma_id {
+                self.cotonoma_or_err(&parent_root_id)?
+            } else {
+                return Ok(None);
+            };
+
+        // Create a link between the two.
+        let (link, change) = self.create_link(
+            &local_root_coto.uuid,
+            &parent_root_coto.uuid,
+            None,
+            None,
+            None,
+            &self.globals.local_node_as_operator()?,
+        )?;
+        Ok(Some((link, parent_root_cotonoma, change)))
     }
 
     /////////////////////////////////////////////////////////////////////////////
