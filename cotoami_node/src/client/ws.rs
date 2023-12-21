@@ -6,13 +6,20 @@ use anyhow::{bail, Result};
 use cotoami_db::{Id, Node};
 use futures::{Sink, StreamExt};
 use tokio::sync::mpsc;
-use tokio_tungstenite::connect_async;
+use tokio_tungstenite::{
+    connect_async,
+    tungstenite::{
+        client::IntoClientRequest,
+        handshake::client::Request,
+        http::{HeaderName, HeaderValue},
+    },
+};
 use tokio_util::sync::PollSender;
 use tracing::info;
 use url::Url;
 
 use crate::{
-    client::{ClientState, ConnectionState},
+    client::{ClientState, ConnectionState, HttpClient},
     event::{
         tungstenite::{communicate_with_operator, communicate_with_parent},
         EventLoopError,
@@ -24,20 +31,19 @@ use crate::{
 #[derive(Clone)]
 pub struct WebSocketClient {
     state: Arc<ClientState>,
-    ws_url: Url,
+    ws_request: Request,
 }
 
 impl WebSocketClient {
     pub async fn new(
         server_id: Id<Node>,
-        url_prefix: String,
+        http_client: &HttpClient,
         node_state: NodeState,
     ) -> Result<Self> {
         let state = ClientState::new(server_id, node_state).await?;
-        let ws_url = Url::parse(&url_prefix)?.join("/api/ws")?;
         Ok(Self {
             state: Arc::new(state),
-            ws_url,
+            ws_request: http_client.ws_request()?,
         })
     }
 
@@ -67,8 +73,8 @@ impl WebSocketClient {
     where
         S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
     {
-        let (ws_stream, _) = connect_async(&self.ws_url).await?;
-        info!("WebSocket connection opened: {}", self.ws_url);
+        let (ws_stream, _) = connect_async(self.ws_request.clone()).await?;
+        info!("WebSocket connection opened: {}", self.ws_request.uri());
         self.state.set_conn_state(ConnectionState::Connected);
 
         let (sink, stream) = ws_stream.split();
@@ -85,7 +91,7 @@ impl WebSocketClient {
             tokio::spawn(communicate_with_parent(
                 self.state.node_state.clone(),
                 self.state.server_id,
-                format!("WebSocket server-as-parent: {}", self.ws_url),
+                format!("WebSocket server-as-parent: {}", self.ws_request.uri()),
                 sink,
                 stream,
                 on_disconnect,
@@ -96,4 +102,36 @@ impl WebSocketClient {
     }
 
     pub fn disconnect(&mut self) { self.state.disconnect(); }
+}
+
+impl HttpClient {
+    pub fn ws_request(&self) -> Result<Request> {
+        let ws_url = Url::parse(&self.ws_url_prefix())?.join("/api/ws")?;
+        let mut request = ws_url.into_client_request()?;
+        {
+            // FIXME: incompatible `http` versions between reqwest and tungstenite
+            // make me write this silly conversion.
+            // Waiting for the following issue to be fixed:
+            // https://github.com/seanmonstar/reqwest/issues/2039
+            let headers = request.headers_mut();
+            for (name, value) in self.all_headers().into_iter() {
+                let value = HeaderValue::from_bytes(value.as_bytes())?;
+                if let Some(name) = name {
+                    let name = HeaderName::from_bytes(name.as_ref())?;
+                    headers.append(name, value);
+                } else {
+                    // Just ignore the `None` case
+                }
+            }
+        }
+        Ok(request)
+    }
+
+    fn ws_url_prefix(&self) -> String {
+        if self.url_prefix().starts_with("http") {
+            self.url_prefix().replacen("http", "ws", 1)
+        } else {
+            unreachable!("url_prefix should start with 'http'.");
+        }
+    }
 }

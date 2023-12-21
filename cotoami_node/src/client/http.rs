@@ -63,6 +63,13 @@ impl HttpClient {
         headers
     }
 
+    pub(crate) fn all_headers(&self) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.extend(Self::default_headers());
+        headers.extend(self.headers.read().clone());
+        headers
+    }
+
     fn url(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> Url {
         let mut url = Url::parse(&self.url_prefix).unwrap_or_else(|_| unreachable!());
         url = url.join(path).unwrap_or_else(|_| unreachable!());
