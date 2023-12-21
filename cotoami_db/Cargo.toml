@@ -13,7 +13,7 @@ base64 = "0.21.2"
 bytes = {version = "1", features = ["serde"]}
 chrono = {version = "0.4.23", features = ["serde"]}
 derive-new = "0.5"
-derive_more = {version = "=1.0.0-beta.3", features = ["debug", "display"]}
+derive_more = {version = "=1.0.0-beta.6", features = ["debug", "display"]}
 dotenvy = "0.15"
 generic-array = "0.14.7"
 identicon-rs = "4.0.1"

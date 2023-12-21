@@ -16,7 +16,7 @@ bytes = {version = "1", features = ["serde"]}
 chrono = {version = "0.4.26", features = ["serde"]} 
 cotoami_db = {path = "../cotoami_db"} 
 derive-new = "0.5" 
-derive_more = {version = "=1.0.0-beta.3", features = ["debug"]} 
+derive_more = {version = "=1.0.0-beta.6", features = ["debug", "display"]} 
 dirs = "5.0.1" 
 dotenvy = "0.15.7" 
 dyn-clone = "1.0.16" 

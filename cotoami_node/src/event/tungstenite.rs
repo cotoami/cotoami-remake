@@ -209,12 +209,10 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                     }
                 }
                 Err(e) => {
-                    // A malicious client can send an invalid message intentionally,
-                    // so let's not log it as an error.
                     info!("The peer ({peer_id}) sent an invalid binary message: {e}");
                     error
                         .lock()
-                        .replace(EventLoopError::CommunicationFailed(e.into()));
+                        .replace(EventLoopError::EventHandlingFailed(e.into()));
                     break;
                 }
             },

@@ -21,9 +21,12 @@ pub(crate) enum NodeSentEvent {
     Error(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, derive_more::Display)]
 pub(crate) enum EventLoopError {
+    #[display("Communication failed: {}", _0)]
     CommunicationFailed(anyhow::Error),
+
+    #[display("Event handling failed: {}", _0)]
     EventHandlingFailed(anyhow::Error),
 }
 

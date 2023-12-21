@@ -103,15 +103,9 @@ impl ConnectionState {
             ConnectionState::Connecting(err) => Some(NotConnected::Connecting(
                 err.as_ref().map(ToString::to_string),
             )),
-            ConnectionState::Disconnected(Some(err)) => match err {
-                EventLoopError::CommunicationFailed(e) => {
-                    Some(NotConnected::CommunicationFailed(e.to_string()))
-                }
-                EventLoopError::EventHandlingFailed(e) => {
-                    Some(NotConnected::EventHandlingFailed(e.to_string()))
-                }
-            },
-            ConnectionState::Disconnected(None) => Some(NotConnected::Disabled),
+            ConnectionState::Disconnected(err) => Some(NotConnected::Disconnected(
+                err.as_ref().map(ToString::to_string),
+            )),
         }
     }
 }
