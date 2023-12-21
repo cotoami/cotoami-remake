@@ -59,6 +59,7 @@ impl WebSocketClient {
             let this = self.clone();
             async move {
                 while let Some(err) = receiver.recv().await {
+                    info!("on_disconnect: {err:?}");
                     this.state
                         .set_conn_state(ConnectionState::Disconnected(err));
                     this.state.publish_server_disconnected();

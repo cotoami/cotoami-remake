@@ -23,7 +23,6 @@ pub(crate) enum NodeSentEvent {
 
 #[derive(Debug)]
 pub(crate) enum EventLoopError {
-    InitFailed(anyhow::Error),
     CommunicationFailed(anyhow::Error),
     EventHandlingFailed(anyhow::Error),
 }

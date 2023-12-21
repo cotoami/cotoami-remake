@@ -118,7 +118,7 @@ impl SseClient {
                             &e
                         );
                         self.state
-                            .set_conn_state(ConnectionState::stream_failed(e.into()));
+                            .set_conn_state(ConnectionState::communication_failed(e.into()));
                         break;
                     } else {
                         debug!(

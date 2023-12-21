@@ -89,11 +89,7 @@ enum ConnectionState {
 }
 
 impl ConnectionState {
-    pub fn init_failed(e: anyhow::Error) -> Self {
-        ConnectionState::Disconnected(Some(EventLoopError::InitFailed(e)))
-    }
-
-    pub fn stream_failed(e: anyhow::Error) -> Self {
+    pub fn communication_failed(e: anyhow::Error) -> Self {
         ConnectionState::Disconnected(Some(EventLoopError::CommunicationFailed(e)))
     }
 
@@ -108,7 +104,6 @@ impl ConnectionState {
                 err.as_ref().map(ToString::to_string),
             )),
             ConnectionState::Disconnected(Some(err)) => match err {
-                EventLoopError::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
                 EventLoopError::CommunicationFailed(e) => {
                     Some(NotConnected::CommunicationFailed(e.to_string()))
                 }
