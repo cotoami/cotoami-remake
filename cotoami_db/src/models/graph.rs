@@ -31,6 +31,8 @@ impl Graph {
 
     pub fn root(&self) -> &Cotonoma { &self.root }
 
+    pub fn is_root(&self, coto_id: &Id<Coto>) -> bool { self.root.coto_id == *coto_id }
+
     pub fn add_coto(&mut self, coto: Coto) { self.cotos.insert(coto.uuid, coto); }
 
     pub fn contains(&self, coto_id: &Id<Coto>) -> bool { self.cotos.contains_key(coto_id) }
