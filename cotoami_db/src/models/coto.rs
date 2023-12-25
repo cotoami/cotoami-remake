@@ -136,12 +136,12 @@ impl Coto {
 impl Display for Coto {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.is_cotonoma {
-            write!(f, "[[{:?}]]", self.name_as_cotonoma().unwrap_or_default())
+            write!(f, "<{}>", self.name_as_cotonoma().unwrap_or_default())
         } else {
             let content = self.content.as_deref().unwrap_or_default();
             match self.summary.as_deref() {
-                Some(summary) => write!(f, "[{:?}] {:?}", summary, content),
-                None => write!(f, "{:?}", content),
+                Some(summary) => write!(f, "({summary}) {content}"),
+                None => write!(f, "{content}"),
             }
         }
     }
