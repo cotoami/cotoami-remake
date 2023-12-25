@@ -1002,7 +1002,7 @@ where
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn graph(&mut self, root: Cotonoma, until_cotonoma: bool) -> Result<Graph> {
-        self.read_transaction(graph_ops::get(root, until_cotonoma))
+        self.read_transaction(graph_ops::bfs_by_iterating_query(root, until_cotonoma))
     }
 
     /////////////////////////////////////////////////////////////////////////////

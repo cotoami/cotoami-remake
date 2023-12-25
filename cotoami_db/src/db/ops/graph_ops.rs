@@ -11,7 +11,11 @@ use crate::{
     schema::{cotos, links},
 };
 
-pub(crate) fn get<Conn: AsReadableConn>(
+/// Breadth first search by iterating a query for sibling [Coto]s.
+///
+/// The traversal starts at a given [Cotonoma] and only traverses [Coto]s reachable from it.
+/// It won't traverse beyond other [Cotonoma]s if `until_cotonoma` is set to `true`.
+pub(crate) fn bfs_by_iterating_query<Conn: AsReadableConn>(
     root: Cotonoma,
     until_cotonoma: bool,
 ) -> impl Operation<Conn, Graph> {
