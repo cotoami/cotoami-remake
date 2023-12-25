@@ -10,7 +10,7 @@ use super::{coto::Coto, cotonoma::Cotonoma, link::Link, Id};
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Graph {
     /// Root cotonoma
-    root_cotonoma: Cotonoma,
+    root: Cotonoma,
 
     /// All the cotos in this graph, each of which is mapped by its ID
     cotos: HashMap<Id<Coto>, Coto>,
@@ -21,20 +21,15 @@ pub struct Graph {
 
 impl Graph {
     /// Creates a graph with a root cotonoma
-    pub fn new(root_cotonoma: (Cotonoma, Coto)) -> Self {
-        let (cotonoma, cotonoma_coto) = root_cotonoma;
-        assert_eq!(cotonoma.coto_id, cotonoma_coto.uuid);
-
-        let mut graph = Graph {
-            root_cotonoma: cotonoma,
+    pub fn new(root: Cotonoma) -> Self {
+        Self {
+            root,
             cotos: HashMap::default(),
             links: HashMap::default(),
-        };
-        graph.add_coto(cotonoma_coto);
-        graph
+        }
     }
 
-    pub fn root_cotonoma(&self) -> &Cotonoma { &self.root_cotonoma }
+    pub fn root(&self) -> &Cotonoma { &self.root }
 
     pub fn add_coto(&mut self, coto: Coto) { self.cotos.insert(coto.uuid, coto); }
 

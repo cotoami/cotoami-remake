@@ -1,10 +1,42 @@
 //! Graph (cotos, cotonomas, links) related operations
 
+use diesel::prelude::*;
+
 use super::{coto_ops, cotonoma_ops, link_ops};
 use crate::{
     db::op::*,
-    models::{node::Node, Id},
+    models::{coto::Coto, cotonoma::Cotonoma, graph::Graph, link::Link, node::Node, Id},
+    schema::{cotos, links},
 };
+
+pub(crate) fn get<Conn: AsReadableConn>(root: Cotonoma) -> impl Operation<Conn, Graph> {
+    read_op(move |conn| {
+        let mut graph = Graph::new(root);
+        let mut layer = vec![graph.root().coto_id];
+        while !layer.is_empty() {
+            // Cotos in the layer
+            let layer_cotos = cotos::table
+                .filter(cotos::uuid.eq_any(&layer))
+                .load::<Coto>(conn)?;
+            for coto in layer_cotos.into_iter() {
+                graph.add_coto(coto);
+            }
+
+            // Links in the layer
+            let layer_links = links::table
+                .filter(links::source_coto_id.eq_any(&layer))
+                .load::<Link>(conn)?;
+            layer.clear();
+            for link in layer_links.into_iter() {
+                if !graph.contains(&link.target_coto_id) {
+                    layer.push(link.target_coto_id);
+                }
+                graph.add_link(link);
+            }
+        }
+        Ok(graph)
+    })
+}
 
 pub(crate) fn change_owner_node<'a>(
     from: &'a Id<Node>,
