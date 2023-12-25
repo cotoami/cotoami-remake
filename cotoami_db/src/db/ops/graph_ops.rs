@@ -1,5 +1,7 @@
 //! Graph (cotos, cotonomas, links) related operations
 
+use std::collections::HashSet;
+
 use diesel::prelude::*;
 
 use super::{coto_ops, cotonoma_ops, link_ops};
@@ -9,16 +11,24 @@ use crate::{
     schema::{cotos, links},
 };
 
-pub(crate) fn get<Conn: AsReadableConn>(root: Cotonoma) -> impl Operation<Conn, Graph> {
+pub(crate) fn get<Conn: AsReadableConn>(
+    root: Cotonoma,
+    until_cotonoma: bool,
+) -> impl Operation<Conn, Graph> {
     read_op(move |conn| {
         let mut graph = Graph::new(root);
-        let mut layer = vec![graph.root().coto_id];
+        let mut layer = HashSet::new();
+        layer.insert(graph.root().coto_id);
         while !layer.is_empty() {
             // Cotos in the layer
             let layer_cotos = cotos::table
                 .filter(cotos::uuid.eq_any(&layer))
                 .load::<Coto>(conn)?;
             for coto in layer_cotos.into_iter() {
+                // Stop traversing the route upon finding a cotonoma
+                if until_cotonoma && !graph.is_root(&coto.uuid) && coto.is_cotonoma {
+                    layer.remove(&coto.uuid);
+                }
                 graph.add_coto(coto);
             }
 
@@ -29,7 +39,7 @@ pub(crate) fn get<Conn: AsReadableConn>(root: Cotonoma) -> impl Operation<Conn, 
             layer.clear();
             for link in layer_links.into_iter() {
                 if !graph.contains(&link.target_coto_id) {
-                    layer.push(link.target_coto_id);
+                    layer.insert(link.target_coto_id);
                 }
                 graph.add_link(link);
             }
