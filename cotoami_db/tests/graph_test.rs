@@ -21,10 +21,6 @@ fn graph() -> Result<()> {
     let (coto1, _) = ds.post_coto("coto1", None, &root, &opr)?;
     let _ = ds.create_link(&root.coto_id, &coto1.uuid, Some("foo"), None, None, &opr)?;
 
-    /////////////////////////////////////////////////////////////////////////////
-    // Then
-    /////////////////////////////////////////////////////////////////////////////
-
     let graph = ds.graph(root.clone(), true)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph()).to_string(),
@@ -48,10 +44,6 @@ fn graph() -> Result<()> {
     let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", &root, &opr)?;
     let _ = ds.create_link(&coto1.uuid, &cotonoma1.coto_id, None, None, None, &opr)?;
 
-    /////////////////////////////////////////////////////////////////////////////
-    // Then
-    /////////////////////////////////////////////////////////////////////////////
-
     let graph = ds.graph(root.clone(), true)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph()).to_string(),
@@ -64,6 +56,34 @@ fn graph() -> Result<()> {
                 0 -> 1 [ label = "foo" ]
                 1 -> 2 [ label = "" ]
                 1 -> 3 [ label = "" ]
+            }
+            "#, 
+        }
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: add a loop
+    /////////////////////////////////////////////////////////////////////////////
+
+    let (coto3, _) = ds.post_coto("coto3", None, &root, &opr)?;
+    let _ = ds.create_link(&coto2.uuid, &coto3.uuid, None, None, None, &opr)?;
+    let _ = ds.create_link(&coto3.uuid, &coto1.uuid, None, None, None, &opr)?;
+
+    let graph = ds.graph(root.clone(), true)?;
+    assert_eq!(
+        Dot::new(&graph.into_petgraph()).to_string(),
+        indoc! {r#"
+            digraph {
+                0 [ label = "<My Node>" ]
+                1 [ label = "coto1" ]
+                2 [ label = "coto2" ]
+                3 [ label = "<cotonoma1>" ]
+                4 [ label = "coto3" ]
+                0 -> 1 [ label = "foo" ]
+                1 -> 2 [ label = "" ]
+                1 -> 3 [ label = "" ]
+                2 -> 4 [ label = "" ]
+                4 -> 1 [ label = "" ]
             }
             "#, 
         }
