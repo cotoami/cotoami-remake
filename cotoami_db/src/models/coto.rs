@@ -140,7 +140,7 @@ impl Display for Coto {
         } else {
             let content = self.content.as_deref().unwrap_or_default();
             match self.summary.as_deref() {
-                Some(summary) => write!(f, "({summary}) {content}"),
+                Some(summary) => write!(f, "{summary} ({content})"),
                 None => write!(f, "{content}"),
             }
         }
