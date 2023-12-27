@@ -23,7 +23,7 @@ fn graph() -> Result<()> {
 
     let graph = ds.graph(root.clone(), true)?;
     assert_eq!(
-        Dot::new(&graph.into_petgraph()).to_string(),
+        Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
             digraph {
                 0 [ label = "<My Node>" ]
@@ -46,7 +46,7 @@ fn graph() -> Result<()> {
 
     let graph = ds.graph(root.clone(), true)?;
     assert_eq!(
-        Dot::new(&graph.into_petgraph()).to_string(),
+        Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
             digraph {
                 0 [ label = "<My Node>" ]
@@ -71,7 +71,7 @@ fn graph() -> Result<()> {
 
     let graph = ds.graph(root.clone(), true)?;
     assert_eq!(
-        Dot::new(&graph.into_petgraph()).to_string(),
+        Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
             digraph {
                 0 [ label = "<My Node>" ]
@@ -97,16 +97,31 @@ fn graph() -> Result<()> {
     let _ = ds.create_link(&cotonoma1.coto_id, &coto4.uuid, None, None, None, &opr)?;
 
     // until_cotonoma = true
-    let graph2 = ds.graph(root.clone(), true)?;
+    let graph = ds.graph(root.clone(), true)?;
     assert_eq!(
-        Dot::new(&graph2.into_petgraph()).to_string(),
-        Dot::new(&graph.into_petgraph()).to_string()
+        Dot::new(&graph.into_petgraph(true)).to_string(),
+        // should NOT be changed from the previous one:
+        indoc! {r#"
+            digraph {
+                0 [ label = "<My Node>" ]
+                1 [ label = "coto1" ]
+                2 [ label = "coto2" ]
+                3 [ label = "<cotonoma1>" ]
+                4 [ label = "coto3" ]
+                0 -> 1 [ label = "foo" ]
+                1 -> 2 [ label = "" ]
+                1 -> 3 [ label = "" ]
+                2 -> 4 [ label = "" ]
+                4 -> 1 [ label = "" ]
+            }
+            "#, 
+        }
     );
 
     // until_cotonoma = false
     let graph = ds.graph(root.clone(), false)?;
     assert_eq!(
-        Dot::new(&graph.into_petgraph()).to_string(),
+        Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
             digraph {
                 0 [ label = "<My Node>" ]

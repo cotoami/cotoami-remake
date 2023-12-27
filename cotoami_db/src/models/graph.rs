@@ -20,12 +20,12 @@ pub struct Graph {
 }
 
 impl Graph {
-    /// Creates a graph with a root cotonoma
+    /// Creates an empty graph with a root cotonoma
     pub fn new(root: Cotonoma) -> Self {
         Self {
             root,
-            cotos: HashMap::default(),
-            links: HashMap::default(),
+            cotos: HashMap::new(),
+            links: HashMap::new(),
         }
     }
 
@@ -44,30 +44,36 @@ impl Graph {
             .push(link);
     }
 
-    /// Converts it into a petgraph mainly for debug purposes
-    pub fn into_petgraph(&self) -> Petgraph<String, &str> {
-        let mut petgraph = Petgraph::<String, &str>::new();
+    /// Converts this graph into a petgraph's [petgraph::graph::Graph].
+    ///
+    /// You can use the `sort` flag to get cotos and links in a predictable order.
+    pub fn into_petgraph(self, sort: bool) -> Petgraph<Coto, Link> {
+        let mut petgraph = Petgraph::<Coto, Link>::new();
 
-        // cotos
-        let mut cotos: Vec<&Coto> = self.cotos.values().collect();
-        cotos.sort_by_key(|coto| coto.created_at);
-        let mut node_indexes: HashMap<Id<Coto>, NodeIndex> = HashMap::new();
-        for coto in cotos.iter() {
-            let node_index = petgraph.add_node(coto.to_string());
-            node_indexes.insert(coto.uuid, node_index);
+        // Cotos
+        let mut cotos: Vec<Coto> = self.cotos.into_values().collect();
+        if sort {
+            cotos.sort_by_key(|coto| {
+                // `rowid` can't be used here because it won't be deserialized.
+                coto.created_at
+            });
+        }
+        let mut node_indices: HashMap<Id<Coto>, NodeIndex> = HashMap::new();
+        for coto in cotos.into_iter() {
+            let coto_id = coto.uuid;
+            let node_index = petgraph.add_node(coto);
+            node_indices.insert(coto_id, node_index);
         }
 
-        // edges
-        let mut links: Vec<&Link> = self.links.values().flatten().collect();
-        links.sort_by_key(|link| link.created_at);
-        for link in links.iter() {
-            let source_index = node_indexes.get(&link.source_coto_id).unwrap();
-            let target_index = node_indexes.get(&link.target_coto_id).unwrap();
-            petgraph.add_edge(
-                *source_index,
-                *target_index,
-                link.linking_phrase.as_deref().unwrap_or_default(),
-            );
+        // Links
+        let mut links: Vec<Link> = self.links.into_values().flatten().collect();
+        if sort {
+            links.sort_by_key(|link| link.created_at);
+        }
+        for link in links.into_iter() {
+            let source_index = node_indices.get(&link.source_coto_id).unwrap();
+            let target_index = node_indices.get(&link.target_coto_id).unwrap();
+            petgraph.add_edge(*source_index, *target_index, link);
         }
         petgraph
     }
