@@ -140,7 +140,15 @@ impl Display for Coto {
         } else {
             let content = self.content.as_deref().unwrap_or_default();
             match self.summary.as_deref() {
-                Some(summary) => write!(f, "{summary} ({content})"),
+                Some(summary) => {
+                    write!(
+                        f,
+                        "{summary} ({})",
+                        crate::abbreviate_str(content, 5, "…")
+                            .as_deref()
+                            .unwrap_or(content)
+                    )
+                }
                 None => write!(f, "{content}"),
             }
         }

@@ -102,7 +102,13 @@ impl Display for Link {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let linking_phrase = self.linking_phrase.as_deref().unwrap_or_default();
         match self.details.as_deref() {
-            Some(_) => write!(f, "{linking_phrase} (..)"),
+            Some(details) => write!(
+                f,
+                "{linking_phrase} ({})",
+                crate::abbreviate_str(details, 5, "…")
+                    .as_deref()
+                    .unwrap_or(details)
+            ),
             None => write!(f, "{linking_phrase}"),
         }
     }
