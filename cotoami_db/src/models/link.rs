@@ -1,5 +1,7 @@
 //! A link is a directed edge connecting two [Coto]s.
 
+use std::fmt::Display;
+
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
@@ -92,6 +94,22 @@ impl Link {
             details: self.details.as_deref(),
             created_at: self.created_at,
             updated_at: self.updated_at,
+        }
+    }
+}
+
+impl Display for Link {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let linking_phrase = self.linking_phrase.as_deref().unwrap_or_default();
+        match self.details.as_deref() {
+            Some(details) => write!(
+                f,
+                "{linking_phrase} ({})",
+                crate::abbreviate_str(details, 5, "…")
+                    .as_deref()
+                    .unwrap_or(details)
+            ),
+            None => write!(f, "{linking_phrase}"),
         }
     }
 }

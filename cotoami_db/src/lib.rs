@@ -64,6 +64,21 @@ fn blank_to_none(x: Option<&str>) -> Option<&str> {
     x.and_then(|x| if x.trim().is_empty() { None } else { Some(x) })
 }
 
+/// Abbreviate a string with the given `ellipsis` for testing display.
+/// It doesn't consider grapheme clusters, but only unicode scalar values.
+fn abbreviate_str(s: &str, length: usize, ellipsis: &str) -> Option<String> {
+    if length == 0 {
+        return Some(ellipsis.into());
+    }
+    match s.char_indices().nth(length) {
+        Some((byte_end, _)) => {
+            let abbreviated = &s[..byte_end];
+            Some(format!("{abbreviated}{ellipsis}"))
+        }
+        None => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
@@ -77,6 +92,14 @@ mod tests {
         assert_eq!(blank_to_none(Some("")), None);
         assert_eq!(blank_to_none(Some("   ")), None);
         assert_eq!(blank_to_none(None), None);
+        Ok(())
+    }
+
+    #[test]
+    fn test_abbreviate_str() -> Result<()> {
+        assert_eq!(abbreviate_str("ab", 0, "…"), Some("…".into()));
+        assert_eq!(abbreviate_str("ab", 1, "…"), Some("a…".into()));
+        assert_eq!(abbreviate_str("ab", 2, "…"), None);
         Ok(())
     }
 }

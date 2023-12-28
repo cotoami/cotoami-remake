@@ -474,7 +474,7 @@ where
     ) -> Result<(ServerNode, ParentNode)> {
         let (server, database_role) =
             self.register_server_node(id, url_prefix, NewDatabaseRole::Parent, operator)?;
-        let DatabaseRole::Parent(parent) = database_role else { unimplemented!() };
+        let DatabaseRole::Parent(parent) = database_role else { unreachable!() };
         Ok((server, parent))
     }
 
@@ -995,6 +995,18 @@ where
             &self.globals.local_node_as_operator()?,
         )?;
         Ok(Some((link, parent_root_cotonoma, change)))
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // graph
+    /////////////////////////////////////////////////////////////////////////////
+
+    pub fn graph(&mut self, root: Coto, until_cotonoma: bool) -> Result<Graph> {
+        self.read_transaction(graph_ops::traverse_by_level_queries(root, until_cotonoma))
+    }
+
+    pub fn graph_by_cte(&mut self, root: Coto, until_cotonoma: bool) -> Result<Graph> {
+        self.read_transaction(graph_ops::traverse_by_recursive_cte(root, until_cotonoma))
     }
 
     /////////////////////////////////////////////////////////////////////////////
