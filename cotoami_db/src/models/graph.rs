@@ -4,13 +4,13 @@ use std::collections::HashMap;
 
 use petgraph::prelude::{Graph as Petgraph, NodeIndex};
 
-use super::{coto::Coto, cotonoma::Cotonoma, link::Link, Id};
+use super::{coto::Coto, link::Link, Id};
 
 /// A graph is a set of cotos that are connected with links
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Graph {
-    /// Root cotonoma
-    root: Cotonoma,
+    /// Root coto ID
+    root_id: Id<Coto>,
 
     /// All the cotos in this graph, each of which is mapped by its ID
     cotos: HashMap<Id<Coto>, Coto>,
@@ -21,17 +21,23 @@ pub struct Graph {
 
 impl Graph {
     /// Creates an empty graph with a root cotonoma
-    pub fn new(root: Cotonoma) -> Self {
-        Self {
-            root,
+    pub fn new(root: Coto) -> Self {
+        let mut graph = Self {
+            root_id: root.uuid,
             cotos: HashMap::new(),
             links: HashMap::new(),
-        }
+        };
+        graph.add_coto(root);
+        graph
     }
 
-    pub fn root(&self) -> &Cotonoma { &self.root }
+    pub fn root(&self) -> &Coto {
+        self.cotos
+            .get(&self.root_id)
+            .unwrap_or_else(|| unreachable!())
+    }
 
-    pub fn is_root(&self, coto_id: &Id<Coto>) -> bool { self.root.coto_id == *coto_id }
+    pub fn is_root(&self, coto_id: &Id<Coto>) -> bool { self.root_id == *coto_id }
 
     pub fn add_coto(&mut self, coto: Coto) { self.cotos.insert(coto.uuid, coto); }
 

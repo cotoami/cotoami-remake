@@ -474,7 +474,7 @@ where
     ) -> Result<(ServerNode, ParentNode)> {
         let (server, database_role) =
             self.register_server_node(id, url_prefix, NewDatabaseRole::Parent, operator)?;
-        let DatabaseRole::Parent(parent) = database_role else { unimplemented!() };
+        let DatabaseRole::Parent(parent) = database_role else { unreachable!() };
         Ok((server, parent))
     }
 
@@ -1001,7 +1001,7 @@ where
     // graph
     /////////////////////////////////////////////////////////////////////////////
 
-    pub fn graph(&mut self, root: Cotonoma, until_cotonoma: bool) -> Result<Graph> {
+    pub fn graph(&mut self, root: Coto, until_cotonoma: bool) -> Result<Graph> {
         self.read_transaction(graph_ops::bfs_by_iterating_query(root, until_cotonoma))
     }
 

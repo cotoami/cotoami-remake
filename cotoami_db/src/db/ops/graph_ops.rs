@@ -7,22 +7,22 @@ use diesel::prelude::*;
 use super::{coto_ops, cotonoma_ops, link_ops};
 use crate::{
     db::op::*,
-    models::{coto::Coto, cotonoma::Cotonoma, graph::Graph, link::Link, node::Node, Id},
+    models::{coto::Coto, graph::Graph, link::Link, node::Node, Id},
     schema::{cotos, links},
 };
 
 /// Breadth first search by iterating a query for sibling [Coto]s.
 ///
-/// The traversal starts at a given [Cotonoma] and only traverses [Coto]s reachable from it.
+/// The traversal starts at a given [Coto] and only traverses [Coto]s reachable from it.
 /// It won't traverse beyond other [Cotonoma]s if `until_cotonoma` is set to `true`.
 pub(crate) fn bfs_by_iterating_query<Conn: AsReadableConn>(
-    root: Cotonoma,
+    root: Coto,
     until_cotonoma: bool,
 ) -> impl Operation<Conn, Graph> {
     read_op(move |conn| {
         let mut graph = Graph::new(root);
         let mut layer = HashSet::new();
-        layer.insert(graph.root().coto_id);
+        layer.insert(graph.root().uuid);
         while !layer.is_empty() {
             // Cotos in the layer
             let layer_cotos = cotos::table

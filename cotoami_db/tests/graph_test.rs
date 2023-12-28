@@ -12,16 +12,16 @@ fn graph() -> Result<()> {
     let (_root_dir, db, _node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
     let opr = db.globals().local_node_as_operator()?;
-    let (root, _) = ds.root_cotonoma()?.unwrap();
+    let (root, root_coto) = ds.root_cotonoma()?.unwrap();
 
     /////////////////////////////////////////////////////////////////////////////
     // When: add a child
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto1, _) = ds.post_coto("coto1", None, &root, &opr)?;
-    let _ = ds.create_link(&root.coto_id, &coto1.uuid, Some("foo"), None, None, &opr)?;
+    let _ = ds.create_link(&root_coto.uuid, &coto1.uuid, Some("foo"), None, None, &opr)?;
 
-    let graph = ds.graph(root.clone(), true)?;
+    let graph = ds.graph(root_coto.clone(), true)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
@@ -44,7 +44,7 @@ fn graph() -> Result<()> {
     let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", &root, &opr)?;
     let _ = ds.create_link(&coto1.uuid, &cotonoma1.coto_id, None, None, None, &opr)?;
 
-    let graph = ds.graph(root.clone(), true)?;
+    let graph = ds.graph(root_coto.clone(), true)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
@@ -69,7 +69,7 @@ fn graph() -> Result<()> {
     let _ = ds.create_link(&coto2.uuid, &coto3.uuid, None, None, None, &opr)?;
     let _ = ds.create_link(&coto3.uuid, &coto1.uuid, None, None, None, &opr)?;
 
-    let graph = ds.graph(root.clone(), true)?;
+    let graph = ds.graph(root_coto.clone(), true)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
@@ -97,7 +97,7 @@ fn graph() -> Result<()> {
     let _ = ds.create_link(&cotonoma1.coto_id, &coto4.uuid, None, None, None, &opr)?;
 
     // until_cotonoma = true
-    let graph = ds.graph(root.clone(), true)?;
+    let graph = ds.graph(root_coto.clone(), true)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph(true)).to_string(),
         // should NOT be changed from the previous one:
@@ -119,7 +119,7 @@ fn graph() -> Result<()> {
     );
 
     // until_cotonoma = false
-    let graph = ds.graph(root.clone(), false)?;
+    let graph = ds.graph(root_coto.clone(), false)?;
     assert_eq!(
         Dot::new(&graph.into_petgraph(true)).to_string(),
         indoc! {r#"
