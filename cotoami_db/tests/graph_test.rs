@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cotoami_db::prelude::Graph;
 use indoc::indoc;
 use petgraph::dot::Dot;
 
@@ -21,18 +22,15 @@ fn graph() -> Result<()> {
     let (coto1, _) = ds.post_coto("coto1", None, &root, &opr)?;
     let _ = ds.create_link(&root_coto.uuid, &coto1.uuid, Some("foo"), None, None, &opr)?;
 
-    let graph = ds.graph(root_coto.clone(), true)?;
-    assert_eq!(
-        Dot::new(&graph.into_petgraph(true)).to_string(),
-        indoc! {r#"
-            digraph {
-                0 [ label = "<My Node>" ]
-                1 [ label = "coto1" ]
-                0 -> 1 [ label = "foo" ]
-            }
-            "#, 
+    let expected_dot = indoc! {r#"
+        digraph {
+            0 [ label = "<My Node>" ]
+            1 [ label = "coto1" ]
+            0 -> 1 [ label = "foo" ]
         }
-    );
+    "#};
+    assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
+    assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: add grandchildren
@@ -44,22 +42,19 @@ fn graph() -> Result<()> {
     let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", &root, &opr)?;
     let _ = ds.create_link(&coto1.uuid, &cotonoma1.coto_id, None, None, None, &opr)?;
 
-    let graph = ds.graph(root_coto.clone(), true)?;
-    assert_eq!(
-        Dot::new(&graph.into_petgraph(true)).to_string(),
-        indoc! {r#"
-            digraph {
-                0 [ label = "<My Node>" ]
-                1 [ label = "coto1" ]
-                2 [ label = "coto2" ]
-                3 [ label = "<cotonoma1>" ]
-                0 -> 1 [ label = "foo" ]
-                1 -> 2 [ label = "" ]
-                1 -> 3 [ label = "" ]
-            }
-            "#, 
+    let expected_dot = indoc! {r#"
+        digraph {
+            0 [ label = "<My Node>" ]
+            1 [ label = "coto1" ]
+            2 [ label = "coto2" ]
+            3 [ label = "<cotonoma1>" ]
+            0 -> 1 [ label = "foo" ]
+            1 -> 2 [ label = "" ]
+            1 -> 3 [ label = "" ]
         }
-    );
+    "#};
+    assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
+    assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: add a loop
@@ -69,25 +64,22 @@ fn graph() -> Result<()> {
     let _ = ds.create_link(&coto2.uuid, &coto3.uuid, None, None, None, &opr)?;
     let _ = ds.create_link(&coto3.uuid, &coto1.uuid, None, None, None, &opr)?;
 
-    let graph = ds.graph(root_coto.clone(), true)?;
-    assert_eq!(
-        Dot::new(&graph.into_petgraph(true)).to_string(),
-        indoc! {r#"
-            digraph {
-                0 [ label = "<My Node>" ]
-                1 [ label = "coto1" ]
-                2 [ label = "coto2" ]
-                3 [ label = "<cotonoma1>" ]
-                4 [ label = "coto3" ]
-                0 -> 1 [ label = "foo" ]
-                1 -> 2 [ label = "" ]
-                1 -> 3 [ label = "" ]
-                2 -> 4 [ label = "" ]
-                4 -> 1 [ label = "" ]
-            }
-            "#, 
+    let expected_dot = indoc! {r#"
+        digraph {
+            0 [ label = "<My Node>" ]
+            1 [ label = "coto1" ]
+            2 [ label = "coto2" ]
+            3 [ label = "<cotonoma1>" ]
+            4 [ label = "coto3" ]
+            0 -> 1 [ label = "foo" ]
+            1 -> 2 [ label = "" ]
+            1 -> 3 [ label = "" ]
+            2 -> 4 [ label = "" ]
+            4 -> 1 [ label = "" ]
         }
-    );
+    "#};
+    assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
+    assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: until cotonoma
@@ -97,49 +89,49 @@ fn graph() -> Result<()> {
     let _ = ds.create_link(&cotonoma1.coto_id, &coto4.uuid, None, None, None, &opr)?;
 
     // until_cotonoma = true
-    let graph = ds.graph(root_coto.clone(), true)?;
-    assert_eq!(
-        Dot::new(&graph.into_petgraph(true)).to_string(),
-        // should NOT be changed from the previous one:
-        indoc! {r#"
-            digraph {
-                0 [ label = "<My Node>" ]
-                1 [ label = "coto1" ]
-                2 [ label = "coto2" ]
-                3 [ label = "<cotonoma1>" ]
-                4 [ label = "coto3" ]
-                0 -> 1 [ label = "foo" ]
-                1 -> 2 [ label = "" ]
-                1 -> 3 [ label = "" ]
-                2 -> 4 [ label = "" ]
-                4 -> 1 [ label = "" ]
-            }
-            "#, 
+    let expected_dot = indoc! {r#"
+        digraph {
+            0 [ label = "<My Node>" ]
+            1 [ label = "coto1" ]
+            2 [ label = "coto2" ]
+            3 [ label = "<cotonoma1>" ]
+            4 [ label = "coto3" ]
+            0 -> 1 [ label = "foo" ]
+            1 -> 2 [ label = "" ]
+            1 -> 3 [ label = "" ]
+            2 -> 4 [ label = "" ]
+            4 -> 1 [ label = "" ]
         }
-    );
+    "#};
+    assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
+    assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
 
     // until_cotonoma = false
-    let graph = ds.graph(root_coto.clone(), false)?;
-    assert_eq!(
-        Dot::new(&graph.into_petgraph(true)).to_string(),
-        indoc! {r#"
-            digraph {
-                0 [ label = "<My Node>" ]
-                1 [ label = "coto1" ]
-                2 [ label = "coto2" ]
-                3 [ label = "<cotonoma1>" ]
-                4 [ label = "coto3" ]
-                5 [ label = "coto4" ]
-                0 -> 1 [ label = "foo" ]
-                1 -> 2 [ label = "" ]
-                1 -> 3 [ label = "" ]
-                2 -> 4 [ label = "" ]
-                4 -> 1 [ label = "" ]
-                3 -> 5 [ label = "" ]
-            }
-            "#, 
+    let expected_dot = indoc! {r#"
+        digraph {
+            0 [ label = "<My Node>" ]
+            1 [ label = "coto1" ]
+            2 [ label = "coto2" ]
+            3 [ label = "<cotonoma1>" ]
+            4 [ label = "coto3" ]
+            5 [ label = "coto4" ]
+            0 -> 1 [ label = "foo" ]
+            1 -> 2 [ label = "" ]
+            1 -> 3 [ label = "" ]
+            2 -> 4 [ label = "" ]
+            4 -> 1 [ label = "" ]
+            3 -> 5 [ label = "" ]
         }
-    );
+    "#};
+    assert_graph(ds.graph(root_coto.clone(), false)?, expected_dot);
+    assert_graph(ds.graph_by_cte(root_coto.clone(), false)?, expected_dot);
 
     Ok(())
+}
+
+fn assert_graph(graph: Graph, expected_dot: &str) {
+    assert_eq!(
+        Dot::new(&graph.into_petgraph(true)).to_string(),
+        expected_dot
+    );
 }
