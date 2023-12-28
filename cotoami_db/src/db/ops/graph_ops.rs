@@ -22,9 +22,26 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Graph> {
     read_op(move |conn| {
         let mut graph = Graph::new(root);
-        let mut level = HashSet::new();
+        let mut level: HashSet<Id<Coto>> = HashSet::new();
         level.insert(graph.root().uuid);
-        while !level.is_empty() {
+        loop {
+            // Links to the next level
+            let links = links::table
+                .filter(links::source_coto_id.eq_any(&level))
+                .load::<Link>(conn)?;
+
+            // Coto IDs in the next level
+            level.clear();
+            for link in links.into_iter() {
+                if !graph.contains(&link.target_coto_id) {
+                    level.insert(link.target_coto_id);
+                }
+                graph.add_link(link);
+            }
+            if level.is_empty() {
+                break;
+            }
+
             // Cotos in the level
             let cotos = cotos::table
                 .filter(cotos::uuid.eq_any(&level))
@@ -36,17 +53,8 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
                 }
                 graph.add_coto(coto);
             }
-
-            // Links in the level
-            let links = links::table
-                .filter(links::source_coto_id.eq_any(&level))
-                .load::<Link>(conn)?;
-            level.clear();
-            for link in links.into_iter() {
-                if !graph.contains(&link.target_coto_id) {
-                    level.insert(link.target_coto_id);
-                }
-                graph.add_link(link);
+            if level.is_empty() {
+                break;
             }
         }
         Ok(graph)
