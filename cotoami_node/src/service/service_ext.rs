@@ -1,12 +1,10 @@
 use anyhow::Result;
-use async_trait::async_trait;
 
 use crate::service::{
     models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession},
     NodeService, RemoteNodeService, RequestBody,
 };
 
-#[async_trait]
 pub trait NodeServiceExt: NodeService {
     async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
         let request = RequestBody::ChunkOfChanges { from }.into_request();
@@ -17,7 +15,6 @@ pub trait NodeServiceExt: NodeService {
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}
 
-#[async_trait]
 pub trait RemoteNodeServiceExt: RemoteNodeService {
     async fn create_client_node_session(
         &mut self,

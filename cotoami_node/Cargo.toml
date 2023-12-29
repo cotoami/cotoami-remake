@@ -9,7 +9,6 @@ version.workspace = true
 [dependencies]
 anyhow = "1.0" 
 async-stream = "0.3.5" 
-async-trait = "0.1.74" 
 axum = {version = "0.6", features = ["headers", "ws"]} 
 axum-extra = {version = "0.7.5", features = ["cookie"]} 
 axum-macros = "0.3.7" 

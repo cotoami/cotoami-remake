@@ -661,7 +661,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-stream",
- "async-trait",
  "axum",
  "axum-extra",
  "axum-macros",
