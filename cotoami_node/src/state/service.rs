@@ -37,6 +37,14 @@ impl NodeState {
                 .await
                 .and_then(Self::to_bytes)
                 .map_err(ServiceError::from),
+            RequestBody::RecentCotos {
+                cotonoma,
+                pagination,
+            } => self
+                .recent_cotos(cotonoma, pagination)
+                .await
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
         }
     }
 

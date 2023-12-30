@@ -21,6 +21,7 @@ use uuid::Uuid;
 
 use crate::service::{
     error::{InputErrors, RequestError},
+    models::Pagination,
     NodeServiceFuture, *,
 };
 
@@ -70,7 +71,7 @@ impl HttpClient {
         headers
     }
 
-    fn url(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> Url {
+    fn url(&self, path: &str, query: Option<Vec<(&str, String)>>) -> Url {
         let mut url = Url::parse(&self.url_prefix).unwrap_or_else(|_| unreachable!());
         url = url.join(path).unwrap_or_else(|_| unreachable!());
         if let Some(query) = query {
@@ -82,7 +83,7 @@ impl HttpClient {
         url
     }
 
-    pub fn get(&self, path: &str, query: Option<Vec<(&str, &str)>>) -> RequestBuilder {
+    pub fn get(&self, path: &str, query: Option<Vec<(&str, String)>>) -> RequestBuilder {
         let url = self.url(path, query);
         self.client.get(url).headers(self.headers.read().clone())
     }
@@ -102,10 +103,23 @@ impl HttpClient {
         let http_req = match request.body() {
             RequestBody::LocalNode => self.get("/api/nodes/local", None),
             RequestBody::ChunkOfChanges { from } => {
-                self.get("/api/changes", Some(vec![("from", &from.to_string())]))
+                self.get("/api/changes", Some(vec![("from", from.to_string())]))
             }
             RequestBody::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
+            }
+            RequestBody::RecentCotos {
+                cotonoma,
+                pagination,
+            } => {
+                if let Some(cotonoma_id) = cotonoma {
+                    self.get(
+                        &format!("/api/cotonomas/{cotonoma_id}/cotos"),
+                        Some(pagination.as_query()),
+                    )
+                } else {
+                    self.get("/api/cotos", Some(pagination.as_query()))
+                }
             }
         };
         Self::convert_response(request_id, http_req.send().await?).await
@@ -158,5 +172,15 @@ impl RemoteNodeService for HttpClient {
             .write()
             .insert(crate::web::SESSION_HEADER_NAME, token);
         Ok(())
+    }
+}
+
+impl Pagination {
+    fn as_query(&self) -> Vec<(&str, String)> {
+        let mut query = vec![("page", self.page.to_string())];
+        if let Some(page_size) = self.page_size {
+            query.push(("page_size", page_size.to_string()));
+        }
+        query
     }
 }

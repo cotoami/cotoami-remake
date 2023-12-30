@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use cotoami_db::Operator;
+use cotoami_db::prelude::*;
 use derive_new::new;
 use dyn_clone::DynClone;
 use futures::future::BoxFuture;
@@ -98,8 +98,14 @@ impl Request {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
     LocalNode,
-    ChunkOfChanges { from: i64 },
+    ChunkOfChanges {
+        from: i64,
+    },
     CreateClientNodeSession(CreateClientNodeSession),
+    RecentCotos {
+        cotonoma: Option<Id<Cotonoma>>,
+        pagination: Pagination,
+    },
 }
 
 impl RequestBody {
