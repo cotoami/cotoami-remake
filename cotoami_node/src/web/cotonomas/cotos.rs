@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
@@ -6,16 +8,10 @@ use axum::{
     Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use serde_json::json;
-use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{
-        error::{IntoServiceResult, RequestError},
-        models::Pagination,
-        ServiceError,
-    },
+    service::{error::IntoServiceResult, models::Pagination, ServiceError},
     web::{Accept, Content},
     NodeState,
 };
@@ -41,7 +37,7 @@ async fn recent_cotos(
     state
         .recent_cotos(Some(cotonoma_id), pagination)
         .await
-        .map(|x| Content(x, accept))
+        .map(|cotos| Content(cotos, accept))
         .map_err(ServiceError::from)
 }
 
@@ -68,27 +64,14 @@ async fn post_coto(
     if let Err(errors) = form.validate() {
         return ("coto", errors).into_result();
     }
-    spawn_blocking(move || {
-        let mut ds = state.db().new_session()?;
-
-        // Check if the cotonoma belongs to this node
-        let (cotonoma, _) = ds.cotonoma_or_err(&cotonoma_id)?;
-        if !state.db().globals().is_local(&cotonoma) {
-            return RequestError::new("not-for-this-node")
-                .with_param("cotonoma_name", json!(cotonoma.name))
-                .into_result();
-        }
-
-        // Post a coto
-        let (coto, change) = ds.post_coto(
-            &form.content.unwrap_or_else(|| unreachable!()),
-            form.summary.as_deref(),
-            &cotonoma,
-            &operator,
-        )?;
-        state.pubsub().publish_change(change);
-
-        Ok((StatusCode::CREATED, Content(coto, accept)))
-    })
-    .await?
+    state
+        .post_coto(
+            form.content.unwrap_or_else(|| unreachable!()),
+            form.summary,
+            cotonoma_id,
+            Arc::new(operator),
+        )
+        .await
+        .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
+        .map_err(ServiceError::from)
 }
