@@ -13,7 +13,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges> {
+    pub(crate) async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges> {
         let db = self.db().clone();
         let changes_chunk_size = self.config().changes_chunk_size;
         spawn_blocking(move || {
@@ -37,7 +37,7 @@ impl NodeState {
         .await?
     }
 
-    pub async fn sync_with_parent(
+    pub(crate) async fn sync_with_parent(
         &self,
         parent_node_id: Id<Node>,
         mut parent_service: Box<dyn NodeService>,
@@ -115,7 +115,7 @@ impl NodeState {
         .await?
     }
 
-    pub async fn handle_parent_change(
+    pub(crate) async fn handle_parent_change(
         &self,
         parent_node_id: Id<Node>,
         change: ChangelogEntry,

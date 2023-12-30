@@ -10,7 +10,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub async fn create_client_node_session(
+    pub(crate) async fn create_client_node_session(
         &self,
         input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession> {

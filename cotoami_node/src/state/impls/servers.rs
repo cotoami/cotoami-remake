@@ -4,7 +4,7 @@ use tokio::task::spawn_blocking;
 use crate::state::{NodeState, ServerConnection};
 
 impl NodeState {
-    pub async fn restore_server_conns(&self) -> Result<()> {
+    pub(crate) async fn restore_server_conns(&self) -> Result<()> {
         let (local_node, server_nodes) = spawn_blocking({
             let db = self.db().clone();
             move || {

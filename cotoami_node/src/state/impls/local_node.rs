@@ -6,12 +6,12 @@ use tracing::info;
 use crate::state::NodeState;
 
 impl NodeState {
-    pub async fn local_node(&self) -> Result<Node> {
+    pub(crate) async fn local_node(&self) -> Result<Node> {
         let db = self.db().clone();
         spawn_blocking(move || Ok(db.new_session()?.local_node()?)).await?
     }
 
-    pub async fn init_local_node(&self) -> Result<()> {
+    pub(crate) async fn init_local_node(&self) -> Result<()> {
         let db = self.db().clone();
         let config = self.config().clone();
         spawn_blocking(move || {
