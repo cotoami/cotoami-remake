@@ -17,6 +17,8 @@ use crate::{
 
 mod cotos;
 
+pub(crate) use cotos::PostCoto;
+
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))

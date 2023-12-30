@@ -106,6 +106,11 @@ pub enum RequestBody {
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     },
+    PostCoto {
+        content: String,
+        summary: Option<String>,
+        post_to: Id<Cotonoma>,
+    },
 }
 
 impl RequestBody {

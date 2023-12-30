@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cotoami_db::prelude::*;
 
 use crate::service::{
     models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession},
@@ -10,6 +11,22 @@ pub trait NodeServiceExt: NodeService {
         let request = RequestBody::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
         response.message_pack::<ChunkOfChanges>()
+    }
+
+    async fn post_coto(
+        &mut self,
+        content: String,
+        summary: Option<String>,
+        post_to: Id<Cotonoma>,
+    ) -> Result<Coto> {
+        let request = RequestBody::PostCoto {
+            content,
+            summary,
+            post_to,
+        }
+        .into_request();
+        let response = self.call(request).await?;
+        response.message_pack::<Coto>()
     }
 }
 

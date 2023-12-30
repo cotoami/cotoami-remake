@@ -19,10 +19,13 @@ use reqwest::{
 use tower_service::Service;
 use uuid::Uuid;
 
-use crate::service::{
-    error::{InputErrors, RequestError},
-    models::Pagination,
-    NodeServiceFuture, *,
+use crate::{
+    service::{
+        error::{InputErrors, RequestError},
+        models::Pagination,
+        NodeServiceFuture, *,
+    },
+    web::PostCoto,
 };
 
 /// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
@@ -120,6 +123,18 @@ impl HttpClient {
                 } else {
                     self.get("/api/cotos", Some(pagination.as_query()))
                 }
+            }
+            RequestBody::PostCoto {
+                content,
+                summary,
+                post_to,
+            } => {
+                let form = PostCoto {
+                    content: Some(content),
+                    summary,
+                };
+                self.post(&format!("/api/cotonomas/{post_to}/cotos"))
+                    .form(&form)
             }
         };
         Self::convert_response(request_id, http_req.send().await?).await

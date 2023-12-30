@@ -45,13 +45,15 @@ async fn recent_cotos(
 // POST /api/cotonomas/:cotonoma_id/cotos
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize, Validate)]
-struct PostCoto {
+/// HTTP API specific input of [post_coto], which is intended to be sent as
+/// `application/x-www-form-urlencoded`.
+#[derive(serde::Serialize, serde::Deserialize, Validate)]
+pub(crate) struct PostCoto {
     #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    content: Option<String>,
+    pub content: Option<String>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    summary: Option<String>,
+    pub summary: Option<String>,
 }
 
 async fn post_coto(

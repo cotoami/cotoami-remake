@@ -4,7 +4,10 @@ use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
-use crate::{service::models::Pagination, state::NodeState};
+use crate::{
+    service::{models::Pagination, NodeServiceExt},
+    state::NodeState,
+};
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
 
@@ -31,17 +34,17 @@ impl NodeState {
         self,
         content: String,
         summary: Option<String>,
-        cotonoma_id: Id<Cotonoma>,
+        post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<Coto> {
         spawn_blocking(move || {
             let mut ds = self.db().new_session()?;
 
             // Local node or remote node?
-            let (cotonoma, _) = ds.cotonoma_or_err(&cotonoma_id)?;
+            let (cotonoma, _) = ds.cotonoma_or_err(&post_to)?;
             if !self.db().globals().is_local(&cotonoma) {
                 if let Some(parent_service) = self.parent_service(&cotonoma.node_id) {
-                    // TODO: post to the parent
+                    return parent_service.post_coto(content, summary, post_to).await;
                 } else {
                     bail!(
                         "Couldn't find a parent node to which the cotonoma [{}] belongs.",

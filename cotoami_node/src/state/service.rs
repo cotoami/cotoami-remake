@@ -21,6 +21,7 @@ use crate::{
 
 impl NodeState {
     async fn handle_request(self, request: Request) -> Result<Bytes, ServiceError> {
+        let operator = request.from_or_err().map(Clone::clone);
         match request.body() {
             RequestBody::LocalNode => self
                 .local_node()
@@ -42,6 +43,15 @@ impl NodeState {
                 pagination,
             } => self
                 .recent_cotos(cotonoma, pagination)
+                .await
+                .and_then(Self::to_bytes)
+                .map_err(ServiceError::from),
+            RequestBody::PostCoto {
+                content,
+                summary,
+                post_to,
+            } => self
+                .post_coto(content, summary, post_to, operator?)
                 .await
                 .and_then(Self::to_bytes)
                 .map_err(ServiceError::from),
