@@ -7,7 +7,7 @@ use validator::Validate;
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub(crate) struct Pagination {
+pub struct Pagination {
     #[serde(default)]
     pub page: i64,
 

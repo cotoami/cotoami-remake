@@ -6,7 +6,6 @@ use axum::{
     Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
@@ -22,8 +21,6 @@ pub(super) fn routes() -> Router<NodeState> {
         .layer(middleware::from_fn(super::require_session))
 }
 
-const DEFAULT_PAGE_SIZE: i64 = 30;
-
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/cotos
 /////////////////////////////////////////////////////////////////////////////
@@ -37,15 +34,9 @@ async fn recent_cotos(
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
-    spawn_blocking(move || {
-        let mut db = state.db().new_session()?;
-        let cotos = db.recent_cotos(
-            None,
-            None,
-            pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
-            pagination.page,
-        )?;
-        Ok(Content(cotos, accept))
-    })
-    .await?
+    state
+        .recent_cotos(None, pagination)
+        .await
+        .map(|x| Content(x, accept))
+        .map_err(ServiceError::from)
 }

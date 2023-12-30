@@ -24,8 +24,6 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new().route("/", get(recent_cotos).post(post_coto))
 }
 
-const DEFAULT_PAGE_SIZE: i64 = 30;
-
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/cotonomas/:cotonoma_id/cotos
 /////////////////////////////////////////////////////////////////////////////
@@ -40,17 +38,11 @@ async fn recent_cotos(
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
-    spawn_blocking(move || {
-        let mut ds = state.db().new_session()?;
-        let cotos = ds.recent_cotos(
-            None,
-            Some(&cotonoma_id),
-            pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
-            pagination.page,
-        )?;
-        Ok(Content(cotos, accept))
-    })
-    .await?
+    state
+        .recent_cotos(Some(cotonoma_id), pagination)
+        .await
+        .map(|x| Content(x, accept))
+        .map_err(ServiceError::from)
 }
 
 /////////////////////////////////////////////////////////////////////////////

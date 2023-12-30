@@ -17,8 +17,8 @@ impl NodeState {
         let db = self.db().clone();
         let changes_chunk_size = self.config().changes_chunk_size;
         spawn_blocking(move || {
-            let mut db = db.new_session()?;
-            match db.chunk_of_changes(from, changes_chunk_size) {
+            let mut ds = db.new_session()?;
+            match ds.chunk_of_changes(from, changes_chunk_size) {
                 Ok((chunk, last_serial_number)) => Ok(ChunkOfChanges::Fetched(Changes {
                     chunk,
                     last_serial_number,
