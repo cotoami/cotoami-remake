@@ -37,29 +37,57 @@ impl NodeState {
         post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<Coto> {
-        spawn_blocking(move || {
-            let mut ds = self.db().new_session()?;
+        // Try to post the coto in the local node.
+        let post_result = spawn_blocking({
+            let this = self.clone();
+            move || {
+                let mut ds = this.db().new_session()?;
 
-            // Local node or remote node?
-            let (cotonoma, _) = ds.cotonoma_or_err(&post_to)?;
-            if !self.db().globals().is_local(&cotonoma) {
-                if let Some(parent_service) = self.parent_service(&cotonoma.node_id) {
-                    return parent_service.post_coto(content, summary, post_to).await;
+                // Target cotonoma
+                let (cotonoma, _) = ds.cotonoma_or_err(&post_to)?;
+
+                // Post the coto if the cotonoma belongs to the local node.
+                if this.db().globals().is_local(&cotonoma) {
+                    let (coto, change) =
+                        ds.post_coto(&content, summary.as_deref(), &cotonoma, operator.as_ref())?;
+                    this.pubsub().publish_change(change);
+                    Ok::<_, anyhow::Error>(PostResult::Posted(coto))
+                } else {
+                    Ok::<_, anyhow::Error>(PostResult::ToForward {
+                        cotonoma,
+                        content,
+                        summary,
+                    })
+                }
+            }
+        })
+        .await??;
+
+        match post_result {
+            PostResult::Posted(coto) => Ok(coto),
+            PostResult::ToForward {
+                cotonoma,
+                content,
+                summary,
+            } => {
+                if let Some(mut parent_service) = self.parent_service(&cotonoma.node_id) {
+                    parent_service.post_coto(content, summary, post_to).await
                 } else {
                     bail!(
-                        "Couldn't find a parent node to which the cotonoma [{}] belongs.",
+                        "Couldn't find a parent node to which the target cotonoma [{}] belongs.",
                         cotonoma.name
                     );
                 }
             }
-
-            // Post a coto
-            let (coto, change) =
-                ds.post_coto(&content, summary.as_deref(), &cotonoma, operator.as_ref())?;
-            self.pubsub().publish_change(change);
-
-            Ok(coto)
-        })
-        .await?
+        }
     }
+}
+
+enum PostResult {
+    Posted(Coto),
+    ToForward {
+        cotonoma: Cotonoma,
+        content: String,
+        summary: Option<String>,
+    },
 }
