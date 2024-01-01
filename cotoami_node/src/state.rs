@@ -12,7 +12,6 @@ use crate::service::NodeService;
 
 mod config;
 mod conn;
-mod error;
 mod impls;
 mod pubsub;
 mod service;

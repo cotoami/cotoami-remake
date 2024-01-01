@@ -1,11 +1,16 @@
 use std::sync::Arc;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use cotoami_db::prelude::*;
+use serde_json::value::Value;
 use tokio::task::spawn_blocking;
 
 use crate::{
-    service::{models::Pagination, NodeServiceExt},
+    service::{
+        error::{IntoServiceResult, RequestError},
+        models::Pagination,
+        NodeServiceExt, ServiceError,
+    },
     state::NodeState,
 };
 
@@ -16,7 +21,7 @@ impl NodeState {
         &self,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
-    ) -> Result<Paginated<Coto>> {
+    ) -> Result<Paginated<Coto>, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
@@ -28,6 +33,7 @@ impl NodeState {
             )
         })
         .await?
+        .map_err(ServiceError::from)
     }
 
     pub(crate) async fn post_coto(
@@ -36,7 +42,7 @@ impl NodeState {
         summary: Option<String>,
         post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
-    ) -> Result<Coto> {
+    ) -> Result<Coto, ServiceError> {
         // Try to post the coto in the local node.
         let post_result = spawn_blocking({
             let this = self.clone();
@@ -71,12 +77,14 @@ impl NodeState {
                 summary,
             } => {
                 if let Some(mut parent_service) = self.parent_service(&cotonoma.node_id) {
-                    parent_service.post_coto(content, summary, post_to).await
+                    parent_service
+                        .post_coto(content, summary, post_to)
+                        .await
+                        .map_err(ServiceError::from)
                 } else {
-                    bail!(
-                        "Couldn't find a parent node to which the target cotonoma [{}] belongs.",
-                        cotonoma.name
-                    );
+                    RequestError::new("posting-to-inaccessible-cotonoma")
+                        .with_param("cotonoma-name", Value::String(cotonoma.name))
+                        .into_result()
                 }
             }
         }

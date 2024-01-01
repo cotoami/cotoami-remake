@@ -12,8 +12,13 @@ use tower_service::Service;
 
 use crate::{
     service::{error::InputError, NodeServiceFuture, *},
-    state::{error::NodeError, NodeState},
+    state::NodeState,
 };
+
+mod changes;
+mod cotos;
+mod nodes;
+mod session;
 
 /////////////////////////////////////////////////////////////////////////////
 // NodeService implemented for NodeState
@@ -23,29 +28,21 @@ impl NodeState {
     async fn handle_request(self, request: Request) -> Result<Bytes, ServiceError> {
         let operator = request.from_or_err().map(Clone::clone);
         match request.body() {
-            RequestBody::LocalNode => self
-                .local_node()
-                .await
-                .and_then(Self::to_bytes)
-                .map_err(ServiceError::from),
-            RequestBody::ChunkOfChanges { from } => self
-                .chunk_of_changes(from)
-                .await
-                .and_then(Self::to_bytes)
-                .map_err(ServiceError::from),
+            RequestBody::LocalNode => self.local_node().await.and_then(Self::to_bytes),
+            RequestBody::ChunkOfChanges { from } => {
+                self.chunk_of_changes(from).await.and_then(Self::to_bytes)
+            }
             RequestBody::CreateClientNodeSession(input) => self
                 .create_client_node_session(input)
                 .await
-                .and_then(Self::to_bytes)
-                .map_err(ServiceError::from),
+                .and_then(Self::to_bytes),
             RequestBody::RecentCotos {
                 cotonoma,
                 pagination,
             } => self
                 .recent_cotos(cotonoma, pagination)
                 .await
-                .and_then(Self::to_bytes)
-                .map_err(ServiceError::from),
+                .and_then(Self::to_bytes),
             RequestBody::PostCoto {
                 content,
                 summary,
@@ -53,15 +50,14 @@ impl NodeState {
             } => self
                 .post_coto(content, summary, post_to, operator?)
                 .await
-                .and_then(Self::to_bytes)
-                .map_err(ServiceError::from),
+                .and_then(Self::to_bytes),
         }
     }
 
-    fn to_bytes<T: serde::Serialize>(t: T) -> Result<Bytes> {
+    fn to_bytes<T: serde::Serialize>(t: T) -> Result<Bytes, ServiceError> {
         rmp_serde::to_vec(&t)
             .map(Bytes::from)
-            .map_err(anyhow::Error::from)
+            .map_err(ServiceError::from)
     }
 }
 
@@ -100,14 +96,6 @@ where
 {
     fn from(err: E) -> Self {
         let anyhow_err = err.into();
-
-        // NodeError
-        match anyhow_err.downcast_ref::<NodeError>() {
-            Some(NodeError::WrongDatabaseRole) => {
-                return Self::request("wrong-database-role");
-            }
-            _ => (),
-        }
 
         // DatabaseError
         match anyhow_err.downcast_ref::<DatabaseError>() {

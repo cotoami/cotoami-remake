@@ -38,5 +38,4 @@ async fn recent_cotos(
         .recent_cotos(None, pagination)
         .await
         .map(|x| Content(x, accept))
-        .map_err(ServiceError::from)
 }

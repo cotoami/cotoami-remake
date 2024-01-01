@@ -44,5 +44,4 @@ async fn chunk_of_changes(
         .chunk_of_changes(from)
         .await
         .map(|x| Content(x, accept))
-        .map_err(ServiceError::from)
 }

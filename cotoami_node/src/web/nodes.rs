@@ -32,9 +32,5 @@ async fn local_node(
     Extension(_operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
 ) -> Result<Content<Node>, ServiceError> {
-    state
-        .local_node()
-        .await
-        .map(|x| Content(x, accept))
-        .map_err(ServiceError::from)
+    state.local_node().await.map(|x| Content(x, accept))
 }

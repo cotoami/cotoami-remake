@@ -38,7 +38,6 @@ async fn recent_cotos(
         .recent_cotos(Some(cotonoma_id), pagination)
         .await
         .map(|cotos| Content(cotos, accept))
-        .map_err(ServiceError::from)
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,5 +74,4 @@ async fn post_coto(
         )
         .await
         .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
-        .map_err(ServiceError::from)
 }

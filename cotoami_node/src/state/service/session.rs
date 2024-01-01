@@ -1,19 +1,22 @@
 use core::time::Duration;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use tokio::task::spawn_blocking;
 use tracing::debug;
 
 use crate::{
-    service::models::{ClientNodeSession, CreateClientNodeSession, Session},
-    state::{error::NodeError, NodeState},
+    service::{
+        models::{ClientNodeSession, CreateClientNodeSession, Session},
+        ServiceError,
+    },
+    state::NodeState,
 };
 
 impl NodeState {
     pub(crate) async fn create_client_node_session(
         &self,
         input: CreateClientNodeSession,
-    ) -> Result<ClientNodeSession> {
+    ) -> Result<ClientNodeSession, ServiceError> {
         let db = self.db().clone();
         let change_pubsub = self.pubsub().local_changes().clone();
         let session_seconds = self.config().session_seconds();
@@ -32,7 +35,7 @@ impl NodeState {
             let client_as_parent = input.as_parent.unwrap_or(false);
             if client_as_parent != db.globals().is_parent(&client.node_id) {
                 ds.clear_client_node_session(&client.node_id)?;
-                bail!(NodeError::WrongDatabaseRole);
+                return Err(ServiceError::request("wrong-database-role"));
             }
 
             // Change password

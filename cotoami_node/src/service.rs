@@ -133,11 +133,11 @@ impl Response {
     pub fn id(&self) -> &Uuid { &self.id }
 
     pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
-        let bytes = self.body.map_err(ServiceStdError)?;
+        let bytes = self.body.map_err(BackendServiceError)?;
         rmp_serde::from_slice(&bytes).context("Invalid response body")
     }
 }
 
 #[derive(Error, Debug)]
-#[error("Service error: {0:?}")]
-pub struct ServiceStdError(ServiceError);
+#[error("Backend service error: {0:?}")]
+pub struct BackendServiceError(ServiceError);
