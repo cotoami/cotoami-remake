@@ -63,7 +63,7 @@ impl Database {
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Self> {
         let root_dir = root_dir.as_ref().canonicalize()?;
         if !root_dir.is_dir() {
-            return Err(DatabaseError::InvalidRootDir(root_dir))?;
+            bail!(DatabaseError::InvalidRootDir(root_dir));
         }
 
         let file_uri = Self::to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
