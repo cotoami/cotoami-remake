@@ -39,12 +39,10 @@ impl NodeState {
         fs::create_dir(&db_dir).ok();
         let db = Database::new(db_dir)?;
 
-        let pubsub = Pubsub::new();
-
         let inner = State {
             config: Arc::new(config),
             db: Arc::new(db),
-            pubsub,
+            pubsub: Pubsub::new(),
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
             parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
         };
