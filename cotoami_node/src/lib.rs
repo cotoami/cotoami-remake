@@ -21,14 +21,10 @@ pub mod prelude {
 }
 
 pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    let port = config.port;
-
-    // Build Web API service
+    // Build a Web API server
     let state = NodeState::new(config).await?;
+    let addr = SocketAddr::from(([0, 0, 0, 0], state.config().port));
     let web_api = web::router(state);
-
-    // Deploy the service to a hyper Server
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let server = axum::Server::bind(&addr).serve(web_api.into_make_service());
 
     // Prepare a way to gracefully shutdown a server
