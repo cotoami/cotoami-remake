@@ -65,7 +65,7 @@ pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::
 pub struct Request {
     id: Uuid,
 
-    /// The operator node that has sent this request.
+    /// The operator that has sent this request.
     ///
     /// This field isn't meant to be sent from a client via network, instead should be
     /// set by a service provider that keeps track of who is the client.
