@@ -32,7 +32,7 @@ struct State {
 }
 
 impl NodeState {
-    pub fn new(config: Config) -> Result<Self> {
+    pub async fn new(config: Config) -> Result<Self> {
         config.validate()?;
 
         let db_dir = config.db_dir();
@@ -46,10 +46,11 @@ impl NodeState {
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
             parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
         };
-
-        Ok(NodeState {
+        let state = Self {
             inner: Arc::new(inner),
-        })
+        };
+        state.init().await?;
+        Ok(state)
     }
 
     pub fn config(&self) -> &Arc<Config> { &self.inner.config }

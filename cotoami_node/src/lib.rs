@@ -24,8 +24,7 @@ pub async fn launch_server(config: Config) -> Result<(JoinHandle<Result<()>>, Se
     let port = config.port;
 
     // Build Web API service
-    let state = NodeState::new(config)?;
-    state.init().await?;
+    let state = NodeState::new(config).await?;
     let web_api = web::router(state);
 
     // Deploy the service to a hyper Server

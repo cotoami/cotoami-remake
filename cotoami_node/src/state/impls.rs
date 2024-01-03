@@ -14,7 +14,7 @@ impl NodeState {
     // Initialize
     /////////////////////////////////////////////////////////////////////////////
 
-    pub async fn init(&self) -> Result<()> {
+    pub(crate) async fn init(&self) -> Result<()> {
         self.init_local_node().await?;
         self.restore_server_conns().await?;
         self.set_internal_event_handler();
