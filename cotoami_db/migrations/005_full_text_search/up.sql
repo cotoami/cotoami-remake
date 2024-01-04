@@ -89,19 +89,19 @@ END;
 -- from the full-text index. 
 CREATE TRIGGER cotos_fts_delete AFTER DELETE ON cotos BEGIN
   INSERT INTO cotos_fts(cotos_fts, rowid, content, summary) 
-    VALUES('delete', old.rowid, old.content. old.summary);
+    VALUES('delete', old.rowid, old.content, old.summary);
   INSERT INTO cotos_fts_trigram(cotos_fts_trigram, rowid, content, summary) 
-    VALUES('delete', old.rowid, old.content. old.summary);
+    VALUES('delete', old.rowid, old.content, old.summary);
 END;
 
 CREATE TRIGGER cotos_fts_update AFTER UPDATE ON cotos BEGIN
   INSERT INTO cotos_fts(cotos_fts, rowid, content, summary) 
-    VALUES('delete', old.rowid, old.content. old.summary);
+    VALUES('delete', old.rowid, old.content, old.summary);
   INSERT INTO cotos_fts(rowid, content, summary) 
     VALUES (new.rowid, new.content, new.summary);
 
   INSERT INTO cotos_fts_trigram(cotos_fts_trigram, rowid, content, summary) 
-    VALUES('delete', old.rowid, old.content. old.summary);
+    VALUES('delete', old.rowid, old.content, old.summary);
   INSERT INTO cotos_fts_trigram(rowid, content, summary) 
     VALUES (new.rowid, new.content, new.summary);
 END;
