@@ -14,6 +14,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     parent_nodes,
     child_nodes,
     cotos,
+    cotos_fts,
+    cotos_fts_trigram,
     cotonomas,
     links,
     changelog
@@ -112,6 +114,57 @@ diesel::table! {
     }
 }
 diesel::joinable!(cotos -> nodes (node_id));
+
+diesel::table! {
+    cotos_fts (uuid) {
+        uuid -> Text,
+        rowid -> BigInt,
+        node_id -> Text,
+        posted_in_id -> Nullable<Text>,
+        posted_by_id -> Text,
+        content -> Nullable<Text>,
+        summary -> Nullable<Text>,
+        is_cotonoma -> Bool,
+        repost_of_id -> Nullable<Text>,
+        reposted_in_ids -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        outgoing_links -> Integer,
+
+        // A special column with the same name as the table,
+        // which is matched against in a full-text query or used to specify a special INSERT command.
+        #[sql_name = "cotos_fts"]
+        whole_row -> Text,
+
+        // All FTS5 tables feature a special hidden column named "rank".
+        // In a full-text query, column rank contains by default the same value as would be
+        // returned by executing the bm25() auxiliary function with no trailing arguments.
+        // The better the match, the numerically smaller the value returned.
+        rank -> Float,
+    }
+}
+
+diesel::table! {
+    cotos_fts_trigram (uuid) {
+        uuid -> Text,
+        rowid -> BigInt,
+        node_id -> Text,
+        posted_in_id -> Nullable<Text>,
+        posted_by_id -> Text,
+        content -> Nullable<Text>,
+        summary -> Nullable<Text>,
+        is_cotonoma -> Bool,
+        repost_of_id -> Nullable<Text>,
+        reposted_in_ids -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+        outgoing_links -> Integer,
+
+        #[sql_name = "cotos_fts_trigram"]
+        whole_row -> Text,
+        rank -> Float,
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Cotonoma (related structs are in `models::cotonoma`)
