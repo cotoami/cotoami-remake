@@ -740,6 +740,10 @@ where
         ))
     }
 
+    pub fn search_cotos(&mut self, query: &str) -> Result<Vec<Coto>> {
+        self.read_transaction(coto_ops::full_text_search(query))
+    }
+
     /// Posts a coto in the specified cotonoma.
     ///
     /// The target cotonoma has to belong to the local node,

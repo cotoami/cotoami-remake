@@ -133,9 +133,9 @@ pub(crate) fn update_number_of_outgoing_links(
     })
 }
 
-pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
-    query: &'a str,
-) -> impl Operation<Conn, Vec<Coto>> + 'a {
+pub(crate) fn full_text_search<Conn: AsReadableConn>(
+    query: &str,
+) -> impl Operation<Conn, Vec<Coto>> + '_ {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
             use crate::schema::cotos_fts_trigram::dsl::*;
