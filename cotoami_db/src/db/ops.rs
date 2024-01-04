@@ -7,6 +7,8 @@ use diesel::{
     sqlite::SqliteConnection,
     RunQueryDsl,
 };
+use once_cell::sync::Lazy;
+use regex::Regex;
 
 pub(crate) mod changelog_ops;
 pub(crate) mod coto_ops;
@@ -107,6 +109,15 @@ where
     })
 }
 
+static CJK: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r"[\u{3040}-\u{30ff}\u{3400}-\u{4dbf}\u{4e00}-\u{9fff}\u{f900}-\u{faff}\u{ff66}-\u{ff9f}]",
+    )
+    .unwrap_or_else(|e| unreachable!("{e:?}"))
+});
+
+fn detect_cjk_chars(text: &str) -> bool { CJK.is_match(text) }
+
 /////////////////////////////////////////////////////////////////////////////
 // tests
 /////////////////////////////////////////////////////////////////////////////
@@ -134,6 +145,14 @@ mod tests {
         paginated.total_rows = 3;
         assert_eq!(paginated.total_pages(), 2);
 
+        Ok(())
+    }
+
+    #[test]
+    fn cjk_chars() -> Result<()> {
+        assert_eq!(detect_cjk_chars("Hello, world!"), false);
+        assert_eq!(detect_cjk_chars("日本語"), true);
+        assert_eq!(detect_cjk_chars("Hello, こんにちは world!"), true);
         Ok(())
     }
 }

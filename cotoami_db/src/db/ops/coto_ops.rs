@@ -7,7 +7,7 @@ use validator::Validate;
 
 use super::{cotonoma_ops, Paginated};
 use crate::{
-    db::{error::*, op::*},
+    db::{error::*, op::*, ops::detect_cjk_chars},
     models::{
         coto::{Coto, NewCoto, UpdateCoto},
         cotonoma::Cotonoma,
@@ -130,5 +130,57 @@ pub(crate) fn update_number_of_outgoing_links(
             .set(cotos::outgoing_links.eq(cotos::outgoing_links + delta))
             .get_result(conn.deref_mut())?;
         Ok(coto.outgoing_links)
+    })
+}
+
+pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
+    query: &'a str,
+) -> impl Operation<Conn, Vec<Coto>> + 'a {
+    read_op(move |conn| {
+        if detect_cjk_chars(query) {
+            use crate::schema::cotos_fts_trigram::dsl::*;
+            cotos_fts_trigram
+                .select((
+                    uuid,
+                    rowid,
+                    node_id,
+                    posted_in_id,
+                    posted_by_id,
+                    content,
+                    summary,
+                    is_cotonoma,
+                    repost_of_id,
+                    reposted_in_ids,
+                    created_at,
+                    updated_at,
+                    outgoing_links,
+                ))
+                .filter(whole_row.eq(query))
+                .order((rank.asc(), rowid.asc()))
+                .load::<Coto>(conn)
+                .map_err(anyhow::Error::from)
+        } else {
+            use crate::schema::cotos_fts::dsl::*;
+            cotos_fts
+                .select((
+                    uuid,
+                    rowid,
+                    node_id,
+                    posted_in_id,
+                    posted_by_id,
+                    content,
+                    summary,
+                    is_cotonoma,
+                    repost_of_id,
+                    reposted_in_ids,
+                    created_at,
+                    updated_at,
+                    outgoing_links,
+                ))
+                .filter(whole_row.eq(query))
+                .order((rank.asc(), rowid.asc()))
+                .load::<Coto>(conn)
+                .map_err(anyhow::Error::from)
+        }
     })
 }
