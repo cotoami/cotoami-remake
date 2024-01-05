@@ -109,13 +109,22 @@ where
     })
 }
 
+/// Regular expression to detect CJK characters.
+/// FIXME: perhaps it's incomplete.
 static CJK: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
-        r"[\u{3040}-\u{30ff}\u{3400}-\u{4dbf}\u{4e00}-\u{9fff}\u{f900}-\u{faff}\u{ff66}-\u{ff9f}]",
+        // U+3040 - U+30FF: hiragana and katakana (Japanese only)
+        // U+3400 - U+4DBF: CJK unified ideographs extension A (Chinese, Japanese, and Korean)
+        // U+4E00 - U+9FFF: CJK unified ideographs (Chinese, Japanese, and Korean)
+        // U+F900 - U+FAFF: CJK compatibility ideographs (Chinese, Japanese, and Korean)
+        // U+FF66 - U+FF9F: half-width katakana (Japanese only)
+        // U+3131 - U+D79D: Korean hangul
+        r"[\u{3040}-\u{30ff}\u{3400}-\u{4dbf}\u{4e00}-\u{9fff}\u{f900}-\u{faff}\u{ff66}-\u{ff9f}\u{3131}-\u{d79d}]",
     )
     .unwrap_or_else(|e| unreachable!("{e:?}"))
 });
 
+/// Returns true if the given text has CJK characters.
 fn detect_cjk_chars(text: &str) -> bool { CJK.is_match(text) }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -152,6 +161,8 @@ mod tests {
     fn cjk_chars() -> Result<()> {
         assert_eq!(detect_cjk_chars("Hello, world!"), false);
         assert_eq!(detect_cjk_chars("日本語"), true);
+        assert_eq!(detect_cjk_chars("光阴似箭"), true);
+        assert_eq!(detect_cjk_chars("안녕하세요"), true);
         assert_eq!(detect_cjk_chars("Hello, こんにちは world!"), true);
         Ok(())
     }
