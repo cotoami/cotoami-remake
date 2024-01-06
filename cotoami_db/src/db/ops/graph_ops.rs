@@ -57,6 +57,7 @@ pub(crate) fn traverse_by_level_queries<Conn: AsReadableConn>(
                 break;
             }
         }
+        graph.sort_links();
         Ok(graph)
     })
 }
@@ -104,6 +105,7 @@ pub(crate) fn traverse_by_recursive_cte<Conn: AsReadableConn>(
         for link in links.into_iter() {
             graph.add_link(link);
         }
+        graph.sort_links();
         Ok(graph)
     })
 }

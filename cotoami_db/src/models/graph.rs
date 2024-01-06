@@ -50,6 +50,12 @@ impl Graph {
             .push(link);
     }
 
+    pub(crate) fn sort_links(&mut self) {
+        for links in self.links.values_mut() {
+            links.sort_by_key(|link| link.order);
+        }
+    }
+
     pub fn assert_links_sorted(&self) {
         for links in self.links.values() {
             let order: Vec<usize> = links.iter().map(|link| link.order as usize).collect();
