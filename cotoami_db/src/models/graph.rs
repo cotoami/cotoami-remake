@@ -50,6 +50,14 @@ impl Graph {
             .push(link);
     }
 
+    pub fn assert_links_sorted(&self) {
+        for links in self.links.values() {
+            let order: Vec<usize> = links.iter().map(|link| link.order as usize).collect();
+            let expected: Vec<usize> = (1..=links.len()).collect();
+            assert_eq!(order, expected);
+        }
+    }
+
     /// Converts this graph into a petgraph's [petgraph::graph::Graph].
     ///
     /// You can use the `sort` flag to get cotos and links in a predictable order.

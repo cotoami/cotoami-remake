@@ -57,10 +57,16 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto2, _) = ds.post_coto("coto2", None, &root, &opr)?;
-    let _ = ds.create_link(&coto1.uuid, &coto2.uuid, None, None, None, None, &opr)?;
+    create_link(&coto1.uuid, &coto2.uuid, None)?;
 
     let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", &root, &opr)?;
     create_link(&coto1.uuid, &cotonoma1.coto_id, None)?;
+
+    let graph = ds.graph(root_coto.clone(), true)?;
+    let graph_by_cte = ds.graph_by_cte(root_coto.clone(), true)?;
+
+    graph.assert_links_sorted();
+    graph_by_cte.assert_links_sorted();
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -73,8 +79,8 @@ fn graph() -> Result<()> {
             1 -> 3 [ label = "" ]
         }
     "#};
-    assert_graph(ds.graph(root_coto.clone(), true)?, expected_dot);
-    assert_graph(ds.graph_by_cte(root_coto.clone(), true)?, expected_dot);
+    assert_graph(graph, expected_dot);
+    assert_graph(graph_by_cte, expected_dot);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: add a loop
