@@ -2,13 +2,15 @@
 
 use std::ops::DerefMut;
 
-use diesel::prelude::*;
+use diesel::{dsl::max, prelude::*};
+use tracing::debug;
 use validator::Validate;
 
 use super::{coto_ops, Paginated};
 use crate::{
     db::{error::*, op::*},
     models::{
+        coto::Coto,
         cotonoma::Cotonoma,
         link::{Link, NewLink, UpdateLink},
         node::Node,
@@ -53,13 +55,54 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn insert<'a>(new_link: &'a NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
+pub(crate) fn insert<'a>(mut new_link: NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
+        if let Some(order) = new_link.order {
+            let affected = make_room_for(new_link.source_coto_id(), order).run(ctx)?;
+            debug!("{affected} links moved over to make room for number: {order}");
+        } else {
+            let last_number = last_order_number(new_link.source_coto_id())
+                .run(ctx)?
+                .unwrap_or(0);
+            new_link.order = Some(last_number + 1);
+        }
         let link: Link = diesel::insert_into(links::table)
             .values(new_link)
             .get_result(ctx.conn().deref_mut())?;
         coto_ops::update_number_of_outgoing_links(&link.source_coto_id, 1).run(ctx)?;
         Ok(link)
+    })
+}
+
+fn last_order_number<Conn: AsReadableConn>(
+    coto_id: &Id<Coto>,
+) -> impl Operation<Conn, Option<i32>> + '_ {
+    read_op(move |conn| {
+        links::table
+            .select(max(links::order))
+            .filter(links::source_coto_id.eq(coto_id))
+            .first(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn, usize> + '_ {
+    write_op(move |conn| {
+        let existing: i64 = links::table
+            .select(diesel::dsl::count_star())
+            .filter(links::source_coto_id.eq(coto_id))
+            .filter(links::order.eq(order))
+            .first(conn.deref_mut())?;
+        if existing == 0 {
+            Ok(0)
+        } else {
+            diesel::update(links::table)
+                .filter(links::source_coto_id.eq(coto_id))
+                .filter(links::order.ge(order))
+                .set(links::order.eq(links::order + 1))
+                .execute(conn.deref_mut())
+                .map_err(anyhow::Error::from)
+        }
     })
 }
 

@@ -198,6 +198,7 @@ diesel::table! {
         target_coto_id -> Text,
         linking_phrase -> Nullable<Text>,
         details -> Nullable<Text>,
+        order -> Integer,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }

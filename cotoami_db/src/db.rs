@@ -897,6 +897,7 @@ where
         target_coto_id: &Id<Coto>,
         linking_phrase: Option<&str>,
         details: Option<&str>,
+        order: Option<i32>,
         created_in: Option<&Cotonoma>,
         operator: &Operator,
     ) -> Result<(Link, ChangelogEntry)> {
@@ -916,9 +917,10 @@ where
             target_coto_id,
             linking_phrase,
             details,
+            order,
         )?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let inserted_link = link_ops::insert(&new_link).run(ctx)?;
+            let inserted_link = link_ops::insert(new_link).run(ctx)?;
             let change = Change::CreateLink(inserted_link.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok((inserted_link, changelog))
@@ -993,6 +995,7 @@ where
         let (link, change) = self.create_link(
             &local_root_coto.uuid,
             &parent_root_coto.uuid,
+            None,
             None,
             None,
             None,

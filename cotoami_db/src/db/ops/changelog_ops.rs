@@ -26,7 +26,7 @@ pub(crate) fn last_serial_number<Conn: AsReadableConn>() -> impl Operation<Conn,
     })
 }
 
-pub(crate) fn last_origin_serial_number<Conn: AsReadableConn>(
+fn last_origin_serial_number<Conn: AsReadableConn>(
     node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<i64>> + '_ {
     read_op(move |conn| {
@@ -223,8 +223,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 cotonoma_ops::delete(id).run(ctx)?;
             }
             Change::CreateLink(link) => {
-                let new_link = link.to_import();
-                link_ops::insert(&new_link).run(ctx)?;
+                link_ops::insert(link.to_import()).run(ctx)?;
             }
             Change::EditLink {
                 uuid,

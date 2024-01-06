@@ -25,30 +25,33 @@ use crate::schema::links;
 )]
 #[diesel(primary_key(uuid))]
 pub struct Link {
-    /// Universally unique link ID
+    /// Universally unique link ID.
     pub uuid: Id<Link>,
 
-    /// UUID of the node in which this link was created
+    /// UUID of the node in which this link was created.
     pub node_id: Id<Node>,
 
     /// UUID of the cotonoma in which this link was created,
     /// or `None` if it does not belong to a cotonoma.
     pub created_in_id: Option<Id<Cotonoma>>,
 
-    /// UUID of the node whose owner has created this link
+    /// UUID of the node whose owner has created this link.
     pub created_by_id: Id<Node>,
 
-    /// UUID of the coto at the source of this link
+    /// UUID of the coto at the source of this link.
     pub source_coto_id: Id<Coto>,
 
-    /// UUID of the coto at the target of this link
+    /// UUID of the coto at the target of this link.
     pub target_coto_id: Id<Coto>,
 
-    /// Linkng phrase to express the relationship between the two cotos
+    /// Linkng phrase to express the relationship between the two cotos.
     pub linking_phrase: Option<String>,
 
-    /// Content attached to this link
+    /// Content attached to this link.
     pub details: Option<String>,
+
+    /// Order of this link among the ones from the same coto.
+    pub order: i32,
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
@@ -92,6 +95,7 @@ impl Link {
             target_coto_id: &self.target_coto_id,
             linking_phrase: self.linking_phrase.as_deref(),
             details: self.details.as_deref(),
+            order: Some(self.order),
             created_at: self.created_at,
             updated_at: self.updated_at,
         }
@@ -136,6 +140,8 @@ pub struct NewLink<'a> {
     linking_phrase: Option<&'a str>,
     #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
     details: Option<&'a str>,
+    #[validate(range(min = 1))]
+    pub order: Option<i32>,
     created_at: NaiveDateTime,
     updated_at: NaiveDateTime,
 }
@@ -149,6 +155,7 @@ impl<'a> NewLink<'a> {
         target_coto_id: &'a Id<Coto>,
         linking_phrase: Option<&'a str>,
         details: Option<&'a str>,
+        order: Option<i32>,
     ) -> Result<Self> {
         let now = crate::current_datetime();
         let link = Self {
@@ -160,12 +167,15 @@ impl<'a> NewLink<'a> {
             target_coto_id,
             linking_phrase,
             details,
+            order,
             created_at: now,
             updated_at: now,
         };
         link.validate()?;
         Ok(link)
     }
+
+    pub fn source_coto_id(&self) -> &'a Id<Coto> { self.source_coto_id }
 }
 
 /////////////////////////////////////////////////////////////////////////////

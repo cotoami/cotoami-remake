@@ -26,6 +26,7 @@ fn crud_operations() -> Result<()> {
         &coto2.uuid,
         Some("hello"),
         None,
+        None,
         Some(&root_cotonoma),
         &operator,
     )?;
@@ -45,6 +46,7 @@ fn crud_operations() -> Result<()> {
             target_coto_id,
             linking_phrase: Some(ref linking_phrase),
             details: None,
+            order: 1,
             ..
         } if node_id == node.uuid &&
              created_in_id == Some(root_cotonoma.uuid) &&
@@ -89,6 +91,7 @@ fn crud_operations() -> Result<()> {
         &coto3.uuid,
         Some("bye"),
         Some("some details"),
+        None,
         Some(&root_cotonoma),
         &operator,
     )?;
@@ -105,6 +108,7 @@ fn crud_operations() -> Result<()> {
             target_coto_id,
             linking_phrase: Some(ref linking_phrase),
             details: Some(ref details),
+            order: 2,
             ..
         } if source_coto_id == coto1.uuid &&
              target_coto_id == coto3.uuid &&

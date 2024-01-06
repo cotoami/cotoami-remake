@@ -106,12 +106,9 @@ pub(crate) fn increment_changes_received(
     let received_at = received_at.unwrap_or(crate::current_datetime());
     write_op(move |conn| {
         diesel::update(parent_nodes::table)
-            .filter(
-                parent_nodes::node_id
-                    .eq(id)
-                    // ensure the `number` is +1 increment
-                    .and(parent_nodes::changes_received.eq(incremented_number - 1)),
-            )
+            .filter(parent_nodes::node_id.eq(id))
+            // ensure the `number` is +1 increment
+            .filter(parent_nodes::changes_received.eq(incremented_number - 1))
             .set((
                 parent_nodes::changes_received.eq(incremented_number),
                 parent_nodes::last_change_received_at.eq(Some(received_at)),

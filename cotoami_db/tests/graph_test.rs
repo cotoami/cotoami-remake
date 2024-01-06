@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::prelude::Graph;
+use cotoami_db::prelude::*;
 use indoc::indoc;
 use petgraph::dot::Dot;
 
@@ -15,12 +15,32 @@ fn graph() -> Result<()> {
     let opr = db.globals().local_node_as_operator()?;
     let (root, root_coto) = ds.root_cotonoma()?.unwrap();
 
+    let mut create_link = {
+        let mut ds = db.new_session()?;
+        let opr = opr.clone();
+        move |source_coto_id: &Id<Coto>,
+              target_coto_id: &Id<Coto>,
+              linking_phrase: Option<&str>|
+              -> Result<()> {
+            let _ = ds.create_link(
+                source_coto_id,
+                target_coto_id,
+                linking_phrase,
+                None,
+                None,
+                None,
+                &opr,
+            )?;
+            Ok(())
+        }
+    };
+
     /////////////////////////////////////////////////////////////////////////////
     // When: add a child
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto1, _) = ds.post_coto("coto1", None, &root, &opr)?;
-    let _ = ds.create_link(&root_coto.uuid, &coto1.uuid, Some("foo"), None, None, &opr)?;
+    create_link(&root_coto.uuid, &coto1.uuid, Some("foo"))?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -37,10 +57,10 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto2, _) = ds.post_coto("coto2", None, &root, &opr)?;
-    let _ = ds.create_link(&coto1.uuid, &coto2.uuid, None, None, None, &opr)?;
+    let _ = ds.create_link(&coto1.uuid, &coto2.uuid, None, None, None, None, &opr)?;
 
     let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", &root, &opr)?;
-    let _ = ds.create_link(&coto1.uuid, &cotonoma1.coto_id, None, None, None, &opr)?;
+    create_link(&coto1.uuid, &cotonoma1.coto_id, None)?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -61,8 +81,8 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto3, _) = ds.post_coto("coto3", None, &root, &opr)?;
-    let _ = ds.create_link(&coto2.uuid, &coto3.uuid, None, None, None, &opr)?;
-    let _ = ds.create_link(&coto3.uuid, &coto1.uuid, None, None, None, &opr)?;
+    create_link(&coto2.uuid, &coto3.uuid, None)?;
+    create_link(&coto3.uuid, &coto1.uuid, None)?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -86,7 +106,7 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto4, _) = ds.post_coto("coto4", None, &root, &opr)?;
-    let _ = ds.create_link(&cotonoma1.coto_id, &coto4.uuid, None, None, None, &opr)?;
+    create_link(&cotonoma1.coto_id, &coto4.uuid, None)?;
 
     // until_cotonoma = true
     let expected_dot = indoc! {r#"
