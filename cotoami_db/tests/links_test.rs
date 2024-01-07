@@ -18,6 +18,7 @@ fn crud_operations() -> Result<()> {
     let (coto1, _) = ds.post_coto("coto1", None, &root_cotonoma, &operator)?;
     let (coto2, _) = ds.post_coto("coto2", None, &root_cotonoma, &operator)?;
     let (coto3, _) = ds.post_coto("coto3", None, &root_cotonoma, &operator)?;
+    let (coto4, _) = ds.post_coto("coto4", None, &root_cotonoma, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto2
@@ -57,7 +58,7 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(link1.updated_at());
 
     // check if it is stored in the db
-    assert_eq!(ds.link(&link1.uuid)?, Some(link1.clone()));
+    assert_eq!(ds.link(&link1.uuid)?.as_ref(), Some(&link1));
 
     // check if `recent_links` contains it
     let recent_links = ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
@@ -68,18 +69,17 @@ fn crud_operations() -> Result<()> {
     assert_matches!(
         changelog1,
         ChangelogEntry {
-            serial_number: 5,
+            serial_number: 6,
             origin_node_id,
-            origin_serial_number: 5,
-            change: Change::CreateLink(change_link),
+            origin_serial_number: 6,
+            change: Change::CreateLink(link),
             ..
         } if origin_node_id == node.uuid &&
-             change_link == link1
+             link == link1
     );
 
     // check if the number of outgoing links has been incremented
-    let Some(coto) = ds.coto(&coto1.uuid)? else { panic!() };
-    assert_eq!(coto.outgoing_links, 1);
+    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto3
@@ -112,7 +112,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if it is stored in the db
-    assert_eq!(ds.link(&link2.uuid)?, Some(link2.clone()));
+    assert_eq!(ds.link(&link2.uuid)?.as_ref(), Some(&link2));
 
     // check if `recent_links` contains it
     let recent_links = ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
@@ -121,8 +121,29 @@ fn crud_operations() -> Result<()> {
     assert_eq!(recent_links.rows[1], link1);
 
     // check if the number of outgoing links has been incremented
-    let Some(coto) = ds.coto(&coto1.uuid)? else { panic!() };
-    assert_eq!(coto.outgoing_links, 2);
+    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 2);
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: create a link from coto1 to coto4 with order number 1
+    /////////////////////////////////////////////////////////////////////////////
+
+    let (link3, _) = ds.create_link(
+        &coto1.uuid,
+        &coto4.uuid,
+        None,
+        None,
+        Some(1),
+        Some(&root_cotonoma),
+        &operator,
+    )?;
+
+    // check if the order of the links has been updated
+    assert_eq!(ds.link(&link3.uuid)?.unwrap().order, 1);
+    assert_eq!(ds.link(&link1.uuid)?.unwrap().order, 2);
+    assert_eq!(ds.link(&link2.uuid)?.unwrap().order, 3);
+
+    // check if the number of outgoing links has been incremented
+    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 3);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: edit link1
@@ -146,9 +167,9 @@ fn crud_operations() -> Result<()> {
     assert_matches!(
         changelog2,
         ChangelogEntry {
-            serial_number: 7,
+            serial_number: 9,
             origin_node_id,
-            origin_serial_number: 7,
+            origin_serial_number: 9,
             change: Change::EditLink {
                 uuid,
                 linking_phrase: Some(ref linking_phrase),
@@ -176,9 +197,9 @@ fn crud_operations() -> Result<()> {
     assert_matches!(
         changelog3,
         ChangelogEntry {
-            serial_number: 8,
+            serial_number: 10,
             origin_node_id,
-            origin_serial_number: 8,
+            origin_serial_number: 10,
             change: Change::DeleteLink (change_link_id),
             ..
         } if origin_node_id == node.uuid &&
@@ -186,8 +207,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of outgoing links has been decremented
-    let Some(coto) = ds.coto(&coto1.uuid)? else { panic!() };
-    assert_eq!(coto.outgoing_links, 1);
+    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 2);
 
     Ok(())
 }
