@@ -1,4 +1,5 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use chrono::naive::NaiveDateTime;
 use cotoami_db::prelude::*;
 
 fn main() -> Result<()> {
@@ -26,6 +27,25 @@ struct CotonomaJson {
 
     inserted_at: i64, // epoch milliseconds
     updated_at: i64,  // epoch milliseconds
+}
+
+impl CotonomaJson {
+    fn into_cotonoma(self, node_id: Id<Node>, coto_id: Id<Coto>) -> Result<Cotonoma> {
+        Ok(Cotonoma {
+            uuid: self.id,
+            node_id,
+            coto_id,
+            name: self.name,
+            created_at: from_timestamp_millis(self.inserted_at)?,
+            updated_at: from_timestamp_millis(self.updated_at)?,
+            posts: 0,
+        })
+    }
+}
+
+fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
+    NaiveDateTime::from_timestamp_millis(millis)
+        .ok_or(anyhow!("The timestamp is out of range: {millis}"))
 }
 
 #[cfg(test)]
