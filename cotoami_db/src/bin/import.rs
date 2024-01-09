@@ -7,26 +7,36 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Exported cotonoma JSON from the original Cotoami.
+/// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/views/cotonoma_view.ex#L61-L74>
 #[derive(Debug, serde::Deserialize)]
 struct CotonomaJson {
     id: Id<Cotonoma>,
 
-    name: String,
     key: String,
+    name: String,
 
     shared: bool,
 
-    // Perhaps this property isn't used in the old app,
+    // Perhaps this property isn't used in the original Cotoami,
     // I couldn't find usages in the source code :-(
     pinned: bool,
 
+    // The revisions seem to be used only for detecting changes since the cotonoma is created:
+    // <https://github.com/cotoami/cotoami/blob/develop/assets/elm/src/App/Types/Coto.elm#L244>
     timeline_revision: u32,
     graph_revision: u32,
 
-    last_post_timestamp: i64, // epoch milliseconds
-
     inserted_at: i64, // epoch milliseconds
     updated_at: i64,  // epoch milliseconds
+
+    // This property is used for read/unread status management with the watchlist table:
+    // <https://github.com/cotoami/cotoami/blob/develop/priv/repo/migrations/20181101015822_create_watchlist.exs>
+    //
+    // Read/unread status management in the client-side:
+    // <https://github.com/cotoami/cotoami/blob/develop/assets/elm/src/App/Update/Watch.elm>
+    // <https://github.com/cotoami/cotoami/blob/develop/assets/elm/src/App/Views/Flow.elm#L480-L486>
+    last_post_timestamp: i64, // epoch milliseconds
 }
 
 impl CotonomaJson {
