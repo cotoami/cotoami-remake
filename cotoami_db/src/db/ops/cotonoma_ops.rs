@@ -159,6 +159,7 @@ pub(crate) fn change_owner_node<'a>(
     })
 }
 
+// TODO: it should also update `updated_at`
 pub(crate) fn update_number_of_posts(
     id: &Id<Cotonoma>,
     delta: i64,
