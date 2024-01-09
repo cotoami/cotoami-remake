@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::{anyhow, Result};
 use chrono::naive::NaiveDateTime;
 use cotoami_db::prelude::*;
@@ -5,6 +7,14 @@ use cotoami_db::prelude::*;
 fn main() -> Result<()> {
     println!("Hello, world!");
     Ok(())
+}
+
+/// Exported coto JSON from the original Cotoami.
+/// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/views/coto_view.ex#L48-L59>
+#[derive(Debug, serde::Deserialize)]
+struct CotoJson {
+    id: Id<Coto>,
+    content: Option<String>,
 }
 
 /// Exported cotonoma JSON from the original Cotoami.
@@ -67,6 +77,8 @@ mod tests {
 
     #[test]
     fn deserialize_cotonoma_json() -> Result<()> {
+        let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let coto_id: Id<Coto> = Id::from_str("00000000-0000-0000-0000-000000000002")?;
         let json = indoc! {r#"
             {
                 "updated_at": 1681253566558,
@@ -82,7 +94,18 @@ mod tests {
             }
         "#};
         let cotonoma: CotonomaJson = serde_json::from_str(json)?;
-        println!("cotonoma: {cotonoma:?}");
+        let cotonoma = cotonoma.into_cotonoma(node_id, coto_id)?;
+
+        assert_eq!(
+            cotonoma.uuid,
+            Id::from_str("43dea0e3-f19b-4837-8587-7ed55296c265")?
+        );
+        assert_eq!(cotonoma.name, "Cotoami");
+        assert_eq!(cotonoma.node_id, node_id);
+        assert_eq!(cotonoma.coto_id, coto_id);
+        assert_eq!(cotonoma.created_at.to_string(), "2017-10-04 15:51:40.379");
+        assert_eq!(cotonoma.updated_at.to_string(), "2023-04-11 22:52:46.558");
+
         Ok(())
     }
 }
