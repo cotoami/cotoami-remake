@@ -115,6 +115,27 @@ impl CotonomaJson {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// ConnectionJson
+/////////////////////////////////////////////////////////////////////////////
+
+/// Exported connection JSON from the original Cotoami.
+/// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami/services/coto_graph_service.ex#L222>
+#[derive(Debug, serde::Deserialize)]
+struct ConnectionJson {
+    start: Id<Coto>,
+    end: Id<Coto>,
+
+    created_by: String, // amishi_id
+    created_in: Option<Id<Cotonoma>>,
+
+    linking_phrase: Option<String>,
+
+    order: i32,
+
+    created_at: i64, // epoch milliseconds
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // tests
 /////////////////////////////////////////////////////////////////////////////
 
