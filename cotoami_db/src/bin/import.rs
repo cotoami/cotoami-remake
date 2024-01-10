@@ -256,7 +256,7 @@ mod tests {
                 "cotonoma": null,
                 "content": "「最大多数の最小不幸」原則",
                 "as_cotonoma": false
-            },
+            }
         "#};
         let coto: CotoJson = serde_json::from_str(json)?;
         let coto = coto.into_coto(node_id)?;
@@ -309,6 +309,35 @@ mod tests {
         assert_eq!(cotonoma.coto_id, coto_id);
         assert_eq!(cotonoma.created_at.to_string(), "2017-10-04 15:51:40.379");
         assert_eq!(cotonoma.updated_at.to_string(), "2023-04-11 22:52:46.558");
+
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_connection_json() -> Result<()> {
+        let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let json = indoc! {r#"
+            {
+                "start": "f05c0f03-8bb0-430e-a4d2-714c2922e0cd",
+                "order": 1,
+                "end": "72972fe8-695c-4086-86ff-29a12c8a98a4",
+                "created_by": "55111bd3-92e2-4b02-bc1a-15b74a945fd0",
+                "created_at": 1507106701180
+            }
+        "#};
+        let conn: ConnectionJson = serde_json::from_str(json)?;
+        let _ = conn.as_new_link(&node_id)?;
+
+        assert_eq!(
+            conn.start,
+            Id::from_str("f05c0f03-8bb0-430e-a4d2-714c2922e0cd")?
+        );
+        assert_eq!(
+            conn.end,
+            Id::from_str("72972fe8-695c-4086-86ff-29a12c8a98a4")?
+        );
+        assert_eq!(conn.order, 1);
+        assert_eq!(conn.linking_phrase, None);
 
         Ok(())
     }
