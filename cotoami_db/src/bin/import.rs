@@ -1,17 +1,45 @@
-use std::str::FromStr;
+use std::{env, fs::File, io::BufReader, str::FromStr};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use chrono::naive::NaiveDateTime;
 use cotoami_db::prelude::*;
+use tracing::info;
 
 fn main() -> Result<()> {
-    println!("Hello, world!");
+    let config = Config::new(env::args())?;
+    let json = config.parse_file()?;
+    info!("{} cotos loaded.", json.cotos.len());
+    info!("{} connections loaded.", json.connections.len());
     Ok(())
 }
 
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
     NaiveDateTime::from_timestamp_millis(millis)
         .ok_or(anyhow!("The timestamp is out of range: {millis}"))
+}
+
+struct Config {
+    json_file: String,
+}
+
+impl Config {
+    fn new(mut args: env::Args) -> Result<Config> {
+        args.next(); // skip the first arg (the name of the program)
+
+        let json_file = match args.next() {
+            Some(arg) => arg,
+            None => bail!("Please specify a JSON file path."),
+        };
+
+        Ok(Config { json_file })
+    }
+
+    fn parse_file(&self) -> Result<CotoamiExportJson> {
+        info!("Parsing a file: {}", &self.json_file);
+        let file = File::open(&self.json_file)?;
+        let reader = BufReader::new(file);
+        Ok(serde_json::from_reader(reader)?)
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
