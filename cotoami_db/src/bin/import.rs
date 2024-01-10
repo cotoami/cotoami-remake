@@ -1,4 +1,4 @@
-use std::{env, fs::File, io::BufReader, time::Instant};
+use std::{env, fmt::Display, fs::File, io::BufReader, path::Path, time::Instant};
 
 use anyhow::{anyhow, bail, Result};
 use chrono::naive::NaiveDateTime;
@@ -7,7 +7,7 @@ use cotoami_db::prelude::*;
 fn main() -> Result<()> {
     let config = Config::new(env::args())?;
     let start = Instant::now();
-    let json = config.parse_file()?;
+    let json = config.load_json()?;
     println!("elapsed {:?}.", start.elapsed());
     println!("{} cotos loaded.", json.cotos.len());
     println!("{} connections loaded.", json.connections.len());
@@ -35,12 +35,7 @@ impl Config {
         Ok(Config { json_file })
     }
 
-    fn parse_file(&self) -> Result<CotoamiExportJson> {
-        println!("Parsing a file: {}", &self.json_file);
-        let file = File::open(&self.json_file)?;
-        let reader = BufReader::new(file);
-        Ok(serde_json::from_reader(reader)?)
-    }
+    fn load_json(&self) -> Result<CotoamiExportJson> { CotoamiExportJson::load(&self.json_file) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -53,6 +48,15 @@ impl Config {
 struct CotoamiExportJson {
     cotos: Vec<CotoJson>,
     connections: Vec<ConnectionJson>,
+}
+
+impl CotoamiExportJson {
+    fn load<P: AsRef<Path> + Display>(path: P) -> Result<Self> {
+        println!("Parsing {path} ...");
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        Ok(serde_json::from_reader(reader)?)
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
