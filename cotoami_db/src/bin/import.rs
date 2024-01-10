@@ -1,15 +1,16 @@
-use std::{env, fs::File, io::BufReader, str::FromStr};
+use std::{env, fs::File, io::BufReader, str::FromStr, time::Instant};
 
 use anyhow::{anyhow, bail, Result};
 use chrono::naive::NaiveDateTime;
 use cotoami_db::prelude::*;
-use tracing::info;
 
 fn main() -> Result<()> {
     let config = Config::new(env::args())?;
+    let start = Instant::now();
     let json = config.parse_file()?;
-    info!("{} cotos loaded.", json.cotos.len());
-    info!("{} connections loaded.", json.connections.len());
+    println!("elapsed {:?}.", start.elapsed());
+    println!("{} cotos loaded.", json.cotos.len());
+    println!("{} connections loaded.", json.connections.len());
     Ok(())
 }
 
@@ -35,7 +36,7 @@ impl Config {
     }
 
     fn parse_file(&self) -> Result<CotoamiExportJson> {
-        info!("Parsing a file: {}", &self.json_file);
+        println!("Parsing a file: {}", &self.json_file);
         let file = File::open(&self.json_file)?;
         let reader = BufReader::new(file);
         Ok(serde_json::from_reader(reader)?)
@@ -137,7 +138,7 @@ struct CotonomaJson {
     // Read/unread status management in the client-side:
     // <https://github.com/cotoami/cotoami/blob/develop/assets/elm/src/App/Update/Watch.elm>
     // <https://github.com/cotoami/cotoami/blob/develop/assets/elm/src/App/Views/Flow.elm#L480-L486>
-    last_post_timestamp: i64, // epoch milliseconds
+    last_post_timestamp: Option<i64>, // epoch milliseconds
 }
 
 impl CotonomaJson {
