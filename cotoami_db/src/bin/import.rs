@@ -126,6 +126,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn deserialize_coto_json() -> Result<()> {
+        let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let json = indoc! {r#"
+            {
+                "updated_at": 1507106650888,
+                "summary": null,
+                "reposted_in_ids": [],
+                "repost_id": null,
+                "posted_in_id": null,
+                "inserted_at": 1507106650888,
+                "id": "f05c0f03-8bb0-430e-a4d2-714c2922e0cd",
+                "cotonoma": null,
+                "content": "Nginx Ingress Controller",
+                "as_cotonoma": false
+            }
+        "#};
+        let coto: CotoJson = serde_json::from_str(json)?;
+        let coto = coto.into_coto(node_id)?;
+
+        assert_eq!(
+            coto.uuid,
+            Id::from_str("f05c0f03-8bb0-430e-a4d2-714c2922e0cd")?
+        );
+        assert_eq!(coto.content, Some("Nginx Ingress Controller".into()));
+        assert_eq!(coto.summary, None);
+        assert_eq!(coto.repost_of_id, None);
+        assert_eq!(coto.reposted_in_ids, None);
+
+        Ok(())
+    }
+
+    #[test]
     fn deserialize_cotonoma_json() -> Result<()> {
         let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
         let coto_id: Id<Coto> = Id::from_str("00000000-0000-0000-0000-000000000002")?;
