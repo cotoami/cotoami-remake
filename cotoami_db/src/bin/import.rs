@@ -153,6 +153,49 @@ mod tests {
         assert_eq!(coto.summary, None);
         assert_eq!(coto.repost_of_id, None);
         assert_eq!(coto.reposted_in_ids, None);
+        assert_eq!(coto.created_at.to_string(), "2017-10-04 08:44:10.888");
+        assert_eq!(coto.updated_at.to_string(), "2017-10-04 08:44:10.888");
+
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_coto_json2() -> Result<()> {
+        let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let json = indoc! {r#"
+            {
+                "updated_at": 1561866119804,
+                "summary": null,
+                "reposted_in_ids": [
+                    "a09327c2-d3d8-400e-b7ae-6af110fa982e",
+                    "e0871a62-33d0-407c-bdc0-9d72c6c84de4"
+                ],
+                "repost_id": null,
+                "posted_in_id": null,
+                "inserted_at": 1530275609616,
+                "id": "4d993f1c-270e-457a-9d12-92201e998691",
+                "cotonoma": null,
+                "content": "「最大多数の最小不幸」原則",
+                "as_cotonoma": false
+            },
+        "#};
+        let coto: CotoJson = serde_json::from_str(json)?;
+        let coto = coto.into_coto(node_id)?;
+
+        assert_eq!(
+            coto.uuid,
+            Id::from_str("4d993f1c-270e-457a-9d12-92201e998691")?
+        );
+        assert_eq!(coto.content, Some("「最大多数の最小不幸」原則".into()));
+        assert_eq!(coto.summary, None);
+        assert_eq!(coto.repost_of_id, None);
+        assert_eq!(
+            coto.reposted_in_ids,
+            Some(Ids(vec![
+                Id::from_str("a09327c2-d3d8-400e-b7ae-6af110fa982e")?,
+                Id::from_str("e0871a62-33d0-407c-bdc0-9d72c6c84de4")?
+            ]))
+        );
 
         Ok(())
     }
