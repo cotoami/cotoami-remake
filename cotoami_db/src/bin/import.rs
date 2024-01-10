@@ -1,4 +1,4 @@
-use std::{env, fs::File, io::BufReader, str::FromStr, time::Instant};
+use std::{env, fs::File, io::BufReader, time::Instant};
 
 use anyhow::{anyhow, bail, Result};
 use chrono::naive::NaiveDateTime;
@@ -197,6 +197,8 @@ impl ConnectionJson {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use anyhow::Result;
     use indoc::indoc;
 
