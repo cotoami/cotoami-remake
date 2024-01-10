@@ -146,7 +146,7 @@ impl<T> Hash for Id<T> {
     Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(sql_type = Text)]
-pub struct Ids<T>(Vec<Id<T>>);
+pub struct Ids<T>(pub Vec<Id<T>>);
 
 impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {
     fn to_sql<'a>(

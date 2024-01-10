@@ -9,13 +9,64 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
+    NaiveDateTime::from_timestamp_millis(millis)
+        .ok_or(anyhow!("The timestamp is out of range: {millis}"))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotoJson
+/////////////////////////////////////////////////////////////////////////////
+
 /// Exported coto JSON from the original Cotoami.
-/// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/views/coto_view.ex#L48-L59>
+/// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/views/coto_view.ex#L48-L61>
 #[derive(Debug, serde::Deserialize)]
 struct CotoJson {
     id: Id<Coto>,
+
     content: Option<String>,
+    summary: Option<String>,
+
+    posted_in_id: Option<Id<Cotonoma>>,
+
+    as_cotonoma: bool,
+    cotonoma: Option<CotonomaJson>,
+
+    repost_id: Option<Id<Coto>>,
+    reposted_in_ids: Vec<Id<Cotonoma>>,
+
+    inserted_at: i64, // epoch milliseconds
+    updated_at: i64,  // epoch milliseconds
 }
+
+impl CotoJson {
+    fn into_coto(self, node_id: Id<Node>) -> Result<Coto> {
+        let reposted_in_ids = if self.reposted_in_ids.is_empty() {
+            None
+        } else {
+            Some(Ids(self.reposted_in_ids))
+        };
+        Ok(Coto {
+            uuid: self.id,
+            rowid: 0,
+            node_id,
+            posted_in_id: self.posted_in_id,
+            posted_by_id: node_id,
+            content: self.content,
+            summary: self.summary,
+            is_cotonoma: self.as_cotonoma,
+            repost_of_id: self.repost_id,
+            reposted_in_ids,
+            created_at: from_timestamp_millis(self.inserted_at)?,
+            updated_at: from_timestamp_millis(self.updated_at)?,
+            outgoing_links: 0,
+        })
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotonomaJson
+/////////////////////////////////////////////////////////////////////////////
 
 /// Exported cotonoma JSON from the original Cotoami.
 /// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/views/cotonoma_view.ex#L61-L74>
@@ -63,10 +114,9 @@ impl CotonomaJson {
     }
 }
 
-fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
-    NaiveDateTime::from_timestamp_millis(millis)
-        .ok_or(anyhow!("The timestamp is out of range: {millis}"))
-}
+/////////////////////////////////////////////////////////////////////////////
+// tests
+/////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod tests {
