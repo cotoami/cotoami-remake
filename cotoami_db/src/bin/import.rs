@@ -135,6 +135,21 @@ struct ConnectionJson {
     created_at: i64, // epoch milliseconds
 }
 
+impl ConnectionJson {
+    fn as_new_link<'a>(&'a self, node_id: &'a Id<Node>) -> Result<NewLink<'a>> {
+        Ok(NewLink::new(
+            node_id,
+            self.created_in.as_ref(),
+            node_id,
+            &self.start,
+            &self.end,
+            self.linking_phrase.as_deref(),
+            None,
+            Some(self.order),
+        )?)
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // tests
 /////////////////////////////////////////////////////////////////////////////
