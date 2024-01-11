@@ -86,20 +86,12 @@ impl Database {
         Ok(db)
     }
 
-    pub fn new_session<'a>(
-        &'a self,
-    ) -> Result<
-        DatabaseSession<
-            '_,
-            impl Fn() -> Result<SqliteConnection> + '_,
-            impl Fn() -> MutexGuard<'a, WritableConn> + '_,
-        >,
-    > {
+    pub fn new_session(&self) -> Result<DatabaseSession<'_>> {
         Ok(DatabaseSession {
             globals: &self.globals,
             ro_conn: OnceCell::new(),
-            new_ro_conn: || self.new_ro_conn(),
-            lock_rw_conn: || self.rw_conn.lock(),
+            new_ro_conn: Box::new(|| self.new_ro_conn()),
+            lock_rw_conn: Box::new(|| self.rw_conn.lock()),
         })
     }
 
@@ -228,18 +220,19 @@ impl Globals {
 // DatabaseSession
 /////////////////////////////////////////////////////////////////////////////
 
-pub struct DatabaseSession<'a, RO, RW> {
+pub struct DatabaseSession<'a> {
     globals: &'a Globals,
     ro_conn: OnceCell<SqliteConnection>,
-    new_ro_conn: RO,
-    lock_rw_conn: RW,
+
+    // The following fields were once defined as generic types. However,
+    // it turned out to make it awkward to use the `DatabaseSession` type
+    // because of the trait bounds, which unnecessarily expose
+    // the internal concerns (`SqliteConnection` and `WritableConn`) to users of the type.
+    new_ro_conn: Box<dyn Fn() -> Result<SqliteConnection> + 'a>,
+    lock_rw_conn: Box<dyn Fn() -> MutexGuard<'a, WritableConn> + 'a>,
 }
 
-impl<'a, RO, RW> DatabaseSession<'a, RO, RW>
-where
-    RO: Fn() -> Result<SqliteConnection> + 'a,
-    RW: Fn() -> MutexGuard<'a, WritableConn> + 'a,
-{
+impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
     // local node
     /////////////////////////////////////////////////////////////////////////////
