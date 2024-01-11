@@ -1,6 +1,6 @@
-use std::{env, fmt::Display, fs::File, io::BufReader, path::Path, time::Instant};
+use std::{env, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use chrono::naive::NaiveDateTime;
 use cotoami_db::prelude::*;
 
@@ -21,21 +21,28 @@ fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
 
 struct Config {
     json_file: String,
+    db_dir: String,
 }
 
 impl Config {
+    const USAGE: &'static str = "Usage: import <JSON file> <database dir>";
+
     fn new(mut args: env::Args) -> Result<Config> {
         args.next(); // skip the first arg (the name of the program)
 
-        let json_file = match args.next() {
-            Some(arg) => arg,
-            None => bail!("Please specify a JSON file path."),
-        };
+        let json_file = args.next().ok_or(anyhow!(Self::USAGE))?;
+        let db_dir = args.next().ok_or(anyhow!(Self::USAGE))?;
 
-        Ok(Config { json_file })
+        Ok(Config { json_file, db_dir })
     }
 
     fn load_json(&self) -> Result<CotoamiExportJson> { CotoamiExportJson::load(&self.json_file) }
+
+    fn db(&self) -> Result<Database> {
+        // Create the directory if it doesn't exist yet (a new database).
+        fs::create_dir(&self.db_dir).ok();
+        Database::new(&self.db_dir)
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
