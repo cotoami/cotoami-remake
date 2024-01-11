@@ -14,11 +14,6 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
-    NaiveDateTime::from_timestamp_millis(millis)
-        .ok_or(anyhow!("The timestamp is out of range: {millis}"))
-}
-
 struct Config {
     json_file: String,
     db_dir: String,
@@ -43,6 +38,11 @@ impl Config {
         fs::create_dir(&self.db_dir).ok();
         Database::new(&self.db_dir)
     }
+}
+
+fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
+    NaiveDateTime::from_timestamp_millis(millis)
+        .ok_or(anyhow!("The timestamp is out of range: {millis}"))
 }
 
 /////////////////////////////////////////////////////////////////////////////
