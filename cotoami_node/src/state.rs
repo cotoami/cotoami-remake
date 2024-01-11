@@ -36,6 +36,7 @@ impl NodeState {
         config.validate()?;
 
         let db_dir = config.db_dir();
+        // Create the directory if it doesn't exist yet (a new database).
         fs::create_dir(&db_dir).ok();
         let db = Database::new(db_dir)?;
 
