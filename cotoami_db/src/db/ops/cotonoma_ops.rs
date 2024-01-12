@@ -32,6 +32,16 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
+    read_op(move |conn| {
+        let count: i64 = cotonomas::table
+            .select(diesel::dsl::count_star())
+            .filter(cotonomas::uuid.eq(id))
+            .first(conn)?;
+        Ok(count > 0)
+    })
+}
+
 pub(crate) fn get_or_err<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {

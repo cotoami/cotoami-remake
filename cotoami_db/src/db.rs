@@ -827,6 +827,10 @@ impl<'a> DatabaseSession<'a> {
         }
     }
 
+    pub fn contains_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<bool> {
+        self.read_transaction(cotonoma_ops::contains(id))
+    }
+
     pub fn cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
         self.read_transaction(cotonoma_ops::get(id))
     }
