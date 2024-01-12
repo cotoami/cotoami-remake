@@ -71,17 +71,17 @@ impl Config {
 
 #[derive(Debug)]
 struct Context {
-    waitlist_of_cotos: HashSet<Id<Coto>>,
-    waitlist_of_cotonomas: HashSet<Id<Cotonoma>>,
+    coto_waitlist: HashSet<Id<Coto>>,
+    cotonoma_waitlist: HashSet<Id<Cotonoma>>,
     local_node_id: Id<Node>,
     root_cotonoma_id: Id<Cotonoma>,
 }
 
 impl Context {
-    fn has_coto_in_waitlist(&self, id: &Id<Coto>) -> bool { self.waitlist_of_cotos.contains(id) }
+    fn has_coto_in_waitlist(&self, id: &Id<Coto>) -> bool { self.coto_waitlist.contains(id) }
 
     fn has_cotonoma_in_waitlist(&self, id: &Id<Cotonoma>) -> bool {
-        self.waitlist_of_cotonomas.contains(id)
+        self.cotonoma_waitlist.contains(id)
     }
 
     fn reject(&mut self, coto_json: &CotoJson, reason: &str) {
@@ -90,17 +90,17 @@ impl Context {
     }
 
     fn remove_from_waitlist(&mut self, coto_json: &CotoJson) {
-        self.waitlist_of_cotos.remove(&coto_json.id);
+        self.coto_waitlist.remove(&coto_json.id);
         if let Some(cotonoma_json) = coto_json.cotonoma.as_ref() {
-            self.waitlist_of_cotonomas.remove(&cotonoma_json.id);
+            self.cotonoma_waitlist.remove(&cotonoma_json.id);
         }
     }
 }
 
 fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let mut context = Context {
-        waitlist_of_cotos: json.all_coto_ids(),
-        waitlist_of_cotonomas: json.all_cotonoma_ids(),
+        coto_waitlist: json.all_coto_ids(),
+        cotonoma_waitlist: json.all_cotonoma_ids(),
         local_node_id: db.globals().local_node_id()?,
         root_cotonoma_id: db
             .globals()
@@ -109,8 +109,8 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     };
     println!(
         "Importing {} cotos, {} cotonomas ...",
-        context.waitlist_of_cotos.len(),
-        context.waitlist_of_cotonomas.len()
+        context.coto_waitlist.len(),
+        context.cotonoma_waitlist.len()
     );
     let mut ds = db.new_session()?;
     import_cotos(&mut ds, json.cotos, &mut context)?;
