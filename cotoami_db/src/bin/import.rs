@@ -217,7 +217,21 @@ fn import_connections(
     connection_jsons: Vec<ConnectionJson>,
     context: &mut Context,
 ) -> Result<()> {
-    unimplemented!();
+    for conn_json in connection_jsons {
+        if !ds.contains_coto(&conn_json.start)? {
+            context.reject_connection(
+                &conn_json,
+                &format!("Start coto is missing: {}.", conn_json.start),
+            );
+        }
+        if !ds.contains_coto(&conn_json.end)? {
+            context.reject_connection(
+                &conn_json,
+                &format!("End coto is missing: {}.", conn_json.end),
+            );
+        }
+    }
+    Ok(())
 }
 
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
@@ -382,17 +396,20 @@ struct ConnectionJson {
 }
 
 impl ConnectionJson {
-    fn as_new_link<'a>(&'a self, node_id: &'a Id<Node>) -> Result<NewLink<'a>> {
-        Ok(NewLink::new(
+    fn into_link(self, node_id: Id<Node>) -> Result<Link> {
+        Ok(Link {
+            uuid: Id::generate(),
             node_id,
-            self.created_in.as_ref(),
-            node_id,
-            &self.start,
-            &self.end,
-            self.linking_phrase.as_deref(),
-            None,
-            Some(self.order),
-        )?)
+            created_in_id: self.created_in,
+            created_by_id: node_id,
+            source_coto_id: self.start,
+            target_coto_id: self.end,
+            linking_phrase: self.linking_phrase,
+            details: None,
+            order: self.order,
+            created_at: from_timestamp_millis(self.created_at)?,
+            updated_at: from_timestamp_millis(self.created_at)?,
+        })
     }
 }
 
@@ -531,18 +548,18 @@ mod tests {
             }
         "#};
         let conn: ConnectionJson = serde_json::from_str(json)?;
-        let _ = conn.as_new_link(&node_id)?;
+        let link = conn.into_link(node_id)?;
 
         assert_eq!(
-            conn.start,
+            link.source_coto_id,
             Id::from_str("f05c0f03-8bb0-430e-a4d2-714c2922e0cd")?
         );
         assert_eq!(
-            conn.end,
+            link.target_coto_id,
             Id::from_str("72972fe8-695c-4086-86ff-29a12c8a98a4")?
         );
-        assert_eq!(conn.order, 1);
-        assert_eq!(conn.linking_phrase, None);
+        assert_eq!(link.order, 1);
+        assert_eq!(link.linking_phrase, None);
 
         Ok(())
     }
