@@ -55,6 +55,7 @@ impl Config {
             let node_name = self.new_node_name.as_deref().ok_or(anyhow!(
                 "Please specify a new node name to create a new database."
             ))?;
+            println!("Creating a local node [{node_name}] ...");
             let _ = db.new_session()?.init_as_node(Some(node_name), None)?;
         }
 
