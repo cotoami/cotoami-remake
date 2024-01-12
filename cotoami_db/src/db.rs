@@ -877,6 +877,23 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn import_cotonoma(
+        &self,
+        coto: &Coto,
+        cotonoma: &Cotonoma,
+    ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
+        assert_eq!(coto.uuid, cotonoma.coto_id);
+
+        let local_node_id = self.globals.local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let coto = coto_ops::insert(&coto.to_import()).run(ctx)?;
+            let cotonoma = cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
+            let change = Change::CreateCotonoma(cotonoma.clone(), coto.clone());
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok(((cotonoma, coto), changelog))
+        })
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // links
     /////////////////////////////////////////////////////////////////////////////
