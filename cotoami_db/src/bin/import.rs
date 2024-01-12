@@ -8,30 +8,38 @@ use cotoami_db::prelude::*;
 
 fn main() -> Result<()> {
     let config = Config::new(env::args())?;
-    let start = Instant::now();
+
+    let db = config.db()?;
     let json = config.load_json()?;
-    println!("elapsed {:?}.", start.elapsed());
-    println!("{} cotos loaded.", json.cotos.len());
-    println!("{} connections loaded.", json.connections.len());
-    println!("{} cotonomas found.", json.all_cotonoma_ids().len());
+
+    let start = Instant::now();
+    import(db, json)?;
+    println!("Import completed - elapsed {:?}.", start.elapsed());
+
     Ok(())
 }
 
 struct Config {
     json_file: String,
     db_dir: String,
+    new_node_name: Option<String>,
 }
 
 impl Config {
-    const USAGE: &'static str = "Usage: import <JSON file> <database dir>";
+    const USAGE: &'static str = "Usage: import <JSON file> <database dir> (<new node name>)";
 
     fn new(mut args: env::Args) -> Result<Config> {
         args.next(); // skip the first arg (the name of the program)
 
         let json_file = args.next().ok_or(anyhow!(Self::USAGE))?;
         let db_dir = args.next().ok_or(anyhow!(Self::USAGE))?;
+        let new_node_name = args.next();
 
-        Ok(Config { json_file, db_dir })
+        Ok(Config {
+            json_file,
+            db_dir,
+            new_node_name,
+        })
     }
 
     fn load_json(&self) -> Result<CotoamiExportJson> { CotoamiExportJson::load(&self.json_file) }
@@ -39,21 +47,52 @@ impl Config {
     fn db(&self) -> Result<Database> {
         // Create the directory if it doesn't exist yet (a new database).
         fs::create_dir(&self.db_dir).ok();
-        Database::new(&self.db_dir)
+
+        let db = Database::new(&self.db_dir)?;
+
+        // Create a local node with the given name if it doesn't exist yet.
+        if !db.globals().has_local_node_initialized() {
+            let node_name = self.new_node_name.as_deref().ok_or(anyhow!(
+                "Please specify a new node name to create a new database."
+            ))?;
+            let _ = db.new_session()?.init_as_node(Some(node_name), None)?;
+        }
+
+        Ok(db)
     }
 }
 
 struct Context {
     all_coto_ids: HashSet<Id<Coto>>,
     all_cotonoma_ids: HashSet<Id<Cotonoma>>,
-    root_cotonoma_id: Id<Cotonoma>,
     local_node_id: Id<Node>,
+    root_cotonoma_id: Id<Cotonoma>,
 }
 
 impl Context {
     fn contains_coto(&self, id: &Id<Coto>) -> bool { self.all_coto_ids.contains(id) }
 
     fn contains_cotonoma(&self, id: &Id<Cotonoma>) -> bool { self.all_cotonoma_ids.contains(id) }
+}
+
+fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
+    let context = Context {
+        all_coto_ids: json.all_coto_ids(),
+        all_cotonoma_ids: json.all_cotonoma_ids(),
+        local_node_id: db.globals().local_node_id()?,
+        root_cotonoma_id: db
+            .globals()
+            .root_cotonoma_id()
+            .ok_or(anyhow!("The root cotonoma is required for import."))?,
+    };
+    println!(
+        "Importing {} cotos, {} cotonomas ...",
+        context.all_coto_ids.len(),
+        context.all_cotonoma_ids.len()
+    );
+    let mut ds = db.new_session()?;
+    import_cotos(&mut ds, json.cotos, &context)?;
+    Ok(())
 }
 
 fn import_cotos(

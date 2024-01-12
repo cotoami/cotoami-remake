@@ -202,6 +202,8 @@ impl Globals {
         self.ensure_local(entity).is_ok()
     }
 
+    pub fn root_cotonoma_id(&self) -> Option<Id<Cotonoma>> { *self.root_cotonoma_id.read() }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 
     fn cache_parent_node(&self, parent: ParentNode) {
