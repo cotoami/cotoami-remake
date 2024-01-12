@@ -272,6 +272,7 @@ impl CotoJson {
 /// Exported cotonoma JSON from the original Cotoami.
 /// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/views/cotonoma_view.ex#L61-L74>
 #[derive(Debug, serde::Deserialize)]
+#[allow(unused)]
 struct CotonomaJson {
     id: Id<Cotonoma>,
 
@@ -322,6 +323,7 @@ impl CotonomaJson {
 /// Exported connection JSON from the original Cotoami.
 /// <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami/services/coto_graph_service.ex#L222>
 #[derive(Debug, serde::Deserialize)]
+#[allow(unused)]
 struct ConnectionJson {
     start: Id<Coto>,
     end: Id<Coto>,
