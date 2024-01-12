@@ -98,13 +98,13 @@ impl Context {
     fn reject_coto(&mut self, coto_json: &CotoJson, reason: &str) {
         self.remove_from_waitlist(coto_json);
         self.rejected_cotos += 1;
-        println!("Rejected Coto ({}): {reason}", coto_json.id);
+        println!("Rejected coto ({}): {reason}", coto_json.id);
     }
 
     fn reject_connection(&mut self, connection_json: &ConnectionJson, reason: &str) {
         self.rejected_connections += 1;
         println!(
-            "Rejected Connection ({})->({}): {reason}",
+            "Rejected connection ({})->({}): {reason}",
             connection_json.start, connection_json.end
         );
     }
@@ -123,16 +123,20 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
         rejected_connections: 0,
     };
     println!(
-        "Importing {} cotos, {} cotonomas ...",
+        "Importing {} cotos, {} cotonomas and {} connections ...",
         context.coto_waitlist.len(),
-        context.cotonoma_waitlist.len()
+        context.cotonoma_waitlist.len(),
+        json.connections.len()
     );
+
     let mut ds = db.new_session()?;
     import_cotos(&mut ds, json.cotos, &mut context)?;
+    import_connections(&mut ds, json.connections, &mut context)?;
     println!(
         "{} cotos and {} connections have been rejected.",
         context.rejected_cotos, context.rejected_connections
     );
+
     Ok(())
 }
 
@@ -141,6 +145,7 @@ fn import_cotos(
     coto_jsons: Vec<CotoJson>,
     context: &mut Context,
 ) -> Result<()> {
+    println!("Importing cotos ...");
     let mut pendings: Vec<CotoJson> = Vec::new();
     for coto_json in coto_jsons {
         // Dependency check: `posted_in_id`
@@ -152,7 +157,7 @@ fn import_cotos(
                     // Put in the pending list until the cotonoma is imported
                     pendings.push(coto_json);
                 } else {
-                    context.reject_coto(&coto_json, &format!("Missing cotonoma: {posted_in_id}."));
+                    context.reject_coto(&coto_json, &format!("missing cotonoma: {posted_in_id}"));
                 }
                 continue;
             }
@@ -169,7 +174,7 @@ fn import_cotos(
                 } else {
                     context.reject_coto(
                         &coto_json,
-                        &format!("Repost of a missing coto: {repost_id}."),
+                        &format!("repost of a missing coto: {repost_id}"),
                     );
                 }
                 continue;
@@ -191,7 +196,7 @@ fn import_coto(
     context: &mut Context,
 ) -> Result<()> {
     if ds.contains_coto(&coto_json.id)? {
-        context.reject_coto(&coto_json, "Already exists in the db.");
+        context.reject_coto(&coto_json, "already exists in the db.");
     } else {
         context.remove_from_waitlist(&coto_json);
         let cotonoma_json = coto_json.cotonoma.take();
@@ -217,19 +222,24 @@ fn import_connections(
     connection_jsons: Vec<ConnectionJson>,
     context: &mut Context,
 ) -> Result<()> {
+    println!("Importing connections ...");
     for conn_json in connection_jsons {
         if !ds.contains_coto(&conn_json.start)? {
             context.reject_connection(
                 &conn_json,
-                &format!("Start coto is missing: {}.", conn_json.start),
+                &format!("start coto is missing: {}", conn_json.start),
             );
+            continue;
         }
         if !ds.contains_coto(&conn_json.end)? {
             context.reject_connection(
                 &conn_json,
-                &format!("End coto is missing: {}.", conn_json.end),
+                &format!("end coto is missing: {}", conn_json.end),
             );
+            continue;
         }
+        let link = conn_json.into_link(context.local_node_id)?;
+        let _ = ds.import_link(&link)?;
     }
     Ok(())
 }
