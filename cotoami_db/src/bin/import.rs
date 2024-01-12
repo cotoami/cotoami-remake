@@ -69,31 +69,38 @@ impl Config {
     }
 }
 
+#[derive(Debug)]
 struct Context {
-    all_coto_ids: HashSet<Id<Coto>>,
-    all_cotonoma_ids: HashSet<Id<Cotonoma>>,
+    waitlist_of_cotos: HashSet<Id<Coto>>,
+    waitlist_of_cotonomas: HashSet<Id<Cotonoma>>,
     local_node_id: Id<Node>,
     root_cotonoma_id: Id<Cotonoma>,
 }
 
 impl Context {
-    fn contains_coto(&self, id: &Id<Coto>) -> bool { self.all_coto_ids.contains(id) }
+    fn has_coto_in_waitlist(&self, id: &Id<Coto>) -> bool { self.waitlist_of_cotos.contains(id) }
 
-    fn contains_cotonoma(&self, id: &Id<Cotonoma>) -> bool { self.all_cotonoma_ids.contains(id) }
+    fn has_cotonoma_in_waitlist(&self, id: &Id<Cotonoma>) -> bool {
+        self.waitlist_of_cotonomas.contains(id)
+    }
 
     fn reject(&mut self, coto_json: &CotoJson, reason: &str) {
-        self.all_coto_ids.remove(&coto_json.id);
-        if let Some(cotonoma_json) = coto_json.cotonoma.as_ref() {
-            self.all_cotonoma_ids.remove(&cotonoma_json.id);
-        }
+        self.remove_from_waitlist(coto_json);
         println!("Rejected Coto ({}): {reason}", coto_json.id);
+    }
+
+    fn remove_from_waitlist(&mut self, coto_json: &CotoJson) {
+        self.waitlist_of_cotos.remove(&coto_json.id);
+        if let Some(cotonoma_json) = coto_json.cotonoma.as_ref() {
+            self.waitlist_of_cotonomas.remove(&cotonoma_json.id);
+        }
     }
 }
 
 fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let mut context = Context {
-        all_coto_ids: json.all_coto_ids(),
-        all_cotonoma_ids: json.all_cotonoma_ids(),
+        waitlist_of_cotos: json.all_coto_ids(),
+        waitlist_of_cotonomas: json.all_cotonoma_ids(),
         local_node_id: db.globals().local_node_id()?,
         root_cotonoma_id: db
             .globals()
@@ -102,8 +109,8 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     };
     println!(
         "Importing {} cotos, {} cotonomas ...",
-        context.all_coto_ids.len(),
-        context.all_cotonoma_ids.len()
+        context.waitlist_of_cotos.len(),
+        context.waitlist_of_cotonomas.len()
     );
     let mut ds = db.new_session()?;
     import_cotos(&mut ds, json.cotos, &mut context)?;
@@ -122,7 +129,7 @@ fn import_cotos(
             if ds.contains_cotonoma(&posted_in_id)? {
                 // OK
             } else {
-                if context.contains_cotonoma(&posted_in_id) {
+                if context.has_cotonoma_in_waitlist(&posted_in_id) {
                     // Put in the pending list until the cotonoma is imported
                     pendings.push(coto_json);
                 } else {
@@ -137,7 +144,7 @@ fn import_cotos(
             if ds.contains_coto(&repost_id)? {
                 // OK
             } else {
-                if context.contains_coto(&repost_id) {
+                if context.has_coto_in_waitlist(&repost_id) {
                     // Put in the pending list until the original coto is imported
                     pendings.push(coto_json);
                 } else {
@@ -167,6 +174,7 @@ fn import_coto(
     if ds.contains_coto(&coto_json.id)? {
         context.reject(&coto_json, "Already exists in the db.");
     } else {
+        context.remove_from_waitlist(&coto_json);
         let cotonoma_json = coto_json.cotonoma.take();
 
         let mut coto = coto_json.into_coto(context.local_node_id)?;
