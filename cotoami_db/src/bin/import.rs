@@ -71,11 +71,14 @@ impl Config {
 
 #[derive(Debug)]
 struct Context {
-    coto_waitlist: HashSet<Id<Coto>>,
-    cotonoma_waitlist: HashSet<Id<Cotonoma>>,
-    rejected_cotos: i64,
     local_node_id: Id<Node>,
     root_cotonoma_id: Id<Cotonoma>,
+
+    coto_waitlist: HashSet<Id<Coto>>,
+    cotonoma_waitlist: HashSet<Id<Cotonoma>>,
+
+    rejected_cotos: i64,
+    rejected_connections: i64,
 }
 
 impl Context {
@@ -85,30 +88,39 @@ impl Context {
         self.cotonoma_waitlist.contains(id)
     }
 
-    fn reject(&mut self, coto_json: &CotoJson, reason: &str) {
-        self.remove_from_waitlist(coto_json);
-        self.rejected_cotos += 1;
-        println!("Rejected Coto ({}): {reason}", coto_json.id);
-    }
-
     fn remove_from_waitlist(&mut self, coto_json: &CotoJson) {
         self.coto_waitlist.remove(&coto_json.id);
         if let Some(cotonoma_json) = coto_json.cotonoma.as_ref() {
             self.cotonoma_waitlist.remove(&cotonoma_json.id);
         }
     }
+
+    fn reject_coto(&mut self, coto_json: &CotoJson, reason: &str) {
+        self.remove_from_waitlist(coto_json);
+        self.rejected_cotos += 1;
+        println!("Rejected Coto ({}): {reason}", coto_json.id);
+    }
+
+    fn reject_connection(&mut self, connection_json: &ConnectionJson, reason: &str) {
+        self.rejected_connections += 1;
+        println!(
+            "Rejected Connection ({})->({}): {reason}",
+            connection_json.start, connection_json.end
+        );
+    }
 }
 
 fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let mut context = Context {
-        coto_waitlist: json.all_coto_ids(),
-        cotonoma_waitlist: json.all_cotonoma_ids(),
-        rejected_cotos: 0,
         local_node_id: db.globals().local_node_id()?,
         root_cotonoma_id: db
             .globals()
             .root_cotonoma_id()
             .ok_or(anyhow!("The root cotonoma is required for import."))?,
+        coto_waitlist: json.all_coto_ids(),
+        cotonoma_waitlist: json.all_cotonoma_ids(),
+        rejected_cotos: 0,
+        rejected_connections: 0,
     };
     println!(
         "Importing {} cotos, {} cotonomas ...",
@@ -117,7 +129,10 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     );
     let mut ds = db.new_session()?;
     import_cotos(&mut ds, json.cotos, &mut context)?;
-    println!("{} cotos have been rejected.", context.rejected_cotos);
+    println!(
+        "{} cotos and {} connections have been rejected.",
+        context.rejected_cotos, context.rejected_connections
+    );
     Ok(())
 }
 
@@ -137,7 +152,7 @@ fn import_cotos(
                     // Put in the pending list until the cotonoma is imported
                     pendings.push(coto_json);
                 } else {
-                    context.reject(&coto_json, &format!("Missing cotonoma: {posted_in_id}."));
+                    context.reject_coto(&coto_json, &format!("Missing cotonoma: {posted_in_id}."));
                 }
                 continue;
             }
@@ -152,7 +167,7 @@ fn import_cotos(
                     // Put in the pending list until the original coto is imported
                     pendings.push(coto_json);
                 } else {
-                    context.reject(
+                    context.reject_coto(
                         &coto_json,
                         &format!("Repost of a missing coto: {repost_id}."),
                     );
@@ -176,7 +191,7 @@ fn import_coto(
     context: &mut Context,
 ) -> Result<()> {
     if ds.contains_coto(&coto_json.id)? {
-        context.reject(&coto_json, "Already exists in the db.");
+        context.reject_coto(&coto_json, "Already exists in the db.");
     } else {
         context.remove_from_waitlist(&coto_json);
         let cotonoma_json = coto_json.cotonoma.take();
@@ -195,6 +210,14 @@ fn import_coto(
         }
     }
     Ok(())
+}
+
+fn import_connections(
+    ds: &mut DatabaseSession<'_>,
+    connection_jsons: Vec<ConnectionJson>,
+    context: &mut Context,
+) -> Result<()> {
+    unimplemented!();
 }
 
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
