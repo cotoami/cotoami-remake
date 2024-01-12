@@ -6,6 +6,8 @@ use crate::service::{
     NodeService, RemoteNodeService, RequestBody,
 };
 
+/// An extension trait for [NodeService] that provides shortcut functions for
+/// frequently used requests.
 pub trait NodeServiceExt: NodeService {
     async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
         let request = RequestBody::ChunkOfChanges { from }.into_request();
