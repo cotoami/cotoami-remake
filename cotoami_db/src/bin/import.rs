@@ -150,6 +150,8 @@ impl CotoamiExportJson {
         Ok(serde_json::from_reader(reader)?)
     }
 
+    fn all_coto_ids(&self) -> HashSet<Id<Coto>> { self.cotos.iter().map(|coto| coto.id).collect() }
+
     fn all_cotonoma_ids(&self) -> HashSet<Id<Cotonoma>> {
         self.cotos
             .iter()
