@@ -739,7 +739,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Posts a coto in the specified cotonoma.
     ///
-    /// The target cotonoma has to belong to the local node,
+    /// The target cotonoma (`posted_in`) has to belong to the local node,
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
         &self,
@@ -749,7 +749,6 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.globals.ensure_local(posted_in)?;
-
         let local_node_id = self.globals.local_node_id()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
@@ -759,8 +758,17 @@ impl<'a> DatabaseSession<'a> {
             content,
             summary,
         )?;
+        self.create_coto(&new_coto)
+    }
+
+    pub fn import_coto(&self, coto: &Coto) -> Result<(Coto, ChangelogEntry)> {
+        self.create_coto(&coto.to_import())
+    }
+
+    fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
+            let inserted_coto = coto_ops::insert(new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok((inserted_coto, changelog))

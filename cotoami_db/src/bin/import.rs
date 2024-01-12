@@ -43,6 +43,26 @@ impl Config {
     }
 }
 
+fn import_cotos<'a>(
+    ds: DatabaseSession<'a>,
+    cotos: Vec<CotoJson>,
+    cotonoma_ids: HashSet<Id<Cotonoma>>,
+    root_cotonoma_id: Id<Cotonoma>,
+    local_node_id: Id<Node>,
+) -> Result<()> {
+    let pendings: Vec<CotoJson> = Vec::new();
+    for coto in cotos {
+        if let Some(posted_in_id) = coto.posted_in_id {
+            //
+        } else {
+            let mut coto = coto.into_coto(local_node_id)?;
+            coto.posted_in_id = Some(root_cotonoma_id);
+            //
+        }
+    }
+    Ok(())
+}
+
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
     NaiveDateTime::from_timestamp_millis(millis)
         .ok_or(anyhow!("The timestamp is out of range: {millis}"))
@@ -89,6 +109,9 @@ struct CotoJson {
     content: Option<String>,
     summary: Option<String>,
 
+    // `None` if this coto doesn't belong to any cotonoma, which is displayed only in "My Home".
+    // In the original Cotoami, "My Home" means "no cotonoma specified".
+    // On the other hand, in Cotoami Remake, that means being posted in the root cotonoma.
     posted_in_id: Option<Id<Cotonoma>>,
 
     as_cotonoma: bool,
