@@ -80,10 +80,18 @@ impl Context {
     fn contains_coto(&self, id: &Id<Coto>) -> bool { self.all_coto_ids.contains(id) }
 
     fn contains_cotonoma(&self, id: &Id<Cotonoma>) -> bool { self.all_cotonoma_ids.contains(id) }
+
+    fn reject(&mut self, coto_json: &CotoJson, reason: &str) {
+        self.all_coto_ids.remove(&coto_json.id);
+        if let Some(cotonoma_json) = coto_json.cotonoma.as_ref() {
+            self.all_cotonoma_ids.remove(&cotonoma_json.id);
+        }
+        println!("Rejected Coto ({}): {reason}", coto_json.id);
+    }
 }
 
 fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
-    let context = Context {
+    let mut context = Context {
         all_coto_ids: json.all_coto_ids(),
         all_cotonoma_ids: json.all_cotonoma_ids(),
         local_node_id: db.globals().local_node_id()?,
@@ -98,14 +106,14 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
         context.all_cotonoma_ids.len()
     );
     let mut ds = db.new_session()?;
-    import_cotos(&mut ds, json.cotos, &context)?;
+    import_cotos(&mut ds, json.cotos, &mut context)?;
     Ok(())
 }
 
 fn import_cotos(
     ds: &mut DatabaseSession<'_>,
     coto_jsons: Vec<CotoJson>,
-    context: &Context,
+    context: &mut Context,
 ) -> Result<()> {
     let mut pendings: Vec<CotoJson> = Vec::new();
     for coto_json in coto_jsons {
@@ -118,10 +126,7 @@ fn import_cotos(
                     // Put in the pending list until the cotonoma is imported
                     pendings.push(coto_json);
                 } else {
-                    println!(
-                        "Rejected: Coto ({}) posted in a missing cotonoma: {posted_in_id}.",
-                        coto_json.id
-                    );
+                    context.reject(&coto_json, &format!("Missing cotonoma: {posted_in_id}."));
                 }
                 continue;
             }
@@ -136,9 +141,9 @@ fn import_cotos(
                     // Put in the pending list until the original coto is imported
                     pendings.push(coto_json);
                 } else {
-                    println!(
-                        "Rejected: Repost ({}) of a missing coto: {repost_id}.",
-                        coto_json.id
+                    context.reject(
+                        &coto_json,
+                        &format!("Repost of a missing coto: {repost_id}."),
                     );
                 }
                 continue;
@@ -157,13 +162,10 @@ fn import_cotos(
 fn import_coto(
     ds: &mut DatabaseSession<'_>,
     mut coto_json: CotoJson,
-    context: &Context,
+    context: &mut Context,
 ) -> Result<()> {
     if ds.contains_coto(&coto_json.id)? {
-        println!(
-            "Rejected: Coto ({}) already exists in the db.",
-            coto_json.id
-        );
+        context.reject(&coto_json, "Already exists in the db.");
     } else {
         let cotonoma_json = coto_json.cotonoma.take();
 
