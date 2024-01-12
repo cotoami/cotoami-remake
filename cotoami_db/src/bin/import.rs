@@ -65,7 +65,7 @@ fn import_cotos(
     for coto_json in coto_jsons {
         // dependency: posted_in_id
         if let Some(posted_in_id) = coto_json.posted_in_id {
-            if ds.cotonoma(&posted_in_id)?.is_none() {
+            if !ds.contains_cotonoma(&posted_in_id)? {
                 if context.contains_cotonoma(&posted_in_id) {
                     // put in the pending list until the cotonoma is imported
                     pendings.push(coto_json);

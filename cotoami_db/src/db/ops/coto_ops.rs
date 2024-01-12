@@ -33,6 +33,16 @@ pub(crate) fn get_or_err<Conn: AsReadableConn>(
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
 }
 
+pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, bool> + '_ {
+    read_op(move |conn| {
+        let count: i64 = cotos::table
+            .select(diesel::dsl::count_star())
+            .filter(cotos::uuid.eq(id))
+            .first(conn)?;
+        Ok(count > 0)
+    })
+}
+
 pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     read_op(move |conn| {
         cotos::table

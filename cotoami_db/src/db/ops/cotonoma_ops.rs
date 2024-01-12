@@ -32,6 +32,12 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn get_or_err<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
+}
+
 pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
     read_op(move |conn| {
         let count: i64 = cotonomas::table
@@ -40,12 +46,6 @@ pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operatio
             .first(conn)?;
         Ok(count > 0)
     })
-}
-
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
-    id: &Id<Cotonoma>,
-) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
 pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
