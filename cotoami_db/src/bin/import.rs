@@ -44,34 +44,30 @@ impl Config {
 }
 
 fn import_cotos(
-    mut ds: DatabaseSession<'_>,
-    cotos: Vec<CotoJson>,
+    ds: &mut DatabaseSession<'_>,
+    coto_jsons: Vec<CotoJson>,
     cotonoma_ids: HashSet<Id<Cotonoma>>,
     root_cotonoma_id: Id<Cotonoma>,
     local_node_id: Id<Node>,
 ) -> Result<()> {
     let mut pendings: Vec<CotoJson> = Vec::new();
-    for coto in cotos {
-        if let Some(posted_in_id) = coto.posted_in_id {
+    for coto_json in coto_jsons {
+        if let Some(posted_in_id) = coto_json.posted_in_id {
             if ds.cotonoma(&posted_in_id)?.is_some() {
-                let coto = coto.into_coto(local_node_id)?;
-                let _ = ds.import_coto(&coto)?;
+                import_coto(ds, coto_json, root_cotonoma_id, local_node_id)?;
             } else {
                 if cotonoma_ids.contains(&posted_in_id) {
                     // put in the pending list until the cotonoma is imported
-                    pendings.push(coto);
+                    pendings.push(coto_json);
                 } else {
                     println!(
-                        "Warning: A coto ({}) is rejected due to the missing cotonoma: {posted_in_id}",
-                        coto.id
+                        "Rejected: Coto ({}) posted in a missing cotonoma: {posted_in_id}.",
+                        coto_json.id
                     );
                 }
             }
         } else {
-            // A coto that doesn't belong to a cotonoma will be imported in the root cotonoma.
-            let mut coto = coto.into_coto(local_node_id)?;
-            coto.posted_in_id = Some(root_cotonoma_id);
-            let _ = ds.import_coto(&coto)?;
+            import_coto(ds, coto_json, root_cotonoma_id, local_node_id)?;
         }
     }
     if pendings.is_empty() {
@@ -79,6 +75,28 @@ fn import_cotos(
     } else {
         import_cotos(ds, pendings, cotonoma_ids, root_cotonoma_id, local_node_id)
     }
+}
+
+fn import_coto(
+    ds: &mut DatabaseSession<'_>,
+    coto_json: CotoJson,
+    root_cotonoma_id: Id<Cotonoma>,
+    local_node_id: Id<Node>,
+) -> Result<()> {
+    if ds.coto(&coto_json.id)?.is_some() {
+        println!(
+            "Rejected: Coto ({}) already exists in the db.",
+            coto_json.id
+        );
+    } else {
+        let mut coto = coto_json.into_coto(local_node_id)?;
+        if coto.posted_in_id.is_none() {
+            // A coto that doesn't belong to a cotonoma will be imported in the root cotonoma.
+            coto.posted_in_id = Some(root_cotonoma_id);
+        }
+        let _ = ds.import_coto(&coto)?;
+    }
+    Ok(())
 }
 
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
