@@ -920,7 +920,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn create_link(
-        &mut self,
+        &self,
         source_coto_id: &Id<Coto>,
         target_coto_id: &Id<Coto>,
         linking_phrase: Option<&str>,
@@ -947,6 +947,15 @@ impl<'a> DatabaseSession<'a> {
             details,
             order,
         )?;
+        self._create_link(new_link)
+    }
+
+    pub fn import_link(&self, link: &Link) -> Result<(Link, ChangelogEntry)> {
+        self._create_link(link.to_import())
+    }
+
+    fn _create_link(&self, new_link: NewLink) -> Result<(Link, ChangelogEntry)> {
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let inserted_link = link_ops::insert(new_link).run(ctx)?;
             let change = Change::CreateLink(inserted_link.clone());

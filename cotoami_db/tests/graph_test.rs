@@ -16,8 +16,8 @@ fn graph() -> Result<()> {
     let opr = db.globals().local_node_as_operator()?;
     let (root, root_coto) = ds.root_cotonoma()?.unwrap();
 
-    let mut create_link = {
-        let mut ds = db.new_session()?;
+    let create_link = {
+        let ds = db.new_session()?;
         let opr = opr.clone();
         move |source_coto_id: &Id<Coto>,
               target_coto_id: &Id<Coto>,
