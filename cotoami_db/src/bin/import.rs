@@ -108,19 +108,31 @@ fn import_cotos(
     }
 }
 
-fn import_coto(ds: &mut DatabaseSession<'_>, coto_json: CotoJson, context: &Context) -> Result<()> {
-    if ds.coto(&coto_json.id)?.is_some() {
+fn import_coto(
+    ds: &mut DatabaseSession<'_>,
+    mut coto_json: CotoJson,
+    context: &Context,
+) -> Result<()> {
+    if ds.contains_coto(&coto_json.id)? {
         println!(
             "Rejected: Coto ({}) already exists in the db.",
             coto_json.id
         );
     } else {
+        let cotonoma_json = coto_json.cotonoma.take();
+
         let mut coto = coto_json.into_coto(context.local_node_id)?;
         if coto.posted_in_id.is_none() {
             // A coto that doesn't belong to a cotonoma will be imported in the root cotonoma.
             coto.posted_in_id = Some(context.root_cotonoma_id);
         }
-        let _ = ds.import_coto(&coto)?;
+
+        if let Some(cotonoma_json) = cotonoma_json {
+            let cotonoma = cotonoma_json.into_cotonoma(context.local_node_id, coto.uuid)?;
+            let _ = ds.import_cotonoma(&coto, &cotonoma)?;
+        } else {
+            let _ = ds.import_coto(&coto)?;
+        }
     }
     Ok(())
 }
