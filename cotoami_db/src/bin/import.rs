@@ -73,6 +73,7 @@ impl Config {
 struct Context {
     coto_waitlist: HashSet<Id<Coto>>,
     cotonoma_waitlist: HashSet<Id<Cotonoma>>,
+    rejected_cotos: i64,
     local_node_id: Id<Node>,
     root_cotonoma_id: Id<Cotonoma>,
 }
@@ -86,6 +87,7 @@ impl Context {
 
     fn reject(&mut self, coto_json: &CotoJson, reason: &str) {
         self.remove_from_waitlist(coto_json);
+        self.rejected_cotos += 1;
         println!("Rejected Coto ({}): {reason}", coto_json.id);
     }
 
@@ -101,6 +103,7 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let mut context = Context {
         coto_waitlist: json.all_coto_ids(),
         cotonoma_waitlist: json.all_cotonoma_ids(),
+        rejected_cotos: 0,
         local_node_id: db.globals().local_node_id()?,
         root_cotonoma_id: db
             .globals()
@@ -114,6 +117,7 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     );
     let mut ds = db.new_session()?;
     import_cotos(&mut ds, json.cotos, &mut context)?;
+    println!("{} cotos have been rejected.", context.rejected_cotos);
     Ok(())
 }
 
