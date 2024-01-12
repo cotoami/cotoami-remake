@@ -137,6 +137,15 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
         context.rejected_cotos, context.rejected_connections
     );
 
+    // Graph traversal test
+    let (_, root_coto) = ds.root_cotonoma()?.unwrap();
+    let graph = ds.graph(root_coto, false)?;
+    println!(
+        "Graph: {} cotos, {} links",
+        graph.count_cotos(),
+        graph.count_links()
+    );
+
     Ok(())
 }
 

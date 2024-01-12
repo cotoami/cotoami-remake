@@ -43,11 +43,19 @@ impl Graph {
 
     pub fn contains(&self, coto_id: &Id<Coto>) -> bool { self.cotos.contains_key(coto_id) }
 
+    pub fn count_cotos(&self) -> usize { self.cotos.len() }
+
     pub fn add_link(&mut self, link: Link) {
         self.links
             .entry(link.source_coto_id)
             .or_insert_with(Vec::new)
             .push(link);
+    }
+
+    pub fn count_links(&self) -> usize {
+        self.links
+            .values()
+            .fold(0, |count, links| count + links.len())
     }
 
     pub(crate) fn sort_links(&mut self) {
