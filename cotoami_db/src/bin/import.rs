@@ -63,11 +63,13 @@ fn import_cotos(
 ) -> Result<()> {
     let mut pendings: Vec<CotoJson> = Vec::new();
     for coto_json in coto_jsons {
-        // dependency: posted_in_id
+        // Dependency check: `posted_in_id`
         if let Some(posted_in_id) = coto_json.posted_in_id {
-            if !ds.contains_cotonoma(&posted_in_id)? {
+            if ds.contains_cotonoma(&posted_in_id)? {
+                // OK
+            } else {
                 if context.contains_cotonoma(&posted_in_id) {
-                    // put in the pending list until the cotonoma is imported
+                    // Put in the pending list until the cotonoma is imported
                     pendings.push(coto_json);
                 } else {
                     println!(
@@ -78,6 +80,25 @@ fn import_cotos(
                 continue;
             }
         }
+
+        // Dependency check: `repost_id`
+        if let Some(repost_id) = coto_json.repost_id {
+            if ds.contains_coto(&repost_id)? {
+                // OK
+            } else {
+                if context.contains_coto(&repost_id) {
+                    // Put in the pending list until the original coto is imported
+                    pendings.push(coto_json);
+                } else {
+                    println!(
+                        "Rejected: Repost ({}) of a missing coto: {repost_id}.",
+                        coto_json.id
+                    );
+                }
+                continue;
+            }
+        }
+
         import_coto(ds, coto_json, context)?;
     }
     if pendings.is_empty() {
