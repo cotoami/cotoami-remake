@@ -1,4 +1,6 @@
-use std::{env, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant};
+use std::{
+    collections::HashSet, env, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant,
+};
 
 use anyhow::{anyhow, Result};
 use chrono::naive::NaiveDateTime;
@@ -11,6 +13,7 @@ fn main() -> Result<()> {
     println!("elapsed {:?}.", start.elapsed());
     println!("{} cotos loaded.", json.cotos.len());
     println!("{} connections loaded.", json.connections.len());
+    println!("{} cotonomas found.", json.all_cotonoma_ids().len());
     Ok(())
 }
 
@@ -63,6 +66,13 @@ impl CotoamiExportJson {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
         Ok(serde_json::from_reader(reader)?)
+    }
+
+    fn all_cotonoma_ids(&self) -> HashSet<Id<Cotonoma>> {
+        self.cotos
+            .iter()
+            .filter_map(|coto| coto.cotonoma.as_ref().map(|cotonoma| cotonoma.id))
+            .collect()
     }
 }
 
