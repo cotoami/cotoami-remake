@@ -43,24 +43,42 @@ impl Config {
     }
 }
 
-fn import_cotos<'a>(
-    ds: DatabaseSession<'a>,
+fn import_cotos(
+    mut ds: DatabaseSession<'_>,
     cotos: Vec<CotoJson>,
     cotonoma_ids: HashSet<Id<Cotonoma>>,
     root_cotonoma_id: Id<Cotonoma>,
     local_node_id: Id<Node>,
 ) -> Result<()> {
-    let pendings: Vec<CotoJson> = Vec::new();
+    let mut pendings: Vec<CotoJson> = Vec::new();
     for coto in cotos {
         if let Some(posted_in_id) = coto.posted_in_id {
-            //
+            if ds.cotonoma(&posted_in_id)?.is_some() {
+                let coto = coto.into_coto(local_node_id)?;
+                let _ = ds.import_coto(&coto)?;
+            } else {
+                if cotonoma_ids.contains(&posted_in_id) {
+                    // put in the pending list until the cotonoma is imported
+                    pendings.push(coto);
+                } else {
+                    println!(
+                        "Warning: A coto ({}) is rejected due to the missing cotonoma: {posted_in_id}",
+                        coto.id
+                    );
+                }
+            }
         } else {
+            // A coto that doesn't belong to a cotonoma will be imported in the root cotonoma.
             let mut coto = coto.into_coto(local_node_id)?;
             coto.posted_in_id = Some(root_cotonoma_id);
-            //
+            let _ = ds.import_coto(&coto)?;
         }
     }
-    Ok(())
+    if pendings.is_empty() {
+        Ok(())
+    } else {
+        import_cotos(ds, pendings, cotonoma_ids, root_cotonoma_id, local_node_id)
+    }
 }
 
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
