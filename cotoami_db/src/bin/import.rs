@@ -2,9 +2,10 @@ use std::{
     collections::HashSet, env, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use chrono::naive::NaiveDateTime;
 use cotoami_db::prelude::*;
+use uuid::Uuid;
 
 fn main() -> Result<()> {
     let config = Config::new(env::args())?;
@@ -72,7 +73,7 @@ impl Config {
 #[derive(Debug)]
 struct Context {
     local_node_id: Id<Node>,
-    root_cotonoma_id: Id<Cotonoma>,
+    root_cotonoma: Cotonoma,
 
     coto_waitlist: HashSet<Id<Coto>>,
     cotonoma_waitlist: HashSet<Id<Cotonoma>>,
@@ -111,12 +112,15 @@ impl Context {
 }
 
 fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
+    let mut ds = db.new_session()?;
+
+    // Init a context
+    let Some((root_cotonoma, _)) = ds.root_cotonoma()? else {
+        bail!("The root cotonoma is required for import.")
+    };
     let mut context = Context {
         local_node_id: db.globals().local_node_id()?,
-        root_cotonoma_id: db
-            .globals()
-            .root_cotonoma_id()
-            .ok_or(anyhow!("The root cotonoma is required for import."))?,
+        root_cotonoma,
         coto_waitlist: json.all_coto_ids(),
         cotonoma_waitlist: json.all_cotonoma_ids(),
         rejected_cotos: 0,
@@ -129,21 +133,12 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
         json.connections.len()
     );
 
-    let mut ds = db.new_session()?;
+    // Import
     import_cotos(&mut ds, json.cotos, &mut context)?;
     import_connections(&mut ds, json.connections, &mut context)?;
     println!(
         "{} cotos and {} connections have been rejected.",
         context.rejected_cotos, context.rejected_connections
-    );
-
-    // Graph traversal test
-    let (_, root_coto) = ds.root_cotonoma()?.unwrap();
-    let graph = ds.graph(root_coto, false)?;
-    println!(
-        "Graph: {} cotos, {} links",
-        graph.count_cotos(),
-        graph.count_links()
     );
 
     Ok(())
@@ -213,7 +208,7 @@ fn import_coto(
         let mut coto = coto_json.into_coto(context.local_node_id)?;
         if coto.posted_in_id.is_none() {
             // A coto that doesn't belong to a cotonoma will be imported in the root cotonoma.
-            coto.posted_in_id = Some(context.root_cotonoma_id);
+            coto.posted_in_id = Some(context.root_cotonoma.uuid);
         }
 
         if let Some(cotonoma_json) = cotonoma_json {
@@ -233,12 +228,12 @@ fn import_connections(
 ) -> Result<()> {
     println!("Importing connections ...");
     for conn_json in connection_jsons {
-        if !ds.contains_coto(&conn_json.start)? {
-            context.reject_connection(
-                &conn_json,
-                &format!("start coto is missing: {}", conn_json.start),
-            );
-            continue;
+        if let Some(start_coto) = conn_json.start_as_coto() {
+            if !ds.contains_coto(&start_coto)? {
+                context
+                    .reject_connection(&conn_json, &format!("start coto is missing: {start_coto}"));
+                continue;
+            }
         }
         if !ds.contains_coto(&conn_json.end)? {
             context.reject_connection(
@@ -247,7 +242,7 @@ fn import_connections(
             );
             continue;
         }
-        let link = conn_json.into_link(context.local_node_id)?;
+        let link = conn_json.into_link(context.local_node_id, context.root_cotonoma.coto_id)?;
         let _ = ds.import_link(&link)?;
     }
     Ok(())
@@ -401,10 +396,15 @@ impl CotonomaJson {
 #[derive(Debug, serde::Deserialize)]
 #[allow(unused)]
 struct ConnectionJson {
-    start: Id<Coto>,
+    /// The `start` node could be a coto or an amishi.
+    ///
+    /// If the `start` is an amishi, this connection is one of the "root connections" of the
+    /// entire amishi's graph and which will be translated as a link from root cotonoma
+    /// during import.
+    start: Uuid,
     end: Id<Coto>,
 
-    created_by: String, // amishi_id
+    created_by: Uuid, // amishi_id
     created_in: Option<Id<Cotonoma>>,
 
     linking_phrase: Option<String>,
@@ -415,13 +415,32 @@ struct ConnectionJson {
 }
 
 impl ConnectionJson {
-    fn into_link(self, node_id: Id<Node>) -> Result<Link> {
+    /// Returns true if this connection is one of the root connections of the entire amishi's graph.
+    ///
+    /// Because only an amishi themself can create a connection from their amishi node,
+    /// it should be a root connection if `start` and `created_by` are the same value.
+    fn is_root(&self) -> bool { self.start == self.created_by }
+
+    fn start_as_coto(&self) -> Option<Id<Coto>> {
+        if self.is_root() {
+            None
+        } else {
+            Some(Id::new(self.start))
+        }
+    }
+
+    fn into_link(self, node_id: Id<Node>, root_coto_id: Id<Coto>) -> Result<Link> {
+        let source_coto_id = if let Some(start_coto_id) = self.start_as_coto() {
+            start_coto_id
+        } else {
+            root_coto_id
+        };
         Ok(Link {
             uuid: Id::generate(),
             node_id,
             created_in_id: self.created_in,
             created_by_id: node_id,
-            source_coto_id: self.start,
+            source_coto_id,
             target_coto_id: self.end,
             linking_phrase: self.linking_phrase,
             details: None,
@@ -557,6 +576,7 @@ mod tests {
     #[test]
     fn deserialize_connection_json() -> Result<()> {
         let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let root_coto_id: Id<Coto> = Id::from_str("00000000-0000-0000-0000-000000000002")?;
         let json = indoc! {r#"
             {
                 "start": "f05c0f03-8bb0-430e-a4d2-714c2922e0cd",
@@ -567,7 +587,7 @@ mod tests {
             }
         "#};
         let conn: ConnectionJson = serde_json::from_str(json)?;
-        let link = conn.into_link(node_id)?;
+        let link = conn.into_link(node_id, root_coto_id)?;
 
         assert_eq!(
             link.source_coto_id,
@@ -579,6 +599,31 @@ mod tests {
         );
         assert_eq!(link.order, 1);
         assert_eq!(link.linking_phrase, None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_connection_json2() -> Result<()> {
+        let node_id: Id<Node> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+        let root_coto_id: Id<Coto> = Id::from_str("00000000-0000-0000-0000-000000000002")?;
+        let json = indoc! {r#"
+            {
+                "start": "55111bd3-92e2-4b02-bc1a-15b74a945fd0",
+                "order": 8,
+                "end": "d1b71c83-9eca-41c2-96ae-ee63bc31696c",
+                "created_by": "55111bd3-92e2-4b02-bc1a-15b74a945fd0",
+                "created_at": 1576546971349
+            }
+        "#};
+        let conn: ConnectionJson = serde_json::from_str(json)?;
+        let link = conn.into_link(node_id, root_coto_id)?;
+
+        assert_eq!(
+            link.source_coto_id,
+            Id::from_str("00000000-0000-0000-0000-000000000002")?,
+            "The source coto should be the root coto."
+        );
 
         Ok(())
     }
