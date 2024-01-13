@@ -78,16 +78,46 @@ struct Context {
     coto_waitlist: HashSet<Id<Coto>>,
     cotonoma_waitlist: HashSet<Id<Cotonoma>>,
 
+    imported_cotos: i64,
+    imported_cotonomas: i64,
+    imported_connections: i64,
+
     rejected_cotos: i64,
     rejected_connections: i64,
 }
 
 impl Context {
+    fn new(
+        local_node_id: Id<Node>,
+        root_cotonoma: Cotonoma,
+        coto_waitlist: HashSet<Id<Coto>>,
+        cotonoma_waitlist: HashSet<Id<Cotonoma>>,
+    ) -> Self {
+        Self {
+            local_node_id,
+            root_cotonoma,
+            coto_waitlist,
+            cotonoma_waitlist,
+            imported_cotos: 0,
+            imported_cotonomas: 0,
+            imported_connections: 0,
+            rejected_cotos: 0,
+            rejected_connections: 0,
+        }
+    }
+
     fn has_coto_in_waitlist(&self, id: &Id<Coto>) -> bool { self.coto_waitlist.contains(id) }
 
     fn has_cotonoma_in_waitlist(&self, id: &Id<Cotonoma>) -> bool {
         self.cotonoma_waitlist.contains(id)
     }
+
+    fn on_coto_imported(&mut self) { self.imported_cotos += 1; }
+    fn on_coto_cotonoma_imported(&mut self) {
+        self.imported_cotos += 1;
+        self.imported_cotonomas += 1;
+    }
+    fn on_connection_imported(&mut self) { self.imported_connections += 1; }
 
     fn remove_from_waitlist(&mut self, coto_json: &CotoJson) {
         self.coto_waitlist.remove(&coto_json.id);
@@ -118,14 +148,12 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let Some((root_cotonoma, _)) = ds.root_cotonoma()? else {
         bail!("The root cotonoma is required for import.")
     };
-    let mut context = Context {
-        local_node_id: db.globals().local_node_id()?,
+    let mut context = Context::new(
+        db.globals().local_node_id()?,
         root_cotonoma,
-        coto_waitlist: json.all_coto_ids(),
-        cotonoma_waitlist: json.all_cotonoma_ids(),
-        rejected_cotos: 0,
-        rejected_connections: 0,
-    };
+        json.all_coto_ids(),
+        json.all_cotonoma_ids(),
+    );
     println!(
         "Importing {} cotos, {} cotonomas and {} connections ...",
         context.coto_waitlist.len(),
@@ -136,8 +164,13 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     // Import
     import_cotos(&mut ds, json.cotos, &mut context)?;
     import_connections(&mut ds, json.connections, &mut context)?;
+
     println!(
-        "{} cotos and {} connections have been rejected.",
+        "Imported {} cotos, {} cotonomas and {} connections.",
+        context.imported_cotos, context.imported_cotonomas, context.imported_connections
+    );
+    println!(
+        "Rejected {} cotos and {} connections.",
         context.rejected_cotos, context.rejected_connections
     );
 
@@ -214,8 +247,10 @@ fn import_coto(
         if let Some(cotonoma_json) = cotonoma_json {
             let cotonoma = cotonoma_json.into_cotonoma(context.local_node_id, coto.uuid)?;
             let _ = ds.import_cotonoma(&coto, &cotonoma)?;
+            context.on_coto_cotonoma_imported();
         } else {
             let _ = ds.import_coto(&coto)?;
+            context.on_coto_imported();
         }
     }
     Ok(())
@@ -244,6 +279,7 @@ fn import_connections(
         }
         let link = conn_json.into_link(context.local_node_id, context.root_cotonoma.coto_id)?;
         let _ = ds.import_link(&link)?;
+        context.on_connection_imported();
     }
     Ok(())
 }
