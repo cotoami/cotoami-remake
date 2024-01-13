@@ -24,7 +24,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto2
     /////////////////////////////////////////////////////////////////////////////
 
-    let (link1, changelog1) = ds.create_link(
+    let (link1, changelog1) = ds.connect(
         &coto1.uuid,
         &coto2.uuid,
         Some("hello"),
@@ -85,7 +85,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto3
     /////////////////////////////////////////////////////////////////////////////
 
-    let (link2, _) = ds.create_link(
+    let (link2, _) = ds.connect(
         &coto1.uuid,
         &coto3.uuid,
         Some("bye"),
@@ -127,7 +127,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto4 with order number 1
     /////////////////////////////////////////////////////////////////////////////
 
-    let (link3, _) = ds.create_link(
+    let (link3, _) = ds.connect(
         &coto1.uuid,
         &coto4.uuid,
         None,

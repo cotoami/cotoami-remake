@@ -43,6 +43,7 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(coto.updated_at());
 
     // check if it is stored in the db
+    assert!(ds.contains_coto(&coto.uuid)?);
     assert_eq!(ds.coto(&coto.uuid)?, Some(coto.clone()));
 
     // check if `recent_cotos` contains it
@@ -125,6 +126,7 @@ fn crud_operations() -> Result<()> {
     let changelog4 = ds.delete_coto(&coto.uuid, &operator)?;
 
     // check if it is deleted from the db
+    assert!(!ds.contains_coto(&coto.uuid)?);
     assert_eq!(ds.coto(&coto.uuid)?, None);
     let all_cotos = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(all_cotos.rows.len(), 0);

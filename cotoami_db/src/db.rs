@@ -202,6 +202,8 @@ impl Globals {
         self.ensure_local(entity).is_ok()
     }
 
+    pub fn root_cotonoma_id(&self) -> Option<Id<Cotonoma>> { *self.root_cotonoma_id.read() }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 
     fn cache_parent_node(&self, parent: ParentNode) {
@@ -716,6 +718,10 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(coto_ops::get(id))
     }
 
+    pub fn contains_coto(&mut self, id: &Id<Coto>) -> Result<bool> {
+        self.read_transaction(coto_ops::contains(id))
+    }
+
     pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { self.read_transaction(coto_ops::all()) }
 
     pub fn recent_cotos(
@@ -739,7 +745,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Posts a coto in the specified cotonoma.
     ///
-    /// The target cotonoma has to belong to the local node,
+    /// The target cotonoma (`posted_in`) has to belong to the local node,
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
         &self,
@@ -749,7 +755,6 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.globals.ensure_local(posted_in)?;
-
         let local_node_id = self.globals.local_node_id()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
@@ -759,8 +764,17 @@ impl<'a> DatabaseSession<'a> {
             content,
             summary,
         )?;
+        self.create_coto(&new_coto)
+    }
+
+    pub fn import_coto(&self, coto: &Coto) -> Result<(Coto, ChangelogEntry)> {
+        self.create_coto(&coto.to_import())
+    }
+
+    fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
+            let inserted_coto = coto_ops::insert(new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok((inserted_coto, changelog))
@@ -828,6 +842,10 @@ impl<'a> DatabaseSession<'a> {
             .map_err(anyhow::Error::from)
     }
 
+    pub fn contains_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<bool> {
+        self.read_transaction(cotonoma_ops::contains(id))
+    }
+
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
         self.read_transaction(cotonoma_ops::all())
     }
@@ -861,6 +879,23 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn import_cotonoma(
+        &self,
+        coto: &Coto,
+        cotonoma: &Cotonoma,
+    ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
+        assert_eq!(coto.uuid, cotonoma.coto_id);
+
+        let local_node_id = self.globals.local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let coto = coto_ops::insert(&coto.to_import()).run(ctx)?;
+            let cotonoma = cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
+            let change = Change::CreateCotonoma(cotonoma.clone(), coto.clone());
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok(((cotonoma, coto), changelog))
+        })
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // links
     /////////////////////////////////////////////////////////////////////////////
@@ -884,8 +919,8 @@ impl<'a> DatabaseSession<'a> {
         ))
     }
 
-    pub fn create_link(
-        &mut self,
+    pub fn connect(
+        &self,
         source_coto_id: &Id<Coto>,
         target_coto_id: &Id<Coto>,
         linking_phrase: Option<&str>,
@@ -912,6 +947,15 @@ impl<'a> DatabaseSession<'a> {
             details,
             order,
         )?;
+        self.create_link(new_link)
+    }
+
+    pub fn import_link(&self, link: &Link) -> Result<(Link, ChangelogEntry)> {
+        self.create_link(link.to_import())
+    }
+
+    fn create_link(&self, new_link: NewLink) -> Result<(Link, ChangelogEntry)> {
+        let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let inserted_link = link_ops::insert(new_link).run(ctx)?;
             let change = Change::CreateLink(inserted_link.clone());
@@ -985,7 +1029,7 @@ impl<'a> DatabaseSession<'a> {
             };
 
         // Create a link between the two.
-        let (link, change) = self.create_link(
+        let (link, change) = self.connect(
             &local_root_coto.uuid,
             &parent_root_coto.uuid,
             None,

@@ -38,6 +38,16 @@ pub(crate) fn get_or_err<Conn: AsReadableConn>(
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
+pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
+    read_op(move |conn| {
+        let count: i64 = cotonomas::table
+            .select(diesel::dsl::count_star())
+            .filter(cotonomas::uuid.eq(id))
+            .first(conn)?;
+        Ok(count > 0)
+    })
+}
+
 pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
     read_op(move |conn| {
         cotonomas::table
