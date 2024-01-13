@@ -1,3 +1,13 @@
+//! A CLI tool to import an original Cotoami's JSON dump.
+//!
+//! The export feature in the original Cotoami is implemented as:
+//! <https://github.com/cotoami/cotoami/blob/develop/lib/cotoami_web/controllers/database_controller.ex#L12>
+//!
+//! How to use this tool via cargo:
+//! ```shell
+//! $ cargo run --bin import /path/to/cotoami-export.json /path/to/db-dir "New node name"
+//! ```
+
 use std::{
     collections::HashSet, env, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant,
 };
