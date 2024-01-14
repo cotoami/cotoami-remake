@@ -1004,7 +1004,7 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn create_link_to_parent_root(
+    pub fn pin_parent_root(
         &mut self,
         parent_id: &Id<Node>,
     ) -> Result<Option<(Link, Cotonoma, ChangelogEntry)>> {
@@ -1013,9 +1013,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // Local root cotonoma
-        let local_root_coto = if let Some((_, coto)) = self.root_cotonoma()? {
-            coto
-        } else {
+        let Some((_, local_root_coto)) = self.root_cotonoma()? else {
             return Ok(None);
         };
 

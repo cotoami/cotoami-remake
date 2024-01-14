@@ -27,7 +27,7 @@ impl NodeState {
                         // Create a link to the parent cotonoma after the first import.
                         if import_from == 1 {
                             debug!("The first import has been completed.");
-                            if let Err(e) = this.create_link_to_parent_root(parent_id).await {
+                            if let Err(e) = this.pin_parent_root(parent_id).await {
                                 error!("Error creating a link: {e:?}");
                             }
                         }
@@ -44,14 +44,12 @@ impl NodeState {
         });
     }
 
-    async fn create_link_to_parent_root(&self, parent_id: Id<Node>) -> Result<()> {
+    async fn pin_parent_root(&self, parent_id: Id<Node>) -> Result<()> {
         let db = self.db().clone();
         let change_pubsub = self.pubsub().local_changes().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            if let Some((link, parent_cotonoma, change)) =
-                ds.create_link_to_parent_root(&parent_id)?
-            {
+            if let Some((link, parent_cotonoma, change)) = ds.pin_parent_root(&parent_id)? {
                 change_pubsub.publish(change, None);
                 info!(
                     "A link to the parent cotonoma [{}] has been created: {}",
