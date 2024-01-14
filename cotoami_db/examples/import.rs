@@ -9,19 +9,20 @@
 //! ```
 
 use std::{
-    collections::HashSet, env, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant,
+    collections::HashSet, fmt::Display, fs, fs::File, io::BufReader, path::Path, time::Instant,
 };
 
 use anyhow::{anyhow, bail, Result};
 use chrono::naive::NaiveDateTime;
+use clap::Parser;
 use cotoami_db::prelude::*;
 use uuid::Uuid;
 
 fn main() -> Result<()> {
-    let config = Config::new(env::args())?;
+    let args = Args::parse();
 
-    let db = config.db()?;
-    let json = config.load_json()?;
+    let db = args.db()?;
+    let json = args.load_json()?;
 
     let start = Instant::now();
     import(db, json)?;
@@ -30,34 +31,16 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-struct Config {
+#[derive(Parser, Debug)]
+#[command(author, version)]
+#[command(about = "Import an original Cotoami's JSON dump.", long_about = None)]
+struct Args {
     json_file: String,
     db_dir: String,
     new_node_name: Option<String>,
 }
 
-impl Config {
-    const USAGE: &'static str = "Usage: import <JSON file> <database dir> (<new node name>)";
-
-    fn new(mut args: env::Args) -> Result<Config> {
-        args.next(); // skip the first arg (the name of the program)
-
-        let json_file = args
-            .next()
-            .ok_or(anyhow!("Please specify a JSON file. \n{}", Self::USAGE))?;
-        let db_dir = args.next().ok_or(anyhow!(
-            "Please specify a database directory. \n{}",
-            Self::USAGE
-        ))?;
-        let new_node_name = args.next();
-
-        Ok(Config {
-            json_file,
-            db_dir,
-            new_node_name,
-        })
-    }
-
+impl Args {
     fn load_json(&self) -> Result<CotoamiExportJson> { CotoamiExportJson::load(&self.json_file) }
 
     fn db(&self) -> Result<Database> {
@@ -69,8 +52,7 @@ impl Config {
         // Create a local node with the given name if it doesn't exist yet.
         if !db.globals().has_local_node_initialized() {
             let node_name = self.new_node_name.as_deref().ok_or(anyhow!(
-                "Please specify a new node name to create a new database. \n{}",
-                Self::USAGE
+                "Please specify a [NEW_NODE_NAME] to create a new database."
             ))?;
             println!("Creating a local node [{node_name}] ...");
             let _ = db.new_session()?.init_as_node(Some(node_name), None)?;
