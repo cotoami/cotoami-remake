@@ -35,8 +35,13 @@ pub(super) fn routes() -> Router<NodeState> {
 
 fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
     let expiration = Expiration::DateTime(
-        OffsetDateTime::from_unix_timestamp_nanos(session.expires_at.timestamp_nanos() as i128)
-            .unwrap(), // out of range error should NOT happen
+        OffsetDateTime::from_unix_timestamp_nanos(
+            session
+                .expires_at
+                .timestamp_nanos_opt()
+                .unwrap_or_else(|| unreachable!()) as i128,
+        )
+        .unwrap_or_else(|_| unreachable!()),
     );
     Cookie::build(super::SESSION_COOKIE_NAME, session.token.clone())
         .secure(true)

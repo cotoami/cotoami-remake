@@ -8,30 +8,30 @@ version.workspace = true
 
 [dependencies]
 aes-gcm = {version = "0.10.3", features = ["std"]}
-anyhow = "1.0"
+anyhow.workspace = true
 argon2 = {version = "0.5.0", features = ["std"]}
 base64 = "0.21.2"
-bytes = {version = "1", features = ["serde"]}
-chrono = {version = "0.4.23", features = ["serde"]}
-derive-new = "0.5"
-derive_more = {version = "=1.0.0-beta.6", features = ["debug", "display"]}
+bytes.workspace = true
+chrono.workspace = true
+derive-new.workspace = true
+derive_more.workspace = true
 dotenvy = "0.15"
 generic-array = "0.14.7"
 identicon-rs = "4.0.1"
 indoc = "2"
-once_cell = "1.18.0"
-parking_lot = "0.12.1"
+once_cell.workspace = true
+parking_lot.workspace = true
 petgraph = "0.6.4"
-rand = "0.8.5"
-regex = "1.10.2"
-rmp-serde = "1.1.2"
-serde = {version = "1.0", features = ["derive"]}
-serde_json = "1.0"
-thiserror = "1.0.50"
-tracing = "0.1"
-url = "2.3.1"
-uuid = {version = "1.3.2", features = ["v4", "serde"]}
-validator = {version = "0.16.1", features = ["derive"]}
+rand.workspace = true
+regex.workspace = true
+rmp-serde.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+url.workspace = true
+uuid.workspace = true
+validator.workspace = true
 
 # Add support for RETURNING expressions for Sqlite via the returning_clauses_for_sqlite_3_35 feature
 diesel = {version = "2.1.4", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"]}
@@ -45,6 +45,6 @@ libsqlite3-sys = {version = "0.27.0", features = ["bundled"]}
 
 [dev-dependencies]
 assert_matches = "1.5.0"
-clap = {version = "4.4.16", features = ["derive"]}
+clap.workspace = true
 image = "0.24.6"
 tempfile = "3"
