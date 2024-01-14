@@ -5,7 +5,7 @@
 //!
 //! How to use this tool via cargo:
 //! ```shell
-//! $ cargo run --bin import /path/to/cotoami-export.json /path/to/db-dir "New node name"
+//! $ cargo run --example import /path/to/cotoami-export.json /path/to/db-dir "New node name"
 //! ```
 
 use std::{
