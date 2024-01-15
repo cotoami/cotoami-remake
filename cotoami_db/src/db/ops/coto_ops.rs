@@ -169,7 +169,7 @@ pub(crate) fn full_text_search<Conn: AsReadableConn>(
                         outgoing_links,
                     ))
                     .filter(whole_row.eq(query))
-                    .order((rank.asc(), rowid.asc()))
+                    .order((is_cotonoma.desc(), rank.asc(), rowid.asc()))
             })
         } else {
             use crate::schema::cotos_fts::dsl::*;
@@ -191,7 +191,7 @@ pub(crate) fn full_text_search<Conn: AsReadableConn>(
                         outgoing_links,
                     ))
                     .filter(whole_row.eq(query))
-                    .order((rank.asc(), rowid.asc()))
+                    .order((is_cotonoma.desc(), rank.asc(), rowid.asc()))
             })
         }
     })
