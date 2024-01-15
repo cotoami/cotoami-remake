@@ -1,5 +1,13 @@
 # Tauri
 
+## Update Tauri CLI
+
+```shell
+$ cargo install tauri-cli
+...
+Replaced package `tauri-cli v1.2.3` with `tauri-cli v1.5.9` (executable `cargo-tauri`)
+```
+
 ## Run in development mode
 
 1. Run [Cotoami UI](../ui/README.md) in development mode
