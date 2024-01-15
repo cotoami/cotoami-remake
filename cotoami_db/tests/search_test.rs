@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cotoami_db::prelude::{Coto, DatabaseSession};
 
 pub mod common;
 
@@ -16,65 +17,45 @@ fn search_cotos() -> Result<()> {
     let (coto3, _) = ds.post_coto("柿くへば鐘が鳴るなり法隆寺", None, &root, &opr)?;
 
     // then
-    assert_eq!(
-        ds.search_cotos("hello")?.iter().collect::<Vec<_>>(),
-        vec![&coto1]
-    );
-    assert_eq!(
-        ds.search_cotos("world")?.iter().collect::<Vec<_>>(),
-        vec![&coto1, &coto2]
-    );
-    assert_eq!(
-        ds.search_cotos("法隆寺")?.iter().collect::<Vec<_>>(),
-        vec![&coto3]
-    );
-    assert_eq!(
-        ds.search_cotos("summary")?.iter().collect::<Vec<_>>(),
-        vec![&coto2]
-    );
-    assert_eq!(
-        ds.search_cotos("small OR world")?
-            .iter()
-            .collect::<Vec<_>>(),
-        vec![&coto2, &coto1]
-    );
-    assert_eq!(
-        ds.search_cotos("small AND world")?
-            .iter()
-            .collect::<Vec<_>>(),
-        vec![&coto2]
-    );
+    assert_search(&mut ds, "hello", vec![&coto1])?;
+    assert_search(&mut ds, "world", vec![&coto1, &coto2])?;
+    assert_search(&mut ds, "法隆寺", vec![&coto3])?;
+    assert_search(&mut ds, "summary", vec![&coto2])?;
+    assert_search(&mut ds, "small OR world", vec![&coto2, &coto1])?;
+    assert_search(&mut ds, "small AND world", vec![&coto2])?;
 
     // when: edit a coto to change English results
     // (testing the trigger: `cotos_fts_update`)
     let (coto2, _) = ds.edit_coto(&coto2.uuid, "No Promises to Keep", None, &opr)?;
-    assert_eq!(
-        ds.search_cotos("world")?.iter().collect::<Vec<_>>(),
-        vec![&coto1]
-    );
-    assert_eq!(
-        ds.search_cotos("promise")?.iter().collect::<Vec<_>>(),
-        vec![&coto2]
-    );
+    assert_search(&mut ds, "world", vec![&coto1])?;
+    assert_search(&mut ds, "promise", vec![&coto2])?;
 
     // when: edit a coto to change CJK results
     // (testing the trigger: `cotos_fts_update`)
     let (coto3, _) = ds.edit_coto(&coto3.uuid, "色即是空空即是色", None, &opr)?;
-    assert_eq!(ds.search_cotos("法隆寺")?, vec![]);
-    assert_eq!(
-        ds.search_cotos("色即是空")?.iter().collect::<Vec<_>>(),
-        vec![&coto3]
-    );
+    assert_search(&mut ds, "法隆寺", vec![])?;
+    assert_search(&mut ds, "色即是空", vec![&coto3])?;
 
     // when: delete a coto in English
     // (testing the trigger: `cotos_fts_delete`)
     let _ = ds.delete_coto(&coto1.uuid, &opr)?;
-    assert_eq!(ds.search_cotos("hello")?, vec![]);
+    assert_search(&mut ds, "hello", vec![])?;
 
     // when: delete a coto in CJK
     // (testing the trigger: `cotos_fts_delete`)
     let _ = ds.delete_coto(&coto3.uuid, &opr)?;
-    assert_eq!(ds.search_cotos("色即是空")?, vec![]);
+    assert_search(&mut ds, "色即是空", vec![])?;
 
+    Ok(())
+}
+
+fn assert_search(ds: &mut DatabaseSession<'_>, query: &str, expect: Vec<&Coto>) -> Result<()> {
+    assert_eq!(
+        ds.search_cotos(query, 10, 0)?
+            .rows
+            .iter()
+            .collect::<Vec<_>>(),
+        expect
+    );
     Ok(())
 }

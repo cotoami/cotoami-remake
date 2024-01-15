@@ -739,8 +739,13 @@ impl<'a> DatabaseSession<'a> {
         ))
     }
 
-    pub fn search_cotos(&mut self, query: &str) -> Result<Vec<Coto>> {
-        self.read_transaction(coto_ops::full_text_search(query))
+    pub fn search_cotos(
+        &mut self,
+        query: &str,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Coto>> {
+        self.read_transaction(coto_ops::full_text_search(query, page_size, page_index))
     }
 
     /// Posts a coto in the specified cotonoma.

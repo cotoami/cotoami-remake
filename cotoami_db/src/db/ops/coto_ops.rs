@@ -145,52 +145,54 @@ pub(crate) fn update_number_of_outgoing_links(
 
 pub(crate) fn full_text_search<Conn: AsReadableConn>(
     query: &str,
-) -> impl Operation<Conn, Vec<Coto>> + '_ {
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<Coto>> + '_ {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
             use crate::schema::cotos_fts_trigram::dsl::*;
-            cotos_fts_trigram
-                .select((
-                    uuid,
-                    rowid,
-                    node_id,
-                    posted_in_id,
-                    posted_by_id,
-                    content,
-                    summary,
-                    is_cotonoma,
-                    repost_of_id,
-                    reposted_in_ids,
-                    created_at,
-                    updated_at,
-                    outgoing_links,
-                ))
-                .filter(whole_row.eq(query))
-                .order((rank.asc(), rowid.asc()))
-                .load::<Coto>(conn)
-                .map_err(anyhow::Error::from)
+            super::paginate(conn, page_size, page_index, || {
+                cotos_fts_trigram
+                    .select((
+                        uuid,
+                        rowid,
+                        node_id,
+                        posted_in_id,
+                        posted_by_id,
+                        content,
+                        summary,
+                        is_cotonoma,
+                        repost_of_id,
+                        reposted_in_ids,
+                        created_at,
+                        updated_at,
+                        outgoing_links,
+                    ))
+                    .filter(whole_row.eq(query))
+                    .order((rank.asc(), rowid.asc()))
+            })
         } else {
             use crate::schema::cotos_fts::dsl::*;
-            cotos_fts
-                .select((
-                    uuid,
-                    rowid,
-                    node_id,
-                    posted_in_id,
-                    posted_by_id,
-                    content,
-                    summary,
-                    is_cotonoma,
-                    repost_of_id,
-                    reposted_in_ids,
-                    created_at,
-                    updated_at,
-                    outgoing_links,
-                ))
-                .filter(whole_row.eq(query))
-                .order((rank.asc(), rowid.asc()))
-                .load::<Coto>(conn)
-                .map_err(anyhow::Error::from)
+            super::paginate(conn, page_size, page_index, || {
+                cotos_fts
+                    .select((
+                        uuid,
+                        rowid,
+                        node_id,
+                        posted_in_id,
+                        posted_by_id,
+                        content,
+                        summary,
+                        is_cotonoma,
+                        repost_of_id,
+                        reposted_in_ids,
+                        created_at,
+                        updated_at,
+                        outgoing_links,
+                    ))
+                    .filter(whole_row.eq(query))
+                    .order((rank.asc(), rowid.asc()))
+            })
         }
     })
 }
