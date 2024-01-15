@@ -2,7 +2,7 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 
 ThisBuild / scalaVersion := "2.13.10"
 
-val circeVersion = "0.14.5"
+val circeVersion = "0.14.6"
 val slinkyVersion = "0.7.4"
 
 lazy val cotoami = project
