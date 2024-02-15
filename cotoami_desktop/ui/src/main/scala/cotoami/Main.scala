@@ -53,13 +53,26 @@ object Main {
           img(
             className := "app-icon",
             alt := "Cotoami",
-            src := "/images/logo/logomark.svg",
-            aria - "label" := "View app info"
+            src := "/images/logo/logomark.svg"
           )
         )
       ),
-      div(id := "app-body", className := "body"),
+      div(id := "app-body", className := "body")(
+        nav(className := "nodes pane", aria - "label" := "Nodes")(
+          paneToggle()
+        )
+      ),
       footer()
+    )
+
+  def paneToggle(): ReactElement =
+    Fragment(
+      button(className := "fold icon", title := "Fold")(
+        span(className := "material-symbols")("arrow_left")
+      ),
+      button(className := "unfold icon", title := "Unfold")(
+        span(className := "material-symbols")("arrow_right")
+      )
     )
 
   def main(args: Array[String]): Unit = {
