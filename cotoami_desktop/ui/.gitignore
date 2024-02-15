@@ -8,7 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist directory is needed for CI
+# dist
 dist-ssr
 *.local
 
