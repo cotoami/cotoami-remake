@@ -1,0 +1,77 @@
+section.traversals {
+  display: flex;
+  flex-direction: row;
+
+  section.traversal {
+    flex: 1;
+    max-width: var(--max-article-width);
+    min-width: 500px;
+    background-color: var(--traversal-background-color);
+
+    header.tools {
+      // place the close button to the left because the right side could be hidden when overflowing
+      flex-direction: row;
+    }
+
+    section.body {
+      padding: 10px;
+      padding-top: 40px;
+      padding-bottom: 60px;
+      overflow-y: auto;
+    }
+
+    div.arrow {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+      opacity: .4;
+
+      span.material-symbols {
+        font-size: 24px;
+      }
+    }
+
+    div.parents {
+      opacity: .6;
+
+      li {
+        background-color: var(--background-color);
+
+        a.parent {
+          display: block;
+          margin-bottom: 4px;
+          padding: 6px 12px;
+          color: var(--h6-color);
+
+          &:hover {
+            background-color: var(--hover-background-color);
+            text-decoration: none;
+          }
+        }
+      }
+    }
+
+    article {
+      &.traversed {
+        border: 2px dashed var(--traversed-border-color);
+
+        .body {
+          opacity: .5;
+        }
+      }
+
+      &.sub-coto .body {
+        display: flex;
+        flex-direction: row;
+
+        button.traverse {
+          flex: 0 0 30px;
+
+          span.material-symbols {
+            font-size: 20px;
+          }
+        }
+      }
+    }
+  }
+}

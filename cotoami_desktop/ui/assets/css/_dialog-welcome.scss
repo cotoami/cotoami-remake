@@ -1,0 +1,70 @@
+dialog.welcome {
+  article {
+    max-width: 800px;
+  }
+
+  header {
+    line-height: 34px;
+
+    img.app-icon {
+      width: 30px;
+      height: 30px;
+      margin-right: 5px;
+      vertical-align: top;
+    }
+  }
+
+  div.body {
+    display: flex;
+    flex-direction: row;
+
+    section.recent-databases {
+      // display: none;
+      margin-right: 16px;
+      max-width: 20rem;
+    }
+
+    div.body-main {
+      width: 25rem;
+    }
+  }
+
+  div.buttons {
+    text-align: right;
+
+    button {
+      display: inline-block;
+    }
+  }
+
+  section.recent-databases {
+    h2 {
+      margin-bottom: 5px;
+    }
+
+    a.database {
+      display: block;
+      margin: 0;
+      padding: 10px;
+      color: var(--h3-color);
+
+      &:hover {
+        background-color: var(--hover-background-color);
+        text-decoration: none;
+      }
+
+      img.node-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        vertical-align: text-top;
+        margin-right: 2px;
+      }
+
+      section.database-path {
+        font-size: 0.8rem;
+        opacity: .5;
+      }
+    }
+  }
+}

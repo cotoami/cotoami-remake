@@ -1,0 +1,295 @@
+@use "./pico-customized" with ($enable-responsive-typography: false);
+
+@use "./color";
+
+@use "./app";
+@use "./header";
+@use "./nav-nodes";
+@use "./nav-cotonomas";
+@use "./main";
+@use "./flow";
+@use "./stock";
+
+@use "./coto-input";
+@use "./pinned";
+@use "./map";
+@use "./traversals";
+
+@use "./dialog-welcome";
+
+:root {
+  --header-height: 36px;
+  --footer-height: 25px;
+  --max-text-content-width: 45rem;
+  --max-article-width: calc(var(--max-text-content-width) + var(--block-spacing-horizontal));
+}
+
+//
+// Material Symbols
+// https://developers.google.com/fonts/docs/material_symbols?hl=en#self-hosting_the_font
+//
+
+@font-face {
+  font-family: 'Material Symbols';
+  font-style: normal;
+  src: url(/material-symbols.woff2) format('woff2');
+}
+
+.material-symbols {
+  font-family: 'Material Symbols';
+  font-weight: normal;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+//
+// Default styles
+//
+
+html {
+  height: 100%;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+
+  li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+section {
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  position: relative;
+  margin: 0;
+  padding: 6px 16px;
+  width: auto;
+}
+
+a {
+  cursor: pointer;
+}
+
+dialog {
+  article {
+    header {
+      margin-bottom: 0;
+      padding: 20px;
+
+      h1 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+      }
+    }
+
+    section {
+      h2 {
+        margin-top: 20px;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        border-bottom: 2px dotted var(--pane-border-color);
+      }
+    }
+  }
+}
+
+//
+// Shared
+//
+
+.header-and-body {
+  display: flex;
+  flex-direction: column;
+
+  >header {
+    flex-grow: 0; // do not grow
+    flex-shrink: 0; // do not shrink
+    flex-basis: auto; // height should be set in each header style
+  }
+
+  >.body {
+    flex: 1;
+    min-height: 0; // let this item shrink below the content size
+  }
+}
+
+button.icon {
+  // unset the pico styles
+  all: unset;
+
+  position: relative;
+  cursor: pointer;
+}
+
+.pane {
+  position: relative;
+
+  >button.fold,
+  >button.unfold {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 20px;
+    height: 25px;
+
+    cursor: pointer;
+    opacity: .5;
+
+    // ensure to place this button in front of everything
+    z-index: 100;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    span.material-symbols {
+      position: absolute;
+      top: -6px;
+      right: -3px;
+      font-size: 22px; // use px here to fix the icon size
+    }
+  }
+
+  >button.unfold {
+    display: none;
+  }
+
+  &.folded {
+    flex: 0 0 16px !important;
+
+    *:nth-child(n+3) {
+      display: none !important;
+    }
+
+    >button.fold {
+      display: none !important;
+    }
+
+    >button.unfold {
+      display: block;
+    }
+  }
+}
+
+header.tools {
+  display: flex;
+  flex-direction: row-reverse;
+  padding-right: 20px;
+
+  button {
+    position: relative;
+    display: inline-block;
+    padding: 4px 10px;
+    z-index: 10;
+
+    span.material-symbols {
+      font-size: 20px; // use px here to fix the icon size
+    }
+  }
+}
+
+article.coto {
+  // reset Pico's style
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+
+  padding-left: 8px;
+  padding-bottom: 1rem;
+
+  &.has-children {
+    font-weight: 650;
+    border-bottom: 2px dotted var(--pane-border-color);
+  }
+
+  &:hover {
+    background-color: var(--hover-background-color);
+  }
+
+  >header {
+    margin: 0;
+    padding: 0;
+    border-style: none;
+    background-color: inherit;
+
+    min-height: 1rem; // empty header serves as padding-top of article.coto
+
+    ul.other-cotonomas {
+      margin-bottom: 5px;
+      padding: 0 var(--block-spacing-horizontal);
+      text-align: right;
+
+      li {
+        display: inline;
+
+        a.also-posted-in {
+          margin-left: 5px;
+          font-size: 0.8rem;
+          color: var(--muted-color);
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  section.text-content {
+    padding: 0 var(--block-spacing-horizontal);
+  }
+
+  section.image-content {
+    padding-left: var(--block-spacing-horizontal);
+
+    &.with-text {
+      margin-bottom: 8px; // fixed margin to the image
+    }
+  }
+}
+
+article.sub-coto {
+  button.unlink {
+    margin-top: 3px;
+  }
+}
+
+div.text-input-with-button {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: var(--spacing);
+
+  input {
+    margin: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  button {
+    margin: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+
+    span.material-symbols {
+      font-size: 20px;
+    }
+  }
+}

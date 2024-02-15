@@ -1,0 +1,25 @@
+section.map {
+  position: relative;
+
+  button {
+    border-radius: 0;
+  }
+
+  button.fold {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+
+    width: 30px;
+    height: 30px;
+
+    // ensure to place this button in front of everything
+    z-index: 100;
+
+    span.material-symbols {
+      font-size: 26px;
+      color: black;
+      opacity: .8;
+    }
+  }
+}

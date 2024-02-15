@@ -1,0 +1,36 @@
+section.stock {
+  display: flex;
+  flex-direction: row;
+
+  section.coto-catalog {
+    flex: 1;
+    min-width: 0; // let this item shrink below the content size
+
+    display: flex;
+    flex-direction: column;
+
+    section.map {
+      // display: none;
+      flex: 0 0 400px;
+      border-bottom: 1px solid var(--pane-border-color);
+    }
+
+    section.pinned {
+      flex: 1;
+      min-height: 0; // let this item shrink below the content size
+    }
+  }
+
+  &.with-traversals-opened {
+    overflow-x: auto;
+
+    section.coto-catalog {
+      min-width: 600px;
+    }
+  }
+
+  section.traversals {
+    // display: none;
+    border-left: 1px solid var(--pane-border-color);
+  }
+}

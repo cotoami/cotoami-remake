@@ -1,0 +1,65 @@
+section.pinned {
+  header.tools button {
+    span.material-symbols {
+      opacity: .5;
+    }
+
+    &.selected {
+      cursor: initial;
+      border-bottom: 1px solid var(--selected-border-color);
+
+      span.material-symbols {
+        opacity: 1;
+      }
+    }
+  }
+
+  ol.pinned-cotos {
+    >li {
+      margin-right: auto;
+      margin-left: auto;
+      max-width: var(--max-article-width);
+    }
+
+    article.pinned-coto {
+      position: relative;
+
+      // position the unpin button at the vertical middle of the left end.
+      button.unpin {
+        position: absolute;
+        top: 0;
+        left: 8px;
+        bottom: 0;
+      }
+    }
+
+    &.document-view {
+      overflow-y: auto;
+
+      >li {
+        margin-bottom: 2rem;
+      }
+    }
+
+    &.column-view {
+      display: flex;
+      flex-direction: row;
+
+      padding-left: 16px;
+      padding-right: 16px;
+      overflow-x: auto;
+
+      >li {
+        flex: 1;
+        min-width: 400px;
+
+        display: flex;
+        flex-direction: column;
+
+        ol.sub-cotos {
+          overflow-y: auto;
+        }
+      }
+    }
+  }
+}

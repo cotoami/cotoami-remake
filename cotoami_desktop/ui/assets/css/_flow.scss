@@ -1,0 +1,55 @@
+section.flow {
+  display: flex;
+  flex-direction: column;
+
+  section.timeline {
+    flex: 1;
+    min-height: 0; // let this item shrink below the content size
+
+    .posts {
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding-bottom: 3rem;
+    }
+
+    article {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--pane-border-color);
+
+      address.author {
+        padding: 0 var(--block-spacing-horizontal);
+        color: var(--muted-color);
+        font-weight: 700;
+
+        img.node-icon {
+          width: 26px;
+          height: 26px;
+          border-radius: 4px;
+          margin-right: 3px;
+        }
+      }
+
+      section.text-content {
+        max-width: var(--max-text-content-width);
+        padding: 0 var(--block-spacing-horizontal);
+      }
+
+      section.image-content {
+        padding-left: 0; // fit to the left border
+      }
+
+      footer {
+        background: inherit;
+        text-align: right;
+        margin: 0;
+        padding: 0 var(--block-spacing-horizontal);
+        border-style: none;
+
+        time {
+          font-size: 0.8rem;
+          opacity: .5;
+        }
+      }
+    }
+  }
+}

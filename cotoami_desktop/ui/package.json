@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "vite": "^5.0.12",
+    "sass": "^1.70.0",
     "@scala-js/vite-plugin-scalajs": "^1.0.0"
   }
 }

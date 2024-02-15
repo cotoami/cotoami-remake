@@ -1,0 +1,42 @@
+/*!
+ * Pico CSS customized version
+ */
+
+// Config
+@import "pico/variables";
+
+// Theming
+@import "pico/themes/default";
+
+// Layout
+@import "pico/layout/document";
+@import "pico/layout/sectioning";
+@import "pico/layout/container";
+@import "pico/layout/section";
+@import "pico/layout/grid";
+@import "pico/layout/scroller";
+
+// Content
+@import "pico/content/typography";
+@import "pico/content/embedded";
+@import "pico/content/button";
+@import "pico/content/form";
+@import "pico/content/form-checkbox-radio";
+@import "pico/content/form-alt-input-types";
+@import "pico/content/table";
+@import "pico/content/code";
+@import "pico/content/miscs";
+
+// Components
+@import "pico/components/accordion";
+@import "pico/components/card";
+@import "pico/components/modal";
+// @import "pico/components/nav";
+@import "pico/components/progress";
+@import "pico/components/dropdown";
+
+// Utilities
+@import "pico/utilities/loading";
+@import "pico/utilities/tooltip";
+@import "pico/utilities/accessibility";
+@import "pico/utilities/reduce-motion";

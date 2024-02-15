@@ -1,0 +1,40 @@
+@use "./pico-customized" as pico;
+
+// Default: Light theme
+// Can be forced with data-theme="light"
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+  --pane-border-color: #{pico.$grey-100};
+  --selected-background-color: #{pico.$grey-100};
+  --selected-border-color: #{pico.$grey-700};
+  --hover-background-color: #{pico.$grey-50};
+  --editor-background-color: #{pico.$grey-50};
+  --traversal-background-color: #{pico.$grey-50};
+  --traversed-border-color: #{pico.$grey-300};
+}
+
+// Dark theme (Auto)
+// Automatically enabled if user has Dark mode enabled
+@media only screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --pane-border-color: #{pico.$grey-800};
+    --selected-background-color: #{pico.$grey-600};
+    --selected-border-color: #{pico.$grey-200};
+    --hover-background-color: #{pico.$grey-800};
+    --editor-background-color: #{mix(pico.$grey-800, pico.$grey-900)};
+    --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
+    --traversed-border-color: #{pico.$grey-500};
+  }
+}
+
+// Dark theme (Forced)
+// Enabled if forced with data-theme="dark"
+[data-theme="dark"] {
+  --pane-border-color: #{pico.$grey-800};
+  --selected-background-color: #{pico.$grey-600};
+  --selected-border-color: #{pico.$grey-200};
+  --hover-background-color: #{pico.$grey-800};
+  --editor-background-color: #{mix(pico.$grey-800, pico.$grey-900)};
+  --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
+  --traversed-border-color: #{pico.$grey-500};
+}

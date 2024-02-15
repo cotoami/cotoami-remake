@@ -1,0 +1,118 @@
+header {
+  button.app-info {
+    display: inline-block;
+    position: absolute;
+    top: 2px;
+    left: 8px;
+    opacity: .8;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    img.app-icon {
+      width: 30px;
+      height: 30px
+    }
+  }
+
+  section.location {
+    text-align: center;
+    height: var(--header-height);
+    line-height: var(--header-height);
+
+    a.node-home {
+      &:hover {
+        text-decoration: none;
+      }
+
+      img.node-icon {
+        vertical-align: top;
+        margin: 4px;
+      }
+    }
+
+    .arrow {
+      font-size: 30px; // use px here to fix the icon size.
+      vertical-align: top;
+      opacity: .3;
+    }
+
+    h1.current-cotonoma {
+      display: inline-block;
+
+      margin: 0;
+      height: 100%;
+
+      // fix the font size since the header height is fixed
+      font-size: 18px;
+      font-weight: 700;
+
+      // abbreviate a long cotonoma name
+      max-width: 40vw;
+      overflow-x: hidden;
+      white-space: nowrap;
+    }
+  }
+
+  section.tools {
+    position: absolute;
+    top: 4px;
+    right: 10px;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    div.tool-buttons {
+      margin-right: 16px;
+
+      button {
+        height: 24px;
+        line-height: 24px;
+
+        padding: 0;
+        padding-left: 5px;
+        padding-right: 5px;
+
+        span.material-symbols {
+          font-size: 18px; // use px here to fix the icon size
+          vertical-align: top;
+        }
+      }
+    }
+
+
+    form.search {
+      margin: 0;
+      padding: 0;
+
+      input[type=search] {
+        margin: 0;
+        width: 260px;
+        height: 27px;
+        border-radius: 4px;
+        border-color: var(--pane-border-color);
+        background-position: center left 8px;
+        padding-inline-start: calc(var(--form-element-spacing-horizontal) + 16px);
+        font-size: 14px;
+      }
+    }
+
+    button.node-profile {
+      margin-left: 16px;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+
+  img.node-icon {
+    width: 27px;
+    height: 27px;
+    border-radius: 4px;
+  }
+}
