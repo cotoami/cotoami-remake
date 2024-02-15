@@ -6,7 +6,7 @@ import org.scalajs.dom
 import org.scalajs.dom.URL
 
 import slinky.core._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{ReactElement, Fragment}
 import slinky.hot
 import slinky.web.html._
 
@@ -47,18 +47,19 @@ object Main {
   //
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
-    div(
-      h1("Welcome to Functional UI!"),
-      div(className := "message-input")(
-        input(
-          value := model.input,
-          onInput := (e => dispatch(Input(e.target.value)))
-        ),
-        button(onClick := (e => dispatch(Send)))("Send")
+    Fragment(
+      header(
+        button(className := "app-info icon", title := "View app info")(
+          img(
+            className := "app-icon",
+            alt := "Cotoami",
+            src := "/images/logo/logomark.svg",
+            aria - "label" := "View app info"
+          )
+        )
       ),
-      div(className := "messages")(
-        model.messages.map(div(className := "message")(_))
-      )
+      div(id := "app-body", className := "body"),
+      footer()
     )
 
   def main(args: Array[String]): Unit = {
