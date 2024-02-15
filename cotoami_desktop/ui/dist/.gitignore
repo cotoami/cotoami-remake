@@ -1,3 +1,0 @@
-# Keeping dist/ as an empty directory to avoid a compile error during CI
-*
-!.gitignore
