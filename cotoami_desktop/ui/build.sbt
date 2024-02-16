@@ -9,7 +9,13 @@ lazy val cotoami = project
   .in(file("."))
   .enablePlugins(ScalaJSPlugin)
   .settings(
-    scalacOptions ++= Seq("-encoding", "utf-8", "-deprecation", "-feature"),
+    scalacOptions ++= Seq(
+      "-encoding",
+      "utf-8",
+      "-deprecation",
+      "-feature",
+      "-Ymacro-annotations"
+    ),
 
     // We have a `main` method
     scalaJSUseMainModuleInitializer := true,
