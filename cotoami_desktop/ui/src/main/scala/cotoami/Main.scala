@@ -83,7 +83,9 @@ object Main {
           slinky.web.html.main()(
             section(className := "flow pane")(
               paneToggle(),
-              section(className := "timeline header-and-body")()
+              section(className := "timeline header-and-body")(
+                SplitPane(className = "hello")
+              )
             )
           )
         )
