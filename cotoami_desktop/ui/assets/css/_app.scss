@@ -16,14 +16,22 @@ div.app {
       border-right: 1px solid var(--pane-border-color);
     }
 
-    nav.cotonomas {
-      flex: 0 0 230px;
-      border-right: 1px solid var(--pane-border-color);
-    }
-
-    main {
+    div.node-contents {
       flex: 1;
       min-width: 0; // let this item shrink below the content size
+
+      display: flex;
+      flex-direction: row;
+
+      nav.cotonomas {
+        width: 230px;
+        border-right: 1px solid var(--pane-border-color);
+      }
+
+      main {
+        flex: 1;
+        min-width: 0; // let this item shrink below the content size
+      }
     }
   }
 

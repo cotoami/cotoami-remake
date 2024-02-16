@@ -76,13 +76,15 @@ object Main {
           ),
           ul(className := "nodes")
         ),
-        nav(className := "cotonomas pane header-and-body")(
-          paneToggle()
-        ),
-        slinky.web.html.main()(
-          section(className := "flow pane")(
-            paneToggle(),
-            section(className := "timeline header-and-body")()
+        div(className := "node-contents")(
+          nav(className := "cotonomas pane header-and-body")(
+            paneToggle()
+          ),
+          slinky.web.html.main()(
+            section(className := "flow pane")(
+              paneToggle(),
+              section(className := "timeline header-and-body")()
+            )
           )
         )
       ),
