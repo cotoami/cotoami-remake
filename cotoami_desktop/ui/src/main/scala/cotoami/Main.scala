@@ -75,6 +75,15 @@ object Main {
             span(className := "material-symbols")("add")
           ),
           ul(className := "nodes")
+        ),
+        nav(className := "cotonomas pane header-and-body")(
+          paneToggle()
+        ),
+        slinky.web.html.main()(
+          section(className := "flow pane")(
+            paneToggle(),
+            section(className := "timeline header-and-body")()
+          )
         )
       ),
       footer()
