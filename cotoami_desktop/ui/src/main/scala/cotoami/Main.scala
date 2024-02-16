@@ -59,7 +59,22 @@ object Main {
       ),
       div(id := "app-body", className := "body")(
         nav(className := "nodes pane", aria - "label" := "Nodes")(
-          paneToggle()
+          paneToggle(),
+          button(
+            className := "all-nodes icon selectable selected",
+            data - "tooltip" := "All nodes",
+            data - "placement" := "right"
+          )(
+            span(className := "material-symbols")("stacks")
+          ),
+          button(
+            className := "add-node icon",
+            data - "tooltip" := "Add node",
+            data - "placement" := "right"
+          )(
+            span(className := "material-symbols")("add")
+          ),
+          ul(className := "nodes")
         )
       ),
       footer()
