@@ -28,11 +28,14 @@ import slinky.web.SyntheticMouseEvent
 
   val component = FunctionalComponent[Props] { props =>
     val (primarySize, setPrimarySize) = useState(props.initialPrimarySize)
+    val (moving, setMoving) = useState(false)
+
     val splitPaneRef = React.createRef[html.Div]
     val separatorPosition = useRef(Double.NaN)
 
     val onMouseDownOnSeparator =
       (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
+        setMoving(true)
         props.split match {
           case "vertical" =>
             separatorPosition.current = e.clientX
@@ -61,6 +64,7 @@ import slinky.web.SyntheticMouseEvent
       }
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = (e: dom.MouseEvent) => {
+      setMoving(false)
       separatorPosition.current = Double.NaN
     }
 
@@ -83,12 +87,20 @@ import slinky.web.SyntheticMouseEvent
       )(
         props.children(0),
         div(
-          className := "separator",
+          className := optionalClasses(
+            Seq(("separator", true), ("moving", moving))
+          ),
           onMouseDown := (onMouseDownOnSeparator(_))
+        )(
+          div(className := "separator-inner")
         ),
         props.children(1)
       )
     )
+  }
+
+  def optionalClasses(classes: Seq[(String, Boolean)]): String = {
+    classes.filter(_._2).map(_._1).mkString(" ")
   }
 
   @react object Primary {

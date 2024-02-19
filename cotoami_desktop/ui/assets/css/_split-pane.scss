@@ -4,7 +4,24 @@
     flex-direction: row;
 
     .separator {
+      width: 3px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
       cursor: col-resize;
+
+      .separator-inner {
+        border-left: 1px solid var(--pane-border-color);
+      }
+
+      &:hover,
+      &.moving {
+        background-color: var(--primary);
+
+        .separator-inner {
+          border-left: 1px solid var(--primary);
+        }
+      }
     }
   }
 
@@ -13,12 +30,25 @@
     flex-direction: column;
 
     .separator {
+      height: 3px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       cursor: row-resize;
-    }
-  }
 
-  .separator {
-    border: 5px solid var(--pane-border-color);
+      .separator-inner {
+        border-top: 1px solid var(--pane-border-color);
+      }
+
+      &:hover,
+      &.moving {
+        background-color: var(--primary);
+
+        .separator-inner {
+          border-top: 1px solid var(--primary);
+        }
+      }
+    }
   }
 
   .split-pane-primary {
