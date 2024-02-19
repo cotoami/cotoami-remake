@@ -9,16 +9,19 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 @react object SplitPane {
-  case class Props(className: String, firstSize: Int, children: ReactElement*)
+  case class Props(className: String, primarySize: Int, children: ReactElement*)
 
-  case class Context(firstSize: Int, setFirstSize: SetStateHookCallback[Int])
+  case class Context(
+      primarySize: Int,
+      setPrimarySize: SetStateHookCallback[Int]
+  )
   val splitPaneContext = React.createContext[Context](null)
 
   val component = FunctionalComponent[Props] { props =>
-    val (firstSize, setFirstSize) = useState(props.firstSize)
+    val (primarySize, setPrimarySize) = useState(props.primarySize)
 
     div(className := "split-pane " + props.className)(
-      splitPaneContext.Provider(value = Context(firstSize, setFirstSize))(
+      splitPaneContext.Provider(value = Context(primarySize, setPrimarySize))(
         props.children(0),
         div(className := "separator"),
         props.children(1)
@@ -26,29 +29,29 @@ import slinky.web.html._
     )
   }
 
-  @react object First {
+  @react object Primary {
     case class Props(children: ReactElement*)
 
     val component = FunctionalComponent[Props] { props =>
-      val firstRef = React.createRef[html.Div]
-      val Context(firstSize, setFirstSize) = useContext(splitPaneContext)
+      val primaryRef = React.createRef[html.Div]
+      val Context(primarySize, setPrimarySize) = useContext(splitPaneContext)
 
       useEffect(
         () => {
-          firstRef.current.style.width = s"${firstSize}px"
+          primaryRef.current.style.width = s"${primarySize}px"
         },
-        Seq(firstSize)
+        Seq(primarySize)
       )
 
-      div(className := "split-pane-first", ref := firstRef)(props.children)
+      div(className := "split-pane-primary", ref := primaryRef)(props.children)
     }
   }
 
-  @react object Second {
+  @react object Secondary {
     case class Props(children: ReactElement*)
 
     val component = FunctionalComponent[Props] { props =>
-      div(className := "split-pane-second")(props.children)
+      div(className := "split-pane-secondary")(props.children)
     }
   }
 }

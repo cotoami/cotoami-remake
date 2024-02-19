@@ -7,22 +7,21 @@
     cursor: col-resize;
   }
 
-  .split-pane-first {
+  .split-pane-primary {
     flex: none;
   }
 
-  .split-pane-second {
+  .split-pane-secondary {
     flex: 1;
   }
 }
 
 .split-pane.hello {
-  .split-pane-first {
+  .split-pane-primary {
     padding: 20px;
-    width: 300px;
   }
 
-  .split-pane-second {
+  .split-pane-secondary {
     padding: 20px;
   }
 }
