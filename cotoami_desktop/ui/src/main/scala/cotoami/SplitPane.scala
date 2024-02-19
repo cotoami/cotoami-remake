@@ -9,7 +9,11 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 @react object SplitPane {
-  case class Props(className: String, primarySize: Int, children: ReactElement*)
+  case class Props(
+      className: String,
+      initialPrimarySize: Int,
+      children: ReactElement*
+  )
 
   case class Context(
       primarySize: Int,
@@ -18,7 +22,7 @@ import slinky.web.html._
   val splitPaneContext = React.createContext[Context](null)
 
   val component = FunctionalComponent[Props] { props =>
-    val (primarySize, setPrimarySize) = useState(props.primarySize)
+    val (primarySize, setPrimarySize) = useState(props.initialPrimarySize)
 
     div(className := "split-pane " + props.className)(
       splitPaneContext.Provider(value = Context(primarySize, setPrimarySize))(
