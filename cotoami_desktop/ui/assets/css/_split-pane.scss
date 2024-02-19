@@ -1,10 +1,24 @@
 .split-pane {
-  display: flex;
-  flex-direction: row;
+  &.vertical {
+    display: flex;
+    flex-direction: row;
+
+    .separator {
+      cursor: col-resize;
+    }
+  }
+
+  &.horizontal {
+    display: flex;
+    flex-direction: column;
+
+    .separator {
+      cursor: row-resize;
+    }
+  }
 
   .separator {
     border: 5px solid var(--pane-border-color);
-    cursor: col-resize;
   }
 
   .split-pane-primary {

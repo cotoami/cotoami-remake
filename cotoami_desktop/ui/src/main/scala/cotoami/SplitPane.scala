@@ -10,12 +10,14 @@ import slinky.web.html._
 
 @react object SplitPane {
   case class Props(
-      className: String,
+      split: String, // "vertical" or "horizontal"
       initialPrimarySize: Int,
+      className: String,
       children: ReactElement*
   )
 
   case class Context(
+      split: String,
       primarySize: Int,
       setPrimarySize: SetStateHookCallback[Int]
   )
@@ -24,8 +26,10 @@ import slinky.web.html._
   val component = FunctionalComponent[Props] { props =>
     val (primarySize, setPrimarySize) = useState(props.initialPrimarySize)
 
-    div(className := "split-pane " + props.className)(
-      splitPaneContext.Provider(value = Context(primarySize, setPrimarySize))(
+    div(className := s"split-pane ${props.split} ${props.className}")(
+      splitPaneContext.Provider(value =
+        Context(props.split, primarySize, setPrimarySize)
+      )(
         props.children(0),
         div(className := "separator"),
         props.children(1)
@@ -38,11 +42,17 @@ import slinky.web.html._
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = React.createRef[html.Div]
-      val Context(primarySize, setPrimarySize) = useContext(splitPaneContext)
+      val Context(split, primarySize, setPrimarySize) =
+        useContext(splitPaneContext)
 
       useEffect(
         () => {
-          primaryRef.current.style.width = s"${primarySize}px"
+          split match {
+            case "vertical" =>
+              primaryRef.current.style.width = s"${primarySize}px"
+            case "horizontal" =>
+              primaryRef.current.style.height = s"${primarySize}px"
+          }
         },
         Seq(primarySize)
       )
