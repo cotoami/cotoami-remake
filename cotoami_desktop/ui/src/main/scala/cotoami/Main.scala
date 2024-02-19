@@ -86,14 +86,25 @@ object Main {
               section(className := "timeline header-and-body")(
                 SplitPane(
                   split = "vertical",
-                  initialPrimarySize = 300,
-                  className = "hello"
+                  initialPrimarySize = 200,
+                  className = "foo"
                 )(
                   SplitPane.Primary(
-                    div()("hello")
+                    div()("1")
                   ),
                   SplitPane.Secondary(
-                    div()("bye")
+                    SplitPane(
+                      split = "vertical",
+                      initialPrimarySize = 100,
+                      className = "bar"
+                    )(
+                      SplitPane.Primary(
+                        div()("2")
+                      ),
+                      SplitPane.Secondary(
+                        div()("3")
+                      )
+                    )
                   )
                 )
               )

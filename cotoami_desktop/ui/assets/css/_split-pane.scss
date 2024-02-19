@@ -60,12 +60,18 @@
   }
 }
 
-.split-pane.hello {
-  .split-pane-primary {
+.split-pane.foo {
+  >.split-pane-primary {
+    padding: 20px;
+  }
+}
+
+.split-pane.bar {
+  >.split-pane-primary {
     padding: 20px;
   }
 
-  .split-pane-secondary {
+  >.split-pane-secondary {
     padding: 20px;
   }
 }
