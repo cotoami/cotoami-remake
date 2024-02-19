@@ -1,0 +1,24 @@
+.split-pane {
+  display: flex;
+  flex-direction: row;
+
+  .separator {
+    border: 5px solid var(--pane-border-color);
+    cursor: col-resize;
+  }
+
+  .split-pane-second {
+    flex: 1;
+  }
+}
+
+.split-pane.hello {
+  .split-pane-first {
+    padding: 20px;
+    width: 300px;
+  }
+
+  .split-pane-second {
+    padding: 20px;
+  }
+}
