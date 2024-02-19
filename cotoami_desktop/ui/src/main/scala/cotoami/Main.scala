@@ -84,7 +84,7 @@ object Main {
             section(className := "flow pane")(
               paneToggle(),
               section(className := "timeline header-and-body")(
-                SplitPane(className = "hello")(
+                SplitPane(className = "hello", firstSize = 300)(
                   SplitPane.First(
                     div()("hello")
                   ),

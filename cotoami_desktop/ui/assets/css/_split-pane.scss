@@ -7,6 +7,10 @@
     cursor: col-resize;
   }
 
+  .split-pane-first {
+    flex: none;
+  }
+
   .split-pane-second {
     flex: 1;
   }
