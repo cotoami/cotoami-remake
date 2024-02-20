@@ -13,14 +13,14 @@ import slinky.web.SyntheticMouseEvent
 
 @react object SplitPane {
   case class Props(
-      split: String, // "vertical" or "horizontal"
+      vertical: Boolean, // true: "vertical", false: "horizontal"
       initialPrimarySize: Int,
       className: String,
       children: ReactElement*
   )
 
   case class Context(
-      split: String,
+      vertical: Boolean,
       primarySize: Int,
       setPrimarySize: SetStateHookCallback[Int]
   )
@@ -36,11 +36,10 @@ import slinky.web.SyntheticMouseEvent
     val onMouseDownOnSeparator =
       (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
         setMoving(true)
-        props.split match {
-          case "vertical" =>
-            separatorPos.current = e.clientX
-          case "horizontal" =>
-            separatorPos.current = e.clientY
+        if (props.vertical) {
+          separatorPos.current = e.clientX
+        } else {
+          separatorPos.current = e.clientY
         }
       }
 
@@ -53,18 +52,21 @@ import slinky.web.SyntheticMouseEvent
       (e: dom.MouseEvent) => {
         if (!separatorPos.current.isNaN()) {
           // calculate the changed primary size from the position of the mouse cursor
-          val cursorPos = props.split match {
-            case "vertical"   => e.clientX
-            case "horizontal" => e.clientY
+          val cursorPos = if (props.vertical) {
+            e.clientX
+          } else {
+            e.clientY
           }
+
           val moved = (cursorPos - separatorPos.current).toInt
           var newSize = primarySize + moved
           separatorPos.current = cursorPos
 
           // keep it from resizing beyond the borders of the SplitPane
-          val splitPaneSize = props.split match {
-            case "vertical"   => splitPaneRef.current.clientWidth
-            case "horizontal" => splitPaneRef.current.clientHeight
+          val splitPaneSize = if (props.vertical) {
+            splitPaneRef.current.clientWidth
+          } else {
+            splitPaneRef.current.clientHeight
           }
           newSize = newSize.max(0).min(splitPaneSize)
 
@@ -88,11 +90,18 @@ import slinky.web.SyntheticMouseEvent
     })
 
     div(
-      className := s"split-pane ${props.split} ${props.className}",
+      className := optionalClasses(
+        Seq(
+          ("split-pane", true),
+          ("vertical", props.vertical),
+          ("horizontal", !props.vertical),
+          (props.className, true)
+        )
+      ),
       ref := splitPaneRef
     )(
       splitPaneContext.Provider(value =
-        Context(props.split, primarySize, setPrimarySize)
+        Context(props.vertical, primarySize, setPrimarySize)
       )(
         props.children(0),
         div(
@@ -113,16 +122,15 @@ import slinky.web.SyntheticMouseEvent
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = React.createRef[html.Div]
-      val Context(split, primarySize, setPrimarySize) =
+      val Context(vertical, primarySize, setPrimarySize) =
         useContext(splitPaneContext)
 
       useEffect(
         () => {
-          split match {
-            case "vertical" =>
-              primaryRef.current.style.width = s"${primarySize}px"
-            case "horizontal" =>
-              primaryRef.current.style.height = s"${primarySize}px"
+          if (vertical) {
+            primaryRef.current.style.width = s"${primarySize}px"
+          } else {
+            primaryRef.current.style.height = s"${primarySize}px"
           }
         },
         Seq(primarySize)

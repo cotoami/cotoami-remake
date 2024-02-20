@@ -85,7 +85,7 @@ object Main {
               paneToggle(),
               section(className := "timeline header-and-body")(
                 SplitPane(
-                  split = "vertical",
+                  vertical = true,
                   initialPrimarySize = 200,
                   className = "foo"
                 )(
@@ -94,7 +94,7 @@ object Main {
                   ),
                   SplitPane.Secondary(
                     SplitPane(
-                      split = "vertical",
+                      vertical = false,
                       initialPrimarySize = 100,
                       className = "bar"
                     )(

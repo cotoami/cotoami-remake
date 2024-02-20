@@ -4,6 +4,7 @@
     flex-direction: row;
 
     .separator {
+      height: 100%;
       width: 3px;
       display: flex;
       flex-direction: row;
@@ -30,6 +31,7 @@
     flex-direction: column;
 
     .separator {
+      width: 100%;
       height: 3px;
       display: flex;
       flex-direction: column;
@@ -61,6 +63,8 @@
 }
 
 .split-pane.foo {
+  height: 100%;
+
   >.split-pane-primary {
     padding: 20px;
   }
