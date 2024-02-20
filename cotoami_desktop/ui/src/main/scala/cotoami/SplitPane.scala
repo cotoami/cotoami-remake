@@ -31,16 +31,16 @@ import slinky.web.SyntheticMouseEvent
     val (moving, setMoving) = useState(false)
 
     val splitPaneRef = React.createRef[html.Div]
-    val separatorPosition = useRef(Double.NaN)
+    val separatorPos = useRef(Double.NaN)
 
     val onMouseDownOnSeparator =
       (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
         setMoving(true)
         props.split match {
           case "vertical" =>
-            separatorPosition.current = e.clientX
+            separatorPos.current = e.clientX
           case "horizontal" =>
-            separatorPosition.current = e.clientY
+            separatorPos.current = e.clientY
         }
       }
 
@@ -51,21 +51,30 @@ import slinky.web.SyntheticMouseEvent
 
     val onMouseMove: js.Function1[dom.MouseEvent, Unit] =
       (e: dom.MouseEvent) => {
-        if (!separatorPosition.current.isNaN()) {
-          val pointer = props.split match {
+        if (!separatorPos.current.isNaN()) {
+          // calculate the changed primary size from the position of the mouse cursor
+          val cursorPos = props.split match {
             case "vertical"   => e.clientX
             case "horizontal" => e.clientY
           }
-          val moved = (pointer - separatorPosition.current).toInt
-          val newSize = primarySize + moved
-          separatorPosition.current = pointer
+          val moved = (cursorPos - separatorPos.current).toInt
+          var newSize = primarySize + moved
+          separatorPos.current = cursorPos
+
+          // keep it from resizing beyond the borders of the SplitPane
+          val splitPaneSize = props.split match {
+            case "vertical"   => splitPaneRef.current.clientWidth
+            case "horizontal" => splitPaneRef.current.clientHeight
+          }
+          newSize = newSize.max(0).min(splitPaneSize)
+
           setPrimarySize(newSize)
         }
       }
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = (e: dom.MouseEvent) => {
       setMoving(false)
-      separatorPosition.current = Double.NaN
+      separatorPos.current = Double.NaN
     }
 
     useEffect(() => {
