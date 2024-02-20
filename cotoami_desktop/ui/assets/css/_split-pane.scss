@@ -61,21 +61,3 @@
     flex: 1;
   }
 }
-
-.split-pane.foo {
-  height: 100%;
-
-  >.split-pane-primary {
-    padding: 20px;
-  }
-}
-
-.split-pane.bar {
-  >.split-pane-primary {
-    padding: 20px;
-  }
-
-  >.split-pane-secondary {
-    padding: 20px;
-  }
-}

@@ -84,35 +84,6 @@ object Main {
             section(className := "flow pane")(
               paneToggle(),
               section(className := "timeline header-and-body")(
-                SplitPane(
-                  vertical = true,
-                  initialPrimarySize = 200,
-                  className = "foo",
-                  onPrimarySizeChanged = (newSize) => {
-                    println(s"foo changed: $newSize")
-                  }
-                )(
-                  SplitPane.Primary(
-                    div()("1")
-                  ),
-                  SplitPane.Secondary(
-                    SplitPane(
-                      vertical = false,
-                      initialPrimarySize = 100,
-                      className = "bar",
-                      onPrimarySizeChanged = (newSize) => {
-                        println(s"bar changed: $newSize")
-                      }
-                    )(
-                      SplitPane.Primary(
-                        div()("2")
-                      ),
-                      SplitPane.Secondary(
-                        div()("3")
-                      )
-                    )
-                  )
-                )
               )
             )
           )
