@@ -16,6 +16,7 @@ import slinky.web.SyntheticMouseEvent
       vertical: Boolean, // true: "vertical", false: "horizontal"
       initialPrimarySize: Int,
       className: String,
+      onPrimarySizeChanged: Int => Unit,
       children: ReactElement*
   )
 
@@ -76,7 +77,10 @@ import slinky.web.SyntheticMouseEvent
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = (e: dom.MouseEvent) => {
       setMoving(false)
-      separatorPos.current = Double.NaN
+      if (!separatorPos.current.isNaN()) {
+        props.onPrimarySizeChanged(primarySize)
+        separatorPos.current = Double.NaN
+      }
     }
 
     useEffect(() => {

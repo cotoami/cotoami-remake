@@ -87,7 +87,10 @@ object Main {
                 SplitPane(
                   vertical = true,
                   initialPrimarySize = 200,
-                  className = "foo"
+                  className = "foo",
+                  onPrimarySizeChanged = (newSize) => {
+                    println(s"foo changed: $newSize")
+                  }
                 )(
                   SplitPane.Primary(
                     div()("1")
@@ -96,7 +99,10 @@ object Main {
                     SplitPane(
                       vertical = false,
                       initialPrimarySize = 100,
-                      className = "bar"
+                      className = "bar",
+                      onPrimarySizeChanged = (newSize) => {
+                        println(s"bar changed: $newSize")
+                      }
                     )(
                       SplitPane.Primary(
                         div()("2")
