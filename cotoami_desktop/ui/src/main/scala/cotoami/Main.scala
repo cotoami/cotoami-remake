@@ -14,21 +14,18 @@ import fui.FunctionalUI._
 
 object Main {
 
-  //
-  // MODEL
-  //
+  def main(args: Array[String]): Unit = {
+    if (LinkingInfo.developmentMode) {
+      hot.initialize()
+    }
 
-  case class Model(messages: Seq[String] = Seq.empty, input: String = "")
+    Browser.runProgram(
+      dom.document.getElementById("app"),
+      Program(init, view, update)
+    )
+  }
 
   def init(url: URL): (Model, Seq[Cmd[Msg]]) = (Model(), Seq.empty)
-
-  //
-  // UPDATE
-  //
-
-  sealed trait Msg
-  case class Input(input: String) extends Msg
-  case object Send extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
@@ -41,10 +38,6 @@ object Main {
           Seq.empty
         )
     }
-
-  //
-  // VIEW
-  //
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
@@ -112,15 +105,4 @@ object Main {
         span(className := "material-symbols")("arrow_right")
       )
     )
-
-  def main(args: Array[String]): Unit = {
-    if (LinkingInfo.developmentMode) {
-      hot.initialize()
-    }
-
-    Browser.runProgram(
-      dom.document.getElementById("app"),
-      Program(init, view, update)
-    )
-  }
 }
