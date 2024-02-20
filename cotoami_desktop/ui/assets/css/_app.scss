@@ -20,17 +20,11 @@ div.app {
       flex: 1;
       min-width: 0; // let this item shrink below the content size
 
-      display: flex;
-      flex-direction: row;
-
-      nav.cotonomas {
-        width: 230px;
-        border-right: 1px solid var(--pane-border-color);
-      }
-
+      // wrapped in SplitPane
+      nav.cotonomas,
       main {
-        flex: 1;
-        min-width: 0; // let this item shrink below the content size
+        width: 100%;
+        height: 100%;
       }
     }
   }
