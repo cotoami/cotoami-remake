@@ -76,14 +76,26 @@ object Main {
           ),
           ul(className := "nodes")
         ),
-        div(className := "node-contents")(
-          nav(className := "cotonomas pane header-and-body")(
-            paneToggle()
+        SplitPane(
+          vertical = true,
+          initialPrimarySize = 230,
+          className = "node-contents",
+          onPrimarySizeChanged = (newSize) => {
+            println(s"node-contents changed: $newSize")
+          }
+        )(
+          SplitPane.Primary(
+            nav(className := "cotonomas pane header-and-body")(
+              paneToggle()
+            )
           ),
-          slinky.web.html.main()(
-            section(className := "flow pane")(
-              paneToggle(),
-              section(className := "timeline header-and-body")()
+          SplitPane.Secondary(
+            slinky.web.html.main()(
+              section(className := "flow pane")(
+                paneToggle(),
+                section(className := "timeline header-and-body")(
+                )
+              )
             )
           )
         )
