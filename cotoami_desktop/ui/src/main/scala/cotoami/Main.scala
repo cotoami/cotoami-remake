@@ -10,7 +10,7 @@ import slinky.core.facade.{ReactElement, Fragment}
 import slinky.hot
 import slinky.web.html._
 
-import cotoami.FunctionalUI._
+import fui.FunctionalUI._
 
 object Main {
 

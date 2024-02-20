@@ -1,4 +1,4 @@
-package cotoami
+package fui
 
 import scala.util.Success
 import scala.util.Failure
