@@ -15,7 +15,7 @@ import slinky.web.SyntheticMouseEvent
   case class Props(
       vertical: Boolean, // true: "vertical", false: "horizontal"
       initialPrimarySize: Int,
-      className: String,
+      className: Option[String],
       onPrimarySizeChanged: Int => Unit,
       children: ReactElement*
   )
@@ -99,7 +99,7 @@ import slinky.web.SyntheticMouseEvent
           ("split-pane", true),
           ("vertical", props.vertical),
           ("horizontal", !props.vertical),
-          (props.className, true)
+          (props.className.getOrElse(""), props.className.nonEmpty)
         )
       ),
       ref := splitPaneRef
@@ -122,7 +122,7 @@ import slinky.web.SyntheticMouseEvent
   }
 
   @react object Primary {
-    case class Props(children: ReactElement*)
+    case class Props(className: Option[String], children: ReactElement*)
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = React.createRef[html.Div]
@@ -140,15 +140,32 @@ import slinky.web.SyntheticMouseEvent
         Seq(primarySize)
       )
 
-      div(className := "split-pane-primary", ref := primaryRef)(props.children)
+      div(
+        className := optionalClasses(
+          Seq(
+            ("split-pane-primary", true),
+            (props.className.getOrElse(""), props.className.nonEmpty)
+          )
+        ),
+        ref := primaryRef
+      )(
+        props.children: _*
+      )
     }
   }
 
   @react object Secondary {
-    case class Props(children: ReactElement*)
+    case class Props(className: Option[String], children: ReactElement*)
 
     val component = FunctionalComponent[Props] { props =>
-      div(className := "split-pane-secondary")(props.children)
+      div(
+        className := optionalClasses(
+          Seq(
+            ("split-pane-secondary", true),
+            (props.className.getOrElse(""), props.className.nonEmpty)
+          )
+        )
+      )(props.children: _*)
     }
   }
 }

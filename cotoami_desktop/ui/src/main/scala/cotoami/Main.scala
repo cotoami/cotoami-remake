@@ -29,6 +29,9 @@ object Main {
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
+      case TogglePane(name) =>
+        (model.copy(uiState = model.uiState.togglePane(name)), Seq.empty)
+
       case Input(input) =>
         (model.copy(input = input), Seq.empty)
 
@@ -51,8 +54,17 @@ object Main {
         )
       ),
       div(id := "app-body", className := "body")(
-        nav(className := "nodes pane", aria - "label" := "Nodes")(
-          paneToggle(),
+        nav(
+          className := optionalClasses(
+            Seq(
+              ("nodes", true),
+              ("pane", true),
+              ("folded", !model.uiState.paneOpened("nav-nodes"))
+            )
+          ),
+          aria - "label" := "Nodes"
+        )(
+          paneToggle("nav-nodes", dispatch),
           button(
             className := "all-nodes icon selectable selected",
             data - "tooltip" := "All nodes",
@@ -72,23 +84,29 @@ object Main {
         SplitPane(
           vertical = true,
           initialPrimarySize = 230,
-          className = "node-contents",
+          className = Some("node-contents"),
           onPrimarySizeChanged = (newSize) => {
             println(s"node-contents changed: $newSize")
           }
         )(
-          SplitPane.Primary(
-            nav(
-              key := "just-suppress-warning",
-              className := "cotonomas pane header-and-body"
-            )(
-              paneToggle()
+          SplitPane.Primary(className =
+            Some(
+              optionalClasses(
+                Seq(
+                  ("pane", true),
+                  ("folded", !model.uiState.paneOpened("nav-cotonomas"))
+                )
+              )
+            )
+          )(
+            paneToggle("nav-cotonomas", dispatch),
+            nav(className := "cotonomas header-and-body")(
             )
           ),
-          SplitPane.Secondary(
-            slinky.web.html.main(key := "just-suppress-warning")(
+          SplitPane.Secondary(className = None)(
+            slinky.web.html.main()(
               section(className := "flow pane")(
-                paneToggle(),
+                paneToggle("flow", dispatch),
                 section(className := "timeline header-and-body")(
                 )
               )
@@ -99,12 +117,20 @@ object Main {
       footer()
     )
 
-  def paneToggle(): ReactElement =
+  def paneToggle(paneName: String, dispatch: Msg => Unit): ReactElement =
     Fragment(
-      button(className := "fold icon", title := "Fold")(
+      button(
+        className := "fold icon",
+        title := "Fold",
+        onClick := ((e) => dispatch(TogglePane(paneName)))
+      )(
         span(className := "material-symbols")("arrow_left")
       ),
-      button(className := "unfold icon", title := "Unfold")(
+      button(
+        className := "unfold icon",
+        title := "Unfold",
+        onClick := ((e) => dispatch(TogglePane(paneName)))
+      )(
         span(className := "material-symbols")("arrow_right")
       )
     )
