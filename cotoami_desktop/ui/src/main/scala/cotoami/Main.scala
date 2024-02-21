@@ -78,12 +78,15 @@ object Main {
           }
         )(
           SplitPane.Primary(
-            nav(className := "cotonomas pane header-and-body")(
+            nav(
+              key := "just-suppress-warning",
+              className := "cotonomas pane header-and-body"
+            )(
               paneToggle()
             )
           ),
           SplitPane.Secondary(
-            slinky.web.html.main()(
+            slinky.web.html.main(key := "just-suppress-warning")(
               section(className := "flow pane")(
                 paneToggle(),
                 section(className := "timeline header-and-body")(
