@@ -1,3 +1,5 @@
+@use "./utils";
+
 .split-pane {
   &.vertical {
     display: flex;
@@ -65,5 +67,14 @@
 
   .split-pane-primary {
     flex: none;
+  }
+
+  .split-pane-primary,
+  .split-pane-secondary {
+    @include utils.unselectable;
+
+    * {
+      @include utils.selectable;
+    }
   }
 }
