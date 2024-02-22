@@ -54,33 +54,7 @@ object Main {
         )
       ),
       div(id := "app-body", className := "body")(
-        nav(
-          className := optionalClasses(
-            Seq(
-              ("nodes", true),
-              ("pane", true),
-              ("folded", !model.uiState.paneOpened("nav-nodes"))
-            )
-          ),
-          aria - "label" := "Nodes"
-        )(
-          paneToggle("nav-nodes", dispatch),
-          button(
-            className := "all-nodes icon selectable selected",
-            data - "tooltip" := "All nodes",
-            data - "placement" := "right"
-          )(
-            span(className := "material-symbols")("stacks")
-          ),
-          button(
-            className := "add-node icon",
-            data - "tooltip" := "Add node",
-            data - "placement" := "right"
-          )(
-            span(className := "material-symbols")("add")
-          ),
-          ul(className := "nodes")
-        ),
+        subparts.NavNodes.view(model, dispatch),
         SplitPane(
           vertical = true,
           initialPrimarySize = 230,
