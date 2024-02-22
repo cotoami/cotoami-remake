@@ -84,7 +84,7 @@ object Main {
         SplitPane(
           vertical = true,
           initialPrimarySize = 230,
-          resizable = true,
+          resizable = model.uiState.paneOpened("nav-cotonomas"),
           className = Some("node-contents"),
           onPrimarySizeChanged = (newSize) => {
             println(s"node-contents changed: $newSize")
