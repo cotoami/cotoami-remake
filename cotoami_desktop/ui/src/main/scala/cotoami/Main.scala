@@ -84,6 +84,7 @@ object Main {
         SplitPane(
           vertical = true,
           initialPrimarySize = 230,
+          resizable = true,
           className = Some("node-contents"),
           onPrimarySizeChanged = (newSize) => {
             println(s"node-contents changed: $newSize")

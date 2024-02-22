@@ -15,6 +15,7 @@ import slinky.web.SyntheticMouseEvent
   case class Props(
       vertical: Boolean, // true: "vertical", false: "horizontal"
       initialPrimarySize: Int,
+      resizable: Boolean,
       className: Option[String],
       onPrimarySizeChanged: Int => Unit,
       children: ReactElement*
@@ -36,11 +37,13 @@ import slinky.web.SyntheticMouseEvent
 
     val onMouseDownOnSeparator =
       (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
-        setMoving(true)
-        if (props.vertical) {
-          separatorPos.current = e.clientX
-        } else {
-          separatorPos.current = e.clientY
+        if (props.resizable) {
+          setMoving(true)
+          if (props.vertical) {
+            separatorPos.current = e.clientX
+          } else {
+            separatorPos.current = e.clientY
+          }
         }
       }
 
@@ -110,7 +113,11 @@ import slinky.web.SyntheticMouseEvent
         props.children(0),
         div(
           className := optionalClasses(
-            Seq(("separator", true), ("moving", moving))
+            Seq(
+              ("separator", true),
+              ("moving", moving),
+              ("movable", props.resizable)
+            )
           ),
           onMouseDown := (onMouseDownOnSeparator(_))
         )(
