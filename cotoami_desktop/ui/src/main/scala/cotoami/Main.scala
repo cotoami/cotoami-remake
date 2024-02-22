@@ -117,22 +117,4 @@ object Main {
       ),
       footer()
     )
-
-  def paneToggle(paneName: String, dispatch: Msg => Unit): ReactElement =
-    Fragment(
-      button(
-        className := "fold icon",
-        title := "Fold",
-        onClick := ((e) => dispatch(TogglePane(paneName)))
-      )(
-        span(className := "material-symbols")("arrow_left")
-      ),
-      button(
-        className := "unfold icon",
-        title := "Unfold",
-        onClick := ((e) => dispatch(TogglePane(paneName)))
-      )(
-        span(className := "material-symbols")("arrow_right")
-      )
-    )
 }
