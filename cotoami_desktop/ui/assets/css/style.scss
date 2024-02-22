@@ -1,6 +1,7 @@
 @use "./pico-customized" with ($enable-responsive-typography: false);
 
 @use "./color";
+@use "./utils";
 
 @use "./app";
 @use "./header";
@@ -46,6 +47,8 @@
   word-wrap: normal;
   white-space: nowrap;
   direction: ltr;
+
+  @include utils.force-unselectable;
 }
 
 //
@@ -83,6 +86,8 @@ button {
   margin: 0;
   padding: 6px 16px;
   width: auto;
+
+  @include utils.force-unselectable;
 }
 
 a {
