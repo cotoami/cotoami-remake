@@ -64,20 +64,7 @@ object Main {
             println(s"node-contents changed: $newSize")
           }
         )(
-          SplitPane.Primary(className =
-            Some(
-              optionalClasses(
-                Seq(
-                  ("pane", true),
-                  ("folded", !model.uiState.paneOpened("nav-cotonomas"))
-                )
-              )
-            )
-          )(
-            paneToggle("nav-cotonomas", dispatch),
-            nav(className := "cotonomas header-and-body")(
-            )
-          ),
+          subparts.NavCotonomas.view(model, dispatch),
           SplitPane.Secondary(className = None)(
             slinky.web.html.main()(
               section(className := "flow pane")(

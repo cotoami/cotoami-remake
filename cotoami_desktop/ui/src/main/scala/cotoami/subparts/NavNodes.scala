@@ -1,8 +1,7 @@
 package cotoami.subparts
 
 import slinky.core._
-import slinky.core.facade.{ReactElement, Fragment}
-import slinky.hot
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Model, Msg, optionalClasses, paneToggle}
