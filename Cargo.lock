@@ -753,11 +753,13 @@ dependencies = [
 name = "cotoami_desktop"
 version = "0.1.0"
 dependencies = [
+ "bincode",
+ "bitflags 2.3.3",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
- "tauri-plugin-window-state",
+ "thiserror",
 ]
 
 [[package]]
@@ -4130,20 +4132,6 @@ dependencies = [
  "syn 1.0.109",
  "tauri-codegen",
  "tauri-utils",
-]
-
-[[package]]
-name = "tauri-plugin-window-state"
-version = "0.1.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#58176114f98c977e3435aba3aa910b61115a394e"
-dependencies = [
- "bincode",
- "bitflags 2.3.3",
- "log",
- "serde",
- "serde_json",
- "tauri",
- "thiserror",
 ]
 
 [[package]]
