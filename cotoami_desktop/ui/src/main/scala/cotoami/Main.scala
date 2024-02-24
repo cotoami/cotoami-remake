@@ -37,15 +37,6 @@ object Main {
           model.copy(uiState = model.uiState.resizePane(name, newSize)),
           Seq.empty
         )
-
-      case Input(input) =>
-        (model.copy(input = input), Seq.empty)
-
-      case Send =>
-        (
-          model.copy(messages = model.messages :+ model.input, input = ""),
-          Seq.empty
-        )
     }
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =

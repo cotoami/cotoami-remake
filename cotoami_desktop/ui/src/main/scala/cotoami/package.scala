@@ -8,9 +8,7 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      uiState: UiState = UiState(),
-      messages: Seq[String] = Seq.empty,
-      input: String = ""
+      uiState: UiState = UiState()
   )
 
   case class UiState(
@@ -36,8 +34,6 @@ package object cotoami {
   sealed trait Msg
   case class TogglePane(name: String) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
-  case class Input(input: String) extends Msg
-  case object Send extends Msg
 
   /////////////////////////////////////////////////////////////////////////////
   // View
