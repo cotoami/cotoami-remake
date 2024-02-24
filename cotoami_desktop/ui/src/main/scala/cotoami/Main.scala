@@ -32,6 +32,12 @@ object Main {
       case TogglePane(name) =>
         (model.copy(uiState = model.uiState.togglePane(name)), Seq.empty)
 
+      case ResizePane(name, newSize) =>
+        (
+          model.copy(uiState = model.uiState.resizePane(name, newSize)),
+          Seq.empty
+        )
+
       case Input(input) =>
         (model.copy(input = input), Seq.empty)
 
@@ -57,12 +63,16 @@ object Main {
         subparts.NavNodes.view(model, dispatch),
         SplitPane(
           vertical = true,
-          initialPrimarySize = 230,
-          resizable = model.uiState.paneOpened("nav-cotonomas"),
+          initialPrimarySize = model.uiState.paneSizes.getOrElse(
+            subparts.NavCotonomas.PaneName,
+            subparts.NavCotonomas.DefaultWidth
+          ),
+          resizable = model.uiState.paneOpened(subparts.NavCotonomas.PaneName),
           className = Some("node-contents"),
-          onPrimarySizeChanged = (newSize) => {
-            println(s"node-contents changed: $newSize")
-          }
+          onPrimarySizeChanged = (
+              (newSize) =>
+                dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
+          )
         )(
           subparts.NavCotonomas.view(model, dispatch),
           SplitPane.Secondary(className = None)(

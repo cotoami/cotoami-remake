@@ -13,14 +13,20 @@ package object cotoami {
       input: String = ""
   )
 
-  case class UiState(paneToggles: Map[String, Boolean] = Map()) {
+  case class UiState(
+      paneToggles: Map[String, Boolean] = Map(),
+      paneSizes: Map[String, Int] = Map()
+  ) {
     def paneOpened(name: String): Boolean =
       this.paneToggles.getOrElse(name, true)
 
     def togglePane(name: String): UiState =
       this.copy(paneToggles =
-        this.paneToggles.updated(name, !this.paneOpened(name))
+        this.paneToggles + (name -> !this.paneOpened(name))
       )
+
+    def resizePane(name: String, newSize: Int): UiState =
+      this.copy(paneSizes = this.paneSizes + (name -> newSize))
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -29,6 +35,7 @@ package object cotoami {
 
   sealed trait Msg
   case class TogglePane(name: String) extends Msg
+  case class ResizePane(name: String, newSize: Int) extends Msg
   case class Input(input: String) extends Msg
   case object Send extends Msg
 

@@ -8,6 +8,7 @@ import cotoami.{Model, Msg, SplitPane, optionalClasses, paneToggle}
 
 object NavCotonomas {
   val PaneName = "nav-cotonomas"
+  val DefaultWidth = 230
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     SplitPane.Primary(className =
