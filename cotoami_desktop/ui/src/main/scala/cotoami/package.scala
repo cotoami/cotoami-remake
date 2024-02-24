@@ -1,5 +1,15 @@
+import org.scalajs.dom
+
 import slinky.core.facade.{ReactElement, Fragment}
 import slinky.web.html._
+
+import io.circe.{Encoder, Decoder}
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import io.circe.parser._
+
+import fui.FunctionalUI.Cmd
+import cats.effect.IO
 
 package object cotoami {
 
@@ -8,7 +18,7 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      uiState: UiState = UiState()
+      uiState: Option[UiState] = None
   )
 
   case class UiState(
@@ -25,6 +35,40 @@ package object cotoami {
 
     def resizePane(name: String, newSize: Int): UiState =
       this.copy(paneSizes = this.paneSizes + (name -> newSize))
+
+    def save(): Cmd[Msg] =
+      IO {
+        dom.window.localStorage
+          .setItem(UiState.StorageKey, this.asJson.toString())
+        None
+      }
+  }
+
+  object UiState {
+    val StorageKey = "uiState"
+
+    implicit val encoder: Encoder[UiState] = deriveEncoder
+    implicit val decoder: Decoder[UiState] = deriveDecoder
+
+    def restore(createMsg: Option[UiState] => Msg): Cmd[Msg] =
+      IO {
+        val value = dom.window.localStorage.getItem(StorageKey)
+        println(s"localStorage[$StorageKey]: $value")
+        val uiState =
+          if (value != null) {
+            decode[UiState](value) match {
+              case Right(uiState) => Some(uiState)
+              case Left(error) => {
+                println(s"Invalid uiState in localStorage: $value")
+                dom.window.localStorage.removeItem(StorageKey)
+                None
+              }
+            }
+          } else {
+            None
+          }
+        Some(createMsg(uiState))
+      }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -32,6 +76,7 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg
+  case class UiStateRestored(state: Option[UiState]) extends Msg
   case class TogglePane(name: String) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
 

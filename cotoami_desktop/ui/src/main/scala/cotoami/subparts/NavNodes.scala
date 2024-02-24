@@ -4,18 +4,22 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg, optionalClasses, paneToggle}
+import cotoami.{Model, Msg, UiState, optionalClasses, paneToggle}
 
 object NavNodes {
   val PaneName = "nav-nodes"
 
-  def view(model: Model, dispatch: Msg => Unit): ReactElement =
+  def view(
+      model: Model,
+      uiState: UiState,
+      dispatch: Msg => Unit
+  ): ReactElement =
     nav(
       className := optionalClasses(
         Seq(
           ("nodes", true),
           ("pane", true),
-          ("folded", !model.uiState.paneOpened(PaneName))
+          ("folded", !uiState.paneOpened(PaneName))
         )
       ),
       aria - "label" := "Nodes"

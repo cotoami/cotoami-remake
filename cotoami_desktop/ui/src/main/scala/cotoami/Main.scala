@@ -25,18 +25,33 @@ object Main {
     )
   }
 
-  def init(url: URL): (Model, Seq[Cmd[Msg]]) = (Model(), Seq.empty)
+  def init(url: URL): (Model, Seq[Cmd[Msg]]) =
+    (Model(), Seq(UiState.restore(UiStateRestored)))
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
-      case TogglePane(name) =>
-        (model.copy(uiState = model.uiState.togglePane(name)), Seq.empty)
+      case UiStateRestored(uiState) =>
+        (model.copy(uiState = Some(uiState.getOrElse(UiState()))), Seq.empty)
 
-      case ResizePane(name, newSize) =>
-        (
-          model.copy(uiState = model.uiState.resizePane(name, newSize)),
-          Seq.empty
-        )
+      case TogglePane(name) => {
+        model.uiState match {
+          case Some(s) => {
+            val new_s = s.togglePane(name)
+            (model.copy(uiState = Some(new_s)), Seq(new_s.save()))
+          }
+          case None => (model, Seq.empty)
+        }
+      }
+
+      case ResizePane(name, newSize) => {
+        model.uiState match {
+          case Some(s) => {
+            val new_s = s.resizePane(name, newSize)
+            (model.copy(uiState = Some(new_s)), Seq(new_s.save()))
+          }
+          case None => (model, Seq.empty)
+        }
+      }
     }
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
@@ -51,32 +66,42 @@ object Main {
         )
       ),
       div(id := "app-body", className := "body")(
-        subparts.NavNodes.view(model, dispatch),
-        SplitPane(
-          vertical = true,
-          initialPrimarySize = model.uiState.paneSizes.getOrElse(
-            subparts.NavCotonomas.PaneName,
-            subparts.NavCotonomas.DefaultWidth
-          ),
-          resizable = model.uiState.paneOpened(subparts.NavCotonomas.PaneName),
-          className = Some("node-contents"),
-          onPrimarySizeChanged = (
-              (newSize) =>
-                dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
-          )
-        )(
-          subparts.NavCotonomas.view(model, dispatch),
-          SplitPane.Secondary(className = None)(
-            slinky.web.html.main()(
-              section(className := "flow pane")(
-                paneToggle("flow", dispatch),
-                section(className := "timeline header-and-body")(
-                )
-              )
-            )
-          )
-        )
+        model.uiState
+          .map(appBodyContent(model, _, dispatch))
+          .getOrElse(Seq()): _*
       ),
       footer()
     )
+
+  def appBodyContent(
+      model: Model,
+      uiState: UiState,
+      dispatch: Msg => Unit
+  ): Seq[ReactElement] = Seq(
+    subparts.NavNodes.view(model, uiState, dispatch),
+    SplitPane(
+      vertical = true,
+      initialPrimarySize = uiState.paneSizes.getOrElse(
+        subparts.NavCotonomas.PaneName,
+        subparts.NavCotonomas.DefaultWidth
+      ),
+      resizable = uiState.paneOpened(subparts.NavCotonomas.PaneName),
+      className = Some("node-contents"),
+      onPrimarySizeChanged = (
+          (newSize) =>
+            dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
+      )
+    )(
+      subparts.NavCotonomas.view(model, uiState, dispatch),
+      SplitPane.Secondary(className = None)(
+        slinky.web.html.main()(
+          section(className := "flow pane")(
+            paneToggle("flow", dispatch),
+            section(className := "timeline header-and-body")(
+            )
+          )
+        )
+      )
+    )
+  )
 }
