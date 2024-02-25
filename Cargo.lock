@@ -713,7 +713,7 @@ dependencies = [
 
 [[package]]
 name = "cotoami_db"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -751,7 +751,7 @@ dependencies = [
 
 [[package]]
 name = "cotoami_desktop"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bincode",
  "bitflags 2.3.3",
@@ -764,7 +764,7 @@ dependencies = [
 
 [[package]]
 name = "cotoami_node"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "async-stream",
