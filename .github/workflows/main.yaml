@@ -16,6 +16,7 @@ jobs:
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
 
+    # Install system dependencies to build a Tauri app on Linux
     # https://tauri.app/v1/guides/getting-started/prerequisites#setting-up-linux
     - name: Install packages
       run: |
