@@ -6,8 +6,7 @@
     "distDir": "../ui/dist"
   },
   "package": {
-    "productName": "Cotoami",
-    "version": "0.1.0"
+    "productName": "Cotoami"
   },
   "tauri": {
     "allowlist": {
