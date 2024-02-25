@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 2  # to detect version change in detect_version
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 20
 
@@ -48,10 +48,11 @@ jobs:
       uses: tauri-apps/tauri-action@v0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        APP_VERSION: ${{ steps.detect_version.outputs.current-version }}
       with:
         projectPath: cotoami_desktop/tauri
-        appVersion: ${{ steps.detect_version.outputs.current-version }}
-        tagName: desktop-v__VERSION__
-        releaseName: Cotoami Desktop v__VERSION__
+        appVersion: ${{ env.APP_VERSION }}
+        tagName: desktop-v${{ env.APP_VERSION }}
+        releaseName: Cotoami Desktop v${{ env.APP_VERSION }}
         releaseDraft: false
         prerelease: false
