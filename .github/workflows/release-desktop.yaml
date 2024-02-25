@@ -1,9 +1,9 @@
-name: release
+name: release-desktop
 
 on:
   push:
     branches:
-    - release
+    - release-desktop
 
 jobs:
   build:
@@ -34,13 +34,22 @@ jobs:
         distribution: corretto
         java-version: 17
 
+    - name: Detect app version
+      uses: salsify/action-detect-and-tag-new-version@v2
+        id: detect_version
+        with:
+          create-tag: false
+          version-command: cd cotoami_desktop/tauri && cargo read-manifest | jq -r .version
+
     - name: Build and release desktop app
+      if: ${{ steps.detect_version.outputs.previous-version != steps.detect_version.outputs.current-version }}
       uses: tauri-apps/tauri-action@v0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         projectPath: cotoami_desktop/tauri
-        tagName: desktop-dev${{ github.run_number }}
-        releaseName: Cotoami Desktop dev${{ github.run_number }}
+        appVersion: ${{ steps.detect_version.outputs.current-version }}
+        tagName: desktop-v__VERSION__
+        releaseName: Cotoami Desktop v__VERSION__
         releaseDraft: false
         prerelease: false
