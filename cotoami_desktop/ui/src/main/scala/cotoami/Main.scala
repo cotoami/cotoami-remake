@@ -70,7 +70,8 @@ object Main {
           .map(appBodyContent(model, _, dispatch))
           .getOrElse(Seq()): _*
       ),
-      footer()
+      footer(),
+      modal(model, dispatch)
     )
 
   def appBodyContent(
@@ -104,4 +105,11 @@ object Main {
       )
     )
   )
+
+  def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
+    if (model.currentNode.isEmpty) {
+      Some(subparts.WelcomeModal.view(model, dispatch))
+    } else {
+      None
+    }
 }

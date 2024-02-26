@@ -96,6 +96,9 @@ package object cotoami {
     classes.filter(_._2).map(_._1).mkString(" ")
   }
 
+  def icon(name: String): ReactElement =
+    span(className := "material-symbols")(name)
+
   def paneToggle(paneName: String, dispatch: Msg => Unit): ReactElement =
     Fragment(
       button(

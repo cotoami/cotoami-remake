@@ -60,10 +60,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
         "resizable": true,
         "title": "Cotoami",
-        "width": 800
+        "width": 900,
+        "height": 700
       }
     ]
   }
