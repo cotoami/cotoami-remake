@@ -11,6 +11,8 @@ import io.circe.parser._
 import fui.FunctionalUI.Cmd
 import cats.effect.IO
 
+import cotoami.entities._
+
 package object cotoami {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -18,11 +20,13 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      /** UI state that can be saved in localStorage separately from app data.
-        *
-        * It will be `None` before being restored from localStorage on init.
-        */
-      uiState: Option[UiState] = None
+      // UI state that can be saved in localStorage separately from app data.
+      // It will be `None` before being restored from localStorage on init.
+      uiState: Option[UiState] = None,
+
+      // Node
+      currentNode: Option[Node] = None,
+      localNode: Option[Node] = None
   )
 
   case class UiState(
