@@ -9,6 +9,8 @@ object Tauri extends js.Object {
 
   /** Sends a message to the backend.
     *
+    * <https://tauri.app/v1/api/js/tauri#invoke>
+    *
     * @param cmd
     *   The command name.
     * @param args

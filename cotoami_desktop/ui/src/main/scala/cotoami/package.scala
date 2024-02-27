@@ -21,6 +21,7 @@ package object cotoami {
 
   case class Model(
       testMsg: Option[String] = None,
+      testDir: Option[String] = None,
 
       // UI state that can be saved in localStorage separately from app data.
       // It will be `None` before being restored from localStorage on init.
@@ -87,6 +88,10 @@ package object cotoami {
 
   sealed trait Msg
   case class TestCommand(result: Either[Throwable, String]) extends Msg
+  case object SelectDirectory extends Msg
+  case class DirectorySelected(result: Either[Throwable, Option[String]])
+      extends Msg
+
   case class UiStateRestored(state: Option[UiState]) extends Msg
   case class TogglePane(name: String) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg

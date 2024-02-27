@@ -16,7 +16,7 @@ bincode = "1.3"
 bitflags = "2"
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "1.5.4", features = [] }
+tauri = {version = "1.5.4", features = ["dialog-open"] }
 thiserror.workspace = true
 
 [features]

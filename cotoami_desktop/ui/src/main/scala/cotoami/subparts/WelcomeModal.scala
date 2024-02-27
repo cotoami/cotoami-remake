@@ -52,7 +52,11 @@ object WelcomeModal {
             placeholder := "Database folder path",
             readOnly := true
           ),
-          button(`type` := "button", className := "secondary")(
+          button(
+            `type` := "button",
+            className := "secondary",
+            onClick := ((e) => dispatch(cotoami.SelectDirectory))
+          )(
             icon("folder")
           )
         ),

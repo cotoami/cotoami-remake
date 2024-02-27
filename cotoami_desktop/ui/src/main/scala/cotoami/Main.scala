@@ -42,6 +42,23 @@ object Main {
       case TestCommand(Left(error)) =>
         (model.copy(testMsg = Some(error.toString())), Seq.empty)
 
+      case SelectDirectory =>
+        (
+          model,
+          Seq(
+            tauri.selectSingleDirectory(
+              "Select a new database directory",
+              DirectorySelected
+            )
+          )
+        )
+
+      case DirectorySelected(Right(path)) =>
+        (model.copy(testDir = path), Seq.empty)
+
+      case DirectorySelected(Left(error)) =>
+        (model.copy(testDir = Some(error.toString())), Seq.empty)
+
       case UiStateRestored(uiState) =>
         (model.copy(uiState = Some(uiState.getOrElse(UiState()))), Seq.empty)
 
@@ -111,7 +128,8 @@ object Main {
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
             section(className := "timeline header-and-body")(
-              model.testMsg.toString()
+              div()(model.testMsg.toString()),
+              div()(model.testDir.toString())
             )
           )
         )

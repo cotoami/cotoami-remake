@@ -12,6 +12,8 @@ object Event extends js.Object {
 
   /** Emits an event to the backend and all Tauri windows.
     *
+    * <https://tauri.app/v1/api/js/event/#emit>
+    *
     * @param event
     *   Event name. Must include only alphanumeric characters, -, /, : and _.
     * @param payload
@@ -22,6 +24,8 @@ object Event extends js.Object {
 
   /** Listen to an event. The event can be either global or window-specific. See
     * windowLabel to check the event source.
+    *
+    * <https://tauri.app/v1/api/js/event/#listen>
     *
     * @param event
     *   Event name. Must include only alphanumeric characters, -, /, : and _.
@@ -38,6 +42,8 @@ object Event extends js.Object {
   ): js.Promise[js.Function0[Unit]] = js.native
 
   /** Listen to an one-off event. See listen for more information.
+    *
+    * <https://tauri.app/v1/api/js/event/#once>
     */
   def once[T](
       event: String,
