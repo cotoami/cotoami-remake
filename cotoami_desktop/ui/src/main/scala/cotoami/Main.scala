@@ -26,10 +26,22 @@ object Main {
   }
 
   def init(url: URL): (Model, Seq[Cmd[Msg]]) =
-    (Model(), Seq(UiState.restore(UiStateRestored)))
+    (
+      Model(),
+      Seq(
+        UiState.restore(UiStateRestored),
+        tauri.invokeCommand(TestCommand, "test_command")
+      )
+    )
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
+      case TestCommand(Right(msg)) =>
+        (model.copy(testMsg = Some(msg)), Seq.empty)
+
+      case TestCommand(Left(error)) =>
+        (model.copy(testMsg = Some(error.toString())), Seq.empty)
+
       case UiStateRestored(uiState) =>
         (model.copy(uiState = Some(uiState.getOrElse(UiState()))), Seq.empty)
 
@@ -99,6 +111,7 @@ object Main {
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
             section(className := "timeline header-and-body")(
+              model.testMsg.toString()
             )
           )
         )

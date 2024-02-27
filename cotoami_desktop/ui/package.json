@@ -11,7 +11,8 @@
   "dependencies": {
     "react": "16.14.0",
     "react-dom": "16.14.0",
-    "react-proxy": "1.1.8"
+    "react-proxy": "1.1.8",
+    "@tauri-apps/api": "^1.5.3"
   },
   "devDependencies": {
     "vite": "^5.0.12",
