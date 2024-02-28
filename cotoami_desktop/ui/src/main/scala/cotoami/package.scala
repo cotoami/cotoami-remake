@@ -87,9 +87,10 @@ package object cotoami {
   // Msg
   /////////////////////////////////////////////////////////////////////////////
 
+  case class ErrorTest(result: Either[backend.Error, String]) extends Msg
+
   sealed trait Msg
-  case class SystemInfoFetched(result: Either[Throwable, SystemInfo])
-      extends Msg
+  case class SystemInfoFetched(result: Either[Unit, SystemInfo]) extends Msg
   case object SelectDirectory extends Msg
   case class DirectorySelected(result: Either[Throwable, Option[String]])
       extends Msg

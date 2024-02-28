@@ -12,21 +12,28 @@ import fui.FunctionalUI.Cmd
 
 package object tauri {
 
-  def invokeCommand[Msg, Result](
-      createMsg: Either[Throwable, Result] => Msg,
+  def invokeCommand[Msg, T, E](
+      createMsg: Either[E, T] => Msg,
       command: String,
       args: js.Object = js.Dynamic.literal()
   ): Cmd[Msg] = {
     IO.async { cb =>
       IO {
         Tauri
-          .invoke[Result](command, args)
+          .invoke[T](command, args)
+          // implicitly convert the Promise to a Future by
+          // `scala.scalajs.js.Thenable.Implicits._`
           .onComplete {
-            case Success(r) => {
-              cb(Right(Some(createMsg(Right(r)))))
+            case Success(t) => {
+              cb(Right(Some(createMsg(Right(t)))))
             }
-            case Failure(t) => {
-              cb(Right(Some(createMsg(Left(t)))))
+            case Failure(ex: js.JavaScriptException) => {
+              val error = ex.exception.asInstanceOf[E]
+              cb(Right(Some(createMsg(Left(error)))))
+            }
+            case Failure(throwable) => {
+              // should be unreachable
+              cb(Left(throwable))
             }
           }
         None
@@ -48,13 +55,15 @@ package object tauri {
         }
         Dialog
           .open(options)
+          // implicitly convert the Promise to a Future by
+          // `scala.scalajs.js.Thenable.Implicits._`
           .onComplete {
-            case Success(r) => {
-              val path = if (r == null) None else Some(r.toString())
+            case Success(result) => {
+              val path = if (result == null) None else Some(result.toString())
               cb(Right(Some(createMsg(Right(path)))))
             }
-            case Failure(t) => {
-              cb(Right(Some(createMsg(Left(t)))))
+            case Failure(throwable) => {
+              cb(Right(Some(createMsg(Left(throwable)))))
             }
           }
         None
