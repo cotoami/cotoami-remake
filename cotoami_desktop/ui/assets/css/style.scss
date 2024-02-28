@@ -25,6 +25,9 @@
   --footer-height: 25px;
   --max-text-content-width: 45rem;
   --max-article-width: calc(var(--max-text-content-width) + var(--block-spacing-horizontal));
+
+  // override pico's custom properties
+  --form-element-spacing-vertical: 0.5rem;
 }
 
 //
@@ -84,7 +87,7 @@ section {
 button {
   position: relative;
   margin: 0;
-  padding: 6px 16px;
+  //padding: 6px 16px;
   width: auto;
 
   @include utils.force-unselectable;
@@ -100,7 +103,7 @@ dialog {
 
     header {
       margin-bottom: 0;
-      padding: 20px;
+      padding: 15px 20px;
 
       h1 {
         margin: 0;
@@ -298,7 +301,8 @@ div.text-input-with-button {
     border-bottom-left-radius: 0;
 
     span.material-symbols {
-      font-size: 20px;
+      line-height: 1rem;
+      vertical-align: text-bottom;
     }
   }
 }
