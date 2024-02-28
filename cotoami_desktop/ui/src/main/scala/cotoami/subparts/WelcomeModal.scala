@@ -50,6 +50,7 @@ object WelcomeModal {
             id := "new-database-folder",
             name := "databaseFolder",
             placeholder := "Database folder path",
+            value := model.systemInfo.map(_.app_data_dir).getOrElse(""),
             readOnly := true
           ),
           button(

@@ -3,15 +3,28 @@
     windows_subsystem = "windows"
 )]
 
+use std::string::ToString;
+
 pub mod window_state;
 
 fn main() {
     tauri::Builder::default()
         .plugin(window_state::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![test_command])
+        .invoke_handler(tauri::generate_handler![system_info])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
+#[derive(serde::Serialize)]
+struct SystemInfo {
+    app_data_dir: Option<String>,
+}
+
 #[tauri::command]
-fn test_command() -> String { "Hello from Rust!".into() }
+fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
+    let app_data_dir = app_handle
+        .path_resolver()
+        .app_data_dir()
+        .and_then(|path| path.into_os_string().into_string().ok());
+    SystemInfo { app_data_dir }
+}

@@ -30,17 +30,17 @@ object Main {
       Model(),
       Seq(
         UiState.restore(UiStateRestored),
-        tauri.invokeCommand(TestCommand, "test_command")
+        cotoami.backend.SystemInfo.fetch(SystemInfoFetched)
       )
     )
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
-      case TestCommand(Right(msg)) =>
-        (model.copy(testMsg = Some(msg)), Seq.empty)
+      case SystemInfoFetched(Right(systemInfo)) =>
+        (model.copy(systemInfo = Some(systemInfo)), Seq.empty)
 
-      case TestCommand(Left(error)) =>
-        (model.copy(testMsg = Some(error.toString())), Seq.empty)
+      case SystemInfoFetched(Left(error)) =>
+        (model.copy(backendError = Some(error.toString())), Seq.empty)
 
       case SelectDirectory =>
         (
@@ -128,7 +128,6 @@ object Main {
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
             section(className := "timeline header-and-body")(
-              div()(model.testMsg.toString()),
               div()(model.testDir.toString())
             )
           )

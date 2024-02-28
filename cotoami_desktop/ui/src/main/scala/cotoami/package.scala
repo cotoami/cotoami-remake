@@ -8,10 +8,10 @@ import io.circe.generic.semiauto._
 import io.circe.syntax._
 import io.circe.parser._
 
-import fui.FunctionalUI.Cmd
 import cats.effect.IO
 
-import cotoami.entities._
+import fui.FunctionalUI.Cmd
+import cotoami.backend.{SystemInfo, Node}
 
 package object cotoami {
 
@@ -20,7 +20,8 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      testMsg: Option[String] = None,
+      systemInfo: Option[SystemInfo] = None,
+      backendError: Option[String] = None,
       testDir: Option[String] = None,
 
       // UI state that can be saved in localStorage separately from app data.
@@ -87,7 +88,8 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg
-  case class TestCommand(result: Either[Throwable, String]) extends Msg
+  case class SystemInfoFetched(result: Either[Throwable, SystemInfo])
+      extends Msg
   case object SelectDirectory extends Msg
   case class DirectorySelected(result: Either[Throwable, Option[String]])
       extends Msg
