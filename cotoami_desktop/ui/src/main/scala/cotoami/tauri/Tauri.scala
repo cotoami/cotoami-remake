@@ -20,7 +20,9 @@ object Tauri extends js.Object {
     *   For the Rust side, it can be of any type, as long as they implement
     *   `serde::Deserialize`.
     * @return
-    *   A promise resolving or rejecting to the backend response.
+    *   A promise resolving or rejecting to the backend response. For the Rust
+    *   side, the returned data can be of any type, as long as it implements
+    *   `serde::Serialize`.
     */
   def invoke[T](
       cmd: String,
