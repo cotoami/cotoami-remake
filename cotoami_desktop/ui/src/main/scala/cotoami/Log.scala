@@ -8,13 +8,21 @@ case class Log(
 ) {
   def lastEntry(): Option[Log.Entry] = this.entries.lastOption
 
-  def debug(message: String): Log = this.addEntry(Log.Debug, message)
-  def info(message: String): Log = this.addEntry(Log.Info, message)
-  def warn(message: String): Log = this.addEntry(Log.Warn, message)
-  def error(message: String): Log = this.addEntry(Log.Error, message)
+  def debug(message: String, details: Option[String] = None): Log =
+    this.addEntry(Log.Debug, message, details)
+  def info(message: String, details: Option[String] = None): Log =
+    this.addEntry(Log.Info, message, details)
+  def warn(message: String, details: Option[String] = None): Log =
+    this.addEntry(Log.Warn, message, details)
+  def error(message: String, details: Option[String] = None): Log =
+    this.addEntry(Log.Error, message, details)
 
-  def addEntry(level: Log.Level, message: String): Log = {
-    var entries = this.entries.enqueue(Log.Entry(level, message))
+  def addEntry(
+      level: Log.Level,
+      message: String,
+      details: Option[String] = None
+  ): Log = {
+    var entries = this.entries.enqueue(Log.Entry(level, message, details))
     while (entries.size > this.maxSize) {
       entries = entries.dequeue._2
     }
@@ -53,5 +61,9 @@ object Log {
     override val icon = "priority_high"
   }
 
-  case class Entry(level: Level, message: String)
+  case class Entry(
+      level: Level,
+      message: String,
+      details: Option[String] = None
+  )
 }

@@ -30,8 +30,8 @@ object Main {
       Model(),
       Seq(
         UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch(SystemInfoFetched)
-        // tauri.invokeCommand(ErrorTest, "error_test")
+        cotoami.backend.SystemInfo.fetch(SystemInfoFetched),
+        tauri.invokeCommand(ErrorTest, "error_test")
       )
     )
 
@@ -52,9 +52,8 @@ object Main {
         (
           model.copy(
             systemInfo = Some(systemInfo),
-            log = model.log.info(
-              s"SystemInfo fetched: ${js.JSON.stringify(systemInfo)}"
-            )
+            log = model.log
+              .info("SystemInfo fetched.", Some(js.JSON.stringify(systemInfo)))
           ),
           Seq.empty
         )
