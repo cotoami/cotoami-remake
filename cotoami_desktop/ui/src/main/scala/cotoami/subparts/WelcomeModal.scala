@@ -38,28 +38,31 @@ object WelcomeModal {
         input(
           `type` := "text",
           id := "new-database-name",
-          name := "databaseName",
-          placeholder := "Database name"
+          name := "databaseName"
         ),
 
-        // Folder
-        label(htmlFor := "new-database-folder")("Folder"),
-        div(className := "text-input-with-button")(
-          input(
-            `type` := "text",
-            id := "new-database-folder",
-            name := "databaseFolder",
-            placeholder := "Database folder path",
-            value := model.systemInfo.map(_.app_data_dir).getOrElse(""),
-            readOnly := true
+        // Base folder
+        label(htmlFor := "select-base-folder")("Base folder"),
+        div(className := "file-select")(
+          div(className := "file-path")(
+            model.systemInfo.map(_.app_data_dir).getOrElse("").toString()
           ),
           button(
+            id := "select-base-folder",
             `type` := "button",
             className := "secondary",
             onClick := ((e) => dispatch(cotoami.SelectDirectory))
           )(
             icon("folder")
           )
+        ),
+
+        // Folder name
+        label(htmlFor := "new-folder-name")("Folder name"),
+        input(
+          `type` := "text",
+          id := "new-folder-name",
+          name := "folderName"
         ),
 
         // Create
@@ -74,16 +77,16 @@ object WelcomeModal {
       h2()("Open"),
       form()(
         // Folder
-        label(htmlFor := "database-folder")("Folder"),
-        div(className := "text-input-with-button")(
-          input(
-            `type` := "text",
-            id := "database-folder",
-            name := "databaseFolder",
-            placeholder := "Database folder path",
-            readOnly := true
+        label(htmlFor := "select-database-folder")("Folder"),
+        div(className := "file-select")(
+          div(className := "file-path")(
           ),
-          button(`type` := "button", className := "secondary")(
+          button(
+            id := "select-database-folder",
+            `type` := "button",
+            className := "secondary",
+            onClick := ((e) => dispatch(cotoami.SelectDirectory))
+          )(
             icon("folder")
           )
         ),

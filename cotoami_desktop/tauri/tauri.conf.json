@@ -65,8 +65,8 @@
         "fullscreen": false,
         "resizable": true,
         "title": "Cotoami",
-        "width": 900,
-        "height": 700
+        "width": 1000,
+        "height": 800
       }
     ]
   }

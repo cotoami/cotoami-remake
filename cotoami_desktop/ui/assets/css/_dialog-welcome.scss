@@ -25,7 +25,7 @@ dialog.welcome {
     }
 
     div.body-main {
-      width: 28rem;
+      width: 25rem;
     }
   }
 
@@ -64,6 +64,46 @@ dialog.welcome {
       section.database-path {
         font-size: 0.8rem;
         opacity: .5;
+      }
+    }
+  }
+
+  div.file-select {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: var(--spacing);
+
+    div.file-path {
+      flex: 1;
+      min-width: 0;
+      padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
+      border: var(--border-width) solid var(--form-element-border-color);
+      border-right-style: none;
+      border-radius: var(--border-radius);
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      outline: none;
+      background-color: var(--form-element-background-color);
+      box-shadow: none;
+      color: var(--form-element-color);
+      font-weight: var(--font-weight);
+      font-size: 0.9rem;
+      word-break: break-all;
+
+      span.placeholder {
+        font-size: 1rem;
+        color: var(--muted-color);
+      }
+    }
+
+    button {
+      border-left-style: none;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+
+      span.material-symbols {
+        line-height: 1rem;
+        vertical-align: text-bottom;
       }
     }
   }
