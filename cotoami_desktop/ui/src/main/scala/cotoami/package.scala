@@ -20,8 +20,8 @@ package object cotoami {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      log: Log = Log(),
       systemInfo: Option[SystemInfo] = None,
-      backendError: Option[String] = None,
       testDir: Option[String] = None,
 
       // UI state that can be saved in localStorage separately from app data.

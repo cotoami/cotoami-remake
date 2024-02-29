@@ -42,12 +42,21 @@ object Main {
 
       case ErrorTest(Left(error)) =>
         (
-          model.copy(backendError = Some(s"[${error.code}] ${error.message}")),
+          model.copy(log =
+            model.log.error(s"[${error.code}] ${error.message}")
+          ),
           Seq.empty
         )
 
       case SystemInfoFetched(Right(systemInfo)) =>
-        (model.copy(systemInfo = Some(systemInfo)), Seq.empty)
+        (
+          model.copy(
+            systemInfo = Some(systemInfo),
+            log =
+              model.log.info(s"SystemInfo fetched: ${systemInfo.toString()}")
+          ),
+          Seq.empty
+        )
 
       case SystemInfoFetched(Left(_)) => (model, Seq.empty)
 
@@ -137,8 +146,6 @@ object Main {
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
             section(className := "timeline header-and-body")(
-              div()(model.backendError.toString()),
-              div()(model.testDir.toString())
             )
           )
         )
