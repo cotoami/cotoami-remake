@@ -122,7 +122,8 @@ object Main {
         model.log
           .lastEntry()
           .map(entry =>
-            div(className := s"log-peek ${entry.level}")(
+            div(className := s"log-peek ${entry.level.name}")(
+              cotoami.icon(entry.level.icon),
               entry.message
             )
           )
