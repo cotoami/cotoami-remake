@@ -1,0 +1,18 @@
+@use "./pico-customized" as pico;
+
+div.app>footer {
+  position: relative;
+
+  div.log-peek {
+    position: absolute;
+    top: 2px;
+    right: 10px;
+
+    font-size: 12px; // in the fixed footer height
+    opacity: .6;
+
+    &.error {
+      color: #{pico.$amber-900};
+    }
+  }
+}

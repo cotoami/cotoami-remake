@@ -30,8 +30,8 @@ object Main {
       Model(),
       Seq(
         UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch(SystemInfoFetched),
-        tauri.invokeCommand(ErrorTest, "error_test")
+        cotoami.backend.SystemInfo.fetch(SystemInfoFetched)
+        // tauri.invokeCommand(ErrorTest, "error_test")
       )
     )
 
@@ -52,8 +52,9 @@ object Main {
         (
           model.copy(
             systemInfo = Some(systemInfo),
-            log =
-              model.log.info(s"SystemInfo fetched: ${systemInfo.toString()}")
+            log = model.log.info(
+              s"SystemInfo fetched: ${js.JSON.stringify(systemInfo)}"
+            )
           ),
           Seq.empty
         )
@@ -117,8 +118,16 @@ object Main {
           .map(appBodyContent(model, _, dispatch))
           .getOrElse(Seq()): _*
       ),
-      footer(),
-      modal(model, dispatch)
+      footer(
+        model.log
+          .lastEntry()
+          .map(entry =>
+            div(className := s"log-peek ${entry.level}")(
+              entry.message
+            )
+          )
+      )
+      // modal(model, dispatch)
     )
 
   def appBodyContent(
