@@ -11,6 +11,11 @@ div.app>footer {
     font-size: 12px; // in the fixed footer height
     opacity: .6;
 
+    max-width: 400px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
     &.error {
       color: #{pico.$amber-900};
     }
