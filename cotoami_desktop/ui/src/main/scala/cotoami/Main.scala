@@ -29,7 +29,7 @@ object Main {
     (
       Model(),
       Seq(
-        UiState.restore(UiStateRestored),
+        Model.UiState.restore(UiStateRestored),
         cotoami.backend.SystemInfo.fetch(SystemInfoFetched),
         tauri.invokeCommand(ErrorTest, "error_test")
       )
@@ -81,7 +81,10 @@ object Main {
         (model.copy(testDir = Some(error.toString())), Seq.empty)
 
       case UiStateRestored(uiState) =>
-        (model.copy(uiState = Some(uiState.getOrElse(UiState()))), Seq.empty)
+        (
+          model.copy(uiState = Some(uiState.getOrElse(Model.UiState()))),
+          Seq.empty
+        )
 
       case TogglePane(name) => {
         model.uiState match {
@@ -144,7 +147,7 @@ object Main {
 
   def appBodyContent(
       model: Model,
-      uiState: UiState,
+      uiState: Model.UiState,
       dispatch: Msg => Unit
   ): Seq[ReactElement] = Seq(
     subparts.NavNodes.view(model, uiState, dispatch),

@@ -4,14 +4,14 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg, UiState, optionalClasses, paneToggle, icon}
+import cotoami.{Model, Msg, optionalClasses, paneToggle, icon}
 
 object NavNodes {
   val PaneName = "nav-nodes"
 
   def view(
       model: Model,
-      uiState: UiState,
+      uiState: Model.UiState,
       dispatch: Msg => Unit
   ): ReactElement =
     nav(
