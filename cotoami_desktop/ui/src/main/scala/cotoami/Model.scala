@@ -61,21 +61,22 @@ object Model {
     def restore(createMsg: Option[UiState] => Msg): Cmd[Msg] =
       IO {
         val value = dom.window.localStorage.getItem(StorageKey)
-        println(s"localStorage[$StorageKey]: $value")
-        val uiState =
-          if (value != null) {
-            decode[UiState](value) match {
-              case Right(uiState) => Some(uiState)
-              case Left(error) => {
-                println(s"Invalid uiState in localStorage: $value")
-                dom.window.localStorage.removeItem(StorageKey)
-                None
-              }
+        val msg = if (value != null) {
+          decode[UiState](value) match {
+            case Right(uiState) => createMsg(Some(uiState))
+            case Left(error) => {
+              dom.window.localStorage.removeItem(StorageKey)
+              cotoami.AddLogEntry(
+                Log.Error,
+                "Invalid uiState in localStorage.",
+                Some(value)
+              )
             }
-          } else {
-            None
           }
-        Some(createMsg(uiState))
+        } else {
+          createMsg(None)
+        }
+        Some(msg)
       }
   }
 }
