@@ -48,6 +48,12 @@ object Main {
           Seq.empty
         )
 
+      case AddLogEntry(level, message, details) =>
+        (
+          model.copy(log = model.log.addEntry(level, message, details)),
+          Seq.empty
+        )
+
       case ToggleLogView =>
         (model.copy(logViewToggle = !model.logViewToggle), Seq.empty)
 
