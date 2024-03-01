@@ -21,6 +21,7 @@ package object cotoami {
 
   case class Model(
       log: Log = Log(),
+      logViewToggle: Boolean = false,
       systemInfo: Option[SystemInfo] = None,
       testDir: Option[String] = None,
 
@@ -89,6 +90,7 @@ package object cotoami {
 
   sealed trait Msg
   case class ErrorTest(result: Either[backend.Error, String]) extends Msg
+  case object ToggleLogView extends Msg
   case class SystemInfoFetched(result: Either[Unit, SystemInfo]) extends Msg
   case object SelectDirectory extends Msg
   case class DirectorySelected(result: Either[Throwable, Option[String]])

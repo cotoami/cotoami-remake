@@ -48,6 +48,9 @@ object Main {
           Seq.empty
         )
 
+      case ToggleLogView =>
+        (model.copy(logViewToggle = !model.logViewToggle), Seq.empty)
+
       case SystemInfoFetched(Right(systemInfo)) =>
         (
           model.copy(
@@ -122,11 +125,20 @@ object Main {
           .lastEntry()
           .map(entry =>
             div(className := s"log-peek ${entry.level.name}")(
-              cotoami.icon(entry.level.icon),
-              entry.message
+              button(
+                className := "open-log-view",
+                onClick := ((e) => dispatch(cotoami.ToggleLogView))
+              )(
+                cotoami.icon(entry.level.icon),
+                entry.message
+              )
             )
           )
-      )
+      ),
+      if (model.logViewToggle)
+        Some(subparts.LogView.view(model.log, dispatch))
+      else
+        None
       // modal(model, dispatch)
     )
 

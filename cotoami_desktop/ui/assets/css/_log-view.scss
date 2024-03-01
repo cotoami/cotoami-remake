@@ -1,0 +1,59 @@
+@use "./pico-customized" as pico;
+
+.log-view {
+  display: flex;
+  flex-direction: column;
+
+  width: 60vw;
+  height: 30vh;
+
+  background: var(--card-background-color);
+  box-shadow: var(--card-box-shadow);
+  border-top: 1px solid var(--pane-border-color);
+  border-left: 1px solid var(--pane-border-color);
+
+  header.tools {
+    padding-right: 10px;
+
+    button {
+      padding: 0;
+    }
+  }
+
+  .log-entries {
+    flex: 1;
+
+    margin: 5px;
+    margin-top: 0;
+    padding: 5px;
+
+    font-size: 0.9rem;
+
+    border: var(--border-width) solid var(--form-element-border-color);
+    outline: none;
+    background-color: var(--form-element-background-color);
+
+    overflow-y: auto;
+
+    .log-entry {
+      display: flex;
+      flex-direction: row;
+
+      margin-bottom: 5px;
+
+      &.error {
+        color: #{pico.$amber-900};
+      }
+
+      span.material-symbols {
+        margin-right: 3px;
+        line-height: 1rem;
+        vertical-align: middle;
+      }
+
+      .details {
+        opacity: .5;
+      }
+    }
+  }
+}

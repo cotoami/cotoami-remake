@@ -16,6 +16,11 @@ div.app>footer {
     overflow: hidden;
     text-overflow: ellipsis;
 
+    button {
+      all: unset;
+      cursor: pointer;
+    }
+
     &.error {
       color: #{pico.$amber-900};
     }
