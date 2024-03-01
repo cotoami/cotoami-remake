@@ -28,6 +28,7 @@ case class Model(
 )
 
 object Model {
+
   case class UiState(
       paneToggles: Map[String, Boolean] = Map(),
       paneSizes: Map[String, Int] = Map()
