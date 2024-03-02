@@ -43,11 +43,16 @@ package object tauri {
 
   def selectSingleDirectory[Msg](
       dialogTitle: String,
-      createMsg: Either[Throwable, Option[String]] => Msg
+      createMsg: Either[Throwable, Option[String]] => Msg,
+      defaultDirectory: Option[String] = None
   ): Cmd[Msg] = {
     IO.async { cb =>
       IO {
         val options = new Dialog.OpenDialogOptions {
+          override val defaultPath = defaultDirectory match {
+            case Some(path) => path
+            case None       => ()
+          }
           override val directory = true
           override val multiple = false
           override val recursive = true

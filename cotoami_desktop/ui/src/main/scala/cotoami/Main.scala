@@ -30,24 +30,12 @@ object Main {
       Model(),
       Seq(
         Model.UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch(SystemInfoFetched),
-        tauri.invokeCommand(ErrorTest, "error_test")
+        cotoami.backend.SystemInfo.fetch(SystemInfoFetched)
       )
     )
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
-      case ErrorTest(Right(value)) =>
-        (model, Seq.empty)
-
-      case ErrorTest(Left(error)) =>
-        (
-          model.copy(log =
-            model.log.error(s"[${error.code}] ${error.message}")
-          ),
-          Seq.empty
-        )
-
       case AddLogEntry(level, message, details) =>
         (
           model.copy(log = model.log.addEntry(level, message, details)),
@@ -61,6 +49,8 @@ object Main {
         (
           model.copy(
             systemInfo = Some(systemInfo),
+            welcomeModal =
+              model.welcomeModal.copy(baseFolder = systemInfo.app_data_dir),
             log = model.log
               .info("SystemInfo fetched.", Some(js.JSON.stringify(systemInfo)))
           ),
@@ -68,23 +58,6 @@ object Main {
         )
 
       case SystemInfoFetched(Left(_)) => (model, Seq.empty)
-
-      case SelectDirectory =>
-        (
-          model,
-          Seq(
-            tauri.selectSingleDirectory(
-              "Select a new database directory",
-              DirectorySelected
-            )
-          )
-        )
-
-      case DirectorySelected(Right(path)) =>
-        (model.copy(testDir = path), Seq.empty)
-
-      case DirectorySelected(Left(error)) =>
-        (model.copy(testDir = Some(error.toString())), Seq.empty)
 
       case UiStateRestored(uiState) =>
         (
@@ -110,6 +83,12 @@ object Main {
           }
           case None => (model, Seq.empty)
         }
+      }
+
+      case WelcomeModalMsg(subMsg) => {
+        val (welcomeModal, cmds) =
+          subparts.WelcomeModal.update(subMsg, model.welcomeModal);
+        (model.copy(welcomeModal = welcomeModal), cmds)
       }
     }
 
@@ -147,8 +126,8 @@ object Main {
       if (model.logViewToggle)
         Some(subparts.LogView.view(model.log, dispatch))
       else
-        None
-      // modal(model, dispatch)
+        None,
+      modal(model, dispatch)
     )
 
   def appBodyContent(
@@ -185,7 +164,7 @@ object Main {
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
     if (model.currentNode.isEmpty) {
-      Some(subparts.WelcomeModal.view(model, dispatch))
+      Some(subparts.WelcomeModal.view(model.welcomeModal, dispatch))
     } else {
       None
     }

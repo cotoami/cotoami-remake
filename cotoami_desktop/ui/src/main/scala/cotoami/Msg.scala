@@ -5,11 +5,6 @@ import cotoami.backend.SystemInfo
 
 sealed trait Msg
 
-case class ErrorTest(result: Either[backend.Error, String]) extends Msg
-case object SelectDirectory extends Msg
-case class DirectorySelected(result: Either[Throwable, Option[String]])
-    extends Msg
-
 // Log
 case class AddLogEntry(
     level: Log.Level,
@@ -25,3 +20,6 @@ case class UiStateRestored(state: Option[Model.UiState]) extends Msg
 // Pane
 case class TogglePane(name: String) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
+
+// Sub
+case class WelcomeModalMsg(subMsg: subparts.WelcomeModal.Msg) extends Msg

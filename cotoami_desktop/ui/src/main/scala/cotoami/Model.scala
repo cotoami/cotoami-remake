@@ -11,6 +11,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{SystemInfo, Node}
+import cotoami.subparts.WelcomeModal
 
 case class Model(
     log: Log = Log(),
@@ -24,7 +25,10 @@ case class Model(
 
     // Node
     currentNode: Option[Node] = None,
-    localNode: Option[Node] = None
+    localNode: Option[Node] = None,
+
+    // WelcomeModal
+    welcomeModal: WelcomeModal.Model = WelcomeModal.Model()
 )
 
 object Model {
