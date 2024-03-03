@@ -1,6 +1,7 @@
 package cotoami
 
 import scala.scalajs.js
+import slinky.web.html.max
 
 package object backend {
 

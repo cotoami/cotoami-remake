@@ -1,11 +1,12 @@
 package cotoami.subparts
 
 import slinky.core._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{Model, Msg, Log, icon, tauri, WelcomeModalMsg}
+import cotoami.{Model, Msg, Log, Validation, icon, tauri, WelcomeModalMsg}
+import cotoami.backend.Node
 import cats.syntax.foldable
 
 object WelcomeModal {
@@ -77,21 +78,37 @@ object WelcomeModal {
       )
     )
 
-  def newDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
-    section(className := "new-database")(
-      h2()("New database"),
-      form()(
-        // Name
-        label(htmlFor := "database-name")("Name"),
+  def databaseNameInput(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement = {
+    val errors =
+      if (model.databaseName.isEmpty) None
+      else Some(Node.validateName(model.databaseName))
+    Fragment(
+      label(htmlFor := "database-name")("Name"),
+      div(className := "input-with-validation")(
         input(
           `type` := "text",
           id := "database-name",
           name := "databaseName",
           value := model.databaseName,
+          Validation.ariaInvalid(errors),
           onInput := ((e) =>
             dispatch(WelcomeModalMsg(DatabaseNameInput(e.target.value)))
           )
         ),
+        Validation.validationErrorDiv(errors)
+      )
+    )
+  }
+
+  def newDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
+    section(className := "new-database")(
+      h2()("New database"),
+      form()(
+        // Name
+        databaseNameInput(model, dispatch),
 
         // Base folder
         label(htmlFor := "select-base-folder")("Base folder"),
@@ -109,13 +126,15 @@ object WelcomeModal {
 
         // Folder name
         label(htmlFor := "folder-name")("Folder name to create"),
-        input(
-          `type` := "text",
-          id := "folder-name",
-          name := "folderName",
-          value := model.folderName,
-          onInput := ((e) =>
-            dispatch(WelcomeModalMsg(FolderNameInput(e.target.value)))
+        div(className := "input-with-validation")(
+          input(
+            `type` := "text",
+            id := "folder-name",
+            name := "folderName",
+            value := model.folderName,
+            onInput := ((e) =>
+              dispatch(WelcomeModalMsg(FolderNameInput(e.target.value)))
+            )
           )
         ),
 

@@ -99,6 +99,13 @@ a {
   cursor: pointer;
 }
 
+// override pico's style to move the margin below validation messages
+input:not([type="checkbox"], [type="radio"]),
+select,
+textarea {
+  margin-bottom: 0;
+}
+
 dialog {
   article {
     padding-bottom: 10px;
@@ -306,5 +313,14 @@ div.text-input-with-button {
       line-height: 1rem;
       vertical-align: text-bottom;
     }
+  }
+}
+
+.input-with-validation {
+  margin-bottom: var(--spacing);
+
+  .validation-error {
+    font-size: 95%;
+    color: var(--form-element-invalid-border-color)
   }
 }
