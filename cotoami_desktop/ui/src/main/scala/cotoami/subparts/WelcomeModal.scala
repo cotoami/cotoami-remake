@@ -18,7 +18,12 @@ object WelcomeModal {
       baseFolder: String = "",
       folderName: String = "",
       folderNameErrors: Option[Seq[Validation.Error]] = None
-  )
+  ) {
+    def validateNewDatabaseInputs(): Boolean =
+      Node
+        .validateName(this.databaseName)
+        .isEmpty && this.folderNameErrors.map(_.isEmpty).getOrElse(false)
+  }
 
   sealed trait Msg
   case class DatabaseNameInput(query: String) extends Msg
@@ -156,7 +161,12 @@ object WelcomeModal {
 
         // Create
         div(className := "buttons")(
-          button(`type` := "submit", disabled := true)("Create")
+          button(
+            `type` := "submit",
+            disabled := !model.validateNewDatabaseInputs()
+          )(
+            "Create"
+          )
         )
       )
     )
