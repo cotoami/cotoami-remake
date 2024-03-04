@@ -145,7 +145,9 @@ object WelcomeModal {
             name := "folderName",
             value := model.folderName,
             Validation.ariaInvalid(model.folderNameErrors),
-            onInput := ((e) =>
+            // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
+            // (onChange is almost the same as onInput in React)
+            onChange := ((e) =>
               dispatch(WelcomeModalMsg(FolderNameInput(e.target.value)))
             )
           ),
@@ -175,7 +177,8 @@ object WelcomeModal {
           name := "databaseName",
           value := model.databaseName,
           Validation.ariaInvalid(errors),
-          onInput := ((e) =>
+          // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
+          onChange := ((e) =>
             dispatch(WelcomeModalMsg(DatabaseNameInput(e.target.value)))
           )
         ),
