@@ -10,8 +10,8 @@ use validator::Validate;
 
 use crate::{
     service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    state::NodeState,
     web::{Accept, Content},
-    NodeState,
 };
 
 pub(super) fn routes() -> Router<NodeState> {

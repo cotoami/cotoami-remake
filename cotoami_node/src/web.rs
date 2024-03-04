@@ -1,7 +1,8 @@
 //! Web API for Node operations based on [NodeState].
 
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
+use anyhow::Result;
 use axum::{
     extract::OriginalUri,
     headers,
@@ -19,8 +20,12 @@ use axum_extra::extract::cookie::{Cookie, CookieJar};
 use bytes::Bytes;
 use cotoami_db::prelude::ClientSession;
 use dotenvy::dotenv;
+use futures::TryFutureExt;
 use mime::Mime;
-use tokio::task::spawn_blocking;
+use tokio::{
+    sync::{oneshot, oneshot::Sender},
+    task::{spawn_blocking, JoinHandle},
+};
 use tracing::{debug, error};
 use validator::Validate;
 
@@ -36,6 +41,26 @@ mod session;
 mod ws;
 
 pub(crate) use self::{cotonomas::PostCoto, csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER};
+
+pub async fn launch_server(
+    server_config: ServerConfig,
+    node_state: NodeState,
+) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
+    // Build a Web API server
+    let addr = SocketAddr::from(([0, 0, 0, 0], server_config.port));
+    let web_api = router(Arc::new(server_config), node_state);
+    let server = axum::Server::bind(&addr).serve(web_api.into_make_service());
+
+    // Prepare a way to gracefully shutdown a server
+    // https://hyper.rs/guides/0.14/server/graceful-shutdown/
+    let (tx, rx) = oneshot::channel::<()>();
+    let server = server.with_graceful_shutdown(async {
+        rx.await.ok();
+    });
+
+    // Launch the server
+    Ok((tokio::spawn(server.map_err(anyhow::Error::from)), tx))
+}
 
 #[derive(Debug, serde::Deserialize, Validate)]
 pub struct ServerConfig {

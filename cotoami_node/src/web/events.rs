@@ -17,8 +17,7 @@ use tracing::debug;
 use crate::{
     event::NodeSentEvent,
     service::{PubsubService, ServiceError},
-    state::EventPubsub,
-    NodeState,
+    state::{EventPubsub, NodeState},
 };
 
 pub(super) fn routes() -> Router<NodeState> {
