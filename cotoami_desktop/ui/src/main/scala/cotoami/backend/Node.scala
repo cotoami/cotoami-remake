@@ -7,7 +7,8 @@ import cotoami.Validation
 trait Node extends js.Object {
   val uuid: String = js.native
   val name: String = js.native
-  val icon: Array[Byte] = js.native
+  val icon: String = js.native // Base64 encoded image binary
+  val version: Int = js.native
 }
 
 object Node {

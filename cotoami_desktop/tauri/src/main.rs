@@ -5,6 +5,8 @@
 
 use std::{path::PathBuf, string::ToString};
 
+use cotoami_db::prelude::Node;
+
 pub mod window_state;
 
 fn main() {
@@ -12,7 +14,8 @@ fn main() {
         .plugin(window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             system_info,
-            validate_new_folder_path
+            validate_new_folder_path,
+            create_database
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -76,4 +79,13 @@ fn validate_new_folder_path(base_folder: String, folder_name: String) -> Result<
             message: e.to_string(),
         }),
     }
+}
+
+#[tauri::command]
+async fn create_database(
+    database_name: String,
+    base_folder: String,
+    folder_name: String,
+) -> Result<Node, Error> {
+    unimplemented!()
 }

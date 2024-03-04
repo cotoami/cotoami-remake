@@ -755,6 +755,8 @@ version = "0.1.3"
 dependencies = [
  "bincode",
  "bitflags 2.3.3",
+ "cotoami_db",
+ "cotoami_node",
  "serde",
  "serde_json",
  "tauri",
