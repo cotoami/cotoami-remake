@@ -3,16 +3,25 @@
     windows_subsystem = "windows"
 )]
 
-use std::string::ToString;
+use std::{path::PathBuf, string::ToString};
 
 pub mod window_state;
 
 fn main() {
     tauri::Builder::default()
         .plugin(window_state::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![system_info, error_test])
+        .invoke_handler(tauri::generate_handler![
+            system_info,
+            validate_new_folder_path
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[derive(serde::Serialize)]
+struct Error {
+    code: String,
+    message: String,
 }
 
 #[derive(serde::Serialize)]
@@ -46,16 +55,25 @@ fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
     }
 }
 
-#[derive(serde::Serialize)]
-struct Error {
-    code: String,
-    message: String,
-}
-
 #[tauri::command]
-fn error_test() -> Result<String, Error> {
-    Err(Error {
-        code: "test".into(),
-        message: "Hi, I'm an error!".into(),
-    })
+fn validate_new_folder_path(base_folder: String, folder_name: String) -> Result<(), Error> {
+    let mut path = PathBuf::from(base_folder);
+    if !path.is_dir() {
+        return Err(Error {
+            code: "non-existent-base-folder".into(),
+            message: "The base folder doesn't exist.".into(),
+        });
+    }
+    path.push(folder_name);
+    match path.try_exists() {
+        Ok(true) => Err(Error {
+            code: "folder-already-exists".into(),
+            message: "The folder already exists.".into(),
+        }),
+        Ok(false) => Ok(()),
+        Err(e) => Err(Error {
+            code: "file-system-error".into(),
+            message: e.to_string(),
+        }),
+    }
 }

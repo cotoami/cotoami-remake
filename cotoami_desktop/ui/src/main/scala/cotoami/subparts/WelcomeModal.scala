@@ -1,11 +1,13 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import slinky.core._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
 import cotoami.{Model, Msg, Log, Validation, icon, tauri, WelcomeModalMsg}
+import cotoami.backend
 import cotoami.backend.Node
 import cats.syntax.foldable
 
@@ -14,7 +16,8 @@ object WelcomeModal {
   case class Model(
       databaseName: String = "",
       baseFolder: String = "",
-      folderName: String = ""
+      folderName: String = "",
+      folderNameErrors: Option[Seq[Validation.Error]] = None
   )
 
   sealed trait Msg
@@ -23,6 +26,8 @@ object WelcomeModal {
   case class BaseFolderSelected(result: Either[Throwable, Option[String]])
       extends Msg
   case class FolderNameInput(query: String) extends Msg
+  case class NewFolderValidation(result: Either[backend.Error, Unit])
+      extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -31,18 +36,21 @@ object WelcomeModal {
 
       case SelectBaseFolder =>
         (
-          model,
+          model.copy(folderNameErrors = None),
           Seq(
             tauri.selectSingleDirectory(
-              "Select a new database directory",
+              "Select a new database folder",
               BaseFolderSelected andThen WelcomeModalMsg,
               Some(model.baseFolder)
             )
           )
         )
 
-      case BaseFolderSelected(Right(path)) =>
-        (model.copy(baseFolder = path.getOrElse(model.baseFolder)), Seq.empty)
+      case BaseFolderSelected(Right(path)) => {
+        model.copy(baseFolder = path.getOrElse(model.baseFolder)) match {
+          case model => (model, validateNewFolder(model))
+        }
+      }
 
       case BaseFolderSelected(Left(error)) =>
         (
@@ -53,8 +61,37 @@ object WelcomeModal {
         )
 
       case FolderNameInput(value) =>
-        (model.copy(folderName = value), Seq.empty)
+        model.copy(folderName = value, folderNameErrors = None) match {
+          case model => (model, validateNewFolder(model))
+        }
+
+      case NewFolderValidation(Right(_)) =>
+        (model.copy(folderNameErrors = Some(Seq.empty)), Seq.empty)
+
+      case NewFolderValidation(Left(error)) =>
+        (
+          model.copy(folderNameErrors =
+            Some(Seq(backend.Error.toValidationError(error)))
+          ),
+          Seq.empty
+        )
     }
+
+  def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
+    if (!model.baseFolder.isBlank && !model.folderName.isBlank)
+      Seq(
+        tauri.invokeCommand(
+          NewFolderValidation andThen WelcomeModalMsg,
+          "validate_new_folder_path",
+          js.Dynamic
+            .literal(
+              baseFolder = model.baseFolder,
+              folderName = model.folderName
+            )
+        )
+      )
+    else
+      Seq()
 
   def view(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -77,31 +114,6 @@ object WelcomeModal {
         )
       )
     )
-
-  def databaseNameInput(
-      model: Model,
-      dispatch: cotoami.Msg => Unit
-  ): ReactElement = {
-    val errors =
-      if (model.databaseName.isEmpty) None
-      else Some(Node.validateName(model.databaseName))
-    Fragment(
-      label(htmlFor := "database-name")("Name"),
-      div(className := "input-with-validation")(
-        input(
-          `type` := "text",
-          id := "database-name",
-          name := "databaseName",
-          value := model.databaseName,
-          Validation.ariaInvalid(errors),
-          onInput := ((e) =>
-            dispatch(WelcomeModalMsg(DatabaseNameInput(e.target.value)))
-          )
-        ),
-        Validation.validationErrorDiv(errors)
-      )
-    )
-  }
 
   def newDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     section(className := "new-database")(
@@ -132,10 +144,12 @@ object WelcomeModal {
             id := "folder-name",
             name := "folderName",
             value := model.folderName,
+            Validation.ariaInvalid(model.folderNameErrors),
             onInput := ((e) =>
               dispatch(WelcomeModalMsg(FolderNameInput(e.target.value)))
             )
-          )
+          ),
+          Validation.validationErrorDiv(model.folderNameErrors)
         ),
 
         // Create
@@ -144,6 +158,31 @@ object WelcomeModal {
         )
       )
     )
+
+  def databaseNameInput(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement = {
+    val errors =
+      if (model.databaseName.isEmpty) None
+      else Some(Node.validateName(model.databaseName))
+    Fragment(
+      label(htmlFor := "database-name")("Name"),
+      div(className := "input-with-validation")(
+        input(
+          `type` := "text",
+          id := "database-name",
+          name := "databaseName",
+          value := model.databaseName,
+          Validation.ariaInvalid(errors),
+          onInput := ((e) =>
+            dispatch(WelcomeModalMsg(DatabaseNameInput(e.target.value)))
+          )
+        ),
+        Validation.validationErrorDiv(errors)
+      )
+    )
+  }
 
   def openDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     section(className := "open-database")(
