@@ -64,17 +64,17 @@ pub async fn launch_server(
 
 #[derive(Debug, serde::Deserialize, Validate)]
 pub struct ServerConfig {
-    // COTOAMI_PORT
+    // COTOAMI_SERVER_PORT
     #[serde(default = "ServerConfig::default_port")]
     pub port: u16,
 
-    // COTOAMI_URL_SCHEME
+    // COTOAMI_SERVER_URL_SCHEME
     #[serde(default = "ServerConfig::default_url_scheme")]
     pub url_scheme: String,
-    // COTOAMI_URL_HOST
+    // COTOAMI_SERVER_URL_HOST
     #[serde(default = "ServerConfig::default_url_host")]
     pub url_host: String,
-    // COTOAMI_URL_PORT
+    // COTOAMI_SERVER_URL_PORT
     pub url_port: Option<u16>,
 }
 
