@@ -6,19 +6,6 @@ use validator::Validate;
 
 #[derive(Debug, serde::Deserialize, Validate)]
 pub struct Config {
-    // COTOAMI_PORT
-    #[serde(default = "Config::default_port")]
-    pub port: u16,
-
-    // COTOAMI_URL_SCHEME
-    #[serde(default = "Config::default_url_scheme")]
-    pub url_scheme: String,
-    // COTOAMI_URL_HOST
-    #[serde(default = "Config::default_url_host")]
-    pub url_host: String,
-    // COTOAMI_URL_PORT
-    pub url_port: Option<u16>,
-
     // COTOAMI_DB_DIR
     pub db_dir: Option<String>,
 
@@ -64,9 +51,6 @@ impl Config {
 
     // Functions returning a default value as a workaround for the issue:
     // https://github.com/serde-rs/serde/issues/368
-    fn default_port() -> u16 { 5103 }
-    fn default_url_scheme() -> String { "http".into() }
-    fn default_url_host() -> String { "localhost".into() }
     fn default_change_owner_password() -> bool { false }
     fn default_session_minutes() -> u64 { 60 }
     fn default_changes_chunk_size() -> i64 { 1000 }

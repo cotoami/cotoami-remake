@@ -1,5 +1,7 @@
 //! Web API for Node operations based on [NodeState].
 
+use std::sync::Arc;
+
 use axum::{
     extract::OriginalUri,
     headers,
@@ -16,9 +18,11 @@ use axum::{
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use bytes::Bytes;
 use cotoami_db::prelude::ClientSession;
+use dotenvy::dotenv;
 use mime::Mime;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error};
+use validator::Validate;
 
 use crate::{service::ServiceError, state::NodeState};
 
@@ -33,11 +37,42 @@ mod ws;
 
 pub(crate) use self::{cotonomas::PostCoto, csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER};
 
+#[derive(Debug, serde::Deserialize, Validate)]
+pub struct ServerConfig {
+    // COTOAMI_PORT
+    #[serde(default = "ServerConfig::default_port")]
+    pub port: u16,
+
+    // COTOAMI_URL_SCHEME
+    #[serde(default = "ServerConfig::default_url_scheme")]
+    pub url_scheme: String,
+    // COTOAMI_URL_HOST
+    #[serde(default = "ServerConfig::default_url_host")]
+    pub url_host: String,
+    // COTOAMI_URL_PORT
+    pub url_port: Option<u16>,
+}
+
+impl ServerConfig {
+    const ENV_PREFXI: &'static str = "COTOAMI_SERVER_";
+
+    pub fn load_from_env() -> Result<ServerConfig, envy::Error> {
+        dotenv().ok();
+        envy::prefixed(Self::ENV_PREFXI).from_env::<ServerConfig>()
+    }
+
+    // Functions returning a default value as a workaround for the issue:
+    // https://github.com/serde-rs/serde/issues/368
+    fn default_port() -> u16 { 5103 }
+    fn default_url_scheme() -> String { "http".into() }
+    fn default_url_host() -> String { "localhost".into() }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Router
 /////////////////////////////////////////////////////////////////////////////
 
-pub(super) fn router(state: NodeState) -> Router {
+pub(super) fn router(config: Arc<ServerConfig>, state: NodeState) -> Router {
     Router::new()
         .nest("/api", routes())
         .fallback(fallback)
@@ -47,6 +82,7 @@ pub(super) fn router(state: NodeState) -> Router {
         // set by a preceding middleware in the same `ServiceBuilder` (it causes "Missing request
         // extension" error).
         // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
+        .layer(Extension(config))
         .layer(Extension(state.clone()))
         .with_state(state)
 }

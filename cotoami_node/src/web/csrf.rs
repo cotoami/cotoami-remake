@@ -13,7 +13,7 @@ use axum::{
 };
 use tracing::info;
 
-use crate::{Config, NodeState};
+use crate::web::ServerConfig;
 
 const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTIONS];
 
@@ -22,18 +22,18 @@ const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTI
 pub(crate) const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
 pub(super) async fn protect_from_forgery<B>(
-    Extension(state): Extension<NodeState>,
+    Extension(config): Extension<Arc<ServerConfig>>,
     request: Request<B>,
     next: Next<B>,
 ) -> Response {
-    if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &state.config()) {
+    if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &config) {
         next.run(request).await
     } else {
         StatusCode::FORBIDDEN.into_response()
     }
 }
 
-fn is_csrf_safe<B>(request: &Request<B>, config: &Arc<Config>) -> bool {
+fn is_csrf_safe<B>(request: &Request<B>, config: &Arc<ServerConfig>) -> bool {
     if let Err(e) = check_csrf_safety(request, config) {
         info!("CSRF safety check failed: {}", e);
         false
@@ -42,7 +42,7 @@ fn is_csrf_safe<B>(request: &Request<B>, config: &Arc<Config>) -> bool {
     }
 }
 
-fn check_csrf_safety<B>(request: &Request<B>, config: &Arc<Config>) -> Result<()> {
+fn check_csrf_safety<B>(request: &Request<B>, config: &Arc<ServerConfig>) -> Result<()> {
     check_custom_header(request.headers())?;
     check_origin(request.headers(), config)?;
     check_host(request.headers(), config)?;
@@ -61,7 +61,7 @@ fn check_custom_header(headers: &HeaderMap<HeaderValue>) -> Result<()> {
 }
 
 /// Block cross-origin ajax requests.
-fn check_origin(headers: &HeaderMap<HeaderValue>, config: &Arc<Config>) -> Result<()> {
+fn check_origin(headers: &HeaderMap<HeaderValue>, config: &Arc<ServerConfig>) -> Result<()> {
     if let Some(origin) = headers.typed_get::<Origin>() {
         (origin.is_null()
             || (origin.scheme() == config.url_scheme
@@ -75,7 +75,7 @@ fn check_origin(headers: &HeaderMap<HeaderValue>, config: &Arc<Config>) -> Resul
 }
 
 /// Prevent DNS rebinding attack.
-fn check_host(headers: &HeaderMap<HeaderValue>, config: &Arc<Config>) -> Result<()> {
+fn check_host(headers: &HeaderMap<HeaderValue>, config: &Arc<ServerConfig>) -> Result<()> {
     if let Some(host) = headers.typed_get::<Host>() {
         (host.hostname() == config.url_host && host.port() == config.url_port)
             .then_some(())
