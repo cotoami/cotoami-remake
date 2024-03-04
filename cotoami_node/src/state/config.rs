@@ -5,7 +5,7 @@ use dotenvy::dotenv;
 use validator::Validate;
 
 #[derive(Debug, serde::Deserialize, Validate)]
-pub struct Config {
+pub struct NodeConfig {
     // COTOAMI_DB_DIR
     pub db_dir: Option<String>,
 
@@ -28,25 +28,25 @@ pub struct Config {
     ///
     /// * This value can be set via the environment variable:
     /// `COTOAMI_CHANGE_OWNER_PASSWORD`.
-    #[serde(default = "Config::default_change_owner_password")]
+    #[serde(default = "NodeConfig::default_change_owner_password")]
     pub change_owner_password: bool,
 
     // COTOAMI_SESSION_MINUTES
-    #[serde(default = "Config::default_session_minutes")]
+    #[serde(default = "NodeConfig::default_session_minutes")]
     pub session_minutes: u64,
 
     // COTOAMI_CHANGES_CHUNK_SIZE
-    #[serde(default = "Config::default_changes_chunk_size")]
+    #[serde(default = "NodeConfig::default_changes_chunk_size")]
     pub changes_chunk_size: i64,
 }
 
-impl Config {
+impl NodeConfig {
     const ENV_PREFXI: &'static str = "COTOAMI_";
     const DEFAULT_DB_DIR_NAME: &'static str = "cotoami";
 
-    pub fn load_from_env() -> Result<Config, envy::Error> {
+    pub fn load_from_env() -> Result<NodeConfig, envy::Error> {
         dotenv().ok();
-        envy::prefixed(Self::ENV_PREFXI).from_env::<Config>()
+        envy::prefixed(Self::ENV_PREFXI).from_env::<NodeConfig>()
     }
 
     // Functions returning a default value as a workaround for the issue:

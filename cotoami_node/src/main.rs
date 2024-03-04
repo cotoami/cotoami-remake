@@ -7,7 +7,7 @@ async fn main() -> Result<()> {
     // Install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
 
-    let config = Config::load_from_env()?;
+    let config = NodeConfig::load_from_env()?;
     info!("Config loaded: {:?}", config);
 
     let server_config = ServerConfig::load_from_env()?;

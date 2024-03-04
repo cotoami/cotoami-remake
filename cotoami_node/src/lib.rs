@@ -8,7 +8,7 @@ use tokio::{
 };
 
 use crate::{
-    state::{Config, NodeState},
+    state::{NodeConfig, NodeState},
     web::ServerConfig,
 };
 
@@ -21,14 +21,14 @@ mod web;
 
 pub mod prelude {
     pub use crate::{
-        state::{Config, NodeState},
+        state::{NodeConfig, NodeState},
         web::ServerConfig,
     };
 }
 
 pub async fn launch_server(
     server_config: ServerConfig,
-    config: Config,
+    config: NodeConfig,
 ) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     // Build a Web API server
     let state = NodeState::new(config).await?;

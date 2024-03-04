@@ -16,7 +16,7 @@ mod impls;
 mod pubsub;
 mod service;
 
-pub use self::{config::Config, conn::*, pubsub::*};
+pub use self::{config::NodeConfig, conn::*, pubsub::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -24,7 +24,7 @@ pub struct NodeState {
 }
 
 struct State {
-    config: Arc<Config>,
+    config: Arc<NodeConfig>,
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
@@ -32,7 +32,7 @@ struct State {
 }
 
 impl NodeState {
-    pub async fn new(config: Config) -> Result<Self> {
+    pub async fn new(config: NodeConfig) -> Result<Self> {
         config.validate()?;
 
         let db_dir = config.db_dir();
@@ -54,7 +54,7 @@ impl NodeState {
         Ok(state)
     }
 
-    pub fn config(&self) -> &Arc<Config> { &self.inner.config }
+    pub fn config(&self) -> &Arc<NodeConfig> { &self.inner.config }
 
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
