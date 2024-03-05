@@ -71,9 +71,11 @@ pub struct ServerConfig {
     // COTOAMI_SERVER_URL_SCHEME
     #[serde(default = "ServerConfig::default_url_scheme")]
     pub url_scheme: String,
+
     // COTOAMI_SERVER_URL_HOST
     #[serde(default = "ServerConfig::default_url_host")]
     pub url_host: String,
+
     // COTOAMI_SERVER_URL_PORT
     pub url_port: Option<u16>,
 }

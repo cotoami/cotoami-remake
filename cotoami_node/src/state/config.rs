@@ -16,9 +16,8 @@ pub struct NodeConfig {
 
     /// The owner password is used for owner authentication and
     /// as a master password to encrypt other passwords. It is required if
-    /// you want this node to be launched as a server or connect to other nodes.
+    /// you want this node to be launched as a server or to connect to other nodes.
     ///
-    /// * This value is required to launch a node server.
     /// * This value can be set via the environment variable:
     /// `COTOAMI_OWNER_PASSWORD`.
     pub owner_password: Option<String>,

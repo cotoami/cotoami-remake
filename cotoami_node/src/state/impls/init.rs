@@ -30,7 +30,7 @@ impl NodeState {
                 if let Some(name) = config.node_name.as_deref() {
                     if name != node.name {
                         // Ignoring the changelog since this function is called during
-                        // the server startup (there should be no child nodes connected).
+                        // the node initialization (there should be no child nodes connected).
                         let (node, _) = ds.rename_local_node(name, &opr)?;
                         info!("The node name has been changed to [{}].", node.name);
                     }
