@@ -43,12 +43,12 @@ mod ws;
 pub(crate) use self::{cotonomas::PostCoto, csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER};
 
 pub async fn launch_server(
-    server_config: ServerConfig,
+    config: ServerConfig,
     node_state: NodeState,
 ) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
     // Build a Web API server
-    let addr = SocketAddr::from(([0, 0, 0, 0], server_config.port));
-    let web_api = router(Arc::new(server_config), node_state);
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
+    let web_api = router(Arc::new(config), node_state);
     let server = axum::Server::bind(&addr).serve(web_api.into_make_service());
 
     // Prepare a way to gracefully shutdown a server
@@ -83,9 +83,9 @@ pub struct ServerConfig {
 impl ServerConfig {
     const ENV_PREFXI: &'static str = "COTOAMI_SERVER_";
 
-    pub fn load_from_env() -> Result<ServerConfig, envy::Error> {
+    pub fn load_from_env() -> Result<Self, envy::Error> {
         dotenv().ok();
-        envy::prefixed(Self::ENV_PREFXI).from_env::<ServerConfig>()
+        envy::prefixed(Self::ENV_PREFXI).from_env::<Self>()
     }
 
     // Functions returning a default value as a workaround for the issue:
@@ -99,7 +99,7 @@ impl ServerConfig {
 // Router
 /////////////////////////////////////////////////////////////////////////////
 
-pub(super) fn router(config: Arc<ServerConfig>, state: NodeState) -> Router {
+pub(super) fn router(config: Arc<ServerConfig>, node_state: NodeState) -> Router {
     Router::new()
         .nest("/api", routes())
         .fallback(fallback)
@@ -110,8 +110,8 @@ pub(super) fn router(config: Arc<ServerConfig>, state: NodeState) -> Router {
         // extension" error).
         // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
         .layer(Extension(config))
-        .layer(Extension(state.clone()))
-        .with_state(state)
+        .layer(Extension(node_state.clone()))
+        .with_state(node_state)
 }
 
 fn routes() -> Router<NodeState> {

@@ -6,12 +6,15 @@
 use std::{path::PathBuf, string::ToString};
 
 use cotoami_db::prelude::Node;
+use cotoami_node::prelude::*;
+use parking_lot::Mutex;
 
 pub mod window_state;
 
 fn main() {
     tauri::Builder::default()
         .plugin(window_state::Builder::default().build())
+        .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             system_info,
             validate_new_folder_path,
@@ -21,10 +24,42 @@ fn main() {
         .expect("error while running tauri application");
 }
 
+struct AppState {
+    node_state: Mutex<Option<NodeState>>,
+}
+
+impl AppState {
+    fn new() -> Self {
+        Self {
+            node_state: Mutex::new(None),
+        }
+    }
+}
+
 #[derive(serde::Serialize)]
 struct Error {
     code: String,
     message: String,
+    details: Option<String>,
+}
+
+impl Error {
+    fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            message: message.into(),
+            details: None,
+        }
+    }
+
+    fn add_details(mut self, details: impl Into<String>) -> Self {
+        self.details = Some(details.into());
+        self
+    }
+}
+
+impl From<anyhow::Error> for Error {
+    fn from(e: anyhow::Error) -> Self { Error::new("system-error", e.to_string()) }
 }
 
 #[derive(serde::Serialize)]
@@ -62,30 +97,38 @@ fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
 fn validate_new_folder_path(base_folder: String, folder_name: String) -> Result<(), Error> {
     let mut path = PathBuf::from(base_folder);
     if !path.is_dir() {
-        return Err(Error {
-            code: "non-existent-base-folder".into(),
-            message: "The base folder doesn't exist.".into(),
-        });
+        return Err(Error::new(
+            "non-existent-base-folder",
+            "The base folder doesn't exist.",
+        ));
     }
     path.push(folder_name);
     match path.try_exists() {
-        Ok(true) => Err(Error {
-            code: "folder-already-exists".into(),
-            message: "The folder already exists.".into(),
-        }),
+        Ok(true) => Err(Error::new(
+            "folder-already-exists",
+            "The folder already exists.",
+        )),
         Ok(false) => Ok(()),
-        Err(e) => Err(Error {
-            code: "file-system-error".into(),
-            message: e.to_string(),
-        }),
+        Err(e) => Err(Error::new("file-system-error", e.to_string())),
     }
 }
 
 #[tauri::command]
 async fn create_database(
+    state: tauri::State<'_, AppState>,
     database_name: String,
     base_folder: String,
     folder_name: String,
 ) -> Result<Node, Error> {
+    let db_dir = {
+        let mut path = PathBuf::from(base_folder);
+        path.push(folder_name);
+        path.to_str().map(str::to_string)
+    };
+
+    let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
+    //let new_node_state = NodeState::new(node_config).await?;
+    //state.inner().node_state.lock().replace(new_node_state);
+
     unimplemented!()
 }

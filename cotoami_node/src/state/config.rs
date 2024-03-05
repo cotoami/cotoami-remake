@@ -45,9 +45,20 @@ impl NodeConfig {
     const ENV_PREFXI: &'static str = "COTOAMI_";
     const DEFAULT_DB_DIR_NAME: &'static str = "cotoami";
 
-    pub fn load_from_env() -> Result<NodeConfig, envy::Error> {
+    pub fn load_from_env() -> Result<Self, envy::Error> {
         dotenv().ok();
-        envy::prefixed(Self::ENV_PREFXI).from_env::<NodeConfig>()
+        envy::prefixed(Self::ENV_PREFXI).from_env::<Self>()
+    }
+
+    pub fn new_standalone(db_dir: Option<String>, node_name: Option<String>) -> Self {
+        Self {
+            db_dir,
+            node_name,
+            owner_password: None,
+            change_owner_password: false,
+            session_minutes: Self::default_session_minutes(),
+            changes_chunk_size: Self::default_changes_chunk_size(),
+        }
     }
 
     // Functions returning a default value as a workaround for the issue:
