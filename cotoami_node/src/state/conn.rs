@@ -75,7 +75,7 @@ impl ServerConnection {
 
         // Attempt to log into the server node
         let password = server
-            .password(node_state.config().owner_password())?
+            .password(node_state.config().try_get_owner_password()?)?
             .ok_or(anyhow!("Server password is missing."))?;
         let _ = http_client
             .create_client_node_session(CreateClientNodeSession {

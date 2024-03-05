@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use validator::Validate;
@@ -14,17 +15,18 @@ pub struct NodeConfig {
     pub node_name: Option<String>,
 
     /// The owner password is used for owner authentication and
-    /// as a master password to encrypt other passwords.
+    /// as a master password to encrypt other passwords. It is required if
+    /// you want this node to be launched as a server or connect to other nodes.
     ///
     /// * This value is required to launch a node server.
     /// * This value can be set via the environment variable:
     /// `COTOAMI_OWNER_PASSWORD`.
-    #[validate(required)]
     pub owner_password: Option<String>,
 
     /// The owner password will be changed to the value of [Config::owner_password] if:
     /// 1. This value is true.
-    /// 2. The local node has already been initialized (meaning there's an existing password).
+    /// 2. [Config::owner_password] has `Some` value.
+    /// 3. The local node has already been initialized (meaning there's an existing password).
     ///
     /// * This value can be set via the environment variable:
     /// `COTOAMI_CHANGE_OWNER_PASSWORD`.
@@ -66,7 +68,11 @@ impl NodeConfig {
         })
     }
 
-    pub fn owner_password(&self) -> &str { self.owner_password.as_deref().unwrap() }
+    pub fn try_get_owner_password(&self) -> Result<&str> {
+        self.owner_password.as_deref().ok_or(anyhow!(
+            "The owner password is required to invoke this operation."
+        ))
+    }
 
     pub fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
 }

@@ -19,13 +19,14 @@ impl NodeState {
         let config = self.config().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            let owner_password = config.owner_password();
 
             // If the local node already exists,
             // its name and password can be changed via config
             if db.globals().has_local_node_initialized() {
                 let opr = db.globals().local_node_as_operator()?;
                 let (ext, node) = ds.local_node_pair(&opr)?;
+
+                // Change the node name
                 if let Some(name) = config.node_name.as_deref() {
                     if name != node.name {
                         // Ignoring the changelog since this function is called during
@@ -35,19 +36,22 @@ impl NodeState {
                     }
                 }
 
-                if config.change_owner_password {
-                    ds.change_owner_password(owner_password)?;
-                    info!("The owner password has been changed.");
-                } else {
-                    ext.verify_password(owner_password)
-                        .context("Config::owner_password couldn't be verified.")?;
+                // The owner password
+                if let Some(owner_password) = config.owner_password.as_deref() {
+                    if config.change_owner_password {
+                        ds.change_owner_password(owner_password)?;
+                        info!("The owner password has been changed.");
+                    } else {
+                        ext.verify_password(owner_password)
+                            .context("Config::owner_password could not be verified.")?;
+                    }
                 }
                 return Ok(());
             }
 
             // Initialize the local node
             let name = config.node_name.as_deref();
-            let ((_, node), _) = ds.init_as_node(name, Some(owner_password))?;
+            let ((_, node), _) = ds.init_as_node(name, config.owner_password.as_deref())?;
             info!(
                 "The local node [{}]({}) has been created",
                 node.name, node.uuid

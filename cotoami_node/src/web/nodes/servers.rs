@@ -137,7 +137,7 @@ async fn add_server_node(
             };
 
             // Register a [ServerNode] and save the password into it
-            let owner_password = state.config().owner_password();
+            let owner_password = state.config().try_get_owner_password()?;
             let (_, server_db_role) =
                 ds.register_server_node(&server_id, &url_prefix, server_db_role, &operator)?;
             let server =
