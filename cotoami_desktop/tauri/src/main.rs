@@ -62,6 +62,13 @@ impl From<anyhow::Error> for Error {
     fn from(e: anyhow::Error) -> Self { Error::new("system-error", e.to_string()) }
 }
 
+// TODO: write thorough conversion
+impl From<ServiceError> for Error {
+    fn from(e: ServiceError) -> Self {
+        Error::new("service-error", "Service Error").add_details(format!("{:?}", e))
+    }
+}
+
 #[derive(serde::Serialize)]
 struct SystemInfo {
     app_version: String,
@@ -121,14 +128,15 @@ async fn create_database(
     folder_name: String,
 ) -> Result<Node, Error> {
     let db_dir = {
-        let mut path = PathBuf::from(base_folder);
-        path.push(folder_name);
+        let path: PathBuf = [base_folder, folder_name].iter().collect();
         path.to_str().map(str::to_string)
     };
 
     let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
-    let new_node_state = NodeState::new(node_config).await?;
-    state.inner().node_state.lock().replace(new_node_state);
+    let node_state = NodeState::new(node_config).await?;
+    let local_node = node_state.local_node().await?;
 
-    unimplemented!()
+    state.inner().node_state.lock().replace(node_state);
+
+    Ok(local_node)
 }

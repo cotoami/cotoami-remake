@@ -5,7 +5,7 @@ use tokio::task::spawn_blocking;
 use crate::{service::ServiceError, state::NodeState};
 
 impl NodeState {
-    pub(crate) async fn local_node(&self) -> Result<Node, ServiceError> {
+    pub async fn local_node(&self) -> Result<Node, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || Ok(db.new_session()?.local_node()?)).await?
     }
