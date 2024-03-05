@@ -65,6 +65,18 @@ object Main {
           Seq.empty
         )
 
+      case DatabaseCreated(Right(node)) =>
+        (
+          model.copy(localNode = Some(node), currentNode = Some(node)),
+          Seq.empty
+        )
+
+      case DatabaseCreated(Left(e)) =>
+        (
+          model.copy(log = model.log.error(e.message, Option(e.details))),
+          Seq.empty
+        )
+
       case TogglePane(name) => {
         model.uiState match {
           case Some(s) => {

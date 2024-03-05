@@ -24,8 +24,8 @@ case class Model(
     uiState: Option[Model.UiState] = None,
 
     // Node
-    currentNode: Option[Node] = None,
     localNode: Option[Node] = None,
+    currentNode: Option[Node] = None,
 
     // WelcomeModal
     welcomeModal: WelcomeModal.Model = WelcomeModal.Model()
