@@ -127,8 +127,8 @@ async fn create_database(
     };
 
     let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
-    //let new_node_state = NodeState::new(node_config).await?;
-    //state.inner().node_state.lock().replace(new_node_state);
+    let new_node_state = NodeState::new(node_config).await?;
+    state.inner().node_state.lock().replace(new_node_state);
 
     unimplemented!()
 }

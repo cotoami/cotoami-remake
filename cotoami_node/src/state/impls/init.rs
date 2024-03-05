@@ -4,7 +4,7 @@ use futures::StreamExt;
 use tokio::task::spawn_blocking;
 use tracing::{debug, info};
 
-use crate::state::{pubsub::Event, NodeState, ServerConnection};
+use crate::state::{pubsub::Event, NodeState, ServerConnection, ServerConnections};
 
 impl NodeState {
     pub(crate) async fn init(&self) -> Result<()> {
@@ -75,12 +75,14 @@ impl NodeState {
         })
         .await??;
 
-        let mut server_conns = self.write_server_conns();
-        server_conns.clear();
+        let mut server_conns = ServerConnections::new();
         for (server, _) in server_nodes.iter() {
-            let server_conn = ServerConnection::connect(server, local_node.clone(), self).await;
-            server_conns.insert(server.node_id, server_conn);
+            server_conns.insert(
+                server.node_id,
+                ServerConnection::connect(server, local_node.clone(), self).await,
+            );
         }
+        *self.write_server_conns() = server_conns;
         Ok(())
     }
 
