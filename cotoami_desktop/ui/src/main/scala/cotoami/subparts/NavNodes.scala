@@ -5,7 +5,12 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
-import cotoami.components.{optionalClasses, paneToggle, material_symbol}
+import cotoami.components.{
+  optionalClasses,
+  paneToggle,
+  material_symbol,
+  node_img
+}
 
 object NavNodes {
   val PaneName = "nav-nodes"
@@ -61,13 +66,7 @@ object NavNodes {
               ),
               data - "tooltip" := node.name,
               data - "placement" := "right"
-            )(
-              img(
-                className := "node-icon",
-                alt := node.name,
-                src := s"data:image/png;base64,${node.icon}"
-              )
-            )
+            )(node_img(node))
           )
         )
       )

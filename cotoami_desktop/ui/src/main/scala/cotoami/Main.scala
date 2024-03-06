@@ -11,7 +11,7 @@ import slinky.hot
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.components.{SplitPane, material_symbol, paneToggle}
+import cotoami.components.{SplitPane, material_symbol, paneToggle, node_img}
 
 object Main {
 
@@ -133,13 +133,7 @@ object Main {
           .currentNode()
           .map(node =>
             section(className := "location")(
-              a(className := "node-home", title := node.name)(
-                img(
-                  className := "node-icon",
-                  alt := node.name,
-                  src := s"data:image/png;base64,${node.icon}"
-                )()
-              )
+              a(className := "node-home", title := node.name)(node_img(node))
             )
           )
       ),

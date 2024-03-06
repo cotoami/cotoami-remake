@@ -3,6 +3,8 @@ package cotoami
 import slinky.core.facade.{ReactElement, Fragment}
 import slinky.web.html._
 
+import cotoami.backend.Node
+
 package object components {
 
   def optionalClasses(classes: Seq[(String, Boolean)]): String = {
@@ -28,5 +30,12 @@ package object components {
       )(
         span(className := "material-symbols")("arrow_right")
       )
+    )
+
+  def node_img(node: Node): ReactElement =
+    img(
+      className := "node-icon",
+      alt := node.name,
+      src := s"data:image/png;base64,${node.icon}"
     )
 }
