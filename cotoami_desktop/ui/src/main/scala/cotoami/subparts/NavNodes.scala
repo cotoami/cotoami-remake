@@ -11,6 +11,7 @@ import cotoami.components.{
   material_symbol,
   node_img
 }
+import cotoami.backend.Node
 
 object NavNodes {
   val PaneName = "nav-nodes"
@@ -53,22 +54,21 @@ object NavNodes {
         material_symbol("add")
       ),
       ul(className := "nodes")(
-        model.localNode.map(node =>
-          li()(
-            button(
-              className := optionalClasses(
-                Seq(
-                  ("node", true),
-                  ("icon", true),
-                  ("selectable", true),
-                  ("selected", model.selected(node))
-                )
-              ),
-              data - "tooltip" := node.name,
-              data - "placement" := "right"
-            )(node_img(node))
-          )
-        )
+        model.localNode.map(node => li()(node_button(model, node)))
       )
     )
+
+  def node_button(model: Model, node: Node): ReactElement =
+    button(
+      className := optionalClasses(
+        Seq(
+          ("node", true),
+          ("icon", true),
+          ("selectable", true),
+          ("selected", model.selected(node))
+        )
+      ),
+      data - "tooltip" := node.name,
+      data - "placement" := "right"
+    )(node_img(node))
 }
