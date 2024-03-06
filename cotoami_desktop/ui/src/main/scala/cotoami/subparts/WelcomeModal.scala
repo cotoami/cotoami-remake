@@ -6,7 +6,8 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{Model, Msg, Log, Validation, icon, tauri, WelcomeModalMsg}
+import cotoami.{Model, Msg, Log, Validation, tauri, WelcomeModalMsg}
+import cotoami.components.material_symbol
 import cotoami.backend
 import cotoami.backend.Node
 import cats.syntax.foldable
@@ -240,7 +241,7 @@ object WelcomeModal {
             className := "secondary",
             onClick := ((e) => dispatch(WelcomeModalMsg(SelectBaseFolder)))
           )(
-            icon("folder")
+            material_symbol("folder")
           )
         ),
 
@@ -318,7 +319,7 @@ object WelcomeModal {
                 dispatch(WelcomeModalMsg(SelectDatabaseFolder))
               )
             )(
-              icon("folder")
+              material_symbol("folder")
             )
           ),
           Validation.validationErrorDiv(model.databaseFolderErrors)

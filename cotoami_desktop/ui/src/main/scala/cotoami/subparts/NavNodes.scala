@@ -4,7 +4,8 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg, optionalClasses, paneToggle, icon}
+import cotoami.{Model, Msg}
+import cotoami.components.{optionalClasses, paneToggle, material_symbol}
 
 object NavNodes {
   val PaneName = "nav-nodes"
@@ -37,14 +38,14 @@ object NavNodes {
         data - "tooltip" := "All nodes",
         data - "placement" := "right"
       )(
-        icon("stacks")
+        material_symbol("stacks")
       ),
       button(
         className := "add-node icon",
         data - "tooltip" := "Add node",
         data - "placement" := "right"
       )(
-        icon("add")
+        material_symbol("add")
       ),
       ul(className := "nodes")(
         model.localNode.map(node =>

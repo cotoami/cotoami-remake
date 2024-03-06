@@ -11,7 +11,7 @@ import slinky.hot
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import components.SplitPane
+import cotoami.components.{SplitPane, material_symbol, paneToggle}
 
 object Main {
 
@@ -157,7 +157,7 @@ object Main {
                 className := "open-log-view",
                 onClick := ((e) => dispatch(cotoami.ToggleLogView))
               )(
-                cotoami.icon(entry.level.icon),
+                material_symbol(entry.level.icon),
                 entry.message
               )
             )
