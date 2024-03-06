@@ -6,7 +6,7 @@
 use std::{path::PathBuf, string::ToString};
 
 use anyhow::anyhow;
-use cotoami_db::prelude::Node;
+use cotoami_db::prelude::{Database, Node};
 use cotoami_node::prelude::*;
 use parking_lot::Mutex;
 
@@ -18,7 +18,8 @@ fn main() {
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             system_info,
-            validate_new_folder_path,
+            validate_new_database_folder,
+            validate_database_folder,
             create_database,
             open_database
         ])
@@ -103,7 +104,7 @@ fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
 }
 
 #[tauri::command]
-fn validate_new_folder_path(base_folder: String, folder_name: String) -> Result<(), Error> {
+fn validate_new_database_folder(base_folder: String, folder_name: String) -> Result<(), Error> {
     let mut path = PathBuf::from(base_folder);
     if !path.is_dir() {
         return Err(Error::new(
@@ -119,6 +120,19 @@ fn validate_new_folder_path(base_folder: String, folder_name: String) -> Result<
         )),
         Ok(false) => Ok(()),
         Err(e) => Err(Error::new("file-system-error", e.to_string())),
+    }
+}
+
+#[tauri::command]
+fn validate_database_folder(database_folder: String) -> Result<(), Error> {
+    let path = PathBuf::from(database_folder);
+    if Database::is_in(path) {
+        Ok(())
+    } else {
+        Err(Error::new(
+            "invalid-database-folder",
+            "Unable to find a database in the given folder.",
+        ))
     }
 }
 

@@ -86,6 +86,12 @@ impl Database {
         Ok(db)
     }
 
+    pub fn is_in<P: AsRef<Path>>(dir: P) -> bool {
+        let mut path = dir.as_ref().to_path_buf();
+        path.push(Self::DATABASE_FILE_NAME);
+        path.is_file()
+    }
+
     pub fn new_session(&self) -> Result<DatabaseSession<'_>> {
         Ok(DatabaseSession {
             globals: &self.globals,

@@ -14,10 +14,17 @@ import cats.syntax.foldable
 object WelcomeModal {
 
   case class Model(
+      // New database
       databaseName: String = "",
       baseFolder: String = "",
       folderName: String = "",
       folderNameErrors: Option[Seq[Validation.Error]] = None,
+
+      // Open an existing database
+      databaseFolder: String = "",
+      databaseFolderErrors: Option[Seq[Validation.Error]] = None,
+
+      // Shared
       processing: Boolean = false,
       systemError: Option[String] = None
   ) {
@@ -93,7 +100,7 @@ object WelcomeModal {
       Seq(
         tauri.invokeCommand(
           NewFolderValidation andThen WelcomeModalMsg,
-          "validate_new_folder_path",
+          "validate_new_database_folder",
           js.Dynamic
             .literal(
               baseFolder = model.baseFolder,
