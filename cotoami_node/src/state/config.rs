@@ -7,36 +7,37 @@ use validator::Validate;
 
 #[derive(Debug, serde::Deserialize, Validate)]
 pub struct NodeConfig {
-    // COTOAMI_DB_DIR
+    /// `COTOAMI_DB_DIR`
     pub db_dir: Option<String>,
 
-    // COTOAMI_NODE_NAME
+    /// `COTOAMI_NODE_NAME`
+    ///
+    /// If there already exists a database in `db_dir`, the name of that database
+    /// will be changed to this value during initialization.
     #[validate(length(min = 1, max = "Node::NAME_MAX_LENGTH"))]
     pub node_name: Option<String>,
 
+    /// `COTOAMI_OWNER_PASSWORD`
+    ///
     /// The owner password is used for owner authentication and
     /// as a master password to encrypt other passwords. It is required if
     /// you want this node to be launched as a server or to connect to other nodes.
-    ///
-    /// * This value can be set via the environment variable:
-    /// `COTOAMI_OWNER_PASSWORD`.
     pub owner_password: Option<String>,
 
+    /// `COTOAMI_CHANGE_OWNER_PASSWORD`
+    ///
     /// The owner password will be changed to the value of [Config::owner_password] if:
     /// 1. This value is true.
     /// 2. [Config::owner_password] has `Some` value.
     /// 3. The local node has already been initialized (meaning there's an existing password).
-    ///
-    /// * This value can be set via the environment variable:
-    /// `COTOAMI_CHANGE_OWNER_PASSWORD`.
     #[serde(default = "NodeConfig::default_change_owner_password")]
     pub change_owner_password: bool,
 
-    // COTOAMI_SESSION_MINUTES
+    /// `COTOAMI_SESSION_MINUTES`
     #[serde(default = "NodeConfig::default_session_minutes")]
     pub session_minutes: u64,
 
-    // COTOAMI_CHANGES_CHUNK_SIZE
+    /// `COTOAMI_CHANGES_CHUNK_SIZE`
     #[serde(default = "NodeConfig::default_changes_chunk_size")]
     pub changes_chunk_size: i64,
 }

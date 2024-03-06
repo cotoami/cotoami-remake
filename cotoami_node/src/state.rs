@@ -44,7 +44,7 @@ impl NodeState {
             }
         }
 
-        // Create a database in the directory
+        // Open or create a database in the directory
         let db = Database::new(db_dir)?;
 
         let inner = State {
