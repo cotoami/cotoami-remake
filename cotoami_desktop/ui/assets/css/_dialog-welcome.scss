@@ -37,6 +37,11 @@ dialog.welcome {
     }
   }
 
+  .system-error {
+    margin-top: 10px;
+    color: var(--form-element-invalid-border-color)
+  }
+
   section.recent-databases {
     h2 {
       margin-bottom: 5px;

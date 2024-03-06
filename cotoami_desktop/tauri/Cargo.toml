@@ -9,7 +9,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [build-dependencies]
-tauri-build = {version = "1.5.1", features = []}
+tauri-build = {version = "1.5.1", features = [] }
 
 [dependencies]
 anyhow.workspace = true
@@ -20,7 +20,7 @@ cotoami_node.workspace = true
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "1.5.4", features = ["dialog-open"]}
+tauri = {version = "1.5.4", features = ["dialog-open"] }
 thiserror.workspace = true
 
 [features]

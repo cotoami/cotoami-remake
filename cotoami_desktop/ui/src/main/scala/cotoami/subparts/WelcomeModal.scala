@@ -17,7 +17,9 @@ object WelcomeModal {
       databaseName: String = "",
       baseFolder: String = "",
       folderName: String = "",
-      folderNameErrors: Option[Seq[Validation.Error]] = None
+      folderNameErrors: Option[Seq[Validation.Error]] = None,
+      processing: Boolean = false,
+      systemError: Option[String] = None
   ) {
     def validateNewDatabaseInputs(): Boolean =
       Node
@@ -33,6 +35,7 @@ object WelcomeModal {
   case class FolderNameInput(query: String) extends Msg
   case class NewFolderValidation(result: Either[backend.Error, Unit])
       extends Msg
+  case object CreateDatabase extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -80,6 +83,9 @@ object WelcomeModal {
           ),
           Seq.empty
         )
+
+      case CreateDatabase =>
+        (model.copy(processing = true), Seq(createDatabase(model)))
     }
 
   def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
@@ -98,6 +104,18 @@ object WelcomeModal {
     else
       Seq()
 
+  def createDatabase(model: Model): Cmd[cotoami.Msg] =
+    tauri.invokeCommand(
+      cotoami.DatabaseCreated,
+      "create_database",
+      js.Dynamic
+        .literal(
+          databaseName = model.databaseName,
+          baseFolder = model.baseFolder,
+          folderName = model.folderName
+        )
+    )
+
   def view(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     dialog(className := "welcome", open := true)(
       article()(
@@ -113,6 +131,7 @@ object WelcomeModal {
         ),
         div(className := "body")(
           div(className := "body-main")(
+            model.systemError.map(e => div(className := "system-error")(e)),
             newDatabase(model, dispatch),
             openDatabase(model, dispatch)
           )
@@ -163,7 +182,8 @@ object WelcomeModal {
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.validateNewDatabaseInputs()
+            disabled := !model.validateNewDatabaseInputs() || model.processing,
+            onClick := ((e) => dispatch(WelcomeModalMsg(CreateDatabase)))
           )(
             "Create"
           )

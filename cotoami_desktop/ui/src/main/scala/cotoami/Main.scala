@@ -67,7 +67,16 @@ object Main {
 
       case DatabaseCreated(Right(node)) =>
         (
-          model.copy(localNode = Some(node), currentNode = Some(node)),
+          model.copy(
+            localNode = Some(node),
+            currentNode = Some(node),
+            welcomeModal = model.welcomeModal.copy(processing = false),
+            log = model.log
+              .info(
+                s"New database [${node.name}] created.",
+                Some(s"uuid: ${node.uuid}, name: ${node.name}")
+              )
+          ),
           Seq.empty
         )
 
