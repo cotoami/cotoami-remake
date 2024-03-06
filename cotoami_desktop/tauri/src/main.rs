@@ -5,6 +5,7 @@
 
 use std::{path::PathBuf, string::ToString};
 
+use anyhow::anyhow;
 use cotoami_db::prelude::Node;
 use cotoami_node::prelude::*;
 use parking_lot::Mutex;
@@ -18,7 +19,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             system_info,
             validate_new_folder_path,
-            create_database
+            create_database,
+            open_database
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -133,6 +135,25 @@ async fn create_database(
     };
 
     let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
+    let node_state = NodeState::new(node_config).await?;
+    let local_node = node_state.local_node().await?;
+
+    state.inner().node_state.lock().replace(node_state);
+
+    Ok(local_node)
+}
+
+#[tauri::command]
+async fn open_database(
+    state: tauri::State<'_, AppState>,
+    database_folder: String,
+) -> Result<Node, Error> {
+    let db_dir = PathBuf::from(&database_folder)
+        .to_str()
+        .map(str::to_string)
+        .ok_or(anyhow!("Invalid folder path: {}", database_folder))?;
+
+    let node_config = NodeConfig::new_standalone(Some(db_dir), None);
     let node_state = NodeState::new(node_config).await?;
     let local_node = node_state.local_node().await?;
 
