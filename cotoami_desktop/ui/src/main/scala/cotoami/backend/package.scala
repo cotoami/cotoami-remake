@@ -11,6 +11,7 @@ package object backend {
   trait Error extends js.Object {
     val code: String = js.native
     val message: String = js.native
+    val details: String = js.native
   }
 
   object Error {

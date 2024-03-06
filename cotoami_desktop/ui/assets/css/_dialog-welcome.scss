@@ -37,6 +37,11 @@ dialog.welcome {
     }
   }
 
+  .system-error {
+    margin-top: 10px;
+    color: var(--form-element-invalid-border-color)
+  }
+
   section.recent-databases {
     h2 {
       margin-bottom: 5px;
@@ -105,6 +110,12 @@ dialog.welcome {
         line-height: 1rem;
         vertical-align: text-bottom;
       }
+    }
+  }
+
+  .input-with-validation {
+    div.file-select {
+      margin-bottom: 0;
     }
   }
 }

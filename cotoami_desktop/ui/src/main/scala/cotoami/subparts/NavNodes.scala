@@ -4,7 +4,14 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg, optionalClasses, paneToggle, icon}
+import cotoami.{Model, Msg}
+import cotoami.components.{
+  optionalClasses,
+  paneToggle,
+  material_symbol,
+  node_img
+}
+import cotoami.backend.Node
 
 object NavNodes {
   val PaneName = "nav-nodes"
@@ -26,19 +33,42 @@ object NavNodes {
     )(
       paneToggle(PaneName, dispatch),
       button(
-        className := "all-nodes icon selectable selected",
+        className := optionalClasses(
+          Seq(
+            ("all-nodes", true),
+            ("icon", true),
+            ("selectable", true),
+            ("selected", model.selectedNodeId.isEmpty)
+          )
+        ),
         data - "tooltip" := "All nodes",
         data - "placement" := "right"
       )(
-        icon("stacks")
+        material_symbol("stacks")
       ),
       button(
         className := "add-node icon",
         data - "tooltip" := "Add node",
         data - "placement" := "right"
       )(
-        icon("add")
+        material_symbol("add")
       ),
-      ul(className := "nodes")
+      ul(className := "nodes")(
+        model.localNode.map(node => li()(node_button(model, node)))
+      )
     )
+
+  def node_button(model: Model, node: Node): ReactElement =
+    button(
+      className := optionalClasses(
+        Seq(
+          ("node", true),
+          ("icon", true),
+          ("selectable", true),
+          ("selected", model.selected(node))
+        )
+      ),
+      data - "tooltip" := node.name,
+      data - "placement" := "right"
+    )(node_img(node))
 }

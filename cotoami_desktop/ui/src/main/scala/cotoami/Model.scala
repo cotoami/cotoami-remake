@@ -24,12 +24,31 @@ case class Model(
     uiState: Option[Model.UiState] = None,
 
     // Node
-    currentNode: Option[Node] = None,
     localNode: Option[Node] = None,
+    parentNodes: Seq[Node] = Seq.empty,
+    operatingNodeId: Option[String] = None,
+    selectedNodeId: Option[String] = None,
 
     // WelcomeModal
     welcomeModal: WelcomeModal.Model = WelcomeModal.Model()
-)
+) {
+  def getNode(uuid: String): Option[Node] =
+    this.localNode.flatMap(local =>
+      if (local.uuid == uuid) {
+        Some(local)
+      } else {
+        this.parentNodes.find(_.uuid == uuid)
+      }
+    )
+
+  def selected(node: Node): Boolean =
+    this.selectedNodeId.map(_ == node.uuid).getOrElse(false)
+
+  def selectedNode(): Option[Node] =
+    this.selectedNodeId.flatMap(getNode(_))
+
+  def currentNode(): Option[Node] = selectedNode().orElse(this.localNode)
+}
 
 object Model {
 

@@ -1,72 +1,69 @@
 use std::path::PathBuf;
 
+use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use validator::Validate;
 
 #[derive(Debug, serde::Deserialize, Validate)]
-pub struct Config {
-    // COTOAMI_PORT
-    #[serde(default = "Config::default_port")]
-    pub port: u16,
-
-    // COTOAMI_URL_SCHEME
-    #[serde(default = "Config::default_url_scheme")]
-    pub url_scheme: String,
-    // COTOAMI_URL_HOST
-    #[serde(default = "Config::default_url_host")]
-    pub url_host: String,
-    // COTOAMI_URL_PORT
-    pub url_port: Option<u16>,
-
-    // COTOAMI_DB_DIR
+pub struct NodeConfig {
+    /// `COTOAMI_DB_DIR`
     pub db_dir: Option<String>,
 
-    // COTOAMI_NODE_NAME
+    /// `COTOAMI_NODE_NAME`
+    ///
+    /// If there already exists a database in `db_dir`, the name of that database
+    /// will be changed to this value during initialization.
     #[validate(length(min = 1, max = "Node::NAME_MAX_LENGTH"))]
     pub node_name: Option<String>,
 
-    /// The owner password is used for owner authentication and
-    /// as a master password to encrypt other passwords.
+    /// `COTOAMI_OWNER_PASSWORD`
     ///
-    /// * This value is required to launch a node server.
-    /// * This value can be set via the environment variable:
-    /// `COTOAMI_OWNER_PASSWORD`.
-    #[validate(required)]
+    /// The owner password is used for owner authentication and
+    /// as a master password to encrypt other passwords. It is required if
+    /// you want this node to be launched as a server or to connect to other nodes.
     pub owner_password: Option<String>,
 
+    /// `COTOAMI_CHANGE_OWNER_PASSWORD`
+    ///
     /// The owner password will be changed to the value of [Config::owner_password] if:
     /// 1. This value is true.
-    /// 2. The local node has already been initialized (meaning there's an existing password).
-    ///
-    /// * This value can be set via the environment variable:
-    /// `COTOAMI_CHANGE_OWNER_PASSWORD`.
-    #[serde(default = "Config::default_change_owner_password")]
+    /// 2. [Config::owner_password] has `Some` value.
+    /// 3. The local node has already been initialized (meaning there's an existing password).
+    #[serde(default = "NodeConfig::default_change_owner_password")]
     pub change_owner_password: bool,
 
-    // COTOAMI_SESSION_MINUTES
-    #[serde(default = "Config::default_session_minutes")]
+    /// `COTOAMI_SESSION_MINUTES`
+    #[serde(default = "NodeConfig::default_session_minutes")]
     pub session_minutes: u64,
 
-    // COTOAMI_CHANGES_CHUNK_SIZE
-    #[serde(default = "Config::default_changes_chunk_size")]
+    /// `COTOAMI_CHANGES_CHUNK_SIZE`
+    #[serde(default = "NodeConfig::default_changes_chunk_size")]
     pub changes_chunk_size: i64,
 }
 
-impl Config {
+impl NodeConfig {
     const ENV_PREFXI: &'static str = "COTOAMI_";
     const DEFAULT_DB_DIR_NAME: &'static str = "cotoami";
 
-    pub fn load_from_env() -> Result<Config, envy::Error> {
+    pub fn load_from_env() -> Result<Self, envy::Error> {
         dotenv().ok();
-        envy::prefixed(Self::ENV_PREFXI).from_env::<Config>()
+        envy::prefixed(Self::ENV_PREFXI).from_env::<Self>()
+    }
+
+    pub fn new_standalone(db_dir: Option<String>, node_name: Option<String>) -> Self {
+        Self {
+            db_dir,
+            node_name,
+            owner_password: None,
+            change_owner_password: false,
+            session_minutes: Self::default_session_minutes(),
+            changes_chunk_size: Self::default_changes_chunk_size(),
+        }
     }
 
     // Functions returning a default value as a workaround for the issue:
     // https://github.com/serde-rs/serde/issues/368
-    fn default_port() -> u16 { 5103 }
-    fn default_url_scheme() -> String { "http".into() }
-    fn default_url_host() -> String { "localhost".into() }
     fn default_change_owner_password() -> bool { false }
     fn default_session_minutes() -> u64 { 60 }
     fn default_changes_chunk_size() -> i64 { 1000 }
@@ -82,7 +79,11 @@ impl Config {
         })
     }
 
-    pub fn owner_password(&self) -> &str { self.owner_password.as_deref().unwrap() }
+    pub fn try_get_owner_password(&self) -> Result<&str> {
+        self.owner_password.as_deref().ok_or(anyhow!(
+            "The owner password is required to invoke this operation."
+        ))
+    }
 
     pub fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
 }

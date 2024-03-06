@@ -11,6 +11,7 @@ import slinky.hot
 import slinky.web.html._
 
 import fui.FunctionalUI._
+import cotoami.components.{SplitPane, material_symbol, paneToggle, node_img}
 
 object Main {
 
@@ -65,6 +66,32 @@ object Main {
           Seq.empty
         )
 
+      case DatabaseOpened(Right(node)) =>
+        (
+          model.copy(
+            localNode = Some(node),
+            operatingNodeId = Some(node.uuid),
+            selectedNodeId = Some(node.uuid),
+            welcomeModal = model.welcomeModal.copy(processing = false),
+            log = model.log
+              .info(
+                s"Database [${node.name}] opened.",
+                Some(s"uuid: ${node.uuid}, name: ${node.name}")
+              )
+          ),
+          Seq.empty
+        )
+
+      case DatabaseOpened(Left(e)) =>
+        (
+          model.copy(
+            log = model.log.error(e.message, Option(e.details)),
+            welcomeModal = model.welcomeModal
+              .copy(processing = false, systemError = Some(e.message))
+          ),
+          Seq.empty
+        )
+
       case TogglePane(name) => {
         model.uiState match {
           case Some(s) => {
@@ -101,7 +128,14 @@ object Main {
             alt := "Cotoami",
             src := "/images/logo/logomark.svg"
           )
-        )
+        ),
+        model
+          .currentNode()
+          .map(node =>
+            section(className := "location")(
+              a(className := "node-home", title := node.name)(node_img(node))
+            )
+          )
       ),
       div(id := "app-body", className := "body")(
         model.uiState
@@ -117,7 +151,7 @@ object Main {
                 className := "open-log-view",
                 onClick := ((e) => dispatch(cotoami.ToggleLogView))
               )(
-                cotoami.icon(entry.level.icon),
+                material_symbol(entry.level.icon),
                 entry.message
               )
             )
@@ -150,7 +184,7 @@ object Main {
       )
     )(
       subparts.NavCotonomas.view(model, uiState, dispatch),
-      SplitPane.Secondary(className = None)(
+      components.SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
@@ -163,7 +197,7 @@ object Main {
   )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.currentNode.isEmpty) {
+    if (model.localNode.isEmpty) {
       Some(subparts.WelcomeModal.view(model.welcomeModal, dispatch))
     } else {
       None

@@ -1,8 +1,8 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
-use std::{collections::HashMap, fs, sync::Arc};
+use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tracing::debug;
@@ -16,7 +16,7 @@ mod impls;
 mod pubsub;
 mod service;
 
-pub use self::{config::Config, conn::*, pubsub::*};
+pub use self::{config::NodeConfig, conn::*, pubsub::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -24,7 +24,7 @@ pub struct NodeState {
 }
 
 struct State {
-    config: Arc<Config>,
+    config: Arc<NodeConfig>,
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
@@ -32,12 +32,19 @@ struct State {
 }
 
 impl NodeState {
-    pub async fn new(config: Config) -> Result<Self> {
+    pub async fn new(config: NodeConfig) -> Result<Self> {
         config.validate()?;
 
-        let db_dir = config.db_dir();
         // Create the directory if it doesn't exist yet (a new database).
-        fs::create_dir(&db_dir).ok();
+        let db_dir = config.db_dir();
+        if let Err(e) = fs::create_dir(&db_dir) {
+            match e.kind() {
+                ErrorKind::AlreadyExists => (), // ignore
+                _ => bail!("Unable to create a directory: {}", e.to_string()),
+            }
+        }
+
+        // Open or create a database in the directory
         let db = Database::new(db_dir)?;
 
         let inner = State {
@@ -54,7 +61,7 @@ impl NodeState {
         Ok(state)
     }
 
-    pub fn config(&self) -> &Arc<Config> { &self.inner.config }
+    pub fn config(&self) -> &Arc<NodeConfig> { &self.inner.config }
 
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 

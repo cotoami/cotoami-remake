@@ -4,7 +4,8 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg, SplitPane, optionalClasses, paneToggle}
+import cotoami.{Model, Msg}
+import cotoami.components.{SplitPane, optionalClasses, paneToggle}
 
 object NavCotonomas {
   val PaneName = "nav-cotonomas"
