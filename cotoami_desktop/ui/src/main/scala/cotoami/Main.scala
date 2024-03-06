@@ -69,7 +69,8 @@ object Main {
         (
           model.copy(
             localNode = Some(node),
-            currentNode = Some(node),
+            operatingNodeId = Some(node.uuid),
+            selectedNodeId = Some(node.uuid),
             welcomeModal = model.welcomeModal.copy(processing = false),
             log = model.log
               .info(
@@ -127,17 +128,19 @@ object Main {
             src := "/images/logo/logomark.svg"
           )
         ),
-        model.currentNode.map(node =>
-          section(className := "location")(
-            a(className := "node-home", title := node.name)(
-              img(
-                className := "node-icon",
-                alt := node.name,
-                src := s"data:image/png;base64,${node.icon}"
-              )()
+        model
+          .currentNode()
+          .map(node =>
+            section(className := "location")(
+              a(className := "node-home", title := node.name)(
+                img(
+                  className := "node-icon",
+                  alt := node.name,
+                  src := s"data:image/png;base64,${node.icon}"
+                )()
+              )
             )
           )
-        )
       ),
       div(id := "app-body", className := "body")(
         model.uiState
@@ -199,7 +202,7 @@ object Main {
   )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.currentNode.isEmpty) {
+    if (model.localNode.isEmpty) {
       Some(subparts.WelcomeModal.view(model.welcomeModal, dispatch))
     } else {
       None

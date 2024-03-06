@@ -39,6 +39,7 @@ object NavNodes {
       )(
         icon("add")
       ),
-      ul(className := "nodes")
+      ul(className := "nodes")(
+      )
     )
 }

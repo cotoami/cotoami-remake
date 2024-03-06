@@ -25,11 +25,27 @@ case class Model(
 
     // Node
     localNode: Option[Node] = None,
-    currentNode: Option[Node] = None,
+    parentNodes: Seq[Node] = Seq.empty,
+    operatingNodeId: Option[String] = None,
+    selectedNodeId: Option[String] = None,
 
     // WelcomeModal
     welcomeModal: WelcomeModal.Model = WelcomeModal.Model()
-)
+) {
+  def getNode(uuid: String): Option[Node] =
+    this.localNode.flatMap(local =>
+      if (local.uuid == uuid) {
+        Some(local)
+      } else {
+        this.parentNodes.find(_.uuid == uuid)
+      }
+    )
+
+  def selectedNode(): Option[Node] =
+    this.selectedNodeId.flatMap(getNode(_))
+
+  def currentNode(): Option[Node] = selectedNode().orElse(this.localNode)
+}
 
 object Model {
 
