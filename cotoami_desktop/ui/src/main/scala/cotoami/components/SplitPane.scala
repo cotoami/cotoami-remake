@@ -1,4 +1,4 @@
-package cotoami
+package cotoami.components
 
 import scala.scalajs.js
 import org.scalajs.dom
@@ -10,6 +10,8 @@ import slinky.core.facade.{React, ReactElement, SetStateHookCallback}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
+
+import cotoami.optionalClasses
 
 @react object SplitPane {
   case class Props(

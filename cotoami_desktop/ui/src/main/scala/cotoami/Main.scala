@@ -11,6 +11,7 @@ import slinky.hot
 import slinky.web.html._
 
 import fui.FunctionalUI._
+import components.SplitPane
 
 object Main {
 
@@ -189,7 +190,7 @@ object Main {
       )
     )(
       subparts.NavCotonomas.view(model, uiState, dispatch),
-      SplitPane.Secondary(className = None)(
+      components.SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
