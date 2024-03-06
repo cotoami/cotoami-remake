@@ -82,7 +82,11 @@ object Main {
 
       case DatabaseCreated(Left(e)) =>
         (
-          model.copy(log = model.log.error(e.message, Option(e.details))),
+          model.copy(
+            log = model.log.error(e.message, Option(e.details)),
+            welcomeModal = model.welcomeModal
+              .copy(processing = false, systemError = Some(e.message))
+          ),
           Seq.empty
         )
 

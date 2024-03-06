@@ -1,8 +1,8 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
-use std::{collections::HashMap, fs, sync::Arc};
+use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use tracing::debug;
@@ -35,9 +35,16 @@ impl NodeState {
     pub async fn new(config: NodeConfig) -> Result<Self> {
         config.validate()?;
 
-        let db_dir = config.db_dir();
         // Create the directory if it doesn't exist yet (a new database).
-        fs::create_dir(&db_dir).ok();
+        let db_dir = config.db_dir();
+        if let Err(e) = fs::create_dir(&db_dir) {
+            match e.kind() {
+                ErrorKind::AlreadyExists => (), // ignore
+                _ => bail!("Unable to create a directory: {}", e.to_string()),
+            }
+        }
+
+        // Create a database in the directory
         let db = Database::new(db_dir)?;
 
         let inner = State {
