@@ -166,6 +166,7 @@ async fn open_database(
         .to_str()
         .map(str::to_string)
         .ok_or(anyhow!("Invalid folder path: {}", database_folder))?;
+    validate_database_folder(db_dir.clone())?;
 
     let node_config = NodeConfig::new_standalone(Some(db_dir), None);
     let node_state = NodeState::new(node_config).await?;

@@ -16,7 +16,7 @@ case object ToggleLogView extends Msg
 // App init
 case class SystemInfoFetched(result: Either[Unit, SystemInfo]) extends Msg
 case class UiStateRestored(state: Option[Model.UiState]) extends Msg
-case class DatabaseCreated(result: Either[backend.Error, Node]) extends Msg
+case class DatabaseOpened(result: Either[backend.Error, Node]) extends Msg
 
 // Pane
 case class TogglePane(name: String) extends Msg

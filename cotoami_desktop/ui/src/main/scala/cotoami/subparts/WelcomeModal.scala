@@ -52,6 +52,7 @@ object WelcomeModal {
       extends Msg
   case class DatabaseFolderValidation(result: Either[backend.Error, Unit])
       extends Msg
+  case object OpenDatabase extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -141,6 +142,9 @@ object WelcomeModal {
           ),
           Seq.empty
         )
+
+      case OpenDatabase =>
+        (model.copy(processing = true), Seq(openDatabase(model)))
     }
 
   def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
@@ -161,7 +165,7 @@ object WelcomeModal {
 
   def createDatabase(model: Model): Cmd[cotoami.Msg] =
     tauri.invokeCommand(
-      cotoami.DatabaseCreated,
+      cotoami.DatabaseOpened,
       "create_database",
       js.Dynamic
         .literal(
@@ -185,6 +189,16 @@ object WelcomeModal {
       )
     else
       Seq()
+
+  def openDatabase(model: Model): Cmd[cotoami.Msg] =
+    tauri.invokeCommand(
+      cotoami.DatabaseOpened,
+      "open_database",
+      js.Dynamic
+        .literal(
+          databaseFolder = model.databaseFolder
+        )
+    )
 
   def view(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -312,7 +326,13 @@ object WelcomeModal {
 
         // Open
         div(className := "buttons")(
-          button(`type` := "submit", disabled := true)("Open")
+          button(
+            `type` := "submit",
+            disabled := model.databaseFolderErrors
+              .map(!_.isEmpty)
+              .getOrElse(true) || model.processing,
+            onClick := ((e) => dispatch(WelcomeModalMsg(OpenDatabase)))
+          )("Open")
         )
       )
     )

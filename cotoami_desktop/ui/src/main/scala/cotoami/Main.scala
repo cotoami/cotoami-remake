@@ -65,7 +65,7 @@ object Main {
           Seq.empty
         )
 
-      case DatabaseCreated(Right(node)) =>
+      case DatabaseOpened(Right(node)) =>
         (
           model.copy(
             localNode = Some(node),
@@ -73,14 +73,14 @@ object Main {
             welcomeModal = model.welcomeModal.copy(processing = false),
             log = model.log
               .info(
-                s"New database [${node.name}] created.",
+                s"Database [${node.name}] opened.",
                 Some(s"uuid: ${node.uuid}, name: ${node.name}")
               )
           ),
           Seq.empty
         )
 
-      case DatabaseCreated(Left(e)) =>
+      case DatabaseOpened(Left(e)) =>
         (
           model.copy(
             log = model.log.error(e.message, Option(e.details)),
