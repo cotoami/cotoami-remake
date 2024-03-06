@@ -35,6 +35,8 @@ object WelcomeModal {
   }
 
   sealed trait Msg
+
+  // New database
   case class DatabaseNameInput(query: String) extends Msg
   case object SelectBaseFolder extends Msg
   case class BaseFolderSelected(result: Either[Throwable, Option[String]])
@@ -43,6 +45,13 @@ object WelcomeModal {
   case class NewFolderValidation(result: Either[backend.Error, Unit])
       extends Msg
   case object CreateDatabase extends Msg
+
+  // Open an existing database
+  case object SelectDatabaseFolder extends Msg
+  case class DatabaseFolderSelected(result: Either[Throwable, Option[String]])
+      extends Msg
+  case class DatabaseFolderValidation(result: Either[backend.Error, Unit])
+      extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -54,7 +63,7 @@ object WelcomeModal {
           model.copy(folderNameErrors = None),
           Seq(
             tauri.selectSingleDirectory(
-              "Select a new database folder",
+              "Select a base folder",
               BaseFolderSelected andThen WelcomeModalMsg,
               Some(model.baseFolder)
             )
@@ -69,7 +78,7 @@ object WelcomeModal {
 
       case BaseFolderSelected(Left(error)) =>
         (
-          model,
+          model.copy(systemError = Some(error.toString())),
           Seq(
             cotoami.log_error("Folder selection error.", Some(error.toString()))
           )
@@ -93,6 +102,45 @@ object WelcomeModal {
 
       case CreateDatabase =>
         (model.copy(processing = true), Seq(createDatabase(model)))
+
+      case SelectDatabaseFolder =>
+        (
+          model.copy(databaseFolderErrors = None),
+          Seq(
+            tauri.selectSingleDirectory(
+              "Select a database folder",
+              DatabaseFolderSelected andThen WelcomeModalMsg,
+              None
+            )
+          )
+        )
+
+      case DatabaseFolderSelected(Right(path)) => {
+        model.copy(databaseFolder =
+          path.getOrElse(model.databaseFolder)
+        ) match {
+          case model => (model, validateDatabaseFolder(model))
+        }
+      }
+
+      case DatabaseFolderSelected(Left(error)) =>
+        (
+          model.copy(systemError = Some(error.toString())),
+          Seq(
+            cotoami.log_error("Folder selection error.", Some(error.toString()))
+          )
+        )
+
+      case DatabaseFolderValidation(Right(_)) =>
+        (model.copy(databaseFolderErrors = Some(Seq.empty)), Seq.empty)
+
+      case DatabaseFolderValidation(Left(error)) =>
+        (
+          model.copy(databaseFolderErrors =
+            Some(Seq(backend.Error.toValidationError(error)))
+          ),
+          Seq.empty
+        )
     }
 
   def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
@@ -122,6 +170,21 @@ object WelcomeModal {
           folderName = model.folderName
         )
     )
+
+  def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
+    if (!model.databaseFolder.isBlank)
+      Seq(
+        tauri.invokeCommand(
+          DatabaseFolderValidation andThen WelcomeModalMsg,
+          "validate_database_folder",
+          js.Dynamic
+            .literal(
+              databaseFolder = model.databaseFolder
+            )
+        )
+      )
+    else
+      Seq()
 
   def view(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -230,16 +293,21 @@ object WelcomeModal {
       form()(
         // Folder
         label(htmlFor := "select-database-folder")("Folder"),
-        div(className := "file-select")(
-          div(className := "file-path")(
+        div(className := "input-with-validation")(
+          div(className := "file-select")(
+            div(className := "file-path")(model.databaseFolder),
+            button(
+              id := "select-database-folder",
+              `type` := "button",
+              className := "secondary",
+              onClick := ((e) =>
+                dispatch(WelcomeModalMsg(SelectDatabaseFolder))
+              )
+            )(
+              icon("folder")
+            )
           ),
-          button(
-            id := "select-database-folder",
-            `type` := "button",
-            className := "secondary"
-          )(
-            icon("folder")
-          )
+          Validation.validationErrorDiv(model.databaseFolderErrors)
         ),
 
         // Open

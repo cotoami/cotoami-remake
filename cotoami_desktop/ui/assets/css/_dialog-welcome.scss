@@ -112,4 +112,10 @@ dialog.welcome {
       }
     }
   }
+
+  .input-with-validation {
+    div.file-select {
+      margin-bottom: 0;
+    }
+  }
 }
