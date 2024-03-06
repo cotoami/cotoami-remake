@@ -126,6 +126,17 @@ object Main {
             alt := "Cotoami",
             src := "/images/logo/logomark.svg"
           )
+        ),
+        model.currentNode.map(node =>
+          section(className := "location")(
+            a(className := "node-home", title := node.name)(
+              img(
+                className := "node-icon",
+                alt := node.name,
+                src := s"data:image/png;base64,${node.icon}"
+              )()
+            )
+          )
         )
       ),
       div(id := "app-body", className := "body")(
