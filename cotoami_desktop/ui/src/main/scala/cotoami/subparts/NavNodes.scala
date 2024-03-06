@@ -26,7 +26,14 @@ object NavNodes {
     )(
       paneToggle(PaneName, dispatch),
       button(
-        className := "all-nodes icon selectable selected",
+        className := optionalClasses(
+          Seq(
+            ("all-nodes", true),
+            ("icon", true),
+            ("selectable", true),
+            ("selected", model.selectedNodeId.isEmpty)
+          )
+        ),
         data - "tooltip" := "All nodes",
         data - "placement" := "right"
       )(
@@ -40,6 +47,28 @@ object NavNodes {
         icon("add")
       ),
       ul(className := "nodes")(
+        model.localNode.map(node =>
+          li()(
+            button(
+              className := optionalClasses(
+                Seq(
+                  ("node", true),
+                  ("icon", true),
+                  ("selectable", true),
+                  ("selected", model.selected(node))
+                )
+              ),
+              data - "tooltip" := node.name,
+              data - "placement" := "right"
+            )(
+              img(
+                className := "node-icon",
+                alt := node.name,
+                src := s"data:image/png;base64,${node.icon}"
+              )
+            )
+          )
+        )
       )
     )
 }

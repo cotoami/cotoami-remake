@@ -41,6 +41,9 @@ case class Model(
       }
     )
 
+  def selected(node: Node): Boolean =
+    this.selectedNodeId.map(_ == node.uuid).getOrElse(false)
+
   def selectedNode(): Option[Node] =
     this.selectedNodeId.flatMap(getNode(_))
 
