@@ -8,7 +8,7 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import cats.effect.IO
 
-import fui.FunctionalUI.Cmd
+import fui.FunctionalUI.{Cmd, Sub}
 
 package object tauri {
 
@@ -40,6 +40,16 @@ package object tauri {
       }
     }
   }
+
+  def listen[T](event: String, id: String): Sub[T] =
+    Sub.Impl[T](
+      id,
+      (dispatch, onSubscribe) => {
+        Event
+          .listen(event, (e: Event[T]) => dispatch(e.payload))
+          .foreach(unlisten => onSubscribe(Some(unlisten)))
+      }
+    )
 
   def selectSingleDirectory[Msg](
       dialogTitle: String,
