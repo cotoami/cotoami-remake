@@ -10,6 +10,9 @@ use cotoami_db::prelude::{Database, Node};
 use cotoami_node::prelude::*;
 use parking_lot::Mutex;
 
+use crate::log::Logger;
+
+mod log;
 pub mod window_state;
 
 fn main() {
@@ -138,6 +141,7 @@ fn validate_database_folder(database_folder: String) -> Result<(), Error> {
 
 #[tauri::command]
 async fn create_database(
+    app_handle: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     database_name: String,
     base_folder: String,
@@ -147,10 +151,12 @@ async fn create_database(
         let path: PathBuf = [base_folder, folder_name].iter().collect();
         path.to_str().map(str::to_string)
     };
+    app_handle.debug(format!("Creating a database in {:?}", db_dir), None);
 
     let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
     let node_state = NodeState::new(node_config).await?;
     let local_node = node_state.local_node().await?;
+    app_handle.info(format!("Database [{}] created.", local_node.name), None);
 
     state.inner().node_state.lock().replace(node_state);
 

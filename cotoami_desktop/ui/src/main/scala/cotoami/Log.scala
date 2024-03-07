@@ -37,6 +37,13 @@ object Log {
     val icon: String
   }
 
+  val levels = Map(
+    Debug.name -> Debug,
+    Info.name -> Info,
+    Warn.name -> Warn,
+    Error.name -> Error
+  )
+
   object Debug extends Level {
     override val name = "debug"
     override val value = 0
