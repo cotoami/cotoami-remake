@@ -38,6 +38,11 @@ object FunctionalUI {
 
   type Cmd[Msg] = IO[Option[Msg]]
 
+  object Cmd {
+    def map[Msg, OtherMsg](cmd: Cmd[Msg], f: Msg => OtherMsg): Cmd[OtherMsg] =
+      cmd.map(_.map(f(_)))
+  }
+
   sealed trait Sub[+Msg] {
     def map[OtherMsg](f: Msg => OtherMsg): Sub[OtherMsg]
 
