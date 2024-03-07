@@ -36,11 +36,10 @@ object FunctionalUI {
       onUrlChange: Option[URL => Msg] = None
   )
 
-  type Cmd[Msg] = IO[Option[Msg]]
-
-  object Cmd {
-    def map[Msg, OtherMsg](cmd: Cmd[Msg], f: Msg => OtherMsg): Cmd[OtherMsg] =
-      cmd.map(_.map(f(_)))
+  case class Cmd[Msg](io: IO[Option[Msg]]) extends AnyVal {
+    def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg] = Cmd(
+      this.io.map(_.map(f(_)))
+    )
   }
 
   sealed trait Sub[+Msg] {
@@ -159,7 +158,7 @@ object FunctionalUI {
 
       // Run side effects
       for (cmd <- cmds) {
-        cmd.unsafeRunAsync {
+        cmd.io.unsafeRunAsync {
           case Right(optionMsg) => optionMsg.map(dispatch(_))
           case Left(e) => throw e // IO should return Right even when it fails
         }
@@ -218,26 +217,26 @@ object FunctionalUI {
       * entry to the browser history.
       */
     def pushUrl[Msg](url: String): Cmd[Msg] =
-      IO {
+      Cmd(IO {
         dom.window.history.pushState((), "", url)
         listenersOnPushUrl.foreach(_(new URL(dom.window.location.href)))
         None
-      }
+      })
 
     /** Change the URL, but do not trigger a page load. This will not add a new
       * entry to the browser history.
       */
     def replaceUrl[Msg](url: String): Cmd[Msg] =
-      IO {
+      Cmd(IO {
         dom.window.history.replaceState((), "", url)
         None
-      }
+      })
 
     def ajaxGetJson[Msg](
         url: String,
         createMsg: Either[Throwable, Json] => Msg
     ): Cmd[Msg] =
-      IO.async { cb =>
+      Cmd(IO.async { cb =>
         IO {
           dom.fetch(url).flatMap(_.text()).onComplete {
             // Returning a Right even when the process has failed so that
@@ -252,14 +251,14 @@ object FunctionalUI {
           }
           None // no finalizer on cancellation
         }
-      }
+      })
 
     def ajaxGet[Msg, Result](
         url: String,
         decoder: Decoder[Result],
         createMsg: Either[Throwable, Result] => Msg
     ): Cmd[Msg] =
-      IO.async { cb =>
+      Cmd(IO.async { cb =>
         IO {
           implicit val resultDecoder = decoder
           dom.fetch(url).flatMap(_.text()).onComplete {
@@ -275,6 +274,6 @@ object FunctionalUI {
           }
           None // no finalizer on cancellation
         }
-      }
+      })
   }
 }

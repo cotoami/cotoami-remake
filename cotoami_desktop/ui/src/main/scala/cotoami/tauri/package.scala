@@ -16,8 +16,8 @@ package object tauri {
       createMsg: Either[E, T] => Msg,
       command: String,
       args: js.Object = js.Dynamic.literal()
-  ): Cmd[Msg] = {
-    IO.async { cb =>
+  ): Cmd[Msg] =
+    Cmd(IO.async { cb =>
       IO {
         Tauri
           .invoke[T](command, args)
@@ -38,8 +38,7 @@ package object tauri {
           }
         None
       }
-    }
-  }
+    })
 
   def listen[T](event: String, id: String): Sub[T] =
     Sub.Impl[T](
@@ -55,8 +54,8 @@ package object tauri {
       dialogTitle: String,
       createMsg: Either[Throwable, Option[String]] => Msg,
       defaultDirectory: Option[String] = None
-  ): Cmd[Msg] = {
-    IO.async { cb =>
+  ): Cmd[Msg] =
+    Cmd(IO.async { cb =>
       IO {
         val options = new Dialog.OpenDialogOptions {
           override val defaultPath = defaultDirectory match {
@@ -83,6 +82,5 @@ package object tauri {
           }
         None
       }
-    }
-  }
+    })
 }

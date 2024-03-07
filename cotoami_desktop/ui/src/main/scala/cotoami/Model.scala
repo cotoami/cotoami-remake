@@ -68,11 +68,11 @@ object Model {
       this.copy(paneSizes = this.paneSizes + (name -> newSize))
 
     def save(): Cmd[Msg] =
-      IO {
+      Cmd(IO {
         dom.window.localStorage
           .setItem(UiState.StorageKey, this.asJson.toString())
         None
-      }
+      })
   }
 
   object UiState {
@@ -82,7 +82,7 @@ object Model {
     implicit val decoder: Decoder[UiState] = deriveDecoder
 
     def restore(createMsg: Option[UiState] => Msg): Cmd[Msg] =
-      IO {
+      Cmd(IO {
         val value = dom.window.localStorage.getItem(StorageKey)
         val msg = if (value != null) {
           decode[UiState](value) match {
@@ -100,6 +100,6 @@ object Model {
           createMsg(None)
         }
         Some(msg)
-      }
+      })
   }
 }
