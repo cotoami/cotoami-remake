@@ -49,11 +49,10 @@ package object tauri {
       }
     )
 
-  def selectSingleDirectory[Msg](
+  def selectSingleDirectory(
       dialogTitle: String,
-      createMsg: Either[Throwable, Option[String]] => Msg,
       defaultDirectory: Option[String] = None
-  ): Cmd[Msg] =
+  ): Cmd[Either[Throwable, Option[String]]] =
     Cmd(IO.async { cb =>
       IO {
         val options = new Dialog.OpenDialogOptions {
@@ -73,10 +72,10 @@ package object tauri {
           .onComplete {
             case Success(result) => {
               val path = if (result == null) None else Some(result.toString())
-              cb(Right(Some(createMsg(Right(path)))))
+              cb(Right(Some(Right(path))))
             }
             case Failure(throwable) => {
-              cb(Right(Some(createMsg(Left(throwable)))))
+              cb(Right(Some(Left(throwable))))
             }
           }
         None

@@ -64,11 +64,12 @@ object WelcomeModal {
         (
           model.copy(folderNameErrors = None),
           Seq(
-            tauri.selectSingleDirectory(
-              "Select a base folder",
-              BaseFolderSelected andThen WelcomeModalMsg,
-              Some(model.baseFolder)
-            )
+            tauri
+              .selectSingleDirectory(
+                "Select a base folder",
+                Some(model.baseFolder)
+              )
+              .map((BaseFolderSelected andThen WelcomeModalMsg)(_))
           )
         )
 
@@ -109,11 +110,12 @@ object WelcomeModal {
         (
           model.copy(databaseFolderErrors = None),
           Seq(
-            tauri.selectSingleDirectory(
-              "Select a database folder",
-              DatabaseFolderSelected andThen WelcomeModalMsg,
-              None
-            )
+            tauri
+              .selectSingleDirectory(
+                "Select a database folder",
+                None
+              )
+              .map((DatabaseFolderSelected andThen WelcomeModalMsg)(_))
           )
         )
 
