@@ -31,7 +31,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns a [ParentNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ParentNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id)))
@@ -89,7 +89,7 @@ pub(crate) fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, P
 
 pub(super) fn set_forked(id: &Id<Node>) -> impl Operation<WritableConn, ParentNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut parent = get_or_err(id).run(ctx)??;
+        let mut parent = try_get(id).run(ctx)??;
         parent.forked = true;
         parent = update(&parent).run(ctx)?;
         Ok(parent)

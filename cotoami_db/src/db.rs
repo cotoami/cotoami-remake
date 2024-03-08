@@ -363,7 +363,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn node_or_err(&mut self, node_id: &Id<Node>) -> Result<Node> {
-        self.read_transaction(node_ops::get_or_err(node_id))?
+        self.read_transaction(node_ops::try_get(node_id))?
             .map_err(anyhow::Error::from)
     }
 
@@ -801,7 +801,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(Coto, ChangelogEntry)> {
         let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let coto = coto_ops::get_or_err(id).run(ctx)??;
+            let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_update_coto(&coto)?;
             let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
@@ -819,7 +819,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
         let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let coto = coto_ops::get_or_err(id).run(ctx)??;
+            let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_delete_coto(&coto)?;
             if coto_ops::delete(id).run(ctx)? {
@@ -849,7 +849,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn cotonoma_or_err(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
-        self.read_transaction(cotonoma_ops::get_or_err(id))?
+        self.read_transaction(cotonoma_ops::try_get(id))?
             .map_err(anyhow::Error::from)
     }
 
@@ -985,7 +985,7 @@ impl<'a> DatabaseSession<'a> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let link = link_ops::get_or_err(id).run(ctx)??;
+            let link = link_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&link)?;
             let link = link_ops::update(&link.edit(linking_phrase, details)).run(ctx)?;
             let change = Change::EditLink {
@@ -1003,7 +1003,7 @@ impl<'a> DatabaseSession<'a> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let link = link_ops::get_or_err(id).run(ctx)??;
+            let link = link_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&link)?;
             if link_ops::delete(id).run(ctx)? {
                 let change = Change::DeleteLink(*id);

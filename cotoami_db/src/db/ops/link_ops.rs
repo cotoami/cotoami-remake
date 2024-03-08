@@ -29,7 +29,7 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, O
     })
 }
 
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Link>,
 ) -> impl Operation<Conn, Result<Link, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Link, *id)))

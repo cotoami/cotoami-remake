@@ -200,7 +200,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 summary,
                 updated_at,
             } => {
-                let coto = coto_ops::get_or_err(uuid).run(ctx)??;
+                let coto = coto_ops::try_get(uuid).run(ctx)??;
                 let mut update_coto = coto.edit(content, summary.as_deref());
                 update_coto.updated_at = *updated_at;
                 coto_ops::update(&update_coto).run(ctx)?;
@@ -231,7 +231,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 details,
                 updated_at,
             } => {
-                let link = link_ops::get_or_err(uuid).run(ctx)??;
+                let link = link_ops::try_get(uuid).run(ctx)??;
                 let mut update_link = link.edit(linking_phrase.as_deref(), details.as_deref());
                 update_link.updated_at = *updated_at;
                 link_ops::update(&update_link).run(ctx)?;

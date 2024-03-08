@@ -29,7 +29,7 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, O
     })
 }
 
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<Node, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Node, *id)))
@@ -122,8 +122,8 @@ pub(crate) fn set_root_cotonoma<'a>(
     cotonoma_id: &'a Id<Cotonoma>,
 ) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let (cotonoma, _) = cotonoma_ops::get_or_err(cotonoma_id).run(ctx)??;
-        let node = get_or_err(id).run(ctx)??;
+        let (cotonoma, _) = cotonoma_ops::try_get(cotonoma_id).run(ctx)??;
+        let node = try_get(id).run(ctx)??;
         let mut update_node = node.to_update();
         update_node.name = &cotonoma.name;
         update_node.root_cotonoma_id = Some(&cotonoma.uuid);

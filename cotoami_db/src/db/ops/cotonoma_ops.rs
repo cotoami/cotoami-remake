@@ -32,7 +32,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
@@ -138,7 +138,7 @@ pub(crate) fn rename<'a>(
 ) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
-        let (cotonoma, coto) = get_or_err(id).run(ctx)??;
+        let (cotonoma, coto) = try_get(id).run(ctx)??;
 
         // Update coto
         let mut coto = coto.to_update();

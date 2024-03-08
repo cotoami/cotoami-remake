@@ -32,7 +32,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns a [ClientNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ClientNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ClientNode, *id)))
@@ -104,7 +104,7 @@ pub(super) fn set_disabled(
     disabled: bool,
 ) -> impl Operation<WritableConn, ClientNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = get_or_err(id).run(ctx)??;
+        let mut client = try_get(id).run(ctx)??;
         client.disabled = disabled;
         client = update(&client).run(ctx)?;
         Ok(client)
@@ -118,7 +118,7 @@ pub(crate) fn start_session<'a>(
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let duration = chrono::Duration::from_std(duration)?;
-        let mut client = get_or_err(id)
+        let mut client = try_get(id)
             .run(ctx)?
             // Hide a not-found error for a security reason
             .context(DatabaseError::AuthenticationFailed)?;
@@ -132,7 +132,7 @@ pub(crate) fn start_session<'a>(
 
 pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WritableConn, ClientNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = get_or_err(id).run(ctx)??;
+        let mut client = try_get(id).run(ctx)??;
         client.clear_session();
         update(&client).run(ctx)?;
         Ok(client)
@@ -144,7 +144,7 @@ pub fn change_password<'a>(
     password: &'a str,
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = get_or_err(id).run(ctx)??;
+        let mut client = try_get(id).run(ctx)??;
         client.update_password(password)?;
         update(&client).run(ctx)?;
         Ok(client)

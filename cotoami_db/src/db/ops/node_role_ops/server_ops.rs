@@ -30,7 +30,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 }
 
 /// Returns a [ServerNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn get_or_err<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ServerNode, DatabaseError>> + '_ {
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ServerNode, *id)))
@@ -75,7 +75,7 @@ pub(crate) fn save_server_password<'a>(
     encryption_password: &'a str,
 ) -> impl Operation<WritableConn, ServerNode> + 'a {
     composite_op::<WritableConn, _, _>(|ctx| {
-        let mut server = get_or_err(id).run(ctx)??;
+        let mut server = try_get(id).run(ctx)??;
         server.save_password(password, encryption_password)?;
         server = update(&server).run(ctx)?;
         Ok(server)
@@ -87,7 +87,7 @@ pub(super) fn set_disabled(
     disabled: bool,
 ) -> impl Operation<WritableConn, ServerNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut server = get_or_err(id).run(ctx)??;
+        let mut server = try_get(id).run(ctx)??;
         server.disabled = disabled;
         server = update(&server).run(ctx)?;
         Ok(server)
