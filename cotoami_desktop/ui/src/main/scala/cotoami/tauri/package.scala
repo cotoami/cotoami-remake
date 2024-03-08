@@ -12,11 +12,10 @@ import fui.FunctionalUI.{Cmd, Sub}
 
 package object tauri {
 
-  def invokeCommand[Msg, T, E](
-      createMsg: Either[E, T] => Msg,
+  def invokeCommand[T, E](
       command: String,
       args: js.Object = js.Dynamic.literal()
-  ): Cmd[Msg] =
+  ): Cmd[Either[E, T]] =
     Cmd(IO.async { cb =>
       IO {
         Tauri
@@ -25,11 +24,11 @@ package object tauri {
           // `scala.scalajs.js.Thenable.Implicits._`
           .onComplete {
             case Success(t) => {
-              cb(Right(Some(createMsg(Right(t)))))
+              cb(Right(Some(Right(t))))
             }
             case Failure(ex: js.JavaScriptException) => {
               val error = ex.exception.asInstanceOf[E]
-              cb(Right(Some(createMsg(Left(error)))))
+              cb(Right(Some(Left(error))))
             }
             case Failure(throwable) => {
               // should be unreachable

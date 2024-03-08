@@ -151,55 +151,59 @@ object WelcomeModal {
   def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.baseFolder.isBlank && !model.folderName.isBlank)
       Seq(
-        tauri.invokeCommand(
-          NewFolderValidation andThen WelcomeModalMsg,
-          "validate_new_database_folder",
-          js.Dynamic
-            .literal(
-              baseFolder = model.baseFolder,
-              folderName = model.folderName
-            )
-        )
+        tauri
+          .invokeCommand(
+            "validate_new_database_folder",
+            js.Dynamic
+              .literal(
+                baseFolder = model.baseFolder,
+                folderName = model.folderName
+              )
+          )
+          .map((NewFolderValidation andThen WelcomeModalMsg)(_))
       )
     else
       Seq()
 
   def createDatabase(model: Model): Cmd[cotoami.Msg] =
-    tauri.invokeCommand(
-      cotoami.DatabaseOpened,
-      "create_database",
-      js.Dynamic
-        .literal(
-          databaseName = model.databaseName,
-          baseFolder = model.baseFolder,
-          folderName = model.folderName
-        )
-    )
+    tauri
+      .invokeCommand(
+        "create_database",
+        js.Dynamic
+          .literal(
+            databaseName = model.databaseName,
+            baseFolder = model.baseFolder,
+            folderName = model.folderName
+          )
+      )
+      .map(cotoami.DatabaseOpened(_))
 
   def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.databaseFolder.isBlank)
       Seq(
-        tauri.invokeCommand(
-          DatabaseFolderValidation andThen WelcomeModalMsg,
-          "validate_database_folder",
-          js.Dynamic
-            .literal(
-              databaseFolder = model.databaseFolder
-            )
-        )
+        tauri
+          .invokeCommand(
+            "validate_database_folder",
+            js.Dynamic
+              .literal(
+                databaseFolder = model.databaseFolder
+              )
+          )
+          .map((DatabaseFolderValidation andThen WelcomeModalMsg)(_))
       )
     else
       Seq()
 
   def openDatabase(model: Model): Cmd[cotoami.Msg] =
-    tauri.invokeCommand(
-      cotoami.DatabaseOpened,
-      "open_database",
-      js.Dynamic
-        .literal(
-          databaseFolder = model.databaseFolder
-        )
-    )
+    tauri
+      .invokeCommand(
+        "open_database",
+        js.Dynamic
+          .literal(
+            databaseFolder = model.databaseFolder
+          )
+      )
+      .map(cotoami.DatabaseOpened(_))
 
   def view(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     dialog(className := "welcome", open := true)(

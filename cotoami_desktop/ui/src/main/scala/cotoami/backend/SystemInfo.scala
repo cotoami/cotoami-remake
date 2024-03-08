@@ -12,6 +12,6 @@ trait SystemInfo extends js.Object {
 }
 
 object SystemInfo {
-  def fetch[Msg](createMsg: Either[Unit, SystemInfo] => Msg): Cmd[Msg] =
-    tauri.invokeCommand(createMsg, "system_info")
+  def fetch(): Cmd[Either[Unit, SystemInfo]] =
+    tauri.invokeCommand("system_info")
 }

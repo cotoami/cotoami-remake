@@ -31,7 +31,7 @@ object Main {
       Model(),
       Seq(
         Model.UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch(SystemInfoFetched)
+        cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched(_))
       )
     )
 
