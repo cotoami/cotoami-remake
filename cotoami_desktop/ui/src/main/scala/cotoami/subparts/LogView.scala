@@ -16,7 +16,7 @@ object LogView {
     section(className := "log-view")(
       header(className := "tools")(
         button(
-          className := "close-log-view icon",
+          className := "close-log-view default",
           onClick := ((e) => dispatch(cotoami.ToggleLogView))
         )(material_symbol("close"))
       ),

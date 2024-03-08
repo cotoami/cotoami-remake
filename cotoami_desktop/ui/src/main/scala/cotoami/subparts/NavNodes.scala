@@ -36,7 +36,7 @@ object NavNodes {
         className := optionalClasses(
           Seq(
             ("all-nodes", true),
-            ("icon", true),
+            ("default", true),
             ("selectable", true),
             ("selected", model.selectedNodeId.isEmpty)
           )
@@ -47,7 +47,7 @@ object NavNodes {
         material_symbol("stacks")
       ),
       button(
-        className := "add-node icon",
+        className := "add-node default",
         data - "tooltip" := "Add node",
         data - "placement" := "right"
       )(
@@ -63,7 +63,7 @@ object NavNodes {
       className := optionalClasses(
         Seq(
           ("node", true),
-          ("icon", true),
+          ("default", true),
           ("selectable", true),
           ("selected", model.selected(node))
         )

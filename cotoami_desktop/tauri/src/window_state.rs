@@ -294,27 +294,6 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new() -> Self { Self::default() }
-
-    /// Sets the state flags to control what state gets restored and saved.
-    pub fn with_state_flags(mut self, flags: StateFlags) -> Self {
-        self.state_flags = flags;
-        self
-    }
-
-    /// Sets a list of windows that shouldn't be tracked and managed by this plugin
-    /// for example splash screen windows.
-    pub fn with_denylist(mut self, denylist: &[&str]) -> Self {
-        self.denylist = denylist.iter().map(|l| l.to_string()).collect();
-        self
-    }
-
-    /// Adds the given window label to a list of windows to skip initial state restore.
-    pub fn skip_initial_state(mut self, label: &str) -> Self {
-        self.skip_initial_state.insert(label.into());
-        self
-    }
-
     pub fn build<R: Runtime>(self) -> TauriPlugin<R> {
         let flags = self.state_flags;
         PluginBuilder::new("window-state")

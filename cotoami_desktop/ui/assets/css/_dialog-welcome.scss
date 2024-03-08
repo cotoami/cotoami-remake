@@ -16,16 +16,23 @@ dialog.welcome {
 
   div.body {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 
-    section.recent-databases {
-      // display: none;
-      margin-right: 16px;
-      max-width: 20rem;
-    }
+    .body-main {
+      flex: 1;
 
-    div.body-main {
-      width: 25rem;
+      display: flex;
+      flex-direction: row;
+
+      section.recent-databases {
+        // display: none;
+        margin-right: 16px;
+        max-width: 20rem;
+      }
+
+      div.create-or-open {
+        width: 25rem;
+      }
     }
   }
 
@@ -39,7 +46,8 @@ dialog.welcome {
 
   .system-error {
     margin-top: 10px;
-    color: var(--form-element-invalid-border-color)
+    color: var(--form-element-invalid-border-color);
+    font-size: 95%;
   }
 
   section.recent-databases {
@@ -47,10 +55,11 @@ dialog.welcome {
       margin-bottom: 5px;
     }
 
-    a.database {
+    button.database {
       display: block;
       margin: 0;
       padding: 10px;
+      width: 100%;
       color: var(--h3-color);
 
       &:hover {
@@ -63,11 +72,13 @@ dialog.welcome {
         height: 18px;
         border-radius: 4px;
         vertical-align: text-top;
-        margin-right: 2px;
+        margin-right: 5px;
       }
 
       section.database-path {
+        margin-top: 2px;
         font-size: 0.8rem;
+        word-break: break-all;
         opacity: .5;
       }
     }

@@ -13,7 +13,7 @@ import slinky.web.html._
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.components.{SplitPane, material_symbol, paneToggle, node_img}
-import cotoami.backend.LogEvent
+import cotoami.backend.{SystemInfo, LogEvent}
 
 object Main {
 
@@ -61,7 +61,7 @@ object Main {
             welcomeModal =
               model.welcomeModal.copy(baseFolder = systemInfo.app_data_dir),
             log = model.log
-              .info("SystemInfo fetched.", Some(js.JSON.stringify(systemInfo)))
+              .info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo)))
           ),
           Seq.empty
         )
@@ -135,7 +135,7 @@ object Main {
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
       header(
-        button(className := "app-info icon", title := "View app info")(
+        button(className := "app-info default", title := "View app info")(
           img(
             className := "app-icon",
             alt := "Cotoami",
@@ -161,7 +161,7 @@ object Main {
           .map(entry =>
             div(className := s"log-peek ${entry.level.name}")(
               button(
-                className := "open-log-view",
+                className := "open-log-view default",
                 onClick := ((e) => dispatch(cotoami.ToggleLogView))
               )(
                 material_symbol(entry.level.icon),
@@ -211,7 +211,14 @@ object Main {
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
     if (model.localNode.isEmpty) {
-      Some(subparts.WelcomeModal.view(model.welcomeModal, dispatch))
+      Some(
+        subparts.WelcomeModal
+          .view(
+            model.welcomeModal,
+            model.systemInfo.map(_.recent_databases.toSeq),
+            dispatch
+          )
+      )
     } else {
       None
     }

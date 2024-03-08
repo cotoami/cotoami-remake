@@ -45,6 +45,10 @@
         color: #{pico.$amber-900};
       }
 
+      &.warn {
+        color: #{pico.$amber-400};
+      }
+
       span.material-symbols {
         margin-right: 3px;
         line-height: 1rem;

@@ -10,10 +10,11 @@ use cotoami_db::prelude::{Database, Node};
 use cotoami_node::prelude::*;
 use parking_lot::Mutex;
 
-use crate::log::Logger;
+use crate::{log::Logger, recent::RecentDatabases};
 
 mod log;
-pub mod window_state;
+mod recent;
+mod window_state;
 
 fn main() {
     tauri::Builder::default()
@@ -80,6 +81,7 @@ struct SystemInfo {
     app_version: String,
     app_config_dir: Option<String>,
     app_data_dir: Option<String>,
+    recent_databases: RecentDatabases,
 }
 
 #[tauri::command]
@@ -99,10 +101,13 @@ fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
         .app_data_dir()
         .and_then(|path| path.to_str().map(str::to_string));
 
+    let recent_databases = RecentDatabases::load(&app_handle);
+
     SystemInfo {
         app_version,
         app_config_dir,
         app_data_dir,
+        recent_databases,
     }
 }
 
@@ -147,38 +152,45 @@ async fn create_database(
     base_folder: String,
     folder_name: String,
 ) -> Result<Node, Error> {
-    let db_dir = {
+    let folder = {
         let path: PathBuf = [base_folder, folder_name].iter().collect();
-        path.to_str().map(str::to_string)
+        path.to_str()
+            .map(str::to_string)
+            .ok_or(anyhow!("Invalid folder path: {:?}", path))?
     };
-    app_handle.debug(format!("Creating a database..."), db_dir.clone());
+    app_handle.debug(format!("Creating a database..."), Some(folder.clone()));
 
-    let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
+    let node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
     let node_state = NodeState::new(node_config).await?;
     let local_node = node_state.local_node().await?;
     app_handle.info(format!("Database [{}] created.", local_node.name), None);
 
     state.inner().node_state.lock().replace(node_state);
 
+    RecentDatabases::update(&app_handle, folder, &local_node);
+
     Ok(local_node)
 }
 
 #[tauri::command]
 async fn open_database(
+    app_handle: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     database_folder: String,
 ) -> Result<Node, Error> {
-    let db_dir = PathBuf::from(&database_folder)
+    let folder = PathBuf::from(&database_folder)
         .to_str()
         .map(str::to_string)
         .ok_or(anyhow!("Invalid folder path: {}", database_folder))?;
-    validate_database_folder(db_dir.clone())?;
+    validate_database_folder(folder.clone())?;
 
-    let node_config = NodeConfig::new_standalone(Some(db_dir), None);
+    let node_config = NodeConfig::new_standalone(Some(folder.clone()), None);
     let node_state = NodeState::new(node_config).await?;
     let local_node = node_state.local_node().await?;
 
     state.inner().node_state.lock().replace(node_state);
+
+    RecentDatabases::update(&app_handle, folder, &local_node);
 
     Ok(local_node)
 }

@@ -87,9 +87,7 @@ section {
 }
 
 button {
-  position: relative;
   margin: 0;
-  //padding: 6px 16px;
   width: auto;
 
   @include utils.force-unselectable;
@@ -153,11 +151,11 @@ dialog {
   }
 }
 
-button.icon {
-  // unset the pico styles
+button.default {
   all: unset;
-
   position: relative;
+  width: auto;
+  box-sizing: border-box;
   cursor: pointer;
 }
 

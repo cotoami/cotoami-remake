@@ -9,7 +9,7 @@ import fui.FunctionalUI._
 import cotoami.{Model, Msg, Log, Validation, tauri, WelcomeModalMsg}
 import cotoami.components.material_symbol
 import cotoami.backend
-import cotoami.backend.Node
+import cotoami.backend.{Node, DatabaseFolder}
 import cats.syntax.foldable
 
 object WelcomeModal {
@@ -54,6 +54,7 @@ object WelcomeModal {
   case class DatabaseFolderValidation(result: Either[backend.Error, Unit])
       extends Msg
   case object OpenDatabase extends Msg
+  case class OpenDatabaseIn(folder: String) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -147,7 +148,10 @@ object WelcomeModal {
         )
 
       case OpenDatabase =>
-        (model.copy(processing = true), Seq(openDatabase(model)))
+        (model.copy(processing = true), Seq(openDatabase(model.databaseFolder)))
+
+      case OpenDatabaseIn(folder) =>
+        (model.copy(processing = true), Seq(openDatabase(folder)))
     }
 
   def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
@@ -196,18 +200,22 @@ object WelcomeModal {
     else
       Seq()
 
-  def openDatabase(model: Model): Cmd[cotoami.Msg] =
+  def openDatabase(folder: String): Cmd[cotoami.Msg] =
     tauri
       .invokeCommand(
         "open_database",
         js.Dynamic
           .literal(
-            databaseFolder = model.databaseFolder
+            databaseFolder = folder
           )
       )
       .map(cotoami.DatabaseOpened(_))
 
-  def view(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
+  def view(
+      model: Model,
+      recentDatabases: Option[Seq[DatabaseFolder]],
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
     dialog(className := "welcome", open := true)(
       article()(
         header()(
@@ -221,14 +229,54 @@ object WelcomeModal {
           )
         ),
         div(className := "body")(
+          model.systemError.map(e => div(className := "system-error")(e)),
           div(className := "body-main")(
-            model.systemError.map(e => div(className := "system-error")(e)),
-            newDatabase(model, dispatch),
-            openDatabase(model, dispatch)
+            recentDatabases.flatMap(recent(model, _, dispatch)),
+            div(className := "create-or-open")(
+              newDatabase(model, dispatch),
+              openDatabase(model, dispatch)
+            )
           )
         )
       )
     )
+
+  def recent(
+      model: Model,
+      databases: Seq[DatabaseFolder],
+      dispatch: cotoami.Msg => Unit
+  ): Option[ReactElement] =
+    if (databases.isEmpty) {
+      None
+    } else {
+      Some(
+        section(className := "recent-databases")(
+          h2()("Recent"),
+          ul()(
+            databases.map(db =>
+              li(key := db.path)(
+                button(
+                  className := "database default",
+                  title := db.name,
+                  disabled := model.processing,
+                  onClick := ((e) =>
+                    dispatch(WelcomeModalMsg(OpenDatabaseIn(db.path)))
+                  )
+                )(
+                  img(
+                    className := "node-icon",
+                    alt := db.name,
+                    src := s"data:image/png;base64,${db.icon}"
+                  ),
+                  db.name,
+                  section(className := "database-path")(db.path)
+                )
+              )
+            ): _*
+          )
+        )
+      )
+    }
 
   def newDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
     section(className := "new-database")(

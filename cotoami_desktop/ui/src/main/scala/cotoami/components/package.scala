@@ -17,14 +17,14 @@ package object components {
   def paneToggle(paneName: String, dispatch: Msg => Unit): ReactElement =
     Fragment(
       button(
-        className := "fold icon",
+        className := "fold default",
         title := "Fold",
         onClick := ((e) => dispatch(TogglePane(paneName)))
       )(
         span(className := "material-symbols")("arrow_left")
       ),
       button(
-        className := "unfold icon",
+        className := "unfold default",
         title := "Unfold",
         onClick := ((e) => dispatch(TogglePane(paneName)))
       )(
