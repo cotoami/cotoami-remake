@@ -2,30 +2,30 @@ use log::error;
 use tauri::{AppHandle, Manager};
 
 pub(crate) trait Logger {
-    fn log(&self, entry: &LogEntry);
+    fn log(&self, event: &LogEvent);
 
     fn debug(&self, message: impl Into<String>, details: Option<String>) {
-        self.log(&LogEntry::new(LogEntry::LEVEL_DEBUG, message, details));
+        self.log(&LogEvent::new(LogEvent::LEVEL_DEBUG, message, details));
     }
     fn info(&self, message: impl Into<String>, details: Option<String>) {
-        self.log(&LogEntry::new(LogEntry::LEVEL_INFO, message, details));
+        self.log(&LogEvent::new(LogEvent::LEVEL_INFO, message, details));
     }
     fn warn(&self, message: impl Into<String>, details: Option<String>) {
-        self.log(&LogEntry::new(LogEntry::LEVEL_WARN, message, details));
+        self.log(&LogEvent::new(LogEvent::LEVEL_WARN, message, details));
     }
     fn error(&self, message: impl Into<String>, details: Option<String>) {
-        self.log(&LogEntry::new(LogEntry::LEVEL_ERROR, message, details));
+        self.log(&LogEvent::new(LogEvent::LEVEL_ERROR, message, details));
     }
 }
 
-#[derive(Clone, serde::Serialize)]
-pub(crate) struct LogEntry {
+#[derive(Debug, Clone, serde::Serialize)]
+pub(crate) struct LogEvent {
     level: &'static str,
     message: String,
     details: Option<String>,
 }
 
-impl LogEntry {
+impl LogEvent {
     const LEVEL_DEBUG: &'static str = "debug";
     const LEVEL_INFO: &'static str = "info";
     const LEVEL_WARN: &'static str = "warn";
@@ -45,9 +45,9 @@ impl LogEntry {
 }
 
 impl Logger for AppHandle {
-    fn log(&self, entry: &LogEntry) {
-        if let Err(e) = self.emit_all("log", entry) {
-            error!("Emitting a log event faild: {}", e);
+    fn log(&self, event: &LogEvent) {
+        if let Err(e) = self.emit_all("log", event) {
+            error!("Emitting a log event faild: {:?} (reason: {})", event, e);
         }
     }
 }

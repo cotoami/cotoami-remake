@@ -39,9 +39,9 @@ package object tauri {
       }
     })
 
-  def listen[T](event: String, id: String): Sub[T] =
+  def listen[T](event: String, id: Option[String]): Sub[T] =
     Sub.Impl[T](
-      id,
+      id.getOrElse(s"listen-${event}"),
       (dispatch, onSubscribe) => {
         Event
           .listen(event, (e: Event[T]) => dispatch(e.payload))

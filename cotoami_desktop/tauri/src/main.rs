@@ -151,7 +151,7 @@ async fn create_database(
         let path: PathBuf = [base_folder, folder_name].iter().collect();
         path.to_str().map(str::to_string)
     };
-    app_handle.debug(format!("Creating a database in {:?}", db_dir), None);
+    app_handle.debug(format!("Creating a database..."), db_dir.clone());
 
     let node_config = NodeConfig::new_standalone(db_dir, Some(database_name));
     let node_state = NodeState::new(node_config).await?;

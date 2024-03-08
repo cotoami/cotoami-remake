@@ -11,7 +11,9 @@ import slinky.hot
 import slinky.web.html._
 
 import fui.FunctionalUI._
+import cotoami.tauri
 import cotoami.components.{SplitPane, material_symbol, paneToggle, node_img}
+import cotoami.backend.LogEvent
 
 object Main {
 
@@ -22,7 +24,7 @@ object Main {
 
     Browser.runProgram(
       dom.document.getElementById("app"),
-      Program(init, view, update)
+      Program(init, view, update, subscriptions)
     )
   }
 
@@ -39,7 +41,13 @@ object Main {
     msg match {
       case AddLogEntry(level, message, details) =>
         (
-          model.copy(log = model.log.addEntry(level, message, details)),
+          model.copy(log = model.log.log(level, message, details)),
+          Seq.empty
+        )
+
+      case BackendLogEvent(event) =>
+        (
+          model.copy(log = model.log.addEntry(LogEvent.toLogEntry(event))),
           Seq.empty
         )
 
@@ -118,6 +126,11 @@ object Main {
         (model.copy(welcomeModal = welcomeModal), cmds)
       }
     }
+
+  def subscriptions(model: Model): Sub[Msg] =
+    // Specify the type of the event payload (`LogEvent`) here,
+    // otherwise a runtime error will occur for some reason
+    tauri.listen[LogEvent]("log", None).map(BackendLogEvent(_))
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(

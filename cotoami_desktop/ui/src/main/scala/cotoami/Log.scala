@@ -9,20 +9,24 @@ case class Log(
   def lastEntry(): Option[Log.Entry] = this.entries.lastOption
 
   def debug(message: String, details: Option[String] = None): Log =
-    this.addEntry(Log.Debug, message, details)
+    this.log(Log.Debug, message, details)
   def info(message: String, details: Option[String] = None): Log =
-    this.addEntry(Log.Info, message, details)
+    this.log(Log.Info, message, details)
   def warn(message: String, details: Option[String] = None): Log =
-    this.addEntry(Log.Warn, message, details)
+    this.log(Log.Warn, message, details)
   def error(message: String, details: Option[String] = None): Log =
-    this.addEntry(Log.Error, message, details)
+    this.log(Log.Error, message, details)
 
-  def addEntry(
+  def log(
       level: Log.Level,
       message: String,
       details: Option[String] = None
   ): Log = {
-    var entries = this.entries.enqueue(Log.Entry(level, message, details))
+    this.addEntry(Log.Entry(level, message, details))
+  }
+
+  def addEntry(entry: Log.Entry): Log = {
+    var entries = this.entries.enqueue(entry)
     while (entries.size > this.maxSize) {
       entries = entries.dequeue._2
     }
@@ -31,6 +35,12 @@ case class Log(
 }
 
 object Log {
+  case class Entry(
+      level: Level,
+      message: String,
+      details: Option[String] = None
+  )
+
   sealed trait Level {
     val name: String
     val value: Int
@@ -67,10 +77,4 @@ object Log {
     override val value = 3
     override val icon = "priority_high"
   }
-
-  case class Entry(
-      level: Level,
-      message: String,
-      details: Option[String] = None
-  )
 }

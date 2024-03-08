@@ -1,7 +1,7 @@
 package cotoami
 
 import cotoami.Log
-import cotoami.backend.{Node, SystemInfo}
+import cotoami.backend.{Node, SystemInfo, LogEvent}
 
 sealed trait Msg
 
@@ -11,6 +11,7 @@ case class AddLogEntry(
     message: String,
     details: Option[String] = None
 ) extends Msg
+case class BackendLogEvent(event: LogEvent) extends Msg
 case object ToggleLogView extends Msg
 
 // App init
