@@ -171,7 +171,10 @@ object FunctionalUI {
       val keysToAdd = nextSubs.keySet.diff(subs.keySet)
       val keysToRemove = subs.keySet.diff(nextSubs.keySet)
       keysToAdd.foreach(key => {
-        // subscribe and hold `unsubscribe` function
+        // Register the key first to avoid multiple subscriptions
+        subs.update(key, None)
+
+        // subscribe and keep the `unsubscribe` function
         nextSubs.get(key) match {
           case Some(subscribe) => subscribe(dispatch, subs.update(key, _))
           case None            => subs.update(key, None)
