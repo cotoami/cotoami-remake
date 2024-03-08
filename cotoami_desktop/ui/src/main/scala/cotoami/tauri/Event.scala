@@ -57,7 +57,7 @@ trait Event[T] extends js.Object {
   val event: String = js.native
 
   // Event identifier used to unlisten
-  val id: Int = js.native
+  val id: Double = js.native
 
   // Event payload
   val payload: T = js.native
