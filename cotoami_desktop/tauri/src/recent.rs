@@ -14,7 +14,7 @@ use crate::log::Logger;
 pub(crate) struct DatabaseFolder {
     path: String,
     name: String,
-    icon: String,
+    icon: String, // Base64-encoded image binary
 }
 
 impl DatabaseFolder {
