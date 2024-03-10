@@ -6,7 +6,7 @@ import org.scalajs.dom
 import org.scalajs.dom.URL
 
 import slinky.core._
-import slinky.core.facade.{ReactElement, Fragment}
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.hot
 import slinky.web.html._
 
@@ -14,8 +14,8 @@ import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.components.{SplitPane, material_symbol, paneToggle, node_img}
-import cotoami.backend.{SystemInfo, LogEvent}
+import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
+import cotoami.backend.{LogEvent, SystemInfo}
 
 object Main {
 

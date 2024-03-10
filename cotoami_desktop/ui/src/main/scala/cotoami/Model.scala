@@ -2,7 +2,7 @@ package cotoami
 
 import org.scalajs.dom
 
-import io.circe.{Encoder, Decoder}
+import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 import io.circe.syntax._
 import io.circe.parser._
@@ -10,7 +10,7 @@ import io.circe.parser._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{SystemInfo, Node}
+import cotoami.backend.{Node, SystemInfo}
 import cotoami.subparts.WelcomeModal
 
 case class Model(
