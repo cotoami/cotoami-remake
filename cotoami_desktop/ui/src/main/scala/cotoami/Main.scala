@@ -10,6 +10,8 @@ import slinky.core.facade.{ReactElement, Fragment}
 import slinky.hot
 import slinky.web.html._
 
+import com.softwaremill.quicklens._
+
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.components.{SplitPane, material_symbol, paneToggle, node_img}
@@ -76,27 +78,26 @@ object Main {
 
       case DatabaseOpened(Right(node)) =>
         (
-          model.copy(
-            localNode = Some(node),
-            operatingNodeId = Some(node.uuid),
-            selectedNodeId = Some(node.uuid),
-            welcomeModal = model.welcomeModal.copy(processing = false),
-            log = model.log
-              .info(
+          model
+            .modify(_.localNode).setTo(Some(node))
+            .modify(_.operatingNodeId).setTo(Some(node.uuid))
+            .modify(_.selectedNodeId).setTo(Some(node.uuid))
+            .modify(_.welcomeModal.processing).setTo(false)
+            .modify(_.log).using(
+              _.info(
                 s"Database [${node.name}] opened.",
                 Some(s"uuid: ${node.uuid}, name: ${node.name}")
               )
-          ),
+            ),
           Seq.empty
         )
 
       case DatabaseOpened(Left(e)) =>
         (
-          model.copy(
-            log = model.log.error(e.message, Option(e.details)),
-            welcomeModal = model.welcomeModal
-              .copy(processing = false, systemError = Some(e.message))
-          ),
+          model
+            .modify(_.log).using(_.error(e.message, Option(e.details)))
+            .modify(_.welcomeModal.processing).setTo(false)
+            .modify(_.welcomeModal.systemError).setTo(Some(e.message)),
           Seq.empty
         )
 
