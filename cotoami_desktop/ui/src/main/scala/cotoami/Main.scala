@@ -58,13 +58,12 @@ object Main {
 
       case SystemInfoFetched(Right(systemInfo)) =>
         (
-          model.copy(
-            systemInfo = Some(systemInfo),
-            welcomeModal =
-              model.welcomeModal.copy(baseFolder = systemInfo.app_data_dir),
-            log = model.log
-              .info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo)))
-          ),
+          model
+            .modify(_.systemInfo).setTo(Some(systemInfo))
+            .modify(_.welcomeModal.baseFolder).setTo(systemInfo.app_data_dir)
+            .modify(_.log).using(
+              _.info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo)))
+            ),
           Seq.empty
         )
 
