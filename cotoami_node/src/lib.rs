@@ -9,7 +9,7 @@ pub use crate::web::launch_server;
 
 pub mod prelude {
     pub use crate::{
-        service::error::ServiceError,
+        service::{error::ServiceError, *},
         state::{NodeConfig, NodeState},
         web::ServerConfig,
     };
