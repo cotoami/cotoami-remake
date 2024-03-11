@@ -65,7 +65,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of posts in the cotonoma has been incremented
-    let (cotonoma, _) = ds.cotonoma_or_err(&root_cotonoma.uuid)?;
+    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
     assert_eq!(cotonoma.posts, 1);
 
     /////////////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of posts in the cotonoma has been decremented
-    let (cotonoma, _) = ds.cotonoma_or_err(&root_cotonoma.uuid)?;
+    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
     assert_eq!(cotonoma.posts, 0);
 
     Ok(())

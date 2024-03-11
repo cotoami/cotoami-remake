@@ -24,7 +24,7 @@ impl NodeState {
         );
         let parent_node = {
             let ds = self.db().new_session()?;
-            ds.parent_node_or_err(
+            ds.try_get_parent_node(
                 &parent_node_id,
                 &self.db().globals().local_node_as_operator()?,
             )?

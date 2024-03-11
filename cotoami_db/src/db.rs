@@ -362,7 +362,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(node_ops::get(node_id))
     }
 
-    pub fn node_or_err(&mut self, node_id: &Id<Node>) -> Result<Node> {
+    pub fn try_get_node(&mut self, node_id: &Id<Node>) -> Result<Node> {
         self.read_transaction(node_ops::try_get(node_id))?
             .map_err(anyhow::Error::from)
     }
@@ -603,7 +603,7 @@ impl<'a> DatabaseSession<'a> {
             .map(|parent| parent.clone()))
     }
 
-    pub fn parent_node_or_err(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
+    pub fn try_get_parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
         self.parent_node(id, operator)?
             .ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id))
             .map_err(anyhow::Error::from)
@@ -848,7 +848,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get(id))
     }
 
-    pub fn cotonoma_or_err(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
+    pub fn try_get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
         self.read_transaction(cotonoma_ops::try_get(id))?
             .map_err(anyhow::Error::from)
     }
@@ -1029,10 +1029,10 @@ impl<'a> DatabaseSession<'a> {
         };
 
         // Parent root cotonoma
-        let parent_node = self.node_or_err(parent_id)?;
+        let parent_node = self.try_get_node(parent_id)?;
         let (parent_root_cotonoma, parent_root_coto) =
             if let Some(parent_root_id) = parent_node.root_cotonoma_id {
-                self.cotonoma_or_err(&parent_root_id)?
+                self.try_get_cotonoma(&parent_root_id)?
             } else {
                 return Ok(None);
             };
