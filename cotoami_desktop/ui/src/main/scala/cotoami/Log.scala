@@ -1,6 +1,7 @@
 package cotoami
 
 import scala.collection.immutable.Queue
+import scala.scalajs.js
 
 case class Log(
     entries: Queue[Log.Entry] = Queue.empty,
@@ -38,7 +39,8 @@ object Log {
   case class Entry(
       level: Level,
       message: String,
-      details: Option[String] = None
+      details: Option[String] = None,
+      timestamp: js.Date = new js.Date()
   )
 
   sealed trait Level {
