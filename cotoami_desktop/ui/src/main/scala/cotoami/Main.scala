@@ -80,7 +80,6 @@ object Main {
           model
             .modify(_.localNode).setTo(Some(node))
             .modify(_.operatingNodeId).setTo(Some(node.uuid))
-            .modify(_.selectedNodeId).setTo(Some(node.uuid))
             .modify(_.welcomeModal.processing).setTo(false)
             .modify(_.log).using(
               _.info(

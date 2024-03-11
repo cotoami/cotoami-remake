@@ -41,13 +41,16 @@ case class Model(
       }
     )
 
-  def selected(node: Node): Boolean =
+  def isSelectingNode(node: Node): Boolean =
     this.selectedNodeId.map(_ == node.uuid).getOrElse(false)
+
+  def operatingNode(): Option[Node] =
+    this.operatingNodeId.flatMap(getNode(_))
 
   def selectedNode(): Option[Node] =
     this.selectedNodeId.flatMap(getNode(_))
 
-  def currentNode(): Option[Node] = selectedNode().orElse(this.localNode)
+  def currentNode(): Option[Node] = selectedNode().orElse(this.operatingNode())
 }
 
 object Model {

@@ -6,10 +6,10 @@ import slinky.web.html._
 
 import cotoami.{Model, Msg}
 import cotoami.components.{
-  optionalClasses,
-  paneToggle,
   material_symbol,
-  node_img
+  node_img,
+  optionalClasses,
+  paneToggle
 }
 import cotoami.backend.Node
 
@@ -65,7 +65,7 @@ object NavNodes {
           ("node", true),
           ("default", true),
           ("selectable", true),
-          ("selected", model.selected(node))
+          ("selected", model.isSelectingNode(node))
         )
       ),
       data - "tooltip" := node.name,
