@@ -97,15 +97,22 @@ impl Request {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum RequestBody {
+    /// Request the local node as a [Node].
     LocalNode,
-    ChunkOfChanges {
-        from: i64,
-    },
+
+    /// Request a [ChunkOfChanges] from a change number `from`.
+    ChunkOfChanges { from: i64 },
+
+    /// Request a new [ClientNodeSession] with [CreateClientNodeSession].
     CreateClientNodeSession(CreateClientNodeSession),
+
+    /// Request a `Paginated<Coto>` that contains recently posted cotos.
     RecentCotos {
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     },
+
+    /// Request to create a new [Coto] in the given cotonoma (`post_to`).
     PostCoto {
         content: String,
         summary: Option<String>,
