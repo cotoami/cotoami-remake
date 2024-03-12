@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -72,6 +72,8 @@ pub struct Request {
     #[serde(skip_serializing, skip_deserializing)]
     from: Option<Arc<Operator>>,
 
+    accept: SerializeFormat,
+
     body: RequestBody,
 }
 
@@ -80,6 +82,7 @@ impl Request {
         Self {
             id: Uuid::new_v4(),
             from: None,
+            accept: SerializeFormat::MessagePack,
             body,
         }
     }
@@ -88,9 +91,13 @@ impl Request {
 
     pub fn set_from(&mut self, from: Arc<Operator>) { self.from = Some(from); }
 
-    pub fn from_or_err(&self) -> Result<&Arc<Operator>, ServiceError> {
+    pub fn try_auth(&self) -> Result<&Arc<Operator>, ServiceError> {
         self.from.as_ref().ok_or(ServiceError::Unauthorized)
     }
+
+    pub fn set_accept(&mut self, accept: SerializeFormat) { self.accept = accept }
+
+    pub fn accept(&self) -> SerializeFormat { self.accept }
 
     pub fn body(self) -> RequestBody { self.body }
 }
@@ -132,6 +139,8 @@ impl RequestBody {
 pub struct Response {
     id: Uuid,
 
+    body_format: SerializeFormat,
+
     #[debug(skip)]
     body: Result<Bytes, ServiceError>,
 }
@@ -139,9 +148,49 @@ pub struct Response {
 impl Response {
     pub fn id(&self) -> &Uuid { &self.id }
 
-    pub fn message_pack<T: DeserializeOwned>(self) -> Result<T> {
+    pub fn content<T: DeserializeOwned>(self) -> Result<T> {
         let bytes = self.body.map_err(BackendServiceError)?;
-        rmp_serde::from_slice(&bytes).context("Invalid response body")
+        match self.body_format {
+            SerializeFormat::Json => {
+                serde_json::from_slice(&bytes).context("Invalid response body")
+            }
+            SerializeFormat::MessagePack => {
+                rmp_serde::from_slice(&bytes).context("Invalid response body")
+            }
+        }
+    }
+
+    pub fn json(self) -> Result<String> {
+        if !matches!(self.body_format, SerializeFormat::Json) {
+            bail!("Response body format is not JSON.");
+        }
+
+        let bytes = self.body.map_err(BackendServiceError)?;
+        std::str::from_utf8(&bytes)
+            .map(Into::into)
+            .map_err(anyhow::Error::from)
+    }
+}
+
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub enum SerializeFormat {
+    Json,
+    MessagePack,
+}
+
+impl SerializeFormat {
+    pub(crate) fn to_bytes<T: serde::Serialize>(
+        &self,
+        result: Result<T, ServiceError>,
+    ) -> Result<Bytes, ServiceError> {
+        result.and_then(|t| match self {
+            SerializeFormat::Json => serde_json::to_vec(&t)
+                .map(Bytes::from)
+                .map_err(ServiceError::from),
+            SerializeFormat::MessagePack => rmp_serde::to_vec(&t)
+                .map(Bytes::from)
+                .map_err(ServiceError::from),
+        })
     }
 }
 

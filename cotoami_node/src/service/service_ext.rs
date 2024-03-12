@@ -12,7 +12,7 @@ pub(crate) trait NodeServiceExt: NodeService {
     async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
         let request = RequestBody::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
-        response.message_pack::<ChunkOfChanges>()
+        response.content::<ChunkOfChanges>()
     }
 
     async fn post_coto(
@@ -28,7 +28,7 @@ pub(crate) trait NodeServiceExt: NodeService {
         }
         .into_request();
         let response = self.call(request).await?;
-        response.message_pack::<Coto>()
+        response.content::<Coto>()
     }
 }
 
@@ -41,7 +41,7 @@ pub(crate) trait RemoteNodeServiceExt: RemoteNodeService {
     ) -> Result<ClientNodeSession> {
         let request = RequestBody::CreateClientNodeSession(input).into_request();
         let response = self.call(request).await?;
-        let client_node_session = response.message_pack::<ClientNodeSession>()?;
+        let client_node_session = response.content::<ClientNodeSession>()?;
         self.set_session_token(&client_node_session.session.token)?;
         Ok(client_node_session)
     }

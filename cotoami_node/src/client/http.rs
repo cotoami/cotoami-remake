@@ -57,10 +57,6 @@ impl HttpClient {
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
-            header::ACCEPT,
-            HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()),
-        );
-        headers.insert(
             crate::web::CSRF_CUSTOM_HEADER,
             HeaderValue::from_static("cotoami_node"),
         );
@@ -103,6 +99,9 @@ impl HttpClient {
 
     async fn handle_request(self, request: Request) -> Result<Response> {
         let request_id = *request.id();
+        let accept = request.accept();
+
+        // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.body() {
             RequestBody::LocalNode => self.get("/api/nodes/local", None),
             RequestBody::ChunkOfChanges { from } => {
@@ -137,12 +136,26 @@ impl HttpClient {
                     .form(&form)
             }
         };
+
+        // Set the "Accept" header from Request::accept()
+        let http_req = match accept {
+            SerializeFormat::MessagePack => http_req.header(
+                header::ACCEPT,
+                HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()),
+            ),
+            SerializeFormat::Json => http_req.header(
+                header::ACCEPT,
+                HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
+            ),
+        };
+
         Self::convert_response(request_id, http_req.send().await?).await
     }
 
     async fn convert_response(id: Uuid, from: reqwest::Response) -> Result<Response> {
+        let body_format = detect_response_body_format(&from);
         if from.status().is_success() {
-            return Ok(Response::new(id, Ok(from.bytes().await?)));
+            return Ok(Response::new(id, body_format, Ok(from.bytes().await?)));
         }
 
         let error = match from.status() {
@@ -156,8 +169,19 @@ impl HttpClient {
             StatusCode::INTERNAL_SERVER_ERROR => ServiceError::Server(from.text().await?),
             _ => ServiceError::Unknown("".to_string()),
         };
-        Ok(Response::new(id, Err(error)))
+        Ok(Response::new(id, body_format, Err(error)))
     }
+}
+
+fn detect_response_body_format(response: &reqwest::Response) -> SerializeFormat {
+    // The format will be MessagePack only if the Content-Type header explicitly specifies it,
+    // otherwise JSON will be selected as a default.
+    if let Some(value) = response.headers().get(header::CONTENT_TYPE) {
+        if value == HeaderValue::from_static(mime::APPLICATION_MSGPACK.as_ref()) {
+            return SerializeFormat::MessagePack;
+        }
+    }
+    SerializeFormat::Json
 }
 
 impl Service<Request> for HttpClient {
