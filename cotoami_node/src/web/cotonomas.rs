@@ -73,7 +73,7 @@ async fn get_cotonoma(
 ) -> Result<Content<CotonomaDetails>, ServiceError> {
     spawn_blocking(move || {
         let mut db = state.db().new_session()?;
-        let (cotonoma, coto) = db.cotonoma_or_err(&cotonoma_id)?;
+        let (cotonoma, coto) = db.try_get_cotonoma(&cotonoma_id)?;
         Ok(Content(CotonomaDetails { cotonoma, coto }, accept))
     })
     .await?

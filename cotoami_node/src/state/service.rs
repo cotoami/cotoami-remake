@@ -26,38 +26,26 @@ mod session;
 
 impl NodeState {
     async fn handle_request(self, request: Request) -> Result<Bytes, ServiceError> {
-        let operator = request.from_or_err().map(Clone::clone);
+        let format = request.accept();
+        let opr = request.try_auth().map(Clone::clone);
         match request.body() {
-            RequestBody::LocalNode => self.local_node().await.and_then(Self::to_bytes),
+            RequestBody::LocalNode => format.to_bytes(self.local_node().await),
             RequestBody::ChunkOfChanges { from } => {
-                self.chunk_of_changes(from).await.and_then(Self::to_bytes)
+                format.to_bytes(self.chunk_of_changes(from).await)
             }
-            RequestBody::CreateClientNodeSession(input) => self
-                .create_client_node_session(input)
-                .await
-                .and_then(Self::to_bytes),
+            RequestBody::CreateClientNodeSession(input) => {
+                format.to_bytes(self.create_client_node_session(input).await)
+            }
             RequestBody::RecentCotos {
                 cotonoma,
                 pagination,
-            } => self
-                .recent_cotos(cotonoma, pagination)
-                .await
-                .and_then(Self::to_bytes),
+            } => format.to_bytes(self.recent_cotos(cotonoma, pagination).await),
             RequestBody::PostCoto {
                 content,
                 summary,
                 post_to,
-            } => self
-                .post_coto(content, summary, post_to, operator?)
-                .await
-                .and_then(Self::to_bytes),
+            } => format.to_bytes(self.post_coto(content, summary, post_to, opr?).await),
         }
-    }
-
-    fn to_bytes<T: serde::Serialize>(t: T) -> Result<Bytes, ServiceError> {
-        rmp_serde::to_vec(&t)
-            .map(Bytes::from)
-            .map_err(ServiceError::from)
     }
 }
 
@@ -75,6 +63,7 @@ impl Service<Request> for NodeState {
         async move {
             Ok(Response::new(
                 *request.id(),
+                request.accept(),
                 this.handle_request(request).await,
             ))
         }

@@ -172,7 +172,7 @@ pub(crate) async fn communicate_with_operator<
 ///
 /// The events to be sent in [handle_operator]:
 /// * local changes (which contains the changes from the parents of the local node)
-/// * responses　(correlating with the number of children sending requests)
+/// * responses (correlating with the number of children sending requests)
 const SEND_BUFFER_SIZE: usize = 16;
 
 /// Send a [NodeSentEvent] to a peer (passed as a [Sink]) by converting it

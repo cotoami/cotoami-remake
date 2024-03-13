@@ -50,7 +50,7 @@ impl NodeState {
                 let mut ds = this.db().new_session()?;
 
                 // Target cotonoma
-                let (cotonoma, _) = ds.cotonoma_or_err(&post_to)?;
+                let (cotonoma, _) = ds.try_get_cotonoma(&post_to)?;
 
                 // Post the coto if the cotonoma belongs to the local node.
                 if this.db().globals().is_local(&cotonoma) {

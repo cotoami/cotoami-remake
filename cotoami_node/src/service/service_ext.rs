@@ -8,11 +8,11 @@ use crate::service::{
 
 /// An extension trait for [NodeService] that provides shortcut functions for
 /// frequently used requests.
-pub trait NodeServiceExt: NodeService {
+pub(crate) trait NodeServiceExt: NodeService {
     async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
         let request = RequestBody::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
-        response.message_pack::<ChunkOfChanges>()
+        response.content::<ChunkOfChanges>()
     }
 
     async fn post_coto(
@@ -28,20 +28,20 @@ pub trait NodeServiceExt: NodeService {
         }
         .into_request();
         let response = self.call(request).await?;
-        response.message_pack::<Coto>()
+        response.content::<Coto>()
     }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}
 
-pub trait RemoteNodeServiceExt: RemoteNodeService {
+pub(crate) trait RemoteNodeServiceExt: RemoteNodeService {
     async fn create_client_node_session(
         &mut self,
         input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession> {
         let request = RequestBody::CreateClientNodeSession(input).into_request();
         let response = self.call(request).await?;
-        let client_node_session = response.message_pack::<ClientNodeSession>()?;
+        let client_node_session = response.content::<ClientNodeSession>()?;
         self.set_session_token(&client_node_session.session.token)?;
         Ok(client_node_session)
     }
