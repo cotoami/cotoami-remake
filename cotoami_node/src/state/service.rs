@@ -28,19 +28,17 @@ impl NodeState {
     async fn handle_request(self, request: Request) -> Result<Bytes, ServiceError> {
         let format = request.accept();
         let opr = request.try_auth().map(Clone::clone);
-        match request.body() {
-            RequestBody::LocalNode => format.to_bytes(self.local_node().await),
-            RequestBody::ChunkOfChanges { from } => {
-                format.to_bytes(self.chunk_of_changes(from).await)
-            }
-            RequestBody::CreateClientNodeSession(input) => {
+        match request.command() {
+            Command::LocalNode => format.to_bytes(self.local_node().await),
+            Command::ChunkOfChanges { from } => format.to_bytes(self.chunk_of_changes(from).await),
+            Command::CreateClientNodeSession(input) => {
                 format.to_bytes(self.create_client_node_session(input).await)
             }
-            RequestBody::RecentCotos {
+            Command::RecentCotos {
                 cotonoma,
                 pagination,
             } => format.to_bytes(self.recent_cotos(cotonoma, pagination).await),
-            RequestBody::PostCoto {
+            Command::PostCoto {
                 content,
                 summary,
                 post_to,

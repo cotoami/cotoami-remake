@@ -102,15 +102,15 @@ impl HttpClient {
         let accept = request.accept();
 
         // Translate the request's body into an HTTP request (RequestBuilder).
-        let http_req = match request.body() {
-            RequestBody::LocalNode => self.get("/api/nodes/local", None),
-            RequestBody::ChunkOfChanges { from } => {
+        let http_req = match request.command() {
+            Command::LocalNode => self.get("/api/nodes/local", None),
+            Command::ChunkOfChanges { from } => {
                 self.get("/api/changes", Some(vec![("from", from.to_string())]))
             }
-            RequestBody::CreateClientNodeSession(input) => {
+            Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
-            RequestBody::RecentCotos {
+            Command::RecentCotos {
                 cotonoma,
                 pagination,
             } => {
@@ -123,7 +123,7 @@ impl HttpClient {
                     self.get("/api/cotos", Some(pagination.as_query()))
                 }
             }
-            RequestBody::PostCoto {
+            Command::PostCoto {
                 content,
                 summary,
                 post_to,

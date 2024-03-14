@@ -3,14 +3,14 @@ use cotoami_db::prelude::*;
 
 use crate::service::{
     models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession},
-    NodeService, RemoteNodeService, RequestBody,
+    Command, NodeService, RemoteNodeService,
 };
 
 /// An extension trait for [NodeService] that provides shortcut functions for
 /// frequently used requests.
 pub(crate) trait NodeServiceExt: NodeService {
     async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
-        let request = RequestBody::ChunkOfChanges { from }.into_request();
+        let request = Command::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
         response.content::<ChunkOfChanges>()
     }
@@ -21,7 +21,7 @@ pub(crate) trait NodeServiceExt: NodeService {
         summary: Option<String>,
         post_to: Id<Cotonoma>,
     ) -> Result<Coto> {
-        let request = RequestBody::PostCoto {
+        let request = Command::PostCoto {
             content,
             summary,
             post_to,
@@ -39,7 +39,7 @@ pub(crate) trait RemoteNodeServiceExt: RemoteNodeService {
         &mut self,
         input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession> {
-        let request = RequestBody::CreateClientNodeSession(input).into_request();
+        let request = Command::CreateClientNodeSession(input).into_request();
         let response = self.call(request).await?;
         let client_node_session = response.content::<ClientNodeSession>()?;
         self.set_session_token(&client_node_session.session.token)?;

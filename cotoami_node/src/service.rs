@@ -74,16 +74,16 @@ pub struct Request {
 
     accept: SerializeFormat,
 
-    body: RequestBody,
+    command: Command,
 }
 
 impl Request {
-    pub fn new(body: RequestBody) -> Self {
+    pub fn new(command: Command) -> Self {
         Self {
             id: Uuid::new_v4(),
             from: None,
             accept: SerializeFormat::MessagePack,
-            body,
+            command,
         }
     }
 
@@ -99,11 +99,11 @@ impl Request {
 
     pub fn accept(&self) -> SerializeFormat { self.accept }
 
-    pub fn body(self) -> RequestBody { self.body }
+    pub fn command(self) -> Command { self.command }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub enum RequestBody {
+pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,
 
@@ -127,7 +127,7 @@ pub enum RequestBody {
     },
 }
 
-impl RequestBody {
+impl Command {
     pub fn into_request(self) -> Request { Request::new(self) }
 }
 
