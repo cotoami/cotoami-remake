@@ -772,6 +772,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "thiserror",
+ "tower-service",
 ]
 
 [[package]]

@@ -3,12 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-use std::{path::PathBuf, string::ToString};
+use std::{path::PathBuf, string::ToString, sync::Arc};
 
 use anyhow::anyhow;
 use cotoami_db::prelude::{Database, Node};
 use cotoami_node::prelude::*;
 use parking_lot::Mutex;
+use tower_service::Service;
 
 use crate::{log::Logger, recent::RecentDatabases};
 
@@ -25,7 +26,8 @@ fn main() {
             validate_new_database_folder,
             validate_database_folder,
             create_database,
-            open_database
+            open_database,
+            request
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -59,6 +61,10 @@ impl Error {
         }
     }
 
+    fn system_error(message: impl Into<String>) -> Self {
+        Error::new("system-error", message.into())
+    }
+
     fn add_details(mut self, details: impl Into<String>) -> Self {
         self.details = Some(details.into());
         self
@@ -66,7 +72,7 @@ impl Error {
 }
 
 impl From<anyhow::Error> for Error {
-    fn from(e: anyhow::Error) -> Self { Error::new("system-error", e.to_string()) }
+    fn from(e: anyhow::Error) -> Self { Self::system_error(e.to_string()) }
 }
 
 // TODO: write thorough conversion
@@ -193,4 +199,21 @@ async fn open_database(
     RecentDatabases::update(&app_handle, folder, &local_node);
 
     Ok(local_node)
+}
+
+#[tauri::command]
+async fn request(
+    app_handle: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    command: Command,
+) -> Result<String, Error> {
+    if let Some(ref mut node_state) = *state.inner().node_state.lock() {
+        let mut request = command.into_request();
+        request.set_from(Arc::new(node_state.local_node_as_operator()?));
+        request.set_accept(SerializeFormat::Json);
+        let response = node_state.call(request).await?;
+        response.json().map_err(Error::from)
+    } else {
+        Err(Error::system_error("No database opened."))
+    }
 }
