@@ -151,11 +151,9 @@ impl Response {
     pub fn content<T: DeserializeOwned>(self) -> Result<T> {
         let bytes = self.body.map_err(BackendServiceError)?;
         match self.body_format {
-            SerializeFormat::Json => {
-                serde_json::from_slice(&bytes).context("Invalid response body")
-            }
+            SerializeFormat::Json => serde_json::from_slice(&bytes).context("Invalid JSON bytes"),
             SerializeFormat::MessagePack => {
-                rmp_serde::from_slice(&bytes).context("Invalid response body")
+                rmp_serde::from_slice(&bytes).context("Invalid MessagePack bytes")
             }
         }
     }
