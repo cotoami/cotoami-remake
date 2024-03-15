@@ -65,6 +65,10 @@ impl NodeState {
 
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
+    pub fn local_node_as_operator(&self) -> Result<Operator> {
+        self.db().globals().local_node_as_operator()
+    }
+
     pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
 
     pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
