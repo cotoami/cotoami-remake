@@ -13,7 +13,7 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
-use std::sync::Arc;
+use std::{future::Future, sync::Arc};
 
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
@@ -23,7 +23,6 @@ use dyn_clone::DynClone;
 use futures::future::BoxFuture;
 use serde::de::DeserializeOwned;
 use thiserror::Error;
-use tower_service::Service;
 use uuid::Uuid;
 
 pub mod error;
@@ -41,6 +40,14 @@ pub(crate) use self::{
 /////////////////////////////////////////////////////////////////////////////
 // Service
 /////////////////////////////////////////////////////////////////////////////
+
+pub trait Service<Request> {
+    type Response;
+    type Error;
+    type Future: Future<Output = Result<Self::Response, Self::Error>>;
+
+    fn call(&self, request: Request) -> Self::Future;
+}
 
 pub trait NodeService:
     Service<Request, Response = Response, Error = anyhow::Error, Future = NodeServiceFuture>

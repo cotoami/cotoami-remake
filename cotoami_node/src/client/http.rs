@@ -3,10 +3,7 @@
 //! This client is stateful and belongs to a single server ([HttpClient::url_prefix()]),
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.
 
-use std::{
-    sync::Arc,
-    task::{Context, Poll},
-};
+use std::sync::Arc;
 
 use anyhow::Result;
 use futures::future::FutureExt;
@@ -16,7 +13,6 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, RequestBuilder, StatusCode, Url,
 };
-use tower_service::Service;
 use uuid::Uuid;
 
 use crate::{
@@ -189,11 +185,7 @@ impl Service<Request> for HttpClient {
     type Error = anyhow::Error;
     type Future = NodeServiceFuture;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, request: Request) -> Self::Future {
+    fn call(&self, request: Request) -> Self::Future {
         let this = self.clone();
         async move { this.handle_request(request).await }.boxed()
     }

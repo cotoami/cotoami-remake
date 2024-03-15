@@ -3,11 +3,8 @@
 //! This client sends requests to [PubsubService::requests] and receives
 //! responses from [PubsubService::responses], so it is protocol agnostic.
 
-use std::task::{Context, Poll};
-
 use anyhow::{bail, Result};
 use futures::StreamExt;
-use tower_service::Service;
 use uuid::Uuid;
 
 use crate::{pubsub::Publisher, service::*};
@@ -54,11 +51,7 @@ impl Service<Request> for PubsubService {
     type Error = anyhow::Error;
     type Future = NodeServiceFuture;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, request: Request) -> Self::Future {
+    fn call(&self, request: Request) -> Self::Future {
         let this = self.clone();
         Box::pin(async move { this.handle_request(request).await })
     }
