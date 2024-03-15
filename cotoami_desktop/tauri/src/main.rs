@@ -24,7 +24,7 @@ fn main() {
             validate_new_database_folder,
             validate_database_folder,
             create_database,
-            open_database,
+            open_database
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
