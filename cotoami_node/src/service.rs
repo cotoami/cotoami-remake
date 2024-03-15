@@ -41,6 +41,15 @@ pub(crate) use self::{
 // Service
 /////////////////////////////////////////////////////////////////////////////
 
+/// An asynchronous function from a `Request` to a `Response`.
+///
+/// It's kind of a simplified version of `tower::Service` modified to suit Cotoami's use cases.
+///
+/// Compared to tower, it doesn't have `poll_ready`, and `call` doesn't require `&mut self`,
+/// which is sometimes inconvenient in concurrent situtations and especially doesn't go well with
+/// Tauri's state management: (<https://docs.rs/tauri/1.6.1/tauri/trait.Manager.html#method.manage>).
+/// If it requires `&mut self`, a `Service` in tauri state needs to be wrapped in `Mutex`
+/// to invoke the method, which causes a problem in a tauri command since `MutexGuard` is `!Send`.
 pub trait Service<Request> {
     type Response;
     type Error;
