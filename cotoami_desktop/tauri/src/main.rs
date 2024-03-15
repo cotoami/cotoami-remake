@@ -3,13 +3,12 @@
     windows_subsystem = "windows"
 )]
 
-use std::{path::PathBuf, string::ToString, sync::Arc};
+use std::{path::PathBuf, string::ToString};
 
 use anyhow::anyhow;
 use cotoami_db::prelude::{Database, Node};
 use cotoami_node::prelude::*;
-use parking_lot::Mutex;
-use tower_service::Service;
+use tauri::Manager;
 
 use crate::{log::Logger, recent::RecentDatabases};
 
@@ -20,29 +19,15 @@ mod window_state;
 fn main() {
     tauri::Builder::default()
         .plugin(window_state::Builder::default().build())
-        .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             system_info,
             validate_new_database_folder,
             validate_database_folder,
             create_database,
             open_database,
-            request
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-struct AppState {
-    node_state: Mutex<Option<NodeState>>,
-}
-
-impl AppState {
-    fn new() -> Self {
-        Self {
-            node_state: Mutex::new(None),
-        }
-    }
 }
 
 #[derive(serde::Serialize)]
@@ -153,7 +138,6 @@ fn validate_database_folder(database_folder: String) -> Result<(), Error> {
 #[tauri::command]
 async fn create_database(
     app_handle: tauri::AppHandle,
-    state: tauri::State<'_, AppState>,
     database_name: String,
     base_folder: String,
     folder_name: String,
@@ -171,7 +155,7 @@ async fn create_database(
     let local_node = node_state.local_node().await?;
     app_handle.info(format!("Database [{}] created.", local_node.name), None);
 
-    state.inner().node_state.lock().replace(node_state);
+    app_handle.manage(node_state);
 
     RecentDatabases::update(&app_handle, folder, &local_node);
 
@@ -181,7 +165,6 @@ async fn create_database(
 #[tauri::command]
 async fn open_database(
     app_handle: tauri::AppHandle,
-    state: tauri::State<'_, AppState>,
     database_folder: String,
 ) -> Result<Node, Error> {
     let folder = PathBuf::from(&database_folder)
@@ -194,26 +177,9 @@ async fn open_database(
     let node_state = NodeState::new(node_config).await?;
     let local_node = node_state.local_node().await?;
 
-    state.inner().node_state.lock().replace(node_state);
+    app_handle.manage(node_state);
 
     RecentDatabases::update(&app_handle, folder, &local_node);
 
     Ok(local_node)
-}
-
-#[tauri::command]
-async fn request(
-    app_handle: tauri::AppHandle,
-    state: tauri::State<'_, AppState>,
-    command: Command,
-) -> Result<String, Error> {
-    if let Some(ref mut node_state) = *state.inner().node_state.lock() {
-        let mut request = command.into_request();
-        request.set_from(Arc::new(node_state.local_node_as_operator()?));
-        request.set_accept(SerializeFormat::Json);
-        let response = node_state.call(request).await?;
-        response.json().map_err(Error::from)
-    } else {
-        Err(Error::system_error("No database opened."))
-    }
 }
