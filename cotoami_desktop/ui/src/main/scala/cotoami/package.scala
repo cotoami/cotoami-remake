@@ -1,3 +1,4 @@
+import scala.scalajs.js
 import cats.effect.IO
 import fui.FunctionalUI._
 
@@ -11,4 +12,12 @@ package object cotoami {
     Cmd(IO { Some(AddLogEntry(Log.Warn, message, details)) })
   def log_error(message: String, details: Option[String] = None): Cmd[Msg] =
     Cmd(IO { Some(AddLogEntry(Log.Error, message, details)) })
+
+  def node_command[T](command: js.Object): Cmd[Either[backend.Error, T]] =
+    tauri.invokeCommand(
+      "node_command",
+      js.Dynamic.literal(command = command)
+    ).map((e: Either[backend.Error, String]) =>
+      e.map(js.JSON.parse(_).asInstanceOf[T])
+    )
 }

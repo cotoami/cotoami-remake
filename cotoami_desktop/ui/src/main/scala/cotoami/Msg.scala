@@ -1,7 +1,7 @@
 package cotoami
 
 import cotoami.Log
-import cotoami.backend.{Node, SystemInfo, LogEvent}
+import cotoami.backend.{LogEvent, Node, SystemInfo}
 
 sealed trait Msg
 
@@ -25,3 +25,7 @@ case class ResizePane(name: String, newSize: Int) extends Msg
 
 // Sub
 case class WelcomeModalMsg(subMsg: subparts.WelcomeModal.Msg) extends Msg
+
+// Commands
+case object FetchLocalNode extends Msg
+case class LocalNodeFetched(result: Either[backend.Error, Node]) extends Msg

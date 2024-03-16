@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::{path::PathBuf, string::ToString};
+use std::{path::PathBuf, string::ToString, sync::Arc};
 
 use anyhow::anyhow;
 use cotoami_db::prelude::{Database, Node};
@@ -24,7 +24,8 @@ fn main() {
             validate_new_database_folder,
             validate_database_folder,
             create_database,
-            open_database
+            open_database,
+            node_command
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -182,4 +183,23 @@ async fn open_database(
     RecentDatabases::update(&app_handle, folder, &local_node);
 
     Ok(local_node)
+}
+
+#[tauri::command]
+async fn node_command(
+    state: tauri::State<'_, NodeState>,
+    command: Command,
+) -> Result<String, Error> {
+    let node_state = state.inner();
+
+    // Build a request
+    let mut request = command.into_request();
+    request.set_from(Arc::new(node_state.local_node_as_operator()?));
+    request.set_accept(SerializeFormat::Json);
+
+    // Send the request to the local node
+    let response = node_state.call(request).await?;
+
+    // Return the result as a JSON string
+    response.json().map_err(Error::from)
 }

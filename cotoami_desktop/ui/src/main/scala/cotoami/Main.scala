@@ -15,7 +15,7 @@ import com.softwaremill.quicklens._
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
-import cotoami.backend.{LogEvent, SystemInfo}
+import cotoami.backend.{Commands, LogEvent, SystemInfo}
 
 object Main {
 
@@ -124,6 +124,33 @@ object Main {
           subparts.WelcomeModal.update(subMsg, model.welcomeModal);
         (model.copy(welcomeModal = welcomeModal), cmds)
       }
+
+      case FetchLocalNode =>
+        (model, Seq(node_command(Commands.LocalNode).map(LocalNodeFetched(_))))
+
+      case LocalNodeFetched(Right(node)) =>
+        (
+          model
+            .modify(_.localNode).setTo(Some(node))
+            .modify(_.log).using(
+              _.info(
+                "Local node fetched.",
+                Some(s"uuid: ${node.uuid}, name: ${node.name}")
+              )
+            ),
+          Seq.empty
+        )
+
+      case LocalNodeFetched(Left(e)) =>
+        (
+          model.modify(_.log).using(
+            _.error(
+              "Couldn't fetch the local node.",
+              Some(js.JSON.stringify(e))
+            )
+          ),
+          Seq.empty
+        )
     }
 
   def subscriptions(model: Model): Sub[Msg] =
@@ -134,7 +161,11 @@ object Main {
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
       header(
-        button(className := "app-info default", title := "View app info")(
+        button(
+          className := "app-info default",
+          title := "View app info",
+          onClick := ((e) => dispatch(cotoami.FetchLocalNode))
+        )(
           img(
             className := "app-icon",
             alt := "Cotoami",
