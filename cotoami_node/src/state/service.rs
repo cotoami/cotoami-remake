@@ -1,14 +1,11 @@
 //! Server-side implemention of Node Service,
 //! which is intended for non-HTTP protocols such as WebSocket.
 
-use std::task::{Context, Poll};
-
 use anyhow::Result;
 use bytes::Bytes;
 use cotoami_db::prelude::*;
 use futures::future::FutureExt;
 use serde_json::value::Value;
-use tower_service::Service;
 
 use crate::{
     service::{error::InputError, NodeServiceFuture, *},
@@ -52,11 +49,7 @@ impl Service<Request> for NodeState {
     type Error = anyhow::Error;
     type Future = NodeServiceFuture;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, request: Request) -> Self::Future {
+    fn call(&self, request: Request) -> Self::Future {
         let this = self.clone();
         async move {
             Ok(Response::new(

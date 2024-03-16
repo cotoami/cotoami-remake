@@ -2,11 +2,10 @@ use std::{ops::ControlFlow, sync::Arc};
 
 use cotoami_db::{ChangelogEntry, DatabaseError, Id, Node, Operator};
 use futures::{Sink, SinkExt};
-use tower_service::Service;
 use tracing::{debug, error, info};
 
 use crate::{
-    service::{Request, Response},
+    service::{Request, Response, Service},
     state::NodeState,
 };
 
@@ -37,7 +36,7 @@ pub(crate) enum EventLoopError {
 pub(crate) async fn handle_event_from_operator<S, E>(
     event: NodeSentEvent,
     opr: Arc<Operator>,
-    mut state: NodeState,
+    state: NodeState,
     mut peer: S,
 ) -> ControlFlow<anyhow::Error>
 where
