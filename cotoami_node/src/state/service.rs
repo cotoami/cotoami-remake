@@ -13,6 +13,7 @@ use crate::{
 };
 
 mod changes;
+mod cotonomas;
 mod cotos;
 mod nodes;
 mod session;
@@ -30,6 +31,9 @@ impl NodeState {
             Command::ChunkOfChanges { from } => format.to_bytes(self.chunk_of_changes(from).await),
             Command::CreateClientNodeSession(input) => {
                 format.to_bytes(self.create_client_node_session(input).await)
+            }
+            Command::RecentCotonomas { node, pagination } => {
+                format.to_bytes(self.recent_cotonomas(node, pagination).await)
             }
             Command::RecentCotos {
                 cotonoma,

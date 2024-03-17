@@ -2,9 +2,8 @@ use axum::{
     extract::{Query, State},
     middleware,
     routing::get,
-    Extension, Router, TypedHeader,
+    Router, TypedHeader,
 };
-use cotoami_db::prelude::*;
 use validator::Validate;
 
 use crate::{
@@ -32,7 +31,6 @@ struct Position {
 
 async fn chunk_of_changes(
     State(state): State<NodeState>,
-    Extension(_operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(position): Query<Position>,
 ) -> Result<Content<ChunkOfChanges>, ServiceError> {

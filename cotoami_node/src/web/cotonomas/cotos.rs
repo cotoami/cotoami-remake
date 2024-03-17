@@ -26,7 +26,6 @@ pub(super) fn routes() -> Router<NodeState> {
 
 async fn recent_cotos(
     State(state): State<NodeState>,
-    Extension(_operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,

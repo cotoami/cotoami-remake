@@ -106,6 +106,16 @@ impl HttpClient {
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
+            Command::RecentCotonomas { node, pagination } => {
+                if let Some(node_id) = node {
+                    self.get(
+                        &format!("/api/nodes/{node_id}/cotonomas"),
+                        Some(pagination.as_query()),
+                    )
+                } else {
+                    self.get("/api/cotonomas", Some(pagination.as_query()))
+                }
+            }
             Command::RecentCotos {
                 cotonoma,
                 pagination,

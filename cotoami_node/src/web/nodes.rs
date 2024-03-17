@@ -9,6 +9,7 @@ use crate::{
 
 mod children;
 mod clients;
+mod cotonomas;
 mod parents;
 mod servers;
 
@@ -19,6 +20,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/clients", clients::routes())
         .nest("/parents", parents::routes())
         .nest("/children", children::routes())
+        .nest("/:node_id/cotonomas", cotonomas::routes())
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }

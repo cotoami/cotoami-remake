@@ -129,6 +129,12 @@ pub enum Command {
     /// Request a new [ClientNodeSession] with [CreateClientNodeSession].
     CreateClientNodeSession(CreateClientNodeSession),
 
+    /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
+    RecentCotonomas {
+        node: Option<Id<Node>>,
+        pagination: Pagination,
+    },
+
     /// Request a `Paginated<Coto>` that contains recently posted cotos.
     RecentCotos {
         cotonoma: Option<Id<Cotonoma>>,
