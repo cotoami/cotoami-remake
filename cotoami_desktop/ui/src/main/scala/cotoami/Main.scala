@@ -78,7 +78,8 @@ object Main {
       case DatabaseOpened(Right(node)) =>
         (
           model
-            .modify(_.localNode).setTo(Some(node))
+            .modify(_.nodes).using(_ + (node.uuid -> node))
+            .modify(_.localNodeId).setTo(Some(node.uuid))
             .modify(_.operatingNodeId).setTo(Some(node.uuid))
             .modify(_.welcomeModal.processing).setTo(false)
             .modify(_.log).using(
@@ -131,7 +132,8 @@ object Main {
       case LocalNodeFetched(Right(node)) =>
         (
           model
-            .modify(_.localNode).setTo(Some(node))
+            .modify(_.nodes).using(_ + (node.uuid -> node))
+            .modify(_.localNodeId).setTo(Some(node.uuid))
             .modify(_.log).using(
               _.info(
                 "Local node fetched.",
@@ -240,7 +242,7 @@ object Main {
   )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.localNode.isEmpty) {
+    if (model.localNode().isEmpty) {
       Some(
         subparts.WelcomeModal
           .view(

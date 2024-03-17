@@ -10,7 +10,7 @@ import io.circe.parser._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Node, SystemInfo}
+import cotoami.backend.{Cotonoma, Node, SystemInfo}
 import cotoami.subparts.WelcomeModal
 
 case class Model(
@@ -24,33 +24,61 @@ case class Model(
     uiState: Option[Model.UiState] = None,
 
     // Node
-    localNode: Option[Node] = None,
-    parentNodes: Seq[Node] = Seq.empty,
+    nodes: Map[String, Node] = Map.empty,
+    localNodeId: Option[String] = None,
+    parentNodeIds: Seq[String] = Seq.empty,
     operatingNodeId: Option[String] = None,
     selectedNodeId: Option[String] = None,
+
+    // Cotonoma
+    cotonomas: Map[String, Cotonoma] = Map.empty,
+    selectedCotonomaId: Option[String] = None,
+    recentCotonomaIds: Seq[String] = Seq.empty,
 
     // WelcomeModal
     welcomeModal: WelcomeModal.Model = WelcomeModal.Model()
 ) {
-  def getNode(uuid: String): Option[Node] =
-    this.localNode.flatMap(local =>
-      if (local.uuid == uuid) {
-        Some(local)
-      } else {
-        this.parentNodes.find(_.uuid == uuid)
-      }
-    )
+  //
+  // Node
+  //
+
+  def node(uuid: String): Option[Node] = this.nodes.get(uuid)
 
   def isSelectingNode(node: Node): Boolean =
     this.selectedNodeId.map(_ == node.uuid).getOrElse(false)
 
-  def operatingNode(): Option[Node] =
-    this.operatingNodeId.flatMap(getNode(_))
+  def localNode(): Option[Node] = this.localNodeId.flatMap(node(_))
 
-  def selectedNode(): Option[Node] =
-    this.selectedNodeId.flatMap(getNode(_))
+  def operatingNode(): Option[Node] = this.operatingNodeId.flatMap(node(_))
+
+  def selectedNode(): Option[Node] = this.selectedNodeId.flatMap(node(_))
 
   def currentNode(): Option[Node] = selectedNode().orElse(this.operatingNode())
+
+  //
+  // Cotonoma
+  //
+
+  def cotonoma(uuid: String): Option[Cotonoma] = this.cotonomas.get(uuid)
+
+  def rootCotonomaId(): Option[String] =
+    currentNode().flatMap(node => Option(node.root_cotonoma_id))
+
+  def isSelectingCotonoma(cotonoma: Cotonoma): Boolean =
+    this.selectedCotonomaId.map(_ == cotonoma.uuid).getOrElse(false)
+
+  def selectedCotonoma(): Option[Cotonoma] =
+    this.selectedCotonomaId.flatMap(cotonoma(_))
+
+  def currentCotonomaId(): Option[String] =
+    this.selectedCotonomaId.orElse(currentNode().map(_.root_cotonoma_id))
+
+  def recentCotonomas(): Seq[Cotonoma] = {
+    val rootCotonomaId = this.rootCotonomaId()
+    this.recentCotonomaIds.filter(Some(_) != rootCotonomaId).map(
+      this.cotonoma(_)
+    ).flatten
+  }
 }
 
 object Model {
