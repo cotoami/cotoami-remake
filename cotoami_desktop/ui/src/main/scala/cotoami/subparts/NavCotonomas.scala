@@ -33,20 +33,27 @@ object NavCotonomas {
       )
     )(
       paneToggle(PaneName, dispatch),
-      model.currentNode().map(cotonomasNav(model, _, dispatch))
+      model.currentNode().map(navCotonomas(model, _, dispatch))
     )
 
-  def cotonomasNav(
+  def navCotonomas(
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
   ): ReactElement =
     nav(className := "cotonomas header-and-body")(
       header()(
-        a(className := "cotonoma home", title := s"${currentNode.name} home")(
-          material_symbol("home"),
-          currentNode.name
-        )
+        if (model.selectedCotonomaId.isEmpty) {
+          div(className := "cotonoma home selected")(
+            material_symbol("home"),
+            currentNode.name
+          )
+        } else {
+          a(className := "cotonoma home", title := s"${currentNode.name} home")(
+            material_symbol("home"),
+            currentNode.name
+          )
+        }
       )
     )
 }
