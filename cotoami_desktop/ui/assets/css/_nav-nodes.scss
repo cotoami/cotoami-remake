@@ -41,6 +41,14 @@ nav.nodes {
       opacity: 0.5;
     }
 
+    &:hover {
+
+      span.material-symbols,
+      img {
+        opacity: 1;
+      }
+    }
+
     &.selected {
       --selected-border-width: 2px;
 
