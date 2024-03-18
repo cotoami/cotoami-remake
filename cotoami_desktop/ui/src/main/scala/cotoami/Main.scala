@@ -11,6 +11,7 @@ import slinky.hot
 import slinky.web.html._
 
 import com.softwaremill.quicklens._
+import trail._
 
 import fui.FunctionalUI._
 import cotoami.tauri
@@ -30,9 +31,13 @@ object Main {
     )
   }
 
+  object Route {
+    val index = Root
+  }
+
   def init(url: URL): (Model, Seq[Cmd[Msg]]) =
     (
-      Model(),
+      Model(url = url),
       Seq(
         Model.UiState.restore(UiStateRestored),
         cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched(_))
@@ -239,6 +244,9 @@ object Main {
 
   def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
     footer(
+      div(className := "browser-nav")(
+        div(className := "path")(model.path())
+      ),
       model.log
         .lastEntry()
         .map(entry =>

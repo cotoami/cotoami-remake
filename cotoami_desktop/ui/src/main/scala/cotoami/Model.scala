@@ -1,6 +1,7 @@
 package cotoami
 
 import org.scalajs.dom
+import org.scalajs.dom.URL
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
@@ -14,10 +15,10 @@ import cotoami.backend.{Cotonoma, Node, SystemInfo}
 import cotoami.subparts.ModalWelcome
 
 case class Model(
+    url: URL,
     log: Log = Log(),
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfo] = None,
-    testDir: Option[String] = None,
 
     // UI state that can be saved in localStorage separately from app data.
     // It will be `None` before being restored from localStorage on init.
@@ -40,6 +41,8 @@ case class Model(
     // WelcomeModal
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
+  def path(): String = this.url.pathname + this.url.search + this.url.hash
+
   //
   // Node
   //
