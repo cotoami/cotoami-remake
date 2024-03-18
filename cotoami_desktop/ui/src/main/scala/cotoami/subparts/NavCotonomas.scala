@@ -41,7 +41,8 @@ object NavCotonomas {
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val recentCotonomas = model.recentCotonomas()
     nav(className := "cotonomas header-and-body")(
       header()(
         if (model.selectedCotonomaId.isEmpty) {
@@ -57,11 +58,15 @@ object NavCotonomas {
         }
       ),
       section(className := "cotonomas body")(
-        model.selectedCotonoma().map(currentCotonoma(model, _, dispatch))
+        model.selectedCotonoma().map(sectionCurrent(model, _, dispatch)),
+        Option.when(!recentCotonomas.isEmpty)(
+          sectionRecent(model, recentCotonomas, dispatch)
+        )
       )
     )
+  }
 
-  private def currentCotonoma(
+  private def sectionCurrent(
       model: Model,
       selectedCotonoma: Cotonoma,
       dispatch: Msg => Unit
@@ -83,6 +88,16 @@ object NavCotonomas {
           )
         )
       )
+    )
+
+  private def sectionRecent(
+      model: Model,
+      cotonomas: Seq[Cotonoma],
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "recent")(
+      h2()("Recent"),
+      ul()(cotonomas.map(liCotonoma(model, _, dispatch)): _*)
     )
 
   private def liCotonoma(
