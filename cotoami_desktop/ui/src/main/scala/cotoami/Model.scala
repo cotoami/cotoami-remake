@@ -33,6 +33,8 @@ case class Model(
     // Cotonoma
     cotonomas: Map[String, Cotonoma] = Map.empty,
     selectedCotonomaId: Option[String] = None,
+    superCotonomaIds: Seq[String] = Seq.empty,
+    subCotonomaIds: Seq[String] = Seq.empty,
     recentCotonomaIds: Seq[String] = Seq.empty,
 
     // WelcomeModal
@@ -69,6 +71,12 @@ case class Model(
 
   def selectedCotonoma(): Option[Cotonoma] =
     this.selectedCotonomaId.flatMap(cotonoma(_))
+
+  def superCotonomas(): Seq[Cotonoma] =
+    this.superCotonomaIds.map(this.cotonoma(_)).flatten
+
+  def subCotonomas(): Seq[Cotonoma] =
+    this.subCotonomaIds.map(this.cotonoma(_)).flatten
 
   def currentCotonomaId(): Option[String] =
     this.selectedCotonomaId.orElse(currentNode().map(_.root_cotonoma_id))

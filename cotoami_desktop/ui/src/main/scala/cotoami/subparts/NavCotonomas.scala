@@ -1,7 +1,7 @@
 package cotoami.subparts
 
 import slinky.core._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
@@ -70,15 +70,44 @@ object NavCotonomas {
       h2()("Current"),
       ul()(
         li()(
-          ul(className := "parent-cotonomas")()
+          ul(className := "super-cotonomas")(
+            model.superCotonomas().map(liCotonoma(model, _, dispatch)): _*
+          )
         ),
         li(className := "current-cotonoma selected")(
-          model.node(selectedCotonoma.node_id).map(node_img(_)),
-          selectedCotonoma.name
+          cotonomaLabel(model, selectedCotonoma)
         ),
         li()(
-          ul(className := "child-cotonomas")()
+          ul(className := "sub-cotonomas")(
+            model.subCotonomas().map(liCotonoma(model, _, dispatch)): _*
+          )
         )
       )
+    )
+
+  private def liCotonoma(
+      model: Model,
+      cotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    li(
+      className := optionalClasses(
+        Seq(("selected", model.isSelectingCotonoma(cotonoma)))
+      ),
+      key := cotonoma.uuid
+    )(
+      if (model.isSelectingCotonoma(cotonoma)) {
+        cotonomaLabel(model, cotonoma)
+      } else {
+        a(className := "cotonoma", title := cotonoma.name)(
+          cotonomaLabel(model, cotonoma)
+        )
+      }
+    )
+
+  private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
+    Fragment(
+      model.node(cotonoma.node_id).map(node_img(_)),
+      cotonoma.name
     )
 }

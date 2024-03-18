@@ -50,7 +50,7 @@ nav.cotonomas {
     flex-direction: column;
     align-items: stretch;
 
-    &.child-cotonomas {
+    &.sub-cotonomas {
       margin-left: calc(var(--item-indent-width) * 2);
     }
 
