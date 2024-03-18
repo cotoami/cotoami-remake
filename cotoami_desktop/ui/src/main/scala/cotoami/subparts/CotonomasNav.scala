@@ -5,7 +5,13 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
-import cotoami.components.{optionalClasses, paneToggle, SplitPane}
+import cotoami.components.{
+  material_symbol,
+  optionalClasses,
+  paneToggle,
+  SplitPane
+}
+import cotoami.backend.Node
 
 object CotonomasNav {
   val PaneName = "nav-cotonomas"
@@ -27,9 +33,19 @@ object CotonomasNav {
       )
     )(
       paneToggle(PaneName, dispatch),
-      nav(className := "cotonomas header-and-body")(
-        header()(
-          a(className := "cotonoma home", title := "")
+      model.currentNode().map(cotonomasNav(model, _, dispatch))
+    )
+
+  def cotonomasNav(
+      model: Model,
+      currentNode: Node,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    nav(className := "cotonomas header-and-body")(
+      header()(
+        a(className := "cotonoma home", title := s"${currentNode.name} home")(
+          material_symbol("home"),
+          currentNode.name
         )
       )
     )
