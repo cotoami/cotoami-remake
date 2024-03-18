@@ -11,7 +11,7 @@ import cotoami.components.{
   paneToggle,
   SplitPane
 }
-import cotoami.backend.Node
+import cotoami.backend.{Cotonoma, Node}
 
 object NavCotonomas {
   val PaneName = "nav-cotonomas"
@@ -36,7 +36,7 @@ object NavCotonomas {
       model.currentNode().map(navCotonomas(model, _, dispatch))
     )
 
-  def navCotonomas(
+  private def navCotonomas(
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
@@ -54,6 +54,27 @@ object NavCotonomas {
             currentNode.name
           )
         }
+      ),
+      section(className := "cotonomas body")(
+        model.selectedCotonoma().map(currentCotonoma(model, _, dispatch))
+      )
+    )
+
+  private def currentCotonoma(
+      model: Model,
+      selectedCotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "current")(
+      h2()("Current"),
+      ul()(
+        li()(
+          ul(className := "parent-cotonomas")()
+        ),
+        li(className := "current-cotonoma selected")(),
+        li()(
+          ul(className := "child-cotonomas")()
+        )
       )
     )
 }
