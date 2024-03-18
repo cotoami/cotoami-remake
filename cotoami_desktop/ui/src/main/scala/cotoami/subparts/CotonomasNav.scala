@@ -5,9 +5,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
-import cotoami.components.{SplitPane, optionalClasses, paneToggle}
+import cotoami.components.{optionalClasses, paneToggle, SplitPane}
 
-object NavCotonomas {
+object CotonomasNav {
   val PaneName = "nav-cotonomas"
   val DefaultWidth = 230
 
@@ -28,6 +28,9 @@ object NavCotonomas {
     )(
       paneToggle(PaneName, dispatch),
       nav(className := "cotonomas header-and-body")(
+        header()(
+          a(className := "cotonoma home", title := "")
+        )
       )
     )
 }

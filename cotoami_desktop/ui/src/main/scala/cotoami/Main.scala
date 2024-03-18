@@ -210,21 +210,21 @@ object Main {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): Seq[ReactElement] = Seq(
-    subparts.NavNodes.view(model, uiState, dispatch),
+    subparts.NodesNav.view(model, uiState, dispatch),
     SplitPane(
       vertical = true,
       initialPrimarySize = uiState.paneSizes.getOrElse(
-        subparts.NavCotonomas.PaneName,
-        subparts.NavCotonomas.DefaultWidth
+        subparts.CotonomasNav.PaneName,
+        subparts.CotonomasNav.DefaultWidth
       ),
-      resizable = uiState.paneOpened(subparts.NavCotonomas.PaneName),
+      resizable = uiState.paneOpened(subparts.CotonomasNav.PaneName),
       className = Some("node-contents"),
       onPrimarySizeChanged = (
           (newSize) =>
-            dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
+            dispatch(ResizePane(subparts.CotonomasNav.PaneName, newSize))
       )
     )(
-      subparts.NavCotonomas.view(model, uiState, dispatch),
+      subparts.CotonomasNav.view(model, uiState, dispatch),
       components.SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
           section(className := "flow pane")(
