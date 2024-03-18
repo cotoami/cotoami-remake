@@ -162,26 +162,7 @@ object Main {
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
-      header(
-        button(
-          className := "app-info default",
-          title := "View app info",
-          onClick := ((e) => dispatch(cotoami.FetchLocalNode))
-        )(
-          img(
-            className := "app-icon",
-            alt := "Cotoami",
-            src := "/images/logo/logomark.svg"
-          )
-        ),
-        model
-          .currentNode()
-          .map(node =>
-            section(className := "location")(
-              a(className := "node-home", title := node.name)(node_img(node))
-            )
-          )
-      ),
+      appHeader(model, dispatch),
       div(id := "app-body", className := "body")(
         model.uiState
           .map(appBodyContent(model, _, dispatch))
@@ -207,6 +188,35 @@ object Main {
       else
         None,
       modal(model, dispatch)
+    )
+
+  def appHeader(model: Model, dispatch: Msg => Unit): ReactElement =
+    header(
+      button(
+        className := "app-info default",
+        title := "View app info"
+      )(
+        img(
+          className := "app-icon",
+          alt := "Cotoami",
+          src := "/images/logo/logomark.svg"
+        )
+      ),
+      model
+        .currentNode()
+        .map(node =>
+          Fragment(
+            section(className := "location")(
+              a(className := "node-home", title := node.name)(node_img(node))
+            ),
+            model.selectedCotonoma().map(cotonoma =>
+              Fragment(
+                material_symbol("chevron_right"),
+                h1(className := "current-cotonoma")(cotonoma.name)
+              )
+            )
+          )
+        )
     )
 
   def appBodyContent(
