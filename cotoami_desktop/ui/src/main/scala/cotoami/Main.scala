@@ -60,7 +60,7 @@ object Main {
         (
           model
             .modify(_.systemInfo).setTo(Some(systemInfo))
-            .modify(_.welcomeModal.baseFolder).setTo(systemInfo.app_data_dir)
+            .modify(_.modalWelcome.baseFolder).setTo(systemInfo.app_data_dir)
             .modify(_.log).using(
               _.info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo)))
             ),
@@ -81,7 +81,7 @@ object Main {
             .modify(_.nodes).using(_ + (node.uuid -> node))
             .modify(_.localNodeId).setTo(Some(node.uuid))
             .modify(_.operatingNodeId).setTo(Some(node.uuid))
-            .modify(_.welcomeModal.processing).setTo(false)
+            .modify(_.modalWelcome.processing).setTo(false)
             .modify(_.log).using(
               _.info(
                 s"Database [${node.name}] opened.",
@@ -95,8 +95,8 @@ object Main {
         (
           model
             .modify(_.log).using(_.error(e.message, Option(e.details)))
-            .modify(_.welcomeModal.processing).setTo(false)
-            .modify(_.welcomeModal.systemError).setTo(Some(e.message)),
+            .modify(_.modalWelcome.processing).setTo(false)
+            .modify(_.modalWelcome.systemError).setTo(Some(e.message)),
           Seq.empty
         )
 
@@ -120,10 +120,10 @@ object Main {
         }
       }
 
-      case WelcomeModalMsg(subMsg) => {
-        val (welcomeModal, cmds) =
-          subparts.WelcomeModal.update(subMsg, model.welcomeModal);
-        (model.copy(welcomeModal = welcomeModal), cmds)
+      case ModalWelcomeMsg(subMsg) => {
+        val (modalWelcome, cmds) =
+          subparts.ModalWelcome.update(subMsg, model.modalWelcome);
+        (model.copy(modalWelcome = modalWelcome), cmds)
       }
 
       case FetchLocalNode =>
@@ -210,21 +210,21 @@ object Main {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): Seq[ReactElement] = Seq(
-    subparts.NodesNav.view(model, uiState, dispatch),
+    subparts.NavNodes.view(model, uiState, dispatch),
     SplitPane(
       vertical = true,
       initialPrimarySize = uiState.paneSizes.getOrElse(
-        subparts.CotonomasNav.PaneName,
-        subparts.CotonomasNav.DefaultWidth
+        subparts.NavCotonomas.PaneName,
+        subparts.NavCotonomas.DefaultWidth
       ),
-      resizable = uiState.paneOpened(subparts.CotonomasNav.PaneName),
+      resizable = uiState.paneOpened(subparts.NavCotonomas.PaneName),
       className = Some("node-contents"),
       onPrimarySizeChanged = (
           (newSize) =>
-            dispatch(ResizePane(subparts.CotonomasNav.PaneName, newSize))
+            dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
       )
     )(
-      subparts.CotonomasNav.view(model, uiState, dispatch),
+      subparts.NavCotonomas.view(model, uiState, dispatch),
       components.SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
           section(className := "flow pane")(
@@ -257,9 +257,9 @@ object Main {
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
     if (model.localNode().isEmpty) {
       Some(
-        subparts.WelcomeModal
+        subparts.ModalWelcome
           .view(
-            model.welcomeModal,
+            model.modalWelcome,
             model.systemInfo.map(_.recent_databases.toSeq),
             dispatch
           )

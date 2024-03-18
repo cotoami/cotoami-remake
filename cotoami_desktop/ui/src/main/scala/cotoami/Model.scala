@@ -11,7 +11,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{Cotonoma, Node, SystemInfo}
-import cotoami.subparts.WelcomeModal
+import cotoami.subparts.ModalWelcome
 
 case class Model(
     log: Log = Log(),
@@ -36,7 +36,7 @@ case class Model(
     recentCotonomaIds: Seq[String] = Seq.empty,
 
     // WelcomeModal
-    welcomeModal: WelcomeModal.Model = WelcomeModal.Model()
+    modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
   //
   // Node

@@ -6,13 +6,13 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{Model, Msg, Log, Validation, tauri, WelcomeModalMsg}
+import cotoami.{tauri, Log, ModalWelcomeMsg, Model, Msg, Validation}
 import cotoami.components.material_symbol
 import cotoami.backend
-import cotoami.backend.{Node, DatabaseFolder}
+import cotoami.backend.{DatabaseFolder, Node}
 import cats.syntax.foldable
 
-object WelcomeModal {
+object ModalWelcome {
 
   case class Model(
       // New database
@@ -70,7 +70,7 @@ object WelcomeModal {
                 "Select a base folder",
                 Some(model.baseFolder)
               )
-              .map((BaseFolderSelected andThen WelcomeModalMsg)(_))
+              .map((BaseFolderSelected andThen ModalWelcomeMsg)(_))
           )
         )
 
@@ -116,7 +116,7 @@ object WelcomeModal {
                 "Select a database folder",
                 None
               )
-              .map((DatabaseFolderSelected andThen WelcomeModalMsg)(_))
+              .map((DatabaseFolderSelected andThen ModalWelcomeMsg)(_))
           )
         )
 
@@ -166,7 +166,7 @@ object WelcomeModal {
                 folderName = model.folderName
               )
           )
-          .map((NewFolderValidation andThen WelcomeModalMsg)(_))
+          .map((NewFolderValidation andThen ModalWelcomeMsg)(_))
       )
     else
       Seq()
@@ -195,7 +195,7 @@ object WelcomeModal {
                 databaseFolder = model.databaseFolder
               )
           )
-          .map((DatabaseFolderValidation andThen WelcomeModalMsg)(_))
+          .map((DatabaseFolderValidation andThen ModalWelcomeMsg)(_))
       )
     else
       Seq()
@@ -260,7 +260,7 @@ object WelcomeModal {
                   title := db.name,
                   disabled := model.processing,
                   onClick := ((e) =>
-                    dispatch(WelcomeModalMsg(OpenDatabaseIn(db.path)))
+                    dispatch(ModalWelcomeMsg(OpenDatabaseIn(db.path)))
                   )
                 )(
                   img(
@@ -293,7 +293,7 @@ object WelcomeModal {
             id := "select-base-folder",
             `type` := "button",
             className := "secondary",
-            onClick := ((e) => dispatch(WelcomeModalMsg(SelectBaseFolder)))
+            onClick := ((e) => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
           )(
             material_symbol("folder")
           )
@@ -311,7 +311,7 @@ object WelcomeModal {
             // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
             // (onChange is almost the same as onInput in React)
             onChange := ((e) =>
-              dispatch(WelcomeModalMsg(FolderNameInput(e.target.value)))
+              dispatch(ModalWelcomeMsg(FolderNameInput(e.target.value)))
             )
           ),
           Validation.validationErrorDiv(model.folderNameErrors)
@@ -322,7 +322,7 @@ object WelcomeModal {
           button(
             `type` := "submit",
             disabled := !model.validateNewDatabaseInputs() || model.processing,
-            onClick := ((e) => dispatch(WelcomeModalMsg(CreateDatabase)))
+            onClick := ((e) => dispatch(ModalWelcomeMsg(CreateDatabase)))
           )(
             "Create"
           )
@@ -348,7 +348,7 @@ object WelcomeModal {
           Validation.ariaInvalid(errors),
           // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
           onChange := ((e) =>
-            dispatch(WelcomeModalMsg(DatabaseNameInput(e.target.value)))
+            dispatch(ModalWelcomeMsg(DatabaseNameInput(e.target.value)))
           )
         ),
         Validation.validationErrorDiv(errors)
@@ -370,7 +370,7 @@ object WelcomeModal {
               `type` := "button",
               className := "secondary",
               onClick := ((e) =>
-                dispatch(WelcomeModalMsg(SelectDatabaseFolder))
+                dispatch(ModalWelcomeMsg(SelectDatabaseFolder))
               )
             )(
               material_symbol("folder")
@@ -386,7 +386,7 @@ object WelcomeModal {
             disabled := model.databaseFolderErrors
               .map(!_.isEmpty)
               .getOrElse(true) || model.processing,
-            onClick := ((e) => dispatch(WelcomeModalMsg(OpenDatabase)))
+            onClick := ((e) => dispatch(ModalWelcomeMsg(OpenDatabase)))
           )("Open")
         )
       )

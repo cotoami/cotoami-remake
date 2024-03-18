@@ -13,7 +13,7 @@ import cotoami.components.{
 }
 import cotoami.backend.Node
 
-object NodesNav {
+object NavNodes {
   val PaneName = "nav-nodes"
 
   def view(

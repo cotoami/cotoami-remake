@@ -24,7 +24,7 @@ case class TogglePane(name: String) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
 
 // Sub
-case class WelcomeModalMsg(subMsg: subparts.WelcomeModal.Msg) extends Msg
+case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
 
 // Commands
 case object FetchLocalNode extends Msg
