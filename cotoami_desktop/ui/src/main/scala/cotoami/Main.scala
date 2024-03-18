@@ -168,21 +168,7 @@ object Main {
           .map(appBodyContent(model, _, dispatch))
           .getOrElse(Seq()): _*
       ),
-      footer(
-        model.log
-          .lastEntry()
-          .map(entry =>
-            div(className := s"log-peek ${entry.level.name}")(
-              button(
-                className := "open-log-view default",
-                onClick := ((e) => dispatch(cotoami.ToggleLogView))
-              )(
-                material_symbol(entry.level.icon),
-                entry.message
-              )
-            )
-          )
-      ),
+      appFooter(model, dispatch),
       if (model.logViewToggle)
         Some(subparts.LogView.view(model.log, dispatch))
       else
@@ -250,6 +236,23 @@ object Main {
       )
     )
   )
+
+  def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
+    footer(
+      model.log
+        .lastEntry()
+        .map(entry =>
+          div(className := s"log-peek ${entry.level.name}")(
+            button(
+              className := "open-log-view default",
+              onClick := ((e) => dispatch(cotoami.ToggleLogView))
+            )(
+              material_symbol(entry.level.icon),
+              entry.message
+            )
+          )
+        )
+    )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
     if (model.localNode().isEmpty) {
