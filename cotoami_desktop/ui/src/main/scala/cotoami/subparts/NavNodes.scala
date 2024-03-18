@@ -58,7 +58,7 @@ object NavNodes {
       )
     )
 
-  def node_button(model: Model, node: Node): ReactElement =
+  private def node_button(model: Model, node: Node): ReactElement =
     button(
       className := optionalClasses(
         Seq(

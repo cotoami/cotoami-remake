@@ -154,7 +154,7 @@ object ModalWelcome {
         (model.copy(processing = true), Seq(openDatabase(folder)))
     }
 
-  def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
+  private def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.baseFolder.isBlank && !model.folderName.isBlank)
       Seq(
         tauri
@@ -171,7 +171,7 @@ object ModalWelcome {
     else
       Seq()
 
-  def createDatabase(model: Model): Cmd[cotoami.Msg] =
+  private def createDatabase(model: Model): Cmd[cotoami.Msg] =
     tauri
       .invokeCommand(
         "create_database",
@@ -184,7 +184,7 @@ object ModalWelcome {
       )
       .map(cotoami.DatabaseOpened(_))
 
-  def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
+  private def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.databaseFolder.isBlank)
       Seq(
         tauri
@@ -200,7 +200,7 @@ object ModalWelcome {
     else
       Seq()
 
-  def openDatabase(folder: String): Cmd[cotoami.Msg] =
+  private def openDatabase(folder: String): Cmd[cotoami.Msg] =
     tauri
       .invokeCommand(
         "open_database",
@@ -241,7 +241,7 @@ object ModalWelcome {
       )
     )
 
-  def recent(
+  private def recent(
       model: Model,
       databases: Seq[DatabaseFolder],
       dispatch: cotoami.Msg => Unit
@@ -278,7 +278,10 @@ object ModalWelcome {
       )
     }
 
-  def newDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
+  private def newDatabase(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
     section(className := "new-database")(
       h2()("New database"),
       form()(
@@ -330,7 +333,7 @@ object ModalWelcome {
       )
     )
 
-  def databaseNameInput(
+  private def databaseNameInput(
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
@@ -356,7 +359,10 @@ object ModalWelcome {
     )
   }
 
-  def openDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
+  private def openDatabase(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
     section(className := "open-database")(
       h2()("Open"),
       form()(
