@@ -7,6 +7,7 @@ import slinky.web.html._
 import cotoami.{Model, Msg}
 import cotoami.components.{
   material_symbol,
+  node_img,
   optionalClasses,
   paneToggle,
   SplitPane
@@ -71,7 +72,10 @@ object NavCotonomas {
         li()(
           ul(className := "parent-cotonomas")()
         ),
-        li(className := "current-cotonoma selected")(),
+        li(className := "current-cotonoma selected")(
+          model.node(selectedCotonoma.node_id).map(node_img(_)),
+          selectedCotonoma.name
+        ),
         li()(
           ul(className := "child-cotonomas")()
         )
