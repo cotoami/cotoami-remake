@@ -1,9 +1,13 @@
 package cotoami
 
+import org.scalajs.dom.URL
+
 import cotoami.Log
 import cotoami.backend.{LogEvent, Node, SystemInfo}
 
 sealed trait Msg
+
+case class UrlChanged(url: URL) extends Msg
 
 // Log
 case class AddLogEntry(

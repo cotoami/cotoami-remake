@@ -27,7 +27,7 @@ object Main {
 
     Browser.runProgram(
       dom.document.getElementById("app"),
-      Program(init, view, update, subscriptions)
+      Program(init, view, update, subscriptions, Some(UrlChanged(_)))
     )
   }
 
@@ -46,6 +46,8 @@ object Main {
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
+      case UrlChanged(url) => applyUrlChange(url, model)
+
       case AddLogEntry(level, message, details) =>
         (
           model.copy(log = model.log.log(level, message, details)),
@@ -154,6 +156,20 @@ object Main {
             _.error(
               "Couldn't fetch the local node.",
               Some(js.JSON.stringify(e))
+            )
+          ),
+          Seq.empty
+        )
+    }
+
+  def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
+    url.pathname + url.search + url.hash match {
+      case Route.index(_) =>
+        (
+          model.modify(_.log).using(
+            _.debug(
+              "Url changed.",
+              Some(url.toString())
             )
           ),
           Seq.empty
