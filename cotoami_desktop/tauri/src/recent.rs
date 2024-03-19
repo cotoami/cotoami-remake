@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     fs::{File, OpenOptions},
     io::{BufReader, BufWriter, Write},
     path::Path,
@@ -11,16 +12,16 @@ use cotoami_db::prelude::Node;
 use crate::log::Logger;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub(crate) struct DatabaseFolder {
-    path: String,
+pub(crate) struct DatabaseOpened {
+    folder: String,
     name: String,
     icon: String, // Base64-encoded image binary
 }
 
-impl DatabaseFolder {
-    fn new(path: String, node: &Node) -> Self {
+impl DatabaseOpened {
+    fn new(folder: String, node: &Node) -> Self {
         Self {
-            path,
+            folder,
             name: node.name.clone(),
             icon: base64::engine::general_purpose::STANDARD_NO_PAD.encode(&node.icon),
         }
@@ -29,7 +30,7 @@ impl DatabaseFolder {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
-pub(crate) struct RecentDatabases(Vec<DatabaseFolder>);
+pub(crate) struct RecentDatabases(Vec<DatabaseOpened>);
 
 impl RecentDatabases {
     const FILENAME: &'static str = ".recent.json";
@@ -41,12 +42,12 @@ impl RecentDatabases {
             if file_path.is_file() {
                 app_handle.debug(
                     "Reading the recent file...",
-                    Some(file_path.to_string_lossy().to_string()),
+                    Some(file_path.to_string_lossy().borrow()),
                 );
                 match Self::read_from_file(file_path) {
                     Ok(recent) => recent,
                     Err(e) => {
-                        app_handle.warn("Error reading the recent file.", Some(e.to_string()));
+                        app_handle.warn("Error reading the recent file.", Some(&e.to_string()));
                         Self::empty()
                     }
                 }
@@ -68,15 +69,15 @@ impl RecentDatabases {
         Ok(recent)
     }
 
-    pub fn update(app_handle: &tauri::AppHandle, path: String, node: &Node) {
+    pub fn update(app_handle: &tauri::AppHandle, folder: String, node: &Node) {
         let mut recent = Self::load(app_handle);
-        recent.opened(DatabaseFolder::new(path, node));
+        recent.opened(DatabaseOpened::new(folder, node));
         recent.save(app_handle);
     }
 
-    fn opened(&mut self, folder: DatabaseFolder) {
-        self.0.retain(|f| f.path != folder.path);
-        self.0.insert(0, folder);
+    fn opened(&mut self, db: DatabaseOpened) {
+        self.0.retain(|x| x.folder != db.folder);
+        self.0.insert(0, db);
         self.0.truncate(Self::MAX_SIZE)
     }
 
@@ -84,11 +85,11 @@ impl RecentDatabases {
         if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
             let file_path = config_dir.join(Self::FILENAME);
             if let Err(e) = self.save_to_file(&file_path) {
-                app_handle.warn("Error writing the recent file.", Some(e.to_string()));
+                app_handle.warn("Error writing the recent file.", Some(&e.to_string()));
             } else {
                 app_handle.debug(
                     "RecentDatabases saved.",
-                    Some(file_path.to_string_lossy().to_string()),
+                    Some(file_path.to_string_lossy().borrow()),
                 );
             }
         } else {

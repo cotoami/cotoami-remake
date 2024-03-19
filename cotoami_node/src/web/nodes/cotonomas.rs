@@ -1,7 +1,6 @@
 use anyhow::Result;
 use axum::{
-    extract::{Query, State},
-    middleware,
+    extract::{Path, Query, State},
     routing::get,
     Router, TypedHeader,
 };
@@ -14,27 +13,23 @@ use crate::{
     web::{Accept, Content},
 };
 
-pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(recent_cotos))
-        .layer(middleware::from_fn(super::require_operator))
-        .layer(middleware::from_fn(super::require_session))
-}
+pub(super) fn routes() -> Router<NodeState> { Router::new().route("/", get(recent_cotonomas)) }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotos
+// GET /api/nodes/:node_id/cotonomas
 /////////////////////////////////////////////////////////////////////////////
 
-async fn recent_cotos(
+async fn recent_cotonomas(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<Coto>>, ServiceError> {
+) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
-        return ("cotos", errors).into_result();
+        return ("cotonomas", errors).into_result();
     }
     state
-        .recent_cotos(None, pagination)
+        .recent_cotonomas(Some(node_id), pagination)
         .await
-        .map(|cotos| Content(cotos, accept))
+        .map(|cotonomas| Content(cotonomas, accept))
 }

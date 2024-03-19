@@ -40,6 +40,14 @@ object FunctionalUI {
     def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg] = Cmd(
       this.io.map(_.map(f(_)))
     )
+
+    def flatMap[OtherMsg](f: Msg => Cmd[OtherMsg]): Cmd[OtherMsg] = Cmd(
+      this.io.flatMap(_.map(f(_).io).getOrElse(IO.none))
+    )
+  }
+
+  object Cmd {
+    def none[Msg]: Cmd[Msg] = Cmd(IO.none)
   }
 
   sealed trait Sub[+Msg] {

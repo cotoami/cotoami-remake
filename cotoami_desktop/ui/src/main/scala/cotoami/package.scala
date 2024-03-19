@@ -20,4 +20,15 @@ package object cotoami {
     ).map((e: Either[backend.Error, String]) =>
       e.map(js.JSON.parse(_).asInstanceOf[T])
     )
+
+  def openDatabase(folder: String): Cmd[Msg] =
+    tauri
+      .invokeCommand(
+        "open_database",
+        js.Dynamic
+          .literal(
+            databaseFolder = folder
+          )
+      )
+      .map(DatabaseOpened(_))
 }

@@ -6,10 +6,11 @@ nav.cotonomas {
   header {
     margin-top: 23px;
 
-    a.home {
+    .home {
       span.material-symbols {
         font-size: 1.2rem;
-        vertical-align: middle;
+        vertical-align: sub;
+        margin-right: 3px;
       }
     }
   }
@@ -49,20 +50,11 @@ nav.cotonomas {
     flex-direction: column;
     align-items: stretch;
 
-    &.child-cotonomas {
+    &.sub-cotonomas {
       margin-left: calc(var(--item-indent-width) * 2);
     }
 
     li {
-      &.selected {
-        display: block;
-        padding-top: 2px;
-        padding-bottom: 2px;
-        padding-left: var(--item-padding-left);
-        font-size: var(--item-font-size);
-        background-color: var(--selected-background-color);
-      }
-
       &.current-cotonoma {
         margin-left: var(--item-indent-width);
         white-space: nowrap;
@@ -89,6 +81,15 @@ nav.cotonomas {
       background-color: var(--hover-background-color);
       text-decoration: none;
     }
+  }
+
+  .selected {
+    display: block;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: var(--item-padding-left);
+    font-size: var(--item-font-size);
+    background-color: var(--selected-background-color);
   }
 
   img.node-icon {

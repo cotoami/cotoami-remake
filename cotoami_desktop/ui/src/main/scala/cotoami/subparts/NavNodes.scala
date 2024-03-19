@@ -54,11 +54,11 @@ object NavNodes {
         material_symbol("add")
       ),
       ul(className := "nodes")(
-        model.localNode.map(node => li()(node_button(model, node)))
+        model.localNode().map(node => li()(node_button(model, node)))
       )
     )
 
-  def node_button(model: Model, node: Node): ReactElement =
+  private def node_button(model: Model, node: Node): ReactElement =
     button(
       className := optionalClasses(
         Seq(

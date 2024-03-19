@@ -1,11 +1,18 @@
 package cotoami.subparts
 
 import slinky.core._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
-import cotoami.components.{SplitPane, optionalClasses, paneToggle}
+import cotoami.components.{
+  material_symbol,
+  node_img,
+  optionalClasses,
+  paneToggle,
+  SplitPane
+}
+import cotoami.backend.{Cotonoma, Node}
 
 object NavCotonomas {
   val PaneName = "nav-cotonomas"
@@ -27,7 +34,95 @@ object NavCotonomas {
       )
     )(
       paneToggle(PaneName, dispatch),
-      nav(className := "cotonomas header-and-body")(
+      model.currentNode().map(navCotonomas(model, _, dispatch))
+    )
+
+  private def navCotonomas(
+      model: Model,
+      currentNode: Node,
+      dispatch: Msg => Unit
+  ): ReactElement = {
+    val recentCotonomas = model.recentCotonomas()
+    nav(className := "cotonomas header-and-body")(
+      header()(
+        if (model.selectedCotonomaId.isEmpty) {
+          div(className := "cotonoma home selected")(
+            material_symbol("home"),
+            currentNode.name
+          )
+        } else {
+          a(className := "cotonoma home", title := s"${currentNode.name} home")(
+            material_symbol("home"),
+            currentNode.name
+          )
+        }
+      ),
+      section(className := "cotonomas body")(
+        model.selectedCotonoma().map(sectionCurrent(model, _, dispatch)),
+        Option.when(!recentCotonomas.isEmpty)(
+          sectionRecent(model, recentCotonomas, dispatch)
+        )
       )
+    )
+  }
+
+  private def sectionCurrent(
+      model: Model,
+      selectedCotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "current")(
+      h2()("Current"),
+      ul()(
+        li()(
+          ul(className := "super-cotonomas")(
+            model.superCotonomas().map(liCotonoma(model, _, dispatch)): _*
+          )
+        ),
+        li(className := "current-cotonoma selected")(
+          cotonomaLabel(model, selectedCotonoma)
+        ),
+        li()(
+          ul(className := "sub-cotonomas")(
+            model.subCotonomas().map(liCotonoma(model, _, dispatch)): _*
+          )
+        )
+      )
+    )
+
+  private def sectionRecent(
+      model: Model,
+      cotonomas: Seq[Cotonoma],
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "recent")(
+      h2()("Recent"),
+      ul()(cotonomas.map(liCotonoma(model, _, dispatch)): _*)
+    )
+
+  private def liCotonoma(
+      model: Model,
+      cotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    li(
+      className := optionalClasses(
+        Seq(("selected", model.isSelectingCotonoma(cotonoma)))
+      ),
+      key := cotonoma.uuid
+    )(
+      if (model.isSelectingCotonoma(cotonoma)) {
+        cotonomaLabel(model, cotonoma)
+      } else {
+        a(className := "cotonoma", title := cotonoma.name)(
+          cotonomaLabel(model, cotonoma)
+        )
+      }
+    )
+
+  private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
+    Fragment(
+      model.node(cotonoma.node_id).map(node_img(_)),
+      cotonoma.name
     )
 }

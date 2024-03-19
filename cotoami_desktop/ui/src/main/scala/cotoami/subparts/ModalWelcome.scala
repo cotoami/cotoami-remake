@@ -6,13 +6,13 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{Model, Msg, Log, Validation, tauri, WelcomeModalMsg}
+import cotoami.{tauri, Log, ModalWelcomeMsg, Model, Msg, Validation}
 import cotoami.components.material_symbol
 import cotoami.backend
-import cotoami.backend.{Node, DatabaseFolder}
+import cotoami.backend.{DatabaseOpened, Node}
 import cats.syntax.foldable
 
-object WelcomeModal {
+object ModalWelcome {
 
   case class Model(
       // New database
@@ -70,7 +70,7 @@ object WelcomeModal {
                 "Select a base folder",
                 Some(model.baseFolder)
               )
-              .map((BaseFolderSelected andThen WelcomeModalMsg)(_))
+              .map((BaseFolderSelected andThen ModalWelcomeMsg)(_))
           )
         )
 
@@ -116,7 +116,7 @@ object WelcomeModal {
                 "Select a database folder",
                 None
               )
-              .map((DatabaseFolderSelected andThen WelcomeModalMsg)(_))
+              .map((DatabaseFolderSelected andThen ModalWelcomeMsg)(_))
           )
         )
 
@@ -148,13 +148,16 @@ object WelcomeModal {
         )
 
       case OpenDatabase =>
-        (model.copy(processing = true), Seq(openDatabase(model.databaseFolder)))
+        (
+          model.copy(processing = true),
+          Seq(cotoami.openDatabase(model.databaseFolder))
+        )
 
       case OpenDatabaseIn(folder) =>
-        (model.copy(processing = true), Seq(openDatabase(folder)))
+        (model.copy(processing = true), Seq(cotoami.openDatabase(folder)))
     }
 
-  def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
+  private def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.baseFolder.isBlank && !model.folderName.isBlank)
       Seq(
         tauri
@@ -166,12 +169,12 @@ object WelcomeModal {
                 folderName = model.folderName
               )
           )
-          .map((NewFolderValidation andThen WelcomeModalMsg)(_))
+          .map((NewFolderValidation andThen ModalWelcomeMsg)(_))
       )
     else
       Seq()
 
-  def createDatabase(model: Model): Cmd[cotoami.Msg] =
+  private def createDatabase(model: Model): Cmd[cotoami.Msg] =
     tauri
       .invokeCommand(
         "create_database",
@@ -184,7 +187,7 @@ object WelcomeModal {
       )
       .map(cotoami.DatabaseOpened(_))
 
-  def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
+  private def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.databaseFolder.isBlank)
       Seq(
         tauri
@@ -195,25 +198,14 @@ object WelcomeModal {
                 databaseFolder = model.databaseFolder
               )
           )
-          .map((DatabaseFolderValidation andThen WelcomeModalMsg)(_))
+          .map((DatabaseFolderValidation andThen ModalWelcomeMsg)(_))
       )
     else
       Seq()
 
-  def openDatabase(folder: String): Cmd[cotoami.Msg] =
-    tauri
-      .invokeCommand(
-        "open_database",
-        js.Dynamic
-          .literal(
-            databaseFolder = folder
-          )
-      )
-      .map(cotoami.DatabaseOpened(_))
-
   def view(
       model: Model,
-      recentDatabases: Option[Seq[DatabaseFolder]],
+      recentDatabases: Seq[DatabaseOpened],
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -231,7 +223,7 @@ object WelcomeModal {
         div(className := "body")(
           model.systemError.map(e => div(className := "system-error")(e)),
           div(className := "body-main")(
-            recentDatabases.flatMap(recent(model, _, dispatch)),
+            recent(model, recentDatabases, dispatch),
             div(className := "create-or-open")(
               newDatabase(model, dispatch),
               openDatabase(model, dispatch)
@@ -241,9 +233,9 @@ object WelcomeModal {
       )
     )
 
-  def recent(
+  private def recent(
       model: Model,
-      databases: Seq[DatabaseFolder],
+      databases: Seq[DatabaseOpened],
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
     if (databases.isEmpty) {
@@ -254,13 +246,13 @@ object WelcomeModal {
           h2()("Recent"),
           ul()(
             databases.map(db =>
-              li(key := db.path)(
+              li(key := db.folder)(
                 button(
                   className := "database default",
                   title := db.name,
                   disabled := model.processing,
                   onClick := ((e) =>
-                    dispatch(WelcomeModalMsg(OpenDatabaseIn(db.path)))
+                    dispatch(ModalWelcomeMsg(OpenDatabaseIn(db.folder)))
                   )
                 )(
                   img(
@@ -269,7 +261,7 @@ object WelcomeModal {
                     src := s"data:image/png;base64,${db.icon}"
                   ),
                   db.name,
-                  section(className := "database-path")(db.path)
+                  section(className := "database-path")(db.folder)
                 )
               )
             ): _*
@@ -278,7 +270,10 @@ object WelcomeModal {
       )
     }
 
-  def newDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
+  private def newDatabase(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
     section(className := "new-database")(
       h2()("New database"),
       form()(
@@ -293,7 +288,7 @@ object WelcomeModal {
             id := "select-base-folder",
             `type` := "button",
             className := "secondary",
-            onClick := ((e) => dispatch(WelcomeModalMsg(SelectBaseFolder)))
+            onClick := ((e) => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
           )(
             material_symbol("folder")
           )
@@ -311,7 +306,7 @@ object WelcomeModal {
             // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
             // (onChange is almost the same as onInput in React)
             onChange := ((e) =>
-              dispatch(WelcomeModalMsg(FolderNameInput(e.target.value)))
+              dispatch(ModalWelcomeMsg(FolderNameInput(e.target.value)))
             )
           ),
           Validation.validationErrorDiv(model.folderNameErrors)
@@ -322,7 +317,7 @@ object WelcomeModal {
           button(
             `type` := "submit",
             disabled := !model.validateNewDatabaseInputs() || model.processing,
-            onClick := ((e) => dispatch(WelcomeModalMsg(CreateDatabase)))
+            onClick := ((e) => dispatch(ModalWelcomeMsg(CreateDatabase)))
           )(
             "Create"
           )
@@ -330,7 +325,7 @@ object WelcomeModal {
       )
     )
 
-  def databaseNameInput(
+  private def databaseNameInput(
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
@@ -348,7 +343,7 @@ object WelcomeModal {
           Validation.ariaInvalid(errors),
           // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
           onChange := ((e) =>
-            dispatch(WelcomeModalMsg(DatabaseNameInput(e.target.value)))
+            dispatch(ModalWelcomeMsg(DatabaseNameInput(e.target.value)))
           )
         ),
         Validation.validationErrorDiv(errors)
@@ -356,7 +351,10 @@ object WelcomeModal {
     )
   }
 
-  def openDatabase(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
+  private def openDatabase(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
     section(className := "open-database")(
       h2()("Open"),
       form()(
@@ -370,7 +368,7 @@ object WelcomeModal {
               `type` := "button",
               className := "secondary",
               onClick := ((e) =>
-                dispatch(WelcomeModalMsg(SelectDatabaseFolder))
+                dispatch(ModalWelcomeMsg(SelectDatabaseFolder))
               )
             )(
               material_symbol("folder")
@@ -386,7 +384,7 @@ object WelcomeModal {
             disabled := model.databaseFolderErrors
               .map(!_.isEmpty)
               .getOrElse(true) || model.processing,
-            onClick := ((e) => dispatch(WelcomeModalMsg(OpenDatabase)))
+            onClick := ((e) => dispatch(ModalWelcomeMsg(OpenDatabase)))
           )("Open")
         )
       )

@@ -34,4 +34,12 @@ package object backend {
         Option(event.details)
       )
   }
+
+  @js.native
+  trait Paginated[T] extends js.Object {
+    val rows: js.Array[T] = js.native
+    val page_size: Double = js.native
+    val page_index: Double = js.native
+    val total_rows: Double = js.native
+  }
 }

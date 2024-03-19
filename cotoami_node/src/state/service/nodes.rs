@@ -9,4 +9,9 @@ impl NodeState {
         let db = self.db().clone();
         spawn_blocking(move || Ok(db.new_session()?.local_node()?)).await?
     }
+
+    pub async fn all_nodes(&self) -> Result<Vec<Node>, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || Ok(db.new_session()?.all_nodes()?)).await?
+    }
 }

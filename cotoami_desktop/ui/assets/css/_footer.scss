@@ -3,6 +3,19 @@
 div.app>footer {
   position: relative;
 
+  div.browser-nav {
+    display: flex;
+    flex-direction: row;
+
+    padding-top: 2px;
+    padding-left: 10px;
+
+    div.path {
+      font-size: 12px; // in the fixed footer height
+      opacity: .6;
+    }
+  }
+
   div.log-peek {
     position: absolute;
     top: 2px;
