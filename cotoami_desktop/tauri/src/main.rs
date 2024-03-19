@@ -136,6 +136,21 @@ fn validate_database_folder(database_folder: String) -> Result<(), Error> {
     }
 }
 
+#[derive(serde::Serialize)]
+struct DatabaseInfo {
+    folder: String,
+    local_node: Node,
+}
+
+impl DatabaseInfo {
+    async fn new(folder: String, node_state: &NodeState) -> Result<Self, Error> {
+        Ok(Self {
+            folder,
+            local_node: node_state.local_node().await?,
+        })
+    }
+}
+
 #[tauri::command]
 async fn create_database(
     app_handle: tauri::AppHandle,
