@@ -15,4 +15,7 @@ trait Node extends js.Object {
 object Node {
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
+
+  def debug(node: Node): String =
+    s"uuid: ${node.uuid}, name: ${node.name}, version: ${node.version}"
 }

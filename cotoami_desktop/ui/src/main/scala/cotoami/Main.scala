@@ -16,7 +16,7 @@ import trail._
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
-import cotoami.backend.{Commands, LogEvent, SystemInfo}
+import cotoami.backend.{Commands, DatabaseInfo, LogEvent, SystemInfo}
 
 object Main {
 
@@ -82,18 +82,17 @@ object Main {
           Seq.empty
         )
 
-      case DatabaseOpened(Right(node)) =>
+      case DatabaseOpened(Right(info)) =>
         (
           model
-            .modify(_.nodes).using(_ + (node.uuid -> node))
-            .modify(_.localNodeId).setTo(Some(node.uuid))
-            .modify(_.operatingNodeId).setTo(Some(node.uuid))
+            .modify(_.databaseFolder).setTo(Some(info.folder))
+            .modify(_.nodes).setTo(DatabaseInfo.nodes_as_map(info))
+            .modify(_.localNodeId).setTo(Some(info.local_node_id))
+            .modify(_.operatingNodeId).setTo(Some(info.local_node_id))
+            .modify(_.parentNodeIds).setTo(info.parent_node_ids.toSeq)
             .modify(_.modalWelcome.processing).setTo(false)
             .modify(_.log).using(
-              _.info(
-                s"Database [${node.name}] opened.",
-                Some(s"uuid: ${node.uuid}, name: ${node.name}")
-              )
+              _.info("Database opened.", Some(DatabaseInfo.debug(info)))
             ),
           Seq.empty
         )

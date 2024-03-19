@@ -24,12 +24,15 @@ case class Model(
     // It will be `None` before being restored from localStorage on init.
     uiState: Option[Model.UiState] = None,
 
+    // Database folder
+    databaseFolder: Option[String] = None,
+
     // Node
     nodes: Map[String, Node] = Map.empty,
     localNodeId: Option[String] = None,
-    parentNodeIds: Seq[String] = Seq.empty,
     operatingNodeId: Option[String] = None,
     selectedNodeId: Option[String] = None,
+    parentNodeIds: Seq[String] = Seq.empty,
 
     // Cotonoma
     cotonomas: Map[String, Cotonoma] = Map.empty,

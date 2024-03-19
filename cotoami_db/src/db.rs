@@ -212,6 +212,14 @@ impl Globals {
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 
+    /// Returns the parent IDs in order of recently updated.
+    pub fn parent_ids_in_update_order(&self) -> Vec<Id<Node>> {
+        let parent_map = self.parent_nodes.read();
+        let mut parents: Vec<&ParentNode> = parent_map.values().collect();
+        parents.sort_by(|a, b| b.last_change_received_at.cmp(&a.last_change_received_at));
+        parents.into_iter().map(|p| p.node_id).collect()
+    }
+
     fn cache_parent_node(&self, parent: ParentNode) {
         self.parent_nodes
             .write()
