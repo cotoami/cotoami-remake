@@ -9,7 +9,7 @@ import fui.FunctionalUI._
 import cotoami.{tauri, Log, ModalWelcomeMsg, Model, Msg, Validation}
 import cotoami.components.material_symbol
 import cotoami.backend
-import cotoami.backend.{DatabaseFolder, Node}
+import cotoami.backend.{DatabaseOpened, Node}
 import cats.syntax.foldable
 
 object ModalWelcome {
@@ -213,7 +213,7 @@ object ModalWelcome {
 
   def view(
       model: Model,
-      recentDatabases: Option[Seq[DatabaseFolder]],
+      recentDatabases: Option[Seq[DatabaseOpened]],
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -243,7 +243,7 @@ object ModalWelcome {
 
   private def recent(
       model: Model,
-      databases: Seq[DatabaseFolder],
+      databases: Seq[DatabaseOpened],
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
     if (databases.isEmpty) {
@@ -254,13 +254,13 @@ object ModalWelcome {
           h2()("Recent"),
           ul()(
             databases.map(db =>
-              li(key := db.path)(
+              li(key := db.folder)(
                 button(
                   className := "database default",
                   title := db.name,
                   disabled := model.processing,
                   onClick := ((e) =>
-                    dispatch(ModalWelcomeMsg(OpenDatabaseIn(db.path)))
+                    dispatch(ModalWelcomeMsg(OpenDatabaseIn(db.folder)))
                   )
                 )(
                   img(
@@ -269,7 +269,7 @@ object ModalWelcome {
                     src := s"data:image/png;base64,${db.icon}"
                   ),
                   db.name,
-                  section(className := "database-path")(db.path)
+                  section(className := "database-path")(db.folder)
                 )
               )
             ): _*
