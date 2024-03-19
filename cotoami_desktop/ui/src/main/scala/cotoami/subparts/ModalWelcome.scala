@@ -205,7 +205,7 @@ object ModalWelcome {
 
   def view(
       model: Model,
-      recentDatabases: Option[Seq[DatabaseOpened]],
+      recentDatabases: Seq[DatabaseOpened],
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -223,7 +223,7 @@ object ModalWelcome {
         div(className := "body")(
           model.systemError.map(e => div(className := "system-error")(e)),
           div(className := "body-main")(
-            recentDatabases.flatMap(recent(model, _, dispatch)),
+            recent(model, recentDatabases, dispatch),
             div(className := "create-or-open")(
               newDatabase(model, dispatch),
               openDatabase(model, dispatch)

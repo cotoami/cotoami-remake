@@ -297,12 +297,12 @@ object Main {
     )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.localNode().isEmpty) {
-      Some(
+    if (model.localNodeId.isEmpty) {
+      model.systemInfo.map(info =>
         subparts.ModalWelcome
           .view(
             model.modalWelcome,
-            model.systemInfo.map(_.recent_databases.toSeq),
+            info.recent_databases.toSeq,
             dispatch
           )
       )
