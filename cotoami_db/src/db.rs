@@ -724,6 +724,10 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(changelog_ops::chunk(from, limit))
     }
 
+    pub fn last_change_number(&mut self) -> Result<Option<i64>> {
+        self.read_transaction(changelog_ops::last_serial_number())
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // cotos
     /////////////////////////////////////////////////////////////////////////////
