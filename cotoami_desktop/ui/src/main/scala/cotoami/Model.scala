@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
@@ -11,7 +12,7 @@ import io.circe.parser._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Cotonoma, Node, SystemInfo}
+import cotoami.backend.{Cotonoma, Error, Node, SystemInfo}
 import cotoami.subparts.ModalWelcome
 
 case class Model(
@@ -45,6 +46,9 @@ case class Model(
     // WelcomeModal
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
+  def error(error: Error, message: String): Model =
+    this.copy(log = this.log.error(message, Some(js.JSON.stringify(error))))
+
   def path(): String = this.url.pathname + this.url.search + this.url.hash
 
   //

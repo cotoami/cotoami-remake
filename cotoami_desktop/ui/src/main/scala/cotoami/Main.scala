@@ -170,27 +170,33 @@ object Main {
         )
 
       case LocalNodeFetched(Left(e)) =>
+        (model.error(e, "Couldn't fetch the local node."), Seq.empty)
+
+      case CotonomasFetched(Right(paginated)) =>
         (
-          model.modify(_.log).using(
-            _.error(
-              "Couldn't fetch the local node.",
-              Some(js.JSON.stringify(e))
+          model
+            .modify(_.cotonomas).using(
+              _ ++ paginated.rows.map(c => (c.uuid, c)).toMap
             )
-          ),
+            .modify(_.recentCotonomaIds).setTo(
+              paginated.rows.map(_.uuid).toSeq
+            ),
           Seq.empty
         )
+
+      case CotonomasFetched(Left(e)) =>
+        (model.error(e, "Couldn't fetch cotonomas."), Seq.empty)
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
         (
-          model.modify(_.log).using(
-            _.debug(
-              "Url changed.",
-              Some(url.toString())
-            )
-          ),
+          model
+            .modify(_.selectedNodeId).setTo(None)
+            .modify(_.selectedCotonomaId).setTo(None)
+            .modify(_.superCotonomaIds).setTo(Seq.empty)
+            .modify(_.subCotonomaIds).setTo(Seq.empty),
           Seq.empty
         )
     }
