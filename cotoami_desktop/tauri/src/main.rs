@@ -139,6 +139,7 @@ fn validate_database_folder(database_folder: String) -> Result<(), Error> {
 #[derive(serde::Serialize)]
 struct DatabaseInfo {
     folder: String,
+    last_change_number: i64,
     nodes: Vec<Node>,
     local_node_id: Id<Node>,
     parent_node_ids: Vec<Id<Node>>,
@@ -148,6 +149,14 @@ impl DatabaseInfo {
     async fn new(folder: String, node_state: &NodeState) -> Result<Self, Error> {
         Ok(Self {
             folder,
+            // Get the last change number before retrieving database contents to
+            // ensure those contents to be the same or newer than the revision of the number.
+            // It should be no problem to have newer contents than the change number as long as
+            // each change is idempotent.
+            last_change_number: node_state
+                .last_change_number()
+                .await?
+                .unwrap_or_else(|| unreachable!("There must be changes before.")),
             nodes: node_state.all_nodes().await?,
             local_node_id: node_state.db().globals().local_node_id()?,
             parent_node_ids: node_state.db().globals().parent_ids_in_update_order(),

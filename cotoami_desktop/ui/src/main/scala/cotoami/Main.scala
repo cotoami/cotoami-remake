@@ -105,6 +105,7 @@ object Main {
         (
           model
             .modify(_.databaseFolder).setTo(Some(info.folder))
+            .modify(_.lastChangeNumber).setTo(info.last_change_number)
             .modify(_.nodes).setTo(DatabaseInfo.nodes_as_map(info))
             .modify(_.localNodeId).setTo(Some(info.local_node_id))
             .modify(_.operatingNodeId).setTo(Some(info.local_node_id))

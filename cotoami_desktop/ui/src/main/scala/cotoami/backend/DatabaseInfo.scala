@@ -5,6 +5,7 @@ import scala.scalajs.js
 @js.native
 trait DatabaseInfo extends js.Object {
   val folder: String = js.native
+  val last_change_number: Double = js.native
   val nodes: js.Array[Node] = js.native
   val local_node_id: String = js.native
   val parent_node_ids: js.Array[String] = js.native
@@ -18,6 +19,7 @@ object DatabaseInfo {
     val localNode = info.nodes.find(_.uuid == info.local_node_id)
     val s = new StringBuilder
     s ++= s"folder: ${info.folder}"
+    s ++= s", lastChangeNumber: ${info.last_change_number}"
     s ++= s", nodes: ${info.nodes.size}"
     s ++= s", localNode: {${localNode.map(Node.debug(_))}}"
     s ++= s", parentNodes: ${info.parent_node_ids.size}"

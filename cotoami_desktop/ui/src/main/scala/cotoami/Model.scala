@@ -24,8 +24,9 @@ case class Model(
     // It will be `None` before being restored from localStorage on init.
     uiState: Option[Model.UiState] = None,
 
-    // Database folder
+    // Database
     databaseFolder: Option[String] = None,
+    lastChangeNumber: Double = 0,
 
     // Node
     nodes: Map[String, Node] = Map.empty,
