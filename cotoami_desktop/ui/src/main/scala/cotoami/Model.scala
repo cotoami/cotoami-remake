@@ -9,6 +9,7 @@ import io.circe.generic.semiauto._
 import io.circe.syntax._
 import io.circe.parser._
 
+import com.softwaremill.quicklens._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
@@ -50,6 +51,14 @@ case class Model(
     this.copy(log = this.log.error(message, Some(js.JSON.stringify(error))))
 
   def path(): String = this.url.pathname + this.url.search + this.url.hash
+
+  def clearSelection(): Model =
+    this.copy(
+      selectedNodeId = None,
+      selectedCotonomaId = None,
+      superCotonomaIds = Seq.empty,
+      subCotonomaIds = Seq.empty
+    )
 
   //
   // Node

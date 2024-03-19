@@ -195,11 +195,7 @@ object Main {
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
         (
-          model
-            .modify(_.selectedNodeId).setTo(None)
-            .modify(_.selectedCotonomaId).setTo(None)
-            .modify(_.superCotonomaIds).setTo(Seq.empty)
-            .modify(_.subCotonomaIds).setTo(Seq.empty),
+          model.clearSelection(),
           Seq(
             node_command(Commands.RecentCotonomas(None)).map(
               CotonomasFetched(_)
