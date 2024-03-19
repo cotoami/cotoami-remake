@@ -65,7 +65,7 @@ object Main {
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
-      case UrlChanged(url) => applyUrlChange(url, model)
+      case UrlChanged(url) => applyUrlChange(url, model.copy(url = url))
 
       case AddLogEntry(level, message, details) =>
         (
@@ -102,20 +102,22 @@ object Main {
         )
 
       case DatabaseOpened(Right(info)) =>
-        (
-          model
-            .modify(_.databaseFolder).setTo(Some(info.folder))
-            .modify(_.lastChangeNumber).setTo(info.last_change_number)
-            .modify(_.nodes).setTo(DatabaseInfo.nodes_as_map(info))
-            .modify(_.localNodeId).setTo(Some(info.local_node_id))
-            .modify(_.operatingNodeId).setTo(Some(info.local_node_id))
-            .modify(_.parentNodeIds).setTo(info.parent_node_ids.toSeq)
-            .modify(_.modalWelcome.processing).setTo(false)
-            .modify(_.log).using(
-              _.info("Database opened.", Some(DatabaseInfo.debug(info)))
-            ),
-          Seq(DatabaseFolder.save(info.folder))
-        )
+        model
+          .modify(_.databaseFolder).setTo(Some(info.folder))
+          .modify(_.lastChangeNumber).setTo(info.last_change_number)
+          .modify(_.nodes).setTo(DatabaseInfo.nodes_as_map(info))
+          .modify(_.localNodeId).setTo(Some(info.local_node_id))
+          .modify(_.operatingNodeId).setTo(Some(info.local_node_id))
+          .modify(_.parentNodeIds).setTo(info.parent_node_ids.toSeq)
+          .modify(_.modalWelcome.processing).setTo(false)
+          .modify(_.log).using(
+            _.info("Database opened.", Some(DatabaseInfo.debug(info)))
+          ) match {
+          case model =>
+            applyUrlChange(model.url, model).modify(_._2).using(
+              DatabaseFolder.save(info.folder) +: _
+            )
+        }
 
       case DatabaseOpened(Left(e)) =>
         (
