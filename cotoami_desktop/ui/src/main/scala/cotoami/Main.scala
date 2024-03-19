@@ -180,6 +180,9 @@ object Main {
             )
             .modify(_.recentCotonomaIds).setTo(
               paginated.rows.map(_.uuid).toSeq
+            )
+            .modify(_.log).using(
+              _.info(s"${paginated.rows.size} recent cotonomas fetched.", None)
             ),
           Seq.empty
         )
@@ -197,7 +200,11 @@ object Main {
             .modify(_.selectedCotonomaId).setTo(None)
             .modify(_.superCotonomaIds).setTo(Seq.empty)
             .modify(_.subCotonomaIds).setTo(Seq.empty),
-          Seq.empty
+          Seq(
+            node_command(Commands.RecentCotonomas(None)).map(
+              CotonomasFetched(_)
+            )
+          )
         )
     }
 
