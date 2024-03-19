@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     fs::{File, OpenOptions},
     io::{BufReader, BufWriter, Write},
     path::Path,
@@ -41,12 +42,12 @@ impl RecentDatabases {
             if file_path.is_file() {
                 app_handle.debug(
                     "Reading the recent file...",
-                    Some(file_path.to_string_lossy().to_string()),
+                    Some(file_path.to_string_lossy().borrow()),
                 );
                 match Self::read_from_file(file_path) {
                     Ok(recent) => recent,
                     Err(e) => {
-                        app_handle.warn("Error reading the recent file.", Some(e.to_string()));
+                        app_handle.warn("Error reading the recent file.", Some(&e.to_string()));
                         Self::empty()
                     }
                 }
@@ -84,11 +85,11 @@ impl RecentDatabases {
         if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
             let file_path = config_dir.join(Self::FILENAME);
             if let Err(e) = self.save_to_file(&file_path) {
-                app_handle.warn("Error writing the recent file.", Some(e.to_string()));
+                app_handle.warn("Error writing the recent file.", Some(&e.to_string()));
             } else {
                 app_handle.debug(
                     "RecentDatabases saved.",
-                    Some(file_path.to_string_lossy().to_string()),
+                    Some(file_path.to_string_lossy().borrow()),
                 );
             }
         } else {

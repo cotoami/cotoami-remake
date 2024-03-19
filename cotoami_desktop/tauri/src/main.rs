@@ -149,12 +149,12 @@ async fn create_database(
             .map(str::to_string)
             .ok_or(anyhow!("Invalid folder path: {:?}", path))?
     };
-    app_handle.debug(format!("Creating a database..."), Some(folder.clone()));
+    app_handle.debug(&format!("Creating a database..."), Some(&folder));
 
     let node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
     let node_state = NodeState::new(node_config).await?;
     let local_node = node_state.local_node().await?;
-    app_handle.info(format!("Database [{}] created.", local_node.name), None);
+    app_handle.info(&format!("Database [{}] created.", local_node.name), None);
 
     app_handle.manage(node_state);
 
