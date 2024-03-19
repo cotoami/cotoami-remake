@@ -12,6 +12,7 @@ import slinky.web.html._
 
 import com.softwaremill.quicklens._
 import trail._
+import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
@@ -35,12 +36,30 @@ object Main {
     val index = Root
   }
 
+  object DatabaseFolder {
+    val SessionStorageKey = "databaseFolder"
+
+    def save(folder: String): Cmd[Msg] =
+      Cmd(IO {
+        dom.window.sessionStorage.setItem(SessionStorageKey, folder)
+        None
+      })
+
+    def restore(): Cmd[Option[String]] =
+      Cmd(IO {
+        Some(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
+      })
+  }
+
   def init(url: URL): (Model, Seq[Cmd[Msg]]) =
     (
       Model(url = url),
       Seq(
         Model.UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched(_))
+        cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched(_)),
+        DatabaseFolder.restore().flatMap(
+          _.map(openDatabase(_)).getOrElse(Cmd.none)
+        )
       )
     )
 
@@ -94,7 +113,7 @@ object Main {
             .modify(_.log).using(
               _.info("Database opened.", Some(DatabaseInfo.debug(info)))
             ),
-          Seq.empty
+          Seq(DatabaseFolder.save(info.folder))
         )
 
       case DatabaseOpened(Left(e)) =>

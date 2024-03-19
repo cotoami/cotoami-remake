@@ -148,10 +148,13 @@ object ModalWelcome {
         )
 
       case OpenDatabase =>
-        (model.copy(processing = true), Seq(openDatabase(model.databaseFolder)))
+        (
+          model.copy(processing = true),
+          Seq(cotoami.openDatabase(model.databaseFolder))
+        )
 
       case OpenDatabaseIn(folder) =>
-        (model.copy(processing = true), Seq(openDatabase(folder)))
+        (model.copy(processing = true), Seq(cotoami.openDatabase(folder)))
     }
 
   private def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
@@ -199,17 +202,6 @@ object ModalWelcome {
       )
     else
       Seq()
-
-  private def openDatabase(folder: String): Cmd[cotoami.Msg] =
-    tauri
-      .invokeCommand(
-        "open_database",
-        js.Dynamic
-          .literal(
-            databaseFolder = folder
-          )
-      )
-      .map(cotoami.DatabaseOpened(_))
 
   def view(
       model: Model,
