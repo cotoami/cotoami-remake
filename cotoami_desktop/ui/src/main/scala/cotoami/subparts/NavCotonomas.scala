@@ -48,12 +48,15 @@ object NavCotonomas {
         if (model.selectedCotonomaId.isEmpty) {
           div(className := "cotonoma home selected")(
             material_symbol("home"),
-            currentNode.name
+            currentNode.name()
           )
         } else {
-          a(className := "cotonoma home", title := s"${currentNode.name} home")(
+          a(
+            className := "cotonoma home",
+            title := s"${currentNode.name()} home"
+          )(
             material_symbol("home"),
-            currentNode.name
+            currentNode.name()
           )
         }
       ),
@@ -109,12 +112,12 @@ object NavCotonomas {
       className := optionalClasses(
         Seq(("selected", model.isSelectingCotonoma(cotonoma)))
       ),
-      key := cotonoma.uuid
+      key := cotonoma.id().uuid
     )(
       if (model.isSelectingCotonoma(cotonoma)) {
         cotonomaLabel(model, cotonoma)
       } else {
-        a(className := "cotonoma", title := cotonoma.name)(
+        a(className := "cotonoma", title := cotonoma.name())(
           cotonomaLabel(model, cotonoma)
         )
       }
@@ -122,7 +125,7 @@ object NavCotonomas {
 
   private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
     Fragment(
-      model.node(cotonoma.node_id).map(node_img(_)),
-      cotonoma.name
+      model.node(cotonoma.nodeId()).map(node_img(_)),
+      cotonoma.name()
     )
 }

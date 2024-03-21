@@ -5,10 +5,10 @@ import org.scalajs.dom.URL
 
 import cotoami.Log
 import cotoami.backend.{
-  Cotonoma,
-  DatabaseInfo,
+  CotonomaJson,
+  DatabaseInfoJson,
   LogEvent,
-  Node,
+  NodeJson,
   Paginated,
   SystemInfo
 }
@@ -29,7 +29,7 @@ case object ToggleLogView extends Msg
 // App init
 case class SystemInfoFetched(result: Either[Unit, SystemInfo]) extends Msg
 case class UiStateRestored(state: Option[Model.UiState]) extends Msg
-case class DatabaseOpened(result: Either[backend.Error, DatabaseInfo])
+case class DatabaseOpened(result: Either[backend.Error, DatabaseInfoJson])
     extends Msg
 
 // Pane
@@ -40,7 +40,6 @@ case class ResizePane(name: String, newSize: Int) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
 
 // Commands
-case object FetchLocalNode extends Msg
-case class LocalNodeFetched(result: Either[backend.Error, Node]) extends Msg
-case class CotonomasFetched(result: Either[backend.Error, Paginated[Cotonoma]])
-    extends Msg
+case class CotonomasFetched(
+    result: Either[backend.Error, Paginated[CotonomaJson]]
+) extends Msg

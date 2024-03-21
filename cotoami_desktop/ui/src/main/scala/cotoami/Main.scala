@@ -17,7 +17,7 @@ import cats.effect.IO
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
-import cotoami.backend.{Commands, DatabaseInfo, LogEvent, SystemInfo}
+import cotoami.backend.{Commands, Cotonoma, DatabaseInfo, LogEvent, SystemInfo}
 
 object Main {
 
@@ -101,23 +101,25 @@ object Main {
           Seq.empty
         )
 
-      case DatabaseOpened(Right(info)) =>
+      case DatabaseOpened(Right(json)) => {
+        val info = DatabaseInfo(json)
         model
-          .modify(_.databaseFolder).setTo(Some(info.folder))
-          .modify(_.lastChangeNumber).setTo(info.last_change_number)
-          .modify(_.nodes).setTo(DatabaseInfo.nodes_as_map(info))
-          .modify(_.localNodeId).setTo(Some(info.local_node_id))
-          .modify(_.operatingNodeId).setTo(Some(info.local_node_id))
-          .modify(_.parentNodeIds).setTo(info.parent_node_ids.toSeq)
+          .modify(_.databaseFolder).setTo(Some(info.folder()))
+          .modify(_.lastChangeNumber).setTo(info.lastChangeNumber())
+          .modify(_.nodes).setTo(info.nodes)
+          .modify(_.localNodeId).setTo(Some(info.localNodeId()))
+          .modify(_.operatingNodeId).setTo(Some(info.localNodeId()))
+          .modify(_.parentNodeIds).setTo(info.parentNodeIds())
           .modify(_.modalWelcome.processing).setTo(false)
           .modify(_.log).using(
-            _.info("Database opened.", Some(DatabaseInfo.debug(info)))
+            _.info("Database opened.", Some(info.debug()))
           ) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
-              DatabaseFolder.save(info.folder) +: _
+              DatabaseFolder.save(info.folder()) +: _
             )
         }
+      }
 
       case DatabaseOpened(Left(e)) =>
         (
@@ -154,35 +156,13 @@ object Main {
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
 
-      case FetchLocalNode =>
-        (model, Seq(node_command(Commands.LocalNode).map(LocalNodeFetched(_))))
-
-      case LocalNodeFetched(Right(node)) =>
-        (
-          model
-            .modify(_.nodes).using(_ + (node.uuid -> node))
-            .modify(_.localNodeId).setTo(Some(node.uuid))
-            .modify(_.log).using(
-              _.info(
-                "Local node fetched.",
-                Some(s"uuid: ${node.uuid}, name: ${node.name}")
-              )
-            ),
-          Seq.empty
-        )
-
-      case LocalNodeFetched(Left(e)) =>
-        (model.error(e, "Couldn't fetch the local node."), Seq.empty)
-
       case CotonomasFetched(Right(paginated)) =>
         (
           model
             .modify(_.cotonomas).using(
-              _ ++ paginated.rows.map(c => (c.uuid, c)).toMap
+              _ ++ Cotonoma.toMap(paginated.rows)
             )
-            .modify(_.recentCotonomaIds).setTo(
-              paginated.rows.map(_.uuid).toSeq
-            )
+            .modify(_.recentCotonomaIds).setTo(Cotonoma.toIds(paginated.rows))
             .modify(_.log).using(
               _.info(s"${paginated.rows.size} recent cotonomas fetched.", None)
             ),
@@ -244,12 +224,12 @@ object Main {
         .map(node =>
           Fragment(
             section(className := "location")(
-              a(className := "node-home", title := node.name)(node_img(node))
+              a(className := "node-home", title := node.name())(node_img(node))
             ),
             model.selectedCotonoma().map(cotonoma =>
               Fragment(
                 material_symbol("chevron_right"),
-                h1(className := "current-cotonoma")(cotonoma.name)
+                h1(className := "current-cotonoma")(cotonoma.name())
               )
             )
           )

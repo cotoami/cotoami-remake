@@ -68,7 +68,7 @@ object NavNodes {
           ("selected", model.isSelectingNode(node))
         )
       ),
-      data - "tooltip" := node.name,
+      data - "tooltip" := node.name(),
       data - "placement" := "right"
     )(node_img(node))
 }

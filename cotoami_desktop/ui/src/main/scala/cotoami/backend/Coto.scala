@@ -1,9 +1,14 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import cotoami.Id
+
+case class Coto(json: CotoJson) {
+  def id(): Id[Coto] = Id(this.json.uuid)
+}
 
 @js.native
-trait Coto extends js.Object {
+trait CotoJson extends js.Object {
   val uuid: String = js.native
   val node_id: String = js.native
   val posted_in_id: String = js.native

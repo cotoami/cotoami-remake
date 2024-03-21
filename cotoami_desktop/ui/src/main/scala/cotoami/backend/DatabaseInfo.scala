@@ -1,28 +1,39 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import cotoami.Id
 
-@js.native
-trait DatabaseInfo extends js.Object {
-  val folder: String = js.native
-  val last_change_number: Double = js.native
-  val nodes: js.Array[Node] = js.native
-  val local_node_id: String = js.native
-  val parent_node_ids: js.Array[String] = js.native
-}
+case class DatabaseInfo(json: DatabaseInfoJson) {
+  def folder(): String = this.json.folder
+  def lastChangeNumber(): Double = this.json.last_change_number
 
-object DatabaseInfo {
-  def nodes_as_map(info: DatabaseInfo): Map[String, Node] =
-    info.nodes.map(node => (node.uuid, node)).toMap
+  lazy val nodes: Map[Id[Node], Node] =
+    this.json.nodes.map(Node(_)).map(node => (node.id(), node)).toMap
 
-  def debug(info: DatabaseInfo): String = {
-    val localNode = info.nodes.find(_.uuid == info.local_node_id)
+  def localNodeId(): Id[Node] = Id(this.json.local_node_id)
+
+  def localNode(): Option[Node] =
+    this.nodes.get(this.localNodeId())
+
+  def parentNodeIds(): Seq[Id[Node]] =
+    this.json.parent_node_ids.map(Id[Node](_)).toSeq
+
+  def debug(): String = {
     val s = new StringBuilder
-    s ++= s"folder: ${info.folder}"
-    s ++= s", lastChangeNumber: ${info.last_change_number}"
-    s ++= s", nodes: ${info.nodes.size}"
-    s ++= s", localNode: {${localNode.map(Node.debug(_))}}"
-    s ++= s", parentNodes: ${info.parent_node_ids.size}"
+    s ++= s"folder: ${this.folder()}"
+    s ++= s", lastChangeNumber: ${this.lastChangeNumber()}"
+    s ++= s", nodes: ${this.nodes.size}"
+    s ++= s", localNode: {${this.localNode().map(_.debug())}}"
+    s ++= s", parentNodes: ${this.parentNodeIds().size}"
     s.result()
   }
+}
+
+@js.native
+trait DatabaseInfoJson extends js.Object {
+  val folder: String = js.native
+  val last_change_number: Double = js.native
+  val nodes: js.Array[NodeJson] = js.native
+  val local_node_id: String = js.native
+  val parent_node_ids: js.Array[String] = js.native
 }

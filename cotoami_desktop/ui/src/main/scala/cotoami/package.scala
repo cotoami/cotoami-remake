@@ -4,6 +4,8 @@ import fui.FunctionalUI._
 
 package object cotoami {
 
+  case class Id[T](uuid: String) extends AnyVal
+
   def log_debug(message: String, details: Option[String] = None): Cmd[Msg] =
     Cmd(IO { Some(AddLogEntry(Log.Debug, message, details)) })
   def log_info(message: String, details: Option[String] = None): Cmd[Msg] =
