@@ -34,7 +34,7 @@ object NavCotonomas {
       )
     )(
       paneToggle(PaneName, dispatch),
-      model.currentNode().map(navCotonomas(model, _, dispatch))
+      model.currentNode.map(navCotonomas(model, _, dispatch))
     )
 
   private def navCotonomas(
@@ -42,26 +42,26 @@ object NavCotonomas {
       currentNode: Node,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val recentCotonomas = model.recentCotonomas()
+    val recentCotonomas = model.recentCotonomas
     nav(className := "cotonomas header-and-body")(
       header()(
         if (model.selectedCotonomaId.isEmpty) {
           div(className := "cotonoma home selected")(
             material_symbol("home"),
-            currentNode.name()
+            currentNode.name
           )
         } else {
           a(
             className := "cotonoma home",
-            title := s"${currentNode.name()} home"
+            title := s"${currentNode.name} home"
           )(
             material_symbol("home"),
-            currentNode.name()
+            currentNode.name
           )
         }
       ),
       section(className := "cotonomas body")(
-        model.selectedCotonoma().map(sectionCurrent(model, _, dispatch)),
+        model.selectedCotonoma.map(sectionCurrent(model, _, dispatch)),
         Option.when(!recentCotonomas.isEmpty)(
           sectionRecent(model, recentCotonomas, dispatch)
         )
@@ -79,7 +79,7 @@ object NavCotonomas {
       ul()(
         li()(
           ul(className := "super-cotonomas")(
-            model.superCotonomas().map(liCotonoma(model, _, dispatch)): _*
+            model.superCotonomas.map(liCotonoma(model, _, dispatch)): _*
           )
         ),
         li(className := "current-cotonoma selected")(
@@ -87,7 +87,7 @@ object NavCotonomas {
         ),
         li()(
           ul(className := "sub-cotonomas")(
-            model.subCotonomas().map(liCotonoma(model, _, dispatch)): _*
+            model.subCotonomas.map(liCotonoma(model, _, dispatch)): _*
           )
         )
       )
@@ -112,12 +112,12 @@ object NavCotonomas {
       className := optionalClasses(
         Seq(("selected", model.isSelectingCotonoma(cotonoma)))
       ),
-      key := cotonoma.id().uuid
+      key := cotonoma.id.uuid
     )(
       if (model.isSelectingCotonoma(cotonoma)) {
         cotonomaLabel(model, cotonoma)
       } else {
-        a(className := "cotonoma", title := cotonoma.name())(
+        a(className := "cotonoma", title := cotonoma.name)(
           cotonomaLabel(model, cotonoma)
         )
       }
@@ -125,7 +125,7 @@ object NavCotonomas {
 
   private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
     Fragment(
-      model.node(cotonoma.nodeId()).map(node_img(_)),
-      cotonoma.name()
+      model.node(cotonoma.nodeId).map(node_img(_)),
+      cotonoma.name
     )
 }

@@ -4,7 +4,7 @@ import scala.scalajs.js
 import cotoami.Id
 
 case class Coto(json: CotoJson) {
-  def id(): Id[Coto] = Id(this.json.uuid)
+  def id: Id[Coto] = Id(this.json.uuid)
 }
 
 @js.native

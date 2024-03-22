@@ -104,19 +104,19 @@ object Main {
       case DatabaseOpened(Right(json)) => {
         val info = DatabaseInfo(json)
         model
-          .modify(_.databaseFolder).setTo(Some(info.folder()))
-          .modify(_.lastChangeNumber).setTo(info.lastChangeNumber())
+          .modify(_.databaseFolder).setTo(Some(info.folder))
+          .modify(_.lastChangeNumber).setTo(info.lastChangeNumber)
           .modify(_.nodes).setTo(info.nodes)
-          .modify(_.localNodeId).setTo(Some(info.localNodeId()))
-          .modify(_.operatingNodeId).setTo(Some(info.localNodeId()))
-          .modify(_.parentNodeIds).setTo(info.parentNodeIds())
+          .modify(_.localNodeId).setTo(Some(info.localNodeId))
+          .modify(_.operatingNodeId).setTo(Some(info.localNodeId))
+          .modify(_.parentNodeIds).setTo(info.parentNodeIds)
           .modify(_.modalWelcome.processing).setTo(false)
           .modify(_.log).using(
             _.info("Database opened.", Some(info.debug()))
           ) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
-              DatabaseFolder.save(info.folder()) +: _
+              DatabaseFolder.save(info.folder) +: _
             )
         }
       }
@@ -220,16 +220,16 @@ object Main {
         )
       ),
       model
-        .currentNode()
+        .currentNode
         .map(node =>
           Fragment(
             section(className := "location")(
-              a(className := "node-home", title := node.name())(node_img(node))
+              a(className := "node-home", title := node.name)(node_img(node))
             ),
-            model.selectedCotonoma().map(cotonoma =>
+            model.selectedCotonoma.map(cotonoma =>
               Fragment(
                 material_symbol("chevron_right"),
-                h1(className := "current-cotonoma")(cotonoma.name())
+                h1(className := "current-cotonoma")(cotonoma.name)
               )
             )
           )
@@ -271,7 +271,7 @@ object Main {
   def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
     footer(
       div(className := "browser-nav")(
-        div(className := "path")(model.path())
+        div(className := "path")(model.path)
       ),
       model.log
         .lastEntry()

@@ -51,7 +51,7 @@ case class Model(
   def error(error: Error, message: String): Model =
     this.copy(log = this.log.error(message, Some(js.JSON.stringify(error))))
 
-  def path(): String = this.url.pathname + this.url.search + this.url.hash
+  def path: String = this.url.pathname + this.url.search + this.url.hash
 
   def clearSelection(): Model =
     this.copy(
@@ -68,15 +68,15 @@ case class Model(
   def node(id: Id[Node]): Option[Node] = this.nodes.get(id)
 
   def isSelectingNode(node: Node): Boolean =
-    this.selectedNodeId.map(_ == node.id()).getOrElse(false)
+    this.selectedNodeId.map(_ == node.id).getOrElse(false)
 
-  def localNode(): Option[Node] = this.localNodeId.flatMap(node(_))
+  def localNode: Option[Node] = this.localNodeId.flatMap(node(_))
 
-  def operatingNode(): Option[Node] = this.operatingNodeId.flatMap(node(_))
+  def operatingNode: Option[Node] = this.operatingNodeId.flatMap(node(_))
 
-  def selectedNode(): Option[Node] = this.selectedNodeId.flatMap(node(_))
+  def selectedNode: Option[Node] = this.selectedNodeId.flatMap(node(_))
 
-  def currentNode(): Option[Node] = selectedNode().orElse(this.operatingNode())
+  def currentNode: Option[Node] = this.selectedNode.orElse(this.operatingNode)
 
   //
   // Cotonoma
@@ -84,26 +84,26 @@ case class Model(
 
   def cotonoma(id: Id[Cotonoma]): Option[Cotonoma] = this.cotonomas.get(id)
 
-  def rootCotonomaId(): Option[Id[Cotonoma]] =
-    currentNode().flatMap(node => Option(node.rootCotonomaId()))
+  def rootCotonomaId: Option[Id[Cotonoma]] =
+    this.currentNode.flatMap(node => Option(node.rootCotonomaId))
 
   def isSelectingCotonoma(cotonoma: Cotonoma): Boolean =
-    this.selectedCotonomaId.map(_ == cotonoma.id()).getOrElse(false)
+    this.selectedCotonomaId.map(_ == cotonoma.id).getOrElse(false)
 
-  def selectedCotonoma(): Option[Cotonoma] =
+  def selectedCotonoma: Option[Cotonoma] =
     this.selectedCotonomaId.flatMap(cotonoma(_))
 
-  def superCotonomas(): Seq[Cotonoma] =
+  def superCotonomas: Seq[Cotonoma] =
     this.superCotonomaIds.map(this.cotonoma(_)).flatten
 
-  def subCotonomas(): Seq[Cotonoma] =
+  def subCotonomas: Seq[Cotonoma] =
     this.subCotonomaIds.map(this.cotonoma(_)).flatten
 
-  def currentCotonomaId(): Option[Id[Cotonoma]] =
-    this.selectedCotonomaId.orElse(currentNode().map(_.rootCotonomaId()))
+  def currentCotonomaId: Option[Id[Cotonoma]] =
+    this.selectedCotonomaId.orElse(this.currentNode.map(_.rootCotonomaId))
 
-  def recentCotonomas(): Seq[Cotonoma] = {
-    val rootCotonomaId = this.rootCotonomaId()
+  def recentCotonomas: Seq[Cotonoma] = {
+    val rootCotonomaId = this.rootCotonomaId
     this.recentCotonomaIds.filter(Some(_) != rootCotonomaId).map(
       this.cotonoma(_)
     ).flatten

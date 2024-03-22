@@ -35,7 +35,7 @@ package object components {
   def node_img(node: Node): ReactElement =
     img(
       className := "node-icon",
-      alt := node.name(),
-      src := s"data:image/png;base64,${node.icon()}"
+      alt := node.name,
+      src := s"data:image/png;base64,${node.icon}"
     )
 }

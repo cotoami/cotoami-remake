@@ -54,7 +54,7 @@ object NavNodes {
         material_symbol("add")
       ),
       ul(className := "nodes")(
-        model.localNode().map(node => li()(node_button(model, node)))
+        model.localNode.map(node => li()(node_button(model, node)))
       )
     )
 
@@ -68,7 +68,7 @@ object NavNodes {
           ("selected", model.isSelectingNode(node))
         )
       ),
-      data - "tooltip" := node.name(),
+      data - "tooltip" := node.name,
       data - "placement" := "right"
     )(node_img(node))
 }

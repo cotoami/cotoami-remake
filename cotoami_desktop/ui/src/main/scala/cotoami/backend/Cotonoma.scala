@@ -4,9 +4,9 @@ import scala.scalajs.js
 import cotoami.{Id, Validation}
 
 case class Cotonoma(json: CotonomaJson) {
-  def id(): Id[Cotonoma] = Id(this.json.uuid)
-  def name(): String = this.json.name
-  def nodeId(): Id[Node] = Id(this.json.node_id)
+  def id: Id[Cotonoma] = Id(this.json.uuid)
+  def name: String = this.json.name
+  def nodeId: Id[Node] = Id(this.json.node_id)
 }
 
 object Cotonoma {
