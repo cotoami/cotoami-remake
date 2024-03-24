@@ -5,8 +5,10 @@ import cotoami.{Id, Validation}
 
 case class Cotonoma(json: CotonomaJson) {
   def id: Id[Cotonoma] = Id(this.json.uuid)
-  def name: String = this.json.name
   def nodeId: Id[Node] = Id(this.json.node_id)
+  def cotoId: Id[Coto] = Id(this.json.coto_id)
+  def name: String = this.json.name
+  def posts: Int = this.json.posts
 }
 
 object Cotonoma {
@@ -32,5 +34,7 @@ trait CotonomaJson extends js.Object {
   val node_id: String = js.native
   val coto_id: String = js.native
   val name: String = js.native
+  val created_at: String = js.native
+  val updated_at: String = js.native
   val posts: Int = js.native
 }
