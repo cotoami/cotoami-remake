@@ -17,7 +17,12 @@ nav.cotonomas {
 
   section.cotonomas {
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
+
+    // SimpleBar div
+    >div {
+      height: 100%;
+    }
 
     h2 {
       margin-left: 8px;
@@ -27,7 +32,7 @@ nav.cotonomas {
       color: var(--muted-color);
     }
 
-    >ul {
+    section>ul {
       margin-left: 3px;
     }
 

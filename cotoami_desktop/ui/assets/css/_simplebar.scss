@@ -1,0 +1,5 @@
+div.app {
+  .simplebar-scrollbar::before {
+    background-color: var(--scrollbar-color);
+  }
+}

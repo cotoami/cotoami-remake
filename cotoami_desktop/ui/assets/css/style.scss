@@ -21,6 +21,7 @@
 @use "./dialog-welcome";
 
 @use "./split-pane";
+@use "./_simplebar";
 
 :root {
   --header-height: 36px;
