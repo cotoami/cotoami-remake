@@ -40,6 +40,7 @@ lazy val cotoami = project
       "org.typelevel" %%% "cats-effect" % "3.4.5",
       "com.softwaremill.quicklens" %%% "quicklens" % "1.9.7",
       "tech.sparse" %%% "trail" % "0.3.1",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
       "org.scalatest" %%% "scalatest" % "3.2.9" % Test
     )
   )

@@ -2,6 +2,7 @@ package cotoami
 
 import scala.scalajs.js
 import slinky.web.html.max
+import java.time._
 
 import cotoami.{Log, Validation}
 
@@ -41,5 +42,11 @@ package object backend {
     val page_size: Double = js.native
     val page_index: Double = js.native
     val total_rows: Double = js.native
+  }
+
+  def parseJsonDateTime(s: String): LocalDateTime = {
+    val instant = Instant.parse(s)
+    val zone = ZoneId.systemDefault()
+    LocalDateTime.ofInstant(instant, zone)
   }
 }
