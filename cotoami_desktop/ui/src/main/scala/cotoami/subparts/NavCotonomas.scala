@@ -10,7 +10,7 @@ import cotoami.components.{
   node_img,
   optionalClasses,
   paneToggle,
-  SimpleBar,
+  ScrollArea,
   SplitPane
 }
 import cotoami.backend.{Cotonoma, Node}
@@ -62,7 +62,11 @@ object NavCotonomas {
         }
       ),
       section(className := "cotonomas body")(
-        SimpleBar(autoHide = true)(
+        ScrollArea(
+          autoHide = true,
+          bottomThreshold = None,
+          onScrollToBottom = () => println("onScrollToBottom")
+        )(
           model.selectedCotonoma.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
             sectionRecent(model, recentCotonomas, dispatch)
