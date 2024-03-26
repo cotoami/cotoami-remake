@@ -13,10 +13,7 @@ case class Cotonomas(
     subIds: Seq[Id[Cotonoma]] = Seq.empty,
 
     // Recent
-    recentIds: Seq[Id[Cotonoma]] = Seq.empty,
-    recentPageIndex: Double = 0,
-    recentPageTotal: Double = 0,
-    recentTotal: Double = 0
+    recentIds: PaginatedIds[Cotonoma] = PaginatedIds()
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
@@ -32,15 +29,15 @@ case class Cotonomas(
   def clearSelection(): Cotonomas =
     this.copy(selectedId = None, superIds = Seq.empty, subIds = Seq.empty)
 
-  def recent: Seq[Cotonoma] = this.recentIds.map(this.get(_)).flatten
+  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
 
   def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =
     this.copy(
       map = this.map ++ Cotonoma.toMap(page.rows),
-      recentIds = this.recentIds ++ Cotonoma.toIds(page.rows),
-      recentPageIndex = page.page_index,
-      recentPageTotal = Paginated.totalPages(page),
-      recentTotal = page.total_rows
+      recentIds = this.recentIds.addPage(
+        page,
+        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+      )
     )
 }
 
@@ -63,9 +60,6 @@ object Cotonoma {
       Validation.length(name, 1, NameMaxLength)
     ).flatten
   }
-
-  def toIds(jsons: js.Array[CotonomaJson]): Seq[Id[Cotonoma]] =
-    jsons.map(json => Id[Cotonoma](json.uuid)).toSeq
 
   def toMap(jsons: js.Array[CotonomaJson]): Map[Id[Cotonoma], Cotonoma] =
     jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap

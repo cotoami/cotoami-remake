@@ -163,18 +163,23 @@ object Main {
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
 
-      case CotonomasFetched(Right(page)) =>
+      case CotonomasFetched(Right(page)) => {
+        val cotonomas = model.cotonomas.addPageOfRecent(page)
+        val pageIndex = cotonomas.recentIds.pageIndex
+        val totalPages = cotonomas.recentIds.totalPages
+        val total = cotonomas.recentIds.total
         (
           model
-            .modify(_.cotonomas).using(_.addPageOfRecent(page))
+            .modify(_.cotonomas).setTo(cotonomas)
             .modify(_.log).using(
               _.info(
-                s"Recent cotonomas (page ${page.page_index} of ${Paginated.totalPages(page)}) fetched.",
-                None
+                "Recent cotonoma fetched.",
+                Some(s"page: ${pageIndex} of ${totalPages}, total: ${total}")
               )
             ),
           Seq.empty
         )
+      }
 
       case CotonomasFetched(Left(e)) =>
         (model.error(e, "Couldn't fetch cotonomas."), Seq.empty)
