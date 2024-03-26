@@ -17,7 +17,14 @@ import cats.effect.IO
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
-import cotoami.backend.{Commands, Cotonoma, DatabaseInfo, LogEvent, SystemInfo}
+import cotoami.backend.{
+  Commands,
+  Cotonoma,
+  DatabaseInfo,
+  LogEvent,
+  Paginated,
+  SystemInfo
+}
 
 object Main {
 
@@ -156,15 +163,15 @@ object Main {
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
 
-      case CotonomasFetched(Right(paginated)) =>
+      case CotonomasFetched(Right(page)) =>
         (
           model
-            .modify(_.cotonomas).using(
-              _ ++ Cotonoma.toMap(paginated.rows)
-            )
-            .modify(_.recentCotonomaIds).setTo(Cotonoma.toIds(paginated.rows))
+            .modify(_.cotonomas).using(_.addPageOfRecent(page))
             .modify(_.log).using(
-              _.info(s"${paginated.rows.size} recent cotonomas fetched.", None)
+              _.info(
+                s"Recent cotonomas (page ${page.page_index} of ${Paginated.totalPages(page)}) fetched.",
+                None
+              )
             ),
           Seq.empty
         )
@@ -226,7 +233,7 @@ object Main {
             section(className := "location")(
               a(className := "node-home", title := node.name)(node_img(node))
             ),
-            model.selectedCotonoma.map(cotonoma =>
+            model.cotonomas.selected.map(cotonoma =>
               Fragment(
                 material_symbol("chevron_right"),
                 h1(className := "current-cotonoma")(cotonoma.name)

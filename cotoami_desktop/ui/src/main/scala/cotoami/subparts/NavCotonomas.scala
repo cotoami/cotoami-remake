@@ -43,10 +43,10 @@ object NavCotonomas {
       currentNode: Node,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val recentCotonomas = model.recentCotonomas
+    val recentCotonomas = model.recentCotonomasWithoutRoot
     nav(className := "cotonomas header-and-body")(
       header()(
-        if (model.selectedCotonomaId.isEmpty) {
+        if (model.cotonomas.selectedId.isEmpty) {
           div(className := "cotonoma home selected")(
             material_symbol("home"),
             currentNode.name
@@ -67,7 +67,7 @@ object NavCotonomas {
           bottomThreshold = None,
           onScrollToBottom = () => println("onScrollToBottom")
         )(
-          model.selectedCotonoma.map(sectionCurrent(model, _, dispatch)),
+          model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
             sectionRecent(model, recentCotonomas, dispatch)
           )
@@ -86,7 +86,9 @@ object NavCotonomas {
       ul()(
         li()(
           ul(className := "super-cotonomas")(
-            model.superCotonomas.map(liCotonoma(model, _, dispatch)): _*
+            model.cotonomas.superOfSelected.map(
+              liCotonoma(model, _, dispatch)
+            ): _*
           )
         ),
         li(className := "current-cotonoma selected")(
@@ -94,7 +96,9 @@ object NavCotonomas {
         ),
         li()(
           ul(className := "sub-cotonomas")(
-            model.subCotonomas.map(liCotonoma(model, _, dispatch)): _*
+            model.cotonomas.subOfSelected.map(
+              liCotonoma(model, _, dispatch)
+            ): _*
           )
         )
       )
@@ -117,11 +121,11 @@ object NavCotonomas {
   ): ReactElement =
     li(
       className := optionalClasses(
-        Seq(("selected", model.isSelectingCotonoma(cotonoma)))
+        Seq(("selected", model.cotonomas.isSelecting(cotonoma)))
       ),
       key := cotonoma.id.uuid
     )(
-      if (model.isSelectingCotonoma(cotonoma)) {
+      if (model.cotonomas.isSelecting(cotonoma)) {
         cotonomaLabel(model, cotonoma)
       } else {
         a(className := "cotonoma", title := cotonoma.name)(

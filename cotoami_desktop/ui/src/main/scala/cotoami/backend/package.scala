@@ -44,6 +44,11 @@ package object backend {
     val total_rows: Double = js.native
   }
 
+  object Paginated {
+    def totalPages[T](p: Paginated[T]): Double =
+      (p.total_rows / p.page_size).ceil
+  }
+
   def parseJsonDateTime(s: String): LocalDateTime = {
     val instant = Instant.parse(s)
     val zone = ZoneId.systemDefault()

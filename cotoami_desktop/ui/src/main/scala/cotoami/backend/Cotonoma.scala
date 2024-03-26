@@ -4,6 +4,46 @@ import scala.scalajs.js
 import java.time.LocalDateTime
 import cotoami.{Id, Validation}
 
+case class Cotonomas(
+    map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
+
+    // The currently selected cotonoma and its super/sub cotonomas
+    selectedId: Option[Id[Cotonoma]] = None,
+    superIds: Seq[Id[Cotonoma]] = Seq.empty,
+    subIds: Seq[Id[Cotonoma]] = Seq.empty,
+
+    // Recent
+    recentIds: Seq[Id[Cotonoma]] = Seq.empty,
+    recentPageIndex: Double = 0,
+    recentPageTotal: Double = 0,
+    recentTotal: Double = 0
+) {
+  def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
+
+  def isSelecting(cotonoma: Cotonoma): Boolean =
+    this.selectedId.map(_ == cotonoma.id).getOrElse(false)
+
+  def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
+
+  def superOfSelected: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
+
+  def subOfSelected: Seq[Cotonoma] = this.subIds.map(this.get(_)).flatten
+
+  def clearSelection(): Cotonomas =
+    this.copy(selectedId = None, superIds = Seq.empty, subIds = Seq.empty)
+
+  def recent: Seq[Cotonoma] = this.recentIds.map(this.get(_)).flatten
+
+  def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =
+    this.copy(
+      map = this.map ++ Cotonoma.toMap(page.rows),
+      recentIds = this.recentIds ++ Cotonoma.toIds(page.rows),
+      recentPageIndex = page.page_index,
+      recentPageTotal = Paginated.totalPages(page),
+      recentTotal = page.total_rows
+    )
+}
+
 case class Cotonoma(json: CotonomaJson) {
   def id: Id[Cotonoma] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)

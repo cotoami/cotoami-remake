@@ -14,7 +14,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
 import cotoami.Id
-import cotoami.backend.{Cotonoma, Error, Node, SystemInfo}
+import cotoami.backend.{Cotonoma, Cotonomas, Error, Node, SystemInfo}
 import cotoami.subparts.ModalWelcome
 
 case class Model(
@@ -39,11 +39,7 @@ case class Model(
     parentNodeIds: Seq[Id[Node]] = Seq.empty,
 
     // Cotonoma
-    cotonomas: Map[Id[Cotonoma], Cotonoma] = Map.empty,
-    selectedCotonomaId: Option[Id[Cotonoma]] = None,
-    superCotonomaIds: Seq[Id[Cotonoma]] = Seq.empty,
-    subCotonomaIds: Seq[Id[Cotonoma]] = Seq.empty,
-    recentCotonomaIds: Seq[Id[Cotonoma]] = Seq.empty,
+    cotonomas: Cotonomas = Cotonomas(),
 
     // WelcomeModal
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
@@ -56,9 +52,7 @@ case class Model(
   def clearSelection(): Model =
     this.copy(
       selectedNodeId = None,
-      selectedCotonomaId = None,
-      superCotonomaIds = Seq.empty,
-      subCotonomaIds = Seq.empty
+      cotonomas = this.cotonomas.clearSelection()
     )
 
   //
@@ -82,31 +76,15 @@ case class Model(
   // Cotonoma
   //
 
-  def cotonoma(id: Id[Cotonoma]): Option[Cotonoma] = this.cotonomas.get(id)
-
   def rootCotonomaId: Option[Id[Cotonoma]] =
     this.currentNode.flatMap(node => Option(node.rootCotonomaId))
 
-  def isSelectingCotonoma(cotonoma: Cotonoma): Boolean =
-    this.selectedCotonomaId.map(_ == cotonoma.id).getOrElse(false)
-
-  def selectedCotonoma: Option[Cotonoma] =
-    this.selectedCotonomaId.flatMap(cotonoma(_))
-
-  def superCotonomas: Seq[Cotonoma] =
-    this.superCotonomaIds.map(this.cotonoma(_)).flatten
-
-  def subCotonomas: Seq[Cotonoma] =
-    this.subCotonomaIds.map(this.cotonoma(_)).flatten
-
   def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.selectedCotonomaId.orElse(this.currentNode.map(_.rootCotonomaId))
+    this.cotonomas.selectedId.orElse(this.currentNode.map(_.rootCotonomaId))
 
-  def recentCotonomas: Seq[Cotonoma] = {
+  def recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootCotonomaId = this.rootCotonomaId
-    this.recentCotonomaIds.filter(Some(_) != rootCotonomaId).map(
-      this.cotonoma(_)
-    ).flatten
+    this.cotonomas.recent.filter(c => Some(c.id) != rootCotonomaId)
   }
 }
 
