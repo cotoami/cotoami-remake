@@ -70,7 +70,11 @@ object NavCotonomas {
           model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
             sectionRecent(model, recentCotonomas, dispatch)
-          )
+          ),
+          div(
+            className := "more",
+            aria - "busy" := model.cotonomasLoading.toString()
+          )()
         )
       )
     )

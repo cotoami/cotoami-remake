@@ -40,6 +40,7 @@ case class Model(
 
     // Cotonoma
     cotonomas: Cotonomas = Cotonomas(),
+    cotonomasLoading: Boolean = false,
 
     // WelcomeModal
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
