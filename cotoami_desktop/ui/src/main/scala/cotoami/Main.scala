@@ -178,9 +178,6 @@ object Main {
 
       case CotonomasFetched(Right(page)) => {
         val cotonomas = model.cotonomas.addPageOfRecent(page)
-        val pageIndex = cotonomas.recentIds.pageIndex
-        val totalPages = cotonomas.recentIds.totalPages
-        val total = cotonomas.recentIds.total
         (
           model
             .modify(_.cotonomas).setTo(cotonomas)
@@ -188,7 +185,7 @@ object Main {
             .modify(_.log).using(
               _.info(
                 "Recent cotonoma fetched.",
-                Some(s"page: ${pageIndex} of ${totalPages}, total: ${total}")
+                Some(cotonomas.recentIds.debug)
               )
             ),
           Seq.empty
@@ -196,7 +193,12 @@ object Main {
       }
 
       case CotonomasFetched(Left(e)) =>
-        (model.error(e, "Couldn't fetch cotonomas."), Seq.empty)
+        (
+          model
+            .modify(_.cotonomasLoading).setTo(false)
+            .error(e, "Couldn't fetch cotonomas."),
+          Seq.empty
+        )
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
