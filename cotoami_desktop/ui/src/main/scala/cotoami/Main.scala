@@ -23,6 +23,7 @@ import cotoami.backend.{
   DatabaseInfo,
   LogEvent,
   Node,
+  Nodes,
   Paginated,
   SystemInfo
 }
@@ -114,10 +115,7 @@ object Main {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.lastChangeNumber).setTo(info.lastChangeNumber)
-          .modify(_.nodes).setTo(info.nodes)
-          .modify(_.localNodeId).setTo(Some(info.localNodeId))
-          .modify(_.operatingNodeId).setTo(Some(info.localNodeId))
-          .modify(_.parentNodeIds).setTo(info.parentNodeIds)
+          .modify(_.nodes).setTo(Nodes(info))
           .modify(_.modalWelcome.processing).setTo(false)
           .modify(_.log).using(
             _.info("Database opened.", Some(info.debug))
@@ -171,7 +169,7 @@ object Main {
           model.cotonomas.recentIds.nextPageIndex.map(i =>
             (
               model.copy(cotonomasLoading = true),
-              Seq(fetchCotonomas(model.selectedNodeId, i))
+              Seq(fetchCotonomas(model.nodes.selectedId, i))
             )
           ).getOrElse((model, Seq.empty))
         }
@@ -249,7 +247,8 @@ object Main {
         )
       ),
       model
-        .currentNode
+        .nodes
+        .current
         .map(node =>
           Fragment(
             section(className := "location")(
@@ -318,7 +317,7 @@ object Main {
     )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.localNodeId.isEmpty) {
+    if (model.nodes.local.isEmpty) {
       model.systemInfo.map(info =>
         subparts.ModalWelcome
           .view(

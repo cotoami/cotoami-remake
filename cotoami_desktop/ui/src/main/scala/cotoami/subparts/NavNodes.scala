@@ -38,7 +38,7 @@ object NavNodes {
             ("all-nodes", true),
             ("default", true),
             ("selectable", true),
-            ("selected", model.selectedNodeId.isEmpty)
+            ("selected", model.nodes.selected.isEmpty)
           )
         ),
         data - "tooltip" := "All nodes",
@@ -54,7 +54,7 @@ object NavNodes {
         material_symbol("add")
       ),
       ul(className := "nodes")(
-        model.localNode.map(node => li()(node_button(model, node)))
+        model.nodes.local.map(node => li()(node_button(model, node)))
       )
     )
 
@@ -65,7 +65,7 @@ object NavNodes {
           ("node", true),
           ("default", true),
           ("selectable", true),
-          ("selected", model.isSelectingNode(node))
+          ("selected", model.nodes.isSelecting(node))
         )
       ),
       data - "tooltip" := node.name,

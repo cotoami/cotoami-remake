@@ -13,7 +13,7 @@ import com.softwaremill.quicklens._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Cotonoma, Cotonomas, Error, Node, SystemInfo}
+import cotoami.backend.{Cotonoma, Cotonomas, Error, Node, Nodes, SystemInfo}
 import cotoami.subparts.ModalWelcome
 
 case class Model(
@@ -30,14 +30,8 @@ case class Model(
     databaseFolder: Option[String] = None,
     lastChangeNumber: Double = 0,
 
-    // Node
-    nodes: Map[Id[Node], Node] = Map.empty,
-    localNodeId: Option[Id[Node]] = None,
-    operatingNodeId: Option[Id[Node]] = None,
-    selectedNodeId: Option[Id[Node]] = None,
-    parentNodeIds: Seq[Id[Node]] = Seq.empty,
-
-    // Cotonoma
+    // Entities
+    nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotonomasLoading: Boolean = false,
 
@@ -51,36 +45,15 @@ case class Model(
 
   def clearSelection(): Model =
     this.copy(
-      selectedNodeId = None,
+      nodes = this.nodes.clearSelection(),
       cotonomas = Cotonomas()
     )
 
-  //
-  // Node
-  //
-
-  def node(id: Id[Node]): Option[Node] = this.nodes.get(id)
-
-  def isSelectingNode(node: Node): Boolean =
-    this.selectedNodeId.map(_ == node.id).getOrElse(false)
-
-  def localNode: Option[Node] = this.localNodeId.flatMap(node(_))
-
-  def operatingNode: Option[Node] = this.operatingNodeId.flatMap(node(_))
-
-  def selectedNode: Option[Node] = this.selectedNodeId.flatMap(node(_))
-
-  def currentNode: Option[Node] = this.selectedNode.orElse(this.operatingNode)
-
-  //
-  // Cotonoma
-  //
-
   def rootCotonomaId: Option[Id[Cotonoma]] =
-    this.currentNode.flatMap(node => Option(node.rootCotonomaId))
+    this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
 
   def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.cotonomas.selectedId.orElse(this.currentNode.map(_.rootCotonomaId))
+    this.cotonomas.selectedId.orElse(this.nodes.current.map(_.rootCotonomaId))
 
   def recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootCotonomaId = this.rootCotonomaId

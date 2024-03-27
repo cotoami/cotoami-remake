@@ -4,6 +4,41 @@ import scala.scalajs.js
 import java.time.LocalDateTime
 import cotoami.{Id, Validation}
 
+case class Nodes(
+    map: Map[Id[Node], Node] = Map.empty,
+    localId: Option[Id[Node]] = None,
+    operatingId: Option[Id[Node]] = None,
+    parentIds: Seq[Id[Node]] = Seq.empty,
+    selectedId: Option[Id[Node]] = None
+) {
+  def get(id: Id[Node]): Option[Node] = this.map.get(id)
+
+  def local: Option[Node] = this.localId.flatMap(this.get(_))
+
+  def operating: Option[Node] = this.operatingId.flatMap(this.get(_))
+
+  def parents: Seq[Node] = this.parentIds.map(this.get(_)).flatten
+
+  def isSelecting(node: Node): Boolean =
+    this.selectedId.map(_ == node.id).getOrElse(false)
+
+  def selected: Option[Node] = this.selectedId.flatMap(this.get(_))
+
+  def clearSelection(): Nodes = this.copy(selectedId = None)
+
+  def current: Option[Node] = this.selected.orElse(this.operating)
+}
+
+object Nodes {
+  def apply(info: DatabaseInfo) =
+    new Nodes(
+      map = info.nodes,
+      localId = Some(info.localNodeId),
+      operatingId = Some(info.localNodeId),
+      parentIds = info.parentNodeIds
+    )
+}
+
 case class Node(json: NodeJson) {
   def id: Id[Node] = Id(this.json.uuid)
   def icon: String = this.json.icon

@@ -35,7 +35,7 @@ object NavCotonomas {
       )
     )(
       paneToggle(PaneName, dispatch),
-      model.currentNode.map(navCotonomas(model, _, dispatch))
+      model.nodes.current.map(navCotonomas(model, _, dispatch))
     )
 
   private def navCotonomas(
@@ -140,7 +140,7 @@ object NavCotonomas {
 
   private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
     Fragment(
-      model.node(cotonoma.nodeId).map(node_img(_)),
+      model.nodes.get(cotonoma.nodeId).map(node_img(_)),
       cotonoma.name
     )
 }
