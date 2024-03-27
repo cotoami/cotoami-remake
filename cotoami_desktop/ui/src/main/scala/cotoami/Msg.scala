@@ -40,6 +40,7 @@ case class ResizePane(name: String, newSize: Int) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
 
 // Commands
+case object FetchMoreCotonomas extends Msg
 case class CotonomasFetched(
     result: Either[backend.Error, Paginated[CotonomaJson]]
 ) extends Msg

@@ -12,7 +12,7 @@ case class Node(json: NodeJson) {
   def version: Int = this.json.version
   lazy val createdAt: LocalDateTime = parseJsonDateTime(this.json.created_at)
 
-  def debug(): String =
+  def debug: String =
     s"id: ${this.id}, name: ${this.name}, version: ${this.version}"
 }
 

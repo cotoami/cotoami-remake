@@ -18,12 +18,12 @@ case class DatabaseInfo(json: DatabaseInfoJson) {
   lazy val parentNodeIds: Seq[Id[Node]] =
     this.json.parent_node_ids.map(Id[Node](_)).toSeq
 
-  def debug(): String = {
+  def debug: String = {
     val s = new StringBuilder
     s ++= s"folder: ${this.folder}"
     s ++= s", lastChangeNumber: ${this.lastChangeNumber}"
     s ++= s", nodes: ${this.nodes.size}"
-    s ++= s", localNode: {${this.localNode.map(_.debug())}}"
+    s ++= s", localNode: {${this.localNode.map(_.debug)}}"
     s ++= s", parentNodes: ${this.parentNodeIds.size}"
     s.result()
   }

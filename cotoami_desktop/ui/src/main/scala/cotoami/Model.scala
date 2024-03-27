@@ -13,7 +13,6 @@ import com.softwaremill.quicklens._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.Id
 import cotoami.backend.{Cotonoma, Cotonomas, Error, Node, SystemInfo}
 import cotoami.subparts.ModalWelcome
 
@@ -40,6 +39,7 @@ case class Model(
 
     // Cotonoma
     cotonomas: Cotonomas = Cotonomas(),
+    cotonomasLoading: Boolean = false,
 
     // WelcomeModal
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
@@ -52,7 +52,7 @@ case class Model(
   def clearSelection(): Model =
     this.copy(
       selectedNodeId = None,
-      cotonomas = this.cotonomas.clearSelection()
+      cotonomas = Cotonomas()
     )
 
   //

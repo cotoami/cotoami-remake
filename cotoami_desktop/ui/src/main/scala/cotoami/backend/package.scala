@@ -71,6 +71,14 @@ package object backend {
     def totalPages: Double =
       if (this.pageSize == 0) 0
       else (this.total / this.pageSize).ceil
+
+    def debug: String = {
+      val s = new StringBuilder
+      s ++= s"local: ${this.ids.size}"
+      s ++= s", page: ${this.pageIndex} of ${this.totalPages}"
+      s ++= s", total: ${this.total}"
+      s.result()
+    }
   }
 
   def parseJsonDateTime(s: String): LocalDateTime = {

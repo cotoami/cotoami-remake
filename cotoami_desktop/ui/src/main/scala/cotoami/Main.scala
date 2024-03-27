@@ -22,6 +22,7 @@ import cotoami.backend.{
   Cotonoma,
   DatabaseInfo,
   LogEvent,
+  Node,
   Paginated,
   SystemInfo
 }
@@ -119,7 +120,7 @@ object Main {
           .modify(_.parentNodeIds).setTo(info.parentNodeIds)
           .modify(_.modalWelcome.processing).setTo(false)
           .modify(_.log).using(
-            _.info("Database opened.", Some(info.debug()))
+            _.info("Database opened.", Some(info.debug))
           ) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
@@ -163,18 +164,28 @@ object Main {
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
 
+      case FetchMoreCotonomas =>
+        if (model.cotonomasLoading) {
+          (model, Seq.empty)
+        } else {
+          model.cotonomas.recentIds.nextPageIndex.map(i =>
+            (
+              model.copy(cotonomasLoading = true),
+              Seq(fetchCotonomas(model.selectedNodeId, i))
+            )
+          ).getOrElse((model, Seq.empty))
+        }
+
       case CotonomasFetched(Right(page)) => {
         val cotonomas = model.cotonomas.addPageOfRecent(page)
-        val pageIndex = cotonomas.recentIds.pageIndex
-        val totalPages = cotonomas.recentIds.totalPages
-        val total = cotonomas.recentIds.total
         (
           model
             .modify(_.cotonomas).setTo(cotonomas)
+            .modify(_.cotonomasLoading).setTo(false)
             .modify(_.log).using(
               _.info(
                 "Recent cotonoma fetched.",
-                Some(s"page: ${pageIndex} of ${totalPages}, total: ${total}")
+                Some(cotonomas.recentIds.debug)
               )
             ),
           Seq.empty
@@ -182,7 +193,12 @@ object Main {
       }
 
       case CotonomasFetched(Left(e)) =>
-        (model.error(e, "Couldn't fetch cotonomas."), Seq.empty)
+        (
+          model
+            .modify(_.cotonomasLoading).setTo(false)
+            .error(e, "Couldn't fetch cotonomas."),
+          Seq.empty
+        )
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
@@ -190,13 +206,14 @@ object Main {
       case Route.index(_) =>
         (
           model.clearSelection(),
-          Seq(
-            node_command(Commands.RecentCotonomas(None)).map(
-              CotonomasFetched(_)
-            )
-          )
+          Seq(fetchCotonomas(None, 0))
         )
     }
+
+  def fetchCotonomas(nodeId: Option[Id[Node]], pageIndex: Double): Cmd[Msg] =
+    node_command(Commands.RecentCotonomas(nodeId, pageIndex)).map(
+      CotonomasFetched(_)
+    )
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
