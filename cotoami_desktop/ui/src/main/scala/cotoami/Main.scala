@@ -120,7 +120,7 @@ object Main {
           .modify(_.parentNodeIds).setTo(info.parentNodeIds)
           .modify(_.modalWelcome.processing).setTo(false)
           .modify(_.log).using(
-            _.info("Database opened.", Some(info.debug()))
+            _.info("Database opened.", Some(info.debug))
           ) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
