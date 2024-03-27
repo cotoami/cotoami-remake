@@ -26,9 +26,6 @@ case class Cotonomas(
 
   def subOfSelected: Seq[Cotonoma] = this.subIds.map(this.get(_)).flatten
 
-  def clearSelection(): Cotonomas =
-    this.copy(selectedId = None, superIds = Seq.empty, subIds = Seq.empty)
-
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
 
   def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =

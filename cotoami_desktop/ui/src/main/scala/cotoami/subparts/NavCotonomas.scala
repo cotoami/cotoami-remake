@@ -65,7 +65,7 @@ object NavCotonomas {
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => println("onScrollToBottom")
+          onScrollToBottom = () => dispatch(cotoami.FetchMoreCotonomas)
         )(
           model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
