@@ -23,13 +23,11 @@ package object subparts {
         .nodes
         .current
         .map(node =>
-          Fragment(
-            section(className := "location")(
-              a(className := "node-home", title := node.name)(node_img(node))
-            ),
+          section(className := "location")(
+            a(className := "node-home", title := node.name)(node_img(node)),
             model.cotonomas.selected.map(cotonoma =>
               Fragment(
-                material_symbol("chevron_right"),
+                material_symbol("chevron_right", "arrow"),
                 h1(className := "current-cotonoma")(cotonoma.name)
               )
             )

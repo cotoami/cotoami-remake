@@ -44,7 +44,7 @@ case class Model(
 
   def clearSelection(): Model =
     this.copy(
-      nodes = this.nodes.clearSelection(),
+      nodes = this.nodes.deselect(),
       cotonomas = Cotonomas()
     )
 

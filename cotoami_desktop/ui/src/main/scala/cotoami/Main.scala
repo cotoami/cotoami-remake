@@ -150,9 +150,29 @@ object Main {
       case SelectNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
-      case DeselectNode =>
-        // TODO: add a case where a cotonoma is selected.
-        (model, Seq(Browser.pushUrl(Route.index.url(()))))
+      case DeselectNode => {
+        val url = model.cotonomas.selected match {
+          case None           => Route.index.url(())
+          case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
+        }
+        (model, Seq(Browser.pushUrl(url)))
+      }
+
+      case SelectCotonoma(id) => {
+        val url = model.nodes.selected match {
+          case None       => Route.cotonoma.url(id)
+          case Some(node) => Route.cotonomaInNode.url((node.id, id))
+        }
+        (model, Seq(Browser.pushUrl(url)))
+      }
+
+      case DeselectCotonoma => {
+        val url = model.nodes.selected match {
+          case None       => Route.index.url(())
+          case Some(node) => Route.node.url(node.id)
+        }
+        (model, Seq(Browser.pushUrl(url)))
+      }
 
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
@@ -208,13 +228,67 @@ object Main {
         )
 
       case Route.node(id) =>
-        (
-          model
-            .clearSelection()
-            .modify(_.nodes).using(_.select(id))
-            .modify(_.cotonomasLoading).setTo(true),
-          Seq(fetchCotonomas(Some(id), 0))
-        )
+        if (model.nodes.contains(id)) {
+          (
+            model
+              .clearSelection()
+              .modify(_.nodes).using(_.select(id))
+              .modify(_.cotonomasLoading).setTo(true),
+            Seq(fetchCotonomas(Some(id), 0))
+          )
+        } else {
+          (
+            model.modify(_.log).using(_.warn(s"Node [${id}] not found.", None)),
+            Seq(Browser.pushUrl(Route.index.url(())))
+          )
+        }
+
+      case Route.cotonoma(id) =>
+        if (model.cotonomas.contains(id)) {
+          (
+            model
+              .modify(_.nodes).using(_.deselect())
+              .modify(_.cotonomas).using(_.select(id)),
+            Seq()
+          )
+        } else {
+          (
+            model.modify(_.log).using(
+              _.warn(s"Cotonoma [${id}] not found.", None)
+            ),
+            Seq(Browser.pushUrl(Route.index.url(())))
+          )
+        }
+
+      case Route.cotonomaInNode((nodeId, cotonomaId)) =>
+        model.cotonomas.get(cotonomaId) match {
+          case Some(cotonoma) =>
+            if (cotonoma.nodeId == nodeId) {
+              (
+                model
+                  .modify(_.nodes).using(_.select(nodeId))
+                  .modify(_.cotonomas).using(_.select(cotonomaId)),
+                Seq()
+              )
+            } else {
+              (
+                model,
+                Seq(
+                  Browser.pushUrl(
+                    Route.cotonomaInNode.url((cotonoma.nodeId, cotonomaId))
+                  )
+                )
+              )
+            }
+
+          case None =>
+            (
+              model.modify(_.log).using(
+                _.warn(s"Cotonoma [${cotonomaId}] not found.", None)
+              ),
+              Seq(Browser.pushUrl(Route.index.url(())))
+            )
+        }
 
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))

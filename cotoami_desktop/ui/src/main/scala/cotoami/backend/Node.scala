@@ -13,20 +13,26 @@ case class Nodes(
 ) {
   def get(id: Id[Node]): Option[Node] = this.map.get(id)
 
+  def contains(id: Id[Node]): Boolean = this.map.contains(id)
+
   def local: Option[Node] = this.localId.flatMap(this.get(_))
 
   def operating: Option[Node] = this.operatingId.flatMap(this.get(_))
 
   def parents: Seq[Node] = this.parentIds.map(this.get(_)).flatten
 
-  def select(id: Id[Node]): Nodes = this.copy(selectedId = Some(id))
+  def select(id: Id[Node]): Nodes =
+    if (this.contains(id))
+      this.copy(selectedId = Some(id))
+    else
+      this
 
-  def isSelecting(node: Node): Boolean =
-    this.selectedId.map(_ == node.id).getOrElse(false)
+  def deselect(): Nodes = this.copy(selectedId = None)
+
+  def isSelecting(id: Id[Node]): Boolean =
+    this.selectedId.map(_ == id).getOrElse(false)
 
   def selected: Option[Node] = this.selectedId.flatMap(this.get(_))
-
-  def clearSelection(): Nodes = this.copy(selectedId = None)
 
   def current: Option[Node] = this.selected.orElse(this.operating)
 }

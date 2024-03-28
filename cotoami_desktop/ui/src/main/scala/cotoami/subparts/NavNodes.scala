@@ -69,10 +69,10 @@ object NavNodes {
           ("node", true),
           ("default", true),
           ("selectable", true),
-          ("selected", model.nodes.isSelecting(node))
+          ("selected", model.nodes.isSelecting(node.id))
         )
       ),
-      disabled := model.nodes.isSelecting(node),
+      disabled := model.nodes.isSelecting(node.id),
       data - "tooltip" := node.name,
       data - "placement" := "right",
       onClick := ((e) => dispatch(SelectNode(node.id)))

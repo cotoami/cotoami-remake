@@ -63,31 +63,36 @@ nav.cotonomas {
     align-items: stretch;
 
     &.sub-cotonomas {
-      margin-left: calc(var(--item-indent-width) * 2);
+      margin-left: var(--item-indent-width);
     }
 
-    li {
-      &.current-cotonoma {
+    &.has-super-cotonomas {
+      .current-cotonoma {
         margin-left: var(--item-indent-width);
-        white-space: nowrap;
+      }
+
+      .sub-cotonomas {
+        margin-left: calc(var(--item-indent-width) * 2);
       }
     }
   }
 
-  a.cotonoma {
+  .cotonoma {
     display: block;
     margin: 0;
     padding: 0;
     padding-top: 2px;
     padding-bottom: 2px;
     padding-left: var(--item-padding-left);
-    border-radius: 0;
     font-size: var(--item-font-size);
-    color: var(--h3-color);
 
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  a.cotonoma {
+    color: var(--h3-color);
 
     &:hover {
       background-color: var(--hover-background-color);
@@ -96,11 +101,6 @@ nav.cotonomas {
   }
 
   .selected {
-    display: block;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: var(--item-padding-left);
-    font-size: var(--item-font-size);
     background-color: var(--selected-background-color);
   }
 

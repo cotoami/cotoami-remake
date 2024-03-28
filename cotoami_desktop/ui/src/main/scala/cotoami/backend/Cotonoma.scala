@@ -17,10 +17,23 @@ case class Cotonomas(
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
-  def isSelecting(cotonoma: Cotonoma): Boolean =
-    this.selectedId.map(_ == cotonoma.id).getOrElse(false)
+  def contains(id: Id[Cotonoma]): Boolean = this.map.contains(id)
+
+  def select(id: Id[Cotonoma]): Cotonomas =
+    if (this.contains(id))
+      this.copy(selectedId = Some(id))
+    else
+      this
+
+  def deselect(): Cotonomas =
+    this.copy(selectedId = None, superIds = Seq.empty, subIds = Seq.empty)
+
+  def isSelecting(id: Id[Cotonoma]): Boolean =
+    this.selectedId.map(_ == id).getOrElse(false)
 
   def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
+
+  def anySuperOfSelected: Boolean = !this.superIds.isEmpty
 
   def superOfSelected: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
 

@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg}
+import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
 import cotoami.components.{
   material_symbol,
   node_img,
@@ -45,7 +45,7 @@ object NavCotonomas {
     val recentCotonomas = model.recentCotonomasWithoutRoot
     nav(className := "cotonomas header-and-body")(
       header()(
-        if (model.cotonomas.selectedId.isEmpty) {
+        if (model.cotonomas.selected.isEmpty) {
           div(className := "cotonoma home selected")(
             material_symbol("home"),
             currentNode.name
@@ -53,7 +53,11 @@ object NavCotonomas {
         } else {
           a(
             className := "cotonoma home",
-            title := s"${currentNode.name} home"
+            title := s"${currentNode.name} home",
+            onClick := ((e) => {
+              e.preventDefault()
+              dispatch(DeselectCotonoma)
+            })
           )(
             material_symbol("home"),
             currentNode.name
@@ -86,7 +90,13 @@ object NavCotonomas {
   ): ReactElement =
     section(className := "current")(
       h2()("Current"),
-      ul()(
+      ul(
+        className := optionalClasses(
+          Seq(
+            ("has-super-cotonomas", model.cotonomas.anySuperOfSelected)
+          )
+        )
+      )(
         li()(
           ul(className := "super-cotonomas")(
             model.cotonomas.superOfSelected.map(
@@ -94,7 +104,7 @@ object NavCotonomas {
             ): _*
           )
         ),
-        li(className := "current-cotonoma selected")(
+        li(className := "current-cotonoma cotonoma selected")(
           cotonomaLabel(model, selectedCotonoma)
         ),
         li()(
@@ -124,14 +134,21 @@ object NavCotonomas {
   ): ReactElement =
     li(
       className := optionalClasses(
-        Seq(("selected", model.cotonomas.isSelecting(cotonoma)))
+        Seq(("selected", model.cotonomas.isSelecting(cotonoma.id)))
       ),
       key := cotonoma.id.uuid
     )(
-      if (model.cotonomas.isSelecting(cotonoma)) {
-        cotonomaLabel(model, cotonoma)
+      if (model.cotonomas.isSelecting(cotonoma.id)) {
+        span(className := "cotonoma")(cotonomaLabel(model, cotonoma))
       } else {
-        a(className := "cotonoma", title := cotonoma.name)(
+        a(
+          className := "cotonoma",
+          title := cotonoma.name,
+          onClick := ((e) => {
+            e.preventDefault()
+            dispatch(SelectCotonoma(cotonoma.id))
+          })
+        )(
           cotonomaLabel(model, cotonoma)
         )
       }

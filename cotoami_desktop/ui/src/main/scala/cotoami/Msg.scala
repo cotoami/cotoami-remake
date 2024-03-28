@@ -4,6 +4,7 @@ import org.scalajs.dom.URL
 
 import cotoami.Log
 import cotoami.backend.{
+  Cotonoma,
   CotonomaJson,
   DatabaseInfoJson,
   LogEvent,
@@ -38,6 +39,8 @@ case class ResizePane(name: String, newSize: Int) extends Msg
 // Transition
 case class SelectNode(id: Id[Node]) extends Msg
 case object DeselectNode extends Msg
+case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
+case object DeselectCotonoma extends Msg
 
 // Sub
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
