@@ -19,6 +19,8 @@ case class Nodes(
 
   def parents: Seq[Node] = this.parentIds.map(this.get(_)).flatten
 
+  def select(id: Id[Node]): Nodes = this.copy(selectedId = Some(id))
+
   def isSelecting(node: Node): Boolean =
     this.selectedId.map(_ == node.id).getOrElse(false)
 

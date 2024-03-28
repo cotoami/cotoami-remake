@@ -4,7 +4,7 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg}
+import cotoami.{Model, Msg, SelectNode}
 import cotoami.components.{
   material_symbol,
   node_img,
@@ -54,11 +54,15 @@ object NavNodes {
         material_symbol("add")
       ),
       ul(className := "nodes")(
-        model.nodes.local.map(node => li()(node_button(model, node)))
+        model.nodes.local.map(node => li()(node_button(model, node, dispatch)))
       )
     )
 
-  private def node_button(model: Model, node: Node): ReactElement =
+  private def node_button(
+      model: Model,
+      node: Node,
+      dispatch: Msg => Unit
+  ): ReactElement =
     button(
       className := optionalClasses(
         Seq(
@@ -68,7 +72,9 @@ object NavNodes {
           ("selected", model.nodes.isSelecting(node))
         )
       ),
+      disabled := model.nodes.isSelecting(node),
       data - "tooltip" := node.name,
-      data - "placement" := "right"
+      data - "placement" := "right",
+      onClick := ((e) => dispatch(SelectNode(node.id)))
     )(node_img(node))
 }

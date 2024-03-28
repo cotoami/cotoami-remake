@@ -41,8 +41,18 @@ object Main {
     )
   }
 
+  implicit case object NodeIdCodec extends IdCodec[Node]
+
   object Route {
     val index = Root
+    val node = Root / "nodes" / Arg[Id[Node]]()
+  }
+
+  class IdCodec[T] extends Codec[Id[T]] {
+    override def encode(id: Id[T]): Option[String] = Some(id.uuid)
+
+    // FIXME: Maybe, we should check if the source string is a valid UUID.
+    override def decode(s: Option[String]): Option[Id[T]] = s.map(Id(_))
   }
 
   object DatabaseFolder {
@@ -156,6 +166,9 @@ object Main {
         }
       }
 
+      case SelectNode(id) =>
+        (model, Seq(Browser.pushUrl(Route.node.url(id))))
+
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
           subparts.ModalWelcome.update(subMsg, model.modalWelcome);
@@ -203,9 +216,23 @@ object Main {
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
         (
-          model.clearSelection(),
+          model
+            .clearSelection()
+            .modify(_.cotonomasLoading).setTo(true),
           Seq(fetchCotonomas(None, 0))
         )
+
+      case Route.node(id) =>
+        (
+          model
+            .clearSelection()
+            .modify(_.nodes).using(_.select(id))
+            .modify(_.cotonomasLoading).setTo(true),
+          Seq(fetchCotonomas(Some(id), 0))
+        )
+
+      case _ =>
+        (model, Seq(Browser.pushUrl(Route.index.url(()))))
     }
 
   def fetchCotonomas(nodeId: Option[Id[Node]], pageIndex: Double): Cmd[Msg] =

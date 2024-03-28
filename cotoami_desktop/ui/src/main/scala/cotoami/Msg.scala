@@ -8,6 +8,7 @@ import cotoami.backend.{
   CotonomaJson,
   DatabaseInfoJson,
   LogEvent,
+  Node,
   NodeJson,
   Paginated,
   SystemInfo
@@ -35,6 +36,9 @@ case class DatabaseOpened(result: Either[backend.Error, DatabaseInfoJson])
 // Pane
 case class TogglePane(name: String) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
+
+// Transition
+case class SelectNode(id: Id[Node]) extends Msg
 
 // Sub
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
