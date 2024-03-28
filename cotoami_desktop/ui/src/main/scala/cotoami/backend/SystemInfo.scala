@@ -3,7 +3,6 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.FunctionalUI.Cmd
 import cotoami.tauri
-import cotoami.backend.Node
 
 @js.native
 trait SystemInfo extends js.Object {

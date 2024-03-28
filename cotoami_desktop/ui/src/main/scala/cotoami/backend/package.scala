@@ -1,7 +1,6 @@
 package cotoami
 
 import scala.scalajs.js
-import slinky.web.html.max
 import java.time._
 
 import cotoami.{Id, Log, Validation}

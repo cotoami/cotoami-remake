@@ -1,6 +1,5 @@
 package cotoami
 
-import scala.scalajs.js
 import org.scalajs.dom.URL
 
 import cotoami.Log
@@ -9,7 +8,6 @@ import cotoami.backend.{
   DatabaseInfoJson,
   LogEvent,
   Node,
-  NodeJson,
   Paginated,
   SystemInfo
 }

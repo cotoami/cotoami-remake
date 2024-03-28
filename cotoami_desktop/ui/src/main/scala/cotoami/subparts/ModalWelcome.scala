@@ -1,16 +1,14 @@
 package cotoami.subparts
 
 import scala.scalajs.js
-import slinky.core._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{tauri, Log, ModalWelcomeMsg, Model, Msg, Validation}
+import cotoami.{tauri, ModalWelcomeMsg, Validation}
 import cotoami.components.material_symbol
 import cotoami.backend
 import cotoami.backend.{DatabaseOpened, Node}
-import cats.syntax.foldable
 
 object ModalWelcome {
 

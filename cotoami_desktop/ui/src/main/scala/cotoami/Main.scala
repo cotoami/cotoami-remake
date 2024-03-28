@@ -1,11 +1,9 @@
 package cotoami
 
-import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
 
-import slinky.core._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.hot
 import slinky.web.html._
@@ -19,12 +17,10 @@ import cotoami.tauri
 import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
 import cotoami.backend.{
   Commands,
-  Cotonoma,
   DatabaseInfo,
   LogEvent,
   Node,
   Nodes,
-  Paginated,
   SystemInfo
 }
 

@@ -14,18 +14,14 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.URL
 import org.scalajs.dom.EventTarget
-import org.scalajs.dom.raw.CustomEvent
 import org.scalajs.dom.Event
-import org.scalajs.dom.ext.Ajax
 
 import slinky.core.facade.ReactElement
 import slinky.web.ReactDOM
 
 import io.circe._
 import io.circe.Decoder
-import io.circe.generic.auto._
 import io.circe.parser._
-import io.circe.syntax._
 
 object FunctionalUI {
   case class Program[Model, Msg](

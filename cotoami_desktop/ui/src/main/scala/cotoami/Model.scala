@@ -9,11 +9,10 @@ import io.circe.generic.semiauto._
 import io.circe.syntax._
 import io.circe.parser._
 
-import com.softwaremill.quicklens._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Cotonoma, Cotonomas, Error, Node, Nodes, SystemInfo}
+import cotoami.backend.{Cotonoma, Cotonomas, Error, Nodes, SystemInfo}
 import cotoami.subparts.ModalWelcome
 
 case class Model(
