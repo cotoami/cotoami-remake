@@ -4,7 +4,7 @@ import slinky.core._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg, SelectNode}
+import cotoami.{DeselectNode, Model, Msg, SelectNode}
 import cotoami.components.{
   material_symbol,
   node_img,
@@ -42,7 +42,8 @@ object NavNodes {
           )
         ),
         data - "tooltip" := "All nodes",
-        data - "placement" := "right"
+        data - "placement" := "right",
+        onClick := ((e) => dispatch(DeselectNode))
       )(
         material_symbol("stacks")
       ),

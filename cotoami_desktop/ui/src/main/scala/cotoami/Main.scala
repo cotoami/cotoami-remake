@@ -169,6 +169,10 @@ object Main {
       case SelectNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
+      case DeselectNode =>
+        // TODO: add a case where a cotonoma is selected.
+        (model, Seq(Browser.pushUrl(Route.index.url(()))))
+
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
           subparts.ModalWelcome.update(subMsg, model.modalWelcome);

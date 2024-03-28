@@ -39,6 +39,7 @@ case class ResizePane(name: String, newSize: Int) extends Msg
 
 // Transition
 case class SelectNode(id: Id[Node]) extends Msg
+case object DeselectNode extends Msg
 
 // Sub
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
