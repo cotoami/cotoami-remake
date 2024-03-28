@@ -24,7 +24,14 @@ package object subparts {
         .current
         .map(node =>
           section(className := "location")(
-            a(className := "node-home", title := node.name)(node_img(node)),
+            a(
+              className := "node-home",
+              title := node.name,
+              onClick := ((e) => {
+                e.preventDefault()
+                dispatch(SelectNode(node.id))
+              })
+            )(node_img(node)),
             model.cotonomas.selected.map(cotonoma =>
               Fragment(
                 material_symbol("chevron_right", "arrow"),
