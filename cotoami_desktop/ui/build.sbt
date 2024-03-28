@@ -14,7 +14,8 @@ lazy val cotoami = project
       "utf-8",
       "-deprecation",
       "-feature",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Xlint:unused"
     ),
 
     // We have a `main` method

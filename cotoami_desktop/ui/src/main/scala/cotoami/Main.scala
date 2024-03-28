@@ -11,7 +11,7 @@ import slinky.hot
 import slinky.web.html._
 
 import com.softwaremill.quicklens._
-import trail._
+
 import cats.effect.IO
 
 import fui.FunctionalUI._
@@ -39,20 +39,6 @@ object Main {
       dom.document.getElementById("app"),
       Program(init, view, update, subscriptions, Some(UrlChanged(_)))
     )
-  }
-
-  implicit case object NodeIdCodec extends IdCodec[Node]
-
-  object Route {
-    val index = Root
-    val node = Root / "nodes" / Arg[Id[Node]]()
-  }
-
-  class IdCodec[T] extends Codec[Id[T]] {
-    override def encode(id: Id[T]): Option[String] = Some(id.uuid)
-
-    // FIXME: Maybe, we should check if the source string is a valid UUID.
-    override def decode(s: Option[String]): Option[Id[T]] = s.map(Id(_))
   }
 
   object DatabaseFolder {
