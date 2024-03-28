@@ -200,7 +200,7 @@ object Main {
             .modify(_.cotonomasLoading).setTo(false)
             .modify(_.log).using(
               _.info(
-                "Recent cotonoma fetched.",
+                "Recent cotonomas fetched.",
                 Some(cotonomas.recentIds.debug)
               )
             ),
