@@ -33,11 +33,11 @@ case class Cotonomas(
 
   def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
 
-  def anySuperOfSelected: Boolean = !this.superIds.isEmpty
+  def anySupers: Boolean = !this.superIds.isEmpty
 
-  def superOfSelected: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
+  def supers: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
 
-  def subOfSelected: Seq[Cotonoma] = this.subIds.map(this.get(_)).flatten
+  def subs: Seq[Cotonoma] = this.subIds.map(this.get(_)).flatten
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
 
