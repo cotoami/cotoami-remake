@@ -1,6 +1,6 @@
 //! Cotonoma related operations
 
-use std::ops::DerefMut;
+use std::{collections::HashMap, ops::DerefMut};
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
@@ -54,6 +54,22 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>>
             .order(cotonomas::created_at.asc())
             .load::<Cotonoma>(conn)
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn get_by_ids<Conn: AsReadableConn>(
+    ids: Vec<Id<Cotonoma>>,
+) -> impl Operation<Conn, Vec<Cotonoma>> {
+    read_op(move |conn| {
+        let mut map: HashMap<Id<Cotonoma>, Cotonoma> = cotonomas::table
+            .filter(cotonomas::uuid.eq_any(&ids))
+            .load::<Cotonoma>(conn)?
+            .into_iter()
+            .map(|c| (c.uuid, c))
+            .collect();
+        // Sort the results in order of the `ids`.
+        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        Ok(cotonomas)
     })
 }
 
