@@ -55,6 +55,15 @@ CREATE INDEX cotos_posted_in_id ON cotos(posted_in_id);
 CREATE INDEX cotos_posted_by_id ON cotos(posted_by_id);
 CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
 
+-- Some columns of a repost should be the same values as the original.
+CREATE TRIGGER cotos_reposts_sync AFTER UPDATE ON cotos BEGIN
+  UPDATE cotos 
+    SET 
+      is_cotonoma = new.is_cotonoma, 
+      updated_at = new.updated_at
+    WHERE repost_of_id = new.uuid;
+END;
+
 
 --
 -- A cotonoma is a specific type of coto in which other cotos are posted. 
