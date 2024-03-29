@@ -29,6 +29,10 @@ CREATE TABLE cotos (
 
   -- TRUE if this coto is a cotonoma.
   -- 0 (false) and 1 (true)
+  --
+  -- If this is a repost, this value will sync with that of the original coto 
+  -- and naturally, even if the value is true, there is no row of `cotonomas` 
+  -- corresponding to this coto.
   is_cotonoma INTEGER DEFAULT FALSE NOT NULL,
 
   -- UUID of the original coto of this repost,
