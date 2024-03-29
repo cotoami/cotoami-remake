@@ -3,13 +3,29 @@ use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
 use crate::{
-    service::{models::Pagination, ServiceError},
+    service::{
+        models::{CotonomaDetails, Pagination},
+        ServiceError,
+    },
     state::NodeState,
 };
 
 const DEFAULT_PAGE_SIZE: i64 = 100;
 
 impl NodeState {
+    pub(crate) async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<CotonomaDetails, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            let mut ds = db.new_session()?;
+            let (cotonoma, coto) = ds.try_get_cotonoma(&id)?;
+            let supers = ds.super_cotonomas(&coto)?;
+            let subs = ds.sub_cotonomas(&cotonoma.uuid, DEFAULT_PAGE_SIZE, 0)?;
+            Ok::<_, anyhow::Error>(CotonomaDetails::new(cotonoma, coto, supers, subs))
+        })
+        .await?
+        .map_err(ServiceError::from)
+    }
+
     pub(crate) async fn recent_cotonomas(
         &self,
         node: Option<Id<Node>>,
@@ -17,8 +33,7 @@ impl NodeState {
     ) -> Result<Paginated<Cotonoma>, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
-            let mut ds = db.new_session()?;
-            ds.recent_cotonomas(
+            db.new_session()?.recent_cotonomas(
                 node.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,

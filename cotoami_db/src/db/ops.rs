@@ -26,7 +26,7 @@ pub(crate) mod prelude {
 // Pagination
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Paginated<T> {
     pub rows: Vec<T>,
     pub page_size: i64,
