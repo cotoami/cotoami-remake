@@ -893,6 +893,15 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids))
     }
 
+    pub fn sub_cotonomas(
+        &mut self,
+        id: &Id<Cotonoma>,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Cotonoma>> {
+        self.read_transaction(cotonoma_ops::subs(id, page_size, page_index))
+    }
+
     pub fn post_cotonoma(
         &self,
         name: &str,

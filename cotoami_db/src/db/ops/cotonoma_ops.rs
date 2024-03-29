@@ -89,6 +89,26 @@ pub(crate) fn recent<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn subs<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<Cotonoma>> + '_ {
+    read_op(move |conn| {
+        super::paginate(conn, page_size, page_index, || {
+            cotonomas::table
+                .inner_join(cotos::table)
+                .filter(cotos::posted_in_id.eq(id))
+                // FIXME: too slow?
+                // The following `LIKE` search will scan only cotonomas that have
+                // non-null `reposted_in_ids`.
+                .or_filter(cotos::reposted_in_ids.like(format!("%{id}%")))
+                .select(Cotonoma::as_select())
+                .order(cotonomas::updated_at.desc())
+        })
+    })
+}
+
 pub(crate) fn create_root<'a>(
     node_id: &'a Id<Node>,
     name: &'a str,
