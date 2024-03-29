@@ -51,6 +51,15 @@ fn crud_operations() -> Result<()> {
     assert_eq!(recent_cotos.rows.len(), 1);
     assert_eq!(recent_cotos.rows[0], coto);
 
+    // check if the number of posts in the cotonoma has been incremented
+    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
+    assert_eq!(cotonoma.posts, 1);
+
+    // check the super cotonomas
+    let supers = ds.super_cotonomas(&coto)?;
+    assert_eq!(supers.len(), 1);
+    assert_eq!(supers[0], cotonoma);
+
     // check the content of the ChangelogEntry
     assert_matches!(
         changelog2,
@@ -63,10 +72,6 @@ fn crud_operations() -> Result<()> {
         } if origin_node_id == node.uuid &&
              change_coto == Coto { rowid: 0, ..coto }
     );
-
-    // check if the number of posts in the cotonoma has been incremented
-    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_eq!(cotonoma.posts, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: edit_coto
