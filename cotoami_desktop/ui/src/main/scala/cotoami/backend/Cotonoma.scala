@@ -85,3 +85,11 @@ trait CotonomaJson extends js.Object {
   val updated_at: String = js.native
   val posts: Int = js.native
 }
+
+@js.native
+trait CotonomaDetailsJson extends js.Object {
+  val cotonoma: CotonomaJson = js.native
+  val coto: CotoJson = js.native
+  val supers: js.Array[CotonomaJson] = js.native
+  val subs: Paginated[CotonomaJson] = js.native
+}
