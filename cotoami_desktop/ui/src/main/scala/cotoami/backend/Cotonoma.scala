@@ -21,17 +21,9 @@ case class Cotonomas(
 
   def select(id: Id[Cotonoma]): Cotonomas =
     if (this.contains(id))
-      this.copy(selectedId = Some(id))
+      this.deselect().copy(selectedId = Some(id))
     else
       this
-
-  def deselect(): Cotonomas =
-    this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())
-
-  def isSelecting(id: Id[Cotonoma]): Boolean =
-    this.selectedId.map(_ == id).getOrElse(false)
-
-  def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)
@@ -48,6 +40,14 @@ case class Cotonomas(
       map = this.map ++ map
     )
   }
+
+  def deselect(): Cotonomas =
+    this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())
+
+  def isSelecting(id: Id[Cotonoma]): Boolean =
+    this.selectedId.map(_ == id).getOrElse(false)
+
+  def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
 
   def anySupers: Boolean = !this.superIds.isEmpty
 
