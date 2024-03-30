@@ -5,6 +5,7 @@ import org.scalajs.dom.URL
 import cotoami.Log
 import cotoami.backend.{
   Cotonoma,
+  CotonomaDetailsJson,
   CotonomaJson,
   DatabaseInfoJson,
   LogEvent,
@@ -49,4 +50,7 @@ case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
 case object FetchMoreCotonomas extends Msg
 case class CotonomasFetched(
     result: Either[backend.Error, Paginated[CotonomaJson]]
+) extends Msg
+case class CotonomaDetailsFetched(
+    result: Either[backend.Error, CotonomaDetailsJson]
 ) extends Msg

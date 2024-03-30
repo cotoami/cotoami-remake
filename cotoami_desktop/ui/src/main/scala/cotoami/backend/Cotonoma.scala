@@ -10,7 +10,7 @@ case class Cotonomas(
     // The currently selected cotonoma and its super/sub cotonomas
     selectedId: Option[Id[Cotonoma]] = None,
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
-    subIds: Seq[Id[Cotonoma]] = Seq.empty,
+    subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
 
     // Recent
     recentIds: PaginatedIds[Cotonoma] = PaginatedIds()
@@ -26,18 +26,34 @@ case class Cotonomas(
       this
 
   def deselect(): Cotonomas =
-    this.copy(selectedId = None, superIds = Seq.empty, subIds = Seq.empty)
+    this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())
 
   def isSelecting(id: Id[Cotonoma]): Boolean =
     this.selectedId.map(_ == id).getOrElse(false)
 
   def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
 
+  def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
+    val cotonoma = Cotonoma(details.cotonoma)
+    val map = Cotonoma.toMap(details.supers) ++
+      Cotonoma.toMap(details.subs.rows) +
+      (cotonoma.id -> cotonoma)
+    this.copy(
+      selectedId = Some(cotonoma.id),
+      superIds = details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq,
+      subIds = this.subIds.addPage(
+        details.subs,
+        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+      ),
+      map = this.map ++ map
+    )
+  }
+
   def anySupers: Boolean = !this.superIds.isEmpty
 
   def supers: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
 
-  def subs: Seq[Cotonoma] = this.subIds.map(this.get(_)).flatten
+  def subs: Seq[Cotonoma] = this.subIds.order.map(this.get(_)).flatten
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
 
