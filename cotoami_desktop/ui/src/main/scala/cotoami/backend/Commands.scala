@@ -14,4 +14,6 @@ object Commands {
         pagination = jso(page = pageIndex)
       )
     )
+
+  def Cotonoma(id: Id[Cotonoma]) = jso(Cotonoma = jso(id = id.uuid))
 }

@@ -16,6 +16,7 @@ import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.backend.{
   Commands,
+  Cotonoma,
   DatabaseInfo,
   LogEvent,
   Node,
@@ -272,7 +273,7 @@ object Main {
             model
               .modify(_.nodes).using(_.deselect())
               .modify(_.cotonomas).using(_.select(id)),
-            Seq()
+            Seq(fetchCotonomaDetails(id))
           )
         } else {
           (
@@ -291,7 +292,7 @@ object Main {
                 model
                   .modify(_.nodes).using(_.select(nodeId))
                   .modify(_.cotonomas).using(_.select(cotonomaId)),
-                Seq()
+                Seq(fetchCotonomaDetails(cotonomaId))
               )
             } else {
               (
@@ -321,6 +322,9 @@ object Main {
     node_command(Commands.RecentCotonomas(nodeId, pageIndex)).map(
       CotonomasFetched(_)
     )
+
+  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[Msg] =
+    node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched(_))
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
