@@ -215,6 +215,29 @@ object Main {
             .error(e, "Couldn't fetch cotonomas."),
           Seq.empty
         )
+
+      case CotonomaDetailsFetched(Right(details)) =>
+        (
+          model
+            .modify(_.cotonomas).using(_.setCotonomaDetails(details))
+            .modify(_.log).using(
+              _.info(
+                "Cotonoma details fetched.",
+                Some(
+                  s"name: ${details.cotonoma.name}" +
+                    s", supers: ${details.supers.size}" +
+                    s", subs: ${details.subs.rows.size}"
+                )
+              )
+            ),
+          Seq.empty
+        )
+
+      case CotonomaDetailsFetched(Left(e)) =>
+        (
+          model.error(e, "Couldn't fetch cotonoma details."),
+          Seq.empty
+        )
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
