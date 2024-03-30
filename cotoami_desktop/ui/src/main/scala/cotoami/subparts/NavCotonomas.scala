@@ -93,13 +93,13 @@ object NavCotonomas {
       ul(
         className := optionalClasses(
           Seq(
-            ("has-super-cotonomas", model.cotonomas.anySupers)
+            ("has-super-cotonomas", model.superCotonomasWithoutRoot.size > 0)
           )
         )
       )(
         li()(
           ul(className := "super-cotonomas")(
-            model.cotonomas.supers.map(
+            model.superCotonomasWithoutRoot.map(
               liCotonoma(model, _, dispatch)
             ): _*
           )

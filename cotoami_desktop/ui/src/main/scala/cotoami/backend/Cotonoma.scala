@@ -49,8 +49,6 @@ case class Cotonomas(
 
   def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
 
-  def anySupers: Boolean = !this.superIds.isEmpty
-
   def supers: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
 
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get(_)).flatten
