@@ -16,6 +16,7 @@ import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.backend.{
   Commands,
+  Cotonoma,
   DatabaseInfo,
   LogEvent,
   Node,
@@ -200,7 +201,7 @@ object Main {
             .modify(_.cotonomasLoading).setTo(false)
             .modify(_.log).using(
               _.info(
-                "Recent cotonoma fetched.",
+                "Recent cotonomas fetched.",
                 Some(cotonomas.recentIds.debug)
               )
             ),
@@ -213,6 +214,29 @@ object Main {
           model
             .modify(_.cotonomasLoading).setTo(false)
             .error(e, "Couldn't fetch cotonomas."),
+          Seq.empty
+        )
+
+      case CotonomaDetailsFetched(Right(details)) =>
+        (
+          model
+            .modify(_.cotonomas).using(_.setCotonomaDetails(details))
+            .modify(_.log).using(
+              _.info(
+                "Cotonoma details fetched.",
+                Some(
+                  s"name: ${details.cotonoma.name}" +
+                    s", supers: ${details.supers.size}" +
+                    s", subs: ${details.subs.rows.size}"
+                )
+              )
+            ),
+          Seq.empty
+        )
+
+      case CotonomaDetailsFetched(Left(e)) =>
+        (
+          model.error(e, "Couldn't fetch cotonoma details."),
           Seq.empty
         )
     }
@@ -249,7 +273,7 @@ object Main {
             model
               .modify(_.nodes).using(_.deselect())
               .modify(_.cotonomas).using(_.select(id)),
-            Seq()
+            Seq(fetchCotonomaDetails(id))
           )
         } else {
           (
@@ -268,7 +292,7 @@ object Main {
                 model
                   .modify(_.nodes).using(_.select(nodeId))
                   .modify(_.cotonomas).using(_.select(cotonomaId)),
-                Seq()
+                Seq(fetchCotonomaDetails(cotonomaId))
               )
             } else {
               (
@@ -298,6 +322,9 @@ object Main {
     node_command(Commands.RecentCotonomas(nodeId, pageIndex)).map(
       CotonomasFetched(_)
     )
+
+  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[Msg] =
+    node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched(_))
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,

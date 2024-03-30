@@ -6,11 +6,14 @@ use axum::{
     Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    service::{
+        error::IntoServiceResult,
+        models::{CotonomaDetails, Pagination},
+        ServiceError,
+    },
     state::NodeState,
     web::{Accept, Content},
 };
@@ -50,21 +53,13 @@ async fn recent_cotonomas(
 // GET /api/cotonomas/:cotonoma_id
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Serialize)]
-struct CotonomaDetails {
-    cotonoma: Cotonoma,
-    coto: Coto,
-}
-
 async fn get_cotonoma(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Content<CotonomaDetails>, ServiceError> {
-    spawn_blocking(move || {
-        let mut db = state.db().new_session()?;
-        let (cotonoma, coto) = db.try_get_cotonoma(&cotonoma_id)?;
-        Ok(Content(CotonomaDetails { cotonoma, coto }, accept))
-    })
-    .await?
+    state
+        .cotonoma(cotonoma_id)
+        .await
+        .map(|cotonoma| Content(cotonoma, accept))
 }

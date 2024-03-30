@@ -1,6 +1,6 @@
 //! Cotonoma related operations
 
-use std::ops::DerefMut;
+use std::{collections::HashMap, ops::DerefMut};
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
@@ -57,6 +57,38 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>>
     })
 }
 
+pub(crate) fn get_by_ids<Conn: AsReadableConn>(
+    ids: Vec<Id<Cotonoma>>,
+) -> impl Operation<Conn, Vec<Cotonoma>> {
+    read_op(move |conn| {
+        let mut map: HashMap<Id<Cotonoma>, Cotonoma> = cotonomas::table
+            .filter(cotonomas::uuid.eq_any(&ids))
+            .load::<Cotonoma>(conn)?
+            .into_iter()
+            .map(|c| (c.uuid, c))
+            .collect();
+        // Sort the results in order of the `ids` param.
+        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        Ok(cotonomas)
+    })
+}
+
+pub(crate) fn get_by_coto_ids<Conn: AsReadableConn>(
+    ids: Vec<Id<Coto>>,
+) -> impl Operation<Conn, Vec<Cotonoma>> {
+    read_op(move |conn| {
+        let mut map: HashMap<Id<Coto>, Cotonoma> = cotonomas::table
+            .filter(cotonomas::coto_id.eq_any(&ids))
+            .load::<Cotonoma>(conn)?
+            .into_iter()
+            .map(|c| (c.coto_id, c))
+            .collect();
+        // Sort the results in order of the `ids` param.
+        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        Ok(cotonomas)
+    })
+}
+
 pub(crate) fn recent<Conn: AsReadableConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,
@@ -69,6 +101,40 @@ pub(crate) fn recent<Conn: AsReadableConn>(
                 query = query.filter(cotonomas::node_id.eq(id));
             }
             query.order(cotonomas::updated_at.desc())
+        })
+    })
+}
+
+pub(crate) fn subs<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+    page_size: i64,
+    page_index: i64,
+) -> impl Operation<Conn, Paginated<Cotonoma>> + '_ {
+    composite_op::<Conn, _, _>(move |ctx| {
+        let cotonoma_cotos: Paginated<Coto> =
+            super::paginate(ctx.conn().readable(), page_size, page_index, || {
+                cotos::table
+                    .filter(cotos::is_cotonoma.eq(true))
+                    .filter(cotos::posted_in_id.eq(id))
+                    .order(cotos::updated_at.desc())
+            })?;
+
+        // Collect the coto IDs of the sub cotonomas.
+        //
+        // There are two kinds of sub cotonoma: "originally posted" and "reposted".
+        // The coto ID of a reposted cotonoma should be taken from `repost_of_id`.
+        let coto_ids: Vec<Id<Coto>> = cotonoma_cotos
+            .rows
+            .iter()
+            .map(|coto| coto.repost_of_id.unwrap_or(coto.uuid))
+            .collect();
+        let cotonomas = get_by_coto_ids(coto_ids).run(ctx)?;
+
+        Ok(Paginated {
+            rows: cotonomas,
+            page_size: cotonoma_cotos.page_size,
+            page_index: cotonoma_cotos.page_index,
+            total_rows: cotonoma_cotos.total_rows,
         })
     })
 }

@@ -29,6 +29,10 @@ CREATE TABLE cotos (
 
   -- TRUE if this coto is a cotonoma.
   -- 0 (false) and 1 (true)
+  --
+  -- If this is a repost, this value will sync with that of the original coto 
+  -- and naturally, even if the value is true, there is no row of `cotonomas` 
+  -- corresponding to this coto.
   is_cotonoma INTEGER DEFAULT FALSE NOT NULL,
 
   -- UUID of the original coto of this repost,
@@ -54,6 +58,15 @@ CREATE INDEX cotos_node_id ON cotos(node_id);
 CREATE INDEX cotos_posted_in_id ON cotos(posted_in_id);
 CREATE INDEX cotos_posted_by_id ON cotos(posted_by_id);
 CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
+
+-- Some columns of a repost should be the same values as the original.
+CREATE TRIGGER cotos_reposts_sync AFTER UPDATE ON cotos BEGIN
+  UPDATE cotos 
+    SET 
+      is_cotonoma = new.is_cotonoma, 
+      updated_at = new.updated_at
+    WHERE repost_of_id = new.uuid;
+END;
 
 
 --

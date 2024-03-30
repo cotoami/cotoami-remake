@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
+use derive_new::new;
 use validator::Validate;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -83,4 +84,16 @@ pub enum NotConnected {
     Connecting(Option<String>),
     InitFailed(String),
     Disconnected(Option<String>),
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Cotonoma
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+pub struct CotonomaDetails {
+    pub cotonoma: Cotonoma,
+    pub coto: Coto,
+    pub supers: Vec<Cotonoma>,
+    pub subs: Paginated<Cotonoma>,
 }

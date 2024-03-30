@@ -882,6 +882,26 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::recent(node_id, page_size, page_index))
     }
 
+    pub fn super_cotonomas(&mut self, coto: &Coto) -> Result<Vec<Cotonoma>> {
+        let mut cotonoma_ids: Vec<Id<Cotonoma>> = Vec::new();
+        if let Some(id) = coto.posted_in_id {
+            cotonoma_ids.push(id);
+        }
+        if let Some(Ids(ref ids)) = coto.reposted_in_ids {
+            cotonoma_ids.extend_from_slice(ids);
+        }
+        self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids))
+    }
+
+    pub fn sub_cotonomas(
+        &mut self,
+        id: &Id<Cotonoma>,
+        page_size: i64,
+        page_index: i64,
+    ) -> Result<Paginated<Cotonoma>> {
+        self.read_transaction(cotonoma_ops::subs(id, page_size, page_index))
+    }
+
     pub fn post_cotonoma(
         &self,
         name: &str,
