@@ -68,7 +68,7 @@ object NavCotonomas {
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(cotoami.FetchMoreCotonomas)
+          onScrollToBottom = () => dispatch(cotoami.FetchMoreRecentCotonomas)
         )(
           model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
@@ -76,7 +76,7 @@ object NavCotonomas {
           ),
           div(
             className := "more",
-            aria - "busy" := model.cotonomasLoading.toString()
+            aria - "busy" := model.recentCotonomasLoading.toString()
           )()
         )
       )
