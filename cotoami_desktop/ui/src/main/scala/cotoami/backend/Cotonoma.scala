@@ -30,7 +30,7 @@ case class Cotonomas(
     val map = Cotonoma.toMap(details.supers) ++
       Cotonoma.toMap(details.subs.rows) +
       (cotonoma.id -> cotonoma)
-    this.copy(
+    this.deselect().copy(
       selectedId = Some(cotonoma.id),
       superIds = details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq,
       subIds = this.subIds.addPage(
