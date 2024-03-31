@@ -232,6 +232,18 @@ object Main {
           Seq.empty
         )
 
+      case FetchMoreSubCotonomas(id) =>
+        if (model.subCotonomasLoading) {
+          (model, Seq.empty)
+        } else {
+          model.cotonomas.subIds.nextPageIndex.map(i =>
+            (
+              model.copy(subCotonomasLoading = true),
+              Seq(fetchSubCotonomas(id, i))
+            )
+          ).getOrElse((model, Seq.empty))
+        }
+
       case SubCotonomasFetched(Right(page)) =>
         (
           model
@@ -336,6 +348,11 @@ object Main {
 
   def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[Msg] =
     node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched(_))
+
+  def fetchSubCotonomas(id: Id[Cotonoma], pageIndex: Double): Cmd[Msg] =
+    node_command(Commands.SubCotonomas(id, pageIndex)).map(
+      SubCotonomasFetched(_)
+    )
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
