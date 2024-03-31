@@ -33,6 +33,7 @@ case class Model(
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     recentCotonomasLoading: Boolean = false,
+    subCotonomasLoading: Boolean = false,
 
     // WelcomeModal
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()

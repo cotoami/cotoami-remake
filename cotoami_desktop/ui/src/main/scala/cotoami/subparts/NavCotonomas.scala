@@ -111,7 +111,12 @@ object NavCotonomas {
           ul(className := "sub-cotonomas")(
             model.cotonomas.subs.map(
               liCotonoma(model, _, dispatch)
-            ): _*
+            ) ++ Option.when(model.subCotonomasLoading)(
+              li(
+                className := "more",
+                aria - "busy" := "true"
+              )()
+            )
           )
         )
       )
