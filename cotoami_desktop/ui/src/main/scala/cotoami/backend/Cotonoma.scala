@@ -53,6 +53,15 @@ case class Cotonomas(
 
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get(_)).flatten
 
+  def addPageOfSubs(page: Paginated[CotonomaJson]): Cotonomas =
+    this.copy(
+      map = this.map ++ Cotonoma.toMap(page.rows),
+      subIds = this.subIds.addPage(
+        page,
+        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+      )
+    )
+
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
 
   def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =

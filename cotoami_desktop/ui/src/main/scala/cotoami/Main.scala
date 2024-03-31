@@ -193,27 +193,19 @@ object Main {
           ).getOrElse((model, Seq.empty))
         }
 
-      case RecentCotonomasFetched(Right(page)) => {
-        val cotonomas = model.cotonomas.addPageOfRecent(page)
+      case RecentCotonomasFetched(Right(page)) =>
         (
           model
-            .modify(_.cotonomas).setTo(cotonomas)
-            .modify(_.recentCotonomasLoading).setTo(false)
-            .modify(_.log).using(
-              _.info(
-                "Recent cotonomas fetched.",
-                Some(cotonomas.recentIds.debug)
-              )
-            ),
+            .modify(_.cotonomas).using(_.addPageOfRecent(page))
+            .modify(_.recentCotonomasLoading).setTo(false),
           Seq.empty
         )
-      }
 
       case RecentCotonomasFetched(Left(e)) =>
         (
           model
             .modify(_.recentCotonomasLoading).setTo(false)
-            .error(e, "Couldn't fetch cotonomas."),
+            .error(e, "Couldn't fetch recent cotonomas."),
           Seq.empty
         )
 
@@ -237,6 +229,22 @@ object Main {
       case CotonomaDetailsFetched(Left(e)) =>
         (
           model.error(e, "Couldn't fetch cotonoma details."),
+          Seq.empty
+        )
+
+      case SubCotonomasFetched(Right(page)) =>
+        (
+          model
+            .modify(_.cotonomas).using(_.addPageOfSubs(page))
+            .modify(_.subCotonomasLoading).setTo(false),
+          Seq.empty
+        )
+
+      case SubCotonomasFetched(Left(e)) =>
+        (
+          model
+            .modify(_.subCotonomasLoading).setTo(false)
+            .error(e, "Couldn't fetch sub cotonomas."),
           Seq.empty
         )
     }

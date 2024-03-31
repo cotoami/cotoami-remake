@@ -54,3 +54,6 @@ case class RecentCotonomasFetched(
 case class CotonomaDetailsFetched(
     result: Either[backend.Error, CotonomaDetailsJson]
 ) extends Msg
+case class SubCotonomasFetched(
+    result: Either[backend.Error, Paginated[CotonomaJson]]
+) extends Msg
