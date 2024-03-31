@@ -3,7 +3,13 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
+import cotoami.{
+  DeselectCotonoma,
+  FetchMoreSubCotonomas,
+  Model,
+  Msg,
+  SelectCotonoma
+}
 import cotoami.components.{
   material_symbol,
   node_img,
@@ -68,7 +74,7 @@ object NavCotonomas {
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(cotoami.FetchMoreCotonomas)
+          onScrollToBottom = () => dispatch(cotoami.FetchMoreRecentCotonomas)
         )(
           model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
@@ -76,7 +82,7 @@ object NavCotonomas {
           ),
           div(
             className := "more",
-            aria - "busy" := model.cotonomasLoading.toString()
+            aria - "busy" := model.recentCotonomasLoading.toString()
           )()
         )
       )
@@ -111,7 +117,23 @@ object NavCotonomas {
           ul(className := "sub-cotonomas")(
             model.cotonomas.subs.map(
               liCotonoma(model, _, dispatch)
-            ): _*
+            ) ++ Option.when(model.cotonomas.subIds.nextPageIndex.isDefined)(
+              li()(
+                button(
+                  className := "more-sub-cotonomas default",
+                  onClick := ((e) =>
+                    dispatch(FetchMoreSubCotonomas(selectedCotonoma.id))
+                  )
+                )(
+                  material_symbol("more_horiz")
+                )
+              )
+            ) ++ Option.when(model.subCotonomasLoading)(
+              li(
+                className := "more",
+                aria - "busy" := "true"
+              )()
+            )
           )
         )
       )

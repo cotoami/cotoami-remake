@@ -30,7 +30,7 @@ case class Cotonomas(
     val map = Cotonoma.toMap(details.supers) ++
       Cotonoma.toMap(details.subs.rows) +
       (cotonoma.id -> cotonoma)
-    this.copy(
+    this.deselect().copy(
       selectedId = Some(cotonoma.id),
       superIds = details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq,
       subIds = this.subIds.addPage(
@@ -52,6 +52,15 @@ case class Cotonomas(
   def supers: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
 
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get(_)).flatten
+
+  def addPageOfSubs(page: Paginated[CotonomaJson]): Cotonomas =
+    this.copy(
+      map = this.map ++ Cotonoma.toMap(page.rows),
+      subIds = this.subIds.addPage(
+        page,
+        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+      )
+    )
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
 

@@ -47,10 +47,14 @@ case object DeselectCotonoma extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
 
 // Commands
-case object FetchMoreCotonomas extends Msg
-case class CotonomasFetched(
+case object FetchMoreRecentCotonomas extends Msg
+case class RecentCotonomasFetched(
     result: Either[backend.Error, Paginated[CotonomaJson]]
 ) extends Msg
 case class CotonomaDetailsFetched(
     result: Either[backend.Error, CotonomaDetailsJson]
+) extends Msg
+case class FetchMoreSubCotonomas(id: Id[Cotonoma]) extends Msg
+case class SubCotonomasFetched(
+    result: Either[backend.Error, Paginated[CotonomaJson]]
 ) extends Msg
