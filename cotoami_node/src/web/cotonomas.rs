@@ -26,6 +26,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
+        .route("/:cotonoma_id/subs", get(sub_cotonomas))
         .nest("/:cotonoma_id/cotos", cotos::routes())
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
@@ -62,4 +63,23 @@ async fn get_cotonoma(
         .cotonoma(cotonoma_id)
         .await
         .map(|cotonoma| Content(cotonoma, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/cotonomas/:cotonoma_id/subs
+/////////////////////////////////////////////////////////////////////////////
+
+async fn sub_cotonomas(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return ("sub-cotonomas", errors).into_result();
+    }
+    state
+        .sub_cotonomas(cotonoma_id, pagination)
+        .await
+        .map(|cotonomas| Content(cotonomas, accept))
 }

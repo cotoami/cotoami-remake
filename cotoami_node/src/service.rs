@@ -138,6 +138,12 @@ pub enum Command {
     /// Request a [CotonomaDetails] with the `id`.
     Cotonoma { id: Id<Cotonoma> },
 
+    /// Request a `Paginated<Cotonoma>` that contains sub cotonomas of the given cotonoma.
+    SubCotonomas {
+        id: Id<Cotonoma>,
+        pagination: Pagination,
+    },
+
     /// Request a `Paginated<Coto>` that contains recently posted cotos.
     RecentCotos {
         cotonoma: Option<Id<Cotonoma>>,
