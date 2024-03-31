@@ -3,7 +3,13 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
+import cotoami.{
+  DeselectCotonoma,
+  FetchMoreSubCotonomas,
+  Model,
+  Msg,
+  SelectCotonoma
+}
 import cotoami.components.{
   material_symbol,
   node_img,
@@ -111,6 +117,17 @@ object NavCotonomas {
           ul(className := "sub-cotonomas")(
             model.cotonomas.subs.map(
               liCotonoma(model, _, dispatch)
+            ) ++ Option.when(model.cotonomas.subIds.nextPageIndex.isDefined)(
+              li()(
+                button(
+                  className := "more-sub-cotonomas default",
+                  onClick := ((e) =>
+                    dispatch(FetchMoreSubCotonomas(selectedCotonoma.id))
+                  )
+                )(
+                  material_symbol("more_horiz")
+                )
+              )
             ) ++ Option.when(model.subCotonomasLoading)(
               li(
                 className := "more",
