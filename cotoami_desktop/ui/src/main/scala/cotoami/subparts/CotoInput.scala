@@ -72,17 +72,25 @@ object CotoInput {
           textarea(placeholder := "Write your Coto in Markdown here")()
         ),
         SplitPane.Secondary(className = None)(
-          footer(className := "post")(
-            address(className := "poster")(
-              node_img(operatingNode),
-              operatingNode.name
-            ),
-            button(className := "post", disabled := true)(
-              s"Post to \"${currentCotonoma.name}\"",
-              span(className := "shortcut-help")("(Ctrl + Enter)")
-            )
-          )
+          inputFooter(model, operatingNode, currentCotonoma, dispatch)
         )
+      )
+    )
+
+  def inputFooter(
+      model: Model,
+      operatingNode: Node,
+      currentCotonoma: Cotonoma,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
+    footer(className := "post")(
+      address(className := "poster")(
+        node_img(operatingNode),
+        operatingNode.name
+      ),
+      button(className := "post", disabled := true)(
+        s"Post to \"${currentCotonoma.name}\"",
+        span(className := "shortcut-help")("(Ctrl + Enter)")
       )
     )
 }
