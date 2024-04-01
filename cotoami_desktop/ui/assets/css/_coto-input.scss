@@ -95,8 +95,8 @@ section.coto-input {
   }
 
   &.folded {
-    textarea {
-      flex: 0 0 3.2rem;
+    .coto-editor {
+      height: 3rem !important;
     }
 
     footer.post {

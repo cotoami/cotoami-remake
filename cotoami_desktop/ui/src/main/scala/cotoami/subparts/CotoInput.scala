@@ -4,11 +4,16 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.{material_symbol, node_img, SplitPane}
+import cotoami.components.{
+  material_symbol,
+  node_img,
+  optionalClasses,
+  SplitPane
+}
 
 object CotoInput {
 
-  case class Model(form: Form = CotoForm())
+  case class Model(folded: Boolean = false, form: Form = CotoForm())
 
   sealed trait Form
   case class CotoForm(content: String = "") extends Form
@@ -20,7 +25,14 @@ object CotoInput {
       currentCotonoma: Cotonoma,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
-    section(className := "coto-input")(
+    section(
+      className := optionalClasses(
+        Seq(
+          ("coto-input", true),
+          ("folded", model.folded)
+        )
+      )
+    )(
       header(className := "tools")(
         section(className := "coto-type-switch")(
           button(className := "new-coto default", disabled := true)(
@@ -50,13 +62,13 @@ object CotoInput {
       SplitPane(
         vertical = false,
         initialPrimarySize = 300,
-        resizable = true,
+        resizable = !model.folded,
         className = Some("xxx"),
         onPrimarySizeChanged = (
             (newSize) => println(s"newSize: ${newSize}")
         )
       )(
-        SplitPane.Primary(className = None)(
+        SplitPane.Primary(className = Some("coto-editor"))(
           textarea(placeholder := "Write your Coto in Markdown here")()
         ),
         SplitPane.Secondary(className = None)(
