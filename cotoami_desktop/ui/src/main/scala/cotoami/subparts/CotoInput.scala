@@ -12,6 +12,7 @@ import cotoami.components.{
 }
 
 object CotoInput {
+  val CotoEditorDefaultHeight = 150
 
   case class Model(folded: Boolean = false, form: Form = CotoForm())
 
@@ -61,7 +62,7 @@ object CotoInput {
       ),
       SplitPane(
         vertical = false,
-        initialPrimarySize = 300,
+        initialPrimarySize = CotoEditorDefaultHeight,
         resizable = !model.folded,
         className = None,
         onPrimarySizeChanged = (
