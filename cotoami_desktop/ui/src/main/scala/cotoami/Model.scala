@@ -13,7 +13,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{Cotonoma, Cotonomas, Error, Nodes, SystemInfo}
-import cotoami.subparts.ModalWelcome
+import cotoami.subparts.{CotoInput, ModalWelcome}
 
 case class Model(
     url: URL,
@@ -33,7 +33,8 @@ case class Model(
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
 
-    // WelcomeModal
+    // subparts
+    flowInput: CotoInput.Model = CotoInput.Model(),
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
   def error(error: Error, message: String): Model =
