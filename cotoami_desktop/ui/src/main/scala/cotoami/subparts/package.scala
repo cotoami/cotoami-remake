@@ -66,6 +66,18 @@ package object subparts {
         slinky.web.html.main()(
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
+            (model.nodes.operating, model.currentCotonoma) match {
+              case (Some(node), Some(cotonoma)) =>
+                Some(
+                  subparts.CotoInput.view(
+                    model.flowInput,
+                    node,
+                    cotonoma,
+                    dispatch
+                  )
+                )
+              case _ => None
+            },
             section(className := "timeline header-and-body")(
             )
           )

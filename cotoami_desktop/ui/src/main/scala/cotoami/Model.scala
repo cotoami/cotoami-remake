@@ -51,8 +51,10 @@ case class Model(
   def rootCotonomaId: Option[Id[Cotonoma]] =
     this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
 
-  def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.cotonomas.selectedId.orElse(this.nodes.current.map(_.rootCotonomaId))
+  def currentCotonoma: Option[Cotonoma] =
+    this.cotonomas.selectedId.orElse(
+      this.nodes.current.map(_.rootCotonomaId)
+    ).flatMap(this.cotonomas.get(_))
 
   lazy val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId
