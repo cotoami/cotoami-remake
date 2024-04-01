@@ -63,7 +63,7 @@ object CotoInput {
         vertical = false,
         initialPrimarySize = 300,
         resizable = !model.folded,
-        className = Some("xxx"),
+        className = None,
         onPrimarySizeChanged = (
             (newSize) => println(s"newSize: ${newSize}")
         )
