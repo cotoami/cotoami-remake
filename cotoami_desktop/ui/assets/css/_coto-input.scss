@@ -40,6 +40,10 @@ section.coto-input {
           vertical-align: sub;
         }
 
+        .label {
+          opacity: 0.5;
+        }
+
         &:hover {
           background-color: var(--hover-background-color);
         }
@@ -47,6 +51,10 @@ section.coto-input {
         &:disabled {
           cursor: default;
           background-color: var(--editor-background-color);
+
+          .label {
+            opacity: 1;
+          }
         }
       }
     }

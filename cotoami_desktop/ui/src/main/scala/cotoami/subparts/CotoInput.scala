@@ -37,12 +37,16 @@ object CotoInput {
       header(className := "tools")(
         section(className := "coto-type-switch")(
           button(className := "new-coto default", disabled := true)(
-            material_symbol("text_snippet"),
-            "Coto"
+            span(className := "label")(
+              material_symbol("text_snippet"),
+              "Coto"
+            )
           ),
           button(className := "new-cotonoma default", disabled := false)(
-            material_symbol("topic"),
-            "Cotonoma"
+            span(className := "label")(
+              material_symbol("topic"),
+              "Cotonoma"
+            )
           )
         ),
         button(
