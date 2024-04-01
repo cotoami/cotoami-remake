@@ -3,7 +3,13 @@ package cotoami
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
+import cotoami.components.{
+  material_symbol,
+  node_img,
+  optionalClasses,
+  paneToggle,
+  SplitPane
+}
 
 package object subparts {
 
@@ -51,17 +57,28 @@ package object subparts {
     SplitPane(
       vertical = true,
       initialPrimarySize = uiState.paneSizes.getOrElse(
-        subparts.NavCotonomas.PaneName,
-        subparts.NavCotonomas.DefaultWidth
+        NavCotonomas.PaneName,
+        NavCotonomas.DefaultWidth
       ),
-      resizable = uiState.paneOpened(subparts.NavCotonomas.PaneName),
+      resizable = uiState.paneOpened(NavCotonomas.PaneName),
       className = Some("node-contents"),
       onPrimarySizeChanged = (
-          (newSize) =>
-            dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
+          (newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize))
       )
     )(
-      subparts.NavCotonomas.view(model, uiState, dispatch),
+      SplitPane.Primary(className =
+        Some(
+          optionalClasses(
+            Seq(
+              ("pane", true),
+              ("folded", !uiState.paneOpened(NavCotonomas.PaneName))
+            )
+          )
+        )
+      )(
+        paneToggle(NavCotonomas.PaneName, dispatch),
+        model.nodes.current.map(NavCotonomas.view(model, _, dispatch))
+      ),
       components.SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
           section(className := "flow pane")(

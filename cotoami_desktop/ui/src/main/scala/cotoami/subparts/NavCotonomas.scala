@@ -8,9 +8,7 @@ import cotoami.components.{
   material_symbol,
   node_img,
   optionalClasses,
-  paneToggle,
-  ScrollArea,
-  SplitPane
+  ScrollArea
 }
 import cotoami.backend.{Cotonoma, Cotonomas, Node}
 
@@ -19,25 +17,6 @@ object NavCotonomas {
   val DefaultWidth = 230
 
   def view(
-      model: Model,
-      uiState: Model.UiState,
-      dispatch: Msg => Unit
-  ): ReactElement =
-    SplitPane.Primary(className =
-      Some(
-        optionalClasses(
-          Seq(
-            ("pane", true),
-            ("folded", !uiState.paneOpened(PaneName))
-          )
-        )
-      )
-    )(
-      paneToggle(PaneName, dispatch),
-      model.nodes.current.map(navCotonomas(model, _, dispatch))
-    )
-
-  private def navCotonomas(
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
