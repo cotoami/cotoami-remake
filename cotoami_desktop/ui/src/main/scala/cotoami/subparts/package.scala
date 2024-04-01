@@ -79,7 +79,7 @@ package object subparts {
         paneToggle(NavCotonomas.PaneName, dispatch),
         model.nodes.current.map(NavCotonomas.view(model, _, dispatch))
       ),
-      components.SplitPane.Secondary(className = None)(
+      SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
           section(className := "flow pane")(
             paneToggle("flow", dispatch),
