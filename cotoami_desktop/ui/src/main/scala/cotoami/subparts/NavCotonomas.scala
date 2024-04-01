@@ -3,13 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{
-  DeselectCotonoma,
-  FetchMoreSubCotonomas,
-  Model,
-  Msg,
-  SelectCotonoma
-}
+import cotoami.{CotonomasMsg, DeselectCotonoma, Model, Msg, SelectCotonoma}
 import cotoami.components.{
   material_symbol,
   node_img,
@@ -18,7 +12,7 @@ import cotoami.components.{
   ScrollArea,
   SplitPane
 }
-import cotoami.backend.{Cotonoma, Node}
+import cotoami.backend.{Cotonoma, Cotonomas, Node}
 
 object NavCotonomas {
   val PaneName = "nav-cotonomas"
@@ -74,7 +68,8 @@ object NavCotonomas {
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(cotoami.FetchMoreRecentCotonomas)
+          onScrollToBottom =
+            () => dispatch(CotonomasMsg(Cotonomas.FetchMoreRecent))
         )(
           model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
           Option.when(!recentCotonomas.isEmpty)(
@@ -82,7 +77,7 @@ object NavCotonomas {
           ),
           div(
             className := "more",
-            aria - "busy" := model.recentCotonomasLoading.toString()
+            aria - "busy" := model.cotonomas.recentLoading.toString()
           )()
         )
       )
@@ -122,13 +117,15 @@ object NavCotonomas {
                 button(
                   className := "more-sub-cotonomas default",
                   onClick := ((e) =>
-                    dispatch(FetchMoreSubCotonomas(selectedCotonoma.id))
+                    dispatch(
+                      CotonomasMsg(Cotonomas.FetchMoreSubs(selectedCotonoma.id))
+                    )
                   )
                 )(
                   material_symbol("more_horiz")
                 )
               )
-            ) ++ Option.when(model.subCotonomasLoading)(
+            ) ++ Option.when(model.cotonomas.subsLoading)(
               li(
                 className := "more",
                 aria - "busy" := "true"

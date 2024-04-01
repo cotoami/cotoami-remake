@@ -3,16 +3,7 @@ package cotoami
 import org.scalajs.dom.URL
 
 import cotoami.Log
-import cotoami.backend.{
-  Cotonoma,
-  CotonomaDetailsJson,
-  CotonomaJson,
-  DatabaseInfoJson,
-  LogEvent,
-  Node,
-  Paginated,
-  SystemInfo
-}
+import cotoami.backend.{Cotonoma, DatabaseInfoJson, LogEvent, Node, SystemInfo}
 
 sealed trait Msg
 
@@ -44,17 +35,5 @@ case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
 case object DeselectCotonoma extends Msg
 
 // Sub
+case class CotonomasMsg(subMsg: backend.Cotonomas.Msg) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
-
-// Commands
-case object FetchMoreRecentCotonomas extends Msg
-case class RecentCotonomasFetched(
-    result: Either[backend.Error, Paginated[CotonomaJson]]
-) extends Msg
-case class CotonomaDetailsFetched(
-    result: Either[backend.Error, CotonomaDetailsJson]
-) extends Msg
-case class FetchMoreSubCotonomas(id: Id[Cotonoma]) extends Msg
-case class SubCotonomasFetched(
-    result: Either[backend.Error, Paginated[CotonomaJson]]
-) extends Msg
