@@ -14,15 +14,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.backend.{
-  Commands,
-  Cotonoma,
-  DatabaseInfo,
-  LogEvent,
-  Node,
-  Nodes,
-  SystemInfo
-}
+import cotoami.backend.{Cotonomas, DatabaseInfo, LogEvent, Nodes, SystemInfo}
 
 object Main {
 
@@ -175,90 +167,21 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
+      case CotonomasMsg(subMsg) => {
+        val (cotonomas, cmds) =
+          backend.Cotonomas.update(
+            subMsg,
+            model.cotonomas,
+            model.nodes.selectedId
+          )
+        (model.copy(cotonomas = cotonomas), cmds)
+      }
+
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
           subparts.ModalWelcome.update(subMsg, model.modalWelcome);
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
-
-      case FetchMoreRecentCotonomas =>
-        if (model.recentCotonomasLoading) {
-          (model, Seq.empty)
-        } else {
-          model.cotonomas.recentIds.nextPageIndex.map(i =>
-            (
-              model.copy(recentCotonomasLoading = true),
-              Seq(fetchRecentCotonomas(model.nodes.selectedId, i))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-
-      case RecentCotonomasFetched(Right(page)) =>
-        (
-          model
-            .modify(_.cotonomas).using(_.addPageOfRecent(page))
-            .modify(_.recentCotonomasLoading).setTo(false),
-          Seq.empty
-        )
-
-      case RecentCotonomasFetched(Left(e)) =>
-        (
-          model
-            .modify(_.recentCotonomasLoading).setTo(false)
-            .error(e, "Couldn't fetch recent cotonomas."),
-          Seq.empty
-        )
-
-      case CotonomaDetailsFetched(Right(details)) =>
-        (
-          model
-            .modify(_.cotonomas).using(_.setCotonomaDetails(details))
-            .modify(_.log).using(
-              _.info(
-                "Cotonoma details fetched.",
-                Some(
-                  s"name: ${details.cotonoma.name}" +
-                    s", supers: ${details.supers.size}" +
-                    s", subs: ${details.subs.rows.size}"
-                )
-              )
-            ),
-          Seq.empty
-        )
-
-      case CotonomaDetailsFetched(Left(e)) =>
-        (
-          model.error(e, "Couldn't fetch cotonoma details."),
-          Seq.empty
-        )
-
-      case FetchMoreSubCotonomas(id) =>
-        if (model.subCotonomasLoading) {
-          (model, Seq.empty)
-        } else {
-          model.cotonomas.subIds.nextPageIndex.map(i =>
-            (
-              model.copy(subCotonomasLoading = true),
-              Seq(fetchSubCotonomas(id, i))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-
-      case SubCotonomasFetched(Right(page)) =>
-        (
-          model
-            .modify(_.cotonomas).using(_.addPageOfSubs(page))
-            .modify(_.subCotonomasLoading).setTo(false),
-          Seq.empty
-        )
-
-      case SubCotonomasFetched(Left(e)) =>
-        (
-          model
-            .modify(_.subCotonomasLoading).setTo(false)
-            .error(e, "Couldn't fetch sub cotonomas."),
-          Seq.empty
-        )
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
@@ -268,7 +191,7 @@ object Main {
           model
             .clearSelection()
             .modify(_.recentCotonomasLoading).setTo(true),
-          Seq(fetchRecentCotonomas(None, 0))
+          Seq(Cotonomas.fetchRecent(None, 0))
         )
 
       case Route.node(id) =>
@@ -278,7 +201,7 @@ object Main {
               .clearSelection()
               .modify(_.nodes).using(_.select(id))
               .modify(_.recentCotonomasLoading).setTo(true),
-            Seq(fetchRecentCotonomas(Some(id), 0))
+            Seq(Cotonomas.fetchRecent(Some(id), 0))
           )
         } else {
           (
@@ -293,7 +216,7 @@ object Main {
             model
               .modify(_.nodes).using(_.deselect())
               .modify(_.cotonomas).using(_.select(id)),
-            Seq(fetchCotonomaDetails(id))
+            Seq(Cotonomas.fetchDetails(id))
           )
         } else {
           (
@@ -312,7 +235,7 @@ object Main {
                 model
                   .modify(_.nodes).using(_.select(nodeId))
                   .modify(_.cotonomas).using(_.select(cotonomaId)),
-                Seq(fetchCotonomaDetails(cotonomaId))
+                Seq(Cotonomas.fetchDetails(cotonomaId))
               )
             } else {
               (
@@ -337,22 +260,6 @@ object Main {
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))
     }
-
-  def fetchRecentCotonomas(
-      nodeId: Option[Id[Node]],
-      pageIndex: Double
-  ): Cmd[Msg] =
-    node_command(Commands.RecentCotonomas(nodeId, pageIndex)).map(
-      RecentCotonomasFetched(_)
-    )
-
-  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[Msg] =
-    node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched(_))
-
-  def fetchSubCotonomas(id: Id[Cotonoma], pageIndex: Double): Cmd[Msg] =
-    node_command(Commands.SubCotonomas(id, pageIndex)).map(
-      SubCotonomasFetched(_)
-    )
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
