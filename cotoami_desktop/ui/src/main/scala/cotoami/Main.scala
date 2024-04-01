@@ -190,7 +190,7 @@ object Main {
         (
           model
             .clearSelection()
-            .modify(_.recentCotonomasLoading).setTo(true),
+            .modify(_.cotonomas.recentLoading).setTo(true),
           Seq(Cotonomas.fetchRecent(None, 0))
         )
 
@@ -200,7 +200,7 @@ object Main {
             model
               .clearSelection()
               .modify(_.nodes).using(_.select(id))
-              .modify(_.recentCotonomasLoading).setTo(true),
+              .modify(_.cotonomas.recentLoading).setTo(true),
             Seq(Cotonomas.fetchRecent(Some(id), 0))
           )
         } else {
