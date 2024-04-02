@@ -16,13 +16,14 @@ object CotoInput {
 
   case class Model(
       name: String,
-      form: Form = CotoForm()
+      form: Form = CotoForm(),
+      focused: Boolean = false
   ) {
     def folded: Boolean =
-      this.form match {
+      !this.focused && (this.form match {
         case CotoForm(content)  => content.isBlank
         case CotonomaForm(name) => name.isBlank
-      }
+      })
   }
 
   sealed trait Form
@@ -34,6 +35,7 @@ object CotoInput {
   case object SetCotonomaForm extends Msg
   case class CotoContentInput(content: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
+  case class SetFocus(focus: Boolean) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     (msg, model.form) match {
@@ -48,6 +50,9 @@ object CotoInput {
 
       case (CotonomaNameInput(name), form: CotonomaForm) =>
         (model.copy(form = form.copy(name = name)), Seq.empty)
+
+      case (SetFocus(focus), _) =>
+        (model.copy(focused = focus), Seq.empty)
 
       case (_, _) => (model, Seq.empty)
     }
@@ -120,7 +125,9 @@ object CotoInput {
               textarea(
                 placeholder := "Write your Coto in Markdown here",
                 value := content,
-                onChange := ((e) => dispatch(CotoContentInput(e.target.value)))
+                onFocus := (_ => dispatch(SetFocus(true))),
+                onBlur := (_ => dispatch(SetFocus(false))),
+                onChange := (e => dispatch(CotoContentInput(e.target.value)))
               )
             ),
             SplitPane.Secondary(className = None)(
@@ -135,6 +142,8 @@ object CotoInput {
               name := "cotonomaName",
               placeholder := "New cotonoma name",
               value := cotonomaName,
+              onFocus := (_ => dispatch(SetFocus(true))),
+              onBlur := (_ => dispatch(SetFocus(false))),
               onChange := ((e) => dispatch(CotonomaNameInput(e.target.value)))
             ),
             inputFooter(model, operatingNode, currentCotonoma, dispatch)
