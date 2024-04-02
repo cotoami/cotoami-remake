@@ -36,4 +36,5 @@ case object DeselectCotonoma extends Msg
 
 // Sub
 case class CotonomasMsg(subMsg: backend.Cotonomas.Msg) extends Msg
+case class FlowInputMsg(subMsg: subparts.CotoInput.Msg) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg

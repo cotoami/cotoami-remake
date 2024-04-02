@@ -177,9 +177,15 @@ object Main {
         (model.copy(cotonomas = cotonomas), cmds)
       }
 
+      case FlowInputMsg(subMsg) => {
+        val (flowInput, cmds) =
+          subparts.CotoInput.update(subMsg, model.flowInput)
+        (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg(_))))
+      }
+
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
-          subparts.ModalWelcome.update(subMsg, model.modalWelcome);
+          subparts.ModalWelcome.update(subMsg, model.modalWelcome)
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
     }

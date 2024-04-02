@@ -109,7 +109,7 @@ package object subparts {
                 FlowInputEditorDefaultHeight
               ),
               (newSize) => dispatch(ResizePane(FlowInputEditorName, newSize)),
-              dispatch
+              subMsg => dispatch(FlowInputMsg(subMsg))
             )
           )
         case _ => None

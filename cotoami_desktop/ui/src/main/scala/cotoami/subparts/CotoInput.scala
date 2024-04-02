@@ -3,6 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import fui.FunctionalUI._
 import cotoami.backend.{Cotonoma, Node}
 import cotoami.components.{
   material_symbol,
@@ -14,6 +15,7 @@ import cotoami.components.{
 object CotoInput {
 
   case class Model(
+      name: String,
       folded: Boolean = false,
       form: Form = CotoForm()
   )
@@ -22,13 +24,26 @@ object CotoInput {
   case class CotoForm(content: String = "") extends Form
   case class CotonomaForm(name: String = "") extends Form
 
+  sealed trait Msg
+  case object SetCotoForm extends Msg
+  case object SetCotonomaForm extends Msg
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
+    msg match {
+      case SetCotoForm =>
+        (model.copy(form = CotoForm()), Seq.empty)
+
+      case SetCotonomaForm =>
+        (model.copy(form = CotonomaForm()), Seq.empty)
+    }
+
   def view(
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit,
-      dispatch: cotoami.Msg => Unit
+      dispatch: Msg => Unit
   ): ReactElement =
     section(
       className := optionalClasses(
@@ -40,13 +55,21 @@ object CotoInput {
     )(
       header(className := "tools")(
         section(className := "coto-type-switch")(
-          button(className := "new-coto default", disabled := true)(
+          button(
+            className := "new-coto default",
+            disabled := model.form.isInstanceOf[CotoForm],
+            onClick := (_ => dispatch(SetCotoForm))
+          )(
             span(className := "label")(
               material_symbol("text_snippet"),
               "Coto"
             )
           ),
-          button(className := "new-cotonoma default", disabled := false)(
+          button(
+            className := "new-cotonoma default",
+            disabled := model.form.isInstanceOf[CotonomaForm],
+            onClick := (_ => dispatch(SetCotonomaForm))
+          )(
             span(className := "label")(
               material_symbol("topic"),
               "Cotonoma"
@@ -105,7 +128,7 @@ object CotoInput {
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
-      dispatch: cotoami.Msg => Unit
+      dispatch: Msg => Unit
   ): ReactElement =
     footer(className := "post")(
       address(className := "poster")(

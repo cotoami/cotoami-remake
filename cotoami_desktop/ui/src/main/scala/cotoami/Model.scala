@@ -34,7 +34,7 @@ case class Model(
     cotonomas: Cotonomas = Cotonomas(),
 
     // subparts
-    flowInput: CotoInput.Model = CotoInput.Model(),
+    flowInput: CotoInput.Model = CotoInput.Model("flow-input"),
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
   def error(error: Error, message: String): Model =
