@@ -58,6 +58,10 @@ section.coto-input {
         }
       }
     }
+
+    button.tool:disabled {
+      opacity: 0.5;
+    }
   }
 
   textarea {
