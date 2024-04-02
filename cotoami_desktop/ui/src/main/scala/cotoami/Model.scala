@@ -13,7 +13,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{Cotonoma, Cotonomas, Error, Nodes, SystemInfo}
-import cotoami.subparts.ModalWelcome
+import cotoami.subparts.{CotoInput, ModalWelcome}
 
 case class Model(
     url: URL,
@@ -33,7 +33,8 @@ case class Model(
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
 
-    // WelcomeModal
+    // subparts
+    flowInput: CotoInput.Model = CotoInput.Model("flow-input"),
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
   def error(error: Error, message: String): Model =
@@ -50,8 +51,10 @@ case class Model(
   def rootCotonomaId: Option[Id[Cotonoma]] =
     this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
 
-  def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.cotonomas.selectedId.orElse(this.nodes.current.map(_.rootCotonomaId))
+  def currentCotonoma: Option[Cotonoma] =
+    this.cotonomas.selectedId.orElse(
+      this.nodes.current.map(_.rootCotonomaId)
+    ).flatMap(this.cotonomas.get(_))
 
   lazy val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId

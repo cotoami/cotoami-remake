@@ -3,7 +3,13 @@ package cotoami
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.components.{material_symbol, node_img, paneToggle, SplitPane}
+import cotoami.components.{
+  material_symbol,
+  node_img,
+  optionalClasses,
+  paneToggle,
+  SplitPane
+}
 
 package object subparts {
 
@@ -51,28 +57,66 @@ package object subparts {
     SplitPane(
       vertical = true,
       initialPrimarySize = uiState.paneSizes.getOrElse(
-        subparts.NavCotonomas.PaneName,
-        subparts.NavCotonomas.DefaultWidth
+        NavCotonomas.PaneName,
+        NavCotonomas.DefaultWidth
       ),
-      resizable = uiState.paneOpened(subparts.NavCotonomas.PaneName),
+      resizable = uiState.paneOpened(NavCotonomas.PaneName),
       className = Some("node-contents"),
       onPrimarySizeChanged = (
-          (newSize) =>
-            dispatch(ResizePane(subparts.NavCotonomas.PaneName, newSize))
+          (newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize))
       )
     )(
-      subparts.NavCotonomas.view(model, uiState, dispatch),
-      components.SplitPane.Secondary(className = None)(
-        slinky.web.html.main()(
-          section(className := "flow pane")(
-            paneToggle("flow", dispatch),
-            section(className := "timeline header-and-body")(
+      SplitPane.Primary(className =
+        Some(
+          optionalClasses(
+            Seq(
+              ("pane", true),
+              ("folded", !uiState.paneOpened(NavCotonomas.PaneName))
             )
           )
+        )
+      )(
+        paneToggle(NavCotonomas.PaneName, dispatch),
+        model.nodes.current.map(NavCotonomas.view(model, _, dispatch))
+      ),
+      SplitPane.Secondary(className = None)(
+        slinky.web.html.main()(
+          flowPane(model, uiState, dispatch)
         )
       )
     )
   )
+
+  private val FlowInputEditorName = "flow-input-editor"
+  private val FlowInputEditorDefaultHeight = 150
+
+  private def flowPane(
+      model: Model,
+      uiState: Model.UiState,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "flow pane")(
+      paneToggle("flow", dispatch),
+      (model.nodes.operating, model.currentCotonoma) match {
+        case (Some(node), Some(cotonoma)) =>
+          Some(
+            subparts.CotoInput.view(
+              model.flowInput,
+              node,
+              cotonoma,
+              uiState.paneSizes.getOrElse(
+                FlowInputEditorName,
+                FlowInputEditorDefaultHeight
+              ),
+              (newSize) => dispatch(ResizePane(FlowInputEditorName, newSize)),
+              subMsg => dispatch(FlowInputMsg(subMsg))
+            )
+          )
+        case _ => None
+      },
+      section(className := "timeline header-and-body")(
+      )
+    )
 
   def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
     footer(

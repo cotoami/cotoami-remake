@@ -98,6 +98,11 @@ a {
   cursor: pointer;
 }
 
+input[type=text],
+textarea {
+  background-color: var(--input-background-color);
+}
+
 // override pico's style to move the margin below validation messages
 input:not([type="checkbox"], [type="radio"]),
 select,
@@ -158,6 +163,10 @@ button.default {
   width: auto;
   box-sizing: border-box;
   cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
 }
 
 .pane {

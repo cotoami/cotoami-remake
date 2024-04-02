@@ -1,3 +1,5 @@
+@use "./utils";
+
 nav.cotonomas {
   --item-padding-left: 12px;
   --item-font-size: 0.9rem;
@@ -95,6 +97,8 @@ nav.cotonomas {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    @include utils.force-unselectable;
   }
 
   a.cotonoma {

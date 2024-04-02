@@ -249,7 +249,7 @@ object ModalWelcome {
                   className := "database default",
                   title := db.name,
                   disabled := model.processing,
-                  onClick := ((e) =>
+                  onClick := (_ =>
                     dispatch(ModalWelcomeMsg(OpenDatabaseIn(db.folder)))
                   )
                 )(
