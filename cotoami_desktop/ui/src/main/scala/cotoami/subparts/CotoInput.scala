@@ -27,6 +27,8 @@ object CotoInput {
   sealed trait Msg
   case object SetCotoForm extends Msg
   case object SetCotonomaForm extends Msg
+  case class CotoContentInput(content: String) extends Msg
+  case class CotonomaNameInput(name: String) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
@@ -35,6 +37,20 @@ object CotoInput {
 
       case SetCotonomaForm =>
         (model.copy(form = CotonomaForm()), Seq.empty)
+
+      case CotoContentInput(content) =>
+        model.form match {
+          case form: CotoForm =>
+            (model.copy(form = form.copy(content = content)), Seq.empty)
+          case _ => (model, Seq.empty)
+        }
+
+      case CotonomaNameInput(name) =>
+        model.form match {
+          case form: CotonomaForm =>
+            (model.copy(form = form.copy(name = name)), Seq.empty)
+          case _ => (model, Seq.empty)
+        }
     }
 
   def view(
@@ -104,8 +120,9 @@ object CotoInput {
             SplitPane.Primary(className = Some("coto-editor"))(
               textarea(
                 placeholder := "Write your Coto in Markdown here",
-                value := content
-              )()
+                value := content,
+                onChange := ((e) => dispatch(CotoContentInput(e.target.value)))
+              )
             ),
             SplitPane.Secondary(className = None)(
               inputFooter(model, operatingNode, currentCotonoma, dispatch)
@@ -118,7 +135,8 @@ object CotoInput {
               `type` := "text",
               name := "cotonomaName",
               placeholder := "New cotonoma name",
-              value := cotonomaName
+              value := cotonomaName,
+              onChange := ((e) => dispatch(CotonomaNameInput(e.target.value)))
             ),
             inputFooter(model, operatingNode, currentCotonoma, dispatch)
           )

@@ -49,7 +49,7 @@ section.coto-input {
         }
 
         &:disabled {
-          cursor: default;
+          opacity: 1;
           background-color: var(--editor-background-color);
 
           .label {
