@@ -31,26 +31,20 @@ object CotoInput {
   case class CotonomaNameInput(name: String) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
-    msg match {
-      case SetCotoForm =>
+    (msg, model.form) match {
+      case (SetCotoForm, _) =>
         (model.copy(form = CotoForm()), Seq.empty)
 
-      case SetCotonomaForm =>
+      case (SetCotonomaForm, _) =>
         (model.copy(form = CotonomaForm()), Seq.empty)
 
-      case CotoContentInput(content) =>
-        model.form match {
-          case form: CotoForm =>
-            (model.copy(form = form.copy(content = content)), Seq.empty)
-          case _ => (model, Seq.empty)
-        }
+      case (CotoContentInput(content), form: CotoForm) =>
+        (model.copy(form = form.copy(content = content)), Seq.empty)
 
-      case CotonomaNameInput(name) =>
-        model.form match {
-          case form: CotonomaForm =>
-            (model.copy(form = form.copy(name = name)), Seq.empty)
-          case _ => (model, Seq.empty)
-        }
+      case (CotonomaNameInput(name), form: CotonomaForm) =>
+        (model.copy(form = form.copy(name = name)), Seq.empty)
+
+      case (_, _) => (model, Seq.empty)
     }
 
   def view(
