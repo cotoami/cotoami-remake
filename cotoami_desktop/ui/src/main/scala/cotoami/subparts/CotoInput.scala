@@ -117,7 +117,7 @@ object CotoInput {
             input(
               `type` := "text",
               name := "cotonomaName",
-              placeholder := "Cotonoma name",
+              placeholder := "New cotonoma name",
               value := cotonomaName
             ),
             inputFooter(model, operatingNode, currentCotonoma, dispatch)
