@@ -68,20 +68,37 @@ object CotoInput {
           material_symbol("location_on")
         )
       ),
-      SplitPane(
-        vertical = false,
-        initialPrimarySize = editorHeight,
-        resizable = !model.folded,
-        className = None,
-        onPrimarySizeChanged = onEditorHeightChanged
-      )(
-        SplitPane.Primary(className = Some("coto-editor"))(
-          textarea(placeholder := "Write your Coto in Markdown here")()
-        ),
-        SplitPane.Secondary(className = None)(
-          inputFooter(model, operatingNode, currentCotonoma, dispatch)
-        )
-      )
+      model.form match {
+        case CotoForm(content) =>
+          SplitPane(
+            vertical = false,
+            initialPrimarySize = editorHeight,
+            resizable = !model.folded,
+            className = None,
+            onPrimarySizeChanged = onEditorHeightChanged
+          )(
+            SplitPane.Primary(className = Some("coto-editor"))(
+              textarea(
+                placeholder := "Write your Coto in Markdown here",
+                value := content
+              )()
+            ),
+            SplitPane.Secondary(className = None)(
+              inputFooter(model, operatingNode, currentCotonoma, dispatch)
+            )
+          )
+
+        case CotonomaForm(cotonomaName) =>
+          div()(
+            input(
+              `type` := "text",
+              name := "cotonomaName",
+              placeholder := "Cotonoma name",
+              value := cotonomaName
+            ),
+            inputFooter(model, operatingNode, currentCotonoma, dispatch)
+          )
+      }
     )
 
   def inputFooter(
