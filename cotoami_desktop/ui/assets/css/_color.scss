@@ -8,7 +8,7 @@
   --selected-background-color: #{pico.$grey-100};
   --selected-border-color: #{pico.$grey-700};
   --hover-background-color: #{pico.$grey-50};
-  --editor-background-color: #{pico.$grey-50};
+  --input-background-color: #{rgba(pico.$grey-50, 0.5)};
   --traversal-background-color: #{pico.$grey-50};
   --traversed-border-color: #{pico.$grey-300};
   --scrollbar-color: #{pico.$grey-400};
@@ -22,7 +22,7 @@
     --selected-background-color: #{pico.$grey-600};
     --selected-border-color: #{pico.$grey-200};
     --hover-background-color: #{pico.$grey-800};
-    --editor-background-color: #{mix(pico.$grey-800, pico.$grey-900)};
+    --input-background-color: #{pico.$grey-900};
     --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
     --traversed-border-color: #{pico.$grey-500};
     --scrollbar-color: #{pico.$grey-600};
@@ -36,7 +36,7 @@
   --selected-background-color: #{pico.$grey-600};
   --selected-border-color: #{pico.$grey-200};
   --hover-background-color: #{pico.$grey-800};
-  --editor-background-color: #{mix(pico.$grey-800, pico.$grey-900)};
+  --input-background-color: #{pico.$grey-900};
   --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
   --traversed-border-color: #{pico.$grey-500};
   --scrollbar-color: #{pico.$grey-600};
