@@ -87,6 +87,9 @@ package object subparts {
     )
   )
 
+  private val FlowInputEditorName = "flow-input-editor"
+  private val FlowInputEditorDefaultHeight = 150
+
   private def flowPane(
       model: Model,
       uiState: Model.UiState,
@@ -101,6 +104,11 @@ package object subparts {
               model.flowInput,
               node,
               cotonoma,
+              uiState.paneSizes.getOrElse(
+                FlowInputEditorName,
+                FlowInputEditorDefaultHeight
+              ),
+              (newSize) => dispatch(ResizePane(FlowInputEditorName, newSize)),
               dispatch
             )
           )

@@ -12,12 +12,9 @@ import cotoami.components.{
 }
 
 object CotoInput {
-  val EditorDefaultHeight = 150
 
   case class Model(
       folded: Boolean = false,
-      editorHeight: Int = EditorDefaultHeight,
-      onEditorHeightChanged: Int => Unit = (height => ()),
       form: Form = CotoForm()
   )
 
@@ -29,6 +26,8 @@ object CotoInput {
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
+      editorHeight: Int,
+      onEditorHeightChanged: Int => Unit,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     section(
@@ -71,10 +70,10 @@ object CotoInput {
       ),
       SplitPane(
         vertical = false,
-        initialPrimarySize = model.editorHeight,
+        initialPrimarySize = editorHeight,
         resizable = !model.folded,
         className = None,
-        onPrimarySizeChanged = model.onEditorHeightChanged
+        onPrimarySizeChanged = onEditorHeightChanged
       )(
         SplitPane.Primary(className = Some("coto-editor"))(
           textarea(placeholder := "Write your Coto in Markdown here")()
