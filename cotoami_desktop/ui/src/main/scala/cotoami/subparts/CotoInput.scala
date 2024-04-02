@@ -12,9 +12,14 @@ import cotoami.components.{
 }
 
 object CotoInput {
-  val CotoEditorDefaultHeight = 150
+  val EditorDefaultHeight = 150
 
-  case class Model(folded: Boolean = false, form: Form = CotoForm())
+  case class Model(
+      folded: Boolean = false,
+      editorHeight: Int = EditorDefaultHeight,
+      onEditorHeightChanged: Int => Unit = (height => ()),
+      form: Form = CotoForm()
+  )
 
   sealed trait Form
   case class CotoForm(content: String = "") extends Form
@@ -66,12 +71,10 @@ object CotoInput {
       ),
       SplitPane(
         vertical = false,
-        initialPrimarySize = CotoEditorDefaultHeight,
+        initialPrimarySize = model.editorHeight,
         resizable = !model.folded,
         className = None,
-        onPrimarySizeChanged = (
-            (newSize) => println(s"newSize: ${newSize}")
-        )
+        onPrimarySizeChanged = model.onEditorHeightChanged
       )(
         SplitPane.Primary(className = Some("coto-editor"))(
           textarea(placeholder := "Write your Coto in Markdown here")()
