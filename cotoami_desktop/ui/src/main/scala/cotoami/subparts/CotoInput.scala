@@ -19,11 +19,13 @@ object CotoInput {
       form: Form = CotoForm(),
       focused: Boolean = false
   ) {
-    def folded: Boolean =
-      !this.focused && (this.form match {
+    def folded: Boolean = !this.focused && this.isBlank
+
+    def isBlank: Boolean =
+      this.form match {
         case CotoForm(content)  => content.isBlank
         case CotonomaForm(name) => name.isBlank
-      })
+      }
   }
 
   sealed trait Form
@@ -117,7 +119,7 @@ object CotoInput {
           SplitPane(
             vertical = false,
             initialPrimarySize = editorHeight,
-            resizable = !model.folded,
+            resizable = !model.folded && !model.isBlank,
             className = None,
             onPrimarySizeChanged = onEditorHeightChanged
           )(
