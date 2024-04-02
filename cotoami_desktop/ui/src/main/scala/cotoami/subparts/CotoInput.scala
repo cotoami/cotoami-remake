@@ -16,9 +16,14 @@ object CotoInput {
 
   case class Model(
       name: String,
-      folded: Boolean = false,
       form: Form = CotoForm()
-  )
+  ) {
+    def folded: Boolean =
+      this.form match {
+        case CotoForm(content)  => content.isBlank
+        case CotonomaForm(name) => name.isBlank
+      }
+  }
 
   sealed trait Form
   case class CotoForm(content: String = "") extends Form
