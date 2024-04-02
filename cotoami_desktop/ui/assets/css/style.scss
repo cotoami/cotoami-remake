@@ -158,6 +158,11 @@ button.default {
   width: auto;
   box-sizing: border-box;
   cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
 }
 
 .pane {

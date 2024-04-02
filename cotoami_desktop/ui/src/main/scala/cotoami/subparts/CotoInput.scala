@@ -79,7 +79,8 @@ object CotoInput {
         button(
           className := "image default",
           data - "tooltip" := "Image",
-          data - "placement" := "bottom"
+          data - "placement" := "bottom",
+          disabled := !model.form.isInstanceOf[CotoForm]
         )(
           material_symbol("image")
         ),
