@@ -22,3 +22,12 @@ case class Cotos(
       )
     )
 }
+
+object Cotos {
+  sealed trait Msg
+
+  case object FetchMoreRecent extends Msg
+  case class RecentFetched(
+      result: Either[Error, Paginated[CotoJson]]
+  ) extends Msg
+}
