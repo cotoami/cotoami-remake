@@ -20,7 +20,7 @@ object PaneFlow {
       (model.nodes.operating, model.currentCotonoma) match {
         case (Some(node), Some(cotonoma)) =>
           Some(
-            CotoInput.view(
+            FormCoto.view(
               model.flowInput,
               node,
               cotonoma,

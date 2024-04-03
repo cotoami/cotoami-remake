@@ -179,7 +179,7 @@ object Main {
 
       case FlowInputMsg(subMsg) => {
         val (flowInput, cmds) =
-          subparts.CotoInput.update(subMsg, model.flowInput)
+          subparts.FormCoto.update(subMsg, model.flowInput)
         (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg(_))))
       }
 

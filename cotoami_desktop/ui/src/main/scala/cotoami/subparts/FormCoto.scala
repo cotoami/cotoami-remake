@@ -7,7 +7,7 @@ import fui.FunctionalUI._
 import cotoami.backend.{Cotonoma, Node}
 import cotoami.components.{material_symbol, optionalClasses, SplitPane}
 
-object CotoInput {
+object FormCoto {
 
   case class Model(
       name: String,
@@ -65,7 +65,7 @@ object CotoInput {
     section(
       className := optionalClasses(
         Seq(
-          ("coto-input", true),
+          ("form-coto", true),
           ("folded", model.folded)
         )
       )
