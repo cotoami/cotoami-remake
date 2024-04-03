@@ -13,7 +13,7 @@ import cotoami.components.{
 import cotoami.backend.{Cotonoma, Cotonomas, Node}
 
 object NavCotonomas {
-  val PaneName = "nav-cotonomas"
+  val PaneName = "NavCotonomas"
   val DefaultWidth = 230
 
   def view(

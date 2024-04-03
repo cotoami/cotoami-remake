@@ -30,7 +30,7 @@ object Main {
   }
 
   object DatabaseFolder {
-    val SessionStorageKey = "databaseFolder"
+    val SessionStorageKey = "DatabaseFolder"
 
     def save(folder: String): Cmd[Msg] =
       Cmd(IO {

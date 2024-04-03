@@ -93,7 +93,7 @@ object Model {
   }
 
   object UiState {
-    val StorageKey = "uiState"
+    val StorageKey = "UiState"
 
     implicit val encoder: Encoder[UiState] = deriveEncoder
     implicit val decoder: Decoder[UiState] = deriveDecoder
