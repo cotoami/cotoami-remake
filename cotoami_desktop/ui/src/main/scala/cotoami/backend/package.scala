@@ -55,7 +55,7 @@ package object backend {
       total: Double = 0
   ) {
     def addPage[S](page: Paginated[S], toId: S => Id[T]): PaginatedIds[T] = {
-      val idsToAdd = page.rows.map(toId(_)).filterNot(this.ids.contains(_))
+      val idsToAdd = page.rows.map(toId).filterNot(this.ids.contains)
       this.copy(
         ids = this.ids ++ idsToAdd,
         order = this.order ++ idsToAdd,

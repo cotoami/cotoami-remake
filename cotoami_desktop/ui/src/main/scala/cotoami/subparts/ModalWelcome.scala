@@ -68,7 +68,7 @@ object ModalWelcome {
                 "Select a base folder",
                 Some(model.baseFolder)
               )
-              .map((BaseFolderSelected andThen ModalWelcomeMsg)(_))
+              .map(BaseFolderSelected andThen ModalWelcomeMsg)
           )
         )
 
@@ -114,7 +114,7 @@ object ModalWelcome {
                 "Select a database folder",
                 None
               )
-              .map((DatabaseFolderSelected andThen ModalWelcomeMsg)(_))
+              .map(DatabaseFolderSelected andThen ModalWelcomeMsg)
           )
         )
 
@@ -167,7 +167,7 @@ object ModalWelcome {
                 folderName = model.folderName
               )
           )
-          .map((NewFolderValidation andThen ModalWelcomeMsg)(_))
+          .map(NewFolderValidation andThen ModalWelcomeMsg)
       )
     else
       Seq()
@@ -183,7 +183,7 @@ object ModalWelcome {
             folderName = model.folderName
           )
       )
-      .map(cotoami.DatabaseOpened(_))
+      .map(cotoami.DatabaseOpened)
 
   private def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.databaseFolder.isBlank)
@@ -196,7 +196,7 @@ object ModalWelcome {
                 databaseFolder = model.databaseFolder
               )
           )
-          .map((DatabaseFolderValidation andThen ModalWelcomeMsg)(_))
+          .map(DatabaseFolderValidation andThen ModalWelcomeMsg)
       )
     else
       Seq()

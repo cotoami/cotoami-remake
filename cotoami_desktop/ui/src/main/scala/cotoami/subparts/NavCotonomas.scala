@@ -149,7 +149,7 @@ object NavCotonomas {
 
   private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
     Fragment(
-      model.nodes.get(cotonoma.nodeId).map(node_img(_)),
+      model.nodes.get(cotonoma.nodeId).map(node_img),
       cotonoma.name
     )
 }

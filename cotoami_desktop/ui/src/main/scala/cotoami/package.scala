@@ -32,5 +32,5 @@ package object cotoami {
             databaseFolder = folder
           )
       )
-      .map(DatabaseOpened(_))
+      .map(DatabaseOpened)
 }

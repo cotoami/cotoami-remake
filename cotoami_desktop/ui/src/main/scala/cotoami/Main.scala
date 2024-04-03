@@ -25,7 +25,7 @@ object Main {
 
     Browser.runProgram(
       dom.document.getElementById("app"),
-      Program(init, view, update, subscriptions, Some(UrlChanged(_)))
+      Program(init, view, update, subscriptions, Some(UrlChanged))
     )
   }
 
@@ -48,11 +48,11 @@ object Main {
       Model(url = url, flowInput = flowInput),
       Seq(
         Model.UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched(_)),
+        cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
-          _.map(openDatabase(_)).getOrElse(Cmd.none)
+          _.map(openDatabase).getOrElse(Cmd.none)
         ),
-        flowInputCmd.map(FlowInputMsg(_))
+        flowInputCmd.map(FlowInputMsg)
       )
     )
   }
@@ -181,7 +181,7 @@ object Main {
       case FlowInputMsg(subMsg) => {
         val (flowInput, cmds) =
           subparts.FormCoto.update(subMsg, model.flowInput)
-        (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg(_))))
+        (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
       }
 
       case ModalWelcomeMsg(subMsg) => {
@@ -271,7 +271,7 @@ object Main {
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
-    tauri.listen[LogEvent]("log", None).map(BackendLogEvent(_))
+    tauri.listen[LogEvent]("log", None).map(BackendLogEvent)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(

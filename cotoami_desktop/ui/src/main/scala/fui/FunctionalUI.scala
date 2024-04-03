@@ -34,7 +34,7 @@ object FunctionalUI {
 
   case class Cmd[Msg](io: IO[Option[Msg]]) extends AnyVal {
     def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg] = Cmd(
-      this.io.map(_.map(f(_)))
+      this.io.map(_.map(f))
     )
 
     def flatMap[OtherMsg](f: Msg => Cmd[OtherMsg]): Cmd[OtherMsg] = Cmd(
@@ -131,7 +131,7 @@ object FunctionalUI {
         name + target.hashCode,
         (dispatch, onSubscribe) => {
           val listener: js.Function1[Event, _] =
-            (e: Event) => toMsg(e).map(dispatch(_))
+            (e: Event) => toMsg(e).map(dispatch)
           target.addEventListener(name, listener)
 
           val unsubscribe = () => target.removeEventListener(name, listener)
@@ -163,7 +163,7 @@ object FunctionalUI {
       // Run side effects
       for (cmd <- cmds) {
         cmd.io.unsafeRunAsync {
-          case Right(optionMsg) => optionMsg.map(dispatch(_))
+          case Right(optionMsg) => optionMsg.map(dispatch)
           case Left(e) => throw e // IO should return Right even when it fails
         }
       }
@@ -191,7 +191,7 @@ object FunctionalUI {
     }
 
     def onPushUrl(url: URL): Unit =
-      program.onUrlChange.map(_(url)).map(dispatch(_))
+      program.onUrlChange.map(_(url)).map(dispatch)
 
     program.onUrlChange.map(onUrlChange => {
       dom.window.addEventListener(

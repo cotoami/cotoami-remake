@@ -44,7 +44,7 @@ object FormCoto {
     def restore: Cmd[Msg] =
       (autoSave, form) match {
         case (true, form: CotoForm) =>
-          restoreCotoContent.map(CotoContentRestored(_))
+          restoreCotoContent.map(CotoContentRestored)
 
         case _ => Cmd.none
       }

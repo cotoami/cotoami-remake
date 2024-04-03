@@ -48,11 +48,11 @@ case class Cotonomas(
   def isSelecting(id: Id[Cotonoma]): Boolean =
     this.selectedId.map(_ == id).getOrElse(false)
 
-  def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get(_))
+  def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get)
 
-  def supers: Seq[Cotonoma] = this.superIds.map(this.get(_)).flatten
+  def supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
 
-  def subs: Seq[Cotonoma] = this.subIds.order.map(this.get(_)).flatten
+  def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
   def addPageOfSubs(page: Paginated[CotonomaJson]): Cotonomas =
     this.copy(
@@ -63,7 +63,7 @@ case class Cotonomas(
       )
     )
 
-  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get(_)).flatten
+  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =
     this.copy(
@@ -162,16 +162,16 @@ object Cotonomas {
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
     node_command(Commands.RecentCotonomas(nodeId, pageIndex)).map(
-      (RecentFetched andThen CotonomasMsg)(_)
+      (RecentFetched andThen CotonomasMsg)
     )
 
   def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
     node_command(Commands.Cotonoma(id)).map(
-      (DetailsFetched andThen CotonomasMsg)(_)
+      (DetailsFetched andThen CotonomasMsg)
     )
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     node_command(Commands.SubCotonomas(id, pageIndex)).map(
-      (SubsFetched andThen CotonomasMsg)(_)
+      (SubsFetched andThen CotonomasMsg)
     )
 }
