@@ -32,29 +32,30 @@ object Main {
   object DatabaseFolder {
     val SessionStorageKey = "DatabaseFolder"
 
-    def save(folder: String): Cmd[Msg] =
-      Cmd(IO {
-        dom.window.sessionStorage.setItem(SessionStorageKey, folder)
-        None
-      })
+    def save(folder: String): Cmd[Msg] = Cmd(IO {
+      dom.window.sessionStorage.setItem(SessionStorageKey, folder)
+      None
+    })
 
-    def restore(): Cmd[Option[String]] =
-      Cmd(IO {
-        Some(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
-      })
+    def restore: Cmd[Option[String]] = Cmd(IO {
+      Some(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
+    })
   }
 
-  def init(url: URL): (Model, Seq[Cmd[Msg]]) =
+  def init(url: URL): (Model, Seq[Cmd[Msg]]) = {
+    val (flowInput, flowInputCmd) = subparts.FormCoto.init("flowInput", true)
     (
-      Model(url = url),
+      Model(url = url, flowInput = flowInput),
       Seq(
         Model.UiState.restore(UiStateRestored),
         cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched(_)),
-        DatabaseFolder.restore().flatMap(
+        DatabaseFolder.restore.flatMap(
           _.map(openDatabase(_)).getOrElse(Cmd.none)
-        )
+        ),
+        flowInputCmd.map(FlowInputMsg(_))
       )
     )
+  }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
@@ -124,7 +125,7 @@ object Main {
         model.uiState match {
           case Some(s) => {
             val new_s = s.togglePane(name)
-            (model.copy(uiState = Some(new_s)), Seq(new_s.save()))
+            (model.copy(uiState = Some(new_s)), Seq(new_s.save))
           }
           case None => (model, Seq.empty)
         }
@@ -134,7 +135,7 @@ object Main {
         model.uiState match {
           case Some(s) => {
             val new_s = s.resizePane(name, newSize)
-            (model.copy(uiState = Some(new_s)), Seq(new_s.save()))
+            (model.copy(uiState = Some(new_s)), Seq(new_s.save))
           }
           case None => (model, Seq.empty)
         }

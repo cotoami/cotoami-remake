@@ -1,18 +1,24 @@
 package cotoami.subparts
 
+import org.scalajs.dom
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
+
+import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.backend.{Cotonoma, Node}
 import cotoami.components.{material_symbol, optionalClasses, SplitPane}
 
 object FormCoto {
+  val StorageKeyPrefix = "FormCoto."
 
   case class Model(
       name: String,
       form: Form = CotoForm(),
-      focused: Boolean = false
+      focused: Boolean = false,
+      autoSave: Boolean = false
   ) {
     def folded: Boolean = !this.focused && this.isBlank
 
@@ -21,7 +27,37 @@ object FormCoto {
         case CotoForm(content)  => content.isBlank
         case CotonomaForm(name) => name.isBlank
       }
+
+    def storageKey: String = StorageKeyPrefix + this.name
+
+    def save: Cmd[Msg] =
+      (autoSave, form) match {
+        case (true, CotoForm(content)) =>
+          Cmd(IO {
+            dom.window.localStorage.setItem(this.storageKey, content)
+            None
+          })
+
+        case _ => Cmd.none
+      }
+
+    def restore: Cmd[Msg] =
+      (autoSave, form) match {
+        case (true, form: CotoForm) =>
+          restoreCotoContent.map(CotoContentRestored(_))
+
+        case _ => Cmd.none
+      }
+
+    private def restoreCotoContent: Cmd[Option[String]] = Cmd(IO {
+      Some(Option(dom.window.localStorage.getItem(this.storageKey)))
+    })
   }
+
+  def init(name: String, autoSave: Boolean): (Model, Cmd[Msg]) =
+    Model(name, autoSave = autoSave) match {
+      case model => (model, model.restore)
+    }
 
   sealed trait Form
   case class CotoForm(content: String = "") extends Form
@@ -30,6 +66,7 @@ object FormCoto {
   sealed trait Msg
   case object SetCotoForm extends Msg
   case object SetCotonomaForm extends Msg
+  case class CotoContentRestored(content: Option[String]) extends Msg
   case class CotoContentInput(content: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
   case class SetFocus(focus: Boolean) extends Msg
@@ -37,13 +74,26 @@ object FormCoto {
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     (msg, model.form) match {
       case (SetCotoForm, _) =>
-        (model.copy(form = CotoForm()), Seq.empty)
+        model.copy(form = CotoForm()) match {
+          case model => (model, Seq(model.restore))
+        }
 
       case (SetCotonomaForm, _) =>
         (model.copy(form = CotonomaForm()), Seq.empty)
 
+      case (CotoContentRestored(Some(content)), form: CotoForm) =>
+        (
+          if (form.content.isBlank())
+            model.copy(form = form.copy(content = content))
+          else
+            model,
+          Seq()
+        )
+
       case (CotoContentInput(content), form: CotoForm) =>
-        (model.copy(form = form.copy(content = content)), Seq.empty)
+        model.copy(form = form.copy(content = content)) match {
+          case model => (model, Seq(model.save))
+        }
 
       case (CotonomaNameInput(name), form: CotonomaForm) =>
         (model.copy(form = form.copy(name = name)), Seq.empty)

@@ -34,7 +34,7 @@ case class Model(
     cotonomas: Cotonomas = Cotonomas(),
 
     // subparts
-    flowInput: FormCoto.Model = FormCoto.Model("flowInput"),
+    flowInput: FormCoto.Model,
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
   def error(error: Error, message: String): Model =
@@ -84,7 +84,7 @@ object Model {
     def resizePane(name: String, newSize: Int): UiState =
       this.copy(paneSizes = this.paneSizes + (name -> newSize))
 
-    def save(): Cmd[Msg] =
+    def save: Cmd[Msg] =
       Cmd(IO {
         dom.window.localStorage
           .setItem(UiState.StorageKey, this.asJson.toString())
