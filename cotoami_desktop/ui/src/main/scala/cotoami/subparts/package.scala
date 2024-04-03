@@ -81,42 +81,11 @@ package object subparts {
       ),
       SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
-          flowPane(model, uiState, dispatch)
+          PaneFlow.view(model, uiState, dispatch)
         )
       )
     )
   )
-
-  private val FlowInputEditorName = "flow-input-editor"
-  private val FlowInputEditorDefaultHeight = 150
-
-  private def flowPane(
-      model: Model,
-      uiState: Model.UiState,
-      dispatch: Msg => Unit
-  ): ReactElement =
-    section(className := "flow pane")(
-      paneToggle("flow", dispatch),
-      (model.nodes.operating, model.currentCotonoma) match {
-        case (Some(node), Some(cotonoma)) =>
-          Some(
-            subparts.CotoInput.view(
-              model.flowInput,
-              node,
-              cotonoma,
-              uiState.paneSizes.getOrElse(
-                FlowInputEditorName,
-                FlowInputEditorDefaultHeight
-              ),
-              (newSize) => dispatch(ResizePane(FlowInputEditorName, newSize)),
-              subMsg => dispatch(FlowInputMsg(subMsg))
-            )
-          )
-        case _ => None
-      },
-      section(className := "timeline header-and-body")(
-      )
-    )
 
   def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
     footer(
