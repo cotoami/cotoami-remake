@@ -21,6 +21,11 @@ case class Coto(json: CotoJson) {
   def outgoingLinks: Int = this.json.outgoing_links
 }
 
+object Coto {
+  def toMap(jsons: js.Array[CotoJson]): Map[Id[Coto], Coto] =
+    jsons.map(json => (Id[Coto](json.uuid), Coto(json))).toMap
+}
+
 @js.native
 trait CotoJson extends js.Object {
   val uuid: String = js.native
