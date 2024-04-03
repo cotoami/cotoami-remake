@@ -11,7 +11,7 @@ import slinky.web.html._
 import cotoami.{Log, Msg}
 import cotoami.components.material_symbol
 
-object LogView {
+object ViewLog {
 
   def view(
       log: Log,
