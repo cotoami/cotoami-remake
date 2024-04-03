@@ -4,12 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{DeselectNode, Model, Msg, SelectNode}
-import cotoami.components.{
-  material_symbol,
-  node_img,
-  optionalClasses,
-  paneToggle
-}
+import cotoami.components.{material_symbol, optionalClasses, paneToggle}
 import cotoami.backend.Node
 
 object NavNodes {

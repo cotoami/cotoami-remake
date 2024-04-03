@@ -5,11 +5,11 @@ import slinky.web.html._
 
 import cotoami.components.{
   material_symbol,
-  node_img,
   optionalClasses,
   paneToggle,
   SplitPane
 }
+import cotoami.backend.Node
 
 package object subparts {
 
@@ -120,4 +120,11 @@ package object subparts {
     } else {
       None
     }
+
+  def node_img(node: Node): ReactElement =
+    img(
+      className := "node-icon",
+      alt := node.name,
+      src := s"data:image/png;base64,${node.icon}"
+    )
 }

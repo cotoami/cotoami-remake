@@ -5,12 +5,7 @@ import slinky.web.html._
 
 import fui.FunctionalUI._
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.{
-  material_symbol,
-  node_img,
-  optionalClasses,
-  SplitPane
-}
+import cotoami.components.{material_symbol, optionalClasses, SplitPane}
 
 object CotoInput {
 

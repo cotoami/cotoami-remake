@@ -4,12 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{CotonomasMsg, DeselectCotonoma, Model, Msg, SelectCotonoma}
-import cotoami.components.{
-  material_symbol,
-  node_img,
-  optionalClasses,
-  ScrollArea
-}
+import cotoami.components.{material_symbol, optionalClasses, ScrollArea}
 import cotoami.backend.{Cotonoma, Cotonomas, Node}
 
 object NavCotonomas {
