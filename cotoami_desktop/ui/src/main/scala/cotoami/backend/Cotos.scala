@@ -1,7 +1,8 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import cotoami.Id
+import fui.FunctionalUI._
+import cotoami.{node_command, Id, TimelineFetched}
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,
@@ -31,6 +32,14 @@ object Cotos {
   sealed trait Msg
 
   case object FetchMoreTimeline extends Msg
+
+  def fetchTimeline(
+      cotonomaId: Option[Id[Cotonoma]],
+      pageIndex: Double
+  ): Cmd[cotoami.Msg] =
+    node_command(Commands.RecentCotos(cotonomaId, pageIndex)).map(
+      TimelineFetched
+    )
 }
 
 @js.native

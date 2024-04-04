@@ -19,4 +19,12 @@ object Commands {
 
   def SubCotonomas(id: Id[Cotonoma], pageIndex: Double) =
     jso(SubCotonomas = jso(id = id.uuid, pagination = jso(page = pageIndex)))
+
+  def RecentCotos(cotonomaId: Option[Id[Cotonoma]], pageIndex: Double) =
+    jso(RecentCotos =
+      jso(
+        cotonoma = cotonomaId.map(_.uuid).getOrElse(null),
+        pagination = jso(page = pageIndex)
+      )
+    )
 }
