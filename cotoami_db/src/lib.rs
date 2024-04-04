@@ -14,7 +14,8 @@ pub mod prelude {
         db::{
             error::*,
             ops::{node_role_ops::*, Paginated},
-            Database, DatabaseSession,
+            session::DatabaseSession,
+            Database,
         },
         models::prelude::*,
     };
