@@ -38,7 +38,7 @@ async fn recent_cotos(
         return ("cotos", errors).into_result();
     }
     state
-        .recent_cotos(Some(cotonoma_id), pagination)
+        .recent_cotos(None, Some(cotonoma_id), pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

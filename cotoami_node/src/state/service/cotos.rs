@@ -19,6 +19,7 @@ const DEFAULT_PAGE_SIZE: i64 = 30;
 impl NodeState {
     pub(crate) async fn recent_cotos(
         &self,
+        node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     ) -> Result<Cotos, ServiceError> {
@@ -26,7 +27,7 @@ impl NodeState {
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
             let paginated = ds.recent_cotos(
-                None,
+                node.as_ref(),
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,

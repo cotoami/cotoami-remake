@@ -122,12 +122,18 @@ impl HttpClient {
                 Some(pagination.as_query()),
             ),
             Command::RecentCotos {
+                node,
                 cotonoma,
                 pagination,
             } => {
                 if let Some(cotonoma_id) = cotonoma {
                     self.get(
                         &format!("/api/cotonomas/{cotonoma_id}/cotos"),
+                        Some(pagination.as_query()),
+                    )
+                } else if let Some(node_id) = node {
+                    self.get(
+                        &format!("/api/nodes/{node_id}/cotos"),
                         Some(pagination.as_query()),
                     )
                 } else {

@@ -146,6 +146,7 @@ pub enum Command {
 
     /// Request [Cotos] that contains recently posted cotos.
     RecentCotos {
+        node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     },
