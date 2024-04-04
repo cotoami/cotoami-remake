@@ -11,7 +11,11 @@ use cotoami_db::prelude::*;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    service::{
+        error::IntoServiceResult,
+        models::{Cotos, Pagination},
+        ServiceError,
+    },
     state::NodeState,
     web::{Accept, Content},
 };
@@ -29,12 +33,12 @@ async fn recent_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<Coto>>, ServiceError> {
+) -> Result<Content<Cotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }
     state
-        .recent_cotos(Some(cotonoma_id), pagination)
+        .recent_cotos(None, Some(cotonoma_id), pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

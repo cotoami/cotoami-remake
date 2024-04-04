@@ -9,7 +9,7 @@ package object components {
     classes.filter(_._2).map(_._1).mkString(" ")
   }
 
-  def material_symbol(name: String, classNames: String = ""): ReactElement =
+  def materialSymbol(name: String, classNames: String = ""): ReactElement =
     span(className := s"material-symbols ${classNames}")(name)
 
   def paneToggle(paneName: String, dispatch: Msg => Unit): ReactElement =

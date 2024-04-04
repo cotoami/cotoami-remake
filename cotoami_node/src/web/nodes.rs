@@ -1,8 +1,18 @@
-use axum::{extract::State, middleware, routing::get, Extension, Router, TypedHeader};
+use axum::{
+    extract::{Path, Query, State},
+    middleware,
+    routing::get,
+    Extension, Router, TypedHeader,
+};
 use cotoami_db::prelude::*;
+use validator::Validate;
 
 use crate::{
-    service::ServiceError,
+    service::{
+        error::IntoServiceResult,
+        models::{Cotos, Pagination},
+        ServiceError,
+    },
     state::NodeState,
     web::{Accept, Content},
 };
@@ -21,6 +31,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/parents", parents::routes())
         .nest("/children", children::routes())
         .nest("/:node_id/cotonomas", cotonomas::routes())
+        .route("/:node_id/cotos", get(recent_cotos))
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -35,4 +46,23 @@ async fn local_node(
     TypedHeader(accept): TypedHeader<Accept>,
 ) -> Result<Content<Node>, ServiceError> {
     state.local_node().await.map(|x| Content(x, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/:node_id/cotos
+/////////////////////////////////////////////////////////////////////////////
+
+async fn recent_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<Cotos>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return ("cotos", errors).into_result();
+    }
+    state
+        .recent_cotos(Some(node_id), None, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
 }

@@ -1,6 +1,6 @@
 //! Coto related operations
 
-use std::ops::DerefMut;
+use std::{collections::HashMap, ops::DerefMut};
 
 use diesel::prelude::*;
 use validator::Validate;
@@ -49,6 +49,22 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
             .order(cotos::rowid.asc())
             .load::<Coto>(conn)
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn get_by_ids<Conn: AsReadableConn>(
+    ids: Vec<Id<Coto>>,
+) -> impl Operation<Conn, Vec<Coto>> {
+    read_op(move |conn| {
+        let mut map: HashMap<Id<Coto>, Coto> = cotos::table
+            .filter(cotos::uuid.eq_any(&ids))
+            .load::<Coto>(conn)?
+            .into_iter()
+            .map(|c| (c.uuid, c))
+            .collect();
+        // Sort the results in order of the `ids` param.
+        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        Ok(cotonomas)
     })
 }
 

@@ -1,5 +1,6 @@
 package cotoami.backend
 
+import scala.scalajs.js
 import fui.FunctionalUI._
 import cotoami.{node_command, CotonomasMsg, Id}
 
@@ -25,6 +26,9 @@ case class Cotonomas(
       this.deselect().copy(selectedId = Some(id))
     else
       this
+
+  def addAll(cotonomas: js.Array[CotonomaJson]): Cotonomas =
+    this.copy(map = this.map ++ Cotonoma.toMap(cotonomas))
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)
@@ -55,8 +59,8 @@ case class Cotonomas(
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
   def addPageOfSubs(page: Paginated[CotonomaJson]): Cotonomas =
-    this.copy(
-      map = this.map ++ Cotonoma.toMap(page.rows),
+    this.addAll(page.rows).copy(
+      subsLoading = false,
       subIds = this.subIds.addPage(
         page,
         (json: CotonomaJson) => Id[Cotonoma](json.uuid)
@@ -66,8 +70,8 @@ case class Cotonomas(
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =
-    this.copy(
-      map = this.map ++ Cotonoma.toMap(page.rows),
+    this.addAll(page.rows).copy(
+      recentLoading = false,
       recentIds = this.recentIds.addPage(
         page,
         (json: CotonomaJson) => Id[Cotonoma](json.uuid)
@@ -109,10 +113,7 @@ object Cotonomas {
         }
 
       case RecentFetched(Right(page)) =>
-        (
-          model.addPageOfRecent(page).copy(recentLoading = false),
-          Seq.empty
-        )
+        (model.addPageOfRecent(page), Seq.empty)
 
       case RecentFetched(Left(e)) =>
         (
@@ -145,10 +146,7 @@ object Cotonomas {
         }
 
       case SubsFetched(Right(page)) =>
-        (
-          model.addPageOfSubs(page).copy(subsLoading = false),
-          Seq.empty
-        )
+        (model.addPageOfSubs(page), Seq.empty)
 
       case SubsFetched(Left(e)) =>
         (

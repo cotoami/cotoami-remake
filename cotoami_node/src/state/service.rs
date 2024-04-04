@@ -40,9 +40,10 @@ impl NodeState {
                 format.to_bytes(self.sub_cotonomas(id, pagination).await)
             }
             Command::RecentCotos {
+                node,
                 cotonoma,
                 pagination,
-            } => format.to_bytes(self.recent_cotos(cotonoma, pagination).await),
+            } => format.to_bytes(self.recent_cotos(node, cotonoma, pagination).await),
             Command::PostCoto {
                 content,
                 summary,

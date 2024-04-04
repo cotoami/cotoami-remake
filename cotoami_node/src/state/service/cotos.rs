@@ -8,29 +8,42 @@ use tokio::task::spawn_blocking;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        models::Pagination,
+        models::{Cotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
 };
 
-const DEFAULT_PAGE_SIZE: i64 = 30;
+const DEFAULT_RECENT_PAGE_SIZE: i64 = 20;
 
 impl NodeState {
     pub(crate) async fn recent_cotos(
         &self,
+        node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
-    ) -> Result<Paginated<Coto>, ServiceError> {
+    ) -> Result<Cotos, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            ds.recent_cotos(
-                None,
+            let paginated = ds.recent_cotos(
+                node.as_ref(),
                 cotonoma.as_ref(),
-                pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
+                pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
-            )
+            )?;
+            let posted_in = ds.cotonomas_of(&paginated.rows)?;
+            let repost_of_ids: Vec<Id<Coto>> = paginated
+                .rows
+                .iter()
+                .map(|coto| coto.repost_of_id)
+                .flatten()
+                .collect();
+            Ok::<_, anyhow::Error>(Cotos {
+                paginated,
+                posted_in,
+                repost_of: ds.cotos(repost_of_ids)?,
+            })
         })
         .await?
         .map_err(ServiceError::from)

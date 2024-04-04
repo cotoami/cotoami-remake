@@ -87,7 +87,7 @@ pub enum NotConnected {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Cotonoma
+// Coto / Cotonoma
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
@@ -96,4 +96,11 @@ pub struct CotonomaDetails {
     pub coto: Coto,
     pub supers: Vec<Cotonoma>,
     pub subs: Paginated<Cotonoma>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+pub struct Cotos {
+    pub paginated: Paginated<Coto>,
+    pub posted_in: Vec<Cotonoma>,
+    pub repost_of: Vec<Coto>,
 }

@@ -10,13 +10,15 @@ import io.circe.syntax._
 import io.circe.parser._
 
 import cats.effect.IO
+import java.time.{Instant, LocalDateTime, ZoneId}
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Cotonoma, Cotonomas, Error, Nodes, SystemInfo}
+import cotoami.backend.{Cotonoma, Cotonomas, Cotos, Error, Nodes, SystemInfo}
 import cotoami.subparts.{FormCoto, ModalWelcome}
 
 case class Model(
     url: URL,
+    context: Model.Context = Model.Context(),
     log: Log = Log(),
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfo] = None,
@@ -32,6 +34,7 @@ case class Model(
     // Entities
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
+    cotos: Cotos = Cotos(),
 
     // subparts
     flowInput: FormCoto.Model,
@@ -45,7 +48,8 @@ case class Model(
   def clearSelection(): Model =
     this.copy(
       nodes = this.nodes.deselect(),
-      cotonomas = Cotonomas()
+      cotonomas = Cotonomas(),
+      cotos = Cotos()
     )
 
   def rootCotonomaId: Option[Id[Cotonoma]] =
@@ -68,6 +72,13 @@ case class Model(
 }
 
 object Model {
+
+  case class Context(
+      zone: ZoneId = ZoneId.of("UTC")
+  ) {
+    def toDateTime(instant: Instant): LocalDateTime =
+      LocalDateTime.ofInstant(instant, this.zone)
+  }
 
   case class UiState(
       paneToggles: Map[String, Boolean] = Map(),

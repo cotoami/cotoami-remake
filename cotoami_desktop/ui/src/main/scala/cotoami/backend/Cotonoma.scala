@@ -1,7 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import java.time.LocalDateTime
+import java.time.Instant
 import cotoami.{Id, Validation}
 
 case class Cotonoma(json: CotonomaJson) {
@@ -9,8 +9,8 @@ case class Cotonoma(json: CotonomaJson) {
   def nodeId: Id[Node] = Id(this.json.node_id)
   def cotoId: Id[Coto] = Id(this.json.coto_id)
   def name: String = this.json.name
-  lazy val createdAt: LocalDateTime = parseJsonDateTime(this.json.created_at)
-  lazy val updatedAt: LocalDateTime = parseJsonDateTime(this.json.updated_at)
+  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
+  lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
   def posts: Int = this.json.posts
 }
 

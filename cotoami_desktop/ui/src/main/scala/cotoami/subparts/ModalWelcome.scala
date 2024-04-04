@@ -6,7 +6,7 @@ import slinky.web.html._
 
 import fui.FunctionalUI._
 import cotoami.{tauri, ModalWelcomeMsg, Validation}
-import cotoami.components.material_symbol
+import cotoami.components.materialSymbol
 import cotoami.backend
 import cotoami.backend.{DatabaseOpened, Node}
 
@@ -288,7 +288,7 @@ object ModalWelcome {
             className := "secondary",
             onClick := ((e) => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
           )(
-            material_symbol("folder")
+            materialSymbol("folder")
           )
         ),
 
@@ -369,7 +369,7 @@ object ModalWelcome {
                 dispatch(ModalWelcomeMsg(SelectDatabaseFolder))
               )
             )(
-              material_symbol("folder")
+              materialSymbol("folder")
             )
           ),
           Validation.validationErrorDiv(model.databaseFolderErrors)

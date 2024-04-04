@@ -3,7 +3,14 @@ package cotoami
 import org.scalajs.dom.URL
 
 import cotoami.Log
-import cotoami.backend.{Cotonoma, DatabaseInfoJson, LogEvent, Node, SystemInfo}
+import cotoami.backend.{
+  Cotonoma,
+  CotosJson,
+  DatabaseInfoJson,
+  LogEvent,
+  Node,
+  SystemInfo
+}
 
 sealed trait Msg
 
@@ -34,7 +41,11 @@ case object DeselectNode extends Msg
 case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
 case object DeselectCotonoma extends Msg
 
+// Backend
+case class TimelineFetched(result: Either[backend.Error, CotosJson]) extends Msg
+
 // Sub
 case class CotonomasMsg(subMsg: backend.Cotonomas.Msg) extends Msg
+case class CotosMsg(subMsg: backend.Cotos.Msg) extends Msg
 case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
