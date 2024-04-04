@@ -168,6 +168,22 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
+      case TimelineFetched(Right(cotos)) =>
+        (
+          model
+            .modify(_.cotos).using(_.appendTimeline(cotos))
+            .modify(_.cotonomas).using(_.addAll(cotos.posted_in)),
+          Seq.empty
+        )
+
+      case TimelineFetched(Left(e)) =>
+        (
+          model
+            .modify(_.cotos.timelineLoading).setTo(false)
+            .error(e, "Couldn't fetch timeline cotos."),
+          Seq.empty
+        )
+
       case CotonomasMsg(subMsg) => {
         val (cotonomas, cmds) =
           backend.Cotonomas.update(

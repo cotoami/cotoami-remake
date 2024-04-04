@@ -12,7 +12,7 @@ import io.circe.parser._
 import cats.effect.IO
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Cotonoma, Cotonomas, Error, Nodes, SystemInfo}
+import cotoami.backend.{Cotonoma, Cotonomas, Cotos, Error, Nodes, SystemInfo}
 import cotoami.subparts.{FormCoto, ModalWelcome}
 
 case class Model(
@@ -32,6 +32,7 @@ case class Model(
     // Entities
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
+    cotos: Cotos = Cotos(),
 
     // subparts
     flowInput: FormCoto.Model,

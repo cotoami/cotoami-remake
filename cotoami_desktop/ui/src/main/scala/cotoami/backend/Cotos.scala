@@ -19,6 +19,7 @@ case class Cotos(
       map = this.map ++
         Coto.toMap(cotos.paginated.rows) ++
         Coto.toMap(cotos.repost_of),
+      timelineLoading = false,
       timelineIds = this.timelineIds.addPage(
         cotos.paginated,
         (json: CotoJson) => Id[Coto](json.uuid)
