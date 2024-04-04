@@ -2,7 +2,7 @@
 
 use core::time::Duration;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
 };
 
@@ -900,6 +900,24 @@ impl<'a> DatabaseSession<'a> {
         page_index: i64,
     ) -> Result<Paginated<Cotonoma>> {
         self.read_transaction(cotonoma_ops::subs(id, page_size, page_index))
+    }
+
+    pub fn cotonomas_of(&mut self, cotos: &Vec<Coto>) -> Result<Vec<Cotonoma>> {
+        let cotonoma_ids: HashSet<Id<Cotonoma>> = cotos
+            .iter()
+            .map(|coto| {
+                let mut ids = Vec::new();
+                if let Some(posted_in_id) = coto.posted_in_id {
+                    ids.push(posted_in_id);
+                }
+                if let Some(ref reposted_in_ids) = coto.reposted_in_ids {
+                    ids.append(&mut reposted_in_ids.0.clone());
+                }
+                ids
+            })
+            .flatten()
+            .collect();
+        self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids.into_iter().collect()))
     }
 
     pub fn post_cotonoma(
