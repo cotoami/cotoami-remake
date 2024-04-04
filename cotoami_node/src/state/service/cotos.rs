@@ -14,7 +14,7 @@ use crate::{
     state::NodeState,
 };
 
-const DEFAULT_PAGE_SIZE: i64 = 30;
+const DEFAULT_RECENT_PAGE_SIZE: i64 = 20;
 
 impl NodeState {
     pub(crate) async fn recent_cotos(
@@ -29,7 +29,7 @@ impl NodeState {
             let paginated = ds.recent_cotos(
                 node.as_ref(),
                 cotonoma.as_ref(),
-                pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
+                pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
             )?;
             let posted_in = ds.cotonomas_of(&paginated.rows)?;

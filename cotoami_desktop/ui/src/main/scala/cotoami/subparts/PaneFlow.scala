@@ -1,10 +1,10 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg, ResizePane}
-import cotoami.components.paneToggle
+import cotoami.components.{paneToggle, ToolButton}
 import cotoami.backend.Coto
 
 object PaneFlow {
@@ -15,7 +15,8 @@ object PaneFlow {
       model: Model,
       uiState: Model.UiState,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val timelineCotos = model.cotos.timeline
     section(className := "flow pane")(
       paneToggle("flow", dispatch),
       (model.nodes.operating, model.currentCotonoma) match {
@@ -36,15 +37,45 @@ object PaneFlow {
         case _ => None
       },
       section(className := "timeline header-and-body")(
+        Option.when(!timelineCotos.isEmpty)(
+          timelineContent(model, timelineCotos, dispatch)
+        )
       )
     )
+  }
 
   def timelineContent(
       model: Model,
       cotos: Seq[Coto],
       dispatch: Msg => Unit
-  ): Seq[ReactElement] = Seq(
-    header(className := "tools")(
+  ): ReactElement =
+    Fragment(
+      header(className := "tools")(
+        ToolButton(
+          classes = "filter",
+          tip = "Filter",
+          symbol = "filter_list"
+        ),
+        ToolButton(
+          classes = "calendar",
+          tip = "Calendar",
+          symbol = "calendar_month"
+        )
+      ),
+      div(className := "posts body")(
+        cotos.map(coto =>
+          article(className := "post coto")(
+            header()(),
+            div(className := "body")(
+              div(className := "content")(
+                section(className := "text-content")(coto.content)
+              )
+            ),
+            footer()(
+              time(className := "posted_at")()
+            )
+          )
+        ): _*
+      )
     )
-  )
 }
