@@ -46,7 +46,8 @@ case class Model(
   def clearSelection(): Model =
     this.copy(
       nodes = this.nodes.deselect(),
-      cotonomas = Cotonomas()
+      cotonomas = Cotonomas(),
+      cotos = Cotos()
     )
 
   def rootCotonomaId: Option[Id[Cotonoma]] =

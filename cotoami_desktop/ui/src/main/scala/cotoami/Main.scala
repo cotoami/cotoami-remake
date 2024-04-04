@@ -265,6 +265,7 @@ object Main {
             model
               .modify(_.nodes).using(_.deselect())
               .modify(_.cotonomas).using(_.select(id))
+              .modify(_.cotos).setTo(Cotos())
               .modify(_.cotos.timelineLoading).setTo(true),
             Seq(
               Cotonomas.fetchDetails(id),
@@ -288,6 +289,7 @@ object Main {
                 model
                   .modify(_.nodes).using(_.select(nodeId))
                   .modify(_.cotonomas).using(_.select(cotonomaId))
+                  .modify(_.cotos).setTo(Cotos())
                   .modify(_.cotos.timelineLoading).setTo(true),
                 Seq(
                   Cotonomas.fetchDetails(cotonomaId),
