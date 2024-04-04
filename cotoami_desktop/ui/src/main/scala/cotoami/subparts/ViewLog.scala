@@ -9,7 +9,7 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import cotoami.{Log, Msg}
-import cotoami.components.material_symbol
+import cotoami.components.materialSymbol
 
 object ViewLog {
 
@@ -22,7 +22,7 @@ object ViewLog {
         button(
           className := "close-log-view default",
           onClick := ((e) => dispatch(cotoami.ToggleLogView))
-        )(material_symbol("close"))
+        )(materialSymbol("close"))
       ),
       LogEntries(entries = log.entries)
     )
@@ -45,7 +45,7 @@ object ViewLog {
             className := s"log-entry ${entry.level.name}",
             key := entry.timestamp.getTime().toString()
           )(
-            div(className := "level")(material_symbol(entry.level.icon)),
+            div(className := "level")(materialSymbol(entry.level.icon)),
             div(className := "content")(
               div(className := "message")(entry.message),
               div(className := "details")(entry.details)

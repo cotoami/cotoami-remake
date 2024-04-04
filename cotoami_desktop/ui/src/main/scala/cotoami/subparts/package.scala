@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.components.{
-  material_symbol,
+  materialSymbol,
   optionalClasses,
   paneToggle,
   SplitPane
@@ -37,10 +37,10 @@ package object subparts {
                 e.preventDefault()
                 dispatch(SelectNode(node.id))
               })
-            )(node_img(node)),
+            )(nodeImg(node)),
             model.cotonomas.selected.map(cotonoma =>
               Fragment(
-                material_symbol("chevron_right", "arrow"),
+                materialSymbol("chevron_right", "arrow"),
                 h1(className := "current-cotonoma")(cotonoma.name)
               )
             )
@@ -100,7 +100,7 @@ package object subparts {
               className := "open-log-view default",
               onClick := ((e) => dispatch(cotoami.ToggleLogView))
             )(
-              material_symbol(entry.level.icon),
+              materialSymbol(entry.level.icon),
               entry.message
             )
           )
@@ -121,7 +121,7 @@ package object subparts {
       None
     }
 
-  def node_img(node: Node): ReactElement =
+  def nodeImg(node: Node): ReactElement =
     img(
       className := "node-icon",
       alt := node.name,

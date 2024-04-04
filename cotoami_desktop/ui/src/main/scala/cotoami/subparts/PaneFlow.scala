@@ -5,6 +5,7 @@ import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg, ResizePane}
 import cotoami.components.paneToggle
+import cotoami.backend.Coto
 
 object PaneFlow {
   val EditorPaneName = "PaneFlow.editor"
@@ -37,4 +38,13 @@ object PaneFlow {
       section(className := "timeline header-and-body")(
       )
     )
+
+  def timelineContent(
+      model: Model,
+      cotos: Seq[Coto],
+      dispatch: Msg => Unit
+  ): Seq[ReactElement] = Seq(
+    header(className := "tools")(
+    )
+  )
 }

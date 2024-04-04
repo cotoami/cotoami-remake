@@ -9,7 +9,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.{material_symbol, optionalClasses, SplitPane}
+import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 
 object FormCoto {
   val StorageKeyPrefix = "FormCoto."
@@ -128,7 +128,7 @@ object FormCoto {
             onClick := (_ => dispatch(SetCotoForm))
           )(
             span(className := "label")(
-              material_symbol("text_snippet"),
+              materialSymbol("text_snippet"),
               "Coto"
             )
           ),
@@ -138,7 +138,7 @@ object FormCoto {
             onClick := (_ => dispatch(SetCotonomaForm))
           )(
             span(className := "label")(
-              material_symbol("topic"),
+              materialSymbol("topic"),
               "Cotonoma"
             )
           )
@@ -149,14 +149,14 @@ object FormCoto {
           data - "placement" := "bottom",
           disabled := !model.form.isInstanceOf[CotoForm]
         )(
-          material_symbol("image")
+          materialSymbol("image")
         ),
         button(
           className := "tool location default",
           data - "tooltip" := "Location",
           data - "placement" := "bottom"
         )(
-          material_symbol("location_on")
+          materialSymbol("location_on")
         )
       ),
       model.form match {
@@ -206,7 +206,7 @@ object FormCoto {
   ): ReactElement =
     footer(className := "post")(
       address(className := "poster")(
-        node_img(operatingNode),
+        nodeImg(operatingNode),
         operatingNode.name
       ),
       button(className := "post", disabled := true)(

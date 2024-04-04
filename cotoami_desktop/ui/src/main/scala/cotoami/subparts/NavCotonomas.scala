@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{CotonomasMsg, DeselectCotonoma, Model, Msg, SelectCotonoma}
-import cotoami.components.{material_symbol, optionalClasses, ScrollArea}
+import cotoami.components.{materialSymbol, optionalClasses, ScrollArea}
 import cotoami.backend.{Cotonoma, Cotonomas, Node}
 
 object NavCotonomas {
@@ -21,7 +21,7 @@ object NavCotonomas {
       header()(
         if (model.cotonomas.selected.isEmpty) {
           div(className := "cotonoma home selected")(
-            material_symbol("home"),
+            materialSymbol("home"),
             currentNode.name
           )
         } else {
@@ -33,7 +33,7 @@ object NavCotonomas {
               dispatch(DeselectCotonoma)
             })
           )(
-            material_symbol("home"),
+            materialSymbol("home"),
             currentNode.name
           )
         }
@@ -96,7 +96,7 @@ object NavCotonomas {
                     )
                   )
                 )(
-                  material_symbol("more_horiz")
+                  materialSymbol("more_horiz")
                 )
               )
             ) ++ Option.when(model.cotonomas.subsLoading)(
@@ -149,7 +149,7 @@ object NavCotonomas {
 
   private def cotonomaLabel(model: Model, cotonoma: Cotonoma): ReactElement =
     Fragment(
-      model.nodes.get(cotonoma.nodeId).map(node_img),
+      model.nodes.get(cotonoma.nodeId).map(nodeImg),
       cotonoma.name
     )
 }
