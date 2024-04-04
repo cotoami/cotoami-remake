@@ -201,6 +201,17 @@ object Main {
         (model.copy(cotonomas = cotonomas), cmds)
       }
 
+      case CotosMsg(subMsg) => {
+        val (cotos, cmds) =
+          backend.Cotos.update(
+            subMsg,
+            model.cotos,
+            model.nodes.selectedId,
+            model.cotonomas.selectedId
+          )
+        (model.copy(cotos = cotos), cmds)
+      }
+
       case FlowInputMsg(subMsg) => {
         val (flowInput, cmds) =
           subparts.FormCoto.update(subMsg, model.flowInput)

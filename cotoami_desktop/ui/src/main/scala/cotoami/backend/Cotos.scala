@@ -33,6 +33,26 @@ object Cotos {
 
   case object FetchMoreTimeline extends Msg
 
+  def update(
+      msg: Msg,
+      model: Cotos,
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]]
+  ): (Cotos, Seq[Cmd[cotoami.Msg]]) =
+    msg match {
+      case FetchMoreTimeline =>
+        if (model.timelineLoading) {
+          (model, Seq.empty)
+        } else {
+          model.timelineIds.nextPageIndex.map(i =>
+            (
+              model.copy(timelineLoading = true),
+              Seq(fetchTimeline(nodeId, cotonomaId, i))
+            )
+          ).getOrElse((model, Seq.empty))
+        }
+    }
+
   def fetchTimeline(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
