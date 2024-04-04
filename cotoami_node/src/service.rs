@@ -144,7 +144,7 @@ pub enum Command {
         pagination: Pagination,
     },
 
-    /// Request a `Paginated<Coto>` that contains recently posted cotos.
+    /// Request [Cotos] that contains recently posted cotos.
     RecentCotos {
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,

@@ -534,6 +534,10 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(coto_ops::contains(id))
     }
 
+    pub fn cotos(&mut self, ids: Vec<Id<Coto>>) -> Result<Vec<Coto>> {
+        self.read_transaction(coto_ops::get_by_ids(ids))
+    }
+
     pub fn all_cotos(&mut self) -> Result<Vec<Coto>> { self.read_transaction(coto_ops::all()) }
 
     pub fn recent_cotos(
@@ -661,6 +665,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn contains_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<bool> {
         self.read_transaction(cotonoma_ops::contains(id))
+    }
+
+    pub fn cotonomas(&mut self, ids: Vec<Id<Cotonoma>>) -> Result<Vec<Cotonoma>> {
+        self.read_transaction(cotonoma_ops::get_by_ids(ids))
     }
 
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {

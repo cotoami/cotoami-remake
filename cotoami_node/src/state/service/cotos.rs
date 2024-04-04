@@ -8,7 +8,7 @@ use tokio::task::spawn_blocking;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        models::Pagination,
+        models::{Cotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -21,16 +21,28 @@ impl NodeState {
         &self,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
-    ) -> Result<Paginated<Coto>, ServiceError> {
+    ) -> Result<Cotos, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            ds.recent_cotos(
+            let paginated = ds.recent_cotos(
                 None,
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
-            )
+            )?;
+            let posted_in = ds.cotonomas_of(&paginated.rows)?;
+            let repost_of_ids: Vec<Id<Coto>> = paginated
+                .rows
+                .iter()
+                .map(|coto| coto.repost_of_id)
+                .flatten()
+                .collect();
+            Ok::<_, anyhow::Error>(Cotos {
+                paginated,
+                posted_in,
+                repost_of: ds.cotos(repost_of_ids)?,
+            })
         })
         .await?
         .map_err(ServiceError::from)
