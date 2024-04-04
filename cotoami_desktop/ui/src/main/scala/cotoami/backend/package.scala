@@ -84,9 +84,5 @@ package object backend {
     }
   }
 
-  def parseJsonDateTime(s: String): LocalDateTime = {
-    val instant = Instant.parse(s)
-    val zone = ZoneId.systemDefault()
-    LocalDateTime.ofInstant(instant, zone)
-  }
+  def parseJsonDateTime(s: String): Instant = Instant.parse(s"${s}Z")
 }

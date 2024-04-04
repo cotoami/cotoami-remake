@@ -72,7 +72,9 @@ object PaneFlow {
               )
             ),
             footer()(
-              time(className := "posted_at")()
+              time(className := "posted_at")(
+                model.context.toDateTime(coto.createdAt).toString()
+              )
             )
           )
         ): _*

@@ -1,7 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import java.time.LocalDateTime
+import java.time.Instant
 import cotoami.Id
 
 case class Coto(json: CotoJson) {
@@ -16,8 +16,8 @@ case class Coto(json: CotoJson) {
   def repostOfId: Option[Id[Coto]] = Option(this.json.repost_of_id).map(Id(_))
   def repostedInIds: Option[Seq[Id[Cotonoma]]] =
     Option(this.json.reposted_in_ids).map(_.map(Id[Cotonoma](_)).toSeq)
-  lazy val createdAt: LocalDateTime = parseJsonDateTime(this.json.created_at)
-  lazy val updatedAt: LocalDateTime = parseJsonDateTime(this.json.updated_at)
+  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
+  lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
   def outgoingLinks: Int = this.json.outgoing_links
 }
 
