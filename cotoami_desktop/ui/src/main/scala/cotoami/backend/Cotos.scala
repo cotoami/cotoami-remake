@@ -34,10 +34,11 @@ object Cotos {
   case object FetchMoreTimeline extends Msg
 
   def fetchTimeline(
+      nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
-    node_command(Commands.RecentCotos(cotonomaId, pageIndex)).map(
+    node_command(Commands.RecentCotos(nodeId, cotonomaId, pageIndex)).map(
       TimelineFetched
     )
 }

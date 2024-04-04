@@ -14,7 +14,14 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.backend.{Cotonomas, DatabaseInfo, LogEvent, Nodes, SystemInfo}
+import cotoami.backend.{
+  Cotonomas,
+  Cotos,
+  DatabaseInfo,
+  LogEvent,
+  Nodes,
+  SystemInfo
+}
 
 object Main {
 
@@ -213,8 +220,12 @@ object Main {
         (
           model
             .clearSelection()
-            .modify(_.cotonomas.recentLoading).setTo(true),
-          Seq(Cotonomas.fetchRecent(None, 0))
+            .modify(_.cotonomas.recentLoading).setTo(true)
+            .modify(_.cotos.timelineLoading).setTo(true),
+          Seq(
+            Cotonomas.fetchRecent(None, 0),
+            Cotos.fetchTimeline(None, None, 0)
+          )
         )
 
       case Route.node(id) =>
@@ -223,8 +234,12 @@ object Main {
             model
               .clearSelection()
               .modify(_.nodes).using(_.select(id))
-              .modify(_.cotonomas.recentLoading).setTo(true),
-            Seq(Cotonomas.fetchRecent(Some(id), 0))
+              .modify(_.cotonomas.recentLoading).setTo(true)
+              .modify(_.cotos.timelineLoading).setTo(true),
+            Seq(
+              Cotonomas.fetchRecent(Some(id), 0),
+              Cotos.fetchTimeline(Some(id), None, 0)
+            )
           )
         } else {
           (
@@ -238,8 +253,12 @@ object Main {
           (
             model
               .modify(_.nodes).using(_.deselect())
-              .modify(_.cotonomas).using(_.select(id)),
-            Seq(Cotonomas.fetchDetails(id))
+              .modify(_.cotonomas).using(_.select(id))
+              .modify(_.cotos.timelineLoading).setTo(true),
+            Seq(
+              Cotonomas.fetchDetails(id),
+              Cotos.fetchTimeline(None, Some(id), 0)
+            )
           )
         } else {
           (
@@ -257,8 +276,12 @@ object Main {
               (
                 model
                   .modify(_.nodes).using(_.select(nodeId))
-                  .modify(_.cotonomas).using(_.select(cotonomaId)),
-                Seq(Cotonomas.fetchDetails(cotonomaId))
+                  .modify(_.cotonomas).using(_.select(cotonomaId))
+                  .modify(_.cotos.timelineLoading).setTo(true),
+                Seq(
+                  Cotonomas.fetchDetails(cotonomaId),
+                  Cotos.fetchTimeline(None, Some(cotonomaId), 0)
+                )
               )
             } else {
               (
