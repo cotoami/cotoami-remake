@@ -9,7 +9,12 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  SplitPane,
+  ToolButton
+}
 
 object FormCoto {
   val StorageKeyPrefix = "FormCoto."
@@ -143,20 +148,16 @@ object FormCoto {
             )
           )
         ),
-        button(
-          className := "tool image default",
-          data - "tooltip" := "Image",
-          data - "placement" := "bottom",
-          disabled := !model.form.isInstanceOf[CotoForm]
-        )(
-          materialSymbol("image")
+        ToolButton(
+          classes = "image",
+          tip = "Image",
+          disabled = !model.form.isInstanceOf[CotoForm],
+          symbol = "image"
         ),
-        button(
-          className := "tool location default",
-          data - "tooltip" := "Location",
-          data - "placement" := "bottom"
-        )(
-          materialSymbol("location_on")
+        ToolButton(
+          classes = "location",
+          tip = "Location",
+          symbol = "location_on"
         )
       ),
       model.form match {
