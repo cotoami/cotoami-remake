@@ -22,7 +22,7 @@ log = "0.4.21"
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "1.5.4", features = ["dialog-open"] }
+tauri = {version = "1.5.4", features = ["dialog-open", "shell-open"] }
 thiserror.workspace = true
 
 [features]
