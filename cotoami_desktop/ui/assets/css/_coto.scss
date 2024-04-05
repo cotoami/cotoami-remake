@@ -1,0 +1,69 @@
+article.coto {
+  // reset Pico's style
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+
+  padding-left: 8px;
+  padding-bottom: 1rem;
+
+  &.has-children {
+    font-weight: 650;
+    border-bottom: 2px dotted var(--pane-border-color);
+  }
+
+  &:hover {
+    background-color: var(--hover-background-color);
+  }
+
+  >header {
+    margin: 0;
+    padding: 0;
+    border-style: none;
+    background-color: inherit;
+
+    min-height: 1rem; // empty header serves as padding-top of article.coto
+
+    ul.other-cotonomas {
+      margin-bottom: 5px;
+      padding: 0 var(--block-spacing-horizontal);
+      text-align: right;
+
+      li {
+        display: inline;
+
+        a.also-posted-in {
+          margin-left: 5px;
+          font-size: 0.8rem;
+          color: var(--muted-color);
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  section.text-content {
+    padding: 0 var(--block-spacing-horizontal);
+  }
+
+  section.image-content {
+    padding-left: var(--block-spacing-horizontal);
+
+    &.with-text {
+      margin-bottom: 8px; // fixed margin to the image
+    }
+  }
+}
+
+article.sub-coto {
+  button.unlink {
+    margin-top: 3px;
+  }
+}
+
+section.text-content {
+  blockquote p:last-child {
+    margin-bottom: 0;
+  }
+}
