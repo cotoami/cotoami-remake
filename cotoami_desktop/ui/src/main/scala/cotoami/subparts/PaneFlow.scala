@@ -1,10 +1,12 @@
 package cotoami.subparts
 
+import scala.scalajs.js.Dynamic.{literal => jso}
+
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg, ResizePane}
-import cotoami.components.{paneToggle, Markdown, ToolButton}
+import cotoami.components.{paneToggle, Markdown, RehypePlugin, ToolButton}
 import cotoami.backend.Coto
 
 object PaneFlow {
@@ -69,7 +71,9 @@ object PaneFlow {
             div(className := "body")(
               div(className := "content")(
                 section(className := "text-content")(
-                  Markdown()(coto.content)
+                  Markdown(rehypePlugins =
+                    Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
+                  )(coto.content)
                 )
               )
             ),
