@@ -19,7 +19,6 @@ import cotoami.subparts.{FormCoto, ModalWelcome}
 case class Model(
     url: URL,
     context: Model.Context = Model.Context(),
-    log: Log = Log(),
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfo] = None,
 
@@ -40,8 +39,6 @@ case class Model(
     flowInput: FormCoto.Model,
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
-  def error(error: Error, message: String): Model =
-    this.copy(log = this.log.error(message, Some(js.JSON.stringify(error))))
 
   def path: String = this.url.pathname + this.url.search + this.url.hash
 
@@ -74,10 +71,20 @@ case class Model(
 object Model {
 
   case class Context(
-      zone: ZoneId = ZoneId.of("UTC")
+      zone: ZoneId = ZoneId.of("UTC"),
+      log: Log = Log()
   ) {
     def toDateTime(instant: Instant): LocalDateTime =
       LocalDateTime.ofInstant(instant, this.zone)
+
+    def debug(message: String, details: Option[String] = None): Context =
+      this.copy(log = this.log.debug(message, details))
+    def info(message: String, details: Option[String] = None): Context =
+      this.copy(log = this.log.info(message, details))
+    def warn(message: String, details: Option[String] = None): Context =
+      this.copy(log = this.log.warn(message, details))
+    def error(message: String, error: Option[Error]): Context =
+      this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
   }
 
   case class UiState(
