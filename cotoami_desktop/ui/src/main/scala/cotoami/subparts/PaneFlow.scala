@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg, ResizePane}
-import cotoami.components.{paneToggle, ToolButton}
+import cotoami.components.{paneToggle, Markdown, ToolButton}
 import cotoami.backend.Coto
 
 object PaneFlow {
@@ -68,7 +68,9 @@ object PaneFlow {
             header()(),
             div(className := "body")(
               div(className := "content")(
-                section(className := "text-content")(coto.content)
+                section(className := "text-content")(
+                  Markdown()(coto.content)
+                )
               )
             ),
             footer()(
