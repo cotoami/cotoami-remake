@@ -37,6 +37,7 @@ object NavNodes {
         ),
         data - "tooltip" := "All nodes",
         data - "placement" := "right",
+        disabled := model.nodes.selected.isEmpty,
         onClick := ((e) => dispatch(DeselectNode))
       )(
         materialSymbol("stacks")
@@ -70,6 +71,7 @@ object NavNodes {
       disabled := model.nodes.isSelecting(node.id),
       data - "tooltip" := node.name,
       data - "placement" := "right",
+      disabled := model.nodes.isSelecting(node.id),
       onClick := ((e) => dispatch(SelectNode(node.id)))
     )(nodeImg(node))
 }
