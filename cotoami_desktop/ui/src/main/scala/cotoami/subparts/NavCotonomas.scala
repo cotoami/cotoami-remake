@@ -72,22 +72,22 @@ object NavCotonomas {
           )
         )
       )(
-        li()(
+        li(key := "super")(
           ul(className := "super-cotonomas")(
             model.superCotonomasWithoutRoot.map(
               liCotonoma(model, _, dispatch)
             ): _*
           )
         ),
-        li(className := "current-cotonoma cotonoma selected")(
+        li(key := "current", className := "current-cotonoma cotonoma selected")(
           cotonomaLabel(model, selectedCotonoma)
         ),
-        li()(
+        li(key := "sub")(
           ul(className := "sub-cotonomas")(
             model.cotonomas.subs.map(
               liCotonoma(model, _, dispatch)
             ) ++ Option.when(model.cotonomas.subIds.nextPageIndex.isDefined)(
-              li()(
+              li(key := "more-button")(
                 button(
                   className := "more-sub-cotonomas default",
                   onClick := ((e) =>
@@ -101,6 +101,7 @@ object NavCotonomas {
               )
             ) ++ Option.when(model.cotonomas.subsLoading)(
               li(
+                key := "more-loading",
                 className := "more",
                 aria - "busy" := "true"
               )()
