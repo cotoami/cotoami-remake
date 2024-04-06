@@ -78,8 +78,11 @@ object PaneFlow {
               )
             ),
             footer()(
-              time(className := "posted_at")(
-                model.context.toDateTime(coto.createdAt).toString()
+              time(
+                className := "posted_at",
+                title := model.context.formatDateTime(coto.createdAt)
+              )(
+                model.context.display(coto.createdAt)
               )
             )
           )

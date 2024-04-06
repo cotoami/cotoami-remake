@@ -10,7 +10,8 @@ import io.circe.syntax._
 import io.circe.parser._
 
 import cats.effect.IO
-import java.time.{Instant, LocalDateTime, ZoneId}
+import java.time._
+import java.time.format.DateTimeFormatter
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{Cotonoma, Cotonomas, Cotos, Error, Nodes, SystemInfo}
@@ -69,6 +70,9 @@ case class Model(
 }
 
 object Model {
+  val DefaultDateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  val SameYearFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
 
   case class Context(
       zone: ZoneId = ZoneId.of("UTC"),
@@ -76,6 +80,22 @@ object Model {
   ) {
     def toDateTime(instant: Instant): LocalDateTime =
       LocalDateTime.ofInstant(instant, this.zone)
+
+    def formatDateTime(instant: Instant): String = {
+      this.toDateTime(instant).format(DefaultDateTimeFormatter)
+    }
+
+    def display(instant: Instant): String = {
+      val now = LocalDateTime.now(this.zone)
+      val dateTime = this.toDateTime(instant)
+      if (dateTime.toLocalDate() == now.toLocalDate()) {
+        dateTime.format(DateTimeFormatter.ISO_LOCAL_TIME)
+      } else if (dateTime.getYear() == now.getYear()) {
+        dateTime.format(SameYearFormatter)
+      } else {
+        dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)
+      }
+    }
 
     def debug(message: String, details: Option[String] = None): Context =
       this.copy(log = this.log.debug(message, details))
