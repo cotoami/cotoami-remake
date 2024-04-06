@@ -266,25 +266,23 @@ object Main {
         }
 
       case Route.cotonoma(id) =>
-        if (model.cotonomas.contains(id)) {
-          (
-            model
-              .modify(_.nodes).using(_.deselect())
-              .modify(_.cotonomas).using(_.select(id))
-              .modify(_.cotos).setTo(Cotos())
-              .modify(_.cotos.timelineLoading).setTo(true),
-            Seq(
-              Cotonomas.fetchDetails(id),
-              Cotos.fetchTimeline(None, Some(id), 0)
+        model
+          .modify(_.nodes).using(_.deselect())
+          .modify(_.cotonomas).using(_.select(id))
+          .modify(_.cotos).setTo(Cotos())
+          .modify(_.cotos.timelineLoading).setTo(true) match {
+          case model =>
+            (
+              model,
+              Seq(
+                Cotonomas.fetchDetails(id),
+                Cotos.fetchTimeline(None, Some(id), 0),
+                if (model.cotonomas.isEmpty)
+                  Cotonomas.fetchRecent(None, 0)
+                else
+                  Cmd.none
+              )
             )
-          )
-        } else {
-          (
-            model.modify(_.context).using(
-              _.warn(s"Cotonoma [${id}] not found.", None)
-            ),
-            Seq(Browser.pushUrl(Route.index.url(())))
-          )
         }
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>

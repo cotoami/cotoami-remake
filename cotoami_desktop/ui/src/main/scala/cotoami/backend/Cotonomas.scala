@@ -19,6 +19,8 @@ case class Cotonomas(
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
+  def isEmpty: Boolean = this.map.isEmpty
+
   def contains(id: Id[Cotonoma]): Boolean = this.map.contains(id)
 
   def select(id: Id[Cotonoma]): Cotonomas =
