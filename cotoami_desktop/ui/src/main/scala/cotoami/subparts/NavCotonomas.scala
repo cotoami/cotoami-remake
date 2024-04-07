@@ -15,8 +15,7 @@ object NavCotonomas {
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
-  ): ReactElement = {
-    val recentCotonomas = model.recentCotonomasWithoutRoot
+  ): ReactElement =
     nav(className := "cotonomas header-and-body")(
       header()(
         if (model.cotonomas.selected.isEmpty) {
@@ -46,8 +45,8 @@ object NavCotonomas {
             () => dispatch(CotonomasMsg(Cotonomas.FetchMoreRecent))
         )(
           model.cotonomas.selected.map(sectionCurrent(model, _, dispatch)),
-          Option.when(!recentCotonomas.isEmpty)(
-            sectionRecent(model, recentCotonomas, dispatch)
+          Option.when(!model.recentCotonomas.isEmpty)(
+            sectionRecent(model, model.recentCotonomas, dispatch)
           ),
           div(
             className := "more",
@@ -56,7 +55,6 @@ object NavCotonomas {
         )
       )
     )
-  }
 
   private def sectionCurrent(
       model: Model,
@@ -68,13 +66,13 @@ object NavCotonomas {
       ul(
         className := optionalClasses(
           Seq(
-            ("has-super-cotonomas", model.superCotonomasWithoutRoot.size > 0)
+            ("has-super-cotonomas", model.superCotonomas.size > 0)
           )
         )
       )(
         li(key := "super")(
           ul(className := "super-cotonomas")(
-            model.superCotonomasWithoutRoot.map(
+            model.superCotonomas.map(
               liCotonoma(model, _, dispatch)
             ): _*
           )

@@ -82,17 +82,17 @@ case class Model(
       }
     )
 
-  lazy val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
+  lazy val recentCotonomas: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId
     this.cotonomas.recent.filter(c => Some(c.id) != rootId)
   }
 
-  lazy val superCotonomasWithoutRoot: Seq[Cotonoma] = {
+  lazy val superCotonomas: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
 
-  lazy val timelineWithoutRoot: Seq[Coto] =
+  lazy val timeline: Seq[Coto] =
     this.nodes.current match {
       case Some(node) =>
         this.cotos.timeline.filter(_.nameAsCotonoma != Some(node.name))
