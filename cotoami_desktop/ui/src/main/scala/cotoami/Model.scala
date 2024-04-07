@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{
+  Coto,
   Cotonoma,
   Cotonomas,
   Cotos,
@@ -90,6 +91,13 @@ case class Model(
     val rootId = this.rootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
+
+  lazy val timelineWithoutRoot: Seq[Coto] =
+    this.nodes.current match {
+      case Some(node) =>
+        this.cotos.timeline.filter(_.nameAsCotonoma != Some(node.name))
+      case None => this.cotos.timeline
+    }
 }
 
 object Model {

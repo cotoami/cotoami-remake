@@ -18,7 +18,7 @@ object PaneFlow {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val timelineCotos = model.cotos.timeline
+    val timelineCotos = model.timelineWithoutRoot
     section(className := "flow pane")(
       paneToggle("flow", dispatch),
       (model.nodes.operating, model.currentCotonoma) match {
