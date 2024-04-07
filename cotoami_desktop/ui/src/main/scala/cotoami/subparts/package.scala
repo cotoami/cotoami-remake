@@ -26,9 +26,8 @@ package object subparts {
         )
       ),
       model
-        .nodes
-        .current
-        .map(node =>
+        .location
+        .map { case (node, cotonoma) =>
           section(className := "location")(
             a(
               className := "node-home",
@@ -38,14 +37,14 @@ package object subparts {
                 dispatch(SelectNode(node.id))
               })
             )(nodeImg(node)),
-            model.cotonomas.selected.map(cotonoma =>
+            cotonoma.map(cotonoma =>
               Fragment(
                 materialSymbol("chevron_right", "arrow"),
                 h1(className := "current-cotonoma")(cotonoma.name)
               )
             )
           )
-        )
+        }
     )
 
   def appBodyContent(

@@ -14,7 +14,15 @@ import java.time._
 import java.time.format.DateTimeFormatter
 
 import fui.FunctionalUI.Cmd
-import cotoami.backend.{Cotonoma, Cotonomas, Cotos, Error, Nodes, SystemInfo}
+import cotoami.backend.{
+  Cotonoma,
+  Cotonomas,
+  Cotos,
+  Error,
+  Node,
+  Nodes,
+  SystemInfo
+}
 import cotoami.subparts.{FormCoto, ModalWelcome}
 
 case class Model(
@@ -57,6 +65,21 @@ case class Model(
     this.cotonomas.selectedId.orElse(
       this.nodes.current.map(_.rootCotonomaId)
     ).flatMap(this.cotonomas.get)
+
+  def location: Option[(Node, Option[Cotonoma])] =
+    this.nodes.current.map(currentNode =>
+      // The location contains a cotonoma only when one is selected,
+      // otherwise the root cotonoma of the current node will be implicitly
+      // used as the current cotonoma.
+      this.cotonomas.selected match {
+        case Some(cotonoma) =>
+          (
+            this.nodes.get(cotonoma.nodeId).getOrElse(currentNode),
+            Some(cotonoma)
+          )
+        case None => (currentNode, None)
+      }
+    )
 
   lazy val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId
