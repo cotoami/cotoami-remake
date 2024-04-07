@@ -10,8 +10,8 @@ case class Coto(json: CotoJson) {
   def postedInId: Option[Id[Cotonoma]] =
     Option(this.json.posted_in_id).map(Id(_))
   def postedById: Id[Node] = Id(this.json.posted_by_id)
-  def content: String = this.json.content
-  def summary: String = this.json.summary
+  def content: Option[String] = Option(this.json.content)
+  def summary: Option[String] = Option(this.json.summary)
   def isCotonoma: Boolean = this.json.is_cotonoma
   def repostOfId: Option[Id[Coto]] = Option(this.json.repost_of_id).map(Id(_))
   def repostedInIds: Option[Seq[Id[Cotonoma]]] =
@@ -19,6 +19,12 @@ case class Coto(json: CotoJson) {
   lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
   lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
   def outgoingLinks: Int = this.json.outgoing_links
+
+  def nameAsCotonoma: Option[String] =
+    if (this.isCotonoma)
+      this.summary.orElse(this.content)
+    else
+      None
 }
 
 object Coto {
