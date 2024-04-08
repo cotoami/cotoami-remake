@@ -35,6 +35,9 @@ case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
 case object DeselectCotonoma extends Msg
 
 // Backend
+case class CotonomaDetailsFetched(
+    result: Either[Error, CotonomaDetailsJson]
+) extends Msg
 case class TimelineFetched(result: Either[backend.Error, CotosJson]) extends Msg
 
 // Sub

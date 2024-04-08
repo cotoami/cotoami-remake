@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import scala.scalajs.js
 import fui.FunctionalUI._
-import cotoami.{node_command, CotonomasMsg}
+import cotoami.{node_command, CotonomaDetailsFetched, CotonomasMsg}
 import cotoami.backend._
 
 case class Cotonomas(
@@ -89,9 +89,6 @@ object Cotonomas {
   case class RecentFetched(
       result: Either[Error, Paginated[CotonomaJson]]
   ) extends Msg
-  case class DetailsFetched(
-      result: Either[Error, CotonomaDetailsJson]
-  ) extends Msg
   case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
   case class SubsFetched(
       result: Either[Error, Paginated[CotonomaJson]]
@@ -122,18 +119,6 @@ object Cotonomas {
         (
           model.copy(recentLoading = false),
           Seq(Error.log(e, "Couldn't fetch recent cotonomas."))
-        )
-
-      case DetailsFetched(Right(details)) =>
-        (
-          model.setCotonomaDetails(details),
-          Seq.empty
-        )
-
-      case DetailsFetched(Left(e)) =>
-        (
-          model,
-          Seq(Error.log(e, "Couldn't fetch cotonoma details."))
         )
 
       case FetchMoreSubs(id) =>
@@ -167,9 +152,7 @@ object Cotonomas {
     )
 
   def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    node_command(Commands.Cotonoma(id)).map(
-      (DetailsFetched andThen CotonomasMsg)
-    )
+    node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched)
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     node_command(Commands.SubCotonomas(id, pageIndex)).map(

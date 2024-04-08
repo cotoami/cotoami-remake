@@ -14,7 +14,7 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.backend.{DatabaseInfo, LogEvent, SystemInfo}
+import cotoami.backend.{Cotonoma, DatabaseInfo, LogEvent, SystemInfo}
 import cotoami.repositories.{Cotonomas, Cotos, Nodes}
 
 object Main {
@@ -167,6 +167,27 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
+      case CotonomaDetailsFetched(Right(details)) => {
+        val cotonoma = Cotonoma(details.cotonoma)
+        (
+          model
+            .modify(_.nodes).using(nodes =>
+              if (!nodes.isSelecting(cotonoma.nodeId))
+                nodes.deselect()
+              else
+                nodes
+            )
+            .modify(_.cotonomas).using(_.setCotonomaDetails(details)),
+          Seq.empty
+        )
+      }
+
+      case CotonomaDetailsFetched(Left(e)) =>
+        (
+          model.error("Couldn't fetch cotonoma details.", Some(e)),
+          Seq.empty
+        )
+
       case TimelineFetched(Right(cotos)) =>
         (
           model
@@ -272,35 +293,22 @@ object Main {
         }
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        model.cotonomas.get(cotonomaId) match {
-          case Some(cotonoma) =>
-            if (cotonoma.nodeId == nodeId) {
-              (
-                model
-                  .modify(_.nodes).using(_.select(nodeId))
-                  .modify(_.cotonomas).using(_.select(cotonomaId))
-                  .modify(_.cotos).setTo(Cotos())
-                  .modify(_.cotos.timelineLoading).setTo(true),
-                Seq(
-                  Cotonomas.fetchDetails(cotonomaId),
-                  Cotos.fetchTimeline(None, Some(cotonomaId), 0)
-                )
-              )
-            } else {
-              (
-                model,
-                Seq(
-                  Browser.pushUrl(
-                    Route.cotonomaInNode.url((cotonoma.nodeId, cotonomaId))
-                  )
-                )
-              )
-            }
-
-          case None =>
+        model
+          .modify(_.nodes).using(_.select(nodeId))
+          .modify(_.cotonomas).using(_.select(cotonomaId))
+          .modify(_.cotos).setTo(Cotos())
+          .modify(_.cotos.timelineLoading).setTo(true) match {
+          case model =>
             (
-              model.warn(s"Cotonoma [${cotonomaId}] not found.", None),
-              Seq(Browser.pushUrl(Route.index.url(())))
+              model,
+              Seq(
+                Cotonomas.fetchDetails(cotonomaId),
+                Cotos.fetchTimeline(None, Some(cotonomaId), 0),
+                if (model.cotonomas.isEmpty)
+                  Cotonomas.fetchRecent(Some(nodeId), 0)
+                else
+                  Cmd.none
+              )
             )
         }
 
