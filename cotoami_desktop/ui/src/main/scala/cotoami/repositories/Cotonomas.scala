@@ -7,6 +7,7 @@ import cotoami.backend._
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
+    mapByCotoId: Map[Id[Coto], Cotonoma] = Map.empty,
 
     // The currently selected cotonoma and its super/sub cotonomas
     selectedId: Option[Id[Cotonoma]] = None,
@@ -20,18 +21,22 @@ case class Cotonomas(
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
+  def getByCotoId(id: Id[Coto]): Option[Cotonoma] = this.mapByCotoId.get(id)
+
   def isEmpty: Boolean = this.map.isEmpty
 
   def contains(id: Id[Cotonoma]): Boolean = this.map.contains(id)
 
-  def select(id: Id[Cotonoma]): Cotonomas =
-    if (this.contains(id))
-      this.deselect().copy(selectedId = Some(id))
-    else
-      this
+  def add(json: CotonomaJson): Cotonomas = {
+    val cotonoma = Cotonoma(json)
+    this.copy(
+      map = this.map + (cotonoma.id -> cotonoma),
+      mapByCotoId = this.mapByCotoId + (cotonoma.cotoId -> cotonoma)
+    )
+  }
 
-  def addAll(cotonomas: js.Array[CotonomaJson]): Cotonomas =
-    this.copy(map = this.map ++ Cotonoma.toMap(cotonomas))
+  def addAll(jsons: js.Array[CotonomaJson]): Cotonomas =
+    jsons.foldLeft(this)((cotonomas, json) => cotonomas.add(json))
 
   def importFrom(cotos: CotosJson): Cotonomas =
     this.addAll(cotos.posted_in ++ cotos.as_cotonomas)
@@ -51,6 +56,18 @@ case class Cotonomas(
       map = this.map ++ map
     )
   }
+
+  def asCotonoma(coto: Coto): Option[Cotonoma] =
+    if (coto.isCotonoma)
+      this.getByCotoId(coto.repostOfId.getOrElse(coto.id))
+    else
+      None
+
+  def select(id: Id[Cotonoma]): Cotonomas =
+    if (this.contains(id))
+      this.deselect().copy(selectedId = Some(id))
+    else
+      this
 
   def deselect(): Cotonomas =
     this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())

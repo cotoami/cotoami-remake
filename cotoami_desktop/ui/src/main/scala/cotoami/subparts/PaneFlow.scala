@@ -5,7 +5,7 @@ import scala.scalajs.js.Dynamic.{literal => jso}
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{FlowInputMsg, Model, Msg, ResizePane}
+import cotoami.{FlowInputMsg, Model, Msg}
 import cotoami.components.{paneToggle, Markdown, RehypePlugin, ToolButton}
 import cotoami.backend.Coto
 
@@ -31,7 +31,8 @@ object PaneFlow {
                 EditorPaneName,
                 EditorDefaultHeight
               ),
-              (newSize) => dispatch(ResizePane(EditorPaneName, newSize)),
+              (newSize) =>
+                dispatch(cotoami.ResizePane(EditorPaneName, newSize)),
               subMsg => dispatch(FlowInputMsg(subMsg))
             )
           )
@@ -68,10 +69,26 @@ object PaneFlow {
             header()(),
             div(className := "body")(
               div(className := "content")(
-                section(className := "text-content")(
-                  Markdown(rehypePlugins =
-                    Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
-                  )(coto.content)
+                model.cotonomas.asCotonoma(coto).map(cotonoma =>
+                  section(className := "cotonoma-content")(
+                    a(
+                      className := "cotonoma",
+                      title := cotonoma.name,
+                      onClick := ((e) => {
+                        e.preventDefault()
+                        dispatch(cotoami.SelectCotonoma(cotonoma.id))
+                      })
+                    )(
+                      model.nodes.get(cotonoma.nodeId).map(nodeImg),
+                      cotonoma.name
+                    )
+                  )
+                ).getOrElse(
+                  section(className := "text-content")(
+                    Markdown(rehypePlugins =
+                      Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
+                    )(coto.content)
+                  )
                 )
               )
             ),

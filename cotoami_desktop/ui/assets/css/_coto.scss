@@ -47,6 +47,23 @@ article.coto {
     padding: 0 var(--block-spacing-horizontal);
   }
 
+  section.cotonoma-content {
+    padding: 0 var(--block-spacing-horizontal);
+    font-weight: 700;
+
+    a.cotonoma {
+      color: var(--h3-color);
+    }
+
+    img.node-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      vertical-align: text-bottom;
+      margin-right: 6px;
+    }
+  }
+
   section.image-content {
     padding-left: var(--block-spacing-horizontal);
 
