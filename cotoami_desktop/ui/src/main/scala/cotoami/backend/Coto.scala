@@ -51,5 +51,6 @@ trait CotoJson extends js.Object {
 trait CotosJson extends js.Object {
   val paginated: Paginated[CotoJson] = js.native
   val posted_in: js.Array[CotonomaJson] = js.native
+  val as_cotonomas: js.Array[CotonomaJson] = js.native
   val repost_of: js.Array[CotoJson] = js.native
 }

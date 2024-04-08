@@ -33,6 +33,9 @@ case class Cotonomas(
   def addAll(cotonomas: js.Array[CotonomaJson]): Cotonomas =
     this.copy(map = this.map ++ Cotonoma.toMap(cotonomas))
 
+  def importFrom(cotos: CotosJson): Cotonomas =
+    this.addAll(cotos.posted_in ++ cotos.as_cotonomas)
+
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)
     val map = Cotonoma.toMap(details.supers) ++

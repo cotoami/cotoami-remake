@@ -693,6 +693,10 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get_by_ids(ids))
     }
 
+    pub fn cotonomas_by_coto_ids(&mut self, ids: Vec<Id<Coto>>) -> Result<Vec<Cotonoma>> {
+        self.read_transaction(cotonoma_ops::get_by_coto_ids(ids))
+    }
+
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
         self.read_transaction(cotonoma_ops::all())
     }
@@ -742,6 +746,21 @@ impl<'a> DatabaseSession<'a> {
             .flatten()
             .collect();
         self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids.into_iter().collect()))
+    }
+
+    pub fn as_cotonomas(&mut self, cotos: &Vec<Coto>) -> Result<Vec<Cotonoma>> {
+        let cotonoma_coto_ids: Vec<Id<Coto>> = cotos
+            .iter()
+            .map(|coto| {
+                if coto.is_cotonoma {
+                    Some(coto.repost_of_id.unwrap_or(coto.uuid))
+                } else {
+                    None
+                }
+            })
+            .flatten()
+            .collect();
+        self.cotonomas_by_coto_ids(cotonoma_coto_ids)
     }
 
     pub fn post_cotonoma(

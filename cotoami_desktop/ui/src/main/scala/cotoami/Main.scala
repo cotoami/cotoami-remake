@@ -192,7 +192,7 @@ object Main {
         (
           model
             .modify(_.cotos).using(_.appendTimeline(cotos))
-            .modify(_.cotonomas).using(_.addAll(cotos.posted_in)),
+            .modify(_.cotonomas).using(_.importFrom(cotos)),
           Seq.empty
         )
 

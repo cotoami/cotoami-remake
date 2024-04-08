@@ -26,22 +26,29 @@ impl NodeState {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
+
+            // Recent cotos
             let paginated = ds.recent_cotos(
                 node.as_ref(),
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
             )?;
+
+            // Fetch related entities
             let posted_in = ds.cotonomas_of(&paginated.rows)?;
+            let as_cotonomas = ds.as_cotonomas(&paginated.rows)?;
             let repost_of_ids: Vec<Id<Coto>> = paginated
                 .rows
                 .iter()
                 .map(|coto| coto.repost_of_id)
                 .flatten()
                 .collect();
+
             Ok::<_, anyhow::Error>(Cotos {
                 paginated,
                 posted_in,
+                as_cotonomas,
                 repost_of: ds.cotos(repost_of_ids)?,
             })
         })
