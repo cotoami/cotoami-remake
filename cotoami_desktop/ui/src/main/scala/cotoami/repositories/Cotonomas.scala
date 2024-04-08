@@ -1,4 +1,4 @@
-package cotoami.repository
+package cotoami.repositories
 
 import scala.scalajs.js
 import fui.FunctionalUI._

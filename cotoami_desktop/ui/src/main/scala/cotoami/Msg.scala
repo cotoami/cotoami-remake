@@ -46,7 +46,7 @@ case object DeselectCotonoma extends Msg
 case class TimelineFetched(result: Either[backend.Error, CotosJson]) extends Msg
 
 // Sub
-case class CotonomasMsg(subMsg: repository.Cotonomas.Msg) extends Msg
-case class CotosMsg(subMsg: repository.Cotos.Msg) extends Msg
+case class CotonomasMsg(subMsg: repositories.Cotonomas.Msg) extends Msg
+case class CotosMsg(subMsg: repositories.Cotos.Msg) extends Msg
 case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg

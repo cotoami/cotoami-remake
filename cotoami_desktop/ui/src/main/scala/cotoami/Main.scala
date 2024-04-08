@@ -15,7 +15,7 @@ import cats.effect.IO
 import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.backend.{DatabaseInfo, LogEvent, SystemInfo}
-import cotoami.repository.{Cotonomas, Cotos, Nodes}
+import cotoami.repositories.{Cotonomas, Cotos, Nodes}
 
 object Main {
 

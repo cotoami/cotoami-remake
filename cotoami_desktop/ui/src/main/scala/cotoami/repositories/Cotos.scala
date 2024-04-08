@@ -1,4 +1,4 @@
-package cotoami.repository
+package cotoami.repositories
 
 import fui.FunctionalUI._
 import cotoami.{node_command, TimelineFetched}

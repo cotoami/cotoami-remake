@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 
 import fui.FunctionalUI.Cmd
 import cotoami.backend.{Coto, Cotonoma, Error, Id, Node, SystemInfo}
-import cotoami.repository.{Cotonomas, Cotos, Nodes}
+import cotoami.repositories.{Cotonomas, Cotos, Nodes}
 import cotoami.subparts.{FormCoto, ModalWelcome}
 
 case class Model(

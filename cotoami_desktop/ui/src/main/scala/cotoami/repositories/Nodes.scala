@@ -1,4 +1,4 @@
-package cotoami.repository
+package cotoami.repositories
 
 import cotoami.backend._
 
