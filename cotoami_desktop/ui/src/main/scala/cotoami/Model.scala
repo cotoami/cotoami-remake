@@ -34,7 +34,7 @@ case class Model(
     databaseFolder: Option[String] = None,
     lastChangeNumber: Double = 0,
 
-    // Entities
+    // Repositories
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
