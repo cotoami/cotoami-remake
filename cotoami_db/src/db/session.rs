@@ -5,6 +5,7 @@ use anyhow::{bail, Context as _, Result};
 use diesel::sqlite::SqliteConnection;
 use once_cell::unsync::OnceCell;
 use parking_lot::MutexGuard;
+use uuid::Uuid;
 
 use crate::{
     db::{
@@ -658,12 +659,29 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get(id))
     }
 
+    pub fn try_get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
+        self.read_transaction(cotonoma_ops::try_get(id))?
+            .map_err(anyhow::Error::from)
+    }
+
     pub fn cotonoma_by_coto_id(&mut self, id: &Id<Coto>) -> Result<Option<(Cotonoma, Coto)>> {
         self.read_transaction(cotonoma_ops::get_by_coto_id(id))
     }
 
-    pub fn try_get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
-        self.read_transaction(cotonoma_ops::try_get(id))?
+    pub fn try_get_cotonoma_by_coto_id(&mut self, id: &Id<Coto>) -> Result<(Cotonoma, Coto)> {
+        self.read_transaction(cotonoma_ops::try_get_by_coto_id(id))?
+            .map_err(anyhow::Error::from)
+    }
+
+    pub fn get_cotonoma_by_uuid(&mut self, uuid: Uuid) -> Result<Option<(Cotonoma, Coto)>> {
+        Ok(self
+            .cotonoma(&Id::new(uuid))?
+            .or(self.cotonoma_by_coto_id(&Id::new(uuid))?))
+    }
+
+    pub fn try_get_cotonoma_by_uuid(&mut self, uuid: Uuid) -> Result<(Cotonoma, Coto)> {
+        self.get_cotonoma_by_uuid(uuid)?
+            .ok_or(DatabaseError::not_found(EntityKind::Cotonoma, uuid))
             .map_err(anyhow::Error::from)
     }
 
