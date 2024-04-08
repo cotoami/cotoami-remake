@@ -5,7 +5,8 @@ import slinky.web.html._
 
 import cotoami.{CotonomasMsg, DeselectCotonoma, Model, Msg, SelectCotonoma}
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea}
-import cotoami.backend.{Cotonoma, Cotonomas, Node}
+import cotoami.backend.{Cotonoma, Node}
+import cotoami.repository.Cotonomas
 
 object NavCotonomas {
   val PaneName = "NavCotonomas"

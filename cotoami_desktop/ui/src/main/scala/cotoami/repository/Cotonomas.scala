@@ -1,8 +1,18 @@
-package cotoami.backend
+package cotoami.repository
 
 import scala.scalajs.js
 import fui.FunctionalUI._
 import cotoami.{node_command, CotonomasMsg, Id}
+import cotoami.backend.{
+  Commands,
+  Cotonoma,
+  CotonomaDetailsJson,
+  CotonomaJson,
+  Error,
+  Node,
+  Paginated,
+  PaginatedIds
+}
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
