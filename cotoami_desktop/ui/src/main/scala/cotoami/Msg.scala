@@ -3,15 +3,7 @@ package cotoami
 import org.scalajs.dom.URL
 
 import cotoami.utils.Log
-import cotoami.backend.{
-  Cotonoma,
-  CotosJson,
-  DatabaseInfoJson,
-  Id,
-  LogEvent,
-  Node,
-  SystemInfo
-}
+import cotoami.backend._
 
 sealed trait Msg
 
