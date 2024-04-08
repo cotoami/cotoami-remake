@@ -54,3 +54,16 @@ trait CotosJson extends js.Object {
   val as_cotonomas: js.Array[CotonomaJson] = js.native
   val repost_of: js.Array[CotoJson] = js.native
 }
+
+object CotosJson {
+  def debug(cotos: CotosJson): String = {
+    val s = new StringBuilder
+    s ++= s"cotos: {page_index: ${cotos.paginated.page_index}"
+    s ++= s", page_size: ${cotos.paginated.page_size}"
+    s ++= s", total_rows: ${cotos.paginated.total_rows}}"
+    s ++= s", posted_in: ${cotos.posted_in.size}"
+    s ++= s", as_cotonomas: ${cotos.as_cotonomas.size}"
+    s ++= s", repost_of: ${cotos.repost_of.size}"
+    s.result()
+  }
+}
