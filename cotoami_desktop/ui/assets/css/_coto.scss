@@ -83,4 +83,9 @@ section.text-content {
   p:last-child {
     margin-bottom: 0;
   }
+
+  pre,
+  code {
+    white-space: pre-wrap;
+  }
 }
