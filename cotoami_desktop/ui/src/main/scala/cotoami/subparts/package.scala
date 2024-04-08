@@ -91,7 +91,7 @@ package object subparts {
       div(className := "browser-nav")(
         div(className := "path")(model.path)
       ),
-      model.context.log
+      model.log
         .lastEntry()
         .map(entry =>
           div(className := s"log-peek ${entry.level.name}")(

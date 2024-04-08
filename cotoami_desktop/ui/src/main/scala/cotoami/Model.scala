@@ -28,6 +28,7 @@ import cotoami.subparts.{FormCoto, ModalWelcome}
 
 case class Model(
     url: URL,
+    log: Log = Log(),
     context: Model.Context = Model.Context(),
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfo] = None,
@@ -49,8 +50,16 @@ case class Model(
     flowInput: FormCoto.Model,
     modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
 ) {
-
   def path: String = this.url.pathname + this.url.search + this.url.hash
+
+  def debug(message: String, details: Option[String] = None): Model =
+    this.copy(log = this.log.debug(message, details))
+  def info(message: String, details: Option[String] = None): Model =
+    this.copy(log = this.log.info(message, details))
+  def warn(message: String, details: Option[String] = None): Model =
+    this.copy(log = this.log.warn(message, details))
+  def error(message: String, error: Option[Error]): Model =
+    this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
 
   def clearSelection(): Model =
     this.copy(
@@ -106,8 +115,7 @@ object Model {
   val SameYearFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
 
   case class Context(
-      zone: ZoneId = ZoneId.of("UTC"),
-      log: Log = Log()
+      zone: ZoneId = ZoneId.of("UTC")
   ) {
     def toDateTime(instant: Instant): LocalDateTime =
       LocalDateTime.ofInstant(instant, this.zone)
@@ -127,15 +135,6 @@ object Model {
         dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)
       }
     }
-
-    def debug(message: String, details: Option[String] = None): Context =
-      this.copy(log = this.log.debug(message, details))
-    def info(message: String, details: Option[String] = None): Context =
-      this.copy(log = this.log.info(message, details))
-    def warn(message: String, details: Option[String] = None): Context =
-      this.copy(log = this.log.warn(message, details))
-    def error(message: String, error: Option[Error]): Context =
-      this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
   }
 
   case class UiState(

@@ -70,13 +70,13 @@ object Main {
 
       case AddLogEntry(level, message, details) =>
         (
-          model.modify(_.context.log).using(_.log(level, message, details)),
+          model.modify(_.log).using(_.log(level, message, details)),
           Seq.empty
         )
 
       case BackendLogEvent(event) =>
         (
-          model.modify(_.context.log).using(
+          model.modify(_.log).using(
             _.addEntry(LogEvent.toLogEntry(event))
           ),
           Seq.empty
@@ -90,9 +90,7 @@ object Main {
           model
             .modify(_.systemInfo).setTo(Some(systemInfo))
             .modify(_.modalWelcome.baseFolder).setTo(systemInfo.app_data_dir)
-            .modify(_.context).using(
-              _.info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo)))
-            ),
+            .info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo))),
           Seq.empty
         )
 
@@ -111,9 +109,7 @@ object Main {
           .modify(_.lastChangeNumber).setTo(info.lastChangeNumber)
           .modify(_.nodes).setTo(Nodes(info))
           .modify(_.modalWelcome.processing).setTo(false)
-          .modify(_.context).using(
-            _.info("Database opened.", Some(info.debug))
-          ) match {
+          .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
               DatabaseFolder.save(info.folder) +: _
@@ -124,7 +120,7 @@ object Main {
       case DatabaseOpened(Left(e)) =>
         (
           model
-            .modify(_.context).using(_.error(e.message, Option(e)))
+            .error(e.message, Option(e))
             .modify(_.modalWelcome.processing).setTo(false)
             .modify(_.modalWelcome.systemError).setTo(Some(e.message)),
           Seq.empty
@@ -189,9 +185,7 @@ object Main {
         (
           model
             .modify(_.cotos.timelineLoading).setTo(false)
-            .modify(_.context).using(
-              _.error("Couldn't fetch timeline cotos.", Some(e))
-            ),
+            .error("Couldn't fetch timeline cotos.", Some(e)),
           Seq.empty
         )
 
@@ -258,9 +252,7 @@ object Main {
           )
         } else {
           (
-            model.modify(_.context).using(
-              _.warn(s"Node [${id}] not found.", None)
-            ),
+            model.warn(s"Node [${id}] not found.", None),
             Seq(Browser.pushUrl(Route.index.url(())))
           )
         }
@@ -313,9 +305,7 @@ object Main {
 
           case None =>
             (
-              model.modify(_.context).using(
-                _.warn(s"Cotonoma [${cotonomaId}] not found.", None)
-              ),
+              model.warn(s"Cotonoma [${cotonomaId}] not found.", None),
               Seq(Browser.pushUrl(Route.index.url(())))
             )
         }
@@ -339,7 +329,7 @@ object Main {
       ),
       subparts.appFooter(model, dispatch),
       if (model.logViewToggle)
-        Some(subparts.ViewLog.view(model.context.log, dispatch))
+        Some(subparts.ViewLog.view(model.log, dispatch))
       else
         None,
       subparts.modal(model, dispatch)
