@@ -658,6 +658,10 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get(id))
     }
 
+    pub fn cotonoma_by_coto_id(&mut self, id: &Id<Coto>) -> Result<Option<(Cotonoma, Coto)>> {
+        self.read_transaction(cotonoma_ops::get_by_coto_id(id))
+    }
+
     pub fn try_get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
         self.read_transaction(cotonoma_ops::try_get(id))?
             .map_err(anyhow::Error::from)

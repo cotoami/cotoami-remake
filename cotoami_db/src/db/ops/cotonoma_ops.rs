@@ -32,6 +32,20 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn get_by_coto_id<Conn: AsReadableConn>(
+    id: &Id<Coto>,
+) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
+    read_op(move |conn| {
+        cotonomas::table
+            .inner_join(cotos::table)
+            .filter(cotonomas::coto_id.eq(id))
+            .select((Cotonoma::as_select(), Coto::as_select()))
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
