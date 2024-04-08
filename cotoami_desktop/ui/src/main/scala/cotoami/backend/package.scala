@@ -4,7 +4,8 @@ import scala.scalajs.js
 import java.time._
 
 import fui.FunctionalUI.Cmd
-import cotoami.{Log, Validation}
+import cotoami.Log
+import cotoami.utils.Validation
 
 package object backend {
 
@@ -19,7 +20,7 @@ package object backend {
 
   object Error {
     def toValidationError(error: Error): Validation.Error =
-      Validation.Error(error.code, error.message)
+      utils.Validation.Error(error.code, error.message)
 
     def log(error: Error, message: String): Cmd[cotoami.Msg] =
       cotoami.log_error(message, Some(js.JSON.stringify(error)))

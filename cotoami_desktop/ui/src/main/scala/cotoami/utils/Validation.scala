@@ -1,4 +1,4 @@
-package cotoami
+package cotoami.utils
 
 import slinky.core.AttrPair
 import slinky.core.facade.ReactElement

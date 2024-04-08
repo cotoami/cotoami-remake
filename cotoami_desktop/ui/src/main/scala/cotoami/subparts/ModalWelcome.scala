@@ -5,7 +5,8 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{tauri, ModalWelcomeMsg, Validation}
+import cotoami.{tauri, ModalWelcomeMsg}
+import cotoami.utils.Validation
 import cotoami.components.materialSymbol
 import cotoami.backend
 import cotoami.backend.{DatabaseOpened, Node}

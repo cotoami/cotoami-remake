@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 import java.time.Instant
-import cotoami.Validation
+import cotoami.utils.Validation
 
 case class Cotonoma(json: CotonomaJson) {
   def id: Id[Cotonoma] = Id(this.json.uuid)
