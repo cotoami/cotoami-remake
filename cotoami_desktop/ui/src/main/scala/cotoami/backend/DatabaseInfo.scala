@@ -1,7 +1,6 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import cotoami.Id
 
 case class DatabaseInfo(json: DatabaseInfoJson) {
   def folder: String = this.json.folder

@@ -7,6 +7,7 @@ import cotoami.backend.{
   Cotonoma,
   CotosJson,
   DatabaseInfoJson,
+  Id,
   LogEvent,
   Node,
   SystemInfo

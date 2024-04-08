@@ -2,7 +2,6 @@ package cotoami.backend
 
 import scala.scalajs.js
 import java.time.Instant
-import cotoami.Id
 
 case class Coto(json: CotoJson) {
   def id: Id[Coto] = Id(this.json.uuid)

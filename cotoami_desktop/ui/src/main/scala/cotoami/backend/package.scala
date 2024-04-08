@@ -4,9 +4,11 @@ import scala.scalajs.js
 import java.time._
 
 import fui.FunctionalUI.Cmd
-import cotoami.{Id, Log, Validation}
+import cotoami.{Log, Validation}
 
 package object backend {
+
+  case class Id[T](uuid: String) extends AnyVal
 
   @js.native
   trait Error extends js.Object {

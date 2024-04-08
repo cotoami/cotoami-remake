@@ -1,13 +1,14 @@
 package cotoami.repository
 
 import fui.FunctionalUI._
-import cotoami.{node_command, Id, TimelineFetched}
+import cotoami.{node_command, TimelineFetched}
 import cotoami.backend.{
   Commands,
   Coto,
   CotoJson,
   Cotonoma,
   CotosJson,
+  Id,
   Node,
   PaginatedIds
 }

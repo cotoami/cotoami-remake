@@ -185,7 +185,7 @@ object Main {
 
       case CotonomasMsg(subMsg) => {
         val (cotonomas, cmds) =
-          repository.Cotonomas.update(
+          Cotonomas.update(
             subMsg,
             model.cotonomas,
             model.nodes.selectedId
@@ -195,7 +195,7 @@ object Main {
 
       case CotosMsg(subMsg) => {
         val (cotos, cmds) =
-          repository.Cotos.update(
+          Cotos.update(
             subMsg,
             model.cotos,
             model.nodes.selectedId,

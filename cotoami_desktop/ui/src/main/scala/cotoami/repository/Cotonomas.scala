@@ -2,13 +2,14 @@ package cotoami.repository
 
 import scala.scalajs.js
 import fui.FunctionalUI._
-import cotoami.{node_command, CotonomasMsg, Id}
+import cotoami.{node_command, CotonomasMsg}
 import cotoami.backend.{
   Commands,
   Cotonoma,
   CotonomaDetailsJson,
   CotonomaJson,
   Error,
+  Id,
   Node,
   Paginated,
   PaginatedIds

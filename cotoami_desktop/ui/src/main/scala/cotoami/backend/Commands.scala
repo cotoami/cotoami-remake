@@ -1,7 +1,6 @@
 package cotoami.backend
 
 import scala.scalajs.js.Dynamic.{literal => jso}
-import cotoami.Id
 
 object Commands {
 
