@@ -2,7 +2,7 @@ package cotoami
 
 import org.scalajs.dom.URL
 
-import cotoami.Log
+import cotoami.utils.Log
 import cotoami.backend.{
   Cotonoma,
   CotosJson,

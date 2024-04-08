@@ -1,4 +1,4 @@
-package cotoami
+package cotoami.utils
 
 import scala.collection.immutable.Queue
 import scala.scalajs.js

@@ -8,7 +8,8 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.{Log, Msg}
+import cotoami.Msg
+import cotoami.utils.Log
 import cotoami.components.materialSymbol
 
 object ViewLog {

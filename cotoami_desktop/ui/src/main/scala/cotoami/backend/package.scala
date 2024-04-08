@@ -4,8 +4,7 @@ import scala.scalajs.js
 import java.time._
 
 import fui.FunctionalUI.Cmd
-import cotoami.Log
-import cotoami.utils.Validation
+import cotoami.utils.{Log, Validation}
 
 package object backend {
 
@@ -35,8 +34,8 @@ package object backend {
 
   object LogEvent {
     def toLogEntry(event: LogEvent): Log.Entry =
-      Log.Entry(
-        Log.levels.get(event.level).getOrElse(Log.Debug),
+      utils.Log.Entry(
+        utils.Log.levels.get(event.level).getOrElse(utils.Log.Debug),
         event.message,
         Option(event.details)
       )
