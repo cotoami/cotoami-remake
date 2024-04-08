@@ -2,16 +2,7 @@ package cotoami.repository
 
 import fui.FunctionalUI._
 import cotoami.{node_command, TimelineFetched}
-import cotoami.backend.{
-  Commands,
-  Coto,
-  CotoJson,
-  Cotonoma,
-  CotosJson,
-  Id,
-  Node,
-  PaginatedIds
-}
+import cotoami.backend._
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,

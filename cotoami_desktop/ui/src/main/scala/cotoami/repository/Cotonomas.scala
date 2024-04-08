@@ -3,17 +3,7 @@ package cotoami.repository
 import scala.scalajs.js
 import fui.FunctionalUI._
 import cotoami.{node_command, CotonomasMsg}
-import cotoami.backend.{
-  Commands,
-  Cotonoma,
-  CotonomaDetailsJson,
-  CotonomaJson,
-  Error,
-  Id,
-  Node,
-  Paginated,
-  PaginatedIds
-}
+import cotoami.backend._
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,

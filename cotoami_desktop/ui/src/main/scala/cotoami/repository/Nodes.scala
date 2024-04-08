@@ -1,6 +1,6 @@
 package cotoami.repository
 
-import cotoami.backend.{DatabaseInfo, Id, Node}
+import cotoami.backend._
 
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
