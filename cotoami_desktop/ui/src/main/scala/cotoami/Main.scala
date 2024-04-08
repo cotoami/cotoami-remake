@@ -14,8 +14,8 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.backend.{Cotos, DatabaseInfo, LogEvent, Nodes, SystemInfo}
-import cotoami.repository.Cotonomas
+import cotoami.backend.{DatabaseInfo, LogEvent, Nodes, SystemInfo}
+import cotoami.repository.{Cotonomas, Cotos}
 
 object Main {
 
@@ -195,7 +195,7 @@ object Main {
 
       case CotosMsg(subMsg) => {
         val (cotos, cmds) =
-          backend.Cotos.update(
+          repository.Cotos.update(
             subMsg,
             model.cotos,
             model.nodes.selectedId,

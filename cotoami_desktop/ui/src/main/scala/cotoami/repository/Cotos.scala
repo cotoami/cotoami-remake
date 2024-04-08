@@ -1,8 +1,16 @@
-package cotoami.backend
+package cotoami.repository
 
-import scala.scalajs.js
 import fui.FunctionalUI._
 import cotoami.{node_command, Id, TimelineFetched}
+import cotoami.backend.{
+  Commands,
+  Coto,
+  CotoJson,
+  Cotonoma,
+  CotosJson,
+  Node,
+  PaginatedIds
+}
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,
@@ -61,11 +69,4 @@ object Cotos {
     node_command(Commands.RecentCotos(nodeId, cotonomaId, pageIndex)).map(
       TimelineFetched
     )
-}
-
-@js.native
-trait CotosJson extends js.Object {
-  val paginated: Paginated[CotoJson] = js.native
-  val posted_in: js.Array[CotonomaJson] = js.native
-  val repost_of: js.Array[CotoJson] = js.native
 }
