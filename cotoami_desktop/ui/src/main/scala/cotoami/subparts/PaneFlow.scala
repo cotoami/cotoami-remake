@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg}
-import cotoami.components.{paneToggle, ToolButton}
+import cotoami.components.{materialSymbol, paneToggle, ToolButton}
 import cotoami.backend.Coto
 
 object PaneFlow {
@@ -63,27 +63,79 @@ object PaneFlow {
       ),
       div(className := "posts body")(
         cotos.map(coto =>
-          article(className := "post coto")(
-            header()(
-              ViewCoto.otherCotonomas(model, coto, dispatch),
-              if (Some(coto.postedById) != model.nodes.operatingId)
-                Some(ViewCoto.author(model, coto))
-              else
-                None
-            ),
-            div(className := "body")(
-              ViewCoto.content(model, coto, dispatch)
-            ),
-            footer()(
-              time(
-                className := "posted_at",
-                title := model.context.formatDateTime(coto.createdAt)
-              )(
-                model.context.display(coto.createdAt)
-              )
-            )
+          section(className := "post")(
+            coto.repostOfId.map(_ => repostHeader(model, coto, dispatch)),
+            cotoArticle(model, model.cotos.getOriginal(coto), dispatch)
           )
         ): _*
+      )
+    )
+
+  def cotoArticle(
+      model: Model,
+      coto: Coto,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    article(className := "coto")(
+      header()(
+        ViewCoto.otherCotonomas(model, coto, dispatch),
+        Option.when(Some(coto.postedById) != model.nodes.operatingId) {
+          ViewCoto.author(model, coto)
+        }
+      ),
+      div(className := "body")(
+        ViewCoto.content(model, coto, dispatch)
+      ),
+      footer()(
+        time(
+          className := "posted-at",
+          title := model.context.formatDateTime(coto.createdAt)
+        )(
+          model.context.display(coto.createdAt)
+        )
+      )
+    )
+
+  def repostHeader(
+      model: Model,
+      coto: Coto,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "repost-header")(
+      materialSymbol("repeat"),
+      Option.when(model.cotonomas.selectedId.isEmpty) {
+        repostedIn(model, coto, dispatch)
+      },
+      Option.when(Some(coto.postedById) != model.nodes.operatingId) {
+        reposter(model, coto)
+      }
+    )
+
+  def repostedIn(
+      model: Model,
+      coto: Coto,
+      dispatch: Msg => Unit
+  ): Option[ReactElement] =
+    coto.postedInId.flatMap(model.cotonomas.get).map(cotonoma =>
+      a(
+        className := "reposted-in",
+        onClick := ((e) => {
+          e.preventDefault()
+          dispatch(cotoami.SelectCotonoma(cotonoma.id))
+        })
+      )(cotonoma.name)
+    )
+
+  def reposter(
+      model: Model,
+      coto: Coto
+  ): ReactElement =
+    address(className := "reposter")(
+      model.nodes.get(coto.postedById).map(node =>
+        Fragment(
+          nodeImg(node),
+          node.name
+        )
       )
     )
 }

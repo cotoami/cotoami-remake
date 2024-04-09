@@ -12,9 +12,45 @@ section.flow {
       padding-bottom: 3rem;
     }
 
+    .post {
+      border-bottom: 1px solid var(--pane-border-color);
+
+      .repost-header {
+        padding: 3px var(--block-spacing-horizontal);
+        padding-top: 5px;
+        color: var(--muted-color);
+        background-color: var(--card-background-color);
+
+        span.material-symbols {
+          font-size: 1.2rem;
+          vertical-align: middle;
+        }
+
+        a.reposted-in {
+          margin-left: 4px;
+          font-size: 0.8rem;
+          color: var(--muted-color);
+          text-decoration: underline;
+        }
+
+        address.reposter {
+          display: inline;
+          margin-left: 16px;
+          color: var(--muted-color);
+          font-size: 0.9rem;
+
+          img.node-icon {
+            width: 15px;
+            height: 15px;
+            border-radius: 4px;
+            margin-right: 4px;
+          }
+        }
+      }
+    }
+
     article {
       padding: 1rem 0;
-      border-bottom: 1px solid var(--pane-border-color);
 
       address.author {
         padding: 0 var(--block-spacing-horizontal);

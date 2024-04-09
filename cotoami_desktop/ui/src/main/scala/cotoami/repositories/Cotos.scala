@@ -13,6 +13,9 @@ case class Cotos(
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
+  def getOriginal(coto: Coto): Coto =
+    coto.repostOfId.flatMap(this.get).getOrElse(coto)
+
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
   def appendTimeline(cotos: CotosJson): Cotos =
