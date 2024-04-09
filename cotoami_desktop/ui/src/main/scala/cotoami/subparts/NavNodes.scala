@@ -50,11 +50,11 @@ object NavNodes {
         materialSymbol("add")
       ),
       ul(className := "nodes")(
-        model.nodes.local.map(node => li()(node_button(model, node, dispatch)))
+        model.nodes.local.map(node => li()(nodeButton(model, node, dispatch)))
       )
     )
 
-  private def node_button(
+  private def nodeButton(
       model: Model,
       node: Node,
       dispatch: Msg => Unit
