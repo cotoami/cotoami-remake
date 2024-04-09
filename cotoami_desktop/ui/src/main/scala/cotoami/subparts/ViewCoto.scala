@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import scala.scalajs.js.Dynamic.{literal => jso}
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
@@ -10,6 +10,20 @@ import cotoami.components.{Markdown, RehypePlugin}
 import cotoami.backend.Coto
 
 object ViewCoto {
+
+  def author(
+      model: Model,
+      coto: Coto
+  ): ReactElement =
+    address(className := "author")(
+      model.nodes.get(coto.postedById).map(node =>
+        Fragment(
+          nodeImg(node),
+          node.name
+        )
+      )
+    )
+
   def otherCotonomas(
       model: Model,
       coto: Coto,

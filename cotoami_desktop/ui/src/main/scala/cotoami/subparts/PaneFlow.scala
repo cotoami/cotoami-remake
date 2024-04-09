@@ -65,7 +65,11 @@ object PaneFlow {
         cotos.map(coto =>
           article(className := "post coto")(
             header()(
-              ViewCoto.otherCotonomas(model, coto, dispatch)
+              ViewCoto.otherCotonomas(model, coto, dispatch),
+              if (Some(coto.postedById) != model.nodes.operatingId)
+                Some(ViewCoto.author(model, coto))
+              else
+                None
             ),
             div(className := "body")(
               ViewCoto.content(model, coto, dispatch)
