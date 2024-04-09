@@ -92,4 +92,21 @@ section.text-content {
   code {
     white-space: pre-wrap;
   }
+
+  ul,
+  ol {
+    margin-bottom: var(--typography-spacing-vertical);
+  }
+
+  ul li {
+    list-style: disc inside;
+  }
+
+  ol li {
+    list-style: decimal inside;
+  }
+
+  li {
+    margin-bottom: calc(var(--typography-spacing-vertical) * 0.25);
+  }
 }
