@@ -56,7 +56,7 @@ trait CotosJson extends js.Object {
   val paginated: Paginated[CotoJson] = js.native
   val posted_in: js.Array[CotonomaJson] = js.native
   val as_cotonomas: js.Array[CotonomaJson] = js.native
-  val repost_of: js.Array[CotoJson] = js.native
+  val originals: js.Array[CotoJson] = js.native
 }
 
 object CotosJson {
@@ -67,7 +67,7 @@ object CotosJson {
     s ++= s", total_rows: ${cotos.paginated.total_rows}}"
     s ++= s", posted_in: ${cotos.posted_in.size}"
     s ++= s", as_cotonomas: ${cotos.as_cotonomas.size}"
-    s ++= s", repost_of: ${cotos.repost_of.size}"
+    s ++= s", originals: ${cotos.originals.size}"
     s.result()
   }
 }

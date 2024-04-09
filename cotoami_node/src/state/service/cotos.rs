@@ -36,20 +36,21 @@ impl NodeState {
             )?;
 
             // Fetch related entities
-            let posted_in = ds.cotonomas_of(&paginated.rows)?;
-            let as_cotonomas = ds.as_cotonomas(&paginated.rows)?;
-            let repost_of_ids: Vec<Id<Coto>> = paginated
+            let original_ids: Vec<Id<Coto>> = paginated
                 .rows
                 .iter()
                 .map(|coto| coto.repost_of_id)
                 .flatten()
                 .collect();
+            let originals = ds.cotos(original_ids)?;
+            let posted_in = ds.cotonomas_of(&paginated.rows)?;
+            let as_cotonomas = ds.as_cotonomas(&paginated.rows)?;
 
             Ok::<_, anyhow::Error>(Cotos {
                 paginated,
                 posted_in,
                 as_cotonomas,
-                repost_of: ds.cotos(repost_of_ids)?,
+                originals,
             })
         })
         .await?

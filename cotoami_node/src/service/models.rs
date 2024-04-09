@@ -103,5 +103,5 @@ pub struct Cotos {
     pub paginated: Paginated<Coto>,
     pub posted_in: Vec<Cotonoma>,
     pub as_cotonomas: Vec<Cotonoma>,
-    pub repost_of: Vec<Coto>,
+    pub originals: Vec<Coto>,
 }

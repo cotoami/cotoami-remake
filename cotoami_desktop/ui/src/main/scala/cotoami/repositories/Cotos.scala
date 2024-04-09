@@ -22,7 +22,7 @@ case class Cotos(
     this.copy(
       map = this.map ++
         Coto.toMap(cotos.paginated.rows) ++
-        Coto.toMap(cotos.repost_of),
+        Coto.toMap(cotos.originals),
       timelineLoading = false,
       timelineIds = this.timelineIds.addPage(
         cotos.paginated,
