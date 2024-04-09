@@ -10,6 +10,30 @@ import cotoami.components.{Markdown, RehypePlugin}
 import cotoami.backend.Coto
 
 object ViewCoto {
+  def otherCotonomas(
+      model: Model,
+      coto: Coto,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    ul(className := "other-cotonomas")(
+      coto.postedInIds
+        .filter(id => !model.isRoot(id) && !model.cotonomas.isSelecting(id))
+        .map(model.cotonomas.get)
+        .flatten
+        .reverse
+        .map(cotonoma =>
+          li()(
+            a(
+              className := "also-posted-in",
+              onClick := ((e) => {
+                e.preventDefault()
+                dispatch(cotoami.SelectCotonoma(cotonoma.id))
+              })
+            )(cotonoma.name)
+          )
+        )
+    )
+
   def content(
       model: Model,
       coto: Coto,

@@ -64,7 +64,9 @@ object PaneFlow {
       div(className := "posts body")(
         cotos.map(coto =>
           article(className := "post coto")(
-            header()(),
+            header()(
+              ViewCoto.otherCotonomas(model, coto, dispatch)
+            ),
             div(className := "body")(
               ViewCoto.content(model, coto, dispatch)
             ),

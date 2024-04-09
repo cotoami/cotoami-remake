@@ -19,6 +19,10 @@ case class Coto(json: CotoJson) {
   lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
   def outgoingLinks: Int = this.json.outgoing_links
 
+  def postedInIds: Seq[Id[Cotonoma]] =
+    Seq(this.postedInId).flatten ++
+      this.repostedInIds.getOrElse(Seq.empty)
+
   def nameAsCotonoma: Option[String] =
     if (this.isCotonoma)
       this.summary.orElse(this.content)

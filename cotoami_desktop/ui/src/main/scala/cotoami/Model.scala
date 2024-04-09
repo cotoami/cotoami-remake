@@ -64,6 +64,8 @@ case class Model(
   def rootCotonomaId: Option[Id[Cotonoma]] =
     this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
 
+  def isRoot(id: Id[Cotonoma]): Boolean = Some(id) == this.rootCotonomaId
+
   def currentCotonoma: Option[Cotonoma] =
     this.cotonomas.selectedId.orElse(
       this.nodes.current.map(_.rootCotonomaId)
