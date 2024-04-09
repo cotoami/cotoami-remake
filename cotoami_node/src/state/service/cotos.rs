@@ -43,8 +43,8 @@ impl NodeState {
                 .flatten()
                 .collect();
             let originals = ds.cotos(original_ids)?;
-            let posted_in = ds.cotonomas_of(&paginated.rows)?;
-            let as_cotonomas = ds.as_cotonomas(&paginated.rows)?;
+            let posted_in = ds.cotonomas_of(paginated.rows.iter())?;
+            let as_cotonomas = ds.as_cotonomas(paginated.rows.iter())?;
 
             Ok::<_, anyhow::Error>(Cotos {
                 paginated,

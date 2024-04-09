@@ -730,9 +730,12 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::subs(id, page_size, page_index))
     }
 
-    pub fn cotonomas_of(&mut self, cotos: &Vec<Coto>) -> Result<Vec<Cotonoma>> {
+    pub fn cotonomas_of<'b, I>(&mut self, cotos: I) -> Result<Vec<Cotonoma>>
+    where
+        I: IntoIterator<Item = &'b Coto>,
+    {
         let cotonoma_ids: HashSet<Id<Cotonoma>> = cotos
-            .iter()
+            .into_iter()
             .map(|coto| {
                 let mut ids = Vec::new();
                 if let Some(posted_in_id) = coto.posted_in_id {
@@ -748,9 +751,12 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids.into_iter().collect()))
     }
 
-    pub fn as_cotonomas(&mut self, cotos: &Vec<Coto>) -> Result<Vec<Cotonoma>> {
+    pub fn as_cotonomas<'b, I>(&mut self, cotos: I) -> Result<Vec<Cotonoma>>
+    where
+        I: IntoIterator<Item = &'b Coto>,
+    {
         let cotonoma_coto_ids: Vec<Id<Coto>> = cotos
-            .iter()
+            .into_iter()
             .map(|coto| {
                 if coto.is_cotonoma {
                     Some(coto.repost_of_id.unwrap_or(coto.uuid))
