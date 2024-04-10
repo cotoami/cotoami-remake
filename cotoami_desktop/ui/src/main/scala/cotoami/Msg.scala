@@ -27,7 +27,7 @@ case class DatabaseOpened(result: Either[backend.Error, DatabaseInfoJson])
 // UI
 case class TogglePane(name: String) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
-case class ToggleContent(toggleId: String) extends Msg
+case class ToggleContent(cotoViewId: String) extends Msg
 
 // Transition
 case class SelectNode(id: Id[Node]) extends Msg

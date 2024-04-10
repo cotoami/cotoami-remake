@@ -84,7 +84,7 @@ object PaneFlow {
         }
       ),
       div(className := "body")(
-        ViewCoto.content(model, coto, dispatch)
+        ViewCoto.content(model, coto, s"timeline-${coto.id}", dispatch)
       ),
       footer()(
         time(

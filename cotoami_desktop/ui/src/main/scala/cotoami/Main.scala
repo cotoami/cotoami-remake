@@ -140,13 +140,13 @@ object Main {
         }
       }
 
-      case ToggleContent(toggleId) =>
+      case ToggleContent(cotoViewId) =>
         (
           model.modify(_.contentTogglesOpened).using(ids =>
-            if (ids.contains(toggleId))
-              ids - toggleId
+            if (ids.contains(cotoViewId))
+              ids - cotoViewId
             else
-              ids + toggleId
+              ids + cotoViewId
           ),
           Seq.empty
         )
