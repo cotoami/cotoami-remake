@@ -71,6 +71,32 @@ article.coto {
       margin-bottom: 8px; // fixed margin to the image
     }
   }
+
+  .summary-and-content {
+    section.summary {
+      padding: 0 var(--block-spacing-horizontal);
+
+      span.material-symbols {
+        margin-right: 6px;
+        vertical-align: top;
+      }
+
+      span.summary {
+        color: var(--muted-color);
+        font-weight: 700;
+        cursor: pointer;
+      }
+    }
+
+    .collapsible-content {
+      display: none;
+
+      &.open {
+        display: block;
+        margin-top: 1rem;
+      }
+    }
+  }
 }
 
 article.sub-coto {

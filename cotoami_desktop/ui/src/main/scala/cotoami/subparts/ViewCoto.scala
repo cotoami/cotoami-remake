@@ -6,7 +6,12 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
-import cotoami.components.{Markdown, RehypePlugin}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  Markdown,
+  RehypePlugin
+}
 import cotoami.backend.Coto
 
 object ViewCoto {
@@ -51,6 +56,7 @@ object ViewCoto {
   def content(
       model: Model,
       coto: Coto,
+      cotoViewId: String,
       dispatch: Msg => Unit
   ): ReactElement =
     div(className := "content")(
@@ -69,11 +75,41 @@ object ViewCoto {
           )
         )
       ).getOrElse(
-        section(className := "text-content")(
-          Markdown(rehypePlugins =
-            Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
-          )(coto.content)
-        )
+        coto.summary.map(summary => {
+          val toggleOpened = model.contentTogglesOpened.contains(cotoViewId)
+          div(className := "summary-and-content")(
+            section(className := "summary")(
+              button(
+                className := "content-toggle default",
+                onClick := ((e) => dispatch(cotoami.ToggleContent(cotoViewId)))
+              )(
+                if (toggleOpened)
+                  materialSymbol("keyboard_double_arrow_up")
+                else
+                  materialSymbol("keyboard_double_arrow_down")
+              ),
+              span(
+                className := "summary",
+                onClick := ((e) => dispatch(cotoami.ToggleContent(cotoViewId)))
+              )(summary)
+            ),
+            div(
+              className := optionalClasses(
+                Seq(
+                  ("collapsible-content", true),
+                  ("open", toggleOpened)
+                )
+              )
+            )(cotoContent(coto))
+          )
+        }).getOrElse(cotoContent(coto))
       )
+    )
+
+  def cotoContent(coto: Coto): ReactElement =
+    section(className := "text-content")(
+      Markdown(rehypePlugins =
+        Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
+      )(coto.content)
     )
 }
