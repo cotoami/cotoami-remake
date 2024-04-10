@@ -26,9 +26,10 @@ case class Model(
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfo] = None,
 
-    // UI state that can be saved in localStorage separately from app data.
+    // uiState that can be saved in localStorage separately from app data.
     // It will be `None` before being restored from localStorage on init.
     uiState: Option[Model.UiState] = None,
+    contentTogglesOpened: Set[String] = Set.empty,
 
     // Database
     databaseFolder: Option[String] = None,

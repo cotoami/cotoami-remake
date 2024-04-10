@@ -140,6 +140,17 @@ object Main {
         }
       }
 
+      case ToggleContent(toggleId) =>
+        (
+          model.modify(_.contentTogglesOpened).using(ids =>
+            if (ids.contains(toggleId))
+              ids - toggleId
+            else
+              ids + toggleId
+          ),
+          Seq.empty
+        )
+
       case SelectNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
