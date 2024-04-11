@@ -173,49 +173,55 @@ button.default {
 .pane {
   position: relative;
 
-  >button.pane-toggle {
+  >.pane-toggle {
+    display: inline-block;
     position: absolute;
     top: 0;
     right: 0;
 
-    width: 20px;
-    height: 25px;
-
-    cursor: pointer;
-    opacity: .5;
-
-    // ensure to place this button in front of everything
+    // ensure to place this toggle in front of everything
     z-index: 100;
 
-    &:hover {
-      opacity: 1;
-    }
-
-    span.material-symbols {
+    button {
       position: absolute;
       top: -6px;
-      right: -3px;
-      font-size: 22px; // use px here to fix the icon size
-    }
-  }
+      right: -2px;
 
-  >button.unfold {
-    display: none;
+      width: 20px;
+      height: 25px;
+
+      cursor: pointer;
+      opacity: .5;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      span.material-symbols {
+        font-size: 22px; // use px here to fix the icon size
+      }
+
+      &.unfold {
+        display: none;
+      }
+    }
   }
 
   &.folded {
     flex: 0 0 16px !important;
 
-    *:nth-child(n+3) {
+    *:nth-child(n+2) {
       display: none !important;
     }
 
-    >button.fold {
-      display: none !important;
-    }
+    >.pane-toggle {
+      button.fold {
+        display: none !important;
+      }
 
-    >button.unfold {
-      display: block;
+      button.unfold {
+        display: block !important;
+      }
     }
   }
 }

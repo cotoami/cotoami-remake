@@ -1,6 +1,6 @@
 package cotoami
 
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 package object components {
@@ -21,9 +21,9 @@ package object components {
       dispatch: Msg => Unit,
       direction: CollapseDirection = ToLeft
   ): ReactElement =
-    Fragment(
+    div(className := "pane-toggle")(
       button(
-        className := "pane-toggle fold default",
+        className := "fold default",
         title := "Fold",
         onClick := ((e) => dispatch(TogglePane(paneName)))
       )(
@@ -35,7 +35,7 @@ package object components {
         )
       ),
       button(
-        className := "pane-toggle unfold default",
+        className := "unfold default",
         title := "Unfold",
         onClick := ((e) => dispatch(TogglePane(paneName)))
       )(
