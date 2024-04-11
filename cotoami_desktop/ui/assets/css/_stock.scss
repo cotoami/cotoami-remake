@@ -1,6 +1,17 @@
 section.stock {
   display: flex;
   flex-direction: row;
+  position: relative;
+
+  >.pane-toggle {
+    left: 0;
+    right: auto;
+
+    button {
+      left: -4px;
+      right: auto;
+    }
+  }
 
   section.coto-catalog {
     flex: 1;
