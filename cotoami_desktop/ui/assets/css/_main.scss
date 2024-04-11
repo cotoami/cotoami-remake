@@ -5,6 +5,7 @@ main {
   // section.flow should fill up the remaining space if section.stock doesn't exist.
   section.flow {
     flex: 1;
+    min-width: 0; // let this item shrink below the content size
 
     button.fold {
       display: none;
