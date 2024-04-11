@@ -8,8 +8,19 @@ section.flow {
 
     .posts {
       overflow-x: hidden;
-      overflow-y: auto;
-      padding-bottom: 3rem;
+      overflow-y: hidden;
+
+      // SimpleBar div
+      >div {
+        height: 100%;
+      }
+
+      .more {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 50px;
+      }
     }
 
     .post {
