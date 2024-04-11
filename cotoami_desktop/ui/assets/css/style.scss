@@ -173,8 +173,7 @@ button.default {
 .pane {
   position: relative;
 
-  >button.fold,
-  >button.unfold {
+  >button.pane-toggle {
     position: absolute;
     top: 0;
     right: 0;
