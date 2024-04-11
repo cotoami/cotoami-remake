@@ -134,11 +134,13 @@ object Model {
   }
 
   case class UiState(
-      paneToggles: Map[String, Boolean] = Map(),
+      paneToggles: Map[String, Boolean] = Map(
+        subparts.PaneStock.PaneName -> false // fold PaneStock by default
+      ),
       paneSizes: Map[String, Int] = Map()
   ) {
     def paneOpened(name: String): Boolean =
-      this.paneToggles.getOrElse(name, true)
+      this.paneToggles.getOrElse(name, true) // open by default
 
     def togglePane(name: String): UiState =
       this.copy(paneToggles =
