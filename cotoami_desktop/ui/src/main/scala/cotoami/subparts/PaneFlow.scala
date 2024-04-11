@@ -33,7 +33,9 @@ object PaneFlow {
         )
       )
     )(
-      paneToggle(PaneName, dispatch),
+      Option.when(uiState.paneOpened(PaneStock.PaneName)) {
+        paneToggle(PaneName, dispatch)
+      },
       (model.nodes.operating, model.currentCotonoma) match {
         case (Some(node), Some(cotonoma)) =>
           Some(

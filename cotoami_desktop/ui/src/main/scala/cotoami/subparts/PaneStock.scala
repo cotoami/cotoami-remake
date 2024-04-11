@@ -23,6 +23,8 @@ object PaneStock {
         )
       )
     )(
-      paneToggle(PaneName, dispatch, ToRight)
+      Option.when(uiState.paneOpened(PaneFlow.PaneName)) {
+        paneToggle(PaneName, dispatch, ToRight)
+      }
     )
 }
