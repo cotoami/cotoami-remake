@@ -2,16 +2,18 @@ main {
   display: flex;
   flex-direction: row;
 
-  // section.flow should fill up the remaining space if section.stock doesn't exist.
-  section.flow {
-    flex: 1;
-    min-width: 0; // let this item shrink below the content size
+  .split-pane {
+    width: 100%;
   }
 
-  // section.stock is rendered only when the current cotonoma has pinned cotos.
+  // wrapped in SplitPane
+  section.flow,
   section.stock {
-    flex: 1;
-    min-width: 0; // let this item shrink below the content size
-    border-left: 1px solid var(--pane-border-color);
+    width: 100%;
+    height: 100%;
+  }
+
+  .occupy {
+    flex: 1 !important;
   }
 }

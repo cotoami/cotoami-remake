@@ -7,7 +7,8 @@ import cotoami.components.{
   materialSymbol,
   optionalClasses,
   paneToggle,
-  SplitPane
+  SplitPane,
+  ToRight
 }
 import cotoami.backend.Node
 
@@ -79,13 +80,68 @@ package object subparts {
         model.nodes.current.map(NavCotonomas.view(model, _, dispatch))
       ),
       SplitPane.Secondary(className = None)(
-        slinky.web.html.main()(
-          PaneFlow.view(model, uiState, dispatch),
+        flowAndStock(model, uiState, dispatch)
+      )
+    )
+  )
+
+  def flowAndStock(
+      model: Model,
+      uiState: Model.UiState,
+      dispatch: Msg => Unit
+  ): ReactElement = {
+    val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
+    val stockOpened = uiState.paneOpened(PaneStock.PaneName)
+    slinky.web.html.main()(
+      SplitPane(
+        vertical = true,
+        initialPrimarySize = uiState.paneSizes.getOrElse(
+          PaneFlow.PaneName,
+          PaneFlow.DefaultWidth
+        ),
+        resizable = flowOpened && stockOpened,
+        className = Some("main"),
+        onPrimarySizeChanged = (
+            (newSize) => dispatch(ResizePane(PaneFlow.PaneName, newSize))
+        )
+      )(
+        SplitPane.Primary(className =
+          Some(
+            optionalClasses(
+              Seq(
+                ("flow", true),
+                ("pane", true),
+                ("folded", !flowOpened),
+                ("occupy", flowOpened && !stockOpened)
+              )
+            )
+          )
+        )(
+          Option.when(stockOpened) {
+            paneToggle(PaneFlow.PaneName, dispatch)
+          },
+          PaneFlow.view(model, uiState, dispatch)
+        ),
+        SplitPane.Secondary(className =
+          Some(
+            optionalClasses(
+              Seq(
+                ("stock", true),
+                ("pane", true),
+                ("folded", !stockOpened),
+                ("occupy", !flowOpened && stockOpened)
+              )
+            )
+          )
+        )(
+          Option.when(flowOpened) {
+            paneToggle(PaneStock.PaneName, dispatch, ToRight)
+          },
           PaneStock.view(model, uiState, dispatch)
         )
       )
     )
-  )
+  }
 
   def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
     footer(
