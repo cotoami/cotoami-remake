@@ -72,7 +72,10 @@ object PaneFlow {
               coto.repostOfId.map(_ => repostHeader(model, coto, dispatch)),
               cotoArticle(model, model.cotos.getOriginal(coto), dispatch)
             )
-          ): _*
+          ) :+ div(
+            className := "more",
+            aria - "busy" := model.cotos.timelineLoading.toString()
+          )(): _*
         )
       )
     )
