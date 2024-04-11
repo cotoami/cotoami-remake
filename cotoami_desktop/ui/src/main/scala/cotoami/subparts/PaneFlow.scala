@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg}
-import cotoami.components.{materialSymbol, paneToggle, ToolButton}
+import cotoami.components.{materialSymbol, paneToggle, ScrollArea, ToolButton}
 import cotoami.backend.Coto
 
 object PaneFlow {
@@ -62,12 +62,18 @@ object PaneFlow {
         )
       ),
       div(className := "posts body")(
-        cotos.map(coto =>
-          section(className := "post")(
-            coto.repostOfId.map(_ => repostHeader(model, coto, dispatch)),
-            cotoArticle(model, model.cotos.getOriginal(coto), dispatch)
-          )
-        ): _*
+        ScrollArea(
+          autoHide = true,
+          bottomThreshold = None,
+          onScrollToBottom = () => ()
+        )(
+          cotos.map(coto =>
+            section(className := "post")(
+              coto.repostOfId.map(_ => repostHeader(model, coto, dispatch)),
+              cotoArticle(model, model.cotos.getOriginal(coto), dispatch)
+            )
+          ): _*
+        )
       )
     )
 

@@ -8,8 +8,13 @@ section.flow {
 
     .posts {
       overflow-x: hidden;
-      overflow-y: auto;
+      overflow-y: hidden;
       padding-bottom: 3rem;
+
+      // SimpleBar div
+      >div {
+        height: 100%;
+      }
     }
 
     .post {
