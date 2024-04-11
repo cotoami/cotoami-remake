@@ -3,9 +3,10 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{FlowInputMsg, Model, Msg}
+import cotoami.{CotosMsg, FlowInputMsg, Model, Msg}
 import cotoami.components.{materialSymbol, paneToggle, ScrollArea, ToolButton}
 import cotoami.backend.Coto
+import cotoami.repositories.Cotos
 
 object PaneFlow {
   val EditorPaneName = "PaneFlow.editor"
@@ -65,7 +66,7 @@ object PaneFlow {
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => ()
+          onScrollToBottom = () => dispatch(CotosMsg(Cotos.FetchMoreTimeline))
         )(
           cotos.map(coto =>
             section(className := "post")(
