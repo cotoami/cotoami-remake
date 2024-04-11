@@ -4,11 +4,18 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{CotosMsg, FlowInputMsg, Model, Msg}
-import cotoami.components.{materialSymbol, paneToggle, ScrollArea, ToolButton}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  paneToggle,
+  ScrollArea,
+  ToolButton
+}
 import cotoami.backend.Coto
 import cotoami.repositories.Cotos
 
 object PaneFlow {
+  val PaneName = "PaneFlow"
   val EditorPaneName = "PaneFlow.editor"
   val EditorDefaultHeight = 150
 
@@ -17,8 +24,16 @@ object PaneFlow {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): ReactElement =
-    section(className := "flow pane")(
-      paneToggle("flow", dispatch),
+    section(
+      className := optionalClasses(
+        Seq(
+          ("flow", true),
+          ("pane", true),
+          ("folded", !uiState.paneOpened(PaneName))
+        )
+      )
+    )(
+      paneToggle(PaneName, dispatch),
       (model.nodes.operating, model.currentCotonoma) match {
         case (Some(node), Some(cotonoma)) =>
           Some(
