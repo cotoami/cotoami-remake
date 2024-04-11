@@ -80,7 +80,8 @@ package object subparts {
       ),
       SplitPane.Secondary(className = None)(
         slinky.web.html.main()(
-          PaneFlow.view(model, uiState, dispatch)
+          PaneFlow.view(model, uiState, dispatch),
+          PaneStock.view(model, uiState, dispatch)
         )
       )
     )
