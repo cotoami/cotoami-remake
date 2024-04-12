@@ -112,7 +112,7 @@ package object subparts {
                 ("flow", true),
                 ("pane", true),
                 ("folded", !flowOpened),
-                ("occupy", flowOpened && !stockOpened)
+                ("occupying", flowOpened && !stockOpened)
               )
             )
           )
@@ -129,7 +129,7 @@ package object subparts {
                 ("stock", true),
                 ("pane", true),
                 ("folded", !stockOpened),
-                ("occupy", !flowOpened && stockOpened)
+                ("occupying", !flowOpened && stockOpened)
               )
             )
           )
