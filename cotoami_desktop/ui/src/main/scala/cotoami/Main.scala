@@ -209,7 +209,7 @@ object Main {
         (
           model
             .modify(_.cotos).using(_.appendTimeline(cotos))
-            .modify(_.cotonomas).using(_.importFrom(cotos))
+            .modify(_.cotonomas).using(_.importFrom(cotos.related_data))
             .info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos))),
           Seq.empty
         )

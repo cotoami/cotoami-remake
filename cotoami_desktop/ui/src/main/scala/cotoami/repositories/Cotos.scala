@@ -22,7 +22,7 @@ case class Cotos(
     this.copy(
       map = this.map ++
         Coto.toMap(cotos.page.rows) ++
-        Coto.toMap(cotos.originals),
+        Coto.toMap(cotos.related_data.originals),
       timelineLoading = false,
       timelineIds = this.timelineIds.addPage(
         cotos.page,

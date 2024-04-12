@@ -8,7 +8,7 @@ use tokio::task::spawn_blocking;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        models::{PaginatedCotos, Pagination},
+        models::{CotosRelatedData, PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -26,32 +26,14 @@ impl NodeState {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-
-            // Recent cotos
             let page = ds.recent_cotos(
                 node.as_ref(),
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
             )?;
-
-            // Fetch related entities
-            let original_ids: Vec<Id<Coto>> = page
-                .rows
-                .iter()
-                .map(|coto| coto.repost_of_id)
-                .flatten()
-                .collect();
-            let originals = ds.cotos(original_ids)?;
-            let posted_in = ds.cotonomas_of(page.rows.iter().chain(originals.iter()))?;
-            let as_cotonomas = ds.as_cotonomas(page.rows.iter())?;
-
-            Ok::<_, anyhow::Error>(PaginatedCotos {
-                page,
-                posted_in,
-                as_cotonomas,
-                originals,
-            })
+            let related_data = get_cotos_related_data(&mut ds, &page.rows)?;
+            Ok::<_, anyhow::Error>(PaginatedCotos::new(page, related_data))
         })
         .await?
         .map_err(ServiceError::from)
@@ -119,4 +101,19 @@ enum PostResult {
         content: String,
         summary: Option<String>,
     },
+}
+
+fn get_cotos_related_data<'a>(
+    ds: &'a mut DatabaseSession<'_>,
+    cotos: &[Coto],
+) -> Result<CotosRelatedData> {
+    let original_ids: Vec<Id<Coto>> = cotos
+        .iter()
+        .map(|coto| coto.repost_of_id)
+        .flatten()
+        .collect();
+    let originals = ds.cotos(original_ids)?;
+    let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
+    let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
+    Ok(CotosRelatedData::new(posted_in, as_cotonomas, originals))
 }
