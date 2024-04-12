@@ -17,7 +17,7 @@ import fui.FunctionalUI.Cmd
 import cotoami.utils.Log
 import cotoami.backend.{Coto, Cotonoma, Error, Id, Node, SystemInfo}
 import cotoami.repositories.{Cotonomas, Cotos, Nodes}
-import cotoami.subparts.{FormCoto, ModalWelcome}
+import cotoami.subparts.{FormCoto, ModalWelcome, PaneFlow, PaneStock}
 
 case class Model(
     url: URL,
@@ -134,16 +134,22 @@ object Model {
   }
 
   case class UiState(
-      paneToggles: Map[String, Boolean] = Map(),
+      paneToggles: Map[String, Boolean] = Map(
+        PaneStock.PaneName -> false // fold PaneStock by default
+      ),
       paneSizes: Map[String, Int] = Map()
   ) {
     def paneOpened(name: String): Boolean =
-      this.paneToggles.getOrElse(name, true)
+      this.paneToggles.getOrElse(name, true) // open by default
 
-    def togglePane(name: String): UiState =
-      this.copy(paneToggles =
-        this.paneToggles + (name -> !this.paneOpened(name))
-      )
+    def togglePane(name: String): UiState = {
+      val toggles = this.paneToggles + (name -> !this.paneOpened(name))
+      (toggles.get(PaneFlow.PaneName), toggles.get(PaneStock.PaneName)) match {
+        // Not allow fold both PaneFlow and PaneStock at the same time.
+        case (Some(false), Some(false)) => this
+        case _                          => this.copy(paneToggles = toggles)
+      }
+    }
 
     def resizePane(name: String, newSize: Int): UiState =
       this.copy(paneSizes = this.paneSizes + (name -> newSize))

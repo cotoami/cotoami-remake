@@ -1,6 +1,31 @@
+.stock.pane {
+  >.pane-toggle {
+    left: 0;
+    right: auto;
+
+    button {
+      left: -4px;
+      right: auto;
+    }
+  }
+
+  // prevent the icon from overflowing to right side of page 
+  &.folded>.pane-toggle {
+    left: auto;
+    right: 0;
+
+    button {
+      left: auto;
+      right: 0;
+      overflow: hidden;
+    }
+  }
+}
+
 section.stock {
   display: flex;
   flex-direction: row;
+  position: relative;
 
   section.coto-catalog {
     flex: 1;
