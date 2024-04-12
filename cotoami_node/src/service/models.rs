@@ -1,3 +1,8 @@
+//! Service models represent inputs or outputs of service implementations.
+//!
+//! An instance of a model struct is passed to services via [super::Command] or
+//! serialized into a body of a response ([super::Response::body]).
+
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use derive_new::new;

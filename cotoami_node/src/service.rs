@@ -1,4 +1,4 @@
-//! Node API interface based on [tower_service::Service].
+//! Node API interface based on [Service] trait.
 //!
 //! This module aims to provide Node API functionalities via a commonalized interface
 //! decoupled from the underlying protocol. With this abstraction, the parent/child concept
