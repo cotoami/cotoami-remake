@@ -39,7 +39,8 @@ case object DeselectCotonoma extends Msg
 case class CotonomaDetailsFetched(
     result: Either[Error, CotonomaDetailsJson]
 ) extends Msg
-case class TimelineFetched(result: Either[backend.Error, CotosJson]) extends Msg
+case class TimelineFetched(result: Either[backend.Error, PaginatedCotosJson])
+    extends Msg
 
 // Sub
 case class CotonomasMsg(subMsg: repositories.Cotonomas.Msg) extends Msg

@@ -10,7 +10,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{Cotos, Pagination},
+        models::{PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -32,7 +32,7 @@ async fn recent_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Cotos>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return ("cotos", errors).into_result();
     }

@@ -99,8 +99,8 @@ pub struct CotonomaDetails {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
-pub struct Cotos {
-    pub paginated: Paginated<Coto>,
+pub struct PaginatedCotos {
+    pub page: Paginated<Coto>,
     pub posted_in: Vec<Cotonoma>,
     pub as_cotonomas: Vec<Cotonoma>,
     pub originals: Vec<Coto>,
