@@ -23,9 +23,6 @@ object Cotonoma {
       Validation.length(name, 1, NameMaxLength)
     ).flatten
   }
-
-  def toMap(jsons: js.Array[CotonomaJson]): Map[Id[Cotonoma], Cotonoma] =
-    jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
 }
 
 @js.native

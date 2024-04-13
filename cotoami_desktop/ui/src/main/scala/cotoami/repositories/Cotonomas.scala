@@ -43,8 +43,8 @@ case class Cotonomas(
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)
-    val map = Cotonoma.toMap(details.supers) ++
-      Cotonoma.toMap(details.subs.rows) +
+    val map = Cotonomas.toMap(details.supers) ++
+      Cotonomas.toMap(details.subs.rows) +
       (cotonoma.id -> cotonoma)
     this.deselect().copy(
       selectedId = Some(cotonoma.id),
@@ -103,8 +103,10 @@ case class Cotonomas(
 }
 
 object Cotonomas {
-  sealed trait Msg
+  def toMap(jsons: js.Array[CotonomaJson]): Map[Id[Cotonoma], Cotonoma] =
+    jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
 
+  sealed trait Msg
   case object FetchMoreRecent extends Msg
   case class RecentFetched(
       result: Either[Error, Paginated[CotonomaJson]]
