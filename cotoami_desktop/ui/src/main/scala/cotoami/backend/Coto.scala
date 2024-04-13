@@ -57,13 +57,6 @@ trait PaginatedCotosJson extends js.Object {
   val related_data: CotosRelatedDataJson = js.native
 }
 
-@js.native
-trait CotosRelatedDataJson extends js.Object {
-  val posted_in: js.Array[CotonomaJson] = js.native
-  val as_cotonomas: js.Array[CotonomaJson] = js.native
-  val originals: js.Array[CotoJson] = js.native
-}
-
 object PaginatedCotosJson {
   def debug(cotos: PaginatedCotosJson): String = {
     val s = new StringBuilder
@@ -75,4 +68,11 @@ object PaginatedCotosJson {
     s ++= s", originals: ${cotos.related_data.originals.size}}"
     s.result()
   }
+}
+
+@js.native
+trait CotosRelatedDataJson extends js.Object {
+  val posted_in: js.Array[CotonomaJson] = js.native
+  val as_cotonomas: js.Array[CotonomaJson] = js.native
+  val originals: js.Array[CotoJson] = js.native
 }
