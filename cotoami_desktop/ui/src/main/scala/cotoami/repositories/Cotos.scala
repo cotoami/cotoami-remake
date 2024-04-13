@@ -1,5 +1,6 @@
 package cotoami.repositories
 
+import scala.scalajs.js
 import fui.FunctionalUI._
 import cotoami.{node_command, TimelineFetched}
 import cotoami.backend._
@@ -21,8 +22,8 @@ case class Cotos(
   def appendTimeline(cotos: PaginatedCotosJson): Cotos =
     this.copy(
       map = this.map ++
-        Coto.toMap(cotos.page.rows) ++
-        Coto.toMap(cotos.related_data.originals),
+        Cotos.toMap(cotos.page.rows) ++
+        Cotos.toMap(cotos.related_data.originals),
       timelineLoading = false,
       timelineIds = this.timelineIds.addPage(
         cotos.page,
@@ -32,8 +33,11 @@ case class Cotos(
 }
 
 object Cotos {
-  sealed trait Msg
 
+  def toMap(jsons: js.Array[CotoJson]): Map[Id[Coto], Coto] =
+    jsons.map(json => (Id[Coto](json.uuid), Coto(json))).toMap
+
+  sealed trait Msg
   case object FetchMoreTimeline extends Msg
 
   def update(

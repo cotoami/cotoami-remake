@@ -30,11 +30,6 @@ case class Coto(json: CotoJson) {
       None
 }
 
-object Coto {
-  def toMap(jsons: js.Array[CotoJson]): Map[Id[Coto], Coto] =
-    jsons.map(json => (Id[Coto](json.uuid), Coto(json))).toMap
-}
-
 @js.native
 trait CotoJson extends js.Object {
   val uuid: String = js.native
