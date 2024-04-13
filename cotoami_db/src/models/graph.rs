@@ -10,13 +10,13 @@ use super::{coto::Coto, link::Link, Id};
 #[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Graph {
     /// Root coto ID
-    root_id: Id<Coto>,
+    pub root_id: Id<Coto>,
 
     /// All the cotos in this graph, each of which is mapped by its ID
-    cotos: HashMap<Id<Coto>, Coto>,
+    pub cotos: HashMap<Id<Coto>, Coto>,
 
     /// All the links in this graph, each of which is mapped by the ID of the source coto
-    links: HashMap<Id<Coto>, Vec<Link>>,
+    pub links: HashMap<Id<Coto>, Vec<Link>>,
 }
 
 impl Graph {

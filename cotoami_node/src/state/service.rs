@@ -15,6 +15,7 @@ use crate::{
 mod changes;
 mod cotonomas;
 mod cotos;
+mod graph;
 mod nodes;
 mod session;
 
