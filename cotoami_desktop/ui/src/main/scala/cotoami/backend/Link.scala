@@ -1,5 +1,6 @@
 package cotoami.backend
 
+import scala.math.Ordering
 import scala.scalajs.js
 import java.time.Instant
 
@@ -16,6 +17,11 @@ case class Link(json: LinkJson) {
   def order: Int = this.json.order
   lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
   lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
+}
+
+object Link {
+  implicit val ordering: Ordering[Link] =
+    Ordering.fromLessThan[Link](_.order < _.order)
 }
 
 @js.native
