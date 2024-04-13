@@ -1,4 +1,4 @@
-//! Node API interface based on [tower_service::Service].
+//! Node API interface based on [Service] trait.
 //!
 //! This module aims to provide Node API functionalities via a commonalized interface
 //! decoupled from the underlying protocol. With this abstraction, the parent/child concept
@@ -144,12 +144,15 @@ pub enum Command {
         pagination: Pagination,
     },
 
-    /// Request [Cotos] that contains recently posted cotos.
+    /// Request [PaginatedCotos] that contains recently posted cotos.
     RecentCotos {
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     },
+
+    /// Request a [CotoGraph] by traversing from the given cotonoma.
+    CotoGraph { from: Id<Cotonoma> },
 
     /// Request to create a new [Coto] in the given cotonoma (`post_to`).
     PostCoto {

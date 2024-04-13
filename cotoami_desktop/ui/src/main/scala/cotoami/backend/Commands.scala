@@ -31,4 +31,6 @@ object Commands {
         pagination = jso(page = pageIndex)
       )
     )
+
+  def CotoGraph(from: Id[Cotonoma]) = jso(CotoGraph = jso(from = from.uuid))
 }

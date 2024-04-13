@@ -52,22 +52,27 @@ trait CotoJson extends js.Object {
 }
 
 @js.native
-trait CotosJson extends js.Object {
-  val paginated: Paginated[CotoJson] = js.native
+trait PaginatedCotosJson extends js.Object {
+  val page: Paginated[CotoJson] = js.native
+  val related_data: CotosRelatedDataJson = js.native
+}
+
+@js.native
+trait CotosRelatedDataJson extends js.Object {
   val posted_in: js.Array[CotonomaJson] = js.native
   val as_cotonomas: js.Array[CotonomaJson] = js.native
   val originals: js.Array[CotoJson] = js.native
 }
 
-object CotosJson {
-  def debug(cotos: CotosJson): String = {
+object PaginatedCotosJson {
+  def debug(cotos: PaginatedCotosJson): String = {
     val s = new StringBuilder
-    s ++= s"cotos: {page_index: ${cotos.paginated.page_index}"
-    s ++= s", page_size: ${cotos.paginated.page_size}"
-    s ++= s", total_rows: ${cotos.paginated.total_rows}}"
-    s ++= s", posted_in: ${cotos.posted_in.size}"
-    s ++= s", as_cotonomas: ${cotos.as_cotonomas.size}"
-    s ++= s", originals: ${cotos.originals.size}"
+    s ++= s"cotos: {page_index: ${cotos.page.page_index}"
+    s ++= s", page_size: ${cotos.page.page_size}"
+    s ++= s", total_rows: ${cotos.page.total_rows}}"
+    s ++= s", related_data: {posted_in: ${cotos.related_data.posted_in.size}"
+    s ++= s", as_cotonomas: ${cotos.related_data.as_cotonomas.size}"
+    s ++= s", originals: ${cotos.related_data.originals.size}}"
     s.result()
   }
 }

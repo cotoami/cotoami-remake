@@ -18,14 +18,14 @@ case class Cotos(
 
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
-  def appendTimeline(cotos: CotosJson): Cotos =
+  def appendTimeline(cotos: PaginatedCotosJson): Cotos =
     this.copy(
       map = this.map ++
-        Coto.toMap(cotos.paginated.rows) ++
-        Coto.toMap(cotos.originals),
+        Coto.toMap(cotos.page.rows) ++
+        Coto.toMap(cotos.related_data.originals),
       timelineLoading = false,
       timelineIds = this.timelineIds.addPage(
-        cotos.paginated,
+        cotos.page,
         (json: CotoJson) => Id[Coto](json.uuid)
       )
     )

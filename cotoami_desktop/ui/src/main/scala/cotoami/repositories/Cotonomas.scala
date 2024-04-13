@@ -38,8 +38,8 @@ case class Cotonomas(
   def addAll(jsons: js.Array[CotonomaJson]): Cotonomas =
     jsons.foldLeft(this)((cotonomas, json) => cotonomas.add(json))
 
-  def importFrom(cotos: CotosJson): Cotonomas =
-    this.addAll(cotos.posted_in ++ cotos.as_cotonomas)
+  def importFrom(data: CotosRelatedDataJson): Cotonomas =
+    this.addAll(data.posted_in ++ data.as_cotonomas)
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)

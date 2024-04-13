@@ -14,7 +14,13 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.backend.{Cotonoma, CotosJson, DatabaseInfo, LogEvent, SystemInfo}
+import cotoami.backend.{
+  Cotonoma,
+  DatabaseInfo,
+  LogEvent,
+  PaginatedCotosJson,
+  SystemInfo
+}
 import cotoami.repositories.{Cotonomas, Cotos, Nodes}
 
 object Main {
@@ -203,8 +209,8 @@ object Main {
         (
           model
             .modify(_.cotos).using(_.appendTimeline(cotos))
-            .modify(_.cotonomas).using(_.importFrom(cotos))
-            .info("Timeline fetched.", Some(CotosJson.debug(cotos))),
+            .modify(_.cotonomas).using(_.importFrom(cotos.related_data))
+            .info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos))),
           Seq.empty
         )
 

@@ -8,7 +8,7 @@ use tokio::task::spawn_blocking;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        models::{Cotos, Pagination},
+        models::{PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -22,36 +22,18 @@ impl NodeState {
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
-    ) -> Result<Cotos, ServiceError> {
+    ) -> Result<PaginatedCotos, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-
-            // Recent cotos
-            let paginated = ds.recent_cotos(
+            let page = ds.recent_cotos(
                 node.as_ref(),
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
             )?;
-
-            // Fetch related entities
-            let original_ids: Vec<Id<Coto>> = paginated
-                .rows
-                .iter()
-                .map(|coto| coto.repost_of_id)
-                .flatten()
-                .collect();
-            let originals = ds.cotos(original_ids)?;
-            let posted_in = ds.cotonomas_of(paginated.rows.iter().chain(originals.iter()))?;
-            let as_cotonomas = ds.as_cotonomas(paginated.rows.iter())?;
-
-            Ok::<_, anyhow::Error>(Cotos {
-                paginated,
-                posted_in,
-                as_cotonomas,
-                originals,
-            })
+            let related_data = super::get_cotos_related_data(&mut ds, &page.rows)?;
+            Ok::<_, anyhow::Error>(PaginatedCotos::new(page, related_data))
         })
         .await?
         .map_err(ServiceError::from)

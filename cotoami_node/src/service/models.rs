@@ -1,3 +1,8 @@
+//! Service models represent inputs or outputs of service implementations.
+//!
+//! An instance of a model struct is passed to services via [super::Command] or
+//! serialized into a body of a response ([super::Response::body]).
+
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -99,9 +104,22 @@ pub struct CotonomaDetails {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
-pub struct Cotos {
-    pub paginated: Paginated<Coto>,
+pub struct PaginatedCotos {
+    pub page: Paginated<Coto>,
+    pub related_data: CotosRelatedData,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+pub struct CotosRelatedData {
     pub posted_in: Vec<Cotonoma>,
     pub as_cotonomas: Vec<Cotonoma>,
     pub originals: Vec<Coto>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+pub struct CotoGraph {
+    pub root_id: Id<Coto>,
+    pub cotos: Vec<Coto>,
+    pub cotos_related_data: CotosRelatedData,
+    pub links: Vec<Link>,
 }

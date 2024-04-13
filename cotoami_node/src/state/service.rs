@@ -8,13 +8,14 @@ use futures::future::FutureExt;
 use serde_json::value::Value;
 
 use crate::{
-    service::{error::InputError, NodeServiceFuture, *},
+    service::{error::InputError, models::CotosRelatedData, NodeServiceFuture, *},
     state::NodeState,
 };
 
 mod changes;
 mod cotonomas;
 mod cotos;
+mod graph;
 mod nodes;
 mod session;
 
@@ -44,6 +45,7 @@ impl NodeState {
                 cotonoma,
                 pagination,
             } => format.to_bytes(self.recent_cotos(node, cotonoma, pagination).await),
+            Command::CotoGraph { from } => format.to_bytes(self.coto_graph(from).await),
             Command::PostCoto {
                 content,
                 summary,
@@ -102,4 +104,23 @@ where
 
         ServiceError::Server(anyhow_err.to_string())
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Utilities for service implementations
+/////////////////////////////////////////////////////////////////////////////
+
+fn get_cotos_related_data<'a>(
+    ds: &'a mut DatabaseSession<'_>,
+    cotos: &[Coto],
+) -> Result<CotosRelatedData> {
+    let original_ids: Vec<Id<Coto>> = cotos
+        .iter()
+        .map(|coto| coto.repost_of_id)
+        .flatten()
+        .collect();
+    let originals = ds.cotos(original_ids)?;
+    let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
+    let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
+    Ok(CotosRelatedData::new(posted_in, as_cotonomas, originals))
 }
