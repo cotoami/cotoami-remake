@@ -8,12 +8,12 @@ use crate::{
 };
 
 impl NodeState {
-    pub(crate) async fn coto_graph(&self, from: Id<Cotonoma>) -> Result<CotoGraph, ServiceError> {
+    pub(crate) async fn coto_graph(&self, from: Id<Coto>) -> Result<CotoGraph, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            let (_, root) = ds.try_get_cotonoma(&from)?;
-            let graph = ds.graph(root, true)?;
+            let root = ds.try_get_coto(&from)?;
+            let graph = ds.graph(root, true)?; // traverse until cotonomas
             let cotos: Vec<Coto> = graph.cotos.into_values().collect();
             let related_data = super::get_cotos_related_data(&mut ds, &cotos)?;
             let links: Vec<Link> = graph.links.into_values().flatten().collect();

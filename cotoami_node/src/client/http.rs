@@ -121,7 +121,6 @@ impl HttpClient {
                 &format!("/api/cotonomas/{id}/subs"),
                 Some(pagination.as_query()),
             ),
-            Command::CotoGraph { from } => self.get(&format!("/api/cotonomas/{from}/graph"), None),
             Command::RecentCotos {
                 node,
                 cotonoma,
@@ -141,6 +140,7 @@ impl HttpClient {
                     self.get("/api/cotos", Some(pagination.as_query()))
                 }
             }
+            Command::CotoGraph { from } => self.get(&format!("/api/cotos/{from}/graph"), None),
             Command::PostCoto {
                 content,
                 summary,

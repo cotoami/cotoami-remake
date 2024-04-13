@@ -19,7 +19,6 @@ use crate::{
 };
 
 mod cotos;
-mod graph;
 
 pub(crate) use cotos::PostCoto;
 
@@ -29,7 +28,6 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/:cotonoma_id", get(get_cotonoma))
         .route("/:cotonoma_id/subs", get(sub_cotonomas))
         .nest("/:cotonoma_id/cotos", cotos::routes())
-        .nest("/:cotonoma_id/graph", graph::routes())
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }

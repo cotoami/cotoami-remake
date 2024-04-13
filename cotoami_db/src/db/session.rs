@@ -531,6 +531,11 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(coto_ops::get(id))
     }
 
+    pub fn try_get_coto(&mut self, id: &Id<Coto>) -> Result<Coto> {
+        self.read_transaction(coto_ops::try_get(id))?
+            .map_err(anyhow::Error::from)
+    }
+
     pub fn contains_coto(&mut self, id: &Id<Coto>) -> Result<bool> {
         self.read_transaction(coto_ops::contains(id))
     }
