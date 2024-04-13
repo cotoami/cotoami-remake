@@ -8,7 +8,7 @@ use tokio::task::spawn_blocking;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        models::{CotosRelatedData, PaginatedCotos, Pagination},
+        models::{PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -32,7 +32,7 @@ impl NodeState {
                 pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
             )?;
-            let related_data = get_cotos_related_data(&mut ds, &page.rows)?;
+            let related_data = super::get_cotos_related_data(&mut ds, &page.rows)?;
             Ok::<_, anyhow::Error>(PaginatedCotos::new(page, related_data))
         })
         .await?
@@ -101,19 +101,4 @@ enum PostResult {
         content: String,
         summary: Option<String>,
     },
-}
-
-fn get_cotos_related_data<'a>(
-    ds: &'a mut DatabaseSession<'_>,
-    cotos: &[Coto],
-) -> Result<CotosRelatedData> {
-    let original_ids: Vec<Id<Coto>> = cotos
-        .iter()
-        .map(|coto| coto.repost_of_id)
-        .flatten()
-        .collect();
-    let originals = ds.cotos(original_ids)?;
-    let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
-    let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
-    Ok(CotosRelatedData::new(posted_in, as_cotonomas, originals))
 }
