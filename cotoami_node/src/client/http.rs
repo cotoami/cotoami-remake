@@ -116,7 +116,7 @@ impl HttpClient {
                     self.get("/api/cotonomas", Some(pagination.as_query()))
                 }
             }
-            Command::Cotonoma { uuid } => self.get(&format!("/api/cotonomas/{uuid}"), None),
+            Command::Cotonoma { id } => self.get(&format!("/api/cotonomas/{id}"), None),
             Command::SubCotonomas { id, pagination } => self.get(
                 &format!("/api/cotonomas/{id}/subs"),
                 Some(pagination.as_query()),

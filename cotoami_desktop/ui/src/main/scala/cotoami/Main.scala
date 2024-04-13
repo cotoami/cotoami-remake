@@ -300,7 +300,7 @@ object Main {
             (
               model,
               Seq(
-                Cotonomas.fetchDetails(id.uuid),
+                Cotonomas.fetchDetails(id),
                 Cotos.fetchTimeline(None, Some(id), 0),
                 if (model.cotonomas.isEmpty)
                   Cotonomas.fetchRecent(None, 0)
@@ -320,7 +320,7 @@ object Main {
             (
               model,
               Seq(
-                Cotonomas.fetchDetails(cotonomaId.uuid),
+                Cotonomas.fetchDetails(cotonomaId),
                 Cotos.fetchTimeline(None, Some(cotonomaId), 0),
                 if (model.cotonomas.isEmpty)
                   Cotonomas.fetchRecent(Some(nodeId), 0)

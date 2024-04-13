@@ -6,7 +6,6 @@ use axum::{
     Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
@@ -54,16 +53,16 @@ async fn recent_cotonomas(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotonomas/:uuid (cotonoma ID or coto ID)
+// GET /api/cotonomas/:cotonoma_id
 /////////////////////////////////////////////////////////////////////////////
 
 async fn get_cotonoma(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(uuid): Path<Uuid>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Content<CotonomaDetails>, ServiceError> {
     state
-        .cotonoma(uuid)
+        .cotonoma(cotonoma_id)
         .await
         .map(|cotonoma| Content(cotonoma, accept))
 }

@@ -171,8 +171,8 @@ object Cotonomas {
       (RecentFetched andThen CotonomasMsg)
     )
 
-  def fetchDetails(uuid: String): Cmd[cotoami.Msg] =
-    node_command(Commands.Cotonoma(uuid)).map(CotonomaDetailsFetched)
+  def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
+    node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched)
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     node_command(Commands.SubCotonomas(id, pageIndex)).map(

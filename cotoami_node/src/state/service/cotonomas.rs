@@ -1,7 +1,6 @@
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use uuid::Uuid;
 
 use crate::{
     service::{
@@ -15,11 +14,11 @@ const DEFAULT_SUB_PAGE_SIZE: i64 = 10;
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
 
 impl NodeState {
-    pub(crate) async fn cotonoma(&self, uuid: Uuid) -> Result<CotonomaDetails, ServiceError> {
+    pub(crate) async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<CotonomaDetails, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            let (cotonoma, coto) = ds.try_get_cotonoma_by_uuid(uuid)?;
+            let (cotonoma, coto) = ds.try_get_cotonoma(&id)?;
             let supers = ds.super_cotonomas(&coto)?;
             let subs = ds.sub_cotonomas(&cotonoma.uuid, DEFAULT_SUB_PAGE_SIZE, 0)?;
             Ok::<_, anyhow::Error>(CotonomaDetails::new(cotonoma, coto, supers, subs))
