@@ -1,6 +1,22 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import java.time.Instant
+
+case class Link(json: LinkJson) {
+  def id: Id[Link] = Id(this.json.uuid)
+  def nodeId: Id[Node] = Id(this.json.node_id)
+  def createdInId: Option[Id[Cotonoma]] =
+    Option(this.json.created_in_id).map(Id(_))
+  def createdById: Id[Node] = Id(this.json.created_by_id)
+  def sourceCotoId: Id[Coto] = Id(this.json.source_coto_id)
+  def targetCotoId: Id[Coto] = Id(this.json.target_coto_id)
+  def linkingPhrase: Option[String] = Option(this.json.linking_phrase)
+  def details: Option[String] = Option(this.json.details)
+  def order: Int = this.json.order
+  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
+  lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
+}
 
 @js.native
 trait LinkJson extends js.Object {
