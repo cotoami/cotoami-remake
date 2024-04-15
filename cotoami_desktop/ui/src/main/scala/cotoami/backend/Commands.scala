@@ -1,8 +1,19 @@
 package cotoami.backend
 
+import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
+import fui.FunctionalUI._
+import cotoami.tauri
 
 object Commands {
+
+  def send[T](command: js.Object): Cmd[Either[ErrorJson, T]] =
+    tauri.invokeCommand(
+      "node_command",
+      js.Dynamic.literal(command = command)
+    ).map((e: Either[ErrorJson, String]) =>
+      e.map(js.JSON.parse(_).asInstanceOf[T])
+    )
 
   val LocalNode = jso(LocalNode = null)
 

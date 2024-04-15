@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import scala.scalajs.js
 import fui.FunctionalUI._
-import cotoami.{node_command, TimelineFetched}
+import cotoami.TimelineFetched
 import cotoami.backend._
 
 case class Cotos(
@@ -65,7 +65,7 @@ object Cotos {
       cotonomaId: Option[Id[Cotonoma]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
-    node_command(Commands.RecentCotos(nodeId, cotonomaId, pageIndex)).map(
+    Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex)).map(
       TimelineFetched
     )
 }

@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import scala.scalajs.js
 import fui.FunctionalUI._
-import cotoami.{node_command, CotonomaDetailsFetched, CotonomasMsg}
+import cotoami.{CotonomaDetailsFetched, CotonomasMsg}
 import cotoami.backend._
 
 case class Cotonomas(
@@ -169,15 +169,15 @@ object Cotonomas {
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
-    node_command(Commands.RecentCotonomas(nodeId, pageIndex)).map(
+    Commands.send(Commands.RecentCotonomas(nodeId, pageIndex)).map(
       (RecentFetched andThen CotonomasMsg)
     )
 
   def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    node_command(Commands.Cotonoma(id)).map(CotonomaDetailsFetched)
+    Commands.send(Commands.Cotonoma(id)).map(CotonomaDetailsFetched)
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
-    node_command(Commands.SubCotonomas(id, pageIndex)).map(
+    Commands.send(Commands.SubCotonomas(id, pageIndex)).map(
       (SubsFetched andThen CotonomasMsg)
     )
 }
