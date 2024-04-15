@@ -29,22 +29,19 @@ case class Cotos(
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
   def appendTimeline(cotos: PaginatedCotosJson): Cotos =
-    this.copy(
-      map = this.map ++
-        Cotos.toMap(cotos.page.rows) ++
-        Cotos.toMap(cotos.related_data.originals),
-      timelineLoading = false,
-      timelineIds = this.timelineIds.addPage(
-        cotos.page,
-        (json: CotoJson) => Id[Coto](json.uuid)
+    this
+      .addAll(cotos.page.rows)
+      .addAll(cotos.related_data.originals)
+      .modify(_.timelineLoading).setTo(false)
+      .modify(_.timelineIds).using(
+        _.addPage(
+          cotos.page,
+          (json: CotoJson) => Id[Coto](json.uuid)
+        )
       )
-    )
 }
 
 object Cotos {
-
-  def toMap(jsons: js.Array[CotoJson]): Map[Id[Coto], Coto] =
-    jsons.map(json => (Id[Coto](json.uuid), Coto(json))).toMap
 
   sealed trait Msg
   case object FetchMoreTimeline extends Msg
