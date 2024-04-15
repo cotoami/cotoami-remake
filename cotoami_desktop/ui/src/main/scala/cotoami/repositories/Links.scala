@@ -1,5 +1,6 @@
 package cotoami.repositories
 
+import scala.scalajs.js
 import scala.collection.immutable.TreeSet
 import com.softwaremill.quicklens._
 import cotoami.backend._
@@ -16,8 +17,12 @@ case class Links(
       .modify(_.map).using(_ + (link.id -> link))
       .modify(_.mapBySourceCotoId).using(map => {
         val links =
-          map.get(link.sourceCotoId).map(_ + link).getOrElse(TreeSet(link))
+          map.get(link.sourceCotoId).map(_ + link)
+            .getOrElse(TreeSet(link))
         map + (link.sourceCotoId -> links)
       })
   }
+
+  def addAll(jsons: js.Array[LinkJson]): Links =
+    jsons.foldLeft(this)(_ add _)
 }

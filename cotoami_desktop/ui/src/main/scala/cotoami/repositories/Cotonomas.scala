@@ -36,7 +36,7 @@ case class Cotonomas(
   }
 
   def addAll(jsons: js.Array[CotonomaJson]): Cotonomas =
-    jsons.foldLeft(this)((cotonomas, json) => cotonomas.add(json))
+    jsons.foldLeft(this)(_ add _)
 
   def importFrom(data: CotosRelatedDataJson): Cotonomas =
     this.addAll(data.posted_in ++ data.as_cotonomas)
