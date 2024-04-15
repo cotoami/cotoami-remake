@@ -5,18 +5,18 @@ import fui.FunctionalUI.Cmd
 import cotoami.tauri
 
 @js.native
-trait SystemInfo extends js.Object {
+trait SystemInfoJson extends js.Object {
   val app_version: String = js.native
   val app_config_dir: String = js.native
   val app_data_dir: String = js.native
-  val recent_databases: js.Array[DatabaseOpened] = js.native
+  val recent_databases: js.Array[DatabaseOpenedJson] = js.native
 }
 
-object SystemInfo {
-  def fetch(): Cmd[Either[Unit, SystemInfo]] =
+object SystemInfoJson {
+  def fetch(): Cmd[Either[Unit, SystemInfoJson]] =
     tauri.invokeCommand("system_info")
 
-  def debug(info: SystemInfo): String = {
+  def debug(info: SystemInfoJson): String = {
     val recent_databases = info.recent_databases.map(x => (x.name, x.folder))
     val s = new StringBuilder
     s ++= s"app_version: ${info.app_version}"
@@ -28,7 +28,7 @@ object SystemInfo {
 }
 
 @js.native
-trait DatabaseOpened extends js.Object {
+trait DatabaseOpenedJson extends js.Object {
   val folder: String = js.native
   val name: String = js.native
   val icon: String = js.native

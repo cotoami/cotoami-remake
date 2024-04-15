@@ -14,14 +14,8 @@ import cats.effect.IO
 
 import fui.FunctionalUI._
 import cotoami.tauri
-import cotoami.backend.{
-  Cotonoma,
-  DatabaseInfo,
-  LogEvent,
-  PaginatedCotosJson,
-  SystemInfo
-}
-import cotoami.repositories.{Cotonomas, Cotos, Nodes}
+import cotoami.backend._
+import cotoami.repositories._
 
 object Main {
 
@@ -55,7 +49,7 @@ object Main {
       Model(url = url, flowInput = flowInput),
       Seq(
         Model.UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfo.fetch().map(SystemInfoFetched),
+        cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
           _.map(openDatabase).getOrElse(Cmd.none)
         ),
@@ -90,7 +84,10 @@ object Main {
           model
             .modify(_.systemInfo).setTo(Some(systemInfo))
             .modify(_.modalWelcome.baseFolder).setTo(systemInfo.app_data_dir)
-            .info("SystemInfo fetched.", Some(SystemInfo.debug(systemInfo))),
+            .info(
+              "SystemInfo fetched.",
+              Some(SystemInfoJson.debug(systemInfo))
+            ),
           Seq.empty
         )
 

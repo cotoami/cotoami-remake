@@ -15,16 +15,16 @@ import java.time.format.DateTimeFormatter
 
 import fui.FunctionalUI.Cmd
 import cotoami.utils.Log
-import cotoami.backend.{Coto, Cotonoma, Error, Id, Node, SystemInfo}
-import cotoami.repositories.{Cotonomas, Cotos, Nodes}
-import cotoami.subparts.{FormCoto, ModalWelcome, PaneFlow, PaneStock}
+import cotoami.backend._
+import cotoami.repositories._
+import cotoami.subparts._
 
 case class Model(
     url: URL,
     log: Log = Log(),
     context: Model.Context = Model.Context(),
     logViewToggle: Boolean = false,
-    systemInfo: Option[SystemInfo] = None,
+    systemInfo: Option[SystemInfoJson] = None,
 
     // uiState that can be saved in localStorage separately from app data.
     // It will be `None` before being restored from localStorage on init.

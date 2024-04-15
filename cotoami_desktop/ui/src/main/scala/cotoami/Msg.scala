@@ -19,7 +19,7 @@ case class BackendLogEvent(event: LogEvent) extends Msg
 case object ToggleLogView extends Msg
 
 // App init
-case class SystemInfoFetched(result: Either[Unit, SystemInfo]) extends Msg
+case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
 case class UiStateRestored(state: Option[Model.UiState]) extends Msg
 case class DatabaseOpened(result: Either[backend.Error, DatabaseInfoJson])
     extends Msg

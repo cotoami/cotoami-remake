@@ -9,7 +9,7 @@ import cotoami.{tauri, ModalWelcomeMsg}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
 import cotoami.backend
-import cotoami.backend.{DatabaseOpened, Node}
+import cotoami.backend.{DatabaseOpenedJson, Node}
 
 object ModalWelcome {
 
@@ -204,7 +204,7 @@ object ModalWelcome {
 
   def view(
       model: Model,
-      recentDatabases: Seq[DatabaseOpened],
+      recentDatabases: Seq[DatabaseOpenedJson],
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     dialog(className := "welcome", open := true)(
@@ -234,7 +234,7 @@ object ModalWelcome {
 
   private def recent(
       model: Model,
-      databases: Seq[DatabaseOpened],
+      databases: Seq[DatabaseOpenedJson],
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
     if (databases.isEmpty) {
