@@ -41,5 +41,5 @@ trait CotonomaDetailsJson extends js.Object {
   val cotonoma: CotonomaJson = js.native
   val coto: CotoJson = js.native
   val supers: js.Array[CotonomaJson] = js.native
-  val subs: Paginated[CotonomaJson] = js.native
+  val subs: PaginatedJson[CotonomaJson] = js.native
 }

@@ -81,7 +81,7 @@ case class Cotonomas(
 
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
-  def addPageOfSubs(page: Paginated[CotonomaJson]): Cotonomas =
+  def addPageOfSubs(page: PaginatedJson[CotonomaJson]): Cotonomas =
     this.addAll(page.rows).copy(
       subsLoading = false,
       subIds = this.subIds.addPage(
@@ -92,7 +92,7 @@ case class Cotonomas(
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
-  def addPageOfRecent(page: Paginated[CotonomaJson]): Cotonomas =
+  def addPageOfRecent(page: PaginatedJson[CotonomaJson]): Cotonomas =
     this.addAll(page.rows).copy(
       recentLoading = false,
       recentIds = this.recentIds.addPage(
@@ -109,11 +109,11 @@ object Cotonomas {
   sealed trait Msg
   case object FetchMoreRecent extends Msg
   case class RecentFetched(
-      result: Either[ErrorJson, Paginated[CotonomaJson]]
+      result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
   ) extends Msg
   case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
   case class SubsFetched(
-      result: Either[ErrorJson, Paginated[CotonomaJson]]
+      result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
   ) extends Msg
 
   def update(

@@ -48,7 +48,7 @@ trait CotoJson extends js.Object {
 
 @js.native
 trait PaginatedCotosJson extends js.Object {
-  val page: Paginated[CotoJson] = js.native
+  val page: PaginatedJson[CotoJson] = js.native
   val related_data: CotosRelatedDataJson = js.native
 }
 
