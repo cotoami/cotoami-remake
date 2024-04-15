@@ -15,7 +15,7 @@ case class AddLogEntry(
     message: String,
     details: Option[String] = None
 ) extends Msg
-case class BackendLogEvent(event: LogEvent) extends Msg
+case class BackendLogEvent(event: LogEventJson) extends Msg
 case object ToggleLogView extends Msg
 
 // App init

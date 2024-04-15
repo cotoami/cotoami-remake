@@ -3,27 +3,9 @@ package cotoami
 import scala.scalajs.js
 import java.time._
 
-import cotoami.utils.Log
-
 package object backend {
 
   case class Id[T](uuid: String) extends AnyVal
-
-  @js.native
-  trait LogEvent extends js.Object {
-    val level: String = js.native
-    val message: String = js.native
-    val details: String = js.native
-  }
-
-  object LogEvent {
-    def toLogEntry(event: LogEvent): Log.Entry =
-      utils.Log.Entry(
-        utils.Log.levels.get(event.level).getOrElse(utils.Log.Debug),
-        event.message,
-        Option(event.details)
-      )
-  }
 
   @js.native
   trait Paginated[T] extends js.Object {

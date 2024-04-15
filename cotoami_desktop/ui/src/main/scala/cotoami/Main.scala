@@ -71,7 +71,7 @@ object Main {
       case BackendLogEvent(event) =>
         (
           model.modify(_.log).using(
-            _.addEntry(LogEvent.toLogEntry(event))
+            _.addEntry(LogEventJson.toLogEntry(event))
           ),
           Seq.empty
         )
@@ -334,7 +334,7 @@ object Main {
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
-    tauri.listen[LogEvent]("log", None).map(BackendLogEvent)
+    tauri.listen[LogEventJson]("log", None).map(BackendLogEvent)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
