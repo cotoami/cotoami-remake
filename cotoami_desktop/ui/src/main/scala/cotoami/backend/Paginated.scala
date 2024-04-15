@@ -10,6 +10,16 @@ trait PaginatedJson[T] extends js.Object {
   val total_rows: Double = js.native
 }
 
+object PaginatedJson {
+  def debug[T](paginated: PaginatedJson[T]): String = {
+    val s = new StringBuilder
+    s ++= s"page_index: ${paginated.page_index}"
+    s ++= s", page_size: ${paginated.page_size}"
+    s ++= s", total_rows: ${paginated.total_rows}"
+    s.result()
+  }
+}
+
 case class PaginatedIds[T](
     ids: Set[Id[T]] = Set.empty[Id[T]],
     order: Seq[Id[T]] = Seq.empty,
