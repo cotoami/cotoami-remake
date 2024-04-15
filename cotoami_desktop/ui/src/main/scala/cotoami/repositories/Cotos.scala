@@ -1,6 +1,7 @@
 package cotoami.repositories
 
 import scala.scalajs.js
+import com.softwaremill.quicklens._
 import fui.FunctionalUI._
 import cotoami.TimelineFetched
 import cotoami.backend._
@@ -16,6 +17,14 @@ case class Cotos(
 
   def getOriginal(coto: Coto): Coto =
     coto.repostOfId.flatMap(this.get).getOrElse(coto)
+
+  def add(json: CotoJson): Cotos = {
+    val coto = Coto(json)
+    this.modify(_.map).using(_ + (coto.id -> coto))
+  }
+
+  def addAll(jsons: js.Array[CotoJson]): Cotos =
+    jsons.foldLeft(this)(_ add _)
 
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
