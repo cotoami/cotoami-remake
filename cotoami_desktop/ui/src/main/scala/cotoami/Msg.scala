@@ -21,7 +21,7 @@ case object ToggleLogView extends Msg
 // App init
 case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
 case class UiStateRestored(state: Option[Model.UiState]) extends Msg
-case class DatabaseOpened(result: Either[backend.Error, DatabaseInfoJson])
+case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
     extends Msg
 
 // UI
@@ -37,9 +37,9 @@ case object DeselectCotonoma extends Msg
 
 // Backend
 case class CotonomaDetailsFetched(
-    result: Either[Error, CotonomaDetailsJson]
+    result: Either[ErrorJson, CotonomaDetailsJson]
 ) extends Msg
-case class TimelineFetched(result: Either[backend.Error, PaginatedCotosJson])
+case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
     extends Msg
 
 // Sub

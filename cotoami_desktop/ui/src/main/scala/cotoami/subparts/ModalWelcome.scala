@@ -8,8 +8,7 @@ import fui.FunctionalUI._
 import cotoami.{tauri, ModalWelcomeMsg}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
-import cotoami.backend
-import cotoami.backend.{DatabaseOpenedJson, Node}
+import cotoami.backend.{DatabaseOpenedJson, ErrorJson, Node}
 
 object ModalWelcome {
 
@@ -42,15 +41,14 @@ object ModalWelcome {
   case class BaseFolderSelected(result: Either[Throwable, Option[String]])
       extends Msg
   case class FolderNameInput(query: String) extends Msg
-  case class NewFolderValidation(result: Either[backend.Error, Unit])
-      extends Msg
+  case class NewFolderValidation(result: Either[ErrorJson, Unit]) extends Msg
   case object CreateDatabase extends Msg
 
   // Open an existing database
   case object SelectDatabaseFolder extends Msg
   case class DatabaseFolderSelected(result: Either[Throwable, Option[String]])
       extends Msg
-  case class DatabaseFolderValidation(result: Either[backend.Error, Unit])
+  case class DatabaseFolderValidation(result: Either[ErrorJson, Unit])
       extends Msg
   case object OpenDatabase extends Msg
   case class OpenDatabaseIn(folder: String) extends Msg
@@ -98,7 +96,7 @@ object ModalWelcome {
       case NewFolderValidation(Left(error)) =>
         (
           model.copy(folderNameErrors =
-            Some(Seq(backend.Error.toValidationError(error)))
+            Some(Seq(ErrorJson.toValidationError(error)))
           ),
           Seq.empty
         )
@@ -141,7 +139,7 @@ object ModalWelcome {
       case DatabaseFolderValidation(Left(error)) =>
         (
           model.copy(databaseFolderErrors =
-            Some(Seq(backend.Error.toValidationError(error)))
+            Some(Seq(ErrorJson.toValidationError(error)))
           ),
           Seq.empty
         )

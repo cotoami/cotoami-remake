@@ -15,11 +15,11 @@ package object cotoami {
   def log_error(message: String, details: Option[String] = None): Cmd[Msg] =
     Cmd(IO { Some(AddLogEntry(Log.Error, message, details)) })
 
-  def node_command[T](command: js.Object): Cmd[Either[backend.Error, T]] =
+  def node_command[T](command: js.Object): Cmd[Either[backend.ErrorJson, T]] =
     tauri.invokeCommand(
       "node_command",
       js.Dynamic.literal(command = command)
-    ).map((e: Either[backend.Error, String]) =>
+    ).map((e: Either[backend.ErrorJson, String]) =>
       e.map(js.JSON.parse(_).asInstanceOf[T])
     )
 

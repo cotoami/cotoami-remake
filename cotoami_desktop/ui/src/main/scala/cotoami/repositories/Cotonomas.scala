@@ -109,11 +109,11 @@ object Cotonomas {
   sealed trait Msg
   case object FetchMoreRecent extends Msg
   case class RecentFetched(
-      result: Either[Error, Paginated[CotonomaJson]]
+      result: Either[ErrorJson, Paginated[CotonomaJson]]
   ) extends Msg
   case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
   case class SubsFetched(
-      result: Either[Error, Paginated[CotonomaJson]]
+      result: Either[ErrorJson, Paginated[CotonomaJson]]
   ) extends Msg
 
   def update(
@@ -140,7 +140,7 @@ object Cotonomas {
       case RecentFetched(Left(e)) =>
         (
           model.copy(recentLoading = false),
-          Seq(Error.log(e, "Couldn't fetch recent cotonomas."))
+          Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
         )
 
       case FetchMoreSubs(id) =>
@@ -161,7 +161,7 @@ object Cotonomas {
       case SubsFetched(Left(e)) =>
         (
           model.copy(subsLoading = false),
-          Seq(Error.log(e, "Couldn't fetch sub cotonomas."))
+          Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
         )
     }
 

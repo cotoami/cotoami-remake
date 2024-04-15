@@ -52,7 +52,7 @@ case class Model(
     this.copy(log = this.log.info(message, details))
   def warn(message: String, details: Option[String] = None): Model =
     this.copy(log = this.log.warn(message, details))
-  def error(message: String, error: Option[Error]): Model =
+  def error(message: String, error: Option[ErrorJson]): Model =
     this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
 
   def clearSelection(): Model =

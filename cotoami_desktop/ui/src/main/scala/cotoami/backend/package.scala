@@ -3,27 +3,11 @@ package cotoami
 import scala.scalajs.js
 import java.time._
 
-import fui.FunctionalUI.Cmd
-import cotoami.utils.{Log, Validation}
+import cotoami.utils.Log
 
 package object backend {
 
   case class Id[T](uuid: String) extends AnyVal
-
-  @js.native
-  trait Error extends js.Object {
-    val code: String = js.native
-    val message: String = js.native
-    val details: String = js.native
-  }
-
-  object Error {
-    def toValidationError(error: Error): Validation.Error =
-      utils.Validation.Error(error.code, error.message)
-
-    def log(error: Error, message: String): Cmd[cotoami.Msg] =
-      cotoami.log_error(message, Some(js.JSON.stringify(error)))
-  }
 
   @js.native
   trait LogEvent extends js.Object {
