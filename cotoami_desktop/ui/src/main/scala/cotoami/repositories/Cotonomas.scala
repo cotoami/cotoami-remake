@@ -87,24 +87,28 @@ case class Cotonomas(
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
   def addPageOfSubs(page: PaginatedJson[CotonomaJson]): Cotonomas =
-    this.addAll(page.rows).copy(
-      subsLoading = false,
-      subIds = this.subIds.addPage(
-        page,
-        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+    this
+      .addAll(page.rows)
+      .modify(_.subsLoading).setTo(false)
+      .modify(_.subIds).using(
+        _.addPage(
+          page,
+          (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+        )
       )
-    )
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def addPageOfRecent(page: PaginatedJson[CotonomaJson]): Cotonomas =
-    this.addAll(page.rows).copy(
-      recentLoading = false,
-      recentIds = this.recentIds.addPage(
-        page,
-        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+    this
+      .addAll(page.rows)
+      .modify(_.recentLoading).setTo(false)
+      .modify(_.recentIds).using(
+        _.addPage(
+          page,
+          (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+        )
       )
-    )
 }
 
 object Cotonomas {
