@@ -5,7 +5,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.FunctionalUI._
-import cotoami.{tauri, ModalWelcomeMsg}
+import cotoami.{log_error, tauri, ModalWelcomeMsg}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
 import cotoami.backend.{DatabaseOpenedJson, ErrorJson, Node}
@@ -81,7 +81,7 @@ object ModalWelcome {
         (
           model.copy(systemError = Some(error.toString())),
           Seq(
-            cotoami.log_error("Folder selection error.", Some(error.toString()))
+            log_error("Folder selection error.", Some(error.toString()))
           )
         )
 
@@ -129,7 +129,7 @@ object ModalWelcome {
         (
           model.copy(systemError = Some(error.toString())),
           Seq(
-            cotoami.log_error("Folder selection error.", Some(error.toString()))
+            log_error("Folder selection error.", Some(error.toString()))
           )
         )
 
