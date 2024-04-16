@@ -39,6 +39,7 @@ case class Model(
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
+    links: Links = Links(),
 
     // subparts
     flowInput: FormCoto.Model,

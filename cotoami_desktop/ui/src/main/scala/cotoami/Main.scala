@@ -219,6 +219,23 @@ object Main {
           Seq.empty
         )
 
+      case CotoGraphFetched(Right(graph)) =>
+        (
+          model
+            .modify(_.cotos).using(_.importFrom(graph))
+            .modify(_.cotonomas).using(_.importFrom(graph.cotos_related_data))
+            .modify(_.links).using(_.addAll(graph.links))
+            .info("Coto graph fetched.", Some(CotoGraphJson.debug(graph))),
+          Seq.empty
+        )
+
+      case CotoGraphFetched(Left(e)) =>
+        (
+          model
+            .error("Couldn't fetch a coto graph.", Some(e)),
+          Seq.empty
+        )
+
       case CotonomasMsg(subMsg) => {
         val (cotonomas, cmds) =
           Cotonomas.update(

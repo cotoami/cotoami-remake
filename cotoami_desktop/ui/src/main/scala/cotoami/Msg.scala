@@ -41,6 +41,8 @@ case class CotonomaDetailsFetched(
 ) extends Msg
 case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
     extends Msg
+case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
+    extends Msg
 
 // Sub
 case class CotonomasMsg(subMsg: repositories.Cotonomas.Msg) extends Msg
