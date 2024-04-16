@@ -202,13 +202,13 @@ object Main {
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
       case Route.index(_) => {
-        val (domain, cmds) = model.domain.fetchInitialNodeContents(None)
+        val (domain, cmds) = model.domain.selectNode(None)
         (model.copy(domain = domain), cmds)
       }
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id)) {
-          val (domain, cmds) = model.domain.fetchInitialNodeContents(Some(id))
+          val (domain, cmds) = model.domain.selectNode(Some(id))
           (model.copy(domain = domain), cmds)
         } else {
           (

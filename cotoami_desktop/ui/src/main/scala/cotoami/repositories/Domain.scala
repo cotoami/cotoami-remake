@@ -61,28 +61,6 @@ case class Domain(
       }
     )
 
-  def fetchInitialNodeContents(
-      nodeId: Option[Id[Node]]
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
-    (
-      this
-        .clearSelection()
-        .modify(_.nodes).using(nodes => {
-          nodeId.map(nodes.select(_)).getOrElse(nodes)
-        })
-        .modify(_.cotonomas.recentLoading).setTo(true)
-        .modify(_.cotos.timelineLoading).setTo(true)
-        .modify(_.graphLoading).setTo(true),
-      Seq(
-        Cotonomas.fetchRecent(nodeId, 0),
-        Cotos.fetchTimeline(nodeId, this.cotonomas.selectedId, 0),
-        this.currentCotonoma.map(cotonoma =>
-          Domain.fetchCotoGraph(cotonoma.cotoId)
-        ).getOrElse(Cmd.none)
-      )
-    )
-  }
-
   def appendTimeline(cotos: PaginatedCotosJson): Domain =
     this
       .modify(_.cotos).using(_.appendTimeline(cotos))
@@ -110,6 +88,28 @@ case class Domain(
       case Some(node) =>
         this.cotos.timeline.filter(_.nameAsCotonoma != Some(node.name))
       case None => this.cotos.timeline
+    }
+
+  def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[cotoami.Msg]]) =
+    this
+      .clearSelection()
+      .modify(_.nodes).using(nodes => {
+        nodeId.map(nodes.select(_)).getOrElse(nodes)
+      })
+      .modify(_.cotonomas.recentLoading).setTo(true)
+      .modify(_.cotos.timelineLoading).setTo(true)
+      .modify(_.graphLoading).setTo(true) match {
+      case domain =>
+        (
+          domain,
+          Seq(
+            Cotonomas.fetchRecent(nodeId, 0),
+            Cotos.fetchTimeline(nodeId, None, 0),
+            domain.currentCotonoma.map(cotonoma =>
+              Domain.fetchCotoGraph(cotonoma.cotoId)
+            ).getOrElse(Cmd.none)
+          )
+        )
     }
 }
 
