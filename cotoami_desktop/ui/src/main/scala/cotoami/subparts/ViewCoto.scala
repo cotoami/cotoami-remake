@@ -107,7 +107,7 @@ object ViewCoto {
       )
     )
 
-  def cotoContent(coto: Coto): ReactElement =
+  private def cotoContent(coto: Coto): ReactElement =
     section(className := "text-content")(
       Markdown(rehypePlugins =
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
