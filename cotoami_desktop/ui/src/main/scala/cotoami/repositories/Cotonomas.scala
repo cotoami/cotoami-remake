@@ -30,10 +30,9 @@ case class Cotonomas(
 
   def add(json: CotonomaJson): Cotonomas = {
     val cotonoma = Cotonoma(json)
-    this.copy(
-      map = this.map + (cotonoma.id -> cotonoma),
-      mapByCotoId = this.mapByCotoId + (cotonoma.cotoId -> cotonoma)
-    )
+    this
+      .modify(_.map).using(_ + (cotonoma.id -> cotonoma))
+      .modify(_.mapByCotoId).using(_ + (cotonoma.cotoId -> cotonoma))
   }
 
   def addAll(jsons: js.Array[CotonomaJson]): Cotonomas =
