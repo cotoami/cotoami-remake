@@ -179,7 +179,7 @@ object FormCoto {
               )
             ),
             SplitPane.Secondary(className = None)(
-              inputFooter(model, operatingNode, currentCotonoma, dispatch)
+              inputFooter(operatingNode, currentCotonoma, dispatch)
             )
           )
 
@@ -194,13 +194,12 @@ object FormCoto {
               onBlur := (_ => dispatch(SetFocus(false))),
               onChange := ((e) => dispatch(CotonomaNameInput(e.target.value)))
             ),
-            inputFooter(model, operatingNode, currentCotonoma, dispatch)
+            inputFooter(operatingNode, currentCotonoma, dispatch)
           )
       }
     )
 
   def inputFooter(
-      model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
