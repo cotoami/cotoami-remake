@@ -104,7 +104,7 @@ object Main {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.lastChangeNumber).setTo(info.lastChangeNumber)
-          .modify(_.nodes).setTo(Nodes(info))
+          .modify(_.domain).using(_.initNodes(info))
           .modify(_.modalWelcome.processing).setTo(false)
           .info("Database opened.", Some(info.debug)) match {
           case model =>
@@ -158,7 +158,7 @@ object Main {
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
       case DeselectNode => {
-        val url = model.cotonomas.selected match {
+        val url = model.domain.cotonomas.selected match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
         }
@@ -166,7 +166,7 @@ object Main {
       }
 
       case SelectCotonoma(id) => {
-        val url = model.nodes.selected match {
+        val url = model.domain.nodes.selected match {
           case None       => Route.cotonoma.url(id)
           case Some(node) => Route.cotonomaInNode.url((node.id, id))
         }
@@ -174,87 +174,16 @@ object Main {
       }
 
       case DeselectCotonoma => {
-        val url = model.nodes.selected match {
+        val url = model.domain.nodes.selected match {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
         }
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case CotonomaDetailsFetched(Right(details)) => {
-        val cotonoma = Cotonoma(details.cotonoma)
-        (
-          model
-            .modify(_.nodes).using(nodes =>
-              if (!nodes.isSelecting(cotonoma.nodeId))
-                nodes.deselect()
-              else
-                nodes
-            )
-            .modify(_.cotonomas).using(_.setCotonomaDetails(details)),
-          Seq.empty
-        )
-      }
-
-      case CotonomaDetailsFetched(Left(e)) =>
-        (
-          model.error("Couldn't fetch cotonoma details.", Some(e)),
-          Seq.empty
-        )
-
-      case TimelineFetched(Right(cotos)) =>
-        (
-          model
-            .modify(_.cotos).using(_.appendTimeline(cotos))
-            .modify(_.cotonomas).using(_.importFrom(cotos.related_data))
-            .info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos))),
-          Seq.empty
-        )
-
-      case TimelineFetched(Left(e)) =>
-        (
-          model
-            .modify(_.cotos.timelineLoading).setTo(false)
-            .error("Couldn't fetch timeline cotos.", Some(e)),
-          Seq.empty
-        )
-
-      case CotoGraphFetched(Right(graph)) =>
-        (
-          model
-            .modify(_.cotos).using(_.importFrom(graph))
-            .modify(_.cotonomas).using(_.importFrom(graph.cotos_related_data))
-            .modify(_.links).using(_.addAll(graph.links))
-            .info("Coto graph fetched.", Some(CotoGraphJson.debug(graph))),
-          Seq.empty
-        )
-
-      case CotoGraphFetched(Left(e)) =>
-        (
-          model
-            .error("Couldn't fetch a coto graph.", Some(e)),
-          Seq.empty
-        )
-
-      case CotonomasMsg(subMsg) => {
-        val (cotonomas, cmds) =
-          Cotonomas.update(
-            subMsg,
-            model.cotonomas,
-            model.nodes.selectedId
-          )
-        (model.copy(cotonomas = cotonomas), cmds)
-      }
-
-      case CotosMsg(subMsg) => {
-        val (cotos, cmds) =
-          Cotos.update(
-            subMsg,
-            model.cotos,
-            model.nodes.selectedId,
-            model.cotonomas.selectedId
-          )
-        (model.copy(cotos = cotos), cmds)
+      case DomainMsg(subMsg) => {
+        val (domain, cmds) = Domain.update(subMsg, model.domain)
+        (model.copy(domain = domain), cmds)
       }
 
       case FlowInputMsg(subMsg) => {
@@ -275,9 +204,9 @@ object Main {
       case Route.index(_) =>
         (
           model
-            .clearSelection()
-            .modify(_.cotonomas.recentLoading).setTo(true)
-            .modify(_.cotos.timelineLoading).setTo(true),
+            .modify(_.domain).using(_.clearSelection())
+            .modify(_.domain.cotonomas.recentLoading).setTo(true)
+            .modify(_.domain.cotos.timelineLoading).setTo(true),
           Seq(
             Cotonomas.fetchRecent(None, 0),
             Cotos.fetchTimeline(None, None, 0)
@@ -285,13 +214,13 @@ object Main {
         )
 
       case Route.node(id) =>
-        if (model.nodes.contains(id)) {
+        if (model.domain.nodes.contains(id)) {
           (
             model
-              .clearSelection()
-              .modify(_.nodes).using(_.select(id))
-              .modify(_.cotonomas.recentLoading).setTo(true)
-              .modify(_.cotos.timelineLoading).setTo(true),
+              .modify(_.domain).using(_.clearSelection())
+              .modify(_.domain.nodes).using(_.select(id))
+              .modify(_.domain.cotonomas.recentLoading).setTo(true)
+              .modify(_.domain.cotos.timelineLoading).setTo(true),
             Seq(
               Cotonomas.fetchRecent(Some(id), 0),
               Cotos.fetchTimeline(Some(id), None, 0)
@@ -306,17 +235,17 @@ object Main {
 
       case Route.cotonoma(id) =>
         model
-          .modify(_.nodes).using(_.deselect())
-          .modify(_.cotonomas).using(_.select(id))
-          .modify(_.cotos).setTo(Cotos())
-          .modify(_.cotos.timelineLoading).setTo(true) match {
+          .modify(_.domain.nodes).using(_.deselect())
+          .modify(_.domain.cotonomas).using(_.select(id))
+          .modify(_.domain.cotos).setTo(Cotos())
+          .modify(_.domain.cotos.timelineLoading).setTo(true) match {
           case model =>
             (
               model,
               Seq(
                 Cotonomas.fetchDetails(id),
                 Cotos.fetchTimeline(None, Some(id), 0),
-                if (model.cotonomas.isEmpty)
+                if (model.domain.cotonomas.isEmpty)
                   Cotonomas.fetchRecent(None, 0)
                 else
                   Cmd.none
@@ -326,17 +255,17 @@ object Main {
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
         model
-          .modify(_.nodes).using(_.select(nodeId))
-          .modify(_.cotonomas).using(_.select(cotonomaId))
-          .modify(_.cotos).setTo(Cotos())
-          .modify(_.cotos.timelineLoading).setTo(true) match {
+          .modify(_.domain.nodes).using(_.select(nodeId))
+          .modify(_.domain.cotonomas).using(_.select(cotonomaId))
+          .modify(_.domain.cotos).setTo(Cotos())
+          .modify(_.domain.cotos.timelineLoading).setTo(true) match {
           case model =>
             (
               model,
               Seq(
                 Cotonomas.fetchDetails(cotonomaId),
                 Cotos.fetchTimeline(None, Some(cotonomaId), 0),
-                if (model.cotonomas.isEmpty)
+                if (model.domain.cotonomas.isEmpty)
                   Cotonomas.fetchRecent(Some(nodeId), 0)
                 else
                   Cmd.none

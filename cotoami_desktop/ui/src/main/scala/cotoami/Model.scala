@@ -35,11 +35,8 @@ case class Model(
     databaseFolder: Option[String] = None,
     lastChangeNumber: Double = 0,
 
-    // Repositories
-    nodes: Nodes = Nodes(),
-    cotonomas: Cotonomas = Cotonomas(),
-    cotos: Cotos = Cotos(),
-    links: Links = Links(),
+    // Domain
+    domain: Domain = Domain(),
 
     // subparts
     flowInput: FormCoto.Model,
@@ -55,55 +52,6 @@ case class Model(
     this.copy(log = this.log.warn(message, details))
   def error(message: String, error: Option[ErrorJson]): Model =
     this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
-
-  def clearSelection(): Model =
-    this.copy(
-      nodes = this.nodes.deselect(),
-      cotonomas = Cotonomas(),
-      cotos = Cotos()
-    )
-
-  def rootCotonomaId: Option[Id[Cotonoma]] =
-    this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
-
-  def isRoot(id: Id[Cotonoma]): Boolean = Some(id) == this.rootCotonomaId
-
-  def currentCotonoma: Option[Cotonoma] =
-    this.cotonomas.selectedId.orElse(
-      this.nodes.current.map(_.rootCotonomaId)
-    ).flatMap(this.cotonomas.get)
-
-  def location: Option[(Node, Option[Cotonoma])] =
-    this.nodes.current.map(currentNode =>
-      // The location contains a cotonoma only when one is selected,
-      // otherwise the root cotonoma of the current node will be implicitly
-      // used as the current cotonoma.
-      this.cotonomas.selected match {
-        case Some(cotonoma) =>
-          (
-            this.nodes.get(cotonoma.nodeId).getOrElse(currentNode),
-            Some(cotonoma)
-          )
-        case None => (currentNode, None)
-      }
-    )
-
-  lazy val recentCotonomas: Seq[Cotonoma] = {
-    val rootId = this.rootCotonomaId
-    this.cotonomas.recent.filter(c => Some(c.id) != rootId)
-  }
-
-  lazy val superCotonomas: Seq[Cotonoma] = {
-    val rootId = this.rootCotonomaId
-    this.cotonomas.supers.filter(c => Some(c.id) != rootId)
-  }
-
-  lazy val timeline: Seq[Coto] =
-    this.nodes.current match {
-      case Some(node) =>
-        this.cotos.timeline.filter(_.nameAsCotonoma != Some(node.name))
-      case None => this.cotos.timeline
-    }
 }
 
 object Model {

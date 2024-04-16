@@ -3,7 +3,7 @@ package cotoami.repositories
 import scala.scalajs.js
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
-import cotoami.{CotonomaDetailsFetched, CotonomasMsg}
+import cotoami.DomainMsg
 import cotoami.backend._
 
 case class Cotonomas(
@@ -175,14 +175,16 @@ object Cotonomas {
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex)).map(
-      (RecentFetched andThen CotonomasMsg)
+      (RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg)
     )
 
   def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.Cotonoma(id)).map(CotonomaDetailsFetched)
+    Commands.send(Commands.Cotonoma(id)).map(
+      Domain.CotonomaDetailsFetched andThen DomainMsg
+    )
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     Commands.send(Commands.SubCotonomas(id, pageIndex)).map(
-      (SubsFetched andThen CotonomasMsg)
+      (SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg)
     )
 }

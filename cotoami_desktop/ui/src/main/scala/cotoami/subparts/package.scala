@@ -27,6 +27,7 @@ package object subparts {
         )
       ),
       model
+        .domain
         .location
         .map { case (node, cotonoma) =>
           section(className := "location")(
@@ -77,7 +78,9 @@ package object subparts {
         )
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
-        model.nodes.current.map(NavCotonomas.view(model, _, dispatch))
+        model.domain.nodes.current.map(
+          NavCotonomas.view(model, _, dispatch)
+        )
       ),
       SplitPane.Secondary(className = None)(
         flowAndStock(model, uiState, dispatch)
@@ -164,7 +167,7 @@ package object subparts {
     )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.nodes.local.isEmpty) {
+    if (model.domain.nodes.local.isEmpty) {
       model.systemInfo.map(info =>
         ModalWelcome
           .view(
