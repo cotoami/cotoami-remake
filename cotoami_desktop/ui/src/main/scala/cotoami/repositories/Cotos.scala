@@ -26,6 +26,11 @@ case class Cotos(
   def addAll(jsons: js.Array[CotoJson]): Cotos =
     jsons.foldLeft(this)(_ add _)
 
+  def importFrom(graph: CotoGraphJson): Cotos =
+    this
+      .addAll(graph.cotos)
+      .addAll(graph.cotos_related_data.originals)
+
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
   def appendTimeline(cotos: PaginatedCotosJson): Cotos =

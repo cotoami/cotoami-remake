@@ -1,6 +1,7 @@
 package cotoami.repositories
 
 import scala.scalajs.js
+import com.softwaremill.quicklens._
 import fui.FunctionalUI._
 import cotoami.{CotonomaDetailsFetched, CotonomasMsg}
 import cotoami.backend._
@@ -39,22 +40,27 @@ case class Cotonomas(
     jsons.foldLeft(this)(_ add _)
 
   def importFrom(data: CotosRelatedDataJson): Cotonomas =
-    this.addAll(data.posted_in ++ data.as_cotonomas)
+    this
+      .addAll(data.posted_in)
+      .addAll(data.as_cotonomas)
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)
-    val map = Cotonomas.toMap(details.supers) ++
-      Cotonomas.toMap(details.subs.rows) +
-      (cotonoma.id -> cotonoma)
-    this.deselect().copy(
-      selectedId = Some(cotonoma.id),
-      superIds = details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq,
-      subIds = this.subIds.addPage(
-        details.subs,
-        (json: CotonomaJson) => Id[Cotonoma](json.uuid)
-      ),
-      map = this.map ++ map
-    )
+    this
+      .deselect()
+      .add(details.cotonoma)
+      .addAll(details.supers)
+      .addAll(details.subs.rows)
+      .modify(_.selectedId).setTo(Some(cotonoma.id))
+      .modify(_.superIds).setTo(
+        details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq
+      )
+      .modify(_.subIds).using(
+        _.addPage(
+          details.subs,
+          (json: CotonomaJson) => Id[Cotonoma](json.uuid)
+        )
+      )
   }
 
   def asCotonoma(coto: Coto): Option[Cotonoma] =
