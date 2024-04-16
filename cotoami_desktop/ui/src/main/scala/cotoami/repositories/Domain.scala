@@ -60,6 +60,17 @@ case class Domain(
       }
     )
 
+  def appendTimeline(cotos: PaginatedCotosJson): Domain =
+    this
+      .modify(_.cotos).using(_.appendTimeline(cotos))
+      .modify(_.cotonomas).using(_.importFrom(cotos.related_data))
+
+  def importCotoGraph(graph: CotoGraphJson): Domain =
+    this
+      .modify(_.cotos).using(_.importFrom(graph))
+      .modify(_.cotonomas).using(_.importFrom(graph.cotos_related_data))
+      .modify(_.links).using(_.addAll(graph.links))
+
   lazy val recentCotonomas: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId
     this.cotonomas.recent.filter(c => Some(c.id) != rootId)
@@ -124,9 +135,7 @@ object Domain {
 
       case TimelineFetched(Right(cotos)) =>
         (
-          model
-            .modify(_.cotos).using(_.appendTimeline(cotos))
-            .modify(_.cotonomas).using(_.importFrom(cotos.related_data)),
+          model.appendTimeline(cotos),
           Seq(
             log_info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos)))
           )
@@ -140,10 +149,7 @@ object Domain {
 
       case CotoGraphFetched(Right(graph)) =>
         (
-          model
-            .modify(_.cotos).using(_.importFrom(graph))
-            .modify(_.cotonomas).using(_.importFrom(graph.cotos_related_data))
-            .modify(_.links).using(_.addAll(graph.links)),
+          model.importCotoGraph(graph),
           Seq(log_info("Coto graph fetched.", Some(CotoGraphJson.debug(graph))))
         )
 
