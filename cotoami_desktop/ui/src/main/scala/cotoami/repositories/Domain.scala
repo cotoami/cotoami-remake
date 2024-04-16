@@ -10,7 +10,8 @@ case class Domain(
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
-    links: Links = Links()
+    links: Links = Links(),
+    graphLoading: Boolean = false
 ) {
   def initNodes(info: DatabaseInfo): Domain =
     this.copy(nodes = Nodes(info))
@@ -31,6 +32,18 @@ case class Domain(
     this.cotonomas.selectedId.orElse(
       this.nodes.current.map(_.rootCotonomaId)
     ).flatMap(this.cotonomas.get)
+
+  def setCotonomaDetails(details: CotonomaDetailsJson): Domain = {
+    val cotonoma = Cotonoma(details.cotonoma)
+    this
+      .modify(_.nodes).using(nodes =>
+        if (!nodes.isSelecting(cotonoma.nodeId))
+          nodes.deselect()
+        else
+          nodes
+      )
+      .modify(_.cotonomas).using(_.setCotonomaDetails(details))
+  }
 
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
@@ -103,20 +116,8 @@ object Domain {
         (model.copy(cotos = cotos), cmds)
       }
 
-      case CotonomaDetailsFetched(Right(details)) => {
-        val cotonoma = Cotonoma(details.cotonoma)
-        (
-          model
-            .modify(_.nodes).using(nodes =>
-              if (!nodes.isSelecting(cotonoma.nodeId))
-                nodes.deselect()
-              else
-                nodes
-            )
-            .modify(_.cotonomas).using(_.setCotonomaDetails(details)),
-          Seq.empty
-        )
-      }
+      case CotonomaDetailsFetched(Right(details)) =>
+        (model.setCotonomaDetails(details), Seq.empty)
 
       case CotonomaDetailsFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch cotonoma details.")))
