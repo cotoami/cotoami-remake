@@ -12,10 +12,11 @@ object NavNodes {
   val PaneName = "nav-nodes"
 
   def view(
-      nodes: Nodes,
+      model: Model,
       uiState: Model.UiState,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val nodes = model.domain.nodes
     nav(
       className := optionalClasses(
         Seq(
@@ -51,13 +52,14 @@ object NavNodes {
         materialSymbol("add")
       ),
       ul(className := "nodes")(
-        nodes.local.map(node => li()(nodeButton(nodes, node, dispatch)))
+        nodes.local.map(node => li()(nodeButton(node, nodes, dispatch)))
       )
     )
+  }
 
   private def nodeButton(
-      nodes: Nodes,
       node: Node,
+      nodes: Nodes,
       dispatch: Msg => Unit
   ): ReactElement =
     button(

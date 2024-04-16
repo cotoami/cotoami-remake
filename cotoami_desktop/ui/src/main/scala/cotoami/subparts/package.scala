@@ -54,7 +54,7 @@ package object subparts {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): Seq[ReactElement] = Seq(
-    subparts.NavNodes.view(model.domain.nodes, uiState, dispatch),
+    subparts.NavNodes.view(model, uiState, dispatch),
     SplitPane(
       vertical = true,
       initialPrimarySize = uiState.paneSizes.getOrElse(

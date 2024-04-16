@@ -16,10 +16,11 @@ object NavCotonomas {
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val cotonomas = model.domain.cotonomas
     nav(className := "cotonomas header-and-body")(
       header()(
-        if (model.domain.cotonomas.selected.isEmpty) {
+        if (cotonomas.selected.isEmpty) {
           div(className := "cotonoma home selected")(
             materialSymbol("home"),
             currentNode.name
@@ -44,7 +45,7 @@ object NavCotonomas {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Msg.FetchMoreRecentCotonomas)
         )(
-          model.domain.cotonomas.selected.map(
+          cotonomas.selected.map(
             sectionCurrent(_, model.domain, dispatch)
           ),
           Option.when(!model.domain.recentCotonomas.isEmpty)(
@@ -52,11 +53,12 @@ object NavCotonomas {
           ),
           div(
             className := "more",
-            aria - "busy" := model.domain.cotonomas.recentLoading.toString()
+            aria - "busy" := cotonomas.recentLoading.toString()
           )()
         )
       )
     )
+  }
 
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,
