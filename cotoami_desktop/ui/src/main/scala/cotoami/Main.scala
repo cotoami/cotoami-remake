@@ -217,45 +217,16 @@ object Main {
           )
         }
 
-      case Route.cotonoma(id) =>
-        model
-          .modify(_.domain.nodes).using(_.deselect())
-          .modify(_.domain.cotonomas).using(_.select(id))
-          .modify(_.domain.cotos).setTo(Cotos())
-          .modify(_.domain.cotos.timelineLoading).setTo(true) match {
-          case model =>
-            (
-              model,
-              Seq(
-                Cotonomas.fetchDetails(id),
-                Cotos.fetchTimeline(None, Some(id), 0),
-                if (model.domain.cotonomas.isEmpty)
-                  Cotonomas.fetchRecent(None, 0)
-                else
-                  Cmd.none
-              )
-            )
-        }
+      case Route.cotonoma(id) => {
+        val (domain, cmds) = model.domain.selectCotonoma(None, id)
+        (model.copy(domain = domain), cmds)
+      }
 
-      case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        model
-          .modify(_.domain.nodes).using(_.select(nodeId))
-          .modify(_.domain.cotonomas).using(_.select(cotonomaId))
-          .modify(_.domain.cotos).setTo(Cotos())
-          .modify(_.domain.cotos.timelineLoading).setTo(true) match {
-          case model =>
-            (
-              model,
-              Seq(
-                Cotonomas.fetchDetails(cotonomaId),
-                Cotos.fetchTimeline(None, Some(cotonomaId), 0),
-                if (model.domain.cotonomas.isEmpty)
-                  Cotonomas.fetchRecent(Some(nodeId), 0)
-                else
-                  Cmd.none
-              )
-            )
-        }
+      case Route.cotonomaInNode((nodeId, cotonomaId)) => {
+        val (domain, cmds) =
+          model.domain.selectCotonoma(Some(nodeId), cotonomaId)
+        (model.copy(domain = domain), cmds)
+      }
 
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))

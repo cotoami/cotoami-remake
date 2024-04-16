@@ -93,9 +93,9 @@ case class Domain(
   def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[cotoami.Msg]]) =
     this
       .clearSelection()
-      .modify(_.nodes).using(nodes => {
+      .modify(_.nodes).using(nodes =>
         nodeId.map(nodes.select(_)).getOrElse(nodes)
-      })
+      )
       .modify(_.cotonomas.recentLoading).setTo(true)
       .modify(_.cotos.timelineLoading).setTo(true)
       .modify(_.graphLoading).setTo(true) match {
@@ -108,6 +108,37 @@ case class Domain(
             domain.currentCotonoma.map(cotonoma =>
               Domain.fetchCotoGraph(cotonoma.cotoId)
             ).getOrElse(Cmd.none)
+          )
+        )
+    }
+
+  def selectCotonoma(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Id[Cotonoma]
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) =
+    this
+      .modify(_.nodes).using(nodes =>
+        nodeId.map(nodes.select(_)).getOrElse(nodes.deselect())
+      )
+      .modify(_.cotonomas).using(_.select(cotonomaId))
+      .modify(_.cotos).setTo(Cotos())
+      .modify(_.links).setTo(Links())
+      .modify(_.cotonomas.recentLoading).setTo(this.cotonomas.isEmpty)
+      .modify(_.cotos.timelineLoading).setTo(true)
+      .modify(_.graphLoading).setTo(true) match {
+      case domain =>
+        (
+          domain,
+          Seq(
+            Cotonomas.fetchDetails(cotonomaId),
+            Cotos.fetchTimeline(None, Some(cotonomaId), 0),
+            domain.currentCotonoma.map(cotonoma =>
+              Domain.fetchCotoGraph(cotonoma.cotoId)
+            ).getOrElse(Cmd.none),
+            if (domain.cotonomas.isEmpty)
+              Cotonomas.fetchRecent(nodeId, 0)
+            else
+              Cmd.none
           )
         )
     }
