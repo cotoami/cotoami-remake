@@ -29,10 +29,15 @@ case class Domain(
 
   def isRoot(id: Id[Cotonoma]): Boolean = Some(id) == this.rootCotonomaId
 
-  def currentCotonoma: Option[Cotonoma] =
+  def currentCotonomaId: Option[Id[Cotonoma]] =
     this.cotonomas.selectedId.orElse(
       this.nodes.current.map(_.rootCotonomaId)
-    ).flatMap(this.cotonomas.get)
+    )
+
+  // Note: Even if `currentCotonomaId` has `Some` value, this method will
+  // return `None` if the cotonoma data of that ID has not been loaded.
+  def currentCotonoma: Option[Cotonoma] =
+    this.currentCotonomaId.flatMap(this.cotonomas.get)
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Domain = {
     val cotonoma = Cotonoma(details.cotonoma)
