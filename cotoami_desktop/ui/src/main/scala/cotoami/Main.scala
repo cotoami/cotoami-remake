@@ -201,31 +201,15 @@ object Main {
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
-      case Route.index(_) =>
-        (
-          model
-            .modify(_.domain).using(_.clearSelection())
-            .modify(_.domain.cotonomas.recentLoading).setTo(true)
-            .modify(_.domain.cotos.timelineLoading).setTo(true),
-          Seq(
-            Cotonomas.fetchRecent(None, 0),
-            Cotos.fetchTimeline(None, None, 0)
-          )
-        )
+      case Route.index(_) => {
+        val (domain, cmds) = model.domain.fetchInitialNodeContents(None)
+        (model.copy(domain = domain), cmds)
+      }
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id)) {
-          (
-            model
-              .modify(_.domain).using(_.clearSelection())
-              .modify(_.domain.nodes).using(_.select(id))
-              .modify(_.domain.cotonomas.recentLoading).setTo(true)
-              .modify(_.domain.cotos.timelineLoading).setTo(true),
-            Seq(
-              Cotonomas.fetchRecent(Some(id), 0),
-              Cotos.fetchTimeline(Some(id), None, 0)
-            )
-          )
+          val (domain, cmds) = model.domain.fetchInitialNodeContents(Some(id))
+          (model.copy(domain = domain), cmds)
         } else {
           (
             model.warn(s"Node [${id}] not found.", None),
