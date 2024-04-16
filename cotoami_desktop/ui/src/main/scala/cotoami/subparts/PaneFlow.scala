@@ -46,7 +46,7 @@ object PaneFlow {
       )
     )
 
-  def timelineContent(
+  private def timelineContent(
       cotos: Seq[Coto],
       model: Model,
       dispatch: Msg => Unit
@@ -85,7 +85,7 @@ object PaneFlow {
       )
     )
 
-  def cotoArticle(
+  private def cotoArticle(
       coto: Coto,
       model: Model,
       dispatch: Msg => Unit
@@ -110,7 +110,7 @@ object PaneFlow {
       )
     )
 
-  def repostHeader(
+  private def repostHeader(
       coto: Coto,
       domain: Domain,
       dispatch: Msg => Unit
@@ -125,7 +125,7 @@ object PaneFlow {
       }
     )
 
-  def repostedIn(
+  private def repostedIn(
       coto: Coto,
       cotonomas: Cotonomas,
       dispatch: Msg => Unit
@@ -140,7 +140,7 @@ object PaneFlow {
       )(cotonoma.name)
     )
 
-  def reposter(
+  private def reposter(
       coto: Coto,
       nodes: Nodes
   ): ReactElement =
