@@ -79,7 +79,7 @@ package object subparts {
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
         model.domain.nodes.current.map(
-          NavCotonomas.view(model.domain, _, dispatch)
+          NavCotonomas.view(model, _, dispatch)
         )
       ),
       SplitPane.Secondary(className = None)(

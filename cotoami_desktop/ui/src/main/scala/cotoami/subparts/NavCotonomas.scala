@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{DeselectCotonoma, Msg, SelectCotonoma}
+import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea}
 import cotoami.backend.{Cotonoma, Node}
 import cotoami.repositories.Domain
@@ -13,13 +13,13 @@ object NavCotonomas {
   val DefaultWidth = 230
 
   def view(
-      domain: Domain,
+      model: Model,
       currentNode: Node,
       dispatch: Msg => Unit
   ): ReactElement =
     nav(className := "cotonomas header-and-body")(
       header()(
-        if (domain.cotonomas.selected.isEmpty) {
+        if (model.domain.cotonomas.selected.isEmpty) {
           div(className := "cotonoma home selected")(
             materialSymbol("home"),
             currentNode.name
@@ -44,23 +44,23 @@ object NavCotonomas {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Msg.FetchMoreRecentCotonomas)
         )(
-          domain.cotonomas.selected.map(
-            sectionCurrent(domain, _, dispatch)
+          model.domain.cotonomas.selected.map(
+            sectionCurrent(_, model.domain, dispatch)
           ),
-          Option.when(!domain.recentCotonomas.isEmpty)(
-            sectionRecent(domain, domain.recentCotonomas, dispatch)
+          Option.when(!model.domain.recentCotonomas.isEmpty)(
+            sectionRecent(model.domain.recentCotonomas, model.domain, dispatch)
           ),
           div(
             className := "more",
-            aria - "busy" := domain.cotonomas.recentLoading.toString()
+            aria - "busy" := model.domain.cotonomas.recentLoading.toString()
           )()
         )
       )
     )
 
   private def sectionCurrent(
-      domain: Domain,
       selectedCotonoma: Cotonoma,
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "current")(
@@ -75,17 +75,17 @@ object NavCotonomas {
         li(key := "super")(
           ul(className := "super-cotonomas")(
             domain.superCotonomas.map(
-              liCotonoma(domain, _, dispatch)
+              liCotonoma(_, domain, dispatch)
             ): _*
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma selected")(
-          cotonomaLabel(domain, selectedCotonoma)
+          cotonomaLabel(selectedCotonoma, domain)
         ),
         li(key := "sub")(
           ul(className := "sub-cotonomas")(
             domain.cotonomas.subs.map(
-              liCotonoma(domain, _, dispatch)
+              liCotonoma(_, domain, dispatch)
             ) ++ Option.when(
               domain.cotonomas.subIds.nextPageIndex.isDefined
             )(
@@ -112,18 +112,18 @@ object NavCotonomas {
     )
 
   private def sectionRecent(
-      domain: Domain,
       cotonomas: Seq[Cotonoma],
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
-      ul()(cotonomas.map(liCotonoma(domain, _, dispatch)): _*)
+      ul()(cotonomas.map(liCotonoma(_, domain, dispatch)): _*)
     )
 
   private def liCotonoma(
-      domain: Domain,
       cotonoma: Cotonoma,
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     li(
@@ -133,7 +133,7 @@ object NavCotonomas {
       key := cotonoma.id.uuid
     )(
       if (domain.cotonomas.isSelecting(cotonoma.id)) {
-        span(className := "cotonoma")(cotonomaLabel(domain, cotonoma))
+        span(className := "cotonoma")(cotonomaLabel(cotonoma, domain))
       } else {
         a(
           className := "cotonoma",
@@ -143,12 +143,12 @@ object NavCotonomas {
             dispatch(SelectCotonoma(cotonoma.id))
           })
         )(
-          cotonomaLabel(domain, cotonoma)
+          cotonomaLabel(cotonoma, domain)
         )
       }
     )
 
-  private def cotonomaLabel(domain: Domain, cotonoma: Cotonoma): ReactElement =
+  private def cotonomaLabel(cotonoma: Cotonoma, domain: Domain): ReactElement =
     Fragment(
       domain.nodes.get(cotonoma.nodeId).map(nodeImg),
       cotonoma.name
