@@ -3,7 +3,7 @@ package cotoami.repositories
 import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
-import cotoami.log_info
+import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 
 case class Domain(
@@ -20,7 +20,8 @@ case class Domain(
     this.copy(
       nodes = this.nodes.deselect(),
       cotonomas = Cotonomas(),
-      cotos = Cotos()
+      cotos = Cotos(),
+      links = Links()
     )
 
   def rootCotonomaId: Option[Id[Cotonoma]] =
@@ -157,4 +158,9 @@ object Domain {
       case CotoGraphFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
+
+  def fetchCotoGraph(from: Id[Coto]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.CotoGraph(from)).map(
+      Domain.CotoGraphFetched andThen DomainMsg
+    )
 }
