@@ -3,7 +3,7 @@ package cotoami.repositories
 import scala.scalajs.js
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
-import cotoami.TimelineFetched
+import cotoami.DomainMsg
 import cotoami.backend._
 
 case class Cotos(
@@ -77,6 +77,6 @@ object Cotos {
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
     Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex)).map(
-      TimelineFetched
+      Domain.TimelineFetched andThen DomainMsg
     )
 }

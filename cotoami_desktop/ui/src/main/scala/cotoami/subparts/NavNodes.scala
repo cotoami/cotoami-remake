@@ -6,12 +6,13 @@ import slinky.web.html._
 import cotoami.{DeselectNode, Model, Msg, SelectNode}
 import cotoami.components.{materialSymbol, optionalClasses, paneToggle}
 import cotoami.backend.Node
+import cotoami.repositories.Nodes
 
 object NavNodes {
   val PaneName = "nav-nodes"
 
   def view(
-      model: Model,
+      nodes: Nodes,
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): ReactElement =
@@ -32,12 +33,12 @@ object NavNodes {
             ("all-nodes", true),
             ("default", true),
             ("selectable", true),
-            ("selected", model.nodes.selected.isEmpty)
+            ("selected", nodes.selected.isEmpty)
           )
         ),
         data - "tooltip" := "All nodes",
         data - "placement" := "right",
-        disabled := model.nodes.selected.isEmpty,
+        disabled := nodes.selected.isEmpty,
         onClick := ((e) => dispatch(DeselectNode))
       )(
         materialSymbol("stacks")
@@ -50,12 +51,12 @@ object NavNodes {
         materialSymbol("add")
       ),
       ul(className := "nodes")(
-        model.nodes.local.map(node => li()(nodeButton(model, node, dispatch)))
+        nodes.local.map(node => li()(nodeButton(nodes, node, dispatch)))
       )
     )
 
   private def nodeButton(
-      model: Model,
+      nodes: Nodes,
       node: Node,
       dispatch: Msg => Unit
   ): ReactElement =
@@ -65,13 +66,13 @@ object NavNodes {
           ("node", true),
           ("default", true),
           ("selectable", true),
-          ("selected", model.nodes.isSelecting(node.id))
+          ("selected", nodes.isSelecting(node.id))
         )
       ),
-      disabled := model.nodes.isSelecting(node.id),
+      disabled := nodes.isSelecting(node.id),
       data - "tooltip" := node.name,
       data - "placement" := "right",
-      disabled := model.nodes.isSelecting(node.id),
+      disabled := nodes.isSelecting(node.id),
       onClick := ((e) => dispatch(SelectNode(node.id)))
     )(nodeImg(node))
 }

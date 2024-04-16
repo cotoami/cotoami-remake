@@ -1,9 +1,11 @@
 package cotoami
 
+import scala.util.chaining._
 import org.scalajs.dom.URL
 
 import cotoami.utils.Log
 import cotoami.backend._
+import cotoami.repositories._
 
 sealed trait Msg
 
@@ -35,17 +37,20 @@ case object DeselectNode extends Msg
 case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
 case object DeselectCotonoma extends Msg
 
-// Backend
-case class CotonomaDetailsFetched(
-    result: Either[ErrorJson, CotonomaDetailsJson]
-) extends Msg
-case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
-    extends Msg
-case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
-    extends Msg
+// Domain
+case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
-// Sub
-case class CotonomasMsg(subMsg: repositories.Cotonomas.Msg) extends Msg
-case class CotosMsg(subMsg: repositories.Cotos.Msg) extends Msg
+// Subparts
 case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
+
+object Msg {
+  lazy val FetchMoreRecentCotonomas =
+    Cotonomas.FetchMoreRecent.pipe(Domain.CotonomasMsg).pipe(DomainMsg)
+
+  def FetchMoreSubCotonomas(id: Id[Cotonoma]) =
+    Cotonomas.FetchMoreSubs(id).pipe(Domain.CotonomasMsg).pipe(DomainMsg)
+
+  lazy val FetchMoreTimeline =
+    Cotos.FetchMoreTimeline.pipe(Domain.CotosMsg).pipe(DomainMsg)
+}

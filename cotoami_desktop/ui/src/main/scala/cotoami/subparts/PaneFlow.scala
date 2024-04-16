@@ -3,10 +3,10 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{CotosMsg, FlowInputMsg, Model, Msg}
+import cotoami.{FlowInputMsg, Model, Msg}
 import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 import cotoami.backend.Coto
-import cotoami.repositories.Cotos
+import cotoami.repositories._
 
 object PaneFlow {
   val PaneName = "PaneFlow"
@@ -21,7 +21,7 @@ object PaneFlow {
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "flow")(
-      (model.nodes.operating, model.currentCotonoma) match {
+      (model.domain.nodes.operating, model.domain.currentCotonoma) match {
         case (Some(node), Some(cotonoma)) =>
           Some(
             FormCoto.view(
@@ -40,15 +40,15 @@ object PaneFlow {
         case _ => None
       },
       section(className := "timeline header-and-body")(
-        Option.when(!model.timeline.isEmpty)(
-          timelineContent(model, model.timeline, dispatch)
+        Option.when(!model.domain.timeline.isEmpty)(
+          timelineContent(model.domain.timeline, model, dispatch)
         )
       )
     )
 
   def timelineContent(
-      model: Model,
       cotos: Seq[Coto],
+      model: Model,
       dispatch: Msg => Unit
   ): ReactElement =
     Fragment(
@@ -68,35 +68,37 @@ object PaneFlow {
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(CotosMsg(Cotos.FetchMoreTimeline))
+          onScrollToBottom = () => dispatch(Msg.FetchMoreTimeline)
         )(
           cotos.map(coto =>
             section(className := "post")(
-              coto.repostOfId.map(_ => repostHeader(model, coto, dispatch)),
-              cotoArticle(model, model.cotos.getOriginal(coto), dispatch)
+              coto.repostOfId.map(_ =>
+                repostHeader(coto, model.domain, dispatch)
+              ),
+              cotoArticle(model.domain.cotos.getOriginal(coto), model, dispatch)
             )
           ) :+ div(
             className := "more",
-            aria - "busy" := model.cotos.timelineLoading.toString()
+            aria - "busy" := model.domain.cotos.timelineLoading.toString()
           )(): _*
         )
       )
     )
 
   def cotoArticle(
-      model: Model,
       coto: Coto,
+      model: Model,
       dispatch: Msg => Unit
   ): ReactElement =
     article(className := "coto")(
       header()(
-        ViewCoto.otherCotonomas(model, coto, dispatch),
-        Option.when(Some(coto.postedById) != model.nodes.operatingId) {
-          ViewCoto.author(model, coto)
+        ViewCoto.otherCotonomas(coto, model.domain, dispatch),
+        Option.when(Some(coto.postedById) != model.domain.nodes.operatingId) {
+          ViewCoto.author(coto, model.domain.nodes)
         }
       ),
       div(className := "body")(
-        ViewCoto.content(model, coto, s"timeline-${coto.id}", dispatch)
+        ViewCoto.content(coto, s"timeline-${coto.id}", model, dispatch)
       ),
       footer()(
         time(
@@ -109,26 +111,26 @@ object PaneFlow {
     )
 
   def repostHeader(
-      model: Model,
       coto: Coto,
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "repost-header")(
       materialSymbol("repeat"),
-      Option.when(model.cotonomas.selectedId.isEmpty) {
-        repostedIn(model, coto, dispatch)
+      Option.when(domain.cotonomas.selectedId.isEmpty) {
+        repostedIn(coto, domain.cotonomas, dispatch)
       },
-      Option.when(Some(coto.postedById) != model.nodes.operatingId) {
-        reposter(model, coto)
+      Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
+        reposter(coto, domain.nodes)
       }
     )
 
   def repostedIn(
-      model: Model,
       coto: Coto,
+      cotonomas: Cotonomas,
       dispatch: Msg => Unit
   ): Option[ReactElement] =
-    coto.postedInId.flatMap(model.cotonomas.get).map(cotonoma =>
+    coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",
         onClick := ((e) => {
@@ -139,11 +141,11 @@ object PaneFlow {
     )
 
   def reposter(
-      model: Model,
-      coto: Coto
+      coto: Coto,
+      nodes: Nodes
   ): ReactElement =
     address(className := "reposter")(
-      model.nodes.get(coto.postedById).map(node =>
+      nodes.get(coto.postedById).map(node =>
         Fragment(
           nodeImg(node),
           node.name

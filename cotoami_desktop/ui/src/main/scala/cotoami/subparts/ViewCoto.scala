@@ -13,15 +13,16 @@ import cotoami.components.{
   RehypePlugin
 }
 import cotoami.backend.Coto
+import cotoami.repositories.{Domain, Nodes}
 
 object ViewCoto {
 
   def author(
-      model: Model,
-      coto: Coto
+      coto: Coto,
+      nodes: Nodes
   ): ReactElement =
     address(className := "author")(
-      model.nodes.get(coto.postedById).map(node =>
+      nodes.get(coto.postedById).map(node =>
         Fragment(
           nodeImg(node),
           node.name
@@ -30,14 +31,14 @@ object ViewCoto {
     )
 
   def otherCotonomas(
-      model: Model,
       coto: Coto,
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
-        .filter(id => !model.isRoot(id) && !model.cotonomas.isSelecting(id))
-        .map(model.cotonomas.get)
+        .filter(id => !domain.isRoot(id) && !domain.cotonomas.isSelecting(id))
+        .map(domain.cotonomas.get)
         .flatten
         .reverse
         .map(cotonoma =>
@@ -54,13 +55,13 @@ object ViewCoto {
     )
 
   def content(
-      model: Model,
       coto: Coto,
       cotoViewId: String,
+      model: Model,
       dispatch: Msg => Unit
   ): ReactElement =
     div(className := "content")(
-      model.cotonomas.asCotonoma(coto).map(cotonoma =>
+      model.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-content")(
           a(
             className := "cotonoma",
@@ -70,7 +71,7 @@ object ViewCoto {
               dispatch(cotoami.SelectCotonoma(cotonoma.id))
             })
           )(
-            model.nodes.get(cotonoma.nodeId).map(nodeImg),
+            model.domain.nodes.get(cotonoma.nodeId).map(nodeImg),
             cotonoma.name
           )
         )

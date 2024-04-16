@@ -12,6 +12,9 @@ case class Domain(
     cotos: Cotos = Cotos(),
     links: Links = Links()
 ) {
+  def initNodes(info: DatabaseInfo): Domain =
+    this.copy(nodes = Nodes(info))
+
   def clearSelection(): Domain =
     this.copy(
       nodes = this.nodes.deselect(),
@@ -23,6 +26,26 @@ case class Domain(
     this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
 
   def isRoot(id: Id[Cotonoma]): Boolean = Some(id) == this.rootCotonomaId
+
+  def currentCotonoma: Option[Cotonoma] =
+    this.cotonomas.selectedId.orElse(
+      this.nodes.current.map(_.rootCotonomaId)
+    ).flatMap(this.cotonomas.get)
+
+  def location: Option[(Node, Option[Cotonoma])] =
+    this.nodes.current.map(currentNode =>
+      // The location contains a cotonoma only when one is selected,
+      // otherwise the root cotonoma of the current node will be implicitly
+      // used as the current cotonoma.
+      this.cotonomas.selected match {
+        case Some(cotonoma) =>
+          (
+            this.nodes.get(cotonoma.nodeId).getOrElse(currentNode),
+            Some(cotonoma)
+          )
+        case None => (currentNode, None)
+      }
+    )
 
   lazy val recentCotonomas: Seq[Cotonoma] = {
     val rootId = this.rootCotonomaId
