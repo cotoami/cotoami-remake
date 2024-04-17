@@ -18,12 +18,12 @@ object PaneStock {
     section(className := "stock")(
       section(className := "coto-catalog")(
         Option.when(!model.domain.pinnedCotos.isEmpty)(
-          pinned(model.domain.pinnedCotos, model, dispatch)
+          sectionPinned(model.domain.pinnedCotos, model, dispatch)
         )
       )
     )
 
-  def pinned(
+  def sectionPinned(
       pinned: Seq[(Link, Coto)],
       model: Model,
       dispatch: Msg => Unit
@@ -51,24 +51,25 @@ object PaneStock {
         )
       )(
         pinned.map { case (link, coto) =>
-          pinnedCoto(link, coto, model, dispatch)
+          liPinnedCoto(link, coto, model, dispatch)
         }: _*
       )
     )
 
-  private def pinnedCoto(
-      link: Link,
+  private def liPinnedCoto(
+      pin: Link,
       coto: Coto,
       model: Model,
       dispatch: Msg => Unit
-  ): ReactElement =
-    li(key := link.id.uuid)(
+  ): ReactElement = {
+    val subCotos = model.domain.subCotosOf(coto.id)
+    li(key := pin.id.uuid)(
       article(
         className := optionalClasses(
           Seq(
             ("pinned-coto", true),
             ("coto", true),
-            ("has-children", false)
+            ("has-children", !subCotos.isEmpty)
           )
         )
       )(
@@ -82,6 +83,35 @@ object PaneStock {
             tipPlacement = "right",
             symbol = "push_pin"
           ),
+          ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
+        )
+      ),
+      ol(className := "sub-cotos")(
+        subCotos.map { case (link, subCoto) =>
+          liSubCoto(link, subCoto, model, dispatch)
+        }
+      )
+    )
+  }
+
+  private def liSubCoto(
+      link: Link,
+      coto: Coto,
+      model: Model,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    li(key := link.id.uuid)(
+      article(className := "sub-coto coto")(
+        header()(
+          ToolButton(
+            classes = "unlink",
+            tip = "Unlink",
+            tipPlacement = "right",
+            symbol = "subdirectory_arrow_right"
+          ),
+          ViewCoto.otherCotonomas(coto, model.domain, dispatch)
+        ),
+        div(className := "body")(
           ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
         )
       )
