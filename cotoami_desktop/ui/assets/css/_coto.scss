@@ -9,8 +9,12 @@ article.coto {
   padding-bottom: 1rem;
 
   &.has-children {
-    font-weight: 650;
     border-bottom: 2px dotted var(--pane-border-color);
+
+    // as a section title
+    section.text-content p:first-child {
+      font-weight: 650;
+    }
   }
 
   &:hover {
