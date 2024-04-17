@@ -51,38 +51,39 @@ object PaneStock {
         )
       )(
         pinned.map { case (link, coto) =>
-          li(key := link.id.uuid)(
-            pinnedCoto(coto, model, dispatch)
-          )
+          pinnedCoto(link, coto, model, dispatch)
         }: _*
       )
     )
 
   private def pinnedCoto(
+      link: Link,
       coto: Coto,
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement =
-    article(
-      className := optionalClasses(
-        Seq(
-          ("pinned-coto", true),
-          ("coto", true),
-          ("has-children", false)
+    li(key := link.id.uuid)(
+      article(
+        className := optionalClasses(
+          Seq(
+            ("pinned-coto", true),
+            ("coto", true),
+            ("has-children", false)
+          )
         )
-      )
-    )(
-      header()(
-        ViewCoto.otherCotonomas(coto, model.domain, dispatch)
-      ),
-      div(className := "body")(
-        ToolButton(
-          classes = "unpin",
-          tip = "Unpin",
-          tipPlacement = "right",
-          symbol = "push_pin"
+      )(
+        header()(
+          ViewCoto.otherCotonomas(coto, model.domain, dispatch)
         ),
-        ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
+        div(className := "body")(
+          ToolButton(
+            classes = "unpin",
+            tip = "Unpin",
+            tipPlacement = "right",
+            symbol = "push_pin"
+          ),
+          ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
+        )
       )
     )
 }
