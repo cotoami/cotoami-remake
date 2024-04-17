@@ -27,6 +27,12 @@ section.pinned {
     article.pinned-coto {
       position: relative;
 
+      >header {
+        ul.other-cotonomas {
+          padding-right: 10px;
+        }
+      }
+
       div.body {
         position: relative;
 

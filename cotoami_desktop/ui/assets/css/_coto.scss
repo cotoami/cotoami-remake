@@ -103,9 +103,27 @@ article.coto {
   }
 }
 
-article.sub-coto {
-  button.unlink {
-    margin-top: 3px;
+ol.sub-cotos {
+  article.sub-coto {
+    >header {
+      display: flex;
+      flex-direction: row;
+
+      button.unlink {
+        margin-top: 3px;
+        margin-left: 3px;
+        opacity: 0.5;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+
+      ul.other-cotonomas {
+        flex: 1;
+        padding-right: 10px;
+      }
+    }
   }
 }
 
