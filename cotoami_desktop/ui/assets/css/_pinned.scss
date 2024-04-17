@@ -15,6 +15,9 @@ section.pinned {
   }
 
   ol.pinned-cotos {
+    padding-top: 10px;
+    // background-color: var(--pinned-background-color);
+
     >li {
       margin-right: auto;
       margin-left: auto;
@@ -24,12 +27,22 @@ section.pinned {
     article.pinned-coto {
       position: relative;
 
-      // position the unpin button at the vertical middle of the left end.
-      button.unpin {
-        position: absolute;
-        top: 0;
-        left: 8px;
-        bottom: 0;
+      >header {
+        ul.other-cotonomas {
+          padding-right: 10px;
+        }
+      }
+
+      div.body {
+        position: relative;
+
+        // position the unpin button at the vertical middle of the left end.
+        button.unpin {
+          position: absolute;
+          top: 0;
+          left: 3px;
+          bottom: 0;
+        }
       }
     }
 
@@ -37,7 +50,7 @@ section.pinned {
       overflow-y: auto;
 
       >li {
-        margin-bottom: 2rem;
+        margin-bottom: 4rem;
       }
     }
 

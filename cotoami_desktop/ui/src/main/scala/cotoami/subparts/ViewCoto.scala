@@ -42,7 +42,7 @@ object ViewCoto {
         .flatten
         .reverse
         .map(cotonoma =>
-          li()(
+          li(key := cotonoma.id.uuid)(
             a(
               className := "also-posted-in",
               onClick := ((e) => {
@@ -51,7 +51,7 @@ object ViewCoto {
               })
             )(cotonoma.name)
           )
-        )
+        ): _*
     )
 
   def content(
