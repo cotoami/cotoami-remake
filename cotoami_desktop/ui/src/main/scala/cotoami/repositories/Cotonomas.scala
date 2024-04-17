@@ -43,6 +43,11 @@ case class Cotonomas(
       .addAll(data.posted_in)
       .addAll(data.as_cotonomas)
 
+  def importFrom(graph: CotoGraphJson): Cotonomas =
+    this
+      .add(graph.root)
+      .importFrom(graph.cotos_related_data)
+
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
     val cotonoma = Cotonoma(details.cotonoma)
     this

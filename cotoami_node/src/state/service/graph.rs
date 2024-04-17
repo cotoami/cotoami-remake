@@ -12,12 +12,12 @@ impl NodeState {
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
-            let (_, root) = ds.try_get_cotonoma(&from)?;
-            let graph = ds.graph(root, true)?; // traverse until cotonomas
+            let (root_cotonoma, root_coto) = ds.try_get_cotonoma(&from)?;
+            let graph = ds.graph(root_coto, true)?; // traverse until cotonomas
             let cotos: Vec<Coto> = graph.cotos.into_values().collect();
             let related_data = super::get_cotos_related_data(&mut ds, &cotos)?;
             let links: Vec<Link> = graph.links.into_values().flatten().collect();
-            Ok::<_, anyhow::Error>(CotoGraph::new(graph.root_id, cotos, related_data, links))
+            Ok::<_, anyhow::Error>(CotoGraph::new(root_cotonoma, cotos, related_data, links))
         })
         .await?
         .map_err(ServiceError::from)

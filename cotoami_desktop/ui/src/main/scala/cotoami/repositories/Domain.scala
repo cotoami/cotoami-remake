@@ -75,7 +75,7 @@ case class Domain(
     this
       .modify(_.graphLoading).setTo(false)
       .modify(_.cotos).using(_.importFrom(graph))
-      .modify(_.cotonomas).using(_.importFrom(graph.cotos_related_data))
+      .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.links).using(_.addAll(graph.links))
 
   lazy val recentCotonomas: Seq[Cotonoma] = {

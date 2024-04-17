@@ -118,7 +118,7 @@ pub struct CotosRelatedData {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotoGraph {
-    pub root_id: Id<Coto>,
+    pub root: Cotonoma,
     pub cotos: Vec<Coto>,
     pub cotos_related_data: CotosRelatedData,
     pub links: Vec<Link>,
