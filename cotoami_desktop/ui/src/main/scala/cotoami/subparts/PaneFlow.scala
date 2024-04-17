@@ -39,19 +39,17 @@ object PaneFlow {
           )
         case _ => None
       },
-      section(className := "timeline header-and-body")(
-        Option.when(!model.domain.timeline.isEmpty)(
-          timelineContent(model.domain.timeline, model, dispatch)
-        )
+      Option.when(!model.domain.timeline.isEmpty)(
+        timeline(model.domain.timeline, model, dispatch)
       )
     )
 
-  private def timelineContent(
+  private def timeline(
       cotos: Seq[Coto],
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement =
-    Fragment(
+    section(className := "timeline header-and-body")(
       header(className := "tools")(
         ToolButton(
           classes = "filter",
