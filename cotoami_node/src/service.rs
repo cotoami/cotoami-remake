@@ -152,7 +152,7 @@ pub enum Command {
     },
 
     /// Request a [CotoGraph] by traversing from the given coto.
-    CotoGraph { from: Id<Coto> },
+    CotoGraph { from: Id<Cotonoma> },
 
     /// Request to create a new [Coto] in the given cotonoma (`post_to`).
     PostCoto {
