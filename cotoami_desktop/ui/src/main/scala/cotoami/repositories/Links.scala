@@ -11,6 +11,9 @@ case class Links(
 ) {
   def get(id: Id[Link]): Option[Link] = this.map.get(id)
 
+  def linksFrom(id: Id[Coto]): Option[TreeSet[Link]] =
+    this.mapBySourceCotoId.get(id)
+
   def add(json: LinkJson): Links = {
     val link = Link(json)
     this

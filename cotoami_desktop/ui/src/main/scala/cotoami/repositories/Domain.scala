@@ -95,6 +95,13 @@ case class Domain(
       case None => this.cotos.timeline
     }
 
+  def subCotosOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
+    this.links.linksFrom(cotoId).map(_.toSeq).getOrElse(Seq.empty)
+      .map(link =>
+        this.cotos.get(link.targetCotoId).map(subCoto => (link, subCoto))
+      )
+      .flatten
+
   def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[cotoami.Msg]]) =
     this
       .clearSelection()
