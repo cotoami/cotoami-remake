@@ -24,12 +24,16 @@ section.pinned {
     article.pinned-coto {
       position: relative;
 
-      // position the unpin button at the vertical middle of the left end.
-      button.unpin {
-        position: absolute;
-        top: 0;
-        left: 8px;
-        bottom: 0;
+      div.body {
+        position: relative;
+
+        // position the unpin button at the vertical middle of the left end.
+        button.unpin {
+          position: absolute;
+          top: 0;
+          left: 3px;
+          bottom: 0;
+        }
       }
     }
 

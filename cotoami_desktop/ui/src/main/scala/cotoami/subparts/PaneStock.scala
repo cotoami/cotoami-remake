@@ -72,16 +72,16 @@ object PaneStock {
         )
       )
     )(
-      ToolButton(
-        classes = "unpin",
-        tip = "Unpin",
-        tipPlacement = "right",
-        symbol = "push_pin"
-      ),
       header()(
         ViewCoto.otherCotonomas(coto, model.domain, dispatch)
       ),
       div(className := "body")(
+        ToolButton(
+          classes = "unpin",
+          tip = "Unpin",
+          tipPlacement = "right",
+          symbol = "push_pin"
+        ),
         ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
       )
     )
