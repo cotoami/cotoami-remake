@@ -95,7 +95,7 @@ case class Domain(
       case None => this.cotos.timeline
     }
 
-  def pinnedCotos(): Seq[(Link, Coto)] =
+  lazy val pinnedCotos: Seq[(Link, Coto)] =
     this.currentCotonoma.map(cotonoma =>
       this.subCotosOf(cotonoma.cotoId)
     ).getOrElse(Seq.empty)
