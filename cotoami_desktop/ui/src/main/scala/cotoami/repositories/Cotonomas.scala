@@ -55,7 +55,7 @@ case class Cotonomas(
       .add(details.cotonoma)
       .addAll(details.supers)
       .addAll(details.subs.rows)
-      .modify(_.selectedId).setTo(Some(cotonoma.id))
+      .select(cotonoma.id)
       .modify(_.superIds).setTo(
         details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq
       )
@@ -73,11 +73,10 @@ case class Cotonomas(
     else
       None
 
+  // You can select a cotonoma even if it's not contained in this repository.
+  // In that case, it assumes that the cotonoma is being fetched at the same time.
   def select(id: Id[Cotonoma]): Cotonomas =
-    if (this.contains(id))
-      this.deselect().copy(selectedId = Some(id))
-    else
-      this
+    this.deselect().copy(selectedId = Some(id))
 
   def deselect(): Cotonomas =
     this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())

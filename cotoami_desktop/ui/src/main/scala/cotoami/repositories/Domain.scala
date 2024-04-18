@@ -153,9 +153,7 @@ case class Domain(
               Cmd.none,
             Cotonomas.fetchDetails(cotonomaId),
             Cotos.fetchTimeline(None, Some(cotonomaId), 0),
-            domain.currentCotonomaId
-              .map(Domain.fetchCotoGraph)
-              .getOrElse(Cmd.none)
+            Domain.fetchCotoGraph(cotonomaId)
           )
         )
     }
