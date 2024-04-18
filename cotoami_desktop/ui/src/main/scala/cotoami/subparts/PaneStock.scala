@@ -18,7 +18,7 @@ object PaneStock {
     section(className := "stock")(
       section(className := "coto-catalog")(
         Option.when(!model.domain.pinnedCotos.isEmpty)(
-          sectionPinned(model.domain.pinnedCotos, model, dispatch)
+          sectionPinned(model.domain.pinnedCotos, model, uiState, dispatch)
         )
       )
     )
@@ -26,17 +26,31 @@ object PaneStock {
   def sectionPinned(
       pinned: Seq[(Link, Coto)],
       model: Model,
+      uiState: Model.UiState,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val inColumns = model.domain.currentCotonomaId
+      .map(uiState.isPinnedInColumns)
+      .getOrElse(false)
     section(className := "pinned header-and-body")(
       header(className := "tools")(
         ToolButton(
-          classes = "view-columns",
+          classes = optionalClasses(
+            Seq(
+              ("view-columns", true),
+              ("selected", inColumns)
+            )
+          ),
           tip = "Columns",
           symbol = "view_column"
         ),
         ToolButton(
-          classes = "view-document selected",
+          classes = optionalClasses(
+            Seq(
+              ("view-document", true),
+              ("selected", !inColumns)
+            )
+          ),
           tip = "Document",
           symbol = "view_agenda"
         )
@@ -45,7 +59,8 @@ object PaneStock {
         className := optionalClasses(
           Seq(
             ("body", true),
-            ("document-view", true)
+            ("document-view", !inColumns),
+            ("column-view", inColumns)
           )
         )
       )(
@@ -62,6 +77,7 @@ object PaneStock {
         )
       )
     )
+  }
 
   private def liPinnedCoto(
       pin: Link,
