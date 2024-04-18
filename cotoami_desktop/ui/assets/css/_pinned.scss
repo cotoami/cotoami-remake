@@ -1,5 +1,5 @@
 section.pinned {
-  header.tools button {
+  >header.tools button {
     span.material-symbols {
       opacity: .5;
     }
@@ -14,7 +14,7 @@ section.pinned {
     }
   }
 
-  ol.pinned-cotos {
+  >div.body {
     padding-top: 10px;
     // background-color: var(--pinned-background-color);
 
@@ -23,7 +23,9 @@ section.pinned {
       width: 100%;
       height: 100%;
     }
+  }
 
+  ol.pinned-cotos {
     li.pin {
       margin-right: auto;
       margin-left: auto;
