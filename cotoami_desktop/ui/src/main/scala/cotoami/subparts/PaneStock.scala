@@ -4,7 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Model, Msg}
-import cotoami.backend.{Coto, Link}
+import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
 object PaneStock {
@@ -16,9 +16,25 @@ object PaneStock {
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "stock")(
-      section(className := "coto-catalog")(
-        Option.when(!model.domain.pinnedCotos.isEmpty)(
-          sectionPinned(model.domain.pinnedCotos, model, uiState, dispatch)
+      model.domain.currentCotonoma.map(
+        sectionCatalog(model, uiState, _, dispatch)
+      )
+    )
+
+  def sectionCatalog(
+      model: Model,
+      uiState: Model.UiState,
+      currentCotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "coto-catalog")(
+      Option.when(!model.domain.pinnedCotos.isEmpty)(
+        sectionPinned(
+          model.domain.pinnedCotos,
+          model,
+          uiState,
+          currentCotonoma,
+          dispatch
         )
       )
     )
@@ -27,11 +43,10 @@ object PaneStock {
       pinned: Seq[(Link, Coto)],
       model: Model,
       uiState: Model.UiState,
+      currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val inColumns = model.domain.currentCotonomaId
-      .map(uiState.isPinnedInColumns)
-      .getOrElse(false)
+    val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
     section(className := "pinned header-and-body")(
       header(className := "tools")(
         ToolButton(
