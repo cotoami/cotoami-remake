@@ -43,3 +43,15 @@ trait CotonomaDetailsJson extends js.Object {
   val supers: js.Array[CotonomaJson] = js.native
   val subs: PaginatedJson[CotonomaJson] = js.native
 }
+
+object CotonomaDetailsJson {
+  def debug(details: CotonomaDetailsJson): String = {
+    val s = new StringBuilder
+    s ++= s"id: ${details.cotonoma.uuid}"
+    s ++= s", coto_id: ${details.cotonoma.coto_id}"
+    s ++= s", name: ${details.cotonoma.name}"
+    s ++= s", supers: ${details.supers.size}"
+    s ++= s", subs: {${PaginatedJson.debug(details.subs)}}"
+    s.result()
+  }
+}

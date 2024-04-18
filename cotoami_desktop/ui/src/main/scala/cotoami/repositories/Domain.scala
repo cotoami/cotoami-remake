@@ -200,7 +200,15 @@ object Domain {
       }
 
       case CotonomaDetailsFetched(Right(details)) =>
-        (model.setCotonomaDetails(details), Seq.empty)
+        (
+          model.setCotonomaDetails(details),
+          Seq(
+            log_info(
+              "Cotonoma details fetched.",
+              Some(CotonomaDetailsJson.debug(details))
+            )
+          )
+        )
 
       case CotonomaDetailsFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch cotonoma details.")))
