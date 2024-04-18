@@ -314,7 +314,7 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.validateNewDatabaseInputs() || model.processing,
-            onClick := ((e) => dispatch(ModalWelcomeMsg(CreateDatabase)))
+            onClick := (_ => dispatch(ModalWelcomeMsg(CreateDatabase)))
           )(
             "Create"
           )
@@ -364,9 +364,7 @@ object ModalWelcome {
               id := "select-database-folder",
               `type` := "button",
               className := "secondary",
-              onClick := ((e) =>
-                dispatch(ModalWelcomeMsg(SelectDatabaseFolder))
-              )
+              onClick := (_ => dispatch(ModalWelcomeMsg(SelectDatabaseFolder)))
             )(
               materialSymbol("folder")
             )
@@ -381,7 +379,7 @@ object ModalWelcome {
             disabled := model.databaseFolderErrors
               .map(!_.isEmpty)
               .getOrElse(true) || model.processing,
-            onClick := ((e) => dispatch(ModalWelcomeMsg(OpenDatabase)))
+            onClick := (_ => dispatch(ModalWelcomeMsg(OpenDatabase)))
           )("Open")
         )
       )

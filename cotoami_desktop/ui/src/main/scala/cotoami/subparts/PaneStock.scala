@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg}
+import cotoami.{Model, Msg, SwitchPinnedView}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
@@ -57,7 +57,9 @@ object PaneStock {
             )
           ),
           tip = "Columns",
-          symbol = "view_column"
+          symbol = "view_column",
+          disabled = inColumns,
+          onClick = (() => dispatch(SwitchPinnedView(currentCotonoma.id, true)))
         ),
         ToolButton(
           classes = optionalClasses(
@@ -67,7 +69,10 @@ object PaneStock {
             )
           ),
           tip = "Document",
-          symbol = "view_agenda"
+          symbol = "view_agenda",
+          disabled = !inColumns,
+          onClick =
+            (() => dispatch(SwitchPinnedView(currentCotonoma.id, false)))
         )
       ),
       div(
@@ -80,7 +85,7 @@ object PaneStock {
         )
       )(
         ScrollArea(
-          autoHide = true,
+          autoHide = !inColumns,
           bottomThreshold = None,
           onScrollToBottom = () => ()
         )(
