@@ -26,12 +26,6 @@ section.pinned {
   }
 
   ol.pinned-cotos {
-    li.pin {
-      margin-right: auto;
-      margin-left: auto;
-      max-width: var(--max-article-width);
-    }
-
     article.pinned-coto {
       position: relative;
 
@@ -57,11 +51,16 @@ section.pinned {
 
   .document-view {
     li.pin {
+      margin-right: auto;
+      margin-left: auto;
       margin-bottom: 3rem;
+      max-width: var(--max-article-width);
     }
 
     article.coto.has-children {
-      section.text-content p:first-child {
+
+      section.text-content p:first-child,
+      span.summary {
         font-size: 1.1rem;
       }
     }
@@ -89,6 +88,7 @@ section.pinned {
     li.pin {
       flex: 1;
       min-width: 400px;
+      margin-right: 16px;
 
       display: flex;
       flex-direction: column;
