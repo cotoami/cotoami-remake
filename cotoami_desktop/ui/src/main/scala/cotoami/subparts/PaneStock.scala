@@ -41,20 +41,20 @@ object PaneStock {
           symbol = "view_agenda"
         )
       ),
-      div(className := "body")(
+      div(
+        className := optionalClasses(
+          Seq(
+            ("body", true),
+            ("document-view", true)
+          )
+        )
+      )(
         ScrollArea(
           autoHide = true,
           bottomThreshold = None,
           onScrollToBottom = () => ()
         )(
-          ol(
-            className := optionalClasses(
-              Seq(
-                ("pinned-cotos", true),
-                ("document-view", true)
-              )
-            )
-          )(
+          ol(className := "pinned-cotos")(
             pinned.map { case (link, coto) =>
               liPinnedCoto(link, coto, model, dispatch)
             }: _*

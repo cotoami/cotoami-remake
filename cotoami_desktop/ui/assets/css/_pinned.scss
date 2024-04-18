@@ -53,30 +53,32 @@ section.pinned {
         }
       }
     }
+  }
 
-    &.document-view {
-      li.pin {
-        margin-bottom: 3rem;
-      }
+  .document-view {
+    li.pin {
+      margin-bottom: 3rem;
     }
+  }
 
-    &.column-view {
+  .column-view {
+    ol.pinned-cotos {
       display: flex;
       flex-direction: row;
 
       padding-left: 16px;
       padding-right: 16px;
+    }
 
-      li.pin {
-        flex: 1;
-        min-width: 400px;
+    li.pin {
+      flex: 1;
+      min-width: 400px;
 
-        display: flex;
-        flex-direction: column;
+      display: flex;
+      flex-direction: column;
 
-        ol.sub-cotos {
-          overflow-y: auto;
-        }
+      ol.sub-cotos {
+        overflow-y: auto;
       }
     }
   }
