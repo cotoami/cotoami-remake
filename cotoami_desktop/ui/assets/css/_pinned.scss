@@ -55,8 +55,6 @@ section.pinned {
     }
 
     &.document-view {
-      overflow-y: auto;
-
       li.pin {
         margin-bottom: 3rem;
       }
@@ -68,7 +66,6 @@ section.pinned {
 
       padding-left: 16px;
       padding-right: 16px;
-      overflow-x: auto;
 
       li.pin {
         flex: 1;
