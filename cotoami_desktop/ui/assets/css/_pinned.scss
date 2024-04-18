@@ -59,6 +59,12 @@ section.pinned {
     li.pin {
       margin-bottom: 3rem;
     }
+
+    article.coto.has-children {
+      section.text-content p:first-child {
+        font-size: 1.1rem;
+      }
+    }
   }
 
   .column-view {
