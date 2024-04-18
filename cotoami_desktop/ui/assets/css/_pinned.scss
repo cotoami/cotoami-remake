@@ -20,6 +20,7 @@ section.pinned {
 
     // SimpleBar div
     >div {
+      width: 100%;
       height: 100%;
     }
 
@@ -67,7 +68,7 @@ section.pinned {
       padding-right: 16px;
       overflow-x: auto;
 
-      >li {
+      li.pin {
         flex: 1;
         min-width: 400px;
 
