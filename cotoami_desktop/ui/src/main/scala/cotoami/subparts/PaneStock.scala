@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Model, Msg}
 import cotoami.backend.{Coto, Link}
-import cotoami.components.{optionalClasses, ToolButton}
+import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
 object PaneStock {
   val PaneName = "PaneStock"
@@ -50,9 +50,15 @@ object PaneStock {
           )
         )
       )(
-        pinned.map { case (link, coto) =>
-          liPinnedCoto(link, coto, model, dispatch)
-        }: _*
+        ScrollArea(
+          autoHide = true,
+          bottomThreshold = None,
+          onScrollToBottom = () => ()
+        )(
+          pinned.map { case (link, coto) =>
+            liPinnedCoto(link, coto, model, dispatch)
+          }: _*
+        )
       )
     )
 
@@ -63,7 +69,7 @@ object PaneStock {
       dispatch: Msg => Unit
   ): ReactElement = {
     val subCotos = model.domain.subCotosOf(coto.id)
-    li(key := pin.id.uuid)(
+    li(key := pin.id.uuid, className := "pin")(
       article(
         className := optionalClasses(
           Seq(
@@ -100,7 +106,7 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement =
-    li(key := link.id.uuid)(
+    li(key := link.id.uuid, className := "sub")(
       article(className := "sub-coto coto")(
         header()(
           ToolButton(

@@ -18,7 +18,12 @@ section.pinned {
     padding-top: 10px;
     // background-color: var(--pinned-background-color);
 
-    >li {
+    // SimpleBar div
+    >div {
+      height: 100%;
+    }
+
+    li.pin {
       margin-right: auto;
       margin-left: auto;
       max-width: var(--max-article-width);
@@ -49,7 +54,7 @@ section.pinned {
     &.document-view {
       overflow-y: auto;
 
-      >li {
+      li.pin {
         margin-bottom: 3rem;
       }
     }
