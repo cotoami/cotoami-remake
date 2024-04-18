@@ -62,10 +62,20 @@ section.pinned {
   }
 
   .column-view {
+    .simplebar-content-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .simplebar-content {
+      height: 100%;
+    }
+
     ol.pinned-cotos {
       display: flex;
       flex-direction: row;
 
+      height: 100%;
       padding-left: 16px;
       padding-right: 16px;
     }
