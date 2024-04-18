@@ -128,8 +128,13 @@ ol.sub-cotos {
 }
 
 section.text-content {
-  p:last-child {
-    margin-bottom: 0;
+
+  p,
+  ul,
+  ol {
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   blockquote:first-child {
