@@ -15,6 +15,10 @@ article.coto {
     section.text-content p:first-child {
       font-weight: 650;
     }
+
+    .collapsible-content section.text-content p:first-child {
+      font-weight: normal;
+    }
   }
 
   &:hover {

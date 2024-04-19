@@ -29,6 +29,8 @@ case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
 // UI
 case class TogglePane(name: String) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
+case class SwitchPinnedView(cotonoma: Id[Cotonoma], inColumns: Boolean)
+    extends Msg
 case class ToggleContent(cotoViewId: String) extends Msg
 
 // Transition

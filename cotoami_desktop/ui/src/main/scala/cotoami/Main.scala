@@ -123,25 +123,26 @@ object Main {
           Seq.empty
         )
 
-      case TogglePane(name) => {
-        model.uiState match {
-          case Some(s) => {
-            val new_s = s.togglePane(name)
-            (model.copy(uiState = Some(new_s)), Seq(new_s.save))
-          }
-          case None => (model, Seq.empty)
-        }
-      }
+      case TogglePane(name) =>
+        model.uiState
+          .map(_.togglePane(name) match {
+            case state => (model.copy(uiState = Some(state)), Seq(state.save))
+          })
+          .getOrElse((model, Seq.empty))
 
-      case ResizePane(name, newSize) => {
-        model.uiState match {
-          case Some(s) => {
-            val new_s = s.resizePane(name, newSize)
-            (model.copy(uiState = Some(new_s)), Seq(new_s.save))
-          }
-          case None => (model, Seq.empty)
-        }
-      }
+      case ResizePane(name, newSize) =>
+        model.uiState
+          .map(_.resizePane(name, newSize) match {
+            case state => (model.copy(uiState = Some(state)), Seq(state.save))
+          })
+          .getOrElse((model, Seq.empty))
+
+      case SwitchPinnedView(cotonoma, inColumns) =>
+        model.uiState
+          .map(_.setPinnedInColumns(cotonoma, inColumns) match {
+            case state => (model.copy(uiState = Some(state)), Seq(state.save))
+          })
+          .getOrElse((model, Seq.empty))
 
       case ToggleContent(cotoViewId) =>
         (

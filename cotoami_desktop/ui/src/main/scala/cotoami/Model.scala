@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.collection.immutable.HashSet
 import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.URL
@@ -10,6 +11,7 @@ import io.circe.syntax._
 import io.circe.parser._
 
 import cats.effect.IO
+import com.softwaremill.quicklens._
 import java.time._
 import java.time.format.DateTimeFormatter
 
@@ -86,7 +88,8 @@ object Model {
       paneToggles: Map[String, Boolean] = Map(
         PaneStock.PaneName -> false // fold PaneStock by default
       ),
-      paneSizes: Map[String, Int] = Map()
+      paneSizes: Map[String, Int] = Map(),
+      pinnedInColumns: HashSet[String] = HashSet.empty
   ) {
     def paneOpened(name: String): Boolean =
       this.paneToggles.getOrElse(name, true) // open by default
@@ -102,6 +105,20 @@ object Model {
 
     def resizePane(name: String, newSize: Int): UiState =
       this.copy(paneSizes = this.paneSizes + (name -> newSize))
+
+    def setPinnedInColumns(
+        cotonoma: Id[Cotonoma],
+        pinnedInColumns: Boolean
+    ): UiState =
+      this.modify(_.pinnedInColumns).using(
+        if (pinnedInColumns)
+          _ + cotonoma.uuid
+        else
+          _ - cotonoma.uuid
+      )
+
+    def isPinnedInColumns(cotonoma: Id[Cotonoma]): Boolean =
+      this.pinnedInColumns.contains(cotonoma.uuid)
 
     def save: Cmd[Msg] =
       Cmd(IO {

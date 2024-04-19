@@ -10,7 +10,8 @@ import slinky.web.html._
       tip: String,
       tipPlacement: String = "bottom",
       disabled: Boolean = false,
-      symbol: String
+      symbol: String,
+      onClick: () => Unit = (() => ())
   )
 
   val component = FunctionalComponent[Props] { props =>
@@ -18,7 +19,8 @@ import slinky.web.html._
       className := s"default tool ${props.classes}",
       data - "tooltip" := props.tip,
       data - "placement" := props.tipPlacement,
-      disabled := props.disabled
+      disabled := props.disabled,
+      onClick := (_ => props.onClick())
     )(
       materialSymbol(props.symbol)
     )

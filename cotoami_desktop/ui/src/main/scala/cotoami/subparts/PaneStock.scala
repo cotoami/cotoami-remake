@@ -3,8 +3,8 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg}
-import cotoami.backend.{Coto, Link}
+import cotoami.{Model, Msg, SwitchPinnedView}
+import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
 object PaneStock {
@@ -16,9 +16,25 @@ object PaneStock {
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "stock")(
-      section(className := "coto-catalog")(
-        Option.when(!model.domain.pinnedCotos.isEmpty)(
-          sectionPinned(model.domain.pinnedCotos, model, dispatch)
+      model.domain.currentCotonoma.map(
+        sectionCatalog(model, uiState, _, dispatch)
+      )
+    )
+
+  def sectionCatalog(
+      model: Model,
+      uiState: Model.UiState,
+      currentCotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "coto-catalog")(
+      Option.when(!model.domain.pinnedCotos.isEmpty)(
+        sectionPinned(
+          model.domain.pinnedCotos,
+          model,
+          uiState,
+          currentCotonoma,
+          dispatch
         )
       )
     )
@@ -26,45 +42,67 @@ object PaneStock {
   def sectionPinned(
       pinned: Seq[(Link, Coto)],
       model: Model,
+      uiState: Model.UiState,
+      currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
     section(className := "pinned header-and-body")(
       header(className := "tools")(
         ToolButton(
-          classes = "view-columns",
+          classes = optionalClasses(
+            Seq(
+              ("view-columns", true),
+              ("selected", inColumns)
+            )
+          ),
           tip = "Columns",
-          symbol = "view_column"
+          symbol = "view_column",
+          disabled = inColumns,
+          onClick = (() => dispatch(SwitchPinnedView(currentCotonoma.id, true)))
         ),
         ToolButton(
-          classes = "view-document selected",
+          classes = optionalClasses(
+            Seq(
+              ("view-document", true),
+              ("selected", !inColumns)
+            )
+          ),
           tip = "Document",
-          symbol = "view_agenda"
+          symbol = "view_agenda",
+          disabled = !inColumns,
+          onClick =
+            (() => dispatch(SwitchPinnedView(currentCotonoma.id, false)))
         )
       ),
-      ol(
+      div(
         className := optionalClasses(
           Seq(
-            ("pinned-cotos", true),
             ("body", true),
-            ("document-view", true)
+            ("document-view", !inColumns),
+            ("column-view", inColumns)
           )
         )
       )(
         ScrollArea(
-          autoHide = true,
+          autoHide = !inColumns,
           bottomThreshold = None,
           onScrollToBottom = () => ()
         )(
-          pinned.map { case (link, coto) =>
-            liPinnedCoto(link, coto, model, dispatch)
-          }: _*
+          ol(className := "pinned-cotos")(
+            pinned.map { case (link, coto) =>
+              liPinnedCoto(link, coto, inColumns, model, dispatch)
+            }: _*
+          )
         )
       )
     )
+  }
 
   private def liPinnedCoto(
       pin: Link,
       coto: Coto,
+      inColumn: Boolean,
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
@@ -96,7 +134,20 @@ object PaneStock {
         subCotos.map { case (link, subCoto) =>
           liSubCoto(link, subCoto, model, dispatch)
         }
-      )
+      ) match {
+        case olSubCotos =>
+          if (inColumn) {
+            div(className := "scrollable-sub-cotos")(
+              ScrollArea(
+                autoHide = true,
+                bottomThreshold = None,
+                onScrollToBottom = () => ()
+              )(olSubCotos)
+            )
+          } else {
+            olSubCotos
+          }
+      }
     )
   }
 
