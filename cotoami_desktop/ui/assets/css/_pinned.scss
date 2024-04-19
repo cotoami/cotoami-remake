@@ -67,13 +67,15 @@ section.pinned {
   }
 
   .column-view {
+    padding-right: 16px;
+
     .simplebar-content-wrapper {
       overflow-x: auto;
       overflow-y: hidden;
-    }
 
-    .simplebar-content {
-      height: 100%;
+      .simplebar-content {
+        height: 100%;
+      }
     }
 
     ol.pinned-cotos {
@@ -82,7 +84,6 @@ section.pinned {
 
       height: 100%;
       padding-left: 16px;
-      padding-right: 16px;
     }
 
     li.pin {
@@ -101,6 +102,10 @@ section.pinned {
           width: 100%;
           height: 100%;
         }
+      }
+
+      ol.sub-cotos {
+        padding-bottom: 3rem;
       }
     }
   }
