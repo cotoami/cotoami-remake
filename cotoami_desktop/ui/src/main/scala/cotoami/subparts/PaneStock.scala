@@ -91,7 +91,7 @@ object PaneStock {
         )(
           ol(className := "pinned-cotos")(
             pinned.map { case (link, coto) =>
-              liPinnedCoto(link, coto, model, dispatch)
+              liPinnedCoto(link, coto, inColumns, model, dispatch)
             }: _*
           )
         )
@@ -102,6 +102,7 @@ object PaneStock {
   private def liPinnedCoto(
       pin: Link,
       coto: Coto,
+      inColumn: Boolean,
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
@@ -133,7 +134,20 @@ object PaneStock {
         subCotos.map { case (link, subCoto) =>
           liSubCoto(link, subCoto, model, dispatch)
         }
-      )
+      ) match {
+        case olSubCotos =>
+          if (inColumn) {
+            div(className := "scrollable-sub-cotos")(
+              ScrollArea(
+                autoHide = true,
+                bottomThreshold = None,
+                onScrollToBottom = () => ()
+              )(olSubCotos)
+            )
+          } else {
+            olSubCotos
+          }
+      }
     )
   }
 

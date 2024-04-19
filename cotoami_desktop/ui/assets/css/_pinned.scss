@@ -93,8 +93,14 @@ section.pinned {
       display: flex;
       flex-direction: column;
 
-      ol.sub-cotos {
-        overflow-y: auto;
+      .scrollable-sub-cotos {
+        min-height: 0; // let this item shrink below the content size
+
+        // SimpleBar div
+        >div {
+          width: 100%;
+          height: 100%;
+        }
       }
     }
   }
