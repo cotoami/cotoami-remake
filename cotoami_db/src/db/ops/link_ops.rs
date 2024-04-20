@@ -88,20 +88,41 @@ fn last_order_number<Conn: AsReadableConn>(
 
 fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn, usize> + '_ {
     write_op(move |conn| {
-        let existing: i64 = links::table
-            .select(diesel::dsl::count_star())
+        let orders_onwards: Vec<i32> = links::table
+            .select(links::order)
             .filter(links::source_coto_id.eq(coto_id))
-            .filter(links::order.eq(order))
-            .first(conn.deref_mut())?;
-        if existing == 0 {
-            Ok(0)
+            .filter(links::order.ge(order))
+            .order(links::order.asc())
+            .load::<i32>(conn.deref_mut())?;
+
+        if orders_onwards.first() == Some(&order) {
+            // calculate new orders
+            let mut new_orders: Vec<i32> = vec![order + 1];
+            for old_order in orders_onwards[1..].iter() {
+                if new_orders.contains(&old_order) {
+                    new_orders.push(old_order + 1);
+                } else {
+                    // no change needed due to missing numbers in the orders
+                    new_orders.push(*old_order);
+                }
+            }
+            assert_eq!(new_orders.len(), orders_onwards.len());
+
+            // apply the new orders in descending order to avoid a UNIQUE constraint error
+            let mut updated = 0;
+            for (old_order, new_order) in orders_onwards.iter().zip(new_orders.iter()).rev() {
+                if old_order != new_order {
+                    diesel::update(links::table)
+                        .filter(links::source_coto_id.eq(coto_id))
+                        .filter(links::order.eq(old_order))
+                        .set(links::order.eq(new_order))
+                        .execute(conn.deref_mut())?;
+                    updated += 1;
+                }
+            }
+            Ok(updated)
         } else {
-            diesel::update(links::table)
-                .filter(links::source_coto_id.eq(coto_id))
-                .filter(links::order.ge(order))
-                .set(links::order.eq(links::order + 1))
-                .execute(conn.deref_mut())
-                .map_err(anyhow::Error::from)
+            Ok(0)
         }
     })
 }
