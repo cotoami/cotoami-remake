@@ -96,11 +96,21 @@ fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn,
             .load::<i32>(conn.deref_mut())?;
 
         if orders_onwards.first() == Some(&order) {
-            let new_orders: Vec<i32> =
-                ((order + 1)..(order + 1 + orders_onwards.len() as i32)).collect();
+            // calculate new orders
+            let mut new_orders: Vec<i32> = vec![order + 1];
+            for old_order in orders_onwards[1..].iter() {
+                if new_orders.contains(&old_order) {
+                    new_orders.push(old_order + 1);
+                } else {
+                    // no change needed due to missing numbers in the orders
+                    new_orders.push(*old_order);
+                }
+            }
             assert_eq!(new_orders.len(), orders_onwards.len());
+
+            // apply the new orders in descending order to avoid a UNIQUE constraint error
             let mut updated = 0;
-            for (old_order, new_order) in orders_onwards.iter().zip(new_orders.iter()) {
+            for (old_order, new_order) in orders_onwards.iter().zip(new_orders.iter()).rev() {
                 if old_order != new_order {
                     diesel::update(links::table)
                         .filter(links::source_coto_id.eq(coto_id))
