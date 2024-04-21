@@ -129,7 +129,11 @@ import slinky.web.SyntheticMouseEvent
   }
 
   @react object Primary {
-    case class Props(className: Option[String], children: ReactElement*)
+    case class Props(
+        className: Option[String],
+        onClick: Option[() => Unit],
+        children: ReactElement*
+    )
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = React.createRef[html.Div]
@@ -154,6 +158,7 @@ import slinky.web.SyntheticMouseEvent
             (props.className.getOrElse(""), props.className.nonEmpty)
           )
         ),
+        onClick := props.onClick,
         ref := primaryRef
       )(
         props.children: _*
@@ -162,7 +167,11 @@ import slinky.web.SyntheticMouseEvent
   }
 
   @react object Secondary {
-    case class Props(className: Option[String], children: ReactElement*)
+    case class Props(
+        className: Option[String],
+        onClick: Option[() => Unit],
+        children: ReactElement*
+    )
 
     val component = FunctionalComponent[Props] { props =>
       div(
@@ -171,7 +180,8 @@ import slinky.web.SyntheticMouseEvent
             ("split-pane-secondary", true),
             (props.className.getOrElse(""), props.className.nonEmpty)
           )
-        )
+        ),
+        onClick := props.onClick
       )(props.children: _*)
     }
   }

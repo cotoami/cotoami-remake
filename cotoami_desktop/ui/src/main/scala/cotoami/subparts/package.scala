@@ -61,22 +61,25 @@ package object subparts {
           (newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize))
       )
     )(
-      SplitPane.Primary(className =
-        Some(
+      SplitPane.Primary(
+        className = Some(
           optionalClasses(
             Seq(
               ("pane", true),
               ("folded", !uiState.paneOpened(NavCotonomas.PaneName))
             )
           )
-        )
+        ),
+        onClick = Option.when(!uiState.paneOpened(NavCotonomas.PaneName)) {
+          () => dispatch(OpenOrClosePane(NavCotonomas.PaneName, true))
+        }
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
         model.domain.nodes.current.map(
           NavCotonomas.view(model, _, dispatch)
         )
       ),
-      SplitPane.Secondary(className = None)(
+      SplitPane.Secondary(className = None, onClick = None)(
         flowAndStock(model, uiState, dispatch)
       )
     )
@@ -102,8 +105,8 @@ package object subparts {
             (newSize) => dispatch(ResizePane(PaneFlow.PaneName, newSize))
         )
       )(
-        SplitPane.Primary(className =
-          Some(
+        SplitPane.Primary(
+          className = Some(
             optionalClasses(
               Seq(
                 ("flow", true),
@@ -112,15 +115,18 @@ package object subparts {
                 ("occupying", flowOpened && !stockOpened)
               )
             )
-          )
+          ),
+          onClick = Option.when(!flowOpened) { () =>
+            dispatch(OpenOrClosePane(PaneFlow.PaneName, true))
+          }
         )(
           Option.when(stockOpened) {
             paneToggle(PaneFlow.PaneName, dispatch)
           },
           PaneFlow.view(model, uiState, dispatch)
         ),
-        SplitPane.Secondary(className =
-          Some(
+        SplitPane.Secondary(
+          className = Some(
             optionalClasses(
               Seq(
                 ("stock", true),
@@ -129,7 +135,10 @@ package object subparts {
                 ("occupying", !flowOpened && stockOpened)
               )
             )
-          )
+          ),
+          onClick = Option.when(!stockOpened) { () =>
+            dispatch(OpenOrClosePane(PaneStock.PaneName, true))
+          }
         )(
           Option.when(flowOpened) {
             paneToggle(PaneStock.PaneName, dispatch, ToRight)
