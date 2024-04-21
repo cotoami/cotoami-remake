@@ -3,8 +3,8 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{DeselectNode, Model, Msg, SelectNode}
-import cotoami.components.{materialSymbol, optionalClasses, paneToggle}
+import cotoami.{DeselectNode, Model, Msg, OpenOrClosePane, SelectNode}
+import cotoami.components.{materialSymbol, optionalClasses}
 import cotoami.backend.Node
 import cotoami.repositories.Nodes
 
@@ -25,7 +25,12 @@ object NavNodes {
           ("folded", !uiState.paneOpened(PaneName))
         )
       ),
-      aria - "label" := "Nodes"
+      aria - "label" := "Nodes",
+      onClick := (_ =>
+        if (!uiState.paneOpened(PaneName)) {
+          dispatch(OpenOrClosePane(PaneName, true))
+        }
+      )
     )(
       paneToggle(PaneName, dispatch),
       button(
