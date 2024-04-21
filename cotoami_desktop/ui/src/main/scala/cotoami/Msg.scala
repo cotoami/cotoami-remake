@@ -27,7 +27,7 @@ case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
     extends Msg
 
 // UI
-case class TogglePane(name: String) extends Msg
+case class OpenOrClosePane(name: String, open: Boolean) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
 case class SwitchPinnedView(cotonoma: Id[Cotonoma], inColumns: Boolean)
     extends Msg

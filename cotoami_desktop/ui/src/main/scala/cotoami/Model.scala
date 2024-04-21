@@ -94,8 +94,8 @@ object Model {
     def paneOpened(name: String): Boolean =
       this.paneToggles.getOrElse(name, true) // open by default
 
-    def togglePane(name: String): UiState = {
-      val toggles = this.paneToggles + (name -> !this.paneOpened(name))
+    def openOrClosePane(name: String, open: Boolean): UiState = {
+      val toggles = this.paneToggles + (name -> open)
       (toggles.get(PaneFlow.PaneName), toggles.get(PaneStock.PaneName)) match {
         // Not allow fold both PaneFlow and PaneStock at the same time.
         case (Some(false), Some(false)) => this

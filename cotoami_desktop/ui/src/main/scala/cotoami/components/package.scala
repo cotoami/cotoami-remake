@@ -25,7 +25,7 @@ package object components {
       button(
         className := "fold default",
         title := "Fold",
-        onClick := ((e) => dispatch(TogglePane(paneName)))
+        onClick := ((e) => dispatch(OpenOrClosePane(paneName, false)))
       )(
         span(className := "material-symbols")(
           direction match {
@@ -37,7 +37,7 @@ package object components {
       button(
         className := "unfold default",
         title := "Unfold",
-        onClick := ((e) => dispatch(TogglePane(paneName)))
+        onClick := ((e) => dispatch(OpenOrClosePane(paneName, true)))
       )(
         span(className := "material-symbols")(
           direction match {
