@@ -123,9 +123,9 @@ object Main {
           Seq.empty
         )
 
-      case TogglePane(name) =>
+      case OpenOrClosePane(name, open) =>
         model.uiState
-          .map(_.togglePane(name) match {
+          .map(_.openOrClosePane(name, open) match {
             case state => (model.copy(uiState = Some(state)), Seq(state.save))
           })
           .getOrElse((model, Seq.empty))

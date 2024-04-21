@@ -169,7 +169,7 @@ object FormCoto {
             className = None,
             onPrimarySizeChanged = onEditorHeightChanged
           )(
-            SplitPane.Primary(className = Some("coto-editor"))(
+            SplitPane.Primary(className = Some("coto-editor"), onClick = None)(
               textarea(
                 placeholder := "Write your Coto in Markdown here",
                 value := content,
@@ -178,7 +178,7 @@ object FormCoto {
                 onChange := (e => dispatch(CotoContentInput(e.target.value)))
               )
             ),
-            SplitPane.Secondary(className = None)(
+            SplitPane.Secondary(className = None, onClick = None)(
               inputFooter(operatingNode, currentCotonoma, dispatch)
             )
           )
