@@ -209,6 +209,7 @@ button.default {
 
   &.folded {
     flex: 0 0 16px !important;
+    cursor: pointer;
 
     *:nth-child(n+2) {
       display: none !important;
