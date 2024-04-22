@@ -240,7 +240,7 @@ object Main {
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
-      subparts.appHeader(model, dispatch),
+      subparts.AppHeader(model, dispatch),
       div(id := "app-body", className := "body")(
         model.uiState
           .map(subparts.appBodyContent(model, _, dispatch))
