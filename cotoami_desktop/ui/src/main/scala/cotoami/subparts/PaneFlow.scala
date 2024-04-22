@@ -15,7 +15,7 @@ object PaneFlow {
   val EditorPaneName = "PaneFlow.editor"
   val EditorDefaultHeight = 150
 
-  def view(
+  def apply(
       model: Model,
       uiState: Model.UiState,
       dispatch: Msg => Unit
@@ -24,7 +24,7 @@ object PaneFlow {
       (model.domain.nodes.operating, model.domain.currentCotonoma) match {
         case (Some(node), Some(cotonoma)) =>
           Some(
-            FormCoto.view(
+            FormCoto(
               model.flowInput,
               node,
               cotonoma,

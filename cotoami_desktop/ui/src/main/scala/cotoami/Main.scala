@@ -248,7 +248,7 @@ object Main {
       ),
       subparts.appFooter(model, dispatch),
       if (model.logViewToggle)
-        Some(subparts.ViewLog.view(model.log, dispatch))
+        Some(subparts.ViewLog(model.log, dispatch))
       else
         None,
       subparts.modal(model, dispatch)

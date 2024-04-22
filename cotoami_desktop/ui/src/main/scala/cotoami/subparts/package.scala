@@ -48,7 +48,7 @@ package object subparts {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): Seq[ReactElement] = Seq(
-    subparts.NavNodes.view(model, uiState, dispatch),
+    subparts.NavNodes(model, uiState, dispatch),
     SplitPane(
       vertical = true,
       initialPrimarySize = uiState.paneSizes.getOrElse(
@@ -76,7 +76,7 @@ package object subparts {
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
         model.domain.nodes.current.map(
-          NavCotonomas.view(model, _, dispatch)
+          NavCotonomas(model, _, dispatch)
         )
       ),
       SplitPane.Secondary(className = None, onClick = None)(
@@ -123,7 +123,7 @@ package object subparts {
           Option.when(stockOpened) {
             paneToggle(PaneFlow.PaneName, dispatch)
           },
-          PaneFlow.view(model, uiState, dispatch)
+          PaneFlow(model, uiState, dispatch)
         ),
         SplitPane.Secondary(
           className = Some(
@@ -143,7 +143,7 @@ package object subparts {
           Option.when(flowOpened) {
             paneToggle(PaneStock.PaneName, dispatch, ToRight)
           },
-          PaneStock.view(model, uiState, dispatch)
+          PaneStock(model, uiState, dispatch)
         )
       )
     )

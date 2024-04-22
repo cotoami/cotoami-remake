@@ -11,7 +11,7 @@ import cotoami.repositories.Nodes
 object NavNodes {
   val PaneName = "nav-nodes"
 
-  def view(
+  def apply(
       model: Model,
       uiState: Model.UiState,
       dispatch: Msg => Unit

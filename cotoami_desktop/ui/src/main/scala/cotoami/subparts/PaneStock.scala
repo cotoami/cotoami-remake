@@ -10,7 +10,7 @@ import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 object PaneStock {
   val PaneName = "PaneStock"
 
-  def view(
+  def apply(
       model: Model,
       uiState: Model.UiState,
       dispatch: Msg => Unit

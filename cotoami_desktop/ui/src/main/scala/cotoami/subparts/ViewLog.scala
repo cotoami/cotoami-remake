@@ -14,7 +14,7 @@ import cotoami.components.materialSymbol
 
 object ViewLog {
 
-  def view(
+  def apply(
       log: Log,
       dispatch: Msg => Unit
   ): ReactElement =

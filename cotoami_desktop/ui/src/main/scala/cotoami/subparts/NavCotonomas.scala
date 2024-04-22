@@ -12,7 +12,7 @@ object NavCotonomas {
   val PaneName = "NavCotonomas"
   val DefaultWidth = 230
 
-  def view(
+  def apply(
       model: Model,
       currentNode: Node,
       dispatch: Msg => Unit

@@ -109,7 +109,7 @@ object FormCoto {
       case (_, _) => (model, Seq.empty)
     }
 
-  def view(
+  def apply(
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
@@ -199,7 +199,7 @@ object FormCoto {
       }
     )
 
-  def inputFooter(
+  private def inputFooter(
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
