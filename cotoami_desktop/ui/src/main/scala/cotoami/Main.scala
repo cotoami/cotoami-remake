@@ -243,7 +243,7 @@ object Main {
       subparts.AppHeader(model, dispatch),
       div(id := "app-body", className := "body")(
         model.uiState
-          .map(subparts.appBodyContent(model, _, dispatch))
+          .map(subparts.AppBody.contents(model, _, dispatch))
           .getOrElse(Seq()): _*
       ),
       subparts.AppFooter(model, dispatch),
