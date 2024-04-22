@@ -3,7 +3,6 @@ package cotoami
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.backend.Node
 
 package object subparts {

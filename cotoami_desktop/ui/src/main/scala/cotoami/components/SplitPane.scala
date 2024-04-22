@@ -17,7 +17,7 @@ import slinky.web.SyntheticMouseEvent
       initialPrimarySize: Int,
       resizable: Boolean,
       className: Option[String],
-      onPrimarySizeChanged: Int => Unit,
+      onPrimarySizeChanged: Option[Int => Unit],
       children: ReactElement*
   )
 
@@ -81,7 +81,7 @@ import slinky.web.SyntheticMouseEvent
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = (e: dom.MouseEvent) => {
       setMoving(false)
       if (!separatorPos.current.isNaN()) {
-        props.onPrimarySizeChanged(primarySize)
+        props.onPrimarySizeChanged.map(_(primarySize))
         separatorPos.current = Double.NaN
       }
     }
