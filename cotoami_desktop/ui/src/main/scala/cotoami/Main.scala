@@ -246,7 +246,7 @@ object Main {
           .map(subparts.appBodyContent(model, _, dispatch))
           .getOrElse(Seq()): _*
       ),
-      subparts.appFooter(model, dispatch),
+      subparts.AppFooter(model, dispatch),
       if (model.logViewToggle)
         Some(subparts.ViewLog(model.log, dispatch))
       else

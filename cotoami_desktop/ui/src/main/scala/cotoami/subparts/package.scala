@@ -3,7 +3,7 @@ package cotoami
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
+import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.backend.Node
 
 package object subparts {
@@ -113,26 +113,6 @@ package object subparts {
       )
     )
   }
-
-  def appFooter(model: Model, dispatch: Msg => Unit): ReactElement =
-    footer(
-      div(className := "browser-nav")(
-        div(className := "path")(model.path)
-      ),
-      model.log
-        .lastEntry()
-        .map(entry =>
-          div(className := s"log-peek ${entry.level.name}")(
-            button(
-              className := "open-log-view default",
-              onClick := ((e) => dispatch(cotoami.ToggleLogView))
-            )(
-              materialSymbol(entry.level.icon),
-              entry.message
-            )
-          )
-        )
-    )
 
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
     if (model.domain.nodes.local.isEmpty) {
