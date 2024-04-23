@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -26,6 +27,8 @@ object FormCoto {
       editorBeingResized: Boolean = false,
       autoSave: Boolean = false
   ) {
+    def editorId: String = s"${this.id}-editor"
+
     def folded: Boolean =
       !this.focused && !this.editorBeingResized && this.isBlank
 
@@ -114,7 +117,18 @@ object FormCoto {
         (model.copy(editorBeingResized = true), Seq.empty)
 
       case (EditorResizeEnd, _) =>
-        (model.copy(editorBeingResized = false), Seq.empty)
+        (
+          model.copy(editorBeingResized = false),
+          // Return the focus to the editor in order for it
+          // not to be folded when it's empty.
+          Seq(Cmd(IO {
+            dom.document.getElementById(model.editorId) match {
+              case element: HTMLElement => element.focus()
+              case _                    => ()
+            }
+            None
+          }))
+        )
 
       case (_, _) => (model, Seq.empty)
     }
@@ -183,6 +197,7 @@ object FormCoto {
           )(
             SplitPane.Primary(className = Some("coto-editor"), onClick = None)(
               textarea(
+                id := model.editorId,
                 placeholder := "Write your Coto in Markdown here",
                 value := content,
                 onFocus := (_ => dispatch(SetFocus(true))),
