@@ -23,9 +23,11 @@ object FormCoto {
       name: String,
       form: Form = CotoForm(),
       focused: Boolean = false,
+      editorBeingResized: Boolean = false,
       autoSave: Boolean = false
   ) {
-    def folded: Boolean = !this.focused && this.isBlank
+    def folded: Boolean =
+      !this.focused && !this.editorBeingResized && this.isBlank
 
     def isBlank: Boolean =
       this.form match {
@@ -75,6 +77,8 @@ object FormCoto {
   case class CotoContentInput(content: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
   case class SetFocus(focus: Boolean) extends Msg
+  case object EditorResizeStart extends Msg
+  case object EditorResizeEnd extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     (msg, model.form) match {
@@ -105,6 +109,12 @@ object FormCoto {
 
       case (SetFocus(focus), _) =>
         (model.copy(focused = focus), Seq.empty)
+
+      case (EditorResizeStart, _) =>
+        (model.copy(editorBeingResized = true), Seq.empty)
+
+      case (EditorResizeEnd, _) =>
+        (model.copy(editorBeingResized = false), Seq.empty)
 
       case (_, _) => (model, Seq.empty)
     }
@@ -165,10 +175,10 @@ object FormCoto {
           SplitPane(
             vertical = false,
             initialPrimarySize = editorHeight,
-            resizable = !model.folded && !model.isBlank,
+            resizable = !model.folded,
             className = None,
-            onResizeStart = None,
-            onResizeEnd = None,
+            onResizeStart = Some(() => dispatch(EditorResizeStart)),
+            onResizeEnd = Some(() => dispatch(EditorResizeEnd)),
             onPrimarySizeChanged = Some(onEditorHeightChanged)
           )(
             SplitPane.Primary(className = Some("coto-editor"), onClick = None)(
