@@ -20,7 +20,7 @@ object FormCoto {
   val StorageKeyPrefix = "FormCoto."
 
   case class Model(
-      name: String,
+      id: String,
       form: Form = CotoForm(),
       focused: Boolean = false,
       editorBeingResized: Boolean = false,
@@ -35,7 +35,7 @@ object FormCoto {
         case CotonomaForm(name) => name.isBlank
       }
 
-    def storageKey: String = StorageKeyPrefix + this.name
+    def storageKey: String = StorageKeyPrefix + this.id
 
     def save: Cmd[Msg] =
       (autoSave, form) match {
@@ -61,8 +61,8 @@ object FormCoto {
     })
   }
 
-  def init(name: String, autoSave: Boolean): (Model, Cmd[Msg]) =
-    Model(name, autoSave = autoSave) match {
+  def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
+    Model(id, autoSave = autoSave) match {
       case model => (model, model.restore)
     }
 
