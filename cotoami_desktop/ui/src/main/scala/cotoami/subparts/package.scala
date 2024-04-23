@@ -10,12 +10,11 @@ package object subparts {
   def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
     if (model.domain.nodes.local.isEmpty) {
       model.systemInfo.map(info =>
-        ModalWelcome
-          .view(
-            model.modalWelcome,
-            info.recent_databases.toSeq,
-            dispatch
-          )
+        ModalWelcome(
+          model.modalWelcome,
+          info.recent_databases.toSeq,
+          dispatch
+        )
       )
     } else {
       None

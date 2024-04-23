@@ -200,7 +200,7 @@ object ModalWelcome {
     else
       Seq()
 
-  def view(
+  def apply(
       model: Model,
       recentDatabases: Seq[DatabaseOpenedJson],
       dispatch: cotoami.Msg => Unit
