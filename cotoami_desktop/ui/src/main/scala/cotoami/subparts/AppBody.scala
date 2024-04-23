@@ -21,9 +21,10 @@ object AppBody {
       ),
       resizable = uiState.paneOpened(NavCotonomas.PaneName),
       className = Some("node-contents"),
-      onPrimarySizeChanged = (
-          (newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize))
-      )
+      onResizeStart = None,
+      onResizeEnd = None,
+      onPrimarySizeChanged =
+        Some((newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize)))
     )(
       SplitPane.Primary(
         className = Some(
@@ -65,9 +66,10 @@ object AppBody {
         ),
         resizable = flowOpened && stockOpened,
         className = Some("main"),
-        onPrimarySizeChanged = (
-            (newSize) => dispatch(ResizePane(PaneFlow.PaneName, newSize))
-        )
+        onResizeStart = None,
+        onResizeEnd = None,
+        onPrimarySizeChanged =
+          Some((newSize) => dispatch(ResizePane(PaneFlow.PaneName, newSize)))
       )(
         SplitPane.Primary(
           className = Some(
