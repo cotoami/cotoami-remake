@@ -17,6 +17,8 @@ import slinky.web.SyntheticMouseEvent
       initialPrimarySize: Int,
       resizable: Boolean,
       className: Option[String],
+      onResizeStart: Option[() => Unit],
+      onResizeEnd: Option[() => Unit],
       onPrimarySizeChanged: Option[Int => Unit],
       children: ReactElement*
   )
@@ -44,6 +46,7 @@ import slinky.web.SyntheticMouseEvent
           } else {
             separatorPos.current = e.clientY
           }
+          props.onResizeStart.map(_())
         }
       }
 
@@ -82,6 +85,7 @@ import slinky.web.SyntheticMouseEvent
       setMoving(false)
       if (!separatorPos.current.isNaN()) {
         props.onPrimarySizeChanged.map(_(primarySize))
+        props.onResizeEnd.map(_())
         separatorPos.current = Double.NaN
       }
     }

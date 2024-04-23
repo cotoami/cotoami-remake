@@ -21,6 +21,8 @@ object AppBody {
       ),
       resizable = uiState.paneOpened(NavCotonomas.PaneName),
       className = Some("node-contents"),
+      onResizeStart = None,
+      onResizeEnd = None,
       onPrimarySizeChanged =
         Some((newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize)))
     )(
@@ -64,6 +66,8 @@ object AppBody {
         ),
         resizable = flowOpened && stockOpened,
         className = Some("main"),
+        onResizeStart = None,
+        onResizeEnd = None,
         onPrimarySizeChanged =
           Some((newSize) => dispatch(ResizePane(PaneFlow.PaneName, newSize)))
       )(

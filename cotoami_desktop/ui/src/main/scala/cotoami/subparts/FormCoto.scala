@@ -167,6 +167,8 @@ object FormCoto {
             initialPrimarySize = editorHeight,
             resizable = !model.folded && !model.isBlank,
             className = None,
+            onResizeStart = None,
+            onResizeEnd = None,
             onPrimarySizeChanged = Some(onEditorHeightChanged)
           )(
             SplitPane.Primary(className = Some("coto-editor"), onClick = None)(
