@@ -22,6 +22,9 @@ object SectionTraversals {
           _.updated(traversalIndex, traversal.traverse(stepIndex, next))
         )
       }).getOrElse(this)
+
+    def closeTraversal(traversalIndex: Int): Model =
+      this.modify(_.traversals).using(_.patch(traversalIndex, Nil, 1))
   }
 
   case class Traversal(start: Id[Coto], steps: Seq[Id[Coto]] = Seq.empty) {
