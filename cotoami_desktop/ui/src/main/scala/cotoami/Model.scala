@@ -12,8 +12,6 @@ import io.circe.parser._
 
 import cats.effect.IO
 import com.softwaremill.quicklens._
-import java.time._
-import java.time.format.DateTimeFormatter
 
 import fui.FunctionalUI.Cmd
 import cotoami.utils.Log
@@ -24,7 +22,7 @@ import cotoami.subparts._
 case class Model(
     url: URL,
     log: Log = Log(),
-    context: Model.Context = Model.Context(),
+    context: Context = Context(),
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfoJson] = None,
 
@@ -57,32 +55,6 @@ case class Model(
 }
 
 object Model {
-  val DefaultDateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-  val SameYearFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
-
-  case class Context(
-      zone: ZoneId = ZoneId.of("UTC")
-  ) {
-    def toDateTime(instant: Instant): LocalDateTime =
-      LocalDateTime.ofInstant(instant, this.zone)
-
-    def formatDateTime(instant: Instant): String = {
-      this.toDateTime(instant).format(DefaultDateTimeFormatter)
-    }
-
-    def display(instant: Instant): String = {
-      val now = LocalDateTime.now(this.zone)
-      val dateTime = this.toDateTime(instant)
-      if (dateTime.toLocalDate() == now.toLocalDate()) {
-        dateTime.format(DateTimeFormatter.ISO_LOCAL_TIME)
-      } else if (dateTime.getYear() == now.getYear()) {
-        dateTime.format(SameYearFormatter)
-      } else {
-        dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)
-      }
-    }
-  }
 
   case class UiState(
       paneToggles: Map[String, Boolean] = Map(

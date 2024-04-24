@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{FlowInputMsg, Model, Msg}
+import cotoami.{Context, FlowInputMsg, Model, Msg}
 import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 import cotoami.backend.Coto
 import cotoami.repositories._
@@ -93,7 +93,7 @@ object PaneFlow {
       coto: Coto,
       openedCotoViews: Set[String],
       domain: Domain,
-      context: Model.Context,
+      context: Context,
       dispatch: Msg => Unit
   ): ReactElement =
     article(className := "coto")(
