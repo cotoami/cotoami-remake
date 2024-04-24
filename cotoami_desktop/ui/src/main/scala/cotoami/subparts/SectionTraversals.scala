@@ -11,7 +11,13 @@ import cotoami.repositories.Links
 object SectionTraversals {
 
   case class Model(
-  )
+      traversals: Seq[Traversal] = Seq.empty
+  ) {
+    def openTraversal(start: Id[Coto]): Model =
+      this.modify(_.traversals).using(
+        _.filterNot(_.start == start) :+ Traversal(start)
+      )
+  }
 
   case class Traversal(start: Id[Coto], steps: Seq[Id[Coto]] = Seq.empty) {
     def traverse(stepIndex: Int, next: Id[Coto]): Traversal =
