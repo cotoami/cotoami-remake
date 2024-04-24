@@ -5,8 +5,8 @@ import slinky.web.html._
 
 import com.softwaremill.quicklens._
 
-import cotoami.backend.{Coto, Id}
-import cotoami.repositories.Links
+import cotoami.backend.{Coto, Id, Link}
+import cotoami.repositories.{Domain, Links}
 import cotoami.components.materialSymbol
 
 object SectionTraversals {
@@ -55,18 +55,23 @@ object SectionTraversals {
     def apply(start: Id[Coto]): Traversal = Traversal(start)
   }
 
-  def apply(model: Model, dispatch: cotoami.Msg => Unit): Option[ReactElement] =
+  def apply(
+      model: Model,
+      domain: Domain,
+      dispatch: cotoami.Msg => Unit
+  ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
-        model.traversals.map(sectionTraversal(_, model, dispatch)): _*
+        model.traversals.map(sectionTraversal(_, model, domain, dispatch)): _*
       )
     }
 
   private def sectionTraversal(
       traversal: Traversal,
       model: Model,
+      domain: Domain,
       dispatch: cotoami.Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
     section(className := "traversal header-and-body")(
       header(className := "tools")(
         button(className := "close-traversal default")(
@@ -74,6 +79,24 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
+        divParents(domain.parentsOf(traversal.start))
       )
     )
+  }
+
+  private def divParents(parents: Seq[(Coto, Link)]): Option[ReactElement] =
+    Option.when(!parents.isEmpty) {
+      div(className := "parents")(
+        ul(className := "parents")(
+          parents.map { case (parent, link) =>
+            li()(
+              button(className := "parent default")(parent.abbreviate)
+            )
+          }
+        ),
+        div(className := "arrow")(
+          materialSymbol("arrow_downward")
+        )
+      )
+    }
 }
