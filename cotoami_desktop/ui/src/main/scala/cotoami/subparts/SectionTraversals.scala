@@ -7,6 +7,7 @@ import com.softwaremill.quicklens._
 
 import cotoami.backend.{Coto, Id}
 import cotoami.repositories.Links
+import cotoami.components.materialSymbol
 
 object SectionTraversals {
 
@@ -54,7 +55,25 @@ object SectionTraversals {
     def apply(start: Id[Coto]): Traversal = Traversal(start)
   }
 
-  def apply(model: Model, dispatch: cotoami.Msg => Unit): ReactElement =
-    section(className := "traversals")(
+  def apply(model: Model, dispatch: cotoami.Msg => Unit): Option[ReactElement] =
+    Option.when(!model.traversals.isEmpty) {
+      section(className := "traversals")(
+        model.traversals.map(sectionTraversal(_, model, dispatch)): _*
+      )
+    }
+
+  private def sectionTraversal(
+      traversal: Traversal,
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
+    section(className := "traversal header-and-body")(
+      header(className := "tools")(
+        button(className := "close-traversal default")(
+          materialSymbol("close")
+        )
+      ),
+      section(className := "body")(
+      )
     )
 }
