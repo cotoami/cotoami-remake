@@ -14,9 +14,14 @@ object SectionTraversals {
       traversals: Seq[Traversal] = Seq.empty
   ) {
     def openTraversal(start: Id[Coto]): Model =
-      this.modify(_.traversals).using(
-        _.filterNot(_.start == start) :+ Traversal(start)
-      )
+      this.modify(_.traversals).using(_ :+ Traversal(start))
+
+    def traverse(traversalIndex: Int, stepIndex: Int, next: Id[Coto]): Model =
+      this.traversals.lift(traversalIndex).map(traversal => {
+        this.modify(_.traversals).using(
+          _.updated(traversalIndex, traversal.traverse(stepIndex, next))
+        )
+      }).getOrElse(this)
   }
 
   case class Traversal(start: Id[Coto], steps: Seq[Id[Coto]] = Seq.empty) {
