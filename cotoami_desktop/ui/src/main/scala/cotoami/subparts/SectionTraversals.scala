@@ -31,6 +31,9 @@ object SectionTraversals {
           }
         )
     }
+
+    def traversed(stepIndex: Int, subCotoId: Id[Coto]): Boolean =
+      this.steps.lift(stepIndex + 1).map(_ == subCotoId).getOrElse(false)
   }
 
   object Traversal {
