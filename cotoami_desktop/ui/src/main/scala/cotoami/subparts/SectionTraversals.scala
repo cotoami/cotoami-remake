@@ -63,7 +63,7 @@ object SectionTraversals {
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
         model.traversals.zipWithIndex.map { case (traversal, index) =>
-          sectionTraversal(traversal, index, model, domain, dispatch)
+          sectionTraversal(traversal, index, domain, dispatch)
         }: _*
       )
     }
@@ -71,7 +71,6 @@ object SectionTraversals {
   private def sectionTraversal(
       traversal: Traversal,
       traversalIndex: Int,
-      model: Model,
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {

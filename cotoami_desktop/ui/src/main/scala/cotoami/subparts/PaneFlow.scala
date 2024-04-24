@@ -73,7 +73,13 @@ object PaneFlow {
               coto.repostOfId.map(_ =>
                 repostHeader(coto, model.domain, dispatch)
               ),
-              articleCoto(model.domain.cotos.getOriginal(coto), model, dispatch)
+              articleCoto(
+                model.domain.cotos.getOriginal(coto),
+                model.openedCotoViews,
+                model.domain,
+                model.context,
+                dispatch
+              )
             )
           ) :+ div(
             className := "more",
@@ -85,31 +91,33 @@ object PaneFlow {
 
   private def articleCoto(
       coto: Coto,
-      model: Model,
+      openedCotoViews: Set[String],
+      domain: Domain,
+      context: Model.Context,
       dispatch: Msg => Unit
   ): ReactElement =
     article(className := "coto")(
       header()(
-        ViewCoto.otherCotonomas(coto, model.domain, dispatch),
-        Option.when(Some(coto.postedById) != model.domain.nodes.operatingId) {
-          ViewCoto.author(coto, model.domain.nodes)
+        ViewCoto.otherCotonomas(coto, domain, dispatch),
+        Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
+          ViewCoto.author(coto, domain.nodes)
         }
       ),
       div(className := "body")(
         ViewCoto.content(
           coto,
           s"timeline-${coto.id}",
-          model.openedCotoViews,
-          model.domain,
+          openedCotoViews,
+          domain,
           dispatch
         )
       ),
       footer()(
         time(
           className := "posted-at",
-          title := model.context.formatDateTime(coto.createdAt)
+          title := context.formatDateTime(coto.createdAt)
         )(
-          model.context.display(coto.createdAt)
+          context.display(coto.createdAt)
         )
       )
     )
