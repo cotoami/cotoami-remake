@@ -5,9 +5,10 @@ import slinky.web.html._
 
 import com.softwaremill.quicklens._
 
+import cotoami.Context
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
-import cotoami.components.materialSymbol
+import cotoami.components.{materialSymbol, optionalClasses}
 
 object SectionTraversals {
 
@@ -17,10 +18,10 @@ object SectionTraversals {
     def openTraversal(start: Id[Coto]): Model =
       this.modify(_.traversals).using(_ :+ Traversal(start))
 
-    def traverse(traversalIndex: Int, stepIndex: Int, next: Id[Coto]): Model =
+    def step(traversalIndex: Int, stepIndex: Int, next: Id[Coto]): Model =
       this.traversals.lift(traversalIndex).map(traversal => {
         this.modify(_.traversals).using(
-          _.updated(traversalIndex, traversal.traverse(stepIndex, next))
+          _.updated(traversalIndex, traversal.step(stepIndex, next))
         )
       }).getOrElse(this)
 
@@ -29,10 +30,10 @@ object SectionTraversals {
   }
 
   case class Traversal(start: Id[Coto], steps: Seq[Id[Coto]] = Seq.empty) {
-    def traverse(stepIndex: Int, next: Id[Coto]): Traversal =
+    def step(stepIndex: Int, next: Id[Coto]): Traversal =
       this.modify(_.steps).using(_.take(stepIndex) :+ next)
 
-    def traverseToParent(parentId: Id[Coto], links: Links): Traversal = {
+    def stepToParent(parentId: Id[Coto], links: Links): Traversal = {
       val oldStart = this.start
       this
         .modify(_.start).setTo(parentId)
@@ -57,13 +58,22 @@ object SectionTraversals {
 
   def apply(
       model: Model,
+      openedCotoViews: Set[String],
       domain: Domain,
+      context: Context,
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
         model.traversals.zipWithIndex.map { case (traversal, index) =>
-          sectionTraversal(traversal, index, domain, dispatch)
+          sectionTraversal(
+            traversal,
+            index,
+            openedCotoViews,
+            domain,
+            context,
+            dispatch
+          )
         }: _*
       )
     }
@@ -71,7 +81,9 @@ object SectionTraversals {
   private def sectionTraversal(
       traversal: Traversal,
       traversalIndex: Int,
+      openedCotoViews: Set[String],
       domain: Domain,
+      context: Context,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
     section(className := "traversal header-and-body")(
@@ -82,7 +94,32 @@ object SectionTraversals {
       ),
       section(className := "body")(
         divParents(domain.parentsOf(traversal.start)),
-        divTraversalStart()
+        // traversal start
+        domain.cotos.get(traversal.start).map(
+          divTraversalStep(
+            _,
+            None,
+            traversalIndex,
+            openedCotoViews,
+            domain,
+            context,
+            dispatch
+          )
+        ),
+        // traversal steps
+        traversal.steps.zipWithIndex.map { case (step, index) =>
+          domain.cotos.get(step).map(
+            divTraversalStep(
+              _,
+              Some(index),
+              traversalIndex,
+              openedCotoViews,
+              domain,
+              context,
+              dispatch
+            )
+          )
+        }
       )
     )
   }
@@ -103,7 +140,38 @@ object SectionTraversals {
       )
     }
 
-  private def divTraversalStart(): ReactElement =
-    div(className := "traversal-start")(
+  private def divTraversalStep(
+      coto: Coto,
+      stepIndex: Option[Int],
+      traversalIndex: Int,
+      openedCotoViews: Set[String],
+      domain: Domain,
+      context: Context,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement = {
+    val subCotos = domain.childrenOf(coto.id)
+    div(
+      className := optionalClasses(
+        Seq(
+          ("traversal-start", stepIndex.isEmpty),
+          ("traversal-step", stepIndex.isDefined)
+        )
+      )
+    )(
+      Option.when(stepIndex.isDefined) {
+        div(className := "arrow")(
+          materialSymbol("arrow_downward")
+        )
+      },
+      article(
+        className := optionalClasses(
+          Seq(
+            ("coto", true),
+            ("has-children", !subCotos.isEmpty)
+          )
+        )
+      )(
+      )
     )
+  }
 }
