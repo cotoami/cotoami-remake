@@ -16,6 +16,11 @@ case class Links(
       Option.when(!links.isEmpty)(links)
     )
 
+  def linksTo(id: Id[Coto]): Option[Seq[Link]] =
+    this.map.values.filter(_.targetCotoId == id).toSeq match {
+      case links => Option.when(!links.isEmpty)(links)
+    }
+
   def add(json: LinkJson): Links = {
     val link = Link(json)
     this
