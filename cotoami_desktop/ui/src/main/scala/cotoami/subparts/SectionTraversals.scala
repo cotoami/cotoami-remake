@@ -62,12 +62,15 @@ object SectionTraversals {
   ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
-        model.traversals.map(sectionTraversal(_, model, domain, dispatch)): _*
+        model.traversals.zipWithIndex.map { case (traversal, index) =>
+          sectionTraversal(traversal, index, model, domain, dispatch)
+        }: _*
       )
     }
 
   private def sectionTraversal(
       traversal: Traversal,
+      traversalIndex: Int,
       model: Model,
       domain: Domain,
       dispatch: cotoami.Msg => Unit
@@ -79,7 +82,8 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
-        divParents(domain.parentsOf(traversal.start))
+        divParents(domain.parentsOf(traversal.start)),
+        divTraversalStart()
       )
     )
   }
@@ -99,4 +103,8 @@ object SectionTraversals {
         )
       )
     }
+
+  private def divTraversalStart(): ReactElement =
+    div(className := "traversal-start")(
+    )
 }
