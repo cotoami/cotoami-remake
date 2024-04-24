@@ -146,7 +146,7 @@ object Main {
 
       case ToggleContent(cotoViewId) =>
         (
-          model.modify(_.contentTogglesOpened).using(ids =>
+          model.modify(_.openedCotoViews).using(ids =>
             if (ids.contains(cotoViewId))
               ids - cotoViewId
             else

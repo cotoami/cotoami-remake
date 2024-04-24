@@ -5,7 +5,7 @@ import scala.scalajs.js.Dynamic.{literal => jso}
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg}
+import cotoami.Msg
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -57,11 +57,12 @@ object ViewCoto {
   def content(
       coto: Coto,
       cotoViewId: String,
-      model: Model,
+      openedCotoViews: Set[String],
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     div(className := "content")(
-      model.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
+      domain.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-content")(
           a(
             className := "cotonoma",
@@ -71,13 +72,13 @@ object ViewCoto {
               dispatch(cotoami.SelectCotonoma(cotonoma.id))
             })
           )(
-            model.domain.nodes.get(cotonoma.nodeId).map(nodeImg),
+            domain.nodes.get(cotonoma.nodeId).map(nodeImg),
             cotonoma.name
           )
         )
       ).getOrElse(
         coto.summary.map(summary => {
-          val toggleOpened = model.contentTogglesOpened.contains(cotoViewId)
+          val toggleOpened = openedCotoViews.contains(cotoViewId)
           div(className := "summary-and-content")(
             section(className := "summary")(
               button(
