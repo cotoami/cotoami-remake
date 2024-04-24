@@ -101,7 +101,7 @@ case class Domain(
     ).getOrElse(Seq.empty)
 
   def childrenOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
-    this.links.linksFrom(cotoId).map(_.toSeq).getOrElse(Seq.empty)
+    this.links.linksFrom(cotoId).toSeq
       .map(link =>
         this.cotos.get(link.targetCotoId).map(subCoto => (link, subCoto))
       )

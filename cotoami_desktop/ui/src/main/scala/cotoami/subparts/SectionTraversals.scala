@@ -39,10 +39,10 @@ object SectionTraversals {
         .modify(_.steps).using(steps =>
           // if oldStart has no outgoing links, there's no need to prepend it
           // to the steps because the new start box will contain it as a sub coto.
-          if (links.linksFrom(oldStart).isDefined) {
-            oldStart +: steps
-          } else {
+          if (links.linksFrom(oldStart).isEmpty) {
             steps
+          } else {
+            oldStart +: steps
           }
         )
     }
