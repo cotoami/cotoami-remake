@@ -97,10 +97,10 @@ case class Domain(
 
   lazy val pinnedCotos: Seq[(Link, Coto)] =
     this.currentCotonoma.map(cotonoma =>
-      this.subCotosOf(cotonoma.cotoId)
+      this.childrenOf(cotonoma.cotoId)
     ).getOrElse(Seq.empty)
 
-  def subCotosOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
+  def childrenOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
     this.links.linksFrom(cotoId).map(_.toSeq).getOrElse(Seq.empty)
       .map(link =>
         this.cotos.get(link.targetCotoId).map(subCoto => (link, subCoto))

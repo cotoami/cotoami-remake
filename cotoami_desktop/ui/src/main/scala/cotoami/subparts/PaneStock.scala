@@ -106,7 +106,7 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val subCotos = model.domain.subCotosOf(coto.id)
+    val subCotos = model.domain.childrenOf(coto.id)
     li(key := pin.id.uuid, className := "pin")(
       article(
         className := optionalClasses(
