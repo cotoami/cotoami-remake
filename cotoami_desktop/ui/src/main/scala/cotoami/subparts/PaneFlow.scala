@@ -40,11 +40,11 @@ object PaneFlow {
         case _ => None
       },
       Option.when(!model.domain.timeline.isEmpty)(
-        timeline(model.domain.timeline, model, dispatch)
+        sectionTimeline(model.domain.timeline, model, dispatch)
       )
     )
 
-  private def timeline(
+  private def sectionTimeline(
       cotos: Seq[Coto],
       model: Model,
       dispatch: Msg => Unit
@@ -73,7 +73,7 @@ object PaneFlow {
               coto.repostOfId.map(_ =>
                 repostHeader(coto, model.domain, dispatch)
               ),
-              cotoArticle(model.domain.cotos.getOriginal(coto), model, dispatch)
+              articleCoto(model.domain.cotos.getOriginal(coto), model, dispatch)
             )
           ) :+ div(
             className := "more",
@@ -83,7 +83,7 @@ object PaneFlow {
       )
     )
 
-  private def cotoArticle(
+  private def articleCoto(
       coto: Coto,
       model: Model,
       dispatch: Msg => Unit
