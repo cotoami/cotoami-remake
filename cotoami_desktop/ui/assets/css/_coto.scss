@@ -133,6 +133,10 @@ ol.sub-cotos {
 
 section.text-content {
 
+  p {
+    overflow-wrap: anywhere;
+  }
+
   p,
   ul,
   ol {
