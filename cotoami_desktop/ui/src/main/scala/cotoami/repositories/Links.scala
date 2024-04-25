@@ -11,8 +11,14 @@ case class Links(
 ) {
   def get(id: Id[Link]): Option[Link] = this.map.get(id)
 
-  def linksFrom(id: Id[Coto]): Option[TreeSet[Link]] =
-    this.mapBySourceCotoId.get(id)
+  def linksFrom(id: Id[Coto]): TreeSet[Link] =
+    this.mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
+
+  def anyLinksFrom(id: Id[Coto]): Boolean =
+    this.mapBySourceCotoId.get(id).map(!_.isEmpty).getOrElse(false)
+
+  def linksTo(id: Id[Coto]): Seq[Link] =
+    this.map.values.filter(_.targetCotoId == id).toSeq
 
   def add(json: LinkJson): Links = {
     val link = Link(json)

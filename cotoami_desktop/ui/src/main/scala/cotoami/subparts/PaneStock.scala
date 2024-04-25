@@ -15,9 +15,22 @@ object PaneStock {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): ReactElement =
-    section(className := "stock")(
+    section(
+      className := optionalClasses(
+        Seq(
+          ("stock", true),
+          ("with-traversals-opened", !model.traversals.isEmpty)
+        )
+      )
+    )(
       model.domain.currentCotonoma.map(
         sectionCatalog(model, uiState, _, dispatch)
+      ),
+      SectionTraversals(
+        model.traversals,
+        model.openedCotoViews,
+        model.domain,
+        dispatch
       )
     )
 
@@ -106,7 +119,7 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val subCotos = model.domain.subCotosOf(coto.id)
+    val subCotos = model.domain.childrenOf(coto.id)
     li(key := pin.id.uuid, className := "pin")(
       article(
         className := optionalClasses(
@@ -127,7 +140,13 @@ object PaneStock {
             tipPlacement = "right",
             symbol = "push_pin"
           ),
-          ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
+          ViewCoto.content(
+            coto,
+            s"pinned-${coto.id}",
+            model.openedCotoViews,
+            model.domain,
+            dispatch
+          )
         )
       ),
       ol(className := "sub-cotos")(
@@ -169,7 +188,24 @@ object PaneStock {
           ViewCoto.otherCotonomas(coto, model.domain, dispatch)
         ),
         div(className := "body")(
-          ViewCoto.content(coto, s"pinned-${coto.id}", model, dispatch)
+          ViewCoto.content(
+            coto,
+            s"pinned-${coto.id}",
+            model.openedCotoViews,
+            model.domain,
+            dispatch
+          ),
+          Option.when(coto.outgoingLinks > 0) {
+            div(className := "links")(
+              ToolButton(
+                classes = "open-traversal",
+                tip = "Links",
+                tipPlacement = "left",
+                symbol = "view_headline",
+                onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
+              )
+            )
+          }
         )
       )
     )

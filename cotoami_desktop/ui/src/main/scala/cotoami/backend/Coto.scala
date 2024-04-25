@@ -28,6 +28,16 @@ case class Coto(json: CotoJson) {
       this.summary.orElse(this.content)
     else
       None
+
+  def abbreviate: Option[String] =
+    this.summary.orElse(
+      this.content.map(content =>
+        if (content.size > Cotonoma.NameMaxLength)
+          s"${content.substring(0, content.size)}..."
+        else
+          content
+      )
+    )
 }
 
 @js.native

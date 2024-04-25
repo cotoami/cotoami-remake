@@ -200,7 +200,7 @@ object ModalWelcome {
     else
       Seq()
 
-  def view(
+  def apply(
       model: Model,
       recentDatabases: Seq[DatabaseOpenedJson],
       dispatch: cotoami.Msg => Unit
@@ -285,7 +285,7 @@ object ModalWelcome {
             id := "select-base-folder",
             `type` := "button",
             className := "secondary",
-            onClick := ((e) => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
+            onClick := (_ => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
           )(
             materialSymbol("folder")
           )

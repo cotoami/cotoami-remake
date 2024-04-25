@@ -44,6 +44,8 @@ case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
 // Subparts
 case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
+case class SectionTraversalsMsg(subMsg: subparts.SectionTraversals.Msg)
+    extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
 
 object Msg {
@@ -55,4 +57,7 @@ object Msg {
 
   lazy val FetchMoreTimeline =
     Cotos.FetchMoreTimeline.pipe(Domain.CotosMsg).pipe(DomainMsg)
+
+  def OpenTraversal(start: Id[Coto]) =
+    subparts.SectionTraversals.OpenTraversal(start).pipe(SectionTraversalsMsg)
 }

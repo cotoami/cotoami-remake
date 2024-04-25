@@ -146,7 +146,7 @@ object Main {
 
       case ToggleContent(cotoViewId) =>
         (
-          model.modify(_.contentTogglesOpened).using(ids =>
+          model.modify(_.openedCotoViews).using(ids =>
             if (ids.contains(cotoViewId))
               ids - cotoViewId
             else
@@ -193,6 +193,16 @@ object Main {
         (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
       }
 
+      case SectionTraversalsMsg(subMsg) => {
+        val (traversals, cmds) =
+          subparts.SectionTraversals.update(
+            subMsg,
+            model.traversals,
+            model.domain.links
+          )
+        (model.copy(traversals = traversals), cmds)
+      }
+
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
           subparts.ModalWelcome.update(subMsg, model.modalWelcome)
@@ -204,13 +214,13 @@ object Main {
     url.pathname + url.search + url.hash match {
       case Route.index(_) => {
         val (domain, cmds) = model.domain.selectNode(None)
-        (model.copy(domain = domain), cmds)
+        (model.copy(domain = domain).clearTraversals, cmds)
       }
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id)) {
           val (domain, cmds) = model.domain.selectNode(Some(id))
-          (model.copy(domain = domain), cmds)
+          (model.copy(domain = domain).clearTraversals, cmds)
         } else {
           (
             model.warn(s"Node [${id}] not found.", None),
@@ -220,13 +230,13 @@ object Main {
 
       case Route.cotonoma(id) => {
         val (domain, cmds) = model.domain.selectCotonoma(None, id)
-        (model.copy(domain = domain), cmds)
+        (model.copy(domain = domain).clearTraversals, cmds)
       }
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) => {
         val (domain, cmds) =
           model.domain.selectCotonoma(Some(nodeId), cotonomaId)
-        (model.copy(domain = domain), cmds)
+        (model.copy(domain = domain).clearTraversals, cmds)
       }
 
       case _ =>

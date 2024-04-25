@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{FlowInputMsg, Model, Msg}
+import cotoami.{Context, FlowInputMsg, Model, Msg}
 import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 import cotoami.backend.Coto
 import cotoami.repositories._
@@ -40,11 +40,11 @@ object PaneFlow {
         case _ => None
       },
       Option.when(!model.domain.timeline.isEmpty)(
-        timeline(model.domain.timeline, model, dispatch)
+        sectionTimeline(model.domain.timeline, model, dispatch)
       )
     )
 
-  private def timeline(
+  private def sectionTimeline(
       cotos: Seq[Coto],
       model: Model,
       dispatch: Msg => Unit
@@ -73,7 +73,13 @@ object PaneFlow {
               coto.repostOfId.map(_ =>
                 repostHeader(coto, model.domain, dispatch)
               ),
-              cotoArticle(model.domain.cotos.getOriginal(coto), model, dispatch)
+              articleCoto(
+                model.domain.cotos.getOriginal(coto),
+                model.openedCotoViews,
+                model.domain,
+                model.context,
+                dispatch
+              )
             )
           ) :+ div(
             className := "more",
@@ -83,27 +89,35 @@ object PaneFlow {
       )
     )
 
-  private def cotoArticle(
+  private def articleCoto(
       coto: Coto,
-      model: Model,
+      openedCotoViews: Set[String],
+      domain: Domain,
+      context: Context,
       dispatch: Msg => Unit
   ): ReactElement =
     article(className := "coto")(
       header()(
-        ViewCoto.otherCotonomas(coto, model.domain, dispatch),
-        Option.when(Some(coto.postedById) != model.domain.nodes.operatingId) {
-          ViewCoto.author(coto, model.domain.nodes)
+        ViewCoto.otherCotonomas(coto, domain, dispatch),
+        Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
+          ViewCoto.author(coto, domain.nodes)
         }
       ),
       div(className := "body")(
-        ViewCoto.content(coto, s"timeline-${coto.id}", model, dispatch)
+        ViewCoto.content(
+          coto,
+          s"timeline-${coto.id}",
+          openedCotoViews,
+          domain,
+          dispatch
+        )
       ),
       footer()(
         time(
           className := "posted-at",
-          title := model.context.formatDateTime(coto.createdAt)
+          title := context.formatDateTime(coto.createdAt)
         )(
-          model.context.display(coto.createdAt)
+          context.display(coto.createdAt)
         )
       )
     )

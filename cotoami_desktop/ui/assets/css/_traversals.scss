@@ -37,8 +37,9 @@ section.traversals {
       li {
         background-color: var(--background-color);
 
-        a.parent {
+        button.parent {
           display: block;
+          width: 100%;
           margin-bottom: 4px;
           padding: 6px 12px;
           color: var(--h6-color);
@@ -63,12 +64,19 @@ section.traversals {
       &.sub-coto .body {
         display: flex;
         flex-direction: row;
+        align-items: center;
 
-        button.traverse {
+        div.content {
+          flex: 1;
+        }
+
+        div.traverse {
           flex: 0 0 30px;
 
-          span.material-symbols {
-            font-size: 20px;
+          button.traverse {
+            span.material-symbols {
+              font-size: 20px;
+            }
           }
         }
       }
