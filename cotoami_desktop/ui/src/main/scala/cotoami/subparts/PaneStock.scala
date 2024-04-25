@@ -15,9 +15,22 @@ object PaneStock {
       uiState: Model.UiState,
       dispatch: Msg => Unit
   ): ReactElement =
-    section(className := "stock")(
+    section(
+      className := optionalClasses(
+        Seq(
+          ("stock", true),
+          ("with-traversals-opened", !model.traversals.isEmpty)
+        )
+      )
+    )(
       model.domain.currentCotonoma.map(
         sectionCatalog(model, uiState, _, dispatch)
+      ),
+      SectionTraversals(
+        model.traversals,
+        model.openedCotoViews,
+        model.domain,
+        dispatch
       )
     )
 
@@ -181,7 +194,16 @@ object PaneStock {
             model.openedCotoViews,
             model.domain,
             dispatch
-          )
+          ),
+          Option.when(coto.outgoingLinks > 0) {
+            ToolButton(
+              classes = "open-traversal",
+              tip = "Links",
+              tipPlacement = "left",
+              symbol = "view_headline",
+              onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
+            )
+          }
         )
       )
     )

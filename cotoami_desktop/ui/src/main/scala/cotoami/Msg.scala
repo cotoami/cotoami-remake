@@ -57,4 +57,7 @@ object Msg {
 
   lazy val FetchMoreTimeline =
     Cotos.FetchMoreTimeline.pipe(Domain.CotosMsg).pipe(DomainMsg)
+
+  def OpenTraversal(start: Id[Coto]) =
+    subparts.SectionTraversals.OpenTraversal(start).pipe(SectionTraversalsMsg)
 }

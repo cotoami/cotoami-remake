@@ -15,6 +15,8 @@ object SectionTraversals {
   case class Model(
       traversals: Seq[Traversal] = Seq.empty
   ) {
+    def isEmpty: Boolean = this.traversals.isEmpty
+
     def openTraversal(start: Id[Coto]): Model =
       this.modify(_.traversals).using(_ :+ Traversal(start))
 
