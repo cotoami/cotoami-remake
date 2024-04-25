@@ -54,10 +54,6 @@ object SectionTraversals {
       this.steps.lift(stepIndex + 1).map(_ == subCotoId).getOrElse(false)
   }
 
-  object Traversal {
-    def apply(start: Id[Coto]): Traversal = Traversal(start)
-  }
-
   sealed trait Msg
   case class OpenTraversal(start: Id[Coto]) extends Msg
 
