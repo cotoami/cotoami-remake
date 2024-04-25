@@ -65,6 +65,10 @@ section.traversals {
         display: flex;
         flex-direction: row;
 
+        div.content {
+          flex: 1;
+        }
+
         button.traverse {
           flex: 0 0 30px;
 
