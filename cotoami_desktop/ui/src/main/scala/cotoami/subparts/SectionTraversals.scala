@@ -285,22 +285,24 @@ object SectionTraversals {
             dispatch
           ),
           Option.when(!traversed && domain.links.anyLinksFrom(coto.id)) {
-            ToolButton(
-              classes = "traverse",
-              tip = "Traverse",
-              tipPlacement = "left",
-              symbol = "arrow_downward",
-              onClick = (
-                  () =>
-                    dispatch(
-                      SectionTraversalsMsg(
-                        Step(
-                          traversal._2,
-                          stepIndex.map(_ + 1).getOrElse(0),
-                          coto.id
+            div(className := "traverse")(
+              ToolButton(
+                classes = "traverse",
+                tip = "Traverse",
+                tipPlacement = "left",
+                symbol = "arrow_downward",
+                onClick = (
+                    () =>
+                      dispatch(
+                        SectionTraversalsMsg(
+                          Step(
+                            traversal._2,
+                            stepIndex.map(_ + 1).getOrElse(0),
+                            coto.id
+                          )
                         )
                       )
-                    )
+                )
               )
             )
           }

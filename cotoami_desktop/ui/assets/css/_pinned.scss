@@ -51,18 +51,22 @@ section.pinned {
     article.sub-coto .body {
       display: flex;
       flex-direction: row;
+      align-items: center;
 
       div.content {
         flex: 1;
       }
 
-      button.open-traversal {
+      div.links {
         flex: 0 0 30px;
-        height: 24px;
-        line-height: 24px;
 
-        span.material-symbols {
-          font-size: 24px;
+        button.open-traversal {
+          height: 24px;
+          line-height: 24px;
+
+          span.material-symbols {
+            font-size: 24px;
+          }
         }
       }
     }

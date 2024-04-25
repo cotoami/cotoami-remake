@@ -64,16 +64,19 @@ section.traversals {
       &.sub-coto .body {
         display: flex;
         flex-direction: row;
+        align-items: center;
 
         div.content {
           flex: 1;
         }
 
-        button.traverse {
+        div.traverse {
           flex: 0 0 30px;
 
-          span.material-symbols {
-            font-size: 20px;
+          button.traverse {
+            span.material-symbols {
+              font-size: 20px;
+            }
           }
         }
       }

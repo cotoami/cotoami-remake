@@ -196,12 +196,14 @@ object PaneStock {
             dispatch
           ),
           Option.when(coto.outgoingLinks > 0) {
-            ToolButton(
-              classes = "open-traversal",
-              tip = "Links",
-              tipPlacement = "left",
-              symbol = "view_headline",
-              onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
+            div(className := "links")(
+              ToolButton(
+                classes = "open-traversal",
+                tip = "Links",
+                tipPlacement = "left",
+                symbol = "view_headline",
+                onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
+              )
             )
           }
         )
