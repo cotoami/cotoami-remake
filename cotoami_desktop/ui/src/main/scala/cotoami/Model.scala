@@ -53,6 +53,9 @@ case class Model(
     this.copy(log = this.log.warn(message, details))
   def error(message: String, error: Option[ErrorJson]): Model =
     this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
+
+  def clearTraversals: Model =
+    this.copy(traversals = SectionTraversals.Model())
 }
 
 object Model {
