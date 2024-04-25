@@ -58,8 +58,12 @@ object SectionTraversals {
         )
     }
 
-    def traversed(stepIndex: Int, subCotoId: Id[Coto]): Boolean =
-      this.steps.lift(stepIndex + 1).map(_ == subCotoId).getOrElse(false)
+    def traversed(stepIndex: Option[Int], subCotoId: Id[Coto]): Boolean =
+      (stepIndex match {
+        case Some(index) => this.steps.lift(index + 1).map(_ == subCotoId)
+        // For the start coto of the traversal
+        case None => this.steps.headOption.map(_ == subCotoId)
+      }).getOrElse(false)
   }
 
   sealed trait Msg
@@ -255,8 +259,7 @@ object SectionTraversals {
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
-    val traversed =
-      stepIndex.map(traversal._1.traversed(_, coto.id)).getOrElse(false)
+    val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
       article(
         className := optionalClasses(
