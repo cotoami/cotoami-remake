@@ -285,7 +285,7 @@ object ModalWelcome {
             id := "select-base-folder",
             `type` := "button",
             className := "secondary",
-            onClick := ((e) => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
+            onClick := (_ => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
           )(
             materialSymbol("folder")
           )

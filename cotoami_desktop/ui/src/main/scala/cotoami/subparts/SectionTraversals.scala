@@ -6,6 +6,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
+import cotoami.SectionTraversalsMsg
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
 import cotoami.components.{materialSymbol, optionalClasses, ToolButton}
@@ -56,11 +57,15 @@ object SectionTraversals {
 
   sealed trait Msg
   case class OpenTraversal(start: Id[Coto]) extends Msg
+  case class CloseTraversal(traversalIndex: Int) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case OpenTraversal(start) =>
         (model.openTraversal(start), Seq.empty)
+
+      case CloseTraversal(traversalIndex) =>
+        (model.closeTraversal(traversalIndex), Seq.empty)
     }
 
   def apply(
@@ -90,7 +95,12 @@ object SectionTraversals {
   ): ReactElement = {
     section(className := "traversal header-and-body")(
       header(className := "tools")(
-        button(className := "close-traversal default")(
+        button(
+          className := "close-traversal default",
+          onClick := (_ =>
+            dispatch(SectionTraversalsMsg(CloseTraversal(traversal._2)))
+          )
+        )(
           materialSymbol("close")
         )
       ),
