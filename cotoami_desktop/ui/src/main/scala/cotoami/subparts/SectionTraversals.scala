@@ -65,6 +65,8 @@ object SectionTraversals {
   sealed trait Msg
   case class OpenTraversal(start: Id[Coto]) extends Msg
   case class CloseTraversal(traversalIndex: Int) extends Msg
+  case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])
+      extends Msg
   case class StepToParent(traversalIndex: Int, parentId: Id[Coto]) extends Msg
 
   def update(
@@ -78,6 +80,9 @@ object SectionTraversals {
 
       case CloseTraversal(traversalIndex) =>
         (model.closeTraversal(traversalIndex), Seq.empty)
+
+      case Step(traversalIndex, stepIndex, step) =>
+        (model.step(traversalIndex, stepIndex, step), Seq.empty)
 
       case StepToParent(traversalIndex, parentId) =>
         (model.stepToParent(traversalIndex, parentId, links), Seq.empty)
@@ -284,7 +289,19 @@ object SectionTraversals {
               classes = "traverse",
               tip = "Traverse",
               tipPlacement = "left",
-              symbol = "arrow_downward"
+              symbol = "arrow_downward",
+              onClick = (
+                  () =>
+                    dispatch(
+                      SectionTraversalsMsg(
+                        Step(
+                          traversal._2,
+                          stepIndex.map(_ + 1).getOrElse(0),
+                          coto.id
+                        )
+                      )
+                    )
+              )
             )
           }
         )
