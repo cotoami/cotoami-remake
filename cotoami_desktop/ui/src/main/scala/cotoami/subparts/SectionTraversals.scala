@@ -249,17 +249,16 @@ object SectionTraversals {
       openedCotoViews: Set[String],
       domain: Domain,
       dispatch: cotoami.Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val traversed =
+      stepIndex.map(traversal._1.traversed(_, coto.id)).getOrElse(false)
     li(key := link.id.uuid, className := "sub")(
       article(
         className := optionalClasses(
           Seq(
             ("sub-coto", true),
             ("coto", true),
-            (
-              "traversed",
-              stepIndex.map(traversal._1.traversed(_, coto.id)).getOrElse(false)
-            )
+            ("traversed", traversed)
           )
         )
       )(
@@ -280,7 +279,7 @@ object SectionTraversals {
             domain,
             dispatch
           ),
-          Option.when(domain.links.anyLinksFrom(coto.id)) {
+          Option.when(!traversed && domain.links.anyLinksFrom(coto.id)) {
             ToolButton(
               classes = "traverse",
               tip = "Traverse",
@@ -291,4 +290,5 @@ object SectionTraversals {
         )
       )
     )
+  }
 }
