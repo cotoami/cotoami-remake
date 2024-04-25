@@ -5,10 +5,9 @@ import slinky.web.html._
 
 import com.softwaremill.quicklens._
 
-import cotoami.Context
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
-import cotoami.components.{materialSymbol, optionalClasses}
+import cotoami.components.{materialSymbol, optionalClasses, ToolButton}
 
 object SectionTraversals {
 
@@ -18,10 +17,10 @@ object SectionTraversals {
     def openTraversal(start: Id[Coto]): Model =
       this.modify(_.traversals).using(_ :+ Traversal(start))
 
-    def step(traversalIndex: Int, stepIndex: Int, next: Id[Coto]): Model =
+    def step(traversalIndex: Int, stepIndex: Int, step: Id[Coto]): Model =
       this.traversals.lift(traversalIndex).map(traversal => {
         this.modify(_.traversals).using(
-          _.updated(traversalIndex, traversal.step(stepIndex, next))
+          _.updated(traversalIndex, traversal.step(stepIndex, step))
         )
       }).getOrElse(this)
 
@@ -30,8 +29,8 @@ object SectionTraversals {
   }
 
   case class Traversal(start: Id[Coto], steps: Seq[Id[Coto]] = Seq.empty) {
-    def step(stepIndex: Int, next: Id[Coto]): Traversal =
-      this.modify(_.steps).using(_.take(stepIndex) :+ next)
+    def step(stepIndex: Int, step: Id[Coto]): Traversal =
+      this.modify(_.steps).using(_.take(stepIndex) :+ step)
 
     def stepToParent(parentId: Id[Coto], links: Links): Traversal = {
       val oldStart = this.start
@@ -60,30 +59,25 @@ object SectionTraversals {
       model: Model,
       openedCotoViews: Set[String],
       domain: Domain,
-      context: Context,
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
-        model.traversals.zipWithIndex.map { case (traversal, index) =>
+        model.traversals.zipWithIndex.map(
           sectionTraversal(
-            traversal,
-            index,
+            _,
             openedCotoViews,
             domain,
-            context,
             dispatch
           )
-        }: _*
+        ): _*
       )
     }
 
   private def sectionTraversal(
-      traversal: Traversal,
-      traversalIndex: Int,
+      traversal: (Traversal, Int),
       openedCotoViews: Set[String],
       domain: Domain,
-      context: Context,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
     section(className := "traversal header-and-body")(
@@ -93,29 +87,27 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
-        divParents(domain.parentsOf(traversal.start)),
+        divParents(domain.parentsOf(traversal._1.start)),
         // traversal start
-        domain.cotos.get(traversal.start).map(
+        domain.cotos.get(traversal._1.start).map(
           divTraversalStep(
             _,
             None,
-            traversalIndex,
+            traversal,
             openedCotoViews,
             domain,
-            context,
             dispatch
           )
         ),
         // traversal steps
-        traversal.steps.zipWithIndex.map { case (step, index) =>
+        traversal._1.steps.zipWithIndex.map { case (step, index) =>
           domain.cotos.get(step).map(
             divTraversalStep(
               _,
               Some(index),
-              traversalIndex,
+              traversal,
               openedCotoViews,
               domain,
-              context,
               dispatch
             )
           )
@@ -143,10 +135,9 @@ object SectionTraversals {
   private def divTraversalStep(
       coto: Coto,
       stepIndex: Option[Int],
-      traversalIndex: Int,
+      traversal: (Traversal, Int),
       openedCotoViews: Set[String],
       domain: Domain,
-      context: Context,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
     val subCotos = domain.childrenOf(coto.id)
@@ -171,7 +162,83 @@ object SectionTraversals {
           )
         )
       )(
+        header()(
+          ViewCoto.otherCotonomas(coto, domain, dispatch)
+        ),
+        div(className := "body")(
+          ViewCoto.content(
+            coto,
+            s"traversal-${traversal._2}-${coto.id}",
+            openedCotoViews,
+            domain,
+            dispatch
+          )
+        )
+      ),
+      ol(className := "sub-cotos")(
+        subCotos.map { case (link, subCoto) =>
+          liSubCoto(
+            link,
+            subCoto,
+            stepIndex,
+            traversal,
+            openedCotoViews,
+            domain,
+            dispatch
+          )
+        }
       )
     )
   }
+
+  private def liSubCoto(
+      link: Link,
+      coto: Coto,
+      stepIndex: Option[Int],
+      traversal: (Traversal, Int),
+      openedCotoViews: Set[String],
+      domain: Domain,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
+    li(key := link.id.uuid, className := "sub")(
+      article(
+        className := optionalClasses(
+          Seq(
+            ("sub-coto", true),
+            ("coto", true),
+            (
+              "traversed",
+              stepIndex.map(traversal._1.traversed(_, coto.id)).getOrElse(false)
+            )
+          )
+        )
+      )(
+        header()(
+          ToolButton(
+            classes = "unlink",
+            tip = "Unlink",
+            tipPlacement = "right",
+            symbol = "subdirectory_arrow_right"
+          ),
+          ViewCoto.otherCotonomas(coto, domain, dispatch)
+        ),
+        div(className := "body")(
+          ViewCoto.content(
+            coto,
+            s"traversal-${traversal._2}-sub-${coto.id}",
+            openedCotoViews,
+            domain,
+            dispatch
+          ),
+          Option.when(domain.links.anyLinksFrom(coto.id)) {
+            ToolButton(
+              classes = "traverse",
+              tip = "Traverse",
+              tipPlacement = "left",
+              symbol = "arrow_downward"
+            )
+          }
+        )
+      )
+    )
 }
