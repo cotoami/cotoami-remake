@@ -5,6 +5,7 @@ import slinky.web.html._
 
 import com.softwaremill.quicklens._
 
+import fui.FunctionalUI._
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
 import cotoami.components.{materialSymbol, optionalClasses, ToolButton}
@@ -54,6 +55,15 @@ object SectionTraversals {
   object Traversal {
     def apply(start: Id[Coto]): Traversal = Traversal(start)
   }
+
+  sealed trait Msg
+  case class OpenTraversal(start: Id[Coto]) extends Msg
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+    msg match {
+      case OpenTraversal(start) =>
+        (model.openTraversal(start), Seq.empty)
+    }
 
   def apply(
       model: Model,

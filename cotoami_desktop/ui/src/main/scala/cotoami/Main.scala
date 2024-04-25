@@ -193,6 +193,12 @@ object Main {
         (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
       }
 
+      case SectionTraversalsMsg(subMsg) => {
+        val (traversals, cmds) =
+          subparts.SectionTraversals.update(subMsg, model.traversals)
+        (model.copy(traversals = traversals), cmds)
+      }
+
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
           subparts.ModalWelcome.update(subMsg, model.modalWelcome)
