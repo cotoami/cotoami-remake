@@ -195,7 +195,11 @@ object Main {
 
       case SectionTraversalsMsg(subMsg) => {
         val (traversals, cmds) =
-          subparts.SectionTraversals.update(subMsg, model.traversals)
+          subparts.SectionTraversals.update(
+            subMsg,
+            model.traversals,
+            model.domain.links
+          )
         (model.copy(traversals = traversals), cmds)
       }
 

@@ -22,11 +22,18 @@ object SectionTraversals {
       this.modify(_.traversals).using(_ :+ Traversal(start))
 
     def step(traversalIndex: Int, stepIndex: Int, step: Id[Coto]): Model =
-      this.traversals.lift(traversalIndex).map(traversal => {
-        this.modify(_.traversals).using(
-          _.updated(traversalIndex, traversal.step(stepIndex, step))
-        )
-      }).getOrElse(this)
+      this.modify(_.traversals.index(traversalIndex)).using(
+        _.step(stepIndex, step)
+      )
+
+    def stepToParent(
+        traversalIndex: Int,
+        parentId: Id[Coto],
+        links: Links
+    ): Model =
+      this.modify(_.traversals.index(traversalIndex)).using(
+        _.stepToParent(parentId, links)
+      )
 
     def closeTraversal(traversalIndex: Int): Model =
       this.modify(_.traversals).using(_.patch(traversalIndex, Nil, 1))
@@ -58,14 +65,22 @@ object SectionTraversals {
   sealed trait Msg
   case class OpenTraversal(start: Id[Coto]) extends Msg
   case class CloseTraversal(traversalIndex: Int) extends Msg
+  case class StepToParent(traversalIndex: Int, parentId: Id[Coto]) extends Msg
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+  def update(
+      msg: Msg,
+      model: Model,
+      links: Links
+  ): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case OpenTraversal(start) =>
         (model.openTraversal(start), Seq.empty)
 
       case CloseTraversal(traversalIndex) =>
         (model.closeTraversal(traversalIndex), Seq.empty)
+
+      case StepToParent(traversalIndex, parentId) =>
+        (model.stepToParent(traversalIndex, parentId, links), Seq.empty)
     }
 
   def apply(
@@ -105,7 +120,11 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
-        divParents(domain.parentsOf(traversal._1.start)),
+        divParents(
+          domain.parentsOf(traversal._1.start),
+          traversal._2,
+          dispatch
+        ),
         // traversal start
         domain.cotos.get(traversal._1.start).map(
           divTraversalStep(
@@ -134,13 +153,26 @@ object SectionTraversals {
     )
   }
 
-  private def divParents(parents: Seq[(Coto, Link)]): Option[ReactElement] =
+  private def divParents(
+      parents: Seq[(Coto, Link)],
+      traversalIndex: Int,
+      dispatch: cotoami.Msg => Unit
+  ): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
         ul(className := "parents")(
           parents.map { case (parent, link) =>
             li()(
-              button(className := "parent default")(parent.abbreviate)
+              button(
+                className := "parent default",
+                onClick := (_ =>
+                  dispatch(
+                    SectionTraversalsMsg(
+                      StepToParent(traversalIndex, parent.id)
+                    )
+                  )
+                )
+              )(parent.abbreviate)
             )
           }
         ),
