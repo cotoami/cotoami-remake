@@ -135,6 +135,7 @@ object SectionTraversals {
       ),
       section(className := "body")(
         ScrollArea(
+          scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
           onScrollToBottom = () => ()

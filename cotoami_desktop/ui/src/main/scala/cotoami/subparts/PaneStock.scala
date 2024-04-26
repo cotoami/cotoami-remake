@@ -38,6 +38,7 @@ object PaneStock {
         case fragment =>
           if (sectionTraversals.isDefined) {
             ScrollArea(
+              scrollableElementId = Some("scrollable-stock-with-traversals"),
               autoHide = true,
               bottomThreshold = None,
               onScrollToBottom = () => ()
@@ -113,6 +114,7 @@ object PaneStock {
         )
       )(
         ScrollArea(
+          scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
           onScrollToBottom = () => ()
@@ -173,6 +175,7 @@ object PaneStock {
           if (inColumn) {
             div(className := "scrollable-sub-cotos")(
               ScrollArea(
+                scrollableElementId = None,
                 autoHide = true,
                 bottomThreshold = None,
                 onScrollToBottom = () => ()

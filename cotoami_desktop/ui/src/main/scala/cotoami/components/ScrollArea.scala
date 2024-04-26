@@ -12,6 +12,7 @@ import slinky.core.facade.Hooks._
 
 @react object ScrollArea {
   case class Props(
+      scrollableElementId: Option[String],
       autoHide: Boolean,
       bottomThreshold: Option[Int],
       onScrollToBottom: () => Unit,
@@ -48,8 +49,11 @@ import slinky.core.facade.Hooks._
 
     SimpleBar(
       autoHide = props.autoHide,
-      scrollableNodeProps =
-        SimpleBar.ScrollableNodeProps(None, Some(scrollableNodeRef))
+      scrollableNodeProps = SimpleBar.ScrollableNodeProps(
+        props.scrollableElementId,
+        None,
+        Some(scrollableNodeRef)
+      )
     )(props.children: _*)
   }
 }
@@ -72,6 +76,7 @@ object SimpleBarCSS extends js.Object
   )
 
   case class ScrollableNodeProps(
+      id: Option[String] = None,
       className: Option[String] = None,
       ref: Option[ReactRef[html.Div]] = None
   )

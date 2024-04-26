@@ -41,6 +41,7 @@ object NavCotonomas {
       ),
       section(className := "cotonomas body")(
         ScrollArea(
+          scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Msg.FetchMoreRecentCotonomas)

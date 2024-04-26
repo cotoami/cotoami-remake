@@ -64,6 +64,7 @@ object PaneFlow {
       ),
       div(className := "posts body")(
         ScrollArea(
+          scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Msg.FetchMoreTimeline)
