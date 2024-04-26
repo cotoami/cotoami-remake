@@ -9,7 +9,12 @@ import fui.FunctionalUI._
 import cotoami.SectionTraversalsMsg
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
-import cotoami.components.{materialSymbol, optionalClasses, ToolButton}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  ScrollArea,
+  ToolButton
+}
 
 object SectionTraversals {
 
@@ -116,7 +121,7 @@ object SectionTraversals {
       openedCotoViews: Set[String],
       domain: Domain,
       dispatch: cotoami.Msg => Unit
-  ): ReactElement = {
+  ): ReactElement =
     section(className := "traversal header-and-body")(
       header(className := "tools")(
         button(
@@ -129,38 +134,43 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
-        divParents(
-          domain.parentsOf(traversal._1.start),
-          traversal._2,
-          dispatch
-        ),
-        // traversal start
-        domain.cotos.get(traversal._1.start).map(
-          divTraversalStep(
-            _,
-            None,
-            traversal,
-            openedCotoViews,
-            domain,
+        ScrollArea(
+          autoHide = true,
+          bottomThreshold = None,
+          onScrollToBottom = () => ()
+        )(
+          divParents(
+            domain.parentsOf(traversal._1.start),
+            traversal._2,
             dispatch
-          )
-        ),
-        // traversal steps
-        traversal._1.steps.zipWithIndex.map { case (step, index) =>
-          domain.cotos.get(step).map(
+          ),
+          // traversal start
+          domain.cotos.get(traversal._1.start).map(
             divTraversalStep(
               _,
-              Some(index),
+              None,
               traversal,
               openedCotoViews,
               domain,
               dispatch
             )
-          )
-        }
+          ),
+          // traversal steps
+          traversal._1.steps.zipWithIndex.map { case (step, index) =>
+            domain.cotos.get(step).map(
+              divTraversalStep(
+                _,
+                Some(index),
+                traversal,
+                openedCotoViews,
+                domain,
+                dispatch
+              )
+            )
+          }
+        )
       )
     )
-  }
 
   private def divParents(
       parents: Seq[(Coto, Link)],

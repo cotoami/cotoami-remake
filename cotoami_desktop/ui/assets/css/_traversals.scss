@@ -14,10 +14,16 @@ section.traversals {
     }
 
     section.body {
-      padding: 10px;
-      padding-top: 40px;
-      padding-bottom: 60px;
-      overflow-y: auto;
+
+      // SimpleBar div
+      >div {
+        width: 100%;
+        height: 100%;
+
+        padding: 10px;
+        padding-top: 40px;
+        padding-bottom: 60px;
+      }
     }
 
     div.arrow {
