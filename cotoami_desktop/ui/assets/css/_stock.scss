@@ -23,16 +23,14 @@
 }
 
 section.stock {
-  display: flex;
-  flex-direction: row;
   position: relative;
 
   section.coto-catalog {
-    flex: 1;
-    min-width: 0; // let this item shrink below the content size
-
     display: flex;
     flex-direction: column;
+
+    width: 100%;
+    height: 100%;
 
     section.map {
       // display: none;
@@ -47,10 +45,31 @@ section.stock {
   }
 
   &.with-traversals-opened {
-    overflow-x: auto;
 
-    section.coto-catalog {
-      min-width: 600px;
+    // SimpleBar div
+    >div {
+      width: 100%;
+      height: 100%;
+
+      >.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        >.simplebar-content {
+          display: flex;
+          flex-direction: row;
+          height: 100%;
+
+          section.coto-catalog {
+            min-width: 600px;
+          }
+        }
+      }
+    }
+
+    // prevent the column-view horizontal scrollbar from overlapping with the stock's scrollbar
+    .column-view .simplebar-horizontal {
+      bottom: 10px;
     }
   }
 

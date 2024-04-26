@@ -1,6 +1,6 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg, SwitchPinnedView}
@@ -14,25 +14,40 @@ object PaneStock {
       model: Model,
       uiState: Model.UiState,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val sectionTraversals = SectionTraversals(
+      model.traversals,
+      model.openedCotoViews,
+      model.domain,
+      dispatch
+    )
     section(
       className := optionalClasses(
         Seq(
           ("stock", true),
-          ("with-traversals-opened", !model.traversals.isEmpty)
+          ("with-traversals-opened", sectionTraversals.isDefined)
         )
       )
     )(
-      model.domain.currentCotonoma.map(
-        sectionCatalog(model, uiState, _, dispatch)
-      ),
-      SectionTraversals(
-        model.traversals,
-        model.openedCotoViews,
-        model.domain,
-        dispatch
-      )
+      Fragment(
+        model.domain.currentCotonoma.map(
+          sectionCatalog(model, uiState, _, dispatch)
+        ),
+        sectionTraversals
+      ) match {
+        case fragment =>
+          if (sectionTraversals.isDefined) {
+            ScrollArea(
+              autoHide = true,
+              bottomThreshold = None,
+              onScrollToBottom = () => ()
+            )(fragment)
+          } else {
+            fragment
+          }
+      }
     )
+  }
 
   def sectionCatalog(
       model: Model,
@@ -98,7 +113,7 @@ object PaneStock {
         )
       )(
         ScrollArea(
-          autoHide = !inColumns,
+          autoHide = true,
           bottomThreshold = None,
           onScrollToBottom = () => ()
         )(
