@@ -290,32 +290,36 @@ object SectionTraversals {
           ViewCoto.otherCotonomas(coto, domain, dispatch)
         ),
         div(className := "body")(
-          ViewCoto.content(
-            coto,
-            s"traversal-${traversal._2}-sub-${coto.id}",
-            openedCotoViews,
-            domain,
-            dispatch
-          ),
+          // Coto content
+          if (traversed) {
+            div(className := "content")(
+              section(className := "abbreviated-content")(coto.abbreviate)
+            )
+          } else {
+            ViewCoto.content(
+              coto,
+              s"traversal-${traversal._2}-sub-${coto.id}",
+              openedCotoViews,
+              domain,
+              dispatch
+            )
+          },
+          // Traverse button
           Option.when(!traversed && domain.links.anyLinksFrom(coto.id)) {
+            val stepMsg = SectionTraversalsMsg(
+              Step(
+                traversal._2,
+                stepIndex.map(_ + 1).getOrElse(0),
+                coto.id
+              )
+            )
             div(className := "traverse")(
               ToolButton(
                 classes = "traverse",
                 tip = "Traverse",
                 tipPlacement = "left",
                 symbol = "arrow_downward",
-                onClick = (
-                    () =>
-                      dispatch(
-                        SectionTraversalsMsg(
-                          Step(
-                            traversal._2,
-                            stepIndex.map(_ + 1).getOrElse(0),
-                            coto.id
-                          )
-                        )
-                      )
-                )
+                onClick = (() => dispatch(stepMsg))
               )
             )
           }

@@ -33,7 +33,7 @@ case class Coto(json: CotoJson) {
     this.summary.orElse(
       this.content.map(content =>
         if (content.size > Cotonoma.NameMaxLength)
-          s"${content.substring(0, content.size)}..."
+          s"${content.substring(0, Cotonoma.NameMaxLength)}..."
         else
           content
       )

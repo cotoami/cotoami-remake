@@ -74,6 +74,10 @@ section.traversals {
 
         div.content {
           flex: 1;
+
+          section.abbreviated-content {
+            padding: 0 var(--block-spacing-horizontal);
+          }
         }
 
         div.traverse {
