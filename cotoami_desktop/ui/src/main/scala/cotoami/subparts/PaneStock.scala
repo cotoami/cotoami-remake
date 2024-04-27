@@ -9,6 +9,7 @@ import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
 object PaneStock {
   val PaneName = "PaneStock"
+  val ScrollableElementId = "scrollable-stock-with-traversals"
 
   def apply(
       model: Model,
@@ -38,7 +39,7 @@ object PaneStock {
         case fragment =>
           if (sectionTraversals.isDefined) {
             ScrollArea(
-              scrollableElementId = Some("scrollable-stock-with-traversals"),
+              scrollableElementId = Some(ScrollableElementId),
               autoHide = true,
               bottomThreshold = None,
               onScrollToBottom = () => ()

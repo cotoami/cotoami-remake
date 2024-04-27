@@ -54,6 +54,7 @@ section.stock {
       >.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
         overflow-x: auto;
         overflow-y: hidden;
+        scroll-behavior: smooth;
 
         >.simplebar-content {
           display: flex;

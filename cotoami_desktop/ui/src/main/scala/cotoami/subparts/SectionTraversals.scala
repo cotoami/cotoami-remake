@@ -1,8 +1,14 @@
 package cotoami.subparts
 
+import scala.scalajs.js
+
+import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import cats.effect.IO
 import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
@@ -85,7 +91,25 @@ object SectionTraversals {
   ): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case OpenTraversal(start) =>
-        (model.openTraversal(start), Seq.empty)
+        (
+          model.openTraversal(start),
+          // scroll to the right end on opening a traversal.
+          Seq(Cmd(IO.async { cb =>
+            IO {
+              js.timers.setTimeout(10) {
+                dom.document.getElementById(
+                  PaneStock.ScrollableElementId
+                ) match {
+                  case element: HTMLElement =>
+                    element.scrollLeft = element.scrollWidth.toDouble
+                  case _ => ()
+                }
+                cb(Right(None))
+              }
+              None // no finalizer on cancellation
+            }
+          }))
+        )
 
       case CloseTraversal(traversalIndex) =>
         (model.closeTraversal(traversalIndex), Seq.empty)
