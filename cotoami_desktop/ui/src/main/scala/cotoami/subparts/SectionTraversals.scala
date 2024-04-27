@@ -115,7 +115,25 @@ object SectionTraversals {
         (model.closeTraversal(traversalIndex), Seq.empty)
 
       case Step(traversalIndex, stepIndex, step) =>
-        (model.step(traversalIndex, stepIndex, step), Seq.empty)
+        (
+          model.step(traversalIndex, stepIndex, step),
+          // scroll to the new step
+          Seq(Cmd(IO.async { cb =>
+            IO {
+              js.timers.setTimeout(10) {
+                dom.document.getElementById(
+                  elementIdOfTraversalStep(traversalIndex, Some(stepIndex))
+                ) match {
+                  case element: HTMLElement =>
+                    element.scrollIntoView(true)
+                  case _ => ()
+                }
+                cb(Right(None))
+              }
+              None // no finalizer on cancellation
+            }
+          }))
+        )
 
       case StepToParent(traversalIndex, parentId) =>
         (model.stepToParent(traversalIndex, parentId, links), Seq.empty)
@@ -241,7 +259,8 @@ object SectionTraversals {
           ("traversal-start", stepIndex.isEmpty),
           ("traversal-step", stepIndex.isDefined)
         )
-      )
+      ),
+      id := elementIdOfTraversalStep(traversal._2, stepIndex)
     )(
       Option.when(stepIndex.isDefined) {
         div(className := "arrow")(
@@ -284,6 +303,13 @@ object SectionTraversals {
       )
     )
   }
+
+  private def elementIdOfTraversalStep(
+      traversalIndex: Int,
+      stepIndex: Option[Int]
+  ): String =
+    s"traversal-${traversalIndex}" +
+      stepIndex.map(step => s"-step-${step}").getOrElse("-start")
 
   private def liSubCoto(
       link: Link,

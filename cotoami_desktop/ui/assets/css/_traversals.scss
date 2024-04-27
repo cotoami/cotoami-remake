@@ -23,6 +23,10 @@ section.traversals {
         padding: 10px;
         padding-top: 40px;
         padding-bottom: 60px;
+
+        &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+          scroll-behavior: smooth;
+        }
       }
     }
 
