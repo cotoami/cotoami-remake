@@ -18,7 +18,6 @@ object PaneStock {
   ): ReactElement = {
     val sectionTraversals = SectionTraversals(
       model.traversals,
-      model.openedCotoViews,
       model.domain,
       dispatch
     )
@@ -158,13 +157,7 @@ object PaneStock {
             tipPlacement = "right",
             symbol = "push_pin"
           ),
-          ViewCoto.content(
-            coto,
-            s"pinned-${coto.id}",
-            model.openedCotoViews,
-            model.domain,
-            dispatch
-          )
+          ViewCoto.content(coto, model.domain, dispatch)
         )
       ),
       ol(className := "sub-cotos")(
@@ -207,13 +200,7 @@ object PaneStock {
           ViewCoto.otherCotonomas(coto, model.domain, dispatch)
         ),
         div(className := "body")(
-          ViewCoto.content(
-            coto,
-            s"pinned-${coto.id}",
-            model.openedCotoViews,
-            model.domain,
-            dispatch
-          ),
+          ViewCoto.content(coto, model.domain, dispatch),
           Option.when(coto.outgoingLinks > 0) {
             div(className := "links")(
               ToolButton(

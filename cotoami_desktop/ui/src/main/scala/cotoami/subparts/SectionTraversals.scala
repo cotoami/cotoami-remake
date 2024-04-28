@@ -141,26 +141,19 @@ object SectionTraversals {
 
   def apply(
       model: Model,
-      openedCotoViews: Set[String],
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
         model.traversals.zipWithIndex.map(
-          sectionTraversal(
-            _,
-            openedCotoViews,
-            domain,
-            dispatch
-          )
+          sectionTraversal(_, domain, dispatch)
         ): _*
       )
     }
 
   private def sectionTraversal(
       traversal: (Traversal, Int),
-      openedCotoViews: Set[String],
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -189,26 +182,12 @@ object SectionTraversals {
           ),
           // traversal start
           domain.cotos.get(traversal._1.start).map(
-            divTraversalStep(
-              _,
-              None,
-              traversal,
-              openedCotoViews,
-              domain,
-              dispatch
-            )
+            divTraversalStep(_, None, traversal, domain, dispatch)
           ),
           // traversal steps
           traversal._1.steps.zipWithIndex.map { case (step, index) =>
             domain.cotos.get(step).map(
-              divTraversalStep(
-                _,
-                Some(index),
-                traversal,
-                openedCotoViews,
-                domain,
-                dispatch
-              )
+              divTraversalStep(_, Some(index), traversal, domain, dispatch)
             )
           }
         )
@@ -248,7 +227,6 @@ object SectionTraversals {
       coto: Coto,
       stepIndex: Option[Int],
       traversal: (Traversal, Int),
-      openedCotoViews: Set[String],
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
@@ -279,27 +257,11 @@ object SectionTraversals {
           ViewCoto.otherCotonomas(coto, domain, dispatch)
         ),
         div(className := "body")(
-          ViewCoto.content(
-            coto,
-            s"traversal-${traversal._2}-${coto.id}",
-            openedCotoViews,
-            domain,
-            dispatch
-          )
+          ViewCoto.content(coto, domain, dispatch)
         )
       ),
       ol(className := "sub-cotos")(
-        subCotos.map { case (link, subCoto) =>
-          liSubCoto(
-            link,
-            subCoto,
-            stepIndex,
-            traversal,
-            openedCotoViews,
-            domain,
-            dispatch
-          )
-        }
+        subCotos.map(liSubCoto(_, stepIndex, traversal, domain, dispatch))
       )
     )
   }
@@ -312,14 +274,13 @@ object SectionTraversals {
       stepIndex.map(step => s"-step-${step}").getOrElse("-start")
 
   private def liSubCoto(
-      link: Link,
-      coto: Coto,
+      subCoto: (Link, Coto),
       stepIndex: Option[Int],
       traversal: (Traversal, Int),
-      openedCotoViews: Set[String],
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
+    val (link, coto) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
       article(
@@ -347,13 +308,7 @@ object SectionTraversals {
               section(className := "abbreviated-content")(coto.abbreviate)
             )
           } else {
-            ViewCoto.content(
-              coto,
-              s"traversal-${traversal._2}-sub-${coto.id}",
-              openedCotoViews,
-              domain,
-              dispatch
-            )
+            ViewCoto.content(coto, domain, dispatch)
           },
           // Traverse button
           Option.when(!traversed && domain.links.anyLinksFrom(coto.id)) {

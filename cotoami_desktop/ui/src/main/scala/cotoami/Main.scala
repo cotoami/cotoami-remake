@@ -144,17 +144,6 @@ object Main {
           })
           .getOrElse((model, Seq.empty))
 
-      case ToggleContent(cotoViewId) =>
-        (
-          model.modify(_.openedCotoViews).using(ids =>
-            if (ids.contains(cotoViewId))
-              ids - cotoViewId
-            else
-              ids + cotoViewId
-          ),
-          Seq.empty
-        )
-
       case SelectNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 

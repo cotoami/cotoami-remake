@@ -31,7 +31,6 @@ case class OpenOrClosePane(name: String, open: Boolean) extends Msg
 case class ResizePane(name: String, newSize: Int) extends Msg
 case class SwitchPinnedView(cotonoma: Id[Cotonoma], inColumns: Boolean)
     extends Msg
-case class ToggleContent(cotoViewId: String) extends Msg
 
 // Transition
 case class SelectNode(id: Id[Node]) extends Msg

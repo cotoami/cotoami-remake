@@ -29,7 +29,6 @@ case class Model(
     // uiState that can be saved in localStorage separately from app data.
     // It will be `None` before being restored from localStorage on init.
     uiState: Option[Model.UiState] = None,
-    openedCotoViews: Set[String] = Set.empty,
 
     // Database
     databaseFolder: Option[String] = None,

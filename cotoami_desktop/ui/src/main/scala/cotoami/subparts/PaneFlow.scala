@@ -76,7 +76,6 @@ object PaneFlow {
               ),
               articleCoto(
                 model.domain.cotos.getOriginal(coto),
-                model.openedCotoViews,
                 model.domain,
                 model.context,
                 dispatch
@@ -92,7 +91,6 @@ object PaneFlow {
 
   private def articleCoto(
       coto: Coto,
-      openedCotoViews: Set[String],
       domain: Domain,
       context: Context,
       dispatch: Msg => Unit
@@ -105,13 +103,7 @@ object PaneFlow {
         }
       ),
       div(className := "body")(
-        ViewCoto.content(
-          coto,
-          s"timeline-${coto.id}",
-          openedCotoViews,
-          domain,
-          dispatch
-        )
+        ViewCoto.content(coto, domain, dispatch)
       ),
       footer()(
         time(
