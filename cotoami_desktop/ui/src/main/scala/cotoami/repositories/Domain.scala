@@ -242,6 +242,11 @@ object Domain {
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
 
+  def fetchGraphFromCoto(coto: Id[Coto]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.GraphFromCoto(coto)).map(
+      Domain.CotoGraphFetched andThen DomainMsg
+    )
+
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
     Commands.send(Commands.GraphFromCotonoma(cotonoma)).map(
       Domain.CotoGraphFetched andThen DomainMsg

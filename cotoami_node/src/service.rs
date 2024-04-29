@@ -151,6 +151,9 @@ pub enum Command {
         pagination: Pagination,
     },
 
+    /// Request a [CotoGraph] by traversing from the given coto.
+    GraphFromCoto { coto: Id<Coto> },
+
     /// Request a [CotoGraph] by traversing from the given cotonoma.
     GraphFromCotonoma { cotonoma: Id<Cotonoma> },
 

@@ -45,6 +45,7 @@ impl NodeState {
                 cotonoma,
                 pagination,
             } => format.to_bytes(self.recent_cotos(node, cotonoma, pagination).await),
+            Command::GraphFromCoto { coto } => format.to_bytes(self.graph_from_coto(coto).await),
             Command::GraphFromCotonoma { cotonoma } => {
                 format.to_bytes(self.graph_from_cotonoma(cotonoma).await)
             }

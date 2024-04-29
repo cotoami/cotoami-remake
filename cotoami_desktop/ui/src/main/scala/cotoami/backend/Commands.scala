@@ -43,6 +43,9 @@ object Commands {
       )
     )
 
+  def GraphFromCoto(coto: Id[Coto]) =
+    jso(GraphFromCoto = jso(coto = coto.uuid))
+
   def GraphFromCotonoma(cotonoma: Id[Cotonoma]) =
     jso(GraphFromCotonoma = jso(cotonoma = cotonoma.uuid))
 }
