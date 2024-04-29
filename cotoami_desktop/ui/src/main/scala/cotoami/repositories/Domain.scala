@@ -164,6 +164,14 @@ case class Domain(
           )
         )
     }
+
+  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[cotoami.Msg] =
+    this.cotos.get(cotoId).map(coto => {
+      if (this.links.linksFrom(cotoId).size < coto.outgoingLinks)
+        Domain.fetchGraphFromCoto(cotoId)
+      else
+        Cmd.none
+    }).getOrElse(Cmd.none)
 }
 
 object Domain {

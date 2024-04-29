@@ -187,7 +187,7 @@ object Main {
           subparts.SectionTraversals.update(
             subMsg,
             model.traversals,
-            model.domain.links
+            model.domain
           )
         (model.copy(traversals = traversals), cmds)
       }
