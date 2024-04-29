@@ -130,7 +130,7 @@ case class Domain(
             Cotonomas.fetchRecent(nodeId, 0),
             Cotos.fetchTimeline(nodeId, None, 0),
             domain.currentCotonomaId
-              .map(Domain.fetchCotoGraph)
+              .map(Domain.fetchGraphFromCotonoma)
               .getOrElse(Cmd.none)
           )
         )
@@ -160,7 +160,7 @@ case class Domain(
               Cmd.none,
             Cotonomas.fetchDetails(cotonomaId),
             Cotos.fetchTimeline(None, Some(cotonomaId), 0),
-            Domain.fetchCotoGraph(cotonomaId)
+            Domain.fetchGraphFromCotonoma(cotonomaId)
           )
         )
     }
@@ -242,8 +242,8 @@ object Domain {
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
 
-  def fetchCotoGraph(from: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.CotoGraph(from)).map(
+  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.GraphFromCotonoma(cotonoma)).map(
       Domain.CotoGraphFetched andThen DomainMsg
     )
 }
