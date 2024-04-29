@@ -73,7 +73,8 @@ object PaginatedCotosJson {
 
 @js.native
 trait CotoGraphJson extends js.Object {
-  val root: CotonomaJson = js.native
+  val root_coto_id: String = js.native
+  val root_cotonoma: js.UndefOr[CotonomaJson] = js.native // could be null
   val cotos: js.Array[CotoJson] = js.native
   val cotos_related_data: CotosRelatedDataJson = js.native
   val links: js.Array[LinkJson] = js.native
@@ -82,7 +83,8 @@ trait CotoGraphJson extends js.Object {
 object CotoGraphJson {
   def debug(graph: CotoGraphJson): String = {
     val s = new StringBuilder
-    s ++= s"root: ${js.JSON.stringify(graph.root)}"
+    s ++= s"root_coto_id: ${graph.root_coto_id}"
+    s ++= s", root_cotonoma: ${js.JSON.stringify(graph.root_cotonoma)}"
     s ++= s", cotos: ${graph.cotos.size}"
     s ++= s", cotos_related_data: ${CotosRelatedDataJson.debug(graph.cotos_related_data)}"
     s ++= s", links: ${graph.links.size}"

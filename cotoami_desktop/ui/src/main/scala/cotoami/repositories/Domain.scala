@@ -130,7 +130,7 @@ case class Domain(
             Cotonomas.fetchRecent(nodeId, 0),
             Cotos.fetchTimeline(nodeId, None, 0),
             domain.currentCotonomaId
-              .map(Domain.fetchCotoGraph)
+              .map(Domain.fetchGraphFromCotonoma)
               .getOrElse(Cmd.none)
           )
         )
@@ -160,10 +160,18 @@ case class Domain(
               Cmd.none,
             Cotonomas.fetchDetails(cotonomaId),
             Cotos.fetchTimeline(None, Some(cotonomaId), 0),
-            Domain.fetchCotoGraph(cotonomaId)
+            Domain.fetchGraphFromCotonoma(cotonomaId)
           )
         )
     }
+
+  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[cotoami.Msg] =
+    this.cotos.get(cotoId).map(coto => {
+      if (this.links.linksFrom(cotoId).size < coto.outgoingLinks)
+        Domain.fetchGraphFromCoto(cotoId)
+      else
+        Cmd.none
+    }).getOrElse(Cmd.none)
 }
 
 object Domain {
@@ -242,8 +250,13 @@ object Domain {
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
 
-  def fetchCotoGraph(from: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.CotoGraph(from)).map(
+  def fetchGraphFromCoto(coto: Id[Coto]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.GraphFromCoto(coto)).map(
+      Domain.CotoGraphFetched andThen DomainMsg
+    )
+
+  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.GraphFromCotonoma(cotonoma)).map(
       Domain.CotoGraphFetched andThen DomainMsg
     )
 }

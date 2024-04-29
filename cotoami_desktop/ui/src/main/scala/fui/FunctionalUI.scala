@@ -32,7 +32,7 @@ object FunctionalUI {
       onUrlChange: Option[URL => Msg] = None
   )
 
-  case class Cmd[Msg](io: IO[Option[Msg]]) extends AnyVal {
+  case class Cmd[+Msg](io: IO[Option[Msg]]) extends AnyVal {
     def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg] = Cmd(
       this.io.map(_.map(f))
     )

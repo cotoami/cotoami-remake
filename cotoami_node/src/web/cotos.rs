@@ -1,16 +1,17 @@
 use anyhow::Result;
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     middleware,
     routing::get,
     Router, TypedHeader,
 };
+use cotoami_db::prelude::*;
 use validator::Validate;
 
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{PaginatedCotos, Pagination},
+        models::{CotoGraph, PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -20,6 +21,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
+        .route("/:coto_id/graph", get(get_graph))
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -40,4 +42,19 @@ async fn recent_cotos(
         .recent_cotos(None, None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/cotos/:coto_id/graph
+/////////////////////////////////////////////////////////////////////////////
+
+async fn get_graph(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+) -> Result<Content<CotoGraph>, ServiceError> {
+    state
+        .graph_from_coto(coto_id)
+        .await
+        .map(|graph| Content(graph, accept))
 }

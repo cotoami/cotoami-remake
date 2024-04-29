@@ -44,8 +44,7 @@ case class Cotonomas(
       .addAll(data.as_cotonomas)
 
   def importFrom(graph: CotoGraphJson): Cotonomas =
-    this
-      .add(graph.root)
+    graph.root_cotonoma.toOption.map(this.add).getOrElse(this)
       .importFrom(graph.cotos_related_data)
 
   def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {

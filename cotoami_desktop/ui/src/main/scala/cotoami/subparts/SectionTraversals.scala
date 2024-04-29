@@ -87,28 +87,31 @@ object SectionTraversals {
   def update(
       msg: Msg,
       model: Model,
-      links: Links
+      domain: Domain
   ): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case OpenTraversal(start) =>
         (
           model.openTraversal(start),
           // scroll to the right end on opening a traversal.
-          Seq(Cmd(IO.async { cb =>
-            IO {
-              js.timers.setTimeout(10) {
-                dom.document.getElementById(
-                  PaneStock.ScrollableElementId
-                ) match {
-                  case element: HTMLElement =>
-                    element.scrollLeft = element.scrollWidth.toDouble
-                  case _ => ()
+          Seq(
+            Cmd(IO.async { cb =>
+              IO {
+                js.timers.setTimeout(10) {
+                  dom.document.getElementById(
+                    PaneStock.ScrollableElementId
+                  ) match {
+                    case element: HTMLElement =>
+                      element.scrollLeft = element.scrollWidth.toDouble
+                    case _ => ()
+                  }
+                  cb(Right(None))
                 }
-                cb(Right(None))
+                None // no finalizer on cancellation
               }
-              None // no finalizer on cancellation
-            }
-          }))
+            }),
+            domain.lazyFetchGraphFromCoto(start)
+          )
         )
 
       case CloseTraversal(traversalIndex) =>
@@ -118,25 +121,28 @@ object SectionTraversals {
         (
           model.step(traversalIndex, stepIndex, step),
           // scroll to the new step
-          Seq(Cmd(IO.async { cb =>
-            IO {
-              js.timers.setTimeout(10) {
-                dom.document.getElementById(
-                  elementIdOfTraversalStep(traversalIndex, Some(stepIndex))
-                ) match {
-                  case element: HTMLElement =>
-                    element.scrollIntoView(true)
-                  case _ => ()
+          Seq(
+            Cmd(IO.async { cb =>
+              IO {
+                js.timers.setTimeout(10) {
+                  dom.document.getElementById(
+                    elementIdOfTraversalStep(traversalIndex, Some(stepIndex))
+                  ) match {
+                    case element: HTMLElement =>
+                      element.scrollIntoView(true)
+                    case _ => ()
+                  }
+                  cb(Right(None))
                 }
-                cb(Right(None))
+                None // no finalizer on cancellation
               }
-              None // no finalizer on cancellation
-            }
-          }))
+            }),
+            domain.lazyFetchGraphFromCoto(step)
+          )
         )
 
       case StepToParent(traversalIndex, parentId) =>
-        (model.stepToParent(traversalIndex, parentId, links), Seq.empty)
+        (model.stepToParent(traversalIndex, parentId, domain.links), Seq.empty)
     }
 
   def apply(
@@ -311,7 +317,7 @@ object SectionTraversals {
             ViewCoto.content(coto, domain, dispatch)
           },
           // Traverse button
-          Option.when(!traversed && domain.links.anyLinksFrom(coto.id)) {
+          Option.when(!traversed && coto.outgoingLinks > 0) {
             val stepMsg = SectionTraversalsMsg(
               Step(
                 traversal._2,

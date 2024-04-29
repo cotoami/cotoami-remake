@@ -27,7 +27,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
         .route("/:cotonoma_id/subs", get(sub_cotonomas))
-        .route("/:cotonoma_id/graph", get(get_coto_graph))
+        .route("/:cotonoma_id/graph", get(get_graph))
         .nest("/:cotonoma_id/cotos", cotos::routes())
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
@@ -89,13 +89,13 @@ async fn sub_cotonomas(
 // GET /api/cotonomas/:cotonoma_id/graph
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_coto_graph(
+async fn get_graph(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Content<CotoGraph>, ServiceError> {
     state
-        .coto_graph(cotonoma_id)
+        .graph_from_cotonoma(cotonoma_id)
         .await
         .map(|graph| Content(graph, accept))
 }

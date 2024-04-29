@@ -140,7 +140,10 @@ impl HttpClient {
                     self.get("/api/cotos", Some(pagination.as_query()))
                 }
             }
-            Command::CotoGraph { from } => self.get(&format!("/api/cotonomas/{from}/graph"), None),
+            Command::GraphFromCoto { coto } => self.get(&format!("/api/cotos/{coto}/graph"), None),
+            Command::GraphFromCotonoma { cotonoma } => {
+                self.get(&format!("/api/cotonomas/{cotonoma}/graph"), None)
+            }
             Command::PostCoto {
                 content,
                 summary,
