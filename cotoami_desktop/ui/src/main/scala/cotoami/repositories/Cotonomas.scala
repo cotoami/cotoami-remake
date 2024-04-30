@@ -28,42 +28,33 @@ case class Cotonomas(
 
   def contains(id: Id[Cotonoma]): Boolean = this.map.contains(id)
 
-  def add(json: CotonomaJson): Cotonomas = {
-    val cotonoma = Cotonoma(json)
+  def add(cotonoma: Cotonoma): Cotonomas = {
     this
       .modify(_.map).using(_ + (cotonoma.id -> cotonoma))
       .modify(_.mapByCotoId).using(_ + (cotonoma.cotoId -> cotonoma))
   }
 
-  def addAll(jsons: js.Array[CotonomaJson]): Cotonomas =
-    jsons.foldLeft(this)(_ add _)
+  def addAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
+    cotonomas.foldLeft(this)(_ add _)
 
-  def importFrom(data: CotosRelatedDataJson): Cotonomas =
+  def importFrom(data: CotosRelatedData): Cotonomas =
     this
-      .addAll(data.posted_in)
-      .addAll(data.as_cotonomas)
+      .addAll(data.postedIn)
+      .addAll(data.asCotonomas)
 
-  def importFrom(graph: CotoGraphJson): Cotonomas =
-    Option(graph.root_cotonoma).map(this.add).getOrElse(this)
-      .importFrom(graph.cotos_related_data)
+  def importFrom(graph: CotoGraph): Cotonomas =
+    graph.rootCotonoma.map(this.add).getOrElse(this)
+      .importFrom(graph.cotosRelatedData)
 
-  def setCotonomaDetails(details: CotonomaDetailsJson): Cotonomas = {
-    val cotonoma = Cotonoma(details.cotonoma)
+  def setCotonomaDetails(details: CotonomaDetails): Cotonomas = {
     this
       .deselect()
       .add(details.cotonoma)
       .addAll(details.supers)
       .addAll(details.subs.rows)
-      .select(cotonoma.id)
-      .modify(_.superIds).setTo(
-        details.supers.map(json => Id[Cotonoma](json.uuid)).toSeq
-      )
-      .modify(_.subIds).using(
-        _.addPage(
-          details.subs,
-          (json: CotonomaJson) => Id[Cotonoma](json.uuid)
-        )
-      )
+      .select(details.cotonoma.id)
+      .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
+      .modify(_.subIds).using(_.addPage(details.subs))
   }
 
   def asCotonoma(coto: Coto): Option[Cotonoma] =
@@ -89,29 +80,19 @@ case class Cotonomas(
 
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
-  def addPageOfSubs(page: PaginatedJson[CotonomaJson]): Cotonomas =
+  def addPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .addAll(page.rows)
       .modify(_.subsLoading).setTo(false)
-      .modify(_.subIds).using(
-        _.addPage(
-          page,
-          (json: CotonomaJson) => Id[Cotonoma](json.uuid)
-        )
-      )
+      .modify(_.subIds).using(_.addPage(page))
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
-  def addPageOfRecent(page: PaginatedJson[CotonomaJson]): Cotonomas =
+  def addPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .addAll(page.rows)
       .modify(_.recentLoading).setTo(false)
-      .modify(_.recentIds).using(
-        _.addPage(
-          page,
-          (json: CotonomaJson) => Id[Cotonoma](json.uuid)
-        )
-      )
+      .modify(_.recentIds).using(_.addPage(page))
 }
 
 object Cotonomas {
@@ -147,7 +128,7 @@ object Cotonomas {
         }
 
       case RecentFetched(Right(page)) =>
-        (model.addPageOfRecent(page), Seq.empty)
+        (model.addPageOfRecent(Paginated(page, Cotonoma(_))), Seq.empty)
 
       case RecentFetched(Left(e)) =>
         (
@@ -168,7 +149,7 @@ object Cotonomas {
         }
 
       case SubsFetched(Right(page)) =>
-        (model.addPageOfSubs(page), Seq.empty)
+        (model.addPageOfSubs(Paginated(page, Cotonoma(_))), Seq.empty)
 
       case SubsFetched(Left(e)) =>
         (

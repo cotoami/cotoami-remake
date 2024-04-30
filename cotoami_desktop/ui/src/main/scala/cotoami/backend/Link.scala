@@ -4,8 +4,8 @@ import scala.math.Ordering
 import scala.scalajs.js
 import java.time.Instant
 
-case class Link(json: LinkJson) {
-  def id: Id[Link] = Id(this.json.uuid)
+case class Link(json: LinkJson) extends Entity[Link] {
+  override def id: Id[Link] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)
   def createdInId: Option[Id[Cotonoma]] =
     Option(this.json.created_in_id).map(Id(_))

@@ -14,8 +14,8 @@ case class DatabaseInfo(json: DatabaseInfoJson) {
   def localNode: Option[Node] =
     this.nodes.get(this.localNodeId)
 
-  lazy val parentNodeIds: Seq[Id[Node]] =
-    this.json.parent_node_ids.map(Id[Node](_)).toSeq
+  lazy val parentNodeIds: js.Array[Id[Node]] =
+    this.json.parent_node_ids.map(Id[Node](_))
 
   def debug: String = {
     val s = new StringBuilder

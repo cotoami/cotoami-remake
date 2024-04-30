@@ -1,6 +1,5 @@
 package cotoami.repositories
 
-import scala.scalajs.js
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
 import cotoami.DomainMsg
@@ -18,32 +17,25 @@ case class Cotos(
   def getOriginal(coto: Coto): Coto =
     coto.repostOfId.flatMap(this.get).getOrElse(coto)
 
-  def add(json: CotoJson): Cotos = {
-    val coto = Coto(json)
+  def add(coto: Coto): Cotos = {
     this.modify(_.map).using(_ + (coto.id -> coto))
   }
 
-  def addAll(jsons: js.Array[CotoJson]): Cotos =
-    jsons.foldLeft(this)(_ add _)
+  def addAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ add _)
 
-  def importFrom(graph: CotoGraphJson): Cotos =
+  def importFrom(graph: CotoGraph): Cotos =
     this
       .addAll(graph.cotos)
-      .addAll(graph.cotos_related_data.originals)
+      .addAll(graph.cotosRelatedData.originals)
 
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
-  def appendTimeline(cotos: PaginatedCotosJson): Cotos =
+  def appendTimeline(cotos: PaginatedCotos): Cotos =
     this
       .addAll(cotos.page.rows)
-      .addAll(cotos.related_data.originals)
+      .addAll(cotos.relatedData.originals)
       .modify(_.timelineLoading).setTo(false)
-      .modify(_.timelineIds).using(
-        _.addPage(
-          cotos.page,
-          (json: CotoJson) => Id[Coto](json.uuid)
-        )
-      )
+      .modify(_.timelineIds).using(_.addPage(cotos.page))
 }
 
 object Cotos {

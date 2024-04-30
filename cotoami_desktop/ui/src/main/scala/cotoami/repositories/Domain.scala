@@ -39,11 +39,10 @@ case class Domain(
   def currentCotonoma: Option[Cotonoma] =
     this.currentCotonomaId.flatMap(this.cotonomas.get)
 
-  def setCotonomaDetails(details: CotonomaDetailsJson): Domain = {
-    val cotonoma = Cotonoma(details.cotonoma)
+  def setCotonomaDetails(details: CotonomaDetails): Domain = {
     this
       .modify(_.nodes).using(nodes =>
-        if (!nodes.isSelecting(cotonoma.nodeId))
+        if (!nodes.isSelecting(details.cotonoma.nodeId))
           nodes.deselect()
         else
           nodes
@@ -66,12 +65,12 @@ case class Domain(
       }
     )
 
-  def appendTimeline(cotos: PaginatedCotosJson): Domain =
+  def appendTimeline(cotos: PaginatedCotos): Domain =
     this
       .modify(_.cotos).using(_.appendTimeline(cotos))
-      .modify(_.cotonomas).using(_.importFrom(cotos.related_data))
+      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
 
-  def importCotoGraph(graph: CotoGraphJson): Domain =
+  def importCotoGraph(graph: CotoGraph): Domain =
     this
       .modify(_.graphLoading).setTo(false)
       .modify(_.cotos).using(_.importFrom(graph))
@@ -214,7 +213,7 @@ object Domain {
 
       case CotonomaDetailsFetched(Right(details)) =>
         (
-          model.setCotonomaDetails(details),
+          model.setCotonomaDetails(CotonomaDetails(details)),
           Seq(
             log_info(
               "Cotonoma details fetched.",
@@ -228,7 +227,7 @@ object Domain {
 
       case TimelineFetched(Right(cotos)) =>
         (
-          model.appendTimeline(cotos),
+          model.appendTimeline(PaginatedCotos(cotos)),
           Seq(
             log_info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos)))
           )
@@ -242,7 +241,7 @@ object Domain {
 
       case CotoGraphFetched(Right(graph)) =>
         (
-          model.importCotoGraph(graph),
+          model.importCotoGraph(CotoGraph(graph)),
           Seq(log_info("Coto graph fetched.", Some(CotoGraphJson.debug(graph))))
         )
 

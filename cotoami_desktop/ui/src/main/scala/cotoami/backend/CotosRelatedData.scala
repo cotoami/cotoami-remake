@@ -1,0 +1,27 @@
+package cotoami.backend
+
+import scala.scalajs.js
+
+case class CotosRelatedData(json: CotosRelatedDataJson) {
+  def postedIn: js.Array[Cotonoma] = this.json.posted_in.map(Cotonoma(_))
+  def asCotonomas: js.Array[Cotonoma] =
+    this.json.as_cotonomas.map(Cotonoma(_))
+  def originals: js.Array[Coto] = this.json.originals.map(Coto(_))
+}
+
+@js.native
+trait CotosRelatedDataJson extends js.Object {
+  val posted_in: js.Array[CotonomaJson] = js.native
+  val as_cotonomas: js.Array[CotonomaJson] = js.native
+  val originals: js.Array[CotoJson] = js.native
+}
+
+object CotosRelatedDataJson {
+  def debug(data: CotosRelatedDataJson): String = {
+    val s = new StringBuilder
+    s ++= s"posted_in: ${data.posted_in.size}"
+    s ++= s", as_cotonomas: ${data.as_cotonomas.size}"
+    s ++= s", originals: ${data.originals.size}"
+    s.result()
+  }
+}

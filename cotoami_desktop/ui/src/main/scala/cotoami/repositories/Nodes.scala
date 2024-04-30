@@ -41,6 +41,6 @@ object Nodes {
       map = info.nodes,
       localId = Some(info.localNodeId),
       operatingId = Some(info.localNodeId),
-      parentIds = info.parentNodeIds
+      parentIds = info.parentNodeIds.toSeq
     )
 }

@@ -3,8 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
-case class Coto(json: CotoJson) {
-  def id: Id[Coto] = Id(this.json.uuid)
+case class Coto(json: CotoJson) extends Entity[Coto] {
+  override def id: Id[Coto] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)
   def postedInId: Option[Id[Cotonoma]] =
     Option(this.json.posted_in_id).map(Id(_))
@@ -54,57 +54,4 @@ trait CotoJson extends js.Object {
   val created_at: String = js.native
   val updated_at: String = js.native
   val outgoing_links: Int = js.native
-}
-
-@js.native
-trait PaginatedCotosJson extends js.Object {
-  val page: PaginatedJson[CotoJson] = js.native
-  val related_data: CotosRelatedDataJson = js.native
-}
-
-object PaginatedCotosJson {
-  def debug(cotos: PaginatedCotosJson): String = {
-    val s = new StringBuilder
-    s ++= s"cotos: {${PaginatedJson.debug(cotos.page)}}"
-    s ++= s", related_data: {${CotosRelatedDataJson.debug(cotos.related_data)}}"
-    s.result()
-  }
-}
-
-@js.native
-trait CotoGraphJson extends js.Object {
-  val root_coto_id: String = js.native
-  val root_cotonoma: CotonomaJson = js.native
-  val cotos: js.Array[CotoJson] = js.native
-  val cotos_related_data: CotosRelatedDataJson = js.native
-  val links: js.Array[LinkJson] = js.native
-}
-
-object CotoGraphJson {
-  def debug(graph: CotoGraphJson): String = {
-    val s = new StringBuilder
-    s ++= s"root_coto_id: ${graph.root_coto_id}"
-    s ++= s", root_cotonoma: ${js.JSON.stringify(graph.root_cotonoma)}"
-    s ++= s", cotos: ${graph.cotos.size}"
-    s ++= s", cotos_related_data: ${CotosRelatedDataJson.debug(graph.cotos_related_data)}"
-    s ++= s", links: ${graph.links.size}"
-    s.result()
-  }
-}
-
-@js.native
-trait CotosRelatedDataJson extends js.Object {
-  val posted_in: js.Array[CotonomaJson] = js.native
-  val as_cotonomas: js.Array[CotonomaJson] = js.native
-  val originals: js.Array[CotoJson] = js.native
-}
-
-object CotosRelatedDataJson {
-  def debug(data: CotosRelatedDataJson): String = {
-    val s = new StringBuilder
-    s ++= s"posted_in: ${data.posted_in.size}"
-    s ++= s", as_cotonomas: ${data.as_cotonomas.size}"
-    s ++= s", originals: ${data.originals.size}"
-    s.result()
-  }
 }

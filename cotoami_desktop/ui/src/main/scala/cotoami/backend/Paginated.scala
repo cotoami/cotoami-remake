@@ -2,6 +2,13 @@ package cotoami.backend
 
 import scala.scalajs.js
 
+case class Paginated[T <: Entity[T], J](json: PaginatedJson[J], map: J => T) {
+  def rows: js.Array[T] = this.json.rows.map(this.map)
+  def pageSize: Double = this.json.page_size
+  def pageIndex: Double = this.json.page_index
+  def totalRows: Double = this.json.total_rows
+}
+
 @js.native
 trait PaginatedJson[T] extends js.Object {
   val rows: js.Array[T] = js.native
@@ -20,21 +27,21 @@ object PaginatedJson {
   }
 }
 
-case class PaginatedIds[T](
+case class PaginatedIds[T <: Entity[T]](
     ids: Set[Id[T]] = Set.empty[Id[T]],
     order: Seq[Id[T]] = Seq.empty,
     pageSize: Double = 0,
     pageIndex: Option[Double] = None,
     total: Double = 0
 ) {
-  def addPage[S](page: PaginatedJson[S], toId: S => Id[T]): PaginatedIds[T] = {
-    val idsToAdd = page.rows.map(toId).filterNot(this.ids.contains)
+  def addPage(page: Paginated[T, _]): PaginatedIds[T] = {
+    val idsToAdd = page.rows.map(_.id).filterNot(this.ids.contains)
     this.copy(
       ids = this.ids ++ idsToAdd,
       order = this.order ++ idsToAdd,
-      pageSize = page.page_size,
-      pageIndex = Some(page.page_index),
-      total = page.total_rows
+      pageSize = page.pageSize,
+      pageIndex = Some(page.pageIndex),
+      total = page.totalRows
     )
   }
 
