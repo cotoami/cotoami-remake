@@ -74,7 +74,7 @@ object PaginatedCotosJson {
 @js.native
 trait CotoGraphJson extends js.Object {
   val root_coto_id: String = js.native
-  val root_cotonoma: js.UndefOr[CotonomaJson] = js.native // could be null
+  val root_cotonoma: CotonomaJson = js.native
   val cotos: js.Array[CotoJson] = js.native
   val cotos_related_data: CotosRelatedDataJson = js.native
   val links: js.Array[LinkJson] = js.native
