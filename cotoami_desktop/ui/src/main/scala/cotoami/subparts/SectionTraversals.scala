@@ -10,6 +10,7 @@ import slinky.web.html._
 
 import cats.effect.IO
 import com.softwaremill.quicklens._
+import java.time.Instant
 
 import fui.FunctionalUI._
 import cotoami.SectionTraversalsMsg
@@ -50,7 +51,12 @@ object SectionTraversals {
       this.modify(_.traversals).using(_.patch(traversalIndex, Nil, 1))
   }
 
-  case class Traversal(start: Id[Coto], steps: Seq[Id[Coto]] = Seq.empty) {
+  case class Traversal(
+      start: Id[Coto],
+      steps: Seq[Id[Coto]] = Seq.empty,
+      id: String =
+        Instant.now().toEpochMilli().toString() // for react element's key
+  ) {
     def step(stepIndex: Int, step: Id[Coto]): Traversal =
       this.modify(_.steps).using(_.take(stepIndex) :+ step)
 
@@ -163,7 +169,7 @@ object SectionTraversals {
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
-    section(className := "traversal header-and-body")(
+    section(key := traversal._1.id, className := "traversal header-and-body")(
       header(className := "tools")(
         button(
           className := "close-traversal default",
@@ -209,7 +215,7 @@ object SectionTraversals {
       div(className := "parents")(
         ul(className := "parents")(
           parents.map { case (parent, link) =>
-            li()(
+            li(key := link.id.uuid)(
               button(
                 className := "parent default",
                 onClick := (_ =>
