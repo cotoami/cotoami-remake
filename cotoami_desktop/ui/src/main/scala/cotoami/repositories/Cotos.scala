@@ -35,7 +35,7 @@ case class Cotos(
       .addAll(cotos.page.rows)
       .addAll(cotos.relatedData.originals)
       .modify(_.timelineLoading).setTo(false)
-      .modify(_.timelineIds).using(_.addPage(cotos.page))
+      .modify(_.timelineIds).using(_.add(cotos.page))
 }
 
 object Cotos {

@@ -34,7 +34,7 @@ case class PaginatedIds[T <: Entity[T]](
     pageIndex: Option[Double] = None,
     total: Double = 0
 ) {
-  def addPage(page: Paginated[T, _]): PaginatedIds[T] = {
+  def add(page: Paginated[T, _]): PaginatedIds[T] = {
     val idsToAdd = page.rows.map(_.id).filterNot(this.ids.contains)
     this.copy(
       ids = this.ids ++ idsToAdd,

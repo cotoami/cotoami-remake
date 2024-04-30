@@ -54,7 +54,7 @@ case class Cotonomas(
       .addAll(details.subs.rows)
       .select(details.cotonoma.id)
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
-      .modify(_.subIds).using(_.addPage(details.subs))
+      .modify(_.subIds).using(_.add(details.subs))
   }
 
   def asCotonoma(coto: Coto): Option[Cotonoma] =
@@ -84,7 +84,7 @@ case class Cotonomas(
     this
       .addAll(page.rows)
       .modify(_.subsLoading).setTo(false)
-      .modify(_.subIds).using(_.addPage(page))
+      .modify(_.subIds).using(_.add(page))
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
@@ -92,7 +92,7 @@ case class Cotonomas(
     this
       .addAll(page.rows)
       .modify(_.recentLoading).setTo(false)
-      .modify(_.recentIds).using(_.addPage(page))
+      .modify(_.recentIds).using(_.add(page))
 }
 
 object Cotonomas {
