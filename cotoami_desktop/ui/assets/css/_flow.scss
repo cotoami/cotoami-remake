@@ -93,5 +93,14 @@ section.flow {
         }
       }
     }
+
+    div.links {
+      background-color: var(--card-background-color);
+      text-align: center;
+
+      button.open-traversal span.material-symbols {
+        font-size: 24px;
+      }
+    }
   }
 }

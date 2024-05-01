@@ -13,7 +13,8 @@ import cotoami.components.{
   materialSymbol,
   optionalClasses,
   Markdown,
-  RehypePlugin
+  RehypePlugin,
+  ToolButton
 }
 import cotoami.backend.Coto
 import cotoami.repositories.{Domain, Nodes}
@@ -130,4 +131,20 @@ object ViewCoto {
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
       )(coto.content)
     )
+
+  def outgoingLinksTraversal(
+      coto: Coto,
+      dispatch: Msg => Unit
+  ): Option[ReactElement] =
+    Option.when(coto.outgoingLinks > 0) {
+      div(className := "links")(
+        ToolButton(
+          classes = "open-traversal",
+          tip = "Links",
+          tipPlacement = "left",
+          symbol = "view_headline",
+          onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
+        )
+      )
+    }
 }

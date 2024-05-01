@@ -201,17 +201,7 @@ object PaneStock {
         ),
         div(className := "body")(
           ViewCoto.content(coto, model.domain, dispatch),
-          Option.when(coto.outgoingLinks > 0) {
-            div(className := "links")(
-              ToolButton(
-                classes = "open-traversal",
-                tip = "Links",
-                tipPlacement = "left",
-                symbol = "view_headline",
-                onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
-              )
-            )
-          }
+          ViewCoto.outgoingLinksTraversal(coto, dispatch)
         )
       )
     )
