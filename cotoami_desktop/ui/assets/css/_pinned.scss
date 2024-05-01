@@ -48,6 +48,17 @@ section.pinned {
       }
     }
 
+    ol.sub-cotos>div.links {
+      padding-top: 6px;
+      padding-bottom: 6px;
+      background-color: var(--card-background-color);
+      text-align: center;
+
+      span.material-symbols {
+        font-size: 24px;
+      }
+    }
+
     article.sub-coto .body {
       display: flex;
       flex-direction: row;

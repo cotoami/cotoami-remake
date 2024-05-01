@@ -80,7 +80,7 @@ object PaneFlow {
                 model.context,
                 dispatch
               ),
-              ViewCoto.outgoingLinksTraversal(coto, dispatch)
+              ViewCoto.outgoingLinksTraversal(coto, "top", dispatch)
             )
           ) :+ div(
             className := "more",

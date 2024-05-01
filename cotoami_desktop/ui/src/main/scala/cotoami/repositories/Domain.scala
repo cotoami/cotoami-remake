@@ -187,6 +187,8 @@ object Domain {
   ) extends Msg
   case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
       extends Msg
+
+  case class FetchGraphFromCoto(coto: Id[Coto]) extends Msg
   case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
       extends Msg
 
@@ -240,6 +242,9 @@ object Domain {
           model.modify(_.cotos.timelineLoading).setTo(false),
           Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
         )
+
+      case FetchGraphFromCoto(coto) =>
+        (model, Seq(fetchGraphFromCoto(coto)))
 
       case CotoGraphFetched(Right(graph)) =>
         (

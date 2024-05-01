@@ -171,9 +171,20 @@ object PaneStock {
   ): ReactElement = {
     val subCotos = model.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
-      subCotos.map { case (link, subCoto) =>
-        liSubCoto(link, subCoto, model, dispatch)
-      }
+      if (subCotos.size < coto.outgoingLinks)
+        div(className := "links")(
+          ToolButton(
+            classes = "fetch-links",
+            tip = "Display links",
+            tipPlacement = "bottom",
+            symbol = "view_headline",
+            onClick = (() => dispatch(Msg.FetchGraphFromCoto(coto.id)))
+          )
+        )
+      else
+        subCotos.map { case (link, subCoto) =>
+          liSubCoto(link, subCoto, model, dispatch)
+        }
     ) match {
       case olSubCotos =>
         if (inColumn) {
@@ -211,7 +222,7 @@ object PaneStock {
         ),
         div(className := "body")(
           ViewCoto.content(coto, model.domain, dispatch),
-          ViewCoto.outgoingLinksTraversal(coto, dispatch)
+          ViewCoto.outgoingLinksTraversal(coto, "left", dispatch)
         )
       )
     )

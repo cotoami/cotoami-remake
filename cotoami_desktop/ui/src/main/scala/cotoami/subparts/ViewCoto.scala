@@ -134,6 +134,7 @@ object ViewCoto {
 
   def outgoingLinksTraversal(
       coto: Coto,
+      tipPlacement: String,
       dispatch: Msg => Unit
   ): Option[ReactElement] =
     Option.when(coto.outgoingLinks > 0) {
@@ -141,7 +142,7 @@ object ViewCoto {
         ToolButton(
           classes = "open-traversal",
           tip = "Links",
-          tipPlacement = "left",
+          tipPlacement = tipPlacement,
           symbol = "view_headline",
           onClick = (() => dispatch(Msg.OpenTraversal(coto.id)))
         )
