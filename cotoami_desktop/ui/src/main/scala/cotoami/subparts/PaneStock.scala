@@ -136,14 +136,13 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val subCotos = model.domain.childrenOf(coto.id)
     li(key := pin.id.uuid, className := "pin")(
       article(
         className := optionalClasses(
           Seq(
             ("pinned-coto", true),
             ("coto", true),
-            ("has-children", !subCotos.isEmpty)
+            ("has-children", coto.outgoingLinks > 0)
           )
         )
       )(
@@ -160,26 +159,37 @@ object PaneStock {
           ViewCoto.content(coto, model.domain, dispatch)
         )
       ),
-      ol(className := "sub-cotos")(
-        subCotos.map { case (link, subCoto) =>
-          liSubCoto(link, subCoto, model, dispatch)
-        }
-      ) match {
-        case olSubCotos =>
-          if (inColumn) {
-            div(className := "scrollable-sub-cotos")(
-              ScrollArea(
-                scrollableElementId = None,
-                autoHide = true,
-                bottomThreshold = None,
-                onScrollToBottom = () => ()
-              )(olSubCotos)
-            )
-          } else {
-            olSubCotos
-          }
-      }
+      olSubCotos(coto, inColumn, model, dispatch)
     )
+  }
+
+  private def olSubCotos(
+      coto: Coto,
+      inColumn: Boolean,
+      model: Model,
+      dispatch: Msg => Unit
+  ): ReactElement = {
+    val subCotos = model.domain.childrenOf(coto.id)
+    ol(className := "sub-cotos")(
+      subCotos.map { case (link, subCoto) =>
+        liSubCoto(link, subCoto, model, dispatch)
+      }
+    ) match {
+      case olSubCotos =>
+        if (inColumn) {
+          div(className := "scrollable-sub-cotos")(
+            ScrollArea(
+              scrollableElementId = None,
+              autoHide = true,
+              bottomThreshold = None,
+              onScrollToBottom = () => ()
+            )(olSubCotos)
+          )
+        } else {
+          olSubCotos
+        }
+    }
+
   }
 
   private def liSubCoto(
