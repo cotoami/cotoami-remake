@@ -54,6 +54,11 @@ section.pinned {
       background-color: var(--card-background-color);
       text-align: center;
 
+      div.loading {
+        padding-top: 3px;
+        height: 30px;
+      }
+
       span.material-symbols {
         font-size: 24px;
       }

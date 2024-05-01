@@ -1,5 +1,6 @@
 package cotoami.repositories
 
+import scala.collection.immutable.HashSet
 import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
@@ -11,7 +12,7 @@ case class Domain(
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
     links: Links = Links(),
-    graphLoading: Boolean = false
+    graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
   def initNodes(info: DatabaseInfo): Domain =
     this.copy(nodes = Nodes(info))
@@ -72,7 +73,7 @@ case class Domain(
 
   def importCotoGraph(graph: CotoGraph): Domain =
     this
-      .modify(_.graphLoading).setTo(false)
+      .modify(_.graphLoading).using(_ - graph.rootCotoId)
       .modify(_.cotos).using(_.importFrom(graph))
       .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.links).using(_.addAll(graph.links))
@@ -120,8 +121,7 @@ case class Domain(
         nodeId.map(nodes.select(_)).getOrElse(nodes)
       )
       .modify(_.cotonomas.recentLoading).setTo(true)
-      .modify(_.cotos.timelineLoading).setTo(true)
-      .modify(_.graphLoading).setTo(true) match {
+      .modify(_.cotos.timelineLoading).setTo(true) match {
       case domain =>
         (
           domain,
@@ -147,8 +147,7 @@ case class Domain(
       .modify(_.cotos).setTo(Cotos())
       .modify(_.links).setTo(Links())
       .modify(_.cotonomas.recentLoading).setTo(this.cotonomas.isEmpty)
-      .modify(_.cotos.timelineLoading).setTo(true)
-      .modify(_.graphLoading).setTo(true) match {
+      .modify(_.cotos.timelineLoading).setTo(true) match {
       case domain =>
         (
           domain,
@@ -188,7 +187,7 @@ object Domain {
   case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
       extends Msg
 
-  case class FetchGraphFromCoto(coto: Id[Coto]) extends Msg
+  case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
   case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
       extends Msg
 
@@ -243,8 +242,11 @@ object Domain {
           Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
         )
 
-      case FetchGraphFromCoto(coto) =>
-        (model, Seq(fetchGraphFromCoto(coto)))
+      case FetchGraphFromCoto(cotoId) =>
+        (
+          model.modify(_.graphLoading).using(_ + cotoId),
+          Seq(fetchGraphFromCoto(cotoId))
+        )
 
       case CotoGraphFetched(Right(graph)) =>
         (

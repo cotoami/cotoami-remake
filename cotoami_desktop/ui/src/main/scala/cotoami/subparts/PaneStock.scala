@@ -173,13 +173,20 @@ object PaneStock {
     ol(className := "sub-cotos")(
       if (subCotos.size < coto.outgoingLinks)
         div(className := "links")(
-          ToolButton(
-            classes = "fetch-links",
-            tip = "Display links",
-            tipPlacement = "bottom",
-            symbol = "view_headline",
-            onClick = (() => dispatch(Msg.FetchGraphFromCoto(coto.id)))
-          )
+          if (model.domain.graphLoading.contains(coto.id)) {
+            div(
+              className := "loading",
+              aria - "busy" := "true"
+            )()
+          } else {
+            ToolButton(
+              classes = "fetch-links",
+              tip = "Display links",
+              tipPlacement = "bottom",
+              symbol = "view_headline",
+              onClick = (() => dispatch(Msg.FetchGraphFromCoto(coto.id)))
+            )
+          }
         )
       else
         subCotos.map { case (link, subCoto) =>
