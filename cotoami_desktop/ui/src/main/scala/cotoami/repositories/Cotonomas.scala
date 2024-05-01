@@ -8,7 +8,7 @@ import cotoami.backend._
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
-    mapByCotoId: Map[Id[Coto], Cotonoma] = Map.empty,
+    mapByCotoId: Map[Id[Coto], Id[Cotonoma]] = Map.empty,
 
     // The currently selected cotonoma and its super/sub cotonomas
     selectedId: Option[Id[Cotonoma]] = None,
@@ -22,7 +22,8 @@ case class Cotonomas(
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
-  def getByCotoId(id: Id[Coto]): Option[Cotonoma] = this.mapByCotoId.get(id)
+  def getByCotoId(id: Id[Coto]): Option[Cotonoma] =
+    this.mapByCotoId.get(id).flatMap(this.get)
 
   def isEmpty: Boolean = this.map.isEmpty
 
@@ -31,7 +32,7 @@ case class Cotonomas(
   def add(cotonoma: Cotonoma): Cotonomas = {
     this
       .modify(_.map).using(_ + (cotonoma.id -> cotonoma))
-      .modify(_.mapByCotoId).using(_ + (cotonoma.cotoId -> cotonoma))
+      .modify(_.mapByCotoId).using(_ + (cotonoma.cotoId -> cotonoma.id))
   }
 
   def addAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
