@@ -107,10 +107,22 @@ case class Domain(
       )
       .flatten
 
-  def parentsOf(cotoId: Id[Coto]): Seq[(Coto, Link)] =
+  def parentsOf(
+      cotoId: Id[Coto],
+      excludeCurrentCotonoma: Boolean = true
+  ): Seq[(Coto, Link)] =
     this.links.linksTo(cotoId)
       .map(link =>
-        this.cotos.get(link.sourceCotoId).map(parent => (parent, link))
+        this.cotos.get(link.sourceCotoId).flatMap(parent =>
+          if (
+            excludeCurrentCotonoma &&
+            this.currentCotonoma.map(_.cotoId == parent.id)
+              .getOrElse(false)
+          )
+            None
+          else
+            Some((parent, link))
+        )
       )
       .flatten
 
