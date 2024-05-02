@@ -213,7 +213,7 @@ object SectionTraversals {
   ): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
-        ul(className := "parents")(
+        ul(className := "traverse-to-parents")(
           parents.map { case (parent, link) =>
             li(key := link.id.uuid)(
               button(
@@ -295,6 +295,10 @@ object SectionTraversals {
     val (link, coto) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
+      ViewCoto.ulParents(
+        domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        dispatch
+      ),
       article(
         className := optionalClasses(
           Seq(

@@ -107,6 +107,31 @@ article.coto {
   }
 }
 
+ul.parents {
+  padding-top: 12px;
+  background-color: var(--card-background-color);
+
+  li {
+    padding: 0 var(--block-spacing-horizontal);
+    padding-bottom: 6px;
+
+    button.parent {
+      display: block;
+      width: 100%;
+      padding: 4px 12px;
+      color: var(--h6-color);
+      background-color: var(--parent-button-color);
+      font-size: 0.9rem;
+      opacity: 0.5;
+
+      &:hover {
+        background-color: var(--hover-background-color);
+        text-decoration: none;
+      }
+    }
+  }
+}
+
 ol.sub-cotos {
   article.sub-coto {
     >header {

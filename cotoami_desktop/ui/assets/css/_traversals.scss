@@ -44,19 +44,21 @@ section.traversals {
     div.parents {
       opacity: .6;
 
-      li {
-        background-color: var(--background-color);
+      ul.traverse-to-parents {
+        li {
+          background-color: var(--background-color);
 
-        button.parent {
-          display: block;
-          width: 100%;
-          margin-bottom: 4px;
-          padding: 6px 12px;
-          color: var(--h6-color);
+          button.parent {
+            display: block;
+            width: 100%;
+            margin-bottom: 4px;
+            padding: 6px 12px;
+            color: var(--h6-color);
 
-          &:hover {
-            background-color: var(--hover-background-color);
-            text-decoration: none;
+            &:hover {
+              background-color: var(--hover-background-color);
+              text-decoration: none;
+            }
           }
         }
       }

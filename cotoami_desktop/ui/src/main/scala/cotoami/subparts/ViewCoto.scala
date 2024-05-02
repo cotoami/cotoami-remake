@@ -16,7 +16,7 @@ import cotoami.components.{
   RehypePlugin,
   ToolButton
 }
-import cotoami.backend.Coto
+import cotoami.backend.{Coto, Link}
 import cotoami.repositories.{Domain, Nodes}
 
 object ViewCoto {
@@ -131,6 +131,23 @@ object ViewCoto {
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
       )(coto.content)
     )
+
+  def ulParents(
+      parents: Seq[(Coto, Link)],
+      dispatch: Msg => Unit
+  ): Option[ReactElement] =
+    Option.when(!parents.isEmpty) {
+      ul(className := "parents")(
+        parents.map { case (parent, link) =>
+          li(key := link.id.uuid)(
+            button(
+              className := "parent default",
+              onClick := (_ => dispatch(Msg.OpenTraversal(parent.id)))
+            )(parent.abbreviate)
+          )
+        }
+      )
+    }
 
   def outgoingLinksTraversal(
       coto: Coto,

@@ -137,6 +137,10 @@ object PaneStock {
       dispatch: Msg => Unit
   ): ReactElement = {
     li(key := pin.id.uuid, className := "pin")(
+      ViewCoto.ulParents(
+        model.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
+        dispatch
+      ),
       article(
         className := optionalClasses(
           Seq(
@@ -217,6 +221,10 @@ object PaneStock {
       dispatch: Msg => Unit
   ): ReactElement =
     li(key := link.id.uuid, className := "sub")(
+      ViewCoto.ulParents(
+        model.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        dispatch
+      ),
       article(className := "sub-coto coto")(
         header()(
           ToolButton(

@@ -87,6 +87,7 @@ object PaneFlow {
   ): ReactElement =
     section(className := "post")(
       coto.repostOfId.map(_ => repostHeader(coto, domain, dispatch)),
+      ViewCoto.ulParents(domain.parentsOf(coto.id), dispatch),
       articleCoto(
         domain.cotos.getOriginal(coto),
         domain,

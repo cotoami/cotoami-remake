@@ -26,6 +26,10 @@ section.pinned {
   }
 
   ol.pinned-cotos {
+    li.pin {
+      background-color: var(--card-background-color);
+    }
+
     article.pinned-coto {
       position: relative;
 

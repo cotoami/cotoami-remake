@@ -13,6 +13,7 @@
   --traversed-border-color: #{pico.$grey-300};
   --scrollbar-color: #{pico.$grey-400};
   --pinned-background-color: #{rgba(pico.$grey-50, 0.5)};
+  --parent-button-color: #{rgba(pico.$grey-50, 0.5)};
 }
 
 // Dark theme (Auto)
@@ -28,6 +29,7 @@
     --traversed-border-color: #{pico.$grey-500};
     --scrollbar-color: #{pico.$grey-600};
     --pinned-background-color: #{pico.$grey-900};
+    --parent-button-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
   }
 }
 
@@ -43,4 +45,5 @@
   --traversed-border-color: #{pico.$grey-500};
   --scrollbar-color: #{pico.$grey-600};
   --pinned-background-color: #{pico.$grey-900};
+  --parent-button-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
 }
