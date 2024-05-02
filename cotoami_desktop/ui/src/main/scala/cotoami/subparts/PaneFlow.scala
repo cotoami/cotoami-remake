@@ -69,25 +69,31 @@ object PaneFlow {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Msg.FetchMoreTimeline)
         )(
-          cotos.map(coto =>
-            section(className := "post")(
-              coto.repostOfId.map(_ =>
-                repostHeader(coto, model.domain, dispatch)
-              ),
-              articleCoto(
-                model.domain.cotos.getOriginal(coto),
-                model.domain,
-                model.context,
-                dispatch
-              ),
-              ViewCoto.outgoingLinksTraversal(coto, "top", dispatch)
-            )
+          cotos.map(
+            sectionPost(_, model.domain, model.context, dispatch)
           ) :+ div(
             className := "more",
             aria - "busy" := model.domain.cotos.timelineLoading.toString()
           )(): _*
         )
       )
+    )
+
+  private def sectionPost(
+      coto: Coto,
+      domain: Domain,
+      context: Context,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "post")(
+      coto.repostOfId.map(_ => repostHeader(coto, domain, dispatch)),
+      articleCoto(
+        domain.cotos.getOriginal(coto),
+        domain,
+        context,
+        dispatch
+      ),
+      ViewCoto.outgoingLinksTraversal(coto, "top", dispatch)
     )
 
   private def articleCoto(
