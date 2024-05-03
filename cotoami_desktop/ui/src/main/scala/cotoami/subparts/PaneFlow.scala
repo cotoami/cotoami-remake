@@ -105,6 +105,7 @@ object PaneFlow {
   ): ReactElement =
     article(className := "coto")(
       header()(
+        ViewCoto.spanPin(coto, domain),
         ViewCoto.otherCotonomas(coto, domain, dispatch),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
           ViewCoto.author(coto, domain.nodes)

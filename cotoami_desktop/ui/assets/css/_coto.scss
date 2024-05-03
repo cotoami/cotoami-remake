@@ -1,5 +1,5 @@
 article.coto {
-  // reset Pico's style
+  position: relative;
   margin: 0;
   padding: 0;
   border-radius: 0;
@@ -26,12 +26,23 @@ article.coto {
   }
 
   >header {
+    position: relative;
     margin: 0;
     padding: 0;
     border-style: none;
     background-color: inherit;
 
     min-height: 1rem; // empty header serves as padding-top of article.coto
+
+    span.pinned {
+      position: absolute;
+      top: 0;
+      right: 6px;
+
+      span.material-symbols {
+        opacity: 0.5;
+      }
+    }
 
     ul.other-cotonomas {
       margin-bottom: 5px;

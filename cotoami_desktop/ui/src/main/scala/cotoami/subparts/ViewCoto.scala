@@ -132,6 +132,11 @@ object ViewCoto {
       )(coto.content)
     )
 
+  def spanPin(coto: Coto, domain: Domain): Option[ReactElement] =
+    Option.when(domain.pinned(coto.id)) {
+      span(className := "pinned")(materialSymbol("push_pin"))
+    }
+
   def ulParents(
       parents: Seq[(Coto, Link)],
       dispatch: Msg => Unit

@@ -63,6 +63,11 @@ section.flow {
     article.coto {
       padding: 1rem 0;
 
+      span.pinned {
+        top: -12px;
+        right: 10px;
+      }
+
       address.author {
         padding: 0 var(--block-spacing-horizontal);
         color: var(--muted-color);
