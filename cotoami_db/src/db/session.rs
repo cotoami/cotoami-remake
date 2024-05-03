@@ -5,7 +5,6 @@ use anyhow::{bail, Context as _, Result};
 use diesel::sqlite::SqliteConnection;
 use once_cell::unsync::OnceCell;
 use parking_lot::MutexGuard;
-use uuid::Uuid;
 
 use crate::{
     db::{
@@ -678,18 +677,6 @@ impl<'a> DatabaseSession<'a> {
             .map_err(anyhow::Error::from)
     }
 
-    pub fn get_cotonoma_by_uuid(&mut self, uuid: Uuid) -> Result<Option<(Cotonoma, Coto)>> {
-        Ok(self
-            .cotonoma(&Id::new(uuid))?
-            .or(self.cotonoma_by_coto_id(&Id::new(uuid))?))
-    }
-
-    pub fn try_get_cotonoma_by_uuid(&mut self, uuid: Uuid) -> Result<(Cotonoma, Coto)> {
-        self.get_cotonoma_by_uuid(uuid)?
-            .ok_or(DatabaseError::not_found(EntityKind::Cotonoma, uuid))
-            .map_err(anyhow::Error::from)
-    }
-
     pub fn contains_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<bool> {
         self.read_transaction(cotonoma_ops::contains(id))
     }
@@ -817,6 +804,10 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn link(&mut self, link_id: &Id<Link>) -> Result<Option<Link>> {
         self.read_transaction(link_ops::get(link_id))
+    }
+
+    pub fn links_by_source_coto_ids(&mut self, coto_ids: Vec<Id<Coto>>) -> Result<Vec<Link>> {
+        self.read_transaction(link_ops::get_by_source_coto_ids(coto_ids))
     }
 
     pub fn recent_links(

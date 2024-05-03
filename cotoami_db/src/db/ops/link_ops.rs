@@ -29,6 +29,17 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, O
     })
 }
 
+pub(crate) fn get_by_source_coto_ids<Conn: AsReadableConn>(
+    coto_ids: Vec<Id<Coto>>,
+) -> impl Operation<Conn, Vec<Link>> {
+    read_op(move |conn| {
+        links::table
+            .filter(links::source_coto_id.eq_any(&coto_ids))
+            .load::<Link>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Link>,
 ) -> impl Operation<Conn, Result<Link, DatabaseError>> + '_ {
