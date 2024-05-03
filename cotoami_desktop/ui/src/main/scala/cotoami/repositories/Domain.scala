@@ -126,6 +126,11 @@ case class Domain(
       )
       .flatten
 
+  def pinned(cotoId: Id[Coto]): Boolean =
+    this.currentCotonoma.map(cotonoma =>
+      this.links.linked(cotonoma.cotoId, cotoId)
+    ).getOrElse(false)
+
   def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[cotoami.Msg]]) =
     this
       .clearSelection()

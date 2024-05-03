@@ -32,6 +32,11 @@ case class Links(
 
   def addAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ add _)
 
+  def linked(from: Id[Coto], to: Id[Coto]): Boolean =
+    this.mapByTargetCotoId.get(to).map(
+      _.exists(this.get(_).map(_.sourceCotoId == from).getOrElse(false))
+    ).getOrElse(false)
+
   def linksFrom(id: Id[Coto]): TreeSet[Link] =
     this.mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
 
