@@ -46,7 +46,7 @@ article.coto {
 
     ul.other-cotonomas {
       margin-bottom: 5px;
-      padding: 0 var(--block-spacing-horizontal);
+      padding: 0 10px;
       text-align: right;
 
       li {
@@ -161,7 +161,6 @@ ol.sub-cotos {
 
       ul.other-cotonomas {
         flex: 1;
-        padding-right: 10px;
       }
     }
   }

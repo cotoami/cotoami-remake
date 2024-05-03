@@ -63,21 +63,27 @@ section.flow {
     article.coto {
       padding: 1rem 0;
 
-      span.pinned {
-        top: -12px;
-        right: 10px;
-      }
+      >header {
+        span.pinned {
+          top: -12px;
+          right: 10px;
+        }
 
-      address.author {
-        padding: 0 var(--block-spacing-horizontal);
-        color: var(--muted-color);
-        font-weight: 700;
+        ul.other-cotonomas {
+          padding: 0 var(--block-spacing-horizontal);
+        }
 
-        img.node-icon {
-          width: 26px;
-          height: 26px;
-          border-radius: 4px;
-          margin-right: 6px;
+        address.author {
+          padding: 0 var(--block-spacing-horizontal);
+          color: var(--muted-color);
+          font-weight: 700;
+
+          img.node-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            margin-right: 6px;
+          }
         }
       }
 
