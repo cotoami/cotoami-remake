@@ -3,23 +3,8 @@
 @use "./color";
 @use "./utils";
 
-@use "./app";
-@use "./header";
-@use "./nav-nodes";
-@use "./nav-cotonomas";
-@use "./main";
-@use "./flow";
-@use "./stock";
-@use "./footer";
-
-@use "./form-coto";
-@use "./coto";
-@use "./pinned";
-@use "./map";
-@use "./traversals";
-
-@use "./log-view";
-@use "./dialog-welcome";
+@use "app";
+@use "subparts";
 
 @use "./split-pane";
 @use "./_simplebar";

@@ -1,0 +1,23 @@
+// app
+@forward "header";
+@forward "footer";
+
+// body
+@forward "nav-nodes";
+@forward "nav-cotonomas";
+@forward "main";
+
+// main
+@forward "flow";
+@forward "stock";
+
+// stock
+@forward "pinned";
+@forward "map";
+@forward "traversals";
+
+// etc
+@forward "coto";
+@forward "form-coto";
+@forward "log-view";
+@forward "dialog-welcome";
