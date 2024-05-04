@@ -1,0 +1,189 @@
+@use "utils";
+
+//
+// Material Symbols
+// https://developers.google.com/fonts/docs/material_symbols?hl=en#self-hosting_the_font
+//
+
+@font-face {
+  font-family: 'Material Symbols';
+  font-style: normal;
+  src: url(/material-symbols.woff2) format('woff2');
+}
+
+.material-symbols {
+  font-family: 'Material Symbols';
+  font-weight: normal;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  @include utils.force-unselectable;
+}
+
+
+//
+// Header and body by flex column layout
+//
+
+.header-and-body {
+  display: flex;
+  flex-direction: column;
+
+  >header {
+    flex-grow: 0; // do not grow
+    flex-shrink: 0; // do not shrink
+    flex-basis: auto; // height should be set in each header style
+  }
+
+  >.body {
+    flex: 1;
+    min-height: 0; // let this item shrink below the content size
+  }
+}
+
+
+//
+// Reset button styles by Pico
+//
+
+button.default {
+  all: unset;
+  position: relative;
+  width: auto;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+
+//
+// Collapsible pane
+//
+
+.pane {
+  position: relative;
+
+  >.pane-toggle {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    // ensure to place this toggle in front of everything
+    z-index: 100;
+
+    button {
+      position: absolute;
+      top: -6px;
+      right: -1px;
+
+      width: 20px;
+      height: 25px;
+
+      cursor: pointer;
+      opacity: .5;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      span.material-symbols {
+        font-size: 23px; // use px here to fix the icon size
+      }
+
+      &.unfold {
+        display: none;
+      }
+    }
+  }
+
+  &.folded {
+    flex: 0 0 16px !important;
+    cursor: pointer;
+
+    *:nth-child(n+2) {
+      display: none !important;
+    }
+
+    >.pane-toggle {
+      button.fold {
+        display: none !important;
+      }
+
+      button.unfold {
+        display: block !important;
+      }
+    }
+  }
+}
+
+
+//
+// Tool buttons header
+//
+
+header.tools {
+  display: flex;
+  flex-direction: row-reverse;
+  padding-right: 20px;
+
+  button {
+    position: relative;
+    display: inline-block;
+    padding: 4px 10px;
+    z-index: 10;
+
+    span.material-symbols {
+      font-size: 20px; // use px here to fix the icon size
+    }
+  }
+}
+
+
+//
+// Text input with a button
+//
+
+div.text-input-with-button {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: var(--spacing);
+
+  input {
+    margin: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  button {
+    margin: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+
+    span.material-symbols {
+      line-height: 1rem;
+      vertical-align: text-bottom;
+    }
+  }
+}
+
+
+//
+// Input with validation
+//
+
+.input-with-validation {
+  margin-bottom: var(--spacing);
+
+  .validation-error {
+    font-size: 95%;
+    color: var(--form-element-invalid-border-color)
+  }
+}
