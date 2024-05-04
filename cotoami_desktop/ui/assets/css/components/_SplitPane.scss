@@ -1,4 +1,4 @@
-@use "../utils";
+@use "../mixins";
 
 .split-pane {
   &.vertical {
@@ -77,10 +77,10 @@
 
   .split-pane-primary,
   .split-pane-secondary {
-    @include utils.unselectable;
+    @include mixins.unselectable;
 
     * {
-      @include utils.selectable;
+      @include mixins.selectable;
     }
   }
 }

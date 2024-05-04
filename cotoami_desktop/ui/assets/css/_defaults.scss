@@ -2,7 +2,7 @@
 // Default styles by customizing Pico's style
 //
 
-@use "utils";
+@use "mixins";
 
 html {
   height: 100%;
@@ -34,7 +34,7 @@ button {
   margin: 0;
   width: auto;
 
-  @include utils.force-unselectable;
+  @include mixins.force-unselectable;
 }
 
 a {

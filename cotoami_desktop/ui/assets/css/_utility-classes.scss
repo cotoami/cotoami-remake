@@ -1,4 +1,4 @@
-@use "utils";
+@use "mixins";
 
 //
 // Material Symbols
@@ -21,7 +21,7 @@
   white-space: nowrap;
   direction: ltr;
 
-  @include utils.force-unselectable;
+  @include mixins.force-unselectable;
 }
 
 

@@ -1,4 +1,4 @@
-@use "../utils";
+@use "../mixins";
 
 nav.cotonomas {
   --item-padding-left: 12px;
@@ -98,7 +98,7 @@ nav.cotonomas {
     overflow: hidden;
     text-overflow: ellipsis;
 
-    @include utils.force-unselectable;
+    @include mixins.force-unselectable;
   }
 
   a.cotonoma {
