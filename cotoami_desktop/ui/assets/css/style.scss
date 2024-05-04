@@ -4,9 +4,7 @@
 @use "./utils";
 
 @use "app";
-
-@use "./split-pane";
-@use "./_simplebar";
+@use "components";
 
 :root {
   --header-height: 36px;
