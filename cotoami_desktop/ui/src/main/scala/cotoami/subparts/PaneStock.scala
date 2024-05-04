@@ -151,7 +151,7 @@ object PaneStock {
         )
       )(
         header()(
-          ViewCoto.otherCotonomas(coto, model.domain, dispatch)
+          ViewCoto.ulOtherCotonomas(coto, model.domain, dispatch)
         ),
         div(className := "body")(
           ToolButton(
@@ -160,7 +160,7 @@ object PaneStock {
             tipPlacement = "right",
             symbol = "push_pin"
           ),
-          ViewCoto.content(coto, model.domain, dispatch)
+          ViewCoto.divContent(coto, model.domain, dispatch)
         )
       ),
       olSubCotos(coto, inColumn, model, dispatch)
@@ -234,11 +234,11 @@ object PaneStock {
             symbol = "subdirectory_arrow_right"
           ),
           ViewCoto.spanPin(coto, model.domain),
-          ViewCoto.otherCotonomas(coto, model.domain, dispatch)
+          ViewCoto.ulOtherCotonomas(coto, model.domain, dispatch)
         ),
         div(className := "body")(
-          ViewCoto.content(coto, model.domain, dispatch),
-          ViewCoto.outgoingLinksTraversal(coto, "left", dispatch)
+          ViewCoto.divContent(coto, model.domain, dispatch),
+          ViewCoto.divLinksTraversal(coto, "left", dispatch)
         )
       )
     )

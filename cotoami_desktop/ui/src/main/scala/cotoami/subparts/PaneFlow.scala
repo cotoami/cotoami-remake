@@ -94,7 +94,7 @@ object PaneFlow {
         context,
         dispatch
       ),
-      ViewCoto.outgoingLinksTraversal(coto, "top", dispatch)
+      ViewCoto.divLinksTraversal(coto, "top", dispatch)
     )
 
   private def articleCoto(
@@ -106,13 +106,13 @@ object PaneFlow {
     article(className := "coto")(
       header()(
         ViewCoto.spanPin(coto, domain),
-        ViewCoto.otherCotonomas(coto, domain, dispatch),
+        ViewCoto.ulOtherCotonomas(coto, domain, dispatch),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
-          ViewCoto.author(coto, domain.nodes)
+          ViewCoto.addressAuthor(coto, domain.nodes)
         }
       ),
       div(className := "body")(
-        ViewCoto.content(coto, domain, dispatch)
+        ViewCoto.divContent(coto, domain, dispatch)
       ),
       footer()(
         time(

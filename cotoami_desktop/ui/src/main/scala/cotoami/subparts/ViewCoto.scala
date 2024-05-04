@@ -21,7 +21,7 @@ import cotoami.repositories.{Domain, Nodes}
 
 object ViewCoto {
 
-  def author(
+  def addressAuthor(
       coto: Coto,
       nodes: Nodes
   ): ReactElement =
@@ -34,7 +34,7 @@ object ViewCoto {
       )
     )
 
-  def otherCotonomas(
+  def ulOtherCotonomas(
       coto: Coto,
       domain: Domain,
       dispatch: Msg => Unit
@@ -58,7 +58,12 @@ object ViewCoto {
         ): _*
     )
 
-  def content(
+  def spanPin(coto: Coto, domain: Domain): Option[ReactElement] =
+    Option.when(domain.pinned(coto.id)) {
+      span(className := "pinned")(materialSymbol("push_pin"))
+    }
+
+  def divContent(
       coto: Coto,
       domain: Domain,
       dispatch: Msg => Unit
@@ -82,9 +87,9 @@ object ViewCoto {
         coto.summary.map(summary => {
           CollapsibleContent(
             summary = summary,
-            content = cotoContent(coto)
+            content = sectionContent(coto)
           ): ReactElement
-        }).getOrElse(cotoContent(coto))
+        }).getOrElse(sectionContent(coto))
       )
     )
 
@@ -125,17 +130,12 @@ object ViewCoto {
     }
   }
 
-  private def cotoContent(coto: Coto): ReactElement =
+  private def sectionContent(coto: Coto): ReactElement =
     section(className := "text-content")(
       Markdown(rehypePlugins =
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
       )(coto.content)
     )
-
-  def spanPin(coto: Coto, domain: Domain): Option[ReactElement] =
-    Option.when(domain.pinned(coto.id)) {
-      span(className := "pinned")(materialSymbol("push_pin"))
-    }
 
   def ulParents(
       parents: Seq[(Coto, Link)],
@@ -154,7 +154,7 @@ object ViewCoto {
       )
     }
 
-  def outgoingLinksTraversal(
+  def divLinksTraversal(
       coto: Coto,
       tipPlacement: String,
       dispatch: Msg => Unit

@@ -267,10 +267,10 @@ object SectionTraversals {
       )(
         header()(
           ViewCoto.spanPin(coto, domain),
-          ViewCoto.otherCotonomas(coto, domain, dispatch)
+          ViewCoto.ulOtherCotonomas(coto, domain, dispatch)
         ),
         div(className := "body")(
-          ViewCoto.content(coto, domain, dispatch)
+          ViewCoto.divContent(coto, domain, dispatch)
         )
       ),
       ol(className := "sub-cotos")(
@@ -317,7 +317,7 @@ object SectionTraversals {
             symbol = "subdirectory_arrow_right"
           ),
           ViewCoto.spanPin(coto, domain),
-          ViewCoto.otherCotonomas(coto, domain, dispatch)
+          ViewCoto.ulOtherCotonomas(coto, domain, dispatch)
         ),
         div(className := "body")(
           // Coto content
@@ -326,7 +326,7 @@ object SectionTraversals {
               section(className := "abbreviated-content")(coto.abbreviate)
             )
           } else {
-            ViewCoto.content(coto, domain, dispatch)
+            ViewCoto.divContent(coto, domain, dispatch)
           },
           // Traverse button
           Option.when(!traversed && coto.outgoingLinks > 0) {
