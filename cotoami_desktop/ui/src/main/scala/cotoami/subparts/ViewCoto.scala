@@ -34,7 +34,19 @@ object ViewCoto {
       )
     )
 
-  def ulOtherCotonomas(
+  def divClassifiedAs(
+      coto: Coto,
+      domain: Domain,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    div(className := "classified-as")(
+      ulOtherCotonomas(coto, domain, dispatch),
+      Option.when(domain.pinned(coto.id)) {
+        div(className := "pinned")(materialSymbol("push_pin"))
+      }
+    )
+
+  private def ulOtherCotonomas(
       coto: Coto,
       domain: Domain,
       dispatch: Msg => Unit
@@ -57,11 +69,6 @@ object ViewCoto {
           )
         ): _*
     )
-
-  def spanPin(coto: Coto, domain: Domain): Option[ReactElement] =
-    Option.when(domain.pinned(coto.id)) {
-      span(className := "pinned")(materialSymbol("push_pin"))
-    }
 
   def divContent(
       coto: Coto,

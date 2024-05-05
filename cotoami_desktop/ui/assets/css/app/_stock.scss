@@ -25,6 +25,12 @@
 section.stock {
   position: relative;
 
+  article.coto {
+    >header {
+      padding: 0 10px;
+    }
+  }
+
   section.coto-catalog {
     display: flex;
     flex-direction: column;

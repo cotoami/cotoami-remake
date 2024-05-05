@@ -34,29 +34,33 @@ article.coto {
 
     min-height: 1rem; // empty header serves as padding-top of article.coto
 
-    span.pinned {
-      position: absolute;
-      top: 0;
-      right: 6px;
+    div.classified-as {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
 
-      span.material-symbols {
-        opacity: 0.5;
+      ul.other-cotonomas {
+        flex: 1;
+        text-align: right;
+
+        li {
+          display: inline;
+
+          a.also-posted-in {
+            margin-left: 5px;
+            font-size: 0.8rem;
+            color: var(--muted-color);
+            text-decoration: underline;
+          }
+        }
       }
-    }
 
-    ul.other-cotonomas {
-      margin-bottom: 5px;
-      padding: 0 10px;
-      text-align: right;
+      div.pinned {
+        margin-left: 10px;
+        padding-top: 1px;
 
-      li {
-        display: inline;
-
-        a.also-posted-in {
-          margin-left: 5px;
-          font-size: 0.8rem;
-          color: var(--muted-color);
-          text-decoration: underline;
+        span.material-symbols {
+          opacity: 0.5;
         }
       }
     }

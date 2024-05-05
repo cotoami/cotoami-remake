@@ -64,17 +64,9 @@ section.flow {
       padding: 1rem 0;
 
       >header {
-        span.pinned {
-          top: -12px;
-          right: 10px;
-        }
-
-        ul.other-cotonomas {
-          padding: 0 var(--block-spacing-horizontal);
-        }
+        padding: 0 var(--block-spacing-horizontal);
 
         address.author {
-          padding: 0 var(--block-spacing-horizontal);
           color: var(--muted-color);
           font-weight: 700;
 

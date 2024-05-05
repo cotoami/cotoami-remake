@@ -33,6 +33,10 @@ section.pinned-cotos {
     article.pinned-coto {
       position: relative;
 
+      div.pinned {
+        display: none;
+      }
+
       div.body {
         position: relative;
 

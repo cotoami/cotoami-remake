@@ -266,8 +266,7 @@ object SectionTraversals {
         )
       )(
         header()(
-          ViewCoto.spanPin(coto, domain),
-          ViewCoto.ulOtherCotonomas(coto, domain, dispatch)
+          ViewCoto.divClassifiedAs(coto, domain, dispatch)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto, domain, dispatch)
@@ -316,8 +315,7 @@ object SectionTraversals {
             tipPlacement = "right",
             symbol = "subdirectory_arrow_right"
           ),
-          ViewCoto.spanPin(coto, domain),
-          ViewCoto.ulOtherCotonomas(coto, domain, dispatch)
+          ViewCoto.divClassifiedAs(coto, domain, dispatch)
         ),
         div(className := "body")(
           // Coto content

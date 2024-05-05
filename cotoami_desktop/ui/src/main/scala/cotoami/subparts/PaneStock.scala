@@ -151,7 +151,7 @@ object PaneStock {
         )
       )(
         header()(
-          ViewCoto.ulOtherCotonomas(coto, model.domain, dispatch)
+          ViewCoto.divClassifiedAs(coto, model.domain, dispatch)
         ),
         div(className := "body")(
           ToolButton(
@@ -233,8 +233,7 @@ object PaneStock {
             tipPlacement = "right",
             symbol = "subdirectory_arrow_right"
           ),
-          ViewCoto.spanPin(coto, model.domain),
-          ViewCoto.ulOtherCotonomas(coto, model.domain, dispatch)
+          ViewCoto.divClassifiedAs(coto, model.domain, dispatch)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto, model.domain, dispatch),
