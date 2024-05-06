@@ -70,6 +70,7 @@ case class Domain(
     this
       .modify(_.cotos).using(_.appendTimeline(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
+      .modify(_.links).using(_.addAll(cotos.outgoingLinks))
 
   def importCotoGraph(graph: CotoGraph): Domain =
     this

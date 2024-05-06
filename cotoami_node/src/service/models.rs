@@ -107,6 +107,7 @@ pub struct CotonomaDetails {
 pub struct PaginatedCotos {
     pub page: Paginated<Coto>,
     pub related_data: CotosRelatedData,
+    pub outgoing_links: Vec<Link>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]

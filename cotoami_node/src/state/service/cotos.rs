@@ -33,7 +33,9 @@ impl NodeState {
                 pagination.page,
             )?;
             let related_data = super::get_cotos_related_data(&mut ds, &page.rows)?;
-            Ok::<_, anyhow::Error>(PaginatedCotos::new(page, related_data))
+            let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
+            let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
+            Ok::<_, anyhow::Error>(PaginatedCotos::new(page, related_data, outgoing_links))
         })
         .await?
         .map_err(ServiceError::from)
