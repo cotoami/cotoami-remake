@@ -124,27 +124,34 @@ object PaneStock {
           else
             div(className := "pinned-cotos-with-toc")(
               olPinnedCotos(pinned, inColumns, model, dispatch),
-              div(className := "toc")(
-                ScrollArea(
-                  scrollableElementId = None,
-                  autoHide = true,
-                  bottomThreshold = None,
-                  onScrollToBottom = () => ()
-                )(
-                  ol(className := "toc")(
-                    pinned.map { case (pin, coto) =>
-                      li(key := pin.id.uuid, className := "toc-entry")(
-                        button(className := "default")(coto.abbreviate)
-                      )
-                    }: _*
-                  )
-                )
-              )
+              divToc(pinned, model, dispatch)
             )
         )
       )
     )
   }
+
+  private def divToc(
+      pinned: Seq[(Link, Coto)],
+      model: Model,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    div(className := "toc")(
+      ScrollArea(
+        scrollableElementId = None,
+        autoHide = true,
+        bottomThreshold = None,
+        onScrollToBottom = () => ()
+      )(
+        ol(className := "toc")(
+          pinned.map { case (pin, coto) =>
+            li(key := pin.id.uuid, className := "toc-entry")(
+              button(className := "default")(coto.abbreviate)
+            )
+          }: _*
+        )
+      )
+    )
 
   private def olPinnedCotos(
       pinned: Seq[(Link, Coto)],
@@ -165,7 +172,7 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
-    li(key := pin.id.uuid, className := "pin")(
+    li(key := pin.id.uuid, className := "pin", id := s"pin-${pin.id.uuid}")(
       ViewCoto.ulParents(
         model.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
         dispatch
