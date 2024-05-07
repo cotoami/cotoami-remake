@@ -106,17 +106,23 @@ section.pinned-cotos {
         max-width: var(--max-article-width);
       }
 
-      ol.toc {
-        width: var(--toc-width);
-        margin-left: 20px;
+      div.toc {
+        ol.toc {
+          width: var(--toc-width);
+          margin-left: 20px;
 
-        li button {
-          width: 100%;
-          padding: 5px 10px;
-          font-size: 0.9rem;
+          position: -webkit-sticky;
+          position: sticky;
+          top: 0;
 
-          &:hover {
-            background-color: var(--hover-background-color);
+          li button {
+            width: 100%;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+
+            &:hover {
+              background-color: var(--hover-background-color);
+            }
           }
         }
       }

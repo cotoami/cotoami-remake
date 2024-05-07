@@ -124,12 +124,14 @@ object PaneStock {
           else
             div(className := "pinned-cotos-with-toc")(
               olPinnedCotos(pinned, inColumns, model, dispatch),
-              ol(className := "toc")(
-                pinned.map { case (pin, coto) =>
-                  li(key := pin.id.uuid, className := "toc-entry")(
-                    button(className := "default")(coto.abbreviate)
-                  )
-                }: _*
+              div(className := "toc")(
+                ol(className := "toc")(
+                  pinned.map { case (pin, coto) =>
+                    li(key := pin.id.uuid, className := "toc-entry")(
+                      button(className := "default")(coto.abbreviate)
+                    )
+                  }: _*
+                )
               )
             )
         )
