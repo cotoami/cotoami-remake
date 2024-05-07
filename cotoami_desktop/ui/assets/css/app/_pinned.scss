@@ -22,6 +22,10 @@ section.pinned-cotos {
     >div {
       width: 100%;
       height: 100%;
+
+      &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+        scroll-behavior: smooth;
+      }
     }
   }
 
@@ -92,11 +96,61 @@ section.pinned-cotos {
   }
 
   .document-view {
-    li.pin {
+    --toc-width: 200px;
+
+    div.pinned-cotos-with-toc {
+      display: flex;
+      flex-direction: row;
+
+      max-width: calc(var(--max-article-width) + var(--toc-width));
       margin-right: auto;
       margin-left: auto;
+
+      ol.pinned-cotos {
+        max-width: var(--max-article-width);
+      }
+
+      div.toc {
+        height: 80vh;
+
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+
+        // SimpleBar div
+        >div {
+          width: 100%;
+          height: 100%;
+        }
+
+        ol.toc {
+          width: var(--toc-width);
+          margin-left: 15px;
+
+          li button {
+            width: 100%;
+            margin-bottom: 3px;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+
+            img.node-icon {
+              width: 16px;
+              height: 16px;
+              border-radius: 4px;
+              vertical-align: text-bottom;
+              margin-right: 5px;
+            }
+
+            &:hover {
+              background-color: var(--hover-background-color);
+            }
+          }
+        }
+      }
+    }
+
+    li.pin {
       margin-bottom: 3rem;
-      max-width: var(--max-article-width);
     }
 
     article.coto.has-children {

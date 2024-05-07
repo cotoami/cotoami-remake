@@ -3,9 +3,10 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg, SwitchPinnedView}
+import cotoami.{Model, Msg, ScrollToPinnedCoto, SwitchPinnedView}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
+import cotoami.repositories.Domain
 
 object PaneStock {
   val PaneName = "PaneStock"
@@ -119,15 +120,64 @@ object PaneStock {
           bottomThreshold = None,
           onScrollToBottom = () => ()
         )(
-          ol(className := "pinned-cotos")(
-            pinned.map { case (link, coto) =>
-              liPinnedCoto(link, coto, inColumns, model, dispatch)
-            }: _*
-          )
+          if (inColumns)
+            olPinnedCotos(pinned, inColumns, model, dispatch)
+          else
+            div(className := "pinned-cotos-with-toc")(
+              olPinnedCotos(pinned, inColumns, model, dispatch),
+              divToc(pinned, model.domain, dispatch)
+            )
         )
       )
     )
   }
+
+  private def divToc(
+      pinned: Seq[(Link, Coto)],
+      domain: Domain,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    div(className := "toc")(
+      ScrollArea(
+        scrollableElementId = None,
+        autoHide = true,
+        bottomThreshold = None,
+        onScrollToBottom = () => ()
+      )(
+        ol(className := "toc")(
+          pinned.map { case (pin, coto) =>
+            li(key := pin.id.uuid, className := "toc-entry")(
+              button(
+                className := "default",
+                onClick := (_ => dispatch(ScrollToPinnedCoto(pin)))
+              )(
+                if (coto.isCotonoma)
+                  span(className := "cotonoma")(
+                    domain.nodes.get(coto.nodeId).map(nodeImg),
+                    coto.nameAsCotonoma
+                  )
+                else
+                  coto.abbreviate
+              )
+            )
+          }: _*
+        )
+      )
+    )
+
+  private def olPinnedCotos(
+      pinned: Seq[(Link, Coto)],
+      inColumns: Boolean,
+      model: Model,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    ol(className := "pinned-cotos")(
+      pinned.map { case (pin, coto) =>
+        liPinnedCoto(pin, coto, inColumns, model, dispatch)
+      }: _*
+    )
+
+  def elementIdOfPinnedCoto(pin: Link): String = s"pin-${pin.id.uuid}"
 
   private def liPinnedCoto(
       pin: Link,
@@ -136,7 +186,11 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
-    li(key := pin.id.uuid, className := "pin")(
+    li(
+      key := pin.id.uuid,
+      className := "pin",
+      id := elementIdOfPinnedCoto(pin)
+    )(
       ViewCoto.ulParents(
         model.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
         dispatch
