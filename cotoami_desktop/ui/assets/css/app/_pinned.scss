@@ -22,6 +22,10 @@ section.pinned-cotos {
     >div {
       width: 100%;
       height: 100%;
+
+      &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+        scroll-behavior: smooth;
+      }
     }
   }
 

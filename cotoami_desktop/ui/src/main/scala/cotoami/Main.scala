@@ -3,6 +3,7 @@ package cotoami
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
+import org.scalajs.dom.HTMLElement
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.hot
@@ -143,6 +144,25 @@ object Main {
             case state => (model.copy(uiState = Some(state)), Seq(state.save))
           })
           .getOrElse((model, Seq.empty))
+
+      case ScrollToPinnedCoto(pin) =>
+        (
+          model,
+          Seq(
+            Cmd(
+              IO {
+                dom.document.getElementById(
+                  subparts.PaneStock.elementIdOfPinnedCoto(pin)
+                ) match {
+                  case element: HTMLElement =>
+                    element.scrollIntoView(true)
+                  case _ => ()
+                }
+                None
+              }
+            )
+          )
+        )
 
       case SelectNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))

@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg, SwitchPinnedView}
+import cotoami.{Model, Msg, ScrollToPinnedCoto, SwitchPinnedView}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 import cotoami.repositories.Domain
@@ -147,7 +147,10 @@ object PaneStock {
         ol(className := "toc")(
           pinned.map { case (pin, coto) =>
             li(key := pin.id.uuid, className := "toc-entry")(
-              button(className := "default")(
+              button(
+                className := "default",
+                onClick := (_ => dispatch(ScrollToPinnedCoto(pin)))
+              )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
                     domain.nodes.get(coto.nodeId).map(nodeImg),
@@ -174,6 +177,8 @@ object PaneStock {
       }: _*
     )
 
+  def elementIdOfPinnedCoto(pin: Link): String = s"pin-${pin.id.uuid}"
+
   private def liPinnedCoto(
       pin: Link,
       coto: Coto,
@@ -181,7 +186,11 @@ object PaneStock {
       model: Model,
       dispatch: Msg => Unit
   ): ReactElement = {
-    li(key := pin.id.uuid, className := "pin", id := s"pin-${pin.id.uuid}")(
+    li(
+      key := pin.id.uuid,
+      className := "pin",
+      id := elementIdOfPinnedCoto(pin)
+    )(
       ViewCoto.ulParents(
         model.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
         dispatch
