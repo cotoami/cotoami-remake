@@ -119,15 +119,35 @@ object PaneStock {
           bottomThreshold = None,
           onScrollToBottom = () => ()
         )(
-          ol(className := "pinned-cotos")(
-            pinned.map { case (link, coto) =>
-              liPinnedCoto(link, coto, inColumns, model, dispatch)
-            }: _*
-          )
+          if (inColumns)
+            olPinnedCotos(pinned, inColumns, model, dispatch)
+          else
+            div(className := "pinned-cotos-with-toc")(
+              olPinnedCotos(pinned, inColumns, model, dispatch),
+              ol(className := "toc")(
+                pinned.map { case (pin, coto) =>
+                  li(key := pin.id.uuid, className := "toc-entry")(
+                    button(className := "default")(coto.abbreviate)
+                  )
+                }: _*
+              )
+            )
         )
       )
     )
   }
+
+  private def olPinnedCotos(
+      pinned: Seq[(Link, Coto)],
+      inColumns: Boolean,
+      model: Model,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    ol(className := "pinned-cotos")(
+      pinned.map { case (pin, coto) =>
+        liPinnedCoto(pin, coto, inColumns, model, dispatch)
+      }: _*
+    )
 
   private def liPinnedCoto(
       pin: Link,
