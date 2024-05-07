@@ -125,12 +125,19 @@ object PaneStock {
             div(className := "pinned-cotos-with-toc")(
               olPinnedCotos(pinned, inColumns, model, dispatch),
               div(className := "toc")(
-                ol(className := "toc")(
-                  pinned.map { case (pin, coto) =>
-                    li(key := pin.id.uuid, className := "toc-entry")(
-                      button(className := "default")(coto.abbreviate)
-                    )
-                  }: _*
+                ScrollArea(
+                  scrollableElementId = None,
+                  autoHide = true,
+                  bottomThreshold = None,
+                  onScrollToBottom = () => ()
+                )(
+                  ol(className := "toc")(
+                    pinned.map { case (pin, coto) =>
+                      li(key := pin.id.uuid, className := "toc-entry")(
+                        button(className := "default")(coto.abbreviate)
+                      )
+                    }: _*
+                  )
                 )
               )
             )
