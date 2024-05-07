@@ -6,6 +6,7 @@ import slinky.web.html._
 import cotoami.{Model, Msg, SwitchPinnedView}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
+import cotoami.repositories.Domain
 
 object PaneStock {
   val PaneName = "PaneStock"
@@ -124,7 +125,7 @@ object PaneStock {
           else
             div(className := "pinned-cotos-with-toc")(
               olPinnedCotos(pinned, inColumns, model, dispatch),
-              divToc(pinned, model, dispatch)
+              divToc(pinned, model.domain, dispatch)
             )
         )
       )
@@ -133,7 +134,7 @@ object PaneStock {
 
   private def divToc(
       pinned: Seq[(Link, Coto)],
-      model: Model,
+      domain: Domain,
       dispatch: Msg => Unit
   ): ReactElement =
     div(className := "toc")(
@@ -146,7 +147,15 @@ object PaneStock {
         ol(className := "toc")(
           pinned.map { case (pin, coto) =>
             li(key := pin.id.uuid, className := "toc-entry")(
-              button(className := "default")(coto.abbreviate)
+              button(className := "default")(
+                if (coto.isCotonoma)
+                  span(className := "cotonoma")(
+                    domain.nodes.get(coto.nodeId).map(nodeImg),
+                    coto.nameAsCotonoma
+                  )
+                else
+                  coto.abbreviate
+              )
             )
           }: _*
         )
