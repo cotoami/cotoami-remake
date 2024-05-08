@@ -112,7 +112,8 @@ object PaneStock {
             ("document-view", !inColumns),
             ("column-view", inColumns)
           )
-        )
+        ),
+        id := "pinned-cotos-body"
       )(
         ScrollArea(
           scrollableElementId = None,
