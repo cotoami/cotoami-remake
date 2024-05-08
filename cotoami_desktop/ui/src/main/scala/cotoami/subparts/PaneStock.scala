@@ -1,6 +1,13 @@
 package cotoami.subparts
 
-import slinky.core.facade.{Fragment, ReactElement}
+import org.scalajs.dom
+import org.scalajs.dom.html
+import org.scalajs.dom.HTMLElement
+
+import slinky.core._
+import slinky.core.annotations.react
+import slinky.core.facade.{Fragment, React, ReactElement}
+import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import cotoami.{Model, Msg, ScrollToPinnedCoto, SwitchPinnedView}
@@ -11,6 +18,7 @@ import cotoami.repositories.Domain
 object PaneStock {
   val PaneName = "PaneStock"
   val ScrollableElementId = "scrollable-stock-with-traversals"
+  val PinnedCotosBodyId = "pinned-cotos-body"
 
   def apply(
       model: Model,
@@ -112,7 +120,8 @@ object PaneStock {
             ("document-view", !inColumns),
             ("column-view", inColumns)
           )
-        )
+        ),
+        id := PinnedCotosBodyId
       )(
         ScrollArea(
           scrollableElementId = None,
@@ -123,47 +132,73 @@ object PaneStock {
           if (inColumns)
             olPinnedCotos(pinned, inColumns, model, dispatch)
           else
-            div(className := "pinned-cotos-with-toc")(
-              olPinnedCotos(pinned, inColumns, model, dispatch),
-              divToc(pinned, model.domain, dispatch)
+            DocumentView(
+              pinned = pinned,
+              viewportId = PinnedCotosBodyId,
+              model = model,
+              dispatch = dispatch
             )
         )
       )
     )
   }
 
-  private def divToc(
-      pinned: Seq[(Link, Coto)],
-      domain: Domain,
-      dispatch: Msg => Unit
-  ): ReactElement =
-    div(className := "toc")(
-      ScrollArea(
-        scrollableElementId = None,
-        autoHide = true,
-        bottomThreshold = None,
-        onScrollToBottom = () => ()
-      )(
-        ol(className := "toc")(
-          pinned.map { case (pin, coto) =>
-            li(key := pin.id.uuid, className := "toc-entry")(
-              button(
-                className := "default",
-                onClick := (_ => dispatch(ScrollToPinnedCoto(pin)))
-              )(
-                if (coto.isCotonoma)
-                  span(className := "cotonoma")(
-                    domain.nodes.get(coto.nodeId).map(nodeImg),
-                    coto.nameAsCotonoma
-                  )
-                else
-                  coto.abbreviate
-              )
-            )
-          }: _*
-        )
-      )
+  @react object DocumentView {
+    case class Props(
+        pinned: Seq[(Link, Coto)],
+        viewportId: String,
+        model: Model,
+        dispatch: Msg => Unit
     )
+
+    val ActiveTocEntryClass = "active"
+
+    val component = FunctionalComponent[Props] { props =>
+      val rootRef = React.createRef[html.Div]
+
+      useEffect(
+        () => {
+          val options = new dom.IntersectionObserverInit {
+            root = dom.document.getElementById(props.viewportId) match {
+              case element: HTMLElement => element
+              case _                    => ()
+            }
+          }
+          val observer = new dom.IntersectionObserver(
+            (entries, observer) =>
+              entries.foreach(entry => {
+                val id = entry.target.getAttribute("id")
+                // Directly modify the class of the corresponding TOC entry element
+                // for performance reasons.
+                dom.document.getElementById(s"toc-${id}") match {
+                  case element: HTMLElement => {
+                    if (entry.intersectionRatio > 0)
+                      element.classList.add(ActiveTocEntryClass)
+                    else
+                      element.classList.remove(ActiveTocEntryClass)
+                  }
+                  case _ => ()
+                }
+              }),
+            options
+          )
+          rootRef.current.querySelectorAll("li.pin").foreach(
+            observer.observe(_)
+          )
+
+          () => {
+            observer.disconnect()
+          }
+        },
+        props.pinned
+      )
+
+      div(className := "pinned-cotos-with-toc", ref := rootRef)(
+        olPinnedCotos(props.pinned, false, props.model, props.dispatch),
+        divToc(props.pinned, props.model.domain, props.dispatch)
+      )
+    }
+  }
 
   private def olPinnedCotos(
       pinned: Seq[(Link, Coto)],
@@ -221,6 +256,46 @@ object PaneStock {
     )
   }
 
+  private def elementIdOfTocEntry(pin: Link): String =
+    s"toc-${elementIdOfPinnedCoto(pin)}"
+
+  private def divToc(
+      pinned: Seq[(Link, Coto)],
+      domain: Domain,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    div(className := "toc")(
+      ScrollArea(
+        scrollableElementId = None,
+        autoHide = true,
+        bottomThreshold = None,
+        onScrollToBottom = () => ()
+      )(
+        ol(className := "toc")(
+          pinned.map { case (pin, coto) =>
+            li(
+              key := pin.id.uuid,
+              className := "toc-entry",
+              id := elementIdOfTocEntry(pin)
+            )(
+              button(
+                className := "default",
+                onClick := (_ => dispatch(ScrollToPinnedCoto(pin)))
+              )(
+                if (coto.isCotonoma)
+                  span(className := "cotonoma")(
+                    domain.nodes.get(coto.nodeId).map(nodeImg),
+                    coto.nameAsCotonoma
+                  )
+                else
+                  coto.abbreviate
+              )
+            )
+          }: _*
+        )
+      )
+    )
+
   private def olSubCotos(
       coto: Coto,
       inColumn: Boolean,
@@ -265,7 +340,6 @@ object PaneStock {
           olSubCotos
         }
     }
-
   }
 
   private def liSubCoto(
