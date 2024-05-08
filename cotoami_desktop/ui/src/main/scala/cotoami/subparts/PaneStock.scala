@@ -1,5 +1,8 @@
 package cotoami.subparts
 
+import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
+
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
@@ -8,9 +11,12 @@ import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 import cotoami.repositories.Domain
 
+import fui.FunctionalUI._
+
 object PaneStock {
   val PaneName = "PaneStock"
   val ScrollableElementId = "scrollable-stock-with-traversals"
+  val PinnedCotosBodyId = "pinned-cotos-body"
 
   def apply(
       model: Model,
@@ -113,7 +119,7 @@ object PaneStock {
             ("column-view", inColumns)
           )
         ),
-        id := "pinned-cotos-body"
+        id := PinnedCotosBodyId
       )(
         ScrollArea(
           scrollableElementId = None,
@@ -179,6 +185,28 @@ object PaneStock {
     )
 
   def elementIdOfPinnedCoto(pin: Link): String = s"pin-${pin.id.uuid}"
+
+  def observePinnedCotosScroll: Sub[(String, Double)] =
+    Sub.Impl[(String, Double)](
+      "observe-pinned-cotos-scroll",
+      (dispatch, onSubscribe) => {
+        val options = new dom.IntersectionObserverInit {
+          root = dom.document.getElementById(PinnedCotosBodyId) match {
+            case element: HTMLElement => element
+            case _                    => ()
+          }
+        }
+        val observer = new dom.IntersectionObserver(
+          (entries, observer) =>
+            entries.foreach(entry =>
+              (entry.target.getAttribute("id"), entry.intersectionRatio)
+            ),
+          options
+        )
+        dom.document.querySelectorAll("li.pin").foreach(observer.observe(_))
+        onSubscribe(Some(() => observer.disconnect()))
+      }
+    )
 
   private def liPinnedCoto(
       pin: Link,

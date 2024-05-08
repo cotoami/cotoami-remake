@@ -31,7 +31,7 @@ lazy val cotoami = project
         )
     },
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "2.4.0",
+      "org.scala-js" %%% "scalajs-dom" % "2.8.0",
       "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
       "me.shadaj" %%% "slinky-web" % slinkyVersion,
       "me.shadaj" %%% "slinky-hot" % slinkyVersion,
