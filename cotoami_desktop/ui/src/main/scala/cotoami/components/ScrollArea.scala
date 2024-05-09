@@ -39,13 +39,16 @@ import slinky.core.facade.Hooks._
       }
     }
 
-    useEffect(() => {
-      val scrollable = scrollableNodeRef.current
-      scrollable.addEventListener("scroll", onScroll)
+    useEffect(
       () => {
-        scrollable.removeEventListener("scroll", onScroll)
-      }
-    })
+        val scrollable = scrollableNodeRef.current
+        scrollable.addEventListener("scroll", onScroll)
+        () => {
+          scrollable.removeEventListener("scroll", onScroll)
+        }
+      },
+      Seq.empty
+    )
 
     SimpleBar(
       autoHide = props.autoHide,
