@@ -116,6 +116,7 @@ import slinky.web.SyntheticMouseEvent
           ("split-pane", true),
           ("vertical", props.vertical),
           ("horizontal", !props.vertical),
+          ("being-resized", moving),
           (props.className.getOrElse(""), props.className.nonEmpty)
         )
       ),

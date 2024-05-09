@@ -75,12 +75,8 @@
     flex: none;
   }
 
-  .split-pane-primary,
-  .split-pane-secondary {
+  // Fix unexpected selection when dragging the separator
+  &.being-resized * {
     @include mixins.unselectable;
-
-    * {
-      @include mixins.selectable;
-    }
   }
 }
