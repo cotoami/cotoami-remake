@@ -3,6 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
+import cotoami.utils.{Remark, StripMarkdown}
+
 case class Coto(json: CotoJson) extends Entity[Coto] {
   override def id: Id[Coto] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)
@@ -29,15 +31,20 @@ case class Coto(json: CotoJson) extends Entity[Coto] {
     else
       None
 
-  def abbreviate: Option[String] =
+  lazy val abbreviate: Option[String] =
     this.summary.orElse(
-      this.content.map(content =>
-        if (content.size > Cotonoma.NameMaxLength)
-          s"${content.substring(0, Cotonoma.NameMaxLength)}..."
+      this.content.map(content => {
+        val text = Coto.stripMarkdown.processSync(content).toString()
+        if (text.size > Cotonoma.NameMaxLength)
+          s"${text.substring(0, Cotonoma.NameMaxLength)}..."
         else
-          content
-      )
+          text
+      })
     )
+}
+
+object Coto {
+  val stripMarkdown = Remark.remark().use(StripMarkdown)
 }
 
 @js.native
