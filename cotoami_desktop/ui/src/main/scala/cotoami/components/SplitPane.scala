@@ -70,12 +70,14 @@ import slinky.web.SyntheticMouseEvent
           separatorPos.current = cursorPos
 
           // keep it from resizing beyond the borders of the SplitPane
-          val splitPaneSize = if (props.vertical) {
-            splitPaneRef.current.clientWidth
-          } else {
-            splitPaneRef.current.clientHeight
+          if (splitPaneRef.current != null) {
+            val splitPaneSize = if (props.vertical) {
+              splitPaneRef.current.clientWidth
+            } else {
+              splitPaneRef.current.clientHeight
+            }
+            newSize = newSize.max(0).min(splitPaneSize)
           }
-          newSize = newSize.max(0).min(splitPaneSize)
 
           setPrimarySize(newSize)
         }
