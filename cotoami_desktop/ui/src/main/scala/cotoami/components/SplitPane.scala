@@ -37,6 +37,11 @@ import slinky.web.SyntheticMouseEvent
     val splitPaneRef = React.createRef[html.Div]
     val separatorPos = useRef(Double.NaN)
 
+    // To allow the onMouseMove callback to refer up-to-date state
+    // https://stackoverflow.com/a/60643670
+    val primarySizeRef = useRef(primarySize)
+    primarySizeRef.current = primarySize
+
     val onMouseDownOnSeparator =
       (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
         if (props.resizable) {
@@ -66,7 +71,7 @@ import slinky.web.SyntheticMouseEvent
           }
 
           val moved = (cursorPos - separatorPos.current).toInt
-          var newSize = primarySize + moved
+          var newSize = primarySizeRef.current + moved
           separatorPos.current = cursorPos
 
           // keep it from resizing beyond the borders of the SplitPane
@@ -92,15 +97,18 @@ import slinky.web.SyntheticMouseEvent
       }
     }
 
-    useEffect(() => {
-      dom.document.addEventListener("mousemove", onMouseMove)
-      dom.document.addEventListener("mouseup", onMouseUp)
-
+    useEffect(
       () => {
-        dom.document.removeEventListener("mousemove", onMouseMove)
-        dom.document.removeEventListener("mouseup", onMouseUp)
-      }
-    })
+        dom.document.addEventListener("mousemove", onMouseMove)
+        dom.document.addEventListener("mouseup", onMouseUp)
+
+        () => {
+          dom.document.removeEventListener("mousemove", onMouseMove)
+          dom.document.removeEventListener("mouseup", onMouseUp)
+        }
+      },
+      Seq.empty
+    )
 
     div(
       className := optionalClasses(
