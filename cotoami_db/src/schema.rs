@@ -133,6 +133,7 @@ diesel::table! {
 
         // A special column with the same name as the table,
         // which is matched against in a full-text query or used to specify a special INSERT command.
+        // https://sqlite.org/fts5.html
         #[sql_name = "cotos_fts"]
         whole_row -> Text,
 

@@ -159,6 +159,7 @@ pub(crate) fn update_number_of_outgoing_links(
     })
 }
 
+// https://sqlite.org/fts5.html#full_text_query_syntax
 pub(crate) fn full_text_search<Conn: AsReadableConn>(
     query: &str,
     page_size: i64,
