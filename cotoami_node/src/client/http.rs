@@ -140,6 +140,22 @@ impl HttpClient {
                     self.get("/api/cotos", Some(pagination.as_query()))
                 }
             }
+            Command::SearchCotos {
+                query,
+                cotonoma,
+                pagination,
+            } => {
+                let mut url_query = pagination.as_query();
+                url_query.push(("q", query));
+                if let Some(cotonoma_id) = cotonoma {
+                    self.get(
+                        &format!("/api/cotonomas/{cotonoma_id}/cotos/search"),
+                        Some(url_query),
+                    )
+                } else {
+                    self.get("/api/cotos/search", Some(url_query))
+                }
+            }
             Command::GraphFromCoto { coto } => self.get(&format!("/api/cotos/{coto}/graph"), None),
             Command::GraphFromCotonoma { cotonoma } => {
                 self.get(&format!("/api/cotonomas/{cotonoma}/graph"), None)
