@@ -34,14 +34,14 @@ uuid.workspace = true
 validator.workspace = true
 
 # Add support for RETURNING expressions for Sqlite via the returning_clauses_for_sqlite_3_35 feature
-diesel = {version = "2.1.4", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"]}
+diesel = {version = "2.1.6", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"]}
 diesel_migrations = {version = "2.1.0", features = ["sqlite"]}
 
-# diesel 2.1.4 -> libsqlite3-sys >=0.17.2, <0.28.0
-# https://github.com/diesel-rs/diesel/blob/v2.1.4/diesel/Cargo.toml#L19
-# SQLite version is 3.44.0
-# https://github.com/rusqlite/rusqlite/blob/v0.30.0/libsqlite3-sys/sqlite3/bindgen_bundled_version.rs#L26
-libsqlite3-sys = {version = "0.27.0", features = ["bundled"]}
+# diesel 2.1.6 -> libsqlite3-sys >=0.17.2, <0.29.0
+# https://github.com/diesel-rs/diesel/blob/v2.1.6/diesel/Cargo.toml#L19
+# SQLite version is 3.45.0
+# https://github.com/rusqlite/rusqlite/blob/sys0.28.0/libsqlite3-sys/sqlite3/bindgen_bundled_version.rs#L26
+libsqlite3-sys = {version = "0.28.0", features = ["bundled"]}
 
 [dev-dependencies]
 assert_matches = "1.5.0"
