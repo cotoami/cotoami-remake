@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     let mut ds = db.new_session()?;
 
     let start = Instant::now();
-    let results = ds.search_cotos(&args.query, args.limit, 0)?;
+    let results = ds.search_cotos(&args.query, None, args.limit, 0)?;
     println!(
         "Found {} cotos by \"{}\" (elapsed: {:?})",
         results.total_rows,

@@ -160,16 +160,17 @@ pub(crate) fn update_number_of_outgoing_links(
 }
 
 // https://sqlite.org/fts5.html#full_text_query_syntax
-pub(crate) fn full_text_search<Conn: AsReadableConn>(
-    query: &str,
+pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
+    query: &'a str,
+    cotonoma_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<Coto>> + '_ {
+) -> impl Operation<Conn, Paginated<Coto>> + 'a {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
             use crate::schema::cotos_fts_trigram::dsl::*;
             super::paginate(conn, page_size, page_index, || {
-                cotos_fts_trigram
+                let mut query = cotos_fts_trigram
                     .select((
                         uuid,
                         rowid,
@@ -186,12 +187,16 @@ pub(crate) fn full_text_search<Conn: AsReadableConn>(
                         outgoing_links,
                     ))
                     .filter(whole_row.eq(query))
-                    .order((is_cotonoma.desc(), rank.asc(), rowid.asc()))
+                    .into_boxed();
+                if let Some(id) = cotonoma_id {
+                    query = query.filter(posted_in_id.eq(id));
+                }
+                query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
             })
         } else {
             use crate::schema::cotos_fts::dsl::*;
             super::paginate(conn, page_size, page_index, || {
-                cotos_fts
+                let mut query = cotos_fts
                     .select((
                         uuid,
                         rowid,
@@ -208,7 +213,11 @@ pub(crate) fn full_text_search<Conn: AsReadableConn>(
                         outgoing_links,
                     ))
                     .filter(whole_row.eq(query))
-                    .order((is_cotonoma.desc(), rank.asc(), rowid.asc()))
+                    .into_boxed();
+                if let Some(id) = cotonoma_id {
+                    query = query.filter(posted_in_id.eq(id));
+                }
+                query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
             })
         }
     })
