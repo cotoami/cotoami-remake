@@ -38,6 +38,7 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
         OffsetDateTime::from_unix_timestamp_nanos(
             session
                 .expires_at
+                .and_utc()
                 .timestamp_nanos_opt()
                 .unwrap_or_else(|| unreachable!()) as i128,
         )
