@@ -21,6 +21,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
+        .route("/search/:query", get(search_cotos))
         .route("/:coto_id/graph", get(get_graph))
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
@@ -40,6 +41,25 @@ async fn recent_cotos(
     }
     state
         .recent_cotos(None, None, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/cotos/search/:query
+/////////////////////////////////////////////////////////////////////////////
+
+async fn search_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(query): Path<String>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<PaginatedCotos>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return ("cotos", errors).into_result();
+    }
+    state
+        .search_cotos(query, None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }
