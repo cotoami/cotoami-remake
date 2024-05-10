@@ -3,6 +3,7 @@
 //! An instance of a model struct is passed to services via [super::Command] or
 //! serialized into a body of a response ([super::Response::body]).
 
+use anyhow::Result;
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -115,6 +116,20 @@ pub struct CotosRelatedData {
     pub posted_in: Vec<Cotonoma>,
     pub as_cotonomas: Vec<Cotonoma>,
     pub originals: Vec<Coto>,
+}
+
+impl CotosRelatedData {
+    pub(crate) fn fetch<'a>(ds: &'a mut DatabaseSession<'_>, cotos: &[Coto]) -> Result<Self> {
+        let original_ids: Vec<Id<Coto>> = cotos
+            .iter()
+            .map(|coto| coto.repost_of_id)
+            .flatten()
+            .collect();
+        let originals = ds.cotos(original_ids)?;
+        let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
+        let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
+        Ok(Self::new(posted_in, as_cotonomas, originals))
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
