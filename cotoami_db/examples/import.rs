@@ -13,7 +13,7 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Result};
-use chrono::naive::NaiveDateTime;
+use chrono::{naive::NaiveDateTime, DateTime};
 use clap::Parser;
 use cotoami_db::prelude::*;
 use uuid::Uuid;
@@ -277,8 +277,9 @@ fn import_connections(
 }
 
 fn from_timestamp_millis(millis: i64) -> Result<NaiveDateTime> {
-    NaiveDateTime::from_timestamp_millis(millis)
+    DateTime::from_timestamp_millis(millis)
         .ok_or(anyhow!("The timestamp is out of range: {millis}"))
+        .map(|dt| dt.naive_utc())
 }
 
 /////////////////////////////////////////////////////////////////////////////
