@@ -43,6 +43,21 @@ object Commands {
       )
     )
 
+  def SearchCotos(
+      query: String,
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]],
+      pageIndex: Double
+  ) =
+    jso(SearchCotos =
+      jso(
+        query = query,
+        node = nodeId.map(_.uuid).getOrElse(null),
+        cotonoma = cotonomaId.map(_.uuid).getOrElse(null),
+        pagination = jso(page = pageIndex)
+      )
+    )
+
   def GraphFromCoto(coto: Id[Coto]) =
     jso(GraphFromCoto = jso(coto = coto.uuid))
 

@@ -3,6 +3,7 @@
 //! An instance of a model struct is passed to services via [super::Command] or
 //! serialized into a body of a response ([super::Response::body]).
 
+use anyhow::Result;
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use derive_new::new;
@@ -103,11 +104,24 @@ pub struct CotonomaDetails {
     pub subs: Paginated<Cotonoma>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct PaginatedCotos {
     pub page: Paginated<Coto>,
     pub related_data: CotosRelatedData,
     pub outgoing_links: Vec<Link>,
+}
+
+impl PaginatedCotos {
+    pub(crate) fn new<'a>(page: Paginated<Coto>, ds: &'a mut DatabaseSession<'_>) -> Result<Self> {
+        let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
+        let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
+        let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
+        Ok(PaginatedCotos {
+            page,
+            related_data,
+            outgoing_links,
+        })
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
@@ -115,6 +129,20 @@ pub struct CotosRelatedData {
     pub posted_in: Vec<Cotonoma>,
     pub as_cotonomas: Vec<Cotonoma>,
     pub originals: Vec<Coto>,
+}
+
+impl CotosRelatedData {
+    pub(crate) fn fetch<'a>(ds: &'a mut DatabaseSession<'_>, cotos: &[Coto]) -> Result<Self> {
+        let original_ids: Vec<Id<Coto>> = cotos
+            .iter()
+            .map(|coto| coto.repost_of_id)
+            .flatten()
+            .collect();
+        let originals = ds.cotos(original_ids)?;
+        let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
+        let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
+        Ok(Self::new(posted_in, as_cotonomas, originals))
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]

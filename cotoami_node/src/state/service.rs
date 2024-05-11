@@ -8,7 +8,7 @@ use futures::future::FutureExt;
 use serde_json::value::Value;
 
 use crate::{
-    service::{error::InputError, models::CotosRelatedData, NodeServiceFuture, *},
+    service::{error::InputError, NodeServiceFuture, *},
     state::NodeState,
 };
 
@@ -45,6 +45,12 @@ impl NodeState {
                 cotonoma,
                 pagination,
             } => format.to_bytes(self.recent_cotos(node, cotonoma, pagination).await),
+            Command::SearchCotos {
+                query,
+                node,
+                cotonoma,
+                pagination,
+            } => format.to_bytes(self.search_cotos(query, node, cotonoma, pagination).await),
             Command::GraphFromCoto { coto } => format.to_bytes(self.graph_from_coto(coto).await),
             Command::GraphFromCotonoma { cotonoma } => {
                 format.to_bytes(self.graph_from_cotonoma(cotonoma).await)
@@ -107,23 +113,4 @@ where
 
         ServiceError::Server(anyhow_err.to_string())
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Utilities for service implementations
-/////////////////////////////////////////////////////////////////////////////
-
-fn get_cotos_related_data<'a>(
-    ds: &'a mut DatabaseSession<'_>,
-    cotos: &[Coto],
-) -> Result<CotosRelatedData> {
-    let original_ids: Vec<Id<Coto>> = cotos
-        .iter()
-        .map(|coto| coto.repost_of_id)
-        .flatten()
-        .collect();
-    let originals = ds.cotos(original_ids)?;
-    let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
-    let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
-    Ok(CotosRelatedData::new(posted_in, as_cotonomas, originals))
 }

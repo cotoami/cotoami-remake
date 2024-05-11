@@ -21,7 +21,9 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/", get(recent_cotos).post(post_coto))
+    Router::new()
+        .route("/", get(recent_cotos).post(post_coto))
+        .route("/search/:query", get(search_cotos))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -77,4 +79,23 @@ async fn post_coto(
         )
         .await
         .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/cotonomas/:cotonoma_id/cotos/search/:query
+/////////////////////////////////////////////////////////////////////////////
+
+async fn search_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<PaginatedCotos>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return ("cotos", errors).into_result();
+    }
+    state
+        .search_cotos(query, None, Some(cotonoma_id), pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
 }

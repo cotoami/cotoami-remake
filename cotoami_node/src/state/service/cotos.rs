@@ -14,7 +14,7 @@ use crate::{
     state::NodeState,
 };
 
-const DEFAULT_RECENT_PAGE_SIZE: i64 = 20;
+const DEFAULT_PAGE_SIZE: i64 = 20;
 
 impl NodeState {
     pub(crate) async fn recent_cotos(
@@ -29,13 +29,33 @@ impl NodeState {
             let page = ds.recent_cotos(
                 node.as_ref(),
                 cotonoma.as_ref(),
-                pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
+                pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
             )?;
-            let related_data = super::get_cotos_related_data(&mut ds, &page.rows)?;
-            let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
-            let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
-            Ok::<_, anyhow::Error>(PaginatedCotos::new(page, related_data, outgoing_links))
+            PaginatedCotos::new(page, &mut ds)
+        })
+        .await?
+        .map_err(ServiceError::from)
+    }
+
+    pub(crate) async fn search_cotos(
+        &self,
+        query: String,
+        node: Option<Id<Node>>,
+        cotonoma: Option<Id<Cotonoma>>,
+        pagination: Pagination,
+    ) -> Result<PaginatedCotos, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            let mut ds = db.new_session()?;
+            let page = ds.search_cotos(
+                &query,
+                node.as_ref(),
+                cotonoma.as_ref(),
+                pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
+                pagination.page,
+            )?;
+            PaginatedCotos::new(page, &mut ds)
         })
         .await?
         .map_err(ServiceError::from)

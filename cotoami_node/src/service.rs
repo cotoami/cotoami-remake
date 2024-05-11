@@ -151,6 +151,14 @@ pub enum Command {
         pagination: Pagination,
     },
 
+    /// Request [PaginatedCotos] that match the given query and cotonoma.
+    SearchCotos {
+        query: String,
+        node: Option<Id<Node>>,
+        cotonoma: Option<Id<Cotonoma>>,
+        pagination: Pagination,
+    },
+
     /// Request a [CotoGraph] by traversing from the given coto.
     GraphFromCoto { coto: Id<Coto> },
 

@@ -8,6 +8,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::future::FutureExt;
 use parking_lot::RwLock;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use reqwest::{
     header,
     header::{HeaderMap, HeaderValue},
@@ -138,6 +139,30 @@ impl HttpClient {
                     )
                 } else {
                     self.get("/api/cotos", Some(pagination.as_query()))
+                }
+            }
+            Command::SearchCotos {
+                query,
+                node,
+                cotonoma,
+                pagination,
+            } => {
+                let encoded_query = utf8_percent_encode(&query, NON_ALPHANUMERIC).to_string();
+                if let Some(cotonoma_id) = cotonoma {
+                    self.get(
+                        &format!("/api/cotonomas/{cotonoma_id}/cotos/search/{encoded_query}"),
+                        Some(pagination.as_query()),
+                    )
+                } else if let Some(node_id) = node {
+                    self.get(
+                        &format!("/api/nodes/{node_id}/cotos/search/{encoded_query}"),
+                        Some(pagination.as_query()),
+                    )
+                } else {
+                    self.get(
+                        &format!("/api/cotos/search/{encoded_query}"),
+                        Some(pagination.as_query()),
+                    )
                 }
             }
             Command::GraphFromCoto { coto } => self.get(&format!("/api/cotos/{coto}/graph"), None),
