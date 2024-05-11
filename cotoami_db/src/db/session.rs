@@ -563,13 +563,15 @@ impl<'a> DatabaseSession<'a> {
     pub fn search_cotos(
         &mut self,
         query: &str,
-        cotonoma_id: Option<&Id<Cotonoma>>,
+        node_id: Option<&Id<Node>>,
+        posted_in_id: Option<&Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
     ) -> Result<Paginated<Coto>> {
         self.read_transaction(coto_ops::full_text_search(
             query,
-            cotonoma_id,
+            node_id,
+            posted_in_id,
             page_size,
             page_index,
         ))

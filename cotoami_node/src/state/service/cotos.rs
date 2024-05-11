@@ -41,6 +41,7 @@ impl NodeState {
     pub(crate) async fn search_cotos(
         &self,
         query: String,
+        node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
@@ -49,6 +50,7 @@ impl NodeState {
             let mut ds = db.new_session()?;
             let page = ds.search_cotos(
                 &query,
+                node.as_ref(),
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,

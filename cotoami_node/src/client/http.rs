@@ -143,6 +143,7 @@ impl HttpClient {
             }
             Command::SearchCotos {
                 query,
+                node,
                 cotonoma,
                 pagination,
             } => {
@@ -150,6 +151,11 @@ impl HttpClient {
                 if let Some(cotonoma_id) = cotonoma {
                     self.get(
                         &format!("/api/cotonomas/{cotonoma_id}/cotos/search/{encoded_query}"),
+                        Some(pagination.as_query()),
+                    )
+                } else if let Some(node_id) = node {
+                    self.get(
+                        &format!("/api/nodes/{node_id}/cotos/search/{encoded_query}"),
                         Some(pagination.as_query()),
                     )
                 } else {

@@ -162,7 +162,8 @@ pub(crate) fn update_number_of_outgoing_links(
 // https://sqlite.org/fts5.html#full_text_query_syntax
 pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
     query: &'a str,
-    cotonoma_id: Option<&'a Id<Cotonoma>>,
+    filter_by_node_id: Option<&'a Id<Node>>,
+    filter_by_posted_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Paginated<Coto>> + 'a {
@@ -188,7 +189,10 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                     ))
                     .filter(whole_row.eq(query))
                     .into_boxed();
-                if let Some(id) = cotonoma_id {
+                if let Some(id) = filter_by_node_id {
+                    query = query.filter(node_id.eq(id));
+                }
+                if let Some(id) = filter_by_posted_in_id {
                     query = query.filter(posted_in_id.eq(id));
                 }
                 query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
@@ -214,7 +218,10 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                     ))
                     .filter(whole_row.eq(query))
                     .into_boxed();
-                if let Some(id) = cotonoma_id {
+                if let Some(id) = filter_by_node_id {
+                    query = query.filter(node_id.eq(id));
+                }
+                if let Some(id) = filter_by_posted_in_id {
                     query = query.filter(posted_in_id.eq(id));
                 }
                 query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))

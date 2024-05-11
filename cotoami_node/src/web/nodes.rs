@@ -32,6 +32,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/children", children::routes())
         .nest("/:node_id/cotonomas", cotonomas::routes())
         .route("/:node_id/cotos", get(recent_cotos))
+        .route("/:node_id/cotos/search/:query", get(search_cotos))
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }
@@ -63,6 +64,25 @@ async fn recent_cotos(
     }
     state
         .recent_cotos(Some(node_id), None, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/:node_id/cotos/search/:query
+/////////////////////////////////////////////////////////////////////////////
+
+async fn search_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path((node_id, query)): Path<(Id<Node>, String)>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<PaginatedCotos>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return ("cotos", errors).into_result();
+    }
+    state
+        .search_cotos(query, Some(node_id), None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

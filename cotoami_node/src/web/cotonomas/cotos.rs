@@ -95,7 +95,7 @@ async fn search_cotos(
         return ("cotos", errors).into_result();
     }
     state
-        .search_cotos(query, Some(cotonoma_id), pagination)
+        .search_cotos(query, None, Some(cotonoma_id), pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

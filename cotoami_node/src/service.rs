@@ -154,6 +154,7 @@ pub enum Command {
     /// Request [PaginatedCotos] that match the given query and cotonoma.
     SearchCotos {
         query: String,
+        node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     },
