@@ -145,7 +145,7 @@ case class Domain(
           domain,
           Seq(
             Cotonomas.fetchRecent(nodeId, 0),
-            Cotos.fetchTimeline(nodeId, None, 0),
+            Cotos.fetchTimeline(nodeId, None, None, 0),
             domain.currentCotonomaId
               .map(Domain.fetchGraphFromCotonoma)
               .getOrElse(Cmd.none)
@@ -175,7 +175,7 @@ case class Domain(
             else
               Cmd.none,
             Cotonomas.fetchDetails(cotonomaId),
-            Cotos.fetchTimeline(None, Some(cotonomaId), 0),
+            Cotos.fetchTimeline(None, Some(cotonomaId), None, 0),
             Domain.fetchGraphFromCotonoma(cotonomaId)
           )
         )

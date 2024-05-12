@@ -96,7 +96,9 @@ object Main {
 
       case UiStateRestored(uiState) =>
         (
-          model.copy(uiState = Some(uiState.getOrElse(Model.UiState()))),
+          model
+            .modify(_.uiState).setTo(Some(uiState.getOrElse(Model.UiState())))
+            .info("UiState restored.", Some(uiState.toString())),
           Seq.empty
         )
 
@@ -201,6 +203,9 @@ object Main {
           subparts.FormCoto.update(subMsg, model.flowInput)
         (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
       }
+
+      case SectionTimelineMsg(subMsg) =>
+        subparts.SectionTimeline.update(subMsg, model)
 
       case SectionTraversalsMsg(subMsg) => {
         val (traversals, cmds) =

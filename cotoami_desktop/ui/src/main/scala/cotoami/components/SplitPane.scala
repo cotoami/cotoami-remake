@@ -37,7 +37,7 @@ import slinky.web.SyntheticMouseEvent
     val splitPaneRef = React.createRef[html.Div]
     val separatorPos = useRef(Double.NaN)
 
-    // To allow the onMouseMove callback to refer up-to-date state
+    // To allow the callbacks to refer up-to-date state
     // https://stackoverflow.com/a/60643670
     val primarySizeRef = useRef(primarySize)
     primarySizeRef.current = primarySize
@@ -91,7 +91,7 @@ import slinky.web.SyntheticMouseEvent
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = (e: dom.MouseEvent) => {
       setMoving(false)
       if (!separatorPos.current.isNaN()) {
-        props.onPrimarySizeChanged.map(_(primarySize))
+        props.onPrimarySizeChanged.map(_(primarySizeRef.current))
         props.onResizeEnd.map(_())
         separatorPos.current = Double.NaN
       }

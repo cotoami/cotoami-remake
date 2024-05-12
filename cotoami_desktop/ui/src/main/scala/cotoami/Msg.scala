@@ -44,6 +44,7 @@ case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
 // Subparts
 case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
+case class SectionTimelineMsg(subMsg: subparts.SectionTimeline.Msg) extends Msg
 case class SectionTraversalsMsg(subMsg: subparts.SectionTraversals.Msg)
     extends Msg
 case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
