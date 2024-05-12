@@ -3,9 +3,10 @@ section.timeline {
     align-items: center;
 
     form.search {
+      position: relative;
       margin: 0;
       padding: 0;
-      width: 40%;
+      width: 50%;
 
       input[type=search] {
         margin: 0;
@@ -16,6 +17,25 @@ section.timeline {
         background-position: center left 8px;
         padding-inline-start: calc(var(--form-element-spacing-horizontal) + 16px);
         font-size: 14px;
+      }
+
+      button.close {
+        position: absolute;
+        top: 0;
+        right: 2px;
+
+        width: 30px;
+        height: 30px;
+
+        opacity: 0.5;
+
+        span.material-symbols {
+          font-size: 16px;
+        }
+
+        &:hover {
+          opacity: 1;
+        }
       }
     }
   }

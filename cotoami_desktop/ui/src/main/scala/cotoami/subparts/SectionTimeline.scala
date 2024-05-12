@@ -35,14 +35,17 @@ object SectionTimeline {
           tip = "Calendar",
           symbol = "calendar_month"
         ),
-        // ToolButton(
-        //   classes = "search",
-        //   tip = "Search",
-        //   symbol = "search"
-        // ),
-        form(className := "search") {
-          input(`type` := "search", name := "query")
-        }
+        ToolButton(
+          classes = "search",
+          tip = "Search",
+          symbol = "search"
+        ),
+        form(className := "search")(
+          input(`type` := "search", name := "query"),
+          button(className := "close default")(
+            materialSymbol("close")
+          )
+        )
       ),
       div(className := "posts body")(
         ScrollArea(
