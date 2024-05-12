@@ -10,7 +10,8 @@ case class Cotos(
 
     // Timeline
     timelineIds: PaginatedIds[Coto] = PaginatedIds(),
-    timelineLoading: Boolean = false
+    timelineLoading: Boolean = false,
+    query: Option[String] = None
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
@@ -57,7 +58,7 @@ object Cotos {
           model.timelineIds.nextPageIndex.map(i =>
             (
               model.copy(timelineLoading = true),
-              Seq(fetchTimeline(nodeId, cotonomaId, i))
+              Seq(fetchTimeline(nodeId, cotonomaId, model.query, i))
             )
           ).getOrElse((model, Seq.empty))
         }
@@ -66,9 +67,14 @@ object Cotos {
   def fetchTimeline(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      query: Option[String],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
-    Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex)).map(
+    query.map(query =>
+      Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
+    ).getOrElse(
+      Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
+    ).map(
       Domain.TimelineFetched andThen DomainMsg
     )
 }
