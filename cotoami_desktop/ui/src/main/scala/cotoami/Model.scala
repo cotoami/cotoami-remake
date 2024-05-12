@@ -30,6 +30,10 @@ case class Model(
     // It will be `None` before being restored from localStorage on init.
     uiState: Option[Model.UiState] = None,
 
+    // This value will be updated by and referred to from subparts that need to
+    // control text input according to IME state.
+    imeActive: Boolean = false,
+
     // Database
     databaseFolder: Option[String] = None,
     lastChangeNumber: Double = 0,

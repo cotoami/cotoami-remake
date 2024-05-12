@@ -17,6 +17,8 @@ object SectionTimeline {
   case object InitSearch extends Msg
   case object CloseSearch extends Msg
   case class QueryInput(query: String) extends Msg
+  case object ImeCompositionStart extends Msg
+  case object ImeCompositionEnd extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -32,17 +34,21 @@ object SectionTimeline {
       case QueryInput(query) =>
         (
           model.modify(_.domain.cotos.query).setTo(Some(query)),
-          if (query.isBlank())
-            Seq(fetchDefaultTimeline(model))
+          if (model.imeActive)
+            Seq.empty
           else
-            Seq(
-              Cotos.fetchTimeline(
-                model.domain.nodes.selectedId,
-                model.domain.cotonomas.selectedId,
-                Some(query),
-                0
-              )
-            )
+            Seq(fetchTimeline(query, model))
+        )
+
+      case ImeCompositionStart =>
+        (model.modify(_.imeActive).setTo(true), Seq.empty)
+
+      case ImeCompositionEnd =>
+        (
+          model.modify(_.imeActive).setTo(false),
+          model.domain.cotos.query.map(query =>
+            Seq(fetchTimeline(query, model))
+          ).getOrElse(Seq.empty)
         )
     }
 
@@ -53,6 +59,17 @@ object SectionTimeline {
       None,
       0
     )
+
+  private def fetchTimeline(query: String, model: Model): Cmd[cotoami.Msg] =
+    if (query.isBlank())
+      fetchDefaultTimeline(model)
+    else
+      Cotos.fetchTimeline(
+        model.domain.nodes.selectedId,
+        model.domain.cotonomas.selectedId,
+        Some(query),
+        0
+      )
 
   def apply(
       model: Model,
@@ -90,6 +107,12 @@ object SectionTimeline {
               value := query,
               onChange := ((e) =>
                 dispatch(SectionTimelineMsg(QueryInput(e.target.value)))
+              ),
+              onCompositionStart := (_ =>
+                dispatch(SectionTimelineMsg(ImeCompositionStart))
+              ),
+              onCompositionEnd := (_ =>
+                dispatch(SectionTimelineMsg(ImeCompositionEnd))
               )
             ),
             button(
