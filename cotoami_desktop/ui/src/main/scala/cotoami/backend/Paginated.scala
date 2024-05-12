@@ -35,10 +35,19 @@ case class PaginatedIds[T <: Entity[T]](
     total: Double = 0
 ) {
   def add(page: Paginated[T, _]): PaginatedIds[T] = {
-    val idsToAdd = page.rows.map(_.id).filterNot(this.ids.contains)
-    this.copy(
-      ids = this.ids ++ idsToAdd,
-      order = this.order ++ idsToAdd,
+    // Reset values when adding a page with index = 0.
+    val self =
+      if (page.pageIndex == 0 && this.pageIndex.isDefined)
+        PaginatedIds[T]()
+      else
+        this
+
+    // Filter IDs that have already added to avoid duplicates.
+    val idsToAdd = page.rows.map(_.id).filterNot(self.ids.contains)
+
+    self.copy(
+      ids = self.ids ++ idsToAdd,
+      order = self.order ++ idsToAdd,
       pageSize = page.pageSize,
       pageIndex = Some(page.pageIndex),
       total = page.totalRows

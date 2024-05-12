@@ -58,7 +58,10 @@ object SectionTimeline {
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): Option[ReactElement] =
-    Option.when(!model.domain.timeline.isEmpty)(
+    Option.when(
+      !model.domain.timeline.isEmpty ||
+        model.domain.cotos.query.isDefined
+    )(
       sectionTimeline(model.domain.timeline, model, dispatch)
     )
 
