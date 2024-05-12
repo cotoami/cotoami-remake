@@ -33,7 +33,7 @@ object SectionTimeline {
         (
           model.modify(_.domain.cotos.query).setTo(Some(query)),
           if (query.isBlank())
-            Seq()
+            Seq(fetchDefaultTimeline(model))
           else
             Seq(
               Cotos.fetchTimeline(
