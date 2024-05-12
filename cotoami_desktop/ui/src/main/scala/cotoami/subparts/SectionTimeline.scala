@@ -35,15 +35,18 @@ object SectionTimeline {
           tip = "Calendar",
           symbol = "calendar_month"
         ),
-        ToolButton(
-          classes = "search",
-          tip = "Search",
-          symbol = "search"
-        ),
-        form(className := "search")(
-          input(`type` := "search", name := "query"),
-          button(className := "close default")(
-            materialSymbol("close")
+        model.domain.cotos.query.map(query =>
+          form(className := "search")(
+            input(`type` := "search", name := "query", value := query),
+            button(className := "close default")(
+              materialSymbol("close")
+            )
+          )
+        ).getOrElse(
+          ToolButton(
+            classes = "search",
+            tip = "Search",
+            symbol = "search"
           )
         )
       ),
