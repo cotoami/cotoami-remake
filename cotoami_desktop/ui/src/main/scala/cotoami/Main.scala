@@ -96,7 +96,9 @@ object Main {
 
       case UiStateRestored(uiState) =>
         (
-          model.copy(uiState = Some(uiState.getOrElse(Model.UiState()))),
+          model
+            .modify(_.uiState).setTo(Some(uiState.getOrElse(Model.UiState())))
+            .info("UiState restored.", Some(uiState.toString())),
           Seq.empty
         )
 
