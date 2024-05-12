@@ -23,7 +23,17 @@ object SectionTimeline {
         (model.modify(_.domain.cotos.query).setTo(Some("")), Seq.empty)
 
       case CloseSearch =>
-        (model.modify(_.domain.cotos.query).setTo(None), Seq.empty)
+        (
+          model.modify(_.domain.cotos.query).setTo(None),
+          Seq(
+            Cotos.fetchTimeline(
+              model.domain.nodes.selectedId,
+              model.domain.cotonomas.selectedId,
+              None,
+              0
+            )
+          )
+        )
     }
 
   def apply(
