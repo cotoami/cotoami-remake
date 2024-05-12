@@ -204,6 +204,9 @@ object Main {
         (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
       }
 
+      case SectionTimelineMsg(subMsg) =>
+        subparts.SectionTimeline.update(subMsg, model)
+
       case SectionTraversalsMsg(subMsg) => {
         val (traversals, cmds) =
           subparts.SectionTraversals.update(

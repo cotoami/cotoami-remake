@@ -3,12 +3,28 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Context, Model}
+import com.softwaremill.quicklens._
+
+import fui.FunctionalUI._
+import cotoami.{Context, Model, SectionTimelineMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
 import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 
 object SectionTimeline {
+
+  sealed trait Msg
+  case object InitSearch extends Msg
+  case object CloseSearch extends Msg
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+    msg match {
+      case InitSearch =>
+        (model.modify(_.domain.cotos.query).setTo(Some("")), Seq.empty)
+
+      case CloseSearch =>
+        (model.modify(_.domain.cotos.query).setTo(None), Seq.empty)
+    }
 
   def apply(
       model: Model,
@@ -38,7 +54,10 @@ object SectionTimeline {
         model.domain.cotos.query.map(query =>
           form(className := "search")(
             input(`type` := "search", name := "query", value := query),
-            button(className := "close default")(
+            button(
+              className := "close default",
+              onClick := (_ => dispatch(SectionTimelineMsg(CloseSearch)))
+            )(
               materialSymbol("close")
             )
           )
@@ -46,7 +65,8 @@ object SectionTimeline {
           ToolButton(
             classes = "search",
             tip = "Search",
-            symbol = "search"
+            symbol = "search",
+            onClick = (() => dispatch(SectionTimelineMsg(InitSearch)))
           )
         )
       ),
