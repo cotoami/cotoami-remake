@@ -16,6 +16,7 @@ object SectionTimeline {
   sealed trait Msg
   case object InitSearch extends Msg
   case object CloseSearch extends Msg
+  case class QueryInput(query: String) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -25,16 +26,33 @@ object SectionTimeline {
       case CloseSearch =>
         (
           model.modify(_.domain.cotos.query).setTo(None),
-          Seq(
-            Cotos.fetchTimeline(
-              model.domain.nodes.selectedId,
-              model.domain.cotonomas.selectedId,
-              None,
-              0
+          Seq(fetchDefaultTimeline(model))
+        )
+
+      case QueryInput(query) =>
+        (
+          model.modify(_.domain.cotos.query).setTo(Some(query)),
+          if (query.isBlank())
+            Seq(fetchDefaultTimeline(model))
+          else
+            Seq(
+              Cotos.fetchTimeline(
+                model.domain.nodes.selectedId,
+                model.domain.cotonomas.selectedId,
+                Some(query),
+                0
+              )
             )
-          )
         )
     }
+
+  private def fetchDefaultTimeline(model: Model): Cmd[cotoami.Msg] =
+    Cotos.fetchTimeline(
+      model.domain.nodes.selectedId,
+      model.domain.cotonomas.selectedId,
+      None,
+      0
+    )
 
   def apply(
       model: Model,
@@ -63,7 +81,14 @@ object SectionTimeline {
         ),
         model.domain.cotos.query.map(query =>
           form(className := "search")(
-            input(`type` := "search", name := "query", value := query),
+            input(
+              `type` := "search",
+              name := "query",
+              value := query,
+              onChange := ((e) =>
+                dispatch(SectionTimelineMsg(QueryInput(e.target.value)))
+              )
+            ),
             button(
               className := "close default",
               onClick := (_ => dispatch(SectionTimelineMsg(CloseSearch)))
