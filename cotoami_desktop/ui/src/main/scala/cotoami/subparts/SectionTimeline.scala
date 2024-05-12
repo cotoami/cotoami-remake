@@ -83,7 +83,7 @@ object SectionTimeline {
           symbol = "calendar_month"
         ),
         model.domain.cotos.query.map(query =>
-          form(className := "search")(
+          div(className := "search")(
             input(
               `type` := "search",
               name := "query",
@@ -95,9 +95,7 @@ object SectionTimeline {
             button(
               className := "close default",
               onClick := (_ => dispatch(SectionTimelineMsg(CloseSearch)))
-            )(
-              materialSymbol("close")
-            )
+            )(materialSymbol("close"))
           )
         ).getOrElse(
           ToolButton(
