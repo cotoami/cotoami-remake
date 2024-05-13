@@ -199,7 +199,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         updated_at,
                         outgoing_links,
                     ))
-                    .filter(whole_row.eq(format!(r#""{query}""#)))
+                    .filter(whole_row.eq(to_fts_phrase(query)))
                     .into_boxed();
                 if let Some(id) = filter_by_node_id {
                     query = query.filter(node_id.eq(id));
@@ -234,12 +234,12 @@ fn search_trigram_index(
         } else {
             tokens
                 .into_iter()
-                .map(|t| format!(r#""{t}""#))
+                .map(|t| to_fts_phrase(&t))
                 .collect::<Vec<_>>()
                 .join(" OR ")
         }
     } else {
-        format!(r#""{query}""#)
+        to_fts_phrase(query)
     };
     // println!("query: [{query}]");
 
@@ -271,4 +271,9 @@ fn search_trigram_index(
         query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
     })
     .with_context(|| format!("Error processing FTS query: [{query}]"))
+}
+
+fn to_fts_phrase(string: &str) -> String {
+    let escaped = string.replace(r#"""#, r#""""#);
+    format!(r#""{escaped}""#)
 }
