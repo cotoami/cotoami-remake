@@ -35,6 +35,15 @@ pub struct Paginated<T> {
 }
 
 impl<T> Paginated<T> {
+    pub fn empty_first(page_size: i64) -> Self {
+        Self {
+            rows: Vec::new(),
+            page_size,
+            page_index: 0,
+            total_rows: 0,
+        }
+    }
+
     pub fn total_pages(&self) -> i64 {
         (self.total_rows as f64 / self.page_size as f64).ceil() as i64
     }

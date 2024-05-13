@@ -25,6 +25,7 @@ fn search_cotos() -> Result<()> {
     assert_search(&mut ds, "鳴る", vec![&coto3])?; // two chars
     assert_search(&mut ds, "柿", vec![&coto3])?; // one char
     assert_search(&mut ds, "寺", vec![&coto3])?; // the last char
+    assert_search(&mut ds, "旅行", vec![])?; // no hit
 
     assert_search(&mut ds, "summary", vec![&coto2])?;
     assert_search(&mut ds, "small OR world", vec![&coto2, &coto1])?;

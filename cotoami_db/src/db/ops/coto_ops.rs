@@ -228,7 +228,12 @@ fn search_trigram_index(
             .filter(term.like(format!("{query}%")))
             .select(term)
             .load::<String>(conn)?;
-        tokens.join(" OR ")
+        if tokens.is_empty() {
+            // No index entries found.
+            return Ok(Paginated::empty_first(page_size));
+        } else {
+            tokens.join(" OR ")
+        }
     } else {
         query.to_owned()
     };
