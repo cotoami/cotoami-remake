@@ -199,7 +199,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         updated_at,
                         outgoing_links,
                     ))
-                    .filter(whole_row.eq(query))
+                    .filter(whole_row.eq(format!(r#""{query}""#)))
                     .into_boxed();
                 if let Some(id) = filter_by_node_id {
                     query = query.filter(node_id.eq(id));
@@ -232,11 +232,16 @@ fn search_trigram_index(
             // No index entries found.
             return Ok(Paginated::empty_first(page_size));
         } else {
-            tokens.join(" OR ")
+            tokens
+                .into_iter()
+                .map(|t| format!(r#""{t}""#))
+                .collect::<Vec<_>>()
+                .join(" OR ")
         }
     } else {
-        query.to_owned()
+        format!(r#""{query}""#)
     };
+    // println!("query: [{query}]");
 
     super::paginate(conn, page_size, page_index, || {
         let mut query = cotos_fts_trigram
