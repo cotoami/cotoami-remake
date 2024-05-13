@@ -82,7 +82,7 @@ CREATE TRIGGER cotos_fts_insert AFTER INSERT ON cotos BEGIN
     VALUES (new.rowid, new.content, new.summary);
 END;
 
--- The reason why it needs indexed values in addition to a rowid to delete an entry:
+-- https://sqlite.org/fts5.html#the_delete_command
 -- When a document is inserted into the FTS5 table, an entry is added to the full-text index to 
 -- record the position of each token within the new document. When a document is removed, 
 -- the original data is required in order to determine the set of entries that need to be removed 
