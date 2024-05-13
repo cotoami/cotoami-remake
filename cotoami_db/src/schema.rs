@@ -16,6 +16,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     cotos,
     cotos_fts,
     cotos_fts_trigram,
+    cotos_fts_trigram_vocab,
     cotonomas,
     links,
     changelog
@@ -164,6 +165,16 @@ diesel::table! {
         #[sql_name = "cotos_fts_trigram"]
         whole_row -> Text,
         rank -> Float,
+    }
+}
+
+diesel::table! {
+    // This table contains one row for each distinct term
+    // in the associated FTS5 table `cotos_fts_trigram`.
+    cotos_fts_trigram_vocab (term) {
+        term -> Text,
+        doc -> BigInt,
+        cnt -> BigInt,
     }
 }
 

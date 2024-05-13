@@ -72,6 +72,7 @@ CREATE VIRTUAL TABLE cotos_fts_trigram USING fts5(
 
 -- For searching for trigram tokens by words that are shorter than the tokens (three characters).
 -- https://www.sqlite.org/fts5.html#the_fts5vocab_virtual_table_module
+-- An fts5vocab table of type "row" contains one row for each distinct term in the associated FTS5 table.
 CREATE VIRTUAL TABLE cotos_fts_trigram_vocab USING fts5vocab('cotos_fts_trigram', 'row');
 
 
