@@ -2,7 +2,7 @@
 
 use std::{collections::HashMap, ops::DerefMut};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -265,4 +265,5 @@ fn search_trigram_index(
         }
         query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
     })
+    .with_context(|| format!("Error processing FTS query: [{query}]"))
 }
