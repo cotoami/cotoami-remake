@@ -98,7 +98,11 @@ impl RecentDatabases {
     }
 
     fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        let file = OpenOptions::new().write(true).create(true).open(path)?;
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(path)?;
         let mut writer = BufWriter::new(file);
         serde_json::to_writer(&mut writer, self)?;
         writer.flush()?;
