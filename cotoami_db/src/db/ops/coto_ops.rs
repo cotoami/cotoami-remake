@@ -2,6 +2,7 @@
 
 use std::{collections::HashMap, ops::DerefMut};
 
+use anyhow::{Context, Result};
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -159,7 +160,8 @@ pub(crate) fn update_number_of_outgoing_links(
     })
 }
 
-// https://sqlite.org/fts5.html#full_text_query_syntax
+const INDEX_TOKEN_LENGTH: usize = 3;
+
 pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
     query: &'a str,
     filter_by_node_id: Option<&'a Id<Node>>,
@@ -169,37 +171,17 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Paginated<Coto>> + 'a {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
-            use crate::schema::cotos_fts_trigram::dsl::*;
-            super::paginate(conn, page_size, page_index, || {
-                let mut query = cotos_fts_trigram
-                    .select((
-                        uuid,
-                        rowid,
-                        node_id,
-                        posted_in_id,
-                        posted_by_id,
-                        content,
-                        summary,
-                        is_cotonoma,
-                        repost_of_id,
-                        reposted_in_ids,
-                        created_at,
-                        updated_at,
-                        outgoing_links,
-                    ))
-                    .filter(whole_row.eq(query))
-                    .into_boxed();
-                if let Some(id) = filter_by_node_id {
-                    query = query.filter(node_id.eq(id));
-                }
-                if let Some(id) = filter_by_posted_in_id {
-                    query = query.filter(posted_in_id.eq(id));
-                }
-                query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
-            })
+            search_trigram_index(
+                conn,
+                query,
+                filter_by_node_id,
+                filter_by_posted_in_id,
+                page_size,
+                page_index,
+            )
         } else {
             use crate::schema::cotos_fts::dsl::*;
-            super::paginate(conn, page_size, page_index, || {
+            super::paginate(conn, page_size, page_index, move || {
                 let mut query = cotos_fts
                     .select((
                         uuid,
@@ -216,7 +198,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         updated_at,
                         outgoing_links,
                     ))
-                    .filter(whole_row.eq(query))
+                    .filter(whole_row.eq(to_fts_query(query)))
                     .into_boxed();
                 if let Some(id) = filter_by_node_id {
                     query = query.filter(node_id.eq(id));
@@ -228,4 +210,78 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
             })
         }
     })
+}
+
+fn search_trigram_index(
+    conn: &mut SqliteConnection,
+    query: &str,
+    filter_by_node_id: Option<&Id<Node>>,
+    filter_by_posted_in_id: Option<&Id<Cotonoma>>,
+    page_size: i64,
+    page_index: i64,
+) -> Result<Paginated<Coto>> {
+    use crate::schema::{cotos_fts_trigram::dsl::*, cotos_fts_trigram_vocab::dsl::*};
+
+    let query = if query.chars().count() < INDEX_TOKEN_LENGTH {
+        let tokens: Vec<String> = cotos_fts_trigram_vocab
+            .filter(term.like(format!("{query}%")))
+            .select(term)
+            .load::<String>(conn)?;
+        if tokens.is_empty() {
+            // No index entries found.
+            return Ok(Paginated::empty_first(page_size));
+        } else {
+            tokens
+                .into_iter()
+                .map(|t| to_fts_phrase(&t))
+                .collect::<Vec<_>>()
+                .join(" OR ")
+        }
+    } else {
+        to_fts_query(query)
+    };
+
+    super::paginate(conn, page_size, page_index, || {
+        let mut query = cotos_fts_trigram
+            .select((
+                uuid,
+                rowid,
+                node_id,
+                posted_in_id,
+                posted_by_id,
+                content,
+                summary,
+                is_cotonoma,
+                repost_of_id,
+                reposted_in_ids,
+                created_at,
+                updated_at,
+                outgoing_links,
+            ))
+            .filter(whole_row.eq(&query))
+            .into_boxed();
+        if let Some(id) = filter_by_node_id {
+            query = query.filter(node_id.eq(id));
+        }
+        if let Some(id) = filter_by_posted_in_id {
+            query = query.filter(posted_in_id.eq(id));
+        }
+        query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
+    })
+    .with_context(|| format!("Error processing FTS query: [{query}]"))
+}
+
+// https://sqlite.org/fts5.html#full_text_query_syntax
+fn to_fts_query(string: &str) -> String {
+    let tokens: Vec<&str> = string.split_ascii_whitespace().collect();
+    tokens
+        .into_iter()
+        .map(|t| to_fts_phrase(t))
+        .collect::<Vec<_>>()
+        .join(" AND ")
+}
+
+fn to_fts_phrase(string: &str) -> String {
+    let escaped = string.replace(r#"""#, r#""""#);
+    format!(r#""{escaped}""#)
 }

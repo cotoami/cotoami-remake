@@ -15,14 +15,24 @@ fn search_cotos() -> Result<()> {
     let (coto1, _) = ds.post_coto("Hello, world!", None, &root, &opr)?;
     let (coto2, _) = ds.post_coto("It's a small world.", Some("summary"), &root, &opr)?;
     let (coto3, _) = ds.post_coto("柿くへば鐘が鳴るなり法隆寺", None, &root, &opr)?;
+    let (coto4, _) = ds.post_coto("旅行(行きたい)", None, &root, &opr)?;
 
     // then
     assert_search(&mut ds, "hello", vec![&coto1])?;
     assert_search(&mut ds, "world", vec![&coto1, &coto2])?;
     assert_search(&mut ds, "法隆寺", vec![&coto3])?;
+    assert_search(&mut ds, "(", vec![])?; // parentheses as a query
+    assert_search(&mut ds, "\"", vec![])?; // double quote as a query
+
+    // search by CJK words shorter than trigram tokens
+    assert_search(&mut ds, "鳴る", vec![&coto3])?; // two chars
+    assert_search(&mut ds, "柿", vec![&coto3])?; // one char
+    assert_search(&mut ds, "寺", vec![&coto3])?; // the last char
+    assert_search(&mut ds, "禅", vec![])?; // no hit
+    assert_search(&mut ds, "旅行", vec![&coto4])?; // a token contains parentheses
+
     assert_search(&mut ds, "summary", vec![&coto2])?;
-    assert_search(&mut ds, "small OR world", vec![&coto2, &coto1])?;
-    assert_search(&mut ds, "small AND world", vec![&coto2])?;
+    assert_search(&mut ds, "small world", vec![&coto2])?; // AND
 
     // when: edit a coto to change English results
     // (testing the trigger: `cotos_fts_update`)
