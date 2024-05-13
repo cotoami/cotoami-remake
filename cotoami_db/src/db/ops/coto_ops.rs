@@ -159,6 +159,8 @@ pub(crate) fn update_number_of_outgoing_links(
     })
 }
 
+const INDEX_TOKEN_LENGTH: usize = 3;
+
 // https://sqlite.org/fts5.html#full_text_query_syntax
 pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
     query: &'a str,
@@ -169,7 +171,18 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Paginated<Coto>> + 'a {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
-            use crate::schema::cotos_fts_trigram::dsl::*;
+            use crate::schema::{cotos_fts_trigram::dsl::*, cotos_fts_trigram_vocab::dsl::*};
+
+            let query = if query.chars().count() < INDEX_TOKEN_LENGTH {
+                let tokens: Vec<String> = cotos_fts_trigram_vocab
+                    .filter(term.like(format!("{query}%")))
+                    .select(term)
+                    .load::<String>(conn)?;
+                tokens.join(" OR ")
+            } else {
+                query.to_owned()
+            };
+
             super::paginate(conn, page_size, page_index, || {
                 let mut query = cotos_fts_trigram
                     .select((
@@ -187,7 +200,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         updated_at,
                         outgoing_links,
                     ))
-                    .filter(whole_row.eq(query))
+                    .filter(whole_row.eq(&query))
                     .into_boxed();
                 if let Some(id) = filter_by_node_id {
                     query = query.filter(node_id.eq(id));
