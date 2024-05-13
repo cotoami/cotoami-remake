@@ -70,28 +70,47 @@ CREATE VIRTUAL TABLE cotos_fts_trigram USING fts5(
   content_rowid=rowid
 );
 
+-- For searching for trigram tokens by words that are shorter than the tokens (three characters).
+-- https://www.sqlite.org/fts5.html#the_fts5vocab_virtual_table_module
+CREATE VIRTUAL TABLE cotos_fts_trigram_vocab USING fts5vocab('cotos_fts_trigram', 'row');
+
 
 --
 -- Triggers to keep the FTS index up to date.
 --
 
+-- Usually, you can't search a trigram index with words of less than three characters.
+-- In order to enable searching by one or two CJK characters:
+--
+-- 1. Find tokens from a token table (fts5vocab virtual table) by prefix search
+-- 2. Search a trigram index by the found tokens
+--
+-- You have to prefix-search a token table to enable SQLite's LIKE optimization (otherwise, 
+-- searching would be disastrously slow), but as a result, you can't match the last two characters 
+-- of a document. To solve this problem, We append two zero-width spaces (ZWSP) at the last of 
+-- each text content when inserting a trigram index.
+
 CREATE TRIGGER cotos_fts_insert AFTER INSERT ON cotos BEGIN
   INSERT INTO cotos_fts(rowid, content, summary) 
     VALUES (new.rowid, new.content, new.summary);
   INSERT INTO cotos_fts_trigram(rowid, content, summary) 
-    VALUES (new.rowid, new.content, new.summary);
+    VALUES (new.rowid, new.content || char(8203,8203), new.summary || char(8203,8203));
 END;
 
 -- https://sqlite.org/fts5.html#the_delete_command
--- When a document is inserted into the FTS5 table, an entry is added to the full-text index to 
--- record the position of each token within the new document. When a document is removed, 
--- the original data is required in order to determine the set of entries that need to be removed 
--- from the full-text index. 
+-- In order to use this command to delete a row, the text value 'delete' must be inserted into 
+-- the special column with the same name as the table. The rowid of the row to delete is inserted 
+-- into the rowid column. The values inserted into the other columns must match the values currently 
+-- stored in the table.
+-- The reason for this: When a document is inserted into the FTS5 table, an entry is added to 
+-- the full-text index to record the position of each token within the new document. 
+-- When a document is removed, the original data is required in order to determine the set of 
+-- entries that need to be removed from the full-text index. 
 CREATE TRIGGER cotos_fts_delete AFTER DELETE ON cotos BEGIN
   INSERT INTO cotos_fts(cotos_fts, rowid, content, summary) 
     VALUES('delete', old.rowid, old.content, old.summary);
   INSERT INTO cotos_fts_trigram(cotos_fts_trigram, rowid, content, summary) 
-    VALUES('delete', old.rowid, old.content, old.summary);
+    VALUES('delete', old.rowid, old.content || char(8203,8203), old.summary || char(8203,8203));
 END;
 
 CREATE TRIGGER cotos_fts_update AFTER UPDATE ON cotos BEGIN
@@ -101,7 +120,7 @@ CREATE TRIGGER cotos_fts_update AFTER UPDATE ON cotos BEGIN
     VALUES (new.rowid, new.content, new.summary);
 
   INSERT INTO cotos_fts_trigram(cotos_fts_trigram, rowid, content, summary) 
-    VALUES('delete', old.rowid, old.content, old.summary);
+    VALUES('delete', old.rowid, old.content || char(8203,8203), old.summary || char(8203,8203));
   INSERT INTO cotos_fts_trigram(rowid, content, summary) 
-    VALUES (new.rowid, new.content, new.summary);
+    VALUES (new.rowid, new.content || char(8203,8203), new.summary || char(8203,8203));
 END;
