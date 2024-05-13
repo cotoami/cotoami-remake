@@ -162,7 +162,6 @@ pub(crate) fn update_number_of_outgoing_links(
 
 const INDEX_TOKEN_LENGTH: usize = 3;
 
-// https://sqlite.org/fts5.html#full_text_query_syntax
 pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
     query: &'a str,
     filter_by_node_id: Option<&'a Id<Node>>,
@@ -182,7 +181,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
             )
         } else {
             use crate::schema::cotos_fts::dsl::*;
-            super::paginate(conn, page_size, page_index, || {
+            super::paginate(conn, page_size, page_index, move || {
                 let mut query = cotos_fts
                     .select((
                         uuid,
@@ -199,7 +198,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         updated_at,
                         outgoing_links,
                     ))
-                    .filter(whole_row.eq(to_fts_phrase(query)))
+                    .filter(whole_row.eq(to_fts_query(query)))
                     .into_boxed();
                 if let Some(id) = filter_by_node_id {
                     query = query.filter(node_id.eq(id));
@@ -239,9 +238,8 @@ fn search_trigram_index(
                 .join(" OR ")
         }
     } else {
-        to_fts_phrase(query)
+        to_fts_query(query)
     };
-    // println!("query: [{query}]");
 
     super::paginate(conn, page_size, page_index, || {
         let mut query = cotos_fts_trigram
@@ -271,6 +269,16 @@ fn search_trigram_index(
         query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
     })
     .with_context(|| format!("Error processing FTS query: [{query}]"))
+}
+
+// https://sqlite.org/fts5.html#full_text_query_syntax
+fn to_fts_query(string: &str) -> String {
+    let tokens: Vec<&str> = string.split_ascii_whitespace().collect();
+    tokens
+        .into_iter()
+        .map(|t| to_fts_phrase(t))
+        .collect::<Vec<_>>()
+        .join(" AND ")
 }
 
 fn to_fts_phrase(string: &str) -> String {
