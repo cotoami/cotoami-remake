@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use axum::{
     extract::{Path, State},
@@ -65,7 +67,7 @@ async fn add_server_node(
     Form(form): Form<AddServerNode>,
 ) -> Result<(StatusCode, Content<Server>), ServiceError> {
     state
-        .add_server_node(form, &operator)
+        .add_server_node(form, Arc::new(operator))
         .await
         .map(|server| (StatusCode::CREATED, Content(server, accept)))
 }

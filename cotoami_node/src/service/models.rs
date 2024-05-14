@@ -50,7 +50,7 @@ pub struct ClientNodeSession {
 // Server
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize, Validate)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct AddServerNode {
     #[validate(required, url)]
     pub url_prefix: Option<String>,

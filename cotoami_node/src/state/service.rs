@@ -34,6 +34,9 @@ impl NodeState {
             Command::CreateClientNodeSession(input) => {
                 format.to_bytes(self.create_client_node_session(input).await)
             }
+            Command::AddServerNode(input) => {
+                format.to_bytes(self.add_server_node(input, opr?).await)
+            }
             Command::RecentCotonomas { node, pagination } => {
                 format.to_bytes(self.recent_cotonomas(node, pagination).await)
             }

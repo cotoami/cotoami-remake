@@ -126,8 +126,11 @@ pub enum Command {
     /// Request a [ChunkOfChanges] from a change number `from`.
     ChunkOfChanges { from: i64 },
 
-    /// Request a new [ClientNodeSession] with [CreateClientNodeSession].
+    /// Request a new [ClientNodeSession].
     CreateClientNodeSession(CreateClientNodeSession),
+
+    /// Request to add a new [Server].
+    AddServerNode(AddServerNode),
 
     /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
     RecentCotonomas {

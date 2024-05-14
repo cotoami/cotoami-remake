@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
@@ -18,7 +20,7 @@ impl NodeState {
     pub(crate) async fn add_server_node(
         &self,
         input: AddServerNode,
-        operator: &Operator,
+        operator: Arc<Operator>,
     ) -> Result<Server, ServiceError> {
         if let Err(errors) = input.validate() {
             return ("add_server_node", errors).into_result();

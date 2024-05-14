@@ -107,6 +107,7 @@ impl HttpClient {
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
+            Command::AddServerNode(input) => self.post(&format!("/api/nodes/servers")).form(&input),
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
                     self.get(
