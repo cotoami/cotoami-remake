@@ -6,7 +6,7 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
 use crate::{
-    db::{error::*, op::*, ops, ops::Paginated},
+    db::{error::*, op::*},
     models::{
         node::{
             parent::{NewParentNode, ParentNode},
@@ -14,7 +14,7 @@ use crate::{
         },
         Id,
     },
-    schema::{nodes, parent_nodes},
+    schema::parent_nodes,
 };
 
 /// Returns a [ParentNode] by its ID.
@@ -54,25 +54,6 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
             .filter(parent_nodes::node_id.eq_any(node_ids))
             .load::<ParentNode>(conn)
             .map_err(anyhow::Error::from)
-    })
-}
-
-/// Returns paginated results of [ParentNode]s that have recently sent a change or
-/// been inserted, with their corresponding [Node]s.
-pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
-    page_size: i64,
-    page_index: i64,
-) -> impl Operation<Conn, Paginated<(ParentNode, Node)>> + 'a {
-    read_op(move |conn| {
-        ops::paginate(conn, page_size, page_index, || {
-            parent_nodes::table
-                .inner_join(nodes::table)
-                .select((ParentNode::as_select(), Node::as_select()))
-                .order((
-                    parent_nodes::last_change_received_at.desc(),
-                    parent_nodes::created_at.desc(),
-                ))
-        })
     })
 }
 

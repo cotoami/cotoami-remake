@@ -411,16 +411,6 @@ impl<'a> DatabaseSession<'a> {
             .map_err(anyhow::Error::from)
     }
 
-    pub fn recent_parent_nodes(
-        &mut self,
-        page_size: i64,
-        page_index: i64,
-        operator: &Operator,
-    ) -> Result<Paginated<(ParentNode, Node)>> {
-        operator.requires_to_be_owner()?;
-        self.read_transaction(parent_ops::recent_pairs(page_size, page_index))
-    }
-
     pub fn database_role_of(&mut self, node_id: &Id<Node>) -> Result<Option<DatabaseRole>> {
         self.read_transaction(node_role_ops::database_role_of(node_id))
     }
