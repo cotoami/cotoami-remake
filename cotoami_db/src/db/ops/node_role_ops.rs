@@ -6,9 +6,10 @@ use crate::{
     db::{error::*, op::*},
     models::{
         node::{
-            child::{ChildNode, NewChildNode},
+            child::NewChildNode,
             client::{ClientNode, NewClientNode},
             parent::{NewParentNode, ParentNode},
+            roles::{DatabaseRole, NetworkRole},
             server::{NewServerNode, ServerNode},
             Node,
         },
@@ -25,15 +26,6 @@ pub mod server_ops;
 /////////////////////////////////////////////////////////////////////////////
 // network role
 /////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug, derive_more::Display)]
-pub enum NetworkRole {
-    #[display("Server ({})", _0.node_id)]
-    Server(ServerNode),
-
-    #[display("Client ({})", _0.node_id)]
-    Client(ClientNode),
-}
 
 pub(crate) fn network_role<Conn: AsReadableConn>(
     id: &Id<Node>,
@@ -109,15 +101,6 @@ pub(crate) fn set_network_disabled(
 /////////////////////////////////////////////////////////////////////////////
 // database role
 /////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug, derive_more::Display)]
-pub enum DatabaseRole {
-    #[display("Parent ({})", _0.node_id)]
-    Parent(ParentNode),
-
-    #[display("Child ({})", _0.node_id)]
-    Child(ChildNode),
-}
 
 pub(crate) fn database_role<Conn: AsReadableConn>(
     id: &Id<Node>,

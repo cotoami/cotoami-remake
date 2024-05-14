@@ -40,7 +40,7 @@ pub(crate) mod prelude {
         cotonoma::*,
         graph::*,
         link::*,
-        node::{child::*, client::*, local::*, parent::*, server::*, *},
+        node::{child::*, client::*, local::*, parent::*, roles::*, server::*, *},
         operator::*,
         ClientSession, Id, Ids,
     };
