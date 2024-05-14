@@ -15,7 +15,7 @@ use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{CreateClientNodeSession, NotConnected},
+        models::{AddServerNode, CreateClientNodeSession, NotConnected},
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
@@ -69,17 +69,6 @@ async fn all_server_nodes(
 /////////////////////////////////////////////////////////////////////////////
 // POST /api/nodes/servers
 /////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Deserialize, Validate)]
-struct AddServerNode {
-    #[validate(required, url)]
-    url_prefix: Option<String>,
-
-    #[validate(required)]
-    password: Option<String>,
-
-    as_child: Option<bool>,
-}
 
 async fn add_server_node(
     State(state): State<NodeState>,
