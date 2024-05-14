@@ -64,9 +64,18 @@ pub struct AddServerNode {
 #[derive(serde::Serialize, new)]
 pub struct Server {
     pub node: Node,
-    pub url_prefix: String,
-    pub is_parent: bool,
+    pub server: ServerNode,
     pub not_connected: Option<NotConnected>,
+    pub database_role: Option<DatabaseRole>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(tag = "reason", content = "details")]
+pub enum NotConnected {
+    Disabled,
+    Connecting(Option<String>),
+    InitFailed(String),
+    Disconnected(Option<String>),
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -100,19 +109,6 @@ impl Changes {
             true // empty (no changes) means the last chunk
         }
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Server
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug, Clone, serde::Serialize)]
-#[serde(tag = "reason", content = "details")]
-pub enum NotConnected {
-    Disabled,
-    Connecting(Option<String>),
-    InitFailed(String),
-    Disconnected(Option<String>),
 }
 
 /////////////////////////////////////////////////////////////////////////////

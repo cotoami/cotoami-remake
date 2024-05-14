@@ -39,16 +39,16 @@ async fn all_server_nodes(
     spawn_blocking(move || {
         let conns = state.read_server_conns();
         let mut db = state.db().new_session()?;
-        let nodes = db
-            .all_server_nodes(&operator)?
+        let server_nodes = db.all_server_nodes(&operator)?;
+        let nodes = server_nodes
             .into_iter()
             .map(|(server, node)| {
                 let conn = conns.get(&server.node_id).unwrap_or_else(|| unreachable!());
                 Server::new(
                     node,
-                    server.url_prefix,
-                    state.is_parent(&server.node_id),
+                    server,
                     conn.not_connected(),
+                    state.is_parent(&server.node_id),
                 )
             })
             .collect();
@@ -138,9 +138,9 @@ async fn add_server_node(
     // Return a Server as a response
     let server = Server::new(
         server_node,
-        http_client.url_prefix().to_string(),
-        matches!(server_db_role, DatabaseRole::Parent(_)),
+        server,
         server_conn.not_connected(),
+        Some(server_db_role),
     );
     Ok((StatusCode::CREATED, Content(server, accept)))
 }

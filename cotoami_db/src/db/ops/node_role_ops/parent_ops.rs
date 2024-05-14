@@ -46,6 +46,17 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<ParentNode
     })
 }
 
+pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
+    node_ids: &Vec<Id<Node>>,
+) -> impl Operation<Conn, Vec<ParentNode>> + '_ {
+    read_op(move |conn| {
+        parent_nodes::table
+            .filter(parent_nodes::node_id.eq_any(node_ids))
+            .load::<ParentNode>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 /// Returns paginated results of [ParentNode]s that have recently sent a change or
 /// been inserted, with their corresponding [Node]s.
 pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(

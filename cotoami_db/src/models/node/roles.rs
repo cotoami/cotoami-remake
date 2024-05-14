@@ -2,7 +2,7 @@ use crate::models::node::{
     child::ChildNode, client::ClientNode, parent::ParentNode, server::ServerNode,
 };
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::Display, serde::Serialize)]
 pub enum NetworkRole {
     #[display("Server ({})", _0.node_id)]
     Server(ServerNode),
@@ -11,7 +11,7 @@ pub enum NetworkRole {
     Client(ClientNode),
 }
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::Display, serde::Serialize)]
 pub enum DatabaseRole {
     #[display("Parent ({})", _0.node_id)]
     Parent(ParentNode),

@@ -1,5 +1,5 @@
 use core::time::Duration;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::{bail, Context as _, Result};
 use diesel::sqlite::SqliteConnection;
@@ -368,7 +368,7 @@ impl<'a> DatabaseSession<'a> {
         // a client node?
         if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
             if client.verify_session(token).is_ok() {
-                match self.database_role(&client.node_id)? {
+                match self.database_role_of(&client.node_id)? {
                     Some(DatabaseRole::Parent(parent)) => {
                         return Ok(Some(ClientSession::ParentNode(parent)));
                     }
@@ -419,6 +419,17 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<Paginated<(ParentNode, Node)>> {
         operator.requires_to_be_owner()?;
         self.read_transaction(parent_ops::recent_pairs(page_size, page_index))
+    }
+
+    pub fn database_role_of(&mut self, node_id: &Id<Node>) -> Result<Option<DatabaseRole>> {
+        self.read_transaction(node_role_ops::database_role_of(node_id))
+    }
+
+    pub fn database_roles_of(
+        &mut self,
+        node_ids: &Vec<Id<Node>>,
+    ) -> Result<HashMap<Id<Node>, DatabaseRole>> {
+        self.read_transaction(node_role_ops::database_roles_of(node_ids))
     }
 
     /// In Cotoami, `fork` means disconnecting from a parent node and taking the ownership of
@@ -989,9 +1000,5 @@ impl<'a> DatabaseSession<'a> {
         Op: Operation<WritableConn, T>,
     {
         op::run_write(&mut (self.lock_rw_conn)(), op)
-    }
-
-    fn database_role(&mut self, id: &Id<Node>) -> Result<Option<DatabaseRole>> {
-        self.read_transaction(node_role_ops::database_role(id))
     }
 }

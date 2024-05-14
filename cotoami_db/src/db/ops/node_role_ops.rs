@@ -1,5 +1,7 @@
 //! Node role related operations
 
+use std::collections::HashMap;
+
 use anyhow::bail;
 
 use crate::{
@@ -27,13 +29,13 @@ pub mod server_ops;
 // network role
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn network_role<Conn: AsReadableConn>(
-    id: &Id<Node>,
+pub(crate) fn network_role_of<Conn: AsReadableConn>(
+    node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<NetworkRole>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
-        if let Some(server) = server_ops::get(id).run(ctx)? {
+        if let Some(server) = server_ops::get(node_id).run(ctx)? {
             Ok(Some(NetworkRole::Server(server)))
-        } else if let Some(client) = client_ops::get(id).run(ctx)? {
+        } else if let Some(client) = client_ops::get(node_id).run(ctx)? {
             Ok(Some(NetworkRole::Client(client)))
         } else {
             Ok(None)
@@ -47,21 +49,21 @@ pub enum NewNetworkRole<'a> {
 }
 
 pub(crate) fn set_network_role<'a>(
-    id: &'a Id<Node>,
+    node_id: &'a Id<Node>,
     role: NewNetworkRole<'a>,
 ) -> impl Operation<WritableConn, NetworkRole> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if let Some(_) = network_role(id).run(ctx)? {
+        if let Some(_) = network_role_of(node_id).run(ctx)? {
             bail!(DatabaseError::NodeRoleConflict);
         }
         match role {
             NewNetworkRole::Server { url_prefix } => {
-                let new_role = NewServerNode::new(id, url_prefix)?;
+                let new_role = NewServerNode::new(node_id, url_prefix)?;
                 let role = server_ops::insert(&new_role).run(ctx)?;
                 Ok(NetworkRole::Server(role))
             }
             NewNetworkRole::Client { password } => {
-                let new_role = NewClientNode::new(id, password)?;
+                let new_role = NewClientNode::new(node_id, password)?;
                 let role = client_ops::insert(&new_role).run(ctx)?;
                 Ok(NetworkRole::Client(role))
             }
@@ -70,12 +72,12 @@ pub(crate) fn set_network_role<'a>(
 }
 
 pub(crate) fn set_network_disabled(
-    id: &Id<Node>,
+    node_id: &Id<Node>,
     disabled: bool,
 ) -> impl Operation<WritableConn, NetworkRole> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         if !disabled {
-            if let Some(DatabaseRole::Parent(parent)) = database_role(id).run(ctx)? {
+            if let Some(DatabaseRole::Parent(parent)) = database_role_of(node_id).run(ctx)? {
                 if parent.forked {
                     // A forked parent can't be enabled
                     bail!(DatabaseError::AlreadyForkedFromParent {
@@ -84,16 +86,16 @@ pub(crate) fn set_network_disabled(
                 }
             }
         }
-        match network_role(id).run(ctx)? {
+        match network_role_of(node_id).run(ctx)? {
             Some(NetworkRole::Server(_)) => {
-                let server = server_ops::set_disabled(id, true).run(ctx)?;
+                let server = server_ops::set_disabled(node_id, true).run(ctx)?;
                 Ok(NetworkRole::Server(server))
             }
             Some(NetworkRole::Client(_)) => {
-                let client = client_ops::set_disabled(id, true).run(ctx)?;
+                let client = client_ops::set_disabled(node_id, true).run(ctx)?;
                 Ok(NetworkRole::Client(client))
             }
-            None => bail!(DatabaseError::not_found(EntityKind::NetworkRole, *id)),
+            None => bail!(DatabaseError::not_found(EntityKind::NetworkRole, *node_id)),
         }
     })
 }
@@ -102,17 +104,32 @@ pub(crate) fn set_network_disabled(
 // database role
 /////////////////////////////////////////////////////////////////////////////
 
-pub(crate) fn database_role<Conn: AsReadableConn>(
-    id: &Id<Node>,
+pub(crate) fn database_role_of<Conn: AsReadableConn>(
+    node_id: &Id<Node>,
 ) -> impl Operation<Conn, Option<DatabaseRole>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
-        if let Some(parent) = parent_ops::get(id).run(ctx)? {
+        if let Some(parent) = parent_ops::get(node_id).run(ctx)? {
             Ok(Some(DatabaseRole::Parent(parent)))
-        } else if let Some(child) = child_ops::get(id).run(ctx)? {
+        } else if let Some(child) = child_ops::get(node_id).run(ctx)? {
             Ok(Some(DatabaseRole::Child(child)))
         } else {
             Ok(None)
         }
+    })
+}
+
+pub(crate) fn database_roles_of<Conn: AsReadableConn>(
+    node_ids: &Vec<Id<Node>>,
+) -> impl Operation<Conn, HashMap<Id<Node>, DatabaseRole>> + '_ {
+    composite_op::<Conn, _, _>(move |ctx| {
+        let mut roles = HashMap::new();
+        for parent in parent_ops::get_by_node_ids(node_ids).run(ctx)? {
+            roles.insert(parent.node_id, DatabaseRole::Parent(parent));
+        }
+        for child in child_ops::get_by_node_ids(node_ids).run(ctx)? {
+            roles.insert(child.node_id, DatabaseRole::Child(child));
+        }
+        Ok(roles)
     })
 }
 
@@ -125,16 +142,16 @@ pub enum NewDatabaseRole {
 }
 
 pub(crate) fn set_database_role<'a>(
-    id: &'a Id<Node>,
+    node_id: &'a Id<Node>,
     role: NewDatabaseRole,
 ) -> impl Operation<WritableConn, DatabaseRole> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if let Some(_) = database_role(id).run(ctx)? {
+        if let Some(_) = database_role_of(node_id).run(ctx)? {
             bail!(DatabaseError::NodeRoleConflict);
         }
         match role {
             NewDatabaseRole::Parent => {
-                let new_role = NewParentNode::new(id)?;
+                let new_role = NewParentNode::new(node_id)?;
                 let role = parent_ops::insert(&new_role).run(ctx)?;
                 Ok(DatabaseRole::Parent(role))
             }
@@ -142,7 +159,7 @@ pub(crate) fn set_database_role<'a>(
                 as_owner,
                 can_edit_links,
             } => {
-                let new_role = NewChildNode::new(id, as_owner, can_edit_links)?;
+                let new_role = NewChildNode::new(node_id, as_owner, can_edit_links)?;
                 let role = child_ops::insert(&new_role).run(ctx)?;
                 Ok(DatabaseRole::Child(role))
             }
@@ -165,38 +182,38 @@ pub(crate) fn fork_from(
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) fn register_server_node<'a>(
-    id: &'a Id<Node>,
+    node_id: &'a Id<Node>,
     url_prefix: &'a str,
     database_role: NewDatabaseRole,
 ) -> impl Operation<WritableConn, (ServerNode, DatabaseRole)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         // Set a network role (server) to the node
         let network_role = NewNetworkRole::Server { url_prefix };
-        let NetworkRole::Server(server) = set_network_role(id, network_role).run(ctx)? else {
+        let NetworkRole::Server(server) = set_network_role(node_id, network_role).run(ctx)? else {
             unreachable!()
         };
 
         // Set a database role to the node
-        let database_role = set_database_role(id, database_role).run(ctx)?;
+        let database_role = set_database_role(node_id, database_role).run(ctx)?;
 
         Ok((server, database_role))
     })
 }
 
 pub(crate) fn register_client_node<'a>(
-    id: &'a Id<Node>,
+    node_id: &'a Id<Node>,
     password: &'a str,
     database_role: NewDatabaseRole,
 ) -> impl Operation<WritableConn, (ClientNode, DatabaseRole)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         // Set a network role (client) to the node
         let network_role = NewNetworkRole::Client { password };
-        let NetworkRole::Client(client) = set_network_role(id, network_role).run(ctx)? else {
+        let NetworkRole::Client(client) = set_network_role(node_id, network_role).run(ctx)? else {
             unreachable!()
         };
 
         // Set a database role to the node
-        let database_role = set_database_role(&id, database_role).run(ctx)?;
+        let database_role = set_database_role(&node_id, database_role).run(ctx)?;
 
         Ok((client, database_role))
     })
