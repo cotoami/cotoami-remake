@@ -9,7 +9,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::{IntoServiceResult, RequestError},
-        models::{PaginatedCotos, Pagination},
+        models::{CotoInput, PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -27,6 +27,7 @@ impl NodeState {
         if let Err(errors) = pagination.validate() {
             return ("recent_cotos", errors).into_result();
         }
+
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
@@ -52,6 +53,7 @@ impl NodeState {
         if let Err(errors) = pagination.validate() {
             return ("search_cotos", errors).into_result();
         }
+
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
@@ -70,11 +72,14 @@ impl NodeState {
 
     pub(crate) async fn post_coto(
         self,
-        content: String,
-        summary: Option<String>,
+        input: CotoInput,
         post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<Coto, ServiceError> {
+        if let Err(errors) = input.validate() {
+            return ("post_coto", errors).into_result();
+        }
+
         // Try to post the coto in the local node.
         let post_result = spawn_blocking({
             let this = self.clone();
@@ -86,16 +91,16 @@ impl NodeState {
 
                 // Post the coto if the cotonoma belongs to the local node.
                 if this.db().globals().is_local(&cotonoma) {
-                    let (coto, change) =
-                        ds.post_coto(&content, summary.as_deref(), &cotonoma, operator.as_ref())?;
+                    let (coto, change) = ds.post_coto(
+                        &input.content.unwrap_or_else(|| unreachable!()),
+                        input.summary.as_deref(),
+                        &cotonoma,
+                        operator.as_ref(),
+                    )?;
                     this.pubsub().publish_change(change);
                     Ok::<_, anyhow::Error>(PostResult::Posted(coto))
                 } else {
-                    Ok::<_, anyhow::Error>(PostResult::ToForward {
-                        cotonoma,
-                        content,
-                        summary,
-                    })
+                    Ok::<_, anyhow::Error>(PostResult::ToForward { cotonoma, input })
                 }
             }
         })
@@ -103,14 +108,10 @@ impl NodeState {
 
         match post_result {
             PostResult::Posted(coto) => Ok(coto),
-            PostResult::ToForward {
-                cotonoma,
-                content,
-                summary,
-            } => {
+            PostResult::ToForward { cotonoma, input } => {
                 if let Some(mut parent_service) = self.parent_service(&cotonoma.node_id) {
                     parent_service
-                        .post_coto(content, summary, post_to)
+                        .post_coto(input, post_to)
                         .await
                         .map_err(ServiceError::from)
                 } else {
@@ -127,7 +128,6 @@ enum PostResult {
     Posted(Coto),
     ToForward {
         cotonoma: Cotonoma,
-        content: String,
-        summary: Option<String>,
+        input: CotoInput,
     },
 }

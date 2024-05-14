@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{PaginatedCotos, Pagination},
+        models::{CotoInput, PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -49,34 +49,15 @@ async fn recent_cotos(
 // POST /api/cotonomas/:cotonoma_id/cotos
 /////////////////////////////////////////////////////////////////////////////
 
-/// HTTP API specific input of [post_coto], which is intended to be sent as
-/// `application/x-www-form-urlencoded`.
-#[derive(serde::Serialize, serde::Deserialize, Validate)]
-pub(crate) struct PostCoto {
-    #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    pub content: Option<String>,
-
-    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    pub summary: Option<String>,
-}
-
 async fn post_coto(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Form(form): Form<PostCoto>,
+    Form(form): Form<CotoInput>,
 ) -> Result<(StatusCode, Content<Coto>), ServiceError> {
-    if let Err(errors) = form.validate() {
-        return ("coto", errors).into_result();
-    }
     state
-        .post_coto(
-            form.content.unwrap_or_else(|| unreachable!()),
-            form.summary,
-            cotonoma_id,
-            Arc::new(operator),
-        )
+        .post_coto(form, cotonoma_id, Arc::new(operator))
         .await
         .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
 }

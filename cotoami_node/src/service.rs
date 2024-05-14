@@ -170,8 +170,7 @@ pub enum Command {
 
     /// Request to create a new [Coto] in the given cotonoma (`post_to`).
     PostCoto {
-        content: String,
-        summary: Option<String>,
+        input: CotoInput,
         post_to: Id<Cotonoma>,
     },
 }

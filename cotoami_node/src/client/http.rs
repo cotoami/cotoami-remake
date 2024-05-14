@@ -16,13 +16,10 @@ use reqwest::{
 };
 use uuid::Uuid;
 
-use crate::{
-    service::{
-        error::{InputErrors, RequestError},
-        models::Pagination,
-        NodeServiceFuture, *,
-    },
-    web::PostCoto,
+use crate::service::{
+    error::{InputErrors, RequestError},
+    models::Pagination,
+    NodeServiceFuture, *,
 };
 
 /// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
@@ -170,18 +167,9 @@ impl HttpClient {
             Command::GraphFromCotonoma { cotonoma } => {
                 self.get(&format!("/api/cotonomas/{cotonoma}/graph"), None)
             }
-            Command::PostCoto {
-                content,
-                summary,
-                post_to,
-            } => {
-                let form = PostCoto {
-                    content: Some(content),
-                    summary,
-                };
-                self.post(&format!("/api/cotonomas/{post_to}/cotos"))
-                    .form(&form)
-            }
+            Command::PostCoto { input, post_to } => self
+                .post(&format!("/api/cotonomas/{post_to}/cotos"))
+                .form(&input),
         };
 
         // Set the "Accept" header from Request::accept()

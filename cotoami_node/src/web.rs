@@ -40,7 +40,7 @@ mod nodes;
 mod session;
 mod ws;
 
-pub(crate) use self::{cotonomas::PostCoto, csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER};
+pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
 
 pub async fn launch_server(
     config: ServerConfig,

@@ -115,6 +115,15 @@ impl Changes {
 // Coto / Cotonoma
 /////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct CotoInput {
+    #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    pub content: Option<String>,
+
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    pub summary: Option<String>,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotonomaDetails {
     pub cotonoma: Cotonoma,

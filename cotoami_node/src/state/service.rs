@@ -59,11 +59,9 @@ impl NodeState {
             Command::GraphFromCotonoma { cotonoma } => {
                 format.to_bytes(self.graph_from_cotonoma(cotonoma).await)
             }
-            Command::PostCoto {
-                content,
-                summary,
-                post_to,
-            } => format.to_bytes(self.post_coto(content, summary, post_to, opr?).await),
+            Command::PostCoto { input, post_to } => {
+                format.to_bytes(self.post_coto(input, post_to, opr?).await)
+            }
         }
     }
 }
