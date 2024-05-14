@@ -26,6 +26,8 @@ pub enum ServerConnection {
 }
 
 impl ServerConnection {
+    /// Creates a new push connection to the given `server` with a `http_client`
+    /// that has already logged it in (having a session token).
     pub async fn new(
         server: &ServerNode,
         http_client: HttpClient,
@@ -47,15 +49,12 @@ impl ServerConnection {
         }
     }
 
-    pub async fn connect(
-        server_node: &ServerNode,
-        local_node: Node,
-        node_state: &NodeState,
-    ) -> Self {
-        if server_node.disabled {
+    /// Connects to the given `server` to create a new [ServerConnection].
+    pub async fn connect(server: &ServerNode, local_node: Node, node_state: &NodeState) -> Self {
+        if server.disabled {
             return Self::Disabled;
         }
-        match Self::try_connect(server_node, local_node, node_state).await {
+        match Self::try_connect(server, local_node, node_state).await {
             Ok(conn) => conn,
             Err(e) => {
                 debug!("Failed to initialize a server connection: {:?}", e);
