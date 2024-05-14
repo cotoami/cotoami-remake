@@ -40,19 +40,17 @@ async fn all_server_nodes(
         let conns = state.read_server_conns();
         let mut db = state.db().new_session()?;
         let server_nodes = db.all_server_nodes(&operator)?;
-        let nodes = server_nodes
+        let node_ids: Vec<Id<Node>> = server_nodes.iter().map(|(_, node)| node.uuid).collect();
+        let mut roles = db.database_roles_of(&node_ids)?;
+        let servers = server_nodes
             .into_iter()
             .map(|(server, node)| {
-                let conn = conns.get(&server.node_id).unwrap_or_else(|| unreachable!());
-                Server::new(
-                    node,
-                    server,
-                    conn.not_connected(),
-                    state.is_parent(&server.node_id),
-                )
+                let node_id = node.uuid;
+                let conn = conns.get(&node_id).unwrap_or_else(|| unreachable!());
+                Server::new(node, server, conn.not_connected(), roles.remove(&node_id))
             })
             .collect();
-        Ok(Content(nodes, accept))
+        Ok(Content(servers, accept))
     })
     .await?
 }
