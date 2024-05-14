@@ -6,7 +6,6 @@ use axum::{
     Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use derive_new::new;
 use tokio::task::spawn_blocking;
 use tracing::{debug, info};
 use validator::Validate;
@@ -15,7 +14,7 @@ use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{AddServerNode, CreateClientNodeSession, NotConnected},
+        models::{AddServerNode, CreateClientNodeSession, Server},
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
@@ -31,14 +30,6 @@ pub(super) fn routes() -> Router<NodeState> {
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/servers
 /////////////////////////////////////////////////////////////////////////////
-
-#[derive(serde::Serialize, new)]
-struct Server {
-    node: Node,
-    url_prefix: String,
-    is_parent: bool,
-    not_connected: Option<NotConnected>,
-}
 
 async fn all_server_nodes(
     State(state): State<NodeState>,

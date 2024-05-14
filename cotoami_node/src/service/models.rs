@@ -61,6 +61,14 @@ pub struct AddServerNode {
     pub as_child: Option<bool>,
 }
 
+#[derive(serde::Serialize, new)]
+pub struct Server {
+    pub node: Node,
+    pub url_prefix: String,
+    pub is_parent: bool,
+    pub not_connected: Option<NotConnected>,
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Changes
 /////////////////////////////////////////////////////////////////////////////
