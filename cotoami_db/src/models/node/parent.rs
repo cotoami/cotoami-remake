@@ -11,7 +11,15 @@ use crate::{models::Id, schema::parent_nodes};
 
 /// A row in `parent_nodes` table
 #[derive(
-    derive_more::Debug, Clone, Eq, PartialEq, Identifiable, AsChangeset, Queryable, Selectable,
+    derive_more::Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    Identifiable,
+    AsChangeset,
+    Queryable,
+    Selectable,
+    serde::Serialize,
 )]
 #[diesel(primary_key(node_id))]
 pub struct ParentNode {

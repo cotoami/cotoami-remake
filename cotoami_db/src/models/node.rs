@@ -19,6 +19,7 @@ pub mod child;
 pub mod client;
 pub mod local;
 pub mod parent;
+pub mod roles;
 pub mod server;
 
 /////////////////////////////////////////////////////////////////////////////

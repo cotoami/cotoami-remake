@@ -47,6 +47,38 @@ pub struct ClientNodeSession {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// Server
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct AddServerNode {
+    #[validate(required, url)]
+    pub url_prefix: Option<String>,
+
+    #[validate(required)]
+    pub password: Option<String>,
+
+    pub as_child: Option<bool>,
+}
+
+#[derive(serde::Serialize, new)]
+pub struct Server {
+    pub node: Node,
+    pub server: ServerNode,
+    pub not_connected: Option<NotConnected>,
+    pub database_role: Option<DatabaseRole>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(tag = "reason", content = "details")]
+pub enum NotConnected {
+    Disabled,
+    Connecting(Option<String>),
+    InitFailed(String),
+    Disconnected(Option<String>),
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Changes
 /////////////////////////////////////////////////////////////////////////////
 
@@ -77,19 +109,6 @@ impl Changes {
             true // empty (no changes) means the last chunk
         }
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Server
-/////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug, Clone, serde::Serialize)]
-#[serde(tag = "reason", content = "details")]
-pub enum NotConnected {
-    Disabled,
-    Connecting(Option<String>),
-    InitFailed(String),
-    Disconnected(Option<String>),
 }
 
 /////////////////////////////////////////////////////////////////////////////

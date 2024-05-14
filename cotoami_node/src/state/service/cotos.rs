@@ -4,6 +4,7 @@ use anyhow::Result;
 use cotoami_db::prelude::*;
 use serde_json::value::Value;
 use tokio::task::spawn_blocking;
+use validator::Validate;
 
 use crate::{
     service::{
@@ -23,6 +24,9 @@ impl NodeState {
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
+        if let Err(errors) = pagination.validate() {
+            return ("recent_cotos", errors).into_result();
+        }
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
@@ -45,6 +49,9 @@ impl NodeState {
         cotonoma: Option<Id<Cotonoma>>,
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
+        if let Err(errors) = pagination.validate() {
+            return ("search_cotos", errors).into_result();
+        }
         let db = self.db().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;

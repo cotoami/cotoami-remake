@@ -36,6 +36,17 @@ pub(crate) fn try_get<Conn: AsReadableConn>(
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
 }
 
+pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
+    node_ids: &Vec<Id<Node>>,
+) -> impl Operation<Conn, Vec<ChildNode>> + '_ {
+    read_op(move |conn| {
+        child_nodes::table
+            .filter(child_nodes::node_id.eq_any(node_ids))
+            .load::<ChildNode>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 /// Returns paginated results of recently inserted [ChildNode]s with their [Node]s.
 pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
     page_size: i64,
