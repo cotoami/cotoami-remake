@@ -159,7 +159,7 @@ impl DatabaseInfo {
                 .unwrap_or_else(|| unreachable!("There must be changes before.")),
             nodes: node_state.all_nodes().await?,
             local_node_id: node_state.db().globals().local_node_id()?,
-            parent_node_ids: node_state.db().globals().parent_ids_in_update_order(),
+            parent_node_ids: node_state.db().globals().parent_node_ids(),
         })
     }
 
