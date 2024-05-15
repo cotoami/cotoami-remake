@@ -84,8 +84,8 @@ impl<'a> DatabaseSession<'a> {
 
         // Put the local node data in the global cache
         if let Ok(((local_node, node), _)) = &result {
-            *self.globals.local_node.write() = Some(local_node.clone());
-            *self.globals.root_cotonoma_id.write() = node.root_cotonoma_id;
+            self.globals.set_local_node(Some(local_node.clone()));
+            self.globals.set_root_cotonoma_id(node.root_cotonoma_id);
         }
 
         result
@@ -397,12 +397,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<Option<ParentNode>> {
         operator.requires_to_be_owner()?;
-        Ok(self
-            .globals
-            .parent_nodes
-            .read()
-            .get(id)
-            .map(|parent| parent.clone()))
+        Ok(self.globals.parent_node(id))
     }
 
     pub fn try_get_parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
@@ -661,7 +656,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
-        if let Some(id) = self.globals.root_cotonoma_id.read().as_ref() {
+        if let Some(id) = self.globals.root_cotonoma_id() {
             self.cotonoma(&id)
         } else {
             Ok(None)
