@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::{debug, info};
@@ -27,13 +27,12 @@ impl NodeState {
             "Importing the changes from {}",
             parent_service.description()
         );
-        let parent_node = {
-            let ds = self.db().new_session()?;
-            ds.try_get_parent_node(
-                &parent_node_id,
-                &self.db().globals().local_node_as_operator()?,
-            )?
-        };
+
+        let parent_node = self
+            .db()
+            .globals()
+            .parent_node(&parent_node_id)
+            .ok_or(anyhow!("ParentNode not found: {parent_node_id}"))?;
 
         let import_from = parent_node.changes_received + 1;
         let mut from = import_from;

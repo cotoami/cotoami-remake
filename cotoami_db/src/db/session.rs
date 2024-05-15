@@ -400,12 +400,6 @@ impl<'a> DatabaseSession<'a> {
         Ok(self.globals.parent_node(id))
     }
 
-    pub fn try_get_parent_node(&self, id: &Id<Node>, operator: &Operator) -> Result<ParentNode> {
-        self.parent_node(id, operator)?
-            .ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id))
-            .map_err(anyhow::Error::from)
-    }
-
     pub fn database_role_of(&mut self, node_id: &Id<Node>) -> Result<Option<DatabaseRole>> {
         self.read_transaction(node_role_ops::database_role_of(node_id))
     }
