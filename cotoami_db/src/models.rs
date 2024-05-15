@@ -75,7 +75,13 @@ pub struct Id<T> {
 }
 
 impl<T> Id<T> {
-    pub fn generate() -> Self { Id::new(Uuid::new_v4()) }
+    /// Generates a version 7 UUID as a new ID.
+    ///
+    /// As UUIDv7 is time-ordered, values generated are practically sequential
+    /// and therefore eliminates the index locality problem.
+    /// The time-ordered nature of UUIDv7 results in much better DB performance
+    /// compared to random-prefixed UUIDv4s.
+    pub fn generate() -> Self { Id::new(Uuid::now_v7()) }
 
     pub fn as_uuid(&self) -> Uuid { self.value }
 }

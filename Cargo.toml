@@ -34,5 +34,5 @@ thiserror = "1.0.56"
 tower-service = "0.3.2"
 tracing = "0.1"
 url = "2.5.0"
-uuid = {version = "1.6.1", features = ["v4", "serde"]}
+uuid = {version = "1.8.0", features = ["std", "v4", "v7", "serde"]}
 validator = {version = "0.16.1", features = ["derive"]}
