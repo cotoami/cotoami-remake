@@ -98,6 +98,8 @@ section.pinned-cotos {
   .document-view {
     --toc-width: 200px;
     container-type: inline-size;
+    padding-left: 16px;
+    padding-right: 16px;
 
     div.pinned-cotos-with-toc {
       max-width: var(--max-article-width);
