@@ -191,7 +191,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
-        let mut local_node = self.globals.write_local_node()?;
+        let mut local_node = self.globals.try_write_local_node()?;
         let duration = chrono::Duration::from_std(duration)?;
         local_node
             .start_session(password, duration)
@@ -201,14 +201,14 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
-        let mut local_node = self.globals.write_local_node()?;
+        let mut local_node = self.globals.try_write_local_node()?;
         local_node.clear_session();
         self.write_transaction(local_ops::update(&local_node))?;
         Ok(())
     }
 
     pub fn change_owner_password(&self, password: &str) -> Result<()> {
-        let mut local_node = self.globals.write_local_node()?;
+        let mut local_node = self.globals.try_write_local_node()?;
         local_node.update_password(password)?;
         self.write_transaction(local_ops::update(&local_node))?;
         self.clear_server_passwords()?;
@@ -381,7 +381,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // the owner of local node?
-        let local_node = self.globals.read_local_node()?;
+        let local_node = self.globals.try_read_local_node()?;
         if local_node.verify_session(token).is_ok() {
             return Ok(Some(ClientSession::Operator(Operator::Owner(
                 local_node.node_id,
@@ -442,7 +442,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(usize, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
         let local_node_id = self.globals.local_node_id()?;
-        let mut parent_node = self.globals.write_parent_node_cache(parent_node_id)?;
+        let mut parent_node = self.globals.try_write_parent_node(parent_node_id)?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // Set the parent to be forked
             *parent_node = node_role_ops::fork_from(parent_node_id).run(ctx)?;
@@ -507,7 +507,7 @@ impl<'a> DatabaseSession<'a> {
         log: &ChangelogEntry,
         parent_node_id: &Id<Node>,
     ) -> Result<Option<ChangelogEntry>> {
-        let mut parent_node = self.globals.write_parent_node_cache(parent_node_id)?;
+        let mut parent_node = self.globals.try_write_parent_node(parent_node_id)?;
         self.write_transaction(changelog_ops::import_change(log, &mut parent_node))
     }
 

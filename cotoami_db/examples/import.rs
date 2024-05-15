@@ -50,7 +50,7 @@ impl Args {
         let db = Database::new(&self.db_dir)?;
 
         // Create a local node with the given name if it doesn't exist yet.
-        if !db.globals().has_local_node_initialized() {
+        if !db.globals().has_local_node() {
             let node_name = self.new_node_name.as_deref().ok_or(anyhow!(
                 "Please specify a [NEW_NODE_NAME] to create a new database."
             ))?;

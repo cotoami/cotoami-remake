@@ -172,26 +172,20 @@ pub struct Globals {
 }
 
 impl Globals {
-    pub fn has_local_node_initialized(&self) -> bool { self.local_node.read().is_some() }
+    /////////////////////////////////////////////////////////////////////////////
+    // local_node
+    /////////////////////////////////////////////////////////////////////////////
 
-    pub fn read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
-        RwLockReadGuard::try_map(self.local_node.read(), |x| x.as_ref())
-            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
-    }
+    pub fn has_local_node(&self) -> bool { self.local_node.read().is_some() }
 
-    fn write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
-        RwLockWriteGuard::try_map(self.local_node.write(), |x| x.as_mut())
-            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
-    }
-
-    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.read_local_node()?.node_id) }
+    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.try_read_local_node()?.node_id) }
 
     pub fn local_node_as_operator(&self) -> Result<Operator> {
         Ok(Operator::Owner(self.local_node_id()?))
     }
 
     pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
-        let local_node_id = self.read_local_node()?.node_id;
+        let local_node_id = self.try_read_local_node()?.node_id;
         if *entity.node_id() != local_node_id {
             bail!("The entity doesn't belong to the local node: {entity:?}");
         }
@@ -202,7 +196,25 @@ impl Globals {
         self.ensure_local(entity).is_ok()
     }
 
+    fn try_read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
+        RwLockReadGuard::try_map(self.local_node.read(), |x| x.as_ref())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    fn try_write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
+        RwLockWriteGuard::try_map(self.local_node.write(), |x| x.as_mut())
+            .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // root_cotonoma_id
+    /////////////////////////////////////////////////////////////////////////////
+
     pub fn root_cotonoma_id(&self) -> Option<Id<Cotonoma>> { *self.root_cotonoma_id.read() }
+
+    /////////////////////////////////////////////////////////////////////////////
+    // parent_nodes
+    /////////////////////////////////////////////////////////////////////////////
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.parent_nodes.read().contains_key(id) }
 
@@ -220,7 +232,7 @@ impl Globals {
             .insert(parent.node_id, parent.clone());
     }
 
-    fn write_parent_node_cache(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
+    fn try_write_parent_node(&self, id: &Id<Node>) -> Result<MappedRwLockWriteGuard<ParentNode>> {
         RwLockWriteGuard::try_map(self.parent_nodes.write(), |x| x.get_mut(id))
             .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
     }

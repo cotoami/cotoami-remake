@@ -22,7 +22,7 @@ impl NodeState {
 
             // If the local node already exists,
             // its name and password can be changed via config
-            if db.globals().has_local_node_initialized() {
+            if db.globals().has_local_node() {
                 let opr = db.globals().local_node_as_operator()?;
                 let (ext, node) = ds.local_node_pair(&opr)?;
 
