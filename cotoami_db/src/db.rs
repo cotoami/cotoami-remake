@@ -64,14 +64,14 @@ impl Database {
         let file_uri = Self::to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
         let rw_conn = Self::new_rw_conn(&file_uri)?;
 
-        let db = Self {
+        let mut db = Self {
             root_dir,
             file_uri,
             rw_conn: Mutex::new(rw_conn),
             globals: Globals::default(),
         };
         db.run_migrations()?;
-        db.load_globals()?;
+        db.globals.init(&mut db.new_ro_conn()?)?;
 
         info!("Database launched:");
         info!("  root_dir: {}", db.root_dir.display());
@@ -135,25 +135,6 @@ impl Database {
         Ok(ro_conn)
     }
 
-    fn load_globals(&self) -> Result<()> {
-        let mut conn = self.new_ro_conn()?;
-
-        // local_node, root_cotonoma_id
-        let local_node_pair = op::run_read(&mut conn, local_ops::get_pair())?;
-        if let Some((local_node, node)) = local_node_pair {
-            *self.globals.local_node.write() = Some(local_node);
-            *self.globals.root_cotonoma_id.write() = node.root_cotonoma_id;
-        }
-
-        // parent_nodes
-        *self.globals.parent_nodes.write() = op::run_read(&mut conn, parent_ops::all())?
-            .into_iter()
-            .map(|x| (x.node_id, x))
-            .collect::<HashMap<_, _>>();
-
-        Ok(())
-    }
-
     pub fn globals(&self) -> &Globals { &self.globals }
 }
 
@@ -172,6 +153,26 @@ pub struct Globals {
 }
 
 impl Globals {
+    fn init(&mut self, conn: &mut SqliteConnection) -> Result<()> {
+        // local_node, root_cotonoma_id
+        let local_node_pair = op::run_read(conn, local_ops::get_pair())?;
+        if let Some((local_node, node)) = local_node_pair {
+            *self.local_node.write() = Some(local_node);
+            *self.root_cotonoma_id.write() = node.root_cotonoma_id;
+        } else {
+            *self.local_node.write() = None;
+            *self.root_cotonoma_id.write() = None;
+        }
+
+        // parent_nodes
+        *self.parent_nodes.write() = op::run_read(conn, parent_ops::all())?
+            .into_iter()
+            .map(|x| (x.node_id, x))
+            .collect::<HashMap<_, _>>();
+
+        Ok(())
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // local_node
     /////////////////////////////////////////////////////////////////////////////
