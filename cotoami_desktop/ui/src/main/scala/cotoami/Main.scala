@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
@@ -12,6 +13,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import cats.effect.IO
+import cats.syntax.all._
 
 import fui.FunctionalUI._
 import cotoami.tauri
@@ -73,6 +75,15 @@ object Main {
         (
           model.modify(_.log).using(
             _.addEntry(LogEventJson.toLogEntry(event))
+          ),
+          Seq.empty
+        )
+
+      case BackendEvent(event) =>
+        (
+          model.debug(
+            "A backend event received.",
+            Some(js.JSON.stringify(event))
           ),
           Seq.empty
         )
@@ -260,7 +271,8 @@ object Main {
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
-    tauri.listen[LogEventJson]("log", None).map(LogEvent)
+    (tauri.listen[LogEventJson]("log", None).map(LogEvent): Sub[Msg]) <+>
+      tauri.listen[BackendEventJson]("backend-event", None).map(BackendEvent)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(

@@ -1,6 +1,6 @@
 package cotoami
 
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 import scala.scalajs.js
 import scala.scalajs.js.Thenable.Implicits._
