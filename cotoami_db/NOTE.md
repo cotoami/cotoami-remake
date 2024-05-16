@@ -1,5 +1,26 @@
 # Notes on cotoami_db
 
+## Types for UUIDs
+
+According to [the UUID RFC document]((https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#name-dbms-and-database-considera)):
+
+> For many applications, such as databases, storing UUIDs as text is unnecessarily verbose, requiring 288 bits to represent 128 bit UUID values. Thus, where feasible, UUIDs SHOULD be stored within database applications as the underlying 128 bit binary value.
+
+> For other systems, UUIDs MAY be stored in binary form or as text, as appropriate. The trade-offs to both approaches are as such:
+> * Storing as binary requires less space and may result in faster data access.
+> * Storing as text requires more space but may require less translation if the resulting text form is to be used after retrieval and thus maybe simpler to implement.
+
+As for SQLite, there are different insights on the Internet:
+
+* [Efficiency, UUIDs and SQLite · Vespa Documentation](https://vespa-mrs.github.io/vespa.io/development/project_dev/database/DatabaseUuidEfficiency.html)
+    * "The text database was 94M while the BLOB database was 51M. This averages out to about 98 bytes/row for the text representation versus 53 bytes/row for the BLOB representation."
+    * "The BLOB method was slower if we consider the time it takes to convert the BLOB into the UUID string that we actually need."
+    * " Since the select improvement when using BLOBs is < 10% and the increase is cancelled out by time spent in the uuid module, I don't think the real world change would be more then +/- 5%."
+* [ios \- How to efficient insert and fetch UUID in Core Data \- Stack Overflow](https://stackoverflow.com/questions/11337324/how-to-efficient-insert-and-fetch-uuid-in-core-data/11337522#11337522)
+    * "The creation time is pretty close (the difference appearing to be based on the time to create the strings and the extra storage space required)."
+    * "The query times seem almost identical, with the binary string appearing to be a tiny bit slower. I think this was the original concern -- doing a query on a binary attribute."
+    * "if, for some reason, you want the data in the database to be stored in a more efficient manner for humans, then storing it as a string is a better choice."
+
 ## Considerations in SQLite's ROWID as a primary key
 
 * Currently, each entity table has a `rowid` as a primary key and `uuid` as a unique column, and each foreign key refers to the `uuid` column in the target table rather than the primary key.
