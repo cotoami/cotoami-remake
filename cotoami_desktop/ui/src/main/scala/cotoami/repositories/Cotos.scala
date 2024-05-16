@@ -43,6 +43,7 @@ object Cotos {
 
   sealed trait Msg
   case object FetchMoreTimeline extends Msg
+  case class CotoPosted(result: Either[ErrorJson, CotoJson]) extends Msg
 
   def update(
       msg: Msg,
@@ -62,6 +63,12 @@ object Cotos {
             )
           ).getOrElse((model, Seq.empty))
         }
+
+      case CotoPosted(Right(coto)) =>
+        (model, Seq.empty)
+
+      case CotoPosted(Left(e)) =>
+        (model, Seq(ErrorJson.log(e, "Couldn't post a coto.")))
     }
 
   def fetchTimeline(
@@ -76,5 +83,14 @@ object Cotos {
       Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
     ).map(
       Domain.TimelineFetched andThen DomainMsg
+    )
+
+  def postCoto(
+      content: String,
+      summary: Option[String],
+      post_to: Id[Cotonoma]
+  ): Cmd[cotoami.Msg] =
+    Commands.send(Commands.PostCoto(content, summary, post_to)).map(
+      CotoPosted andThen Domain.CotosMsg andThen DomainMsg
     )
 }
