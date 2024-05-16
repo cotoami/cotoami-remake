@@ -189,6 +189,7 @@ async fn create_database(
 
     let node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
     let node_state = NodeState::new(node_config).await?;
+    tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
 
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
     app_handle.info(
@@ -215,6 +216,7 @@ async fn open_database(
 
     let node_config = NodeConfig::new_standalone(Some(folder.clone()), None);
     let node_state = NodeState::new(node_config).await?;
+    tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
 
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
     RecentDatabases::update(&app_handle, folder, db_info.local_node());

@@ -23,6 +23,8 @@ cotoami_db = {path = "cotoami_db"}
 cotoami_node = {path = "cotoami_node"}
 derive-new = "0.6.0"
 derive_more = {version = "=1.0.0-beta.6", features = ["debug", "display"]}
+futures = "0.3.30"
+futures-util = "0.3.30"
 once_cell = "1.19.0"
 parking_lot = "0.12.1"
 rand = "0.8.5"
