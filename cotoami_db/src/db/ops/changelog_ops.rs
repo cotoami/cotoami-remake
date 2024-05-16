@@ -170,9 +170,9 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         match change {
             Change::None => (),
-            Change::CreateNode(node, root_cotonoma) => {
+            Change::CreateNode { node, root } => {
                 node_ops::upsert(node).run(ctx)?;
-                if let Some((cotonoma, coto)) = root_cotonoma {
+                if let Some((cotonoma, coto)) = root {
                     coto_ops::insert(&coto.to_import()).run(ctx)?;
                     cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
                 }

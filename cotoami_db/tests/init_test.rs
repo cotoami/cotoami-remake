@@ -72,7 +72,7 @@ fn init_as_empty_node() -> Result<()> {
             serial_number: 1,
             origin_node_id,
             origin_serial_number: 1,
-            change: Change::CreateNode(a, None),
+            change: Change::CreateNode {node: a, root: None},
             ..
         } if origin_node_id == node.uuid &&
              a == Node { rowid: 0, ..node }
@@ -244,7 +244,7 @@ fn init_as_node() -> Result<()> {
             serial_number: 1,
             origin_node_id,
             origin_serial_number: 1,
-            change: Change::CreateNode(a, Some((b, c))),
+            change: Change::CreateNode { node: a, root: Some((b, c)) },
             ..
         } if origin_node_id == node.uuid &&
              a == Node { rowid: 0, ..node } &&

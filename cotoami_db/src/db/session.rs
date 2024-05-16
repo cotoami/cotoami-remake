@@ -69,15 +69,18 @@ impl<'a> DatabaseSession<'a> {
                 let (node_updated, cotonoma, coto) =
                     node_ops::create_root_cotonoma(&node.uuid, name).run(ctx)?;
                 node = node_updated;
-                Change::CreateNode(node, Some((cotonoma, coto)))
+                Change::CreateNode {
+                    node,
+                    root: Some((cotonoma, coto)),
+                }
             } else {
-                Change::CreateNode(node, None)
+                Change::CreateNode { node, root: None }
             };
 
             let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
 
             // Take the node data back from the `change` struct
-            let Change::CreateNode(node, _) = change else { unreachable!() };
+            let Change::CreateNode { node, root: _ } = change else { unreachable!() };
 
             Ok(((local_node, node), changelog))
         });
