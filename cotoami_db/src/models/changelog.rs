@@ -89,20 +89,23 @@ pub struct NewChangelogEntry<'a> {
 #[repr(u8)]
 pub enum Change {
     None = 0,
-    CreateNode(Node, Option<(Cotonoma, Coto)>) = 1,
+    CreateNode {
+        node: Node,
+        root: Option<(Cotonoma, Coto)>,
+    } = 1,
     UpsertNode(Node) = 2,
     RenameNode {
-        uuid: Id<Node>,
+        node_id: Id<Node>,
         name: String,
         updated_at: NaiveDateTime,
     } = 3,
     SetRootCotonoma {
-        uuid: Id<Node>,
+        node_id: Id<Node>,
         cotonoma_id: Id<Cotonoma>,
     } = 4,
     CreateCoto(Coto) = 5,
     EditCoto {
-        uuid: Id<Coto>,
+        coto_id: Id<Coto>,
         content: String,
         summary: Option<String>,
         updated_at: NaiveDateTime,
@@ -110,14 +113,14 @@ pub enum Change {
     DeleteCoto(Id<Coto>) = 7,
     CreateCotonoma(Cotonoma, Coto) = 8,
     RenameCotonoma {
-        uuid: Id<Cotonoma>,
+        cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
     } = 9,
     DeleteCotonoma(Id<Cotonoma>) = 10,
     CreateLink(Link) = 11,
     EditLink {
-        uuid: Id<Link>,
+        link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,

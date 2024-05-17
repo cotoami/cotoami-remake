@@ -12,6 +12,7 @@ use tauri::Manager;
 
 use crate::{log::Logger, recent::RecentDatabases};
 
+mod event;
 mod log;
 mod recent;
 mod window_state;
@@ -184,10 +185,11 @@ async fn create_database(
             .map(str::to_string)
             .ok_or(anyhow!("Invalid folder path: {:?}", path))?
     };
-    app_handle.debug(&format!("Creating a database..."), Some(&folder));
+    app_handle.debug("Creating a database...", Some(&folder));
 
     let node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
     let node_state = NodeState::new(node_config).await?;
+    tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
 
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
     app_handle.info(
@@ -214,6 +216,7 @@ async fn open_database(
 
     let node_config = NodeConfig::new_standalone(Some(folder.clone()), None);
     let node_state = NodeState::new(node_config).await?;
+    tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
 
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
     RecentDatabases::update(&app_handle, folder, db_info.local_node());

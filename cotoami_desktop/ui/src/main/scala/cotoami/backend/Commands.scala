@@ -63,4 +63,16 @@ object Commands {
 
   def GraphFromCotonoma(cotonoma: Id[Cotonoma]) =
     jso(GraphFromCotonoma = jso(cotonoma = cotonoma.uuid))
+
+  def PostCoto(
+      content: String,
+      summary: Option[String],
+      post_to: Id[Cotonoma]
+  ) =
+    jso(PostCoto =
+      jso(
+        input = jso(content = content, summary = summary.getOrElse(null)),
+        post_to = post_to.uuid
+      )
+    )
 }

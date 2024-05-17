@@ -111,14 +111,14 @@ fn crud_operations() -> Result<()> {
             origin_node_id,
             origin_serial_number: 3,
             change: Change::EditCoto {
-                uuid,
+                coto_id,
                 content,
                 summary: Some(ref summary),
                 updated_at,
             },
             ..
         } if origin_node_id == node.uuid &&
-             uuid == coto.uuid &&
+             coto_id == coto.uuid &&
              content == "bar" &&
              summary == "foo" &&
              updated_at == edited_coto.updated_at

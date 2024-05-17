@@ -772,6 +772,8 @@ dependencies = [
  "bitflags 2.5.0",
  "cotoami_db",
  "cotoami_node",
+ "futures",
+ "futures-util",
  "log",
  "parking_lot",
  "serde",
@@ -779,6 +781,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]

@@ -8,14 +8,15 @@ import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 
 case class Domain(
+    lastChangeNumber: Double = 0,
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
     links: Links = Links(),
     graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def initNodes(info: DatabaseInfo): Domain =
-    this.copy(nodes = Nodes(info))
+  def init(info: DatabaseInfo): Domain =
+    this.copy(lastChangeNumber = info.lastChangeNumber, nodes = Nodes(info))
 
   def clearSelection(): Domain =
     this.copy(
@@ -66,9 +67,9 @@ case class Domain(
       }
     )
 
-  def appendTimeline(cotos: PaginatedCotos): Domain =
+  def addTimelinePage(cotos: PaginatedCotos): Domain =
     this
-      .modify(_.cotos).using(_.appendTimeline(cotos))
+      .modify(_.cotos).using(_.addTimelinePage(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.links).using(_.addAll(cotos.outgoingLinks))
 
@@ -181,15 +182,28 @@ case class Domain(
         )
     }
 
+  // Fetch the graph from the given coto if it has outgoing links that
+  // have not yet been loaded (the target cotos of them should also be loaded).
   def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[cotoami.Msg] =
     this.cotos.get(cotoId).map(coto => {
-      // Fetch the graph from the coto if there are outgoing links that
-      // have not yet been loaded (the target cotos of them should also be loaded).
       if (this.childrenOf(cotoId).size < coto.outgoingLinks)
         Domain.fetchGraphFromCoto(cotoId)
       else
         Cmd.none
     }).getOrElse(Cmd.none)
+
+  def applyChange(log: ChangelogEntryJson): (Domain, Cmd[cotoami.Msg]) =
+    if (log.serial_number == (this.lastChangeNumber + 1)) {
+      val domain = log.type_number match {
+        case 5 =>
+          log.change.CreateCoto.toOption.map(coto => this).getOrElse(this)
+        case _ => this
+      }
+      (domain.copy(lastChangeNumber = log.serial_number), Cmd.none)
+    } else {
+      // TODO: need to sync
+      (this, Cmd.none)
+    }
 }
 
 object Domain {
@@ -248,7 +262,7 @@ object Domain {
 
       case TimelineFetched(Right(cotos)) =>
         (
-          model.appendTimeline(PaginatedCotos(cotos)),
+          model.addTimelinePage(PaginatedCotos(cotos)),
           Seq(
             log_info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos)))
           )
