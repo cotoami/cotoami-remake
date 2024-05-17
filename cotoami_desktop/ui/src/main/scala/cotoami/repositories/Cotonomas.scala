@@ -55,7 +55,7 @@ case class Cotonomas(
       .addAll(details.subs.rows)
       .select(details.cotonoma.id)
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
-      .modify(_.subIds).using(_.add(details.subs))
+      .modify(_.subIds).using(_.appendPage(details.subs))
   }
 
   def asCotonoma(coto: Coto): Option[Cotonoma] =
@@ -81,19 +81,19 @@ case class Cotonomas(
 
   def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
-  def addPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
+  def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .addAll(page.rows)
       .modify(_.subsLoading).setTo(false)
-      .modify(_.subIds).using(_.add(page))
+      .modify(_.subIds).using(_.appendPage(page))
 
   def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
-  def addPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
+  def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .addAll(page.rows)
       .modify(_.recentLoading).setTo(false)
-      .modify(_.recentIds).using(_.add(page))
+      .modify(_.recentIds).using(_.appendPage(page))
 }
 
 object Cotonomas {
@@ -129,7 +129,7 @@ object Cotonomas {
         }
 
       case RecentFetched(Right(page)) =>
-        (model.addPageOfRecent(Paginated(page, Cotonoma(_))), Seq.empty)
+        (model.appendPageOfRecent(Paginated(page, Cotonoma(_))), Seq.empty)
 
       case RecentFetched(Left(e)) =>
         (
@@ -150,7 +150,7 @@ object Cotonomas {
         }
 
       case SubsFetched(Right(page)) =>
-        (model.addPageOfSubs(Paginated(page, Cotonoma(_))), Seq.empty)
+        (model.appendPageOfSubs(Paginated(page, Cotonoma(_))), Seq.empty)
 
       case SubsFetched(Left(e)) =>
         (

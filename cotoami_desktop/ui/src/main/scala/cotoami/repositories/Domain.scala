@@ -67,9 +67,9 @@ case class Domain(
       }
     )
 
-  def addTimelinePage(cotos: PaginatedCotos): Domain =
+  def appendTimelinePage(cotos: PaginatedCotos): Domain =
     this
-      .modify(_.cotos).using(_.addTimelinePage(cotos))
+      .modify(_.cotos).using(_.appendTimelinePage(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.links).using(_.addAll(cotos.outgoingLinks))
 
@@ -262,7 +262,7 @@ object Domain {
 
       case TimelineFetched(Right(cotos)) =>
         (
-          model.addTimelinePage(PaginatedCotos(cotos)),
+          model.appendTimelinePage(PaginatedCotos(cotos)),
           Seq(
             log_info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos)))
           )
