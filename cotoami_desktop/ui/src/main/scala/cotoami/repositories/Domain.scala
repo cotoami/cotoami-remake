@@ -182,10 +182,10 @@ case class Domain(
         )
     }
 
+  // Fetch the graph from the given coto if it has outgoing links that
+  // have not yet been loaded (the target cotos of them should also be loaded).
   def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[cotoami.Msg] =
     this.cotos.get(cotoId).map(coto => {
-      // Fetch the graph from the coto if there are outgoing links that
-      // have not yet been loaded (the target cotos of them should also be loaded).
       if (this.childrenOf(cotoId).size < coto.outgoingLinks)
         Domain.fetchGraphFromCoto(cotoId)
       else
