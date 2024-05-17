@@ -19,6 +19,7 @@ object SectionTimeline {
   case class QueryInput(query: String) extends Msg
   case object ImeCompositionStart extends Msg
   case object ImeCompositionEnd extends Msg
+  case object OpenCalendar extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -48,6 +49,14 @@ object SectionTimeline {
           model.modify(_.imeActive).setTo(false),
           model.domain.cotos.query.map(query =>
             Seq(fetchTimeline(query, model))
+          ).getOrElse(Seq.empty)
+        )
+
+      case OpenCalendar =>
+        (
+          model,
+          model.domain.rootCotonomaId.map(cotonomaId =>
+            Seq(Cotos.postCoto("Gooo!", None, cotonomaId))
           ).getOrElse(Seq.empty)
         )
     }
@@ -97,7 +106,8 @@ object SectionTimeline {
         ToolButton(
           classes = "calendar",
           tip = "Calendar",
-          symbol = "calendar_month"
+          symbol = "calendar_month",
+          onClick = (() => dispatch(SectionTimelineMsg(OpenCalendar)))
         ),
         model.domain.cotos.query.map(query =>
           div(className := "search")(

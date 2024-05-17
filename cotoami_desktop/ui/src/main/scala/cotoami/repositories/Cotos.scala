@@ -37,6 +37,17 @@ case class Cotos(
       .addAll(cotos.relatedData.originals)
       .modify(_.timelineLoading).setTo(false)
       .modify(_.timelineIds).using(_.appendPage(cotos.page))
+
+  def prependToTimeline(coto: Coto): Cotos = {
+    this
+      .add(coto)
+      .modify(_.timelineIds).using(timeline =>
+        if (this.query.isEmpty)
+          timeline.prependId(coto.id)
+        else
+          timeline
+      )
+  }
 }
 
 object Cotos {

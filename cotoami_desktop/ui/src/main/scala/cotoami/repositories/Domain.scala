@@ -192,18 +192,27 @@ case class Domain(
         Cmd.none
     }).getOrElse(Cmd.none)
 
-  def applyChange(log: ChangelogEntryJson): (Domain, Cmd[cotoami.Msg]) =
+  def importChangelogEntry(
+      log: ChangelogEntryJson
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) =
     if (log.serial_number == (this.lastChangeNumber + 1)) {
-      val domain = log.type_number match {
-        case 5 =>
-          log.change.CreateCoto.toOption.map(coto => this).getOrElse(this)
-        case _ => this
-      }
-      (domain.copy(lastChangeNumber = log.serial_number), Cmd.none)
+      (
+        this
+          .applyChange(log.change)
+          .copy(lastChangeNumber = log.serial_number),
+        Seq.empty
+      )
     } else {
       // TODO: need to sync
-      (this, Cmd.none)
+      (this, Seq.empty)
     }
+
+  private def applyChange(change: ChangeJson): Domain = {
+    for (coto <- change.CreateCoto.toOption) {
+      return this.modify(_.cotos).using(_.prependToTimeline(Coto(coto)))
+    }
+    this
+  }
 }
 
 object Domain {

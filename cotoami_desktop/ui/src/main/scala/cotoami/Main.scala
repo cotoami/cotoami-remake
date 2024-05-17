@@ -1,6 +1,5 @@
 package cotoami
 
-import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
@@ -79,14 +78,13 @@ object Main {
           Seq.empty
         )
 
-      case BackendEvent(event) =>
-        (
-          model.debug(
-            "A backend event received.",
-            Some(js.JSON.stringify(event))
-          ),
-          Seq.empty
-        )
+      case BackendEvent(event) => {
+        for (change <- event.LocalChange.toOption) {
+          val (domain, cmds) = model.domain.importChangelogEntry(change)
+          return (model.copy(domain = domain), cmds)
+        }
+        (model, Seq.empty)
+      }
 
       case ToggleLogView =>
         (model.copy(logViewToggle = !model.logViewToggle), Seq.empty)
