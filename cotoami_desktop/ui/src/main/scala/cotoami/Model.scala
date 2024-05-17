@@ -25,6 +25,7 @@ case class Model(
     context: Context = Context(),
     logViewToggle: Boolean = false,
     systemInfo: Option[SystemInfoJson] = None,
+    databaseFolder: Option[String] = None,
 
     // uiState that can be saved in localStorage separately from app data.
     // It will be `None` before being restored from localStorage on init.
@@ -34,11 +35,7 @@ case class Model(
     // control text input according to IME state.
     imeActive: Boolean = false,
 
-    // Database
-    databaseFolder: Option[String] = None,
-    lastChangeNumber: Double = 0,
-
-    // Domain
+    // Domain aggregate root
     domain: Domain = Domain(),
 
     // subparts

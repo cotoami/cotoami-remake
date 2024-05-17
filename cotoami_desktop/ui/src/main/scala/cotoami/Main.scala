@@ -117,8 +117,7 @@ object Main {
         val info = DatabaseInfo(json)
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
-          .modify(_.lastChangeNumber).setTo(info.lastChangeNumber)
-          .modify(_.domain).using(_.initNodes(info))
+          .modify(_.domain).using(_.init(info))
           .modify(_.modalWelcome.processing).setTo(false)
           .info("Database opened.", Some(info.debug)) match {
           case model =>

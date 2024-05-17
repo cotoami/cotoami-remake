@@ -8,14 +8,15 @@ import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 
 case class Domain(
+    lastChangeNumber: Double = 0,
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
     links: Links = Links(),
     graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def initNodes(info: DatabaseInfo): Domain =
-    this.copy(nodes = Nodes(info))
+  def init(info: DatabaseInfo): Domain =
+    this.copy(lastChangeNumber = info.lastChangeNumber, nodes = Nodes(info))
 
   def clearSelection(): Domain =
     this.copy(
