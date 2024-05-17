@@ -65,7 +65,15 @@ object Cotos {
         }
 
       case CotoPosted(Right(coto)) =>
-        (model, Seq.empty)
+        (
+          model,
+          Seq(
+            cotoami.log_info(
+              "CotoPosted",
+              Some(scala.scalajs.js.JSON.stringify(coto))
+            )
+          )
+        )
 
       case CotoPosted(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't post a coto.")))

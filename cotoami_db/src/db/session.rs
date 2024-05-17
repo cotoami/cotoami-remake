@@ -122,7 +122,7 @@ impl<'a> DatabaseSession<'a> {
             let updated_at = crate::current_datetime();
             let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
             let change = Change::RenameNode {
-                uuid: local_node_id,
+                node_id: local_node_id,
                 name: name.into(),
                 updated_at,
             };
@@ -141,7 +141,7 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;
             let change = Change::SetRootCotonoma {
-                uuid: local_node_id,
+                node_id: local_node_id,
                 cotonoma_id: *cotonoma_id,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
@@ -622,7 +622,7 @@ impl<'a> DatabaseSession<'a> {
             operator.can_update_coto(&coto)?;
             let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
             let change = Change::EditCoto {
-                uuid: *id,
+                coto_id: *id,
                 content: content.into(),
                 summary: summary.map(String::from),
                 updated_at: coto.updated_at,
@@ -885,7 +885,7 @@ impl<'a> DatabaseSession<'a> {
             self.globals.ensure_local(&link)?;
             let link = link_ops::update(&link.edit(linking_phrase, details)).run(ctx)?;
             let change = Change::EditLink {
-                uuid: *id,
+                link_id: *id,
                 linking_phrase: linking_phrase.map(String::from),
                 details: details.map(String::from),
                 updated_at: link.updated_at,

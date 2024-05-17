@@ -239,7 +239,12 @@ object Main {
     url.pathname + url.search + url.hash match {
       case Route.index(_) => {
         val (domain, cmds) = model.domain.selectNode(None)
-        (model.copy(domain = domain).clearTraversals, cmds)
+        (
+          model.copy(domain = domain).clearTraversals,
+          cmds ++ model.domain.rootCotonomaId.map(cotonomaId =>
+            Seq(Cotos.postCoto("Hello", None, cotonomaId))
+          ).getOrElse(Seq.empty)
+        )
       }
 
       case Route.node(id) =>

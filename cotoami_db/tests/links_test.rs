@@ -171,14 +171,14 @@ fn crud_operations() -> Result<()> {
             origin_node_id,
             origin_serial_number: 9,
             change: Change::EditLink {
-                uuid,
+                link_id,
                 linking_phrase: Some(ref linking_phrase),
                 details: Some(ref details),
                 updated_at,
             },
             ..
         } if origin_node_id == node.uuid &&
-             uuid == link1.uuid &&
+             link_id == link1.uuid &&
              linking_phrase == "hello" &&
              details == "hello details" &&
              updated_at == edited_link1.updated_at

@@ -181,26 +181,29 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 node_ops::upsert(node).run(ctx)?;
             }
             Change::RenameNode {
-                uuid,
+                node_id,
                 name,
                 updated_at,
             } => {
-                node_ops::rename(uuid, name, Some(*updated_at)).run(ctx)?;
+                node_ops::rename(node_id, name, Some(*updated_at)).run(ctx)?;
             }
-            Change::SetRootCotonoma { uuid, cotonoma_id } => {
-                node_ops::set_root_cotonoma(uuid, cotonoma_id).run(ctx)?;
+            Change::SetRootCotonoma {
+                node_id,
+                cotonoma_id,
+            } => {
+                node_ops::set_root_cotonoma(node_id, cotonoma_id).run(ctx)?;
             }
             Change::CreateCoto(coto) => {
                 let new_coto = coto.to_import();
                 coto_ops::insert(&new_coto).run(ctx)?;
             }
             Change::EditCoto {
-                uuid,
+                coto_id,
                 content,
                 summary,
                 updated_at,
             } => {
-                let coto = coto_ops::try_get(uuid).run(ctx)??;
+                let coto = coto_ops::try_get(coto_id).run(ctx)??;
                 let mut update_coto = coto.edit(content, summary.as_deref());
                 update_coto.updated_at = *updated_at;
                 coto_ops::update(&update_coto).run(ctx)?;
@@ -213,11 +216,11 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             }
             Change::RenameCotonoma {
-                uuid,
+                cotonoma_id,
                 name,
                 updated_at,
             } => {
-                cotonoma_ops::rename(uuid, name, Some(*updated_at)).run(ctx)?;
+                cotonoma_ops::rename(cotonoma_id, name, Some(*updated_at)).run(ctx)?;
             }
             Change::DeleteCotonoma(id) => {
                 cotonoma_ops::delete(id).run(ctx)?;
@@ -226,12 +229,12 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 link_ops::insert(link.to_import()).run(ctx)?;
             }
             Change::EditLink {
-                uuid,
+                link_id,
                 linking_phrase,
                 details,
                 updated_at,
             } => {
-                let link = link_ops::try_get(uuid).run(ctx)??;
+                let link = link_ops::try_get(link_id).run(ctx)??;
                 let mut update_link = link.edit(linking_phrase.as_deref(), details.as_deref());
                 update_link.updated_at = *updated_at;
                 link_ops::update(&update_link).run(ctx)?;
