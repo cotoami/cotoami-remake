@@ -31,7 +31,7 @@ case class Cotos(
 
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
-  def appendTimeline(cotos: PaginatedCotos): Cotos =
+  def addTimelinePage(cotos: PaginatedCotos): Cotos =
     this
       .addAll(cotos.page.rows)
       .addAll(cotos.relatedData.originals)

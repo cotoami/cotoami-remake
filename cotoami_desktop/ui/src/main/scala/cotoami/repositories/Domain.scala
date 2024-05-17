@@ -67,9 +67,9 @@ case class Domain(
       }
     )
 
-  def appendTimeline(cotos: PaginatedCotos): Domain =
+  def addTimelinePage(cotos: PaginatedCotos): Domain =
     this
-      .modify(_.cotos).using(_.appendTimeline(cotos))
+      .modify(_.cotos).using(_.addTimelinePage(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.links).using(_.addAll(cotos.outgoingLinks))
 
@@ -191,6 +191,19 @@ case class Domain(
       else
         Cmd.none
     }).getOrElse(Cmd.none)
+
+  def applyChange(log: ChangelogEntryJson): (Domain, Cmd[cotoami.Msg]) =
+    if (log.serial_number == (this.lastChangeNumber + 1)) {
+      val domain = log.type_number match {
+        case 5 =>
+          log.change.CreateCoto.toOption.map(coto => this).getOrElse(this)
+        case _ => this
+      }
+      (domain.copy(lastChangeNumber = log.serial_number), Cmd.none)
+    } else {
+      // TODO: need to sync
+      (this, Cmd.none)
+    }
 }
 
 object Domain {
@@ -249,7 +262,7 @@ object Domain {
 
       case TimelineFetched(Right(cotos)) =>
         (
-          model.appendTimeline(PaginatedCotos(cotos)),
+          model.addTimelinePage(PaginatedCotos(cotos)),
           Seq(
             log_info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos)))
           )
