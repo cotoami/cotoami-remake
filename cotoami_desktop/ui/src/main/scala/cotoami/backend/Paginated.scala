@@ -1,6 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import com.softwaremill.quicklens._
 
 case class Paginated[T <: Entity[T], J](json: PaginatedJson[J], map: J => T) {
   def rows: js.Array[T] = this.json.rows.map(this.map)
@@ -53,6 +54,25 @@ case class PaginatedIds[T <: Entity[T]](
       total = page.totalRows
     )
   }
+
+  def prependId(id: Id[T]): PaginatedIds[T] =
+    this
+      .modify(_.order).using(order =>
+        id +: (if (this.ids.contains(id))
+                 order.filterNot(_ == id)
+               else
+                 order)
+      )
+      .modify(_.ids).using(_ + id)
+      .modify(_.pageIndex).using(index =>
+        if (this.pageSize > 0) {
+          // recalculate the page index according to the size after prepending
+          val pages = (this.ids.size / this.pageSize).floor
+          if (pages > 0) Some(pages - 1) else None
+        } else {
+          index
+        }
+      )
 
   def nextPageIndex: Option[Double] =
     this.pageIndex match {
