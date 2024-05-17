@@ -41,6 +41,9 @@ case class Domain(
   def currentCotonoma: Option[Cotonoma] =
     this.currentCotonomaId.flatMap(this.cotonomas.get)
 
+  def postedInCurrentCotonoma(coto: Coto): Boolean =
+    coto.postedInId == this.currentCotonomaId
+
   def setCotonomaDetails(details: CotonomaDetails): Domain = {
     this
       .modify(_.nodes).using(nodes =>
@@ -208,8 +211,13 @@ case class Domain(
     }
 
   private def applyChange(change: ChangeJson): Domain = {
-    for (coto <- change.CreateCoto.toOption) {
-      return this.modify(_.cotos).using(_.prependToTimeline(Coto(coto)))
+    // CreateCoto
+    for (cotoJson <- change.CreateCoto.toOption) {
+      val coto = Coto(cotoJson)
+      if (this.postedInCurrentCotonoma(coto))
+        return this.modify(_.cotos).using(_.prependToTimeline(coto))
+      else
+        return this.modify(_.cotos).using(_.add(coto))
     }
     this
   }
