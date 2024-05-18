@@ -41,9 +41,6 @@ case class Domain(
   def currentCotonoma: Option[Cotonoma] =
     this.currentCotonomaId.flatMap(this.cotonomas.get)
 
-  def postedInCurrentCotonoma(coto: Coto): Boolean =
-    coto.postedInId == this.currentCotonomaId
-
   def setCotonomaDetails(details: CotonomaDetails): Domain = {
     this
       .modify(_.nodes).using(nodes =>
@@ -195,7 +192,7 @@ case class Domain(
         Cmd.none
     }).getOrElse(Cmd.none)
 
-  def importChangelogEntry(
+  def importChangelog(
       log: ChangelogEntryJson
   ): (Domain, Seq[Cmd[cotoami.Msg]]) =
     if (log.serial_number == (this.lastChangeNumber + 1)) {
@@ -214,10 +211,10 @@ case class Domain(
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
-      if (this.postedInCurrentCotonoma(coto))
+      if (coto.postedInId == this.currentCotonomaId)
         return this.modify(_.cotos).using(_.prependToTimeline(coto))
       else
-        return this.modify(_.cotos).using(_.add(coto))
+        return this
     }
     this
   }

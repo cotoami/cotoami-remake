@@ -80,7 +80,7 @@ object Main {
 
       case BackendEvent(event) => {
         for (change <- event.LocalChange.toOption) {
-          val (domain, cmds) = model.domain.importChangelogEntry(change)
+          val (domain, cmds) = model.domain.importChangelog(change)
           return (model.copy(domain = domain), cmds)
         }
         (model, Seq.empty)
