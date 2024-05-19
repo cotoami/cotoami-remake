@@ -55,7 +55,7 @@ object SectionTimeline {
       case OpenCalendar =>
         (
           model,
-          model.domain.rootCotonomaId.map(cotonomaId =>
+          model.domain.currentCotonomaId.map(cotonomaId =>
             Seq(Cotos.postCoto("Gooo!", None, cotonomaId))
           ).getOrElse(Seq.empty)
         )
