@@ -110,6 +110,7 @@ pub enum Change {
         summary: Option<String>,
         updated_at: NaiveDateTime,
     } = 6,
+    // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
@@ -120,15 +121,14 @@ pub enum Change {
         name: String,
         updated_at: NaiveDateTime,
     } = 9,
-    DeleteCotonoma(Id<Cotonoma>) = 10,
-    CreateLink(Link) = 11,
+    CreateLink(Link) = 10,
     EditLink {
         link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,
-    } = 12,
-    DeleteLink(Id<Link>) = 13,
+    } = 11,
+    DeleteLink(Id<Link>) = 12,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -139,7 +139,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 14,
+    } = 13,
 }
 
 impl Change {
@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn message_pack_serialization() -> Result<()> {
-        let change = Change::DeleteCotonoma(Id::from_str("00000000-0000-0000-0000-000000000001")?);
+        let change = Change::DeleteLink(Id::from_str("00000000-0000-0000-0000-000000000001")?);
         let msgpack_bytes = rmp_serde::to_vec(&change)?;
         let deserialized: Change = rmp_serde::from_slice(&msgpack_bytes)?;
         assert_eq!(deserialized, change);

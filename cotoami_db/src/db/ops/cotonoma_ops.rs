@@ -220,13 +220,6 @@ pub(crate) fn update<'a>(
     })
 }
 
-pub(crate) fn delete(id: &Id<Cotonoma>) -> impl Operation<WritableConn, bool> + '_ {
-    write_op(move |conn| {
-        let affected = diesel::delete(cotonomas::table.find(id)).execute(conn.deref_mut())?;
-        Ok(affected > 0)
-    })
-}
-
 pub(crate) fn rename<'a>(
     id: &'a Id<Cotonoma>,
     name: &'a str,

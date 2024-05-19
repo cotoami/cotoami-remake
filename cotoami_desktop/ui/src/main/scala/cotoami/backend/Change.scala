@@ -24,7 +24,6 @@ trait ChangeJson extends js.Object {
   val DeleteCoto: js.UndefOr[DeleteCotoJson] = js.native
   val CreateCotonoma: js.UndefOr[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val RenameCotonoma: js.UndefOr[RenameCotonomaJson] = js.native
-  val DeleteCotonoma: js.UndefOr[String] = js.native
   val CreateLink: js.UndefOr[LinkJson] = js.native
   val EditLink: js.UndefOr[EditLinkJson] = js.native
   val DeleteLink: js.UndefOr[String] = js.native

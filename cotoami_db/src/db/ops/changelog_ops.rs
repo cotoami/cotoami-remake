@@ -225,9 +225,6 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             } => {
                 cotonoma_ops::rename(cotonoma_id, name, Some(*updated_at)).run(ctx)?;
             }
-            Change::DeleteCotonoma(id) => {
-                cotonoma_ops::delete(id).run(ctx)?;
-            }
             Change::CreateLink(link) => {
                 link_ops::insert(link.to_import()).run(ctx)?;
             }
