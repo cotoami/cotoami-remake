@@ -62,7 +62,7 @@ object SectionTimeline {
     }
 
   private def fetchDefaultTimeline(model: Model): Cmd[cotoami.Msg] =
-    Cotos.fetchTimeline(
+    Domain.fetchTimeline(
       model.domain.nodes.selectedId,
       model.domain.cotonomas.selectedId,
       None,
@@ -73,7 +73,7 @@ object SectionTimeline {
     if (query.isBlank())
       fetchDefaultTimeline(model)
     else
-      Cotos.fetchTimeline(
+      Domain.fetchTimeline(
         model.domain.nodes.selectedId,
         model.domain.cotonomas.selectedId,
         Some(query),

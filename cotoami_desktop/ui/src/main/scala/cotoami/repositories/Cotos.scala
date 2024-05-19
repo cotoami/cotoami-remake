@@ -70,7 +70,7 @@ object Cotos {
           model.timelineIds.nextPageIndex.map(i =>
             (
               model.copy(timelineLoading = true),
-              Seq(fetchTimeline(nodeId, cotonomaId, model.query, i))
+              Seq(Domain.fetchTimeline(nodeId, cotonomaId, model.query, i))
             )
           ).getOrElse((model, Seq.empty))
         }
@@ -89,20 +89,6 @@ object Cotos {
       case CotoPosted(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't post a coto.")))
     }
-
-  def fetchTimeline(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]],
-      query: Option[String],
-      pageIndex: Double
-  ): Cmd[cotoami.Msg] =
-    query.map(query =>
-      Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
-    ).getOrElse(
-      Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
-    ).map(
-      Domain.TimelineFetched andThen DomainMsg
-    )
 
   def postCoto(
       content: String,
