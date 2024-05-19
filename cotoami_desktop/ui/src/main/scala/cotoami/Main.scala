@@ -201,6 +201,13 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
+      case ReloadDomain => {
+        (
+          model.copy(domain = Domain()),
+          Seq(model.databaseFolder.map(openDatabase).getOrElse(Cmd.none))
+        )
+      }
+
       case DomainMsg(subMsg) => {
         val (domain, cmds) = Domain.update(subMsg, model.domain)
         (model.copy(domain = domain), cmds)

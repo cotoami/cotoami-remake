@@ -200,7 +200,7 @@ case class Domain(
         .applyChange(log.change)
         .modify(_._1.lastChangeNumber).setTo(log.serial_number)
     } else {
-      (this, Seq(Browser.reload()))
+      (this, Seq(Browser.send(cotoami.ReloadDomain)))
     }
 
   private def applyChange(

@@ -41,6 +41,7 @@ case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
 case object DeselectCotonoma extends Msg
 
 // Domain
+case object ReloadDomain extends Msg
 case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
 // Subparts

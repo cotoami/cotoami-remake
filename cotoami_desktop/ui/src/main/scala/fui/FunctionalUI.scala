@@ -220,6 +220,8 @@ object FunctionalUI {
       listenersOnPushUrl = runtime.onPushUrl _ :: listenersOnPushUrl
     }
 
+    def send[Msg](msg: Msg): Cmd[Msg] = Cmd(IO(Some(msg)))
+
     /** Change the URL, but do not trigger a page load. This will add a new
       * entry to the browser history.
       */
