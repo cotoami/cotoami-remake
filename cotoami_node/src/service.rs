@@ -139,7 +139,7 @@ pub enum Command {
     },
 
     /// Request a [CotonomaDetails] of the given ID.
-    Cotonoma { id: Id<Cotonoma> },
+    CotonomaDetails { id: Id<Cotonoma> },
 
     /// Request a `Paginated<Cotonoma>` that contains sub cotonomas of the given cotonoma.
     SubCotonomas {

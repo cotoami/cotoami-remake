@@ -168,7 +168,7 @@ object Cotonomas {
     )
 
   def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.Cotonoma(id)).map(
+    Commands.send(Commands.CotonomaDetails(id)).map(
       Domain.CotonomaDetailsFetched andThen DomainMsg
     )
 

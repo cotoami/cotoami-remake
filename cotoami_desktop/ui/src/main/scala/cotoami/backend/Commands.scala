@@ -25,7 +25,8 @@ object Commands {
       )
     )
 
-  def Cotonoma(id: Id[Cotonoma]) = jso(Cotonoma = jso(id = id.uuid))
+  def CotonomaDetails(id: Id[Cotonoma]) =
+    jso(CotonomaDetails = jso(id = id.uuid))
 
   def SubCotonomas(id: Id[Cotonoma], pageIndex: Double) =
     jso(SubCotonomas = jso(id = id.uuid, pagination = jso(page = pageIndex)))
