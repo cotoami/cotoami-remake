@@ -166,16 +166,21 @@ object Cotonomas {
         )
     }
 
+  def fetchOne(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.Cotonoma(id)).map(
+      OneFetched andThen Domain.CotonomasMsg andThen DomainMsg
+    )
+
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex)).map(
-      (RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg)
+      RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg
     )
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     Commands.send(Commands.SubCotonomas(id, pageIndex)).map(
-      (SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg)
+      SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg
     )
 }
