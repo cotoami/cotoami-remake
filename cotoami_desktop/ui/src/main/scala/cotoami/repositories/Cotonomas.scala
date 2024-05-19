@@ -98,7 +98,7 @@ case class Cotonomas(
   def prependIdToRecent(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
     (
       this.modify(_.recentIds).using(_.prependId(id)),
-      if (this.contains(id))
+      if (!this.contains(id))
         Seq(Cotonomas.fetchOne(id))
       else
         Seq.empty
