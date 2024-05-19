@@ -14,6 +14,16 @@ const DEFAULT_SUB_PAGE_SIZE: i64 = 10;
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
 
 impl NodeState {
+    pub(crate) async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<Cotonoma, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            let (cotonoma, _) = db.new_session()?.try_get_cotonoma(&id)?;
+            Ok::<_, anyhow::Error>(cotonoma)
+        })
+        .await?
+        .map_err(ServiceError::from)
+    }
+
     pub(crate) async fn cotonoma_details(
         &self,
         id: Id<Cotonoma>,

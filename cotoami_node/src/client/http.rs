@@ -115,6 +115,7 @@ impl HttpClient {
                     self.get("/api/cotonomas", Some(pagination.as_query()))
                 }
             }
+            Command::Cotonoma { id } => self.get(&format!("/api/cotonomas/{id}"), None),
             Command::CotonomaDetails { id } => {
                 self.get(&format!("/api/cotonomas/{id}/details"), None)
             }
