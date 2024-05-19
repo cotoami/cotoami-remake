@@ -110,22 +110,25 @@ pub enum Change {
         summary: Option<String>,
         updated_at: NaiveDateTime,
     } = 6,
-    DeleteCoto(Id<Coto>) = 7,
+    // Used to delete a coto or cotonoma
+    DeleteCoto {
+        coto_id: Id<Coto>,
+        deleted_at: NaiveDateTime,
+    } = 7,
     CreateCotonoma(Cotonoma, Coto) = 8,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
     } = 9,
-    DeleteCotonoma(Id<Cotonoma>) = 10,
-    CreateLink(Link) = 11,
+    CreateLink(Link) = 10,
     EditLink {
         link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,
-    } = 12,
-    DeleteLink(Id<Link>) = 13,
+    } = 11,
+    DeleteLink(Id<Link>) = 12,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -136,7 +139,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 14,
+    } = 13,
 }
 
 impl Change {
@@ -205,7 +208,7 @@ mod tests {
 
     #[test]
     fn changelog_entry_as_json() -> Result<()> {
-        let change = Change::DeleteCoto(Id::from_str("00000000-0000-0000-0000-000000000001")?);
+        let change = Change::None;
         let changelog_entry = ChangelogEntry {
             serial_number: 1,
             origin_node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
@@ -224,10 +227,8 @@ mod tests {
               "serial_number": 1,
               "origin_node_id": "00000000-0000-0000-0000-000000000001",
               "origin_serial_number": 1,
-              "type_number": 7,
-              "change": {
-                "DeleteCoto": "00000000-0000-0000-0000-000000000001"
-              },
+              "type_number": 0,
+              "change": "None",
               "inserted_at": "2023-01-02T03:04:05"
             }"#}
         );
@@ -241,7 +242,7 @@ mod tests {
 
     #[test]
     fn message_pack_serialization() -> Result<()> {
-        let change = Change::DeleteCotonoma(Id::from_str("00000000-0000-0000-0000-000000000001")?);
+        let change = Change::DeleteLink(Id::from_str("00000000-0000-0000-0000-000000000001")?);
         let msgpack_bytes = rmp_serde::to_vec(&change)?;
         let deserialized: Change = rmp_serde::from_slice(&msgpack_bytes)?;
         assert_eq!(deserialized, change);

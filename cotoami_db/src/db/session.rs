@@ -638,8 +638,11 @@ impl<'a> DatabaseSession<'a> {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_delete_coto(&coto)?;
-            if coto_ops::delete(id).run(ctx)? {
-                let change = Change::DeleteCoto(*id);
+            if let Some(deleted_at) = coto_ops::delete(id, None).run(ctx)? {
+                let change = Change::DeleteCoto {
+                    coto_id: *id,
+                    deleted_at,
+                };
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {

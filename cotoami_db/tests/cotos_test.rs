@@ -136,6 +136,10 @@ fn crud_operations() -> Result<()> {
     let all_cotos = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
     assert_eq!(all_cotos.rows.len(), 0);
 
+    // check if the number of posts in the cotonoma has been decremented
+    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
+    assert_eq!(cotonoma.posts, 0);
+
     // check the content of the ChangelogEntry
     assert_matches!(
         changelog4,
@@ -143,15 +147,12 @@ fn crud_operations() -> Result<()> {
             serial_number: 4,
             origin_node_id,
             origin_serial_number: 4,
-            change: Change::DeleteCoto (change_coto_id),
+            change: Change::DeleteCoto { coto_id, deleted_at },
             ..
         } if origin_node_id == node.uuid &&
-             change_coto_id == coto.uuid
+             coto_id == coto.uuid &&
+             deleted_at == cotonoma.updated_at
     );
-
-    // check if the number of posts in the cotonoma has been decremented
-    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_eq!(cotonoma.posts, 0);
 
     Ok(())
 }

@@ -24,6 +24,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
         .route("/:cotonoma_id", get(get_cotonoma))
+        .route("/:cotonoma_id/details", get(get_cotonoma_details))
         .route("/:cotonoma_id/subs", get(sub_cotonomas))
         .route("/:cotonoma_id/graph", get(get_graph))
         .nest("/:cotonoma_id/cotos", cotos::routes())
@@ -57,11 +58,26 @@ async fn get_cotonoma(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-) -> Result<Content<CotonomaDetails>, ServiceError> {
+) -> Result<Content<Cotonoma>, ServiceError> {
     state
         .cotonoma(cotonoma_id)
         .await
         .map(|cotonoma| Content(cotonoma, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/cotonomas/:cotonoma_id/details
+/////////////////////////////////////////////////////////////////////////////
+
+async fn get_cotonoma_details(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+) -> Result<Content<CotonomaDetails>, ServiceError> {
+    state
+        .cotonoma_details(cotonoma_id)
+        .await
+        .map(|details| Content(details, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

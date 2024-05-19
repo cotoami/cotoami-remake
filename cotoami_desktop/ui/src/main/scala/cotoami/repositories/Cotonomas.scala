@@ -3,7 +3,7 @@ package cotoami.repositories
 import scala.scalajs.js
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
-import cotoami.DomainMsg
+import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 
 case class Cotonomas(
@@ -94,6 +94,15 @@ case class Cotonomas(
       .addAll(page.rows)
       .modify(_.recentLoading).setTo(false)
       .modify(_.recentIds).using(_.appendPage(page))
+
+  def prependIdToRecent(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
+    (
+      this.modify(_.recentIds).using(_.prependId(id)),
+      if (!this.contains(id))
+        Seq(Cotonomas.fetchOne(id))
+      else
+        Seq.empty
+    )
 }
 
 object Cotonomas {
@@ -101,6 +110,7 @@ object Cotonomas {
     jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
 
   sealed trait Msg
+  case class OneFetched(result: Either[ErrorJson, CotonomaJson]) extends Msg
   case object FetchMoreRecent extends Msg
   case class RecentFetched(
       result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
@@ -116,6 +126,15 @@ object Cotonomas {
       nodeId: Option[Id[Node]]
   ): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
     msg match {
+      case OneFetched(Right(cotonomaJson)) =>
+        (
+          model.add(Cotonoma(cotonomaJson)),
+          Seq(log_info("Cotonoma fetched.", Some(cotonomaJson.name)))
+        )
+
+      case OneFetched(Left(e)) =>
+        (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
+
       case FetchMoreRecent =>
         if (model.recentLoading) {
           (model, Seq.empty)
@@ -159,21 +178,21 @@ object Cotonomas {
         )
     }
 
+  def fetchOne(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.Cotonoma(id)).map(
+      OneFetched andThen Domain.CotonomasMsg andThen DomainMsg
+    )
+
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex)).map(
-      (RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg)
-    )
-
-  def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.Cotonoma(id)).map(
-      Domain.CotonomaDetailsFetched andThen DomainMsg
+      RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg
     )
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     Commands.send(Commands.SubCotonomas(id, pageIndex)).map(
-      (SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg)
+      SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg
     )
 }

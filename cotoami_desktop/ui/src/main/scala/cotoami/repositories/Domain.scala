@@ -146,7 +146,7 @@ case class Domain(
           domain,
           Seq(
             Cotonomas.fetchRecent(nodeId, 0),
-            Cotos.fetchTimeline(nodeId, None, None, 0),
+            Domain.fetchTimeline(nodeId, None, None, 0),
             domain.currentCotonomaId
               .map(Domain.fetchGraphFromCotonoma)
               .getOrElse(Cmd.none)
@@ -175,8 +175,8 @@ case class Domain(
               Cotonomas.fetchRecent(nodeId, 0)
             else
               Cmd.none,
-            Cotonomas.fetchDetails(cotonomaId),
-            Cotos.fetchTimeline(None, Some(cotonomaId), None, 0),
+            Domain.fetchCotonomaDetails(cotonomaId),
+            Domain.fetchTimeline(None, Some(cotonomaId), None, 0),
             Domain.fetchGraphFromCotonoma(cotonomaId)
           )
         )
@@ -196,27 +196,38 @@ case class Domain(
       log: ChangelogEntryJson
   ): (Domain, Seq[Cmd[cotoami.Msg]]) =
     if (log.serial_number == (this.lastChangeNumber + 1)) {
-      (
-        this
-          .applyChange(log.change)
-          .copy(lastChangeNumber = log.serial_number),
-        Seq.empty
-      )
+      this
+        .applyChange(log.change)
+        .modify(_._1.lastChangeNumber).setTo(log.serial_number)
     } else {
-      // TODO: need to sync
+      // TODO: just reloading would be ok?
       (this, Seq.empty)
     }
 
-  private def applyChange(change: ChangeJson): Domain = {
+  private def applyChange(
+      change: ChangeJson
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
-      if (coto.postedInId == this.currentCotonomaId)
-        return this.modify(_.cotos).using(_.prependToTimeline(coto))
-      else
-        return this
+      return this
+        .modify(_.cotos).using(cotos =>
+          if (coto.postedInId == this.currentCotonomaId)
+            cotos.prependToTimeline(coto)
+          else
+            cotos
+        ).prependCotonomaIdToRecent(coto.postedInId)
     }
-    this
+    (this, Seq.empty)
+  }
+
+  private def prependCotonomaIdToRecent(
+      id: Option[Id[Cotonoma]]
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+    id.map(id => {
+      val (cotonomas, cmds) = this.cotonomas.prependIdToRecent(id)
+      (this.copy(cotonomas = cotonomas), cmds)
+    }).getOrElse((this, Seq.empty))
   }
 }
 
@@ -304,13 +315,32 @@ object Domain {
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
 
+  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
+    Commands.send(Commands.CotonomaDetails(id)).map(
+      CotonomaDetailsFetched andThen DomainMsg
+    )
+
+  def fetchTimeline(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]],
+      query: Option[String],
+      pageIndex: Double
+  ): Cmd[cotoami.Msg] =
+    query.map(query =>
+      Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
+    ).getOrElse(
+      Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
+    ).map(
+      TimelineFetched andThen DomainMsg
+    )
+
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[cotoami.Msg] =
     Commands.send(Commands.GraphFromCoto(coto)).map(
-      Domain.CotoGraphFetched andThen DomainMsg
+      CotoGraphFetched andThen DomainMsg
     )
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
     Commands.send(Commands.GraphFromCotonoma(cotonoma)).map(
-      Domain.CotoGraphFetched andThen DomainMsg
+      CotoGraphFetched andThen DomainMsg
     )
 }

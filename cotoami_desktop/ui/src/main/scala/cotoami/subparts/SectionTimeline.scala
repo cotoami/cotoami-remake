@@ -55,14 +55,14 @@ object SectionTimeline {
       case OpenCalendar =>
         (
           model,
-          model.domain.rootCotonomaId.map(cotonomaId =>
+          model.domain.currentCotonomaId.map(cotonomaId =>
             Seq(Cotos.postCoto("Gooo!", None, cotonomaId))
           ).getOrElse(Seq.empty)
         )
     }
 
   private def fetchDefaultTimeline(model: Model): Cmd[cotoami.Msg] =
-    Cotos.fetchTimeline(
+    Domain.fetchTimeline(
       model.domain.nodes.selectedId,
       model.domain.cotonomas.selectedId,
       None,
@@ -73,7 +73,7 @@ object SectionTimeline {
     if (query.isBlank())
       fetchDefaultTimeline(model)
     else
-      Cotos.fetchTimeline(
+      Domain.fetchTimeline(
         model.domain.nodes.selectedId,
         model.domain.cotonomas.selectedId,
         Some(query),
