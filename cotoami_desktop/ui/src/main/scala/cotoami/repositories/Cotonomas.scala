@@ -3,7 +3,7 @@ package cotoami.repositories
 import scala.scalajs.js
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
-import cotoami.DomainMsg
+import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 
 case class Cotonomas(
@@ -127,7 +127,10 @@ object Cotonomas {
   ): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case OneFetched(Right(cotonomaJson)) =>
-        (model.add(Cotonoma(cotonomaJson)), Seq.empty)
+        (
+          model.add(Cotonoma(cotonomaJson)),
+          Seq(log_info("Cotonoma fetched.", Some(cotonomaJson.name)))
+        )
 
       case OneFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
