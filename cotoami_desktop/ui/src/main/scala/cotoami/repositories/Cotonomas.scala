@@ -174,11 +174,6 @@ object Cotonomas {
       (RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg)
     )
 
-  def fetchDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.CotonomaDetails(id)).map(
-      Domain.CotonomaDetailsFetched andThen DomainMsg
-    )
-
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     Commands.send(Commands.SubCotonomas(id, pageIndex)).map(
       (SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg)
