@@ -196,27 +196,38 @@ case class Domain(
       log: ChangelogEntryJson
   ): (Domain, Seq[Cmd[cotoami.Msg]]) =
     if (log.serial_number == (this.lastChangeNumber + 1)) {
-      (
-        this
-          .applyChange(log.change)
-          .copy(lastChangeNumber = log.serial_number),
-        Seq.empty
-      )
+      this
+        .applyChange(log.change)
+        .modify(_._1.lastChangeNumber).setTo(log.serial_number)
     } else {
-      // TODO: need to sync
+      // TODO: just reloading would be ok?
       (this, Seq.empty)
     }
 
-  private def applyChange(change: ChangeJson): Domain = {
+  private def applyChange(
+      change: ChangeJson
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
-      if (coto.postedInId == this.currentCotonomaId)
-        return this.modify(_.cotos).using(_.prependToTimeline(coto))
-      else
-        return this
+      return this
+        .modify(_.cotos).using(cotos =>
+          if (coto.postedInId == this.currentCotonomaId)
+            cotos.prependToTimeline(coto)
+          else
+            cotos
+        ).prependCotonomaIdToRecent(coto.postedInId)
     }
-    this
+    (this, Seq.empty)
+  }
+
+  private def prependCotonomaIdToRecent(
+      id: Option[Id[Cotonoma]]
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+    id.map(id => {
+      val (cotonomas, cmds) = this.cotonomas.prependIdToRecent(id)
+      (this.copy(cotonomas = cotonomas), cmds)
+    }).getOrElse((this, Seq.empty))
   }
 }
 

@@ -94,6 +94,15 @@ case class Cotonomas(
       .addAll(page.rows)
       .modify(_.recentLoading).setTo(false)
       .modify(_.recentIds).using(_.appendPage(page))
+
+  def prependIdToRecent(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
+    (
+      this.modify(_.recentIds).using(_.prependId(id)),
+      if (this.contains(id))
+        Seq(Cotonomas.fetchOne(id))
+      else
+        Seq.empty
+    )
 }
 
 object Cotonomas {
