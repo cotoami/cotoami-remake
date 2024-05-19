@@ -239,6 +239,12 @@ object FunctionalUI {
         None
       })
 
+    def reload[Msg](): Cmd[Msg] =
+      Cmd(IO {
+        dom.window.location.reload()
+        None
+      })
+
     def ajaxGetJson[Msg](
         url: String,
         createMsg: Either[Throwable, Json] => Msg

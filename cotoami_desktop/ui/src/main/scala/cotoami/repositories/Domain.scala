@@ -200,8 +200,7 @@ case class Domain(
         .applyChange(log.change)
         .modify(_._1.lastChangeNumber).setTo(log.serial_number)
     } else {
-      // TODO: just reloading would be ok?
-      (this, Seq.empty)
+      (this, Seq(Browser.reload()))
     }
 
   private def applyChange(
