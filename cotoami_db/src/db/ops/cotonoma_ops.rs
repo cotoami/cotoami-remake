@@ -265,14 +265,17 @@ pub(crate) fn change_owner_node<'a>(
     })
 }
 
-// TODO: it should also update `updated_at`
 pub(crate) fn update_number_of_posts(
     id: &Id<Cotonoma>,
     delta: i64,
+    updated_at: NaiveDateTime,
 ) -> impl Operation<WritableConn, i64> + '_ {
     write_op(move |conn| {
         let cotonoma: Cotonoma = diesel::update(cotonomas::table.find(id))
-            .set(cotonomas::posts.eq(cotonomas::posts + delta))
+            .set((
+                cotonomas::posts.eq(cotonomas::posts + delta),
+                cotonomas::updated_at.eq(updated_at),
+            ))
             .get_result(conn.deref_mut())?;
         Ok(cotonoma.posts)
     })

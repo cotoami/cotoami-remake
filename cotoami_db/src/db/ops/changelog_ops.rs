@@ -208,8 +208,11 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 update_coto.updated_at = *updated_at;
                 coto_ops::update(&update_coto).run(ctx)?;
             }
-            Change::DeleteCoto(id) => {
-                coto_ops::delete(id).run(ctx)?;
+            Change::DeleteCoto {
+                coto_id,
+                deleted_at,
+            } => {
+                coto_ops::delete(coto_id, Some(*deleted_at)).run(ctx)?;
             }
             Change::CreateCotonoma(cotonoma, coto) => {
                 coto_ops::insert(&coto.to_import()).run(ctx)?;

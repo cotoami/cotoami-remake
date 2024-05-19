@@ -3,6 +3,7 @@
 use std::{collections::HashMap, ops::DerefMut};
 
 use anyhow::{Context, Result};
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -97,7 +98,7 @@ pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableCo
 
         // Increment the number of posts in the cotonoma
         if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
-            cotonoma_ops::update_number_of_posts(posted_in_id, 1).run(ctx)?;
+            cotonoma_ops::update_number_of_posts(posted_in_id, 1, coto.updated_at).run(ctx)?;
         }
 
         Ok(coto)
@@ -114,8 +115,13 @@ pub(crate) fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<Writable
     })
 }
 
-pub(crate) fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
+pub(crate) fn delete(
+    id: &Id<Coto>,
+    deleted_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Option<NaiveDateTime>> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
+        let deleted_at = deleted_at.unwrap_or(crate::current_datetime());
+
         // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
         // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
         // FOREIGN KEY ON DELETE CASCADE.
@@ -126,11 +132,11 @@ pub(crate) fn delete(id: &Id<Coto>) -> impl Operation<WritableConn, bool> + '_ {
         if let Some(coto) = deleted {
             // Decrement the number of posts in the cotonoma
             if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
-                cotonoma_ops::update_number_of_posts(posted_in_id, -1).run(ctx)?;
+                cotonoma_ops::update_number_of_posts(posted_in_id, -1, deleted_at).run(ctx)?;
             }
-            Ok(true)
+            Ok(Some(deleted_at))
         } else {
-            Ok(false)
+            Ok(None)
         }
     })
 }

@@ -110,7 +110,10 @@ pub enum Change {
         summary: Option<String>,
         updated_at: NaiveDateTime,
     } = 6,
-    DeleteCoto(Id<Coto>) = 7,
+    DeleteCoto {
+        coto_id: Id<Coto>,
+        deleted_at: NaiveDateTime,
+    } = 7,
     CreateCotonoma(Cotonoma, Coto) = 8,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
@@ -205,7 +208,7 @@ mod tests {
 
     #[test]
     fn changelog_entry_as_json() -> Result<()> {
-        let change = Change::DeleteCoto(Id::from_str("00000000-0000-0000-0000-000000000001")?);
+        let change = Change::None;
         let changelog_entry = ChangelogEntry {
             serial_number: 1,
             origin_node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
@@ -224,10 +227,8 @@ mod tests {
               "serial_number": 1,
               "origin_node_id": "00000000-0000-0000-0000-000000000001",
               "origin_serial_number": 1,
-              "type_number": 7,
-              "change": {
-                "DeleteCoto": "00000000-0000-0000-0000-000000000001"
-              },
+              "type_number": 0,
+              "change": "None",
               "inserted_at": "2023-01-02T03:04:05"
             }"#}
         );
