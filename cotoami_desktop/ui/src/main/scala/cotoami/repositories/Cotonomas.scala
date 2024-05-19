@@ -101,6 +101,7 @@ object Cotonomas {
     jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
 
   sealed trait Msg
+  case class OneFetched(result: Either[ErrorJson, CotonomaJson]) extends Msg
   case object FetchMoreRecent extends Msg
   case class RecentFetched(
       result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
@@ -116,6 +117,12 @@ object Cotonomas {
       nodeId: Option[Id[Node]]
   ): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
     msg match {
+      case OneFetched(Right(cotonomaJson)) =>
+        (model.add(Cotonoma(cotonomaJson)), Seq.empty)
+
+      case OneFetched(Left(e)) =>
+        (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
+
       case FetchMoreRecent =>
         if (model.recentLoading) {
           (model, Seq.empty)
