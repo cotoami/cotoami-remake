@@ -18,6 +18,7 @@ import fui.FunctionalUI._
 import cotoami.tauri
 import cotoami.backend._
 import cotoami.repositories._
+import cotoami.subparts._
 
 object Main {
 
@@ -46,7 +47,7 @@ object Main {
   }
 
   def init(url: URL): (Model, Seq[Cmd[Msg]]) = {
-    val (flowInput, flowInputCmd) = subparts.FormCoto.init("flowInput", true)
+    val (flowInput, flowInputCmd) = FormCoto.init("flowInput", true)
     (
       Model(url = url, flowInput = flowInput),
       Seq(
@@ -165,7 +166,7 @@ object Main {
             Cmd(
               IO {
                 dom.document.getElementById(
-                  subparts.PaneStock.elementIdOfPinnedCoto(pin)
+                  PaneStock.elementIdOfPinnedCoto(pin)
                 ) match {
                   case element: HTMLElement =>
                     element.scrollIntoView(true)
@@ -217,27 +218,34 @@ object Main {
       }
 
       case FlowInputMsg(subMsg) => {
-        val (flowInput, cmds) =
-          subparts.FormCoto.update(subMsg, model.flowInput)
+        val (flowInput, cmds) = FormCoto.update(subMsg, model.flowInput)
         (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
       }
 
       case SectionTimelineMsg(subMsg) =>
-        subparts.SectionTimeline.update(subMsg, model)
+        SectionTimeline.update(subMsg, model)
 
       case SectionTraversalsMsg(subMsg) => {
         val (traversals, cmds) =
-          subparts.SectionTraversals.update(
+          SectionTraversals.update(
             subMsg,
             model.traversals,
             model.domain
           )
-        (model.copy(traversals = traversals), cmds)
+        (
+          model.copy(traversals = traversals),
+          (subMsg, model.uiState) match {
+            case (SectionTraversals.OpenTraversal(_), Some(uiState))
+                if !uiState.paneOpened(PaneStock.PaneName) =>
+              Browser.send(OpenOrClosePane(PaneStock.PaneName, true)) +: cmds
+            case _ => cmds
+          }
+        )
       }
 
       case ModalWelcomeMsg(subMsg) => {
         val (modalWelcome, cmds) =
-          subparts.ModalWelcome.update(subMsg, model.modalWelcome)
+          ModalWelcome.update(subMsg, model.modalWelcome)
         (model.copy(modalWelcome = modalWelcome), cmds)
       }
     }
@@ -283,17 +291,17 @@ object Main {
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
-      subparts.AppHeader(model, dispatch),
+      AppHeader(model, dispatch),
       div(id := "app-body", className := "body")(
         model.uiState
-          .map(subparts.AppBody.contents(model, _, dispatch))
+          .map(AppBody.contents(model, _, dispatch))
           .getOrElse(Seq()): _*
       ),
-      subparts.AppFooter(model, dispatch),
+      AppFooter(model, dispatch),
       if (model.logViewToggle)
-        Some(subparts.ViewLog(model.log, dispatch))
+        Some(ViewLog(model.log, dispatch))
       else
         None,
-      subparts.modal(model, dispatch)
+      modal(model, dispatch)
     )
 }
