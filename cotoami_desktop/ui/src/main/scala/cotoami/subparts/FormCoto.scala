@@ -206,7 +206,7 @@ object FormCoto {
               )
             ),
             SplitPane.Secondary(className = None, onClick = None)(
-              inputFooter(operatingNode, currentCotonoma, dispatch)
+              inputFooter(model, operatingNode, currentCotonoma, dispatch)
             )
           )
 
@@ -221,12 +221,13 @@ object FormCoto {
               onBlur := (_ => dispatch(SetFocus(false))),
               onChange := ((e) => dispatch(CotonomaNameInput(e.target.value)))
             ),
-            inputFooter(operatingNode, currentCotonoma, dispatch)
+            inputFooter(model, operatingNode, currentCotonoma, dispatch)
           )
       }
     )
 
   private def inputFooter(
+      model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
@@ -236,7 +237,7 @@ object FormCoto {
         nodeImg(operatingNode),
         operatingNode.name
       ),
-      button(className := "post", disabled := true)(
+      button(className := "post", disabled := model.isBlank)(
         "Post to ",
         span(className := "target-cotonoma")(
           currentCotonoma.abbreviateName(15)
