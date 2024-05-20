@@ -56,7 +56,7 @@ object SectionTimeline {
         (
           model,
           model.domain.currentCotonomaId.map(cotonomaId =>
-            Seq(Cotos.postCoto("Gooo!", None, cotonomaId))
+            Seq(Cotos.postCoto("post-id", "Gooo!", None, cotonomaId))
           ).getOrElse(Seq.empty)
         )
     }
