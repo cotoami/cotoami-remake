@@ -11,7 +11,10 @@ case class Cotos(
     // Timeline
     timelineIds: PaginatedIds[Coto] = PaginatedIds(),
     timelineLoading: Boolean = false,
-    query: Option[String] = None
+    query: Option[String] = None,
+
+    // Coto inputs waiting to be posted
+    waitingPosts: Seq[WaitingPost] = Seq.empty
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
@@ -101,3 +104,11 @@ object Cotos {
       (CotoPosted(postId, _)) andThen Domain.CotosMsg andThen DomainMsg
     )
 }
+
+case class WaitingPost(
+    postId: String,
+    // Left: Coto => (content, summary)
+    // Right: Cotonoma => name
+    content: Either[(String, Option[String]), String],
+    postedIn: Cotonoma
+)
