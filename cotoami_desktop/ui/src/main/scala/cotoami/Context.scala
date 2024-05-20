@@ -17,7 +17,7 @@ case class Context(
     val now = LocalDateTime.now(this.zone)
     val dateTime = this.toDateTime(instant)
     if (dateTime.toLocalDate() == now.toLocalDate()) {
-      dateTime.format(DateTimeFormatter.ISO_LOCAL_TIME)
+      dateTime.format(Context.SameDayFormatter)
     } else if (dateTime.getYear() == now.getYear()) {
       dateTime.format(Context.SameYearFormatter)
     } else {
@@ -30,4 +30,5 @@ object Context {
   val DefaultDateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   val SameYearFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
+  val SameDayFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 }
