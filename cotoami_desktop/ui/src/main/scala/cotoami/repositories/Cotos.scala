@@ -107,8 +107,8 @@ object Cotos {
 
 case class WaitingPost(
     postId: String,
-    // Left: Coto => (content, summary)
-    // Right: Cotonoma => name
-    content: Either[(String, Option[String]), String],
+    content: Option[String],
+    summary: Option[String],
+    isCotonoma: Boolean,
     postedIn: Cotonoma
-)
+) extends CotoContent

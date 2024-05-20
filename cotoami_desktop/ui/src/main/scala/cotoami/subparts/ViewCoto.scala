@@ -16,7 +16,7 @@ import cotoami.components.{
   RehypePlugin,
   ToolButton
 }
-import cotoami.backend.{Coto, Link}
+import cotoami.backend.{Coto, CotoContent, Link}
 import cotoami.repositories.{Domain, Nodes}
 
 object ViewCoto {
@@ -137,11 +137,11 @@ object ViewCoto {
     }
   }
 
-  private def sectionContent(coto: Coto): ReactElement =
+  private def sectionContent(content: CotoContent): ReactElement =
     section(className := "text-content")(
       Markdown(rehypePlugins =
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
-      )(coto.content)
+      )(content.content)
     )
 
   def ulParents(

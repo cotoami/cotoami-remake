@@ -5,7 +5,30 @@ import java.time.Instant
 
 import cotoami.utils.{Remark, StripMarkdown}
 
-case class Coto(json: CotoJson) extends Entity[Coto] {
+trait CotoContent {
+  def content: Option[String]
+  def summary: Option[String]
+  def isCotonoma: Boolean
+
+  def nameAsCotonoma: Option[String] =
+    if (this.isCotonoma)
+      this.summary.orElse(this.content)
+    else
+      None
+
+  lazy val abbreviate: Option[String] =
+    this.summary.orElse(
+      this.content.map(content => {
+        val text = Coto.stripMarkdown.processSync(content).toString()
+        if (text.size > Cotonoma.NameMaxLength)
+          s"${text.substring(0, Cotonoma.NameMaxLength)}…"
+        else
+          text
+      })
+    )
+}
+
+case class Coto(json: CotoJson) extends Entity[Coto] with CotoContent {
   override def id: Id[Coto] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)
   def postedInId: Option[Id[Cotonoma]] =
@@ -24,23 +47,6 @@ case class Coto(json: CotoJson) extends Entity[Coto] {
   def postedInIds: Seq[Id[Cotonoma]] =
     Seq(this.postedInId).flatten ++
       this.repostedInIds.getOrElse(Seq.empty)
-
-  def nameAsCotonoma: Option[String] =
-    if (this.isCotonoma)
-      this.summary.orElse(this.content)
-    else
-      None
-
-  lazy val abbreviate: Option[String] =
-    this.summary.orElse(
-      this.content.map(content => {
-        val text = Coto.stripMarkdown.processSync(content).toString()
-        if (text.size > Cotonoma.NameMaxLength)
-          s"${text.substring(0, Cotonoma.NameMaxLength)}…"
-        else
-          text
-      })
-    )
 }
 
 object Coto {
