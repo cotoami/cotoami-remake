@@ -6,6 +6,7 @@
 use std::{path::PathBuf, string::ToString, sync::Arc};
 
 use anyhow::anyhow;
+use chrono::Local;
 use cotoami_db::{Database, Id, Node};
 use cotoami_node::prelude::*;
 use tauri::Manager;
@@ -74,6 +75,7 @@ struct SystemInfo {
     app_version: String,
     app_config_dir: Option<String>,
     app_data_dir: Option<String>,
+    time_zone_offset_in_sec: i32,
     recent_databases: RecentDatabases,
 }
 
@@ -94,12 +96,15 @@ fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
         .app_data_dir()
         .and_then(|path| path.to_str().map(str::to_string));
 
+    let time_zone_offset_in_sec = Local::now().offset().local_minus_utc();
+
     let recent_databases = RecentDatabases::load(&app_handle);
 
     SystemInfo {
         app_version,
         app_config_dir,
         app_data_dir,
+        time_zone_offset_in_sec,
         recent_databases,
     }
 }

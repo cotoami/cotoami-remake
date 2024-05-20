@@ -93,6 +93,9 @@ object Main {
         (
           model
             .modify(_.systemInfo).setTo(Some(systemInfo))
+            .modify(_.context).using(
+              _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
+            )
             .modify(_.modalWelcome.baseFolder).setTo(systemInfo.app_data_dir)
             .info(
               "SystemInfo fetched.",

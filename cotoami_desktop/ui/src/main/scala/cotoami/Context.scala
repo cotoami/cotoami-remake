@@ -6,6 +6,9 @@ import java.time.format.DateTimeFormatter
 case class Context(
     zone: ZoneId = ZoneId.of("UTC")
 ) {
+  def setZoneOffsetInSeconds(seconds: Int): Context =
+    this.copy(zone = ZoneOffset.ofTotalSeconds(seconds))
+
   def toDateTime(instant: Instant): LocalDateTime =
     LocalDateTime.ofInstant(instant, this.zone)
 
