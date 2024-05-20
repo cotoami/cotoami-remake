@@ -237,7 +237,10 @@ object FormCoto {
         operatingNode.name
       ),
       button(className := "post", disabled := true)(
-        s"Post to \"${currentCotonoma.name}\"",
+        "Post to ",
+        span(className := "target-cotonoma")(
+          currentCotonoma.abbreviateName(15)
+        ),
         span(className := "shortcut-help")("(Ctrl + Enter)")
       )
     )

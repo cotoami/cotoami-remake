@@ -12,6 +12,12 @@ case class Cotonoma(json: CotonomaJson) extends Entity[Cotonoma] {
   lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
   lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
   def posts: Int = this.json.posts
+
+  def abbreviateName(length: Int): String =
+    if (this.name.size > length)
+      s"${this.name.substring(0, length)}…"
+    else
+      this.name
 }
 
 object Cotonoma {

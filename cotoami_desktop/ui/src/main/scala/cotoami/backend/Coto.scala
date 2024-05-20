@@ -36,7 +36,7 @@ case class Coto(json: CotoJson) extends Entity[Coto] {
       this.content.map(content => {
         val text = Coto.stripMarkdown.processSync(content).toString()
         if (text.size > Cotonoma.NameMaxLength)
-          s"${text.substring(0, Cotonoma.NameMaxLength)}..."
+          s"${text.substring(0, Cotonoma.NameMaxLength)}…"
         else
           text
       })

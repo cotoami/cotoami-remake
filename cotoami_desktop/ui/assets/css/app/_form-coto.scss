@@ -98,6 +98,12 @@ section.form-coto {
       width: auto;
       padding: 5px 12px;
 
+      span.target-cotonoma {
+        font-weight: 600;
+        opacity: .5;
+        text-decoration: underline;
+      }
+
       span.shortcut-help {
         margin-left: 4px;
         opacity: .7;
