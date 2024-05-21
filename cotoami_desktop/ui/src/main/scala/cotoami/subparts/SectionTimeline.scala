@@ -163,7 +163,7 @@ object SectionTimeline {
       post: FormCoto.WaitingPost,
       domain: Domain
   ): ReactElement =
-    section(className := "waiting-post")(
+    section(className := "waiting-post", aria - "busy" := "true")(
       article(className := "coto")(
         div(className := "body")(
           ViewCoto.divWaitingPostContent(post, domain)
