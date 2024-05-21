@@ -58,8 +58,11 @@ case class Model(
   def error(message: String, error: Option[ErrorJson]): Model =
     this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
 
-  def clearTraversals: Model =
-    this.copy(traversals = SectionTraversals.Model())
+  def resetSubparts: Model =
+    this.copy(
+      waitingPosts = WaitingPosts(),
+      traversals = SectionTraversals.Model()
+    )
 }
 
 object Model {
