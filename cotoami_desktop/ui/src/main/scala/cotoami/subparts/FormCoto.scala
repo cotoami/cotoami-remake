@@ -87,6 +87,13 @@ object FormCoto {
     def add(post: WaitingPost): WaitingPosts =
       this.modify(_.posts).using(post +: _)
 
+    def addCoto(
+        content: String,
+        summary: Option[String],
+        postedIn: Cotonoma
+    ): WaitingPosts =
+      this.add(WaitingPost("", Some(content), summary, false, postedIn))
+
     def remove(postId: String): WaitingPosts =
       this.modify(_.posts).using(_.filterNot(_.postId == postId))
   }
@@ -109,6 +116,7 @@ object FormCoto {
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
   case object EditorResizeEnd extends Msg
+  case object Post extends Msg
   case class CotoPosted(postId: String, result: Either[ErrorJson, CotoJson])
       extends Msg
   case class CotonomaPosted(
@@ -118,6 +126,7 @@ object FormCoto {
 
   def update(
       msg: Msg,
+      currentCotonoma: Cotonoma,
       model: Model,
       waitingPosts: WaitingPosts,
       log: Log
@@ -177,31 +186,36 @@ object FormCoto {
           }))
         )
 
-      case (CotoPosted(postId, Right(cotoJson)), _) =>
+      case (Post, form: CotoForm) =>
         model.clear match {
           case model =>
             (
               model,
-              waitingPosts.remove(postId),
-              log.info("Coto posted.", Some(cotoJson.uuid)),
+              waitingPosts.addCoto(form.content, None, currentCotonoma),
+              log,
               Seq(model.save)
             )
         }
 
+      case (CotoPosted(postId, Right(cotoJson)), _) =>
+        (
+          model,
+          waitingPosts.remove(postId),
+          log.info("Coto posted.", Some(cotoJson.uuid)),
+          Seq.empty
+        )
+
       case (CotoPosted(postId, Left(e)), _) =>
-        model.clear match {
-          case model =>
-            (
-              model,
-              waitingPosts.remove(postId),
-              log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
-              Seq(model.save)
-            )
-        }
+        (
+          model,
+          waitingPosts.remove(postId),
+          log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
+          Seq.empty
+        )
 
       case (CotonomaPosted(postId, Right(cotonoma)), _) =>
         (
-          model.clear,
+          model,
           waitingPosts.remove(postId),
           log.info(
             "Cotonoma posted.",
@@ -212,7 +226,7 @@ object FormCoto {
 
       case (CotonomaPosted(postId, Left(e)), _) =>
         (
-          model.clear,
+          model,
           waitingPosts.remove(postId),
           log.error("Couldn't post a cotonoma.", Some(js.JSON.stringify(e))),
           Seq.empty
@@ -344,7 +358,11 @@ object FormCoto {
         nodeImg(operatingNode),
         operatingNode.name
       ),
-      button(className := "post", disabled := model.isBlank)(
+      button(
+        className := "post",
+        disabled := model.isBlank,
+        onClick := (_ => dispatch(Post))
+      )(
         "Post to ",
         span(className := "target-cotonoma")(
           currentCotonoma.abbreviateName(15)

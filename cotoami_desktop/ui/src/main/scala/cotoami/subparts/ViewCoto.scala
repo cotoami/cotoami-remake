@@ -116,7 +116,8 @@ object ViewCoto {
         post.summary.map(summary => {
           CollapsibleContent(
             summary = summary,
-            content = sectionCotoContent(post)
+            content = sectionCotoContent(post),
+            opened = true
           ): ReactElement
         }).getOrElse(sectionCotoContent(post))
       )

@@ -34,9 +34,9 @@ case class Coto(json: CotoJson) extends Entity[Coto] with CotoContent {
   def postedInId: Option[Id[Cotonoma]] =
     Option(this.json.posted_in_id).map(Id(_))
   def postedById: Id[Node] = Id(this.json.posted_by_id)
-  def content: Option[String] = Option(this.json.content)
-  def summary: Option[String] = Option(this.json.summary)
-  def isCotonoma: Boolean = this.json.is_cotonoma
+  override def content: Option[String] = Option(this.json.content)
+  override def summary: Option[String] = Option(this.json.summary)
+  override def isCotonoma: Boolean = this.json.is_cotonoma
   def repostOfId: Option[Id[Coto]] = Option(this.json.repost_of_id).map(Id(_))
   def repostedInIds: Option[Seq[Id[Cotonoma]]] =
     Option(this.json.reposted_in_ids).map(_.map(Id[Cotonoma](_)).toSeq)
