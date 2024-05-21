@@ -41,6 +41,12 @@ object FormCoto {
         case CotonomaForm(name) => name.isBlank
       }
 
+    def clear: Model =
+      this.copy(form = this.form match {
+        case CotoForm(_)     => CotoForm()
+        case CotonomaForm(_) => CotonomaForm()
+      })
+
     def storageKey: String = StorageKeyPrefix + this.id
 
     def save: Cmd[Msg] =
@@ -172,24 +178,30 @@ object FormCoto {
         )
 
       case (CotoPosted(postId, Right(cotoJson)), _) =>
-        (
-          model,
-          waitingPosts.remove(postId),
-          log.info("Coto posted.", Some(cotoJson.uuid)),
-          Seq.empty
-        )
+        model.clear match {
+          case model =>
+            (
+              model,
+              waitingPosts.remove(postId),
+              log.info("Coto posted.", Some(cotoJson.uuid)),
+              Seq(model.save)
+            )
+        }
 
       case (CotoPosted(postId, Left(e)), _) =>
-        (
-          model,
-          waitingPosts.remove(postId),
-          log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
-          Seq.empty
-        )
+        model.clear match {
+          case model =>
+            (
+              model,
+              waitingPosts.remove(postId),
+              log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
+              Seq(model.save)
+            )
+        }
 
       case (CotonomaPosted(postId, Right(cotonoma)), _) =>
         (
-          model,
+          model.clear,
           waitingPosts.remove(postId),
           log.info(
             "Cotonoma posted.",
@@ -200,7 +212,7 @@ object FormCoto {
 
       case (CotonomaPosted(postId, Left(e)), _) =>
         (
-          model,
+          model.clear,
           waitingPosts.remove(postId),
           log.error("Couldn't post a cotonoma.", Some(js.JSON.stringify(e))),
           Seq.empty
