@@ -80,10 +80,7 @@ object Commands {
       )
     )
 
-  def PostCotonoma(
-      name: String,
-      post_to: Id[Cotonoma]
-  ) =
+  def PostCotonoma(name: String, post_to: Id[Cotonoma]) =
     jso(PostCotonoma =
       jso(
         input = jso(name = name),
