@@ -1,11 +1,16 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use cotoami_db::prelude::*;
+use futures::future::FutureExt;
 use tokio::task::spawn_blocking;
+use validator::Validate;
 
 use crate::{
     service::{
-        models::{CotonomaDetails, Pagination},
-        ServiceError,
+        error::IntoServiceResult,
+        models::{CotonomaDetails, CotonomaInput, Pagination},
+        NodeServiceExt, ServiceError,
     },
     state::NodeState,
 };
@@ -45,6 +50,9 @@ impl NodeState {
         id: Id<Cotonoma>,
         pagination: Pagination,
     ) -> Result<Paginated<Cotonoma>, ServiceError> {
+        if let Err(errors) = pagination.validate() {
+            return ("sub_cotonomas", errors).into_result();
+        }
         let db = self.db().clone();
         spawn_blocking(move || {
             db.new_session()?.sub_cotonomas(
@@ -62,6 +70,9 @@ impl NodeState {
         node: Option<Id<Node>>,
         pagination: Pagination,
     ) -> Result<Paginated<Cotonoma>, ServiceError> {
+        if let Err(errors) = pagination.validate() {
+            return ("recent_cotonomas", errors).into_result();
+        }
         let db = self.db().clone();
         spawn_blocking(move || {
             db.new_session()?.recent_cotonomas(
@@ -72,5 +83,30 @@ impl NodeState {
         })
         .await?
         .map_err(ServiceError::from)
+    }
+
+    pub(crate) async fn post_cotonoma(
+        self,
+        input: CotonomaInput,
+        post_to: Id<Cotonoma>,
+        operator: Arc<Operator>,
+    ) -> Result<(Cotonoma, Coto), ServiceError> {
+        if let Err(errors) = input.validate() {
+            return ("post_cotonoma", errors).into_result();
+        }
+        self.change_in_cotonoma(
+            input,
+            post_to,
+            operator,
+            |ds, input, cotonoma, opr| {
+                ds.post_cotonoma(
+                    &input.name.unwrap_or_else(|| unreachable!()),
+                    &cotonoma,
+                    opr,
+                )
+            },
+            |parent, input, cotonoma| parent.post_cotonoma(input, cotonoma.uuid).boxed(),
+        )
+        .await
     }
 }

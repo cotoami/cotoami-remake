@@ -176,6 +176,13 @@ pub enum Command {
         input: CotoInput,
         post_to: Id<Cotonoma>,
     },
+
+    /// Request to create a new [Cotonoma] in the given cotonoma (`post_to`).
+    /// The return type is `(Cotonoma, Coto)`.
+    PostCotonoma {
+        input: CotonomaInput,
+        post_to: Id<Cotonoma>,
+    },
 }
 
 impl Command {

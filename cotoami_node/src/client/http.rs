@@ -173,6 +173,9 @@ impl HttpClient {
             Command::PostCoto { input, post_to } => self
                 .post(&format!("/api/cotonomas/{post_to}/cotos"))
                 .form(&input),
+            Command::PostCotonoma { input, post_to } => self
+                .post(&format!("/api/cotonomas/{post_to}/subs"))
+                .form(&input),
         };
 
         // Set the "Accept" header from Request::accept()

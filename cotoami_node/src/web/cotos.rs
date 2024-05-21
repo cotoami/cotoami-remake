@@ -6,11 +6,9 @@ use axum::{
     Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use validator::Validate;
 
 use crate::{
     service::{
-        error::IntoServiceResult,
         models::{CotoGraph, PaginatedCotos, Pagination},
         ServiceError,
     },
@@ -36,9 +34,6 @@ async fn recent_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
-    if let Err(errors) = pagination.validate() {
-        return ("cotos", errors).into_result();
-    }
     state
         .recent_cotos(None, None, pagination)
         .await
@@ -55,9 +50,6 @@ async fn search_cotos(
     Path(query): Path<String>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
-    if let Err(errors) = pagination.validate() {
-        return ("cotos", errors).into_result();
-    }
     state
         .search_cotos(query, None, None, pagination)
         .await

@@ -69,6 +69,9 @@ impl NodeState {
             Command::PostCoto { input, post_to } => {
                 format.to_bytes(self.post_coto(input, post_to, opr?).await)
             }
+            Command::PostCotonoma { input, post_to } => {
+                format.to_bytes(self.post_cotonoma(input, post_to, opr?).await)
+            }
         }
     }
 }
