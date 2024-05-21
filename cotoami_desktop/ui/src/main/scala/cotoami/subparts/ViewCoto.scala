@@ -103,11 +103,12 @@ object ViewCoto {
   @react object CollapsibleContent {
     case class Props(
         summary: String,
-        content: ReactElement
+        content: ReactElement,
+        opened: Boolean = false
     )
 
     val component = FunctionalComponent[Props] { props =>
-      val (opened, setOpened) = useState(false)
+      val (opened, setOpened) = useState(props.opened)
 
       div(className := "summary-and-content")(
         section(className := "summary")(
