@@ -17,7 +17,7 @@ import cotoami.components.{
   ToolButton
 }
 import cotoami.backend.{Coto, CotoContent, Link}
-import cotoami.repositories.{Domain, Nodes, WaitingPost}
+import cotoami.repositories.{Domain, Nodes}
 
 object ViewCoto {
 
@@ -100,7 +100,10 @@ object ViewCoto {
       )
     )
 
-  def divWaitingPostContent(post: WaitingPost, domain: Domain): ReactElement =
+  def divWaitingPostContent(
+      post: FormCoto.WaitingPost,
+      domain: Domain
+  ): ReactElement =
     div(className := "content")(
       post.nameAsCotonoma.map(name =>
         section(className := "cotonoma-content")(

@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 
@@ -9,7 +10,8 @@ import slinky.web.html._
 import cats.effect.IO
 
 import fui.FunctionalUI._
-import cotoami.backend.{Cotonoma, Node}
+import cotoami.utils.Log
+import cotoami.backend._
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -64,6 +66,20 @@ object FormCoto {
     })
   }
 
+  case class WaitingPost(
+      postId: String,
+      content: Option[String],
+      summary: Option[String],
+      isCotonoma: Boolean,
+      postedIn: Cotonoma
+  ) extends CotoContent
+
+  def removeWaitingPost(
+      waitingPosts: Seq[WaitingPost],
+      postId: String
+  ): Seq[WaitingPost] =
+    waitingPosts.filterNot(_.postId == postId)
+
   def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
     Model(id, autoSave = autoSave) match {
       case model => (model, model.restore)
@@ -82,16 +98,27 @@ object FormCoto {
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
   case object EditorResizeEnd extends Msg
+  case class CotoPosted(postId: String, result: Either[ErrorJson, CotoJson])
+      extends Msg
+  case class CotonomaPosted(
+      postId: String,
+      result: Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]
+  ) extends Msg
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
+  def update(
+      msg: Msg,
+      model: Model,
+      waitingPosts: Seq[WaitingPost],
+      log: Log
+  ): (Model, Seq[WaitingPost], Log, Seq[Cmd[Msg]]) =
     (msg, model.form) match {
       case (SetCotoForm, _) =>
         model.copy(form = CotoForm()) match {
-          case model => (model, Seq(model.restore))
+          case model => (model, waitingPosts, log, Seq(model.restore))
         }
 
       case (SetCotonomaForm, _) =>
-        (model.copy(form = CotonomaForm()), Seq.empty)
+        (model.copy(form = CotonomaForm()), waitingPosts, log, Seq.empty)
 
       case (CotoContentRestored(Some(content)), form: CotoForm) =>
         (
@@ -99,26 +126,35 @@ object FormCoto {
             model.copy(form = form.copy(content = content))
           else
             model,
+          waitingPosts,
+          log,
           Seq()
         )
 
       case (CotoContentInput(content), form: CotoForm) =>
         model.copy(form = form.copy(content = content)) match {
-          case model => (model, Seq(model.save))
+          case model => (model, waitingPosts, log, Seq(model.save))
         }
 
       case (CotonomaNameInput(name), form: CotonomaForm) =>
-        (model.copy(form = form.copy(name = name)), Seq.empty)
+        (
+          model.copy(form = form.copy(name = name)),
+          waitingPosts,
+          log,
+          Seq.empty
+        )
 
       case (SetFocus(focus), _) =>
-        (model.copy(focused = focus), Seq.empty)
+        (model.copy(focused = focus), waitingPosts, log, Seq.empty)
 
       case (EditorResizeStart, _) =>
-        (model.copy(editorBeingResized = true), Seq.empty)
+        (model.copy(editorBeingResized = true), waitingPosts, log, Seq.empty)
 
       case (EditorResizeEnd, _) =>
         (
           model.copy(editorBeingResized = false),
+          waitingPosts,
+          log,
           // Return the focus to the editor in order for it
           // not to be folded when it's empty.
           Seq(Cmd(IO {
@@ -130,8 +166,62 @@ object FormCoto {
           }))
         )
 
-      case (_, _) => (model, Seq.empty)
+      case (CotoPosted(postId, Right(cotoJson)), _) =>
+        (
+          model,
+          removeWaitingPost(waitingPosts, postId),
+          log.info("Coto posted.", Some(cotoJson.uuid)),
+          Seq.empty
+        )
+
+      case (CotoPosted(postId, Left(e)), _) =>
+        (
+          model,
+          removeWaitingPost(waitingPosts, postId),
+          log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
+          Seq.empty
+        )
+
+      case (CotonomaPosted(postId, Right(cotonoma)), _) =>
+        (
+          model,
+          removeWaitingPost(waitingPosts, postId),
+          log.info(
+            "Cotonoma posted.",
+            Some(js.JSON.stringify(cotonoma._1))
+          ),
+          Seq.empty
+        )
+
+      case (CotonomaPosted(postId, Left(e)), _) =>
+        (
+          model,
+          removeWaitingPost(waitingPosts, postId),
+          log.error("Couldn't post a cotonoma.", Some(js.JSON.stringify(e))),
+          Seq.empty
+        )
+
+      case (_, _) => (model, waitingPosts, log, Seq.empty)
     }
+
+  private def postCoto(
+      postId: String,
+      content: String,
+      summary: Option[String],
+      post_to: Id[Cotonoma]
+  ): Cmd[Msg] =
+    Commands
+      .send(Commands.PostCoto(content, summary, post_to))
+      .map(CotoPosted(postId, _))
+
+  private def postCotonoma(
+      postId: String,
+      name: String,
+      post_to: Id[Cotonoma]
+  ): Cmd[Msg] =
+    Commands
+      .send(Commands.PostCotonoma(name, post_to))
+      .map(CotonomaPosted(postId, _))
 
   def apply(
       model: Model,

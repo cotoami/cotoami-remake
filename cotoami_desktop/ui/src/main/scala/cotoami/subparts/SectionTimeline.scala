@@ -53,12 +53,7 @@ object SectionTimeline {
         )
 
       case OpenCalendar =>
-        (
-          model,
-          model.domain.currentCotonomaId.map(cotonomaId =>
-            Seq(Cotos.postCoto("post-id", "Gooo!", None, cotonomaId))
-          ).getOrElse(Seq.empty)
-        )
+        (model, Seq.empty)
     }
 
   private def fetchDefaultTimeline(model: Model): Cmd[cotoami.Msg] =
@@ -86,12 +81,12 @@ object SectionTimeline {
   ): Option[ReactElement] =
     Option.when(
       !model.domain.timeline.isEmpty ||
-        !model.domain.cotos.waitingPosts.isEmpty ||
+        !model.waitingPosts.isEmpty ||
         model.domain.cotos.query.isDefined
     )(
       sectionTimeline(
         model.domain.timeline,
-        model.domain.cotos.waitingPosts,
+        model.waitingPosts,
         model,
         dispatch
       )
@@ -99,7 +94,7 @@ object SectionTimeline {
 
   private def sectionTimeline(
       cotos: Seq[Coto],
-      waitingPosts: Seq[WaitingPost],
+      waitingPosts: Seq[FormCoto.WaitingPost],
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -165,7 +160,7 @@ object SectionTimeline {
     )
 
   private def sectionWaitingPost(
-      post: WaitingPost,
+      post: FormCoto.WaitingPost,
       domain: Domain
   ): ReactElement =
     section(className := "waiting-post")(

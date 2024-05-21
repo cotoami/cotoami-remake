@@ -218,8 +218,20 @@ object Main {
       }
 
       case FlowInputMsg(subMsg) => {
-        val (flowInput, cmds) = FormCoto.update(subMsg, model.flowInput)
-        (model.copy(flowInput = flowInput), cmds.map(_.map(FlowInputMsg)))
+        val (flowInput, waitingPosts, log, cmds) = FormCoto.update(
+          subMsg,
+          model.flowInput,
+          model.waitingPosts,
+          model.log
+        )
+        (
+          model.copy(
+            flowInput = flowInput,
+            waitingPosts = waitingPosts,
+            log = log
+          ),
+          cmds.map(_.map(FlowInputMsg))
+        )
       }
 
       case SectionTimelineMsg(subMsg) =>
