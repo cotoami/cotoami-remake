@@ -1,5 +1,7 @@
 package cotoami.repositories
 
+import scala.scalajs.js
+
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
 import cotoami.DomainMsg
@@ -64,6 +66,10 @@ object Cotos {
   case object FetchMoreTimeline extends Msg
   case class CotoPosted(postId: String, result: Either[ErrorJson, CotoJson])
       extends Msg
+  case class CotonomaPosted(
+      postId: String,
+      result: Either[ErrorJson, (CotonomaJson, CotoJson)]
+  ) extends Msg
 
   def update(
       msg: Msg,
@@ -84,16 +90,33 @@ object Cotos {
           ).getOrElse((model, Seq.empty))
         }
 
-      case CotoPosted(postId, Right(coto)) =>
+      case CotoPosted(postId, Right(cotoJson)) =>
         (
           model.removeWaitingPost(postId),
-          Seq(cotoami.log_info("Coto posted.", Some(coto.uuid)))
+          Seq(cotoami.log_info("Coto posted.", Some(cotoJson.uuid)))
         )
 
       case CotoPosted(postId, Left(e)) =>
         (
           model.removeWaitingPost(postId),
           Seq(ErrorJson.log(e, "Couldn't post a coto."))
+        )
+
+      case CotonomaPosted(postId, Right((cotonomaJson, cotoJson))) =>
+        (
+          model.removeWaitingPost(postId),
+          Seq(
+            cotoami.log_info(
+              "Cotonoma posted.",
+              Some(js.JSON.stringify(cotonomaJson))
+            )
+          )
+        )
+
+      case CotonomaPosted(postId, Left(e)) =>
+        (
+          model.removeWaitingPost(postId),
+          Seq(ErrorJson.log(e, "Couldn't post a cotonoma."))
         )
     }
 
@@ -105,6 +128,15 @@ object Cotos {
   ): Cmd[cotoami.Msg] =
     Commands.send(Commands.PostCoto(content, summary, post_to)).map(
       (CotoPosted(postId, _)) andThen Domain.CotosMsg andThen DomainMsg
+    )
+
+  def postCotonoma(
+      postId: String,
+      name: String,
+      post_to: Id[Cotonoma]
+  ): Cmd[cotoami.Msg] =
+    Commands.send(Commands.PostCotonoma(name, post_to)).map(
+      (CotonomaPosted(postId, _)) andThen Domain.CotosMsg andThen DomainMsg
     )
 }
 
