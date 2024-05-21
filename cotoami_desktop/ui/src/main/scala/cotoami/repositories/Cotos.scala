@@ -68,7 +68,7 @@ object Cotos {
       extends Msg
   case class CotonomaPosted(
       postId: String,
-      result: Either[ErrorJson, (CotonomaJson, CotoJson)]
+      result: Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]
   ) extends Msg
 
   def update(
@@ -102,13 +102,13 @@ object Cotos {
           Seq(ErrorJson.log(e, "Couldn't post a coto."))
         )
 
-      case CotonomaPosted(postId, Right((cotonomaJson, cotoJson))) =>
+      case CotonomaPosted(postId, Right(cotonoma)) =>
         (
           model.removeWaitingPost(postId),
           Seq(
             cotoami.log_info(
               "Cotonoma posted.",
-              Some(js.JSON.stringify(cotonomaJson))
+              Some(js.JSON.stringify(cotonoma._1))
             )
           )
         )
