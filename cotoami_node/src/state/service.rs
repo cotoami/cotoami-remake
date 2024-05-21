@@ -5,10 +5,13 @@ use anyhow::Result;
 use bytes::Bytes;
 use cotoami_db::prelude::*;
 use futures::future::FutureExt;
-use serde_json::value::Value;
+use serde_json::json;
 
 use crate::{
-    service::{error::InputError, NodeServiceFuture, *},
+    service::{
+        error::{InputError, RequestError},
+        NodeServiceFuture, *,
+    },
     state::NodeState,
 };
 
@@ -104,7 +107,7 @@ where
         match anyhow_err.downcast_ref::<DatabaseError>() {
             Some(DatabaseError::EntityNotFound { kind, id }) => {
                 return InputError::new(kind.to_string(), "id", "not-found")
-                    .with_param("value", Value::String(id.to_string()))
+                    .with_param("value", json!(id.to_string()))
                     .into();
             }
             Some(DatabaseError::AuthenticationFailed) => {
@@ -116,4 +119,12 @@ where
 
         ServiceError::Server(anyhow_err.to_string())
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Utils for service implementations
+/////////////////////////////////////////////////////////////////////////////
+
+fn read_only_cotonoma_error(cotonoma_name: &str) -> RequestError {
+    RequestError::new("read-only-cotonoma").with_param("cotonoma-name", json!(cotonoma_name))
 }

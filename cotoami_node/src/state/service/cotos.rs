@@ -2,13 +2,12 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
-use serde_json::value::Value;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
     service::{
-        error::{IntoServiceResult, RequestError},
+        error::IntoServiceResult,
         models::{CotoInput, PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
@@ -115,9 +114,7 @@ impl NodeState {
                         .await
                         .map_err(ServiceError::from)
                 } else {
-                    RequestError::new("posting-to-inaccessible-cotonoma")
-                        .with_param("cotonoma-name", Value::String(cotonoma.name))
-                        .into_result()
+                    super::read_only_cotonoma_error(&cotonoma.name).into_result()
                 }
             }
         }
