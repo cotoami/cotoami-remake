@@ -17,7 +17,7 @@ import cotoami.components.{
   ToolButton
 }
 import cotoami.backend.{Coto, CotoContent, Link}
-import cotoami.repositories.{Domain, Nodes}
+import cotoami.repositories.{Domain, Nodes, WaitingPost}
 
 object ViewCoto {
 
@@ -94,9 +94,28 @@ object ViewCoto {
         coto.summary.map(summary => {
           CollapsibleContent(
             summary = summary,
-            content = sectionContent(coto)
+            content = sectionCotoContent(coto)
           ): ReactElement
-        }).getOrElse(sectionContent(coto))
+        }).getOrElse(sectionCotoContent(coto))
+      )
+    )
+
+  def divWaitingPostContent(post: WaitingPost, domain: Domain): ReactElement =
+    div(className := "content")(
+      post.nameAsCotonoma.map(name =>
+        section(className := "cotonoma-content")(
+          span(className := "cotonoma")(
+            domain.nodes.get(post.postedIn.nodeId).map(nodeImg),
+            name
+          )
+        )
+      ).getOrElse(
+        post.summary.map(summary => {
+          CollapsibleContent(
+            summary = summary,
+            content = sectionCotoContent(post)
+          ): ReactElement
+        }).getOrElse(sectionCotoContent(post))
       )
     )
 
@@ -138,7 +157,7 @@ object ViewCoto {
     }
   }
 
-  private def sectionContent(content: CotoContent): ReactElement =
+  private def sectionCotoContent(content: CotoContent): ReactElement =
     section(className := "text-content")(
       Markdown(rehypePlugins =
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
