@@ -8,6 +8,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cats.effect.IO
+import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
 import cotoami.utils.Log
@@ -74,11 +75,15 @@ object FormCoto {
       postedIn: Cotonoma
   ) extends CotoContent
 
-  def removeWaitingPost(
-      waitingPosts: Seq[WaitingPost],
-      postId: String
-  ): Seq[WaitingPost] =
-    waitingPosts.filterNot(_.postId == postId)
+  case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
+    def isEmpty: Boolean = this.posts.isEmpty
+
+    def add(post: WaitingPost): WaitingPosts =
+      this.modify(_.posts).using(post +: _)
+
+    def remove(postId: String): WaitingPosts =
+      this.modify(_.posts).using(_.filterNot(_.postId == postId))
+  }
 
   def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
     Model(id, autoSave = autoSave) match {
@@ -108,9 +113,9 @@ object FormCoto {
   def update(
       msg: Msg,
       model: Model,
-      waitingPosts: Seq[WaitingPost],
+      waitingPosts: WaitingPosts,
       log: Log
-  ): (Model, Seq[WaitingPost], Log, Seq[Cmd[Msg]]) =
+  ): (Model, WaitingPosts, Log, Seq[Cmd[Msg]]) =
     (msg, model.form) match {
       case (SetCotoForm, _) =>
         model.copy(form = CotoForm()) match {
@@ -169,7 +174,7 @@ object FormCoto {
       case (CotoPosted(postId, Right(cotoJson)), _) =>
         (
           model,
-          removeWaitingPost(waitingPosts, postId),
+          waitingPosts.remove(postId),
           log.info("Coto posted.", Some(cotoJson.uuid)),
           Seq.empty
         )
@@ -177,7 +182,7 @@ object FormCoto {
       case (CotoPosted(postId, Left(e)), _) =>
         (
           model,
-          removeWaitingPost(waitingPosts, postId),
+          waitingPosts.remove(postId),
           log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
           Seq.empty
         )
@@ -185,7 +190,7 @@ object FormCoto {
       case (CotonomaPosted(postId, Right(cotonoma)), _) =>
         (
           model,
-          removeWaitingPost(waitingPosts, postId),
+          waitingPosts.remove(postId),
           log.info(
             "Cotonoma posted.",
             Some(js.JSON.stringify(cotonoma._1))
@@ -196,7 +201,7 @@ object FormCoto {
       case (CotonomaPosted(postId, Left(e)), _) =>
         (
           model,
-          removeWaitingPost(waitingPosts, postId),
+          waitingPosts.remove(postId),
           log.error("Couldn't post a cotonoma.", Some(js.JSON.stringify(e))),
           Seq.empty
         )

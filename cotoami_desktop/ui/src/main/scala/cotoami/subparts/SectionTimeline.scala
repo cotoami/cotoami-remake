@@ -94,7 +94,7 @@ object SectionTimeline {
 
   private def sectionTimeline(
       cotos: Seq[Coto],
-      waitingPosts: Seq[FormCoto.WaitingPost],
+      waitingPosts: FormCoto.WaitingPosts,
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -148,7 +148,7 @@ object SectionTimeline {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(cotoami.Msg.FetchMoreTimeline)
         )(
-          (waitingPosts.map(sectionWaitingPost(_, model.domain)) ++
+          (waitingPosts.posts.map(sectionWaitingPost(_, model.domain)) ++
             cotos.map(
               sectionPost(_, model.domain, model.context, dispatch)
             ) :+ div(

@@ -18,7 +18,7 @@ import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.subparts._
-import cotoami.subparts.FormCoto.WaitingPost
+import cotoami.subparts.FormCoto.WaitingPosts
 
 case class Model(
     url: URL,
@@ -40,7 +40,7 @@ case class Model(
     domain: Domain = Domain(),
 
     // Coto/Cotonoma inputs waiting to be posted
-    waitingPosts: Seq[WaitingPost] = Seq.empty,
+    waitingPosts: WaitingPosts = WaitingPosts(),
 
     // subparts
     flowInput: FormCoto.Model,
