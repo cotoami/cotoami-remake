@@ -86,13 +86,20 @@ object SectionTimeline {
   ): Option[ReactElement] =
     Option.when(
       !model.domain.timeline.isEmpty ||
+        !model.domain.cotos.waitingPosts.isEmpty ||
         model.domain.cotos.query.isDefined
     )(
-      sectionTimeline(model.domain.timeline, model, dispatch)
+      sectionTimeline(
+        model.domain.timeline,
+        model.domain.cotos.waitingPosts,
+        model,
+        dispatch
+      )
     )
 
   private def sectionTimeline(
       cotos: Seq[Coto],
+      waitingPosts: Seq[WaitingPost],
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -146,12 +153,25 @@ object SectionTimeline {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(cotoami.Msg.FetchMoreTimeline)
         )(
-          cotos.map(
-            sectionPost(_, model.domain, model.context, dispatch)
-          ) :+ div(
-            className := "more",
-            aria - "busy" := model.domain.cotos.timelineLoading.toString()
-          )(): _*
+          (waitingPosts.map(sectionWaitingPost(_, model.domain)) ++
+            cotos.map(
+              sectionPost(_, model.domain, model.context, dispatch)
+            ) :+ div(
+              className := "more",
+              aria - "busy" := model.domain.cotos.timelineLoading.toString()
+            )()): _*
+        )
+      )
+    )
+
+  private def sectionWaitingPost(
+      post: WaitingPost,
+      domain: Domain
+  ): ReactElement =
+    section(className := "waiting-post")(
+      article(className := "coto")(
+        div(className := "body")(
+          ViewCoto.divWaitingPostContent(post, domain)
         )
       )
     )

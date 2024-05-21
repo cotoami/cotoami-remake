@@ -15,7 +15,7 @@ case class Cotos(
     timelineLoading: Boolean = false,
     query: Option[String] = None,
 
-    // Coto inputs waiting to be posted
+    // Coto/Cotonoma inputs waiting to be posted
     waitingPosts: Seq[WaitingPost] = Seq.empty
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
@@ -54,7 +54,7 @@ case class Cotos(
       )
 
   def addWaitingPost(post: WaitingPost): Cotos =
-    this.modify(_.waitingPosts).using(_ :+ post)
+    this.modify(_.waitingPosts).using(post +: _)
 
   def removeWaitingPost(postId: String): Cotos =
     this.modify(_.waitingPosts).using(_.filterNot(_.postId == postId))
