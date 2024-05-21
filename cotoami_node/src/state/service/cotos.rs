@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
+use futures::future::FutureExt;
 use tokio::task::spawn_blocking;
 use validator::Validate;
 
@@ -78,53 +79,20 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return ("post_coto", errors).into_result();
         }
-
-        // Try to post the coto in the local node.
-        let post_result = spawn_blocking({
-            let this = self.clone();
-            move || {
-                let mut ds = this.db().new_session()?;
-
-                // Target cotonoma
-                let (cotonoma, _) = ds.try_get_cotonoma(&post_to)?;
-
-                // Post the coto if the cotonoma belongs to the local node.
-                if this.db().globals().is_local(&cotonoma) {
-                    let (coto, change) = ds.post_coto(
-                        &input.content.unwrap_or_else(|| unreachable!()),
-                        input.summary.as_deref(),
-                        &cotonoma,
-                        operator.as_ref(),
-                    )?;
-                    this.pubsub().publish_change(change);
-                    Ok::<_, anyhow::Error>(PostResult::Posted(coto))
-                } else {
-                    Ok::<_, anyhow::Error>(PostResult::ToForward { cotonoma, input })
-                }
-            }
-        })
-        .await??;
-
-        match post_result {
-            PostResult::Posted(coto) => Ok(coto),
-            PostResult::ToForward { cotonoma, input } => {
-                if let Some(mut parent_service) = self.parent_service(&cotonoma.node_id) {
-                    parent_service
-                        .post_coto(input, post_to)
-                        .await
-                        .map_err(ServiceError::from)
-                } else {
-                    super::read_only_cotonoma_error(&cotonoma.name).into_result()
-                }
-            }
-        }
+        self.change_in_cotonoma(
+            input,
+            post_to,
+            operator,
+            |ds, input, cotonoma, opr| {
+                ds.post_coto(
+                    &input.content.unwrap_or_else(|| unreachable!()),
+                    input.summary.as_deref(),
+                    &cotonoma,
+                    opr,
+                )
+            },
+            |parent, input, cotonoma| parent.post_coto(input, cotonoma.uuid).boxed(),
+        )
+        .await
     }
-}
-
-enum PostResult {
-    Posted(Coto),
-    ToForward {
-        cotonoma: Cotonoma,
-        input: CotoInput,
-    },
 }
