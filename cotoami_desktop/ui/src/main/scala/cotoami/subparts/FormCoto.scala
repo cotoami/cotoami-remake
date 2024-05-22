@@ -4,6 +4,8 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 
+import java.time._
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -82,6 +84,11 @@ object FormCoto {
       error: Option[String] = None
   ) extends CotoContent
 
+  object WaitingPost {
+    def newPostId(): String =
+      Instant.now().toEpochMilli().toString
+  }
+
   case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
     def isEmpty: Boolean = this.posts.isEmpty
 
@@ -89,11 +96,13 @@ object FormCoto {
       this.modify(_.posts).using(post +: _)
 
     def addCoto(
-        content: String,
-        summary: Option[String],
+        postId: String,
+        form: CotoForm,
         postedIn: Cotonoma
     ): WaitingPosts =
-      this.add(WaitingPost("", Some(content), summary, false, postedIn))
+      this.add(
+        WaitingPost(postId, Some(form.content), form.summary, false, postedIn)
+      )
 
     def setError(postId: String, error: String): WaitingPosts =
       this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(
@@ -110,7 +119,9 @@ object FormCoto {
     }
 
   sealed trait Form
-  case class CotoForm(content: String = "") extends Form
+  case class CotoForm(content: String = "") extends Form {
+    val summary: Option[String] = None
+  }
   case class CotonomaForm(name: String = "") extends Form
 
   sealed trait Msg
@@ -192,16 +203,21 @@ object FormCoto {
           }))
         )
 
-      case (Post, form: CotoForm) =>
+      case (Post, form: CotoForm) => {
+        val postId = WaitingPost.newPostId()
         model.clear match {
           case model =>
             (
               model,
-              waitingPosts.addCoto(form.content, None, currentCotonoma),
+              waitingPosts.addCoto(postId, form, currentCotonoma),
               log,
-              Seq(model.save)
+              Seq(
+                postCoto(postId, form, currentCotonoma.id),
+                model.save
+              )
             )
         }
+      }
 
       case (CotoPosted(postId, Right(cotoJson)), _) =>
         (
@@ -253,12 +269,11 @@ object FormCoto {
 
   private def postCoto(
       postId: String,
-      content: String,
-      summary: Option[String],
+      form: CotoForm,
       post_to: Id[Cotonoma]
   ): Cmd[Msg] =
     Commands
-      .send(Commands.PostCoto(content, summary, post_to))
+      .send(Commands.PostCoto(form.content, form.summary, post_to))
       .map(CotoPosted(postId, _))
 
   private def postCotonoma(
