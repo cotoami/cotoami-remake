@@ -78,7 +78,8 @@ object FormCoto {
       content: Option[String],
       summary: Option[String],
       isCotonoma: Boolean,
-      postedIn: Cotonoma
+      postedIn: Cotonoma,
+      error: Option[String] = None
   ) extends CotoContent
 
   case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
@@ -93,6 +94,11 @@ object FormCoto {
         postedIn: Cotonoma
     ): WaitingPosts =
       this.add(WaitingPost("", Some(content), summary, false, postedIn))
+
+    def setError(postId: String, error: String): WaitingPosts =
+      this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(
+        Some(error)
+      )
 
     def remove(postId: String): WaitingPosts =
       this.modify(_.posts).using(_.filterNot(_.postId == postId))
@@ -205,13 +211,18 @@ object FormCoto {
           Seq.empty
         )
 
-      case (CotoPosted(postId, Left(e)), _) =>
+      case (CotoPosted(postId, Left(e)), _) => {
+        val error = js.JSON.stringify(e)
         (
           model,
-          waitingPosts.remove(postId),
-          log.error("Couldn't post a coto.", Some(js.JSON.stringify(e))),
+          waitingPosts.setError(
+            postId,
+            s"Couldn't post this coto: ${error}"
+          ),
+          log.error("Couldn't post a coto.", Some(error)),
           Seq.empty
         )
+      }
 
       case (CotonomaPosted(postId, Right(cotonoma)), _) =>
         (
@@ -224,13 +235,18 @@ object FormCoto {
           Seq.empty
         )
 
-      case (CotonomaPosted(postId, Left(e)), _) =>
+      case (CotonomaPosted(postId, Left(e)), _) => {
+        val error = js.JSON.stringify(e)
         (
           model,
-          waitingPosts.remove(postId),
-          log.error("Couldn't post a cotonoma.", Some(js.JSON.stringify(e))),
+          waitingPosts.setError(
+            postId,
+            s"Couldn't post this cotonoma: ${error}"
+          ),
+          log.error("Couldn't post a cotonoma.", Some(error)),
           Seq.empty
         )
+      }
 
       case (_, _) => (model, waitingPosts, log, Seq.empty)
     }

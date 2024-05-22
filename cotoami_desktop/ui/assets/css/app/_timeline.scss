@@ -101,6 +101,13 @@ section.timeline {
     article.coto {
       padding: 2rem 0;
       opacity: 0.4;
+
+      section.error {
+        padding: 0 var(--block-spacing-horizontal);
+        margin-bottom: 1rem;
+        color: red;
+        font-weight: 650;
+      }
     }
 
     &::before {

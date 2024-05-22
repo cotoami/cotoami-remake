@@ -165,6 +165,7 @@ object SectionTimeline {
   ): ReactElement =
     section(className := "waiting-post", aria - "busy" := "true")(
       article(className := "coto")(
+        post.error.map(section(className := "error")(_)),
         div(className := "body")(
           ViewCoto.divWaitingPostContent(post, domain)
         )
