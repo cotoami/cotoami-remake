@@ -2,7 +2,6 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 import fui.FunctionalUI._
-import cotoami.DomainMsg
 import cotoami.backend._
 
 case class Cotos(
@@ -38,7 +37,7 @@ case class Cotos(
       .modify(_.timelineLoading).setTo(false)
       .modify(_.timelineIds).using(_.appendPage(cotos.page))
 
-  def prependToTimeline(coto: Coto): Cotos = {
+  def prependToTimeline(coto: Coto): Cotos =
     this
       .add(coto)
       .modify(_.timelineIds).using(timeline =>
@@ -47,14 +46,12 @@ case class Cotos(
         else
           timeline
       )
-  }
 }
 
 object Cotos {
 
   sealed trait Msg
   case object FetchMoreTimeline extends Msg
-  case class CotoPosted(result: Either[ErrorJson, CotoJson]) extends Msg
 
   def update(
       msg: Msg,
@@ -74,28 +71,5 @@ object Cotos {
             )
           ).getOrElse((model, Seq.empty))
         }
-
-      case CotoPosted(Right(coto)) =>
-        (
-          model,
-          Seq(
-            cotoami.log_info(
-              "CotoPosted",
-              Some(scala.scalajs.js.JSON.stringify(coto))
-            )
-          )
-        )
-
-      case CotoPosted(Left(e)) =>
-        (model, Seq(ErrorJson.log(e, "Couldn't post a coto.")))
     }
-
-  def postCoto(
-      content: String,
-      summary: Option[String],
-      post_to: Id[Cotonoma]
-  ): Cmd[cotoami.Msg] =
-    Commands.send(Commands.PostCoto(content, summary, post_to)).map(
-      CotoPosted andThen Domain.CotosMsg andThen DomainMsg
-    )
 }

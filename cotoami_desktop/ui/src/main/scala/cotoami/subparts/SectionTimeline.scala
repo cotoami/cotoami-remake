@@ -53,12 +53,7 @@ object SectionTimeline {
         )
 
       case OpenCalendar =>
-        (
-          model,
-          model.domain.currentCotonomaId.map(cotonomaId =>
-            Seq(Cotos.postCoto("Gooo!", None, cotonomaId))
-          ).getOrElse(Seq.empty)
-        )
+        (model, Seq.empty)
     }
 
   private def fetchDefaultTimeline(model: Model): Cmd[cotoami.Msg] =
@@ -86,13 +81,20 @@ object SectionTimeline {
   ): Option[ReactElement] =
     Option.when(
       !model.domain.timeline.isEmpty ||
+        !model.waitingPosts.isEmpty ||
         model.domain.cotos.query.isDefined
     )(
-      sectionTimeline(model.domain.timeline, model, dispatch)
+      sectionTimeline(
+        model.domain.timeline,
+        model.waitingPosts,
+        model,
+        dispatch
+      )
     )
 
   private def sectionTimeline(
       cotos: Seq[Coto],
+      waitingPosts: FormCoto.WaitingPosts,
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -146,12 +148,26 @@ object SectionTimeline {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(cotoami.Msg.FetchMoreTimeline)
         )(
-          cotos.map(
-            sectionPost(_, model.domain, model.context, dispatch)
-          ) :+ div(
-            className := "more",
-            aria - "busy" := model.domain.cotos.timelineLoading.toString()
-          )(): _*
+          (waitingPosts.posts.map(sectionWaitingPost(_, model.domain)) ++
+            cotos.map(
+              sectionPost(_, model.domain, model.context, dispatch)
+            ) :+ div(
+              className := "more",
+              aria - "busy" := model.domain.cotos.timelineLoading.toString()
+            )()): _*
+        )
+      )
+    )
+
+  private def sectionWaitingPost(
+      post: FormCoto.WaitingPost,
+      domain: Domain
+  ): ReactElement =
+    section(className := "waiting-post", aria - "busy" := "true")(
+      article(className := "coto")(
+        post.error.map(section(className := "error")(_)),
+        div(className := "body")(
+          ViewCoto.divWaitingPostContent(post, domain)
         )
       )
     )

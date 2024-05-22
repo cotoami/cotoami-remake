@@ -124,6 +124,12 @@ pub struct CotoInput {
     pub summary: Option<String>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct CotonomaInput {
+    #[validate(required, length(max = "Cotonoma::NAME_MAX_LENGTH"))]
+    pub name: Option<String>,
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotonomaDetails {
     pub cotonoma: Cotonoma,

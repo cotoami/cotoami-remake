@@ -18,6 +18,7 @@ import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.subparts._
+import cotoami.subparts.FormCoto.WaitingPosts
 
 case class Model(
     url: URL,
@@ -38,6 +39,9 @@ case class Model(
     // Domain aggregate root
     domain: Domain = Domain(),
 
+    // Coto/Cotonoma inputs waiting to be posted
+    waitingPosts: WaitingPosts = WaitingPosts(),
+
     // subparts
     flowInput: FormCoto.Model,
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
@@ -54,8 +58,11 @@ case class Model(
   def error(message: String, error: Option[ErrorJson]): Model =
     this.copy(log = this.log.error(message, error.map(js.JSON.stringify(_))))
 
-  def clearTraversals: Model =
-    this.copy(traversals = SectionTraversals.Model())
+  def resetSubparts: Model =
+    this.copy(
+      waitingPosts = WaitingPosts(),
+      traversals = SectionTraversals.Model()
+    )
 }
 
 object Model {

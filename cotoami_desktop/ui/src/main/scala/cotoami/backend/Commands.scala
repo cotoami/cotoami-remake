@@ -79,4 +79,12 @@ object Commands {
         post_to = post_to.uuid
       )
     )
+
+  def PostCotonoma(name: String, post_to: Id[Cotonoma]) =
+    jso(PostCotonoma =
+      jso(
+        input = jso(name = name),
+        post_to = post_to.uuid
+      )
+    )
 }

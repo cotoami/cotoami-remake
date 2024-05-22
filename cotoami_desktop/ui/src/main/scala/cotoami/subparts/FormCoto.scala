@@ -1,15 +1,20 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
+
+import java.time._
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cats.effect.IO
+import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
-import cotoami.backend.{Cotonoma, Node}
+import cotoami.utils.Log
+import cotoami.backend._
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -38,6 +43,12 @@ object FormCoto {
         case CotonomaForm(name) => name.isBlank
       }
 
+    def clear: Model =
+      this.copy(form = this.form match {
+        case CotoForm(_)     => CotoForm()
+        case CotonomaForm(_) => CotonomaForm()
+      })
+
     def storageKey: String = StorageKeyPrefix + this.id
 
     def save: Cmd[Msg] =
@@ -64,13 +75,62 @@ object FormCoto {
     })
   }
 
+  case class WaitingPost(
+      postId: String,
+      content: Option[String],
+      summary: Option[String],
+      isCotonoma: Boolean,
+      postedIn: Cotonoma,
+      error: Option[String] = None
+  ) extends CotoContent
+
+  object WaitingPost {
+    def newPostId(): String =
+      Instant.now().toEpochMilli().toString
+  }
+
+  case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
+    def isEmpty: Boolean = this.posts.isEmpty
+
+    def add(post: WaitingPost): WaitingPosts =
+      this.modify(_.posts).using(post +: _)
+
+    def addCoto(
+        postId: String,
+        form: CotoForm,
+        postedIn: Cotonoma
+    ): WaitingPosts =
+      this.add(
+        WaitingPost(postId, Some(form.content), form.summary, false, postedIn)
+      )
+
+    def addCotonoma(
+        postId: String,
+        form: CotonomaForm,
+        postedIn: Cotonoma
+    ): WaitingPosts =
+      this.add(
+        WaitingPost(postId, None, Some(form.name), true, postedIn)
+      )
+
+    def setError(postId: String, error: String): WaitingPosts =
+      this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(
+        Some(error)
+      )
+
+    def remove(postId: String): WaitingPosts =
+      this.modify(_.posts).using(_.filterNot(_.postId == postId))
+  }
+
   def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
     Model(id, autoSave = autoSave) match {
       case model => (model, model.restore)
     }
 
   sealed trait Form
-  case class CotoForm(content: String = "") extends Form
+  case class CotoForm(content: String = "") extends Form {
+    val summary: Option[String] = None
+  }
   case class CotonomaForm(name: String = "") extends Form
 
   sealed trait Msg
@@ -82,16 +142,29 @@ object FormCoto {
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
   case object EditorResizeEnd extends Msg
+  case object Post extends Msg
+  case class CotoPosted(postId: String, result: Either[ErrorJson, CotoJson])
+      extends Msg
+  case class CotonomaPosted(
+      postId: String,
+      result: Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]
+  ) extends Msg
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
+  def update(
+      msg: Msg,
+      currentCotonoma: Cotonoma,
+      model: Model,
+      waitingPosts: WaitingPosts,
+      log: Log
+  ): (Model, WaitingPosts, Log, Seq[Cmd[Msg]]) =
     (msg, model.form) match {
       case (SetCotoForm, _) =>
         model.copy(form = CotoForm()) match {
-          case model => (model, Seq(model.restore))
+          case model => (model, waitingPosts, log, Seq(model.restore))
         }
 
       case (SetCotonomaForm, _) =>
-        (model.copy(form = CotonomaForm()), Seq.empty)
+        (model.copy(form = CotonomaForm()), waitingPosts, log, Seq.empty)
 
       case (CotoContentRestored(Some(content)), form: CotoForm) =>
         (
@@ -99,26 +172,35 @@ object FormCoto {
             model.copy(form = form.copy(content = content))
           else
             model,
+          waitingPosts,
+          log,
           Seq()
         )
 
       case (CotoContentInput(content), form: CotoForm) =>
         model.copy(form = form.copy(content = content)) match {
-          case model => (model, Seq(model.save))
+          case model => (model, waitingPosts, log, Seq(model.save))
         }
 
       case (CotonomaNameInput(name), form: CotonomaForm) =>
-        (model.copy(form = form.copy(name = name)), Seq.empty)
+        (
+          model.copy(form = form.copy(name = name)),
+          waitingPosts,
+          log,
+          Seq.empty
+        )
 
       case (SetFocus(focus), _) =>
-        (model.copy(focused = focus), Seq.empty)
+        (model.copy(focused = focus), waitingPosts, log, Seq.empty)
 
       case (EditorResizeStart, _) =>
-        (model.copy(editorBeingResized = true), Seq.empty)
+        (model.copy(editorBeingResized = true), waitingPosts, log, Seq.empty)
 
       case (EditorResizeEnd, _) =>
         (
           model.copy(editorBeingResized = false),
+          waitingPosts,
+          log,
           // Return the focus to the editor in order for it
           // not to be folded when it's empty.
           Seq(Cmd(IO {
@@ -130,8 +212,100 @@ object FormCoto {
           }))
         )
 
-      case (_, _) => (model, Seq.empty)
+      case (Post, form: CotoForm) => {
+        val postId = WaitingPost.newPostId()
+        model.clear match {
+          case model =>
+            (
+              model,
+              waitingPosts.addCoto(postId, form, currentCotonoma),
+              log,
+              Seq(
+                postCoto(postId, form, currentCotonoma.id),
+                model.save
+              )
+            )
+        }
+      }
+
+      case (Post, form: CotonomaForm) => {
+        val postId = WaitingPost.newPostId()
+        model.clear match {
+          case model =>
+            (
+              model,
+              waitingPosts.addCotonoma(postId, form, currentCotonoma),
+              log,
+              Seq(postCotonoma(postId, form, currentCotonoma.id))
+            )
+        }
+      }
+
+      case (CotoPosted(postId, Right(cotoJson)), _) =>
+        (
+          model,
+          waitingPosts.remove(postId),
+          log.info("Coto posted.", Some(cotoJson.uuid)),
+          Seq.empty
+        )
+
+      case (CotoPosted(postId, Left(e)), _) => {
+        val error = js.JSON.stringify(e)
+        (
+          model,
+          waitingPosts.setError(
+            postId,
+            s"Couldn't post this coto: ${error}"
+          ),
+          log.error("Couldn't post a coto.", Some(error)),
+          Seq.empty
+        )
+      }
+
+      case (CotonomaPosted(postId, Right(cotonoma)), _) =>
+        (
+          model,
+          waitingPosts.remove(postId),
+          log.info(
+            "Cotonoma posted.",
+            Some(js.JSON.stringify(cotonoma._1))
+          ),
+          Seq.empty
+        )
+
+      case (CotonomaPosted(postId, Left(e)), _) => {
+        val error = js.JSON.stringify(e)
+        (
+          model,
+          waitingPosts.setError(
+            postId,
+            s"Couldn't post this cotonoma: ${error}"
+          ),
+          log.error("Couldn't post a cotonoma.", Some(error)),
+          Seq.empty
+        )
+      }
+
+      case (_, _) => (model, waitingPosts, log, Seq.empty)
     }
+
+  private def postCoto(
+      postId: String,
+      form: CotoForm,
+      post_to: Id[Cotonoma]
+  ): Cmd[Msg] =
+    Commands
+      .send(Commands.PostCoto(form.content, form.summary, post_to))
+      .map(CotoPosted(postId, _))
+
+  private def postCotonoma(
+      postId: String,
+      form: CotonomaForm,
+      post_to: Id[Cotonoma]
+  ): Cmd[Msg] =
+    Commands
+      .send(Commands.PostCotonoma(form.name, post_to))
+      .map(CotonomaPosted(postId, _))
 
   def apply(
       model: Model,
@@ -206,7 +380,7 @@ object FormCoto {
               )
             ),
             SplitPane.Secondary(className = None, onClick = None)(
-              inputFooter(operatingNode, currentCotonoma, dispatch)
+              inputFooter(model, operatingNode, currentCotonoma, dispatch)
             )
           )
 
@@ -221,12 +395,13 @@ object FormCoto {
               onBlur := (_ => dispatch(SetFocus(false))),
               onChange := ((e) => dispatch(CotonomaNameInput(e.target.value)))
             ),
-            inputFooter(operatingNode, currentCotonoma, dispatch)
+            inputFooter(model, operatingNode, currentCotonoma, dispatch)
           )
       }
     )
 
   private def inputFooter(
+      model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
@@ -236,8 +411,15 @@ object FormCoto {
         nodeImg(operatingNode),
         operatingNode.name
       ),
-      button(className := "post", disabled := true)(
-        s"Post to \"${currentCotonoma.name}\"",
+      button(
+        className := "post",
+        disabled := model.isBlank,
+        onClick := (_ => dispatch(Post))
+      )(
+        "Post to ",
+        span(className := "target-cotonoma")(
+          currentCotonoma.abbreviateName(15)
+        ),
         span(className := "shortcut-help")("(Ctrl + Enter)")
       )
     )

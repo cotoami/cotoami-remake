@@ -1,14 +1,20 @@
 //! Server-side implemention of Node Service,
 //! which is intended for non-HTTP protocols such as WebSocket.
 
+use std::sync::Arc;
+
 use anyhow::Result;
 use bytes::Bytes;
 use cotoami_db::prelude::*;
-use futures::future::FutureExt;
-use serde_json::value::Value;
+use futures::future::{BoxFuture, FutureExt};
+use serde_json::json;
+use tokio::task::spawn_blocking;
 
 use crate::{
-    service::{error::InputError, NodeServiceFuture, *},
+    service::{
+        error::{InputError, IntoServiceResult, RequestError},
+        NodeServiceFuture, *,
+    },
     state::NodeState,
 };
 
@@ -63,6 +69,9 @@ impl NodeState {
             Command::PostCoto { input, post_to } => {
                 format.to_bytes(self.post_coto(input, post_to, opr?).await)
             }
+            Command::PostCotonoma { input, post_to } => {
+                format.to_bytes(self.post_cotonoma(input, post_to, opr?).await)
+            }
         }
     }
 }
@@ -104,7 +113,7 @@ where
         match anyhow_err.downcast_ref::<DatabaseError>() {
             Some(DatabaseError::EntityNotFound { kind, id }) => {
                 return InputError::new(kind.to_string(), "id", "not-found")
-                    .with_param("value", Value::String(id.to_string()))
+                    .with_param("value", json!(id.to_string()))
                     .into();
             }
             Some(DatabaseError::AuthenticationFailed) => {
@@ -116,4 +125,74 @@ where
 
         ServiceError::Server(anyhow_err.to_string())
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Utils for service implementations
+/////////////////////////////////////////////////////////////////////////////
+
+impl NodeState {
+    pub(crate) async fn change_in_cotonoma<Input, Change, Apply, Forward>(
+        self,
+        input: Input,
+        cotonoma: Id<Cotonoma>,
+        operator: Arc<Operator>,
+        apply: Apply,
+        forward: Forward,
+    ) -> Result<Change, ServiceError>
+    where
+        Input: Send + 'static,
+        Change: Send + 'static,
+        Apply: FnOnce(
+                &mut DatabaseSession<'_>,
+                Input,
+                &Cotonoma,
+                &Operator,
+            ) -> Result<(Change, ChangelogEntry)>
+            + Send
+            + 'static,
+        Forward: for<'a> FnOnce(
+            &'a mut dyn NodeService,
+            Input,
+            &Cotonoma,
+        ) -> BoxFuture<'a, Result<Change, anyhow::Error>>,
+    {
+        let result = spawn_blocking({
+            let this = self.clone();
+            move || {
+                let mut ds = this.db().new_session()?;
+                let (cotonoma, _) = ds.try_get_cotonoma(&cotonoma)?;
+                if this.db().globals().is_local(&cotonoma) {
+                    let (change, log) = apply(&mut ds, input, &cotonoma, operator.as_ref())?;
+                    this.pubsub().publish_change(log);
+                    Ok::<_, anyhow::Error>(ChangeResult::Changed(change))
+                } else {
+                    Ok::<_, anyhow::Error>(ChangeResult::ToForward { cotonoma, input })
+                }
+            }
+        })
+        .await??;
+
+        match result {
+            ChangeResult::Changed(change) => Ok(change),
+            ChangeResult::ToForward { cotonoma, input } => {
+                if let Some(mut parent_service) = self.parent_service(&cotonoma.node_id) {
+                    forward(&mut *parent_service, input, &cotonoma)
+                        .await
+                        .map_err(ServiceError::from)
+                } else {
+                    read_only_cotonoma_error(&cotonoma.name).into_result()
+                }
+            }
+        }
+    }
+}
+
+enum ChangeResult<Input, Change> {
+    Changed(Change),
+    ToForward { cotonoma: Cotonoma, input: Input },
+}
+
+fn read_only_cotonoma_error(cotonoma_name: &str) -> RequestError {
+    RequestError::new("read-only-cotonoma").with_param("cotonoma-name", json!(cotonoma_name))
 }

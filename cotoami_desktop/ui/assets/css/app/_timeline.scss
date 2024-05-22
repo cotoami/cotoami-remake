@@ -94,6 +94,34 @@ section.timeline {
     }
   }
 
+  .waiting-post {
+    position: relative;
+    border-bottom: 1px solid var(--pane-border-color);
+
+    article.coto {
+      padding: 2rem 0;
+      opacity: 0.4;
+
+      section.error {
+        padding: 0 var(--block-spacing-horizontal);
+        margin-bottom: 1rem;
+        color: red;
+        font-weight: 650;
+      }
+    }
+
+    &::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: auto;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
   article.coto {
     padding: 1rem 0;
 

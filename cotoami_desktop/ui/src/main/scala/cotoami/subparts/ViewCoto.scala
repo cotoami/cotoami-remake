@@ -16,7 +16,7 @@ import cotoami.components.{
   RehypePlugin,
   ToolButton
 }
-import cotoami.backend.{Coto, Link}
+import cotoami.backend.{Coto, CotoContent, Link}
 import cotoami.repositories.{Domain, Nodes}
 
 object ViewCoto {
@@ -94,20 +94,44 @@ object ViewCoto {
         coto.summary.map(summary => {
           CollapsibleContent(
             summary = summary,
-            content = sectionContent(coto)
+            content = sectionCotoContent(coto)
           ): ReactElement
-        }).getOrElse(sectionContent(coto))
+        }).getOrElse(sectionCotoContent(coto))
+      )
+    )
+
+  def divWaitingPostContent(
+      post: FormCoto.WaitingPost,
+      domain: Domain
+  ): ReactElement =
+    div(className := "content")(
+      post.nameAsCotonoma.map(name =>
+        section(className := "cotonoma-content")(
+          span(className := "cotonoma")(
+            domain.nodes.get(post.postedIn.nodeId).map(nodeImg),
+            name
+          )
+        )
+      ).getOrElse(
+        post.summary.map(summary => {
+          CollapsibleContent(
+            summary = summary,
+            content = sectionCotoContent(post),
+            opened = true
+          ): ReactElement
+        }).getOrElse(sectionCotoContent(post))
       )
     )
 
   @react object CollapsibleContent {
     case class Props(
         summary: String,
-        content: ReactElement
+        content: ReactElement,
+        opened: Boolean = false
     )
 
     val component = FunctionalComponent[Props] { props =>
-      val (opened, setOpened) = useState(false)
+      val (opened, setOpened) = useState(props.opened)
 
       div(className := "summary-and-content")(
         section(className := "summary")(
@@ -137,11 +161,11 @@ object ViewCoto {
     }
   }
 
-  private def sectionContent(coto: Coto): ReactElement =
+  private def sectionCotoContent(content: CotoContent): ReactElement =
     section(className := "text-content")(
       Markdown(rehypePlugins =
         Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
-      )(coto.content)
+      )(content.content)
     )
 
   def ulParents(
