@@ -104,6 +104,15 @@ object FormCoto {
         WaitingPost(postId, Some(form.content), form.summary, false, postedIn)
       )
 
+    def addCotonoma(
+        postId: String,
+        form: CotonomaForm,
+        postedIn: Cotonoma
+    ): WaitingPosts =
+      this.add(
+        WaitingPost(postId, None, Some(form.name), true, postedIn)
+      )
+
     def setError(postId: String, error: String): WaitingPosts =
       this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(
         Some(error)
@@ -219,6 +228,19 @@ object FormCoto {
         }
       }
 
+      case (Post, form: CotonomaForm) => {
+        val postId = WaitingPost.newPostId()
+        model.clear match {
+          case model =>
+            (
+              model,
+              waitingPosts.addCotonoma(postId, form, currentCotonoma),
+              log,
+              Seq(postCotonoma(postId, form, currentCotonoma.id))
+            )
+        }
+      }
+
       case (CotoPosted(postId, Right(cotoJson)), _) =>
         (
           model,
@@ -278,11 +300,11 @@ object FormCoto {
 
   private def postCotonoma(
       postId: String,
-      name: String,
+      form: CotonomaForm,
       post_to: Id[Cotonoma]
   ): Cmd[Msg] =
     Commands
-      .send(Commands.PostCotonoma(name, post_to))
+      .send(Commands.PostCotonoma(form.name, post_to))
       .map(CotonomaPosted(postId, _))
 
   def apply(
