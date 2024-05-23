@@ -1,6 +1,7 @@
 package cotoami.repositories
 
 import scala.collection.immutable.HashSet
+
 import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
@@ -210,15 +211,30 @@ case class Domain(
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
       return this
-        .modify(_.cotos).using(cotos =>
-          if (coto.postedInId == this.currentCotonomaId)
-            cotos.prependToTimeline(coto)
-          else
-            cotos
-        ).prependCotonomaIdToRecent(coto.postedInId)
+        .prependCotoToTimeline(coto)
+        .prependCotonomaIdToRecent(coto.postedInId)
     }
+
+    // CreateCotonoma
+    for (cotonomaTuple <- change.CreateCotonoma.toOption) {
+      val cotonoma = Cotonoma(cotonomaTuple._1)
+      val coto = Coto(cotonomaTuple._2)
+      return this
+        .modify(_.cotonomas).using(_.prependToRecent(cotonoma))
+        .prependCotoToTimeline(coto)
+        .prependCotonomaIdToRecent(coto.postedInId)
+    }
+
     (this, Seq.empty)
   }
+
+  private def prependCotoToTimeline(coto: Coto): Domain =
+    this.modify(_.cotos).using(cotos =>
+      if (coto.postedInId == this.currentCotonomaId)
+        cotos.prependToTimeline(coto)
+      else
+        cotos
+    )
 
   private def prependCotonomaIdToRecent(
       id: Option[Id[Cotonoma]]
