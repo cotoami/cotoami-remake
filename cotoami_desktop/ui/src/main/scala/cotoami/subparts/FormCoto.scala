@@ -43,6 +43,8 @@ object FormCoto {
         case CotonomaForm(name) => name.isBlank
       }
 
+    def readyToPost: Boolean = !this.isBlank
+
     def clear: Model =
       this.copy(form = this.form match {
         case CotoForm(_)     => CotoForm()
@@ -376,7 +378,12 @@ object FormCoto {
                 value := content,
                 onFocus := (_ => dispatch(SetFocus(true))),
                 onBlur := (_ => dispatch(SetFocus(false))),
-                onChange := (e => dispatch(CotoContentInput(e.target.value)))
+                onChange := (e => dispatch(CotoContentInput(e.target.value))),
+                onKeyDown := (e =>
+                  if (model.readyToPost && detectCtrlEnter(e)) {
+                    dispatch(Post)
+                  }
+                )
               )
             ),
             SplitPane.Secondary(className = None, onClick = None)(
@@ -393,7 +400,12 @@ object FormCoto {
               value := cotonomaName,
               onFocus := (_ => dispatch(SetFocus(true))),
               onBlur := (_ => dispatch(SetFocus(false))),
-              onChange := ((e) => dispatch(CotonomaNameInput(e.target.value)))
+              onChange := (e => dispatch(CotonomaNameInput(e.target.value))),
+              onKeyDown := (e =>
+                if (model.readyToPost && detectCtrlEnter(e)) {
+                  dispatch(Post)
+                }
+              )
             ),
             inputFooter(model, operatingNode, currentCotonoma, dispatch)
           )
@@ -413,7 +425,7 @@ object FormCoto {
       ),
       button(
         className := "post",
-        disabled := model.isBlank,
+        disabled := !model.readyToPost,
         onClick := (_ => dispatch(Post))
       )(
         "Post to ",

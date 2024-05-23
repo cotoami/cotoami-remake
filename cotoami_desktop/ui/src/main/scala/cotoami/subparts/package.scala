@@ -2,6 +2,7 @@ package cotoami
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
+import slinky.web.SyntheticKeyboardEvent
 
 import cotoami.backend.Node
 
@@ -62,4 +63,9 @@ package object subparts {
         )
       )
     )
+
+  val EnterKey = "Enter"
+
+  def detectCtrlEnter[T](e: SyntheticKeyboardEvent[T]): Boolean =
+    e.key == EnterKey && (e.ctrlKey || e.metaKey)
 }
