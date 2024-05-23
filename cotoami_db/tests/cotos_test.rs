@@ -41,6 +41,7 @@ fn crud_operations() -> Result<()> {
     );
     common::assert_approximately_now(coto.created_at());
     common::assert_approximately_now(coto.updated_at());
+    assert_eq!(coto.created_at, coto.updated_at);
 
     // check if it is stored in the db
     assert!(ds.contains_coto(&coto.uuid)?);
@@ -51,14 +52,15 @@ fn crud_operations() -> Result<()> {
     assert_eq!(recent_cotos.rows.len(), 1);
     assert_eq!(recent_cotos.rows[0], coto);
 
-    // check if the number of posts in the cotonoma has been incremented
-    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_eq!(cotonoma.posts, 1);
+    // check if the number of posts of the root cotonoma has been incremented
+    let (root_cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
+    assert_eq!(root_cotonoma.posts, 1);
+    assert_eq!(root_cotonoma.updated_at, coto.updated_at);
 
     // check the super cotonomas
     let supers = ds.super_cotonomas(&coto)?;
     assert_eq!(supers.len(), 1);
-    assert_eq!(supers[0], cotonoma);
+    assert_eq!(supers[0], root_cotonoma);
 
     // check the content of the ChangelogEntry
     assert_matches!(

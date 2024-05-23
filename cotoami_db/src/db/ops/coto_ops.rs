@@ -98,7 +98,7 @@ pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableCo
 
         // Increment the number of posts in the cotonoma
         if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
-            cotonoma_ops::update_number_of_posts(posted_in_id, 1, coto.updated_at).run(ctx)?;
+            cotonoma_ops::update_number_of_posts(posted_in_id, 1, coto.created_at).run(ctx)?;
         }
 
         Ok(coto)

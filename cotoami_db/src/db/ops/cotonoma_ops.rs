@@ -176,7 +176,8 @@ pub(crate) fn create_root<'a>(
     composite_op::<WritableConn, _, _>(|ctx| {
         let new_coto = NewCoto::new_root_cotonoma(node_id, name)?;
         let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
-        let new_cotonoma = NewCotonoma::new(node_id, &inserted_coto.uuid, name)?;
+        let new_cotonoma =
+            NewCotonoma::new(node_id, &inserted_coto.uuid, name, inserted_coto.created_at)?;
         let inserted_cotonoma = insert(&new_cotonoma).run(ctx)?;
         Ok((inserted_cotonoma, inserted_coto))
     })
@@ -191,7 +192,8 @@ pub(crate) fn create<'a>(
     composite_op::<WritableConn, _, _>(|ctx| {
         let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, name)?;
         let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
-        let new_cotonoma = NewCotonoma::new(node_id, &inserted_coto.uuid, name)?;
+        let new_cotonoma =
+            NewCotonoma::new(node_id, &inserted_coto.uuid, name, inserted_coto.created_at)?;
         let inserted_cotonoma = insert(&new_cotonoma).run(ctx)?;
         Ok((inserted_cotonoma, inserted_coto))
     })

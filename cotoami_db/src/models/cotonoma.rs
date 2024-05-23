@@ -101,15 +101,19 @@ pub struct NewCotonoma<'a> {
 }
 
 impl<'a> NewCotonoma<'a> {
-    pub fn new(node_id: &'a Id<Node>, coto_id: &'a Id<Coto>, name: &'a str) -> Result<Self> {
-        let now = crate::current_datetime();
+    pub fn new(
+        node_id: &'a Id<Node>,
+        coto_id: &'a Id<Coto>,
+        name: &'a str,
+        created_at: NaiveDateTime,
+    ) -> Result<Self> {
         let cotonoma = Self {
             uuid: Id::generate(),
             node_id,
             coto_id,
             name,
-            created_at: now,
-            updated_at: now,
+            created_at,
+            updated_at: created_at,
         };
         cotonoma.validate()?;
         Ok(cotonoma)
