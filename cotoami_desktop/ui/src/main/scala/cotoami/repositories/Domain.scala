@@ -220,9 +220,9 @@ case class Domain(
       val cotonoma = Cotonoma(cotonomaTuple._1)
       val coto = Coto(cotonomaTuple._2)
       return this
-        .modify(_.cotonomas).using(_.prependToRecent(cotonoma))
         .prependCotoToTimeline(coto)
         .prependCotonomaIdToRecent(coto.postedInId)
+        .modify(_._1.cotonomas).using(_.prependToRecent(cotonoma))
     }
 
     (this, Seq.empty)

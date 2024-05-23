@@ -130,7 +130,13 @@ pub(crate) fn recent<Conn: AsReadableConn>(
             if let Some(id) = node_id {
                 query = query.filter(cotonomas::node_id.eq(id));
             }
-            query.order(cotonomas::updated_at.desc())
+            query.order((
+                cotonomas::updated_at.desc(),
+                // When a cotonoma has been posted, the updated_at timestamps of
+                // the super/sub cotonoma will become the same, in the case,
+                // the new(sub) cotonoma should be should precede in a recent list.
+                cotonomas::created_at.desc(),
+            ))
         })
     })
 }
