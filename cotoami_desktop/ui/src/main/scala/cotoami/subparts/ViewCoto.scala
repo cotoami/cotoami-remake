@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
 import slinky.core._
@@ -14,6 +15,7 @@ import cotoami.components.{
   optionalClasses,
   Markdown,
   RehypePlugin,
+  RemarkPlugin,
   ToolButton
 }
 import cotoami.backend.{Coto, CotoContent, Link}
@@ -163,8 +165,10 @@ object ViewCoto {
 
   private def sectionCotoContent(content: CotoContent): ReactElement =
     section(className := "text-content")(
-      Markdown(rehypePlugins =
-        Seq((RehypePlugin.externalLinks, jso(target = "_blank")))
+      Markdown(
+        remarkPlugins = Seq(RemarkPlugin.breaks),
+        rehypePlugins =
+          Seq(js.Tuple2(RehypePlugin.externalLinks, jso(target = "_blank")))
       )(content.content)
     )
 

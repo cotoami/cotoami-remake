@@ -16,6 +16,7 @@
     "react-proxy": "1.1.8",
     "rehype-external-links": "^3.0.0",
     "remark": "^15.0.1",
+    "remark-breaks": "^4.0.0",
     "simplebar-react": "^3.2.4",
     "strip-markdown": "^6.0.0"
   },
