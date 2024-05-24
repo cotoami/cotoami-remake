@@ -92,14 +92,7 @@ object ViewCoto {
             cotonoma.name
           )
         )
-      ).getOrElse(
-        coto.summary.map(summary => {
-          CollapsibleContent(
-            summary = summary,
-            content = sectionCotoContent(coto)
-          ): ReactElement
-        }).getOrElse(sectionCotoContent(coto))
-      )
+      ).getOrElse(sectionCotoContent(coto))
     )
 
   def divWaitingPostContent(
@@ -114,21 +107,27 @@ object ViewCoto {
             name
           )
         )
-      ).getOrElse(
-        post.summary.map(summary => {
-          CollapsibleContent(
-            summary = summary,
-            content = sectionCotoContent(post),
-            opened = true
-          ): ReactElement
-        }).getOrElse(sectionCotoContent(post))
-      )
+      ).getOrElse(sectionCotoContent(post, true))
+    )
+
+  private def sectionCotoContent(
+      cotoContent: CotoContent,
+      collapsibleContentOpened: Boolean = false
+  ): ReactElement =
+    section(className := "coto-content")(
+      cotoContent.summary.map(summary => {
+        CollapsibleContent(
+          summary = summary,
+          details = sectionCotoContentDetails(cotoContent),
+          opened = collapsibleContentOpened
+        ): ReactElement
+      }).getOrElse(sectionCotoContentDetails(cotoContent))
     )
 
   @react object CollapsibleContent {
     case class Props(
         summary: String,
-        content: ReactElement,
+        details: ReactElement,
         opened: Boolean = false
     )
 
@@ -158,18 +157,20 @@ object ViewCoto {
               ("open", opened)
             )
           )
-        )(props.content)
+        )(props.details)
       )
     }
   }
 
-  private def sectionCotoContent(content: CotoContent): ReactElement =
-    section(className := "text-content")(
-      Markdown(
-        remarkPlugins = Seq(RemarkPlugin.breaks),
-        rehypePlugins =
-          Seq(js.Tuple2(RehypePlugin.externalLinks, jso(target = "_blank")))
-      )(content.content)
+  private def sectionCotoContentDetails(content: CotoContent): ReactElement =
+    Fragment(
+      section(className := "text-content")(
+        Markdown(
+          remarkPlugins = Seq(RemarkPlugin.breaks),
+          rehypePlugins =
+            Seq(js.Tuple2(RehypePlugin.externalLinks, jso(target = "_blank")))
+        )(content.content)
+      )
     )
 
   def ulParents(
