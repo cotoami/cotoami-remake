@@ -135,7 +135,7 @@ object ViewCoto {
     val component = FunctionalComponent[Props] { props =>
       val (opened, setOpened) = useState(props.opened)
 
-      div(className := "summary-and-content")(
+      div(className := "collapsible-content")(
         section(className := "summary")(
           button(
             className := "content-toggle default",
@@ -154,7 +154,7 @@ object ViewCoto {
         div(
           className := optionalClasses(
             Seq(
-              ("collapsible-content", true),
+              ("details", true),
               ("open", opened)
             )
           )

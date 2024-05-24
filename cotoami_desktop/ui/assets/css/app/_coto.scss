@@ -95,7 +95,7 @@ article.coto {
     }
   }
 
-  .summary-and-content {
+  .collapsible-content {
     section.summary {
       padding: 0 var(--block-spacing-horizontal);
 
@@ -111,7 +111,7 @@ article.coto {
       }
     }
 
-    .collapsible-content {
+    .details {
       display: none;
 
       &.open {
