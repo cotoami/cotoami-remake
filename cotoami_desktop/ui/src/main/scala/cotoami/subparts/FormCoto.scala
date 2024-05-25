@@ -67,12 +67,12 @@ object FormCoto {
     def restore: Cmd[Msg] =
       (autoSave, form) match {
         case (true, form: CotoForm) =>
-          restoreCotoContent.map(CotoContentRestored)
+          restoreCoto.map(CotoRestored)
 
         case _ => Cmd.none
       }
 
-    private def restoreCotoContent: Cmd[Option[String]] = Cmd(IO {
+    private def restoreCoto: Cmd[Option[String]] = Cmd(IO {
       Some(Option(dom.window.localStorage.getItem(this.storageKey)))
     })
   }
@@ -130,16 +130,38 @@ object FormCoto {
     }
 
   sealed trait Form
-  case class CotoForm(content: String = "") extends Form {
-    val summary: Option[String] = None
+
+  case class CotoForm(coto: String = "") extends Form {
+    def summary: Option[String] =
+      if (this.hasSummary)
+        Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
+      else
+        None
+
+    def content: String =
+      if (this.hasSummary)
+        this.coto.stripPrefix(this.firstLine).trim
+      else
+        this.coto
+
+    private def hasSummary: Boolean =
+      this.coto.startsWith(CotoForm.SummaryPrefix)
+
+    private def firstLine = this.coto.linesIterator.next()
   }
+  object CotoForm {
+    // A top-level heading as the first line will be used as a summary.
+    // cf. https://spec.commonmark.org/0.31.2/#atx-headings
+    val SummaryPrefix = "# "
+  }
+
   case class CotonomaForm(name: String = "") extends Form
 
   sealed trait Msg
   case object SetCotoForm extends Msg
   case object SetCotonomaForm extends Msg
-  case class CotoContentRestored(content: Option[String]) extends Msg
-  case class CotoContentInput(content: String) extends Msg
+  case class CotoRestored(coto: Option[String]) extends Msg
+  case class CotoInput(coto: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
@@ -168,10 +190,10 @@ object FormCoto {
       case (SetCotonomaForm, _) =>
         (model.copy(form = CotonomaForm()), waitingPosts, log, Seq.empty)
 
-      case (CotoContentRestored(Some(content)), form: CotoForm) =>
+      case (CotoRestored(Some(coto)), form: CotoForm) =>
         (
-          if (form.content.isBlank())
-            model.copy(form = form.copy(content = content))
+          if (form.coto.isBlank())
+            model.copy(form = form.copy(coto = coto))
           else
             model,
           waitingPosts,
@@ -179,8 +201,8 @@ object FormCoto {
           Seq()
         )
 
-      case (CotoContentInput(content), form: CotoForm) =>
-        model.copy(form = form.copy(content = content)) match {
+      case (CotoInput(coto), form: CotoForm) =>
+        model.copy(form = form.copy(coto = coto)) match {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
@@ -378,7 +400,7 @@ object FormCoto {
                 value := content,
                 onFocus := (_ => dispatch(SetFocus(true))),
                 onBlur := (_ => dispatch(SetFocus(false))),
-                onChange := (e => dispatch(CotoContentInput(e.target.value))),
+                onChange := (e => dispatch(CotoInput(e.target.value))),
                 onKeyDown := (e =>
                   if (model.readyToPost && detectCtrlEnter(e)) {
                     dispatch(Post)
