@@ -73,13 +73,21 @@ section.form-coto {
     box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2);
   }
 
-  section.coto-preview {
-    padding: 16px;
+  div.coto-preview {
 
-    section.summary {
-      margin-bottom: 16px;
-      color: var(--muted-color);
-      font-weight: 700;
+    // SimpleBar div
+    >div {
+      height: 100%;
+    }
+
+    section.coto-preview {
+      padding: 16px;
+
+      section.summary {
+        margin-bottom: 16px;
+        color: var(--muted-color);
+        font-weight: 700;
+      }
     }
   }
 

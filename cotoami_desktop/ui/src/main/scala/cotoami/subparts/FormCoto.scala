@@ -18,6 +18,7 @@ import cotoami.backend._
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
+  ScrollArea,
   SplitPane,
   ToolButton
 }
@@ -405,15 +406,30 @@ object FormCoto {
             onResizeEnd = Some(() => dispatch(EditorResizeEnd)),
             onPrimarySizeChanged = Some(onEditorHeightChanged)
           )(
-            SplitPane.Primary(className = Some("coto-editor"), onClick = None)(
-              if (model.inPreview)
-                section(className := "coto-preview")(
-                  form.summary.map(section(className := "summary")(_)),
-                  div(className := "content")(
-                    ViewCoto.sectionCotoContentDetails(form)
+            if (model.inPreview)
+              SplitPane.Primary(
+                className = Some("coto-preview"),
+                onClick = None
+              )(
+                ScrollArea(
+                  scrollableElementId = None,
+                  autoHide = true,
+                  bottomThreshold = None,
+                  onScrollToBottom = () => ()
+                )(
+                  section(className := "coto-preview")(
+                    form.summary.map(section(className := "summary")(_)),
+                    div(className := "content")(
+                      ViewCoto.sectionCotoContentDetails(form)
+                    )
                   )
                 )
-              else
+              )
+            else
+              SplitPane.Primary(
+                className = Some("coto-editor"),
+                onClick = None
+              )(
                 textarea(
                   id := model.editorId,
                   placeholder := "Write your Coto in Markdown here",
@@ -427,7 +443,7 @@ object FormCoto {
                     }
                   )
                 )
-            ),
+              ),
             SplitPane.Secondary(className = None, onClick = None)(
               footerPost(model, operatingNode, currentCotonoma, dispatch)
             )
