@@ -47,10 +47,13 @@ object FormCoto {
     def readyToPost: Boolean = !this.isBlank
 
     def clear: Model =
-      this.copy(form = this.form match {
-        case CotoForm(_)     => CotoForm()
-        case CotonomaForm(_) => CotonomaForm()
-      })
+      this.copy(
+        form = this.form match {
+          case CotoForm(_)     => CotoForm()
+          case CotonomaForm(_) => CotonomaForm()
+        },
+        inPreview = false
+      )
 
     def storageKey: String = StorageKeyPrefix + this.id
 
@@ -104,7 +107,7 @@ object FormCoto {
         postedIn: Cotonoma
     ): WaitingPosts =
       this.add(
-        WaitingPost(postId, Some(form.content), form.summary, false, postedIn)
+        WaitingPost(postId, form.content, form.summary, false, postedIn)
       )
 
     def addCotonoma(
@@ -132,18 +135,20 @@ object FormCoto {
 
   sealed trait Form
 
-  case class CotoForm(coto: String = "") extends Form {
-    def summary: Option[String] =
+  case class CotoForm(coto: String = "") extends Form with CotoContent {
+    override def summary: Option[String] =
       if (this.hasSummary)
         Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
       else
         None
 
-    def content: String =
+    override def content: Option[String] =
       if (this.hasSummary)
-        this.coto.stripPrefix(this.firstLine).trim
+        Some(this.coto.stripPrefix(this.firstLine).trim)
       else
-        this.coto
+        Some(this.coto)
+
+    override def isCotonoma: Boolean = false
 
     private def hasSummary: Boolean =
       this.coto.startsWith(CotoForm.SummaryPrefix)
@@ -324,7 +329,9 @@ object FormCoto {
       post_to: Id[Cotonoma]
   ): Cmd[Msg] =
     Commands
-      .send(Commands.PostCoto(form.content, form.summary, post_to))
+      .send(
+        Commands.PostCoto(form.content.getOrElse(""), form.summary, post_to)
+      )
       .map(CotoPosted(postId, _))
 
   private def postCotonoma(
@@ -388,7 +395,7 @@ object FormCoto {
         )
       ),
       model.form match {
-        case CotoForm(content) =>
+        case form: CotoForm =>
           SplitPane(
             vertical = false,
             initialPrimarySize = editorHeight,
@@ -399,19 +406,27 @@ object FormCoto {
             onPrimarySizeChanged = Some(onEditorHeightChanged)
           )(
             SplitPane.Primary(className = Some("coto-editor"), onClick = None)(
-              textarea(
-                id := model.editorId,
-                placeholder := "Write your Coto in Markdown here",
-                value := content,
-                onFocus := (_ => dispatch(SetFocus(true))),
-                onBlur := (_ => dispatch(SetFocus(false))),
-                onChange := (e => dispatch(CotoInput(e.target.value))),
-                onKeyDown := (e =>
-                  if (model.readyToPost && detectCtrlEnter(e)) {
-                    dispatch(Post)
-                  }
+              if (model.inPreview)
+                section(className := "coto-preview")(
+                  form.summary.map(section(className := "summary")(_)),
+                  div(className := "content")(
+                    ViewCoto.sectionCotoContentDetails(form)
+                  )
                 )
-              )
+              else
+                textarea(
+                  id := model.editorId,
+                  placeholder := "Write your Coto in Markdown here",
+                  value := form.coto,
+                  onFocus := (_ => dispatch(SetFocus(true))),
+                  onBlur := (_ => dispatch(SetFocus(false))),
+                  onChange := (e => dispatch(CotoInput(e.target.value))),
+                  onKeyDown := (e =>
+                    if (model.readyToPost && detectCtrlEnter(e)) {
+                      dispatch(Post)
+                    }
+                  )
+                )
             ),
             SplitPane.Secondary(className = None, onClick = None)(
               footerPost(model, operatingNode, currentCotonoma, dispatch)
