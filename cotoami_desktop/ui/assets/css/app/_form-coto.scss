@@ -91,24 +91,36 @@ section.form-coto {
       }
     }
 
-    button.post {
+    div.buttons {
       position: absolute;
       top: 4px;
       right: 4px;
-      width: auto;
-      padding: 5px 12px;
 
-      span.target-cotonoma {
-        font-weight: 600;
-        opacity: .5;
-        text-decoration: underline;
+      display: flex;
+      flex-direction: row;
+
+      button {
+        width: auto;
+        padding: 5px 12px;
       }
 
-      span.shortcut-help {
-        margin-left: 4px;
-        opacity: .7;
-        font-size: 0.8rem;
-        vertical-align: text-top;
+      button.post {
+        span.target-cotonoma {
+          font-weight: 600;
+          opacity: .5;
+          text-decoration: underline;
+        }
+
+        span.shortcut-help {
+          margin-left: 4px;
+          opacity: .7;
+          font-size: 0.8rem;
+          vertical-align: text-top;
+        }
+      }
+
+      button.preview {
+        margin-right: 5px;
       }
     }
   }

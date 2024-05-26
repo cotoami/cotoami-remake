@@ -409,7 +409,7 @@ object FormCoto {
               )
             ),
             SplitPane.Secondary(className = None, onClick = None)(
-              inputFooter(model, operatingNode, currentCotonoma, dispatch)
+              footerPost(model, operatingNode, currentCotonoma, dispatch)
             )
           )
 
@@ -429,12 +429,12 @@ object FormCoto {
                 }
               )
             ),
-            inputFooter(model, operatingNode, currentCotonoma, dispatch)
+            footerPost(model, operatingNode, currentCotonoma, dispatch)
           )
       }
     )
 
-  private def inputFooter(
+  private def footerPost(
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
@@ -445,16 +445,26 @@ object FormCoto {
         nodeImg(operatingNode),
         operatingNode.name
       ),
-      button(
-        className := "post",
-        disabled := !model.readyToPost,
-        onClick := (_ => dispatch(Post))
-      )(
-        "Post to ",
-        span(className := "target-cotonoma")(
-          currentCotonoma.abbreviateName(15)
-        ),
-        span(className := "shortcut-help")("(Ctrl + Enter)")
+      div(className := "buttons")(
+        Option.when(model.form.isInstanceOf[CotoForm]) {
+          button(
+            className := "preview contrast outline",
+            disabled := !model.readyToPost
+          )(
+            "Preview"
+          )
+        },
+        button(
+          className := "post",
+          disabled := !model.readyToPost,
+          onClick := (_ => dispatch(Post))
+        )(
+          "Post to ",
+          span(className := "target-cotonoma")(
+            currentCotonoma.abbreviateName(15)
+          ),
+          span(className := "shortcut-help")("(Ctrl + Enter)")
+        )
       )
     )
 }
