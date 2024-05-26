@@ -30,7 +30,8 @@ object FormCoto {
       form: Form = CotoForm(),
       focused: Boolean = false,
       editorBeingResized: Boolean = false,
-      autoSave: Boolean = false
+      autoSave: Boolean = false,
+      inPreview: Boolean = false
   ) {
     def editorId: String = s"${this.id}-editor"
 
@@ -166,6 +167,7 @@ object FormCoto {
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
   case object EditorResizeEnd extends Msg
+  case object TogglePreview extends Msg
   case object Post extends Msg
   case class CotoPosted(postId: String, result: Either[ErrorJson, CotoJson])
       extends Msg
@@ -235,6 +237,9 @@ object FormCoto {
             None
           }))
         )
+
+      case (TogglePreview, _) =>
+        (model.modify(_.inPreview).using(!_), waitingPosts, log, Seq.empty)
 
       case (Post, form: CotoForm) => {
         val postId = WaitingPost.newPostId()
@@ -449,9 +454,13 @@ object FormCoto {
         Option.when(model.form.isInstanceOf[CotoForm]) {
           button(
             className := "preview contrast outline",
-            disabled := !model.readyToPost
+            disabled := !model.readyToPost,
+            onClick := (_ => dispatch(TogglePreview))
           )(
-            "Preview"
+            if (model.inPreview)
+              "Edit"
+            else
+              "Preview"
           )
         },
         button(
