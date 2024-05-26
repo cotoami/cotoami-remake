@@ -162,7 +162,7 @@ object ViewCoto {
     }
   }
 
-  private def sectionCotoContentDetails(content: CotoContent): ReactElement =
+  def sectionCotoContentDetails(content: CotoContent): ReactElement =
     Fragment(
       section(className := "text-content")(
         Markdown(

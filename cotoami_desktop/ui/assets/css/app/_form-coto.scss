@@ -73,6 +73,24 @@ section.form-coto {
     box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2);
   }
 
+  div.coto-preview {
+
+    // SimpleBar div
+    >div {
+      height: 100%;
+    }
+
+    section.coto-preview {
+      padding: 16px;
+
+      section.summary {
+        margin-bottom: 16px;
+        color: var(--muted-color);
+        font-weight: 700;
+      }
+    }
+  }
+
   footer.post {
     position: relative;
     margin-bottom: 3rem;
@@ -91,24 +109,36 @@ section.form-coto {
       }
     }
 
-    button.post {
+    div.buttons {
       position: absolute;
       top: 4px;
       right: 4px;
-      width: auto;
-      padding: 5px 12px;
 
-      span.target-cotonoma {
-        font-weight: 600;
-        opacity: .5;
-        text-decoration: underline;
+      display: flex;
+      flex-direction: row;
+
+      button {
+        width: auto;
+        padding: 5px 12px;
       }
 
-      span.shortcut-help {
-        margin-left: 4px;
-        opacity: .7;
-        font-size: 0.8rem;
-        vertical-align: text-top;
+      button.post {
+        span.target-cotonoma {
+          font-weight: 600;
+          opacity: .5;
+          text-decoration: underline;
+        }
+
+        span.shortcut-help {
+          margin-left: 4px;
+          opacity: .7;
+          font-size: 0.8rem;
+          vertical-align: text-top;
+        }
+      }
+
+      button.preview {
+        margin-right: 5px;
       }
     }
   }
