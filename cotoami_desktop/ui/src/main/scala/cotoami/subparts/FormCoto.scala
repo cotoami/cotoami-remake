@@ -370,41 +370,7 @@ object FormCoto {
         )
       )
     )(
-      header(className := "tools")(
-        section(className := "coto-type-switch")(
-          button(
-            className := "new-coto default",
-            disabled := model.form.isInstanceOf[CotoForm],
-            onClick := (_ => dispatch(SetCotoForm))
-          )(
-            span(className := "label")(
-              materialSymbol("text_snippet"),
-              "Coto"
-            )
-          ),
-          button(
-            className := "new-cotonoma default",
-            disabled := model.form.isInstanceOf[CotonomaForm],
-            onClick := (_ => dispatch(SetCotonomaForm))
-          )(
-            span(className := "label")(
-              materialSymbol("topic"),
-              "Cotonoma"
-            )
-          )
-        ),
-        ToolButton(
-          classes = "image",
-          tip = "Image",
-          disabled = !model.form.isInstanceOf[CotoForm],
-          symbol = "image"
-        ),
-        ToolButton(
-          classes = "location",
-          tip = "Location",
-          symbol = "location_on"
-        )
-      ),
+      headerTools(model, dispatch),
       model.form match {
         case form: CotoForm =>
           SplitPane(
@@ -484,6 +450,43 @@ object FormCoto {
             divPost(model, errors, operatingNode, currentCotonoma, dispatch)
           )
       }
+    )
+
+  private def headerTools(model: Model, dispatch: Msg => Unit): ReactElement =
+    header(className := "tools")(
+      section(className := "coto-type-switch")(
+        button(
+          className := "new-coto default",
+          disabled := model.form.isInstanceOf[CotoForm],
+          onClick := (_ => dispatch(SetCotoForm))
+        )(
+          span(className := "label")(
+            materialSymbol("text_snippet"),
+            "Coto"
+          )
+        ),
+        button(
+          className := "new-cotonoma default",
+          disabled := model.form.isInstanceOf[CotonomaForm],
+          onClick := (_ => dispatch(SetCotonomaForm))
+        )(
+          span(className := "label")(
+            materialSymbol("topic"),
+            "Cotonoma"
+          )
+        )
+      ),
+      ToolButton(
+        classes = "image",
+        tip = "Image",
+        disabled = !model.form.isInstanceOf[CotoForm],
+        symbol = "image"
+      ),
+      ToolButton(
+        classes = "location",
+        tip = "Location",
+        symbol = "location_on"
+      )
     )
 
   private def divPost(
