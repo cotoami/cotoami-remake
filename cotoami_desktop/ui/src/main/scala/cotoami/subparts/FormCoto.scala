@@ -116,7 +116,14 @@ object FormCoto {
     override def isCotonoma: Boolean = false
 
     def validate: Validation.Result =
-      Validation.Result(errors = this.summary.map(Coto.validateSummary(_)))
+      if (this.coto.isBlank())
+        Validation.Result()
+      else {
+        val errors =
+          this.summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
+            Coto.validateContent(this.content.get) // this.content must be Some
+        Validation.Result(errors)
+      }
 
     private def hasSummary: Boolean =
       this.coto.startsWith(CotoForm.SummaryPrefix)

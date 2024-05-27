@@ -60,6 +60,13 @@ object Coto {
       Validation.length(fieldName, summary, 1, SummaryMaxLength)
     ).flatten
   }
+
+  def validateContent(content: String): Seq[Validation.Error] = {
+    val fieldName = "content"
+    Vector(
+      Validation.nonBlank(fieldName, content)
+    ).flatten
+  }
 }
 
 @js.native
