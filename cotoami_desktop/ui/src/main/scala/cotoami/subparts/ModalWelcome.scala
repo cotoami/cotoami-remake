@@ -28,9 +28,8 @@ object ModalWelcome {
       systemError: Option[String] = None
   ) {
     def validateNewDatabaseInputs(): Boolean =
-      Node
-        .validateName(this.databaseName)
-        .isEmpty && this.folderNameErrors.map(_.isEmpty).getOrElse(false)
+      Node.validateName(this.databaseName).isEmpty &&
+        this.folderNameErrors.map(_.isEmpty).getOrElse(false)
   }
 
   sealed trait Msg
