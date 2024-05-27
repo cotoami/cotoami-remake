@@ -7,7 +7,6 @@ import org.scalajs.dom.HTMLElement
 import java.time._
 
 import slinky.core.facade.ReactElement
-import slinky.web.html
 import slinky.web.html._
 
 import cats.effect.IO
@@ -457,7 +456,7 @@ object FormCoto {
                 )
               ),
             SplitPane.Secondary(className = None, onClick = None)(
-              footer(
+              divPost(
                 model,
                 form.validationErrors,
                 operatingNode,
@@ -483,20 +482,20 @@ object FormCoto {
                 }
               )
             ),
-            footer(model, errors, operatingNode, currentCotonoma, dispatch)
+            divPost(model, errors, operatingNode, currentCotonoma, dispatch)
           )
       }
     )
 
-  private def footer(
+  private def divPost(
       model: Model,
       errors: Option[Seq[Validation.Error]],
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
   ): ReactElement =
-    html.footer()(
-      Validation.validationErrorDiv(errors),
+    div(className := "post")(
+      Validation.sectionValidationError(errors),
       section(className := "post")(
         address(className := "poster")(
           nodeImg(operatingNode),

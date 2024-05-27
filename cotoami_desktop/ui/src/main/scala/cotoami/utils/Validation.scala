@@ -44,10 +44,10 @@ object Validation {
         .getOrElse("")
   }
 
-  def validationErrorDiv(errors: Option[Seq[Error]]): ReactElement =
+  def sectionValidationError(errors: Option[Seq[Error]]): ReactElement =
     errors.flatMap(errors =>
       errors.headOption.map(e =>
-        div(className := "validation-error")(
+        section(className := "validation-error")(
           e.message
         )
       )

@@ -306,7 +306,7 @@ object ModalWelcome {
               dispatch(ModalWelcomeMsg(FolderNameInput(e.target.value)))
             )
           ),
-          Validation.validationErrorDiv(model.folderNameErrors)
+          Validation.sectionValidationError(model.folderNameErrors)
         ),
 
         // Create
@@ -343,7 +343,7 @@ object ModalWelcome {
             dispatch(ModalWelcomeMsg(DatabaseNameInput(e.target.value)))
           )
         ),
-        Validation.validationErrorDiv(errors)
+        Validation.sectionValidationError(errors)
       )
     )
   }
@@ -369,7 +369,7 @@ object ModalWelcome {
               materialSymbol("folder")
             )
           ),
-          Validation.validationErrorDiv(model.databaseFolderErrors)
+          Validation.sectionValidationError(model.databaseFolderErrors)
         ),
 
         // Open
