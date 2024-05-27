@@ -183,8 +183,22 @@ object FormCoto {
 
   case class CotonomaForm(
       name: String = "",
+      // Some of the validations need to be done via a backend command,
+      // so this value is none until the whole validation process is completed.
       validationErrors: Option[Seq[Validation.Error]] = None
-  ) extends Form
+  ) extends Form {
+    // Do validations that can be done at frontend.
+    def validate: Form =
+      this.modify(_.validationErrors).setTo(
+        if (this.name.isEmpty())
+          None
+        else
+          Cotonoma.validateName(this.name) match {
+            case errors if errors.isEmpty => None
+            case errors                   => Some(errors)
+          }
+      )
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // update
@@ -240,13 +254,17 @@ object FormCoto {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
-      case (CotonomaNameInput(name), form: CotonomaForm) =>
-        (
-          model.copy(form = form.copy(name = name)),
-          waitingPosts,
-          log,
-          Seq.empty
-        )
+      case (CotonomaNameInput(name), form: CotonomaForm) => {
+        form.copy(name = name).validate match {
+          case form =>
+            (
+              model.copy(form = form),
+              waitingPosts,
+              log,
+              Seq.empty
+            )
+        }
+      }
 
       case (SetFocus(focus), _) =>
         (model.copy(focused = focus), waitingPosts, log, Seq.empty)
