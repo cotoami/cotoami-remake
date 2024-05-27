@@ -176,14 +176,14 @@ div.text-input-with-button {
 
 
 //
-// Input with validation
+// Validation
 //
 
 .input-with-validation {
   margin-bottom: var(--spacing);
+}
 
-  .validation-error {
-    font-size: 95%;
-    color: var(--form-element-invalid-border-color)
-  }
+.validation-error {
+  font-size: 95%;
+  color: var(--form-element-invalid-border-color)
 }
