@@ -95,6 +95,59 @@ object FormCoto {
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  // Form
+  /////////////////////////////////////////////////////////////////////////////
+
+  sealed trait Form
+
+  case class CotoForm(coto: String = "") extends Form with CotoContent {
+    override def summary: Option[String] =
+      if (this.hasSummary)
+        Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
+      else
+        None
+
+    override def content: Option[String] =
+      if (this.hasSummary)
+        Some(this.coto.stripPrefix(this.firstLine).trim)
+      else
+        Some(this.coto)
+
+    override def isCotonoma: Boolean = false
+
+    def validate: Validation.Result =
+      Validation.Result(errors = this.summary.map(Coto.validateSummary(_)))
+
+    private def hasSummary: Boolean =
+      this.coto.startsWith(CotoForm.SummaryPrefix)
+
+    private def firstLine = this.coto.linesIterator.next()
+  }
+
+  object CotoForm {
+    // A top-level heading as the first line will be used as a summary.
+    // cf. https://spec.commonmark.org/0.31.2/#atx-headings
+    val SummaryPrefix = "# "
+  }
+
+  case class CotonomaForm(
+      name: String = "",
+      validation: Validation.Result = Validation.Result()
+  ) extends Form {
+    // Do validations that can be done at frontend.
+    def validate: CotonomaForm =
+      this.modify(_.validation).setTo(
+        if (this.name.isEmpty())
+          Validation.Result()
+        else
+          Cotonoma.validateName(this.name) match {
+            case errors if errors.isEmpty => Validation.Result()
+            case errors                   => Validation.Result(errors)
+          }
+      )
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // WaitingPost
   /////////////////////////////////////////////////////////////////////////////
 
@@ -143,58 +196,6 @@ object FormCoto {
 
     def remove(postId: String): WaitingPosts =
       this.modify(_.posts).using(_.filterNot(_.postId == postId))
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Form
-  /////////////////////////////////////////////////////////////////////////////
-
-  sealed trait Form
-
-  case class CotoForm(coto: String = "") extends Form with CotoContent {
-    override def summary: Option[String] =
-      if (this.hasSummary)
-        Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
-      else
-        None
-
-    override def content: Option[String] =
-      if (this.hasSummary)
-        Some(this.coto.stripPrefix(this.firstLine).trim)
-      else
-        Some(this.coto)
-
-    override def isCotonoma: Boolean = false
-
-    def validate: Validation.Result =
-      Validation.Result(errors = this.summary.map(Coto.validateSummary(_)))
-
-    private def hasSummary: Boolean =
-      this.coto.startsWith(CotoForm.SummaryPrefix)
-
-    private def firstLine = this.coto.linesIterator.next()
-  }
-  object CotoForm {
-    // A top-level heading as the first line will be used as a summary.
-    // cf. https://spec.commonmark.org/0.31.2/#atx-headings
-    val SummaryPrefix = "# "
-  }
-
-  case class CotonomaForm(
-      name: String = "",
-      validation: Validation.Result = Validation.Result()
-  ) extends Form {
-    // Do validations that can be done at frontend.
-    def validate: Form =
-      this.modify(_.validation).setTo(
-        if (this.name.isEmpty())
-          Validation.Result()
-        else
-          Cotonoma.validateName(this.name) match {
-            case errors if errors.isEmpty => Validation.Result()
-            case errors                   => Validation.Result(errors)
-          }
-      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
