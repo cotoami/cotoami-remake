@@ -13,7 +13,7 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 
 import fui.FunctionalUI._
-import cotoami.utils.Log
+import cotoami.utils.{Log, Validation}
 import cotoami.backend._
 import cotoami.components.{
   materialSymbol,
@@ -41,17 +41,21 @@ object FormCoto {
 
     def isBlank: Boolean =
       this.form match {
-        case CotoForm(content)  => content.isBlank
-        case CotonomaForm(name) => name.isBlank
+        case CotoForm(content, _)  => content.isBlank
+        case CotonomaForm(name, _) => name.isBlank
       }
 
-    def readyToPost: Boolean = !this.isBlank
+    def readyToPost: Boolean = !this.isBlank && (this.form match {
+      case CotoForm(_, Some(errors))     => errors.isEmpty
+      case CotonomaForm(_, Some(errors)) => errors.isEmpty
+      case _                             => true
+    })
 
     def clear: Model =
       this.copy(
         form = this.form match {
-          case CotoForm(_)     => CotoForm()
-          case CotonomaForm(_) => CotonomaForm()
+          case form: CotoForm     => CotoForm()
+          case form: CotonomaForm => CotonomaForm()
         },
         inPreview = false
       )
@@ -60,7 +64,7 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (autoSave, form) match {
-        case (true, CotoForm(content)) =>
+        case (true, CotoForm(content, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(this.storageKey, content)
             None
@@ -136,7 +140,11 @@ object FormCoto {
 
   sealed trait Form
 
-  case class CotoForm(coto: String = "") extends Form with CotoContent {
+  case class CotoForm(
+      coto: String = "",
+      validationErrors: Option[Seq[Validation.Error]] = None
+  ) extends Form
+      with CotoContent {
     override def summary: Option[String] =
       if (this.hasSummary)
         Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
@@ -162,7 +170,10 @@ object FormCoto {
     val SummaryPrefix = "# "
   }
 
-  case class CotonomaForm(name: String = "") extends Form
+  case class CotonomaForm(
+      name: String = "",
+      validationErrors: Option[Seq[Validation.Error]] = None
+  ) extends Form
 
   sealed trait Msg
   case object SetCotoForm extends Msg
@@ -449,7 +460,7 @@ object FormCoto {
             )
           )
 
-        case CotonomaForm(cotonomaName) =>
+        case CotonomaForm(cotonomaName, errors) =>
           div()(
             input(
               `type` := "text",
