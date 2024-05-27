@@ -6,7 +6,7 @@ import org.scalajs.dom.HTMLElement
 
 import java.time._
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cats.effect.IO
@@ -432,7 +432,7 @@ object FormCoto {
           )
 
         case CotonomaForm(cotonomaName, errors) =>
-          div()(
+          Fragment(
             input(
               `type` := "text",
               name := "cotonomaName",
