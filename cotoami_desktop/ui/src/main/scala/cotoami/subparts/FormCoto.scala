@@ -7,6 +7,7 @@ import org.scalajs.dom.HTMLElement
 import java.time._
 
 import slinky.core.facade.ReactElement
+import slinky.web.html
 import slinky.web.html._
 
 import cats.effect.IO
@@ -456,7 +457,13 @@ object FormCoto {
                 )
               ),
             SplitPane.Secondary(className = None, onClick = None)(
-              footerPost(model, operatingNode, currentCotonoma, dispatch)
+              footer(
+                model,
+                form.validationErrors,
+                operatingNode,
+                currentCotonoma,
+                dispatch
+              )
             )
           )
 
@@ -476,45 +483,49 @@ object FormCoto {
                 }
               )
             ),
-            footerPost(model, operatingNode, currentCotonoma, dispatch)
+            footer(model, errors, operatingNode, currentCotonoma, dispatch)
           )
       }
     )
 
-  private def footerPost(
+  private def footer(
       model: Model,
+      errors: Option[Seq[Validation.Error]],
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
   ): ReactElement =
-    footer(className := "post")(
-      address(className := "poster")(
-        nodeImg(operatingNode),
-        operatingNode.name
-      ),
-      div(className := "buttons")(
-        Option.when(model.form.isInstanceOf[CotoForm]) {
+    html.footer()(
+      Validation.validationErrorDiv(errors),
+      section(className := "post")(
+        address(className := "poster")(
+          nodeImg(operatingNode),
+          operatingNode.name
+        ),
+        div(className := "buttons")(
+          Option.when(model.form.isInstanceOf[CotoForm]) {
+            button(
+              className := "preview contrast outline",
+              disabled := !model.readyToPost,
+              onClick := (_ => dispatch(TogglePreview))
+            )(
+              if (model.inPreview)
+                "Edit"
+              else
+                "Preview"
+            )
+          },
           button(
-            className := "preview contrast outline",
+            className := "post",
             disabled := !model.readyToPost,
-            onClick := (_ => dispatch(TogglePreview))
+            onClick := (_ => dispatch(Post))
           )(
-            if (model.inPreview)
-              "Edit"
-            else
-              "Preview"
+            "Post to ",
+            span(className := "target-cotonoma")(
+              currentCotonoma.abbreviateName(15)
+            ),
+            span(className := "shortcut-help")("(Ctrl + Enter)")
           )
-        },
-        button(
-          className := "post",
-          disabled := !model.readyToPost,
-          onClick := (_ => dispatch(Post))
-        )(
-          "Post to ",
-          span(className := "target-cotonoma")(
-            currentCotonoma.abbreviateName(15)
-          ),
-          span(className := "shortcut-help")("(Ctrl + Enter)")
         )
       )
     )
