@@ -24,9 +24,10 @@ object Cotonoma {
   val NameMaxLength = 50
 
   def validateName(name: String): Seq[Validation.Error] = {
+    val fieldName = "name"
     Vector(
-      Validation.nonBlank(name),
-      Validation.length(name, 1, NameMaxLength)
+      Validation.nonBlank(fieldName, name),
+      Validation.length(fieldName, name, 1, NameMaxLength)
     ).flatten
   }
 }

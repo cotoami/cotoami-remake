@@ -58,16 +58,16 @@ object FunctionalUI {
       }
   }
 
-  implicit object MonoidKSub extends MonoidK[Sub] {
-    def empty[Msg]: Sub[Msg] = Sub.Empty
-    def combineK[Msg](sub1: Sub[Msg], sub2: Sub[Msg]): Sub[Msg] =
-      sub1.combine(sub2)
-  }
-
   object Sub {
     type Subscribe[Msg] = (Msg => Unit, OnSubscribe) => Unit
     type OnSubscribe = Option[Unsubscribe] => Unit
     type Unsubscribe = () => Unit
+
+    implicit object MonoidKSub extends MonoidK[Sub] {
+      def empty[Msg]: Sub[Msg] = Sub.Empty
+      def combineK[Msg](sub1: Sub[Msg], sub2: Sub[Msg]): Sub[Msg] =
+        sub1.combine(sub2)
+    }
 
     case object Empty extends Sub[Nothing] {
       def map[OtherMsg](f: Nothing => OtherMsg): Sub[OtherMsg] = this

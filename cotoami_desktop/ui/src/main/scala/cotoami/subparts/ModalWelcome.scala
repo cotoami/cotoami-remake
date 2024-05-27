@@ -17,20 +17,25 @@ object ModalWelcome {
       databaseName: String = "",
       baseFolder: String = "",
       folderName: String = "",
-      folderNameErrors: Option[Seq[Validation.Error]] = None,
+      folderNameValidation: Validation.Result = Validation.Result(),
 
       // Open an existing database
       databaseFolder: String = "",
-      databaseFolderErrors: Option[Seq[Validation.Error]] = None,
+      databaseFolderValidation: Validation.Result = Validation.Result(),
 
       // Shared
       processing: Boolean = false,
       systemError: Option[String] = None
   ) {
-    def validateNewDatabaseInputs(): Boolean =
-      Node
-        .validateName(this.databaseName)
-        .isEmpty && this.folderNameErrors.map(_.isEmpty).getOrElse(false)
+    def validateDatabaseName: Validation.Result =
+      if (this.databaseName.isBlank())
+        Validation.Result()
+      else
+        Validation.Result(Node.validateName(this.databaseName))
+
+    def validateNewDatabaseInputs: Boolean =
+      this.validateDatabaseName.validated &&
+        this.folderNameValidation.validated
   }
 
   sealed trait Msg
@@ -60,7 +65,7 @@ object ModalWelcome {
 
       case SelectBaseFolder =>
         (
-          model.copy(folderNameErrors = None),
+          model.copy(folderNameValidation = Validation.Result()),
           Seq(
             tauri
               .selectSingleDirectory(
@@ -86,17 +91,23 @@ object ModalWelcome {
         )
 
       case FolderNameInput(value) =>
-        model.copy(folderName = value, folderNameErrors = None) match {
+        model.copy(
+          folderName = value,
+          folderNameValidation = Validation.Result()
+        ) match {
           case model => (model, validateNewFolder(model))
         }
 
       case NewFolderValidation(Right(_)) =>
-        (model.copy(folderNameErrors = Some(Seq.empty)), Seq.empty)
+        (
+          model.copy(folderNameValidation = Validation.Result.validated()),
+          Seq.empty
+        )
 
       case NewFolderValidation(Left(error)) =>
         (
-          model.copy(folderNameErrors =
-            Some(Seq(ErrorJson.toValidationError(error)))
+          model.copy(folderNameValidation =
+            Validation.Result(Seq(ErrorJson.toValidationError(error)))
           ),
           Seq.empty
         )
@@ -106,7 +117,7 @@ object ModalWelcome {
 
       case SelectDatabaseFolder =>
         (
-          model.copy(databaseFolderErrors = None),
+          model.copy(databaseFolderValidation = Validation.Result()),
           Seq(
             tauri
               .selectSingleDirectory(
@@ -134,12 +145,15 @@ object ModalWelcome {
         )
 
       case DatabaseFolderValidation(Right(_)) =>
-        (model.copy(databaseFolderErrors = Some(Seq.empty)), Seq.empty)
+        (
+          model.copy(databaseFolderValidation = Validation.Result.validated()),
+          Seq.empty
+        )
 
       case DatabaseFolderValidation(Left(error)) =>
         (
-          model.copy(databaseFolderErrors =
-            Some(Seq(ErrorJson.toValidationError(error)))
+          model.copy(databaseFolderValidation =
+            Validation.Result(Seq(ErrorJson.toValidationError(error)))
           ),
           Seq.empty
         )
@@ -299,21 +313,21 @@ object ModalWelcome {
             id := "folder-name",
             name := "folderName",
             value := model.folderName,
-            Validation.ariaInvalid(model.folderNameErrors),
+            Validation.ariaInvalid(model.folderNameValidation),
             // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
             // (onChange is almost the same as onInput in React)
             onChange := ((e) =>
               dispatch(ModalWelcomeMsg(FolderNameInput(e.target.value)))
             )
           ),
-          Validation.validationErrorDiv(model.folderNameErrors)
+          Validation.sectionValidationError(model.folderNameValidation)
         ),
 
         // Create
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.validateNewDatabaseInputs() || model.processing,
+            disabled := !model.validateNewDatabaseInputs || model.processing,
             onClick := (_ => dispatch(ModalWelcomeMsg(CreateDatabase)))
           )(
             "Create"
@@ -326,9 +340,7 @@ object ModalWelcome {
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
-    val errors =
-      if (model.databaseName.isEmpty) None
-      else Some(Node.validateName(model.databaseName))
+    val errors = model.validateDatabaseName
     Fragment(
       label(htmlFor := "database-name")("Name"),
       div(className := "input-with-validation")(
@@ -343,7 +355,7 @@ object ModalWelcome {
             dispatch(ModalWelcomeMsg(DatabaseNameInput(e.target.value)))
           )
         ),
-        Validation.validationErrorDiv(errors)
+        Validation.sectionValidationError(errors)
       )
     )
   }
@@ -369,16 +381,14 @@ object ModalWelcome {
               materialSymbol("folder")
             )
           ),
-          Validation.validationErrorDiv(model.databaseFolderErrors)
+          Validation.sectionValidationError(model.databaseFolderValidation)
         ),
 
         // Open
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := model.databaseFolderErrors
-              .map(!_.isEmpty)
-              .getOrElse(true) || model.processing,
+            disabled := !model.databaseFolderValidation.validated || model.processing,
             onClick := (_ => dispatch(ModalWelcomeMsg(OpenDatabase)))
           )("Open")
         )

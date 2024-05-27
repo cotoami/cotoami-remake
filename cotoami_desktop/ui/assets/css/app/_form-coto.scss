@@ -3,7 +3,7 @@ section.form-coto {
   flex-direction: column;
   position: relative;
 
-  header {
+  >header {
     position: relative;
     height: 40px;
 
@@ -91,54 +91,61 @@ section.form-coto {
     }
   }
 
-  footer.post {
-    position: relative;
+  div.post {
     margin-bottom: 3rem;
 
-    address.poster {
-      padding-top: 8px;
-      padding-left: 10px;
-      color: var(--muted-color);
-      font-weight: 700;
-
-      img.node-icon {
-        width: 26px;
-        height: 26px;
-        border-radius: 4px;
-        margin-right: 8px;
-      }
+    section.validation-error {
+      padding: 5px 10px;
     }
 
-    div.buttons {
-      position: absolute;
-      top: 4px;
-      right: 4px;
+    section.post {
+      position: relative;
 
-      display: flex;
-      flex-direction: row;
+      address.poster {
+        padding-top: 8px;
+        padding-left: 10px;
+        color: var(--muted-color);
+        font-weight: 700;
 
-      button {
-        width: auto;
-        padding: 5px 12px;
-      }
-
-      button.post {
-        span.target-cotonoma {
-          font-weight: 600;
-          opacity: .5;
-          text-decoration: underline;
-        }
-
-        span.shortcut-help {
-          margin-left: 4px;
-          opacity: .7;
-          font-size: 0.8rem;
-          vertical-align: text-top;
+        img.node-icon {
+          width: 26px;
+          height: 26px;
+          border-radius: 4px;
+          margin-right: 8px;
         }
       }
 
-      button.preview {
-        margin-right: 5px;
+      div.buttons {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+
+        display: flex;
+        flex-direction: row;
+
+        button {
+          width: auto;
+          padding: 5px 12px;
+        }
+
+        button.post {
+          span.target-cotonoma {
+            font-weight: 600;
+            opacity: .5;
+            text-decoration: underline;
+          }
+
+          span.shortcut-help {
+            margin-left: 4px;
+            opacity: .7;
+            font-size: 0.8rem;
+            vertical-align: text-top;
+          }
+        }
+
+        button.preview {
+          margin-right: 5px;
+        }
       }
     }
   }
@@ -148,7 +155,7 @@ section.form-coto {
       height: 2.5rem !important;
     }
 
-    footer.post {
+    div.post {
       display: none;
     }
   }
