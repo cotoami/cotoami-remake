@@ -71,10 +71,10 @@ object FormCoto {
     def storageKey: String = StorageKeyPrefix + this.id
 
     def save: Cmd[Msg] =
-      (autoSave, form) match {
-        case (true, CotoForm(content)) =>
+      (this.autoSave, this.form) match {
+        case (true, CotoForm(coto)) =>
           Cmd(IO {
-            dom.window.localStorage.setItem(this.storageKey, content)
+            dom.window.localStorage.setItem(this.storageKey, coto)
             None
           })
 
@@ -82,7 +82,7 @@ object FormCoto {
       }
 
     def restore: Cmd[Msg] =
-      (autoSave, form) match {
+      (this.autoSave, this.form) match {
         case (true, form: CotoForm) =>
           restoreCoto.map(CotoRestored)
 
@@ -229,37 +229,37 @@ object FormCoto {
 
   def update(
       msg: Msg,
-      currentCotonoma: Cotonoma,
+      currentCotonoma: Option[Cotonoma],
       model: Model,
       waitingPosts: WaitingPosts,
       log: Log
   ): (Model, WaitingPosts, Log, Seq[Cmd[Msg]]) =
-    (msg, model.form) match {
-      case (SetCotoForm, _) =>
+    (msg, model.form, currentCotonoma) match {
+      case (SetCotoForm, _, _) =>
         model.copy(form = CotoForm()) match {
           case model => (model, waitingPosts, log, Seq(model.restore))
         }
 
-      case (SetCotonomaForm, _) =>
+      case (SetCotonomaForm, _, _) =>
         (model.copy(form = CotonomaForm()), waitingPosts, log, Seq.empty)
 
-      case (CotoRestored(Some(coto)), form: CotoForm) =>
+      case (CotoRestored(Some(coto)), form: CotoForm, _) =>
         (
           if (form.coto.isBlank())
             model.copy(form = form.copy(coto = coto))
           else
             model,
           waitingPosts,
-          log,
+          log.info("Coto draft restored"),
           Seq()
         )
 
-      case (CotoInput(coto), form: CotoForm) =>
+      case (CotoInput(coto), form: CotoForm, _) =>
         model.copy(form = form.copy(coto = coto)) match {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
-      case (CotonomaNameInput(name), form: CotonomaForm) => {
+      case (CotonomaNameInput(name), form: CotonomaForm, _) => {
         form.copy(name = name).validate match {
           case form =>
             (
@@ -271,13 +271,13 @@ object FormCoto {
         }
       }
 
-      case (SetFocus(focus), _) =>
+      case (SetFocus(focus), _, _) =>
         (model.copy(focused = focus), waitingPosts, log, Seq.empty)
 
-      case (EditorResizeStart, _) =>
+      case (EditorResizeStart, _, _) =>
         (model.copy(editorBeingResized = true), waitingPosts, log, Seq.empty)
 
-      case (EditorResizeEnd, _) =>
+      case (EditorResizeEnd, _, _) =>
         (
           model.copy(editorBeingResized = false),
           waitingPosts,
@@ -293,39 +293,39 @@ object FormCoto {
           }))
         )
 
-      case (TogglePreview, _) =>
+      case (TogglePreview, _, _) =>
         (model.modify(_.inPreview).using(!_), waitingPosts, log, Seq.empty)
 
-      case (Post, form: CotoForm) => {
+      case (Post, form: CotoForm, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
         model.clear match {
           case model =>
             (
               model,
-              waitingPosts.addCoto(postId, form, currentCotonoma),
+              waitingPosts.addCoto(postId, form, cotonoma),
               log,
               Seq(
-                postCoto(postId, form, currentCotonoma.id),
+                postCoto(postId, form, cotonoma.id),
                 model.save
               )
             )
         }
       }
 
-      case (Post, form: CotonomaForm) => {
+      case (Post, form: CotonomaForm, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
         model.clear match {
           case model =>
             (
               model,
-              waitingPosts.addCotonoma(postId, form, currentCotonoma),
+              waitingPosts.addCotonoma(postId, form, cotonoma),
               log,
-              Seq(postCotonoma(postId, form, currentCotonoma.id))
+              Seq(postCotonoma(postId, form, cotonoma.id))
             )
         }
       }
 
-      case (CotoPosted(postId, Right(cotoJson)), _) =>
+      case (CotoPosted(postId, Right(cotoJson)), _, _) =>
         (
           model,
           waitingPosts.remove(postId),
@@ -333,7 +333,7 @@ object FormCoto {
           Seq.empty
         )
 
-      case (CotoPosted(postId, Left(e)), _) => {
+      case (CotoPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
         (
           model,
@@ -346,7 +346,7 @@ object FormCoto {
         )
       }
 
-      case (CotonomaPosted(postId, Right(cotonoma)), _) =>
+      case (CotonomaPosted(postId, Right(cotonoma)), _, _) =>
         (
           model,
           waitingPosts.remove(postId),
@@ -357,7 +357,7 @@ object FormCoto {
           Seq.empty
         )
 
-      case (CotonomaPosted(postId, Left(e)), _) => {
+      case (CotonomaPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
         (
           model,
@@ -370,7 +370,7 @@ object FormCoto {
         )
       }
 
-      case (_, _) => (model, waitingPosts, log, Seq.empty)
+      case (_, _, _) => (model, waitingPosts, log, Seq.empty)
     }
 
   private def postCoto(

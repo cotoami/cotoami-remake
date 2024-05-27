@@ -217,24 +217,23 @@ object Main {
         (model.copy(domain = domain), cmds)
       }
 
-      case FlowInputMsg(subMsg) =>
-        model.domain.currentCotonoma.map(cotonoma => {
-          val (flowInput, waitingPosts, log, cmds) = FormCoto.update(
-            subMsg,
-            cotonoma,
-            model.flowInput,
-            model.waitingPosts,
-            model.log
-          )
-          (
-            model.copy(
-              flowInput = flowInput,
-              waitingPosts = waitingPosts,
-              log = log
-            ),
-            cmds.map(_.map(FlowInputMsg))
-          )
-        }).getOrElse((model, Seq.empty))
+      case FlowInputMsg(subMsg) => {
+        val (flowInput, waitingPosts, log, cmds) = FormCoto.update(
+          subMsg,
+          model.domain.currentCotonoma,
+          model.flowInput,
+          model.waitingPosts,
+          model.log
+        )
+        (
+          model.copy(
+            flowInput = flowInput,
+            waitingPosts = waitingPosts,
+            log = log
+          ),
+          cmds.map(_.map(FlowInputMsg))
+        )
+      }
 
       case SectionTimelineMsg(subMsg) =>
         SectionTimeline.update(subMsg, model)
