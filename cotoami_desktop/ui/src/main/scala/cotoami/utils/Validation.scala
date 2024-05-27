@@ -11,27 +11,33 @@ object Validation {
       params: Map[String, String] = Map.empty
   )
 
-  def nonBlank(value: String): Option[Error] =
+  def nonBlank(name: String, value: String): Option[Error] =
     if (value.isBlank())
-      Some(Error("blank", "This must not be blank."))
+      Some(
+        Error(
+          "blank",
+          s"${name.capitalize} must not be blank.",
+          Map("name" -> name)
+        )
+      )
     else
       None
 
-  def length(value: String, min: Int, max: Int): Option[Error] =
+  def length(name: String, value: String, min: Int, max: Int): Option[Error] =
     if (value.length() < min)
       Some(
         Error(
           "length-min",
-          s"This must be longer than ${min}.",
-          Map("min" -> min.toString())
+          s"${name.capitalize} must be longer than ${min}.",
+          Map("name" -> name, "min" -> min.toString())
         )
       )
     else if (value.length() > max)
       Some(
         Error(
           "length-max",
-          s"This must be shorter than ${max}.",
-          Map("max" -> max.toString())
+          s"${name.capitalize} must be shorter than ${max}.",
+          Map("name" -> name, "max" -> max.toString())
         )
       )
     else
