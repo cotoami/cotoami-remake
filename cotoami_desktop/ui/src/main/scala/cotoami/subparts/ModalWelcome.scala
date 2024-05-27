@@ -27,8 +27,14 @@ object ModalWelcome {
       processing: Boolean = false,
       systemError: Option[String] = None
   ) {
-    def validateNewDatabaseInputs(): Boolean =
-      Node.validateName(this.databaseName).isEmpty &&
+    def validateDatabaseName: Option[Seq[Validation.Error]] =
+      if (this.databaseName.isBlank())
+        None
+      else
+        Some(Node.validateName(this.databaseName))
+
+    def validateNewDatabaseInputs: Boolean =
+      this.validateDatabaseName.map(_.isEmpty).getOrElse(false) &&
         this.folderNameErrors.map(_.isEmpty).getOrElse(false)
   }
 
@@ -312,7 +318,7 @@ object ModalWelcome {
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.validateNewDatabaseInputs() || model.processing,
+            disabled := !model.validateNewDatabaseInputs || model.processing,
             onClick := (_ => dispatch(ModalWelcomeMsg(CreateDatabase)))
           )(
             "Create"
@@ -325,9 +331,7 @@ object ModalWelcome {
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
-    val errors =
-      if (model.databaseName.isEmpty) None
-      else Some(Node.validateName(model.databaseName))
+    val errors = model.validateDatabaseName
     Fragment(
       label(htmlFor := "database-name")("Name"),
       div(className := "input-with-validation")(
