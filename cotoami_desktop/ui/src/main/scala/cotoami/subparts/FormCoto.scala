@@ -55,9 +55,8 @@ object FormCoto {
       }
 
     def readyToPost: Boolean = !this.isBlank && (this.form match {
-      case form: CotoForm => form.validate.map(_.isEmpty).getOrElse(false)
-      case CotonomaForm(_, Some(errors)) => errors.isEmpty
-      case _                             => false
+      case form: CotoForm              => form.validate.validated
+      case CotonomaForm(_, validation) => validation.validated
     })
 
     def clear: Model =
@@ -167,8 +166,8 @@ object FormCoto {
 
     override def isCotonoma: Boolean = false
 
-    def validate: Option[Seq[Validation.Error]] =
-      this.summary.map(Coto.validateSummary(_))
+    def validate: Validation.Result =
+      Validation.Result(errors = this.summary.map(Coto.validateSummary(_)))
 
     private def hasSummary: Boolean =
       this.coto.startsWith(CotoForm.SummaryPrefix)
@@ -183,19 +182,17 @@ object FormCoto {
 
   case class CotonomaForm(
       name: String = "",
-      // Some of the validations need to be done via a backend command,
-      // so this value is none until the whole validation process is completed.
-      validationErrors: Option[Seq[Validation.Error]] = None
+      validation: Validation.Result = Validation.Result()
   ) extends Form {
     // Do validations that can be done at frontend.
     def validate: Form =
-      this.modify(_.validationErrors).setTo(
+      this.modify(_.validation).setTo(
         if (this.name.isEmpty())
-          None
+          Validation.Result()
         else
           Cotonoma.validateName(this.name) match {
-            case errors if errors.isEmpty => None
-            case errors                   => Some(errors)
+            case errors if errors.isEmpty => Validation.Result()
+            case errors                   => Validation.Result(errors)
           }
       )
   }
@@ -469,13 +466,14 @@ object FormCoto {
             )
           )
 
-        case CotonomaForm(cotonomaName, errors) =>
+        case CotonomaForm(cotonomaName, validation) =>
           Fragment(
             input(
               `type` := "text",
               name := "cotonomaName",
               placeholder := "New cotonoma name",
               value := cotonomaName,
+              Validation.ariaInvalid(validation),
               onFocus := (_ => dispatch(SetFocus(true))),
               onBlur := (_ => dispatch(SetFocus(false))),
               onChange := (e => dispatch(CotonomaNameInput(e.target.value))),
@@ -485,7 +483,7 @@ object FormCoto {
                 }
               )
             ),
-            divPost(model, errors, operatingNode, currentCotonoma, dispatch)
+            divPost(model, validation, operatingNode, currentCotonoma, dispatch)
           )
       }
     )
@@ -529,13 +527,13 @@ object FormCoto {
 
   private def divPost(
       model: Model,
-      errors: Option[Seq[Validation.Error]],
+      validation: Validation.Result,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
   ): ReactElement =
     div(className := "post")(
-      Validation.sectionValidationError(errors),
+      Validation.sectionValidationError(validation),
       section(className := "post")(
         address(className := "poster")(
           nodeImg(operatingNode),
