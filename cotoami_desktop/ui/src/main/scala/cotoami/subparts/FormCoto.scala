@@ -41,12 +41,12 @@ object FormCoto {
 
     def isBlank: Boolean =
       this.form match {
-        case CotoForm(content, _)  => content.isBlank
+        case CotoForm(content)     => content.isBlank
         case CotonomaForm(name, _) => name.isBlank
       }
 
     def readyToPost: Boolean = !this.isBlank && (this.form match {
-      case CotoForm(_, Some(errors))     => errors.isEmpty
+      case form: CotoForm => form.validate.map(_.isEmpty).getOrElse(false)
       case CotonomaForm(_, Some(errors)) => errors.isEmpty
       case _                             => false
     })
@@ -64,7 +64,7 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (autoSave, form) match {
-        case (true, CotoForm(content, _)) =>
+        case (true, CotoForm(content)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(this.storageKey, content)
             None
@@ -140,11 +140,7 @@ object FormCoto {
 
   sealed trait Form
 
-  case class CotoForm(
-      coto: String = "",
-      validationErrors: Option[Seq[Validation.Error]] = None
-  ) extends Form
-      with CotoContent {
+  case class CotoForm(coto: String = "") extends Form with CotoContent {
     override def summary: Option[String] =
       if (this.hasSummary)
         Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
@@ -158,6 +154,9 @@ object FormCoto {
         Some(this.coto)
 
     override def isCotonoma: Boolean = false
+
+    def validate: Option[Seq[Validation.Error]] =
+      this.summary.map(Coto.validateSummary(_))
 
     private def hasSummary: Boolean =
       this.coto.startsWith(CotoForm.SummaryPrefix)
@@ -458,7 +457,7 @@ object FormCoto {
             SplitPane.Secondary(className = None, onClick = None)(
               divPost(
                 model,
-                form.validationErrors,
+                form.validate,
                 operatingNode,
                 currentCotonoma,
                 dispatch

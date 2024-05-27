@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
-import cotoami.utils.{Remark, StripMarkdown}
+import cotoami.utils.{Remark, StripMarkdown, Validation}
 
 trait CotoContent {
   def content: Option[String]
@@ -50,7 +50,16 @@ case class Coto(json: CotoJson) extends Entity[Coto] with CotoContent {
 }
 
 object Coto {
+  val SummaryMaxLength = 200
   val stripMarkdown = Remark.remark().use(StripMarkdown)
+
+  def validateSummary(summary: String): Seq[Validation.Error] = {
+    val fieldName = "summary"
+    Vector(
+      Validation.nonBlank(fieldName, summary),
+      Validation.length(fieldName, summary, 1, SummaryMaxLength)
+    ).flatten
+  }
 }
 
 @js.native

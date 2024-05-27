@@ -94,6 +94,10 @@ section.form-coto {
   div.post {
     margin-bottom: 3rem;
 
+    section.validation-error {
+      padding: 5px 10px;
+    }
+
     section.post {
       position: relative;
 
