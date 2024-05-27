@@ -26,6 +26,15 @@ import cotoami.components.{
 object FormCoto {
   val StorageKeyPrefix = "FormCoto."
 
+  def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
+    Model(id, autoSave = autoSave) match {
+      case model => (model, model.restore)
+    }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Model
+  /////////////////////////////////////////////////////////////////////////////
+
   case class Model(
       id: String,
       form: Form = CotoForm(),
@@ -86,6 +95,10 @@ object FormCoto {
     })
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // WaitingPost
+  /////////////////////////////////////////////////////////////////////////////
+
   case class WaitingPost(
       postId: String,
       content: Option[String],
@@ -133,10 +146,9 @@ object FormCoto {
       this.modify(_.posts).using(_.filterNot(_.postId == postId))
   }
 
-  def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
-    Model(id, autoSave = autoSave) match {
-      case model => (model, model.restore)
-    }
+  /////////////////////////////////////////////////////////////////////////////
+  // Form
+  /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Form
 
@@ -173,6 +185,10 @@ object FormCoto {
       name: String = "",
       validationErrors: Option[Seq[Validation.Error]] = None
   ) extends Form
+
+  /////////////////////////////////////////////////////////////////////////////
+  // update
+  /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg
   case object SetCotoForm extends Msg
@@ -353,6 +369,10 @@ object FormCoto {
     Commands
       .send(Commands.PostCotonoma(form.name, post_to))
       .map(CotonomaPosted(postId, _))
+
+  /////////////////////////////////////////////////////////////////////////////
+  // view
+  /////////////////////////////////////////////////////////////////////////////
 
   def apply(
       model: Model,
