@@ -451,7 +451,7 @@ object FormCoto {
               )(
                 textarea(
                   id := model.editorId,
-                  placeholder := "Write your Coto in Markdown here",
+                  placeholder := "Write your Coto in Markdown",
                   value := form.coto,
                   onFocus := (_ => dispatch(SetFocus(true))),
                   onBlur := (_ => dispatch(SetFocus(false))),
