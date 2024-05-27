@@ -48,7 +48,7 @@ object FormCoto {
     def readyToPost: Boolean = !this.isBlank && (this.form match {
       case CotoForm(_, Some(errors))     => errors.isEmpty
       case CotonomaForm(_, Some(errors)) => errors.isEmpty
-      case _                             => true
+      case _                             => false
     })
 
     def clear: Model =
