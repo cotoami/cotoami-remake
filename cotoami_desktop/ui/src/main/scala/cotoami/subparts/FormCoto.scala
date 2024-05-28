@@ -142,17 +142,18 @@ object FormCoto {
       name: String = "",
       validation: Validation.Result = Validation.Result()
   ) extends Form {
-    // Do validations that can be done at frontend.
-    def validate: CotonomaForm =
-      this.modify(_.validation).setTo(
+    def validate(nodeId: Id[Node]): (CotonomaForm, Seq[Cmd[Msg]]) = {
+      val (validation, cmds) =
         if (this.name.isEmpty())
-          Validation.Result()
+          (Validation.Result(), Seq.empty)
         else
           Cotonoma.validateName(this.name) match {
-            case errors if errors.isEmpty => Validation.Result()
-            case errors                   => Validation.Result(errors)
+            case errors if errors.isEmpty =>
+              (Validation.Result(), Seq(cotonomaByName(this.name, nodeId)))
+            case errors => (Validation.Result(errors), Seq.empty)
           }
-      )
+      (this.copy(validation = validation), cmds)
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -266,38 +267,39 @@ object FormCoto {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
-      case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) =>
-        form.copy(name = name).validate match {
-          case form =>
-            (
-              model.copy(form = form),
-              waitingPosts,
-              log,
-              if (
-                !name.isBlank &&
-                !model.imeActive &&
-                form.validation.validating
-              )
-                Seq(cotonomaByName(name, cotonoma.nodeId))
-              else
-                Seq.empty
-            )
-        }
+      case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) => {
+        val (newForm, cmds) = form.copy(name = name).validate(cotonoma.nodeId)
+        (
+          model.copy(form = newForm),
+          waitingPosts,
+          log,
+          if (!model.imeActive)
+            cmds
+          else
+            Seq.empty
+        )
+      }
 
       case (ImeCompositionStart, _, _) =>
         (model.copy(imeActive = true), waitingPosts, log, Seq.empty)
 
       case (ImeCompositionEnd, form, currentCotonoma) =>
-        (
-          model.copy(imeActive = false),
-          waitingPosts,
-          log,
-          (form, currentCotonoma) match {
-            case (form: CotonomaForm, Some(cotonoma)) =>
-              Seq(cotonomaByName(form.name, cotonoma.nodeId))
-            case _ => Seq.empty
+        model.copy(imeActive = false) match {
+          case model => {
+            (form, currentCotonoma) match {
+              case (form: CotonomaForm, Some(cotonoma)) => {
+                val (newForm, cmds) = form.validate(cotonoma.nodeId)
+                (
+                  model.copy(form = newForm),
+                  waitingPosts,
+                  log,
+                  cmds
+                )
+              }
+              case _ => (model, waitingPosts, log, Seq.empty)
+            }
           }
-        )
+        }
 
       case (CotonomaByName(name, Right(cotonomaJson)), form: CotonomaForm, _) =>
         if (cotonomaJson.name == form.name)
