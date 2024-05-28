@@ -101,7 +101,7 @@ object FormCoto {
 
   sealed trait Form
 
-  case class CotoForm(coto: String = "") extends Form with CotoContent {
+  case class CotoForm(cotoInput: String = "") extends Form with CotoContent {
     override def summary: Option[String] =
       if (this.hasSummary)
         Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
@@ -110,14 +110,14 @@ object FormCoto {
 
     override def content: Option[String] =
       if (this.hasSummary)
-        Some(this.coto.stripPrefix(this.firstLine).trim)
+        Some(this.cotoInput.stripPrefix(this.firstLine).trim)
       else
-        Some(this.coto)
+        Some(this.cotoInput.trim)
 
     override def isCotonoma: Boolean = false
 
     def validate: Validation.Result =
-      if (this.coto.isBlank())
+      if (this.cotoInput.isBlank())
         Validation.Result()
       else {
         val errors =
@@ -127,9 +127,9 @@ object FormCoto {
       }
 
     private def hasSummary: Boolean =
-      this.coto.startsWith(CotoForm.SummaryPrefix)
+      this.cotoInput.startsWith(CotoForm.SummaryPrefix)
 
-    private def firstLine = this.coto.linesIterator.next()
+    private def firstLine = this.cotoInput.linesIterator.next()
   }
 
   object CotoForm {
@@ -253,8 +253,8 @@ object FormCoto {
 
       case (CotoRestored(Some(coto)), form: CotoForm, _) =>
         (
-          if (form.coto.isBlank())
-            model.copy(form = form.copy(coto = coto))
+          if (form.cotoInput.isBlank())
+            model.copy(form = form.copy(cotoInput = coto))
           else
             model,
           waitingPosts,
@@ -263,7 +263,7 @@ object FormCoto {
         )
 
       case (CotoInput(coto), form: CotoForm, _) =>
-        model.copy(form = form.copy(coto = coto)) match {
+        model.copy(form = form.copy(cotoInput = coto)) match {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
@@ -528,7 +528,7 @@ object FormCoto {
                 textarea(
                   id := model.editorId,
                   placeholder := "Write your Coto in Markdown",
-                  value := form.coto,
+                  value := form.cotoInput,
                   onFocus := (_ => dispatch(SetFocus(true))),
                   onBlur := (_ => dispatch(SetFocus(false))),
                   onChange := (e => dispatch(CotoInput(e.target.value))),
