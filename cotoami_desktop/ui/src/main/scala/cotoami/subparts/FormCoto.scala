@@ -40,6 +40,7 @@ object FormCoto {
       form: Form = CotoForm(),
       focused: Boolean = false,
       editorBeingResized: Boolean = false,
+      imeActive: Boolean = false,
       autoSave: Boolean = false,
       inPreview: Boolean = false
   ) {
@@ -141,17 +142,18 @@ object FormCoto {
       name: String = "",
       validation: Validation.Result = Validation.Result()
   ) extends Form {
-    // Do validations that can be done at frontend.
-    def validate: CotonomaForm =
-      this.modify(_.validation).setTo(
+    def validate(nodeId: Id[Node]): (CotonomaForm, Seq[Cmd[Msg]]) = {
+      val (validation, cmds) =
         if (this.name.isEmpty())
-          Validation.Result()
+          (Validation.Result(), Seq.empty)
         else
           Cotonoma.validateName(this.name) match {
-            case errors if errors.isEmpty => Validation.Result()
-            case errors                   => Validation.Result(errors)
+            case errors if errors.isEmpty =>
+              (Validation.Result(), Seq(cotonomaByName(this.name, nodeId)))
+            case errors => (Validation.Result(errors), Seq.empty)
           }
-      )
+      (this.copy(validation = validation), cmds)
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -215,6 +217,12 @@ object FormCoto {
   case class CotoRestored(coto: Option[String]) extends Msg
   case class CotoInput(coto: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
+  case object ImeCompositionStart extends Msg
+  case object ImeCompositionEnd extends Msg
+  case class CotonomaByName(
+      name: String,
+      result: Either[ErrorJson, CotonomaJson]
+  ) extends Msg
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
   case object EditorResizeEnd extends Msg
@@ -259,17 +267,80 @@ object FormCoto {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
-      case (CotonomaNameInput(name), form: CotonomaForm, _) => {
-        form.copy(name = name).validate match {
-          case form =>
-            (
-              model.copy(form = form),
-              waitingPosts,
-              log,
-              Seq.empty
-            )
-        }
+      case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) => {
+        val (newForm, cmds) = form.copy(name = name).validate(cotonoma.nodeId)
+        (
+          model.copy(form = newForm),
+          waitingPosts,
+          log,
+          if (!model.imeActive)
+            cmds
+          else
+            Seq.empty
+        )
       }
+
+      case (ImeCompositionStart, _, _) =>
+        (model.copy(imeActive = true), waitingPosts, log, Seq.empty)
+
+      case (ImeCompositionEnd, form, currentCotonoma) =>
+        model.copy(imeActive = false) match {
+          case model => {
+            (form, currentCotonoma) match {
+              case (form: CotonomaForm, Some(cotonoma)) => {
+                val (newForm, cmds) = form.validate(cotonoma.nodeId)
+                (
+                  model.copy(form = newForm),
+                  waitingPosts,
+                  log,
+                  cmds
+                )
+              }
+              case _ => (model, waitingPosts, log, Seq.empty)
+            }
+          }
+        }
+
+      case (CotonomaByName(name, Right(cotonomaJson)), form: CotonomaForm, _) =>
+        if (cotonomaJson.name == form.name)
+          form.modify(_.validation).setTo(
+            Validation.Result(
+              Validation.Error(
+                "cotonoma-already-exists",
+                s"The cotonoma \"${cotonomaJson.name}\" already exists in this node.",
+                Map("name" -> cotonomaJson.name, "id" -> cotonomaJson.uuid)
+              )
+            )
+          ) match {
+            case form =>
+              (
+                model.copy(form = form),
+                waitingPosts,
+                log,
+                Seq.empty
+              )
+          }
+        else
+          (model, waitingPosts, log, Seq.empty)
+
+      case (CotonomaByName(name, Left(error)), form: CotonomaForm, _) =>
+        if (name == form.name && error.code == "not-found")
+          form.copy(validation = Validation.Result.validated()) match {
+            case form =>
+              (
+                model.copy(form = form),
+                waitingPosts,
+                log,
+                Seq.empty
+              )
+          }
+        else
+          (
+            model,
+            waitingPosts,
+            log.error("CotonomaByName error.", Some(js.JSON.stringify(error))),
+            Seq.empty
+          )
 
       case (SetFocus(focus), _, _) =>
         (model.copy(focused = focus), waitingPosts, log, Seq.empty)
@@ -373,6 +444,11 @@ object FormCoto {
       case (_, _, _) => (model, waitingPosts, log, Seq.empty)
     }
 
+  private def cotonomaByName(name: String, nodeId: Id[Node]): Cmd[Msg] =
+    Commands
+      .send(Commands.CotonomaByName(name, nodeId))
+      .map(CotonomaByName(name, _))
+
   private def postCoto(
       postId: String,
       form: CotoForm,
@@ -456,6 +532,8 @@ object FormCoto {
                   onFocus := (_ => dispatch(SetFocus(true))),
                   onBlur := (_ => dispatch(SetFocus(false))),
                   onChange := (e => dispatch(CotoInput(e.target.value))),
+                  onCompositionStart := (_ => dispatch(ImeCompositionStart)),
+                  onCompositionEnd := (_ => dispatch(ImeCompositionEnd)),
                   onKeyDown := (e =>
                     if (model.readyToPost && detectCtrlEnter(e)) {
                       dispatch(Post)
@@ -485,6 +563,8 @@ object FormCoto {
               onFocus := (_ => dispatch(SetFocus(true))),
               onBlur := (_ => dispatch(SetFocus(false))),
               onChange := (e => dispatch(CotonomaNameInput(e.target.value))),
+              onCompositionStart := (_ => dispatch(ImeCompositionStart)),
+              onCompositionEnd := (_ => dispatch(ImeCompositionEnd)),
               onKeyDown := (e =>
                 if (model.readyToPost && detectCtrlEnter(e)) {
                   dispatch(Post)

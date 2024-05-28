@@ -95,7 +95,11 @@ pub(crate) fn set_network_disabled(
                 let client = client_ops::set_disabled(node_id, true).run(ctx)?;
                 Ok(NetworkRole::Client(client))
             }
-            None => bail!(DatabaseError::not_found(EntityKind::NetworkRole, *node_id)),
+            None => bail!(DatabaseError::not_found(
+                EntityKind::NetworkRole,
+                "node_id",
+                *node_id
+            )),
         }
     })
 }

@@ -646,7 +646,7 @@ impl<'a> DatabaseSession<'a> {
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
-                Err(DatabaseError::not_found(EntityKind::Coto, *id))?
+                Err(DatabaseError::not_found(EntityKind::Coto, "uuid", *id))?
             }
         })
     }
@@ -678,6 +678,23 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn try_get_cotonoma_by_coto_id(&mut self, id: &Id<Coto>) -> Result<(Cotonoma, Coto)> {
         self.read_transaction(cotonoma_ops::try_get_by_coto_id(id))?
+            .map_err(anyhow::Error::from)
+    }
+
+    pub fn cotonoma_by_name(
+        &mut self,
+        name: &str,
+        node_id: &Id<Node>,
+    ) -> Result<Option<(Cotonoma, Coto)>> {
+        self.read_transaction(cotonoma_ops::get_by_name(name, node_id))
+    }
+
+    pub fn try_get_cotonoma_by_name(
+        &mut self,
+        name: &str,
+        node_id: &Id<Node>,
+    ) -> Result<(Cotonoma, Coto)> {
+        self.read_transaction(cotonoma_ops::try_get_by_name(name, node_id))?
             .map_err(anyhow::Error::from)
     }
 
@@ -909,7 +926,7 @@ impl<'a> DatabaseSession<'a> {
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
-                Err(DatabaseError::not_found(EntityKind::Link, *id))?
+                Err(DatabaseError::not_found(EntityKind::Link, "uuid", *id))?
             }
         })
     }

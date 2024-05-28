@@ -12,7 +12,7 @@ pub enum ServiceError {
     Request(RequestError),
     Unauthorized,
     Permission,
-    NotFound,
+    NotFound(Option<String>),
     Input(InputErrors),
     Server(String),
     NotImplemented,
@@ -144,11 +144,6 @@ impl InputError {
 
     pub fn insert_param(&mut self, key: impl Into<String>, value: Value) {
         self.params.insert(key.into(), value);
-    }
-
-    pub fn with_param(mut self, key: impl Into<String>, value: Value) -> Self {
-        self.insert_param(key, value);
-        self
     }
 }
 

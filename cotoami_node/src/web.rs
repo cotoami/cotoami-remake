@@ -217,7 +217,7 @@ impl IntoResponse for ServiceError {
             ServiceError::Request(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
             ServiceError::Unauthorized => StatusCode::UNAUTHORIZED.into_response(),
             ServiceError::Permission => StatusCode::FORBIDDEN.into_response(),
-            ServiceError::NotFound => StatusCode::NOT_FOUND.into_response(),
+            ServiceError::NotFound(..) => StatusCode::NOT_FOUND.into_response(),
             ServiceError::Input(e) => (StatusCode::UNPROCESSABLE_ENTITY, Json(e)).into_response(),
             ServiceError::NotImplemented => StatusCode::NOT_IMPLEMENTED.into_response(),
             ServiceError::Server(e) => {

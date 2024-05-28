@@ -33,7 +33,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ChildNode, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ChildNode, *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ChildNode, "uuid", *id)))
 }
 
 pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(

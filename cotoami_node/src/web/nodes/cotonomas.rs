@@ -13,7 +13,11 @@ use crate::{
     web::{Accept, Content},
 };
 
-pub(super) fn routes() -> Router<NodeState> { Router::new().route("/", get(recent_cotonomas)) }
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(recent_cotonomas))
+        .route("/:name", get(get_cotonoma_by_name))
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // GET /api/nodes/:node_id/cotonomas
@@ -32,4 +36,19 @@ async fn recent_cotonomas(
         .recent_cotonomas(Some(node_id), pagination)
         .await
         .map(|cotonomas| Content(cotonomas, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/:node_id/cotonomas/:name
+/////////////////////////////////////////////////////////////////////////////
+
+async fn get_cotonoma_by_name(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path((node_id, name)): Path<(Id<Node>, String)>,
+) -> Result<Content<Cotonoma>, ServiceError> {
+    state
+        .cotonoma_by_name(name, node_id)
+        .await
+        .map(|cotonoma| Content(cotonoma, accept))
 }
