@@ -49,6 +49,14 @@ impl Error {
         }
     }
 
+    // TODO: write thorough conversion
+    fn from_service_error(e: ServiceError) -> Self {
+        match e {
+            ServiceError::NotFound => Error::new("not-found", "Not found"),
+            _ => Error::new("service-error", "Service Error").add_details(format!("{:?}", e)),
+        }
+    }
+
     fn system_error(message: impl Into<String>) -> Self {
         Error::new("system-error", message.into())
     }
@@ -60,17 +68,16 @@ impl Error {
 }
 
 impl From<anyhow::Error> for Error {
-    fn from(e: anyhow::Error) -> Self { Self::system_error(e.to_string()) }
-}
-
-// TODO: write thorough conversion
-impl From<ServiceError> for Error {
-    fn from(e: ServiceError) -> Self {
-        match e {
-            ServiceError::NotFound => Error::new("not-found", "Not found"),
-            _ => Error::new("service-error", "Service Error").add_details(format!("{:?}", e)),
+    fn from(e: anyhow::Error) -> Self {
+        match e.downcast::<BackendServiceError>() {
+            Ok(BackendServiceError(service_error)) => Self::from_service_error(service_error),
+            Err(e) => Self::system_error(e.to_string()),
         }
     }
+}
+
+impl From<ServiceError> for Error {
+    fn from(e: ServiceError) -> Self { Self::from_service_error(e) }
 }
 
 #[derive(serde::Serialize)]

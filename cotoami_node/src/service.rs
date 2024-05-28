@@ -255,4 +255,4 @@ impl SerializeFormat {
 
 #[derive(Error, Debug)]
 #[error("Backend service error: {0:?}")]
-pub struct BackendServiceError(ServiceError);
+pub struct BackendServiceError(pub ServiceError);
