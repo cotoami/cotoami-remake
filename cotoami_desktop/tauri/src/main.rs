@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::{path::PathBuf, string::ToString, sync::Arc};
+use std::{env, path::PathBuf, string::ToString, sync::Arc};
 
 use anyhow::anyhow;
 use chrono::Local;
@@ -86,6 +86,7 @@ struct SystemInfo {
     app_config_dir: Option<String>,
     app_data_dir: Option<String>,
     time_zone_offset_in_sec: i32,
+    os: String,
     recent_databases: RecentDatabases,
 }
 
@@ -115,6 +116,7 @@ fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
         app_config_dir,
         app_data_dir,
         time_zone_offset_in_sec,
+        os: env::consts::OS.into(),
         recent_databases,
     }
 }

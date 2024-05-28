@@ -16,6 +16,9 @@
       },
       "shell": {
         "open": true
+      },
+      "window": {
+        "startDragging": true
       }
     },
     "bundle": {
@@ -69,7 +72,9 @@
         "resizable": true,
         "title": "Cotoami",
         "width": 1000,
-        "height": 800
+        "height": 800,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay"
       }
     ]
   }

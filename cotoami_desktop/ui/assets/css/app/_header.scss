@@ -1,4 +1,12 @@
 div.app>header {
+  div.header-content {
+    position: relative;
+  }
+
+  &[data-os="macos"] div.header-content {
+    margin-left: 70px;
+  }
+
   button.app-info {
     display: inline-block;
     position: absolute;
@@ -12,8 +20,9 @@ div.app>header {
     }
 
     img.app-icon {
-      width: 30px;
-      height: 30px
+      width: 26px;
+      height: 26px;
+      margin-top: 2px;
     }
   }
 
@@ -29,7 +38,8 @@ div.app>header {
 
       img.node-icon {
         vertical-align: top;
-        margin: 4px;
+        margin-top: 6px;
+        margin-right: 4px;
       }
     }
 
@@ -46,7 +56,7 @@ div.app>header {
       height: 100%;
 
       // fix the font size since the header height is fixed
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
 
       // abbreviate a long cotonoma name
@@ -94,8 +104,8 @@ div.app>header {
   }
 
   img.node-icon {
-    width: 27px;
-    height: 27px;
+    width: 24px;
+    height: 24px;
     border-radius: 4px;
   }
 }

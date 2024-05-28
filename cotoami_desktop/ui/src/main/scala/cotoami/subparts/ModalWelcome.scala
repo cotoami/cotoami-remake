@@ -219,7 +219,11 @@ object ModalWelcome {
       recentDatabases: Seq[DatabaseOpenedJson],
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
-    dialog(className := "welcome", open := true)(
+    dialog(
+      className := "welcome",
+      open := true,
+      data - "tauri-drag-region" := "default"
+    )(
       article()(
         header()(
           h1()(
