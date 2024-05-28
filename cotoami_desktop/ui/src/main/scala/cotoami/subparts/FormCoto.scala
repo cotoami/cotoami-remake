@@ -284,8 +284,8 @@ object FormCoto {
             Validation.Result(
               Validation.Error(
                 "cotonoma-already-exists",
-                s"The cotonoma [${cotonomaJson.name}] already exists.",
-                Map("name" -> cotonomaJson.name)
+                s"The cotonoma \"${cotonomaJson.name}\" already exists in this node.",
+                Map("name" -> cotonomaJson.name, "id" -> cotonomaJson.uuid)
               )
             )
           ) match {
