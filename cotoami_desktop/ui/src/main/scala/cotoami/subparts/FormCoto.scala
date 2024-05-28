@@ -139,9 +139,11 @@ object FormCoto {
   }
 
   case class CotonomaForm(
-      name: String = "",
+      nameInput: String = "",
       validation: Validation.Result = Validation.Result()
   ) extends Form {
+    def name: String = this.nameInput.trim
+
     def validate(nodeId: Id[Node]): (CotonomaForm, Seq[Cmd[Msg]]) = {
       val (validation, cmds) =
         if (this.name.isEmpty())
@@ -268,7 +270,8 @@ object FormCoto {
         }
 
       case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) => {
-        val (newForm, cmds) = form.copy(name = name).validate(cotonoma.nodeId)
+        val (newForm, cmds) =
+          form.copy(nameInput = name).validate(cotonoma.nodeId)
         (
           model.copy(form = newForm),
           waitingPosts,
