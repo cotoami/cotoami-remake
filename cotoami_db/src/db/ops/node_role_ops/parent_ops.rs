@@ -34,7 +34,13 @@ pub(crate) fn get<Conn: AsReadableConn>(
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ParentNode, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ParentNode, *id)))
+    get(id).map(|opt| {
+        opt.ok_or(DatabaseError::not_found(
+            EntityKind::ParentNode,
+            "node_id",
+            *id,
+        ))
+    })
 }
 
 /// Returns all [ParentNode]s in arbitrary order.

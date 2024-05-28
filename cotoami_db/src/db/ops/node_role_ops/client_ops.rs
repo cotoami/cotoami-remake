@@ -35,7 +35,13 @@ pub(crate) fn get<Conn: AsReadableConn>(
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ClientNode, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ClientNode, *id)))
+    get(id).map(|opt| {
+        opt.ok_or(DatabaseError::not_found(
+            EntityKind::ClientNode,
+            "node_id",
+            *id,
+        ))
+    })
 }
 
 /// Returns a [ClientNode] by its session token.

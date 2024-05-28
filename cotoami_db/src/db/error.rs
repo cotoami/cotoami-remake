@@ -17,8 +17,12 @@ pub enum DatabaseError {
     #[error("Local node has not yet been created")]
     LocalNodeNotYetInitialized,
 
-    #[error("Not found: {kind} ({id})")]
-    EntityNotFound { kind: EntityKind, id: String },
+    #[error("Not found: {kind} ({by}: {value})")]
+    EntityNotFound {
+        kind: EntityKind,
+        by: String,
+        value: String,
+    },
 
     #[error("Authentication failed")]
     AuthenticationFailed,
@@ -46,10 +50,11 @@ pub enum DatabaseError {
 }
 
 impl DatabaseError {
-    pub fn not_found(kind: EntityKind, id: impl Into<String>) -> Self {
+    pub fn not_found(kind: EntityKind, by: impl Into<String>, value: impl Into<String>) -> Self {
         DatabaseError::EntityNotFound {
             kind,
-            id: id.into(),
+            by: by.into(),
+            value: value.into(),
         }
     }
 }

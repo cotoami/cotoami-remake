@@ -646,7 +646,7 @@ impl<'a> DatabaseSession<'a> {
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
-                Err(DatabaseError::not_found(EntityKind::Coto, *id))?
+                Err(DatabaseError::not_found(EntityKind::Coto, "uuid", *id))?
             }
         })
     }
@@ -926,7 +926,7 @@ impl<'a> DatabaseSession<'a> {
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
-                Err(DatabaseError::not_found(EntityKind::Link, *id))?
+                Err(DatabaseError::not_found(EntityKind::Link, "uuid", *id))?
             }
         })
     }

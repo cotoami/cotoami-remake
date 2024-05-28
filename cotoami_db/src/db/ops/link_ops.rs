@@ -43,7 +43,7 @@ pub(crate) fn get_by_source_coto_ids<Conn: AsReadableConn>(
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Link>,
 ) -> impl Operation<Conn, Result<Link, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Link, *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Link, "uuid", *id)))
 }
 
 pub(crate) fn recent<'a, Conn: AsReadableConn>(
