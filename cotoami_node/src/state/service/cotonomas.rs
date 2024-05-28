@@ -108,7 +108,7 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return ("post_cotonoma", errors).into_result();
         }
-        self.change_in_cotonoma(
+        self.change(
             input,
             post_to,
             operator,
