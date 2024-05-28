@@ -19,6 +19,8 @@ object Validation {
     def validated: Boolean =
       this.errors.map(_.isEmpty).getOrElse(false)
 
+    def failed: Boolean = this.firstError.isDefined
+
     def firstError: Option[Validation.Error] =
       this.errors.flatMap(_.headOption)
 

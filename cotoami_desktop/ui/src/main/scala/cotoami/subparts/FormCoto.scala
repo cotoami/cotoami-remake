@@ -263,14 +263,17 @@ object FormCoto {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
-      case (CotonomaNameInput(name), form: CotonomaForm, _) => {
+      case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) => {
         form.copy(name = name).validate match {
           case form =>
             (
               model.copy(form = form),
               waitingPosts,
               log,
-              Seq.empty
+              if (form.validation.validating)
+                Seq(cotonomaByName(name, cotonoma.nodeId))
+              else
+                Seq.empty
             )
         }
       }
@@ -417,6 +420,11 @@ object FormCoto {
 
       case (_, _, _) => (model, waitingPosts, log, Seq.empty)
     }
+
+  private def cotonomaByName(name: String, nodeId: Id[Node]): Cmd[Msg] =
+    Commands
+      .send(Commands.CotonomaByName(name, nodeId))
+      .map(CotonomaByName(name, _))
 
   private def postCoto(
       postId: String,
