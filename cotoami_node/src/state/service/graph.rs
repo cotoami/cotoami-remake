@@ -1,6 +1,5 @@
 use anyhow::Result;
 use cotoami_db::prelude::*;
-use tokio::task::spawn_blocking;
 
 use crate::{
     service::{
@@ -15,9 +14,7 @@ impl NodeState {
         &self,
         coto_id: Id<Coto>,
     ) -> Result<CotoGraph, ServiceError> {
-        let db = self.db().clone();
-        spawn_blocking(move || {
-            let mut ds = db.new_session()?;
+        self.get(move |ds| {
             let root_coto = ds.try_get_coto(&coto_id)?;
             let root_cotonoma = if root_coto.is_cotonoma {
                 let (cotonoma, _) = ds.try_get_cotonoma_by_coto_id(&root_coto.uuid)?;
@@ -25,24 +22,20 @@ impl NodeState {
             } else {
                 None
             };
-            graph(&mut ds, root_coto, root_cotonoma)
+            graph(ds, root_coto, root_cotonoma)
         })
-        .await?
-        .map_err(ServiceError::from)
+        .await
     }
 
     pub(crate) async fn graph_from_cotonoma(
         &self,
         cotonoma_id: Id<Cotonoma>,
     ) -> Result<CotoGraph, ServiceError> {
-        let db = self.db().clone();
-        spawn_blocking(move || {
-            let mut ds = db.new_session()?;
+        self.get(move |ds| {
             let (root_cotonoma, root_coto) = ds.try_get_cotonoma(&cotonoma_id)?;
-            graph(&mut ds, root_coto, Some(root_cotonoma))
+            graph(ds, root_coto, Some(root_cotonoma))
         })
-        .await?
-        .map_err(ServiceError::from)
+        .await
     }
 }
 

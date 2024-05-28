@@ -3,7 +3,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use futures::future::FutureExt;
-use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
@@ -27,20 +26,16 @@ impl NodeState {
         if let Err(errors) = pagination.validate() {
             return ("recent_cotos", errors).into_result();
         }
-
-        let db = self.db().clone();
-        spawn_blocking(move || {
-            let mut ds = db.new_session()?;
+        self.get(move |ds| {
             let page = ds.recent_cotos(
                 node.as_ref(),
                 cotonoma.as_ref(),
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
             )?;
-            PaginatedCotos::new(page, &mut ds)
+            PaginatedCotos::new(page, ds)
         })
-        .await?
-        .map_err(ServiceError::from)
+        .await
     }
 
     pub(crate) async fn search_cotos(
@@ -53,10 +48,7 @@ impl NodeState {
         if let Err(errors) = pagination.validate() {
             return ("search_cotos", errors).into_result();
         }
-
-        let db = self.db().clone();
-        spawn_blocking(move || {
-            let mut ds = db.new_session()?;
+        self.get(move |ds| {
             let page = ds.search_cotos(
                 &query,
                 node.as_ref(),
@@ -64,10 +56,9 @@ impl NodeState {
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
             )?;
-            PaginatedCotos::new(page, &mut ds)
+            PaginatedCotos::new(page, ds)
         })
-        .await?
-        .map_err(ServiceError::from)
+        .await
     }
 
     pub(crate) async fn post_coto(

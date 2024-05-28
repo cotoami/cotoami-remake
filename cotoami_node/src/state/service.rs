@@ -133,6 +133,21 @@ where
 /////////////////////////////////////////////////////////////////////////////
 
 impl NodeState {
+    pub(crate) async fn get<Value, Get>(&self, get: Get) -> Result<Value, ServiceError>
+    where
+        Value: Send + 'static,
+        Get: FnOnce(&mut DatabaseSession<'_>) -> Result<Value> + Send + 'static,
+    {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            let mut ds = db.new_session()?;
+            let value = get(&mut ds)?;
+            Ok::<_, anyhow::Error>(value)
+        })
+        .await?
+        .map_err(ServiceError::from)
+    }
+
     pub(crate) async fn change<Input, Change, Apply, Forward>(
         self,
         input: Input,
