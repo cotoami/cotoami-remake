@@ -31,6 +31,9 @@ object Commands {
   def CotonomaDetails(id: Id[Cotonoma]) =
     jso(CotonomaDetails = jso(id = id.uuid))
 
+  def CotonomaByName(name: String, node: Id[Node]) =
+    jso(CotonomaByName = jso(name = name, node = node.uuid))
+
   def SubCotonomas(id: Id[Cotonoma], pageIndex: Double) =
     jso(SubCotonomas = jso(id = id.uuid, pagination = jso(page = pageIndex)))
 
