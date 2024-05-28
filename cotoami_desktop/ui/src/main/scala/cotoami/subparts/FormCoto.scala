@@ -215,6 +215,10 @@ object FormCoto {
   case class CotoRestored(coto: Option[String]) extends Msg
   case class CotoInput(coto: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
+  case class CotonomaByName(
+      name: String,
+      result: Either[ErrorJson, CotonomaJson]
+  ) extends Msg
   case class SetFocus(focus: Boolean) extends Msg
   case object EditorResizeStart extends Msg
   case object EditorResizeEnd extends Msg
@@ -270,6 +274,47 @@ object FormCoto {
             )
         }
       }
+
+      case (CotonomaByName(name, Right(cotonomaJson)), form: CotonomaForm, _) =>
+        if (cotonomaJson.name == form.name)
+          form.modify(_.validation).setTo(
+            Validation.Result(
+              Validation.Error(
+                "cotonoma-already-exists",
+                s"The cotonoma [${cotonomaJson.name}] already exists.",
+                Map("name" -> cotonomaJson.name)
+              )
+            )
+          ) match {
+            case form =>
+              (
+                model.copy(form = form),
+                waitingPosts,
+                log,
+                Seq.empty
+              )
+          }
+        else
+          (model, waitingPosts, log, Seq.empty)
+
+      case (CotonomaByName(name, Left(error)), form: CotonomaForm, _) =>
+        if (name == form.name && error.code == "not-found")
+          form.copy(validation = Validation.Result.validated()) match {
+            case form =>
+              (
+                model.copy(form = form),
+                waitingPosts,
+                log,
+                Seq.empty
+              )
+          }
+        else
+          (
+            model,
+            waitingPosts,
+            log.error("CotonomaByName error.", Some(js.JSON.stringify(error))),
+            Seq.empty
+          )
 
       case (SetFocus(focus), _, _) =>
         (model.copy(focused = focus), waitingPosts, log, Seq.empty)

@@ -22,6 +22,9 @@ object Validation {
     def firstError: Option[Validation.Error] =
       this.errors.flatMap(_.headOption)
 
+    def addError(error: Validation.Error): Result =
+      this.addErrors(Seq(error))
+
     def addErrors(errors: Seq[Validation.Error]): Result =
       this.modify(_.errors).using(
         _ match {
@@ -32,6 +35,9 @@ object Validation {
   }
 
   object Result {
+    def apply(error: Validation.Error): Result =
+      Result(Some(Seq(error)))
+
     def apply(errors: Seq[Validation.Error]): Result =
       Result(Some(errors))
 

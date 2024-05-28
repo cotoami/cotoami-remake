@@ -66,7 +66,10 @@ impl From<anyhow::Error> for Error {
 // TODO: write thorough conversion
 impl From<ServiceError> for Error {
     fn from(e: ServiceError) -> Self {
-        Error::new("service-error", "Service Error").add_details(format!("{:?}", e))
+        match e {
+            ServiceError::NotFound => Error::new("not-found", "Not found"),
+            _ => Error::new("service-error", "Service Error").add_details(format!("{:?}", e)),
+        }
     }
 }
 
