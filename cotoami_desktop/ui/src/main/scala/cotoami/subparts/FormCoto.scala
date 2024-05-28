@@ -40,6 +40,7 @@ object FormCoto {
       form: Form = CotoForm(),
       focused: Boolean = false,
       editorBeingResized: Boolean = false,
+      imeActive: Boolean = false,
       autoSave: Boolean = false,
       inPreview: Boolean = false
   ) {
@@ -215,6 +216,8 @@ object FormCoto {
   case class CotoRestored(coto: Option[String]) extends Msg
   case class CotoInput(coto: String) extends Msg
   case class CotonomaNameInput(name: String) extends Msg
+  case object ImeCompositionStart extends Msg
+  case object ImeCompositionEnd extends Msg
   case class CotonomaByName(
       name: String,
       result: Either[ErrorJson, CotonomaJson]
@@ -263,20 +266,38 @@ object FormCoto {
           case model => (model, waitingPosts, log, Seq(model.save))
         }
 
-      case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) => {
+      case (CotonomaNameInput(name), form: CotonomaForm, Some(cotonoma)) =>
         form.copy(name = name).validate match {
           case form =>
             (
               model.copy(form = form),
               waitingPosts,
               log,
-              if (!name.isBlank && form.validation.validating)
+              if (
+                !name.isBlank &&
+                !model.imeActive &&
+                form.validation.validating
+              )
                 Seq(cotonomaByName(name, cotonoma.nodeId))
               else
                 Seq.empty
             )
         }
-      }
+
+      case (ImeCompositionStart, _, _) =>
+        (model.copy(imeActive = true), waitingPosts, log, Seq.empty)
+
+      case (ImeCompositionEnd, form, currentCotonoma) =>
+        (
+          model.copy(imeActive = false),
+          waitingPosts,
+          log,
+          (form, currentCotonoma) match {
+            case (form: CotonomaForm, Some(cotonoma)) =>
+              Seq(cotonomaByName(form.name, cotonoma.nodeId))
+            case _ => Seq.empty
+          }
+        )
 
       case (CotonomaByName(name, Right(cotonomaJson)), form: CotonomaForm, _) =>
         if (cotonomaJson.name == form.name)
@@ -509,6 +530,8 @@ object FormCoto {
                   onFocus := (_ => dispatch(SetFocus(true))),
                   onBlur := (_ => dispatch(SetFocus(false))),
                   onChange := (e => dispatch(CotoInput(e.target.value))),
+                  onCompositionStart := (_ => dispatch(ImeCompositionStart)),
+                  onCompositionEnd := (_ => dispatch(ImeCompositionEnd)),
                   onKeyDown := (e =>
                     if (model.readyToPost && detectCtrlEnter(e)) {
                       dispatch(Post)
@@ -538,6 +561,8 @@ object FormCoto {
               onFocus := (_ => dispatch(SetFocus(true))),
               onBlur := (_ => dispatch(SetFocus(false))),
               onChange := (e => dispatch(CotonomaNameInput(e.target.value))),
+              onCompositionStart := (_ => dispatch(ImeCompositionStart)),
+              onCompositionEnd := (_ => dispatch(ImeCompositionEnd)),
               onKeyDown := (e =>
                 if (model.readyToPost && detectCtrlEnter(e)) {
                   dispatch(Post)
