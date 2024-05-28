@@ -270,7 +270,7 @@ object FormCoto {
               model.copy(form = form),
               waitingPosts,
               log,
-              if (form.validation.validating)
+              if (!name.isBlank && form.validation.validating)
                 Seq(cotonomaByName(name, cotonoma.nodeId))
               else
                 Seq.empty
