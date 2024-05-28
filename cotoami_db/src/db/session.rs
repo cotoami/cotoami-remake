@@ -681,6 +681,23 @@ impl<'a> DatabaseSession<'a> {
             .map_err(anyhow::Error::from)
     }
 
+    pub fn cotonoma_by_name(
+        &mut self,
+        name: &str,
+        node_id: &Id<Node>,
+    ) -> Result<Option<(Cotonoma, Coto)>> {
+        self.read_transaction(cotonoma_ops::get_by_name(name, node_id))
+    }
+
+    pub fn try_get_cotonoma_by_name(
+        &mut self,
+        name: &str,
+        node_id: &Id<Node>,
+    ) -> Result<(Cotonoma, Coto)> {
+        self.read_transaction(cotonoma_ops::try_get_by_name(name, node_id))?
+            .map_err(anyhow::Error::from)
+    }
+
     pub fn contains_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<bool> {
         self.read_transaction(cotonoma_ops::contains(id))
     }

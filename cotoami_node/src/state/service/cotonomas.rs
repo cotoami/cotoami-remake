@@ -45,6 +45,20 @@ impl NodeState {
         .map_err(ServiceError::from)
     }
 
+    pub(crate) async fn cotonoma_by_name(
+        &self,
+        name: String,
+        node: Id<Node>,
+    ) -> Result<Cotonoma, ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            let (cotonoma, _) = db.new_session()?.try_get_cotonoma_by_name(&name, &node)?;
+            Ok::<_, anyhow::Error>(cotonoma)
+        })
+        .await?
+        .map_err(ServiceError::from)
+    }
+
     pub(crate) async fn sub_cotonomas(
         &self,
         id: Id<Cotonoma>,

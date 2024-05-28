@@ -144,6 +144,9 @@ pub enum Command {
     /// Request a [CotonomaDetails] of the given ID.
     CotonomaDetails { id: Id<Cotonoma> },
 
+    /// Request a [Cotonoma] of the given name in the given node.
+    CotonomaByName { name: String, node: Id<Node> },
+
     /// Request a `Paginated<Cotonoma>` that contains sub cotonomas of the given cotonoma.
     SubCotonomas {
         id: Id<Cotonoma>,

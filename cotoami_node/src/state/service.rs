@@ -48,6 +48,9 @@ impl NodeState {
             }
             Command::Cotonoma { id } => format.to_bytes(self.cotonoma(id).await),
             Command::CotonomaDetails { id } => format.to_bytes(self.cotonoma_details(id).await),
+            Command::CotonomaByName { name, node } => {
+                format.to_bytes(self.cotonoma_by_name(name, node).await)
+            }
             Command::SubCotonomas { id, pagination } => {
                 format.to_bytes(self.sub_cotonomas(id, pagination).await)
             }

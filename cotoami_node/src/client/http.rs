@@ -119,6 +119,10 @@ impl HttpClient {
             Command::CotonomaDetails { id } => {
                 self.get(&format!("/api/cotonomas/{id}/details"), None)
             }
+            Command::CotonomaByName { name, node } => {
+                let encoded_name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
+                self.get(&format!("/api/nodes/{node}/cotonomas/{encoded_name}"), None)
+            }
             Command::SubCotonomas { id, pagination } => self.get(
                 &format!("/api/cotonomas/{id}/subs"),
                 Some(pagination.as_query()),
