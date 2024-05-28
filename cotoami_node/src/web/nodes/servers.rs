@@ -93,7 +93,9 @@ async fn update_server_node(
         return ("nodes/server", errors).into_result();
     }
     if !state.contains_server(&node_id) {
-        return Err(ServiceError::NotFound);
+        return Err(ServiceError::NotFound(Some(format!(
+            "Server node [{node_id}] not found."
+        ))));
     }
     if let Some(disabled) = form.disabled {
         set_server_disabled(node_id, disabled, &state, operator).await?;

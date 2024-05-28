@@ -84,6 +84,7 @@ impl NodeState {
             .get(server_id)
             .ok_or(anyhow!(DatabaseError::not_found(
                 EntityKind::ServerNode,
+                "node_id",
                 *server_id,
             )))
             .map(Clone::clone)

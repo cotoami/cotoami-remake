@@ -207,7 +207,7 @@ impl HttpClient {
             StatusCode::BAD_REQUEST => ServiceError::Request(from.json::<RequestError>().await?),
             StatusCode::UNAUTHORIZED => ServiceError::Unauthorized,
             StatusCode::FORBIDDEN => ServiceError::Permission,
-            StatusCode::NOT_FOUND => ServiceError::NotFound,
+            StatusCode::NOT_FOUND => ServiceError::NotFound(None),
             StatusCode::UNPROCESSABLE_ENTITY => {
                 ServiceError::Input(from.json::<InputErrors>().await?)
             }

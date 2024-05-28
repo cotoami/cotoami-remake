@@ -52,7 +52,7 @@ impl Error {
     // TODO: write thorough conversion
     fn from_service_error(e: ServiceError) -> Self {
         match e {
-            ServiceError::NotFound => Error::new("not-found", "Not found"),
+            ServiceError::NotFound(msg) => Error::new("not-found", msg.unwrap_or("".into())),
             _ => Error::new("service-error", "Service Error").add_details(format!("{:?}", e)),
         }
     }

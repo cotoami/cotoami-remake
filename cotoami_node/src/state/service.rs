@@ -12,7 +12,7 @@ use tokio::task::spawn_blocking;
 
 use crate::{
     service::{
-        error::{InputError, IntoServiceResult, RequestError},
+        error::{IntoServiceResult, RequestError},
         NodeServiceFuture, *,
     },
     state::NodeState,
@@ -114,10 +114,8 @@ where
 
         // DatabaseError
         match anyhow_err.downcast_ref::<DatabaseError>() {
-            Some(DatabaseError::EntityNotFound { kind, id }) => {
-                return InputError::new(kind.to_string(), "id", "not-found")
-                    .with_param("value", json!(id.to_string()))
-                    .into();
+            Some(e @ DatabaseError::EntityNotFound { .. }) => {
+                return ServiceError::NotFound(Some(e.to_string()));
             }
             Some(DatabaseError::AuthenticationFailed) => {
                 return Self::request("authentication-failed");
