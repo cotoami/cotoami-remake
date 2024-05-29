@@ -4,7 +4,7 @@ import scala.collection.immutable.HashSet
 
 import com.softwaremill.quicklens._
 
-import fui.FunctionalUI._
+import fui._
 import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 

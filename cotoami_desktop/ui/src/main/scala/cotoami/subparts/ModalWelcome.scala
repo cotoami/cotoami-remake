@@ -4,7 +4,7 @@ import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.FunctionalUI._
+import fui._
 import cotoami.{log_error, tauri, ModalWelcomeMsg}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol

@@ -12,7 +12,7 @@ import slinky.web.html._
 import cats.effect.IO
 import com.softwaremill.quicklens._
 
-import fui.FunctionalUI._
+import fui._
 import cotoami.utils.{Log, Validation}
 import cotoami.backend._
 import cotoami.components.{

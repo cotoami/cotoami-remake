@@ -1,7 +1,7 @@
 import scala.scalajs.js
 import cats.effect.IO
 
-import fui.FunctionalUI._
+import fui._
 import cotoami.utils.Log
 
 package object cotoami {

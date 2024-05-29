@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import com.softwaremill.quicklens._
 
-import fui.FunctionalUI._
+import fui._
 import cotoami.{Context, Model, SectionTimelineMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._

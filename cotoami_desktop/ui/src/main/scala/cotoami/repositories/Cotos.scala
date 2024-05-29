@@ -1,7 +1,7 @@
 package cotoami.repositories
 
 import com.softwaremill.quicklens._
-import fui.FunctionalUI._
+import fui._
 import cotoami.backend._
 
 case class Cotos(

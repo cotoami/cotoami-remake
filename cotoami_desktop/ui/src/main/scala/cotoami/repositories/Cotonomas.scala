@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import scala.scalajs.js
 import com.softwaremill.quicklens._
-import fui.FunctionalUI._
+import fui._
 import cotoami.{log_info, DomainMsg}
 import cotoami.backend._
 

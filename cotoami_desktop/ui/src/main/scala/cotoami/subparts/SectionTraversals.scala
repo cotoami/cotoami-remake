@@ -12,7 +12,7 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 import java.time.Instant
 
-import fui.FunctionalUI._
+import fui.Cmd
 import cotoami.SectionTraversalsMsg
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}

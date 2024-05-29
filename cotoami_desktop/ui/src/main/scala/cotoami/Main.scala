@@ -14,7 +14,7 @@ import com.softwaremill.quicklens._
 import cats.effect.IO
 import cats.syntax.all._
 
-import fui.FunctionalUI._
+import fui._
 import cotoami.tauri
 import cotoami.backend._
 import cotoami.repositories._

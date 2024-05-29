@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 
-import fui.FunctionalUI.Cmd
+import fui.Cmd
 import cotoami.utils.Validation
 
 @js.native

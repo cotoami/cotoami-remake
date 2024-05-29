@@ -8,7 +8,7 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import cats.effect.IO
 
-import fui.FunctionalUI.{Cmd, Sub}
+import fui.{Cmd, Sub}
 
 package object tauri {
 

@@ -13,7 +13,7 @@ import io.circe.parser._
 import cats.effect.IO
 import com.softwaremill.quicklens._
 
-import fui.FunctionalUI.Cmd
+import fui.Cmd
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
