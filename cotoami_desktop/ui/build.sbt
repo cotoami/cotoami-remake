@@ -1,8 +1,8 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.13"
 
-val circeVersion = "0.14.6"
+val circeVersion = "0.14.7"
 val slinkyVersion = "0.7.4"
 
 lazy val cotoami = project
@@ -32,13 +32,13 @@ lazy val cotoami = project
     },
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "2.8.0",
-      "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
+      "org.scala-js" %%% "scala-js-macrotask-executor" % "1.1.1",
       "me.shadaj" %%% "slinky-web" % slinkyVersion,
       "me.shadaj" %%% "slinky-hot" % slinkyVersion,
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion,
-      "org.typelevel" %%% "cats-effect" % "3.4.5",
+      "org.typelevel" %%% "cats-effect" % "3.5.4",
       "com.softwaremill.quicklens" %%% "quicklens" % "1.9.7",
       "tech.sparse" %%% "trail" % "0.3.1",
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
