@@ -26,7 +26,7 @@ impl NodeState {
             // Authenticate and start session
             let client = ds.start_client_node_session(
                 &input.client.uuid,
-                &input.password, // validated to be Some
+                &input.password,
                 Duration::from_secs(session_seconds),
             )?;
             debug!("Client session started: {}", client.node_id);
@@ -49,12 +49,20 @@ impl NodeState {
                 debug!("Client node imported: {}", client.node_id);
             }
 
+            // Root cotonoma
+            let root_cotonoma = if client_as_parent {
+                None
+            } else {
+                ds.root_cotonoma()?
+            };
+
             Ok(ClientNodeSession {
                 session: Session {
                     token: client.session_token.unwrap(),
                     expires_at: client.session_expires_at.unwrap(),
                 },
                 server: ds.local_node()?,
+                server_root_cotonoma: root_cotonoma,
             })
         })
         .await?

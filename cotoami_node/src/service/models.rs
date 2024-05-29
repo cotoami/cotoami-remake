@@ -31,6 +31,7 @@ pub struct CreateClientNodeSession {
     pub password: String,
     pub new_password: Option<String>,
     pub client: Node,
+    // If true, the client requires to become a parent.
     pub as_parent: Option<bool>,
 }
 
@@ -44,6 +45,7 @@ pub struct Session {
 pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
+    pub server_root_cotonoma: Option<(Cotonoma, Coto)>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
