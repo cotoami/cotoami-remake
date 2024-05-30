@@ -15,7 +15,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddServerNode, Server},
+        models::{ConnectServerNode, Server},
         ServiceError,
     },
     state::NodeState,
@@ -64,7 +64,7 @@ async fn add_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Form(form): Form<AddServerNode>,
+    Form(form): Form<ConnectServerNode>,
 ) -> Result<(StatusCode, Content<Server>), ServiceError> {
     state
         .add_server_node(form, Arc::new(operator))

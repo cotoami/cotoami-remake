@@ -130,7 +130,7 @@ pub enum Command {
     CreateClientNodeSession(CreateClientNodeSession),
 
     /// Request to add a new [Server].
-    AddServerNode(AddServerNode),
+    AddServerNode(ConnectServerNode),
 
     /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
     RecentCotonomas {

@@ -10,7 +10,7 @@ use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{AddServerNode, CreateClientNodeSession, Server},
+        models::{ConnectServerNode, CreateClientNodeSession, Server},
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
@@ -19,7 +19,7 @@ use crate::{
 impl NodeState {
     pub(crate) async fn add_server_node(
         &self,
-        input: AddServerNode,
+        input: ConnectServerNode,
         operator: Arc<Operator>,
     ) -> Result<Server, ServiceError> {
         if let Err(errors) = input.validate() {

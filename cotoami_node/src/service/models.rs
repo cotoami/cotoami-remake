@@ -53,7 +53,7 @@ pub struct ClientNodeSession {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct AddServerNode {
+pub struct ConnectServerNode {
     #[validate(required, url)]
     pub url_prefix: Option<String>,
 
