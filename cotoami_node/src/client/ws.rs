@@ -129,8 +129,8 @@ impl HttpClient {
     }
 
     fn ws_url_prefix(&self) -> String {
-        if self.url_prefix().starts_with("http") {
-            self.url_prefix().replacen("http", "ws", 1)
+        if self.url_prefix().scheme().starts_with("http") {
+            self.url_prefix().as_str().replacen("http", "ws", 1)
         } else {
             unreachable!("url_prefix should start with 'http'.");
         }

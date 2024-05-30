@@ -11,20 +11,20 @@ use crate::service::{
 /// An extension trait for [NodeService] that provides shortcut functions for
 /// frequently used requests.
 pub(crate) trait NodeServiceExt: NodeService {
-    async fn chunk_of_changes(&mut self, from: i64) -> Result<ChunkOfChanges> {
+    async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges> {
         let request = Command::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
         response.content::<ChunkOfChanges>()
     }
 
-    async fn post_coto(&mut self, input: CotoInput, post_to: Id<Cotonoma>) -> Result<Coto> {
+    async fn post_coto(&self, input: CotoInput, post_to: Id<Cotonoma>) -> Result<Coto> {
         let request = Command::PostCoto { input, post_to }.into_request();
         let response = self.call(request).await?;
         response.content::<Coto>()
     }
 
     async fn post_cotonoma(
-        &mut self,
+        &self,
         input: CotonomaInput,
         post_to: Id<Cotonoma>,
     ) -> Result<(Cotonoma, Coto)> {

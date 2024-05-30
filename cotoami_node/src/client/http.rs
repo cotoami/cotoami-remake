@@ -18,7 +18,6 @@ use uuid::Uuid;
 
 use crate::service::{
     error::{InputErrors, RequestError},
-    models::Pagination,
     NodeServiceFuture, *,
 };
 
@@ -30,23 +29,23 @@ use crate::service::{
 #[derive(Clone)]
 pub struct HttpClient {
     client: Client,
-    url_prefix: String,
+    url_prefix: Url,
     headers: Arc<RwLock<HeaderMap>>,
 }
 
 impl HttpClient {
-    pub fn new(url_prefix: String) -> Result<Self> {
+    pub fn new(url_prefix: &str) -> Result<Self> {
         let client = Client::builder()
             .default_headers(Self::default_headers())
             .build()?;
         Ok(Self {
             client,
-            url_prefix,
+            url_prefix: Url::parse(url_prefix)?,
             headers: Arc::new(RwLock::new(HeaderMap::new())),
         })
     }
 
-    pub fn url_prefix(&self) -> &str { &self.url_prefix }
+    pub fn url_prefix(&self) -> &Url { &self.url_prefix }
 
     fn default_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -64,31 +63,28 @@ impl HttpClient {
         headers
     }
 
-    fn url(&self, path: &str, query: Option<Vec<(&str, String)>>) -> Url {
-        let mut url = Url::parse(&self.url_prefix).unwrap_or_else(|_| unreachable!());
-        url = url.join(path).unwrap_or_else(|_| unreachable!());
-        if let Some(query) = query {
-            let mut pairs = url.query_pairs_mut();
-            for (name, value) in query.iter() {
-                pairs.append_pair(name, value);
-            }
-        }
-        url
+    fn url(&self, path: &str) -> Url {
+        self.url_prefix
+            .join(path)
+            .unwrap_or_else(|_| unreachable!())
     }
 
-    pub fn get(&self, path: &str, query: Option<Vec<(&str, String)>>) -> RequestBuilder {
-        let url = self.url(path, query);
-        self.client.get(url).headers(self.headers.read().clone())
+    pub fn get(&self, path: &str) -> RequestBuilder {
+        self.client
+            .get(self.url(path))
+            .headers(self.headers.read().clone())
     }
 
     pub fn put(&self, path: &str) -> RequestBuilder {
-        let url = self.url(path, None);
-        self.client.put(url).headers(self.headers.read().clone())
+        self.client
+            .put(self.url(path))
+            .headers(self.headers.read().clone())
     }
 
     pub fn post(&self, path: &str) -> RequestBuilder {
-        let url = self.url(path, None);
-        self.client.post(url).headers(self.headers.read().clone())
+        self.client
+            .post(self.url(path))
+            .headers(self.headers.read().clone())
     }
 
     async fn handle_request(self, request: Request) -> Result<Response> {
@@ -97,53 +93,47 @@ impl HttpClient {
 
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
-            Command::LocalNode => self.get("/api/nodes/local", None),
-            Command::ChunkOfChanges { from } => {
-                self.get("/api/changes", Some(vec![("from", from.to_string())]))
-            }
+            Command::LocalNode => self.get("/api/nodes/local"),
+            Command::ChunkOfChanges { from } => self
+                .get("/api/changes")
+                .query(&[("from", from.to_string())]),
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
-            Command::AddServerNode(input) => self.post(&format!("/api/nodes/servers")).form(&input),
+            Command::TryConnectServerNode(input) => {
+                self.get("/api/nodes/servers/try").query(&input)
+            }
+            Command::AddServerNode(input) => self.post("/api/nodes/servers").form(&input),
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
-                    self.get(
-                        &format!("/api/nodes/{node_id}/cotonomas"),
-                        Some(pagination.as_query()),
-                    )
+                    self.get(&format!("/api/nodes/{node_id}/cotonomas"))
+                        .query(&pagination)
                 } else {
-                    self.get("/api/cotonomas", Some(pagination.as_query()))
+                    self.get("/api/cotonomas").query(&pagination)
                 }
             }
-            Command::Cotonoma { id } => self.get(&format!("/api/cotonomas/{id}"), None),
-            Command::CotonomaDetails { id } => {
-                self.get(&format!("/api/cotonomas/{id}/details"), None)
-            }
+            Command::Cotonoma { id } => self.get(&format!("/api/cotonomas/{id}")),
+            Command::CotonomaDetails { id } => self.get(&format!("/api/cotonomas/{id}/details")),
             Command::CotonomaByName { name, node } => {
                 let encoded_name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
-                self.get(&format!("/api/nodes/{node}/cotonomas/{encoded_name}"), None)
+                self.get(&format!("/api/nodes/{node}/cotonomas/{encoded_name}"))
             }
-            Command::SubCotonomas { id, pagination } => self.get(
-                &format!("/api/cotonomas/{id}/subs"),
-                Some(pagination.as_query()),
-            ),
+            Command::SubCotonomas { id, pagination } => self
+                .get(&format!("/api/cotonomas/{id}/subs"))
+                .query(&pagination),
             Command::RecentCotos {
                 node,
                 cotonoma,
                 pagination,
             } => {
                 if let Some(cotonoma_id) = cotonoma {
-                    self.get(
-                        &format!("/api/cotonomas/{cotonoma_id}/cotos"),
-                        Some(pagination.as_query()),
-                    )
+                    self.get(&format!("/api/cotonomas/{cotonoma_id}/cotos"))
+                        .query(&pagination)
                 } else if let Some(node_id) = node {
-                    self.get(
-                        &format!("/api/nodes/{node_id}/cotos"),
-                        Some(pagination.as_query()),
-                    )
+                    self.get(&format!("/api/nodes/{node_id}/cotos"))
+                        .query(&pagination)
                 } else {
-                    self.get("/api/cotos", Some(pagination.as_query()))
+                    self.get("/api/cotos").query(&pagination)
                 }
             }
             Command::SearchCotos {
@@ -154,25 +144,23 @@ impl HttpClient {
             } => {
                 let encoded_query = utf8_percent_encode(&query, NON_ALPHANUMERIC).to_string();
                 if let Some(cotonoma_id) = cotonoma {
-                    self.get(
-                        &format!("/api/cotonomas/{cotonoma_id}/cotos/search/{encoded_query}"),
-                        Some(pagination.as_query()),
-                    )
+                    self.get(&format!(
+                        "/api/cotonomas/{cotonoma_id}/cotos/search/{encoded_query}"
+                    ))
+                    .query(&pagination)
                 } else if let Some(node_id) = node {
-                    self.get(
-                        &format!("/api/nodes/{node_id}/cotos/search/{encoded_query}"),
-                        Some(pagination.as_query()),
-                    )
+                    self.get(&format!(
+                        "/api/nodes/{node_id}/cotos/search/{encoded_query}"
+                    ))
+                    .query(&pagination)
                 } else {
-                    self.get(
-                        &format!("/api/cotos/search/{encoded_query}"),
-                        Some(pagination.as_query()),
-                    )
+                    self.get(&format!("/api/cotos/search/{encoded_query}"))
+                        .query(&pagination)
                 }
             }
-            Command::GraphFromCoto { coto } => self.get(&format!("/api/cotos/{coto}/graph"), None),
+            Command::GraphFromCoto { coto } => self.get(&format!("/api/cotos/{coto}/graph")),
             Command::GraphFromCotonoma { cotonoma } => {
-                self.get(&format!("/api/cotonomas/{cotonoma}/graph"), None)
+                self.get(&format!("/api/cotonomas/{cotonoma}/graph"))
             }
             Command::PostCoto { input, post_to } => self
                 .post(&format!("/api/cotonomas/{post_to}/cotos"))
@@ -241,7 +229,7 @@ impl Service<Request> for HttpClient {
 }
 
 impl NodeService for HttpClient {
-    fn description(&self) -> &str { self.url_prefix() }
+    fn description(&self) -> &str { self.url_prefix().as_str() }
 }
 
 impl RemoteNodeService for HttpClient {
@@ -252,15 +240,5 @@ impl RemoteNodeService for HttpClient {
             .write()
             .insert(crate::web::SESSION_HEADER_NAME, token);
         Ok(())
-    }
-}
-
-impl Pagination {
-    fn as_query(&self) -> Vec<(&str, String)> {
-        let mut query = vec![("page", self.page.to_string())];
-        if let Some(page_size) = self.page_size {
-            query.push(("page_size", page_size.to_string()));
-        }
-        query
     }
 }

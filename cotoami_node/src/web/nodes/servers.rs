@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     routing::{get, put},
     Extension, Form, Router, TypedHeader,
@@ -15,7 +15,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{ConnectServerNode, Server},
+        models::{ClientNodeSession, ConnectServerNode, Server},
         ServiceError,
     },
     state::NodeState,
@@ -25,6 +25,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(all_server_nodes).post(add_server_node))
+        .route("/try", get(connect_server_node))
         .route("/:node_id", put(update_server_node))
 }
 
@@ -54,6 +55,21 @@ async fn all_server_nodes(
         Ok(Content(servers, accept))
     })
     .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/nodes/servers/try
+/////////////////////////////////////////////////////////////////////////////
+
+async fn connect_server_node(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Query(input): Query<ConnectServerNode>,
+) -> Result<(StatusCode, Content<ClientNodeSession>), ServiceError> {
+    state
+        .connect_server_node(input)
+        .await
+        .map(|(session, _)| (StatusCode::CREATED, Content(session, accept)))
 }
 
 /////////////////////////////////////////////////////////////////////////////

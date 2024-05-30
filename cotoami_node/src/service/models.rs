@@ -46,6 +46,7 @@ pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
     pub server_root_cotonoma: Option<(Cotonoma, Coto)>,
+    pub as_parent: bool,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -60,7 +61,9 @@ pub struct ConnectServerNode {
     #[validate(required)]
     pub password: Option<String>,
 
-    pub as_child: Option<bool>,
+    pub new_password: Option<String>,
+
+    pub server_as_child: Option<bool>,
 }
 
 #[derive(serde::Serialize, new)]

@@ -63,6 +63,7 @@ impl NodeState {
                 },
                 server: ds.local_node()?,
                 server_root_cotonoma: root_cotonoma,
+                as_parent: client_as_parent,
             })
         })
         .await?

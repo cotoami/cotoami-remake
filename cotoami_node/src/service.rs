@@ -129,6 +129,9 @@ pub enum Command {
     /// Request a new [ClientNodeSession].
     CreateClientNodeSession(CreateClientNodeSession),
 
+    /// Request to connect the server node and return a [ClientNodeSession] if succeeded.
+    TryConnectServerNode(ConnectServerNode),
+
     /// Request to add a new [Server].
     AddServerNode(ConnectServerNode),
 

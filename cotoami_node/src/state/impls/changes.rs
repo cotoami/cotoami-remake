@@ -21,7 +21,7 @@ impl NodeState {
     pub(crate) async fn sync_with_parent(
         &self,
         parent_node_id: Id<Node>,
-        mut parent_service: Box<dyn NodeService>,
+        parent_service: Box<dyn NodeService>,
     ) -> Result<Option<(i64, i64)>> {
         info!(
             "Importing the changes from {}",

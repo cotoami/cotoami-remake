@@ -10,13 +10,41 @@ use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{ConnectServerNode, CreateClientNodeSession, Server},
+        models::{ClientNodeSession, ConnectServerNode, CreateClientNodeSession, Server},
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
 };
 
 impl NodeState {
+    pub(crate) async fn connect_server_node(
+        &self,
+        input: ConnectServerNode,
+    ) -> Result<(ClientNodeSession, HttpClient), ServiceError> {
+        if let Err(errors) = input.validate() {
+            return ("connect_server_node", errors).into_result();
+        }
+
+        let url_prefix = input.url_prefix.unwrap_or_else(|| unreachable!());
+        let password = input.password.unwrap_or_else(|| unreachable!());
+        let server_as_child = input.server_as_child.unwrap_or(false);
+
+        let session_request = CreateClientNodeSession {
+            password,
+            new_password: input.new_password,
+            client: self.local_node().await?,
+            as_parent: Some(server_as_child),
+        };
+
+        let mut http_client = HttpClient::new(&url_prefix)?;
+        let session = http_client
+            .create_client_node_session(session_request)
+            .await?;
+        info!("Successfully logged in to {}", http_client.url_prefix());
+
+        Ok((session, http_client))
+    }
+
     pub(crate) async fn add_server_node(
         &self,
         input: ConnectServerNode,
@@ -26,26 +54,11 @@ impl NodeState {
             return ("add_server_node", errors).into_result();
         }
 
-        // Inputs
-        let url_prefix = input.url_prefix.unwrap_or_else(|| unreachable!());
-        let password = input.password.unwrap_or_else(|| unreachable!());
-        let server_as_child = input.as_child.unwrap_or(false);
+        // Save the password before moving the `input`
+        let password = input.password.clone().unwrap_or_else(|| unreachable!());
 
-        // Get the local node
-        let db = self.db().clone();
-        let local_node = spawn_blocking(move || db.new_session()?.local_node()).await??;
-
-        // Attempt to log into the server node
-        let mut http_client = HttpClient::new(url_prefix)?;
-        let client_session = http_client
-            .create_client_node_session(CreateClientNodeSession {
-                password: password.clone(),
-                new_password: None, // TODO: change the password on the first login
-                client: local_node,
-                as_parent: Some(server_as_child),
-            })
-            .await?;
-        info!("Successfully logged in to {}", http_client.url_prefix());
+        // TODO: change the password on adding the node
+        let (client_session, http_client) = self.connect_server_node(input).await?;
         let server_id = client_session.server.uuid;
 
         // Register the server node
@@ -62,7 +75,7 @@ impl NodeState {
                 }
 
                 // Database role
-                let server_db_role = if server_as_child {
+                let server_db_role = if client_session.as_parent {
                     NewDatabaseRole::Child {
                         as_owner: false,
                         can_edit_links: false,

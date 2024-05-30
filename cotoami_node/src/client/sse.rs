@@ -43,7 +43,7 @@ impl SseClient {
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 
-    fn url_prefix(&self) -> &str { self.http_client.url_prefix() }
+    fn url_prefix(&self) -> &str { self.http_client.url_prefix().as_str() }
 
     fn node_state(&self) -> &NodeState { &self.state.node_state }
 
@@ -51,8 +51,7 @@ impl SseClient {
         // To inherit request headers (ex. session token) from the `http_client`,
         // an event source has to be constructed via [EventSource::new] with a
         // [RequestBuilder] constructed by the `http_client`.
-        EventSource::new(self.http_client.get("/api/events", None))
-            .unwrap_or_else(|_| unreachable!())
+        EventSource::new(self.http_client.get("/api/events")).unwrap_or_else(|_| unreachable!())
     }
 
     pub fn connect(&mut self) {
