@@ -42,7 +42,8 @@ object FormCoto {
       editorBeingResized: Boolean = false,
       imeActive: Boolean = false,
       autoSave: Boolean = false,
-      inPreview: Boolean = false
+      inPreview: Boolean = false,
+      posting: Boolean = false
   ) {
     def editorId: String = s"${this.id}-editor"
 
@@ -55,10 +56,11 @@ object FormCoto {
         case CotonomaForm(name, _) => name.isBlank
       }
 
-    def readyToPost: Boolean = !this.isBlank && (this.form match {
-      case form: CotoForm              => form.validate.validated
-      case CotonomaForm(_, validation) => validation.validated
-    })
+    def readyToPost: Boolean =
+      !this.isBlank && !this.posting && (this.form match {
+        case form: CotoForm              => form.validate.validated
+        case CotonomaForm(_, validation) => validation.validated
+      })
 
     def clear: Model =
       this.copy(
@@ -372,7 +374,7 @@ object FormCoto {
 
       case (Post, form: CotoForm, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
-        model.clear match {
+        model.copy(posting = true).clear match {
           case model =>
             (
               model,
@@ -388,7 +390,7 @@ object FormCoto {
 
       case (Post, form: CotonomaForm, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
-        model.clear match {
+        model.copy(posting = true).clear match {
           case model =>
             (
               model,
@@ -401,7 +403,7 @@ object FormCoto {
 
       case (CotoPosted(postId, Right(cotoJson)), _, _) =>
         (
-          model,
+          model.copy(posting = false),
           waitingPosts.remove(postId),
           log.info("Coto posted.", Some(cotoJson.uuid)),
           Seq.empty
@@ -410,7 +412,7 @@ object FormCoto {
       case (CotoPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
         (
-          model,
+          model.copy(posting = false),
           waitingPosts.setError(
             postId,
             s"Couldn't post this coto: ${error}"
@@ -422,7 +424,7 @@ object FormCoto {
 
       case (CotonomaPosted(postId, Right(cotonoma)), _, _) =>
         (
-          model,
+          model.copy(posting = false),
           waitingPosts.remove(postId),
           log.info(
             "Cotonoma posted.",
@@ -434,7 +436,7 @@ object FormCoto {
       case (CotonomaPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
         (
-          model,
+          model.copy(posting = false),
           waitingPosts.setError(
             postId,
             s"Couldn't post this cotonoma: ${error}"
@@ -646,6 +648,7 @@ object FormCoto {
           button(
             className := "post",
             disabled := !model.readyToPost,
+            aria - "busy" := model.posting.toString(),
             onClick := (_ => dispatch(Post))
           )(
             "Post to ",
