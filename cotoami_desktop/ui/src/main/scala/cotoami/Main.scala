@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.util.chaining._
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
@@ -97,7 +98,8 @@ object Main {
             .modify(_.context).using(
               _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
             )
-            .modify(_.modalWelcome.baseFolder).setTo(systemInfo.app_data_dir)
+            .modify(_.modal.each.when[Modal.WelcomeModel].model.baseFolder)
+            .setTo(systemInfo.app_data_dir)
             .info(
               "SystemInfo fetched.",
               Some(SystemInfoJson.debug(systemInfo))
@@ -120,7 +122,7 @@ object Main {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.domain).using(_.init(info))
-          .modify(_.modalWelcome.processing).setTo(false)
+          .modify(_.modal).setTo(None)
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
@@ -133,8 +135,8 @@ object Main {
         (
           model
             .error(e.message, Option(e))
-            .modify(_.modalWelcome.processing).setTo(false)
-            .modify(_.modalWelcome.systemError).setTo(Some(e.message)),
+            .modify(_.modal.each.when[Modal.WelcomeModel].model)
+            .using(_.copy(processing = false, systemError = Some(e.message))),
           Seq.empty
         )
 
@@ -256,11 +258,13 @@ object Main {
         )
       }
 
-      case ModalWelcomeMsg(subMsg) => {
-        val (modalWelcome, cmds) =
-          ModalWelcome.update(subMsg, model.modalWelcome)
-        (model.copy(modalWelcome = modalWelcome), cmds)
-      }
+      case ModalMsg(subMsg) =>
+        model.modal match {
+          case Some(modal) =>
+            Modal.update(subMsg, modal)
+              .pipe(pair => (model.copy(modal = Some(pair._1)), pair._2))
+          case None => (model, Seq.empty)
+        }
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
@@ -315,6 +319,6 @@ object Main {
         Some(ViewLog(model.log, dispatch))
       else
         None,
-      modal(model, dispatch)
+      Modal(model, dispatch)
     )
 }

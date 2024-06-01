@@ -6,6 +6,7 @@ import org.scalajs.dom.URL
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
+import cotoami.subparts.Modal
 
 sealed trait Msg
 
@@ -49,7 +50,7 @@ case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
 case class SectionTimelineMsg(subMsg: subparts.SectionTimeline.Msg) extends Msg
 case class SectionTraversalsMsg(subMsg: subparts.SectionTraversals.Msg)
     extends Msg
-case class ModalWelcomeMsg(subMsg: subparts.ModalWelcome.Msg) extends Msg
+case class ModalMsg(subMsg: Modal.Msg) extends Msg
 
 object Msg {
   lazy val FetchMoreRecentCotonomas =

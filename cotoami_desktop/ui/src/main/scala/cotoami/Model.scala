@@ -18,6 +18,7 @@ import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.subparts._
+import cotoami.subparts.Modal
 import cotoami.subparts.FormCoto.WaitingPosts
 
 case class Model(
@@ -45,7 +46,7 @@ case class Model(
     // subparts
     flowInput: FormCoto.Model,
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
-    modalWelcome: ModalWelcome.Model = ModalWelcome.Model()
+    modal: Option[Modal.Model] = Modal.Model.default
 ) {
   def path: String = this.url.pathname + this.url.search + this.url.hash
 

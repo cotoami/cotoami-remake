@@ -8,19 +8,6 @@ import cotoami.backend.Node
 
 package object subparts {
 
-  def modal(model: Model, dispatch: Msg => Unit): Option[ReactElement] =
-    if (model.domain.nodes.local.isEmpty) {
-      model.systemInfo.map(info =>
-        ModalWelcome(
-          model.modalWelcome,
-          info.recent_databases.toSeq,
-          dispatch
-        )
-      )
-    } else {
-      None
-    }
-
   def nodeImg(node: Node): ReactElement =
     img(
       className := "node-icon",

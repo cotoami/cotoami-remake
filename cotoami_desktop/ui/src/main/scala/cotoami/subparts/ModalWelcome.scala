@@ -5,7 +5,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui._
-import cotoami.{log_error, tauri, ModalWelcomeMsg}
+import cotoami.{log_error, tauri}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
 import cotoami.backend.{DatabaseOpenedJson, ErrorJson, Node}
@@ -38,7 +38,12 @@ object ModalWelcome {
         this.folderNameValidation.validated
   }
 
-  sealed trait Msg
+  sealed trait Msg {
+    def toAppMsg: cotoami.Msg = cotoami.ModalMsg(Modal.WelcomeMsg(this))
+  }
+
+  private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
+    tagger andThen Modal.WelcomeMsg andThen cotoami.ModalMsg
 
   // New database
   case class DatabaseNameInput(query: String) extends Msg
@@ -72,7 +77,7 @@ object ModalWelcome {
                 "Select a base folder",
                 Some(model.baseFolder)
               )
-              .map(BaseFolderSelected andThen ModalWelcomeMsg)
+              .map(toAppMsg(BaseFolderSelected(_)))
           )
         )
 
@@ -124,7 +129,7 @@ object ModalWelcome {
                 "Select a database folder",
                 None
               )
-              .map(DatabaseFolderSelected andThen ModalWelcomeMsg)
+              .map(toAppMsg(DatabaseFolderSelected(_)))
           )
         )
 
@@ -180,7 +185,7 @@ object ModalWelcome {
                 folderName = model.folderName
               )
           )
-          .map(NewFolderValidation andThen ModalWelcomeMsg)
+          .map(toAppMsg(NewFolderValidation(_)))
       )
     else
       Seq()
@@ -209,7 +214,7 @@ object ModalWelcome {
                 databaseFolder = model.databaseFolder
               )
           )
-          .map(DatabaseFolderValidation andThen ModalWelcomeMsg)
+          .map(toAppMsg(DatabaseFolderValidation(_)))
       )
     else
       Seq()
@@ -266,9 +271,7 @@ object ModalWelcome {
                   className := "database default",
                   title := db.name,
                   disabled := model.processing,
-                  onClick := (_ =>
-                    dispatch(ModalWelcomeMsg(OpenDatabaseIn(db.folder)))
-                  )
+                  onClick := (_ => dispatch(OpenDatabaseIn(db.folder).toAppMsg))
                 )(
                   img(
                     className := "node-icon",
@@ -303,7 +306,7 @@ object ModalWelcome {
             id := "select-base-folder",
             `type` := "button",
             className := "secondary",
-            onClick := (_ => dispatch(ModalWelcomeMsg(SelectBaseFolder)))
+            onClick := (_ => dispatch(SelectBaseFolder.toAppMsg))
           )(
             materialSymbol("folder")
           )
@@ -321,7 +324,7 @@ object ModalWelcome {
             // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
             // (onChange is almost the same as onInput in React)
             onChange := ((e) =>
-              dispatch(ModalWelcomeMsg(FolderNameInput(e.target.value)))
+              dispatch(FolderNameInput(e.target.value).toAppMsg)
             )
           ),
           Validation.sectionValidationError(model.folderNameValidation)
@@ -332,7 +335,7 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.validateNewDatabaseInputs || model.processing,
-            onClick := (_ => dispatch(ModalWelcomeMsg(CreateDatabase)))
+            onClick := (_ => dispatch(CreateDatabase.toAppMsg))
           )(
             "Create"
           )
@@ -356,7 +359,7 @@ object ModalWelcome {
           Validation.ariaInvalid(errors),
           // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
           onChange := ((e) =>
-            dispatch(ModalWelcomeMsg(DatabaseNameInput(e.target.value)))
+            dispatch(DatabaseNameInput(e.target.value).toAppMsg)
           )
         ),
         Validation.sectionValidationError(errors)
@@ -380,7 +383,7 @@ object ModalWelcome {
               id := "select-database-folder",
               `type` := "button",
               className := "secondary",
-              onClick := (_ => dispatch(ModalWelcomeMsg(SelectDatabaseFolder)))
+              onClick := (_ => dispatch(SelectDatabaseFolder.toAppMsg))
             )(
               materialSymbol("folder")
             )
@@ -393,7 +396,7 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.databaseFolderValidation.validated || model.processing,
-            onClick := (_ => dispatch(ModalWelcomeMsg(OpenDatabase)))
+            onClick := (_ => dispatch(OpenDatabase.toAppMsg))
           )("Open")
         )
       )
