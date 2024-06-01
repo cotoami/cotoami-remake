@@ -40,8 +40,7 @@ object ModalWelcome {
   }
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg =
-      this.pipe(Modal.WelcomeMsg).pipe(cotoami.ModalMsg)
+    def toAppMsg: cotoami.Msg = Modal.WelcomeMsg(this).pipe(cotoami.ModalMsg)
   }
 
   private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =

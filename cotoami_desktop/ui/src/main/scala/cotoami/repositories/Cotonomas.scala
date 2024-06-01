@@ -118,7 +118,7 @@ object Cotonomas {
 
   sealed trait Msg {
     def toAppMsg: cotoami.Msg =
-      this.pipe(Domain.CotonomasMsg).pipe(cotoami.DomainMsg)
+      Domain.CotonomasMsg(this).pipe(cotoami.DomainMsg)
   }
 
   private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
