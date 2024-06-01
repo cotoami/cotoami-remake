@@ -252,7 +252,7 @@ object Domain {
     def asAppMsg: cotoami.Msg = cotoami.DomainMsg(this)
   }
 
-  private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
+  private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
     tagger andThen cotoami.DomainMsg
 
   case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
@@ -337,7 +337,7 @@ object Domain {
 
   def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
     Commands.send(Commands.CotonomaDetails(id))
-      .map(toAppMsg(CotonomaDetailsFetched))
+      .map(appMsgTagger(CotonomaDetailsFetched))
 
   def fetchTimeline(
       nodeId: Option[Id[Node]],
@@ -349,13 +349,13 @@ object Domain {
       Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
     ).getOrElse(
       Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
-    ).map(toAppMsg(TimelineFetched))
+    ).map(appMsgTagger(TimelineFetched))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[cotoami.Msg] =
     Commands.send(Commands.GraphFromCoto(coto))
-      .map(toAppMsg(CotoGraphFetched))
+      .map(appMsgTagger(CotoGraphFetched))
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
     Commands.send(Commands.GraphFromCotonoma(cotonoma))
-      .map(toAppMsg(CotoGraphFetched))
+      .map(appMsgTagger(CotoGraphFetched))
 }

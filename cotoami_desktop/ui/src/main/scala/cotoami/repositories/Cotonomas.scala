@@ -121,7 +121,7 @@ object Cotonomas {
       Domain.CotonomasMsg(this).pipe(cotoami.DomainMsg)
   }
 
-  private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
+  private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
     tagger andThen Domain.CotonomasMsg andThen cotoami.DomainMsg
 
   case class OneFetched(result: Either[ErrorJson, CotonomaJson]) extends Msg
@@ -193,16 +193,16 @@ object Cotonomas {
     }
 
   def fetchOne(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.Cotonoma(id)).map(toAppMsg(OneFetched))
+    Commands.send(Commands.Cotonoma(id)).map(appMsgTagger(OneFetched))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex))
-      .map(toAppMsg(RecentFetched))
+      .map(appMsgTagger(RecentFetched))
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
     Commands.send(Commands.SubCotonomas(id, pageIndex))
-      .map(toAppMsg(SubsFetched))
+      .map(appMsgTagger(SubsFetched))
 }

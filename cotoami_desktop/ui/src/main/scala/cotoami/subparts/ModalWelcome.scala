@@ -43,7 +43,7 @@ object ModalWelcome {
     def asAppMsg: cotoami.Msg = Modal.WelcomeMsg(this).pipe(cotoami.ModalMsg)
   }
 
-  private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
+  private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
     tagger andThen Modal.WelcomeMsg andThen cotoami.ModalMsg
 
   // New database
@@ -78,7 +78,7 @@ object ModalWelcome {
                 "Select a base folder",
                 Some(model.baseFolder)
               )
-              .map(toAppMsg(BaseFolderSelected(_)))
+              .map(appMsgTagger(BaseFolderSelected(_)))
           )
         )
 
@@ -130,7 +130,7 @@ object ModalWelcome {
                 "Select a database folder",
                 None
               )
-              .map(toAppMsg(DatabaseFolderSelected(_)))
+              .map(appMsgTagger(DatabaseFolderSelected(_)))
           )
         )
 
@@ -186,7 +186,7 @@ object ModalWelcome {
                 folderName = model.folderName
               )
           )
-          .map(toAppMsg(NewFolderValidation(_)))
+          .map(appMsgTagger(NewFolderValidation(_)))
       )
     else
       Seq()
@@ -215,7 +215,7 @@ object ModalWelcome {
                 databaseFolder = model.databaseFolder
               )
           )
-          .map(toAppMsg(DatabaseFolderValidation(_)))
+          .map(appMsgTagger(DatabaseFolderValidation(_)))
       )
     else
       Seq()
