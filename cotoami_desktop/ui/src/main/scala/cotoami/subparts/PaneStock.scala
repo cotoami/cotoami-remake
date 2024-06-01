@@ -317,7 +317,8 @@ object PaneStock {
               tip = "Display links",
               tipPlacement = "bottom",
               symbol = "view_headline",
-              onClick = (() => dispatch(Msg.FetchGraphFromCoto(coto.id)))
+              onClick =
+                (() => dispatch(Domain.FetchGraphFromCoto(coto.id).toAppMsg))
             )
           }
         )
