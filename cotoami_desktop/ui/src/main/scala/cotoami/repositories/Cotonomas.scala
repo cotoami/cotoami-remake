@@ -1,9 +1,11 @@
 package cotoami.repositories
 
+import scala.util.chaining._
 import scala.scalajs.js
 import com.softwaremill.quicklens._
+
 import fui._
-import cotoami.{log_info, DomainMsg}
+import cotoami.log_info
 import cotoami.backend._
 
 case class Cotonomas(
@@ -114,7 +116,14 @@ object Cotonomas {
   def toMap(jsons: js.Array[CotonomaJson]): Map[Id[Cotonoma], Cotonoma] =
     jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
 
-  sealed trait Msg
+  sealed trait Msg {
+    def toAppMsg: cotoami.Msg =
+      this.pipe(Domain.CotonomasMsg).pipe(cotoami.DomainMsg)
+  }
+
+  private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
+    tagger andThen Domain.CotonomasMsg andThen cotoami.DomainMsg
+
   case class OneFetched(result: Either[ErrorJson, CotonomaJson]) extends Msg
   case object FetchMoreRecent extends Msg
   case class RecentFetched(
@@ -184,20 +193,16 @@ object Cotonomas {
     }
 
   def fetchOne(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.Cotonoma(id)).map(
-      OneFetched andThen Domain.CotonomasMsg andThen DomainMsg
-    )
+    Commands.send(Commands.Cotonoma(id)).map(toAppMsg(OneFetched))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd[cotoami.Msg] =
-    Commands.send(Commands.RecentCotonomas(nodeId, pageIndex)).map(
-      RecentFetched andThen Domain.CotonomasMsg andThen DomainMsg
-    )
+    Commands.send(Commands.RecentCotonomas(nodeId, pageIndex))
+      .map(toAppMsg(RecentFetched))
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[cotoami.Msg] =
-    Commands.send(Commands.SubCotonomas(id, pageIndex)).map(
-      SubsFetched andThen Domain.CotonomasMsg andThen DomainMsg
-    )
+    Commands.send(Commands.SubCotonomas(id, pageIndex))
+      .map(toAppMsg(SubsFetched))
 }

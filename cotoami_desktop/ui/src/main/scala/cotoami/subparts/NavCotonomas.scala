@@ -6,7 +6,7 @@ import slinky.web.html._
 import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea}
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.repositories.Domain
+import cotoami.repositories.{Cotonomas, Domain}
 
 object NavCotonomas {
   val PaneName = "NavCotonomas"
@@ -44,7 +44,7 @@ object NavCotonomas {
           scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Msg.FetchMoreRecentCotonomas)
+          onScrollToBottom = () => dispatch(Cotonomas.FetchMoreRecent.toAppMsg)
         )(
           cotonomas.selected.map(
             sectionCurrent(_, model.domain, dispatch)
@@ -96,7 +96,9 @@ object NavCotonomas {
                 button(
                   className := "more-sub-cotonomas default",
                   onClick := ((e) =>
-                    dispatch(Msg.FetchMoreSubCotonomas(selectedCotonoma.id))
+                    dispatch(
+                      Cotonomas.FetchMoreSubs(selectedCotonoma.id).toAppMsg
+                    )
                   )
                 )(
                   materialSymbol("more_horiz")

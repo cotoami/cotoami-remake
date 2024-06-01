@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.util.chaining._
 import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -39,7 +40,8 @@ object ModalWelcome {
   }
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg = cotoami.ModalMsg(Modal.WelcomeMsg(this))
+    def toAppMsg: cotoami.Msg =
+      this.pipe(Modal.WelcomeMsg).pipe(cotoami.ModalMsg)
   }
 
   private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =

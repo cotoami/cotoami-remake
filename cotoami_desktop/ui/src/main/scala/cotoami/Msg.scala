@@ -1,6 +1,5 @@
 package cotoami
 
-import scala.util.chaining._
 import org.scalajs.dom.URL
 
 import cotoami.utils.Log
@@ -51,20 +50,3 @@ case class SectionTimelineMsg(subMsg: subparts.SectionTimeline.Msg) extends Msg
 case class SectionTraversalsMsg(subMsg: subparts.SectionTraversals.Msg)
     extends Msg
 case class ModalMsg(subMsg: Modal.Msg) extends Msg
-
-object Msg {
-  lazy val FetchMoreRecentCotonomas =
-    Cotonomas.FetchMoreRecent.pipe(Domain.CotonomasMsg).pipe(DomainMsg)
-
-  def FetchMoreSubCotonomas(id: Id[Cotonoma]) =
-    Cotonomas.FetchMoreSubs(id).pipe(Domain.CotonomasMsg).pipe(DomainMsg)
-
-  lazy val FetchMoreTimeline =
-    Cotos.FetchMoreTimeline.pipe(Domain.CotosMsg).pipe(DomainMsg)
-
-  def FetchGraphFromCoto(coto: Id[Coto]) =
-    Domain.FetchGraphFromCoto(coto).pipe(DomainMsg)
-
-  def OpenTraversal(start: Id[Coto]) =
-    subparts.SectionTraversals.OpenTraversal(start).pipe(SectionTraversalsMsg)
-}

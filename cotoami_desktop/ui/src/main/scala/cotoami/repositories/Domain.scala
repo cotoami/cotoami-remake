@@ -5,7 +5,7 @@ import scala.collection.immutable.HashSet
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{log_info, DomainMsg}
+import cotoami.log_info
 import cotoami.backend._
 
 case class Domain(
@@ -248,7 +248,12 @@ case class Domain(
 
 object Domain {
 
-  sealed trait Msg
+  sealed trait Msg {
+    def toAppMsg: cotoami.Msg = cotoami.DomainMsg(this)
+  }
+
+  private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
+    tagger andThen cotoami.DomainMsg
 
   case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
   case class CotosMsg(subMsg: Cotos.Msg) extends Msg
@@ -331,9 +336,8 @@ object Domain {
     }
 
   def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.CotonomaDetails(id)).map(
-      CotonomaDetailsFetched andThen DomainMsg
-    )
+    Commands.send(Commands.CotonomaDetails(id))
+      .map(toAppMsg(CotonomaDetailsFetched))
 
   def fetchTimeline(
       nodeId: Option[Id[Node]],
@@ -345,17 +349,13 @@ object Domain {
       Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
     ).getOrElse(
       Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
-    ).map(
-      TimelineFetched andThen DomainMsg
-    )
+    ).map(toAppMsg(TimelineFetched))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.GraphFromCoto(coto)).map(
-      CotoGraphFetched andThen DomainMsg
-    )
+    Commands.send(Commands.GraphFromCoto(coto))
+      .map(toAppMsg(CotoGraphFetched))
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
-    Commands.send(Commands.GraphFromCotonoma(cotonoma)).map(
-      CotoGraphFetched andThen DomainMsg
-    )
+    Commands.send(Commands.GraphFromCotonoma(cotonoma))
+      .map(toAppMsg(CotoGraphFetched))
 }

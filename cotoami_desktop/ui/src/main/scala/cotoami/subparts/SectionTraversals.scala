@@ -13,7 +13,6 @@ import com.softwaremill.quicklens._
 import java.time.Instant
 
 import fui.Cmd
-import cotoami.SectionTraversalsMsg
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
 import cotoami.components.{
@@ -83,7 +82,10 @@ object SectionTraversals {
       }).getOrElse(false)
   }
 
-  sealed trait Msg
+  sealed trait Msg {
+    def toAppMsg: cotoami.Msg = cotoami.SectionTraversalsMsg(this)
+  }
+
   case class OpenTraversal(start: Id[Coto]) extends Msg
   case class CloseTraversal(traversalIndex: Int) extends Msg
   case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])
@@ -173,9 +175,7 @@ object SectionTraversals {
       header(className := "tools")(
         button(
           className := "close-traversal default",
-          onClick := (_ =>
-            dispatch(SectionTraversalsMsg(CloseTraversal(traversal._2)))
-          )
+          onClick := (_ => dispatch(CloseTraversal(traversal._2).toAppMsg))
         )(
           materialSymbol("close")
         )
@@ -220,9 +220,7 @@ object SectionTraversals {
                 className := "parent default",
                 onClick := (_ =>
                   dispatch(
-                    SectionTraversalsMsg(
-                      StepToParent(traversalIndex, parent.id)
-                    )
+                    StepToParent(traversalIndex, parent.id).toAppMsg
                   )
                 )
               )(parent.abbreviate)
@@ -328,13 +326,11 @@ object SectionTraversals {
           },
           // Traverse button
           Option.when(!traversed && coto.outgoingLinks > 0) {
-            val stepMsg = SectionTraversalsMsg(
-              Step(
-                traversal._2,
-                stepIndex.map(_ + 1).getOrElse(0),
-                coto.id
-              )
-            )
+            val stepMsg = Step(
+              traversal._2,
+              stepIndex.map(_ + 1).getOrElse(0),
+              coto.id
+            ).toAppMsg
             div(className := "traverse")(
               ToolButton(
                 classes = "traverse",

@@ -1,6 +1,8 @@
 package cotoami.repositories
 
+import scala.util.chaining._
 import com.softwaremill.quicklens._
+
 import fui._
 import cotoami.backend._
 
@@ -50,7 +52,11 @@ case class Cotos(
 
 object Cotos {
 
-  sealed trait Msg
+  sealed trait Msg {
+    def toAppMsg: cotoami.Msg =
+      this.pipe(Domain.CotosMsg).pipe(cotoami.DomainMsg)
+  }
+
   case object FetchMoreTimeline extends Msg
 
   def update(
