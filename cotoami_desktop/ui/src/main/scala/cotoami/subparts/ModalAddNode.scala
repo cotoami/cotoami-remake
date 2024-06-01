@@ -3,6 +3,8 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import cotoami.CloseModal
+
 object ModalAddNode {
 
   case class Model(
@@ -22,6 +24,10 @@ object ModalAddNode {
     )(
       article()(
         header()(
+          button(
+            className := "close default",
+            onClick := (_ => dispatch(CloseModal))
+          ),
           h1()("Add Node")
         ),
         div(className := "body")(

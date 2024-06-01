@@ -49,4 +49,5 @@ case class FlowInputMsg(subMsg: FormCoto.Msg) extends Msg
 case class SectionTimelineMsg(subMsg: SectionTimeline.Msg) extends Msg
 case class SectionTraversalsMsg(subMsg: SectionTraversals.Msg) extends Msg
 case class OpenModal(modal: Modal.Model) extends Msg
+case object CloseModal extends Msg
 case class ModalMsg(subMsg: Modal.Msg) extends Msg
