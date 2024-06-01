@@ -53,7 +53,7 @@ case class Cotos(
 object Cotos {
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg = Domain.CotosMsg(this).pipe(cotoami.DomainMsg)
+    def asAppMsg: cotoami.Msg = Domain.CotosMsg(this).pipe(cotoami.DomainMsg)
   }
 
   case object FetchMoreTimeline extends Msg

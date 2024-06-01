@@ -184,7 +184,7 @@ object ViewCoto {
             button(
               className := "parent default",
               onClick := (_ =>
-                dispatch(SectionTraversals.OpenTraversal(parent.id).toAppMsg)
+                dispatch(SectionTraversals.OpenTraversal(parent.id).asAppMsg)
               )
             )(parent.abbreviate)
           )
@@ -205,7 +205,7 @@ object ViewCoto {
           tipPlacement = tipPlacement,
           symbol = "view_headline",
           onClick =
-            (() => dispatch(SectionTraversals.OpenTraversal(coto.id).toAppMsg))
+            (() => dispatch(SectionTraversals.OpenTraversal(coto.id).asAppMsg))
         )
       )
     }

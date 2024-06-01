@@ -117,7 +117,7 @@ object Cotonomas {
     jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg =
+    def asAppMsg: cotoami.Msg =
       Domain.CotonomasMsg(this).pipe(cotoami.DomainMsg)
   }
 

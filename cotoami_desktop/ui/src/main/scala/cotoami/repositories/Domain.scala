@@ -249,7 +249,7 @@ case class Domain(
 object Domain {
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg = cotoami.DomainMsg(this)
+    def asAppMsg: cotoami.Msg = cotoami.DomainMsg(this)
   }
 
   private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =

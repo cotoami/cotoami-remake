@@ -44,7 +44,7 @@ object NavCotonomas {
           scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Cotonomas.FetchMoreRecent.toAppMsg)
+          onScrollToBottom = () => dispatch(Cotonomas.FetchMoreRecent.asAppMsg)
         )(
           cotonomas.selected.map(
             sectionCurrent(_, model.domain, dispatch)
@@ -97,7 +97,7 @@ object NavCotonomas {
                   className := "more-sub-cotonomas default",
                   onClick := ((e) =>
                     dispatch(
-                      Cotonomas.FetchMoreSubs(selectedCotonoma.id).toAppMsg
+                      Cotonomas.FetchMoreSubs(selectedCotonoma.id).asAppMsg
                     )
                   )
                 )(

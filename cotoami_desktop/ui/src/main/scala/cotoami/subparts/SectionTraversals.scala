@@ -83,7 +83,7 @@ object SectionTraversals {
   }
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg = cotoami.SectionTraversalsMsg(this)
+    def asAppMsg: cotoami.Msg = cotoami.SectionTraversalsMsg(this)
   }
 
   case class OpenTraversal(start: Id[Coto]) extends Msg
@@ -175,7 +175,7 @@ object SectionTraversals {
       header(className := "tools")(
         button(
           className := "close-traversal default",
-          onClick := (_ => dispatch(CloseTraversal(traversal._2).toAppMsg))
+          onClick := (_ => dispatch(CloseTraversal(traversal._2).asAppMsg))
         )(
           materialSymbol("close")
         )
@@ -220,7 +220,7 @@ object SectionTraversals {
                 className := "parent default",
                 onClick := (_ =>
                   dispatch(
-                    StepToParent(traversalIndex, parent.id).toAppMsg
+                    StepToParent(traversalIndex, parent.id).asAppMsg
                   )
                 )
               )(parent.abbreviate)
@@ -330,7 +330,7 @@ object SectionTraversals {
               traversal._2,
               stepIndex.map(_ + 1).getOrElse(0),
               coto.id
-            ).toAppMsg
+            ).asAppMsg
             div(className := "traverse")(
               ToolButton(
                 classes = "traverse",

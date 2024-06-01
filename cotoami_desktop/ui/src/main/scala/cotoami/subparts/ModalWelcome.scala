@@ -40,7 +40,7 @@ object ModalWelcome {
   }
 
   sealed trait Msg {
-    def toAppMsg: cotoami.Msg = Modal.WelcomeMsg(this).pipe(cotoami.ModalMsg)
+    def asAppMsg: cotoami.Msg = Modal.WelcomeMsg(this).pipe(cotoami.ModalMsg)
   }
 
   private def toAppMsg[T](tagger: T => Msg): T => cotoami.Msg =
@@ -272,7 +272,7 @@ object ModalWelcome {
                   className := "database default",
                   title := db.name,
                   disabled := model.processing,
-                  onClick := (_ => dispatch(OpenDatabaseIn(db.folder).toAppMsg))
+                  onClick := (_ => dispatch(OpenDatabaseIn(db.folder).asAppMsg))
                 )(
                   img(
                     className := "node-icon",
@@ -307,7 +307,7 @@ object ModalWelcome {
             id := "select-base-folder",
             `type` := "button",
             className := "secondary",
-            onClick := (_ => dispatch(SelectBaseFolder.toAppMsg))
+            onClick := (_ => dispatch(SelectBaseFolder.asAppMsg))
           )(
             materialSymbol("folder")
           )
@@ -325,7 +325,7 @@ object ModalWelcome {
             // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
             // (onChange is almost the same as onInput in React)
             onChange := ((e) =>
-              dispatch(FolderNameInput(e.target.value).toAppMsg)
+              dispatch(FolderNameInput(e.target.value).asAppMsg)
             )
           ),
           Validation.sectionValidationError(model.folderNameValidation)
@@ -336,7 +336,7 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.validateNewDatabaseInputs || model.processing,
-            onClick := (_ => dispatch(CreateDatabase.toAppMsg))
+            onClick := (_ => dispatch(CreateDatabase.asAppMsg))
           )(
             "Create"
           )
@@ -360,7 +360,7 @@ object ModalWelcome {
           Validation.ariaInvalid(errors),
           // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
           onChange := ((e) =>
-            dispatch(DatabaseNameInput(e.target.value).toAppMsg)
+            dispatch(DatabaseNameInput(e.target.value).asAppMsg)
           )
         ),
         Validation.sectionValidationError(errors)
@@ -384,7 +384,7 @@ object ModalWelcome {
               id := "select-database-folder",
               `type` := "button",
               className := "secondary",
-              onClick := (_ => dispatch(SelectDatabaseFolder.toAppMsg))
+              onClick := (_ => dispatch(SelectDatabaseFolder.asAppMsg))
             )(
               materialSymbol("folder")
             )
@@ -397,7 +397,7 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.databaseFolderValidation.validated || model.processing,
-            onClick := (_ => dispatch(OpenDatabase.toAppMsg))
+            onClick := (_ => dispatch(OpenDatabase.asAppMsg))
           )("Open")
         )
       )
