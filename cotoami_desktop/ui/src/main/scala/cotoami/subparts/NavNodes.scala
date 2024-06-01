@@ -3,7 +3,14 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{DeselectNode, Model, Msg, OpenOrClosePane, SelectNode}
+import cotoami.{
+  DeselectNode,
+  Model,
+  Msg,
+  OpenModal,
+  OpenOrClosePane,
+  SelectNode
+}
 import cotoami.components.{materialSymbol, optionalClasses}
 import cotoami.backend.Node
 import cotoami.repositories.Nodes
@@ -45,14 +52,15 @@ object NavNodes {
         data - "tooltip" := "All nodes",
         data - "placement" := "right",
         disabled := nodes.selected.isEmpty,
-        onClick := ((e) => dispatch(DeselectNode))
+        onClick := (_ => dispatch(DeselectNode))
       )(
         materialSymbol("stacks")
       ),
       button(
         className := "add-node default",
         data - "tooltip" := "Add node",
-        data - "placement" := "right"
+        data - "placement" := "right",
+        onClick := (_ => dispatch(OpenModal(Modal.Model.addNode)))
       )(
         materialSymbol("add")
       ),

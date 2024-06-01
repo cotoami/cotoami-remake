@@ -5,7 +5,7 @@ import org.scalajs.dom.URL
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
-import cotoami.subparts.Modal
+import cotoami.subparts._
 
 sealed trait Msg
 
@@ -45,8 +45,8 @@ case object ReloadDomain extends Msg
 case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
 // Subparts
-case class FlowInputMsg(subMsg: subparts.FormCoto.Msg) extends Msg
-case class SectionTimelineMsg(subMsg: subparts.SectionTimeline.Msg) extends Msg
-case class SectionTraversalsMsg(subMsg: subparts.SectionTraversals.Msg)
-    extends Msg
+case class FlowInputMsg(subMsg: FormCoto.Msg) extends Msg
+case class SectionTimelineMsg(subMsg: SectionTimeline.Msg) extends Msg
+case class SectionTraversalsMsg(subMsg: SectionTraversals.Msg) extends Msg
+case class OpenModal(modal: Modal.Model) extends Msg
 case class ModalMsg(subMsg: Modal.Msg) extends Msg

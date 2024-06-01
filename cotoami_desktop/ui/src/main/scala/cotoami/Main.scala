@@ -258,6 +258,9 @@ object Main {
         )
       }
 
+      case OpenModal(modal) =>
+        (model.copy(modal = Some(modal)), Seq.empty)
+
       case ModalMsg(subMsg) =>
         model.modal match {
           case Some(modal) =>

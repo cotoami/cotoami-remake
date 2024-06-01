@@ -8,11 +8,13 @@ import fui.Cmd
 object Modal {
   sealed trait Model
   case class WelcomeModel(model: ModalWelcome.Model) extends Model
+  case class AddNodeModel(model: ModalAddNode.Model) extends Model
 
   object Model {
-    def default: Option[Model] = Some(
-      WelcomeModel(ModalWelcome.Model())
-    )
+    def default: Option[Model] = Some(this.welcome)
+
+    def welcome: Model = WelcomeModel(ModalWelcome.Model())
+    def addNode: Model = AddNodeModel(ModalAddNode.Model())
   }
 
   sealed trait Msg
@@ -31,9 +33,13 @@ object Modal {
       model: cotoami.Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
-    model.modal.map { case WelcomeModel(modalModel) =>
-      model.systemInfo.map(info =>
-        ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
-      )
+    model.modal.map {
+      case WelcomeModel(modalModel) =>
+        model.systemInfo.map(info =>
+          ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
+        )
+
+      case AddNodeModel(modalModel) =>
+        Some(ModalAddNode(modalModel, dispatch))
     }
 }
