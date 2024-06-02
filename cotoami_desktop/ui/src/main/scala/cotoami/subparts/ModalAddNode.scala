@@ -35,8 +35,8 @@ object ModalAddNode {
           section(className := "introduction")(
             """
             You can incorporate another database node into your database.
-            Once incorporated, it will sync with the original node in real-time as long as you are online,
-            allowing you to collaborate with other people who are connected to the same node.
+            Once incorporated, it will sync with the original node 
+            in real-time as long as you are online.
             """
           ),
           sectionConnect(model, dispatch)
