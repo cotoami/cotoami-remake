@@ -52,30 +52,3 @@ select,
 textarea {
   margin-bottom: 0;
 }
-
-dialog {
-  article {
-    padding-bottom: 10px;
-
-    header {
-      margin-bottom: 0;
-      padding: 15px 20px;
-
-      h1 {
-        margin: 0;
-        font-size: 1.2rem;
-        font-weight: 800;
-      }
-    }
-
-    section {
-      h2 {
-        margin-top: 20px;
-        margin-bottom: 15px;
-        font-size: 1.1rem;
-        font-weight: 500;
-        border-bottom: 2px dotted var(--pane-border-color);
-      }
-    }
-  }
-}
