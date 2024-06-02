@@ -29,20 +29,6 @@ dialog.welcome {
     }
   }
 
-  div.buttons {
-    text-align: right;
-
-    button {
-      display: inline-block;
-    }
-  }
-
-  .system-error {
-    margin-top: 10px;
-    color: var(--form-element-invalid-border-color);
-    font-size: 95%;
-  }
-
   section.recent-databases {
     h2 {
       margin-bottom: 5px;

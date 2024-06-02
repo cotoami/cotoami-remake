@@ -13,6 +13,12 @@ dialog {
       }
     }
 
+    .system-error {
+      margin-top: 10px;
+      color: var(--form-element-invalid-border-color);
+      font-size: 95%;
+    }
+
     section {
       h2 {
         margin-top: 20px;
@@ -20,6 +26,14 @@ dialog {
         font-size: 1.1rem;
         font-weight: 500;
         border-bottom: 2px dotted var(--pane-border-color);
+      }
+    }
+
+    div.buttons {
+      text-align: right;
+
+      button {
+        display: inline-block;
       }
     }
   }
