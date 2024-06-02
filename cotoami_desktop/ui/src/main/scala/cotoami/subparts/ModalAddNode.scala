@@ -30,10 +30,17 @@ object ModalAddNode {
           ),
           h1()("Add Node")
         ),
+        model.systemError.map(e => div(className := "system-error")(e)),
         div(className := "body")(
-          model.systemError.map(e => div(className := "system-error")(e)),
-          div(className := "body-main")(
-            //
+          section(className := "introduction")(
+            """
+            You can incorporate another database node into your database.
+            Once incorporated, it will sync with the original node in real-time as long as you are online,
+            allowing you to collaborate with other people who are connected to the same node.
+            """
+          ),
+          section(className := "recent-databases")(
+            h2()("Connect")
           )
         )
       )
