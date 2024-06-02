@@ -241,14 +241,12 @@ object ModalWelcome {
             "Welcome to Cotoami"
           )
         ),
+        model.systemError.map(e => div(className := "system-error")(e)),
         div(className := "body")(
-          model.systemError.map(e => div(className := "system-error")(e)),
-          div(className := "body-main")(
-            recent(model, recentDatabases, dispatch),
-            div(className := "create-or-open")(
-              newDatabase(model, dispatch),
-              openDatabase(model, dispatch)
-            )
+          recent(model, recentDatabases, dispatch),
+          div(className := "create-or-open")(
+            newDatabase(model, dispatch),
+            openDatabase(model, dispatch)
           )
         )
       )

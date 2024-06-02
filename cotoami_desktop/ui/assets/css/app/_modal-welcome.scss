@@ -16,23 +16,16 @@ dialog.welcome {
 
   div.body {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 
-    .body-main {
-      flex: 1;
+    section.recent-databases {
+      // display: none;
+      margin-right: 16px;
+      max-width: 20rem;
+    }
 
-      display: flex;
-      flex-direction: row;
-
-      section.recent-databases {
-        // display: none;
-        margin-right: 16px;
-        max-width: 20rem;
-      }
-
-      div.create-or-open {
-        width: 25rem;
-      }
+    div.create-or-open {
+      width: 25rem;
     }
   }
 
