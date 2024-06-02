@@ -39,10 +39,16 @@ object ModalAddNode {
             allowing you to collaborate with other people who are connected to the same node.
             """
           ),
-          section(className := "recent-databases")(
-            h2()("Connect")
-          )
+          sectionConnect(model, dispatch)
         )
       )
+    )
+
+  private def sectionConnect(
+      model: Model,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
+    section(className := "connect")(
+      h2()("Connect")
     )
 }
