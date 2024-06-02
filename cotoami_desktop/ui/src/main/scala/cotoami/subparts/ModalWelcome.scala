@@ -243,20 +243,20 @@ object ModalWelcome {
         ),
         model.systemError.map(e => div(className := "system-error")(e)),
         div(className := "body")(
-          recent(model, recentDatabases, dispatch),
+          sectionRecent(model, recentDatabases, dispatch),
           div(className := "create-or-open")(
-            newDatabase(model, dispatch),
-            openDatabase(model, dispatch)
+            sectionNewDatabase(model, dispatch),
+            sectionOpenDatabase(model, dispatch)
           )
         )
       )
     )
 
-  private def recent(
+  private def sectionRecent(
       model: Model,
       databases: Seq[DatabaseOpenedJson],
       dispatch: cotoami.Msg => Unit
-  ): Option[ReactElement] =
+  ): ReactElement =
     if (databases.isEmpty) {
       None
     } else {
@@ -287,7 +287,7 @@ object ModalWelcome {
       )
     }
 
-  private def newDatabase(
+  private def sectionNewDatabase(
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -295,7 +295,7 @@ object ModalWelcome {
       h2()("New database"),
       form()(
         // Name
-        databaseNameInput(model, dispatch),
+        inputDatabaseName(model, dispatch),
 
         // Base folder
         label(htmlFor := "select-base-folder")("Base folder"),
@@ -342,7 +342,7 @@ object ModalWelcome {
       )
     )
 
-  private def databaseNameInput(
+  private def inputDatabaseName(
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
@@ -366,7 +366,7 @@ object ModalWelcome {
     )
   }
 
-  private def openDatabase(
+  private def sectionOpenDatabase(
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
