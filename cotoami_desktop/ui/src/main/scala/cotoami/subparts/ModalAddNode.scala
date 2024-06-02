@@ -8,7 +8,7 @@ import cotoami.CloseModal
 object ModalAddNode {
 
   case class Model(
-      serverUrl: String = "",
+      nodeUrl: String = "",
       password: String = "",
       systemError: Option[String] = None
   )
@@ -49,6 +49,9 @@ object ModalAddNode {
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     section(className := "connect")(
-      h2()("Connect")
+      h2()("Connect"),
+      form()(
+        //
+      )
     )
 }
