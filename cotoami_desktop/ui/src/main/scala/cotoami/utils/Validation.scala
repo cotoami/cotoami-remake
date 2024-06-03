@@ -87,7 +87,7 @@ object Validation {
         Left(
           Error(
             "invaid-url",
-            s"${name.capitalize} must be a URL."
+            s"${name.capitalize} must be in valid URL format."
           )
         )
       case e: Throwable => Left(Error("system-error", e.toString()))

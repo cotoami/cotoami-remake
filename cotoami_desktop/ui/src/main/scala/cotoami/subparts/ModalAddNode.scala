@@ -4,6 +4,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.CloseModal
+import cotoami.utils.Validation
+import cotoami.backend.ServerNode
 
 object ModalAddNode {
 
@@ -11,7 +13,13 @@ object ModalAddNode {
       nodeUrl: String = "",
       password: String = "",
       systemError: Option[String] = None
-  )
+  ) {
+    def validateNodeUrl: Validation.Result =
+      if (this.nodeUrl.isBlank())
+        Validation.Result()
+      else
+        Validation.Result(ServerNode.validateUrl(this.nodeUrl))
+  }
 
   def apply(
       model: Model,

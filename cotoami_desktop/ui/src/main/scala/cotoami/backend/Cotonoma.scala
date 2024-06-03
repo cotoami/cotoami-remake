@@ -25,7 +25,7 @@ object Cotonoma {
 
   def validateName(name: String): Seq[Validation.Error] = {
     val fieldName = "name"
-    Vector(
+    Seq(
       Validation.nonBlank(fieldName, name),
       Validation.length(fieldName, name, 1, NameMaxLength)
     ).flatten
