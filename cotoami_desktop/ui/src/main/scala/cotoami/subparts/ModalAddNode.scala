@@ -14,13 +14,16 @@ object ModalAddNode {
   case class Model(
       nodeUrl: String = "",
       password: String = "",
-      systemError: Option[String] = None
+      systemError: Option[String] = None,
+      processing: Boolean = false
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
         Validation.Result.toBeValidated
       else
         Validation.Result(ServerNode.validateUrl(this.nodeUrl))
+
+    def readyToConnect: Boolean = validateNodeUrl.validated
   }
 
   sealed trait Msg {
@@ -100,6 +103,16 @@ object ModalAddNode {
           name := "password",
           value := model.password,
           onChange := ((e) => dispatch(PasswordInput(e.target.value).asAppMsg))
+        ),
+
+        // Preview
+        div(className := "buttons")(
+          button(
+            `type` := "submit",
+            disabled := !model.readyToConnect || model.processing
+          )(
+            "Preview"
+          )
         )
       )
     )
