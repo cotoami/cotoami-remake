@@ -7,7 +7,12 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.CloseModal
 import cotoami.utils.Validation
-import cotoami.backend.ServerNode
+import cotoami.backend.{
+  ClientNodeSession,
+  ClientNodeSessionJson,
+  ErrorJson,
+  ServerNode
+}
 
 object ModalAddNode {
 
@@ -15,7 +20,9 @@ object ModalAddNode {
       nodeUrl: String = "",
       password: String = "",
       systemError: Option[String] = None,
-      connecting: Boolean = false
+      connecting: Boolean = false,
+      nodeSession: Option[ClientNodeSession] = None,
+      connectingError: Option[String] = None
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
@@ -32,6 +39,8 @@ object ModalAddNode {
 
   case class NodeUrlInput(url: String) extends Msg
   case class PasswordInput(password: String) extends Msg
+  case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
+      extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -40,6 +49,18 @@ object ModalAddNode {
 
       case PasswordInput(password) =>
         (model.copy(password = password), Seq.empty)
+
+      case NodeConnected(Right(json)) =>
+        (
+          model.copy(nodeSession = Some(ClientNodeSession(json))),
+          Seq.empty
+        )
+
+      case NodeConnected(Left(error)) =>
+        (
+          model.copy(connectingError = Some(error.toString())),
+          Seq.empty
+        )
     }
 
   def apply(
