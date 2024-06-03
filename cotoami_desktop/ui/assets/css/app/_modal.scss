@@ -29,6 +29,15 @@ dialog {
       }
     }
 
+    .input-field {
+      margin-bottom: var(--spacing);
+
+      .validation-error {
+        font-size: 95%;
+        color: var(--form-element-invalid-border-color)
+      }
+    }
+
     div.buttons {
       text-align: right;
 

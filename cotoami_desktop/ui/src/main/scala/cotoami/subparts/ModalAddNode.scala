@@ -81,8 +81,8 @@ object ModalAddNode {
       h2()("Connect"),
       form()(
         // Node URL
-        label(htmlFor := "node-url")("Node URL"),
-        div(className := "input-with-validation")(
+        div(className := "input-field")(
+          label(htmlFor := "node-url")("Node URL"),
           input(
             `type` := "text",
             id := "node-url",
@@ -96,13 +96,17 @@ object ModalAddNode {
         ),
 
         // Password
-        label(htmlFor := "password")("Password"),
-        input(
-          `type` := "password",
-          id := "password",
-          name := "password",
-          value := model.password,
-          onChange := ((e) => dispatch(PasswordInput(e.target.value).asAppMsg))
+        div(className := "input-field")(
+          label(htmlFor := "password")("Password"),
+          input(
+            `type` := "password",
+            id := "password",
+            name := "password",
+            value := model.password,
+            onChange := ((e) =>
+              dispatch(PasswordInput(e.target.value).asAppMsg)
+            )
+          )
         ),
 
         // Preview

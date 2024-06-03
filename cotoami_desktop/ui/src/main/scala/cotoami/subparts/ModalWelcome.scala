@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import scala.util.chaining._
 import scala.scalajs.js
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui._
@@ -301,22 +301,24 @@ object ModalWelcome {
         inputDatabaseName(model, dispatch),
 
         // Base folder
-        label(htmlFor := "select-base-folder")("Base folder"),
-        div(className := "file-select")(
-          div(className := "file-path")(model.baseFolder),
-          button(
-            id := "select-base-folder",
-            `type` := "button",
-            className := "secondary",
-            onClick := (_ => dispatch(SelectBaseFolder.asAppMsg))
-          )(
-            materialSymbol("folder")
+        div(className := "input-field")(
+          label(htmlFor := "select-base-folder")("Base folder"),
+          div(className := "file-select")(
+            div(className := "file-path")(model.baseFolder),
+            button(
+              id := "select-base-folder",
+              `type` := "button",
+              className := "secondary",
+              onClick := (_ => dispatch(SelectBaseFolder.asAppMsg))
+            )(
+              materialSymbol("folder")
+            )
           )
         ),
 
         // Folder name
-        label(htmlFor := "folder-name")("Folder name to create"),
-        div(className := "input-with-validation")(
+        div(className := "input-field")(
+          label(htmlFor := "folder-name")("Folder name to create"),
           input(
             `type` := "text",
             id := "folder-name",
@@ -350,22 +352,20 @@ object ModalWelcome {
       dispatch: cotoami.Msg => Unit
   ): ReactElement = {
     val errors = model.validateDatabaseName
-    Fragment(
+    div(className := "input-field")(
       label(htmlFor := "database-name")("Name"),
-      div(className := "input-with-validation")(
-        input(
-          `type` := "text",
-          id := "database-name",
-          name := "databaseName",
-          value := model.databaseName,
-          Validation.ariaInvalid(errors),
-          // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
-          onChange := ((e) =>
-            dispatch(DatabaseNameInput(e.target.value).asAppMsg)
-          )
-        ),
-        Validation.sectionValidationError(errors)
-      )
+      input(
+        `type` := "text",
+        id := "database-name",
+        name := "databaseName",
+        value := model.databaseName,
+        Validation.ariaInvalid(errors),
+        // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
+        onChange := ((e) =>
+          dispatch(DatabaseNameInput(e.target.value).asAppMsg)
+        )
+      ),
+      Validation.sectionValidationError(errors)
     )
   }
 
@@ -377,8 +377,8 @@ object ModalWelcome {
       h2()("Open"),
       form()(
         // Folder
-        label(htmlFor := "select-database-folder")("Folder"),
-        div(className := "input-with-validation")(
+        div(className := "input-field")(
+          label(htmlFor := "select-database-folder")("Folder"),
           div(className := "file-select")(
             div(className := "file-path")(model.databaseFolder),
             button(
