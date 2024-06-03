@@ -62,17 +62,23 @@ object ModalAddNode {
         (model.copy(password = password), Seq.empty)
 
       case Connect =>
-        (model, Seq(connect(model.nodeUrl, model.password)))
+        (
+          model.copy(connecting = true),
+          Seq(connect(model.nodeUrl, model.password))
+        )
 
       case NodeConnected(Right(json)) =>
         (
-          model.copy(nodeSession = Some(ClientNodeSession(json))),
+          model.copy(
+            connecting = false,
+            nodeSession = Some(ClientNodeSession(json))
+          ),
           Seq.empty
         )
 
       case NodeConnected(Left(e)) =>
         (
-          model.copy(connectingError = Some(e.message)),
+          model.copy(connecting = false, connectingError = Some(e.message)),
           Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
