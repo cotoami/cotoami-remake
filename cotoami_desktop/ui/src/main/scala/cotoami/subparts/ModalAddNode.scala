@@ -28,11 +28,15 @@ object ModalAddNode {
   }
 
   case class NodeUrlInput(url: String) extends Msg
+  case class PasswordInput(password: String) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case NodeUrlInput(url) =>
         (model.copy(nodeUrl = url), Seq.empty)
+
+      case PasswordInput(password) =>
+        (model.copy(password = password), Seq.empty)
     }
 
   def apply(
@@ -86,6 +90,16 @@ object ModalAddNode {
             onChange := ((e) => dispatch(NodeUrlInput(e.target.value).asAppMsg))
           ),
           Validation.sectionValidationError(model.validateNodeUrl)
+        ),
+
+        // Password
+        label(htmlFor := "password")("Password"),
+        input(
+          `type` := "password",
+          id := "password",
+          name := "password",
+          value := model.password,
+          onChange := ((e) => dispatch(PasswordInput(e.target.value).asAppMsg))
         )
       )
     )
