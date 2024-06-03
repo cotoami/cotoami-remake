@@ -1,5 +1,6 @@
 package cotoami.utils
 
+import java.net.{URI, URISyntaxException}
 import com.softwaremill.quicklens._
 
 import slinky.core.AttrPair
@@ -77,6 +78,37 @@ object Validation {
       )
     else
       None
+
+  def url(name: String, value: String): Either[Error, URI] =
+    try {
+      Right(new URI(value))
+    } catch {
+      case e: URISyntaxException =>
+        Left(
+          Error(
+            "invaid-url",
+            s"${name.capitalize} must be a URL."
+          )
+        )
+      case e: Throwable => Left(Error("system-error", e.toString()))
+    }
+
+  val HttpSchemes = Seq("http", "https")
+
+  def httpUrl(name: String, value: String): Option[Error] =
+    this.url(name, value) match {
+      case Right(url) =>
+        if (HttpSchemes.contains(url.getScheme()))
+          None
+        else
+          Some(
+            Error(
+              "non-http-url",
+              s"${name.capitalize} must be an HTTP or HTTPS URL."
+            )
+          )
+      case Left(e) => Some(e)
+    }
 
   def ariaInvalid(result: Validation.Result): AttrPair[input.tagType] = {
     (aria - "invalid") :=
