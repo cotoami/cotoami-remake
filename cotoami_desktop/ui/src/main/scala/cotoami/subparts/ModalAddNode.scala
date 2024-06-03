@@ -1,8 +1,10 @@
 package cotoami.subparts
 
+import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import fui.Cmd
 import cotoami.CloseModal
 import cotoami.utils.Validation
 import cotoami.backend.ServerNode
@@ -20,6 +22,18 @@ object ModalAddNode {
       else
         Validation.Result(ServerNode.validateUrl(this.nodeUrl))
   }
+
+  sealed trait Msg {
+    def asAppMsg: cotoami.Msg = Modal.AddNodeMsg(this).pipe(cotoami.ModalMsg)
+  }
+
+  case class NodeUrlInput(url: String) extends Msg
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+    msg match {
+      case NodeUrlInput(url) =>
+        (model.copy(nodeUrl = url), Seq.empty)
+    }
 
   def apply(
       model: Model,
@@ -59,7 +73,20 @@ object ModalAddNode {
     section(className := "connect")(
       h2()("Connect"),
       form()(
-        //
+        // Node URL
+        label(htmlFor := "node-url")("Node URL"),
+        div(className := "input-with-validation")(
+          input(
+            `type` := "text",
+            id := "node-url",
+            name := "nodeUrl",
+            placeholder := "https://example.com",
+            value := model.nodeUrl,
+            Validation.ariaInvalid(model.validateNodeUrl),
+            onChange := ((e) => dispatch(NodeUrlInput(e.target.value).asAppMsg))
+          ),
+          Validation.sectionValidationError(model.validateNodeUrl)
+        )
       )
     )
 }

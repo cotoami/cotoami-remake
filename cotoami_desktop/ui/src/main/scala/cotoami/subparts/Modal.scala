@@ -19,12 +19,17 @@ object Modal {
 
   sealed trait Msg
   case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
+  case class AddNodeMsg(msg: ModalAddNode.Msg) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     (msg, model) match {
       case (WelcomeMsg(modalMsg), WelcomeModel(modalModel)) =>
         ModalWelcome.update(modalMsg, modalModel)
           .pipe(pair => (WelcomeModel(pair._1), pair._2))
+
+      case (AddNodeMsg(modalMsg), AddNodeModel(modalModel)) =>
+        ModalAddNode.update(modalMsg, modalModel)
+          .pipe(pair => (AddNodeModel(pair._1), pair._2))
 
       case (_, _) => (model, Seq.empty)
     }

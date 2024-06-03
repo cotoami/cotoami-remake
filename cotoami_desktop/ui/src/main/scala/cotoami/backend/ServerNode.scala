@@ -15,7 +15,7 @@ object ServerNode {
   val UrlMaxLength = 1500
 
   def validateUrl(url: String): Seq[Validation.Error] = {
-    val fieldName = "url"
+    val fieldName = "node URL"
     Seq(
       Validation.nonBlank(fieldName, url),
       Validation.length(fieldName, url, 1, UrlMaxLength),
