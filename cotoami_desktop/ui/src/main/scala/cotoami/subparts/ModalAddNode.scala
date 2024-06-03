@@ -160,9 +160,7 @@ object ModalAddNode {
             disabled := !model.readyToConnect,
             aria - "busy" := model.connecting.toString(),
             onClick := (_ => dispatch(Connect.asAppMsg))
-          )(
-            "Preview"
-          )
+          )("Preview")
         )
       )
     )
@@ -196,9 +194,7 @@ object ModalAddNode {
           `type` := "button",
           disabled := !model.readyToAdd,
           aria - "busy" := model.adding.toString()
-        )(
-          "Add"
-        )
+        )("Add")
       )
     )
 }
