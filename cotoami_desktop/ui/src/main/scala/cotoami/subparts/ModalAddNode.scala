@@ -16,7 +16,7 @@ object ModalAddNode {
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
-        Validation.Result()
+        Validation.Result.toBeValidated
       else
         Validation.Result(ServerNode.validateUrl(this.nodeUrl))
   }

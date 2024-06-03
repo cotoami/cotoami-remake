@@ -14,7 +14,7 @@ object Validation {
       params: Map[String, String] = Map.empty
   )
 
-  case class Result(errors: Option[Seq[Validation.Error]] = None) {
+  case class Result(errors: Option[Seq[Validation.Error]]) {
     def toBeValidated: Boolean = this.errors.isEmpty
 
     def validated: Boolean =
@@ -44,7 +44,9 @@ object Validation {
     def apply(errors: Seq[Validation.Error]): Result =
       Result(Some(errors))
 
-    def validated(): Result = Result(Seq.empty)
+    lazy val toBeValidated: Result = Result(None)
+
+    lazy val validated: Result = Result(Seq.empty)
   }
 
   def nonBlank(name: String, value: String): Option[Error] =

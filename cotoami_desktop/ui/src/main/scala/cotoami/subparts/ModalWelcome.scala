@@ -18,11 +18,12 @@ object ModalWelcome {
       databaseName: String = "",
       baseFolder: String = "",
       folderName: String = "",
-      folderNameValidation: Validation.Result = Validation.Result(),
+      folderNameValidation: Validation.Result = Validation.Result.toBeValidated,
 
       // Open an existing database
       databaseFolder: String = "",
-      databaseFolderValidation: Validation.Result = Validation.Result(),
+      databaseFolderValidation: Validation.Result =
+        Validation.Result.toBeValidated,
 
       // Shared
       processing: Boolean = false,
@@ -30,7 +31,7 @@ object ModalWelcome {
   ) {
     def validateDatabaseName: Validation.Result =
       if (this.databaseName.isBlank())
-        Validation.Result()
+        Validation.Result.toBeValidated
       else
         Validation.Result(Node.validateName(this.databaseName))
 
@@ -71,7 +72,7 @@ object ModalWelcome {
 
       case SelectBaseFolder =>
         (
-          model.copy(folderNameValidation = Validation.Result()),
+          model.copy(folderNameValidation = Validation.Result.toBeValidated),
           Seq(
             tauri
               .selectSingleDirectory(
@@ -99,14 +100,14 @@ object ModalWelcome {
       case FolderNameInput(value) =>
         model.copy(
           folderName = value,
-          folderNameValidation = Validation.Result()
+          folderNameValidation = Validation.Result.toBeValidated
         ) match {
           case model => (model, validateNewFolder(model))
         }
 
       case NewFolderValidation(Right(_)) =>
         (
-          model.copy(folderNameValidation = Validation.Result.validated()),
+          model.copy(folderNameValidation = Validation.Result.validated),
           Seq.empty
         )
 
@@ -123,7 +124,9 @@ object ModalWelcome {
 
       case SelectDatabaseFolder =>
         (
-          model.copy(databaseFolderValidation = Validation.Result()),
+          model.copy(databaseFolderValidation =
+            Validation.Result.toBeValidated
+          ),
           Seq(
             tauri
               .selectSingleDirectory(
@@ -152,7 +155,7 @@ object ModalWelcome {
 
       case DatabaseFolderValidation(Right(_)) =>
         (
-          model.copy(databaseFolderValidation = Validation.Result.validated()),
+          model.copy(databaseFolderValidation = Validation.Result.validated),
           Seq.empty
         )
 
