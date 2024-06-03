@@ -341,7 +341,10 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.readyToCreate,
-            onClick := (_ => dispatch(CreateDatabase.asAppMsg))
+            onClick := (e => {
+              e.preventDefault()
+              dispatch(CreateDatabase.asAppMsg)
+            })
           )("Create")
         )
       )
@@ -361,9 +364,7 @@ object ModalWelcome {
         value := model.databaseName,
         Validation.ariaInvalid(errors),
         // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
-        onChange := ((e) =>
-          dispatch(DatabaseNameInput(e.target.value).asAppMsg)
-        )
+        onChange := (e => dispatch(DatabaseNameInput(e.target.value).asAppMsg))
       ),
       Validation.sectionValidationError(errors)
     )
@@ -396,7 +397,10 @@ object ModalWelcome {
           button(
             `type` := "submit",
             disabled := !model.readyToOpen,
-            onClick := (_ => dispatch(OpenDatabase.asAppMsg))
+            onClick := (e => {
+              e.preventDefault()
+              dispatch(OpenDatabase.asAppMsg)
+            })
           )("Open")
         )
       )

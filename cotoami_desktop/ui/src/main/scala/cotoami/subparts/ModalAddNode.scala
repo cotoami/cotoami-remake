@@ -147,9 +147,7 @@ object ModalAddNode {
             id := "password",
             name := "password",
             value := model.password,
-            onChange := ((e) =>
-              dispatch(PasswordInput(e.target.value).asAppMsg)
-            )
+            onChange := (e => dispatch(PasswordInput(e.target.value).asAppMsg))
           )
         ),
 
@@ -159,7 +157,10 @@ object ModalAddNode {
             `type` := "submit",
             disabled := !model.readyToConnect,
             aria - "busy" := model.connecting.toString(),
-            onClick := (_ => dispatch(Connect.asAppMsg))
+            onClick := (e => {
+              e.preventDefault()
+              dispatch(Connect.asAppMsg)
+            })
           )("Preview")
         )
       )
