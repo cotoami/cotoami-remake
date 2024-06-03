@@ -7,15 +7,27 @@ dialog.add-node {
     margin-top: 20px;
   }
 
-  section.node-preview {
-    section.node-name {
-      img.node-icon {
-        width: 26px;
-        height: 26px;
-        border-radius: 4px;
-        vertical-align: middle;
-        margin-right: 6px;
+  section.add {
+    margin-bottom: var(--spacing);
+
+    section.node-preview {
+      section.node-name {
+        img.node-icon {
+          width: 26px;
+          height: 26px;
+          border-radius: 4px;
+          vertical-align: middle;
+          margin-right: 6px;
+        }
+
+        .name {
+          vertical-align: middle;
+        }
       }
+    }
+
+    button.cancel {
+      margin-right: 10px;
     }
   }
 }

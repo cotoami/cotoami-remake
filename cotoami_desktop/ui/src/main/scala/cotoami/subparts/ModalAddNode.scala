@@ -52,6 +52,7 @@ object ModalAddNode {
   case object Connect extends Msg
   case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
       extends Msg
+  case object Cancel extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -83,6 +84,17 @@ object ModalAddNode {
           Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
+        )
+
+      case Cancel =>
+        (
+          model.copy(
+            connecting = false,
+            connectingError = None,
+            addingError = None,
+            nodeSession = None
+          ),
+          Seq.empty
         )
     }
 
@@ -118,8 +130,9 @@ object ModalAddNode {
             in real-time as long as you are online.
             """
           ),
-          sectionConnect(model, dispatch),
-          model.nodeSession.map(sectionAdd(model, _, domain, dispatch))
+          model.nodeSession
+            .map(sectionAdd(model, _, domain, dispatch))
+            .getOrElse(sectionConnect(model, dispatch))
         )
       )
     )
@@ -181,7 +194,7 @@ object ModalAddNode {
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     section(className := "add")(
-      h2()("Add"),
+      h2()("Node"),
       model.addingError.map(e => section(className := "error")(e)),
 
       // Node preview
@@ -199,6 +212,11 @@ object ModalAddNode {
 
       // Add button
       div(className := "buttons")(
+        button(
+          `type` := "button",
+          className := "cancel contrast outline",
+          onClick := (e => dispatch(Cancel.asAppMsg))
+        )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToAdd,
