@@ -13,6 +13,7 @@ import cotoami.backend.{
   ErrorJson,
   ServerNode
 }
+import cotoami.repositories.Domain
 
 object ModalAddNode {
 
@@ -22,7 +23,9 @@ object ModalAddNode {
       error: Option[String] = None,
       connecting: Boolean = false,
       nodeSession: Option[ClientNodeSession] = None,
-      connectingError: Option[String] = None
+      connectingError: Option[String] = None,
+      adding: Boolean = false,
+      addingError: Option[String] = None
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
@@ -31,6 +34,8 @@ object ModalAddNode {
         Validation.Result(ServerNode.validateUrl(this.nodeUrl))
 
     def readyToConnect: Boolean = !this.connecting && validateNodeUrl.validated
+
+    def readyToAdd: Boolean = !this.connecting && !this.adding
   }
 
   sealed trait Msg {
@@ -65,6 +70,7 @@ object ModalAddNode {
 
   def apply(
       model: Model,
+      domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     dialog(
@@ -90,7 +96,7 @@ object ModalAddNode {
             """
           ),
           sectionConnect(model, dispatch),
-          model.nodeSession.map(sectionAdd(model, _, dispatch))
+          model.nodeSession.map(sectionAdd(model, _, domain, dispatch))
         )
       )
     )
@@ -148,9 +154,31 @@ object ModalAddNode {
   private def sectionAdd(
       model: Model,
       nodeSession: ClientNodeSession,
+      domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     section(className := "add")(
-      h2()("Add")
+      h2()("Add"),
+      model.addingError.map(e => section(className := "error")(e)),
+      section(className := "node-preview")(
+        section(className := "node-name")(
+          nodeImg(nodeSession.server),
+          nodeSession.server.name
+        ),
+        nodeSession.serverRootCotonoma.map { case (_, coto) =>
+          section(className := "node-content")(
+            ViewCoto.sectionCotoContentDetails(coto)
+          )
+        }
+      ),
+      div(className := "buttons")(
+        button(
+          `type` := "button",
+          disabled := !model.readyToAdd,
+          aria - "busy" := model.adding.toString()
+        )(
+          "Add"
+        )
+      )
     )
 }

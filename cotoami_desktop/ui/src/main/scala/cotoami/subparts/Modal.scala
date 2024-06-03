@@ -45,6 +45,6 @@ object Modal {
         )
 
       case AddNodeModel(modalModel) =>
-        Some(ModalAddNode(modalModel, dispatch))
+        Some(ModalAddNode(modalModel, model.domain, dispatch))
     }
 }
