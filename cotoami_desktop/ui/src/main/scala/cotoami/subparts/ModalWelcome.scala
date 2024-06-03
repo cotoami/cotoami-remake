@@ -36,8 +36,12 @@ object ModalWelcome {
         Validation.Result(Node.validateName(this.databaseName))
 
     def readyToCreate: Boolean =
-      this.validateDatabaseName.validated &&
+      !this.processing &&
+        this.validateDatabaseName.validated &&
         this.folderNameValidation.validated
+
+    def readyToOpen: Boolean =
+      !this.processing && this.databaseFolderValidation.validated
   }
 
   sealed trait Msg {
@@ -336,7 +340,7 @@ object ModalWelcome {
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.readyToCreate || model.processing,
+            disabled := !model.readyToCreate,
             onClick := (_ => dispatch(CreateDatabase.asAppMsg))
           )("Create")
         )
@@ -391,7 +395,7 @@ object ModalWelcome {
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.databaseFolderValidation.validated || model.processing,
+            disabled := !model.readyToOpen,
             onClick := (_ => dispatch(OpenDatabase.asAppMsg))
           )("Open")
         )
