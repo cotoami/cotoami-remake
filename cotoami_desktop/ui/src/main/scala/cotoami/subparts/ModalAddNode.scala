@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -69,11 +70,11 @@ object ModalAddNode {
           Seq.empty
         )
 
-      case NodeConnected(Left(error)) =>
+      case NodeConnected(Left(e)) =>
         (
-          model.copy(connectingError = Some(error.toString())),
+          model.copy(connectingError = Some(e.toString())),
           Seq(
-            log_error("Node connecting error.", Some(error.toString()))
+            log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
         )
     }
