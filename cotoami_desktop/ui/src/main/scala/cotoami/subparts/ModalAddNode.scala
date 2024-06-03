@@ -15,7 +15,7 @@ object ModalAddNode {
       nodeUrl: String = "",
       password: String = "",
       systemError: Option[String] = None,
-      processing: Boolean = false
+      connecting: Boolean = false
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
@@ -23,7 +23,7 @@ object ModalAddNode {
       else
         Validation.Result(ServerNode.validateUrl(this.nodeUrl))
 
-    def readyToConnect: Boolean = validateNodeUrl.validated
+    def readyToConnect: Boolean = !this.connecting && validateNodeUrl.validated
   }
 
   sealed trait Msg {
@@ -113,7 +113,8 @@ object ModalAddNode {
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.readyToConnect || model.processing
+            disabled := !model.readyToConnect,
+            aria - "busy" := model.connecting.toString()
           )(
             "Preview"
           )
