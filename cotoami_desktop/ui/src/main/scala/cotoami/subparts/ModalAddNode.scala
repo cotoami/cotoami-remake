@@ -5,7 +5,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.CloseModal
+import cotoami.{log_error, CloseModal}
 import cotoami.utils.Validation
 import cotoami.backend.{
   ClientNodeSession,
@@ -72,7 +72,9 @@ object ModalAddNode {
       case NodeConnected(Left(error)) =>
         (
           model.copy(connectingError = Some(error.toString())),
-          Seq.empty
+          Seq(
+            log_error("Node connecting error.", Some(error.toString()))
+          )
         )
     }
 
