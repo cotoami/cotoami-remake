@@ -41,6 +41,7 @@ impl NodeState {
             // Change password
             if let Some(new_password) = input.new_password {
                 ds.change_client_node_password(&client.node_id, &new_password)?;
+                debug!("Password changed.");
             }
 
             // Import the client node
