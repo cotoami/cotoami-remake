@@ -15,7 +15,7 @@ object Validation {
   )
 
   case class Result(errors: Option[Seq[Validation.Error]] = None) {
-    def validating: Boolean = this.errors.isEmpty
+    def toBeValidated: Boolean = this.errors.isEmpty
 
     def validated: Boolean =
       this.errors.map(_.isEmpty).getOrElse(false)
@@ -112,7 +112,7 @@ object Validation {
 
   def ariaInvalid(result: Validation.Result): AttrPair[input.tagType] = {
     (aria - "invalid") :=
-      (if (result.validating)
+      (if (result.toBeValidated)
          ""
        else if (result.validated)
          "false"
