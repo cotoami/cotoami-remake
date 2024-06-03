@@ -89,7 +89,8 @@ object ModalAddNode {
             in real-time as long as you are online.
             """
           ),
-          sectionConnect(model, dispatch)
+          sectionConnect(model, dispatch),
+          model.nodeSession.map(sectionAdd(model, _, dispatch))
         )
       )
     )
@@ -143,5 +144,14 @@ object ModalAddNode {
           )
         )
       )
+    )
+
+  private def sectionAdd(
+      model: Model,
+      nodeSession: ClientNodeSession,
+      dispatch: cotoami.Msg => Unit
+  ): ReactElement =
+    section(className := "add")(
+      h2()("Add")
     )
 }
