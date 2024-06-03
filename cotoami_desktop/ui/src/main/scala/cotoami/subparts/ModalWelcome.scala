@@ -310,9 +310,7 @@ object ModalWelcome {
               `type` := "button",
               className := "secondary",
               onClick := (_ => dispatch(SelectBaseFolder.asAppMsg))
-            )(
-              materialSymbol("folder")
-            )
+            )(materialSymbol("folder"))
           )
         ),
 
@@ -340,9 +338,7 @@ object ModalWelcome {
             `type` := "submit",
             disabled := !model.readyToCreate || model.processing,
             onClick := (_ => dispatch(CreateDatabase.asAppMsg))
-          )(
-            "Create"
-          )
+          )("Create")
         )
       )
     )
@@ -386,9 +382,7 @@ object ModalWelcome {
               `type` := "button",
               className := "secondary",
               onClick := (_ => dispatch(SelectDatabaseFolder.asAppMsg))
-            )(
-              materialSymbol("folder")
-            )
+            )(materialSymbol("folder"))
           ),
           Validation.sectionValidationError(model.databaseFolderValidation)
         ),
