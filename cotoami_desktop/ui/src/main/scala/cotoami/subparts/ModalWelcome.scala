@@ -35,7 +35,7 @@ object ModalWelcome {
       else
         Validation.Result(Node.validateName(this.databaseName))
 
-    def validateNewDatabaseInputs: Boolean =
+    def readyToCreate: Boolean =
       this.validateDatabaseName.validated &&
         this.folderNameValidation.validated
   }
@@ -338,7 +338,7 @@ object ModalWelcome {
         div(className := "buttons")(
           button(
             `type` := "submit",
-            disabled := !model.validateNewDatabaseInputs || model.processing,
+            disabled := !model.readyToCreate || model.processing,
             onClick := (_ => dispatch(CreateDatabase.asAppMsg))
           )(
             "Create"
