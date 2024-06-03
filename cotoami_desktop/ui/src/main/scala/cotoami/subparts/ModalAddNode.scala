@@ -10,6 +10,7 @@ import cotoami.utils.Validation
 import cotoami.backend.{
   ClientNodeSession,
   ClientNodeSessionJson,
+  Commands,
   ErrorJson,
   ServerNode
 }
@@ -42,8 +43,12 @@ object ModalAddNode {
     def asAppMsg: cotoami.Msg = Modal.AddNodeMsg(this).pipe(cotoami.ModalMsg)
   }
 
+  private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
+    tagger andThen Modal.AddNodeMsg andThen cotoami.ModalMsg
+
   case class NodeUrlInput(url: String) extends Msg
   case class PasswordInput(password: String) extends Msg
+  case object Connect extends Msg
   case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
       extends Msg
 
@@ -54,6 +59,9 @@ object ModalAddNode {
 
       case PasswordInput(password) =>
         (model.copy(password = password), Seq.empty)
+
+      case Connect =>
+        (model, Seq(connect(model.nodeUrl, model.password)))
 
       case NodeConnected(Right(json)) =>
         (
@@ -67,6 +75,11 @@ object ModalAddNode {
           Seq.empty
         )
     }
+
+  private def connect(url: String, password: String): Cmd[cotoami.Msg] =
+    Commands
+      .send(Commands.TryConnectServerNode(url, password, false))
+      .map(appMsgTagger(NodeConnected(_)))
 
   def apply(
       model: Model,
@@ -143,7 +156,8 @@ object ModalAddNode {
           button(
             `type` := "submit",
             disabled := !model.readyToConnect,
-            aria - "busy" := model.connecting.toString()
+            aria - "busy" := model.connecting.toString(),
+            onClick := (_ => dispatch(Connect.asAppMsg))
           )(
             "Preview"
           )
@@ -160,6 +174,8 @@ object ModalAddNode {
     section(className := "add")(
       h2()("Add"),
       model.addingError.map(e => section(className := "error")(e)),
+
+      // Node preview
       section(className := "node-preview")(
         section(className := "node-name")(
           nodeImg(nodeSession.server),
@@ -171,6 +187,8 @@ object ModalAddNode {
           )
         }
       ),
+
+      // Add button
       div(className := "buttons")(
         button(
           `type` := "button",

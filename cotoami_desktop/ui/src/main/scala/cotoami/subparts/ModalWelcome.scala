@@ -336,7 +336,7 @@ object ModalWelcome {
           Validation.sectionValidationError(model.folderNameValidation)
         ),
 
-        // Create
+        // Create button
         div(className := "buttons")(
           button(
             `type` := "submit",
