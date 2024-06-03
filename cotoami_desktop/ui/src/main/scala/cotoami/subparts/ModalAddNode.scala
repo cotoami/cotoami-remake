@@ -71,6 +71,7 @@ object ModalAddNode {
         (
           model.copy(
             connecting = false,
+            connectingError = None,
             nodeSession = Some(ClientNodeSession(json))
           ),
           Seq.empty
@@ -187,7 +188,7 @@ object ModalAddNode {
       section(className := "node-preview")(
         section(className := "node-name")(
           nodeImg(nodeSession.server),
-          nodeSession.server.name
+          span(className := "name")(nodeSession.server.name)
         ),
         nodeSession.serverRootCotonoma.map { case (_, coto) =>
           section(className := "node-content")(
