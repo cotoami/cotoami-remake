@@ -101,6 +101,8 @@ object ModalAddNode {
     section(className := "connect")(
       h2()("Connect"),
       form()(
+        model.connectingError.map(e => section(className := "error")(e)),
+
         // Node URL
         div(className := "input-field")(
           label(htmlFor := "node-url")("Node URL"),

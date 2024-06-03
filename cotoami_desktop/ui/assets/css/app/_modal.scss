@@ -14,9 +14,16 @@ dialog {
     }
 
     .error {
-      margin-top: 10px;
       color: var(--form-element-invalid-border-color);
       font-size: 95%;
+    }
+
+    &>.error {
+      margin-top: 10px;
+    }
+
+    form .error {
+      margin-bottom: 10px;
     }
 
     section {
