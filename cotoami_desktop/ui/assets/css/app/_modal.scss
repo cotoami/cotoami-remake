@@ -22,10 +22,6 @@ dialog {
       margin-top: 10px;
     }
 
-    form .error {
-      margin-bottom: 10px;
-    }
-
     section {
       h2 {
         margin-top: 20px;
@@ -33,6 +29,10 @@ dialog {
         font-size: 1.1rem;
         font-weight: 500;
         border-bottom: 2px dotted var(--pane-border-color);
+      }
+
+      >.error {
+        margin-bottom: var(--spacing);
       }
     }
 
