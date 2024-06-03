@@ -1,0 +1,21 @@
+dialog.add-node {
+  article {
+    max-width: 550px;
+  }
+
+  section.introduction {
+    margin-top: 20px;
+  }
+
+  section.node-preview {
+    section.node-name {
+      img.node-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+    }
+  }
+}

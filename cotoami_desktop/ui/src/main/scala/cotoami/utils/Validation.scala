@@ -1,5 +1,6 @@
 package cotoami.utils
 
+import java.net.{URI, URISyntaxException}
 import com.softwaremill.quicklens._
 
 import slinky.core.AttrPair
@@ -13,8 +14,8 @@ object Validation {
       params: Map[String, String] = Map.empty
   )
 
-  case class Result(errors: Option[Seq[Validation.Error]] = None) {
-    def validating: Boolean = this.errors.isEmpty
+  case class Result(errors: Option[Seq[Validation.Error]]) {
+    def toBeValidated: Boolean = this.errors.isEmpty
 
     def validated: Boolean =
       this.errors.map(_.isEmpty).getOrElse(false)
@@ -43,7 +44,9 @@ object Validation {
     def apply(errors: Seq[Validation.Error]): Result =
       Result(Some(errors))
 
-    def validated(): Result = Result(Seq.empty)
+    lazy val toBeValidated: Result = Result(None)
+
+    lazy val validated: Result = Result(Seq.empty)
   }
 
   def nonBlank(name: String, value: String): Option[Error] =
@@ -78,9 +81,40 @@ object Validation {
     else
       None
 
+  def url(name: String, value: String): Either[Error, URI] =
+    try {
+      Right(new URI(value))
+    } catch {
+      case e: URISyntaxException =>
+        Left(
+          Error(
+            "invaid-url",
+            s"${name.capitalize} must be in valid URL format."
+          )
+        )
+      case e: Throwable => Left(Error("system-error", e.toString()))
+    }
+
+  val HttpSchemes = Seq("http", "https")
+
+  def httpUrl(name: String, value: String): Option[Error] =
+    this.url(name, value) match {
+      case Right(url) =>
+        if (HttpSchemes.contains(url.getScheme()))
+          None
+        else
+          Some(
+            Error(
+              "non-http-url",
+              s"${name.capitalize} must be an HTTP or HTTPS URL."
+            )
+          )
+      case Left(e) => Some(e)
+    }
+
   def ariaInvalid(result: Validation.Result): AttrPair[input.tagType] = {
     (aria - "invalid") :=
-      (if (result.validating)
+      (if (result.toBeValidated)
          ""
        else if (result.validated)
          "false"

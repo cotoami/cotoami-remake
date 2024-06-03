@@ -120,7 +120,7 @@ object FormCoto {
 
     def validate: Validation.Result =
       if (this.cotoInput.isBlank())
-        Validation.Result()
+        Validation.Result.toBeValidated
       else {
         val errors =
           this.summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
@@ -142,18 +142,23 @@ object FormCoto {
 
   case class CotonomaForm(
       nameInput: String = "",
-      validation: Validation.Result = Validation.Result()
+      validation: Validation.Result = Validation.Result.toBeValidated
   ) extends Form {
     def name: String = this.nameInput.trim
 
     def validate(nodeId: Id[Node]): (CotonomaForm, Seq[Cmd[Msg]]) = {
       val (validation, cmds) =
         if (this.name.isEmpty())
-          (Validation.Result(), Seq.empty)
+          (Validation.Result.toBeValidated, Seq.empty)
         else
           Cotonoma.validateName(this.name) match {
             case errors if errors.isEmpty =>
-              (Validation.Result(), Seq(cotonomaByName(this.name, nodeId)))
+              (
+                // Now that the local validation has passed,
+                // wait for backend validation to be done.
+                Validation.Result.toBeValidated,
+                Seq(cotonomaByName(this.name, nodeId))
+              )
             case errors => (Validation.Result(errors), Seq.empty)
           }
       (this.copy(validation = validation), cmds)
@@ -330,7 +335,7 @@ object FormCoto {
 
       case (CotonomaByName(name, Left(error)), form: CotonomaForm, _) =>
         if (name == form.name && error.code == "not-found")
-          form.copy(validation = Validation.Result.validated()) match {
+          form.copy(validation = Validation.Result.validated) match {
             case form =>
               (
                 model.copy(form = form),
