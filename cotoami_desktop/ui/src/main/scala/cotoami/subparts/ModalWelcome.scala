@@ -27,7 +27,7 @@ object ModalWelcome {
 
       // Shared
       processing: Boolean = false,
-      systemError: Option[String] = None
+      error: Option[String] = None
   ) {
     def validateDatabaseName: Validation.Result =
       if (this.databaseName.isBlank())
@@ -95,7 +95,7 @@ object ModalWelcome {
 
       case BaseFolderSelected(Left(error)) =>
         (
-          model.copy(systemError = Some(error.toString())),
+          model.copy(error = Some(error.toString())),
           Seq(
             log_error("Folder selection error.", Some(error.toString()))
           )
@@ -151,7 +151,7 @@ object ModalWelcome {
 
       case DatabaseFolderSelected(Left(error)) =>
         (
-          model.copy(systemError = Some(error.toString())),
+          model.copy(error = Some(error.toString())),
           Seq(
             log_error("Folder selection error.", Some(error.toString()))
           )
@@ -248,7 +248,7 @@ object ModalWelcome {
             "Welcome to Cotoami"
           )
         ),
-        model.systemError.map(e => div(className := "system-error")(e)),
+        model.error.map(e => section(className := "error")(e)),
         div(className := "body")(
           sectionRecent(model, recentDatabases, dispatch),
           div(className := "create-or-open")(

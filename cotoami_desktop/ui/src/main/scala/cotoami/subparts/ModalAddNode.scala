@@ -19,7 +19,7 @@ object ModalAddNode {
   case class Model(
       nodeUrl: String = "",
       password: String = "",
-      systemError: Option[String] = None,
+      error: Option[String] = None,
       connecting: Boolean = false,
       nodeSession: Option[ClientNodeSession] = None,
       connectingError: Option[String] = None
@@ -80,7 +80,7 @@ object ModalAddNode {
           ),
           h1()("Add Node")
         ),
-        model.systemError.map(e => div(className := "system-error")(e)),
+        model.error.map(e => section(className := "error")(e)),
         div(className := "body")(
           section(className := "introduction")(
             """

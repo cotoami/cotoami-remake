@@ -136,7 +136,7 @@ object Main {
           model
             .error(e.message, Option(e))
             .modify(_.modal.each.when[Modal.WelcomeModel].model)
-            .using(_.copy(processing = false, systemError = Some(e.message))),
+            .using(_.copy(processing = false, error = Some(e.message))),
           Seq.empty
         )
 
