@@ -1,6 +1,6 @@
 dialog.add-node {
   article {
-    max-width: 550px;
+    max-width: 600px;
   }
 
   section.introduction {
@@ -23,6 +23,17 @@ dialog.add-node {
         .name {
           vertical-align: middle;
         }
+      }
+
+      section.node-content {
+        margin-top: var(--spacing);
+        margin-bottom: var(--spacing);
+        border: 1px solid var(--pane-border-color);
+        padding: var(--spacing);
+        background-color: var(--card-background-color);
+
+        max-height: 200px;
+        overflow-y: auto;
       }
     }
 
