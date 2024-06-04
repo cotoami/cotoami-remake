@@ -54,8 +54,11 @@ impl Error {
     fn from_service_error(e: ServiceError) -> Self {
         match e {
             ServiceError::Request(e) => e.into(),
-            ServiceError::Permission => Error::new("permission-error", "Permission Error"),
-            ServiceError::NotFound(msg) => Error::new("not-found", msg.unwrap_or("".into())),
+            ServiceError::Permission => Error::new("permission-error", "Permission error."),
+            ServiceError::NotFound(msg) => Error::new(
+                "not-found",
+                msg.unwrap_or("The requested resource is not found.".into()),
+            ),
             ServiceError::Server(msg) => Error::new("server-error", msg),
             _ => Error::new("service-error", format!("{e:?}")),
         }

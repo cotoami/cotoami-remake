@@ -64,7 +64,7 @@ object ModalAddNode {
 
       case Connect =>
         (
-          model.copy(connecting = true),
+          model.copy(connecting = true, connectingError = None),
           Seq(connect(model.nodeUrl, model.password))
         )
 
