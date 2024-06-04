@@ -30,3 +30,25 @@ trait NodeJson extends js.Object {
   val version: Int = js.native
   val created_at: String = js.native
 }
+
+sealed trait DatabaseRole
+case class Parent(info: ParentNode) extends DatabaseRole
+case class Child(info: ChildNode) extends DatabaseRole
+
+object DatabaseRole {
+  def apply(json: DatabaseRoleJson): DatabaseRole = {
+    for (parent <- json.Parent.toOption) {
+      return Parent(ParentNode(parent))
+    }
+    for (child <- json.Child.toOption) {
+      return Child(ChildNode(child))
+    }
+    return null // this should be unreachable
+  }
+}
+
+@js.native
+trait DatabaseRoleJson extends js.Object {
+  val Parent: js.UndefOr[ParentNodeJson] = js.native
+  val Child: js.UndefOr[ChildNodeJson] = js.native
+}
