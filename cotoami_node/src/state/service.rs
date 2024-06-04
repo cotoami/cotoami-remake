@@ -129,7 +129,11 @@ where
             _ => (),
         }
 
-        ServiceError::Server(anyhow_err.to_string())
+        // BackendServiceError
+        match anyhow_err.downcast::<BackendServiceError>() {
+            Ok(BackendServiceError(e)) => e,
+            Err(e) => ServiceError::Server(e.to_string()),
+        }
     }
 }
 
