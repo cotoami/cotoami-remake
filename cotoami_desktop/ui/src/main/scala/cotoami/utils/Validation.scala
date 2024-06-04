@@ -10,7 +10,7 @@ import slinky.web.html._
 object Validation {
   case class Error(
       code: String,
-      message: String,
+      defaultMessage: String,
       params: Map[String, String] = Map.empty
   )
 
@@ -125,7 +125,7 @@ object Validation {
   def sectionValidationError(result: Validation.Result): ReactElement =
     result.firstError.map(e =>
       section(className := "validation-error")(
-        e.message
+        e.defaultMessage
       )
     )
 }

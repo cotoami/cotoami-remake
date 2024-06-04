@@ -20,7 +20,9 @@ pub enum ServiceError {
 }
 
 impl ServiceError {
-    pub fn request(code: impl Into<String>) -> Self { RequestError::new(code).into() }
+    pub fn request(code: impl Into<String>, message: impl Into<String>) -> Self {
+        RequestError::new(code, message).into()
+    }
 }
 
 pub(crate) trait IntoServiceResult<T> {
@@ -33,14 +35,16 @@ pub(crate) trait IntoServiceResult<T> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RequestError {
-    code: String,
-    params: HashMap<String, Value>,
+    pub code: String,
+    pub default_message: String,
+    pub params: HashMap<String, Value>,
 }
 
 impl RequestError {
-    pub fn new(code: impl Into<String>) -> Self {
+    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             code: code.into(),
+            default_message: message.into(),
             params: HashMap::default(),
         }
     }

@@ -123,7 +123,7 @@ where
                 return ServiceError::NotFound(Some(e.to_string()));
             }
             Some(DatabaseError::AuthenticationFailed) => {
-                return Self::request("authentication-failed");
+                return Self::request("authentication-failed", "Authentication failed.");
             }
             Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
             _ => (),
@@ -215,5 +215,6 @@ enum ChangeResult<Input, Change> {
 }
 
 fn read_only_cotonoma_error(cotonoma_name: &str) -> RequestError {
-    RequestError::new("read-only-cotonoma").with_param("cotonoma-name", json!(cotonoma_name))
+    RequestError::new("read-only-cotonoma", "The cotonoma is read-only for you.")
+        .with_param("cotonoma-name", json!(cotonoma_name))
 }

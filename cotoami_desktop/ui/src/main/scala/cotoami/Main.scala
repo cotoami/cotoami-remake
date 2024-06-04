@@ -134,9 +134,9 @@ object Main {
       case DatabaseOpened(Left(e)) =>
         (
           model
-            .error(e.message, Option(e))
+            .error(e.default_message, Option(e))
             .modify(_.modal.each.when[Modal.WelcomeModel].model)
-            .using(_.copy(processing = false, error = Some(e.message))),
+            .using(_.copy(processing = false, error = Some(e.default_message))),
           Seq.empty
         )
 

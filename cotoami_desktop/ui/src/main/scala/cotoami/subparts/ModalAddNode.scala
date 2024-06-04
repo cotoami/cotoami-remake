@@ -80,7 +80,10 @@ object ModalAddNode {
 
       case NodeConnected(Left(e)) =>
         (
-          model.copy(connecting = false, connectingError = Some(e.message)),
+          model.copy(
+            connecting = false,
+            connectingError = Some(e.default_message)
+          ),
           Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )

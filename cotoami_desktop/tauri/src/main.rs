@@ -3,12 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-use std::{env, path::PathBuf, string::ToString, sync::Arc};
+use std::{collections::HashMap, env, path::PathBuf, string::ToString, sync::Arc};
 
 use anyhow::anyhow;
 use chrono::Local;
 use cotoami_db::{Database, Id, Node};
 use cotoami_node::prelude::*;
+use serde_json::value::Value;
 use tauri::Manager;
 
 use crate::{log::Logger, recent::RecentDatabases};
@@ -36,36 +37,32 @@ fn main() {
 #[derive(serde::Serialize)]
 struct Error {
     code: String,
-    message: String,
-    details: Option<String>,
+    default_message: String,
+    params: HashMap<String, Value>,
 }
 
 impl Error {
     fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             code: code.into(),
-            message: message.into(),
-            details: None,
+            default_message: message.into(),
+            params: HashMap::new(),
         }
     }
 
     // TODO: write thorough conversion
     fn from_service_error(e: ServiceError) -> Self {
         match e {
+            ServiceError::Request(e) => e.into(),
             ServiceError::Permission => Error::new("permission-error", "Permission Error"),
             ServiceError::NotFound(msg) => Error::new("not-found", msg.unwrap_or("".into())),
             ServiceError::Server(msg) => Error::new("server-error", msg),
-            _ => Error::new("service-error", "Service Error").add_details(format!("{:?}", e)),
+            _ => Error::new("service-error", format!("{e:?}")),
         }
     }
 
     fn system_error(message: impl Into<String>) -> Self {
         Error::new("system-error", message.into())
-    }
-
-    fn add_details(mut self, details: impl Into<String>) -> Self {
-        self.details = Some(details.into());
-        self
     }
 }
 
@@ -80,6 +77,16 @@ impl From<anyhow::Error> for Error {
 
 impl From<ServiceError> for Error {
     fn from(e: ServiceError) -> Self { Self::from_service_error(e) }
+}
+
+impl From<RequestError> for Error {
+    fn from(e: RequestError) -> Self {
+        Self {
+            code: e.code,
+            default_message: e.default_message,
+            params: e.params,
+        }
+    }
 }
 
 #[derive(serde::Serialize)]

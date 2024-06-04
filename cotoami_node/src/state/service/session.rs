@@ -35,7 +35,10 @@ impl NodeState {
             let client_as_parent = input.as_parent.unwrap_or(false);
             if client_as_parent != db.globals().is_parent(&client.node_id) {
                 ds.clear_client_node_session(&client.node_id)?;
-                return Err(ServiceError::request("wrong-database-role"));
+                return Err(ServiceError::request(
+                    "wrong-database-role",
+                    "Invalid request of client role.",
+                ));
             }
 
             // Change password

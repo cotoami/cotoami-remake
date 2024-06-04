@@ -99,8 +99,12 @@ async fn post_event(
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
         let parent_service = state.parent_service_or_err(&parent.node_id)?;
-        let event = rmp_serde::from_slice(&body)
-            .map_err(|_| ServiceError::request("invalid-request-body"))?;
+        let event = rmp_serde::from_slice(&body).map_err(|_| {
+            ServiceError::request(
+                "invalid-request-body",
+                "The request body couldn't be deserialized into NodeSentEvent.",
+            )
+        })?;
         match event {
             NodeSentEvent::Change(change) => {
                 // `sync_with_parent` could be run in parallel, in such cases,
