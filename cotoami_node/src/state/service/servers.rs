@@ -17,6 +17,29 @@ use crate::{
 };
 
 impl NodeState {
+    pub(crate) async fn all_server_nodes(
+        &self,
+        operator: Arc<Operator>,
+    ) -> Result<Vec<Server>, ServiceError> {
+        let this = self.clone();
+        self.get(move |ds| {
+            let server_nodes = ds.all_server_nodes(&operator)?;
+            let node_ids: Vec<Id<Node>> = server_nodes.iter().map(|(_, node)| node.uuid).collect();
+            let mut roles = ds.database_roles_of(&node_ids)?;
+            let conns = this.read_server_conns();
+            let servers = server_nodes
+                .into_iter()
+                .map(|(server, node)| {
+                    let node_id = node.uuid;
+                    let conn = conns.get(&node_id).unwrap_or_else(|| unreachable!());
+                    Server::new(node, server, conn.not_connected(), roles.remove(&node_id))
+                })
+                .collect();
+            Ok(servers)
+        })
+        .await
+    }
+
     pub(crate) async fn connect_server_node(
         &self,
         input: ConnectServerNode,

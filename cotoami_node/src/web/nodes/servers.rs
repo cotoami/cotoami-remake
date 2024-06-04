@@ -38,23 +38,10 @@ async fn all_server_nodes(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
 ) -> Result<Content<Vec<Server>>, ServiceError> {
-    spawn_blocking(move || {
-        let conns = state.read_server_conns();
-        let mut db = state.db().new_session()?;
-        let server_nodes = db.all_server_nodes(&operator)?;
-        let node_ids: Vec<Id<Node>> = server_nodes.iter().map(|(_, node)| node.uuid).collect();
-        let mut roles = db.database_roles_of(&node_ids)?;
-        let servers = server_nodes
-            .into_iter()
-            .map(|(server, node)| {
-                let node_id = node.uuid;
-                let conn = conns.get(&node_id).unwrap_or_else(|| unreachable!());
-                Server::new(node, server, conn.not_connected(), roles.remove(&node_id))
-            })
-            .collect();
-        Ok(Content(servers, accept))
-    })
-    .await?
+    state
+        .all_server_nodes(Arc::new(operator))
+        .await
+        .map(|servers| Content(servers, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
