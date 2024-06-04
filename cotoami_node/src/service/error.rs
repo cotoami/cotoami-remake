@@ -7,6 +7,10 @@ use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 // ServiceError
 /////////////////////////////////////////////////////////////////////////////
 
+/// An error happened during service execution.
+///
+/// It doesn't implement [std::error::Error] because it has to be (de)serializable
+/// in order to be sent to other layers sometimes over the wire.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ServiceError {
     Request(RequestError),

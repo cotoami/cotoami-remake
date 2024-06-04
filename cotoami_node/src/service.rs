@@ -41,7 +41,7 @@ pub(crate) use self::{
 // Service
 /////////////////////////////////////////////////////////////////////////////
 
-/// An asynchronous function from a `Request` to a `Response`.
+/// An asynchronous function from a [Request] to a [Response].
 ///
 /// It's kind of a simplified version of `tower::Service` modified to suit Cotoami's use cases.
 ///
@@ -50,6 +50,18 @@ pub(crate) use self::{
 /// Tauri's state management: (<https://docs.rs/tauri/1.6.1/tauri/trait.Manager.html#method.manage>).
 /// If it requires `&mut self`, a `Service` in tauri state needs to be wrapped in `Mutex`
 /// to invoke the method, which causes a problem in a tauri command since `MutexGuard` is `!Send`.
+///
+/// ## Error handling
+///
+/// [Service] returns an error in two ways:
+///
+/// 1. As a result of awaiting [Service::Future] returned by [Service::call].
+///     * This error is caused during sending a request or receiving a response,
+///       unrelated to the logic of a target service.
+/// 2. A backend [ServiceError] that is saved in a [Response] and returned
+///    when you try to get the body of a it.
+///     * This [ServiceError] will be wrapped in [BackendServiceError] to allow you
+///       to handle it as a [std::error::Error].
 pub trait Service<Request> {
     type Response;
     type Error;
