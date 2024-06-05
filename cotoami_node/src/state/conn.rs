@@ -26,8 +26,8 @@ pub enum ServerConnection {
 }
 
 impl ServerConnection {
-    /// Creates a new push connection to the given `server` with a `http_client`
-    /// that has already logged it in (having a session token).
+    /// Creates a new connection to the given [ServerNode] using an
+    /// [HttpClient] that has already logged it in (having a session token).
     pub async fn new(
         server: &ServerNode,
         http_client: HttpClient,

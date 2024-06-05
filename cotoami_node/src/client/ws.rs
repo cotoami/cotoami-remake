@@ -53,8 +53,11 @@ impl WebSocketClient {
         if self.state.has_running_tasks() {
             bail!("Already connected");
         }
+
         let (sender, mut receiver) = mpsc::channel::<Option<EventLoopError>>(1);
         self.do_connect(PollSender::new(sender)).await?;
+
+        // Listen to disconnect events
         tokio::spawn({
             let this = self.clone();
             async move {
