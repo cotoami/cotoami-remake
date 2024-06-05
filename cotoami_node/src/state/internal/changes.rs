@@ -19,15 +19,18 @@ impl NodeState {
         parent_node_id: Id<Node>,
         parent_service: Box<dyn NodeService>,
     ) -> Result<Option<(i64, i64)>> {
+        let parent_node = self
+            .db()
+            .globals()
+            .parent_node(&parent_node_id)
+            .ok_or(anyhow!("ParentNode not found: {parent_node_id}"))?;
+
         self.pubsub()
             .publish_event(LocalNodeEvent::ParentSyncStart {
                 node_id: parent_node_id,
                 parent_description: parent_service.description().into(),
             });
-        match self
-            .do_sync_with_parent(parent_node_id, parent_service)
-            .await
-        {
+        match self.do_sync_with_parent(parent_node, parent_service).await {
             Ok(Some(range)) => {
                 self.pubsub().publish_event(LocalNodeEvent::ParentSyncEnd {
                     node_id: parent_node_id,
@@ -57,7 +60,7 @@ impl NodeState {
 
     async fn do_sync_with_parent(
         &self,
-        parent_node_id: Id<Node>,
+        parent_node: ParentNode,
         parent_service: Box<dyn NodeService>,
     ) -> Result<Option<(i64, i64)>> {
         info!(
@@ -65,11 +68,6 @@ impl NodeState {
             parent_service.description()
         );
 
-        let parent_node = self
-            .db()
-            .globals()
-            .parent_node(&parent_node_id)
-            .ok_or(anyhow!("ParentNode not found: {parent_node_id}"))?;
         let import_from = parent_node.changes_received + 1;
         let mut from = import_from;
         loop {
@@ -99,14 +97,15 @@ impl NodeState {
             );
 
             // Import the changes to the local database
-            self.import_changes(parent_node_id, changes).await?;
+            self.import_changes(parent_node.node_id, changes).await?;
 
+            // Publish progress
             let progress = ((last_number_of_chunk - import_from) as f64
                 / (last_serial_number - import_from) as f64)
                 * 100f64;
             self.pubsub()
                 .publish_event(LocalNodeEvent::ParentSyncProgress {
-                    node_id: parent_node_id,
+                    node_id: parent_node.node_id,
                     percent: progress as u8,
                 });
 
