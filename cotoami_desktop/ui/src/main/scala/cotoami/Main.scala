@@ -80,12 +80,9 @@ object Main {
           Seq.empty
         )
 
-      case BackendEvent(event) => {
-        for (change <- event.LocalChange.toOption) {
-          val (domain, cmds) = model.domain.importChangelog(change)
-          return (model.copy(domain = domain), cmds)
-        }
-        (model, Seq.empty)
+      case BackendChange(log) => {
+        val (domain, cmds) = model.domain.importChangelog(log)
+        return (model.copy(domain = domain), cmds)
       }
 
       case ToggleLogView =>
@@ -309,7 +306,9 @@ object Main {
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
     (tauri.listen[LogEventJson]("log", None).map(LogEvent): Sub[Msg]) <+>
-      tauri.listen[BackendEventJson]("backend-event", None).map(BackendEvent)
+      tauri.listen[ChangelogEntryJson]("backend-change", None).map(
+        BackendChange
+      )
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(

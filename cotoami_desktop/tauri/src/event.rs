@@ -1,25 +1,41 @@
 use cotoami_db::ChangelogEntry;
 use cotoami_node::prelude::*;
 use futures::StreamExt;
-use log::error;
 use tauri::{AppHandle, Manager};
 use tokio::task::JoinSet;
 
 use crate::log::Logger;
 
-#[derive(Debug, serde::Serialize)]
-pub(crate) enum BackendEvent {
-    LocalChange(ChangelogEntry),
+/////////////////////////////////////////////////////////////////////////////
+// Emit local changes
+/////////////////////////////////////////////////////////////////////////////
+
+pub(crate) trait LocalChangeSink {
+    fn send_backend_change(&self, change: &ChangelogEntry);
 }
 
-pub(crate) trait BackendEventSink {
-    fn send(&self, event: &BackendEvent);
+impl LocalChangeSink for AppHandle {
+    fn send_backend_change(&self, change: &ChangelogEntry) {
+        if let Err(e) = self.emit_all("backend-change", change) {
+            self.error(
+                &format!("Emitting a backend change faild: {e}"),
+                Some(&format!("{change:?}")),
+            );
+        }
+    }
 }
 
-impl BackendEventSink for AppHandle {
-    fn send(&self, event: &BackendEvent) {
+/////////////////////////////////////////////////////////////////////////////
+// Emit local events
+/////////////////////////////////////////////////////////////////////////////
+
+pub(crate) trait LocalEventSink {
+    fn send_backend_event(&self, event: &LocalNodeEvent);
+}
+
+impl LocalEventSink for AppHandle {
+    fn send_backend_event(&self, event: &LocalNodeEvent) {
         if let Err(e) = self.emit_all("backend-event", event) {
-            error!("Emitting a backend event faild: {event:?} (reason: {e})");
             self.error(
                 &format!("Emitting a backend event faild: {e}"),
                 Some(&format!("{event:?}")),
@@ -28,17 +44,31 @@ impl BackendEventSink for AppHandle {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Wire up between frontend and backend
+/////////////////////////////////////////////////////////////////////////////
+
 pub(super) async fn listen(state: NodeState, app_handle: AppHandle) {
     let mut tasks = JoinSet::new();
 
-    // listen to `BackendEvent::LocalChange`s.
+    // listen to [ChangelogEntry]s
     tasks.spawn({
         let (state, app_handle) = (state.clone(), app_handle.clone());
         let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
         async move {
             while let Some(change) = changes.next().await {
-                let event = BackendEvent::LocalChange(change);
-                app_handle.send(&event);
+                app_handle.send_backend_change(&change);
+            }
+        }
+    });
+
+    // listen to [LocalNodeEvent]s
+    tasks.spawn({
+        let (state, app_handle) = (state.clone(), app_handle.clone());
+        let mut events = state.pubsub().events().subscribe(None::<()>);
+        async move {
+            while let Some(event) = events.next().await {
+                app_handle.send_backend_event(&event);
             }
         }
     });
