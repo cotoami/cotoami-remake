@@ -29,10 +29,10 @@ impl NodeState {
             let conns = this.read_server_conns();
             let servers = server_nodes
                 .into_iter()
-                .map(|(server, node)| {
-                    let node_id = node.uuid;
+                .map(|(server, _)| {
+                    let node_id = server.node_id;
                     let conn = conns.get(&node_id).unwrap_or_else(|| unreachable!());
-                    Server::new(node, server, conn.not_connected(), roles.remove(&node_id))
+                    Server::new(server, conn.not_connected(), roles.remove(&node_id))
                 })
                 .collect();
             Ok(servers)
@@ -127,12 +127,7 @@ impl NodeState {
         self.put_server_conn(&server_id, server_conn.clone());
 
         // Return a Server as a response
-        let server = Server::new(
-            server_node,
-            server,
-            server_conn.not_connected(),
-            Some(server_db_role),
-        );
+        let server = Server::new(server, server_conn.not_connected(), Some(server_db_role));
         Ok(server)
     }
 }

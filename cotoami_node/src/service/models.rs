@@ -68,7 +68,6 @@ pub struct ConnectServerNode {
 
 #[derive(serde::Serialize, new)]
 pub struct Server {
-    pub node: Node,
     pub server: ServerNode,
     pub not_connected: Option<NotConnected>,
     pub database_role: Option<DatabaseRole>,
