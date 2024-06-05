@@ -100,13 +100,11 @@ impl NodeState {
             self.import_changes(parent_node.node_id, changes).await?;
 
             // Publish progress
-            let progress = ((last_number_of_chunk - import_from) as f64
-                / (last_serial_number - import_from) as f64)
-                * 100f64;
             self.pubsub()
                 .publish_event(LocalNodeEvent::ParentSyncProgress {
                     node_id: parent_node.node_id,
-                    percent: progress as u8,
+                    progress: last_number_of_chunk - import_from,
+                    max: last_serial_number - import_from,
                 });
 
             // Next chunk or finish import

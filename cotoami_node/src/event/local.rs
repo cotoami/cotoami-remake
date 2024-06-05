@@ -14,7 +14,8 @@ pub enum LocalNodeEvent {
     },
     ParentSyncProgress {
         node_id: Id<Node>,
-        percent: u8,
+        progress: i64,
+        max: i64,
     },
     ParentSyncEnd {
         node_id: Id<Node>,
