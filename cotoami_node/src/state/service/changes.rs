@@ -10,6 +10,10 @@ use crate::{
 };
 
 impl NodeState {
+    pub async fn last_change_number(&self) -> Result<Option<i64>, ServiceError> {
+        self.get(move |ds| ds.last_change_number()).await
+    }
+
     pub async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges, ServiceError> {
         let changes_chunk_size = self.config().changes_chunk_size;
         self.get(

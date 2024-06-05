@@ -12,7 +12,7 @@ use crate::service::NodeService;
 
 mod config;
 mod conn;
-mod impls;
+mod internal;
 mod pubsub;
 mod service;
 

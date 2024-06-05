@@ -13,11 +13,6 @@ use crate::{
 };
 
 impl NodeState {
-    pub async fn last_change_number(&self) -> Result<Option<i64>> {
-        let db = self.db().clone();
-        spawn_blocking(move || Ok(db.new_session()?.last_change_number()?)).await?
-    }
-
     pub(crate) async fn sync_with_parent(
         &self,
         parent_node_id: Id<Node>,
