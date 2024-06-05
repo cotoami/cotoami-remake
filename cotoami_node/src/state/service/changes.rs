@@ -10,7 +10,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub(crate) async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges, ServiceError> {
+    pub async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges, ServiceError> {
         let changes_chunk_size = self.config().changes_chunk_size;
         self.get(
             move |ds| match ds.chunk_of_changes(from, changes_chunk_size) {

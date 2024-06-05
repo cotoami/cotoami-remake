@@ -6,8 +6,11 @@ case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
     localId: Option[Id[Node]] = None,
     operatingId: Option[Id[Node]] = None,
+    selectedId: Option[Id[Node]] = None,
+
+    // roles
     parentIds: Seq[Id[Node]] = Seq.empty,
-    selectedId: Option[Id[Node]] = None
+    servers: Seq[Server] = Seq.empty
 ) {
   def get(id: Id[Node]): Option[Node] = this.map.get(id)
 
@@ -41,6 +44,7 @@ object Nodes {
       map = info.nodes,
       localId = Some(info.localNodeId),
       operatingId = Some(info.localNodeId),
-      parentIds = info.parentNodeIds.toSeq
+      parentIds = info.parentNodeIds.toSeq,
+      servers = info.servers.toSeq
     )
 }

@@ -173,10 +173,12 @@ struct DatabaseInfo {
     nodes: Vec<Node>,
     local_node_id: Id<Node>,
     parent_node_ids: Vec<Id<Node>>,
+    servers: Vec<Server>,
 }
 
 impl DatabaseInfo {
     async fn new(folder: String, node_state: &NodeState) -> Result<Self, Error> {
+        let opr = Arc::new(node_state.local_node_as_operator()?);
         Ok(Self {
             folder,
             // Get the last change number before retrieving database contents to
@@ -190,6 +192,7 @@ impl DatabaseInfo {
             nodes: node_state.all_nodes().await?,
             local_node_id: node_state.db().globals().local_node_id()?,
             parent_node_ids: node_state.db().globals().parent_node_ids(),
+            servers: node_state.all_server_nodes(opr).await?,
         })
     }
 

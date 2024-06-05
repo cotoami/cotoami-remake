@@ -30,9 +30,9 @@ pub mod models;
 pub mod pubsub;
 pub mod service_ext;
 
-use self::models::*;
 pub(crate) use self::{
     error::*,
+    models::*,
     pubsub::*,
     service_ext::{NodeServiceExt, RemoteNodeServiceExt},
 };

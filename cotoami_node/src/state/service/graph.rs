@@ -10,10 +10,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub(crate) async fn graph_from_coto(
-        &self,
-        coto_id: Id<Coto>,
-    ) -> Result<CotoGraph, ServiceError> {
+    pub async fn graph_from_coto(&self, coto_id: Id<Coto>) -> Result<CotoGraph, ServiceError> {
         self.get(move |ds| {
             let root_coto = ds.try_get_coto(&coto_id)?;
             let root_cotonoma = if root_coto.is_cotonoma {
@@ -27,7 +24,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn graph_from_cotonoma(
+    pub async fn graph_from_cotonoma(
         &self,
         cotonoma_id: Id<Cotonoma>,
     ) -> Result<CotoGraph, ServiceError> {

@@ -17,7 +17,7 @@ use crate::{
 const DEFAULT_PAGE_SIZE: i64 = 20;
 
 impl NodeState {
-    pub(crate) async fn recent_cotos(
+    pub async fn recent_cotos(
         &self,
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
@@ -38,7 +38,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn search_cotos(
+    pub async fn search_cotos(
         &self,
         query: String,
         node: Option<Id<Node>>,
@@ -61,7 +61,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn post_coto(
+    pub async fn post_coto(
         self,
         input: CotoInput,
         post_to: Id<Cotonoma>,

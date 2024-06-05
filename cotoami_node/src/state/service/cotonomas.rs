@@ -18,7 +18,7 @@ const DEFAULT_SUB_PAGE_SIZE: i64 = 10;
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
 
 impl NodeState {
-    pub(crate) async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<Cotonoma, ServiceError> {
+    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<Cotonoma, ServiceError> {
         self.get(move |ds| {
             let (cotonoma, _) = ds.try_get_cotonoma(&id)?;
             Ok::<_, anyhow::Error>(cotonoma)
@@ -26,7 +26,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn cotonoma_details(
+    pub async fn cotonoma_details(
         &self,
         id: Id<Cotonoma>,
     ) -> Result<CotonomaDetails, ServiceError> {
@@ -39,7 +39,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn cotonoma_by_name(
+    pub async fn cotonoma_by_name(
         &self,
         name: String,
         node: Id<Node>,
@@ -51,7 +51,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn sub_cotonomas(
+    pub async fn sub_cotonomas(
         &self,
         id: Id<Cotonoma>,
         pagination: Pagination,
@@ -69,7 +69,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn recent_cotonomas(
+    pub async fn recent_cotonomas(
         &self,
         node: Option<Id<Node>>,
         pagination: Pagination,
@@ -87,7 +87,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn post_cotonoma(
+    pub async fn post_cotonoma(
         self,
         input: CotonomaInput,
         post_to: Id<Cotonoma>,

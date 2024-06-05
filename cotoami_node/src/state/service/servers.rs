@@ -17,7 +17,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub(crate) async fn all_server_nodes(
+    pub async fn all_server_nodes(
         &self,
         operator: Arc<Operator>,
     ) -> Result<Vec<Server>, ServiceError> {
@@ -40,7 +40,7 @@ impl NodeState {
         .await
     }
 
-    pub(crate) async fn connect_server_node(
+    pub async fn connect_server_node(
         &self,
         input: ConnectServerNode,
     ) -> Result<(ClientNodeSession, HttpClient), ServiceError> {
@@ -68,7 +68,7 @@ impl NodeState {
         Ok((session, http_client))
     }
 
-    pub(crate) async fn add_server_node(
+    pub async fn add_server_node(
         &self,
         input: ConnectServerNode,
         operator: Arc<Operator>,
