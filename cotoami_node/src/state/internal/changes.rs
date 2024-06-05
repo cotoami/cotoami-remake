@@ -4,6 +4,7 @@ use tokio::task::spawn_blocking;
 use tracing::{debug, info};
 
 use crate::{
+    event::local::LocalNodeEvent,
     service::{
         models::{Changes, ChunkOfChanges},
         service_ext::NodeServiceExt,
@@ -18,6 +19,47 @@ impl NodeState {
         parent_node_id: Id<Node>,
         parent_service: Box<dyn NodeService>,
     ) -> Result<Option<(i64, i64)>> {
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ParentSyncStart {
+                node_id: parent_node_id,
+                parent_description: parent_service.description().into(),
+            });
+        match self
+            .do_sync_with_parent(parent_node_id, parent_service)
+            .await
+        {
+            Ok(Some(range)) => {
+                self.pubsub().publish_event(LocalNodeEvent::ParentSyncEnd {
+                    node_id: parent_node_id,
+                    range: Some(range),
+                    error: None,
+                });
+                Ok(Some(range))
+            }
+            Ok(None) => {
+                self.pubsub().publish_event(LocalNodeEvent::ParentSyncEnd {
+                    node_id: parent_node_id,
+                    range: None,
+                    error: None,
+                });
+                Ok(None)
+            }
+            Err(e) => {
+                self.pubsub().publish_event(LocalNodeEvent::ParentSyncEnd {
+                    node_id: parent_node_id,
+                    range: None,
+                    error: Some(e.to_string()),
+                });
+                Err(e)
+            }
+        }
+    }
+
+    async fn do_sync_with_parent(
+        &self,
+        parent_node_id: Id<Node>,
+        parent_service: Box<dyn NodeService>,
+    ) -> Result<Option<(i64, i64)>> {
         info!(
             "Importing the changes from {}",
             parent_service.description()
@@ -28,7 +70,6 @@ impl NodeState {
             .globals()
             .parent_node(&parent_node_id)
             .ok_or(anyhow!("ParentNode not found: {parent_node_id}"))?;
-
         let import_from = parent_node.changes_received + 1;
         let mut from = import_from;
         loop {
@@ -50,14 +91,21 @@ impl NodeState {
             };
             let is_last_chunk = changes.is_last_chunk();
             let last_number_of_chunk = changes.last_serial_number_of_chunk();
+            let last_serial_number = changes.last_serial_number;
 
             debug!(
                 "Fetched a chunk of changes: {}-{} (is_last: {}, max: {})",
-                from, last_number_of_chunk, is_last_chunk, changes.last_serial_number
+                from, last_number_of_chunk, is_last_chunk, last_serial_number
             );
 
             // Import the changes to the local database
             self.import_changes(parent_node_id, changes).await?;
+
+            let progress = ((last_number_of_chunk - import_from) as f64
+                / (last_serial_number - import_from) as f64)
+                * 100f64;
+            self.pubsub()
+                .publish_event(LocalNodeEvent::ParentSyncPercent(progress as u8));
 
             // Next chunk or finish import
             if is_last_chunk {

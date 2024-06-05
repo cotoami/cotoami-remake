@@ -39,6 +39,8 @@ impl Pubsub {
     pub fn publish_change(&self, changelog: ChangelogEntry) {
         self.local_changes.publish(changelog, None);
     }
+
+    pub fn publish_event(&self, event: LocalNodeEvent) { self.events.publish(event, None); }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -56,23 +58,17 @@ pub type EventPubsub = Publisher<LocalNodeEvent, ()>;
 impl EventPubsub {
     pub fn publish_server_disconnected(
         &self,
-        server_node_id: Id<Node>,
+        node_id: Id<Node>,
         reason: NotConnected,
         is_parent: bool,
     ) {
-        self.publish(
-            LocalNodeEvent::ServerDisconnected {
-                server_node_id,
-                reason,
-            },
-            None,
-        );
+        self.publish(LocalNodeEvent::ServerDisconnected { node_id, reason }, None);
         if is_parent {
-            self.publish_parent_disconnected(server_node_id);
+            self.publish_parent_disconnected(node_id);
         }
     }
 
-    pub fn publish_parent_disconnected(&self, parent_node_id: Id<Node>) {
-        self.publish(LocalNodeEvent::ParentDisconnected(parent_node_id), None);
+    pub fn publish_parent_disconnected(&self, node_id: Id<Node>) {
+        self.publish(LocalNodeEvent::ParentDisconnected(node_id), None);
     }
 }
