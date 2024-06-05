@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
-    event::tungstenite::{communicate_with_operator, communicate_with_parent},
+    event::remote::tungstenite::{communicate_with_operator, communicate_with_parent},
     state::NodeState,
 };
 

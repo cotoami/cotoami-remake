@@ -8,7 +8,7 @@ use parking_lot::{Mutex, RwLock};
 use tokio::task::{spawn_blocking, AbortHandle};
 use tracing::info;
 
-use crate::{event::EventLoopError, service::models::NotConnected, state::NodeState};
+use crate::{event::remote::EventLoopError, service::models::NotConnected, state::NodeState};
 
 mod http;
 mod sse;

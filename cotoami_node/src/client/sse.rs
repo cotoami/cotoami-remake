@@ -12,7 +12,7 @@ use tracing::{debug, error, info};
 
 use crate::{
     client::{ClientState, ConnectionState, HttpClient},
-    event::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
+    event::remote::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
     service::{models::NotConnected, Request, Response},
     state::NodeState,
 };

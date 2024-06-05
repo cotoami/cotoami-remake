@@ -13,7 +13,7 @@ use tokio_util::sync::PollSender;
 use tracing::{debug, info};
 
 use crate::{
-    event::{EventLoopError, NodeSentEvent},
+    event::remote::{EventLoopError, NodeSentEvent},
     service::PubsubService,
     state::NodeState,
 };

@@ -15,7 +15,7 @@ use futures::stream::Stream;
 use tracing::debug;
 
 use crate::{
-    event::NodeSentEvent,
+    event::remote::NodeSentEvent,
     service::{PubsubService, ServiceError},
     state::{EventPubsub, NodeState},
 };
