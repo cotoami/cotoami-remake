@@ -105,7 +105,10 @@ impl NodeState {
                 / (last_serial_number - import_from) as f64)
                 * 100f64;
             self.pubsub()
-                .publish_event(LocalNodeEvent::ParentSyncPercent(progress as u8));
+                .publish_event(LocalNodeEvent::ParentSyncProgress {
+                    node_id: parent_node_id,
+                    percent: progress as u8,
+                });
 
             // Next chunk or finish import
             if is_last_chunk {

@@ -12,7 +12,10 @@ pub enum LocalNodeEvent {
         node_id: Id<Node>,
         parent_description: String,
     },
-    ParentSyncPercent(u8),
+    ParentSyncProgress {
+        node_id: Id<Node>,
+        percent: u8,
+    },
     ParentSyncEnd {
         node_id: Id<Node>,
         range: Option<(i64, i64)>,
