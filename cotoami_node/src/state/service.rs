@@ -1,5 +1,4 @@
-//! Server-side implemention of Node Service,
-//! which is intended for non-HTTP protocols such as WebSocket.
+//! [NodeService] implementation based on [NodeState].
 
 use std::sync::Arc;
 
