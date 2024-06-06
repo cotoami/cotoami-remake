@@ -4,6 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{FlowInputMsg, Model, Msg}
+import cotoami.models.UiState
 
 object PaneFlow {
   val PaneName = "PaneFlow"
@@ -14,7 +15,7 @@ object PaneFlow {
 
   def apply(
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "flow")(

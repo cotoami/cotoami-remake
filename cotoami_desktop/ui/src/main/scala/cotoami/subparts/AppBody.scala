@@ -3,13 +3,14 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 
 import cotoami.{Model, Msg, OpenOrClosePane, ResizePane}
+import cotoami.models.UiState
 import cotoami.components.{optionalClasses, SplitPane}
 
 object AppBody {
 
   def contents(
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       dispatch: Msg => Unit
   ): Seq[ReactElement] = Seq(
     NavNodes(model, uiState, dispatch),
@@ -52,7 +53,7 @@ object AppBody {
 
   private def flowAndStock(
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       dispatch: Msg => Unit
   ): ReactElement = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)

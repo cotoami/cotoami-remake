@@ -12,8 +12,9 @@ import slinky.web.html._
 
 import cotoami.{Model, Msg, ScrollToPinnedCoto, SwitchPinnedView}
 import cotoami.backend.{Coto, Cotonoma, Link}
-import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
+import cotoami.models.UiState
 import cotoami.repositories.Domain
+import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
 object PaneStock {
   val PaneName = "PaneStock"
@@ -22,7 +23,7 @@ object PaneStock {
 
   def apply(
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       dispatch: Msg => Unit
   ): ReactElement = {
     val sectionTraversals = SectionTraversals(
@@ -61,7 +62,7 @@ object PaneStock {
 
   def sectionCatalog(
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
   ): ReactElement =
@@ -80,7 +81,7 @@ object PaneStock {
   def sectionPinnedCotos(
       pinned: Seq[(Link, Coto)],
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       currentCotonoma: Cotonoma,
       dispatch: Msg => Unit
   ): ReactElement = {

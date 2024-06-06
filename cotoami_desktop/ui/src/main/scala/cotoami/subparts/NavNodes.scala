@@ -11,16 +11,17 @@ import cotoami.{
   OpenOrClosePane,
   SelectNode
 }
-import cotoami.components.{materialSymbol, optionalClasses}
+import cotoami.models.UiState
 import cotoami.backend.Node
 import cotoami.repositories.Nodes
+import cotoami.components.{materialSymbol, optionalClasses}
 
 object NavNodes {
   val PaneName = "nav-nodes"
 
   def apply(
       model: Model,
-      uiState: Model.UiState,
+      uiState: UiState,
       dispatch: Msg => Unit
   ): ReactElement = {
     val nodes = model.domain.nodes

@@ -5,6 +5,7 @@ import org.scalajs.dom.URL
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
+import cotoami.models._
 import cotoami.subparts._
 
 sealed trait Msg
@@ -23,7 +24,7 @@ case object ToggleLogView extends Msg
 
 // App init
 case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
-case class UiStateRestored(state: Option[Model.UiState]) extends Msg
+case class UiStateRestored(state: Option[UiState]) extends Msg
 case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
     extends Msg
 

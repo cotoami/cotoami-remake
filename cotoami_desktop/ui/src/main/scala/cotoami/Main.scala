@@ -19,6 +19,7 @@ import fui._
 import cotoami.tauri
 import cotoami.backend._
 import cotoami.repositories._
+import cotoami.models._
 import cotoami.subparts._
 
 object Main {
@@ -52,7 +53,7 @@ object Main {
     (
       Model(url = url, flowInput = flowInput),
       Seq(
-        Model.UiState.restore(UiStateRestored),
+        UiState.restore(UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
           _.map(openDatabase).getOrElse(Cmd.none)
@@ -109,7 +110,7 @@ object Main {
       case UiStateRestored(uiState) =>
         (
           model
-            .modify(_.uiState).setTo(Some(uiState.getOrElse(Model.UiState())))
+            .modify(_.uiState).setTo(Some(uiState.getOrElse(UiState())))
             .info("UiState restored.", Some(uiState.toString())),
           Seq.empty
         )
