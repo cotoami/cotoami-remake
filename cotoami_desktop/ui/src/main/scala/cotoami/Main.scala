@@ -96,8 +96,9 @@ object Main {
             .modify(_.context).using(
               _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
             )
-            .modify(_.modal.each.when[Modal.WelcomeModel].model.baseFolder)
-            .setTo(Nullable.toOption(systemInfo.app_data_dir).getOrElse(""))
+            .modify(
+              _.modalStack.modals.each.when[Modal.WelcomeModel].model.baseFolder
+            ).setTo(Nullable.toOption(systemInfo.app_data_dir).getOrElse(""))
             .info(
               "SystemInfo fetched.",
               Some(SystemInfoJson.debug(systemInfo))
@@ -120,7 +121,7 @@ object Main {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.domain).using(_.init(info))
-          .modify(_.modal).setTo(None)
+          .modify(_.modalStack).using(_.closeTop)
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
@@ -133,7 +134,7 @@ object Main {
         (
           model
             .error(e.default_message, Some(e))
-            .modify(_.modal.each.when[Modal.WelcomeModel].model)
+            .modify(_.modalStack.modals.each.when[Modal.WelcomeModel].model)
             .using(_.copy(processing = false, error = Some(e.default_message))),
           Seq.empty
         )
@@ -257,17 +258,14 @@ object Main {
       }
 
       case OpenModal(modal) =>
-        (model.copy(modal = Some(modal)), Seq.empty)
+        (model.modify(_.modalStack).using(_.open(modal)), Seq.empty)
 
-      case CloseModal => (model.copy(modal = None), Seq.empty)
+      case CloseModal =>
+        (model.modify(_.modalStack).using(_.closeTop), Seq.empty)
 
       case ModalMsg(subMsg) =>
-        model.modal match {
-          case Some(modal) =>
-            Modal.update(subMsg, modal)
-              .pipe(pair => (model.copy(modal = Some(pair._1)), pair._2))
-          case None => (model, Seq.empty)
-        }
+        Modal.update(subMsg, model.modalStack)
+          .pipe(pair => (model.copy(modalStack = pair._1), pair._2))
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
