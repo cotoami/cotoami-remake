@@ -7,7 +7,7 @@ import cotoami.utils.Log
 trait LogEventJson extends js.Object {
   val level: String = js.native
   val message: String = js.native
-  val details: String = js.native
+  val details: Nullable[String] = js.native
 }
 
 object LogEventJson {
@@ -15,6 +15,6 @@ object LogEventJson {
     Log.Entry(
       Log.levels.get(event.level).getOrElse(Log.Debug),
       event.message,
-      Option(event.details)
+      Nullable.toOption(event.details)
     )
 }

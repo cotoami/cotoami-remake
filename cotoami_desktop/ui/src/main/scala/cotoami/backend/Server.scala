@@ -7,16 +7,16 @@ import cotoami.utils.Validation
 case class Server(json: ServerJson) {
   val server: ServerNode = ServerNode(this.json.server)
   val notConnected: Option[NotConnected] =
-    Option(this.json.not_connected).map(NotConnected(_))
+    Nullable.toOption(this.json.not_connected).map(NotConnected(_))
   val databaseRole: Option[DatabaseRole] =
-    Option(this.json.database_role).map(DatabaseRole(_))
+    Nullable.toOption(this.json.database_role).map(DatabaseRole(_))
 }
 
 @js.native
 trait ServerJson extends js.Object {
   val server: ServerNodeJson = js.native
-  val not_connected: NotConnectedJson = js.native
-  val database_role: DatabaseRoleJson = js.native
+  val not_connected: Nullable[NotConnectedJson] = js.native
+  val database_role: Nullable[DatabaseRoleJson] = js.native
 }
 
 case class ServerNode(json: ServerNodeJson) {

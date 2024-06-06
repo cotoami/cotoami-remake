@@ -33,7 +33,7 @@ trait ChangeJson extends js.Object {
 @js.native
 trait CreateNodeJson extends js.Object {
   val node: NodeJson = js.native
-  val root: js.Tuple2[CotonomaJson, CotoJson] = js.native
+  val root: Nullable[js.Tuple2[CotonomaJson, CotoJson]] = js.native
 }
 
 @js.native
@@ -53,7 +53,7 @@ trait SetRootCotonomaJson extends js.Object {
 trait EditCotoJson extends js.Object {
   val coto_id: String = js.native
   val content: String = js.native
-  val summary: String = js.native
+  val summary: Nullable[String] = js.native
   val updated_at: String = js.native
 }
 
@@ -73,8 +73,8 @@ trait RenameCotonomaJson extends js.Object {
 @js.native
 trait EditLinkJson extends js.Object {
   val link_id: String = js.native
-  val linking_phrase: String = js.native
-  val details: String = js.native
+  val linking_phrase: Nullable[String] = js.native
+  val details: Nullable[String] = js.native
   val updated_at: String = js.native
 }
 

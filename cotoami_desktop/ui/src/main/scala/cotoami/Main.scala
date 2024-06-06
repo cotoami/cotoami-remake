@@ -96,7 +96,7 @@ object Main {
               _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
             )
             .modify(_.modal.each.when[Modal.WelcomeModel].model.baseFolder)
-            .setTo(systemInfo.app_data_dir)
+            .setTo(Nullable.toOption(systemInfo.app_data_dir).getOrElse(""))
             .info(
               "SystemInfo fetched.",
               Some(SystemInfoJson.debug(systemInfo))
@@ -131,7 +131,7 @@ object Main {
       case DatabaseOpened(Left(e)) =>
         (
           model
-            .error(e.default_message, Option(e))
+            .error(e.default_message, Some(e))
             .modify(_.modal.each.when[Modal.WelcomeModel].model)
             .using(_.copy(processing = false, error = Some(e.default_message))),
           Seq.empty

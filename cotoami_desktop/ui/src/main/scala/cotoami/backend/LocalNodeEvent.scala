@@ -33,6 +33,6 @@ trait ParentSyncProgressJson extends js.Object {
 @js.native
 trait ParentSyncEndJson extends js.Object {
   val node_id: String = js.native
-  val range: js.Tuple2[Double, Double] = js.native // nullable
-  val error: String = js.native // nullable
+  val range: Nullable[js.Tuple2[Double, Double]] = js.native
+  val error: Nullable[String] = js.native
 }

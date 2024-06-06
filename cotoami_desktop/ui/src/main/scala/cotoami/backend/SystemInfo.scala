@@ -7,8 +7,8 @@ import cotoami.tauri
 @js.native
 trait SystemInfoJson extends js.Object {
   val app_version: String = js.native
-  val app_config_dir: String = js.native
-  val app_data_dir: String = js.native
+  val app_config_dir: Nullable[String] = js.native
+  val app_data_dir: Nullable[String] = js.native
   val time_zone_offset_in_sec: Int = js.native
   val os: String = js.native
   val recent_databases: js.Array[DatabaseOpenedJson] = js.native

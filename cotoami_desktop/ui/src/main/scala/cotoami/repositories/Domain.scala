@@ -28,13 +28,13 @@ case class Domain(
     )
 
   def rootCotonomaId: Option[Id[Cotonoma]] =
-    this.nodes.current.flatMap(node => Option(node.rootCotonomaId))
+    this.nodes.current.flatMap(node => node.rootCotonomaId)
 
   def isRoot(id: Id[Cotonoma]): Boolean = Some(id) == this.rootCotonomaId
 
   def currentCotonomaId: Option[Id[Cotonoma]] =
     this.cotonomas.selectedId.orElse(
-      this.nodes.current.map(_.rootCotonomaId)
+      this.nodes.current.flatMap(_.rootCotonomaId)
     )
 
   // Note: Even if `currentCotonomaId` has `Some` value, this method will

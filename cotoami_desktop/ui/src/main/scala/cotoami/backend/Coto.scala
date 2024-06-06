@@ -31,17 +31,27 @@ trait CotoContent {
 case class Coto(json: CotoJson) extends Entity[Coto] with CotoContent {
   override def id: Id[Coto] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)
+
   def postedInId: Option[Id[Cotonoma]] =
-    Option(this.json.posted_in_id).map(Id(_))
+    Nullable.toOption(this.json.posted_in_id).map(Id(_))
+
   def postedById: Id[Node] = Id(this.json.posted_by_id)
-  override def content: Option[String] = Option(this.json.content)
-  override def summary: Option[String] = Option(this.json.summary)
+
+  override def content: Option[String] = Nullable.toOption(this.json.content)
+  override def summary: Option[String] = Nullable.toOption(this.json.summary)
+
   override def isCotonoma: Boolean = this.json.is_cotonoma
-  def repostOfId: Option[Id[Coto]] = Option(this.json.repost_of_id).map(Id(_))
+
+  def repostOfId: Option[Id[Coto]] =
+    Nullable.toOption(this.json.repost_of_id).map(Id(_))
+
   def repostedInIds: Option[Seq[Id[Cotonoma]]] =
-    Option(this.json.reposted_in_ids).map(_.map(Id[Cotonoma](_)).toSeq)
+    Nullable.toOption(this.json.reposted_in_ids)
+      .map(_.map(Id[Cotonoma](_)).toSeq)
+
   lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
   lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
+
   def outgoingLinks: Int = this.json.outgoing_links
 
   def postedInIds: Seq[Id[Cotonoma]] =
@@ -73,13 +83,13 @@ object Coto {
 trait CotoJson extends js.Object {
   val uuid: String = js.native
   val node_id: String = js.native
-  val posted_in_id: String = js.native
+  val posted_in_id: Nullable[String] = js.native
   val posted_by_id: String = js.native
-  val content: String = js.native
-  val summary: String = js.native
+  val content: Nullable[String] = js.native
+  val summary: Nullable[String] = js.native
   val is_cotonoma: Boolean = js.native
-  val repost_of_id: String = js.native
-  val reposted_in_ids: js.Array[String] = js.native
+  val repost_of_id: Nullable[String] = js.native
+  val reposted_in_ids: Nullable[js.Array[String]] = js.native
   val created_at: String = js.native
   val updated_at: String = js.native
   val outgoing_links: Int = js.native
