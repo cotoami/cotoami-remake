@@ -9,7 +9,13 @@ import fui._
 import cotoami.{log_error, tauri}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
-import cotoami.backend.{DatabaseOpenedJson, ErrorJson, Node}
+import cotoami.backend.{
+  DatabaseInfo,
+  DatabaseInfoJson,
+  DatabaseOpenedJson,
+  ErrorJson,
+  Node
+}
 
 object ModalWelcome {
 
@@ -68,6 +74,8 @@ object ModalWelcome {
       extends Msg
   case object OpenDatabase extends Msg
   case class OpenDatabaseIn(folder: String) extends Msg
+  case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
+      extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -174,11 +182,38 @@ object ModalWelcome {
       case OpenDatabase =>
         (
           model.copy(processing = true),
-          Seq(cotoami.openDatabase(model.databaseFolder))
+          Seq(
+            cotoami.openDatabase(model.databaseFolder).map(
+              appMsgTagger(DatabaseOpened(_))
+            )
+          )
         )
 
       case OpenDatabaseIn(folder) =>
-        (model.copy(processing = true), Seq(cotoami.openDatabase(folder)))
+        (
+          model.copy(processing = true),
+          Seq(
+            cotoami.openDatabase(folder).map(
+              appMsgTagger(DatabaseOpened(_))
+            )
+          )
+        )
+
+      case DatabaseOpened(Right(json)) => {
+        (
+          model,
+          Seq(
+            Browser.send(cotoami.SetDatabaseInfo(DatabaseInfo(json))),
+            Browser.send(cotoami.CloseModal)
+          )
+        )
+      }
+
+      case DatabaseOpened(Left(e)) =>
+        (
+          model.copy(processing = false, error = Some(e.default_message)),
+          Seq(log_error(e.default_message, Some(e.toString())))
+        )
     }
 
   private def validateNewFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
@@ -209,7 +244,7 @@ object ModalWelcome {
             folderName = model.folderName
           )
       )
-      .map(cotoami.DatabaseOpened)
+      .map(appMsgTagger(DatabaseOpened(_)))
 
   private def validateDatabaseFolder(model: Model): Seq[Cmd[cotoami.Msg]] =
     if (!model.databaseFolder.isBlank)

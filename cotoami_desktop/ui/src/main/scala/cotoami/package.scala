@@ -3,6 +3,7 @@ import cats.effect.IO
 
 import fui._
 import cotoami.utils.Log
+import cotoami.backend.{DatabaseInfoJson, ErrorJson}
 
 package object cotoami {
 
@@ -15,7 +16,7 @@ package object cotoami {
   def log_error(message: String, details: Option[String] = None): Cmd[Msg] =
     Cmd(IO { Some(AddLogEntry(Log.Error, message, details)) })
 
-  def openDatabase(folder: String): Cmd[Msg] =
+  def openDatabase(folder: String): Cmd[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
       .invokeCommand(
         "open_database",
@@ -24,5 +25,4 @@ package object cotoami {
             databaseFolder = folder
           )
       )
-      .map(DatabaseOpened)
 }

@@ -56,7 +56,7 @@ object Main {
         UiState.restore(UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
-          _.map(openDatabase).getOrElse(Cmd.none)
+          _.map(openDatabase(_).map(DatabaseOpened)).getOrElse(Cmd.none)
         ),
         flowInputCmd.map(FlowInputMsg)
       )
@@ -116,12 +116,16 @@ object Main {
           Seq.empty
         )
 
-      case DatabaseOpened(Right(json)) => {
-        val info = DatabaseInfo(json)
+      case DatabaseOpened(Right(json)) =>
+        (model, Seq(Browser.send(SetDatabaseInfo(DatabaseInfo(json)))))
+
+      case DatabaseOpened(Left(e)) =>
+        (model.error(e.default_message, Some(e)), Seq())
+
+      case SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.domain).using(_.init(info))
-          .modify(_.modalStack).using(_.closeTop)
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
@@ -129,15 +133,6 @@ object Main {
             )
         }
       }
-
-      case DatabaseOpened(Left(e)) =>
-        (
-          model
-            .error(e.default_message, Some(e))
-            .modify(_.modalStack.modals.each.when[Modal.WelcomeModel].model)
-            .using(_.copy(processing = false, error = Some(e.default_message))),
-          Seq.empty
-        )
 
       case OpenOrClosePane(name, open) =>
         model.uiState
@@ -209,7 +204,11 @@ object Main {
       case ReloadDomain => {
         (
           model.copy(domain = Domain()),
-          Seq(model.databaseFolder.map(openDatabase).getOrElse(Cmd.none))
+          Seq(
+            model.databaseFolder.map(
+              openDatabase(_).map(DatabaseOpened)
+            ).getOrElse(Cmd.none)
+          )
         )
       }
 
