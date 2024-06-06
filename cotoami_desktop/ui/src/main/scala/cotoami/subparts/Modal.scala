@@ -16,7 +16,7 @@ object Modal {
     def addNode: Model = AddNodeModel(ModalAddNode.Model())
   }
 
-  case class Stack(modals: Seq[Model]) {
+  case class Stack(modals: Seq[Model] = Seq.empty) {
     def open(modal: Model): Stack = this.modify(_.modals).using(modal +: _)
 
     def top: Option[Model] = this.modals.headOption
@@ -25,10 +25,6 @@ object Modal {
       this.modify(_.modals).using(_.updated(0, modal))
 
     def closeTop: Stack = this.modify(_.modals).using(_.drop(1))
-  }
-
-  object Stack {
-    def default: Stack = Stack(Seq(Model.welcome))
   }
 
   sealed trait Msg

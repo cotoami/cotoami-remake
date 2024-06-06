@@ -56,7 +56,8 @@ object Main {
         UiState.restore(UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
-          _.map(openDatabase(_).map(DatabaseOpened)).getOrElse(Cmd.none)
+          _.map(openDatabase(_).map(DatabaseOpened))
+            .getOrElse(Browser.send(OpenModal(Modal.Model.welcome)))
         ),
         flowInputCmd.map(FlowInputMsg)
       )

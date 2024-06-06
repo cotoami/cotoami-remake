@@ -36,7 +36,7 @@ case class Model(
     // subparts
     flowInput: FormCoto.Model,
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
-    modalStack: Modal.Stack = Modal.Stack.default
+    modalStack: Modal.Stack = Modal.Stack()
 ) {
   def path: String = this.url.pathname + this.url.search + this.url.hash
 
