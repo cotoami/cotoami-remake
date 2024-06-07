@@ -87,24 +87,34 @@ impl NodeState {
                     }
                 }
             };
+
+            // Info from the chunk
             let is_last_chunk = changes.is_last_chunk();
             let last_number_of_chunk = changes.last_serial_number_of_chunk();
             let last_serial_number = changes.last_serial_number;
-
+            let total = last_serial_number - import_from;
             debug!(
                 "Fetched a chunk of changes: {}-{} (is_last: {}, max: {})",
                 from, last_number_of_chunk, is_last_chunk, last_serial_number
             );
 
+            // Publish progress (before importing a chunk)
+            self.pubsub()
+                .publish_event(LocalNodeEvent::ParentSyncProgress {
+                    node_id: parent_node.node_id,
+                    progress: from - import_from,
+                    total,
+                });
+
             // Import the changes to the local database
             self.import_changes(parent_node.node_id, changes).await?;
 
-            // Publish progress
+            // Publish progress (after importing a chunk)
             self.pubsub()
                 .publish_event(LocalNodeEvent::ParentSyncProgress {
                     node_id: parent_node.node_id,
                     progress: last_number_of_chunk - import_from,
-                    max: last_serial_number - import_from,
+                    total,
                 });
 
             // Next chunk or finish import
