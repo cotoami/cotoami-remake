@@ -259,6 +259,7 @@ object Main {
         (
           model.copy(traversals = traversals),
           (subMsg, model.uiState) match {
+            // Open the stock pane on OpenTraversal if it's closed.
             case (SectionTraversals.OpenTraversal(_), Some(uiState))
                 if !uiState.paneOpened(PaneStock.PaneName) =>
               Browser.send(OpenOrClosePane(PaneStock.PaneName, true)) +: cmds
