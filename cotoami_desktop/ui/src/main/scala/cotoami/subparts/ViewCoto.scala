@@ -20,6 +20,7 @@ import cotoami.components.{
 }
 import cotoami.backend.{Coto, CotoContent, Link}
 import cotoami.repositories.{Domain, Nodes}
+import cotoami.models.WaitingPost
 
 object ViewCoto {
 
@@ -96,7 +97,7 @@ object ViewCoto {
     )
 
   def divWaitingPostContent(
-      post: FormCoto.WaitingPost,
+      post: WaitingPost,
       domain: Domain
   ): ReactElement =
     div(className := "content")(

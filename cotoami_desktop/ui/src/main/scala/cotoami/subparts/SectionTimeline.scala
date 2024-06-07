@@ -9,7 +9,7 @@ import fui._
 import cotoami.{Model, SectionTimelineMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
-import cotoami.models.Context
+import cotoami.models.{Context, WaitingPost, WaitingPosts}
 import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 
 object SectionTimeline {
@@ -95,7 +95,7 @@ object SectionTimeline {
 
   private def sectionTimeline(
       cotos: Seq[Coto],
-      waitingPosts: FormCoto.WaitingPosts,
+      waitingPosts: WaitingPosts,
       model: Model,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
@@ -161,7 +161,7 @@ object SectionTimeline {
     )
 
   private def sectionWaitingPost(
-      post: FormCoto.WaitingPost,
+      post: WaitingPost,
       domain: Domain
   ): ReactElement =
     section(className := "waiting-post", aria - "busy" := "true")(

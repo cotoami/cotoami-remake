@@ -9,7 +9,6 @@ import cotoami.repositories._
 import cotoami.models._
 import cotoami.subparts._
 import cotoami.subparts.Modal
-import cotoami.subparts.FormCoto.WaitingPosts
 
 case class Model(
     url: URL,
