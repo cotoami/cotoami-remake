@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.reflect.ClassTag
 import slinky.core.facade.ReactElement
 import com.softwaremill.quicklens._
 
@@ -25,6 +26,9 @@ object Modal {
       this.modify(_.modals).using(_.updated(0, modal))
 
     def closeTop: Stack = this.modify(_.modals).using(_.drop(1))
+
+    def close[M >: Model: ClassTag]: Stack =
+      this.modify(_.modals).using(_.filterNot(_.isInstanceOf[M]))
   }
 
   sealed trait Msg
