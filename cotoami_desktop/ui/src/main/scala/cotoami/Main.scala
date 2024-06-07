@@ -57,7 +57,7 @@ object Main {
         cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
           _.map(openDatabase(_).map(DatabaseOpened))
-            .getOrElse(Browser.send(OpenModal(Modal.Model.welcome)))
+            .getOrElse(openModal(Modal.Model.welcome))
         ),
         flowInputCmd.map(FlowInputMsg)
       )
@@ -217,9 +217,6 @@ object Main {
         val (domain, cmds) = Domain.update(subMsg, model.domain)
         (model.copy(domain = domain), cmds)
       }
-
-      case OpenModal(modal) =>
-        (model.modify(_.modalStack).using(_.open(modal)), Seq.empty)
 
       case CloseModal =>
         (model.modify(_.modalStack).using(_.closeTop), Seq.empty)

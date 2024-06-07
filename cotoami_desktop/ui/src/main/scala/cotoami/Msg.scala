@@ -47,7 +47,6 @@ case object ReloadDomain extends Msg
 case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
 // Modal
-case class OpenModal(modal: Modal.Model) extends Msg
 case object CloseModal extends Msg
 case class ModalMsg(subMsg: Modal.Msg) extends Msg
 

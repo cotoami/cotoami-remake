@@ -4,6 +4,7 @@ import cats.effect.IO
 import fui._
 import cotoami.utils.Log
 import cotoami.backend.{DatabaseInfoJson, ErrorJson}
+import cotoami.subparts.Modal
 
 package object cotoami {
 
@@ -25,4 +26,7 @@ package object cotoami {
             databaseFolder = folder
           )
       )
+
+  def openModal(modal: Modal.Model): Cmd[Msg] =
+    Browser.send(Modal.OpenModal(modal).asAppMsg)
 }

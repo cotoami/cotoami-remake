@@ -31,12 +31,18 @@ object Modal {
       this.modify(_.modals).using(_.filterNot(_.isInstanceOf[M]))
   }
 
-  sealed trait Msg
+  sealed trait Msg {
+    def asAppMsg: cotoami.Msg = cotoami.ModalMsg(this)
+  }
+  case class OpenModal(modal: Model) extends Msg
   case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
   case class AddNodeMsg(msg: ModalAddNode.Msg) extends Msg
 
   def update(msg: Msg, stack: Stack): (Stack, Seq[Cmd[cotoami.Msg]]) =
     (msg, stack.top) match {
+      case (OpenModal(modal), _) =>
+        (stack.open(modal), Seq.empty)
+
       case (WelcomeMsg(modalMsg), Some(WelcomeModel(modalModel))) =>
         ModalWelcome.update(modalMsg, modalModel)
           .pipe { case (model, cmds) =>
