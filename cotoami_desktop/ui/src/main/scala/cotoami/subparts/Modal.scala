@@ -39,11 +39,15 @@ object Modal {
     (msg, stack.top) match {
       case (WelcomeMsg(modalMsg), Some(WelcomeModel(modalModel))) =>
         ModalWelcome.update(modalMsg, modalModel)
-          .pipe(pair => (stack.updateTop(WelcomeModel(pair._1)), pair._2))
+          .pipe { case (model, cmds) =>
+            (stack.updateTop(WelcomeModel(model)), cmds)
+          }
 
       case (AddNodeMsg(modalMsg), Some(AddNodeModel(modalModel))) =>
         ModalAddNode.update(modalMsg, modalModel)
-          .pipe(pair => (stack.updateTop(AddNodeModel(pair._1)), pair._2))
+          .pipe { case (model, cmds) =>
+            (stack.updateTop(AddNodeModel(model)), cmds)
+          }
 
       case (_, _) => (stack, Seq.empty)
     }
