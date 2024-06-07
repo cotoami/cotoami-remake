@@ -33,10 +33,13 @@ case class Model(
     // Coto/Cotonoma inputs waiting to be posted
     waitingPosts: WaitingPosts = WaitingPosts(),
 
+    // Status of syncing with parent nodes
+    parentSync: ParentSync = ParentSync(),
+
     // subparts
+    modalStack: Modal.Stack = Modal.Stack(),
     flowInput: FormCoto.Model,
-    traversals: SectionTraversals.Model = SectionTraversals.Model(),
-    modalStack: Modal.Stack = Modal.Stack()
+    traversals: SectionTraversals.Model = SectionTraversals.Model()
 ) {
   def path: String = this.url.pathname + this.url.search + this.url.hash
 

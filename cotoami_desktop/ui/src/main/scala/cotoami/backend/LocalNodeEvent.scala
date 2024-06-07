@@ -27,7 +27,7 @@ trait ParentSyncStartJson extends js.Object {
 trait ParentSyncProgressJson extends js.Object {
   val node_id: String = js.native
   val progress: Double = js.native
-  val max: Double = js.native
+  val total: Double = js.native
 }
 
 @js.native

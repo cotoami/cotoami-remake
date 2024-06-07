@@ -218,6 +218,16 @@ object Main {
         (model.copy(domain = domain), cmds)
       }
 
+      case OpenModal(modal) =>
+        (model.modify(_.modalStack).using(_.open(modal)), Seq.empty)
+
+      case CloseModal =>
+        (model.modify(_.modalStack).using(_.closeTop), Seq.empty)
+
+      case ModalMsg(subMsg) =>
+        Modal.update(subMsg, model.modalStack)
+          .pipe(pair => (model.copy(modalStack = pair._1), pair._2))
+
       case FlowInputMsg(subMsg) => {
         val (flowInput, waitingPosts, log, cmds) = FormCoto.update(
           subMsg,
@@ -256,16 +266,6 @@ object Main {
           }
         )
       }
-
-      case OpenModal(modal) =>
-        (model.modify(_.modalStack).using(_.open(modal)), Seq.empty)
-
-      case CloseModal =>
-        (model.modify(_.modalStack).using(_.closeTop), Seq.empty)
-
-      case ModalMsg(subMsg) =>
-        Modal.update(subMsg, model.modalStack)
-          .pipe(pair => (model.copy(modalStack = pair._1), pair._2))
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
