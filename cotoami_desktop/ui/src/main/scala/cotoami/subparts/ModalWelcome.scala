@@ -204,7 +204,7 @@ object ModalWelcome {
           model,
           Seq(
             Browser.send(cotoami.SetDatabaseInfo(DatabaseInfo(json))),
-            Browser.send(cotoami.CloseModal)
+            Modal.close(classOf[Modal.WelcomeModel])
           )
         )
       }

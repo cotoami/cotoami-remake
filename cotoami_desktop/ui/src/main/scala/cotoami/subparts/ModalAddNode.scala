@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, CloseModal}
+import cotoami.log_error
 import cotoami.utils.Validation
 import cotoami.backend.{
   ClientNodeSession,
@@ -120,7 +120,9 @@ object ModalAddNode {
         header()(
           button(
             className := "close default",
-            onClick := (_ => dispatch(CloseModal))
+            onClick := (_ =>
+              dispatch(Modal.CloseModal(classOf[Modal.AddNodeModel]).asAppMsg)
+            )
           ),
           h1()("Add Node")
         ),

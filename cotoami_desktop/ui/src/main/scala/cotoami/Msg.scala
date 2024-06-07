@@ -46,11 +46,8 @@ case object DeselectCotonoma extends Msg
 case object ReloadDomain extends Msg
 case class DomainMsg(subMsg: Domain.Msg) extends Msg
 
-// Modal
-case object CloseModal extends Msg
-case class ModalMsg(subMsg: Modal.Msg) extends Msg
-
 // Subparts
+case class ModalMsg(subMsg: Modal.Msg) extends Msg
 case class FlowInputMsg(subMsg: FormCoto.Msg) extends Msg
 case class SectionTimelineMsg(subMsg: SectionTimeline.Msg) extends Msg
 case class SectionTraversalsMsg(subMsg: SectionTraversals.Msg) extends Msg
