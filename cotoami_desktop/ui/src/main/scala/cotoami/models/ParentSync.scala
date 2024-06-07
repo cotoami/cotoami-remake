@@ -19,4 +19,8 @@ case class ParentSync(
     this.syncing.values.foldLeft(0d)((remaining, progress) =>
       remaining + (progress.total - progress.progress)
     )
+
+  final val ManyThreshold = 100d
+
+  def comingManyChanges: Boolean = this.remaining > ManyThreshold
 }
