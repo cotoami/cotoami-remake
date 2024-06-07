@@ -60,8 +60,8 @@ case class Coto(json: CotoJson) extends Entity[Coto] with CotoContent {
 }
 
 object Coto {
-  val SummaryMaxLength = 200
-  val stripMarkdown = Remark.remark().use(StripMarkdown)
+  final val SummaryMaxLength = 200
+  final val stripMarkdown = Remark.remark().use(StripMarkdown)
 
   def validateSummary(summary: String): Seq[Validation.Error] = {
     val fieldName = "summary"

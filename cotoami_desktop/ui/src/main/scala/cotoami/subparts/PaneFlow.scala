@@ -7,11 +7,11 @@ import cotoami.{FlowInputMsg, Model, Msg}
 import cotoami.models.UiState
 
 object PaneFlow {
-  val PaneName = "PaneFlow"
-  val DefaultWidth = 500
+  final val PaneName = "PaneFlow"
+  final val DefaultWidth = 500
 
-  val EditorPaneName = "PaneFlow.editor"
-  val EditorDefaultHeight = 150
+  final val EditorPaneName = "PaneFlow.editor"
+  final val EditorDefaultHeight = 150
 
   def apply(
       model: Model,

@@ -9,8 +9,8 @@ import cotoami.backend.{Cotonoma, Node}
 import cotoami.repositories.{Cotonomas, Domain}
 
 object NavCotonomas {
-  val PaneName = "NavCotonomas"
-  val DefaultWidth = 230
+  final val PaneName = "NavCotonomas"
+  final val DefaultWidth = 230
 
   def apply(
       model: Model,

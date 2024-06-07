@@ -10,7 +10,7 @@ import cotoami.repositories.Nodes
 import cotoami.components.{materialSymbol, optionalClasses}
 
 object NavNodes {
-  val PaneName = "nav-nodes"
+  final val PaneName = "nav-nodes"
 
   def apply(
       model: Model,

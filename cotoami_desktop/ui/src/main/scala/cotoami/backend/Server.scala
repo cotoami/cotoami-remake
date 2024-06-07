@@ -27,7 +27,7 @@ case class ServerNode(json: ServerNodeJson) {
 }
 
 object ServerNode {
-  val UrlMaxLength = 1500
+  final val UrlMaxLength = 1500
 
   def validateUrl(url: String): Seq[Validation.Error] = {
     val fieldName = "node URL"

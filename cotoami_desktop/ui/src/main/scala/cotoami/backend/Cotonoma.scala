@@ -21,7 +21,7 @@ case class Cotonoma(json: CotonomaJson) extends Entity[Cotonoma] {
 }
 
 object Cotonoma {
-  val NameMaxLength = 50
+  final val NameMaxLength = 50
 
   def validateName(name: String): Seq[Validation.Error] = {
     val fieldName = "name"

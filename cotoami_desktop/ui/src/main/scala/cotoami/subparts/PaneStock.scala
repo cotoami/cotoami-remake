@@ -17,9 +17,9 @@ import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
 
 object PaneStock {
-  val PaneName = "PaneStock"
-  val ScrollableElementId = "scrollable-stock-with-traversals"
-  val PinnedCotosBodyId = "pinned-cotos-body"
+  final val PaneName = "PaneStock"
+  final val ScrollableElementId = "scrollable-stock-with-traversals"
+  final val PinnedCotosBodyId = "pinned-cotos-body"
 
   def apply(
       model: Model,
@@ -152,7 +152,7 @@ object PaneStock {
         dispatch: Msg => Unit
     )
 
-    val ActiveTocEntryClass = "active"
+    final val ActiveTocEntryClass = "active"
 
     val component = FunctionalComponent[Props] { props =>
       val rootRef = React.createRef[html.Div]

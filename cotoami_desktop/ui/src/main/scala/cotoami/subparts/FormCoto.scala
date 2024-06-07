@@ -23,7 +23,7 @@ import cotoami.components.{
 }
 
 object FormCoto {
-  val StorageKeyPrefix = "FormCoto."
+  final val StorageKeyPrefix = "FormCoto."
 
   def init(id: String, autoSave: Boolean): (Model, Cmd[Msg]) =
     Model(id, autoSave = autoSave) match {

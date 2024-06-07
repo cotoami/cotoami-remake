@@ -61,7 +61,7 @@ case class UiState(
 }
 
 object UiState {
-  val StorageKey = "UiState"
+  final val StorageKey = "UiState"
 
   implicit val encoder: Encoder[UiState] = deriveEncoder
   implicit val decoder: Decoder[UiState] = deriveDecoder
