@@ -220,7 +220,7 @@ object Main {
 
       case ModalMsg(subMsg) =>
         Modal.update(subMsg, model.modalStack)
-          .pipe(pair => (model.copy(modalStack = pair._1), pair._2))
+          .pipe { case (stack, cmds) => (model.copy(modalStack = stack), cmds) }
 
       case FlowInputMsg(subMsg) => {
         val (flowInput, waitingPosts, log, cmds) = FormCoto.update(
