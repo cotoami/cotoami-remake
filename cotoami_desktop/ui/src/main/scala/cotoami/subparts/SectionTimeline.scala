@@ -6,9 +6,10 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{Context, Model, SectionTimelineMsg}
+import cotoami.{Model, SectionTimelineMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
+import cotoami.models.Context
 import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 
 object SectionTimeline {

@@ -1,4 +1,4 @@
-package cotoami
+package cotoami.models
 
 import java.time._
 import java.time.format.DateTimeFormatter
