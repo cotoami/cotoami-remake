@@ -8,6 +8,8 @@ case class ParentSync(
     synced: Seq[ParentSyncEndJson] = Seq.empty
 ) {
   def progress(progress: ParentSyncProgressJson): ParentSync =
+    // Update the progress with the same `node_id` as the given one
+    // or prepend it to the list if not found.
     this.modify(_.syncing).using(oldSeq => {
       val (newSeq, found) =
         oldSeq.foldLeft((Seq.empty[ParentSyncProgressJson], false)) {
