@@ -1,22 +1,32 @@
 package cotoami.models
 
 import com.softwaremill.quicklens._
-import cotoami.backend.{Id, Node, ParentSyncEndJson, ParentSyncProgressJson}
+import cotoami.backend.{ParentSyncEndJson, ParentSyncProgressJson}
 
 case class ParentSync(
-    syncing: Map[Id[Node], ParentSyncProgressJson] = Map.empty,
+    syncing: Seq[ParentSyncProgressJson] = Seq.empty,
     synced: Seq[ParentSyncEndJson] = Seq.empty
 ) {
   def progress(progress: ParentSyncProgressJson): ParentSync =
-    this.modify(_.syncing).using(_ + (Id(progress.node_id) -> progress))
+    this.modify(_.syncing).using(oldSeq => {
+      val (newSeq, found) =
+        oldSeq.foldLeft((Seq.empty[ParentSyncProgressJson], false)) {
+          case ((newSeq, found), item) =>
+            if (item.node_id == progress.node_id)
+              (newSeq :+ progress, true)
+            else
+              (newSeq :+ item, found)
+        }
+      if (found) newSeq else progress +: oldSeq
+    })
 
   def end(end: ParentSyncEndJson): ParentSync =
     this
-      .modify(_.syncing).using(_ - Id(end.node_id))
+      .modify(_.syncing).using(_.filterNot(_.node_id == end.node_id))
       .modify(_.synced).using(end +: _)
 
   lazy val remaining: Double =
-    this.syncing.values.foldLeft(0d)((remaining, progress) =>
+    this.syncing.foldLeft(0d)((remaining, progress) =>
       remaining + (progress.total - progress.progress)
     )
 
