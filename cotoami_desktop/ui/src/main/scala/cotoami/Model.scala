@@ -2,6 +2,7 @@ package cotoami
 
 import scala.scalajs.js
 import org.scalajs.dom.URL
+import com.softwaremill.quicklens._
 
 import cotoami.utils.Log
 import cotoami.backend._
@@ -56,4 +57,18 @@ case class Model(
       waitingPosts = WaitingPosts(),
       traversals = SectionTraversals.Model()
     )
+
+  def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {
+    // ParentSyncProgress
+    for (progress <- event.ParentSyncProgress.toOption) {
+      return this.modify(_.parentSync).using(_.progress(progress))
+    }
+
+    // ParentSyncEnd
+    for (end <- event.ParentSyncEnd.toOption) {
+      return this.modify(_.parentSync).using(_.end(end))
+    }
+
+    this
+  }
 }

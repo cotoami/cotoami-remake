@@ -20,6 +20,7 @@ case class AddLogEntry(
 ) extends Msg
 case class LogEvent(event: LogEventJson) extends Msg
 case class BackendChange(log: ChangelogEntryJson) extends Msg
+case class BackendEvent(event: LocalNodeEventJson) extends Msg
 case object ToggleLogView extends Msg
 
 // App init
