@@ -195,6 +195,7 @@ section.text-content {
 
   ul,
   ol {
+    padding-left: var(--spacing);
     margin-bottom: var(--typography-spacing-vertical);
   }
 
