@@ -13,6 +13,7 @@ import cotoami.backend.{
   ClientNodeSessionJson,
   Commands,
   ErrorJson,
+  ServerJson,
   ServerNode
 }
 import cotoami.repositories.Domain
@@ -53,6 +54,8 @@ object ModalAddNode {
   case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
       extends Msg
   case object Cancel extends Msg
+  case object Add extends Msg
+  case class NodeAdded(result: Either[ErrorJson, ServerJson]) extends Msg
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
     msg match {
@@ -99,12 +102,38 @@ object ModalAddNode {
           ),
           Seq.empty
         )
+
+      case Add =>
+        (
+          model.copy(adding = true, addingError = None),
+          Seq(addParentNode(model.nodeUrl, model.password))
+        )
+
+      case NodeAdded(Right(json)) =>
+        (
+          model.copy(adding = false, addingError = None),
+          Seq(Modal.close(classOf[Modal.AddNode]))
+        )
+
+      case NodeAdded(Left(e)) =>
+        (
+          model.copy(
+            adding = false,
+            addingError = Some(e.default_message)
+          ),
+          Seq(log_error("Node adding error.", Some(js.JSON.stringify(e))))
+        )
     }
 
   private def connect(url: String, password: String): Cmd[cotoami.Msg] =
     Commands
       .send(Commands.TryConnectServerNode(url, password, false))
       .map(appMsgTagger(NodeConnected(_)))
+
+  private def addParentNode(url: String, password: String): Cmd[cotoami.Msg] =
+    Commands
+      .send(Commands.AddServerNode(url, password, false))
+      .map(appMsgTagger(NodeAdded(_)))
 
   def apply(
       model: Model,
@@ -225,7 +254,8 @@ object ModalAddNode {
         button(
           `type` := "button",
           disabled := !model.readyToAdd,
-          aria - "busy" := model.adding.toString()
+          aria - "busy" := model.adding.toString(),
+          onClick := (e => dispatch(Add.asAppMsg))
         )("Add")
       )
     )

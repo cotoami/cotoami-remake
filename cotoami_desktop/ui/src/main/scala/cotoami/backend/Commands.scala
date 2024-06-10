@@ -30,6 +30,19 @@ object Commands {
       )
     )
 
+  def AddServerNode(
+      url_prefix: String,
+      password: String,
+      server_as_child: Boolean = false
+  ) =
+    jso(AddServerNode =
+      jso(
+        url_prefix = url_prefix,
+        password = password,
+        server_as_child = server_as_child
+      )
+    )
+
   def RecentCotonomas(nodeId: Option[Id[Node]], pageIndex: Double) =
     jso(RecentCotonomas =
       jso(
