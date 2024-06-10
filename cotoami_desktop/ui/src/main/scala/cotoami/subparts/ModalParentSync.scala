@@ -85,6 +85,12 @@ object ModalParentSync {
             )
           )
         })
+      ),
+      div(className := "buttons")(
+        button(
+          `type` := "button",
+          disabled := !parentSync.syncing.isEmpty
+        )("OK")
       )
     )
 
