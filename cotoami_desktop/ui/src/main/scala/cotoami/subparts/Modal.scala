@@ -18,11 +18,14 @@ object Modal {
     def open[M <: Model: ClassTag](modal: M): Stack =
       this.close(modal.getClass()).modify(_.modals).using(modal +: _)
 
-    def top: Option[Model] = this.modals.headOption
+    def opened[M <: Model: ClassTag]: Boolean =
+      this.modals.exists(classTag[M].runtimeClass.isInstance(_))
 
     def get[M <: Model: ClassTag]: Option[M] =
       this.modals.find(classTag[M].runtimeClass.isInstance(_))
         .map(_.asInstanceOf[M])
+
+    def top: Option[Model] = this.modals.headOption
 
     def update[M <: Model: ClassTag](newState: M): Stack =
       this.modify(_.modals).using(
