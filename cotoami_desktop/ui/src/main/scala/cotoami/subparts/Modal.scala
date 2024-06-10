@@ -9,13 +9,10 @@ import fui.{Browser, Cmd}
 
 object Modal {
   sealed trait Model
-  case class WelcomeModel(model: ModalWelcome.Model) extends Model
-  case class AddNodeModel(model: ModalAddNode.Model) extends Model
-
-  object Model {
-    def welcome: Model = WelcomeModel(ModalWelcome.Model())
-    def addNode: Model = AddNodeModel(ModalAddNode.Model())
-  }
+  case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
+      extends Model
+  case class AddNode(model: ModalAddNode.Model = ModalAddNode.Model())
+      extends Model
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
@@ -64,18 +61,18 @@ object Modal {
         Some((stack.close(modalType), Seq.empty))
 
       case WelcomeMsg(modalMsg) =>
-        stack.get[WelcomeModel].map { case WelcomeModel(modalModel) =>
+        stack.get[Welcome].map { case Welcome(modalModel) =>
           ModalWelcome.update(modalMsg, modalModel)
             .pipe { case (model, cmds) =>
-              (stack.update(WelcomeModel(model)), cmds)
+              (stack.update(Welcome(model)), cmds)
             }
         }
 
       case AddNodeMsg(modalMsg) =>
-        stack.get[AddNodeModel].map { case AddNodeModel(modalModel) =>
+        stack.get[AddNode].map { case AddNode(modalModel) =>
           ModalAddNode.update(modalMsg, modalModel)
             .pipe { case (model, cmds) =>
-              (stack.update(AddNodeModel(model)), cmds)
+              (stack.update(AddNode(model)), cmds)
             }
         }
     }).getOrElse((stack, Seq.empty))
@@ -85,12 +82,12 @@ object Modal {
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     model.modalStack.top.map {
-      case WelcomeModel(modalModel) =>
+      case Welcome(modalModel) =>
         model.systemInfo.map(info =>
           ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
         )
 
-      case AddNodeModel(modalModel) =>
+      case AddNode(modalModel) =>
         Some(ModalAddNode(modalModel, model.domain, dispatch))
     }
 }

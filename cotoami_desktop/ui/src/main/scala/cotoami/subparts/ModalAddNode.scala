@@ -121,7 +121,7 @@ object ModalAddNode {
           button(
             className := "close default",
             onClick := (_ =>
-              dispatch(Modal.CloseModal(classOf[Modal.AddNodeModel]).asAppMsg)
+              dispatch(Modal.CloseModal(classOf[Modal.AddNode]).asAppMsg)
             )
           ),
           h1()("Add Node")

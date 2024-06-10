@@ -58,7 +58,7 @@ object Main {
         cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
           _.map(openDatabase(_).map(DatabaseOpened))
-            .getOrElse(Modal.open(Modal.Model.welcome))
+            .getOrElse(Modal.open(Modal.Welcome()))
         ),
         flowInputCmd.map(FlowInputMsg)
       )
@@ -109,7 +109,7 @@ object Main {
               _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
             )
             .modify(
-              _.modalStack.modals.each.when[Modal.WelcomeModel].model.baseFolder
+              _.modalStack.modals.each.when[Modal.Welcome].model.baseFolder
             ).setTo(Nullable.toOption(systemInfo.app_data_dir).getOrElse(""))
             .info(
               "SystemInfo fetched.",

@@ -54,9 +54,7 @@ object NavNodes {
         className := "add-node default",
         data - "tooltip" := "Add node",
         data - "placement" := "right",
-        onClick := (_ =>
-          dispatch(Modal.OpenModal(Modal.Model.addNode).asAppMsg)
-        )
+        onClick := (_ => dispatch(Modal.OpenModal(Modal.AddNode()).asAppMsg))
       )(
         materialSymbol("add")
       ),
