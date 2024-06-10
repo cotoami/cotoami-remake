@@ -61,7 +61,16 @@ case class Model(
   def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {
     // ParentSyncProgress
     for (progress <- event.ParentSyncProgress.toOption) {
-      return this.modify(_.parentSync).using(_.progress(progress))
+      val parentSync = this.parentSync.progress(progress)
+      val modalStack =
+        if (
+          parentSync.comingManyChanges &&
+          !this.modalStack.opened[Modal.ParentSync]
+        )
+          this.modalStack.open(Modal.ParentSync())
+        else
+          this.modalStack
+      return this.copy(parentSync = parentSync, modalStack = modalStack)
     }
 
     // ParentSyncEnd

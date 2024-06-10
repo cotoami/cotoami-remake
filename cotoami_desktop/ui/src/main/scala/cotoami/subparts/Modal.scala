@@ -13,7 +13,7 @@ object Modal {
       extends Model
   case class AddNode(model: ModalAddNode.Model = ModalAddNode.Model())
       extends Model
-  case object ParentSync extends Model
+  case class ParentSync() extends Model
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
@@ -94,7 +94,7 @@ object Modal {
       case AddNode(modalModel) =>
         Some(ModalAddNode(modalModel, model.domain, dispatch))
 
-      case ParentSync =>
+      case ParentSync() =>
         Some(ModalParentSync(model.parentSync, model.domain, dispatch))
     }
 }
