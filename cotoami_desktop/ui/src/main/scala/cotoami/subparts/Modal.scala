@@ -22,6 +22,9 @@ object Modal {
     def opened[M <: Model: ClassTag]: Boolean =
       this.modals.exists(classTag[M].runtimeClass.isInstance(_))
 
+    def openIfNot[M <: Model: ClassTag](modal: M): Stack =
+      if (this.opened[M]) this else this.open(modal)
+
     def get[M <: Model: ClassTag]: Option[M] =
       this.modals.find(classTag[M].runtimeClass.isInstance(_))
         .map(_.asInstanceOf[M])
