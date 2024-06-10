@@ -13,7 +13,8 @@ object Modal {
       extends Model
   case class AddNode(model: ModalAddNode.Model = ModalAddNode.Model())
       extends Model
-  case class ParentSync() extends Model
+  case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
+      extends Model
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
@@ -52,6 +53,7 @@ object Modal {
   case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
   case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
   case class AddNodeMsg(msg: ModalAddNode.Msg) extends Msg
+  case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
 
   def open(modal: Model): Cmd[cotoami.Msg] =
     Browser.send(OpenModal(modal).asAppMsg)
@@ -82,6 +84,14 @@ object Modal {
               (stack.update(AddNode(model)), cmds)
             }
         }
+
+      case ParentSyncMsg(modalMsg) =>
+        stack.get[ParentSync].map { case ParentSync(modalModel) =>
+          ModalParentSync.update(modalMsg, modalModel)
+            .pipe { case (model, cmds) =>
+              (stack.update(ParentSync(model)), cmds)
+            }
+        }
     }).getOrElse((stack, Seq.empty))
 
   def apply(
@@ -97,7 +107,9 @@ object Modal {
       case AddNode(modalModel) =>
         Some(ModalAddNode(modalModel, model.domain, dispatch))
 
-      case ParentSync() =>
-        Some(ModalParentSync(model.parentSync, model.domain, dispatch))
+      case ParentSync(modalModel) =>
+        Some(
+          ModalParentSync(modalModel, model.parentSync, model.domain, dispatch)
+        )
     }
 }

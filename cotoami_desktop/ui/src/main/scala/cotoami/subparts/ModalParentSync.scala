@@ -1,16 +1,39 @@
 package cotoami.subparts
 
+import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html
 import slinky.web.html._
 
+import fui.{Browser, Cmd}
 import cotoami.backend.{Id, Node, Nullable}
 import cotoami.repositories.Domain
 import cotoami.models.ParentSync
 
 object ModalParentSync {
 
+  case class Model()
+
+  sealed trait Msg {
+    def asAppMsg: cotoami.Msg = Modal.ParentSyncMsg(this).pipe(cotoami.ModalMsg)
+  }
+
+  case object Close extends Msg
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+    msg match {
+      case Close =>
+        (
+          model,
+          Seq(
+            Modal.close(classOf[Modal.ParentSync]),
+            Browser.send(cotoami.ReloadDomain)
+          )
+        )
+    }
+
   def apply(
+      model: Model,
       parentSync: ParentSync,
       domain: Domain,
       dispatch: cotoami.Msg => Unit
@@ -89,7 +112,8 @@ object ModalParentSync {
       div(className := "buttons")(
         button(
           `type` := "button",
-          disabled := !parentSync.syncing.isEmpty
+          disabled := !parentSync.syncing.isEmpty,
+          onClick := (e => dispatch(Close.asAppMsg))
         )("OK")
       )
     )
