@@ -1,0 +1,38 @@
+dialog.parent-sync {
+  article {
+    width: 600px;
+  }
+
+  section.parent-node {
+    margin-bottom: 10px;
+
+    span.node {
+      img.node-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        margin-right: 6px;
+      }
+    }
+
+    span.progress {
+      margin-left: var(--spacing);
+      color: var(--muted-color);
+      font-size: 90%;
+    }
+
+    span.result {
+      margin-left: var(--spacing);
+      color: var(--muted-color);
+      font-size: 90%;
+
+      span.changes {
+        margin-left: var(--spacing);
+      }
+    }
+
+    span.error {
+      margin-left: var(--spacing);
+    }
+  }
+}

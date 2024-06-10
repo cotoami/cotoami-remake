@@ -32,7 +32,7 @@ case class ParentSync(
       remaining + (progress.total - progress.progress)
     )
 
-  final val ManyThreshold = 100d
+  final val ManyThreshold = 1d
 
   def comingManyChanges: Boolean = this.remaining > ManyThreshold
 }

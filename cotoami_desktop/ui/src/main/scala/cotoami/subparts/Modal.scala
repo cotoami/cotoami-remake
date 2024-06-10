@@ -9,23 +9,28 @@ import fui.{Browser, Cmd}
 
 object Modal {
   sealed trait Model
-  case class WelcomeModel(model: ModalWelcome.Model) extends Model
-  case class AddNodeModel(model: ModalAddNode.Model) extends Model
-
-  object Model {
-    def welcome: Model = WelcomeModel(ModalWelcome.Model())
-    def addNode: Model = AddNodeModel(ModalAddNode.Model())
-  }
+  case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
+      extends Model
+  case class AddNode(model: ModalAddNode.Model = ModalAddNode.Model())
+      extends Model
+  case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
+      extends Model
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
       this.close(modal.getClass()).modify(_.modals).using(modal +: _)
 
-    def top: Option[Model] = this.modals.headOption
+    def opened[M <: Model: ClassTag]: Boolean =
+      this.modals.exists(classTag[M].runtimeClass.isInstance(_))
+
+    def openIfNot[M <: Model: ClassTag](modal: M): Stack =
+      if (this.opened[M]) this else this.open(modal)
 
     def get[M <: Model: ClassTag]: Option[M] =
       this.modals.find(classTag[M].runtimeClass.isInstance(_))
         .map(_.asInstanceOf[M])
+
+    def top: Option[Model] = this.modals.headOption
 
     def update[M <: Model: ClassTag](newState: M): Stack =
       this.modify(_.modals).using(
@@ -48,6 +53,7 @@ object Modal {
   case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
   case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
   case class AddNodeMsg(msg: ModalAddNode.Msg) extends Msg
+  case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
 
   def open(modal: Model): Cmd[cotoami.Msg] =
     Browser.send(OpenModal(modal).asAppMsg)
@@ -64,18 +70,26 @@ object Modal {
         Some((stack.close(modalType), Seq.empty))
 
       case WelcomeMsg(modalMsg) =>
-        stack.get[WelcomeModel].map { case WelcomeModel(modalModel) =>
+        stack.get[Welcome].map { case Welcome(modalModel) =>
           ModalWelcome.update(modalMsg, modalModel)
             .pipe { case (model, cmds) =>
-              (stack.update(WelcomeModel(model)), cmds)
+              (stack.update(Welcome(model)), cmds)
             }
         }
 
       case AddNodeMsg(modalMsg) =>
-        stack.get[AddNodeModel].map { case AddNodeModel(modalModel) =>
+        stack.get[AddNode].map { case AddNode(modalModel) =>
           ModalAddNode.update(modalMsg, modalModel)
             .pipe { case (model, cmds) =>
-              (stack.update(AddNodeModel(model)), cmds)
+              (stack.update(AddNode(model)), cmds)
+            }
+        }
+
+      case ParentSyncMsg(modalMsg) =>
+        stack.get[ParentSync].map { case ParentSync(modalModel) =>
+          ModalParentSync.update(modalMsg, modalModel)
+            .pipe { case (model, cmds) =>
+              (stack.update(ParentSync(model)), cmds)
             }
         }
     }).getOrElse((stack, Seq.empty))
@@ -85,12 +99,17 @@ object Modal {
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     model.modalStack.top.map {
-      case WelcomeModel(modalModel) =>
+      case Welcome(modalModel) =>
         model.systemInfo.map(info =>
           ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
         )
 
-      case AddNodeModel(modalModel) =>
+      case AddNode(modalModel) =>
         Some(ModalAddNode(modalModel, model.domain, dispatch))
+
+      case ParentSync(modalModel) =>
+        Some(
+          ModalParentSync(modalModel, model.parentSync, model.domain, dispatch)
+        )
     }
 }
