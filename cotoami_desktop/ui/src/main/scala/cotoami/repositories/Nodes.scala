@@ -1,5 +1,7 @@
 package cotoami.repositories
 
+import com.softwaremill.quicklens._
+
 import cotoami.backend._
 
 case class Nodes(
@@ -15,6 +17,9 @@ case class Nodes(
   def get(id: Id[Node]): Option[Node] = this.map.get(id)
 
   def contains(id: Id[Node]): Boolean = this.map.contains(id)
+
+  def add(node: Node): Nodes =
+    this.modify(_.map).using(_ + (node.id -> node))
 
   def local: Option[Node] = this.localId.flatMap(this.get)
 

@@ -19,9 +19,8 @@ case class Cotos(
   def getOriginal(coto: Coto): Coto =
     coto.repostOfId.flatMap(this.get).getOrElse(coto)
 
-  def add(coto: Coto): Cotos = {
+  def add(coto: Coto): Cotos =
     this.modify(_.map).using(_ + (coto.id -> coto))
-  }
 
   def addAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ add _)
 
