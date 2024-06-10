@@ -311,10 +311,16 @@ object Main {
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
     (tauri.listen[LogEventJson]("log", None).map(LogEvent): Sub[Msg]) <+>
-      (tauri.listen[ChangelogEntryJson]("backend-change", None)
-        .map(BackendChange)) <+>
+      this.listenToBackendChanges(model) <+>
       (tauri.listen[LocalNodeEventJson]("backend-event", None)
         .map(BackendEvent))
+
+  private def listenToBackendChanges(model: Model): Sub[Msg] =
+    if (model.modalStack.opened[Modal.ParentSync])
+      Sub.Empty
+    else
+      tauri.listen[ChangelogEntryJson]("backend-change", None)
+        .map(BackendChange)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(
