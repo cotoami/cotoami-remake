@@ -12,6 +12,7 @@ case class Nodes(
 
     // roles
     parentIds: Seq[Id[Node]] = Seq.empty,
+    childIds: Seq[Id[Node]] = Seq.empty,
     servers: Seq[Server] = Seq.empty
 ) {
   def get(id: Id[Node]): Option[Node] = this.map.get(id)
@@ -41,6 +42,14 @@ case class Nodes(
   def selected: Option[Node] = this.selectedId.flatMap(this.get)
 
   def current: Option[Node] = this.selected.orElse(this.operating)
+
+  def prependServer(server: Server): Nodes = {
+    val nodes = this.modify(_.servers).using(server +: _)
+    server.databaseRole.map {
+      case Parent(parent) => this.modify(_.parentIds).using(parent.nodeId +: _)
+      case Child(child)   => this.modify(_.childIds).using(child.nodeId +: _)
+    }.getOrElse(nodes)
+  }
 }
 
 object Nodes {

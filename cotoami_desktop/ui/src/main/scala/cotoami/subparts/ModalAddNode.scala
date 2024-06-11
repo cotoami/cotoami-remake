@@ -13,6 +13,7 @@ import cotoami.backend.{
   ClientNodeSessionJson,
   Commands,
   ErrorJson,
+  Server,
   ServerJson,
   ServerNode
 }
@@ -123,7 +124,7 @@ object ModalAddNode {
       case NodeAdded(Right(json)) =>
         (
           model.copy(adding = false, addingError = None),
-          nodes,
+          nodes.prependServer(Server(json)),
           Seq(Modal.close(classOf[Modal.AddNode]))
         )
 
