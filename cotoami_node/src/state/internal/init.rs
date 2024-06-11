@@ -39,23 +39,19 @@ impl NodeState {
                     }
                 }
 
-                // The owner password
-                if let Some(owner_password) = config.owner_password.as_deref() {
-                    if config.change_owner_password {
-                        ds.change_owner_password(owner_password)?;
-                        info!("The owner password has been changed.");
-                    } else {
-                        local
-                            .verify_password(owner_password)
-                            .context("Config::owner_password could not be verified.")?;
-                    }
-                }
+                // Owner authentication
+                local
+                    .authenticate(config.owner_password.as_deref())
+                    .context("Owner authentication has been failed.")?;
+
                 return Ok(());
             }
 
             // Initialize the local node
-            let name = config.node_name.as_deref();
-            let ((_, node), _) = ds.init_as_node(name, config.owner_password.as_deref())?;
+            let ((_, node), _) = ds.init_as_node(
+                config.node_name.as_deref(),
+                config.owner_password.as_deref(),
+            )?;
             info!(
                 "The local node [{}]({}) has been created",
                 node.name, node.uuid
