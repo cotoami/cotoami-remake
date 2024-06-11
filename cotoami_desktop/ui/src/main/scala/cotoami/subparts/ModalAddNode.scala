@@ -16,7 +16,7 @@ import cotoami.backend.{
   ServerJson,
   ServerNode
 }
-import cotoami.repositories.Domain
+import cotoami.repositories.{Domain, Nodes}
 
 object ModalAddNode {
 
@@ -57,29 +57,37 @@ object ModalAddNode {
   case object Add extends Msg
   case class NodeAdded(result: Either[ErrorJson, ServerJson]) extends Msg
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+  def update(
+      msg: Msg,
+      model: Model,
+      nodes: Nodes
+  ): (Model, Nodes, Seq[Cmd[cotoami.Msg]]) =
     msg match {
       case NodeUrlInput(url) =>
-        (model.copy(nodeUrl = url), Seq.empty)
+        (model.copy(nodeUrl = url), nodes, Seq.empty)
 
       case PasswordInput(password) =>
-        (model.copy(password = password), Seq.empty)
+        (model.copy(password = password), nodes, Seq.empty)
 
       case Connect =>
         (
           model.copy(connecting = true, connectingError = None),
+          nodes,
           Seq(connect(model.nodeUrl, model.password))
         )
 
-      case NodeConnected(Right(json)) =>
+      case NodeConnected(Right(json)) => {
+        val session = ClientNodeSession(json)
         (
           model.copy(
             connecting = false,
             connectingError = None,
-            nodeSession = Some(ClientNodeSession(json))
+            nodeSession = Some(session)
           ),
+          nodes.add(session.server),
           Seq.empty
         )
+      }
 
       case NodeConnected(Left(e)) =>
         (
@@ -87,6 +95,7 @@ object ModalAddNode {
             connecting = false,
             connectingError = Some(e.default_message)
           ),
+          nodes,
           Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
@@ -100,18 +109,21 @@ object ModalAddNode {
             addingError = None,
             nodeSession = None
           ),
+          nodes,
           Seq.empty
         )
 
       case Add =>
         (
           model.copy(adding = true, addingError = None),
+          nodes,
           Seq(addParentNode(model.nodeUrl, model.password))
         )
 
       case NodeAdded(Right(json)) =>
         (
           model.copy(adding = false, addingError = None),
+          nodes,
           Seq(Modal.close(classOf[Modal.AddNode]))
         )
 
@@ -121,6 +133,7 @@ object ModalAddNode {
             adding = false,
             addingError = Some(e.default_message)
           ),
+          nodes,
           Seq(log_error("Node adding error.", Some(js.JSON.stringify(e))))
         )
     }

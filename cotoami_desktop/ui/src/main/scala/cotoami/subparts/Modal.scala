@@ -83,9 +83,14 @@ object Modal {
 
       case AddNodeMsg(modalMsg) =>
         stack.get[AddNode].map { case AddNode(modalModel) =>
-          ModalAddNode.update(modalMsg, modalModel)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(AddNode(modal))), cmds)
+          ModalAddNode.update(modalMsg, modalModel, model.domain.nodes)
+            .pipe { case (modal, nodes, cmds) =>
+              (
+                model
+                  .modify(_.modalStack).using(_.update(AddNode(modal)))
+                  .modify(_.domain.nodes).setTo(nodes),
+                cmds
+              )
             }
         }
 
