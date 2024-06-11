@@ -1,12 +1,9 @@
 use std::ops::DerefMut;
 
 use anyhow::{bail, Result};
-use cotoami_db::{
-    db::{
-        op,
-        op::{AsReadableConn, Context, Operation, WritableConn},
-    },
-    prelude::*,
+use cotoami_db::db::{
+    self, op,
+    op::{AsReadableConn, Context, Operation, WritableConn},
 };
 use derive_new::new;
 use diesel::prelude::*;
@@ -18,7 +15,7 @@ pub mod common;
 fn operation() -> Result<()> {
     // setup
     let db_file = common::temp_file_path()?;
-    let mut conn = Database::new_rw_conn(&Database::to_file_uri(&db_file)?)?;
+    let mut conn = db::new_rw_conn(&db::to_file_uri(&db_file)?)?;
     create_table(&mut conn)?;
 
     // when: successful transaction

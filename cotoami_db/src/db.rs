@@ -43,13 +43,12 @@ pub struct Database {
 
 impl Database {
     const DATABASE_FILE_NAME: &'static str = "cotoami.db";
-    const SQLITE_BUSY_TIMEOUT: Duration = Duration::from_millis(10_000);
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Self> {
-        let root_dir = Self::ensure_dir(root_dir)?;
-        let file_uri = Self::to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
-        let rw_conn = Self::new_rw_conn(&file_uri)?;
+        let root_dir = ensure_dir(root_dir)?;
+        let file_uri = to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
+        let rw_conn = new_rw_conn(&file_uri)?;
 
         let mut db = Self {
             root_dir,
@@ -82,53 +81,57 @@ impl Database {
         ))
     }
 
-    pub fn new_rw_conn(uri: &str) -> Result<WritableConn> {
-        let mut rw_conn = SqliteConnection::establish(uri)?;
-        sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
-        sqlite::enable_wal(&mut rw_conn)?;
-        sqlite::set_busy_timeout(&mut rw_conn, Self::SQLITE_BUSY_TIMEOUT)?;
-        Ok(WritableConn::new(rw_conn))
-    }
-
-    pub fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {
-        let path = path.as_ref();
-        if path.is_dir() {
-            Err(DatabaseError::InvalidFilePath {
-                path: path.to_path_buf(),
-                reason: "The given path is a directory".into(),
-            })?
-        } else {
-            // Url::from_file_path
-            // This returns Err if the given path is not absolute or, on Windows,
-            // if the prefix is not a disk prefix (e.g. C:) or a UNC prefix (\\).
-            // https://docs.rs/url/2.2.2/url/struct.Url.html#method.from_file_path
-            let uri = Url::from_file_path(path).or(Err(DatabaseError::InvalidFilePath {
-                path: path.to_path_buf(),
-                reason: "Invalid path".into(),
-            }))?;
-            Ok(uri.as_str().to_owned())
-        }
-    }
-
-    fn ensure_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
-        let path = path.as_ref().canonicalize()?;
-        if !path.is_dir() {
-            bail!(DatabaseError::InvalidRootDir(path));
-        }
-        Ok(path)
-    }
-
     fn run_migrations(&self) -> Result<()> {
         let mut conn = SqliteConnection::establish(&self.file_uri)?;
         conn.run_pending_migrations(Self::MIGRATIONS).unwrap();
         Ok(())
     }
 
-    fn new_ro_conn(&self) -> Result<SqliteConnection> {
-        let database_uri = format!("{}?mode=ro&_txlock=deferred", &self.file_uri);
-        let ro_conn = SqliteConnection::establish(&database_uri)?;
-        Ok(ro_conn)
-    }
+    fn new_ro_conn(&self) -> Result<SqliteConnection> { new_ro_conn(&self.file_uri) }
 
     pub fn globals(&self) -> &Globals { &self.globals }
+}
+
+const SQLITE_BUSY_TIMEOUT: Duration = Duration::from_millis(10_000);
+
+pub fn new_rw_conn(uri: &str) -> Result<WritableConn> {
+    let mut rw_conn = SqliteConnection::establish(uri)?;
+    sqlite::enable_foreign_key_constraints(&mut rw_conn)?;
+    sqlite::enable_wal(&mut rw_conn)?;
+    sqlite::set_busy_timeout(&mut rw_conn, SQLITE_BUSY_TIMEOUT)?;
+    Ok(WritableConn::new(rw_conn))
+}
+
+pub fn new_ro_conn(uri: &str) -> Result<SqliteConnection> {
+    let database_uri = format!("{}?mode=ro&_txlock=deferred", uri);
+    let ro_conn = SqliteConnection::establish(&database_uri)?;
+    Ok(ro_conn)
+}
+
+fn ensure_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
+    let path = path.as_ref().canonicalize()?;
+    if !path.is_dir() {
+        bail!(DatabaseError::InvalidRootDir(path));
+    }
+    Ok(path)
+}
+
+pub fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {
+    let path = path.as_ref();
+    if path.is_dir() {
+        Err(DatabaseError::InvalidFilePath {
+            path: path.to_path_buf(),
+            reason: "The given path is a directory".into(),
+        })?
+    } else {
+        // Url::from_file_path
+        // This returns Err if the given path is not absolute or, on Windows,
+        // if the prefix is not a disk prefix (e.g. C:) or a UNC prefix (\\).
+        // https://docs.rs/url/2.2.2/url/struct.Url.html#method.from_file_path
+        let uri = Url::from_file_path(path).or(Err(DatabaseError::InvalidFilePath {
+            path: path.to_path_buf(),
+            reason: "Invalid path".into(),
+        }))?;
+        Ok(uri.as_str().to_owned())
+    }
 }
