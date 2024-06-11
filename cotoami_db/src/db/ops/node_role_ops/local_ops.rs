@@ -67,3 +67,11 @@ pub(crate) fn start_session<'a>(
         Ok(())
     })
 }
+
+pub(crate) fn clear_session(local_node: &mut LocalNode) -> impl Operation<WritableConn, ()> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        local_node.clear_session();
+        *local_node = update(&local_node).run(ctx)?;
+        Ok(())
+    })
+}

@@ -208,9 +208,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn clear_owner_session(&self) -> Result<()> {
         let mut local_node = self.globals.try_write_local_node()?;
-        local_node.clear_session();
-        self.write_transaction(local_ops::update(&local_node))?;
-        Ok(())
+        self.write_transaction(local_ops::clear_session(local_node.deref_mut()))
     }
 
     pub fn change_owner_password(&self, password: &str) -> Result<()> {
