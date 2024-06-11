@@ -10,7 +10,13 @@ use parking_lot::Mutex;
 use tracing::info;
 use url::Url;
 
-use crate::db::{error::*, globals::Globals, op::WritableConn, session::DatabaseSession};
+use crate::{
+    db::{
+        error::*, globals::Globals, op::WritableConn, ops::node_role_ops::local_ops,
+        session::DatabaseSession,
+    },
+    models::node::{Node, Principal},
+};
 
 pub mod error;
 pub mod globals;
@@ -67,10 +73,17 @@ impl Database {
         Ok(db)
     }
 
-    pub fn is_in<P: AsRef<Path>>(dir: P) -> bool {
-        let mut path = dir.as_ref().to_path_buf();
-        path.push(Self::DATABASE_FILE_NAME);
-        path.is_file()
+    pub fn is_in<P: AsRef<Path>>(dir: P) -> bool { Self::try_read_node_info(dir).is_ok() }
+
+    /// Try to read a database node info from the given directory.
+    pub fn try_read_node_info<P: AsRef<Path>>(root_dir: P) -> Result<Option<(Node, bool)>> {
+        let db_file = ensure_dir(root_dir)?.join(Self::DATABASE_FILE_NAME);
+        let mut conn = new_ro_conn(&to_file_uri(db_file)?)?;
+        if let Some((local_node, node)) = op::run_read(&mut conn, local_ops::get_pair())? {
+            Ok(Some((node, local_node.password_hash().is_some())))
+        } else {
+            Ok(None)
+        }
     }
 
     pub fn new_session(&self) -> Result<DatabaseSession<'_>> {

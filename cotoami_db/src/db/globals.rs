@@ -25,8 +25,7 @@ pub struct Globals {
 impl Globals {
     pub(super) fn init(&mut self, conn: &mut SqliteConnection) -> Result<()> {
         // local_node, root_cotonoma_id
-        let local_node_pair = op::run_read(conn, local_ops::get_pair())?;
-        if let Some((local_node, node)) = local_node_pair {
+        if let Some((local_node, node)) = op::run_read(conn, local_ops::get_pair())? {
             self.set_local_node(Some(local_node));
             self.set_root_cotonoma_id(node.root_cotonoma_id);
         } else {
@@ -37,7 +36,7 @@ impl Globals {
         // parent_nodes
         *self.parent_nodes.write() = op::run_read(conn, parent_ops::all())?
             .into_iter()
-            .map(|x| (x.node_id, x))
+            .map(|parent| (parent.node_id, parent))
             .collect::<HashMap<_, _>>();
 
         Ok(())
