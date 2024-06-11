@@ -1,0 +1,62 @@
+use std::{collections::HashMap, string::ToString};
+
+use cotoami_node::prelude::*;
+use serde_json::value::Value;
+
+#[derive(serde::Serialize)]
+pub(crate) struct Error {
+    code: String,
+    default_message: String,
+    params: HashMap<String, Value>,
+}
+
+impl Error {
+    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            default_message: message.into(),
+            params: HashMap::new(),
+        }
+    }
+
+    // TODO: write thorough conversion
+    fn from_service_error(e: ServiceError) -> Self {
+        match e {
+            ServiceError::Request(e) => e.into(),
+            ServiceError::Permission => Error::new("permission-error", "Permission error."),
+            ServiceError::NotFound(msg) => Error::new(
+                "not-found",
+                msg.unwrap_or("The requested resource is not found.".into()),
+            ),
+            ServiceError::Server(msg) => Error::new("server-error", msg),
+            _ => Error::new("service-error", format!("{e:?}")),
+        }
+    }
+
+    fn system_error(message: impl Into<String>) -> Self {
+        Error::new("system-error", message.into())
+    }
+}
+
+impl From<anyhow::Error> for Error {
+    fn from(e: anyhow::Error) -> Self {
+        match e.downcast::<BackendServiceError>() {
+            Ok(BackendServiceError(service_error)) => Self::from_service_error(service_error),
+            Err(e) => Self::system_error(e.to_string()),
+        }
+    }
+}
+
+impl From<ServiceError> for Error {
+    fn from(e: ServiceError) -> Self { Self::from_service_error(e) }
+}
+
+impl From<RequestError> for Error {
+    fn from(e: RequestError) -> Self {
+        Self {
+            code: e.code,
+            default_message: e.default_message,
+            params: e.params,
+        }
+    }
+}
