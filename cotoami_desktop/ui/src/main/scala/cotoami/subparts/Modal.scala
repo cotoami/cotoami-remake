@@ -61,38 +61,43 @@ object Modal {
   def close[M <: Model](modalType: Class[M]): Cmd[cotoami.Msg] =
     Browser.send(Modal.CloseModal(modalType).asAppMsg)
 
-  def update(msg: Msg, stack: Stack): (Stack, Seq[Cmd[cotoami.Msg]]) =
+  def update(
+      msg: Msg,
+      model: cotoami.Model
+  ): (cotoami.Model, Seq[Cmd[cotoami.Msg]]) = {
+    val stack = model.modalStack
     (msg match {
       case OpenModal(modal) =>
-        Some((stack.open(modal), Seq.empty))
+        Some((model.modify(_.modalStack).using(_.open(modal)), Seq.empty))
 
       case CloseModal(modalType) =>
-        Some((stack.close(modalType), Seq.empty))
+        Some((model.modify(_.modalStack).using(_.close(modalType)), Seq.empty))
 
       case WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modalModel) =>
           ModalWelcome.update(modalMsg, modalModel)
-            .pipe { case (model, cmds) =>
-              (stack.update(Welcome(model)), cmds)
+            .pipe { case (modal, cmds) =>
+              (model.copy(modalStack = stack.update(Welcome(modal))), cmds)
             }
         }
 
       case AddNodeMsg(modalMsg) =>
         stack.get[AddNode].map { case AddNode(modalModel) =>
           ModalAddNode.update(modalMsg, modalModel)
-            .pipe { case (model, cmds) =>
-              (stack.update(AddNode(model)), cmds)
+            .pipe { case (modal, cmds) =>
+              (model.copy(modalStack = stack.update(AddNode(modal))), cmds)
             }
         }
 
       case ParentSyncMsg(modalMsg) =>
         stack.get[ParentSync].map { case ParentSync(modalModel) =>
           ModalParentSync.update(modalMsg, modalModel)
-            .pipe { case (model, cmds) =>
-              (stack.update(ParentSync(model)), cmds)
+            .pipe { case (modal, cmds) =>
+              (model.copy(modalStack = stack.update(ParentSync(modal))), cmds)
             }
         }
-    }).getOrElse((stack, Seq.empty))
+    }).getOrElse((model, Seq.empty))
+  }
 
   def apply(
       model: cotoami.Model,

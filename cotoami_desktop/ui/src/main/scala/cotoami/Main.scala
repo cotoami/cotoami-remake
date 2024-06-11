@@ -1,6 +1,5 @@
 package cotoami
 
-import scala.util.chaining._
 import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
@@ -229,9 +228,7 @@ object Main {
         (model.copy(domain = domain), cmds)
       }
 
-      case ModalMsg(subMsg) =>
-        Modal.update(subMsg, model.modalStack)
-          .pipe { case (stack, cmds) => (model.copy(modalStack = stack), cmds) }
+      case ModalMsg(subMsg) => Modal.update(subMsg, model)
 
       case FlowInputMsg(subMsg) => {
         val (flowInput, waitingPosts, log, cmds) = FormCoto.update(
