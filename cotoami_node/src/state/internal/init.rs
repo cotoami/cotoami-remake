@@ -27,7 +27,7 @@ impl NodeState {
             // its name and password can be changed via config
             if db.globals().has_local_node() {
                 let opr = db.globals().local_node_as_operator()?;
-                let (ext, node) = ds.local_node_pair(&opr)?;
+                let (local, node) = ds.local_node_pair(&opr)?;
 
                 // Change the node name
                 if let Some(name) = config.node_name.as_deref() {
@@ -45,7 +45,8 @@ impl NodeState {
                         ds.change_owner_password(owner_password)?;
                         info!("The owner password has been changed.");
                     } else {
-                        ext.verify_password(owner_password)
+                        local
+                            .verify_password(owner_password)
                             .context("Config::owner_password could not be verified.")?;
                     }
                 }
