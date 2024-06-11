@@ -216,6 +216,17 @@ pub trait Principal {
         Ok(())
     }
 
+    fn authenticate(&self, password: Option<&str>) -> Result<()> {
+        if let Some(password) = password {
+            self.verify_password(password)?;
+        } else {
+            if self.password_hash().is_some() {
+                bail!("A password must be specified to authenticate.");
+            }
+        }
+        Ok(())
+    }
+
     fn start_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
         self.verify_password(password)?;
         self.set_session_token(Some(crate::generate_session_token()));
