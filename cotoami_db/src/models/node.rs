@@ -258,7 +258,7 @@ pub trait Principal {
     fn verify_password(&self, password: &str) -> Result<()> {
         let password_hash = self
             .password_hash()
-            .ok_or(anyhow!("No owner password assigned."))?;
+            .ok_or(anyhow!("No password assigned."))?;
         verify_password(password, password_hash)
     }
 }

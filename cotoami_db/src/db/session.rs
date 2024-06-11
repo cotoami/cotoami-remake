@@ -211,12 +211,14 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(local_ops::clear_session(local_node.deref_mut()))
     }
 
-    pub fn change_owner_password(&self, password: &str) -> Result<()> {
+    pub fn change_owner_password(&self, new_password: &str, old_password: &str) -> Result<()> {
         let mut local_node = self.globals.try_write_local_node()?;
-        local_node.update_password(password)?;
-        self.write_transaction(local_ops::update(&local_node))?;
-        self.clear_server_passwords()?;
-        Ok(())
+        local_node.verify_password(old_password)?;
+        local_node.update_password(new_password)?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            local_ops::update(&local_node).run(ctx)?;
+            server_ops::reencrypt_all_passwords(new_password, old_password).run(ctx)
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -298,10 +300,6 @@ impl<'a> DatabaseSession<'a> {
             password,
             encryption_password,
         ))
-    }
-
-    pub fn clear_server_passwords(&self) -> Result<usize> {
-        self.write_transaction(server_ops::clear_all_passwords())
     }
 
     /////////////////////////////////////////////////////////////////////////////
