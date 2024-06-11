@@ -1,7 +1,10 @@
 use core::time::Duration;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    ops::DerefMut,
+};
 
-use anyhow::{bail, Context as _, Result};
+use anyhow::{bail, Result};
 use diesel::sqlite::SqliteConnection;
 use once_cell::unsync::OnceCell;
 use parking_lot::MutexGuard;
@@ -195,11 +198,11 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
         let mut local_node = self.globals.try_write_local_node()?;
-        let duration = chrono::Duration::from_std(duration)?;
-        local_node
-            .start_session(password, duration)
-            .context(DatabaseError::AuthenticationFailed)?;
-        self.write_transaction(local_ops::update(&local_node))?;
+        self.write_transaction(local_ops::start_session(
+            local_node.deref_mut(),
+            password,
+            duration,
+        ))?;
         Ok(local_node.clone())
     }
 

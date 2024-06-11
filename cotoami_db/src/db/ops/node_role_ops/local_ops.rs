@@ -1,14 +1,16 @@
 //! LocalNode related operations
 
+use core::time::Duration;
 use std::ops::DerefMut;
 
+use anyhow::Context;
 use diesel::prelude::*;
 
 use crate::{
-    db::{op::*, ops::node_ops},
+    db::{error::*, op::*, ops::node_ops},
     models::node::{
         local::{LocalNode, NewLocalNode},
-        NewNode, Node,
+        NewNode, Node, Principal,
     },
     schema::{local_node, nodes},
 };
@@ -48,5 +50,20 @@ pub(crate) fn update(local_node: &LocalNode) -> impl Operation<WritableConn, Loc
             .set(local_node)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn start_session<'a>(
+    local_node: &'a mut LocalNode,
+    password: &'a str,
+    duration: Duration,
+) -> impl Operation<WritableConn, ()> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let duration = chrono::Duration::from_std(duration)?;
+        local_node
+            .start_session(password, duration)
+            .context(DatabaseError::AuthenticationFailed)?;
+        *local_node = update(&local_node).run(ctx)?;
+        Ok(())
     })
 }
