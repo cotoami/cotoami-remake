@@ -47,11 +47,7 @@ impl Database {
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Self> {
-        let root_dir = root_dir.as_ref().canonicalize()?;
-        if !root_dir.is_dir() {
-            bail!(DatabaseError::InvalidRootDir(root_dir));
-        }
-
+        let root_dir = Self::ensure_dir(root_dir)?;
         let file_uri = Self::to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
         let rw_conn = Self::new_rw_conn(&file_uri)?;
 
@@ -112,6 +108,14 @@ impl Database {
             }))?;
             Ok(uri.as_str().to_owned())
         }
+    }
+
+    fn ensure_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
+        let path = path.as_ref().canonicalize()?;
+        if !path.is_dir() {
+            bail!(DatabaseError::InvalidRootDir(path));
+        }
+        Ok(path)
     }
 
     fn run_migrations(&self) -> Result<()> {
