@@ -24,15 +24,6 @@ pub struct NodeConfig {
     /// you want this node to be launched as a server or to connect to other nodes.
     pub owner_password: Option<String>,
 
-    /// `COTOAMI_CHANGE_OWNER_PASSWORD`
-    ///
-    /// The owner password will be changed to the value of [Config::owner_password] if:
-    /// 1. This value is true.
-    /// 2. [Config::owner_password] has `Some` value.
-    /// 3. The local node has already been initialized (meaning there's an existing password).
-    #[serde(default = "NodeConfig::default_change_owner_password")]
-    pub change_owner_password: bool,
-
     /// `COTOAMI_SESSION_MINUTES`
     #[serde(default = "NodeConfig::default_session_minutes")]
     pub session_minutes: u64,
@@ -56,7 +47,6 @@ impl NodeConfig {
             db_dir,
             node_name,
             owner_password: None,
-            change_owner_password: false,
             session_minutes: Self::default_session_minutes(),
             changes_chunk_size: Self::default_changes_chunk_size(),
         }
@@ -64,7 +54,6 @@ impl NodeConfig {
 
     // Functions returning a default value as a workaround for the issue:
     // https://github.com/serde-rs/serde/issues/368
-    fn default_change_owner_password() -> bool { false }
     fn default_session_minutes() -> u64 { 60 }
     fn default_changes_chunk_size() -> i64 { 100 }
 
