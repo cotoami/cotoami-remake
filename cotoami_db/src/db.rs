@@ -95,7 +95,7 @@ impl Database {
         if path.is_dir() {
             Err(DatabaseError::InvalidFilePath {
                 path: path.to_path_buf(),
-                reason: "The path is a directory".into(),
+                reason: "The given path is a directory".into(),
             })?
         } else {
             // Url::from_file_path
