@@ -5,7 +5,10 @@ use cotoami_db::{Database, Id, Node};
 use cotoami_node::prelude::*;
 use tauri::Manager;
 
-use crate::{error::Error, event, log::Logger, recent::RecentDatabases};
+use self::recent::RecentDatabases;
+use crate::{error::Error, event, log::Logger};
+
+pub(crate) mod recent;
 
 #[derive(serde::Serialize)]
 pub(crate) struct DatabaseInfo {

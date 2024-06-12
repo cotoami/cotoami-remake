@@ -7,7 +7,6 @@ mod db;
 mod error;
 mod event;
 mod log;
-mod recent;
 mod system;
 mod window_state;
 
