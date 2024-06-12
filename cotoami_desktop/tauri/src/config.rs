@@ -1,8 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    fs::{self, OpenOptions},
-    path::Path,
-};
+use std::{collections::BTreeMap, fs, path::Path};
 
 use anyhow::Result;
 use cotoami_db::{Id, Node};
