@@ -6,7 +6,6 @@
 use std::{env, path::PathBuf, string::ToString, sync::Arc};
 
 use anyhow::anyhow;
-use chrono::Local;
 use cotoami_db::{Database, Id, Node};
 use cotoami_node::prelude::*;
 use tauri::Manager;
@@ -17,13 +16,14 @@ mod error;
 mod event;
 mod log;
 mod recent;
+mod system;
 mod window_state;
 
 fn main() {
     tauri::Builder::default()
         .plugin(window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            system_info,
+            system::system_info,
             validate_new_database_folder,
             validate_database_folder,
             create_database,
@@ -32,47 +32,6 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-#[derive(serde::Serialize)]
-struct SystemInfo {
-    app_version: String,
-    app_config_dir: Option<String>,
-    app_data_dir: Option<String>,
-    time_zone_offset_in_sec: i32,
-    os: String,
-    recent_databases: RecentDatabases,
-}
-
-#[tauri::command]
-fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
-    // tauri::PackageInfo
-    // https://docs.rs/tauri/1.6.1/tauri/struct.PackageInfo.html
-    let package_info = app_handle.package_info();
-    let app_version = package_info.version.to_string();
-
-    // tauri::PathResolver
-    // https://docs.rs/tauri/1.6.1/tauri/struct.PathResolver.html
-    let path_resolver = app_handle.path_resolver();
-    let app_config_dir = path_resolver
-        .app_config_dir()
-        .and_then(|path| path.to_str().map(str::to_string));
-    let app_data_dir = path_resolver
-        .app_data_dir()
-        .and_then(|path| path.to_str().map(str::to_string));
-
-    let time_zone_offset_in_sec = Local::now().offset().local_minus_utc();
-
-    let recent_databases = RecentDatabases::load(&app_handle);
-
-    SystemInfo {
-        app_version,
-        app_config_dir,
-        app_data_dir,
-        time_zone_offset_in_sec,
-        os: env::consts::OS.into(),
-        recent_databases,
-    }
 }
 
 #[tauri::command]
