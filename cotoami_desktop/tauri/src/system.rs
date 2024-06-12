@@ -5,7 +5,7 @@ use chrono::Local;
 use crate::db::recent::RecentDatabases;
 
 #[derive(serde::Serialize)]
-pub(crate) struct SystemInfo {
+pub struct SystemInfo {
     app_version: String,
     app_config_dir: Option<String>,
     app_data_dir: Option<String>,
@@ -15,7 +15,7 @@ pub(crate) struct SystemInfo {
 }
 
 #[tauri::command]
-pub(crate) fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
+pub fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
     // tauri::PackageInfo
     // https://docs.rs/tauri/1.6.1/tauri/struct.PackageInfo.html
     let package_info = app_handle.package_info();

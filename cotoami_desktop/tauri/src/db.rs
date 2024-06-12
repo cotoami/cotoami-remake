@@ -11,7 +11,7 @@ use crate::{error::Error, event, log::Logger};
 pub(crate) mod recent;
 
 #[derive(serde::Serialize)]
-pub(crate) struct DatabaseInfo {
+pub struct DatabaseInfo {
     folder: String,
     last_change_number: i64,
     nodes: Vec<Node>,
@@ -49,10 +49,7 @@ impl DatabaseInfo {
 }
 
 #[tauri::command]
-pub(crate) fn validate_new_database_folder(
-    base_folder: String,
-    folder_name: String,
-) -> Result<(), Error> {
+pub fn validate_new_database_folder(base_folder: String, folder_name: String) -> Result<(), Error> {
     let mut path = PathBuf::from(base_folder);
     if !path.is_dir() {
         return Err(Error::new(
@@ -72,7 +69,7 @@ pub(crate) fn validate_new_database_folder(
 }
 
 #[tauri::command]
-pub(crate) fn validate_database_folder(database_folder: String) -> Result<(), Error> {
+pub fn validate_database_folder(database_folder: String) -> Result<(), Error> {
     let path = PathBuf::from(database_folder);
     if Database::is_in(path) {
         Ok(())
@@ -85,7 +82,7 @@ pub(crate) fn validate_database_folder(database_folder: String) -> Result<(), Er
 }
 
 #[tauri::command]
-pub(crate) async fn create_database(
+pub async fn create_database(
     app_handle: tauri::AppHandle,
     database_name: String,
     base_folder: String,
@@ -116,7 +113,7 @@ pub(crate) async fn create_database(
 }
 
 #[tauri::command]
-pub(crate) async fn open_database(
+pub async fn open_database(
     app_handle: tauri::AppHandle,
     database_folder: String,
 ) -> Result<DatabaseInfo, Error> {
@@ -139,7 +136,7 @@ pub(crate) async fn open_database(
 }
 
 #[tauri::command]
-pub(crate) async fn node_command(
+pub async fn node_command(
     state: tauri::State<'_, NodeState>,
     command: Command,
 ) -> Result<String, Error> {

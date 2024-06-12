@@ -1,6 +1,7 @@
 //! Data structure that represents a Cotoami database
 
 use std::{
+    cmp::Ordering,
     fmt::{Debug, Display},
     hash::{Hash, Hasher},
     marker::PhantomData,
@@ -137,6 +138,14 @@ impl<T> Copy for Id<T> {}
 
 impl<T> Clone for Id<T> {
     fn clone(&self) -> Self { *self }
+}
+
+impl<T: Eq> Ord for Id<T> {
+    fn cmp(&self, other: &Self) -> Ordering { self.value.cmp(&other.value) }
+}
+
+impl<T: Eq> PartialOrd for Id<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
 
 impl<T> Hash for Id<T> {

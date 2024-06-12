@@ -33,31 +33,32 @@ impl DatabaseOpened {
 pub(crate) struct RecentDatabases(Vec<DatabaseOpened>);
 
 impl RecentDatabases {
-    const FILENAME: &'static str = ".recent.json";
+    const FILENAME: &'static str = "recent.json";
     const MAX_SIZE: usize = 10;
 
     pub fn load(app_handle: &tauri::AppHandle) -> Self {
-        if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
-            let file_path = config_dir.join(Self::FILENAME);
-            if file_path.is_file() {
-                app_handle.debug(
-                    "Reading the recent file...",
-                    Some(file_path.to_string_lossy().borrow()),
-                );
-                match Self::read_from_file(file_path) {
-                    Ok(recent) => recent,
-                    Err(e) => {
-                        app_handle.warn("Error reading the recent file.", Some(&e.to_string()));
-                        Self::empty()
-                    }
+        if let Some(path) = crate::config_file_path(app_handle, Self::FILENAME) {
+            app_handle.debug(
+                "Reading the recent file...",
+                Some(path.to_string_lossy().borrow()),
+            );
+            match Self::read_from_file(path) {
+                Ok(recent) => recent,
+                Err(e) => {
+                    app_handle.warn("Error reading the recent file.", Some(&e.to_string()));
+                    Self::empty()
                 }
-            } else {
-                app_handle.debug("No recent databases.", None);
-                Self::empty()
             }
         } else {
+            app_handle.debug("No recent databases.", None);
             Self::empty()
         }
+    }
+
+    pub fn update(app_handle: &tauri::AppHandle, folder: String, node: &Node) {
+        let mut recent = Self::load(app_handle);
+        recent.opened(DatabaseOpened::new(folder, node));
+        recent.save(app_handle);
     }
 
     fn empty() -> Self { RecentDatabases(Vec::new()) }
@@ -67,12 +68,6 @@ impl RecentDatabases {
         let reader = BufReader::new(file);
         let recent = serde_json::from_reader(reader)?;
         Ok(recent)
-    }
-
-    pub fn update(app_handle: &tauri::AppHandle, folder: String, node: &Node) {
-        let mut recent = Self::load(app_handle);
-        recent.opened(DatabaseOpened::new(folder, node));
-        recent.save(app_handle);
     }
 
     fn opened(&mut self, db: DatabaseOpened) {
@@ -92,8 +87,6 @@ impl RecentDatabases {
                     Some(file_path.to_string_lossy().borrow()),
                 );
             }
-        } else {
-            app_handle.debug("app_config_dir is None.", None);
         }
     }
 

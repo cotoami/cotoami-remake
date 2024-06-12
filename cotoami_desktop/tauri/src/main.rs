@@ -3,12 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-mod db;
-mod error;
-mod event;
-mod log;
-mod plugins;
-mod system;
+use cotoami_desktop::{db, plugins, system};
 
 fn main() {
     tauri::Builder::default()

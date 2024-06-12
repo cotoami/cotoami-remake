@@ -4,7 +4,7 @@ use cotoami_node::prelude::*;
 use serde_json::value::Value;
 
 #[derive(serde::Serialize)]
-pub(crate) struct Error {
+pub struct Error {
     code: String,
     default_message: String,
     params: HashMap<String, Value>,

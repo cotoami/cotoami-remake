@@ -5,7 +5,7 @@ use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use validator::Validate;
 
-#[derive(Debug, serde::Deserialize, Validate)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Validate)]
 pub struct NodeConfig {
     /// `COTOAMI_DB_DIR`
     pub db_dir: Option<String>,
