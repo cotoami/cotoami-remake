@@ -7,12 +7,12 @@ mod db;
 mod error;
 mod event;
 mod log;
+mod plugins;
 mod system;
-mod window_state;
 
 fn main() {
     tauri::Builder::default()
-        .plugin(window_state::Builder::default().build())
+        .plugin(plugins::window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             system::system_info,
             db::validate_new_database_folder,
