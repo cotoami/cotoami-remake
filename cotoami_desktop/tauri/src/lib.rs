@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
+
 use crate::log::Logger;
 
 mod config;
@@ -22,4 +24,13 @@ fn config_file_path(app_handle: &tauri::AppHandle, file_name: &str) -> Option<Pa
         app_handle.warn("app_config_dir is None.", None);
         None
     }
+}
+
+fn generate_password() -> String {
+    // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-alphanumeric-characters
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .map(char::from)
+        .collect()
 }
