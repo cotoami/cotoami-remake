@@ -6,7 +6,7 @@ use cotoami_node::prelude::*;
 use tauri::Manager;
 
 use self::recent::RecentDatabases;
-use crate::{error::Error, event, log::Logger};
+use crate::{config::Configs, error::Error, event, log::Logger};
 
 pub(crate) mod recent;
 
@@ -96,10 +96,22 @@ pub async fn create_database(
     };
     app_handle.debug("Creating a database...", Some(&folder));
 
-    let node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
-    let node_state = NodeState::new(node_config).await?;
+    // Create a new config.
+    let mut node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
+    node_config.owner_password = Some(crate::generate_password());
+
+    // Create a node state with the config.
+    let node_state = NodeState::new(node_config.clone()).await?;
+
+    // Save the config.
+    let mut configs = Configs::load(&app_handle);
+    configs.set(node_state.local_node_id()?, node_config);
+    configs.save(&app_handle);
+
+    // Pipe node events into the frontend.
     tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
 
+    // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
     app_handle.info(
         &format!("Database [{}] created.", db_info.local_node().name),
@@ -107,6 +119,7 @@ pub async fn create_database(
     );
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
+    // Store the state.
     app_handle.manage(node_state);
 
     Ok(db_info)

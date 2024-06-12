@@ -65,6 +65,8 @@ impl NodeState {
 
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
+    pub fn local_node_id(&self) -> Result<Id<Node>> { self.db().globals().local_node_id() }
+
     pub fn local_node_as_operator(&self) -> Result<Operator> {
         self.db().globals().local_node_as_operator()
     }

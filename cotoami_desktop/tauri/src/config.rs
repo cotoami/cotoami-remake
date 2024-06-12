@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fs, path::Path};
+use std::{borrow::Borrow, collections::BTreeMap, fs, path::Path};
 
 use anyhow::Result;
 use cotoami_db::{Id, Node};
@@ -28,6 +28,8 @@ impl Configs {
         }
     }
 
+    pub fn get(&self, node_id: &Id<Node>) -> Option<&NodeConfig> { self.0.get(node_id) }
+
     pub fn set(&mut self, node_id: Id<Node>, config: NodeConfig) { self.0.insert(node_id, config); }
 
     pub fn save(&self, app_handle: &tauri::AppHandle) {
@@ -35,6 +37,8 @@ impl Configs {
             let file_path = config_dir.join(Self::FILENAME);
             if let Err(e) = self.save_to_file(&file_path) {
                 app_handle.warn("Error writing the configs file.", Some(&e.to_string()));
+            } else {
+                app_handle.debug("Configs saved.", Some(file_path.to_string_lossy().borrow()));
             }
         }
     }
