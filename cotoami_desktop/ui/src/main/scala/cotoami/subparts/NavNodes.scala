@@ -59,7 +59,12 @@ object NavNodes {
         materialSymbol("add")
       ),
       ul(className := "nodes")(
-        nodes.local.map(node => li()(nodeButton(node, nodes, dispatch)))
+        nodes.local.map(node =>
+          li(className := "local")(nodeButton(node, nodes, dispatch))
+        ),
+        nodes.parents.map(node =>
+          li(className := "parent")(nodeButton(node, nodes, dispatch))
+        )
       )
     )
   }
