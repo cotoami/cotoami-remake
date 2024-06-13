@@ -12,8 +12,8 @@ use crate::{
 impl NodeState {
     pub(crate) async fn init(&self) -> Result<()> {
         self.init_local_node().await?;
+        self.start_handling_local_events();
         self.restore_server_conns().await?;
-        self.handle_local_events();
         Ok(())
     }
 
@@ -49,6 +49,22 @@ impl NodeState {
         .await?
     }
 
+    fn start_handling_local_events(&self) {
+        let this = self.clone();
+        tokio::spawn(async move {
+            let mut events = this.pubsub().events().subscribe(None::<()>);
+            while let Some(event) = events.next().await {
+                debug!("Internal event: {event:?}");
+                match event {
+                    LocalNodeEvent::ParentDisconnected(parent_id) => {
+                        this.remove_parent_service(&parent_id);
+                    }
+                    _ => (),
+                }
+            }
+        });
+    }
+
     async fn restore_server_conns(&self) -> Result<()> {
         let (local_node, server_nodes) = spawn_blocking({
             let db = self.db().clone();
@@ -72,21 +88,5 @@ impl NodeState {
         }
         *self.write_server_conns() = server_conns;
         Ok(())
-    }
-
-    fn handle_local_events(&self) {
-        let this = self.clone();
-        tokio::spawn(async move {
-            let mut events = this.pubsub().events().subscribe(None::<()>);
-            while let Some(event) = events.next().await {
-                debug!("Internal event: {event:?}");
-                match event {
-                    LocalNodeEvent::ParentDisconnected(parent_id) => {
-                        this.remove_parent_service(&parent_id);
-                    }
-                    _ => (),
-                }
-            }
-        });
     }
 }
