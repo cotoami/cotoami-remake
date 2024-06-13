@@ -37,6 +37,12 @@ case class Domain(
       this.nodes.current.flatMap(_.rootCotonomaId)
     )
 
+  def inRootCotonoma: Boolean =
+    (this.currentCotonomaId, this.rootCotonomaId) match {
+      case (Some(current), Some(root)) => current == root
+      case _                           => false
+    }
+
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
   // return `None` if the cotonoma data of that ID has not been loaded.
   def currentCotonoma: Option[Cotonoma] =
@@ -230,7 +236,7 @@ case class Domain(
 
   private def prependCotoToTimeline(coto: Coto): Domain =
     this.modify(_.cotos).using(cotos =>
-      if (coto.postedInId == this.currentCotonomaId)
+      if (this.inRootCotonoma || coto.postedInId == this.currentCotonomaId)
         cotos.prependToTimeline(coto)
       else
         cotos
