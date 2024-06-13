@@ -158,6 +158,9 @@ pub(crate) fn import_change<'a>(
         *parent_node = parent_ops::increment_changes_received(
             &parent_node.node_id,
             expected_number,
+            // If the same change has already been received from another parent,
+            // `log_entry` should be None, so the current timpstamp will be used
+            // as the `received_at` timpstamp.
             log_entry.as_ref().map(|e| e.inserted_at),
         )
         .run(ctx)?;
