@@ -27,7 +27,6 @@ futures.workspace = true
 mime = "0.3.17" 
 parking_lot.workspace = true 
 percent-encoding = "2.3.1" 
-rand.workspace = true 
 reqwest = {version = "0.11", features = ["json"]} 
 reqwest-eventsource = "0.4.0" 
 rmp-serde.workspace = true 

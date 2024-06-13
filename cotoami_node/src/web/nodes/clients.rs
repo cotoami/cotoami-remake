@@ -5,7 +5,6 @@ use axum::{
     Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use tokio::task::spawn_blocking;
 use tracing::debug;
 use validator::Validate;
@@ -84,7 +83,7 @@ async fn add_client_node(
     spawn_blocking(move || {
         // Inputs
         let db = state.db().new_session()?;
-        let password = generate_password();
+        let password = cotoami_db::generate_secret(None);
         let db_role = if form.as_parent.unwrap_or(false) {
             NewDatabaseRole::Parent
         } else {
@@ -112,13 +111,4 @@ async fn add_client_node(
         ))
     })
     .await?
-}
-
-fn generate_password() -> String {
-    // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-alphanumeric-characters
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect()
 }

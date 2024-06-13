@@ -98,7 +98,7 @@ pub async fn create_database(
 
     // Create a new config.
     let mut node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
-    node_config.owner_password = Some(crate::generate_password());
+    node_config.owner_password = Some(cotoami_db::generate_secret(None));
 
     // Create a node state with the config.
     let node_state = NodeState::new(node_config.clone()).await?;

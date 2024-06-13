@@ -229,7 +229,7 @@ pub trait Principal {
 
     fn start_session(&mut self, password: &str, duration: Duration) -> Result<&str> {
         self.verify_password(password)?;
-        self.set_session_token(Some(crate::generate_session_token()));
+        self.set_session_token(Some(crate::generate_secret(None)));
         self.set_session_expires_at(Some(crate::current_datetime() + duration));
         Ok(self.session_token().unwrap())
     }

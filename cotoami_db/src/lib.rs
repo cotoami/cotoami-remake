@@ -2,7 +2,7 @@
 
 use base64::Engine;
 use chrono::{offset::Utc, NaiveDateTime};
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rand::Rng;
 use serde::{Deserialize, Deserializer, Serializer};
 
 pub mod db;
@@ -25,14 +25,23 @@ pub use crate::prelude::*;
 /// Returns the current datetime in UTC.
 fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }
 
-fn generate_session_token() -> String {
-    // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-alphanumeric-characters
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(32)
-        .map(char::from)
+// Generate a secret string of the given length which is 32 by default.
+pub fn generate_secret(length: Option<usize>) -> String {
+    let length = length.unwrap_or(32);
+
+    // // https://rust-lang-nursery.github.io/rust-cookbook/algorithms/randomness.html#create-random-passwords-from-a-set-of-user-defined-characters
+    let mut rng = rand::thread_rng();
+    (0..length)
+        .map(|_| {
+            let index = rng.gen_range(0..SECRET_CHARSET.len());
+            SECRET_CHARSET[index] as char
+        })
         .collect()
 }
+
+const SECRET_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                            abcdefghijklmnopqrstuvwxyz\
+                            0123456789)(*&^%$#@!~";
 
 /// Base64 serialization in serde
 ///
