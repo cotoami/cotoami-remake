@@ -255,7 +255,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         1
     );
 
-    // when
+    // when: the same change from a different parent
     let imported_change2 = ds1.import_change(&src_change, &node3.uuid)?;
 
     // then
@@ -264,6 +264,8 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         ds1.parent_node(&node3.uuid, &opr)?
             .unwrap()
             .changes_received,
+        // the change should not be applied,
+        // but still the number should be incremented.
         1
     );
 
