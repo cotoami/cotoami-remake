@@ -98,7 +98,7 @@ object ModalParentSync {
                 span(className := "result")(
                   span(className := "range")(s"${range._1} to ${range._2}"),
                   span(className := "changes")(
-                    s"(${range._2 - range._1} changes)"
+                    s"(${range._2 - range._1 + 1} changes)"
                   )
                 )
               ),
