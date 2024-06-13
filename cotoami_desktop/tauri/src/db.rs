@@ -34,7 +34,7 @@ impl DatabaseInfo {
                 .await?
                 .unwrap_or_else(|| unreachable!("There must be changes before.")),
             nodes: node_state.all_nodes().await?,
-            local_node_id: node_state.db().globals().local_node_id()?,
+            local_node_id: node_state.db().globals().try_get_local_node_id()?,
             parent_node_ids: node_state.db().globals().parent_node_ids(),
             servers: node_state.all_server_nodes(opr).await?,
         })
@@ -71,8 +71,15 @@ pub fn validate_new_database_folder(base_folder: String, folder_name: String) ->
 #[tauri::command]
 pub fn validate_database_folder(database_folder: String) -> Result<(), Error> {
     let path = PathBuf::from(database_folder);
-    if Database::is_in(path) {
-        Ok(())
+    if let Ok(Some((node, _))) = Database::try_read_node_info(path) {
+        if node.has_root_cotonoma() {
+            Ok(())
+        } else {
+            Err(Error::new(
+                "invalid-node",
+                "The database node must have a root cotonoma.",
+            ))
+        }
     } else {
         Err(Error::new(
             "invalid-database-folder",
@@ -105,7 +112,7 @@ pub async fn create_database(
 
     // Save the config.
     let mut configs = Configs::load(&app_handle);
-    configs.set(node_state.local_node_id()?, node_config);
+    configs.insert(node_state.try_get_local_node_id()?, node_config);
     configs.save(&app_handle);
 
     // Pipe node events into the frontend.
@@ -113,10 +120,7 @@ pub async fn create_database(
 
     // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
-    app_handle.info(
-        &format!("Database [{}] created.", db_info.local_node().name),
-        None,
-    );
+    app_handle.info("Database created.", Some(&db_info.local_node().name));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
     // Store the state.
@@ -136,13 +140,45 @@ pub async fn open_database(
         .ok_or(anyhow!("Invalid folder path: {}", database_folder))?;
     validate_database_folder(folder.clone())?;
 
-    let node_config = NodeConfig::new_standalone(Some(folder.clone()), None);
+    // Load or create a config.
+    let node_config = if let Some((node, require_password)) = Database::try_read_node_info(&folder)?
+    {
+        let mut configs = Configs::load(&app_handle);
+        let config = if let Some(config) = configs.get_mut(&node.uuid) {
+            app_handle.debug("Found an existing config.", Some(&node.name));
+            config.db_dir = Some(folder.clone());
+            // sync just to avoid confusion, though `node_name` has an effect only in database creation.
+            config.node_name = Some(node.name);
+            config.clone()
+        } else {
+            let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
+            if require_password {
+                unimplemented!("Need to display a modal to input a password here.");
+            } else {
+                config.owner_password = Some(cotoami_db::generate_secret(None));
+                app_handle.debug("The owner password is going to be initialized.", None);
+            }
+            configs.insert(node.uuid, config.clone());
+            config
+        };
+        configs.save(&app_handle);
+        config
+    } else {
+        unreachable!();
+    };
+
+    // Create a node state with the config.
     let node_state = NodeState::new(node_config).await?;
+
+    // Pipe node events into the frontend.
     tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
 
+    // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
+    app_handle.info("Database opened.", Some(&db_info.local_node().name));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
+    // Store the state.
     app_handle.manage(node_state);
 
     Ok(db_info)

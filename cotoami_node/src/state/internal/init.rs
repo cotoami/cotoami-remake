@@ -21,41 +21,29 @@ impl NodeState {
         let db = self.db().clone();
         let config = self.config().clone();
         spawn_blocking(move || {
-            let mut ds = db.new_session()?;
-
-            // If the local node already exists,
-            // its name and password can be changed via config
-            if db.globals().has_local_node() {
-                let opr = db.globals().local_node_as_operator()?;
-                let (local, node) = ds.local_node_pair(&opr)?;
-
-                // Change the node name
-                if let Some(name) = config.node_name.as_deref() {
-                    if name != node.name {
-                        // Ignoring the changelog since this function is called during
-                        // the node initialization (there should be no child nodes connected).
-                        let (node, _) = ds.rename_local_node(name, &opr)?;
-                        info!("The node name has been changed to [{}].", node.name);
+            if let Some(local_node) = db.globals().local_node() {
+                if local_node.has_password() {
+                    local_node
+                        .authenticate(config.owner_password.as_deref())
+                        .context("Owner authentication has been failed.")?;
+                } else {
+                    if let Some(ref new_password) = config.owner_password {
+                        db.new_session()?.set_owner_password_if_none(new_password)?;
+                        debug!("The owner password has been initialized.");
+                    } else {
+                        debug!("Skipping authentication.");
                     }
                 }
-
-                // Owner authentication
-                local
-                    .authenticate(config.owner_password.as_deref())
-                    .context("Owner authentication has been failed.")?;
-
-                return Ok(());
+            } else {
+                let ((_, node), _) = db.new_session()?.init_as_node(
+                    config.node_name.as_deref(),
+                    config.owner_password.as_deref(),
+                )?;
+                info!(
+                    "The local node [{}]({}) has been created",
+                    node.name, node.uuid
+                );
             }
-
-            // Initialize the local node
-            let ((_, node), _) = ds.init_as_node(
-                config.node_name.as_deref(),
-                config.owner_password.as_deref(),
-            )?;
-            info!(
-                "The local node [{}]({}) has been created",
-                node.name, node.uuid
-            );
             Ok(())
         })
         .await?

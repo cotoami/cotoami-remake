@@ -74,6 +74,8 @@ impl Node {
     pub const ICON_MAX_LENGTH: usize = 5_000_000; // 5MB
     pub const NAME_MAX_LENGTH: usize = Cotonoma::NAME_MAX_LENGTH;
 
+    pub fn has_root_cotonoma(&self) -> bool { self.root_cotonoma_id.is_some() }
+
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
     pub fn to_update(&self) -> UpdateNode {
@@ -204,6 +206,8 @@ pub trait Principal {
     fn session_expires_at(&self) -> Option<&NaiveDateTime>;
 
     fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>);
+
+    fn has_password(&self) -> bool { self.password_hash().is_some() }
 
     fn session_expires_at_as_local_time(&self) -> Option<DateTime<Local>> {
         self.session_expires_at()

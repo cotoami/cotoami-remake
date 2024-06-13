@@ -120,7 +120,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let updated_at = crate::current_datetime();
             let node = node_ops::rename(&local_node_id, name, Some(updated_at)).run(ctx)?;
@@ -140,7 +140,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::set_root_cotonoma(&local_node_id, cotonoma_id).run(ctx)?;
             let change = Change::SetRootCotonoma {
@@ -179,7 +179,7 @@ impl<'a> DatabaseSession<'a> {
 
     /// Import a node data sent from a child or parent node.
     pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             if let Some(node) = node_ops::upsert(node).run(ctx)? {
                 let change = Change::UpsertNode(node);
@@ -209,6 +209,19 @@ impl<'a> DatabaseSession<'a> {
     pub fn clear_owner_session(&self) -> Result<()> {
         let mut local_node = self.globals.try_write_local_node()?;
         self.write_transaction(local_ops::clear_session(local_node.deref_mut()))
+    }
+
+    pub fn set_owner_password_if_none(&self, new_password: &str) -> Result<()> {
+        let mut local_node = self.globals.try_write_local_node()?;
+        if local_node.password_hash().is_some() {
+            bail!("The local node already has a password.");
+        }
+        local_node.update_password(new_password)?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            local_ops::update(&local_node).run(ctx)?;
+            server_ops::clear_all_passwords().run(ctx)?;
+            Ok(())
+        })
     }
 
     pub fn change_owner_password(&self, new_password: &str, old_password: &str) -> Result<()> {
@@ -432,7 +445,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(usize, ChangelogEntry)> {
         operator.requires_to_be_owner()?;
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         let mut parent_node = self.globals.try_write_parent_node(parent_node_id)?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // Set the parent to be forked
@@ -480,7 +493,7 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn as_operator(&mut self, node_id: Id<Node>) -> Result<Option<Operator>> {
-        if node_id == self.globals.local_node_id()? {
+        if node_id == self.globals.try_get_local_node_id()? {
             return Ok(Some(Operator::Owner(node_id)));
         }
         if let Some(child) = self.read_transaction(child_ops::get(&node_id))? {
@@ -581,7 +594,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.globals.ensure_local(posted_in)?;
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
             &local_node_id,
@@ -598,7 +611,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let inserted_coto = coto_ops::insert(new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
@@ -614,7 +627,7 @@ impl<'a> DatabaseSession<'a> {
         summary: Option<&str>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
@@ -632,7 +645,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
@@ -789,7 +802,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
         self.globals.ensure_local(posted_in)?;
 
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         let posted_by_id = operator.node_id();
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let (cotonoma, coto) =
@@ -808,7 +821,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
         assert_eq!(coto.uuid, cotonoma.coto_id);
 
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let coto = coto_ops::insert(&coto.to_import()).run(ctx)?;
             let cotonoma = cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
@@ -861,7 +874,7 @@ impl<'a> DatabaseSession<'a> {
             self.globals.ensure_local(cotonoma)?;
         }
 
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         let created_by_id = operator.node_id();
         let new_link = NewLink::new(
             &local_node_id,
@@ -881,7 +894,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     fn create_link(&self, new_link: NewLink) -> Result<(Link, ChangelogEntry)> {
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let inserted_link = link_ops::insert(new_link).run(ctx)?;
             let change = Change::CreateLink(inserted_link.clone());
@@ -898,7 +911,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Link, ChangelogEntry)> {
         operator.can_edit_links()?;
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let link = link_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&link)?;
@@ -916,7 +929,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn delete_link(&self, id: &Id<Link>, operator: &Operator) -> Result<ChangelogEntry> {
         operator.can_edit_links()?;
-        let local_node_id = self.globals.local_node_id()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let link = link_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&link)?;

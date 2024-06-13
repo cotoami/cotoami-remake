@@ -28,9 +28,13 @@ impl Configs {
         }
     }
 
-    pub fn get(&self, node_id: &Id<Node>) -> Option<&NodeConfig> { self.0.get(node_id) }
+    pub fn get_mut(&mut self, node_id: &Id<Node>) -> Option<&mut NodeConfig> {
+        self.0.get_mut(node_id)
+    }
 
-    pub fn set(&mut self, node_id: Id<Node>, config: NodeConfig) { self.0.insert(node_id, config); }
+    pub fn insert(&mut self, node_id: Id<Node>, config: NodeConfig) {
+        self.0.insert(node_id, config);
+    }
 
     pub fn save(&self, app_handle: &tauri::AppHandle) {
         if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
@@ -66,11 +70,11 @@ mod tests {
     #[test]
     fn serialize_to_toml() -> Result<()> {
         let mut configs = Configs::empty();
-        configs.set(
+        configs.insert(
             Id::from_str("00000000-0000-0000-0000-000000000001")?,
             NodeConfig::new_standalone(Some("/path/to/db1".into()), Some("Hello".into())),
         );
-        configs.set(
+        configs.insert(
             Id::from_str("00000000-0000-0000-0000-000000000002")?,
             NodeConfig::new_standalone(Some("/path/to/db2".into()), Some("Bye".into())),
         );

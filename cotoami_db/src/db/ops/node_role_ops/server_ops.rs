@@ -8,7 +8,7 @@ use crate::{
     db::{error::*, op::*},
     models::{
         node::{
-            server::{NewServerNode, ServerNode},
+            server::{ClearServerPassword, NewServerNode, ServerNode},
             Node,
         },
         Id,
@@ -112,5 +112,15 @@ pub(crate) fn reencrypt_all_passwords<'a>(
             }
         }
         Ok(())
+    })
+}
+
+/// Clears the password of every server node in this database.
+pub(crate) fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
+    write_op(move |conn| {
+        diesel::update(server_nodes::table)
+            .set(ClearServerPassword::new())
+            .execute(conn.deref_mut())
+            .map_err(anyhow::Error::from)
     })
 }

@@ -12,16 +12,22 @@ pub struct NodeConfig {
 
     /// `COTOAMI_NODE_NAME`
     ///
-    /// If there already exists a database in `db_dir`, the name of that database
-    /// will be changed to this value during initialization.
+    /// It will be used to define a node name when the node is first initialized.
     #[validate(length(min = 1, max = "Node::NAME_MAX_LENGTH"))]
     pub node_name: Option<String>,
 
     /// `COTOAMI_OWNER_PASSWORD`
     ///
-    /// The owner password is used for owner authentication and
-    /// as a master password to encrypt other passwords. It is required if
-    /// you want this node to be launched as a server or to connect to other nodes.
+    /// An owner password is required if you want the local node to be launched as a server or
+    /// to connect to other server nodes.
+    ///
+    /// This value will be used:
+    ///
+    /// 1. to configure the local node password ([LocalNode::owner_password_hash])
+    ///    when it has not yet configured.
+    /// 2. to authenticate an owner who is about to create a [crate::state::NodeState].
+    /// 3. to authenticate remote clients as owners.
+    /// 4. as a master password to encrypt other passwords.
     pub owner_password: Option<String>,
 
     /// `COTOAMI_SESSION_MINUTES`

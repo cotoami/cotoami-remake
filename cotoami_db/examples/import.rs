@@ -141,7 +141,7 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
         bail!("The root cotonoma is required for import.")
     };
     let mut context = Context::new(
-        db.globals().local_node_id()?,
+        db.globals().try_get_local_node_id()?,
         root_cotonoma,
         json.all_coto_ids(),
         json.all_cotonoma_ids(),

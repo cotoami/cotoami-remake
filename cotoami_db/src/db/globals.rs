@@ -46,16 +46,16 @@ impl Globals {
     // local_node
     /////////////////////////////////////////////////////////////////////////////
 
-    pub(crate) fn set_local_node(&self, local_node: Option<LocalNode>) {
-        *self.local_node.write() = local_node;
-    }
-
     pub fn has_local_node(&self) -> bool { self.local_node.read().is_some() }
 
-    pub fn local_node_id(&self) -> Result<Id<Node>> { Ok(self.try_read_local_node()?.node_id) }
+    pub fn try_get_local_node_id(&self) -> Result<Id<Node>> {
+        Ok(self.try_read_local_node()?.node_id)
+    }
+
+    pub fn local_node(&self) -> Option<LocalNode> { self.local_node.read().clone() }
 
     pub fn local_node_as_operator(&self) -> Result<Operator> {
-        Ok(Operator::Owner(self.local_node_id()?))
+        Ok(Operator::Owner(self.try_get_local_node_id()?))
     }
 
     pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
@@ -70,9 +70,13 @@ impl Globals {
         self.ensure_local(entity).is_ok()
     }
 
-    pub(crate) fn try_read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
+    pub fn try_read_local_node(&self) -> Result<MappedRwLockReadGuard<LocalNode>> {
         RwLockReadGuard::try_map(self.local_node.read(), |x| x.as_ref())
             .map_err(|_| anyhow!(DatabaseError::LocalNodeNotYetInitialized))
+    }
+
+    pub(crate) fn set_local_node(&self, local_node: Option<LocalNode>) {
+        *self.local_node.write() = local_node;
     }
 
     pub(crate) fn try_write_local_node(&self) -> Result<MappedRwLockWriteGuard<LocalNode>> {
