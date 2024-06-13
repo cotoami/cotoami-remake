@@ -2,6 +2,7 @@
 
 use std::ops::DerefMut;
 
+use anyhow::Context;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
@@ -112,6 +113,6 @@ pub(crate) fn increment_changes_received(
                 parent_nodes::last_change_received_at.eq(Some(received_at)),
             ))
             .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)
+            .with_context(|| format!("Invalid change number increment on: {id}"))
     })
 }
