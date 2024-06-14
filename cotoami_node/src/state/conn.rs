@@ -118,4 +118,8 @@ impl ServerConnection {
     }
 }
 
+impl Drop for ServerConnection {
+    fn drop(&mut self) { self.disconnect(); }
+}
+
 pub type ServerConnections = HashMap<Id<Node>, ServerConnection>;
