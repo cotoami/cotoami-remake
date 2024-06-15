@@ -51,7 +51,7 @@ impl NodeState {
 
     fn start_handling_local_events(&self) {
         let this = self.clone();
-        tokio::spawn(async move {
+        self.inner.tasks.lock().spawn(async move {
             let mut events = this.pubsub().events().subscribe(None::<()>);
             while let Some(event) = events.next().await {
                 debug!("Internal event: {event:?}");

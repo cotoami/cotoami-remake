@@ -4,7 +4,8 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tokio::task::JoinSet;
 use tracing::debug;
 use validator::Validate;
 
@@ -29,6 +30,7 @@ struct State {
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
     parent_services: Arc<RwLock<ParentNodeServices>>,
+    tasks: Arc<Mutex<JoinSet<()>>>,
 }
 
 impl NodeState {
@@ -53,6 +55,7 @@ impl NodeState {
             pubsub: Pubsub::new(),
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
             parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
+            tasks: Arc::new(Mutex::new(JoinSet::new())),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -122,6 +125,13 @@ impl NodeState {
     pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         debug!("Parent service being removed: {parent_id}");
         self.inner.parent_services.write().remove(parent_id)
+    }
+
+    pub async fn shutdown(&self) {
+        for conn in self.inner.server_conns.write().values_mut() {
+            conn.disconnect();
+        }
+        self.inner.tasks.lock().shutdown().await;
     }
 }
 
