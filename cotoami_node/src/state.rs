@@ -133,6 +133,13 @@ impl NodeState {
         }
         self.inner.tasks.lock().shutdown().await;
     }
+
+    pub fn debug(&self, label: &str) {
+        debug!(
+            "NodeState inner pointers({label}): {}",
+            Arc::strong_count(&self.inner)
+        );
+    }
 }
 
 type ParentNodeServices = HashMap<Id<Node>, Box<dyn NodeService>>;
