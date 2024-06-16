@@ -44,8 +44,7 @@ pub(crate) async fn communicate_with_parent<
     let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
 
     // Create a parent service.
-    let parent_service =
-        PubsubService::new(description.clone(), node_state.pubsub().responses().clone());
+    let parent_service = PubsubService::new(description, node_state.pubsub().responses().clone());
 
     // A task sending request events.
     abortables.lock().push(tasks.spawn({
@@ -187,7 +186,7 @@ where
     message_sink.send(Message::Binary(bytes.into())).await
 }
 
-/// Handle [NodeSentEvent]s streamed from a peer with a specified `handler`.
+/// Handle [NodeSentEvent]s in WebSocket messages streamed from a peer with a specified `handler`.
 async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
     mut msg_stream: MsgStream,
     peer_id: Id<Node>,
