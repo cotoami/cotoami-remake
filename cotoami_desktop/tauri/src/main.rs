@@ -4,10 +4,18 @@
 )]
 
 use cotoami_desktop::{db, plugins, system};
+use log::LevelFilter;
+use tauri_plugin_log::LogTarget;
 
 fn main() {
     tauri::Builder::default()
         .plugin(plugins::window_state::Builder::default().build())
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .targets([LogTarget::Stdout])
+                .level(LevelFilter::Debug)
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             system::system_info,
             db::validate_new_database_folder,
