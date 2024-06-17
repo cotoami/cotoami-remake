@@ -52,7 +52,8 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     }));
     let stream = stream.map(|r| r.map(into_tungstenite));
 
-    let abortables = Abortables::new();
+    // The `communication_tasks` will be terminated when the connection is closed.
+    let communication_tasks = Abortables::new();
     match session {
         ClientSession::Operator(opr) => {
             communicate_with_operator(
@@ -61,7 +62,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 sink,
                 stream,
                 futures::sink::drain(),
-                abortables,
+                communication_tasks,
             )
             .await;
         }
@@ -73,7 +74,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 sink,
                 stream,
                 futures::sink::drain(),
-                abortables,
+                communication_tasks,
             )
             .await;
         }

@@ -41,5 +41,5 @@ async fn chunk_of_changes(
     state
         .chunk_of_changes(from)
         .await
-        .map(|x| Content(x, accept))
+        .map(|changes| Content(changes, accept))
 }
