@@ -163,19 +163,27 @@ pub async fn open_database(
         unreachable!();
     };
 
-    // Create a node state with the config.
-    let node_state = NodeState::new(node_config).await?;
-
-    // Pipe node events into the frontend.
-    node_state.spawn_task(event::listen(node_state.clone(), app_handle.clone()));
+    // Reuse an existing state or create a new one.
+    // TODO: Support opening another database. Currently, it will reuse an existing state
+    //       whatever database it belongs.
+    let node_state = match app_handle.try_state::<NodeState>() {
+        Some(state) => {
+            app_handle.debug("Reusing the existing NodeState.", None);
+            state.inner().clone()
+        }
+        _ => {
+            app_handle.debug("Creating a new NodeState.", None);
+            let node_state = NodeState::new(node_config).await?;
+            node_state.spawn_task(event::listen(node_state.clone(), app_handle.clone()));
+            app_handle.manage(node_state.clone());
+            node_state
+        }
+    };
 
     // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
     app_handle.info("Database opened.", Some(&db_info.local_node().name));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
-
-    // Store the state.
-    app_handle.manage(node_state);
 
     Ok(db_info)
 }
