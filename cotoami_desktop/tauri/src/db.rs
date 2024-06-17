@@ -1,6 +1,9 @@
-use std::{path::PathBuf, string::ToString, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    string::ToString,
+    sync::Arc,
+};
 
-use anyhow::anyhow;
 use cotoami_db::{Database, Id, Node};
 use cotoami_node::prelude::*;
 use tauri::Manager;
@@ -95,12 +98,8 @@ pub async fn create_database(
     base_folder: String,
     folder_name: String,
 ) -> Result<DatabaseInfo, Error> {
-    let folder = {
-        let path: PathBuf = [base_folder, folder_name].iter().collect();
-        path.to_str()
-            .map(str::to_string)
-            .ok_or(anyhow!("Invalid folder path: {:?}", path))?
-    };
+    let path: PathBuf = [base_folder, folder_name].iter().collect();
+    let folder = canonicalize_path(path)?;
     app_handle.debug("Creating a database...", Some(&folder));
 
     // Create a new config.
@@ -134,10 +133,7 @@ pub async fn open_database(
     app_handle: tauri::AppHandle,
     database_folder: String,
 ) -> Result<DatabaseInfo, Error> {
-    let folder = PathBuf::from(&database_folder)
-        .to_str()
-        .map(str::to_string)
-        .ok_or(anyhow!("Invalid folder path: {}", database_folder))?;
+    let folder = canonicalize_path(&database_folder)?;
     validate_database_folder(folder.clone())?;
 
     // Load or create a config.
@@ -201,4 +197,15 @@ pub async fn node_command(
 
     // Return the result as a JSON string
     response.json().map_err(Error::from)
+}
+
+fn canonicalize_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    let path = path
+        .as_ref()
+        .canonicalize()
+        .map_err(|e| Error::new("invalid-path", e.to_string()))?;
+    path.to_str().map(str::to_string).ok_or(Error::new(
+        "invalid-path",
+        "The path contains invalid unicodes.",
+    ))
 }
