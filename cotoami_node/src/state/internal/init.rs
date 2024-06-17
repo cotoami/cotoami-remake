@@ -51,7 +51,7 @@ impl NodeState {
 
     fn start_handling_local_events(&self) {
         let this = self.clone();
-        self.inner.tasks.lock().spawn(async move {
+        self.spawn_task(async move {
             let mut events = this.pubsub().events().subscribe(None::<()>);
             while let Some(event) = events.next().await {
                 debug!("Internal event: {event:?}");

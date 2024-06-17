@@ -1,7 +1,8 @@
+use core::future::Future;
 use std::sync::Arc;
 
 use parking_lot::Mutex;
-use tokio::task::AbortHandle;
+use tokio::task::{AbortHandle, JoinHandle};
 
 mod client;
 mod event;
@@ -36,5 +37,15 @@ impl Abortables {
         while let Some(abortable) = abortables.pop() {
             abortable.abort();
         }
+    }
+
+    fn spawn<F>(&self, future: F) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        let join_handle = tokio::spawn(future);
+        self.add(join_handle.abort_handle());
+        join_handle
     }
 }

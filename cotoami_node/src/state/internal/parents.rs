@@ -18,7 +18,7 @@ impl NodeState {
             .insert(parent_id, dyn_clone::clone_box(&*service));
 
         // A task syncing with the parent
-        tokio::spawn({
+        self.spawn_task({
             let this = self.clone();
             async move {
                 let description = service.description().to_string();

@@ -1,15 +1,16 @@
 //! This module defines the global state ([NodeState]) and functions dealing with it.
 
+use core::future::Future;
 use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
-use tokio::task::JoinSet;
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tokio::task::JoinHandle;
 use tracing::debug;
 use validator::Validate;
 
-use crate::service::NodeService;
+use crate::{service::NodeService, Abortables};
 
 mod config;
 mod conn;
@@ -30,7 +31,7 @@ struct State {
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
     parent_services: Arc<RwLock<ParentNodeServices>>,
-    tasks: Arc<Mutex<JoinSet<()>>>,
+    abortables: Abortables,
 }
 
 impl NodeState {
@@ -55,7 +56,7 @@ impl NodeState {
             pubsub: Pubsub::new(),
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
             parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
-            tasks: Arc::new(Mutex::new(JoinSet::new())),
+            abortables: Abortables::new(),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -127,11 +128,19 @@ impl NodeState {
         self.inner.parent_services.write().remove(parent_id)
     }
 
-    pub async fn shutdown(&self) {
+    fn spawn_task<F>(&self, future: F) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        self.inner.abortables.spawn(future)
+    }
+
+    pub fn abort_tasks(&self) {
         for conn in self.inner.server_conns.write().values_mut() {
             conn.disconnect();
         }
-        self.inner.tasks.lock().shutdown().await;
+        self.inner.abortables.abort_all();
     }
 
     pub fn debug(&self, label: &str) {
