@@ -4,10 +4,7 @@ use bytes::Bytes;
 use cotoami_db::{Id, Node, Operator};
 use futures::{Sink, SinkExt, Stream, StreamExt};
 use parking_lot::Mutex;
-use tokio::{
-    sync::mpsc,
-    task::{AbortHandle, JoinSet},
-};
+use tokio::{sync::mpsc, task::JoinSet};
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_util::sync::PollSender;
 use tracing::{debug, info};
@@ -16,6 +13,7 @@ use crate::{
     event::remote::{EventLoopError, NodeSentEvent},
     service::PubsubService,
     state::NodeState,
+    Abortables,
 };
 
 /// Spawn and join tasks to handle a WebSocket connection to a parent node.
@@ -32,7 +30,7 @@ pub(crate) async fn communicate_with_parent<
     mut msg_sink: MsgSink,
     msg_stream: MsgStream,
     mut on_disconnect: OnDisconnect,
-    abortables: Arc<Mutex<Vec<AbortHandle>>>,
+    abortables: Abortables,
 ) where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
     MsgSinkErr: Into<anyhow::Error>,
@@ -47,7 +45,7 @@ pub(crate) async fn communicate_with_parent<
     let parent_service = PubsubService::new(description, node_state.pubsub().responses().clone());
 
     // A task sending request events.
-    abortables.lock().push(tasks.spawn({
+    abortables.add(tasks.spawn({
         let mut requests = parent_service.requests().subscribe(None::<()>);
         let task_error = task_error.clone();
         async move {
@@ -64,7 +62,7 @@ pub(crate) async fn communicate_with_parent<
     }));
 
     // A task receiving events from the parent.
-    abortables.lock().push(tasks.spawn(handle_message_stream(
+    abortables.add(tasks.spawn(handle_message_stream(
         msg_stream,
         parent_id,
         task_error.clone(),
@@ -100,7 +98,7 @@ pub(crate) async fn communicate_with_operator<
     mut msg_sink: MsgSink,
     msg_stream: MsgStream,
     mut on_disconnect: OnDisconnect,
-    abortables: Arc<Mutex<Vec<AbortHandle>>>,
+    abortables: Abortables,
 ) where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
     MsgSinkErr: Into<anyhow::Error>,
@@ -115,7 +113,7 @@ pub(crate) async fn communicate_with_operator<
     let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
 
     // A task sending events received from the other tasks
-    abortables.lock().push(tasks.spawn({
+    abortables.add(tasks.spawn({
         let task_error = task_error.clone();
         async move {
             while let Some(event) = receiver.recv().await {
@@ -131,7 +129,7 @@ pub(crate) async fn communicate_with_operator<
 
     // A task publishing change events to a child node
     if let Operator::ChildNode(_) = *opr {
-        abortables.lock().push(tasks.spawn({
+        abortables.add(tasks.spawn({
             let sender = sender.clone();
             let mut changes = node_state.pubsub().local_changes().subscribe(None::<()>);
             async move {
@@ -146,7 +144,7 @@ pub(crate) async fn communicate_with_operator<
     }
 
     // A task receiving events from the child
-    abortables.lock().push(tasks.spawn({
+    abortables.add(tasks.spawn({
         handle_message_stream(msg_stream, node_id, task_error.clone(), move |event| {
             super::handle_event_from_operator(
                 event,

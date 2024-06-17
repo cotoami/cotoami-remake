@@ -4,11 +4,13 @@ use std::{ops::DerefMut, sync::Arc};
 
 use anyhow::Result;
 use cotoami_db::{Id, Node, Operator};
-use parking_lot::{Mutex, RwLock};
-use tokio::task::{spawn_blocking, AbortHandle};
+use parking_lot::RwLock;
+use tokio::task::spawn_blocking;
 use tracing::info;
 
-use crate::{event::remote::EventLoopError, service::models::NotConnected, state::NodeState};
+use crate::{
+    event::remote::EventLoopError, service::models::NotConnected, state::NodeState, Abortables,
+};
 
 mod http;
 mod sse;
@@ -21,7 +23,7 @@ struct ClientState {
     server_as_operator: Option<Arc<Operator>>,
     conn_state: RwLock<ConnectionState>,
     node_state: NodeState,
-    abortables: Arc<Mutex<Vec<AbortHandle>>>,
+    abortables: Abortables,
 }
 
 impl ClientState {
@@ -38,7 +40,7 @@ impl ClientState {
             server_as_operator,
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
-            abortables: Arc::new(Mutex::new(Vec::new())),
+            abortables: Abortables::new(),
         })
     }
 
@@ -50,16 +52,11 @@ impl ClientState {
 
     fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
 
-    fn has_running_tasks(&self) -> bool { !self.abortables.lock().is_empty() }
-
-    fn add_abortable(&self, abortable: AbortHandle) { self.abortables.lock().push(abortable); }
+    fn has_running_tasks(&self) -> bool { !self.abortables.is_empty() }
 
     fn disconnect(&self) {
         info!("Disconnecting from: {}", self.server_id);
-        let mut abortables = self.abortables.lock();
-        while let Some(abortable) = abortables.pop() {
-            abortable.abort();
-        }
+        self.abortables.abort_all();
         self.set_conn_state(ConnectionState::Disconnected(None));
         self.publish_server_disconnected();
     }

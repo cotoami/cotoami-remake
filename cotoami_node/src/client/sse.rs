@@ -66,12 +66,14 @@ impl SseClient {
 
                 // A task: event_loop
                 this.state
-                    .add_abortable(tasks.spawn(this.clone().event_loop(event_source)));
+                    .abortables
+                    .add(tasks.spawn(this.clone().event_loop(event_source)));
 
                 // A task: stream_changes_to_server
                 if !this.state.is_server_parent() {
                     this.state
-                        .add_abortable(tasks.spawn(this.clone().stream_changes_to_server()));
+                        .abortables
+                        .add(tasks.spawn(this.clone().stream_changes_to_server()));
                 }
 
                 // If any one of the tasks exit, abort the others.

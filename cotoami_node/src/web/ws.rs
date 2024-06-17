@@ -12,12 +12,12 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::{SinkExt, StreamExt};
-use parking_lot::Mutex;
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
     event::remote::tungstenite::{communicate_with_operator, communicate_with_parent},
     state::NodeState,
+    Abortables,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -52,7 +52,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     }));
     let stream = stream.map(|r| r.map(into_tungstenite));
 
-    let abortables = Arc::new(Mutex::new(Vec::new()));
+    let abortables = Abortables::new();
     match session {
         ClientSession::Operator(opr) => {
             communicate_with_operator(
