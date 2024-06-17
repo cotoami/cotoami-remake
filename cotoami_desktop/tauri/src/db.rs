@@ -116,7 +116,7 @@ pub async fn create_database(
     configs.save(&app_handle);
 
     // Pipe node events into the frontend.
-    tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
+    node_state.spawn_task(event::listen(node_state.clone(), app_handle.clone()));
 
     // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
@@ -171,7 +171,7 @@ pub async fn open_database(
     let node_state = NodeState::new(node_config).await?;
 
     // Pipe node events into the frontend.
-    tokio::spawn(event::listen(node_state.clone(), app_handle.clone()));
+    node_state.spawn_task(event::listen(node_state.clone(), app_handle.clone()));
 
     // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;

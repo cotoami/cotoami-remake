@@ -128,7 +128,7 @@ impl NodeState {
         self.inner.parent_services.write().remove(parent_id)
     }
 
-    fn spawn_task<F>(&self, future: F) -> JoinHandle<F::Output>
+    pub fn spawn_task<F>(&self, future: F) -> JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
@@ -148,6 +148,15 @@ impl NodeState {
             "NodeState inner pointers({label}): {}",
             Arc::strong_count(&self.inner)
         );
+    }
+}
+
+impl Drop for State {
+    fn drop(&mut self) {
+        debug!(
+            "NodeState [{:?}] is being destroyed.",
+            self.config.node_name
+        )
     }
 }
 
