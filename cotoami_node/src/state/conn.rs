@@ -13,10 +13,6 @@ use crate::{
     state::NodeState,
 };
 
-/////////////////////////////////////////////////////////////////////////////
-// ServerConnection
-/////////////////////////////////////////////////////////////////////////////
-
 #[derive(Clone)]
 pub enum ServerConnection {
     Disabled,
@@ -26,29 +22,6 @@ pub enum ServerConnection {
 }
 
 impl ServerConnection {
-    /// Creates a new connection to the given [ServerNode] using an
-    /// [HttpClient] that has already logged it in (having a session token).
-    pub async fn new(
-        server: &ServerNode,
-        http_client: HttpClient,
-        node_state: &NodeState,
-    ) -> Result<Self> {
-        // Try to connect via WebSocket first
-        let mut ws_client =
-            WebSocketClient::new(server.node_id, &http_client, node_state.clone()).await?;
-        match ws_client.connect().await {
-            Ok(_) => Ok(Self::WebSocket(ws_client)),
-            Err(e) => {
-                // Fallback to SSE
-                info!("Falling back to SSE due to: {e:?}");
-                let mut sse_client =
-                    SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
-                sse_client.connect();
-                Ok(Self::Sse(sse_client))
-            }
-        }
-    }
-
     /// Connects to the given `server` to create a new [ServerConnection].
     pub async fn connect(server: &ServerNode, local_node: Node, node_state: &NodeState) -> Self {
         if server.disabled {
@@ -87,6 +60,29 @@ impl ServerConnection {
         info!("Successfully logged in to {}", http_client.url_prefix());
 
         Self::new(server, http_client, node_state).await
+    }
+
+    /// Creates a new connection to the given [ServerNode] using an
+    /// [HttpClient] that has already logged it in (having a session token).
+    pub async fn new(
+        server: &ServerNode,
+        http_client: HttpClient,
+        node_state: &NodeState,
+    ) -> Result<Self> {
+        // Try to connect via WebSocket first
+        let mut ws_client =
+            WebSocketClient::new(server.node_id, &http_client, node_state.clone()).await?;
+        match ws_client.connect().await {
+            Ok(_) => Ok(Self::WebSocket(ws_client)),
+            Err(e) => {
+                // Fallback to SSE
+                info!("Falling back to SSE due to: {e:?}");
+                let mut sse_client =
+                    SseClient::new(server.node_id, http_client.clone(), node_state.clone()).await?;
+                sse_client.connect();
+                Ok(Self::Sse(sse_client))
+            }
+        }
     }
 
     pub fn disconnect(&mut self) {
