@@ -26,7 +26,7 @@ pub struct ServerConnection {
 }
 
 enum ConnectionState {
-    Default,
+    Disconnected(Option<String>),
     Disabled,
     Initializing(AbortHandle),
     InitFailed(Arc<anyhow::Error>),
@@ -39,7 +39,7 @@ impl ServerConnection {
         let conn_state = if server.disabled {
             ConnectionState::Disabled
         } else {
-            ConnectionState::Default
+            ConnectionState::Disconnected(None)
         };
         Self {
             server,
@@ -53,7 +53,7 @@ impl ServerConnection {
         if self.server.disabled {
             return;
         }
-        self.disconnect();
+        self.disconnect(None);
 
         let task = tokio::spawn(self.clone().try_connect());
         self.set_conn_state(ConnectionState::Initializing(task.abort_handle()));
@@ -117,23 +117,25 @@ impl ServerConnection {
     }
 
     pub fn disable(&self) {
-        self.disconnect();
+        self.disconnect(None);
         self.set_conn_state(ConnectionState::Disabled);
     }
 
-    pub fn disconnect(&self) {
+    pub fn disconnect(&self, reason: Option<&str>) {
         match self.conn_state.write().deref_mut() {
             ConnectionState::Initializing(task) => task.abort(),
             ConnectionState::WebSocket(client) => client.disconnect(),
             ConnectionState::Sse(client) => client.disconnect(),
             _ => (),
         }
-        self.set_conn_state(ConnectionState::Default);
+        self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> {
         match self.conn_state.read().deref() {
-            ConnectionState::Default => Some(NotConnected::Disconnected(None)),
+            ConnectionState::Disconnected(reason) => {
+                Some(NotConnected::Disconnected(reason.clone()))
+            }
             ConnectionState::Initializing(_) => Some(NotConnected::Connecting(None)),
             ConnectionState::Disabled => Some(NotConnected::Disabled),
             ConnectionState::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
@@ -149,5 +151,5 @@ impl ServerConnection {
 }
 
 impl Drop for ServerConnection {
-    fn drop(&mut self) { self.disconnect(); }
+    fn drop(&mut self) { self.disconnect(None); }
 }

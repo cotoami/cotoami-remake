@@ -169,7 +169,7 @@ impl ServerConnections {
 
     pub fn disconnect_all(&self) {
         for conn in self.0.write().values_mut() {
-            conn.disconnect();
+            conn.disconnect(None);
         }
     }
 }
