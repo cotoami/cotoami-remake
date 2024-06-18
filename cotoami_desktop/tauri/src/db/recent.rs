@@ -33,7 +33,7 @@ impl DatabaseOpened {
 pub(crate) struct RecentDatabases(Vec<DatabaseOpened>);
 
 impl RecentDatabases {
-    const FILENAME: &'static str = "recent.json";
+    const FILENAME: &'static str = ".recent.json";
     const MAX_SIZE: usize = 10;
 
     pub fn load(app_handle: &tauri::AppHandle) -> Self {
