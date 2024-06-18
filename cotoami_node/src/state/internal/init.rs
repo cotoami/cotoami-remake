@@ -57,7 +57,7 @@ impl NodeState {
                 debug!("Internal event: {event:?}");
                 match event {
                     LocalNodeEvent::ParentDisconnected(parent_id) => {
-                        this.remove_parent_service(&parent_id);
+                        this.parent_services().remove(&parent_id);
                     }
                     _ => (),
                 }

@@ -200,7 +200,7 @@ impl NodeState {
         match result {
             ChangeResult::Changed(change) => Ok(change),
             ChangeResult::ToForward { cotonoma, input } => {
-                if let Some(mut parent_service) = self.parent_service(&cotonoma.node_id) {
+                if let Some(mut parent_service) = self.parent_services().get(&cotonoma.node_id) {
                     forward(&mut *parent_service, input, &cotonoma)
                         .await
                         .map_err(ServiceError::from)

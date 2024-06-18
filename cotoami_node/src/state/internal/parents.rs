@@ -12,10 +12,8 @@ impl NodeState {
         service: Box<dyn NodeService>,
     ) {
         debug!("Parent service being registered: {parent_id}");
-        self.inner
-            .parent_services
-            .write()
-            .insert(parent_id, dyn_clone::clone_box(&*service));
+        self.parent_services()
+            .register(parent_id, dyn_clone::clone_box(&*service));
 
         // A task syncing with the parent
         self.spawn_task({

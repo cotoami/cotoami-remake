@@ -79,7 +79,7 @@ pub(crate) async fn handle_event_from_parent(
 ) -> ControlFlow<anyhow::Error> {
     match event {
         NodeSentEvent::Change(change) => {
-            if let Some(parent_service) = state.parent_service(&parent_id) {
+            if let Some(parent_service) = state.parent_services().get(&parent_id) {
                 let r = state
                     .handle_parent_change(parent_id, change, parent_service)
                     .await;

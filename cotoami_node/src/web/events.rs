@@ -98,7 +98,7 @@ async fn post_event(
     body: Bytes,
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
-        let parent_service = state.parent_service_or_err(&parent.node_id)?;
+        let parent_service = state.parent_services().try_get(&parent.node_id)?;
         let event = rmp_serde::from_slice(&body).map_err(|_| {
             ServiceError::request(
                 "invalid-request-body",

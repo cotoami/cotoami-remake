@@ -30,7 +30,7 @@ struct State {
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: Arc<RwLock<ServerConnections>>,
-    parent_services: Arc<RwLock<ParentNodeServices>>,
+    parent_services: ParentServices,
     abortables: Abortables,
 }
 
@@ -55,7 +55,7 @@ impl NodeState {
             db: Arc::new(db),
             pubsub: Pubsub::new(),
             server_conns: Arc::new(RwLock::new(ServerConnections::default())),
-            parent_services: Arc::new(RwLock::new(ParentNodeServices::default())),
+            parent_services: ParentServices::new(),
             abortables: Abortables::new(),
         };
         let state = Self {
@@ -108,25 +108,7 @@ impl NodeState {
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
-    pub fn read_parent_services(&self) -> RwLockReadGuard<ParentNodeServices> {
-        self.inner.parent_services.read()
-    }
-
-    pub fn parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
-        self.read_parent_services()
-            .get(parent_id)
-            .map(|s| dyn_clone::clone_box(&**s))
-    }
-
-    pub fn parent_service_or_err(&self, parent_id: &Id<Node>) -> Result<Box<dyn NodeService>> {
-        self.parent_service(parent_id)
-            .ok_or(anyhow!("Parent disconnected: {parent_id}"))
-    }
-
-    pub fn remove_parent_service(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
-        debug!("Parent service being removed: {parent_id}");
-        self.inner.parent_services.write().remove(parent_id)
-    }
+    pub fn parent_services(&self) -> &ParentServices { &self.inner.parent_services }
 
     pub fn spawn_task<F>(&self, future: F) -> JoinHandle<F::Output>
     where
@@ -160,4 +142,30 @@ impl Drop for State {
     }
 }
 
-type ParentNodeServices = HashMap<Id<Node>, Box<dyn NodeService>>;
+#[derive(Clone)]
+pub struct ParentServices(Arc<RwLock<HashMap<Id<Node>, Box<dyn NodeService>>>>);
+
+impl ParentServices {
+    fn new() -> Self { Self(Arc::new(RwLock::new(HashMap::default()))) }
+
+    pub fn get(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        self.0
+            .read()
+            .get(parent_id)
+            .map(|s| dyn_clone::clone_box(&**s))
+    }
+
+    pub fn try_get(&self, parent_id: &Id<Node>) -> Result<Box<dyn NodeService>> {
+        self.get(parent_id)
+            .ok_or(anyhow!("Parent disconnected: {parent_id}"))
+    }
+
+    pub fn register(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+        self.0.write().insert(parent_id, service);
+    }
+
+    pub fn remove(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+        debug!("Parent service being removed: {parent_id}");
+        self.0.write().remove(parent_id)
+    }
+}
