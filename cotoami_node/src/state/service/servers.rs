@@ -125,7 +125,8 @@ impl NodeState {
         info!("ServerNode [{}] registered.", server_node.name);
 
         // Create a ServerConnection
-        let server_conn = ServerConnection::new(&server, http_client.clone(), &self).await?;
+        let server_conn = ServerConnection::new(server.clone(), self.clone());
+        server_conn.start_event_loop(http_client.clone()).await?;
         self.server_conns().put(server_id, server_conn.clone());
 
         // Return a Server as a response

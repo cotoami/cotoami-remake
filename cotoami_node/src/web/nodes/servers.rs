@@ -126,16 +126,12 @@ async fn set_server_disabled(
     // Disconnect from the server
     if disabled {
         debug!("Disabling the connection to: {}", server_id);
-        state.server_conns().try_get(&server_id)?.disconnect();
+        state.server_conns().try_get(&server_id)?.disable();
 
     // Or reconnect to the server
     } else {
         debug!("Enabling the connection to {}", server_id);
-        state
-            .server_conns()
-            .try_get(&server_id)?
-            .reconnect()
-            .await?;
+        state.server_conns().try_get(&server_id)?.connect().await;
     }
 
     Ok(())
