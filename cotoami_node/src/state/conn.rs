@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
@@ -121,5 +121,3 @@ impl ServerConnection {
 impl Drop for ServerConnection {
     fn drop(&mut self) { self.disconnect(); }
 }
-
-pub type ServerConnections = HashMap<Id<Node>, ServerConnection>;

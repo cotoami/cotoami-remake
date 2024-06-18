@@ -31,7 +31,7 @@ async fn fork_from_parent(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,
 ) -> Result<Content<Forked>, ServiceError> {
-    state.server_conn(&node_id)?.disconnect();
+    state.server_conns().try_get(&node_id)?.disconnect();
 
     let (affected, change) = spawn_blocking({
         let db = state.db().clone();

@@ -95,7 +95,7 @@ async fn update_server_node(
     if let Err(errors) = form.validate() {
         return ("nodes/server", errors).into_result();
     }
-    if !state.contains_server(&node_id) {
+    if !state.server_conns().contains(&node_id) {
         return Err(ServiceError::NotFound(Some(format!(
             "Server node [{node_id}] not found."
         ))));
@@ -126,12 +126,16 @@ async fn set_server_disabled(
     // Disconnect from the server
     if disabled {
         debug!("Disabling the connection to: {}", server_id);
-        state.server_conn(&server_id)?.disconnect();
+        state.server_conns().try_get(&server_id)?.disconnect();
 
     // Or reconnect to the server
     } else {
         debug!("Enabling the connection to {}", server_id);
-        state.server_conn(&server_id)?.reconnect().await?;
+        state
+            .server_conns()
+            .try_get(&server_id)?
+            .reconnect()
+            .await?;
     }
 
     Ok(())

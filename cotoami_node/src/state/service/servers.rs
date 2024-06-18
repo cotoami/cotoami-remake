@@ -26,12 +26,14 @@ impl NodeState {
             let server_nodes = ds.all_server_nodes(&operator)?;
             let node_ids: Vec<Id<Node>> = server_nodes.iter().map(|(_, node)| node.uuid).collect();
             let mut roles = ds.database_roles_of(&node_ids)?;
-            let conns = this.read_server_conns();
             let servers = server_nodes
                 .into_iter()
                 .map(|(server, _)| {
                     let node_id = server.node_id;
-                    let conn = conns.get(&node_id).unwrap_or_else(|| unreachable!());
+                    let conn = this
+                        .server_conns()
+                        .get(&node_id)
+                        .unwrap_or_else(|| unreachable!());
                     Server::new(server, conn.not_connected(), roles.remove(&node_id))
                 })
                 .collect();
@@ -124,7 +126,7 @@ impl NodeState {
 
         // Create a ServerConnection
         let server_conn = ServerConnection::new(&server, http_client.clone(), &self).await?;
-        self.put_server_conn(&server_id, server_conn.clone());
+        self.server_conns().put(server_id, server_conn.clone());
 
         // Return a Server as a response
         let server = Server::new(server, server_conn.not_connected(), Some(server_db_role));

@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::RwLock;
 use tokio::task::JoinHandle;
 use tracing::debug;
 use validator::Validate;
@@ -29,7 +29,7 @@ struct State {
     config: Arc<NodeConfig>,
     db: Arc<Database>,
     pubsub: Pubsub,
-    server_conns: Arc<RwLock<ServerConnections>>,
+    server_conns: ServerConnections,
     parent_services: ParentServices,
     abortables: Abortables,
 }
@@ -54,7 +54,7 @@ impl NodeState {
             config: Arc::new(config),
             db: Arc::new(db),
             pubsub: Pubsub::new(),
-            server_conns: Arc::new(RwLock::new(ServerConnections::default())),
+            server_conns: ServerConnections::new(),
             parent_services: ParentServices::new(),
             abortables: Abortables::new(),
         };
@@ -79,32 +79,7 @@ impl NodeState {
 
     pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
 
-    pub fn read_server_conns(&self) -> RwLockReadGuard<ServerConnections> {
-        self.inner.server_conns.read()
-    }
-
-    pub fn contains_server(&self, server_id: &Id<Node>) -> bool {
-        self.read_server_conns().contains_key(server_id)
-    }
-
-    pub fn server_conn(&self, server_id: &Id<Node>) -> Result<ServerConnection> {
-        self.read_server_conns()
-            .get(server_id)
-            .ok_or(anyhow!(DatabaseError::not_found(
-                EntityKind::ServerNode,
-                "node_id",
-                *server_id,
-            )))
-            .map(Clone::clone)
-    }
-
-    pub fn write_server_conns(&self) -> RwLockWriteGuard<ServerConnections> {
-        self.inner.server_conns.write()
-    }
-
-    pub fn put_server_conn(&self, server_id: &Id<Node>, server_conn: ServerConnection) {
-        self.write_server_conns().insert(*server_id, server_conn);
-    }
+    pub fn server_conns(&self) -> &ServerConnections { &self.inner.server_conns }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
@@ -119,9 +94,7 @@ impl NodeState {
     }
 
     pub fn abort_tasks(&self) {
-        for conn in self.inner.server_conns.write().values_mut() {
-            conn.disconnect();
-        }
+        self.server_conns().disconnect_all();
         self.inner.abortables.abort_all();
     }
 
@@ -160,12 +133,43 @@ impl ParentServices {
             .ok_or(anyhow!("Parent disconnected: {parent_id}"))
     }
 
-    pub fn register(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+    pub fn put(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
         self.0.write().insert(parent_id, service);
     }
 
     pub fn remove(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         debug!("Parent service being removed: {parent_id}");
         self.0.write().remove(parent_id)
+    }
+}
+
+#[derive(Clone)]
+pub struct ServerConnections(Arc<RwLock<HashMap<Id<Node>, ServerConnection>>>);
+
+impl ServerConnections {
+    fn new() -> Self { Self(Arc::new(RwLock::new(HashMap::default()))) }
+
+    pub fn contains(&self, server_id: &Id<Node>) -> bool { self.0.read().contains_key(server_id) }
+
+    pub fn get(&self, server_id: &Id<Node>) -> Option<ServerConnection> {
+        self.0.read().get(server_id).map(Clone::clone)
+    }
+
+    pub fn try_get(&self, server_id: &Id<Node>) -> Result<ServerConnection> {
+        self.get(server_id).ok_or(anyhow!(DatabaseError::not_found(
+            EntityKind::ServerNode,
+            "node_id",
+            *server_id,
+        )))
+    }
+
+    pub fn put(&self, server_id: Id<Node>, server_conn: ServerConnection) {
+        self.0.write().insert(server_id, server_conn);
+    }
+
+    pub fn disconnect_all(&self) {
+        for conn in self.0.write().values_mut() {
+            conn.disconnect();
+        }
     }
 }

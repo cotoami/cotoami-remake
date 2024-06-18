@@ -6,7 +6,7 @@ use tracing::{debug, info};
 
 use crate::{
     event::local::LocalNodeEvent,
-    state::{NodeState, ServerConnection, ServerConnections},
+    state::{NodeState, ServerConnection},
 };
 
 impl NodeState {
@@ -79,14 +79,12 @@ impl NodeState {
         })
         .await??;
 
-        let mut server_conns = ServerConnections::new();
         for (server, _) in server_nodes.iter() {
-            server_conns.insert(
+            self.server_conns().put(
                 server.node_id,
                 ServerConnection::connect(server, local_node.clone(), self).await,
             );
         }
-        *self.write_server_conns() = server_conns;
         Ok(())
     }
 }
