@@ -56,19 +56,25 @@ pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
 pub type EventPubsub = Publisher<LocalNodeEvent, ()>;
 
 impl EventPubsub {
-    pub fn publish_server_disconnected(
+    pub fn server_state_changed(
         &self,
         node_id: Id<Node>,
-        reason: NotConnected,
+        not_connected: Option<NotConnected>,
         is_parent: bool,
     ) {
-        self.publish(LocalNodeEvent::ServerDisconnected { node_id, reason }, None);
+        self.publish(
+            LocalNodeEvent::ServerStateChanged {
+                node_id,
+                not_connected,
+            },
+            None,
+        );
         if is_parent {
-            self.publish_parent_disconnected(node_id);
+            self.parent_disconnected(node_id);
         }
     }
 
-    pub fn publish_parent_disconnected(&self, node_id: Id<Node>) {
+    pub fn parent_disconnected(&self, node_id: Id<Node>) {
         self.publish(LocalNodeEvent::ParentDisconnected(node_id), None);
     }
 }

@@ -32,9 +32,9 @@ impl NodeState {
                     }
                     Ok(None) => (),
                     Err(e) => {
-                        if let Ok(mut conn) = this.server_conns().try_get(&parent_id) {
+                        if let Ok(conn) = this.server_conns().try_get(&parent_id) {
                             error!("Error syncing with ({description}): {e:?}");
-                            conn.disconnect();
+                            conn.disconnect(Some("sync-error"));
                         }
                     }
                 }

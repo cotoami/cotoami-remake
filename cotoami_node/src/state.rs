@@ -167,9 +167,15 @@ impl ServerConnections {
         self.0.write().insert(server_id, server_conn);
     }
 
+    pub async fn connect_all(&self) {
+        for conn in self.0.write().values() {
+            conn.connect().await;
+        }
+    }
+
     pub fn disconnect_all(&self) {
-        for conn in self.0.write().values_mut() {
-            conn.disconnect();
+        for conn in self.0.write().values() {
+            conn.disconnect(None);
         }
     }
 }

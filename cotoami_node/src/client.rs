@@ -63,14 +63,11 @@ impl ClientState {
 
     fn publish_server_disconnected(&self) {
         if let Some(not_connected) = self.not_connected() {
-            self.node_state
-                .pubsub()
-                .events()
-                .publish_server_disconnected(
-                    self.server_id,
-                    not_connected,
-                    self.is_server_parent(),
-                );
+            self.node_state.pubsub().events().server_state_changed(
+                self.server_id,
+                Some(not_connected),
+                self.is_server_parent(),
+            );
         }
     }
 }
