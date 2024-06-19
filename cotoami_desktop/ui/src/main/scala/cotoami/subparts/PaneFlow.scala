@@ -20,21 +20,27 @@ object PaneFlow {
   ): ReactElement =
     section(className := "flow")(
       (model.domain.nodes.operating, model.domain.currentCotonoma) match {
-        case (Some(node), Some(cotonoma)) =>
-          Some(
-            FormCoto(
-              model.flowInput,
-              node,
-              cotonoma,
-              uiState.paneSizes.getOrElse(
-                EditorPaneName,
-                EditorDefaultHeight
-              ),
-              (newSize) =>
-                dispatch(cotoami.ResizePane(EditorPaneName, newSize)),
-              subMsg => dispatch(FlowInputMsg(subMsg))
-            )
+        case (Some(operatingNode), Some(cotonoma)) =>
+          model.domain.nodes.get(cotonoma.nodeId).flatMap(targetNode =>
+            if (model.domain.nodes.isEditable(targetNode.id))
+              Some(
+                FormCoto(
+                  model.flowInput,
+                  operatingNode,
+                  cotonoma,
+                  uiState.paneSizes.getOrElse(
+                    EditorPaneName,
+                    EditorDefaultHeight
+                  ),
+                  (newSize) =>
+                    dispatch(cotoami.ResizePane(EditorPaneName, newSize)),
+                  subMsg => dispatch(FlowInputMsg(subMsg))
+                )
+              )
+            else
+              None
           )
+
         case _ => None
       },
       SectionTimeline(model, dispatch)
