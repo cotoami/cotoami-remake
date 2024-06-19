@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use crate::log::Logger;
 
 mod config;
+pub mod conn;
 pub mod db;
 pub mod error;
 mod event;

@@ -168,13 +168,14 @@ impl ServerConnections {
     }
 
     pub async fn connect_all(&self) {
-        for conn in self.0.write().values() {
+        // NOTE: The each read lock guard is held across calls to .await.
+        for conn in self.0.read().values() {
             conn.connect().await;
         }
     }
 
     pub fn disconnect_all(&self) {
-        for conn in self.0.write().values() {
+        for conn in self.0.read().values() {
             conn.disconnect(None);
         }
     }
