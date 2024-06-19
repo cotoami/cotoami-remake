@@ -69,9 +69,8 @@ impl NodeState {
         let server_nodes = spawn_blocking({
             let db = self.db().clone();
             move || {
-                let mut ds = db.new_session()?;
                 let operator = db.globals().local_node_as_operator()?;
-                ds.all_server_nodes(&operator)
+                db.new_session()?.all_server_nodes(&operator)
             }
         })
         .await??;
