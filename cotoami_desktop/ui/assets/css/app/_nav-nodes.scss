@@ -63,6 +63,43 @@ nav.nodes {
     }
   }
 
+  button.node {
+    position: relative;
+
+    span.status {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: auto;
+
+      span.material-symbols {
+        display: inline-block;
+        height: 26px;
+        line-height: 26px;
+        vertical-align: middle;
+        font-size: 20px;
+        color: white;
+      }
+
+      &.busy {
+        padding-top: 2px;
+      }
+    }
+
+    &:hover,
+    &.selected {
+      span.status span.material-symbols {
+        color: black;
+      }
+    }
+
+    span.status.error span.material-symbols {
+      color: var(--form-element-invalid-border-color);
+    }
+  }
+
   ul.nodes {
     flex: 1;
     width: 100%;

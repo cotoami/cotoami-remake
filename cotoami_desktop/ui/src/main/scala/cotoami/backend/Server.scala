@@ -48,10 +48,6 @@ trait ServerNodeJson extends js.Object {
 }
 
 sealed trait NotConnected
-case object Disabled extends NotConnected
-case class Connecting(details: Option[String]) extends NotConnected
-case class InitFailed(details: String) extends NotConnected
-case class Disconnected(details: Option[String]) extends NotConnected
 
 object NotConnected {
   def apply(json: NotConnectedJson): NotConnected = json.reason match {
@@ -60,6 +56,11 @@ object NotConnected {
     case "InitFailed"   => InitFailed(json.details)
     case "Disconnected" => Disconnected(Option(json.details))
   }
+
+  case object Disabled extends NotConnected
+  case class Connecting(details: Option[String]) extends NotConnected
+  case class InitFailed(details: String) extends NotConnected
+  case class Disconnected(details: Option[String]) extends NotConnected
 }
 
 @js.native
