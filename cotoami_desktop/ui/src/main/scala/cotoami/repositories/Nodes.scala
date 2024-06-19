@@ -60,6 +60,9 @@ case class Nodes(
 
   def addServers(servers: Iterable[Server]): Nodes =
     servers.foldLeft(this)(_ addServer _)
+
+  def setServerState(id: Id[Node], notConnected: Option[NotConnected]): Nodes =
+    this.modify(_.serverMap.index(id).notConnected).setTo(notConnected)
 }
 
 object Nodes {

@@ -59,6 +59,16 @@ case class Model(
     )
 
   def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {
+    // ServerStateChanged
+    for (change <- event.ServerStateChanged.toOption) {
+      val nodeId = Id[Node](change.node_id)
+      val notConnected =
+        Nullable.toOption(change.not_connected).map(NotConnected(_))
+      return this.modify(_.domain.nodes).using(
+        _.setServerState(nodeId, notConnected)
+      )
+    }
+
     // ParentSyncProgress
     for (progress <- event.ParentSyncProgress.toOption) {
       val parentSync = this.parentSync.progress(progress)

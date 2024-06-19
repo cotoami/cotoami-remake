@@ -4,12 +4,19 @@ import scala.scalajs.js
 import java.time.Instant
 import cotoami.utils.Validation
 
-case class Server(json: ServerJson) {
-  val server: ServerNode = ServerNode(this.json.server)
-  val notConnected: Option[NotConnected] =
-    Nullable.toOption(this.json.not_connected).map(NotConnected(_))
-  val databaseRole: Option[DatabaseRole] =
-    Nullable.toOption(this.json.database_role).map(DatabaseRole(_))
+case class Server(
+    server: ServerNode,
+    notConnected: Option[NotConnected],
+    databaseRole: Option[DatabaseRole]
+)
+
+object Server {
+  def apply(json: ServerJson): Server =
+    Server(
+      ServerNode(json.server),
+      Nullable.toOption(json.not_connected).map(NotConnected(_)),
+      Nullable.toOption(json.database_role).map(DatabaseRole(_))
+    )
 }
 
 @js.native
