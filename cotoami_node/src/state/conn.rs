@@ -50,7 +50,11 @@ impl ServerConnection {
         if self.server.disabled {
             return;
         }
-        self.disconnect(None);
+
+        match *self.conn_state.read().deref() {
+            ConnectionState::Disconnected(_) => (),
+            _ => self.disconnect(None),
+        }
 
         let task = tokio::spawn(self.clone().try_connect());
         self.set_conn_state(ConnectionState::Initializing(task.abort_handle()));
