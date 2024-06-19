@@ -213,6 +213,12 @@ case class Domain(
   private def applyChange(
       change: ChangeJson
   ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+    // UpsertNode
+    for (nodeJson <- change.UpsertNode.toOption) {
+      val node = Node(nodeJson)
+      return (this.modify(_.nodes).using(_.add(node)), Seq.empty)
+    }
+
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
