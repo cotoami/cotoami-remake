@@ -73,7 +73,10 @@ object NavNodes {
       node: Node,
       nodes: Nodes,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val status = nodeStatus(node, nodes)
+    val tooltip =
+      status.map(s => s"${node.name} (${s._1})").getOrElse(node.name)
     button(
       className := optionalClasses(
         Seq(
@@ -84,21 +87,33 @@ object NavNodes {
         )
       ),
       disabled := nodes.isSelecting(node.id),
-      data - "tooltip" := node.name,
+      data - "tooltip" := tooltip,
       data - "placement" := "right",
       disabled := nodes.isSelecting(node.id),
       onClick := ((e) => dispatch(SelectNode(node.id)))
     )(
       nodeImg(node),
-      nodes.getServer(node.id).map(_.notConnected.map {
-        case NotConnected.Disabled => statusIcon("", "sync_disabled")
-        case NotConnected.Connecting(details) =>
-          span(className := "status busy", aria - "busy" := "true")()
-        case NotConnected.InitFailed(details) => statusIcon("error", "error")
-        case NotConnected.Disconnected(details) =>
-          statusIcon("", "do_not_disturb_on")
-      })
+      status.map(_._2)
     )
+  }
+
+  private def nodeStatus(
+      node: Node,
+      nodes: Nodes
+  ): Option[(String, ReactElement)] =
+    nodes.getServer(node.id).flatMap(_.notConnected.map {
+      case NotConnected.Disabled =>
+        ("disabled", statusIcon("", "sync_disabled"))
+      case NotConnected.Connecting(details) =>
+        (
+          "connecting",
+          span(className := "status busy", aria - "busy" := "true")()
+        )
+      case NotConnected.InitFailed(details) =>
+        ("error", statusIcon("error", "error"))
+      case NotConnected.Disconnected(details) =>
+        ("disconnected", statusIcon("", "do_not_disturb_on"))
+    })
 
   private def statusIcon(status: String, icon: String): ReactElement =
     span(className := s"status ${status}")(materialSymbol(icon))
