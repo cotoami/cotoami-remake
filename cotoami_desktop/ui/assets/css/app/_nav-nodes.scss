@@ -1,4 +1,6 @@
 nav.nodes {
+  --node-icon-size: 26px;
+
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -31,8 +33,8 @@ nav.nodes {
     }
 
     img.node-icon {
-      width: 26px;
-      height: 26px;
+      width: var(--node-icon-size);
+      height: var(--node-icon-size);
       border-radius: 4px;
     }
 
@@ -76,8 +78,8 @@ nav.nodes {
 
       span.material-symbols {
         display: inline-block;
-        height: 26px;
-        line-height: 26px;
+        height: var(--node-icon-size);
+        line-height: var(--node-icon-size);
         vertical-align: middle;
         font-size: 20px;
         color: white;
