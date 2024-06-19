@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 @js.native
 trait LocalNodeEventJson extends js.Object {
-  val ServerDisconnected: js.UndefOr[ServerDisconnectedJson] = js.native
+  val ServerStateChanged: js.UndefOr[ServerStateChangedJson] = js.native
   val ParentSyncStart: js.UndefOr[ParentSyncStartJson] = js.native
   val ParentSyncProgress: js.UndefOr[ParentSyncProgressJson] = js.native
   val ParentSyncEnd: js.UndefOr[ParentSyncEndJson] = js.native
@@ -12,9 +12,9 @@ trait LocalNodeEventJson extends js.Object {
 }
 
 @js.native
-trait ServerDisconnectedJson extends js.Object {
+trait ServerStateChangedJson extends js.Object {
   val node_id: String = js.native
-  val reason: NotConnectedJson = js.native
+  val not_connected: Nullable[NotConnectedJson] = js.native
 }
 
 @js.native

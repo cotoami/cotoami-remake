@@ -4,9 +4,9 @@ use crate::service::models::NotConnected;
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub enum LocalNodeEvent {
-    ServerDisconnected {
+    ServerStateChanged {
         node_id: Id<Node>,
-        reason: NotConnected,
+        not_connected: Option<NotConnected>,
     },
     ParentSyncStart {
         node_id: Id<Node>,

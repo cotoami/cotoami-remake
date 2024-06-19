@@ -64,8 +64,7 @@ impl ServerConnection {
     }
 
     async fn try_connect(self) -> Result<()> {
-        let is_server_parent = self.node_state.is_parent(&self.server.node_id);
-        let is_local_parent = !is_server_parent; // just for clarity
+        let is_local_parent = !self.is_parent(); // just for clarity
         let (_, local_node) = self.node_state.local_node_pair().await?;
         let mut http_client = HttpClient::new(&self.server.url_prefix)?;
 
@@ -144,9 +143,15 @@ impl ServerConnection {
         }
     }
 
+    fn is_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
+
     fn set_conn_state(&self, state: ConnectionState) {
         *self.conn_state.write() = state;
-        // TODO publish state change
+        self.node_state.pubsub().events().server_state_changed(
+            self.server.node_id,
+            self.not_connected(),
+            self.is_parent(),
+        );
     }
 }
 
