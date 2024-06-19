@@ -124,7 +124,7 @@ object ModalAddNode {
       case NodeAdded(Right(json)) =>
         (
           model.copy(adding = false, addingError = None),
-          nodes.prependServer(Server(json)),
+          nodes.addServer(Server(json)),
           Seq(Modal.close(classOf[Modal.AddNode]))
         )
 

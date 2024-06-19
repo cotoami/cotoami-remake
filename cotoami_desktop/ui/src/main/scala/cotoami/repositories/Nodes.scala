@@ -13,7 +13,7 @@ case class Nodes(
     // roles
     parentIds: Seq[Id[Node]] = Seq.empty,
     childIds: Seq[Id[Node]] = Seq.empty,
-    servers: Seq[Server] = Seq.empty
+    serverMap: Map[Id[Node], Server] = Map.empty
 ) {
   def get(id: Id[Node]): Option[Node] = this.map.get(id)
 
@@ -43,13 +43,19 @@ case class Nodes(
 
   def current: Option[Node] = this.selected.orElse(this.operating)
 
-  def prependServer(server: Server): Nodes = {
-    val nodes = this.modify(_.servers).using(server +: _)
+  def getServer(id: Id[Node]): Option[Server] = this.serverMap.get(id)
+
+  def addServer(server: Server): Nodes = {
+    val nodes =
+      this.modify(_.serverMap).using(_ + (server.server.nodeId -> server))
     server.databaseRole.map {
       case Parent(parent) => this.modify(_.parentIds).using(parent.nodeId +: _)
       case Child(child)   => this.modify(_.childIds).using(child.nodeId +: _)
     }.getOrElse(nodes)
   }
+
+  def addServers(servers: Iterable[Server]): Nodes =
+    servers.foldLeft(this)(_ addServer _)
 }
 
 object Nodes {
@@ -58,7 +64,6 @@ object Nodes {
       map = info.nodes,
       localId = Some(info.localNodeId),
       operatingId = Some(info.localNodeId),
-      parentIds = info.parentNodeIds.toSeq,
-      servers = info.servers.toSeq
-    )
+      parentIds = info.parentNodeIds.toSeq
+    ).addServers(info.servers)
 }
