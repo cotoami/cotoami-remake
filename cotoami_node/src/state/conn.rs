@@ -1,7 +1,4 @@
-use std::{
-    ops::{Deref, DerefMut},
-    sync::Arc,
-};
+use std::{ops::Deref, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
@@ -121,12 +118,7 @@ impl ServerConnection {
     }
 
     pub fn disconnect(&self, reason: Option<&str>) {
-        match self.conn_state.write().deref_mut() {
-            ConnectionState::Initializing(task) => task.abort(),
-            ConnectionState::WebSocket(client) => client.disconnect(),
-            ConnectionState::Sse(client) => client.disconnect(),
-            _ => (),
-        }
+        self.conn_state.write().disconnect();
         self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
     }
 
@@ -155,6 +147,17 @@ impl ServerConnection {
     }
 }
 
-impl Drop for ServerConnection {
-    fn drop(&mut self) { self.disconnect(None); }
+impl ConnectionState {
+    fn disconnect(&mut self) {
+        match self {
+            ConnectionState::Initializing(task) => task.abort(),
+            ConnectionState::WebSocket(client) => client.disconnect(),
+            ConnectionState::Sse(client) => client.disconnect(),
+            _ => (),
+        }
+    }
+}
+
+impl Drop for ConnectionState {
+    fn drop(&mut self) { self.disconnect(); }
 }
