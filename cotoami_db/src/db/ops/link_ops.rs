@@ -106,6 +106,7 @@ fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn,
             .order(links::order.asc())
             .load::<i32>(conn.deref_mut())?;
 
+        // Has the given `order` number already been used?
         if orders_onwards.first() == Some(&order) {
             // calculate new orders
             let mut new_orders: Vec<i32> = vec![order + 1];
