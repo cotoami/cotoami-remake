@@ -63,14 +63,14 @@ object ModalWelcome {
   case class BaseFolderSelected(result: Either[Throwable, Option[String]])
       extends Msg
   case class FolderNameInput(query: String) extends Msg
-  case class NewFolderValidation(result: Either[ErrorJson, Unit]) extends Msg
+  case class NewFolderValidation(result: Either[ErrorJson, Null]) extends Msg
   case object CreateDatabase extends Msg
 
   // Open an existing database
   case object SelectDatabaseFolder extends Msg
   case class DatabaseFolderSelected(result: Either[Throwable, Option[String]])
       extends Msg
-  case class DatabaseFolderValidation(result: Either[ErrorJson, Unit])
+  case class DatabaseFolderValidation(result: Either[ErrorJson, Null])
       extends Msg
   case object OpenDatabase extends Msg
   case class OpenDatabaseIn(folder: String) extends Msg

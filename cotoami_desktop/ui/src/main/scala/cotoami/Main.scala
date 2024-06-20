@@ -40,6 +40,7 @@ object Main {
 
     def save(folder: String): Cmd[Msg] = Cmd(IO {
       dom.window.sessionStorage.setItem(SessionStorageKey, folder)
+      println(s"folder saved: ${folder}")
       None
     })
 
@@ -158,7 +159,7 @@ object Main {
       case ServerConnectionsInitialized(result) =>
         (
           result match {
-            case Right(()) =>
+            case Right(_) =>
               model.debug("Server connections initialized.", None)
             case Left(e) =>
               model.error("Failed to initialize server connections.", Some(e))
