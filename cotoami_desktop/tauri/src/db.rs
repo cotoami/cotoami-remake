@@ -1,5 +1,5 @@
 use std::{
-    path::{Path, PathBuf},
+    path::{self, Path, PathBuf},
     string::ToString,
     sync::Arc,
 };
@@ -99,7 +99,7 @@ pub async fn create_database(
     folder_name: String,
 ) -> Result<DatabaseInfo, Error> {
     let path: PathBuf = [base_folder, folder_name].iter().collect();
-    let folder = canonicalize_path(path)?;
+    let folder = normalize_path(path)?;
     app_handle.debug("Creating a database...", Some(&folder));
 
     // Create a new config.
@@ -133,7 +133,7 @@ pub async fn open_database(
     app_handle: tauri::AppHandle,
     database_folder: String,
 ) -> Result<DatabaseInfo, Error> {
-    let folder = canonicalize_path(&database_folder)?;
+    let folder = normalize_path(&database_folder)?;
     validate_database_folder(folder.clone())?;
 
     // Load or create a config.
@@ -207,11 +207,8 @@ pub async fn node_command(
     response.json().map_err(Error::from)
 }
 
-fn canonicalize_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
-    let path = path
-        .as_ref()
-        .canonicalize()
-        .map_err(|e| Error::new("invalid-path", e.to_string()))?;
+fn normalize_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    let path = path::absolute(path).map_err(|e| Error::new("invalid-path", e.to_string()))?;
     path.to_str().map(str::to_string).ok_or(Error::new(
         "invalid-path",
         "The path contains invalid unicodes.",
