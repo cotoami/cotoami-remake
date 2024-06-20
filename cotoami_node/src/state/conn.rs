@@ -58,9 +58,18 @@ impl ServerConnection {
 
         let task = tokio::spawn(self.clone().try_connect());
         self.set_conn_state(ConnectionState::Initializing(task.abort_handle()));
-        if let Ok(Err(e)) = task.await {
-            debug!("Failed to initialize a server connection: {:?}", e);
-            self.set_conn_state(ConnectionState::InitFailed(Arc::new(e)));
+
+        match task.await {
+            Ok(Ok(())) => {
+                debug!("Server connection established: {}", self.server.node_id);
+            }
+            Ok(Err(e)) => {
+                debug!("Failed to initialize a server connection: {:?}", e);
+                self.set_conn_state(ConnectionState::InitFailed(Arc::new(e)));
+            }
+            Err(e) => {
+                debug!("Initializing task has been aborted: {:?}", e);
+            }
         }
     }
 
