@@ -45,7 +45,10 @@ impl ServerConnection {
         }
     }
 
-    /// Connects to the given `server` to create a new [ServerConnection].
+    /// Connects to the server node.
+    ///
+    /// The state of this connection will be published via
+    /// [crate::event::local::LocalNodeEvent].
     pub async fn connect(&self) {
         if self.server.disabled {
             return;
