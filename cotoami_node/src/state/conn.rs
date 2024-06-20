@@ -87,8 +87,7 @@ impl ServerConnection {
         self.start_event_loop(http_client).await
     }
 
-    /// Starts a event loop using an [HttpClient] that has already logged it in
-    /// (having a session token).
+    /// Starts a event loop using an [HttpClient] that already has a session token.
     pub async fn start_event_loop(&self, http_client: HttpClient) -> Result<()> {
         if self.server.disabled {
             return Ok(());
