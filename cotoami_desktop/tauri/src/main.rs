@@ -23,7 +23,7 @@ fn main() {
             db::create_database,
             db::open_database,
             db::node_command,
-            conn::connect_to_all_servers
+            conn::connect_to_servers
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

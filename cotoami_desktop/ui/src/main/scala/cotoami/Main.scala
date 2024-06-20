@@ -147,10 +147,24 @@ object Main {
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
-              DatabaseFolder.save(info.folder) +: _
+              Seq(
+                DatabaseFolder.save(info.folder),
+                connectToServers()
+              ) ++ _
             )
         }
       }
+
+      case ServerConnectionsInitialized(result) =>
+        (
+          result match {
+            case Right(()) =>
+              model.debug("Server connections initialized.", None)
+            case Left(e) =>
+              model.error("Failed to initialize server connections.", Some(e))
+          },
+          Seq.empty
+        )
 
       case OpenOrClosePane(name, open) =>
         model.uiState
@@ -310,6 +324,9 @@ object Main {
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))
     }
+
+  private def connectToServers(): Cmd[Msg] =
+    tauri.invokeCommand("connect_to_servers").map(ServerConnectionsInitialized)
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,

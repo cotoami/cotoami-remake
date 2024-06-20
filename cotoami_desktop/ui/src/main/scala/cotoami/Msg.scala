@@ -29,6 +29,8 @@ case class UiStateRestored(state: Option[UiState]) extends Msg
 case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
     extends Msg
 case class SetDatabaseInfo(info: DatabaseInfo) extends Msg
+case class ServerConnectionsInitialized(result: Either[ErrorJson, Unit])
+    extends Msg
 
 // UI
 case class OpenOrClosePane(name: String, open: Boolean) extends Msg
