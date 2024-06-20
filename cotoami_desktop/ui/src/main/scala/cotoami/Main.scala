@@ -40,7 +40,6 @@ object Main {
 
     def save(folder: String): Cmd[Msg] = Cmd(IO {
       dom.window.sessionStorage.setItem(SessionStorageKey, folder)
-      println(s"folder saved: ${folder}")
       None
     })
 
