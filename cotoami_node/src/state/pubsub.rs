@@ -62,6 +62,7 @@ impl EventPubsub {
         not_connected: Option<NotConnected>,
         is_parent: bool,
     ) {
+        let disconnected = not_connected.is_some();
         self.publish(
             LocalNodeEvent::ServerStateChanged {
                 node_id,
@@ -69,7 +70,7 @@ impl EventPubsub {
             },
             None,
         );
-        if is_parent {
+        if is_parent && disconnected {
             self.parent_disconnected(node_id);
         }
     }
