@@ -137,18 +137,7 @@ impl ServerConnection {
         self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
     }
 
-    pub fn not_connected(&self) -> Option<NotConnected> {
-        match self.conn_state.read().deref() {
-            ConnectionState::Disconnected(reason) => {
-                Some(NotConnected::Disconnected(reason.clone()))
-            }
-            ConnectionState::Initializing(_) => Some(NotConnected::Connecting(None)),
-            ConnectionState::Disabled => Some(NotConnected::Disabled),
-            ConnectionState::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ConnectionState::WebSocket(client) => client.not_connected(),
-            ConnectionState::Sse(client) => client.not_connected(),
-        }
-    }
+    pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
 
     fn is_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
 
@@ -163,6 +152,19 @@ impl ServerConnection {
 }
 
 impl ConnectionState {
+    fn not_connected(&self) -> Option<NotConnected> {
+        match self {
+            ConnectionState::Disconnected(reason) => {
+                Some(NotConnected::Disconnected(reason.clone()))
+            }
+            ConnectionState::Initializing(_) => Some(NotConnected::Connecting(None)),
+            ConnectionState::Disabled => Some(NotConnected::Disabled),
+            ConnectionState::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
+            ConnectionState::WebSocket(client) => client.not_connected(),
+            ConnectionState::Sse(client) => client.not_connected(),
+        }
+    }
+
     fn disconnect(&mut self) {
         match self {
             ConnectionState::Initializing(task) => task.abort(),
