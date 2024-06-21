@@ -237,6 +237,12 @@ case class Domain(
         .modify(_._1.cotonomas).using(_.prependToRecent(cotonoma))
     }
 
+    // CreateLink
+    for (linkJson <- change.CreateLink.toOption) {
+      val link = Link(linkJson)
+      return (this.modify(_.links).using(_.add(link)), Seq.empty)
+    }
+
     (this, Seq.empty)
   }
 
