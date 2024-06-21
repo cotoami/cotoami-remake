@@ -213,55 +213,76 @@ case class Domain(
   private def applyChange(
       change: ChangeJson
   ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
-    // UpsertNode
-    for (nodeJson <- change.UpsertNode.toOption) {
-      val node = Node(nodeJson)
-      return (this.modify(_.nodes).using(_.add(node)), Seq.empty)
-    }
-
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
       return this
-        .prependCotoToTimeline(coto)
-        .prependCotonomaIdToRecent(coto.postedInId)
+        .postCoto(coto)
+        .cotonomaUpdated(coto.postedInId)
     }
 
     // CreateCotonoma
-    for (cotonomaTuple <- change.CreateCotonoma.toOption) {
-      val cotonoma = Cotonoma(cotonomaTuple._1)
-      val coto = Coto(cotonomaTuple._2)
-      return this
-        .prependCotoToTimeline(coto)
-        .prependCotonomaIdToRecent(coto.postedInId)
-        .modify(_._1.cotonomas).using(_.prependToRecent(cotonoma))
+    for (cotonomaJson <- change.CreateCotonoma.toOption) {
+      return this.postCotonoma(cotonomaJson)
     }
 
     // CreateLink
     for (linkJson <- change.CreateLink.toOption) {
-      val link = Link(linkJson)
-      return (this.modify(_.links).using(_.add(link)), Seq.empty)
+      return (this.addLink(Link(linkJson)), Seq.empty)
+    }
+
+    // UpsertNode
+    for (nodeJson <- change.UpsertNode.toOption) {
+      return (this.addNode(Node(nodeJson)), Seq.empty)
+    }
+
+    // CreateNode
+    for (createNodeJson <- change.CreateNode.toOption) {
+      val domain = this.addNode(Node(createNodeJson.node))
+      return Nullable.toOption(createNodeJson.root)
+        .map(this.postCotonoma(_))
+        .getOrElse((domain, Seq.empty))
     }
 
     (this, Seq.empty)
   }
 
-  private def prependCotoToTimeline(coto: Coto): Domain =
+  private def addNode(node: Node): Domain =
+    this.modify(_.nodes).using(_.add(node))
+
+  private def postCoto(coto: Coto): Domain =
     this.modify(_.cotos).using(cotos =>
       if (this.inRootCotonoma || coto.postedInId == this.currentCotonomaId)
-        cotos.prependToTimeline(coto)
+        cotos.post(coto)
       else
         cotos
     )
 
-  private def prependCotonomaIdToRecent(
+  private def postCotonoma(
+      jsonPair: (CotonomaJson, CotoJson)
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+    val cotonoma = Cotonoma(jsonPair._1)
+    val coto = Coto(jsonPair._2)
+    this
+      .postCotonoma(cotonoma)
+      .postCoto(coto)
+      .cotonomaUpdated(coto.postedInId)
+  }
+
+  private def postCotonoma(cotonoma: Cotonoma): Domain =
+    this.modify(_.cotonomas).using(_.post(cotonoma))
+
+  private def cotonomaUpdated(
       id: Option[Id[Cotonoma]]
   ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
     id.map(id => {
-      val (cotonomas, cmds) = this.cotonomas.prependIdToRecent(id)
+      val (cotonomas, cmds) = this.cotonomas.updated(id)
       (this.copy(cotonomas = cotonomas), cmds)
     }).getOrElse((this, Seq.empty))
   }
+
+  private def addLink(link: Link): Domain =
+    this.modify(_.links).using(_.add(link))
 }
 
 object Domain {

@@ -97,12 +97,12 @@ case class Cotonomas(
       .modify(_.recentLoading).setTo(false)
       .modify(_.recentIds).using(_.appendPage(page))
 
-  def prependToRecent(cotonoma: Cotonoma): Cotonomas =
+  def post(cotonoma: Cotonoma): Cotonomas =
     this
       .add(cotonoma)
       .modify(_.recentIds).using(_.prependId(cotonoma.id))
 
-  def prependIdToRecent(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
+  def updated(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
     (
       this.modify(_.recentIds).using(_.prependId(id)),
       if (!this.contains(id))

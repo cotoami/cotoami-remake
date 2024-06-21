@@ -38,7 +38,7 @@ case class Cotos(
       .modify(_.timelineLoading).setTo(false)
       .modify(_.timelineIds).using(_.appendPage(cotos.page))
 
-  def prependToTimeline(coto: Coto): Cotos =
+  def post(coto: Coto): Cotos =
     this
       .add(coto)
       .modify(_.timelineIds).using(timeline =>
