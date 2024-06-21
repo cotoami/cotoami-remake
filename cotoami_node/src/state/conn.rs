@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
@@ -54,10 +54,8 @@ impl ServerConnection {
             return;
         }
 
-        match *self.conn_state.read().deref() {
-            ConnectionState::Disconnected(_) => (),
-            _ => self.disconnect(None),
-        }
+        // To avoid leaking the existing running tasks.
+        self.disconnect(None);
 
         let task = tokio::spawn(self.clone().try_connect());
         self.set_conn_state(ConnectionState::Initializing(task.abort_handle()));
@@ -142,12 +140,18 @@ impl ServerConnection {
     fn is_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
 
     fn set_conn_state(&self, state: ConnectionState) {
+        let old_not_connected = self.not_connected();
         *self.conn_state.write() = state;
-        self.node_state.pubsub().events().server_state_changed(
-            self.server.node_id,
-            self.not_connected(),
-            self.is_parent(),
-        );
+        let new_not_connected = self.not_connected();
+
+        // Publish the state only if the state has changed.
+        if old_not_connected != new_not_connected {
+            self.node_state.pubsub().events().server_state_changed(
+                self.server.node_id,
+                new_not_connected,
+                self.is_parent(),
+            );
+        }
     }
 }
 

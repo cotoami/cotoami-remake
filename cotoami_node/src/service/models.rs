@@ -73,7 +73,7 @@ pub struct Server {
     pub database_role: Option<DatabaseRole>,
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 #[serde(tag = "reason", content = "details")]
 pub enum NotConnected {
     Disabled,
