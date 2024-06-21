@@ -38,8 +38,8 @@ trait ParentSyncProgressJson extends js.Object {
 
 case class ParentSyncEnd(json: ParentSyncEndJson) {
   def nodeId: Id[Node] = Id(this.json.node_id)
-  def range: Option[js.Tuple2[Double, Double]] =
-    Nullable.toOption(this.json.range)
+  def range: Option[(Double, Double)] =
+    Nullable.toOption(this.json.range).map(js.Tuple2.toScalaTuple2(_))
   def error: Option[String] = Nullable.toOption(this.json.error)
 
   def noChanges: Boolean = this.range.isEmpty && this.error.isEmpty
