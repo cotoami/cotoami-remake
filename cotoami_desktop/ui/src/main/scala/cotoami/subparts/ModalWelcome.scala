@@ -254,7 +254,7 @@ object ModalWelcome {
             "validate_database_folder",
             js.Dynamic
               .literal(
-                databaseFolder = model.databaseFolder
+                folder = model.databaseFolder
               )
           )
           .map(appMsgTagger(DatabaseFolderValidation(_)))

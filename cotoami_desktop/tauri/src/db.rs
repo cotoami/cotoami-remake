@@ -72,8 +72,8 @@ pub fn validate_new_database_folder(base_folder: String, folder_name: String) ->
 }
 
 #[tauri::command]
-pub fn validate_database_folder(database_folder: String) -> Result<(), Error> {
-    let path = PathBuf::from(database_folder);
+pub fn validate_database_folder(folder: &str) -> Result<(), Error> {
+    let path = PathBuf::from(folder);
     if let Ok(Some((node, _))) = Database::try_read_node_info(path) {
         if node.has_root_cotonoma() {
             Ok(())
@@ -134,7 +134,7 @@ pub async fn open_database(
     database_folder: String,
 ) -> Result<DatabaseInfo, Error> {
     let folder = normalize_path(&database_folder)?;
-    validate_database_folder(folder.clone())?;
+    validate_database_folder(&folder)?;
 
     // Load or create a config.
     let node_config = if let Some((node, require_password)) = Database::try_read_node_info(&folder)?

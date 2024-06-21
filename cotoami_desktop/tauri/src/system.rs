@@ -33,7 +33,8 @@ pub fn system_info(app_handle: tauri::AppHandle) -> SystemInfo {
 
     let time_zone_offset_in_sec = Local::now().offset().local_minus_utc();
 
-    let recent_databases = RecentDatabases::load(&app_handle);
+    let mut recent_databases = RecentDatabases::load(&app_handle);
+    recent_databases.delete_invalid_folders(&app_handle);
 
     SystemInfo {
         app_version,
