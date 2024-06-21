@@ -252,9 +252,11 @@ object ModalAddNode {
           span(className := "name")(nodeSession.server.name)
         ),
         nodeSession.serverRootCotonoma.map { case (_, coto) =>
-          section(className := "node-content")(
-            ViewCoto.sectionCotoContentDetails(coto)
-          )
+          Option.when(coto.content.isDefined) {
+            section(className := "node-description")(
+              ViewCoto.sectionCotoContentDetails(coto)
+            )
+          }
         }
       ),
 
