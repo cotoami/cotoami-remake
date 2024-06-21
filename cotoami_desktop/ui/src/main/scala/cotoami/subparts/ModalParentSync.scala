@@ -71,7 +71,7 @@ object ModalParentSync {
           val total = progress.total.toString()
           li()(
             section(className := "parent-node")(
-              spanNode(Id(progress.node_id), domain),
+              spanNode(progress.nodeId, domain),
               span(className := "progress")(s"${current}/${total}")
             ),
             div(className := "progress-bar")(
@@ -93,8 +93,8 @@ object ModalParentSync {
         parentSync.synced.map(done => {
           li()(
             section(className := "parent-node")(
-              spanNode(Id(done.node_id), domain),
-              Nullable.toOption(done.range).map(range =>
+              spanNode(done.nodeId, domain),
+              done.range.map(range =>
                 span(className := "result")(
                   span(className := "range")(s"${range._1} to ${range._2}"),
                   span(className := "changes")(

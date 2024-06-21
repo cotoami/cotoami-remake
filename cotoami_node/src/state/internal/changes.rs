@@ -39,6 +39,7 @@ impl NodeState {
                 });
                 Ok(Some(range))
             }
+            // Already synced with the parent.
             Ok(None) => {
                 self.pubsub().publish_event(LocalNodeEvent::ParentSyncEnd {
                     node_id: parent_node_id,

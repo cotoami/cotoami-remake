@@ -23,11 +23,26 @@ trait ParentSyncStartJson extends js.Object {
   val parent_description: String = js.native
 }
 
+case class ParentSyncProgress(json: ParentSyncProgressJson) {
+  def nodeId: Id[Node] = Id(this.json.node_id)
+  def progress: Double = this.json.progress
+  def total: Double = this.json.total
+}
+
 @js.native
 trait ParentSyncProgressJson extends js.Object {
   val node_id: String = js.native
   val progress: Double = js.native
   val total: Double = js.native
+}
+
+case class ParentSyncEnd(json: ParentSyncEndJson) {
+  def nodeId: Id[Node] = Id(this.json.node_id)
+  def range: Option[js.Tuple2[Double, Double]] =
+    Nullable.toOption(this.json.range)
+  def error: Option[String] = Nullable.toOption(this.json.error)
+
+  def noChanges: Boolean = this.range.isEmpty && this.error.isEmpty
 }
 
 @js.native
