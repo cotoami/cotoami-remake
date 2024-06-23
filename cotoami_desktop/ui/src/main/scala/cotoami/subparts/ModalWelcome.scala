@@ -412,9 +412,9 @@ object ModalWelcome {
     section(className := "open-database")(
       h2()("Open"),
       form()(
-        // Folder
+        // Database folder
         div(className := "input-field")(
-          label(htmlFor := "select-database-folder")("Folder"),
+          label(htmlFor := "select-database-folder")("Database folder"),
           div(className := "file-select")(
             div(className := "file-path")(model.databaseFolder),
             button(
