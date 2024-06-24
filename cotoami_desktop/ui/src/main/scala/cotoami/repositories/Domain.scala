@@ -27,18 +27,19 @@ case class Domain(
       links = Links()
     )
 
-  def rootCotonomaId: Option[Id[Cotonoma]] =
-    this.nodes.current.flatMap(node => node.rootCotonomaId)
+  def currentRootCotonomaId: Option[Id[Cotonoma]] =
+    this.nodes.current.flatMap(_.rootCotonomaId)
 
-  def isRoot(id: Id[Cotonoma]): Boolean = Some(id) == this.rootCotonomaId
+  def isCurrentRoot(id: Id[Cotonoma]): Boolean =
+    Some(id) == this.currentRootCotonomaId
 
   def currentCotonomaId: Option[Id[Cotonoma]] =
     this.cotonomas.selectedId.orElse(
       this.nodes.current.flatMap(_.rootCotonomaId)
     )
 
-  def inRootCotonoma: Boolean =
-    (this.currentCotonomaId, this.rootCotonomaId) match {
+  def inCurrentRoot: Boolean =
+    (this.currentCotonomaId, this.currentRootCotonomaId) match {
       case (Some(current), Some(root)) => current == root
       case _                           => false
     }
@@ -88,12 +89,12 @@ case class Domain(
       .modify(_.links).using(_.addAll(graph.links))
 
   lazy val recentCotonomas: Seq[Cotonoma] = {
-    val rootId = this.rootCotonomaId
+    val rootId = this.currentRootCotonomaId
     this.cotonomas.recent.filter(c => Some(c.id) != rootId)
   }
 
   lazy val superCotonomas: Seq[Cotonoma] = {
-    val rootId = this.rootCotonomaId
+    val rootId = this.currentRootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
 
@@ -250,7 +251,7 @@ case class Domain(
 
   private def postCoto(coto: Coto): Domain =
     this.modify(_.cotos).using(cotos =>
-      if (this.inRootCotonoma || coto.postedInId == this.currentCotonomaId)
+      if (this.inCurrentRoot || coto.postedInId == this.currentCotonomaId)
         cotos.post(coto)
       else
         cotos

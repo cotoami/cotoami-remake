@@ -56,7 +56,10 @@ object ViewCoto {
   ): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
-        .filter(id => !domain.isRoot(id) && !domain.cotonomas.isSelecting(id))
+        .filter(id =>
+          !domain.isCurrentRoot(id) &&
+            !domain.cotonomas.isSelecting(id)
+        )
         .map(domain.cotonomas.get)
         .flatten
         .reverse
