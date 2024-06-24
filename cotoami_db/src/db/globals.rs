@@ -11,7 +11,11 @@ use parking_lot::{
 };
 
 use crate::{
-    db::{error::*, op, ops::prelude::*},
+    db::{
+        error::*,
+        op,
+        ops::node_role_ops::{local_ops, parent_ops},
+    },
     models::prelude::*,
 };
 
