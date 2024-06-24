@@ -66,7 +66,7 @@ object ViewCoto {
               className := "also-posted-in",
               onClick := ((e) => {
                 e.preventDefault()
-                dispatch(cotoami.SelectCotonoma(cotonoma.id))
+                dispatch(cotoami.SelectCotonoma(cotonoma))
               })
             )(cotonoma.name)
           )
@@ -86,7 +86,7 @@ object ViewCoto {
             title := cotonoma.name,
             onClick := ((e) => {
               e.preventDefault()
-              dispatch(cotoami.SelectCotonoma(cotonoma.id))
+              dispatch(cotoami.SelectCotonoma(cotonoma))
             })
           )(
             domain.nodes.get(cotonoma.nodeId).map(nodeImg),

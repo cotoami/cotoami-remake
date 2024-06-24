@@ -27,13 +27,13 @@ case class Nodes(
 
   def parents: Seq[Node] = this.parentIds.map(this.get).flatten
 
-  def select(id: Id[Node]): Nodes =
-    if (this.contains(id))
-      this.copy(selectedId = Some(id))
-    else
-      this
-
-  def deselect(): Nodes = this.copy(selectedId = None)
+  def select(id: Option[Id[Node]]): Nodes =
+    id.map(id =>
+      if (this.contains(id))
+        this.copy(selectedId = Some(id))
+      else
+        this
+    ).getOrElse(this.copy(selectedId = None))
 
   def isSelecting(id: Id[Node]): Boolean =
     this.selectedId.map(_ == id).getOrElse(false)

@@ -21,7 +21,7 @@ case class Domain(
 
   def clearSelection(): Domain =
     this.copy(
-      nodes = this.nodes.deselect(),
+      nodes = this.nodes.select(None),
       cotonomas = Cotonomas(),
       cotos = Cotos(),
       links = Links()
@@ -51,8 +51,8 @@ case class Domain(
   def setCotonomaDetails(details: CotonomaDetails): Domain = {
     this
       .modify(_.nodes).using(nodes =>
-        if (!nodes.isSelecting(details.cotonoma.nodeId))
-          nodes.deselect()
+        if (nodes.selectedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
+          nodes.select(Some(details.cotonoma.nodeId))
         else
           nodes
       )
@@ -143,9 +143,7 @@ case class Domain(
   def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[cotoami.Msg]]) =
     this
       .clearSelection()
-      .modify(_.nodes).using(nodes =>
-        nodeId.map(nodes.select(_)).getOrElse(nodes)
-      )
+      .modify(_.nodes).using(_.select(nodeId))
       .modify(_.cotonomas.recentLoading).setTo(true)
       .modify(_.cotos.timelineLoading).setTo(true) match {
       case domain =>
@@ -164,11 +162,10 @@ case class Domain(
   def selectCotonoma(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) =
+  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+    val nodeChanged = nodeId != this.nodes.selectedId
     this
-      .modify(_.nodes).using(nodes =>
-        nodeId.map(nodes.select(_)).getOrElse(nodes.deselect())
-      )
+      .modify(_.nodes).using(_.select(nodeId))
       .modify(_.cotonomas).using(_.select(cotonomaId))
       .modify(_.cotos).setTo(Cotos())
       .modify(_.links).setTo(Links())
@@ -178,7 +175,7 @@ case class Domain(
         (
           domain,
           Seq(
-            if (domain.cotonomas.isEmpty)
+            if (nodeChanged)
               Cotonomas.fetchRecent(nodeId, 0)
             else
               Cmd.none,
@@ -188,6 +185,7 @@ case class Domain(
           )
         )
     }
+  }
 
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).

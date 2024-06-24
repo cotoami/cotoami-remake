@@ -42,7 +42,7 @@ case class ScrollToPinnedCoto(pin: Link) extends Msg
 // Transition
 case class SelectNode(id: Id[Node]) extends Msg
 case object DeselectNode extends Msg
-case class SelectCotonoma(id: Id[Cotonoma]) extends Msg
+case class SelectCotonoma(cotonoma: Cotonoma) extends Msg
 case object DeselectCotonoma extends Msg
 
 // Domain

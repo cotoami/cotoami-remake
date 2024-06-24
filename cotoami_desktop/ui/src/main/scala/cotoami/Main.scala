@@ -217,10 +217,11 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case SelectCotonoma(id) => {
+      case SelectCotonoma(cotonoma) => {
         val url = model.domain.nodes.selected match {
-          case None       => Route.cotonoma.url(id)
-          case Some(node) => Route.cotonomaInNode.url((node.id, id))
+          case None => Route.cotonoma.url(cotonoma.id)
+          case Some(_) =>
+            Route.cotonomaInNode.url((cotonoma.nodeId, cotonoma.id))
         }
         (model, Seq(Browser.pushUrl(url)))
       }

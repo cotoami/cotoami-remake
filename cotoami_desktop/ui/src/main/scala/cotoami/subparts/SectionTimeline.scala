@@ -242,7 +242,7 @@ object SectionTimeline {
         className := "reposted-in",
         onClick := ((e) => {
           e.preventDefault()
-          dispatch(cotoami.SelectCotonoma(cotonoma.id))
+          dispatch(cotoami.SelectCotonoma(cotonoma))
         })
       )(cotonoma.name)
     )

@@ -145,7 +145,7 @@ object NavCotonomas {
           title := cotonoma.name,
           onClick := ((e) => {
             e.preventDefault()
-            dispatch(SelectCotonoma(cotonoma.id))
+            dispatch(SelectCotonoma(cotonoma))
           })
         )(
           cotonomaLabel(cotonoma, domain)
