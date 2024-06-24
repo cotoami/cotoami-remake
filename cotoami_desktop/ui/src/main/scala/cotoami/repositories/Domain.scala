@@ -45,9 +45,14 @@ case class Domain(
     }
 
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
-  // return `None` if the cotonoma data of that ID has not been loaded.
+  // return `None` if the cotonoma data of that ID has not been fetched.
   def currentCotonoma: Option[Cotonoma] =
     this.currentCotonomaId.flatMap(this.cotonomas.get)
+
+  def isRoot(cotonoma: Cotonoma): Boolean =
+    this.nodes.get(cotonoma.nodeId)
+      .map(_.rootCotonomaId == Some(cotonoma.id))
+      .getOrElse(false)
 
   def setCotonomaDetails(details: CotonomaDetails): Domain = {
     this
