@@ -9,6 +9,8 @@ use crate::{
     models::prelude::*,
 };
 
+pub mod local;
+
 impl<'a> DatabaseSession<'a> {
     pub fn node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
         self.read_transaction(node_ops::get(node_id))
