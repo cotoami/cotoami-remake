@@ -10,6 +10,7 @@ use crate::{
 };
 
 pub mod local;
+pub mod server;
 
 impl<'a> DatabaseSession<'a> {
     pub fn node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
