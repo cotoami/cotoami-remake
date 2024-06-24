@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 
 use crate::{
@@ -11,6 +13,7 @@ use crate::{
 
 pub mod client;
 pub mod local;
+pub mod parent;
 pub mod server;
 
 impl<'a> DatabaseSession<'a> {
@@ -48,5 +51,16 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<NetworkRole> {
         operator.requires_to_be_owner()?;
         self.write_transaction(node_role_ops::set_network_disabled(id, disabled))
+    }
+
+    pub fn database_role_of(&mut self, node_id: &Id<Node>) -> Result<Option<DatabaseRole>> {
+        self.read_transaction(node_role_ops::database_role_of(node_id))
+    }
+
+    pub fn database_roles_of(
+        &mut self,
+        node_ids: &Vec<Id<Node>>,
+    ) -> Result<HashMap<Id<Node>, DatabaseRole>> {
+        self.read_transaction(node_role_ops::database_roles_of(node_ids))
     }
 }
