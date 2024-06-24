@@ -164,22 +164,22 @@ case class Domain(
       cotonomaId: Id[Cotonoma]
   ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
     val nodeChanged = nodeId != this.nodes.selectedId
+    val (cotonomas, cmds) = this.cotonomas.selectAndFetch(cotonomaId)
     this
       .modify(_.nodes).using(_.select(nodeId))
-      .modify(_.cotonomas).using(_.select(cotonomaId))
+      .modify(_.cotonomas).setTo(cotonomas)
       .modify(_.cotos).setTo(Cotos())
       .modify(_.links).setTo(Links())
-      .modify(_.cotonomas.recentLoading).setTo(this.cotonomas.isEmpty)
+      .modify(_.cotonomas.recentLoading).setTo(nodeChanged)
       .modify(_.cotos.timelineLoading).setTo(true) match {
       case domain =>
         (
           domain,
-          Seq(
+          cmds ++ Seq(
             if (nodeChanged)
               Cotonomas.fetchRecent(nodeId, 0)
             else
               Cmd.none,
-            Domain.fetchCotonomaDetails(cotonomaId),
             Domain.fetchTimeline(None, Some(cotonomaId), None, 0),
             Domain.fetchGraphFromCotonoma(cotonomaId)
           )

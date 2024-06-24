@@ -51,11 +51,10 @@ case class Cotonomas(
 
   def setCotonomaDetails(details: CotonomaDetails): Cotonomas = {
     this
-      .deselect()
       .add(details.cotonoma)
       .addAll(details.supers)
       .addAll(details.subs.rows)
-      .select(details.cotonoma.id)
+      .select(Some(details.cotonoma.id))
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
       .modify(_.subIds).using(_.appendPage(details.subs))
   }
@@ -66,12 +65,19 @@ case class Cotonomas(
     else
       None
 
-  // You can select a cotonoma even if it's not contained in this repository.
-  // In that case, it assumes that the cotonoma is being fetched at the same time.
-  def select(id: Id[Cotonoma]): Cotonomas =
-    this.deselect().copy(selectedId = Some(id))
+  def select(id: Option[Id[Cotonoma]]): Cotonomas =
+    if (id.map(this.contains(_)).getOrElse(true))
+      this.deselect.copy(selectedId = id)
+    else
+      this
 
-  def deselect(): Cotonomas =
+  def selectAndFetch(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
+    (
+      this.deselect.copy(selectedId = Some(id)),
+      Seq(Domain.fetchCotonomaDetails(id))
+    )
+
+  def deselect: Cotonomas =
     this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())
 
   def isSelecting(id: Id[Cotonoma]): Boolean =
