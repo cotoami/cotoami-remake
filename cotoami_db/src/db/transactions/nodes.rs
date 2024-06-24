@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, node_ops},
+        ops::{changelog_ops, node_ops, node_role_ops},
         DatabaseSession,
     },
     models::prelude::*,
@@ -36,5 +36,15 @@ impl<'a> DatabaseSession<'a> {
                 Ok(None)
             }
         })
+    }
+
+    pub fn set_network_disabled(
+        &self,
+        id: &Id<Node>,
+        disabled: bool,
+        operator: &Operator,
+    ) -> Result<NetworkRole> {
+        operator.requires_to_be_owner()?;
+        self.write_transaction(node_role_ops::set_network_disabled(id, disabled))
     }
 }
