@@ -13,7 +13,7 @@ use url::Url;
 use crate::{
     db::{
         error::*, globals::Globals, op::WritableConn, ops::node_role_ops::local_ops,
-        session::DatabaseSession,
+        transactions::DatabaseSession,
     },
     models::node::{Node, Principal},
 };
@@ -22,8 +22,8 @@ pub mod error;
 pub mod globals;
 pub mod op;
 pub mod ops;
-pub mod session;
 pub mod sqlite;
+pub mod transactions;
 
 /// A Cotoami database instance based on SQLite
 pub struct Database {
