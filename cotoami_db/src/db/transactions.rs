@@ -20,6 +20,8 @@ use crate::{
     models::prelude::*,
 };
 
+pub mod nodes;
+
 pub struct DatabaseSession<'a> {
     globals: &'a Globals,
     ro_conn: OnceCell<SqliteConnection>,
@@ -160,36 +162,6 @@ impl<'a> DatabaseSession<'a> {
         } else {
             Ok(None)
         }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////
-    // nodes
-    /////////////////////////////////////////////////////////////////////////////
-
-    pub fn node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
-        self.read_transaction(node_ops::get(node_id))
-    }
-
-    pub fn try_get_node(&mut self, node_id: &Id<Node>) -> Result<Node> {
-        self.read_transaction(node_ops::try_get(node_id))?
-            .map_err(anyhow::Error::from)
-    }
-
-    pub fn all_nodes(&mut self) -> Result<Vec<Node>> { self.read_transaction(node_ops::all()) }
-
-    /// Import a node data sent from a child or parent node.
-    pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
-        let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            if let Some(node) = node_ops::upsert(node).run(ctx)? {
-                let change = Change::UpsertNode(node);
-                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-                let Change::UpsertNode(node) = change else { unreachable!() };
-                Ok(Some((node, changelog)))
-            } else {
-                Ok(None)
-            }
-        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
