@@ -3,19 +3,16 @@ use diesel::sqlite::SqliteConnection;
 use once_cell::unsync::OnceCell;
 use parking_lot::MutexGuard;
 
-use crate::{
-    db::{
-        op,
-        op::{Operation, WritableConn},
-        ops::prelude::*,
-        Globals,
-    },
-    models::prelude::*,
+use crate::db::{
+    op,
+    op::{Operation, WritableConn},
+    Globals,
 };
 
 pub mod changes;
 pub mod cotonomas;
 pub mod cotos;
+pub mod graph;
 pub mod links;
 pub mod nodes;
 
@@ -44,22 +41,6 @@ impl<'a> DatabaseSession<'a> {
             lock_rw_conn,
         }
     }
-
-    /////////////////////////////////////////////////////////////////////////////
-    // graph
-    /////////////////////////////////////////////////////////////////////////////
-
-    pub fn graph(&mut self, root: Coto, until_cotonoma: bool) -> Result<Graph> {
-        self.read_transaction(graph_ops::traverse_by_level_queries(root, until_cotonoma))
-    }
-
-    pub fn graph_by_cte(&mut self, root: Coto, until_cotonoma: bool) -> Result<Graph> {
-        self.read_transaction(graph_ops::traverse_by_recursive_cte(root, until_cotonoma))
-    }
-
-    /////////////////////////////////////////////////////////////////////////////
-    // internals
-    /////////////////////////////////////////////////////////////////////////////
 
     fn ro_conn(&mut self) -> Result<&mut SqliteConnection> {
         // https://github.com/matklad/once_cell/issues/194
