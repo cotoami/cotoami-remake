@@ -9,6 +9,7 @@ use crate::{
     models::prelude::*,
 };
 
+pub mod client;
 pub mod local;
 pub mod server;
 
