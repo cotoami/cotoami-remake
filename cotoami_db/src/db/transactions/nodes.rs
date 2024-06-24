@@ -5,12 +5,13 @@ use anyhow::Result;
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, node_ops, node_role_ops},
+        ops::{changelog_ops, node_ops, node_role_ops, node_role_ops::child_ops},
         DatabaseSession,
     },
     models::prelude::*,
 };
 
+pub mod child;
 pub mod client;
 pub mod local;
 pub mod parent;
@@ -62,5 +63,15 @@ impl<'a> DatabaseSession<'a> {
         node_ids: &Vec<Id<Node>>,
     ) -> Result<HashMap<Id<Node>, DatabaseRole>> {
         self.read_transaction(node_role_ops::database_roles_of(node_ids))
+    }
+
+    pub fn as_operator(&mut self, node_id: Id<Node>) -> Result<Option<Operator>> {
+        if node_id == self.globals.try_get_local_node_id()? {
+            return Ok(Some(Operator::Owner(node_id)));
+        }
+        if let Some(child) = self.read_transaction(child_ops::get(&node_id))? {
+            return Ok(Some(Operator::ChildNode(child)));
+        }
+        Ok(None)
     }
 }
