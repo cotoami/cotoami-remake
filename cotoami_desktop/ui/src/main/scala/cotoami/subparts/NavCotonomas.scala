@@ -37,7 +37,10 @@ object NavCotonomas {
             materialSymbol("home"),
             currentNode.name
           )
-        }
+        },
+        model.domain.nodes.selected.map(
+          sectionNodeTools(_, model.domain, dispatch)
+        )
       ),
       section(className := "cotonomas body")(
         ScrollArea(
@@ -67,7 +70,23 @@ object NavCotonomas {
       dispatch: Msg => Unit
   ): ReactElement =
     section(className := "node-tools")(
-      //
+      nodeStatus(node, domain.nodes).map(status =>
+        details(
+          className := optionalClasses(
+            Seq(
+              ("node-status", true),
+              (status.name, true),
+              ("no-message", status.message.isEmpty)
+            )
+          )
+        )(
+          summary()(
+            status.icon,
+            span(className := "name")(status.name)
+          ),
+          status.message.map(p(className := "message")(_))
+        )
+      )
     )
 
   private def sectionCurrent(
