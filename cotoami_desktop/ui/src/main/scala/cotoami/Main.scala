@@ -66,7 +66,7 @@ object Main {
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
-      case UrlChanged(url) => applyUrlChange(url, model.copy(url = url))
+      case UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
 
       case AddLogEntry(level, message, details) =>
         (
@@ -300,13 +300,13 @@ object Main {
     url.pathname + url.search + url.hash match {
       case Route.index(_) => {
         val (domain, cmds) = model.domain.selectNode(None)
-        (model.copy(domain = domain).resetSubparts, cmds)
+        (model.copy(domain = domain), cmds)
       }
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id)) {
           val (domain, cmds) = model.domain.selectNode(Some(id))
-          (model.copy(domain = domain).resetSubparts, cmds)
+          (model.copy(domain = domain), cmds)
         } else {
           (
             model.warn(s"Node [${id}] not found.", None),
@@ -316,13 +316,13 @@ object Main {
 
       case Route.cotonoma(id) => {
         val (domain, cmds) = model.domain.selectCotonoma(None, id)
-        (model.copy(domain = domain).resetSubparts, cmds)
+        (model.copy(domain = domain), cmds)
       }
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) => {
         val (domain, cmds) =
           model.domain.selectCotonoma(Some(nodeId), cotonomaId)
-        (model.copy(domain = domain).resetSubparts, cmds)
+        (model.copy(domain = domain), cmds)
       }
 
       case _ =>
