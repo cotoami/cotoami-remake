@@ -4,7 +4,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
-import cotoami.backend.Node
+import cotoami.backend.{Node, NotConnected}
+import cotoami.repositories.Nodes
+import cotoami.components.materialSymbol
 
 package object subparts {
 
@@ -55,4 +57,29 @@ package object subparts {
 
   def detectCtrlEnter[T](e: SyntheticKeyboardEvent[T]): Boolean =
     e.key == EnterKey && (e.ctrlKey || e.metaKey)
+
+  case class NodeStatus(
+      name: String,
+      icon: ReactElement,
+      message: Option[String] = None
+  )
+
+  def nodeStatus(
+      node: Node,
+      nodes: Nodes
+  ): Option[NodeStatus] =
+    nodes.getServer(node.id).flatMap(_.notConnected.map {
+      case NotConnected.Disabled =>
+        NodeStatus("disabled", materialSymbol("sync_disabled"))
+      case NotConnected.Connecting(details) =>
+        NodeStatus(
+          "connecting",
+          span(className := "busy", aria - "busy" := "true")(),
+          details
+        )
+      case NotConnected.InitFailed(details) =>
+        NodeStatus("error", materialSymbol("error"), Some(details))
+      case NotConnected.Disconnected(details) =>
+        NodeStatus("disconnected", materialSymbol("do_not_disturb_on"), details)
+    })
 }

@@ -61,6 +61,15 @@ object NavCotonomas {
     )
   }
 
+  private def sectionNodeTools(
+      node: Node,
+      domain: Domain,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    section(className := "node-tools")(
+      //
+    )
+
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,
       domain: Domain,

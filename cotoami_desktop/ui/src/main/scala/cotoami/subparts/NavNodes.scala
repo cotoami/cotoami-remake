@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{DeselectNode, Model, Msg, OpenOrClosePane, SelectNode}
 import cotoami.models.UiState
-import cotoami.backend.{Node, NotConnected}
+import cotoami.backend.Node
 import cotoami.repositories.Nodes
 import cotoami.components.{materialSymbol, optionalClasses}
 
@@ -80,7 +80,7 @@ object NavNodes {
   ): ReactElement = {
     val status = nodeStatus(node, nodes)
     val tooltip =
-      status.map(s => s"${node.name} (${s._1})").getOrElse(node.name)
+      status.map(s => s"${node.name} (${s.name})").getOrElse(node.name)
     button(
       className := optionalClasses(
         Seq(
@@ -97,28 +97,7 @@ object NavNodes {
       onClick := ((e) => dispatch(SelectNode(node.id)))
     )(
       nodeImg(node),
-      status.map(_._2)
+      status.map(s => span(className := s"status ${s.name}")(s.icon))
     )
   }
-
-  private def nodeStatus(
-      node: Node,
-      nodes: Nodes
-  ): Option[(String, ReactElement)] =
-    nodes.getServer(node.id).flatMap(_.notConnected.map {
-      case NotConnected.Disabled =>
-        ("disabled", statusIcon("", "sync_disabled"))
-      case NotConnected.Connecting(details) =>
-        (
-          "connecting",
-          span(className := "status busy", aria - "busy" := "true")()
-        )
-      case NotConnected.InitFailed(details) =>
-        ("error", statusIcon("error", "error"))
-      case NotConnected.Disconnected(details) =>
-        ("disconnected", statusIcon("", "do_not_disturb_on"))
-    })
-
-  private def statusIcon(status: String, icon: String): ReactElement =
-    span(className := s"status ${status}")(materialSymbol(icon))
 }
