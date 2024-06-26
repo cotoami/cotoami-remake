@@ -4,7 +4,12 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
-import cotoami.components.{materialSymbol, optionalClasses, ScrollArea}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  ScrollArea,
+  ToolButton
+}
 import cotoami.backend.{Cotonoma, Node}
 import cotoami.repositories.{Cotonomas, Domain}
 
@@ -68,9 +73,10 @@ object NavCotonomas {
       node: Node,
       domain: Domain,
       dispatch: Msg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val status = parentStatus(node, domain.nodes)
     section(className := "node-tools")(
-      nodeStatus(node, domain.nodes).map(status =>
+      status.map(status =>
         details(
           className := optionalClasses(
             Seq(
@@ -86,8 +92,34 @@ object NavCotonomas {
           ),
           status.message.map(p(className := "message")(_))
         )
+      ),
+      div(className := "tools")(
+        Option.when(domain.nodes.containsServer(node.id)) {
+          Fragment(
+            input(
+              className := "connection",
+              `type` := "checkbox",
+              role := "switch",
+              checked := status.isEmpty
+            ),
+            ToolButton(
+              classes = "disable",
+              tip = "Disable sync",
+              symbol = "sync_disabled",
+              onClick = (() => ())
+            ),
+            span(className := "separator")()
+          )
+        },
+        ToolButton(
+          classes = "settings",
+          tip = "Node settings",
+          symbol = "settings",
+          onClick = (() => ())
+        )
       )
     )
+  }
 
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,

@@ -58,28 +58,32 @@ package object subparts {
   def detectCtrlEnter[T](e: SyntheticKeyboardEvent[T]): Boolean =
     e.key == EnterKey && (e.ctrlKey || e.metaKey)
 
-  case class NodeStatus(
+  case class ParentStatus(
       name: String,
       icon: ReactElement,
       message: Option[String] = None
   )
 
-  def nodeStatus(
+  def parentStatus(
       node: Node,
       nodes: Nodes
-  ): Option[NodeStatus] =
+  ): Option[ParentStatus] =
     nodes.getServer(node.id).flatMap(_.notConnected.map {
       case NotConnected.Disabled =>
-        NodeStatus("disabled", materialSymbol("sync_disabled"))
+        ParentStatus("disabled", materialSymbol("sync_disabled"))
       case NotConnected.Connecting(details) =>
-        NodeStatus(
+        ParentStatus(
           "connecting",
           span(className := "busy", aria - "busy" := "true")(),
           details
         )
       case NotConnected.InitFailed(details) =>
-        NodeStatus("error", materialSymbol("error"), Some(details))
+        ParentStatus("error", materialSymbol("error"), Some(details))
       case NotConnected.Disconnected(details) =>
-        NodeStatus("disconnected", materialSymbol("do_not_disturb_on"), details)
+        ParentStatus(
+          "disconnected",
+          materialSymbol("do_not_disturb_on"),
+          details
+        )
     })
 }

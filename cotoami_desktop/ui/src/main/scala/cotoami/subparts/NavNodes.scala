@@ -80,7 +80,7 @@ object NavNodes {
       nodes: Nodes,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val status = nodeStatus(node, nodes)
+    val status = parentStatus(node, nodes)
     val tooltip =
       status.map(s => s"${node.name} (${s.name})").getOrElse(node.name)
     button(
