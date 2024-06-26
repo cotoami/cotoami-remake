@@ -178,11 +178,19 @@ section.pinned-cotos {
       margin-bottom: 3rem;
     }
 
-    article.coto.has-children {
+    article.coto {
+      background-color: var(--background-color);
 
-      section.text-content p:first-child,
-      span.summary {
-        font-size: 1.1rem;
+      &:hover {
+        background-color: var(--hover-background-color);
+      }
+
+      &.has-children {
+
+        section.text-content p:first-child,
+        span.summary {
+          font-size: 1.1rem;
+        }
       }
     }
   }
