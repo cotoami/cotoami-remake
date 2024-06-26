@@ -19,17 +19,16 @@ import cotoami.backend.{
 }
 import cotoami.repositories.{Domain, Nodes}
 
-object ModalAddNode {
+object ModalIncorporateNode {
 
   case class Model(
       nodeUrl: String = "",
       password: String = "",
-      error: Option[String] = None,
       connecting: Boolean = false,
-      nodeSession: Option[ClientNodeSession] = None,
       connectingError: Option[String] = None,
-      adding: Boolean = false,
-      addingError: Option[String] = None
+      nodeSession: Option[ClientNodeSession] = None,
+      incorporating: Boolean = false,
+      incorporatingError: Option[String] = None
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
@@ -39,15 +38,16 @@ object ModalAddNode {
 
     def readyToConnect: Boolean = !this.connecting && validateNodeUrl.validated
 
-    def readyToAdd: Boolean = !this.connecting && !this.adding
+    def readyToIncorporate: Boolean = !this.connecting && !this.incorporating
   }
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg = Modal.AddNodeMsg(this).pipe(cotoami.ModalMsg)
+    def asAppMsg: cotoami.Msg =
+      Modal.IncorporateNodeMsg(this).pipe(cotoami.ModalMsg)
   }
 
   private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
-    tagger andThen Modal.AddNodeMsg andThen cotoami.ModalMsg
+    tagger andThen Modal.IncorporateNodeMsg andThen cotoami.ModalMsg
 
   case class NodeUrlInput(url: String) extends Msg
   case class PasswordInput(password: String) extends Msg
@@ -55,8 +55,8 @@ object ModalAddNode {
   case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
       extends Msg
   case object Cancel extends Msg
-  case object Add extends Msg
-  case class NodeAdded(result: Either[ErrorJson, ServerJson]) extends Msg
+  case object Incorporate extends Msg
+  case class NodeIncorporated(result: Either[ErrorJson, ServerJson]) extends Msg
 
   def update(
       msg: Msg,
@@ -118,35 +118,37 @@ object ModalAddNode {
           model.copy(
             connecting = false,
             connectingError = None,
-            addingError = None,
+            incorporatingError = None,
             nodeSession = None
           ),
           nodes,
           Seq.empty
         )
 
-      case Add =>
+      case Incorporate =>
         (
-          model.copy(adding = true, addingError = None),
+          model.copy(incorporating = true, incorporatingError = None),
           nodes,
           Seq(addParentNode(model.nodeUrl, model.password))
         )
 
-      case NodeAdded(Right(json)) =>
+      case NodeIncorporated(Right(json)) =>
         (
-          model.copy(adding = false, addingError = None),
+          model.copy(incorporating = false, incorporatingError = None),
           nodes.addServer(Server(json)),
-          Seq(Modal.close(classOf[Modal.AddNode]))
+          Seq(Modal.close(classOf[Modal.IncorporateNode]))
         )
 
-      case NodeAdded(Left(e)) =>
+      case NodeIncorporated(Left(e)) =>
         (
           model.copy(
-            adding = false,
-            addingError = Some(e.default_message)
+            incorporating = false,
+            incorporatingError = Some(e.default_message)
           ),
           nodes,
-          Seq(log_error("Node adding error.", Some(js.JSON.stringify(e))))
+          Seq(
+            log_error("Node incorporating error.", Some(js.JSON.stringify(e)))
+          )
         )
     }
 
@@ -158,7 +160,7 @@ object ModalAddNode {
   private def addParentNode(url: String, password: String): Cmd[cotoami.Msg] =
     Commands
       .send(Commands.AddServerNode(url, password, false))
-      .map(appMsgTagger(NodeAdded(_)))
+      .map(appMsgTagger(NodeIncorporated(_)))
 
   def apply(
       model: Model,
@@ -166,7 +168,7 @@ object ModalAddNode {
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
     dialog(
-      className := "add-node",
+      className := "incorporate-node",
       open := true,
       data - "tauri-drag-region" := "default"
     )(
@@ -175,12 +177,13 @@ object ModalAddNode {
           button(
             className := "close default",
             onClick := (_ =>
-              dispatch(Modal.CloseModal(classOf[Modal.AddNode]).asAppMsg)
+              dispatch(
+                Modal.CloseModal(classOf[Modal.IncorporateNode]).asAppMsg
+              )
             )
           ),
-          h1()("Add Node")
+          h1()("Incorporate Node")
         ),
-        model.error.map(e => section(className := "error")(e)),
         div(className := "body")(
           section(className := "introduction")(
             """
@@ -190,7 +193,7 @@ object ModalAddNode {
             """
           ),
           model.nodeSession
-            .map(sectionAdd(model, _, domain, dispatch))
+            .map(sectionIncorporate(model, _, domain, dispatch))
             .getOrElse(sectionConnect(model, dispatch))
         )
       )
@@ -246,15 +249,15 @@ object ModalAddNode {
       )
     )
 
-  private def sectionAdd(
+  private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession,
       domain: Domain,
       dispatch: cotoami.Msg => Unit
   ): ReactElement =
-    section(className := "add")(
+    section(className := "incorporate")(
       h2()("Node"),
-      model.addingError.map(e => section(className := "error")(e)),
+      model.incorporatingError.map(e => section(className := "error")(e)),
 
       // Node preview
       section(className := "node-preview")(
@@ -271,7 +274,7 @@ object ModalAddNode {
         }
       ),
 
-      // Add button
+      // Incorporate button
       div(className := "buttons")(
         button(
           `type` := "button",
@@ -280,10 +283,10 @@ object ModalAddNode {
         )("Cancel"),
         button(
           `type` := "button",
-          disabled := !model.readyToAdd,
-          aria - "busy" := model.adding.toString(),
-          onClick := (e => dispatch(Add.asAppMsg))
-        )("Add")
+          disabled := !model.readyToIncorporate,
+          aria - "busy" := model.incorporating.toString(),
+          onClick := (e => dispatch(Incorporate.asAppMsg))
+        )("Incorporate")
       )
     )
 }

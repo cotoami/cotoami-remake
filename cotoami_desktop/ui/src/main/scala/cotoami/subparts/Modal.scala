@@ -11,8 +11,9 @@ object Modal {
   sealed trait Model
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Model
-  case class AddNode(model: ModalAddNode.Model = ModalAddNode.Model())
-      extends Model
+  case class IncorporateNode(
+      model: ModalIncorporateNode.Model = ModalIncorporateNode.Model()
+  ) extends Model
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Model
 
@@ -52,7 +53,7 @@ object Modal {
   case class OpenModal(modal: Model) extends Msg
   case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
   case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
-  case class AddNodeMsg(msg: ModalAddNode.Msg) extends Msg
+  case class IncorporateNodeMsg(msg: ModalIncorporateNode.Msg) extends Msg
   case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
 
   def open(modal: Model): Cmd[cotoami.Msg] =
@@ -81,13 +82,13 @@ object Modal {
             }
         }
 
-      case AddNodeMsg(modalMsg) =>
-        stack.get[AddNode].map { case AddNode(modalModel) =>
-          ModalAddNode.update(modalMsg, modalModel, model.domain.nodes)
+      case IncorporateNodeMsg(modalMsg) =>
+        stack.get[IncorporateNode].map { case IncorporateNode(modalModel) =>
+          ModalIncorporateNode.update(modalMsg, modalModel, model.domain.nodes)
             .pipe { case (modal, nodes, cmds) =>
               (
                 model
-                  .modify(_.modalStack).using(_.update(AddNode(modal)))
+                  .modify(_.modalStack).using(_.update(IncorporateNode(modal)))
                   .modify(_.domain.nodes).setTo(nodes),
                 cmds
               )
@@ -114,8 +115,8 @@ object Modal {
           ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
         )
 
-      case AddNode(modalModel) =>
-        Some(ModalAddNode(modalModel, model.domain, dispatch))
+      case IncorporateNode(modalModel) =>
+        Some(ModalIncorporateNode(modalModel, model.domain, dispatch))
 
       case ParentSync(modalModel) =>
         Some(

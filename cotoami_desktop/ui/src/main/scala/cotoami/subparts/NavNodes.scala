@@ -51,10 +51,12 @@ object NavNodes {
         materialSymbol("stacks")
       ),
       button(
-        className := "add-node default",
-        data - "tooltip" := "Add node",
+        className := "incorporate-node default",
+        data - "tooltip" := "Incorporate node",
         data - "placement" := "right",
-        onClick := (_ => dispatch(Modal.OpenModal(Modal.AddNode()).asAppMsg))
+        onClick := (_ =>
+          dispatch(Modal.OpenModal(Modal.IncorporateNode()).asAppMsg)
+        )
       )(
         materialSymbol("add")
       ),
