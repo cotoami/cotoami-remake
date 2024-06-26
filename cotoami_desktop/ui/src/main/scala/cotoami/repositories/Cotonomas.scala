@@ -103,10 +103,17 @@ case class Cotonomas(
       .modify(_.recentLoading).setTo(false)
       .modify(_.recentIds).using(_.appendPage(page))
 
-  def post(cotonoma: Cotonoma): Cotonomas =
+  def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
     this
       .add(cotonoma)
       .modify(_.recentIds).using(_.prependId(cotonoma.id))
+      .modify(_.subIds).using(subIds =>
+        (cotonomaCoto.postedInId, this.selectedId) match {
+          case (Some(postedIn), Some(selected)) if postedIn == selected =>
+            subIds.prependId(cotonoma.id)
+          case _ => subIds
+        }
+      )
 
   def updated(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[cotoami.Msg]]) =
     (

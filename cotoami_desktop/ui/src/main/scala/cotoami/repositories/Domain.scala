@@ -272,13 +272,13 @@ case class Domain(
     val cotonoma = Cotonoma(jsonPair._1)
     val coto = Coto(jsonPair._2)
     this
-      .postCotonoma(cotonoma)
+      .postCotonoma(cotonoma, coto)
       .postCoto(coto)
       .cotonomaUpdated(coto.postedInId)
   }
 
-  private def postCotonoma(cotonoma: Cotonoma): Domain =
-    this.modify(_.cotonomas).using(_.post(cotonoma))
+  private def postCotonoma(cotonoma: Cotonoma, cotonomaCoto: Coto): Domain =
+    this.modify(_.cotonomas).using(_.post(cotonoma, cotonomaCoto))
 
   private def cotonomaUpdated(
       id: Option[Id[Cotonoma]]
