@@ -82,7 +82,7 @@ pub enum NotConnected {
     Disconnected(Option<String>),
 }
 
-#[derive(Debug, Clone, serde::Deserialize, Validate)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct UpdateServerNode {
     pub disabled: Option<bool>,
     pub url_prefix: Option<String>,

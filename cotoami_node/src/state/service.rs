@@ -47,6 +47,9 @@ impl NodeState {
             Command::AddServerNode(input) => {
                 format.to_bytes(self.add_server_node(input, opr?).await)
             }
+            Command::UpdateServerNode { id, values } => {
+                format.to_bytes(self.update_server_node(id, values, opr?).await)
+            }
             Command::RecentCotonomas { node, pagination } => {
                 format.to_bytes(self.recent_cotonomas(node, pagination).await)
             }

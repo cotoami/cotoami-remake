@@ -147,6 +147,12 @@ pub enum Command {
     /// Request to add a new [Server].
     AddServerNode(ConnectServerNode),
 
+    /// Request to update a server node.
+    UpdateServerNode {
+        id: Id<Node>,
+        values: UpdateServerNode,
+    },
+
     /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
     RecentCotonomas {
         node: Option<Id<Node>>,

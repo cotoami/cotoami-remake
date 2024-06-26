@@ -139,10 +139,10 @@ impl NodeState {
     pub async fn update_server_node(
         &self,
         node_id: Id<Node>,
-        input: UpdateServerNode,
+        values: UpdateServerNode,
         operator: Arc<Operator>,
     ) -> Result<(), ServiceError> {
-        if let Err(errors) = input.validate() {
+        if let Err(errors) = values.validate() {
             return ("update_server_node", errors).into_result();
         }
         if !self.server_conns().contains(&node_id) {
@@ -150,7 +150,8 @@ impl NodeState {
                 "Server node [{node_id}] not found."
             ))));
         }
-        if let Some(disabled) = input.disabled {
+        // TODO: update url_prefix
+        if let Some(disabled) = values.disabled {
             self.set_server_disabled(node_id, disabled, operator)
                 .await?;
         }

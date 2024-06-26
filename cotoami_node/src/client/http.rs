@@ -104,6 +104,9 @@ impl HttpClient {
                 self.get("/api/nodes/servers/try").query(&input)
             }
             Command::AddServerNode(input) => self.post("/api/nodes/servers").form(&input),
+            Command::UpdateServerNode { id, values } => {
+                self.put(&format!("/api/nodes/servers/{id}")).form(&values)
+            }
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
                     self.get(&format!("/api/nodes/{node_id}/cotonomas"))
