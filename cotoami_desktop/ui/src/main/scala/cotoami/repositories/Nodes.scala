@@ -64,6 +64,8 @@ case class Nodes(
   def setServerState(id: Id[Node], notConnected: Option[NotConnected]): Nodes =
     this.modify(_.serverMap.index(id).notConnected).setTo(notConnected)
 
+  def containsServer(id: Id[Node]): Boolean = this.serverMap.contains(id)
+
   def isEditable(id: Id[Node]): Boolean = {
     if (Some(id) == localId) return true
 

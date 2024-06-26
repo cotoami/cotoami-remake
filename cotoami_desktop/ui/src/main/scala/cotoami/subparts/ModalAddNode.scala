@@ -79,15 +79,26 @@ object ModalAddNode {
 
       case NodeConnected(Right(json)) => {
         val session = ClientNodeSession(json)
-        (
-          model.copy(
-            connecting = false,
-            connectingError = None,
-            nodeSession = Some(session)
-          ),
-          nodes.add(session.server),
-          Seq.empty
-        )
+        if (nodes.containsServer(session.server.id))
+          (
+            model.copy(
+              connecting = false,
+              connectingError =
+                Some("This node has already been registered as a server.")
+            ),
+            nodes,
+            Seq.empty
+          )
+        else
+          (
+            model.copy(
+              connecting = false,
+              connectingError = None,
+              nodeSession = Some(session)
+            ),
+            nodes.add(session.server),
+            Seq.empty
+          )
       }
 
       case NodeConnected(Left(e)) =>
