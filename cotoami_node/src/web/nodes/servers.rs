@@ -8,14 +8,10 @@ use axum::{
     Extension, Form, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
-use tokio::task::spawn_blocking;
-use tracing::debug;
-use validator::Validate;
 
 use crate::{
     service::{
-        error::IntoServiceResult,
-        models::{ClientNodeSession, ConnectServerNode, Server},
+        models::{ClientNodeSession, ConnectServerNode, Server, UpdateServerNode},
         ServiceError,
     },
     state::NodeState,
@@ -79,60 +75,14 @@ async fn add_server_node(
 // PUT /api/nodes/servers/:node_id
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(serde::Deserialize, Validate)]
-struct UpdateServerNode {
-    disabled: Option<bool>,
-    // TODO: url_prefix
-}
-
-#[axum_macros::debug_handler]
 async fn update_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
     Form(form): Form<UpdateServerNode>,
 ) -> Result<StatusCode, ServiceError> {
-    if let Err(errors) = form.validate() {
-        return ("nodes/server", errors).into_result();
-    }
-    if !state.server_conns().contains(&node_id) {
-        return Err(ServiceError::NotFound(Some(format!(
-            "Server node [{node_id}] not found."
-        ))));
-    }
-    if let Some(disabled) = form.disabled {
-        set_server_disabled(node_id, disabled, &state, operator).await?;
-    }
-    Ok(StatusCode::OK)
-}
-
-async fn set_server_disabled(
-    server_id: Id<Node>,
-    disabled: bool,
-    state: &NodeState,
-    operator: Operator,
-) -> Result<()> {
-    // Set `disabled` to true/false
-    spawn_blocking({
-        let db = state.db().clone();
-        move || {
-            let ds = db.new_session()?;
-            ds.set_network_disabled(&server_id, disabled, &operator)?;
-            Ok::<_, anyhow::Error>(())
-        }
-    })
-    .await??;
-
-    // Disconnect from the server
-    if disabled {
-        debug!("Disabling the connection to: {}", server_id);
-        state.server_conns().try_get(&server_id)?.disable();
-
-    // Or reconnect to the server
-    } else {
-        debug!("Enabling the connection to {}", server_id);
-        state.server_conns().try_get(&server_id)?.connect().await;
-    }
-
-    Ok(())
+    state
+        .update_server_node(node_id, form, Arc::new(operator))
+        .await
+        .map(|_| StatusCode::OK)
 }

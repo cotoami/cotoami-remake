@@ -3,14 +3,16 @@ use std::sync::Arc;
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use tracing::info;
+use tracing::{debug, info};
 use validator::Validate;
 
 use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{ClientNodeSession, ConnectServerNode, CreateClientNodeSession, Server},
+        models::{
+            ClientNodeSession, ConnectServerNode, CreateClientNodeSession, Server, UpdateServerNode,
+        },
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
@@ -132,5 +134,56 @@ impl NodeState {
         // Return a Server as a response
         let server = Server::new(server, server_conn.not_connected(), Some(server_db_role));
         Ok(server)
+    }
+
+    pub async fn update_server_node(
+        &self,
+        node_id: Id<Node>,
+        input: UpdateServerNode,
+        operator: Arc<Operator>,
+    ) -> Result<(), ServiceError> {
+        if let Err(errors) = input.validate() {
+            return ("update_server_node", errors).into_result();
+        }
+        if !self.server_conns().contains(&node_id) {
+            return Err(ServiceError::NotFound(Some(format!(
+                "Server node [{node_id}] not found."
+            ))));
+        }
+        if let Some(disabled) = input.disabled {
+            self.set_server_disabled(node_id, disabled, operator)
+                .await?;
+        }
+        Ok(())
+    }
+
+    async fn set_server_disabled(
+        &self,
+        server_id: Id<Node>,
+        disabled: bool,
+        operator: Arc<Operator>,
+    ) -> Result<()> {
+        // Set `disabled` to true/false
+        spawn_blocking({
+            let db = self.db().clone();
+            move || {
+                db.new_session()?
+                    .set_network_disabled(&server_id, disabled, &operator)
+            }
+        })
+        .await??;
+
+        // Disconnect from the server
+        if disabled {
+            debug!("Disabling the connection to: {}", server_id);
+            self.server_conns().try_get(&server_id)?.disable();
+
+        // Or reconnect to the server
+        } else {
+            debug!("Enabling the connection to {}", server_id);
+            self.server_conns().try_get(&server_id)?.connect().await;
+        }
+
+        Ok(())
     }
 }
