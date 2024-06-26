@@ -169,20 +169,24 @@ case class Domain(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
   ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
-    val nodeChanged = nodeId != this.nodes.selectedId
+    val shouldFetchCotonomas =
+      // the selected node is changed
+      nodeId != this.nodes.selectedId ||
+        // or no recent cotonomas has been loaded yet (which means the page being reloaded)
+        this.cotonomas.recentIds.isEmpty
     val (cotonomas, cmds) = this.cotonomas.selectAndFetch(cotonomaId)
     this
       .modify(_.nodes).using(_.select(nodeId))
       .modify(_.cotonomas).setTo(cotonomas)
       .modify(_.cotos).setTo(Cotos())
       .modify(_.links).setTo(Links())
-      .modify(_.cotonomas.recentLoading).setTo(nodeChanged)
+      .modify(_.cotonomas.recentLoading).setTo(shouldFetchCotonomas)
       .modify(_.cotos.timelineLoading).setTo(true) match {
       case domain =>
         (
           domain,
           cmds ++ Seq(
-            if (nodeChanged)
+            if (shouldFetchCotonomas)
               Cotonomas.fetchRecent(nodeId, 0)
             else
               Cmd.none,

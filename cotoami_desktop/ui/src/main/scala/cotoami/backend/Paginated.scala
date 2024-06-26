@@ -35,6 +35,8 @@ case class PaginatedIds[T <: Entity[T]](
     pageIndex: Option[Double] = None,
     total: Double = 0
 ) {
+  def isEmpty: Boolean = this.ids.isEmpty
+
   def appendPage(page: Paginated[T, _]): PaginatedIds[T] = {
     // Reset values when adding the first page (index == 0).
     val self =
