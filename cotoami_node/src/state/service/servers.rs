@@ -19,10 +19,7 @@ use crate::{
 };
 
 impl NodeState {
-    pub async fn all_server_nodes(
-        &self,
-        operator: Arc<Operator>,
-    ) -> Result<Vec<Server>, ServiceError> {
+    pub async fn all_servers(&self, operator: Arc<Operator>) -> Result<Vec<Server>, ServiceError> {
         let this = self.clone();
         self.get(move |ds| {
             let server_nodes = ds.all_server_nodes(&operator)?;

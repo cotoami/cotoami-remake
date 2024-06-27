@@ -20,7 +20,7 @@ use crate::{
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
-        .route("/", get(all_server_nodes).post(add_server_node))
+        .route("/", get(all_servers).post(add_server_node))
         .route("/try", get(connect_server_node))
         .route("/:node_id", put(update_server_node))
 }
@@ -29,13 +29,13 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/nodes/servers
 /////////////////////////////////////////////////////////////////////////////
 
-async fn all_server_nodes(
+async fn all_servers(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
 ) -> Result<Content<Vec<Server>>, ServiceError> {
     state
-        .all_server_nodes(Arc::new(operator))
+        .all_servers(Arc::new(operator))
         .await
         .map(|servers| Content(servers, accept))
 }
