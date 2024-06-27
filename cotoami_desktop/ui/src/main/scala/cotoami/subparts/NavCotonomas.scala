@@ -145,28 +145,38 @@ object NavCotonomas {
       div(className := "tools")(
         status.map(status => {
           val syncDisabled = status == ParentStatus.Disabled
-          span(
-            className := "sync-switch",
-            data - "tooltip" := (
-              if (syncDisabled) "Sync OFF" else "Sync ON"
-            ),
-            data - "placement" := "bottom"
-          )(
-            input(
-              `type` := "checkbox",
-              role := "switch",
-              checked := !syncDisabled,
-              disabled := model.togglingSync,
-              onClick := (_ =>
-                dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).toApp)
+          Fragment(
+            span(
+              className := "sync-switch",
+              data - "tooltip" := (
+                if (syncDisabled) "Sync OFF" else "Sync ON"
+              ),
+              data - "placement" := "bottom"
+            )(
+              input(
+                `type` := "checkbox",
+                role := "switch",
+                checked := !syncDisabled,
+                disabled := model.togglingSync,
+                onClick := (_ =>
+                  dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).toApp)
+                )
               )
-            )
+            ),
+            span(className := "separator")()
           )
+
         }),
         ToolButton(
           classes = "settings",
           tip = "Node settings",
           symbol = "settings",
+          onClick = (() => ())
+        ),
+        ToolButton(
+          classes = "operate",
+          tip = "Operate",
+          symbol = "switch_account",
           onClick = (() => ())
         )
       )
