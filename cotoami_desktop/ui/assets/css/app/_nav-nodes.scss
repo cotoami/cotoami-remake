@@ -97,8 +97,10 @@ nav.nodes {
       }
     }
 
-    span.status.error span.material-symbols {
-      color: var(--form-element-invalid-border-color);
+    span.status.init-failed {
+      span.material-symbols {
+        color: var(--form-element-invalid-border-color);
+      }
     }
   }
 

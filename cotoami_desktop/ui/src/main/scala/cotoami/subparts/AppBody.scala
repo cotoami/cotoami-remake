@@ -42,7 +42,7 @@ object AppBody {
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
         model.domain.nodes.current.map(
-          NavCotonomas(model, _, dispatch)
+          NavCotonomas(model.navCotonomas, _, model.domain, dispatch)
         )
       ),
       SplitPane.Secondary(className = None, onClick = None)(

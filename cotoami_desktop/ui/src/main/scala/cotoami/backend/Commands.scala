@@ -43,6 +43,23 @@ object Commands {
       )
     )
 
+  def UpdateServerNode(
+      id: Id[Node],
+      disabled: Option[Boolean],
+      url_prefix: Option[String]
+  ) =
+    jso(UpdateServerNode =
+      jso(
+        id = id.uuid,
+        values = jso(
+          // For some reason, `disabled.getOrElse(null)` causes a compile error
+          // without explicit type conversion (`asInstanceOf`).
+          disabled = disabled.getOrElse(null).asInstanceOf[js.Any],
+          url_prefix = url_prefix.getOrElse(null)
+        )
+      )
+    )
+
   def RecentCotonomas(nodeId: Option[Id[Node]], pageIndex: Double) =
     jso(RecentCotonomas =
       jso(

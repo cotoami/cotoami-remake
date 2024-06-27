@@ -75,6 +75,24 @@ case class Nodes(
       false
     }
   }
+
+  def parentStatus(id: Id[Node]): Option[ParentStatus] =
+    this.getServer(id).map(_.notConnected.map {
+      case NotConnected.Disabled            => ParentStatus.Disabled
+      case NotConnected.Connecting(details) => ParentStatus.Connecting(details)
+      case NotConnected.InitFailed(details) => ParentStatus.InitFailed(details)
+      case NotConnected.Disconnected(details) =>
+        ParentStatus.Disconnected(details)
+    }.getOrElse(ParentStatus.Connected))
+}
+
+sealed trait ParentStatus
+object ParentStatus {
+  case object Connected extends ParentStatus
+  case object Disabled extends ParentStatus
+  case class Connecting(message: Option[String]) extends ParentStatus
+  case class InitFailed(message: String) extends ParentStatus
+  case class Disconnected(message: Option[String]) extends ParentStatus
 }
 
 object Nodes {

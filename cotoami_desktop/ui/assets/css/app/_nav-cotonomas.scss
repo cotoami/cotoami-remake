@@ -47,8 +47,10 @@ nav.cotonomas {
           }
         }
 
-        &.error summary {
-          color: var(--form-element-invalid-border-color);
+        &.init-failed {
+          summary {
+            color: var(--form-element-invalid-border-color);
+          }
         }
 
         p.message {
@@ -68,6 +70,15 @@ nav.cotonomas {
             font-size: 20px;
             vertical-align: middle;
           }
+        }
+
+        span.sync-switch {
+          display: inline-block;
+
+          // customize pico style for tooltip
+          border-bottom-style: none;
+          padding-bottom: 3px;
+          cursor: pointer;
         }
 
         span.separator {

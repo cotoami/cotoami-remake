@@ -64,8 +64,7 @@ impl WebSocketClient {
                 while let Some(err) = receiver.recv().await {
                     info!("on_disconnect: {err:?}");
                     this.state
-                        .set_conn_state(ConnectionState::Disconnected(err));
-                    this.state.publish_server_disconnected();
+                        .change_conn_state(ConnectionState::Disconnected(err));
                     // TODO: reconnect
                 }
             }
@@ -79,7 +78,7 @@ impl WebSocketClient {
     {
         let (ws_stream, _) = connect_async(self.ws_request.clone()).await?;
         info!("WebSocket connection opened: {}", self.ws_request.uri());
-        self.state.set_conn_state(ConnectionState::Connected);
+        self.state.change_conn_state(ConnectionState::Connected);
 
         let (sink, stream) = ws_stream.split();
         if let Some(opr) = self.state.server_as_operator.as_ref() {

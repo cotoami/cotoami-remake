@@ -88,11 +88,11 @@ pub(crate) fn set_network_disabled(
         }
         match network_role_of(node_id).run(ctx)? {
             Some(NetworkRole::Server(_)) => {
-                let server = server_ops::set_disabled(node_id, true).run(ctx)?;
+                let server = server_ops::set_disabled(node_id, disabled).run(ctx)?;
                 Ok(NetworkRole::Server(server))
             }
             Some(NetworkRole::Client(_)) => {
-                let client = client_ops::set_disabled(node_id, true).run(ctx)?;
+                let client = client_ops::set_disabled(node_id, disabled).run(ctx)?;
                 Ok(NetworkRole::Client(client))
             }
             None => bail!(DatabaseError::not_found(

@@ -38,6 +38,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
+    navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     flowInput: FormCoto.Model,
     traversals: SectionTraversals.Model = SectionTraversals.Model()
 ) {

@@ -91,7 +91,7 @@ impl SseClient {
             match item {
                 Ok(ESItem::Open) => {
                     info!("Event source opened: {}", self.url_prefix());
-                    self.state.set_conn_state(ConnectionState::Connected);
+                    self.state.change_conn_state(ConnectionState::Connected);
                     if self.state.is_server_parent() {
                         let parent_service = Box::new(self.http_client.clone());
                         self.node_state()
@@ -107,7 +107,7 @@ impl SseClient {
                         );
                         event_source.close();
                         self.state
-                            .set_conn_state(ConnectionState::event_handling_failed(e));
+                            .change_conn_state(ConnectionState::event_handling_failed(e));
                         break;
                     }
                 }
@@ -119,7 +119,7 @@ impl SseClient {
                             &e
                         );
                         self.state
-                            .set_conn_state(ConnectionState::communication_failed(e.into()));
+                            .change_conn_state(ConnectionState::communication_failed(e.into()));
                         break;
                     } else {
                         debug!(
@@ -128,12 +128,13 @@ impl SseClient {
                             &e
                         );
                         self.state
-                            .set_conn_state(ConnectionState::Connecting(Some(e.into())));
+                            .change_conn_state(ConnectionState::Connecting(Some(e.into())));
                     }
                 }
             }
         }
-        self.state.publish_server_disconnected();
+        self.state
+            .change_conn_state(ConnectionState::Disconnected(None));
     }
 
     async fn stream_changes_to_server(self) {

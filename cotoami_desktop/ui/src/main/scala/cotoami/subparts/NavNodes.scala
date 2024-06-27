@@ -80,9 +80,9 @@ object NavNodes {
       nodes: Nodes,
       dispatch: Msg => Unit
   ): ReactElement = {
-    val status = parentStatus(node, nodes)
+    val status = nodes.parentStatus(node.id).flatMap(parentStatusParts(_))
     val tooltip =
-      status.map(s => s"${node.name} (${s.name})").getOrElse(node.name)
+      status.map(s => s"${node.name} (${s.slug})").getOrElse(node.name)
     button(
       className := optionalClasses(
         Seq(
@@ -99,7 +99,7 @@ object NavNodes {
       onClick := ((e) => dispatch(SelectNode(node.id)))
     )(
       nodeImg(node),
-      status.map(s => span(className := s"status ${s.name}")(s.icon))
+      status.map(s => span(className := s"status ${s.slug}")(s.icon))
     )
   }
 }

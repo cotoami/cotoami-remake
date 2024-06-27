@@ -1,5 +1,6 @@
 //! Network client implementations.
 
+use core::mem::discriminant;
 use std::{ops::DerefMut, sync::Arc};
 
 use anyhow::Result;
@@ -46,8 +47,17 @@ impl ClientState {
 
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
 
-    fn set_conn_state(&self, state: ConnectionState) {
-        let _ = std::mem::replace(self.conn_state.write().deref_mut(), state);
+    fn change_conn_state(&self, state: ConnectionState) {
+        if state.changed_from(&self.conn_state.read()) {
+            let _ = std::mem::replace(self.conn_state.write().deref_mut(), state);
+            if let Some(not_connected) = self.not_connected() {
+                self.node_state.pubsub().events().server_state_changed(
+                    self.server_id,
+                    Some(not_connected),
+                    self.is_server_parent(),
+                );
+            }
+        }
     }
 
     fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
@@ -57,18 +67,7 @@ impl ClientState {
     fn disconnect(&self) {
         info!("Disconnecting from: {}", self.server_id);
         self.abortables.abort_all();
-        self.set_conn_state(ConnectionState::Disconnected(None));
-        self.publish_server_disconnected();
-    }
-
-    fn publish_server_disconnected(&self) {
-        if let Some(not_connected) = self.not_connected() {
-            self.node_state.pubsub().events().server_state_changed(
-                self.server_id,
-                Some(not_connected),
-                self.is_server_parent(),
-            );
-        }
+        self.change_conn_state(ConnectionState::Disconnected(None));
     }
 }
 
@@ -101,5 +100,9 @@ impl ConnectionState {
                 err.as_ref().map(ToString::to_string),
             )),
         }
+    }
+
+    pub fn changed_from(&self, another: &ConnectionState) -> bool {
+        discriminant(self) != discriminant(another)
     }
 }

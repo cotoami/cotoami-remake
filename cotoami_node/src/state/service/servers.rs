@@ -165,7 +165,7 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<()> {
         // Set `disabled` to true/false
-        spawn_blocking({
+        let network_role = spawn_blocking({
             let db = self.db().clone();
             move || {
                 db.new_session()?
@@ -173,16 +173,19 @@ impl NodeState {
             }
         })
         .await??;
+        let NetworkRole::Server(server) = network_role else { unreachable!() };
 
         // Disconnect from the server
         if disabled {
-            debug!("Disabling the connection to: {}", server_id);
+            debug!("Disabling the connection to: {server_id}");
             self.server_conns().try_get(&server_id)?.disable();
 
         // Or reconnect to the server
         } else {
-            debug!("Enabling the connection to {}", server_id);
-            self.server_conns().try_get(&server_id)?.connect().await;
+            debug!("Enabling the connection to {server_id}");
+            let conn = ServerConnection::new(server, self.clone());
+            conn.connect().await;
+            self.server_conns().put(server_id, conn);
         }
 
         Ok(())

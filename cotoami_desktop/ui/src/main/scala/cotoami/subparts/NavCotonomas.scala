@@ -1,28 +1,74 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{DeselectCotonoma, Model, Msg, SelectCotonoma}
+import fui.Cmd
+import cotoami.{log_debug, log_error, DeselectCotonoma, SelectCotonoma}
+import cotoami.backend.{Commands, Cotonoma, ErrorJson, Id, Node}
+import cotoami.repositories.{Cotonomas, Domain, ParentStatus}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
   ScrollArea,
   ToolButton
 }
-import cotoami.backend.{Cotonoma, Node}
-import cotoami.repositories.{Cotonomas, Domain}
 
 object NavCotonomas {
   final val PaneName = "NavCotonomas"
   final val DefaultWidth = 230
 
+  case class Model(togglingSync: Boolean = false)
+
+  sealed trait Msg {
+    def toApp: cotoami.Msg = cotoami.NavCotonomasMsg(this)
+  }
+  object Msg {
+    case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
+    case class SyncToggled(result: Either[ErrorJson, Null]) extends Msg
+
+    def toApp[T](tagger: T => Msg): (T => cotoami.Msg) =
+      tagger andThen cotoami.NavCotonomasMsg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+    msg match {
+      case Msg.SetSyncDisabled(id, disable) =>
+        (model.copy(togglingSync = true), Seq(setSyncDisabled(id, disable)))
+
+      case Msg.SyncToggled(result) =>
+        (
+          model.copy(togglingSync = false),
+          Seq(
+            result match {
+              case Right(_) =>
+                log_debug("Parent sync disabled.", None)
+              case Left(e) =>
+                log_error(
+                  "Failed to disable parent sync.",
+                  Some(js.JSON.stringify(e))
+                )
+            }
+          )
+        )
+    }
+
+  private def setSyncDisabled(
+      id: Id[Node],
+      disable: Boolean
+  ): Cmd[cotoami.Msg] =
+    Commands
+      .send(Commands.UpdateServerNode(id, Some(disable), None))
+      .map(Msg.toApp(Msg.SyncToggled(_)))
+
   def apply(
       model: Model,
       currentNode: Node,
-      dispatch: Msg => Unit
+      domain: Domain,
+      dispatch: cotoami.Msg => Unit
   ): ReactElement = {
-    val cotonomas = model.domain.cotonomas
+    val cotonomas = domain.cotonomas
     nav(className := "cotonomas header-and-body")(
       header()(
         if (cotonomas.selected.isEmpty) {
@@ -43,8 +89,8 @@ object NavCotonomas {
             currentNode.name
           )
         },
-        model.domain.nodes.selected.map(
-          sectionNodeTools(_, model.domain, dispatch)
+        domain.nodes.selected.map(
+          sectionNodeTools(model, _, domain, dispatch)
         )
       ),
       section(className := "cotonomas body")(
@@ -55,10 +101,10 @@ object NavCotonomas {
           onScrollToBottom = () => dispatch(Cotonomas.FetchMoreRecent.asAppMsg)
         )(
           cotonomas.selected.map(
-            sectionCurrent(_, model.domain, dispatch)
+            sectionCurrent(_, domain, dispatch)
           ),
-          Option.when(!model.domain.recentCotonomas.isEmpty)(
-            sectionRecent(model.domain.recentCotonomas, model.domain, dispatch)
+          Option.when(!domain.recentCotonomas.isEmpty)(
+            sectionRecent(domain.recentCotonomas, domain, dispatch)
           ),
           div(
             className := "more",
@@ -70,47 +116,53 @@ object NavCotonomas {
   }
 
   private def sectionNodeTools(
+      model: Model,
       node: Node,
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: cotoami.Msg => Unit
   ): ReactElement = {
-    val status = parentStatus(node, domain.nodes)
+    val status = domain.nodes.parentStatus(node.id)
+    val statusParts = status.flatMap(parentStatusParts(_))
+
     section(className := "node-tools")(
-      status.map(status =>
+      statusParts.map(parts =>
         details(
           className := optionalClasses(
             Seq(
               ("node-status", true),
-              (status.name, true),
-              ("no-message", status.message.isEmpty)
+              (parts.slug, true),
+              ("no-message", parts.message.isEmpty)
             )
           )
         )(
           summary()(
-            status.icon,
-            span(className := "name")(status.name)
+            parts.icon,
+            span(className := "name")(parts.slug)
           ),
-          status.message.map(p(className := "message")(_))
+          parts.message.map(p(className := "message")(_))
         )
       ),
       div(className := "tools")(
-        Option.when(domain.nodes.containsServer(node.id)) {
-          Fragment(
+        status.map(status => {
+          val syncDisabled = status == ParentStatus.Disabled
+          span(
+            className := "sync-switch",
+            data - "tooltip" := (
+              if (syncDisabled) "Sync OFF" else "Sync ON"
+            ),
+            data - "placement" := "bottom"
+          )(
             input(
-              className := "connection",
               `type` := "checkbox",
               role := "switch",
-              checked := status.isEmpty
-            ),
-            ToolButton(
-              classes = "disable",
-              tip = "Disable sync",
-              symbol = "sync_disabled",
-              onClick = (() => ())
-            ),
-            span(className := "separator")()
+              checked := !syncDisabled,
+              disabled := model.togglingSync,
+              onClick := (_ =>
+                dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).toApp)
+              )
+            )
           )
-        },
+        }),
         ToolButton(
           classes = "settings",
           tip = "Node settings",
@@ -124,7 +176,7 @@ object NavCotonomas {
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: cotoami.Msg => Unit
   ): ReactElement =
     section(className := "current")(
       h2()("Current"),
@@ -179,7 +231,7 @@ object NavCotonomas {
   private def sectionRecent(
       cotonomas: Seq[Cotonoma],
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: cotoami.Msg => Unit
   ): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
@@ -189,7 +241,7 @@ object NavCotonomas {
   private def liCotonoma(
       cotonoma: Cotonoma,
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: cotoami.Msg => Unit
   ): ReactElement =
     li(
       className := optionalClasses(

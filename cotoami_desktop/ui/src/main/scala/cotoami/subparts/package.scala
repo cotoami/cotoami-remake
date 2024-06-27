@@ -4,8 +4,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
-import cotoami.backend.{Node, NotConnected}
-import cotoami.repositories.Nodes
+import cotoami.backend.Node
+import cotoami.repositories.ParentStatus
 import cotoami.components.materialSymbol
 
 package object subparts {
@@ -58,32 +58,51 @@ package object subparts {
   def detectCtrlEnter[T](e: SyntheticKeyboardEvent[T]): Boolean =
     e.key == EnterKey && (e.ctrlKey || e.metaKey)
 
-  case class ParentStatus(
-      name: String,
+  case class ParentStatusParts(
+      status: ParentStatus,
+      slug: String,
       icon: ReactElement,
-      message: Option[String] = None
+      message: Option[String]
   )
 
-  def parentStatus(
-      node: Node,
-      nodes: Nodes
-  ): Option[ParentStatus] =
-    nodes.getServer(node.id).flatMap(_.notConnected.map {
-      case NotConnected.Disabled =>
-        ParentStatus("disabled", materialSymbol("sync_disabled"))
-      case NotConnected.Connecting(details) =>
-        ParentStatus(
-          "connecting",
-          span(className := "busy", aria - "busy" := "true")(),
-          details
+  def parentStatusParts(status: ParentStatus): Option[ParentStatusParts] =
+    status match {
+      case ParentStatus.Disabled =>
+        Some(
+          ParentStatusParts(
+            status,
+            "disabled",
+            materialSymbol("sync_disabled"),
+            None
+          )
         )
-      case NotConnected.InitFailed(details) =>
-        ParentStatus("error", materialSymbol("error"), Some(details))
-      case NotConnected.Disconnected(details) =>
-        ParentStatus(
-          "disconnected",
-          materialSymbol("do_not_disturb_on"),
-          details
+      case ParentStatus.Connecting(message) =>
+        Some(
+          ParentStatusParts(
+            status,
+            "connecting",
+            span(className := "busy", aria - "busy" := "true")(),
+            message
+          )
         )
-    })
+      case ParentStatus.InitFailed(message) =>
+        Some(
+          ParentStatusParts(
+            status,
+            "init-failed",
+            materialSymbol("error"),
+            Some(message)
+          )
+        )
+      case ParentStatus.Disconnected(message) =>
+        Some(
+          ParentStatusParts(
+            status,
+            "disconnected",
+            materialSymbol("do_not_disturb_on"),
+            message
+          )
+        )
+      case _ => None
+    }
 }
