@@ -178,20 +178,24 @@ section.pinned-cotos {
       margin-bottom: 3rem;
     }
 
-    article.coto {
+    // Heading font size
+    article.coto.has-children {
+
+      section.text-content p:first-child,
+      span.summary {
+        font-size: 1.1rem;
+      }
+    }
+
+    // Disable card-background-color in document-view
+    article.coto,
+    ol.pinned-cotos ol.sub-cotos>div.links,
+    ul.parents {
       background-color: var(--background-color);
+    }
 
-      &:hover {
-        background-color: var(--hover-background-color);
-      }
-
-      &.has-children {
-
-        section.text-content p:first-child,
-        span.summary {
-          font-size: 1.1rem;
-        }
-      }
+    article.coto:hover {
+      background-color: var(--hover-background-color);
     }
   }
 
