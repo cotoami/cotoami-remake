@@ -72,7 +72,7 @@ package object subparts {
           ParentStatusParts(
             status,
             "disabled",
-            materialSymbol("sync_disabled"),
+            materialSymbol("link_off"),
             None
           )
         )
