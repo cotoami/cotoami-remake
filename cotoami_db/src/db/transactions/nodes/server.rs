@@ -18,6 +18,16 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(server_ops::get(id))
     }
 
+    pub fn try_get_server_node(
+        &mut self,
+        id: &Id<Node>,
+        operator: &Operator,
+    ) -> Result<ServerNode> {
+        operator.requires_to_be_owner()?;
+        self.read_transaction(server_ops::try_get(id))?
+            .map_err(anyhow::Error::from)
+    }
+
     pub fn all_server_nodes(&mut self, operator: &Operator) -> Result<Vec<(ServerNode, Node)>> {
         operator.requires_to_be_owner()?;
         self.read_transaction(server_ops::all_pairs())

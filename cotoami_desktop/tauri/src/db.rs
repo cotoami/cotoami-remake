@@ -39,7 +39,7 @@ impl DatabaseInfo {
             nodes: node_state.all_nodes().await?,
             local_node_id: node_state.db().globals().try_get_local_node_id()?,
             parent_node_ids: node_state.db().globals().parent_node_ids(),
-            servers: node_state.all_server_nodes(opr).await?,
+            servers: node_state.all_servers(opr).await?,
         })
     }
 

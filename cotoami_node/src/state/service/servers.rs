@@ -19,6 +19,15 @@ use crate::{
 };
 
 impl NodeState {
+    pub async fn server_node(
+        &self,
+        id: Id<Node>,
+        operator: Arc<Operator>,
+    ) -> Result<ServerNode, ServiceError> {
+        self.get(move |ds| ds.try_get_server_node(&id, &operator))
+            .await
+    }
+
     pub async fn all_servers(&self, operator: Arc<Operator>) -> Result<Vec<Server>, ServiceError> {
         let this = self.clone();
         self.get(move |ds| {
@@ -147,43 +156,33 @@ impl NodeState {
                 "Server node [{node_id}] not found."
             ))));
         }
-        // TODO: update url_prefix
+
+        // TODO: Set url_prefix
+
+        // Set disabled
         if let Some(disabled) = values.disabled {
-            self.set_server_disabled(node_id, disabled, operator)
-                .await?;
-        }
-        Ok(())
-    }
+            debug!("Updating a server node [{node_id}] to be disabled = {disabled}");
+            spawn_blocking({
+                let db = self.db().clone();
+                let operator = operator.clone();
+                move || {
+                    db.new_session()?
+                        .set_network_disabled(&node_id, disabled, &operator)
+                }
+            })
+            .await??;
 
-    async fn set_server_disabled(
-        &self,
-        server_id: Id<Node>,
-        disabled: bool,
-        operator: Arc<Operator>,
-    ) -> Result<()> {
-        // Set `disabled` to true/false
-        let network_role = spawn_blocking({
-            let db = self.db().clone();
-            move || {
-                db.new_session()?
-                    .set_network_disabled(&server_id, disabled, &operator)
+            if disabled {
+                // Just to publish a connection state change.
+                self.server_conns().try_get(&node_id)?.disable();
             }
-        })
-        .await??;
-        let NetworkRole::Server(server) = network_role else { unreachable!() };
-
-        // Disconnect from the server
-        if disabled {
-            debug!("Disabling the connection to: {server_id}");
-            self.server_conns().try_get(&server_id)?.disable();
-
-        // Or reconnect to the server
-        } else {
-            debug!("Enabling the connection to {server_id}");
-            let conn = ServerConnection::new(server, self.clone());
-            conn.connect().await;
-            self.server_conns().put(server_id, conn);
         }
+
+        // Update the connection
+        let server = self.server_node(node_id, operator).await?;
+        let conn = ServerConnection::new(server, self.clone());
+        conn.connect().await;
+        self.server_conns().put(node_id, conn);
 
         Ok(())
     }
