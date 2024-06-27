@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
 use tokio::task::AbortHandle;
@@ -84,7 +84,7 @@ impl ServerConnection {
             .server
             .password(self.node_state.config().try_get_owner_password()?)?
             .ok_or(anyhow!("Server password is missing."))?;
-        let _ = http_client
+        let session = http_client
             .create_client_node_session(CreateClientNodeSession {
                 password,
                 new_password: None,
@@ -93,6 +93,10 @@ impl ServerConnection {
             })
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
+
+        if session.server.uuid != self.server.node_id {
+            bail!("The remote server ID does not match the stored value.");
+        }
 
         self.start_event_loop(http_client).await
     }
