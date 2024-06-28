@@ -4,6 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
+import cotoami.{Msg => AppMsg}
 import cotoami.backend.Node
 import cotoami.repositories.ParentStatus
 import cotoami.components.materialSymbol
@@ -30,7 +31,7 @@ package object subparts {
       button(
         className := "fold default",
         title := "Fold",
-        onClick := (_ => dispatch(OpenOrClosePane(paneName, false)))
+        onClick := (_ => dispatch(AppMsg.OpenOrClosePane(paneName, false)))
       )(
         span(className := "material-symbols")(
           direction match {
@@ -42,7 +43,7 @@ package object subparts {
       button(
         className := "unfold default",
         title := "Unfold",
-        onClick := (_ => dispatch(OpenOrClosePane(paneName, true)))
+        onClick := (_ => dispatch(AppMsg.OpenOrClosePane(paneName, true)))
       )(
         span(className := "material-symbols")(
           direction match {

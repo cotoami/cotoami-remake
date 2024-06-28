@@ -6,7 +6,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{Model, SectionTimelineMsg}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
 import cotoami.models.{Context, WaitingPost, WaitingPosts}
@@ -14,26 +14,31 @@ import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
 
 object SectionTimeline {
 
-  sealed trait Msg
-  case object InitSearch extends Msg
-  case object CloseSearch extends Msg
-  case class QueryInput(query: String) extends Msg
-  case object ImeCompositionStart extends Msg
-  case object ImeCompositionEnd extends Msg
-  case object OpenCalendar extends Msg
+  sealed trait Msg {
+    def toApp: AppMsg = AppMsg.SectionTimelineMsg(this)
+  }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+  object Msg {
+    case object InitSearch extends Msg
+    case object CloseSearch extends Msg
+    case class QueryInput(query: String) extends Msg
+    case object ImeCompositionStart extends Msg
+    case object ImeCompositionEnd extends Msg
+    case object OpenCalendar extends Msg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
-      case InitSearch =>
+      case Msg.InitSearch =>
         (model.modify(_.domain.cotos.query).setTo(Some("")), Seq.empty)
 
-      case CloseSearch =>
+      case Msg.CloseSearch =>
         (
           model.modify(_.domain.cotos.query).setTo(None),
           Seq(fetchDefaultTimeline(model))
         )
 
-      case QueryInput(query) =>
+      case Msg.QueryInput(query) =>
         (
           model.modify(_.domain.cotos.query).setTo(Some(query)),
           if (model.imeActive)
@@ -42,10 +47,10 @@ object SectionTimeline {
             Seq(fetchTimeline(query, model))
         )
 
-      case ImeCompositionStart =>
+      case Msg.ImeCompositionStart =>
         (model.modify(_.imeActive).setTo(true), Seq.empty)
 
-      case ImeCompositionEnd =>
+      case Msg.ImeCompositionEnd =>
         (
           model.modify(_.imeActive).setTo(false),
           model.domain.cotos.query.map(query =>
@@ -53,11 +58,11 @@ object SectionTimeline {
           ).getOrElse(Seq.empty)
         )
 
-      case OpenCalendar =>
+      case Msg.OpenCalendar =>
         (model, Seq.empty)
     }
 
-  private def fetchDefaultTimeline(model: Model): Cmd[cotoami.Msg] =
+  private def fetchDefaultTimeline(model: Model): Cmd[AppMsg] =
     Domain.fetchTimeline(
       model.domain.nodes.selectedId,
       model.domain.cotonomas.selectedId,
@@ -65,7 +70,7 @@ object SectionTimeline {
       0
     )
 
-  private def fetchTimeline(query: String, model: Model): Cmd[cotoami.Msg] =
+  private def fetchTimeline(query: String, model: Model): Cmd[AppMsg] =
     if (query.isBlank())
       fetchDefaultTimeline(model)
     else
@@ -78,7 +83,7 @@ object SectionTimeline {
 
   def apply(
       model: Model,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): Option[ReactElement] =
     Option.when(
       !model.domain.timeline.isEmpty ||
@@ -97,7 +102,7 @@ object SectionTimeline {
       cotos: Seq[Coto],
       waitingPosts: WaitingPosts,
       model: Model,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
@@ -110,7 +115,7 @@ object SectionTimeline {
           classes = "calendar",
           tip = "Calendar",
           symbol = "calendar_month",
-          onClick = (() => dispatch(SectionTimelineMsg(OpenCalendar)))
+          onClick = (() => dispatch(Msg.OpenCalendar.toApp))
         ),
         model.domain.cotos.query.map(query =>
           div(className := "search")(
@@ -119,18 +124,16 @@ object SectionTimeline {
               name := "query",
               value := query,
               onChange := ((e) =>
-                dispatch(SectionTimelineMsg(QueryInput(e.target.value)))
+                dispatch(Msg.QueryInput(e.target.value).toApp)
               ),
               onCompositionStart := (_ =>
-                dispatch(SectionTimelineMsg(ImeCompositionStart))
+                dispatch(Msg.ImeCompositionStart.toApp)
               ),
-              onCompositionEnd := (_ =>
-                dispatch(SectionTimelineMsg(ImeCompositionEnd))
-              )
+              onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd.toApp))
             ),
             button(
               className := "close default",
-              onClick := (_ => dispatch(SectionTimelineMsg(CloseSearch)))
+              onClick := (_ => dispatch(Msg.CloseSearch.toApp))
             )(materialSymbol("close"))
           )
         ).getOrElse(
@@ -138,7 +141,7 @@ object SectionTimeline {
             classes = "search",
             tip = "Search",
             symbol = "search",
-            onClick = (() => dispatch(SectionTimelineMsg(InitSearch)))
+            onClick = (() => dispatch(Msg.InitSearch.toApp))
           )
         )
       ),
@@ -147,7 +150,7 @@ object SectionTimeline {
           scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Cotos.FetchMoreTimeline.asAppMsg)
+          onScrollToBottom = () => dispatch(Cotos.Msg.FetchMoreTimeline.toApp)
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_, model.domain)) ++
             cotos.map(
@@ -177,7 +180,7 @@ object SectionTimeline {
       coto: Coto,
       domain: Domain,
       context: Context,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "post")(
       coto.repostOfId.map(_ => repostHeader(coto, domain, dispatch)),
@@ -195,7 +198,7 @@ object SectionTimeline {
       coto: Coto,
       domain: Domain,
       context: Context,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     article(className := "coto")(
       header()(
@@ -220,7 +223,7 @@ object SectionTimeline {
   private def repostHeader(
       coto: Coto,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "repost-header")(
       materialSymbol("repeat"),
@@ -235,14 +238,14 @@ object SectionTimeline {
   private def repostedIn(
       coto: Coto,
       cotonomas: Cotonomas,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): Option[ReactElement] =
     coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",
         onClick := ((e) => {
           e.preventDefault()
-          dispatch(cotoami.SelectCotonoma(cotonoma))
+          dispatch(AppMsg.SelectCotonoma(cotonoma))
         })
       )(cotonoma.name)
     )

@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import slinky.core.facade.ReactElement
 
-import cotoami.{Model, Msg, OpenOrClosePane, ResizePane}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.components.{optionalClasses, SplitPane}
 
@@ -11,7 +11,7 @@ object AppBody {
   def contents(
       model: Model,
       uiState: UiState,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): Seq[ReactElement] = Seq(
     NavNodes(model, uiState, dispatch),
     SplitPane(
@@ -24,8 +24,9 @@ object AppBody {
       className = Some("node-contents"),
       onResizeStart = None,
       onResizeEnd = None,
-      onPrimarySizeChanged =
-        Some((newSize) => dispatch(ResizePane(NavCotonomas.PaneName, newSize)))
+      onPrimarySizeChanged = Some((newSize) =>
+        dispatch(AppMsg.ResizePane(NavCotonomas.PaneName, newSize))
+      )
     )(
       SplitPane.Primary(
         className = Some(
@@ -37,7 +38,7 @@ object AppBody {
           )
         ),
         onClick = Option.when(!uiState.paneOpened(NavCotonomas.PaneName)) {
-          () => dispatch(OpenOrClosePane(NavCotonomas.PaneName, true))
+          () => dispatch(AppMsg.OpenOrClosePane(NavCotonomas.PaneName, true))
         }
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
@@ -54,7 +55,7 @@ object AppBody {
   private def flowAndStock(
       model: Model,
       uiState: UiState,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
     val stockOpened = uiState.paneOpened(PaneStock.PaneName)
@@ -69,8 +70,9 @@ object AppBody {
         className = Some("main"),
         onResizeStart = None,
         onResizeEnd = None,
-        onPrimarySizeChanged =
-          Some((newSize) => dispatch(ResizePane(PaneFlow.PaneName, newSize)))
+        onPrimarySizeChanged = Some((newSize) =>
+          dispatch(AppMsg.ResizePane(PaneFlow.PaneName, newSize))
+        )
       )(
         SplitPane.Primary(
           className = Some(
@@ -84,7 +86,7 @@ object AppBody {
             )
           ),
           onClick = Option.when(!flowOpened) { () =>
-            dispatch(OpenOrClosePane(PaneFlow.PaneName, true))
+            dispatch(AppMsg.OpenOrClosePane(PaneFlow.PaneName, true))
           }
         )(
           Option.when(stockOpened) {
@@ -104,7 +106,7 @@ object AppBody {
             )
           ),
           onClick = Option.when(!stockOpened) { () =>
-            dispatch(OpenOrClosePane(PaneStock.PaneName, true))
+            dispatch(AppMsg.OpenOrClosePane(PaneStock.PaneName, true))
           }
         )(
           Option.when(flowOpened) {

@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{DeselectNode, Model, Msg, OpenOrClosePane, SelectNode}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.backend.Node
 import cotoami.repositories.Nodes
@@ -15,7 +15,7 @@ object NavNodes {
   def apply(
       model: Model,
       uiState: UiState,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val nodes = model.domain.nodes
     nav(
@@ -29,7 +29,7 @@ object NavNodes {
       aria - "label" := "Nodes",
       onClick := (_ =>
         if (!uiState.paneOpened(PaneName)) {
-          dispatch(OpenOrClosePane(PaneName, true))
+          dispatch(AppMsg.OpenOrClosePane(PaneName, true))
         }
       )
     )(
@@ -46,7 +46,7 @@ object NavNodes {
         data - "tooltip" := "All nodes",
         data - "placement" := "right",
         disabled := nodes.selected.isEmpty,
-        onClick := (_ => dispatch(DeselectNode))
+        onClick := (_ => dispatch(AppMsg.DeselectNode))
       )(
         materialSymbol("stacks")
       ),
@@ -55,7 +55,7 @@ object NavNodes {
         data - "tooltip" := "Incorporate node",
         data - "placement" := "right",
         onClick := (_ =>
-          dispatch(Modal.OpenModal(Modal.IncorporateNode()).asAppMsg)
+          dispatch(Modal.Msg.OpenModal(Modal.IncorporateNode()).toApp)
         )
       )(
         materialSymbol("add")
@@ -78,7 +78,7 @@ object NavNodes {
   private def nodeButton(
       node: Node,
       nodes: Nodes,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val status = nodes.parentStatus(node.id).flatMap(parentStatusParts(_))
     val tooltip =
@@ -96,7 +96,7 @@ object NavNodes {
       data - "tooltip" := tooltip,
       data - "placement" := "right",
       disabled := nodes.isSelecting(node.id),
-      onClick := ((e) => dispatch(SelectNode(node.id)))
+      onClick := ((e) => dispatch(AppMsg.SelectNode(node.id)))
     )(
       nodeImg(node),
       status.map(s => span(className := s"status ${s.slug}")(s.icon))

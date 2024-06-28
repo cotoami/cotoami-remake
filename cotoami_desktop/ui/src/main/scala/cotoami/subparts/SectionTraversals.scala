@@ -13,6 +13,7 @@ import com.softwaremill.quicklens._
 import java.time.Instant
 
 import fui.Cmd
+import cotoami.{Msg => AppMsg}
 import cotoami.backend.{Coto, Id, Link}
 import cotoami.repositories.{Domain, Links}
 import cotoami.components.{
@@ -83,22 +84,24 @@ object SectionTraversals {
   }
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg = cotoami.SectionTraversalsMsg(this)
+    def toApp: AppMsg = AppMsg.SectionTraversalsMsg(this)
   }
 
-  case class OpenTraversal(start: Id[Coto]) extends Msg
-  case class CloseTraversal(traversalIndex: Int) extends Msg
-  case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])
-      extends Msg
-  case class StepToParent(traversalIndex: Int, parentId: Id[Coto]) extends Msg
+  object Msg {
+    case class OpenTraversal(start: Id[Coto]) extends Msg
+    case class CloseTraversal(traversalIndex: Int) extends Msg
+    case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])
+        extends Msg
+    case class StepToParent(traversalIndex: Int, parentId: Id[Coto]) extends Msg
+  }
 
   def update(
       msg: Msg,
       model: Model,
       domain: Domain
-  ): (Model, Seq[Cmd[cotoami.Msg]]) =
+  ): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
-      case OpenTraversal(start) =>
+      case Msg.OpenTraversal(start) =>
         (
           model.openTraversal(start),
           // scroll to the right end on opening a traversal.
@@ -122,10 +125,10 @@ object SectionTraversals {
           )
         )
 
-      case CloseTraversal(traversalIndex) =>
+      case Msg.CloseTraversal(traversalIndex) =>
         (model.closeTraversal(traversalIndex), Seq.empty)
 
-      case Step(traversalIndex, stepIndex, step) =>
+      case Msg.Step(traversalIndex, stepIndex, step) =>
         (
           model.step(traversalIndex, stepIndex, step),
           // scroll to the new step
@@ -149,14 +152,14 @@ object SectionTraversals {
           )
         )
 
-      case StepToParent(traversalIndex, parentId) =>
+      case Msg.StepToParent(traversalIndex, parentId) =>
         (model.stepToParent(traversalIndex, parentId, domain.links), Seq.empty)
     }
 
   def apply(
       model: Model,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
@@ -169,13 +172,13 @@ object SectionTraversals {
   private def sectionTraversal(
       traversal: (Traversal, Int),
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(key := traversal._1.id, className := "traversal header-and-body")(
       header(className := "tools")(
         button(
           className := "close-traversal default",
-          onClick := (_ => dispatch(CloseTraversal(traversal._2).asAppMsg))
+          onClick := (_ => dispatch(Msg.CloseTraversal(traversal._2).toApp))
         )(
           materialSymbol("close")
         )
@@ -209,7 +212,7 @@ object SectionTraversals {
   private def divParents(
       parents: Seq[(Coto, Link)],
       traversalIndex: Int,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
@@ -220,7 +223,7 @@ object SectionTraversals {
                 className := "parent default",
                 onClick := (_ =>
                   dispatch(
-                    StepToParent(traversalIndex, parent.id).asAppMsg
+                    Msg.StepToParent(traversalIndex, parent.id).toApp
                   )
                 )
               )(parent.abbreviate)
@@ -238,7 +241,7 @@ object SectionTraversals {
       stepIndex: Option[Int],
       traversal: (Traversal, Int),
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val subCotos = domain.childrenOf(coto.id)
     div(
@@ -288,7 +291,7 @@ object SectionTraversals {
       stepIndex: Option[Int],
       traversal: (Traversal, Int),
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val (link, coto) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
@@ -326,11 +329,11 @@ object SectionTraversals {
           },
           // Traverse button
           Option.when(!traversed && coto.outgoingLinks > 0) {
-            val stepMsg = Step(
+            val stepMsg = Msg.Step(
               traversal._2,
               stepIndex.map(_ + 1).getOrElse(0),
               coto.id
-            ).asAppMsg
+            ).toApp
             div(className := "traverse")(
               ToolButton(
                 classes = "traverse",

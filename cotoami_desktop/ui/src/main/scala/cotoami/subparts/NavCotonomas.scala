@@ -5,7 +5,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_debug, log_error, DeselectCotonoma, SelectCotonoma}
+import cotoami.{log_debug, log_error, Msg => AppMsg}
 import cotoami.backend.{Commands, Cotonoma, ErrorJson, Id, Node}
 import cotoami.repositories.{Cotonomas, Domain, ParentStatus}
 import cotoami.components.{
@@ -22,17 +22,17 @@ object NavCotonomas {
   case class Model(togglingSync: Boolean = false)
 
   sealed trait Msg {
-    def toApp: cotoami.Msg = cotoami.NavCotonomasMsg(this)
+    def toApp: AppMsg = AppMsg.NavCotonomasMsg(this)
   }
   object Msg {
+    def toApp[T](tagger: T => Msg): (T => AppMsg) =
+      tagger andThen AppMsg.NavCotonomasMsg
+
     case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class SyncToggled(result: Either[ErrorJson, Null]) extends Msg
-
-    def toApp[T](tagger: T => Msg): (T => cotoami.Msg) =
-      tagger andThen cotoami.NavCotonomasMsg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
       case Msg.SetSyncDisabled(id, disable) =>
         (model.copy(togglingSync = true), Seq(setSyncDisabled(id, disable)))
@@ -57,7 +57,7 @@ object NavCotonomas {
   private def setSyncDisabled(
       id: Id[Node],
       disable: Boolean
-  ): Cmd[cotoami.Msg] =
+  ): Cmd[AppMsg] =
     Commands
       .send(Commands.UpdateServerNode(id, Some(disable), None))
       .map(Msg.toApp(Msg.SyncToggled(_)))
@@ -66,7 +66,7 @@ object NavCotonomas {
       model: Model,
       currentNode: Node,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val cotonomas = domain.cotonomas
     nav(className := "cotonomas header-and-body")(
@@ -82,7 +82,7 @@ object NavCotonomas {
             title := s"${currentNode.name} home",
             onClick := ((e) => {
               e.preventDefault()
-              dispatch(DeselectCotonoma)
+              dispatch(AppMsg.DeselectCotonoma)
             })
           )(
             materialSymbol("home"),
@@ -98,7 +98,7 @@ object NavCotonomas {
           scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Cotonomas.FetchMoreRecent.asAppMsg)
+          onScrollToBottom = () => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp)
         )(
           cotonomas.selected.map(
             sectionCurrent(_, domain, dispatch)
@@ -119,7 +119,7 @@ object NavCotonomas {
       model: Model,
       node: Node,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val status = domain.nodes.parentStatus(node.id)
     val statusParts = status.flatMap(parentStatusParts(_))
@@ -186,7 +186,7 @@ object NavCotonomas {
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "current")(
       h2()("Current"),
@@ -219,7 +219,7 @@ object NavCotonomas {
                   className := "more-sub-cotonomas default",
                   onClick := ((e) =>
                     dispatch(
-                      Cotonomas.FetchMoreSubs(selectedCotonoma.id).asAppMsg
+                      Cotonomas.Msg.FetchMoreSubs(selectedCotonoma.id).toApp
                     )
                   )
                 )(
@@ -241,7 +241,7 @@ object NavCotonomas {
   private def sectionRecent(
       cotonomas: Seq[Cotonoma],
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
@@ -251,7 +251,7 @@ object NavCotonomas {
   private def liCotonoma(
       cotonoma: Cotonoma,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     li(
       className := optionalClasses(
@@ -267,7 +267,7 @@ object NavCotonomas {
           title := cotonoma.name,
           onClick := ((e) => {
             e.preventDefault()
-            dispatch(SelectCotonoma(cotonoma))
+            dispatch(AppMsg.SelectCotonoma(cotonoma))
           })
         )(
           cotonomaLabel(cotonoma, domain)

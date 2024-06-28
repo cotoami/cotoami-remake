@@ -9,7 +9,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.Msg
+import cotoami.{Msg => AppMsg}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -40,7 +40,7 @@ object ViewCoto {
   def divClassifiedAs(
       coto: Coto,
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     div(className := "classified-as")(
       ulOtherCotonomas(coto, domain, dispatch),
@@ -52,7 +52,7 @@ object ViewCoto {
   private def ulOtherCotonomas(
       coto: Coto,
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
@@ -69,7 +69,7 @@ object ViewCoto {
               className := "also-posted-in",
               onClick := ((e) => {
                 e.preventDefault()
-                dispatch(cotoami.SelectCotonoma(cotonoma))
+                dispatch(AppMsg.SelectCotonoma(cotonoma))
               })
             )(cotonoma.name)
           )
@@ -79,7 +79,7 @@ object ViewCoto {
   def divContent(
       coto: Coto,
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     div(className := "content")(
       domain.cotonomas.asCotonoma(coto).map(cotonoma =>
@@ -89,7 +89,7 @@ object ViewCoto {
             title := cotonoma.name,
             onClick := ((e) => {
               e.preventDefault()
-              dispatch(cotoami.SelectCotonoma(cotonoma))
+              dispatch(AppMsg.SelectCotonoma(cotonoma))
             })
           )(
             domain.nodes.get(cotonoma.nodeId).map(nodeImg),
@@ -179,7 +179,7 @@ object ViewCoto {
 
   def ulParents(
       parents: Seq[(Coto, Link)],
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
@@ -188,7 +188,9 @@ object ViewCoto {
             button(
               className := "parent default",
               onClick := (_ =>
-                dispatch(SectionTraversals.OpenTraversal(parent.id).asAppMsg)
+                dispatch(
+                  SectionTraversals.Msg.OpenTraversal(parent.id).toApp
+                )
               )
             )(parent.abbreviate)
           )
@@ -199,7 +201,7 @@ object ViewCoto {
   def divLinksTraversal(
       coto: Coto,
       tipPlacement: String,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): Option[ReactElement] =
     Option.when(coto.outgoingLinks > 0) {
       div(className := "links")(
@@ -208,8 +210,9 @@ object ViewCoto {
           tip = "Links",
           tipPlacement = tipPlacement,
           symbol = "view_headline",
-          onClick =
-            (() => dispatch(SectionTraversals.OpenTraversal(coto.id).asAppMsg))
+          onClick = (
+              () => dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
+          )
         )
       )
     }

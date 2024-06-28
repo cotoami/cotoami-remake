@@ -32,7 +32,7 @@ object Main {
 
     Browser.runProgram(
       dom.document.getElementById("app"),
-      Program(init, view, update, subscriptions, Some(UrlChanged))
+      Program(init, view, update, subscriptions, Some(Msg.UrlChanged))
     )
   }
 
@@ -54,28 +54,28 @@ object Main {
     (
       Model(url = url, flowInput = flowInput),
       Seq(
-        UiState.restore(UiStateRestored),
-        cotoami.backend.SystemInfoJson.fetch().map(SystemInfoFetched),
+        UiState.restore(Msg.UiStateRestored),
+        cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
-          _.map(openDatabase(_).map(DatabaseOpened))
+          _.map(openDatabase(_).map(Msg.DatabaseOpened))
             .getOrElse(Modal.open(Modal.Welcome()))
         ),
-        flowInputCmd.map(FlowInputMsg)
+        flowInputCmd.map(Msg.FlowInputMsg)
       )
     )
   }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
     msg match {
-      case UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
+      case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
 
-      case AddLogEntry(level, message, details) =>
+      case Msg.AddLogEntry(level, message, details) =>
         (
           model.modify(_.log).using(_.log(level, message, details)),
           Seq.empty
         )
 
-      case LogEvent(event) =>
+      case Msg.LogEvent(event) =>
         (
           model.modify(_.log).using(
             _.addEntry(LogEventJson.toLogEntry(event))
@@ -83,7 +83,7 @@ object Main {
           Seq.empty
         )
 
-      case BackendChange(log) => {
+      case Msg.BackendChange(log) => {
         val (domain, cmds) = model.domain.importChangelog(log)
         (
           model.copy(domain = domain)
@@ -95,7 +95,7 @@ object Main {
         )
       }
 
-      case BackendEvent(event) =>
+      case Msg.BackendEvent(event) =>
         (
           model.handleLocalNodeEvent(event)
             .debug(
@@ -105,10 +105,10 @@ object Main {
           Seq.empty
         )
 
-      case ToggleLogView =>
+      case Msg.ToggleLogView =>
         (model.copy(logViewToggle = !model.logViewToggle), Seq.empty)
 
-      case SystemInfoFetched(Right(systemInfo)) =>
+      case Msg.SystemInfoFetched(Right(systemInfo)) =>
         (
           model
             .modify(_.systemInfo).setTo(Some(systemInfo))
@@ -125,9 +125,9 @@ object Main {
           Seq.empty
         )
 
-      case SystemInfoFetched(Left(_)) => (model, Seq.empty)
+      case Msg.SystemInfoFetched(Left(_)) => (model, Seq.empty)
 
-      case UiStateRestored(uiState) =>
+      case Msg.UiStateRestored(uiState) =>
         (
           model
             .modify(_.uiState).setTo(Some(uiState.getOrElse(UiState())))
@@ -135,13 +135,13 @@ object Main {
           Seq.empty
         )
 
-      case DatabaseOpened(Right(json)) =>
-        (model, Seq(Browser.send(SetDatabaseInfo(DatabaseInfo(json)))))
+      case Msg.DatabaseOpened(Right(json)) =>
+        (model, Seq(Browser.send(Msg.SetDatabaseInfo(DatabaseInfo(json)))))
 
-      case DatabaseOpened(Left(e)) =>
+      case Msg.DatabaseOpened(Left(e)) =>
         (model.error(e.default_message, Some(e)), Seq())
 
-      case SetDatabaseInfo(info) => {
+      case Msg.SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.domain).using(_.init(info))
@@ -156,7 +156,7 @@ object Main {
         }
       }
 
-      case ServerConnectionsInitialized(result) =>
+      case Msg.ServerConnectionsInitialized(result) =>
         (
           result match {
             case Right(_) =>
@@ -167,28 +167,28 @@ object Main {
           Seq.empty
         )
 
-      case OpenOrClosePane(name, open) =>
+      case Msg.OpenOrClosePane(name, open) =>
         model.uiState
           .map(_.openOrClosePane(name, open) match {
             case state => (model.copy(uiState = Some(state)), Seq(state.save))
           })
           .getOrElse((model, Seq.empty))
 
-      case ResizePane(name, newSize) =>
+      case Msg.ResizePane(name, newSize) =>
         model.uiState
           .map(_.resizePane(name, newSize) match {
             case state => (model.copy(uiState = Some(state)), Seq(state.save))
           })
           .getOrElse((model, Seq.empty))
 
-      case SwitchPinnedView(cotonoma, inColumns) =>
+      case Msg.SwitchPinnedView(cotonoma, inColumns) =>
         model.uiState
           .map(_.setPinnedInColumns(cotonoma, inColumns) match {
             case state => (model.copy(uiState = Some(state)), Seq(state.save))
           })
           .getOrElse((model, Seq.empty))
 
-      case ScrollToPinnedCoto(pin) =>
+      case Msg.ScrollToPinnedCoto(pin) =>
         (
           model,
           Seq(
@@ -207,10 +207,10 @@ object Main {
           )
         )
 
-      case SelectNode(id) =>
+      case Msg.SelectNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
-      case DeselectNode => {
+      case Msg.DeselectNode => {
         val url = model.domain.cotonomas.selected match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
@@ -218,7 +218,7 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case SelectCotonoma(cotonoma) => {
+      case Msg.SelectCotonoma(cotonoma) => {
         val url = model.domain.nodes.selected match {
           case None => Route.cotonoma.url(cotonoma.id)
           case Some(_) =>
@@ -230,7 +230,7 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case DeselectCotonoma => {
+      case Msg.DeselectCotonoma => {
         val url = model.domain.nodes.selected match {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
@@ -238,28 +238,28 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case ReloadDomain => {
+      case Msg.ReloadDomain => {
         (
           model.copy(domain = Domain()),
           Seq(
             model.databaseFolder.map(
-              openDatabase(_).map(DatabaseOpened)
+              openDatabase(_).map(Msg.DatabaseOpened)
             ).getOrElse(Cmd.none)
           )
         )
       }
 
-      case DomainMsg(subMsg) =>
+      case Msg.DomainMsg(subMsg) =>
         Domain.update(subMsg, model.domain)
           .pipe(r => (model.copy(domain = r._1), r._2))
 
-      case ModalMsg(subMsg) => Modal.update(subMsg, model)
+      case Msg.ModalMsg(subMsg) => Modal.update(subMsg, model)
 
-      case NavCotonomasMsg(subMsg) =>
+      case Msg.NavCotonomasMsg(subMsg) =>
         NavCotonomas.update(subMsg, model.navCotonomas)
           .pipe(r => (model.copy(navCotonomas = r._1), r._2))
 
-      case FlowInputMsg(subMsg) =>
+      case Msg.FlowInputMsg(subMsg) =>
         FormCoto.update(
           subMsg,
           model.domain.currentCotonoma,
@@ -273,14 +273,14 @@ object Main {
               waitingPosts = r._2,
               log = r._3
             ),
-            r._4.map(_.map(FlowInputMsg))
+            r._4.map(_.map(Msg.FlowInputMsg))
           )
         )
 
-      case SectionTimelineMsg(subMsg) =>
+      case Msg.SectionTimelineMsg(subMsg) =>
         SectionTimeline.update(subMsg, model)
 
-      case SectionTraversalsMsg(subMsg) =>
+      case Msg.SectionTraversalsMsg(subMsg) =>
         SectionTraversals.update(
           subMsg,
           model.traversals,
@@ -290,9 +290,11 @@ object Main {
             model.copy(traversals = r._1),
             (subMsg, model.uiState) match {
               // Open the stock pane on OpenTraversal if it's closed.
-              case (SectionTraversals.OpenTraversal(_), Some(uiState))
+              case (SectionTraversals.Msg.OpenTraversal(_), Some(uiState))
                   if !uiState.paneOpened(PaneStock.PaneName) =>
-                Browser.send(OpenOrClosePane(PaneStock.PaneName, true)) +: r._2
+                Browser.send(
+                  Msg.OpenOrClosePane(PaneStock.PaneName, true)
+                ) +: r._2
               case _ => r._2
             }
           )
@@ -333,22 +335,24 @@ object Main {
     }
 
   private def connectToServers(): Cmd[Msg] =
-    tauri.invokeCommand("connect_to_servers").map(ServerConnectionsInitialized)
+    tauri.invokeCommand("connect_to_servers").map(
+      Msg.ServerConnectionsInitialized
+    )
 
   def subscriptions(model: Model): Sub[Msg] =
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
-    (tauri.listen[LogEventJson]("log", None).map(LogEvent): Sub[Msg]) <+>
+    (tauri.listen[LogEventJson]("log", None).map(Msg.LogEvent): Sub[Msg]) <+>
       this.listenToBackendChanges(model) <+>
       (tauri.listen[LocalNodeEventJson]("backend-event", None)
-        .map(BackendEvent))
+        .map(Msg.BackendEvent))
 
   private def listenToBackendChanges(model: Model): Sub[Msg] =
     if (model.modalStack.opened[Modal.ParentSync])
       Sub.Empty
     else
       tauri.listen[ChangelogEntryJson]("backend-change", None)
-        .map(BackendChange)
+        .map(Msg.BackendChange)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement =
     Fragment(

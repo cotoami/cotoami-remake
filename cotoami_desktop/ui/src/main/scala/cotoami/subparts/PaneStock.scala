@@ -10,7 +10,7 @@ import slinky.core.facade.{Fragment, React, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.{Model, Msg, ScrollToPinnedCoto, SwitchPinnedView}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.models.UiState
 import cotoami.repositories.Domain
@@ -24,7 +24,7 @@ object PaneStock {
   def apply(
       model: Model,
       uiState: UiState,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val sectionTraversals = SectionTraversals(
       model.traversals,
@@ -64,7 +64,7 @@ object PaneStock {
       model: Model,
       uiState: UiState,
       currentCotonoma: Cotonoma,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "coto-catalog")(
       Option.when(!model.domain.pinnedCotos.isEmpty)(
@@ -83,7 +83,7 @@ object PaneStock {
       model: Model,
       uiState: UiState,
       currentCotonoma: Cotonoma,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
     section(className := "pinned-cotos header-and-body")(
@@ -98,7 +98,8 @@ object PaneStock {
           tip = "Columns",
           symbol = "view_column",
           disabled = inColumns,
-          onClick = (() => dispatch(SwitchPinnedView(currentCotonoma.id, true)))
+          onClick =
+            (() => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, true)))
         ),
         ToolButton(
           classes = optionalClasses(
@@ -111,7 +112,7 @@ object PaneStock {
           symbol = "view_agenda",
           disabled = !inColumns,
           onClick =
-            (() => dispatch(SwitchPinnedView(currentCotonoma.id, false)))
+            (() => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, false)))
         )
       ),
       div(
@@ -149,7 +150,7 @@ object PaneStock {
         pinned: Seq[(Link, Coto)],
         viewportId: String,
         model: Model,
-        dispatch: Msg => Unit
+        dispatch: AppMsg => Unit
     )
 
     final val ActiveTocEntryClass = "active"
@@ -205,7 +206,7 @@ object PaneStock {
       pinned: Seq[(Link, Coto)],
       inColumns: Boolean,
       model: Model,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     ol(className := "pinned-cotos")(
       pinned.map { case (pin, coto) =>
@@ -220,7 +221,7 @@ object PaneStock {
       coto: Coto,
       inColumn: Boolean,
       model: Model,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     li(
       key := pin.id.uuid,
@@ -263,7 +264,7 @@ object PaneStock {
   private def divToc(
       pinned: Seq[(Link, Coto)],
       domain: Domain,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     div(className := "toc")(
       ScrollArea(
@@ -281,7 +282,7 @@ object PaneStock {
             )(
               button(
                 className := "default",
-                onClick := (_ => dispatch(ScrollToPinnedCoto(pin)))
+                onClick := (_ => dispatch(AppMsg.ScrollToPinnedCoto(pin)))
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
@@ -301,7 +302,7 @@ object PaneStock {
       coto: Coto,
       inColumn: Boolean,
       model: Model,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val subCotos = model.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
@@ -318,8 +319,9 @@ object PaneStock {
               tip = "Display links",
               tipPlacement = "bottom",
               symbol = "view_headline",
-              onClick =
-                (() => dispatch(Domain.FetchGraphFromCoto(coto.id).asAppMsg))
+              onClick = (
+                  () => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).toApp)
+              )
             )
           }
         )
@@ -348,7 +350,7 @@ object PaneStock {
       link: Link,
       coto: Coto,
       model: Model,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(

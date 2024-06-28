@@ -4,6 +4,7 @@ import scala.util.chaining._
 import com.softwaremill.quicklens._
 
 import fui._
+import cotoami.{Msg => AppMsg}
 import cotoami.backend._
 
 case class Cotos(
@@ -52,19 +53,21 @@ case class Cotos(
 object Cotos {
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg = Domain.CotosMsg(this).pipe(cotoami.DomainMsg)
+    def toApp: AppMsg = Domain.Msg.CotosMsg(this).pipe(AppMsg.DomainMsg)
   }
 
-  case object FetchMoreTimeline extends Msg
+  object Msg {
+    case object FetchMoreTimeline extends Msg
+  }
 
   def update(
       msg: Msg,
       model: Cotos,
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]]
-  ): (Cotos, Seq[Cmd[cotoami.Msg]]) =
+  ): (Cotos, Seq[Cmd[AppMsg]]) =
     msg match {
-      case FetchMoreTimeline =>
+      case Msg.FetchMoreTimeline =>
         if (model.timelineLoading) {
           (model, Seq.empty)
         } else {

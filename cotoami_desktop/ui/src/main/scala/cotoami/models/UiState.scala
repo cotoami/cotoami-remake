@@ -74,7 +74,7 @@ object UiState {
           case Right(uiState) => createMsg(Some(uiState))
           case Left(error) => {
             dom.window.localStorage.removeItem(StorageKey)
-            cotoami.AddLogEntry(
+            Msg.AddLogEntry(
               Log.Error,
               "Invalid uiState in localStorage.",
               Some(value)

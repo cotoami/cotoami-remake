@@ -3,14 +3,14 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.components.materialSymbol
 
 object AppFooter {
 
   def apply(
       model: Model,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     footer(
       div(className := "browser-nav")(
@@ -22,7 +22,7 @@ object AppFooter {
           div(className := s"log-peek ${entry.level.name}")(
             button(
               className := "open-log-view default",
-              onClick := ((e) => dispatch(cotoami.ToggleLogView))
+              onClick := ((e) => dispatch(AppMsg.ToggleLogView))
             )(
               materialSymbol(entry.level.icon),
               entry.message

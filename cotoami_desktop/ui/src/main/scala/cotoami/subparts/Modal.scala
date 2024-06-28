@@ -6,6 +6,7 @@ import slinky.core.facade.ReactElement
 import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
+import cotoami.{Model => AppModel, Msg => AppMsg}
 
 object Modal {
   sealed trait Model
@@ -48,33 +49,37 @@ object Modal {
   }
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg = cotoami.ModalMsg(this)
+    def toApp: AppMsg = AppMsg.ModalMsg(this)
   }
-  case class OpenModal(modal: Model) extends Msg
-  case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
-  case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
-  case class IncorporateNodeMsg(msg: ModalIncorporateNode.Msg) extends Msg
-  case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
 
-  def open(modal: Model): Cmd[cotoami.Msg] =
-    Browser.send(OpenModal(modal).asAppMsg)
+  object Msg {
+    case class OpenModal(modal: Model) extends Msg
+    case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
 
-  def close[M <: Model](modalType: Class[M]): Cmd[cotoami.Msg] =
-    Browser.send(Modal.CloseModal(modalType).asAppMsg)
+    case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
+    case class IncorporateNodeMsg(msg: ModalIncorporateNode.Msg) extends Msg
+    case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
+  }
+
+  def open(modal: Model): Cmd[AppMsg] =
+    Browser.send(Msg.OpenModal(modal).toApp)
+
+  def close[M <: Model](modalType: Class[M]): Cmd[AppMsg] =
+    Browser.send(Msg.CloseModal(modalType).toApp)
 
   def update(
       msg: Msg,
-      model: cotoami.Model
-  ): (cotoami.Model, Seq[Cmd[cotoami.Msg]]) = {
+      model: AppModel
+  ): (AppModel, Seq[Cmd[AppMsg]]) = {
     val stack = model.modalStack
     (msg match {
-      case OpenModal(modal) =>
+      case Msg.OpenModal(modal) =>
         Some((model.modify(_.modalStack).using(_.open(modal)), Seq.empty))
 
-      case CloseModal(modalType) =>
+      case Msg.CloseModal(modalType) =>
         Some((model.modify(_.modalStack).using(_.close(modalType)), Seq.empty))
 
-      case WelcomeMsg(modalMsg) =>
+      case Msg.WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modalModel) =>
           ModalWelcome.update(modalMsg, modalModel)
             .pipe { case (modal, cmds) =>
@@ -82,7 +87,7 @@ object Modal {
             }
         }
 
-      case IncorporateNodeMsg(modalMsg) =>
+      case Msg.IncorporateNodeMsg(modalMsg) =>
         stack.get[IncorporateNode].map { case IncorporateNode(modalModel) =>
           ModalIncorporateNode.update(modalMsg, modalModel, model.domain.nodes)
             .pipe { case (modal, nodes, cmds) =>
@@ -95,7 +100,7 @@ object Modal {
             }
         }
 
-      case ParentSyncMsg(modalMsg) =>
+      case Msg.ParentSyncMsg(modalMsg) =>
         stack.get[ParentSync].map { case ParentSync(modalModel) =>
           ModalParentSync.update(modalMsg, modalModel)
             .pipe { case (modal, cmds) =>
@@ -106,8 +111,8 @@ object Modal {
   }
 
   def apply(
-      model: cotoami.Model,
-      dispatch: cotoami.Msg => Unit
+      model: AppModel,
+      dispatch: AppMsg => Unit
   ): ReactElement =
     model.modalStack.top.map {
       case Welcome(modalModel) =>

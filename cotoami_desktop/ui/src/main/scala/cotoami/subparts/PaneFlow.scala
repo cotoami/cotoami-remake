@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{FlowInputMsg, Model, Msg}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.models.UiState
 
 object PaneFlow {
@@ -16,7 +16,7 @@ object PaneFlow {
   def apply(
       model: Model,
       uiState: UiState,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "flow")(
       (model.domain.nodes.operating, model.domain.currentCotonoma) match {
@@ -33,8 +33,8 @@ object PaneFlow {
                     EditorDefaultHeight
                   ),
                   (newSize) =>
-                    dispatch(cotoami.ResizePane(EditorPaneName, newSize)),
-                  subMsg => dispatch(FlowInputMsg(subMsg))
+                    dispatch(AppMsg.ResizePane(EditorPaneName, newSize)),
+                  subMsg => dispatch(AppMsg.FlowInputMsg(subMsg))
                 )
               )
             else

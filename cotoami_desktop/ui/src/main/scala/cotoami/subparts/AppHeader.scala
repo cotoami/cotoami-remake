@@ -3,14 +3,14 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg, SelectNode}
+import cotoami.{Model, Msg => AppMsg}
 import cotoami.components.materialSymbol
 
 object AppHeader {
 
   def apply(
       model: Model,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     header(
       data - "tauri-drag-region" := "default",
@@ -43,7 +43,7 @@ object AppHeader {
                 title := node.name,
                 onClick := ((e) => {
                   e.preventDefault()
-                  dispatch(SelectNode(node.id))
+                  dispatch(AppMsg.SelectNode(node.id))
                 })
               )(nodeImg(node)),
               cotonoma.map(cotonoma =>

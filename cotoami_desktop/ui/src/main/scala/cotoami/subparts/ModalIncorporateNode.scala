@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.log_error
+import cotoami.{log_error, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.backend.{
   ClientNodeSession,
@@ -42,42 +42,45 @@ object ModalIncorporateNode {
   }
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg =
-      Modal.IncorporateNodeMsg(this).pipe(cotoami.ModalMsg)
+    def toApp: AppMsg =
+      Modal.Msg.IncorporateNodeMsg(this).pipe(AppMsg.ModalMsg)
   }
 
-  private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
-    tagger andThen Modal.IncorporateNodeMsg andThen cotoami.ModalMsg
+  object Msg {
+    def toApp[T](tagger: T => Msg): T => AppMsg =
+      tagger andThen Modal.Msg.IncorporateNodeMsg andThen AppMsg.ModalMsg
 
-  case class NodeUrlInput(url: String) extends Msg
-  case class PasswordInput(password: String) extends Msg
-  case object Connect extends Msg
-  case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
-      extends Msg
-  case object Cancel extends Msg
-  case object Incorporate extends Msg
-  case class NodeIncorporated(result: Either[ErrorJson, ServerJson]) extends Msg
+    case class NodeUrlInput(url: String) extends Msg
+    case class PasswordInput(password: String) extends Msg
+    case object Connect extends Msg
+    case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
+        extends Msg
+    case object Cancel extends Msg
+    case object Incorporate extends Msg
+    case class NodeIncorporated(result: Either[ErrorJson, ServerJson])
+        extends Msg
+  }
 
   def update(
       msg: Msg,
       model: Model,
       nodes: Nodes
-  ): (Model, Nodes, Seq[Cmd[cotoami.Msg]]) =
+  ): (Model, Nodes, Seq[Cmd[AppMsg]]) =
     msg match {
-      case NodeUrlInput(url) =>
+      case Msg.NodeUrlInput(url) =>
         (model.copy(nodeUrl = url), nodes, Seq.empty)
 
-      case PasswordInput(password) =>
+      case Msg.PasswordInput(password) =>
         (model.copy(password = password), nodes, Seq.empty)
 
-      case Connect =>
+      case Msg.Connect =>
         (
           model.copy(connecting = true, connectingError = None),
           nodes,
           Seq(connect(model.nodeUrl, model.password))
         )
 
-      case NodeConnected(Right(json)) => {
+      case Msg.NodeConnected(Right(json)) => {
         val session = ClientNodeSession(json)
         if (nodes.containsServer(session.server.id))
           (
@@ -101,7 +104,7 @@ object ModalIncorporateNode {
           )
       }
 
-      case NodeConnected(Left(e)) =>
+      case Msg.NodeConnected(Left(e)) =>
         (
           model.copy(
             connecting = false,
@@ -113,7 +116,7 @@ object ModalIncorporateNode {
           )
         )
 
-      case Cancel =>
+      case Msg.Cancel =>
         (
           model.copy(
             connecting = false,
@@ -125,21 +128,21 @@ object ModalIncorporateNode {
           Seq.empty
         )
 
-      case Incorporate =>
+      case Msg.Incorporate =>
         (
           model.copy(incorporating = true, incorporatingError = None),
           nodes,
           Seq(addParentNode(model.nodeUrl, model.password))
         )
 
-      case NodeIncorporated(Right(json)) =>
+      case Msg.NodeIncorporated(Right(json)) =>
         (
           model.copy(incorporating = false, incorporatingError = None),
           nodes.addServer(Server(json)),
           Seq(Modal.close(classOf[Modal.IncorporateNode]))
         )
 
-      case NodeIncorporated(Left(e)) =>
+      case Msg.NodeIncorporated(Left(e)) =>
         (
           model.copy(
             incorporating = false,
@@ -152,20 +155,20 @@ object ModalIncorporateNode {
         )
     }
 
-  private def connect(url: String, password: String): Cmd[cotoami.Msg] =
+  private def connect(url: String, password: String): Cmd[AppMsg] =
     Commands
       .send(Commands.TryConnectServerNode(url, password, false))
-      .map(appMsgTagger(NodeConnected(_)))
+      .map(Msg.toApp(Msg.NodeConnected(_)))
 
-  private def addParentNode(url: String, password: String): Cmd[cotoami.Msg] =
+  private def addParentNode(url: String, password: String): Cmd[AppMsg] =
     Commands
       .send(Commands.AddServerNode(url, password, false))
-      .map(appMsgTagger(NodeIncorporated(_)))
+      .map(Msg.toApp(Msg.NodeIncorporated(_)))
 
   def apply(
       model: Model,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     dialog(
       className := "incorporate-node",
@@ -178,7 +181,7 @@ object ModalIncorporateNode {
             className := "close default",
             onClick := (_ =>
               dispatch(
-                Modal.CloseModal(classOf[Modal.IncorporateNode]).asAppMsg
+                Modal.Msg.CloseModal(classOf[Modal.IncorporateNode]).toApp
               )
             )
           ),
@@ -201,7 +204,7 @@ object ModalIncorporateNode {
 
   private def sectionConnect(
       model: Model,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "connect")(
       h2()("Connect"),
@@ -217,7 +220,9 @@ object ModalIncorporateNode {
             placeholder := "https://example.com",
             value := model.nodeUrl,
             Validation.ariaInvalid(model.validateNodeUrl),
-            onChange := ((e) => dispatch(NodeUrlInput(e.target.value).asAppMsg))
+            onChange := ((e) =>
+              dispatch(Msg.NodeUrlInput(e.target.value).toApp)
+            )
           ),
           Validation.sectionValidationError(model.validateNodeUrl)
         ),
@@ -230,7 +235,7 @@ object ModalIncorporateNode {
             id := "password",
             name := "password",
             value := model.password,
-            onChange := (e => dispatch(PasswordInput(e.target.value).asAppMsg))
+            onChange := (e => dispatch(Msg.PasswordInput(e.target.value).toApp))
           )
         ),
 
@@ -242,7 +247,7 @@ object ModalIncorporateNode {
             aria - "busy" := model.connecting.toString(),
             onClick := (e => {
               e.preventDefault()
-              dispatch(Connect.asAppMsg)
+              dispatch(Msg.Connect.toApp)
             })
           )("Preview")
         )
@@ -253,7 +258,7 @@ object ModalIncorporateNode {
       model: Model,
       nodeSession: ClientNodeSession,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "incorporate")(
       h2()("Node"),
@@ -279,13 +284,13 @@ object ModalIncorporateNode {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (e => dispatch(Cancel.asAppMsg))
+          onClick := (e => dispatch(Msg.Cancel.toApp))
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToIncorporate,
           aria - "busy" := model.incorporating.toString(),
-          onClick := (e => dispatch(Incorporate.asAppMsg))
+          onClick := (e => dispatch(Msg.Incorporate.toApp))
         )("Incorporate")
       )
     )

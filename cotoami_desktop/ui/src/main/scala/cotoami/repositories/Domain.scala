@@ -5,7 +5,7 @@ import scala.collection.immutable.HashSet
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.log_info
+import cotoami.{log_info, Msg => AppMsg}
 import cotoami.backend._
 
 case class Domain(
@@ -146,7 +146,7 @@ case class Domain(
       this.links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
-  def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[cotoami.Msg]]) =
+  def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[AppMsg]]) =
     this
       .clearSelection()
       .modify(_.nodes).using(_.select(nodeId))
@@ -168,7 +168,7 @@ case class Domain(
   def selectCotonoma(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+  ): (Domain, Seq[Cmd[AppMsg]]) = {
     val shouldFetchCotonomas =
       // the selected node is changed
       nodeId != this.nodes.selectedId ||
@@ -199,7 +199,7 @@ case class Domain(
 
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
-  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[cotoami.Msg] =
+  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[AppMsg] =
     this.cotos.get(cotoId).map(coto => {
       if (this.childrenOf(cotoId).size < coto.outgoingLinks)
         Domain.fetchGraphFromCoto(cotoId)
@@ -209,18 +209,18 @@ case class Domain(
 
   def importChangelog(
       log: ChangelogEntryJson
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) =
+  ): (Domain, Seq[Cmd[AppMsg]]) =
     if (log.serial_number == (this.lastChangeNumber + 1)) {
       this
         .applyChange(log.change)
         .modify(_._1.lastChangeNumber).setTo(log.serial_number)
     } else {
-      (this, Seq(Browser.send(cotoami.ReloadDomain)))
+      (this, Seq(Browser.send(AppMsg.ReloadDomain)))
     }
 
   private def applyChange(
       change: ChangeJson
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+  ): (Domain, Seq[Cmd[AppMsg]]) = {
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       val coto = Coto(cotoJson)
@@ -268,7 +268,7 @@ case class Domain(
 
   private def postCotonoma(
       jsonPair: (CotonomaJson, CotoJson)
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+  ): (Domain, Seq[Cmd[AppMsg]]) = {
     val cotonoma = Cotonoma(jsonPair._1)
     val coto = Coto(jsonPair._2)
     this
@@ -282,7 +282,7 @@ case class Domain(
 
   private def cotonomaUpdated(
       id: Option[Id[Cotonoma]]
-  ): (Domain, Seq[Cmd[cotoami.Msg]]) = {
+  ): (Domain, Seq[Cmd[AppMsg]]) = {
     id.map(id => {
       val (cotonomas, cmds) = this.cotonomas.updated(id)
       (this.copy(cotonomas = cotonomas), cmds)
@@ -296,28 +296,30 @@ case class Domain(
 object Domain {
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg = cotoami.DomainMsg(this)
+    def toApp: AppMsg = AppMsg.DomainMsg(this)
   }
 
-  private def appMsgTagger[T](tagger: T => Msg): T => cotoami.Msg =
-    tagger andThen cotoami.DomainMsg
+  object Msg {
+    def toApp[T](tagger: T => Msg): T => AppMsg =
+      tagger andThen AppMsg.DomainMsg
 
-  case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
-  case class CotosMsg(subMsg: Cotos.Msg) extends Msg
+    case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
+    case class CotosMsg(subMsg: Cotos.Msg) extends Msg
 
-  case class CotonomaDetailsFetched(
-      result: Either[ErrorJson, CotonomaDetailsJson]
-  ) extends Msg
-  case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
-      extends Msg
+    case class CotonomaDetailsFetched(
+        result: Either[ErrorJson, CotonomaDetailsJson]
+    ) extends Msg
+    case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
+        extends Msg
 
-  case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
-  case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
-      extends Msg
+    case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
+    case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
+        extends Msg
+  }
 
-  def update(msg: Msg, model: Domain): (Domain, Seq[Cmd[cotoami.Msg]]) =
+  def update(msg: Msg, model: Domain): (Domain, Seq[Cmd[AppMsg]]) =
     msg match {
-      case CotonomasMsg(subMsg) => {
+      case Msg.CotonomasMsg(subMsg) => {
         val (cotonomas, cmds) =
           Cotonomas.update(
             subMsg,
@@ -327,7 +329,7 @@ object Domain {
         (model.copy(cotonomas = cotonomas), cmds)
       }
 
-      case CotosMsg(subMsg) => {
+      case Msg.CotosMsg(subMsg) => {
         val (cotos, cmds) =
           Cotos.update(
             subMsg,
@@ -338,7 +340,7 @@ object Domain {
         (model.copy(cotos = cotos), cmds)
       }
 
-      case CotonomaDetailsFetched(Right(details)) =>
+      case Msg.CotonomaDetailsFetched(Right(details)) =>
         (
           model.setCotonomaDetails(CotonomaDetails(details)),
           Seq(
@@ -349,10 +351,10 @@ object Domain {
           )
         )
 
-      case CotonomaDetailsFetched(Left(e)) =>
+      case Msg.CotonomaDetailsFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch cotonoma details.")))
 
-      case TimelineFetched(Right(cotos)) =>
+      case Msg.TimelineFetched(Right(cotos)) =>
         (
           model.appendTimelinePage(PaginatedCotos(cotos)),
           Seq(
@@ -360,49 +362,49 @@ object Domain {
           )
         )
 
-      case TimelineFetched(Left(e)) =>
+      case Msg.TimelineFetched(Left(e)) =>
         (
           model.modify(_.cotos.timelineLoading).setTo(false),
           Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
         )
 
-      case FetchGraphFromCoto(cotoId) =>
+      case Msg.FetchGraphFromCoto(cotoId) =>
         (
           model.modify(_.graphLoading).using(_ + cotoId),
           Seq(fetchGraphFromCoto(cotoId))
         )
 
-      case CotoGraphFetched(Right(graph)) =>
+      case Msg.CotoGraphFetched(Right(graph)) =>
         (
           model.importCotoGraph(CotoGraph(graph)),
           Seq(log_info("Coto graph fetched.", Some(CotoGraphJson.debug(graph))))
         )
 
-      case CotoGraphFetched(Left(e)) =>
+      case Msg.CotoGraphFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
 
-  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[cotoami.Msg] =
+  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[AppMsg] =
     Commands.send(Commands.CotonomaDetails(id))
-      .map(appMsgTagger(CotonomaDetailsFetched))
+      .map(Msg.toApp(Msg.CotonomaDetailsFetched))
 
   def fetchTimeline(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       query: Option[String],
       pageIndex: Double
-  ): Cmd[cotoami.Msg] =
+  ): Cmd[AppMsg] =
     query.map(query =>
       Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
     ).getOrElse(
       Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
-    ).map(appMsgTagger(TimelineFetched))
+    ).map(Msg.toApp(Msg.TimelineFetched))
 
-  def fetchGraphFromCoto(coto: Id[Coto]): Cmd[cotoami.Msg] =
+  def fetchGraphFromCoto(coto: Id[Coto]): Cmd[AppMsg] =
     Commands.send(Commands.GraphFromCoto(coto))
-      .map(appMsgTagger(CotoGraphFetched))
+      .map(Msg.toApp(Msg.CotoGraphFetched))
 
-  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[cotoami.Msg] =
+  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[AppMsg] =
     Commands.send(Commands.GraphFromCotonoma(cotonoma))
-      .map(appMsgTagger(CotoGraphFetched))
+      .map(Msg.toApp(Msg.CotoGraphFetched))
 }

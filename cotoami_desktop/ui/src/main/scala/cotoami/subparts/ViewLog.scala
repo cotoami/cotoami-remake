@@ -8,7 +8,7 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.Msg
+import cotoami.{Msg => AppMsg}
 import cotoami.utils.Log
 import cotoami.components.materialSymbol
 
@@ -16,13 +16,13 @@ object ViewLog {
 
   def apply(
       log: Log,
-      dispatch: Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "log-view")(
       header(className := "tools")(
         button(
           className := "close-log-view default",
-          onClick := ((e) => dispatch(cotoami.ToggleLogView))
+          onClick := ((e) => dispatch(AppMsg.ToggleLogView))
         )(materialSymbol("close"))
       ),
       LogEntries(entries = log.entries)

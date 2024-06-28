@@ -6,6 +6,7 @@ import slinky.web.html
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
+import cotoami.{Msg => AppMsg}
 import cotoami.backend.{Id, Node, Nullable}
 import cotoami.repositories.Domain
 import cotoami.models.ParentSync
@@ -15,19 +16,21 @@ object ModalParentSync {
   case class Model()
 
   sealed trait Msg {
-    def asAppMsg: cotoami.Msg = Modal.ParentSyncMsg(this).pipe(cotoami.ModalMsg)
+    def toApp: AppMsg = Modal.Msg.ParentSyncMsg(this).pipe(AppMsg.ModalMsg)
   }
 
-  case object Close extends Msg
+  object Msg {
+    case object Close extends Msg
+  }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[cotoami.Msg]]) =
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Close =>
+      case Msg.Close =>
         (
           model,
           Seq(
             Modal.close(classOf[Modal.ParentSync]),
-            Browser.send(cotoami.ReloadDomain)
+            Browser.send(AppMsg.ReloadDomain)
           )
         )
     }
@@ -36,7 +39,7 @@ object ModalParentSync {
       model: Model,
       parentSync: ParentSync,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     dialog(
       className := "parent-sync",
@@ -61,7 +64,7 @@ object ModalParentSync {
   private def sectionSyncing(
       parentSync: ParentSync,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "syncing")(
       h2()("Syncing"),
@@ -85,7 +88,7 @@ object ModalParentSync {
   private def sectionSynced(
       parentSync: ParentSync,
       domain: Domain,
-      dispatch: cotoami.Msg => Unit
+      dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "synced")(
       h2()("Synced"),
@@ -113,7 +116,7 @@ object ModalParentSync {
         button(
           `type` := "button",
           disabled := !parentSync.syncing.isEmpty,
-          onClick := (e => dispatch(Close.asAppMsg))
+          onClick := (e => dispatch(Msg.Close.toApp))
         )("OK")
       )
     )
