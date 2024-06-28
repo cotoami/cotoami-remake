@@ -18,15 +18,22 @@ import cotoami.backend.{
   ServerNode
 }
 import cotoami.repositories.{Domain, Nodes}
+import cotoami.models.Context
 
-object ModalIncorporateNode {
+object ModalIncorporate {
 
   case class Model(
+      helpIntro: Boolean = false,
+
+      // connect
+      helpConnect: Boolean = false,
       nodeUrl: String = "",
       password: String = "",
       connecting: Boolean = false,
       connectingError: Option[String] = None,
       nodeSession: Option[ClientNodeSession] = None,
+
+      // incorporate
       incorporating: Boolean = false,
       incorporatingError: Option[String] = None
   ) {
@@ -43,13 +50,15 @@ object ModalIncorporateNode {
 
   sealed trait Msg {
     def toApp: AppMsg =
-      Modal.Msg.IncorporateNodeMsg(this).pipe(AppMsg.ModalMsg)
+      Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
     def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.IncorporateNodeMsg andThen AppMsg.ModalMsg
+      tagger andThen Modal.Msg.IncorporateMsg andThen AppMsg.ModalMsg
 
+    case class HelpIntro(display: Boolean) extends Msg
+    case class HelpConnect(display: Boolean) extends Msg
     case class NodeUrlInput(url: String) extends Msg
     case class PasswordInput(password: String) extends Msg
     case object Connect extends Msg
@@ -67,6 +76,12 @@ object ModalIncorporateNode {
       nodes: Nodes
   ): (Model, Nodes, Seq[Cmd[AppMsg]]) =
     msg match {
+      case Msg.HelpIntro(display) =>
+        (model.copy(helpIntro = display), nodes, Seq.empty)
+
+      case Msg.HelpConnect(display) =>
+        (model.copy(helpConnect = display), nodes, Seq.empty)
+
       case Msg.NodeUrlInput(url) =>
         (model.copy(nodeUrl = url), nodes, Seq.empty)
 
@@ -139,7 +154,7 @@ object ModalIncorporateNode {
         (
           model.copy(incorporating = false, incorporatingError = None),
           nodes.addServer(Server(json)),
-          Seq(Modal.close(classOf[Modal.IncorporateNode]))
+          Seq(Modal.close(classOf[Modal.Incorporate]))
         )
 
       case Msg.NodeIncorporated(Left(e)) =>
@@ -168,10 +183,11 @@ object ModalIncorporateNode {
   def apply(
       model: Model,
       domain: Domain,
+      context: Context,
       dispatch: AppMsg => Unit
   ): ReactElement =
     dialog(
-      className := "incorporate-node",
+      className := "incorporate",
       open := true,
       data - "tauri-drag-region" := "default"
     )(
@@ -181,35 +197,55 @@ object ModalIncorporateNode {
             className := "close default",
             onClick := (_ =>
               dispatch(
-                Modal.Msg.CloseModal(classOf[Modal.IncorporateNode]).toApp
+                Modal.Msg.CloseModal(classOf[Modal.Incorporate]).toApp
               )
             )
           ),
-          h1()("Incorporate Node")
+          h1()(
+            "Incorporate Remote Database",
+            buttonHelp(
+              model.helpIntro,
+              () => dispatch(Msg.HelpIntro(true).toApp)
+            )
+          )
         ),
         div(className := "body")(
-          section(className := "introduction")(
-            """
-            You can incorporate another database node into your database.
-            Once incorporated, it will sync with the original node 
-            in real-time as long as you are online.
-            """
+          sectionHelp(
+            model.helpIntro,
+            () => dispatch(Msg.HelpIntro(false).toApp),
+            context.help.ModalIncorporate_intro
           ),
           model.nodeSession
             .map(sectionIncorporate(model, _, domain, dispatch))
-            .getOrElse(sectionConnect(model, dispatch))
+            .getOrElse(sectionConnect(model, domain.nodes, context, dispatch))
         )
       )
     )
 
   private def sectionConnect(
       model: Model,
+      nodes: Nodes,
+      context: Context,
       dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "connect")(
-      h2()("Connect"),
+      h2()(
+        "Connect",
+        buttonHelp(
+          model.helpConnect,
+          () => dispatch(Msg.HelpConnect(true).toApp)
+        )
+      ),
       model.connectingError.map(e => section(className := "error")(e)),
       form()(
+        sectionHelp(
+          model.helpConnect,
+          () => dispatch(Msg.HelpConnect(false).toApp),
+          context.help.ModalIncorporate_connect(
+            nodes.operatingId.map(_.uuid).getOrElse("")
+          )
+        ),
+
         // Node URL
         div(className := "input-field")(
           label(htmlFor := "node-url")("Node URL"),

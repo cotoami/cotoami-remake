@@ -3,6 +3,8 @@ package cotoami.models
 import java.time._
 import java.time.format.DateTimeFormatter
 
+import cotoami.i18n.Help
+
 case class Context(
     zone: ZoneId = ZoneId.of("UTC")
 ) {
@@ -27,6 +29,8 @@ case class Context(
       dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)
     }
   }
+
+  lazy val help: Help = Help.inLang("")
 }
 
 object Context {

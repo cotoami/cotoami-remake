@@ -60,4 +60,44 @@ div.app {
     right: 0;
     bottom: 0;
   }
+
+  button.help {
+    margin-left: 8px;
+    vertical-align: middle;
+
+    &:disabled {
+      opacity: 0.3;
+    }
+  }
+
+  section.help {
+    position: relative;
+    border: 1px dashed var(--pane-border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    padding: 16px;
+
+    button.close {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      margin: 0;
+      padding: 0;
+      width: 16px;
+      height: 16px;
+      background-size: auto 0.8rem;
+    }
+
+    animation: slide-in-top 0.1s linear;
+
+    @keyframes slide-in-top {
+      0% {
+        transform: translateY(-50px);
+      }
+
+      100% {
+        transform: translateY(0);
+      }
+    }
+  }
 }

@@ -18,6 +18,30 @@ package object subparts {
       src := s"data:image/png;base64,${node.icon}"
     )
 
+  def buttonHelp(disable: Boolean, onButtonClick: () => Unit): ReactElement =
+    button(
+      className := s"default help",
+      disabled := disable,
+      onClick := onButtonClick
+    )(
+      materialSymbol("help")
+    )
+
+  def sectionHelp(
+      display: Boolean,
+      onCloseClick: () => Unit,
+      contents: ReactElement*
+  ): ReactElement =
+    Option.when(display) {
+      section(className := "help")(
+        button(
+          className := "close default",
+          onClick := onCloseClick
+        ),
+        contents
+      )
+    }
+
   sealed trait CollapseDirection
   case object ToLeft extends CollapseDirection
   case object ToRight extends CollapseDirection

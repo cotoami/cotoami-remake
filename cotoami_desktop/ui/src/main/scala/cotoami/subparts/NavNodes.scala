@@ -37,7 +37,7 @@ object NavNodes {
       button(
         className := optionalClasses(
           Seq(
-            ("all-nodes", true),
+            ("all", true),
             ("default", true),
             ("selectable", true),
             ("selected", nodes.selected.isEmpty)
@@ -51,11 +51,11 @@ object NavNodes {
         materialSymbol("stacks")
       ),
       button(
-        className := "incorporate-node default",
-        data - "tooltip" := "Incorporate node",
+        className := "add default",
+        data - "tooltip" := "Add node",
         data - "placement" := "right",
         onClick := (_ =>
-          dispatch(Modal.Msg.OpenModal(Modal.IncorporateNode()).toApp)
+          dispatch(Modal.Msg.OpenModal(Modal.Incorporate()).toApp)
         )
       )(
         materialSymbol("add")
