@@ -167,7 +167,11 @@ object SectionTimeline {
       post: WaitingPost,
       domain: Domain
   ): ReactElement =
-    section(className := "waiting-post", aria - "busy" := "true")(
+    section(
+      className := "waiting-post",
+      key := post.postId,
+      aria - "busy" := "true"
+    )(
       article(className := "coto")(
         post.error.map(section(className := "error")(_)),
         div(className := "body")(
@@ -182,7 +186,7 @@ object SectionTimeline {
       context: Context,
       dispatch: AppMsg => Unit
   ): ReactElement =
-    section(className := "post")(
+    section(className := "post", key := coto.id.uuid)(
       coto.repostOfId.map(_ => repostHeader(coto, domain, dispatch)),
       ViewCoto.ulParents(domain.parentsOf(coto.id), dispatch),
       articleCoto(
