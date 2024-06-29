@@ -16,9 +16,9 @@ object en extends Help {
 
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement = p()(
     """
-    Trying to connect to a remote node with a password to authenticate your node.
+    Trying to connect to a remote node with a URL and a password to authenticate your node.
     If you don't have a password for a node you want to incorporate,
-    tell an admin of the node the ID of your node to create a new account.
+    tell an admin of the node your node ID to create a new account.
     Your node ID is:
     """,
     code()(operatingNodeId)
