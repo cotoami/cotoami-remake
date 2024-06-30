@@ -11,7 +11,7 @@
 :root {
   --header-height: 36px;
   --footer-height: 25px;
-  --max-text-content-width: 50rem;
+  --max-text-content-width: 45rem;
   --max-article-width: calc(var(--max-text-content-width) + var(--block-spacing-horizontal));
 
   // override pico's custom properties
