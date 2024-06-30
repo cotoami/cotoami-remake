@@ -354,7 +354,9 @@ object Main {
       tauri.listen[ChangelogEntryJson]("backend-change", None)
         .map(Msg.BackendChange)
 
-  def view(model: Model, dispatch: Msg => Unit): ReactElement =
+  def view(model: Model, dispatch: Msg => Unit): ReactElement = {
+    implicit val context = model.context
+    implicit val dmain = model.domain
     Fragment(
       AppHeader(model, dispatch),
       div(id := "app-body", className := "body")(
@@ -369,4 +371,5 @@ object Main {
         None,
       Modal(model, dispatch)
     )
+  }
 }

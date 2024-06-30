@@ -38,9 +38,8 @@ object ModalParentSync {
   def apply(
       model: Model,
       parentSync: ParentSync,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     dialog(
       className := "parent-sync",
       open := true,
@@ -52,10 +51,10 @@ object ModalParentSync {
         ),
         div(className := "body")(
           Option.when(!parentSync.syncing.isEmpty) {
-            sectionSyncing(parentSync, domain, dispatch)
+            sectionSyncing(parentSync, dispatch)
           },
           Option.when(!parentSync.synced.isEmpty) {
-            sectionSynced(parentSync, domain, dispatch)
+            sectionSynced(parentSync, dispatch)
           }
         )
       )
@@ -63,9 +62,8 @@ object ModalParentSync {
 
   private def sectionSyncing(
       parentSync: ParentSync,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     section(className := "syncing")(
       h2()("Syncing"),
       ul()(
@@ -74,7 +72,7 @@ object ModalParentSync {
           val total = progress.total.toString()
           li()(
             section(className := "parent-node")(
-              spanNode(progress.nodeId, domain),
+              spanNode(progress.nodeId),
               span(className := "progress")(s"${current}/${total}")
             ),
             div(className := "progress-bar")(
@@ -87,16 +85,15 @@ object ModalParentSync {
 
   private def sectionSynced(
       parentSync: ParentSync,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     section(className := "synced")(
       h2()("Synced"),
       ul()(
         parentSync.synced.map(done => {
           li()(
             section(className := "parent-node")(
-              spanNode(done.nodeId, domain),
+              spanNode(done.nodeId),
               done.range.map(range =>
                 span(className := "result")(
                   span(className := "range")(s"${range._1} to ${range._2}"),
@@ -121,7 +118,7 @@ object ModalParentSync {
       )
     )
 
-  private def spanNode(id: Id[Node], domain: Domain): ReactElement =
+  private def spanNode(id: Id[Node])(implicit domain: Domain): ReactElement =
     domain.nodes.get(id).map(node =>
       span(className := "node")(
         nodeImg(node),

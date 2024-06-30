@@ -7,6 +7,8 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Model => AppModel, Msg => AppMsg}
+import cotoami.models.Context
+import cotoami.repositories.Domain
 
 object Modal {
   sealed trait Model
@@ -113,7 +115,7 @@ object Modal {
   def apply(
       model: AppModel,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context, domain: Domain): ReactElement =
     model.modalStack.top.map {
       case Welcome(modalModel) =>
         model.systemInfo.map(info =>
@@ -121,18 +123,9 @@ object Modal {
         )
 
       case Incorporate(modalModel) =>
-        Some(
-          ModalIncorporate(
-            modalModel,
-            model.domain,
-            model.context,
-            dispatch
-          )
-        )
+        Some(ModalIncorporate(modalModel, dispatch))
 
       case ParentSync(modalModel) =>
-        Some(
-          ModalParentSync(modalModel, model.parentSync, model.domain, dispatch)
-        )
+        Some(ModalParentSync(modalModel, model.parentSync, dispatch))
     }
 }

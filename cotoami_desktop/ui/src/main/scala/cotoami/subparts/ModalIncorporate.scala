@@ -180,11 +180,9 @@ object ModalIncorporate {
       .send(Commands.AddServerNode(url, password, false))
       .map(Msg.toApp(Msg.NodeIncorporated(_)))
 
-  def apply(
-      model: Model,
-      domain: Domain,
+  def apply(model: Model, dispatch: AppMsg => Unit)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      domain: Domain
   ): ReactElement =
     dialog(
       className := "incorporate",
@@ -216,8 +214,8 @@ object ModalIncorporate {
             context.help.ModalIncorporate_intro
           ),
           model.nodeSession
-            .map(sectionIncorporate(model, _, domain, dispatch))
-            .getOrElse(sectionConnect(model, domain.nodes, context, dispatch))
+            .map(sectionIncorporate(model, _, dispatch))
+            .getOrElse(sectionConnect(model, domain.nodes, dispatch))
         )
       )
     )
@@ -225,9 +223,8 @@ object ModalIncorporate {
   private def sectionConnect(
       model: Model,
       nodes: Nodes,
-      context: Context,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     section(className := "connect")(
       h2()(
         "Connect",
@@ -293,7 +290,6 @@ object ModalIncorporate {
   private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession,
-      domain: Domain,
       dispatch: AppMsg => Unit
   ): ReactElement =
     section(className := "incorporate")(
