@@ -223,10 +223,9 @@ case class Domain(
   ): (Domain, Seq[Cmd[AppMsg]]) = {
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
-      val coto = Coto(cotoJson)
       return this
-        .postCoto(coto)
-        .cotonomaUpdated(coto.postedInId)
+        .postCoto(cotoJson)
+
     }
 
     // CreateCotonoma
@@ -258,13 +257,15 @@ case class Domain(
   private def addNode(node: Node): Domain =
     this.modify(_.nodes).using(_.add(node))
 
-  private def postCoto(coto: Coto): Domain =
+  private def postCoto(cotoJson: CotoJson): (Domain, Seq[Cmd[AppMsg]]) = {
+    val coto = Coto(cotoJson, true)
     this.modify(_.cotos).using(cotos =>
       if (this.inCurrentRoot || coto.postedInId == this.currentCotonomaId)
         cotos.post(coto)
       else
         cotos
-    )
+    ).cotonomaUpdated(coto.postedInId)
+  }
 
   private def postCotonoma(
       jsonPair: (CotonomaJson, CotoJson)
@@ -272,13 +273,9 @@ case class Domain(
     val cotonoma = Cotonoma(jsonPair._1)
     val coto = Coto(jsonPair._2)
     this
-      .postCotonoma(cotonoma, coto)
-      .postCoto(coto)
-      .cotonomaUpdated(coto.postedInId)
+      .modify(_.cotonomas).using(_.post(cotonoma, coto))
+      .postCoto(jsonPair._2)
   }
-
-  private def postCotonoma(cotonoma: Cotonoma, cotonomaCoto: Coto): Domain =
-    this.modify(_.cotonomas).using(_.post(cotonoma, cotonomaCoto))
 
   private def cotonomaUpdated(
       id: Option[Id[Cotonoma]]

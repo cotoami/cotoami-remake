@@ -10,7 +10,12 @@ import cotoami.{Model, Msg => AppMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
 import cotoami.models.{Context, WaitingPost, WaitingPosts}
-import cotoami.components.{materialSymbol, ScrollArea, ToolButton}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  ScrollArea,
+  ToolButton
+}
 
 object SectionTimeline {
 
@@ -186,7 +191,15 @@ object SectionTimeline {
       context: Context,
       dispatch: AppMsg => Unit
   ): ReactElement =
-    section(className := "post", key := coto.id.uuid)(
+    section(
+      className := optionalClasses(
+        Seq(
+          ("post", true),
+          ("posted", coto.posted)
+        )
+      ),
+      key := coto.id.uuid
+    )(
       coto.repostOfId.map(_ => repostHeader(coto, domain, dispatch)),
       ViewCoto.ulParents(domain.parentsOf(coto.id), dispatch),
       articleCoto(

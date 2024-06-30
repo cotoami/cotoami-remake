@@ -28,7 +28,9 @@ trait CotoContent {
     )
 }
 
-case class Coto(json: CotoJson) extends Entity[Coto] with CotoContent {
+case class Coto(json: CotoJson, posted: Boolean = false)
+    extends Entity[Coto]
+    with CotoContent {
   override def id: Id[Coto] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)
 

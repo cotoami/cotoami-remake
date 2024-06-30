@@ -60,6 +60,20 @@ section.timeline {
   .post {
     border-bottom: 1px solid var(--pane-border-color);
 
+    &.posted {
+      @keyframes slide-in-top {
+        0% {
+          transform: translateY(-50px);
+        }
+
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      animation: slide-in-top 0.3s linear;
+    }
+
     .repost-header {
       padding: 0 var(--block-spacing-horizontal);
       padding-top: 5px;
