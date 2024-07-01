@@ -1,7 +1,5 @@
-use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
-    middleware,
     routing::get,
     Router, TypedHeader,
 };
@@ -9,7 +7,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoGraph, PaginatedCotos, Pagination},
+        models::{PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -20,53 +18,36 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
         .route("/search/:query", get(search_cotos))
-        .route("/:coto_id/graph", get(get_graph))
-        .layer(middleware::from_fn(super::require_operator))
-        .layer(middleware::from_fn(super::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotos
+// GET /api/data/nodes/:node_id/cotos
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
-        .recent_cotos(None, None, pagination)
+        .recent_cotos(Some(node_id), None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotos/search/:query
+// GET /api/data/nodes/:node_id/cotos/search/:query
 /////////////////////////////////////////////////////////////////////////////
 
 async fn search_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(query): Path<String>,
+    Path((node_id, query)): Path<(Id<Node>, String)>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
-        .search_cotos(query, None, None, pagination)
+        .search_cotos(query, Some(node_id), None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// GET /api/cotos/:coto_id/graph
-/////////////////////////////////////////////////////////////////////////////
-
-async fn get_graph(
-    State(state): State<NodeState>,
-    TypedHeader(accept): TypedHeader<Accept>,
-    Path(coto_id): Path<Id<Coto>>,
-) -> Result<Content<CotoGraph>, ServiceError> {
-    state
-        .graph_from_coto(coto_id)
-        .await
-        .map(|graph| Content(graph, accept))
 }

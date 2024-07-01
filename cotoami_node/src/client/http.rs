@@ -6,6 +6,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use const_format::concatcp;
 use futures::future::FutureExt;
 use parking_lot::RwLock;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -93,37 +94,39 @@ impl HttpClient {
 
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
-            Command::LocalNode => self.get("/api/nodes/local"),
-            Command::InitialDataset => self.get("/api/data"),
+            Command::LocalNode => self.get(&format!("{API_PATH_NODES}/local")),
+            Command::InitialDataset => self.get(API_PATH_DATA),
             Command::ChunkOfChanges { from } => self
-                .get("/api/changes")
+                .get(API_PATH_CHANGES)
                 .query(&[("from", from.to_string())]),
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
             Command::TryConnectServerNode(input) => {
-                self.get("/api/nodes/servers/try").query(&input)
+                self.get(&format!("{API_PATH_SERVERS}/try")).query(&input)
             }
-            Command::AddServerNode(input) => self.post("/api/nodes/servers").form(&input),
+            Command::AddServerNode(input) => self.post(API_PATH_SERVERS).form(&input),
             Command::UpdateServerNode { id, values } => {
-                self.put(&format!("/api/nodes/servers/{id}")).form(&values)
+                self.put(&format!("{API_PATH_SERVERS}/{id}")).form(&values)
             }
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
-                    self.get(&format!("/api/nodes/{node_id}/cotonomas"))
+                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotonomas"))
                         .query(&pagination)
                 } else {
-                    self.get("/api/cotonomas").query(&pagination)
+                    self.get(API_PATH_COTONOMAS).query(&pagination)
                 }
             }
-            Command::Cotonoma { id } => self.get(&format!("/api/cotonomas/{id}")),
-            Command::CotonomaDetails { id } => self.get(&format!("/api/cotonomas/{id}/details")),
+            Command::Cotonoma { id } => self.get(&format!("{API_PATH_COTONOMAS}/{id}")),
+            Command::CotonomaDetails { id } => {
+                self.get(&format!("{API_PATH_COTONOMAS}/{id}/details"))
+            }
             Command::CotonomaByName { name, node } => {
                 let encoded_name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
-                self.get(&format!("/api/nodes/{node}/cotonomas/{encoded_name}"))
+                self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{encoded_name}"))
             }
             Command::SubCotonomas { id, pagination } => self
-                .get(&format!("/api/cotonomas/{id}/subs"))
+                .get(&format!("{API_PATH_COTONOMAS}/{id}/subs"))
                 .query(&pagination),
             Command::RecentCotos {
                 node,
@@ -131,13 +134,13 @@ impl HttpClient {
                 pagination,
             } => {
                 if let Some(cotonoma_id) = cotonoma {
-                    self.get(&format!("/api/cotonomas/{cotonoma_id}/cotos"))
+                    self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma_id}/cotos"))
                         .query(&pagination)
                 } else if let Some(node_id) = node {
-                    self.get(&format!("/api/nodes/{node_id}/cotos"))
+                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos"))
                         .query(&pagination)
                 } else {
-                    self.get("/api/cotos").query(&pagination)
+                    self.get(API_PATH_COTOS).query(&pagination)
                 }
             }
             Command::SearchCotos {
@@ -149,28 +152,28 @@ impl HttpClient {
                 let encoded_query = utf8_percent_encode(&query, NON_ALPHANUMERIC).to_string();
                 if let Some(cotonoma_id) = cotonoma {
                     self.get(&format!(
-                        "/api/cotonomas/{cotonoma_id}/cotos/search/{encoded_query}"
+                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/search/{encoded_query}"
                     ))
                     .query(&pagination)
                 } else if let Some(node_id) = node {
                     self.get(&format!(
-                        "/api/nodes/{node_id}/cotos/search/{encoded_query}"
+                        "{API_PATH_NODES}/{node_id}/cotos/search/{encoded_query}"
                     ))
                     .query(&pagination)
                 } else {
-                    self.get(&format!("/api/cotos/search/{encoded_query}"))
+                    self.get(&format!("{API_PATH_COTOS}/search/{encoded_query}"))
                         .query(&pagination)
                 }
             }
-            Command::GraphFromCoto { coto } => self.get(&format!("/api/cotos/{coto}/graph")),
+            Command::GraphFromCoto { coto } => self.get(&format!("{API_PATH_COTOS}/{coto}/graph")),
             Command::GraphFromCotonoma { cotonoma } => {
-                self.get(&format!("/api/cotonomas/{cotonoma}/graph"))
+                self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma}/graph"))
             }
             Command::PostCoto { input, post_to } => self
-                .post(&format!("/api/cotonomas/{post_to}/cotos"))
+                .post(&format!("{API_PATH_COTONOMAS}/{post_to}/cotos"))
                 .form(&input),
             Command::PostCotonoma { input, post_to } => self
-                .post(&format!("/api/cotonomas/{post_to}/subs"))
+                .post(&format!("{API_PATH_COTONOMAS}/{post_to}/subs"))
                 .form(&input),
         };
 
@@ -209,6 +212,13 @@ impl HttpClient {
         Ok(Response::new(id, body_format, Err(error)))
     }
 }
+
+const API_PATH_DATA: &'static str = "/api/data";
+const API_PATH_CHANGES: &'static str = concatcp!(API_PATH_DATA, "/changes");
+const API_PATH_NODES: &'static str = concatcp!(API_PATH_DATA, "/nodes");
+const API_PATH_SERVERS: &'static str = concatcp!(API_PATH_NODES, "/servers");
+const API_PATH_COTONOMAS: &'static str = concatcp!(API_PATH_DATA, "/cotonomas");
+const API_PATH_COTOS: &'static str = concatcp!(API_PATH_DATA, "/cotos");
 
 fn detect_response_body_format(response: &reqwest::Response) -> SerializeFormat {
     // The format will be MessagePack only if the Content-Type header explicitly specifies it,

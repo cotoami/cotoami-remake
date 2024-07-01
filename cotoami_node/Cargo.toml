@@ -14,6 +14,7 @@ axum-extra = {version = "0.7.5", features = ["cookie"]}
 axum-macros = "0.3.7" 
 bytes.workspace = true 
 chrono.workspace = true 
+const_format = "0.2.32" 
 cotoami_db.workspace = true 
 derive-new.workspace = true 
 derive_more.workspace = true 

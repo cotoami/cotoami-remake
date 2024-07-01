@@ -31,12 +31,9 @@ use validator::Validate;
 
 use crate::{service::ServiceError, state::NodeState};
 
-mod changes;
-mod cotonomas;
-mod cotos;
 mod csrf;
+mod data;
 mod events;
-mod nodes;
 mod session;
 mod ws;
 
@@ -120,10 +117,7 @@ fn routes() -> Router<NodeState> {
         .nest("/ws", ws::routes())
         .nest("/session", session::routes())
         .nest("/events", events::routes())
-        .nest("/changes", changes::routes())
-        .nest("/nodes", nodes::routes())
-        .nest("/cotos", cotos::routes())
-        .nest("/cotonomas", cotonomas::routes())
+        .nest("/data", data::routes())
 }
 
 async fn fallback(uri: Uri) -> impl IntoResponse {

@@ -1,6 +1,5 @@
 use axum::{
     extract::{Query, State},
-    middleware,
     routing::get,
     Router, TypedHeader,
 };
@@ -12,15 +11,10 @@ use crate::{
     web::{Accept, Content},
 };
 
-pub(super) fn routes() -> Router<NodeState> {
-    Router::new()
-        .route("/", get(chunk_of_changes))
-        .layer(middleware::from_fn(super::require_operator))
-        .layer(middleware::from_fn(super::require_session))
-}
+pub(super) fn routes() -> Router<NodeState> { Router::new().route("/", get(chunk_of_changes)) }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/changes
+// GET /api/data/changes
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(serde::Serialize, serde::Deserialize, Validate)]

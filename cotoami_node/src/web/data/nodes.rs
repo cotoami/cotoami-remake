@@ -1,4 +1,4 @@
-use axum::{extract::State, middleware, routing::get, Extension, Router, TypedHeader};
+use axum::{extract::State, routing::get, Extension, Router, TypedHeader};
 use cotoami_db::prelude::*;
 
 use crate::{
@@ -23,12 +23,10 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/children", children::routes())
         .nest("/:node_id/cotonomas", cotonomas::routes())
         .nest("/:node_id/cotos", cotos::routes())
-        .layer(middleware::from_fn(super::require_operator))
-        .layer(middleware::from_fn(super::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/nodes/local
+// GET /api/data/nodes/local
 /////////////////////////////////////////////////////////////////////////////
 
 async fn local_node(

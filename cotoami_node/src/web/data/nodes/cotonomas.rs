@@ -1,56 +1,54 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
-    http::StatusCode,
     routing::get,
-    Extension, Form, Router, TypedHeader,
+    Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
+use validator::Validate;
 
 use crate::{
-    service::{
-        models::{CotonomaInput, Pagination},
-        ServiceError,
-    },
+    service::{error::IntoServiceResult, models::Pagination, ServiceError},
     state::NodeState,
     web::{Accept, Content},
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/", get(sub_cotonomas).post(post_cotonoma))
+    Router::new()
+        .route("/", get(recent_cotonomas))
+        .route("/:name", get(get_cotonoma_by_name))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotonomas/:cotonoma_id/subs
+// GET /api/data/nodes/:node_id/cotonomas
 /////////////////////////////////////////////////////////////////////////////
 
-async fn sub_cotonomas(
+async fn recent_cotonomas(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(cotonoma_id): Path<Id<Cotonoma>>,
+    Path(node_id): Path<Id<Node>>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return ("cotonomas", errors).into_result();
+    }
     state
-        .sub_cotonomas(cotonoma_id, pagination)
+        .recent_cotonomas(Some(node_id), pagination)
         .await
         .map(|cotonomas| Content(cotonomas, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// POST /api/cotonomas/:cotonoma_id/subs
+// GET /api/data/nodes/:node_id/cotonomas/:name
 /////////////////////////////////////////////////////////////////////////////
 
-async fn post_cotonoma(
+async fn get_cotonoma_by_name(
     State(state): State<NodeState>,
-    Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Form(form): Form<CotonomaInput>,
-) -> Result<(StatusCode, Content<(Cotonoma, Coto)>), ServiceError> {
+    Path((node_id, name)): Path<(Id<Node>, String)>,
+) -> Result<Content<Cotonoma>, ServiceError> {
     state
-        .post_cotonoma(form, cotonoma_id, Arc::new(operator))
+        .cotonoma_by_name(name, node_id)
         .await
-        .map(|cotonoma| (StatusCode::CREATED, Content(cotonoma, accept)))
+        .map(|cotonoma| Content(cotonoma, accept))
 }

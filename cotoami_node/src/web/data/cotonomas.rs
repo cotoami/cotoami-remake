@@ -1,7 +1,6 @@
 use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
-    middleware,
     routing::get,
     Router, TypedHeader,
 };
@@ -27,12 +26,10 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/:cotonoma_id/graph", get(get_graph))
         .nest("/:cotonoma_id/subs", subs::routes())
         .nest("/:cotonoma_id/cotos", cotos::routes())
-        .layer(middleware::from_fn(super::require_operator))
-        .layer(middleware::from_fn(super::require_session))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotonomas
+// GET /api/data/cotonomas
 /////////////////////////////////////////////////////////////////////////////
 
 async fn recent_cotonomas(
@@ -47,7 +44,7 @@ async fn recent_cotonomas(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotonomas/:cotonoma_id
+// GET /api/data/cotonomas/:cotonoma_id
 /////////////////////////////////////////////////////////////////////////////
 
 async fn get_cotonoma(
@@ -62,7 +59,7 @@ async fn get_cotonoma(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotonomas/:cotonoma_id/details
+// GET /api/data/cotonomas/:cotonoma_id/details
 /////////////////////////////////////////////////////////////////////////////
 
 async fn get_cotonoma_details(
@@ -77,7 +74,7 @@ async fn get_cotonoma_details(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/cotonomas/:cotonoma_id/graph
+// GET /api/data/cotonomas/:cotonoma_id/graph
 /////////////////////////////////////////////////////////////////////////////
 
 async fn get_graph(
