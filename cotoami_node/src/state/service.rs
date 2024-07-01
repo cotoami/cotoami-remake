@@ -35,6 +35,7 @@ impl NodeState {
         let opr = request.try_auth().map(Clone::clone);
         match request.command() {
             Command::LocalNode => format.to_bytes(self.local_node().await),
+            Command::InitialDataset => format.to_bytes(self.initial_dataset(opr?).await),
             Command::ChunkOfChanges { from } => format.to_bytes(self.chunk_of_changes(from).await),
             Command::CreateClientNodeSession(input) => {
                 format.to_bytes(self.create_client_node_session(input).await)
@@ -223,4 +224,23 @@ enum ChangeResult<Input, Change> {
 fn read_only_cotonoma_error(cotonoma_name: &str) -> RequestError {
     RequestError::new("read-only-cotonoma", "The cotonoma is read-only for you.")
         .with_param("cotonoma-name", json!(cotonoma_name))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// InitialDataset
+/////////////////////////////////////////////////////////////////////////////
+
+impl NodeState {
+    pub async fn initial_dataset(
+        &self,
+        operator: Arc<Operator>,
+    ) -> Result<InitialDataset, ServiceError> {
+        Ok(InitialDataset {
+            last_change_number: self.last_change_number().await?.unwrap_or(0),
+            nodes: self.all_nodes().await?,
+            local_node_id: self.db().globals().try_get_local_node_id()?,
+            parent_node_ids: self.db().globals().parent_node_ids(),
+            servers: self.all_servers(operator).await?,
+        })
+    }
 }

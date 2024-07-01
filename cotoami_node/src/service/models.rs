@@ -50,6 +50,19 @@ pub struct ClientNodeSession {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// Database
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, serde::Serialize)]
+pub struct InitialDataset {
+    pub last_change_number: i64,
+    pub nodes: Vec<Node>,
+    pub local_node_id: Id<Node>,
+    pub parent_node_ids: Vec<Id<Node>>,
+    pub servers: Vec<Server>,
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Server
 /////////////////////////////////////////////////////////////////////////////
 
@@ -66,14 +79,14 @@ pub struct ConnectServerNode {
     pub server_as_child: Option<bool>,
 }
 
-#[derive(serde::Serialize, new)]
+#[derive(Debug, serde::Serialize, new)]
 pub struct Server {
     pub server: ServerNode,
     pub not_connected: Option<NotConnected>,
     pub database_role: Option<DatabaseRole>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "reason", content = "details")]
 pub enum NotConnected {
     Disabled,

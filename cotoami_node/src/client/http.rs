@@ -94,6 +94,7 @@ impl HttpClient {
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
             Command::LocalNode => self.get("/api/nodes/local"),
+            Command::InitialDataset => self.get("/api/data"),
             Command::ChunkOfChanges { from } => self
                 .get("/api/changes")
                 .query(&[("from", from.to_string())]),

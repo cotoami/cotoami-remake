@@ -135,6 +135,9 @@ pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,
 
+    /// Request an [InitialDataset].
+    InitialDataset,
+
     /// Request a [ChunkOfChanges] from a change number `from`.
     ChunkOfChanges { from: i64 },
 
