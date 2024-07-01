@@ -235,8 +235,19 @@ impl NodeState {
         &self,
         operator: Arc<Operator>,
     ) -> Result<InitialDataset, ServiceError> {
+        // Get the last change number before retrieving database contents to
+        // ensure them to be the same or newer version than the number.
+        //
+        // Since the number will be used as a base of accepting changes,
+        // older contents lead to missing changes to be applied:
+        // <older contents> -> missing -> <last number> -> changes to be applied
+        //
+        // On the other hand, newer contents cause duplicate changes to be applied,
+        // but it should be no problem as long as each change is idempotent:
+        // <last number> -> duplicate changes to be applied -> <newer contents>
+        let last_change_number = self.last_change_number().await?.unwrap_or(0);
         Ok(InitialDataset {
-            last_change_number: self.last_change_number().await?.unwrap_or(0),
+            last_change_number,
             nodes: self.all_nodes().await?,
             local_node_id: self.db().globals().try_get_local_node_id()?,
             parent_node_ids: self.db().globals().parent_node_ids(),

@@ -16,8 +16,11 @@ case class Domain(
     links: Links = Links(),
     graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def init(info: DatabaseInfo): Domain =
-    this.copy(lastChangeNumber = info.lastChangeNumber, nodes = Nodes(info))
+  def init(dataset: InitialDataset): Domain =
+    this.copy(
+      lastChangeNumber = dataset.lastChangeNumber,
+      nodes = Nodes(dataset)
+    )
 
   def clearSelection(): Domain =
     this.copy(

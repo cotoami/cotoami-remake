@@ -62,6 +62,14 @@ pub struct InitialDataset {
     pub servers: Vec<Server>,
 }
 
+impl InitialDataset {
+    pub fn local_node(&self) -> Option<&Node> {
+        self.nodes
+            .iter()
+            .find(|node| node.uuid == self.local_node_id)
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Server
 /////////////////////////////////////////////////////////////////////////////

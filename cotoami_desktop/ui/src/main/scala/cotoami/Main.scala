@@ -144,7 +144,7 @@ object Main {
       case Msg.SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
-          .modify(_.domain).using(_.init(info))
+          .modify(_.domain).using(_.init(info.initialDataset))
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(

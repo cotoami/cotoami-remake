@@ -96,11 +96,11 @@ object ParentStatus {
 }
 
 object Nodes {
-  def apply(info: DatabaseInfo) =
+  def apply(dataset: InitialDataset) =
     new Nodes(
-      map = info.nodes,
-      localId = Some(info.localNodeId),
-      operatingId = Some(info.localNodeId),
-      parentIds = info.parentNodeIds.toSeq
-    ).addServers(info.servers)
+      map = dataset.nodes,
+      localId = Some(dataset.localNodeId),
+      operatingId = Some(dataset.localNodeId),
+      parentIds = dataset.parentNodeIds.toSeq
+    ).addServers(dataset.servers)
 }
