@@ -57,6 +57,7 @@ impl ServerConnection {
         // To avoid leaking the existing running tasks.
         self.disconnect(None);
 
+        debug!("Server connection initializing: {}", self.server.node_id);
         let task = tokio::spawn(self.clone().try_connect());
         self.set_conn_state(ConnectionState::Initializing(task.abort_handle()));
 

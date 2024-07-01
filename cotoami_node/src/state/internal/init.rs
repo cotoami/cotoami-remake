@@ -65,6 +65,11 @@ impl NodeState {
         });
     }
 
+    /// Restores [ServerConnection] instances for the [cotoami_db::ServerNode]s
+    /// of the local node.
+    ///
+    /// NOTE: The connections won't be made active, so you need to call
+    /// [crate::state::ServerConnections::connect_all] afterward.
     async fn restore_server_conns(&self) -> Result<()> {
         let server_nodes = spawn_blocking({
             let db = self.db().clone();
