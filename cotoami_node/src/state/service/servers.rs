@@ -178,7 +178,7 @@ impl NodeState {
             }
         }
 
-        // Update the connection
+        // Recreate a connection with the updated [ServerNode].
         let server = self.server_node(node_id, operator).await?;
         let conn = ServerConnection::new(server, self.clone());
         conn.connect().await;
