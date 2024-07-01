@@ -158,7 +158,7 @@ object NavCotonomas {
                 role := "switch",
                 checked := !syncDisabled,
                 disabled := model.togglingSync,
-                onClick := (_ =>
+                onChange := (_ =>
                   dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).toApp)
                 )
               )
