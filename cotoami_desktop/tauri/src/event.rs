@@ -51,10 +51,10 @@ impl LocalEventSink for AppHandle {
 pub(super) async fn listen(state: NodeState, app_handle: AppHandle) {
     let mut tasks = JoinSet::new();
 
-    // listen to [ChangelogEntry]s
+    // listen to ChangelogEntries
     tasks.spawn({
         let (state, app_handle) = (state.clone(), app_handle.clone());
-        let mut changes = state.pubsub().local_changes().subscribe(None::<()>);
+        let mut changes = state.pubsub().changes().subscribe(None::<()>);
         async move {
             while let Some(change) = changes.next().await {
                 app_handle.send_backend_change(&change);
@@ -62,7 +62,7 @@ pub(super) async fn listen(state: NodeState, app_handle: AppHandle) {
         }
     });
 
-    // listen to [LocalNodeEvent]s
+    // listen to LocalNodeEvents
     tasks.spawn({
         let (state, app_handle) = (state.clone(), app_handle.clone());
         let mut events = state.pubsub().events().subscribe(None::<()>);
