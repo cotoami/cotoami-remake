@@ -44,7 +44,7 @@ impl NodeState {
 
     async fn pin_parent_root(&self, parent_id: Id<Node>) -> Result<()> {
         let db = self.db().clone();
-        let change_pubsub = self.pubsub().local_changes().clone();
+        let change_pubsub = self.pubsub().changes().clone();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
             if let Some((link, parent_cotonoma, change)) = ds.pin_parent_root(&parent_id)? {

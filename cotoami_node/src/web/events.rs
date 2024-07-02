@@ -1,6 +1,5 @@
 use std::convert::Infallible;
 
-use async_stream::stream;
 use axum::{
     body::Bytes,
     extract::{Extension, State},
@@ -11,7 +10,7 @@ use axum::{
     Router,
 };
 use cotoami_db::prelude::*;
-use futures::stream::Stream;
+use futures::{stream::Stream, StreamExt};
 use tracing::debug;
 
 use crate::{
@@ -34,8 +33,8 @@ async fn stream_events(
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
-    let events = stream! {
-        if let ClientSession::ParentNode(parent) = session {
+    let events = match session {
+        ClientSession::ParentNode(parent) => {
             // How to know when Sse connection is closed?
             // https://github.com/tokio-rs/axum/discussions/1060
             struct StreamLocal(Id<Node>, EventPubsub);
@@ -59,14 +58,28 @@ async fn stream_events(
             state.register_parent_service(parent.node_id, Box::new(parent_service.clone()));
 
             // Stream `request` events
-            for await request in requests {
-                yield event("request", request);
-            }
-        } else {
-            // Stream `change` events
-            let changes = state.pubsub().local_changes().subscribe(None::<()>);
-            for await change in changes {
-                yield event("change", change);
+            requests
+                .map(|request| event(NodeSentEvent::NAME_REQUEST, request))
+                .boxed()
+        }
+        ClientSession::Operator(opr) => {
+            // Stream of change events
+            let changes = state
+                .pubsub()
+                .changes()
+                .subscribe(None::<()>)
+                .map(|change| event(NodeSentEvent::NAME_CHANGE, change));
+
+            if opr.has_owner_permission() {
+                // Stream of local events
+                let local_events = state
+                    .pubsub()
+                    .events()
+                    .subscribe(None::<()>)
+                    .map(|local_event| event(NodeSentEvent::NAME_REMOTE_LOCAL, local_event));
+                futures::stream::select(changes, local_events).boxed()
+            } else {
+                changes.boxed()
             }
         }
     };
@@ -85,7 +98,9 @@ where
 }
 
 fn error_event<E: ToString>(e: E) -> SseEvent {
-    SseEvent::default().event("error").data(e.to_string())
+    SseEvent::default()
+        .event(NodeSentEvent::NAME_ERROR)
+        .data(e.to_string())
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -126,6 +141,10 @@ async fn post_event(
                     .responses()
                     .publish(response, Some(&response_id))
             }
+            NodeSentEvent::RemoteLocal(event) => state
+                .pubsub()
+                .remote_events()
+                .publish(event, Some(&parent.node_id)),
             NodeSentEvent::Error(msg) => {
                 return Err(ServiceError::Server(msg));
             }

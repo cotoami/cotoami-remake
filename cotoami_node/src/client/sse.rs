@@ -12,7 +12,10 @@ use tracing::{debug, error, info};
 
 use crate::{
     client::{ClientState, ConnectionState, HttpClient},
-    event::remote::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
+    event::{
+        local::LocalNodeEvent,
+        remote::{handle_event_from_operator, handle_event_from_parent, NodeSentEvent},
+    },
     service::{models::NotConnected, Request, Response},
     state::NodeState,
 };
@@ -138,11 +141,7 @@ impl SseClient {
     }
 
     async fn stream_changes_to_server(self) {
-        let mut changes = self
-            .node_state()
-            .pubsub()
-            .local_changes()
-            .subscribe(None::<()>);
+        let mut changes = self.node_state().pubsub().changes().subscribe(None::<()>);
         while let Some(change) = changes.next().await {
             if let Err(e) = self
                 .http_client
@@ -174,19 +173,23 @@ impl SseClient {
 impl From<eventsource_stream::Event> for NodeSentEvent {
     fn from(source: eventsource_stream::Event) -> Self {
         match &*source.event {
-            "change" => match serde_json::from_str::<ChangelogEntry>(&source.data) {
+            Self::NAME_CHANGE => match serde_json::from_str::<ChangelogEntry>(&source.data) {
                 Ok(change) => NodeSentEvent::Change(change),
                 Err(e) => NodeSentEvent::Error(e.to_string()),
             },
-            "request" => match serde_json::from_str::<Request>(&source.data) {
+            Self::NAME_REQUEST => match serde_json::from_str::<Request>(&source.data) {
                 Ok(request) => NodeSentEvent::Request(request),
                 Err(e) => NodeSentEvent::Error(e.to_string()),
             },
-            "response" => match serde_json::from_str::<Response>(&source.data) {
+            Self::NAME_RESPONSE => match serde_json::from_str::<Response>(&source.data) {
                 Ok(response) => NodeSentEvent::Response(response),
                 Err(e) => NodeSentEvent::Error(e.to_string()),
             },
-            "error" => NodeSentEvent::Error(source.data),
+            Self::NAME_REMOTE_LOCAL => match serde_json::from_str::<LocalNodeEvent>(&source.data) {
+                Ok(event) => NodeSentEvent::RemoteLocal(event),
+                Err(e) => NodeSentEvent::Error(e.to_string()),
+            },
+            Self::NAME_ERROR => NodeSentEvent::Error(source.data),
             _ => NodeSentEvent::Error(format!("Unknown event: {}", source.event)),
         }
     }

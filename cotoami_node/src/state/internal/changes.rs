@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
@@ -135,7 +137,7 @@ impl NodeState {
 
     async fn import_changes(&self, parent_node_id: Id<Node>, changes: Changes) -> Result<()> {
         let db = self.db().clone();
-        let change_pubsub = self.pubsub().local_changes().clone();
+        let change_pubsub = self.pubsub().changes().clone();
         spawn_blocking(move || {
             let db = db.new_session()?;
             for change in changes.chunk {
@@ -160,6 +162,15 @@ impl NodeState {
             change.serial_number,
             parent_service.description()
         );
+
+        let change = Arc::new(change);
+
+        // Publish the change as a remote change
+        self.pubsub()
+            .remote_changes()
+            .publish(change.clone(), Some(&parent_node_id));
+
+        // Apply the change to the local database
         let import_result = spawn_blocking({
             let db = self.db().clone();
             move || db.new_session()?.import_change(&change, &parent_node_id)

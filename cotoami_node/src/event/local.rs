@@ -2,7 +2,7 @@ use cotoami_db::prelude::*;
 
 use crate::service::models::NotConnected;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LocalNodeEvent {
     ServerStateChanged {
         node_id: Id<Node>,

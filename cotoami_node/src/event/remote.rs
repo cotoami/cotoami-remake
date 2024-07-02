@@ -5,6 +5,7 @@ use futures::{Sink, SinkExt};
 use tracing::{debug, error, info};
 
 use crate::{
+    event::local::LocalNodeEvent,
     service::{Request, Response, Service},
     state::NodeState,
 };
@@ -17,7 +18,16 @@ pub(crate) enum NodeSentEvent {
     Change(ChangelogEntry),
     Request(Request),
     Response(Response),
+    RemoteLocal(LocalNodeEvent),
     Error(String),
+}
+
+impl NodeSentEvent {
+    pub const NAME_CHANGE: &'static str = "change";
+    pub const NAME_REQUEST: &'static str = "request";
+    pub const NAME_RESPONSE: &'static str = "response";
+    pub const NAME_REMOTE_LOCAL: &'static str = "remote-local";
+    pub const NAME_ERROR: &'static str = "error";
 }
 
 #[derive(Debug, derive_more::Display)]
@@ -105,6 +115,10 @@ pub(crate) async fn handle_event_from_parent(
                 .responses()
                 .publish(response, Some(&response_id))
         }
+        NodeSentEvent::RemoteLocal(event) => state
+            .pubsub()
+            .remote_events()
+            .publish(event, Some(&parent_id)),
         NodeSentEvent::Error(msg) => error!("Event error: {msg}"),
         unsupported => {
             info!("Child doesn't support the event: {:?}", unsupported);

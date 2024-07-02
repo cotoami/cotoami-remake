@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use cotoami_db::prelude::*;
 
 use crate::{
@@ -12,32 +14,36 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Pubsub {
-    local_changes: ChangePubsub,
+    changes: ChangePubsub,
+    remote_changes: RemoteChangePubsub,
     events: EventPubsub,
+    remote_events: RemoteEventPubsub,
     responses: ResponsePubsub,
 }
 
 impl Pubsub {
     pub(crate) fn new() -> Self {
-        let local_changes = ChangePubsub::new();
-        let events = EventPubsub::new();
-        let responses = ResponsePubsub::new();
-
         Self {
-            local_changes,
-            events,
-            responses,
+            changes: ChangePubsub::new(),
+            remote_changes: RemoteChangePubsub::new(),
+            events: EventPubsub::new(),
+            remote_events: RemoteEventPubsub::new(),
+            responses: ResponsePubsub::new(),
         }
     }
 
-    pub fn local_changes(&self) -> &ChangePubsub { &self.local_changes }
+    pub fn changes(&self) -> &ChangePubsub { &self.changes }
+
+    pub fn remote_changes(&self) -> &RemoteChangePubsub { &self.remote_changes }
 
     pub fn events(&self) -> &EventPubsub { &self.events }
+
+    pub fn remote_events(&self) -> &RemoteEventPubsub { &self.remote_events }
 
     pub fn responses(&self) -> &ResponsePubsub { &self.responses }
 
     pub fn publish_change(&self, changelog: ChangelogEntry) {
-        self.local_changes.publish(changelog, None);
+        self.changes.publish(changelog, None);
     }
 
     pub fn publish_event(&self, event: LocalNodeEvent) { self.events.publish(event, None); }
@@ -48,6 +54,8 @@ impl Pubsub {
 /////////////////////////////////////////////////////////////////////////////
 
 pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
+
+pub(crate) type RemoteChangePubsub = Publisher<Arc<ChangelogEntry>, Id<Node>>;
 
 /////////////////////////////////////////////////////////////////////////////
 // EventPubsub
@@ -79,3 +87,5 @@ impl EventPubsub {
         self.publish(LocalNodeEvent::ParentDisconnected(node_id), None);
     }
 }
+
+pub type RemoteEventPubsub = Publisher<LocalNodeEvent, Id<Node>>;
