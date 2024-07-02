@@ -230,8 +230,6 @@ impl IntoResponse for ServiceError {
 
 const SESSION_COOKIE_NAME: &str = "session_token";
 
-// https://github.com/rust-lang/rust-clippy/issues/9776
-#[allow(clippy::declare_interior_mutable_const)]
 pub(crate) const SESSION_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-session-token");
 
@@ -281,15 +279,28 @@ async fn require_session<B>(
 // Operator
 /////////////////////////////////////////////////////////////////////////////
 
+pub(crate) const OPERATE_AS_OWNER_HEADER_NAME: HeaderName =
+    HeaderName::from_static("x-cotoami-operate-as-owner");
+
 /// A middleware function to identify the operator from a session.
 ///
 /// This middleware has to be placed after the [require_session] middleware.
 async fn require_operator<B>(
+    Extension(state): Extension<NodeState>,
     Extension(session): Extension<ClientSession>,
     mut request: Request<B>,
     next: Next<B>,
 ) -> Result<Response, ServiceError> {
     if let ClientSession::Operator(operator) = session {
+        let operator = if request.headers().contains_key(OPERATE_AS_OWNER_HEADER_NAME) {
+            if operator.has_owner_permission() {
+                state.db().globals().local_node_as_operator()?
+            } else {
+                return Err(ServiceError::Permission);
+            }
+        } else {
+            operator
+        };
         request.extensions_mut().insert(operator);
         Ok(next.run(request).await)
     } else {
