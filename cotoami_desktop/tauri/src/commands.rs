@@ -34,6 +34,7 @@ pub async fn node_command(
     let response = if let Some(node_id) = operating_as.node_id() {
         // Send the request to the operating node
         let parent_service = state.parent_services().try_get(&node_id)?;
+        request.operate_as_owner();
         parent_service.call(request).await?
     } else {
         // Send the request to the local node

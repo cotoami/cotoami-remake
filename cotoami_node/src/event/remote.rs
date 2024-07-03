@@ -6,7 +6,7 @@ use tracing::{debug, error, info};
 
 use crate::{
     event::local::LocalNodeEvent,
-    service::{Request, Response, Service},
+    service::{error::ServiceError, Request, Response, Service},
     state::NodeState,
 };
 
@@ -56,13 +56,32 @@ where
     match event {
         NodeSentEvent::Request(mut request) => {
             debug!("Received a request from: {opr:?}: {request:?}");
-            request.set_from(opr);
+
+            // Operate-as-owner feature
+            if request.as_owner() {
+                if opr.has_owner_permission() {
+                    match state.db().globals().local_node_as_operator() {
+                        Ok(owner) => {
+                            request.set_from(Arc::new(owner));
+                        }
+                        Err(e) => {
+                            return ControlFlow::Break(e);
+                        }
+                    }
+                } else {
+                    send_response(
+                        Response::to(&request, Err(ServiceError::Permission)),
+                        &mut peer,
+                    )
+                    .await?;
+                }
+            } else {
+                request.set_from(opr);
+            }
+
             match state.call(request).await {
                 Ok(response) => {
-                    if let Err(e) = peer.send(NodeSentEvent::Response(response)).await {
-                        // Disconnected
-                        return ControlFlow::Break(e.into().context("Error sending a response."));
-                    }
+                    send_response(response, &mut peer).await?;
                 }
                 Err(e) => {
                     // It shouldn't happen: an error processing a request
@@ -77,6 +96,22 @@ where
         }
     }
     ControlFlow::Continue(())
+}
+
+pub(crate) async fn send_response<S, E>(
+    response: Response,
+    peer: &mut S,
+) -> ControlFlow<anyhow::Error>
+where
+    S: Sink<NodeSentEvent, Error = E> + Unpin,
+    E: Into<anyhow::Error>,
+{
+    if let Err(e) = peer.send(NodeSentEvent::Response(response)).await {
+        // Disconnected
+        ControlFlow::Break(e.into().context("Error sending a response."))
+    } else {
+        ControlFlow::Continue(())
+    }
 }
 
 /// Handle events sent from a parent node.

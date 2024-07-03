@@ -102,6 +102,8 @@ pub struct Request {
 
     accept: SerializeFormat,
 
+    as_owner: bool,
+
     command: Command,
 }
 
@@ -111,6 +113,7 @@ impl Request {
             id: Uuid::new_v4(),
             from: None,
             accept: SerializeFormat::MessagePack,
+            as_owner: false,
             command,
         }
     }
@@ -126,6 +129,10 @@ impl Request {
     pub fn set_accept(&mut self, accept: SerializeFormat) { self.accept = accept }
 
     pub fn accept(&self) -> SerializeFormat { self.accept }
+
+    pub fn as_owner(&self) -> bool { self.as_owner }
+
+    pub fn operate_as_owner(&mut self) { self.as_owner = true }
 
     pub fn command(self) -> Command { self.command }
 }
@@ -231,6 +238,10 @@ pub struct Response {
 }
 
 impl Response {
+    pub fn to(request: &Request, body: Result<Bytes, ServiceError>) -> Self {
+        Response::new(*request.id(), request.accept(), body)
+    }
+
     pub fn id(&self) -> &Uuid { &self.id }
 
     pub fn content<T: DeserializeOwned>(self) -> Result<T> {

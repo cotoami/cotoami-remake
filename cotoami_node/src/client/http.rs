@@ -95,6 +95,7 @@ impl HttpClient {
     async fn handle_request(self, request: Request) -> Result<Response> {
         let request_id = *request.id();
         let accept = request.accept();
+        let as_owner = request.as_owner();
 
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
@@ -191,6 +192,16 @@ impl HttpClient {
                 header::ACCEPT,
                 HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
             ),
+        };
+
+        // Operate as owner.
+        let http_req = if as_owner {
+            http_req.header(
+                crate::web::OPERATE_AS_OWNER_HEADER_NAME,
+                HeaderValue::from_static("true"),
+            )
+        } else {
+            http_req
         };
 
         Self::convert_response(request_id, http_req.send().await?).await
