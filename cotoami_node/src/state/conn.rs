@@ -18,6 +18,7 @@ use crate::{
 #[derive(Clone)]
 pub struct ServerConnection {
     server: ServerNode,
+    operate_as_owner: bool,
     node_state: NodeState,
     conn_state: Arc<RwLock<ConnectionState>>,
 }
@@ -40,9 +41,16 @@ impl ServerConnection {
         };
         Self {
             server,
+            operate_as_owner: false,
             node_state,
             conn_state: Arc::new(RwLock::new(conn_state)),
         }
+    }
+
+    pub fn new_as_owner(server: ServerNode, node_state: NodeState) -> Self {
+        let mut conn = Self::new(server, node_state);
+        conn.operate_as_owner = true;
+        conn
     }
 
     /// Connects to the server node.
@@ -106,6 +114,10 @@ impl ServerConnection {
     pub async fn start_event_loop(&self, http_client: HttpClient) -> Result<()> {
         if self.server.disabled {
             return Ok(());
+        }
+
+        if self.is_parent() && self.operate_as_owner {
+            //
         }
 
         // Try to connect via WebSocket first

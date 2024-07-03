@@ -12,7 +12,7 @@ use parking_lot::RwLock;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use reqwest::{
     header,
-    header::{HeaderMap, HeaderValue},
+    header::{HeaderMap, HeaderName, HeaderValue},
     Client, RequestBuilder, StatusCode, Url,
 };
 use uuid::Uuid;
@@ -55,6 +55,10 @@ impl HttpClient {
             HeaderValue::from_static("cotoami_node"),
         );
         headers
+    }
+
+    pub fn set_header(&self, name: HeaderName, value: HeaderValue) {
+        self.headers.write().insert(name, value);
     }
 
     pub(crate) fn all_headers(&self) -> HeaderMap {
@@ -250,9 +254,7 @@ impl RemoteNodeService for HttpClient {
     fn set_session_token(&mut self, token: &str) -> Result<()> {
         let mut token = HeaderValue::from_str(token)?;
         token.set_sensitive(true);
-        self.headers
-            .write()
-            .insert(crate::web::SESSION_HEADER_NAME, token);
+        self.set_header(crate::web::SESSION_HEADER_NAME, token);
         Ok(())
     }
 }
