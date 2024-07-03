@@ -3,7 +3,6 @@ use std::sync::Arc;
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
-use reqwest::header::HeaderValue;
 use tokio::task::AbortHandle;
 use tracing::{debug, info};
 
@@ -19,7 +18,6 @@ use crate::{
 #[derive(Clone)]
 pub struct ServerConnection {
     server: ServerNode,
-    operate_as_owner: bool,
     node_state: NodeState,
     conn_state: Arc<RwLock<ConnectionState>>,
 }
@@ -42,16 +40,9 @@ impl ServerConnection {
         };
         Self {
             server,
-            operate_as_owner: false,
             node_state,
             conn_state: Arc::new(RwLock::new(conn_state)),
         }
-    }
-
-    pub fn new_as_owner(server: ServerNode, node_state: NodeState) -> Self {
-        let mut conn = Self::new(server, node_state);
-        conn.operate_as_owner = true;
-        conn
     }
 
     /// Connects to the server node.
@@ -115,14 +106,6 @@ impl ServerConnection {
     pub async fn start_event_loop(&self, http_client: HttpClient) -> Result<()> {
         if self.server.disabled {
             return Ok(());
-        }
-
-        // Operate as owner
-        if self.is_parent() && self.operate_as_owner {
-            http_client.set_header(
-                crate::web::OPERATE_AS_OWNER_HEADER_NAME,
-                HeaderValue::from_static("true"),
-            );
         }
 
         // Try to connect via WebSocket first
