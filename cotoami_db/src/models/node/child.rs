@@ -20,6 +20,7 @@ use crate::{models::Id, schema::child_nodes};
     Queryable,
     Selectable,
     serde::Serialize,
+    serde::Deserialize,
 )]
 #[diesel(primary_key(node_id), treat_none_as_null = true)]
 pub struct ChildNode {

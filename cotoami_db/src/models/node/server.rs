@@ -32,6 +32,7 @@ use crate::{models::Id, schema::server_nodes};
     Selectable,
     Validate,
     serde::Serialize,
+    serde::Deserialize,
 )]
 #[diesel(primary_key(node_id))]
 pub struct ServerNode {
@@ -47,7 +48,7 @@ pub struct ServerNode {
 
     /// Saved password to connect to this server node.
     #[debug(skip)]
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub encrypted_password: Option<EncryptedPassword>,
 
     /// Local node won't connect to this node if the value is TRUE.

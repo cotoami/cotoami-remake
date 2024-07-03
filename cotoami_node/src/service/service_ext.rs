@@ -1,16 +1,34 @@
 use anyhow::Result;
+use async_trait::async_trait;
 use cotoami_db::prelude::*;
 
 use crate::service::{
     models::{
         ChunkOfChanges, ClientNodeSession, CotoInput, CotonomaInput, CreateClientNodeSession,
+        InitialDataset,
     },
     Command, NodeService, RemoteNodeService,
 };
 
 /// An extension trait for [NodeService] that provides shortcut functions for
-/// frequently used requests.
-pub(crate) trait NodeServiceExt: NodeService {
+/// frequently used commands.
+///
+/// `async fn` is now supported in Rust 1.75.0:
+/// https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html
+/// However, it is still discouraged for general use in public traits and
+/// APIs for the reason that users can't put additional bounds on the return type.
+///
+/// We want this extension trait to be public so that other crate can use it,
+/// so decided to use the `async_trait` crate until this limitation is removed.
+/// https://crates.io/crates/async-trait
+#[async_trait]
+pub trait NodeServiceExt: NodeService {
+    async fn initial_dataset(&self) -> Result<InitialDataset> {
+        let request = Command::InitialDataset.into_request();
+        let response = self.call(request).await?;
+        response.content::<InitialDataset>()
+    }
+
     async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges> {
         let request = Command::ChunkOfChanges { from }.into_request();
         let response = self.call(request).await?;
@@ -36,7 +54,8 @@ pub(crate) trait NodeServiceExt: NodeService {
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}
 
-pub(crate) trait RemoteNodeServiceExt: RemoteNodeService {
+#[async_trait]
+pub trait RemoteNodeServiceExt: RemoteNodeService {
     async fn create_client_node_session(
         &mut self,
         input: CreateClientNodeSession,

@@ -53,7 +53,7 @@ pub struct ClientNodeSession {
 // Database
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct InitialDataset {
     pub last_change_number: i64,
     pub nodes: Vec<Node>,
@@ -87,7 +87,7 @@ pub struct ConnectServerNode {
     pub server_as_child: Option<bool>,
 }
 
-#[derive(Debug, serde::Serialize, new)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct Server {
     pub server: ServerNode,
     pub not_connected: Option<NotConnected>,

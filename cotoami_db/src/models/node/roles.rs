@@ -11,7 +11,7 @@ pub enum NetworkRole {
     Client(ClientNode),
 }
 
-#[derive(Debug, derive_more::Display, serde::Serialize)]
+#[derive(Debug, derive_more::Display, serde::Serialize, serde::Deserialize)]
 pub enum DatabaseRole {
     #[display("Parent ({})", _0.node_id)]
     Parent(ParentNode),

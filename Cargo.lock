@@ -907,6 +907,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-stream",
+ "async-trait",
  "axum",
  "axum-extra",
  "axum-macros",
