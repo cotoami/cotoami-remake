@@ -16,6 +16,7 @@ fn main() {
                 .level(LevelFilter::Debug)
                 .build(),
         )
+        .manage(commands::OperatingAs::default())
         .invoke_handler(tauri::generate_handler![
             commands::node_command,
             commands::system::system_info,
