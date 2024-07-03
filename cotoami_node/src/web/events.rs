@@ -107,6 +107,7 @@ fn error_event<E: ToString>(e: E) -> SseEvent {
 // POST /api/events
 /////////////////////////////////////////////////////////////////////////////
 
+/// Send a [NodeSentEvent] from parent(client) to child(server).
 async fn post_event(
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
