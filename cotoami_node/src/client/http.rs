@@ -12,7 +12,7 @@ use parking_lot::RwLock;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use reqwest::{
     header,
-    header::{HeaderMap, HeaderName, HeaderValue},
+    header::{HeaderMap, HeaderValue, IntoHeaderName},
     Client, RequestBuilder, StatusCode, Url,
 };
 use uuid::Uuid;
@@ -57,7 +57,7 @@ impl HttpClient {
         headers
     }
 
-    pub fn set_header(&self, name: HeaderName, value: HeaderValue) {
+    pub fn set_header<K: IntoHeaderName>(&self, name: K, value: HeaderValue) {
         self.headers.write().insert(name, value);
     }
 

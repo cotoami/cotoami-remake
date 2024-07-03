@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
+use reqwest::header::HeaderValue;
 use tokio::task::AbortHandle;
 use tracing::{debug, info};
 
@@ -116,8 +117,12 @@ impl ServerConnection {
             return Ok(());
         }
 
+        // Operate as owner
         if self.is_parent() && self.operate_as_owner {
-            //
+            http_client.set_header(
+                crate::web::OPERATE_AS_OWNER_HEADER_NAME,
+                HeaderValue::from_static("true"),
+            );
         }
 
         // Try to connect via WebSocket first
