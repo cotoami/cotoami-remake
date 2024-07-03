@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use cotoami_desktop::{conn, db, plugins, system};
+use cotoami_desktop::{commands, plugins};
 use log::LevelFilter;
 use tauri_plugin_log::LogTarget;
 
@@ -17,13 +17,13 @@ fn main() {
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
-            system::system_info,
-            db::validate_new_database_folder,
-            db::validate_database_folder,
-            db::create_database,
-            db::open_database,
-            db::node_command,
-            conn::connect_to_servers
+            commands::node_command,
+            commands::system::system_info,
+            commands::db::validate_new_database_folder,
+            commands::db::validate_database_folder,
+            commands::db::create_database,
+            commands::db::open_database,
+            commands::conn::connect_to_servers
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

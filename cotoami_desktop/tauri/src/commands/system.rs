@@ -2,7 +2,7 @@ use std::env;
 
 use chrono::Local;
 
-use crate::db::recent::RecentDatabases;
+use crate::commands::db::recent::RecentDatabases;
 
 #[derive(serde::Serialize)]
 pub struct SystemInfo {

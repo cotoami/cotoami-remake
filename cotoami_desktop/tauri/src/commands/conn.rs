@@ -1,6 +1,6 @@
 use cotoami_node::prelude::*;
 
-use crate::{error::Error, log::Logger};
+use crate::{commands::error::Error, log::Logger};
 
 #[tauri::command]
 pub async fn connect_to_servers(
