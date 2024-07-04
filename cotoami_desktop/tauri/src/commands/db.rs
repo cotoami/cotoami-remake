@@ -9,7 +9,11 @@ use cotoami_node::prelude::*;
 use tauri::Manager;
 
 use self::recent::RecentDatabases;
-use crate::{commands::error::Error, config::Configs, event, log::Logger};
+use crate::{
+    commands::{error::Error, OperatingAs},
+    config::Configs,
+    log::Logger,
+};
 
 pub(crate) mod recent;
 
@@ -99,8 +103,10 @@ pub async fn create_database(
     configs.insert(node_state.try_get_local_node_id()?, node_config);
     configs.save(&app_handle);
 
-    // Pipe node events into the frontend.
-    node_state.spawn_task(event::listen(node_state.clone(), app_handle.clone()));
+    // Operating as the local node.
+    let operating_as = OperatingAs::default();
+    operating_as.operate_as_local(&node_state, &app_handle)?;
+    app_handle.manage(operating_as);
 
     // DatabaseInfo
     let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
@@ -159,7 +165,12 @@ pub async fn open_database(
         _ => {
             app_handle.debug("Creating a new NodeState.", None);
             let node_state = NodeState::new(node_config).await?;
-            node_state.spawn_task(event::listen(node_state.clone(), app_handle.clone()));
+
+            // Operating as the local node.
+            let operating_as = OperatingAs::default();
+            operating_as.operate_as_local(&node_state, &app_handle)?;
+            app_handle.manage(operating_as);
+
             app_handle.manage(node_state.clone());
             node_state
         }

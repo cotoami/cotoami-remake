@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use cotoami_db::prelude::*;
 
 use crate::{
@@ -55,7 +53,7 @@ impl Pubsub {
 
 pub(crate) type ChangePubsub = Publisher<ChangelogEntry, ()>;
 
-pub(crate) type RemoteChangePubsub = Publisher<Arc<ChangelogEntry>, Id<Node>>;
+pub(crate) type RemoteChangePubsub = Publisher<ChangelogEntry, Id<Node>>;
 
 /////////////////////////////////////////////////////////////////////////////
 // EventPubsub

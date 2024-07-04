@@ -163,19 +163,22 @@ impl NodeState {
             parent_service.description()
         );
 
+        // Import the change to the local database
         let change = Arc::new(change);
-
-        // Publish the change as a remote change
-        self.pubsub()
-            .remote_changes()
-            .publish(change.clone(), Some(&parent_node_id));
-
-        // Apply the change to the local database
         let import_result = spawn_blocking({
             let db = self.db().clone();
+            let change = change.clone();
             move || db.new_session()?.import_change(&change, &parent_node_id)
         })
         .await?;
+
+        // Publish the change as a remote change
+        self.pubsub().remote_changes().publish(
+            Arc::into_inner(change).unwrap_or_else(|| unreachable!()),
+            Some(&parent_node_id),
+        );
+
+        // Handle the import result
         match import_result {
             Err(anyhow_err) => {
                 if let Some(DatabaseError::UnexpectedChangeNumber {
