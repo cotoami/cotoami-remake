@@ -148,7 +148,7 @@ pub enum Command {
     /// Request a [ChunkOfChanges] from a change number `from`.
     ChunkOfChanges { from: i64 },
 
-    /// Request a new [ClientNodeSession].
+    /// Request a new [ClientNodeSession] on the local node.
     CreateClientNodeSession(CreateClientNodeSession),
 
     /// Request to connect the server node and return a [ClientNodeSession] if succeeded.

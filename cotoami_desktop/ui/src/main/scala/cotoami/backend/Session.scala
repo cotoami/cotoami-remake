@@ -21,7 +21,8 @@ case class ClientNodeSession(json: ClientNodeSessionJson) {
     Nullable.toOption(this.json.server_root_cotonoma).map(pair =>
       (Cotonoma(pair._1), Coto(pair._2))
     )
-  def asParent: Boolean = this.json.as_parent
+  def asChild: Option[ChildNode] =
+    Nullable.toOption(this.json.as_child).map(ChildNode(_))
 }
 
 @js.native
@@ -30,5 +31,5 @@ trait ClientNodeSessionJson extends js.Object {
   val server: NodeJson = js.native
   val server_root_cotonoma: Nullable[js.Tuple2[CotonomaJson, CotoJson]] =
     js.native
-  val as_parent: Boolean = js.native
+  val as_child: Nullable[ChildNodeJson] = js.native
 }

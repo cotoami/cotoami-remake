@@ -20,26 +20,26 @@ object Commands {
   def TryConnectServerNode(
       url_prefix: String,
       password: String,
-      server_as_child: Boolean = false
+      client_role: Option[String] = None
   ) =
     jso(TryConnectServerNode =
       jso(
         url_prefix = url_prefix,
         password = password,
-        server_as_child = server_as_child
+        client_role = client_role.getOrElse(null)
       )
     )
 
   def AddServerNode(
       url_prefix: String,
       password: String,
-      server_as_child: Boolean = false
+      client_role: Option[String] = None
   ) =
     jso(AddServerNode =
       jso(
         url_prefix = url_prefix,
         password = password,
-        server_as_child = server_as_child
+        client_role = client_role.getOrElse(null)
       )
     )
 
