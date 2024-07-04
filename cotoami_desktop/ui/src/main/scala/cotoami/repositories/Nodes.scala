@@ -52,7 +52,7 @@ case class Nodes(
   def addServer(server: Server): Nodes = {
     val nodes =
       this.modify(_.serverMap).using(_ + (server.server.nodeId -> server))
-    server.databaseRole.map {
+    server.role.map {
       case Parent(parent) => nodes.prependParentId(parent.nodeId)
       case Child(child)   => nodes
     }.getOrElse(nodes)

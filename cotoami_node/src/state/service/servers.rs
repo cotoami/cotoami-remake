@@ -40,7 +40,12 @@ impl NodeState {
                         .server_conns()
                         .get(&node_id)
                         .unwrap_or_else(|| unreachable!());
-                    Server::new(server, conn.not_connected(), roles.remove(&node_id))
+                    Server::new(
+                        server,
+                        roles.remove(&node_id),
+                        conn.local_as_child(),
+                        conn.not_connected(),
+                    )
                 })
                 .collect();
             Ok(servers)
@@ -85,7 +90,7 @@ impl NodeState {
         let server_id = client_session.server.uuid;
 
         // Register the server node
-        let (server, server_node, server_db_role) = spawn_blocking({
+        let (server, server_node, server_role) = spawn_blocking({
             let state = self.clone();
             let operator = operator.clone();
             let url_prefix = http_client.url_prefix().to_string();
@@ -97,8 +102,8 @@ impl NodeState {
                     state.pubsub().publish_change(changelog);
                 }
 
-                // Database role
-                let server_db_role = if client_session.as_child.is_some() {
+                // Database role of the server
+                let server_role = if client_session.as_child.is_some() {
                     NewDatabaseRole::Parent
                 } else {
                     NewDatabaseRole::Child {
@@ -109,14 +114,14 @@ impl NodeState {
 
                 // Register a [ServerNode] and save the password into it
                 let owner_password = state.config().try_get_owner_password()?;
-                let (_, server_db_role) =
-                    ds.register_server_node(&server_id, &url_prefix, server_db_role, &operator)?;
+                let (_, server_role) =
+                    ds.register_server_node(&server_id, &url_prefix, server_role, &operator)?;
                 let server =
                     ds.save_server_password(&server_id, &password, owner_password, &operator)?;
 
                 // Get the imported node data
                 let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());
-                Ok::<_, ServiceError>((server, node, server_db_role))
+                Ok::<_, ServiceError>((server, node, server_role))
             }
         })
         .await??;
@@ -128,7 +133,12 @@ impl NodeState {
         self.server_conns().put(server_id, server_conn.clone());
 
         // Return a Server as a response
-        let server = Server::new(server, server_conn.not_connected(), Some(server_db_role));
+        let server = Server::new(
+            server,
+            Some(server_role),
+            server_conn.local_as_child(),
+            server_conn.not_connected(),
+        );
         Ok(server)
     }
 

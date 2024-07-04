@@ -19,6 +19,7 @@ use crate::{
 pub struct ServerConnection {
     server: ServerNode,
     node_state: NodeState,
+    local_as_child: Arc<RwLock<Option<ChildNode>>>,
     conn_state: Arc<RwLock<ConnectionState>>,
 }
 
@@ -41,6 +42,7 @@ impl ServerConnection {
         Self {
             server,
             node_state,
+            local_as_child: Default::default(),
             conn_state: Arc::new(RwLock::new(conn_state)),
         }
     }
@@ -102,6 +104,8 @@ impl ServerConnection {
             bail!("The remote server ID does not match the stored value.");
         }
 
+        *self.local_as_child.write() = session.as_child;
+
         self.start_event_loop(http_client).await
     }
 
@@ -140,10 +144,13 @@ impl ServerConnection {
 
     pub fn disconnect(&self, reason: Option<&str>) {
         self.conn_state.write().disconnect();
+        *self.local_as_child.write() = None;
         self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
+
+    pub fn local_as_child(&self) -> Option<ChildNode> { self.local_as_child.read().clone() }
 
     fn to_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
 

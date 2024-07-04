@@ -111,8 +111,9 @@ impl ConnectServerNode {
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct Server {
     pub server: ServerNode,
+    pub role: Option<DatabaseRole>,
+    pub client_as_child: Option<ChildNode>,
     pub not_connected: Option<NotConnected>,
-    pub database_role: Option<DatabaseRole>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
