@@ -49,7 +49,7 @@ pub struct OperatingAs {
 impl OperatingAs {
     pub fn parent_id(&self) -> Option<Id<Node>> { *self.parent_id.read() }
 
-    pub fn operate_as_local(&self, state: NodeState, app_handle: AppHandle) -> Result<()> {
+    pub fn operate_as_local(&self, state: NodeState, app_handle: AppHandle) -> Result<(), Error> {
         self.operate_as(None, state, app_handle)
     }
 
@@ -58,12 +58,21 @@ impl OperatingAs {
         parent_id: Option<Id<Node>>,
         state: NodeState,
         app_handle: AppHandle,
-    ) -> Result<()> {
+    ) -> Result<(), Error> {
+        // Check the privilege to operate the remote node.
         if let Some(parent_id) = parent_id {
-            // Check parent
+            match state.local_as_child(&parent_id) {
+                Some(ChildNode { as_owner: true, .. }) => (),
+                _ => {
+                    return Err(Error::new(
+                        "permission-error",
+                        "The local node does not have owner privilege of the target node.",
+                    ))
+                }
+            }
         }
 
-        // Replace piping processes.
+        // Initialize piping processes.
         self.piping_events.abort_all();
         tokio::spawn(event::pipe(
             parent_id,

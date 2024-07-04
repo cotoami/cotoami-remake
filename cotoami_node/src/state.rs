@@ -85,6 +85,12 @@ impl NodeState {
 
     pub fn parent_services(&self) -> &ParentServices { &self.inner.parent_services }
 
+    pub fn local_as_child(&self, parent_id: &Id<Node>) -> Option<ChildNode> {
+        self.server_conns()
+            .get(parent_id)
+            .and_then(|conn| conn.local_as_child())
+    }
+
     pub fn spawn_task<F>(&self, future: F) -> JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
