@@ -7,7 +7,7 @@ use tracing::debug;
 
 use crate::{
     service::{
-        models::{ClientNodeSession, CreateClientNodeSession, Session},
+        models::{ClientNodeSession, CreateClientNodeSession, NodeRole, Session},
         ServiceError,
     },
     state::NodeState,
@@ -25,11 +25,11 @@ impl NodeState {
             let mut ds = db.new_session()?;
 
             // Check database role
-            let client_as_parent = input.as_parent();
+            let client_role = input.client_role();
             let db_role = ds.database_role_of(&input.client.uuid)?;
-            match (&db_role, client_as_parent) {
-                (Some(DatabaseRole::Parent(_)), true) => (),
-                (Some(DatabaseRole::Child(_)), false) => (),
+            match (client_role, &db_role) {
+                (NodeRole::Parent, Some(DatabaseRole::Parent(_))) => (),
+                (NodeRole::Child, Some(DatabaseRole::Child(_))) => (),
                 _ => {
                     return Err(ServiceError::request(
                         "wrong-database-role",
@@ -64,10 +64,9 @@ impl NodeState {
                     expires_at: client.session_expires_at.unwrap(),
                 },
                 server: ds.local_node()?,
-                server_root_cotonoma: if client_as_parent {
-                    None
-                } else {
-                    ds.root_cotonoma()?
+                server_root_cotonoma: match client_role {
+                    NodeRole::Parent => None,
+                    NodeRole::Child => ds.root_cotonoma()?,
                 },
                 as_child: if let Some(DatabaseRole::Child(child)) = db_role {
                     Some(child)

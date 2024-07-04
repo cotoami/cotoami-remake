@@ -26,17 +26,22 @@ pub struct Pagination {
 // Session
 /////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
+pub enum NodeRole {
+    Parent,
+    Child,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CreateClientNodeSession {
     pub password: String,
     pub new_password: Option<String>,
     pub client: Node,
-    // If true, the client database will be incorporated into the server.
-    pub as_parent: Option<bool>,
+    pub client_role: Option<NodeRole>,
 }
 
 impl CreateClientNodeSession {
-    pub fn as_parent(&self) -> bool { self.as_parent.unwrap_or(false) }
+    pub fn client_role(&self) -> NodeRole { self.client_role.unwrap_or(NodeRole::Child) }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -88,7 +93,7 @@ pub struct ConnectServerNode {
 
     pub new_password: Option<String>,
 
-    pub server_as_child: Option<bool>,
+    pub client_role: Option<NodeRole>,
 }
 
 impl ConnectServerNode {
@@ -98,7 +103,7 @@ impl ConnectServerNode {
             password: self.password.unwrap_or_else(|| unreachable!()),
             new_password: self.new_password,
             client,
-            as_parent: self.server_as_child,
+            client_role: self.client_role,
         })
     }
 }

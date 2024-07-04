@@ -9,7 +9,7 @@ use tracing::{debug, info};
 use crate::{
     client::{HttpClient, SseClient, WebSocketClient},
     service::{
-        models::{CreateClientNodeSession, NotConnected},
+        models::{CreateClientNodeSession, NodeRole, NotConnected},
         RemoteNodeServiceExt,
     },
     state::NodeState,
@@ -76,7 +76,6 @@ impl ServerConnection {
     }
 
     async fn try_connect(self) -> Result<()> {
-        let is_local_parent = !self.is_parent(); // just for clarity
         let (_, local_node) = self.node_state.local_node_pair().await?;
         let mut http_client = HttpClient::new(&self.server.url_prefix)?;
 
@@ -90,7 +89,11 @@ impl ServerConnection {
                 password,
                 new_password: None,
                 client: local_node,
-                as_parent: Some(is_local_parent),
+                client_role: if self.to_parent() {
+                    Some(NodeRole::Child)
+                } else {
+                    Some(NodeRole::Parent)
+                },
             })
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
@@ -142,7 +145,7 @@ impl ServerConnection {
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
 
-    fn is_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
+    fn to_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
 
     fn set_conn_state(&self, state: ConnectionState) {
         let old_not_connected = self.not_connected();
@@ -154,7 +157,7 @@ impl ServerConnection {
             self.node_state.pubsub().events().server_state_changed(
                 self.server.node_id,
                 new_not_connected,
-                self.is_parent(),
+                self.to_parent(),
             );
         }
     }
