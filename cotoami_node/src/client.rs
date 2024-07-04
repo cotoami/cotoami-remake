@@ -41,7 +41,7 @@ impl ClientState {
             server_as_operator,
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
-            abortables: Abortables::new(),
+            abortables: Abortables::default(),
         })
     }
 

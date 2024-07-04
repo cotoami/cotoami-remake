@@ -53,7 +53,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
     let stream = stream.map(|r| r.map(into_tungstenite));
 
     // The `communication_tasks` will be terminated when the connection is closed.
-    let communication_tasks = Abortables::new();
+    let communication_tasks = Abortables::default();
     match session {
         ClientSession::Operator(opr) => {
             communicate_with_operator(

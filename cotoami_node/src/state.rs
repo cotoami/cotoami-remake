@@ -54,9 +54,9 @@ impl NodeState {
             config: Arc::new(config),
             db: Arc::new(db),
             pubsub: Pubsub::new(),
-            server_conns: ServerConnections::new(),
-            parent_services: ParentServices::new(),
-            abortables: Abortables::new(),
+            server_conns: ServerConnections::default(),
+            parent_services: ParentServices::default(),
+            abortables: Abortables::default(),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -115,12 +115,10 @@ impl Drop for State {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ParentServices(Arc<RwLock<HashMap<Id<Node>, Box<dyn NodeService>>>>);
 
 impl ParentServices {
-    fn new() -> Self { Self(Arc::new(RwLock::new(HashMap::default()))) }
-
     pub fn get(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         self.0
             .read()
@@ -143,12 +141,10 @@ impl ParentServices {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct ServerConnections(Arc<RwLock<HashMap<Id<Node>, ServerConnection>>>);
 
 impl ServerConnections {
-    fn new() -> Self { Self(Arc::new(RwLock::new(HashMap::default()))) }
-
     pub fn contains(&self, server_id: &Id<Node>) -> bool { self.0.read().contains_key(server_id) }
 
     pub fn get(&self, server_id: &Id<Node>) -> Option<ServerConnection> {
