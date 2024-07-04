@@ -40,6 +40,31 @@ pub async fn node_command(
     response.json().map_err(Error::from)
 }
 
+#[tauri::command]
+pub async fn operate_as(
+    app_handle: tauri::AppHandle,
+    state: tauri::State<'_, NodeState>,
+    operating_as: tauri::State<'_, OperatingAs>,
+    parent_id: Option<Id<Node>>,
+) -> Result<InitialDataset, Error> {
+    let node_state = state.inner();
+
+    // Switch the operating node.
+    operating_as.operate_as(parent_id, node_state.clone(), app_handle)?;
+
+    // Fetch the [InitialDataset] from the new operating node.
+    if let Some(parent_id) = parent_id {
+        let parent_service = state.parent_services().try_get(&parent_id)?;
+        parent_service.initial_dataset().await.map_err(Error::from)
+    } else {
+        let opr = node_state.local_node_as_operator()?;
+        node_state
+            .initial_dataset(Arc::new(opr))
+            .await
+            .map_err(Error::from)
+    }
+}
+
 #[derive(Default)]
 pub struct OperatingAs {
     parent_id: RwLock<Option<Id<Node>>>,

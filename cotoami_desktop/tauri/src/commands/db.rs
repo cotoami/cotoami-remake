@@ -25,8 +25,8 @@ pub struct DatabaseInfo {
 
 impl DatabaseInfo {
     async fn new(folder: String, node_state: &NodeState) -> Result<Self, Error> {
-        let opr = Arc::new(node_state.local_node_as_operator()?);
-        let initial_dataset = node_state.initial_dataset(opr).await?;
+        let opr = node_state.local_node_as_operator()?;
+        let initial_dataset = node_state.initial_dataset(Arc::new(opr)).await?;
         Ok(Self {
             folder,
             initial_dataset,

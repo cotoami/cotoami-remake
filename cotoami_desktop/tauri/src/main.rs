@@ -18,6 +18,7 @@ fn main() {
         )
         .invoke_handler(tauri::generate_handler![
             commands::node_command,
+            commands::operate_as,
             commands::system::system_info,
             commands::db::validate_new_database_folder,
             commands::db::validate_database_folder,
