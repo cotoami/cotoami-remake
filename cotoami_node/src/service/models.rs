@@ -31,8 +31,12 @@ pub struct CreateClientNodeSession {
     pub password: String,
     pub new_password: Option<String>,
     pub client: Node,
-    // If true, the client requires to become a parent.
+    // If true, the client database will be incorporated into the server.
     pub as_parent: Option<bool>,
+}
+
+impl CreateClientNodeSession {
+    pub fn as_parent(&self) -> bool { self.as_parent.unwrap_or(false) }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -85,6 +89,18 @@ pub struct ConnectServerNode {
     pub new_password: Option<String>,
 
     pub server_as_child: Option<bool>,
+}
+
+impl ConnectServerNode {
+    pub fn into_session_request(self, client: Node) -> Result<CreateClientNodeSession> {
+        self.validate()?;
+        Ok(CreateClientNodeSession {
+            password: self.password.unwrap_or_else(|| unreachable!()),
+            new_password: self.new_password,
+            client,
+            as_parent: self.server_as_child,
+        })
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]

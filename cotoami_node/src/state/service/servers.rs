@@ -10,9 +10,7 @@ use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{
-            ClientNodeSession, ConnectServerNode, CreateClientNodeSession, Server, UpdateServerNode,
-        },
+        models::{ClientNodeSession, ConnectServerNode, Server, UpdateServerNode},
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
@@ -58,16 +56,8 @@ impl NodeState {
             return ("connect_server_node", errors).into_result();
         }
 
-        let url_prefix = input.url_prefix.unwrap_or_else(|| unreachable!());
-        let password = input.password.unwrap_or_else(|| unreachable!());
-        let server_as_child = input.server_as_child.unwrap_or(false);
-
-        let session_request = CreateClientNodeSession {
-            password,
-            new_password: input.new_password,
-            client: self.local_node().await?,
-            as_parent: Some(server_as_child),
-        };
+        let url_prefix = input.url_prefix.clone().unwrap_or_else(|| unreachable!());
+        let session_request = input.into_session_request(self.local_node().await?)?;
 
         let mut http_client = HttpClient::new(&url_prefix)?;
         let session = http_client

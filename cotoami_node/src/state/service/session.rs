@@ -25,7 +25,7 @@ impl NodeState {
             let mut ds = db.new_session()?;
 
             // Check database role
-            let client_as_parent = input.as_parent.unwrap_or(false);
+            let client_as_parent = input.as_parent();
             let db_role = ds.database_role_of(&input.client.uuid)?;
             match (&db_role, client_as_parent) {
                 (Some(DatabaseRole::Parent(_)), true) => (),

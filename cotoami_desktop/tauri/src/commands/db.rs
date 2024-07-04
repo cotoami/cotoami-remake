@@ -105,7 +105,7 @@ pub async fn create_database(
 
     // Operating as the local node.
     let operating_as = OperatingAs::default();
-    operating_as.operate_as_local(&node_state, &app_handle)?;
+    operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
     app_handle.manage(operating_as);
 
     // DatabaseInfo
@@ -168,7 +168,7 @@ pub async fn open_database(
 
             // Operating as the local node.
             let operating_as = OperatingAs::default();
-            operating_as.operate_as_local(&node_state, &app_handle)?;
+            operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
             app_handle.manage(operating_as);
 
             app_handle.manage(node_state.clone());
