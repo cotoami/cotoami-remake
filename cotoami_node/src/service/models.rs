@@ -46,7 +46,7 @@ pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
     pub server_root_cotonoma: Option<(Cotonoma, Coto)>,
-    pub as_parent: bool,
+    pub as_child: Option<ChildNode>,
 }
 
 /////////////////////////////////////////////////////////////////////////////

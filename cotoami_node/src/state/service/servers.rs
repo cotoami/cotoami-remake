@@ -108,13 +108,13 @@ impl NodeState {
                 }
 
                 // Database role
-                let server_db_role = if client_session.as_parent {
+                let server_db_role = if client_session.as_child.is_some() {
+                    NewDatabaseRole::Parent
+                } else {
                     NewDatabaseRole::Child {
                         as_owner: false,
                         can_edit_links: false,
                     }
-                } else {
-                    NewDatabaseRole::Parent
                 };
 
                 // Register a [ServerNode] and save the password into it

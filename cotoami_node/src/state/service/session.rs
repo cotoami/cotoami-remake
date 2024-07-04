@@ -1,6 +1,7 @@
 use core::time::Duration;
 
 use anyhow::Result;
+use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::debug;
 
@@ -23,6 +24,20 @@ impl NodeState {
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
 
+            // Check database role
+            let client_as_parent = input.as_parent.unwrap_or(false);
+            let db_role = ds.database_role_of(&input.client.uuid)?;
+            match (&db_role, client_as_parent) {
+                (Some(DatabaseRole::Parent(_)), true) => (),
+                (Some(DatabaseRole::Child(_)), false) => (),
+                _ => {
+                    return Err(ServiceError::request(
+                        "wrong-database-role",
+                        "Invalid request of client role.",
+                    ));
+                }
+            }
+
             // Authenticate and start session
             let client = ds.start_client_node_session(
                 &input.client.uuid,
@@ -30,16 +45,6 @@ impl NodeState {
                 Duration::from_secs(session_seconds),
             )?;
             debug!("Client session started: {}", client.node_id);
-
-            // Check database role
-            let client_as_parent = input.as_parent.unwrap_or(false);
-            if client_as_parent != db.globals().is_parent(&client.node_id) {
-                ds.clear_client_node_session(&client.node_id)?;
-                return Err(ServiceError::request(
-                    "wrong-database-role",
-                    "Invalid request of client role.",
-                ));
-            }
 
             // Change password
             if let Some(new_password) = input.new_password {
@@ -53,21 +58,22 @@ impl NodeState {
                 debug!("Client node imported: {}", client.node_id);
             }
 
-            // Root cotonoma
-            let root_cotonoma = if client_as_parent {
-                None
-            } else {
-                ds.root_cotonoma()?
-            };
-
             Ok(ClientNodeSession {
                 session: Session {
                     token: client.session_token.unwrap(),
                     expires_at: client.session_expires_at.unwrap(),
                 },
                 server: ds.local_node()?,
-                server_root_cotonoma: root_cotonoma,
-                as_parent: client_as_parent,
+                server_root_cotonoma: if client_as_parent {
+                    None
+                } else {
+                    ds.root_cotonoma()?
+                },
+                as_child: if let Some(DatabaseRole::Child(child)) = db_role {
+                    Some(child)
+                } else {
+                    None
+                },
             })
         })
         .await?
