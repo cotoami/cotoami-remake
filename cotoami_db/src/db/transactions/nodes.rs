@@ -11,11 +11,11 @@ use crate::{
     models::prelude::*,
 };
 
-pub mod child;
-pub mod client;
+pub mod children;
+pub mod clients;
 pub mod local;
-pub mod parent;
-pub mod server;
+pub mod parents;
+pub mod servers;
 
 impl<'a> DatabaseSession<'a> {
     pub fn node(&mut self, node_id: &Id<Node>) -> Result<Option<Node>> {
