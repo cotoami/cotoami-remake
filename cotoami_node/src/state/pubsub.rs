@@ -62,21 +62,32 @@ pub(crate) type RemoteChangePubsub = Publisher<ChangelogEntry, Id<Node>>;
 pub type EventPubsub = Publisher<LocalNodeEvent, ()>;
 
 impl EventPubsub {
-    pub fn server_state_changed(
-        &self,
-        node_id: Id<Node>,
-        not_connected: Option<NotConnected>,
-        is_parent: bool,
-    ) {
-        let disconnected = not_connected.is_some();
+    pub fn server_connected(&self, node_id: Id<Node>, client_as_child: Option<ChildNode>) {
         self.publish(
             LocalNodeEvent::ServerStateChanged {
                 node_id,
-                not_connected,
+                not_connected: None,
+                client_as_child,
             },
             None,
         );
-        if is_parent && disconnected {
+    }
+
+    pub fn server_disconnected(
+        &self,
+        node_id: Id<Node>,
+        not_connected: NotConnected,
+        is_parent: bool,
+    ) {
+        self.publish(
+            LocalNodeEvent::ServerStateChanged {
+                node_id,
+                not_connected: Some(not_connected),
+                client_as_child: None,
+            },
+            None,
+        );
+        if is_parent {
             self.parent_disconnected(node_id);
         }
     }

@@ -43,8 +43,8 @@ impl NodeState {
                     Server::new(
                         server,
                         roles.remove(&node_id),
-                        conn.local_as_child(),
                         conn.not_connected(),
+                        conn.local_as_child(),
                     )
                 })
                 .collect();
@@ -136,8 +136,8 @@ impl NodeState {
         let server = Server::new(
             server,
             Some(server_role),
-            server_conn.local_as_child(),
             server_conn.not_connected(),
+            server_conn.local_as_child(),
         );
         Ok(server)
     }

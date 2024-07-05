@@ -15,6 +15,7 @@ trait LocalNodeEventJson extends js.Object {
 trait ServerStateChangedJson extends js.Object {
   val node_id: String = js.native
   val not_connected: Nullable[NotConnectedJson] = js.native
+  val client_as_child: Nullable[ChildNodeJson] = js.native
 }
 
 @js.native

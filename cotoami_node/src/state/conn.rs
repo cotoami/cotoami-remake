@@ -159,13 +159,20 @@ impl ServerConnection {
         *self.conn_state.write() = state;
         let new_not_connected = self.not_connected();
 
-        // Publish the state only if the state has changed.
+        // Publish the state only if changed.
         if old_not_connected != new_not_connected {
-            self.node_state.pubsub().events().server_state_changed(
-                self.server.node_id,
-                new_not_connected,
-                self.to_parent(),
-            );
+            if let Some(not_connected) = new_not_connected {
+                self.node_state.pubsub().events().server_disconnected(
+                    self.server.node_id,
+                    not_connected,
+                    self.to_parent(),
+                );
+            } else {
+                self.node_state
+                    .pubsub()
+                    .events()
+                    .server_connected(self.server.node_id, self.local_as_child());
+            }
         }
     }
 }

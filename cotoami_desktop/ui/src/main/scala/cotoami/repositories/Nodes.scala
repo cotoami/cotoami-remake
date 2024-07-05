@@ -61,8 +61,14 @@ case class Nodes(
   def addServers(servers: Iterable[Server]): Nodes =
     servers.foldLeft(this)(_ addServer _)
 
-  def setServerState(id: Id[Node], notConnected: Option[NotConnected]): Nodes =
-    this.modify(_.serverMap.index(id).notConnected).setTo(notConnected)
+  def setServerState(
+      id: Id[Node],
+      notConnected: Option[NotConnected],
+      clientAsChild: Option[ChildNode]
+  ): Nodes =
+    this.modify(_.serverMap.index(id)).using(
+      _.copy(notConnected = notConnected, clientAsChild = clientAsChild)
+    )
 
   def containsServer(id: Id[Node]): Boolean = this.serverMap.contains(id)
 

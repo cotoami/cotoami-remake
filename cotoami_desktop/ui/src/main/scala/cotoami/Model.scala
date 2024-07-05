@@ -66,8 +66,10 @@ case class Model(
       val nodeId = Id[Node](change.node_id)
       val notConnected =
         Nullable.toOption(change.not_connected).map(NotConnected(_))
+      val clientAsChild =
+        Nullable.toOption(change.client_as_child).map(ChildNode(_))
       return this.modify(_.domain.nodes).using(
-        _.setServerState(nodeId, notConnected)
+        _.setServerState(nodeId, notConnected, clientAsChild)
       )
     }
 

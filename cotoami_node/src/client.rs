@@ -53,9 +53,9 @@ impl ClientState {
 
             // Publish a "disconnected" event.
             if let Some(not_connected) = self.not_connected() {
-                self.node_state.pubsub().events().server_state_changed(
+                self.node_state.pubsub().events().server_disconnected(
                     self.server_id,
-                    Some(not_connected),
+                    not_connected,
                     self.is_server_parent(),
                 );
             }
