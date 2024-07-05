@@ -302,6 +302,19 @@ object ModalIncorporate {
           nodeImg(nodeSession.server),
           span(className := "name")(nodeSession.server.name)
         ),
+        nodeSession.asChild.map(child =>
+          section(className := "child-privileges")(
+            "Privileges: ",
+            span(className := "privileges")(
+              if (child.asOwner)
+                "Owner"
+              else if (child.canEditLinks)
+                "Post, Edit links"
+              else
+                "Post"
+            )
+          )
+        ),
         nodeSession.serverRootCotonoma.map { case (_, coto) =>
           Option.when(coto.content.isDefined) {
             section(className := "node-description")(
