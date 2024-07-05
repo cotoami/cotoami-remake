@@ -69,6 +69,10 @@ nav.cotonomas {
         button.tool {
           margin-left: 5px;
 
+          &:nth-of-type(n+2) {
+            margin-left: 10px;
+          }
+
           span.material-symbols {
             font-size: 20px;
             vertical-align: middle;
