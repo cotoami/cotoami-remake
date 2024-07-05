@@ -163,6 +163,9 @@ pub enum Command {
         values: UpdateServerNode,
     },
 
+    /// Request to add a new client node and return [ClientNodeAdded] if succeeded.
+    AddClientNode(AddClientNode),
+
     /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
     RecentCotonomas {
         node: Option<Id<Node>>,

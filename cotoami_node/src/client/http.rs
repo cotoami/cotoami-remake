@@ -114,6 +114,7 @@ impl HttpClient {
             Command::UpdateServerNode { id, values } => {
                 self.put(&format!("{API_PATH_SERVERS}/{id}")).form(&values)
             }
+            Command::AddClientNode(input) => self.post(API_PATH_CLIENTS).form(&input),
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
                     self.get(&format!("{API_PATH_NODES}/{node_id}/cotonomas"))
@@ -232,6 +233,7 @@ const API_PATH_DATA: &'static str = "/api/data";
 const API_PATH_CHANGES: &'static str = concatcp!(API_PATH_DATA, "/changes");
 const API_PATH_NODES: &'static str = concatcp!(API_PATH_DATA, "/nodes");
 const API_PATH_SERVERS: &'static str = concatcp!(API_PATH_NODES, "/servers");
+const API_PATH_CLIENTS: &'static str = concatcp!(API_PATH_NODES, "/clients");
 const API_PATH_COTONOMAS: &'static str = concatcp!(API_PATH_DATA, "/cotonomas");
 const API_PATH_COTOS: &'static str = concatcp!(API_PATH_DATA, "/cotos");
 
