@@ -66,39 +66,37 @@ case class Nodes(
 
   def containsServer(id: Id[Node]): Boolean = this.serverMap.contains(id)
 
-  // Returns a child role (ChildNode) if:
-  // * The operating node is a child of the given parent.
-  // * The connection between the child and the parent is active.
-  def operatingAsChild(parentId: Id[Node]): Option[ChildNode] =
+  def parentStatus(parentId: Id[Node]): Option[ParentStatus] =
     if (this.parentIds.contains(parentId))
       this.getServer(parentId).map(server =>
-        if (server.notConnected.isEmpty)
-          server.clientAsChild
-        else
-          None
-      ).getOrElse(None)
+        server.notConnected.map {
+          case NotConnected.Disabled => ParentStatus.Disabled
+          case NotConnected.Connecting(details) =>
+            ParentStatus.Connecting(details)
+          case NotConnected.InitFailed(details) =>
+            ParentStatus.InitFailed(details)
+          case NotConnected.Disconnected(details) =>
+            ParentStatus.Disconnected(details)
+        }.getOrElse(
+          ParentStatus.Connected(server.clientAsChild)
+        )
+      )
     else
       None
 
-  def postable(id: Id[Node]): Boolean =
+  def postableTo(id: Id[Node]): Boolean =
     if (Some(id) == this.localId)
       true
     else
-      this.operatingAsChild(id).isDefined
-
-  def parentStatus(id: Id[Node]): Option[ParentStatus] =
-    this.getServer(id).map(_.notConnected.map {
-      case NotConnected.Disabled            => ParentStatus.Disabled
-      case NotConnected.Connecting(details) => ParentStatus.Connecting(details)
-      case NotConnected.InitFailed(details) => ParentStatus.InitFailed(details)
-      case NotConnected.Disconnected(details) =>
-        ParentStatus.Disconnected(details)
-    }.getOrElse(ParentStatus.Connected))
+      this.parentStatus(id).map {
+        case ParentStatus.Connected(Some(child)) => true
+        case _                                   => false
+      }.getOrElse(false)
 }
 
 sealed trait ParentStatus
 object ParentStatus {
-  case object Connected extends ParentStatus
+  case class Connected(child: Option[ChildNode]) extends ParentStatus
   case object Disabled extends ParentStatus
   case class Connecting(message: Option[String]) extends ParentStatus
   case class InitFailed(message: String) extends ParentStatus
