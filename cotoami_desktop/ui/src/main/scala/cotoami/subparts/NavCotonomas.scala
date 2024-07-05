@@ -171,12 +171,20 @@ object NavCotonomas {
           symbol = "settings",
           onClick = (() => ())
         ),
-        ToolButton(
-          classes = "operate",
-          tip = "Operate",
-          symbol = "switch_account",
-          onClick = (() => ())
-        )
+        Option.when(
+          !domain.nodes.operatingRemote &&
+            domain.nodes.operatingAsChild(node.id)
+              .map(_.asOwner).getOrElse(false)
+        ) {
+          Some(
+            ToolButton(
+              classes = "operate",
+              tip = "Operate as",
+              symbol = "switch_account",
+              onClick = (() => ())
+            )
+          )
+        }
       )
     )
   }

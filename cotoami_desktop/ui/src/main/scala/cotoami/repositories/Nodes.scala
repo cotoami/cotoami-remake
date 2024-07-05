@@ -25,6 +25,11 @@ case class Nodes(
 
   def operating: Option[Node] = this.operatingId.flatMap(this.get)
 
+  def operatingRemote: Boolean = (this.localId, this.operatingId) match {
+    case (Some(local), Some(operating)) => local != operating
+    case _                              => false
+  }
+
   def parents: Seq[Node] = this.parentIds.map(this.get).flatten
 
   def select(id: Option[Id[Node]]): Nodes =
@@ -89,6 +94,12 @@ case class Nodes(
       )
     else
       None
+
+  def operatingAsChild(parentId: Id[Node]): Option[ChildNode] =
+    parentStatus(parentId) match {
+      case Some(ParentStatus.Connected(child)) => child
+      case _                                   => None
+    }
 
   def postableTo(id: Id[Node]): Boolean =
     if (Some(id) == this.localId)
