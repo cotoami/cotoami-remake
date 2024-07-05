@@ -3,6 +3,9 @@ use cotoami_db::prelude::*;
 
 use crate::{service::ServiceError, state::NodeState};
 
+mod clients;
+mod servers;
+
 impl NodeState {
     pub async fn local_node(&self) -> Result<Node, ServiceError> {
         self.get(move |ds| ds.local_node()).await

@@ -106,6 +106,7 @@ impl NodeState {
                 let server_role = if client_session.as_child.is_some() {
                     NewDatabaseRole::Parent
                 } else {
+                    // TODO: want to make it configurable later
                     NewDatabaseRole::Child {
                         as_owner: false,
                         can_edit_links: false,

@@ -59,6 +59,36 @@ pub struct ClientNodeSession {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// Client
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct AddClientNode {
+    #[validate(required)]
+    pub id: Option<Id<Node>>,
+
+    pub client_role: Option<NodeRole>,
+
+    // Client as a child
+    pub as_owner: Option<bool>,
+    pub can_edit_links: Option<bool>,
+}
+
+impl AddClientNode {
+    pub fn client_role(&self) -> NodeRole { self.client_role.unwrap_or(NodeRole::Child) }
+
+    pub fn as_owner(&self) -> bool { self.as_owner.unwrap_or(false) }
+
+    pub fn can_edit_links(&self) -> bool { self.can_edit_links.unwrap_or(false) }
+}
+
+#[derive(serde::Serialize)]
+pub struct ClientNodeAdded {
+    /// Generated password
+    pub password: String,
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Database
 /////////////////////////////////////////////////////////////////////////////
 
