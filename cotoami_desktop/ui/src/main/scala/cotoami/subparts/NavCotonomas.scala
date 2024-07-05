@@ -65,9 +65,8 @@ object NavCotonomas {
   def apply(
       model: Model,
       currentNode: Node,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement = {
+  )(implicit domain: Domain): ReactElement = {
     val cotonomas = domain.cotonomas
     nav(className := "cotonomas header-and-body")(
       header()(
@@ -90,7 +89,7 @@ object NavCotonomas {
           )
         },
         domain.nodes.selected.map(
-          sectionNodeTools(model, _, domain, dispatch)
+          sectionNodeTools(model, _, dispatch)
         )
       ),
       section(className := "cotonomas body")(
@@ -101,10 +100,10 @@ object NavCotonomas {
           onScrollToBottom = () => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp)
         )(
           cotonomas.selected.map(
-            sectionCurrent(_, domain, dispatch)
+            sectionCurrent(_, dispatch)
           ),
           Option.when(!domain.recentCotonomas.isEmpty)(
-            sectionRecent(domain.recentCotonomas, domain, dispatch)
+            sectionRecent(domain.recentCotonomas, dispatch)
           ),
           div(
             className := "more",
@@ -118,9 +117,8 @@ object NavCotonomas {
   private def sectionNodeTools(
       model: Model,
       node: Node,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement = {
+  )(implicit domain: Domain): ReactElement = {
     val status = domain.nodes.parentStatus(node.id)
     val statusParts = status.flatMap(parentStatusParts(_))
 
@@ -185,9 +183,8 @@ object NavCotonomas {
 
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     section(className := "current")(
       h2()("Current"),
       ul(
@@ -200,17 +197,17 @@ object NavCotonomas {
         li(key := "super")(
           ul(className := "super-cotonomas")(
             domain.superCotonomas.map(
-              liCotonoma(_, domain, dispatch)
+              liCotonoma(_, dispatch)
             ): _*
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma selected")(
-          cotonomaLabel(selectedCotonoma, domain)
+          cotonomaLabel(selectedCotonoma)
         ),
         li(key := "sub")(
           ul(className := "sub-cotonomas")(
             domain.cotonomas.subs.map(
-              liCotonoma(_, domain, dispatch)
+              liCotonoma(_, dispatch)
             ) ++ Option.when(
               domain.cotonomas.subIds.nextPageIndex.isDefined
             )(
@@ -240,19 +237,17 @@ object NavCotonomas {
 
   private def sectionRecent(
       cotonomas: Seq[Cotonoma],
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
-      ul()(cotonomas.map(liCotonoma(_, domain, dispatch)): _*)
+      ul()(cotonomas.map(liCotonoma(_, dispatch)): _*)
     )
 
   private def liCotonoma(
       cotonoma: Cotonoma,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     li(
       className := optionalClasses(
         Seq(("selected", domain.cotonomas.isSelecting(cotonoma.id)))
@@ -260,7 +255,7 @@ object NavCotonomas {
       key := cotonoma.id.uuid
     )(
       if (domain.cotonomas.isSelecting(cotonoma.id)) {
-        span(className := "cotonoma")(cotonomaLabel(cotonoma, domain))
+        span(className := "cotonoma")(cotonomaLabel(cotonoma))
       } else {
         a(
           className := "cotonoma",
@@ -270,12 +265,14 @@ object NavCotonomas {
             dispatch(AppMsg.SelectCotonoma(cotonoma))
           })
         )(
-          cotonomaLabel(cotonoma, domain)
+          cotonomaLabel(cotonoma)
         )
       }
     )
 
-  private def cotonomaLabel(cotonoma: Cotonoma, domain: Domain): ReactElement =
+  private def cotonomaLabel(
+      cotonoma: Cotonoma
+  )(implicit domain: Domain): ReactElement =
     Fragment(
       domain.nodes.get(cotonoma.nodeId).map(nodeImg),
       cotonoma.name
