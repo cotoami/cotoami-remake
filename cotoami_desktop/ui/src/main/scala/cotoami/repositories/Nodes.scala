@@ -66,15 +66,25 @@ case class Nodes(
 
   def containsServer(id: Id[Node]): Boolean = this.serverMap.contains(id)
 
-  def isEditable(id: Id[Node]): Boolean = {
-    if (Some(id) == localId) return true
+  // Returns a child role (ChildNode) if:
+  // * The operating node is a child of the given parent.
+  // * The connection between the child and the parent is active.
+  def operatingAsChild(parentId: Id[Node]): Option[ChildNode] =
+    if (this.parentIds.contains(parentId))
+      this.getServer(parentId).map(server =>
+        if (server.notConnected.isEmpty)
+          server.clientAsChild
+        else
+          None
+      ).getOrElse(None)
+    else
+      None
 
-    if (this.parentIds.contains(id)) {
-      this.getServer(id).map(_.notConnected.isEmpty).getOrElse(false)
-    } else {
-      false
-    }
-  }
+  def postable(id: Id[Node]): Boolean =
+    if (Some(id) == this.localId)
+      true
+    else
+      this.operatingAsChild(id).isDefined
 
   def parentStatus(id: Id[Node]): Option[ParentStatus] =
     this.getServer(id).map(_.notConnected.map {
