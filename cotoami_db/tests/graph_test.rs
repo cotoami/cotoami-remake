@@ -24,8 +24,7 @@ fn graph() -> Result<()> {
               linking_phrase: Option<&str>|
               -> Result<()> {
             let _ = ds.connect(
-                source_coto_id,
-                target_coto_id,
+                (source_coto_id, target_coto_id),
                 linking_phrase,
                 None,
                 None,

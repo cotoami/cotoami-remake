@@ -106,7 +106,7 @@ impl<'a> DatabaseSession<'a> {
     {
         let cotonoma_ids: HashSet<Id<Cotonoma>> = cotos
             .into_iter()
-            .map(|coto| {
+            .flat_map(|coto| {
                 let mut ids = Vec::new();
                 if let Some(posted_in_id) = coto.posted_in_id {
                     ids.push(posted_in_id);
@@ -116,7 +116,6 @@ impl<'a> DatabaseSession<'a> {
                 }
                 ids
             })
-            .flatten()
             .collect();
         self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids.into_iter().collect()))
     }
@@ -127,14 +126,13 @@ impl<'a> DatabaseSession<'a> {
     {
         let cotonoma_coto_ids: Vec<Id<Coto>> = cotos
             .into_iter()
-            .map(|coto| {
+            .filter_map(|coto| {
                 if coto.is_cotonoma {
                     Some(coto.repost_of_id.unwrap_or(coto.uuid))
                 } else {
                     None
                 }
             })
-            .flatten()
             .collect();
         self.cotonomas_by_coto_ids(cotonoma_coto_ids)
     }

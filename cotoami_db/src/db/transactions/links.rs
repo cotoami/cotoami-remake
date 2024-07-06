@@ -34,10 +34,9 @@ impl<'a> DatabaseSession<'a> {
         ))
     }
 
-    pub fn connect(
+    pub fn connect<'b>(
         &self,
-        source_coto_id: &Id<Coto>,
-        target_coto_id: &Id<Coto>,
+        link: (&'b Id<Coto>, &'b Id<Coto>),
         linking_phrase: Option<&str>,
         details: Option<&str>,
         order: Option<i32>,
@@ -56,8 +55,7 @@ impl<'a> DatabaseSession<'a> {
             &local_node_id,
             created_in.map(|c| &c.uuid),
             &created_by_id,
-            source_coto_id,
-            target_coto_id,
+            link,
             linking_phrase,
             details,
             order,
@@ -143,8 +141,7 @@ impl<'a> DatabaseSession<'a> {
 
         // Create a link between the two.
         let (link, change) = self.connect(
-            &local_root_coto.uuid,
-            &parent_root_coto.uuid,
+            (&local_root_coto.uuid, &parent_root_coto.uuid),
             None,
             None,
             None,

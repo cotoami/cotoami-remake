@@ -119,7 +119,7 @@ pub(crate) fn reencrypt_all_passwords<'a>(
 pub(crate) fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
     write_op(move |conn| {
         diesel::update(server_nodes::table)
-            .set(ClearServerPassword::new())
+            .set(ClearServerPassword::default())
             .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })

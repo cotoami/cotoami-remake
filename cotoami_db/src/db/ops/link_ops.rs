@@ -66,7 +66,7 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn insert<'a>(mut new_link: NewLink<'a>) -> impl Operation<WritableConn, Link> + 'a {
+pub(crate) fn insert(mut new_link: NewLink<'_>) -> impl Operation<WritableConn, Link> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         if let Some(order) = new_link.order {
             let affected = make_room_for(new_link.source_coto_id(), order).run(ctx)?;
@@ -111,7 +111,7 @@ fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn,
             // calculate new orders
             let mut new_orders: Vec<i32> = vec![order + 1];
             for old_order in orders_onwards[1..].iter() {
-                if new_orders.contains(&old_order) {
+                if new_orders.contains(old_order) {
                     new_orders.push(old_order + 1);
                 } else {
                     // no change needed due to missing numbers in the orders

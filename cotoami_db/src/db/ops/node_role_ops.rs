@@ -53,7 +53,7 @@ pub(crate) fn set_network_role<'a>(
     role: NewNetworkRole<'a>,
 ) -> impl Operation<WritableConn, NetworkRole> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if let Some(_) = network_role_of(node_id).run(ctx)? {
+        if network_role_of(node_id).run(ctx)?.is_some() {
             bail!(DatabaseError::NodeRoleConflict);
         }
         match role {
@@ -145,12 +145,12 @@ pub enum NewDatabaseRole {
     },
 }
 
-pub(crate) fn set_database_role<'a>(
-    node_id: &'a Id<Node>,
+pub(crate) fn set_database_role(
+    node_id: &Id<Node>,
     role: NewDatabaseRole,
-) -> impl Operation<WritableConn, DatabaseRole> + 'a {
+) -> impl Operation<WritableConn, DatabaseRole> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if let Some(_) = database_role_of(node_id).run(ctx)? {
+        if database_role_of(node_id).run(ctx)?.is_some() {
             bail!(DatabaseError::NodeRoleConflict);
         }
         match role {
@@ -217,7 +217,7 @@ pub(crate) fn register_client_node<'a>(
         };
 
         // Set a database role to the node
-        let database_role = set_database_role(&node_id, database_role).run(ctx)?;
+        let database_role = set_database_role(node_id, database_role).run(ctx)?;
 
         Ok((client, database_role))
     })

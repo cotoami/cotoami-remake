@@ -65,7 +65,7 @@ pub(crate) fn get_by_ids<Conn: AsReadableConn>(
             .map(|c| (c.uuid, c))
             .collect();
         // Sort the results in order of the `ids` param.
-        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
         Ok(cotonomas)
     })
 }
@@ -282,12 +282,12 @@ fn to_fts_query(string: &str) -> String {
     let tokens: Vec<&str> = string.split_ascii_whitespace().collect();
     tokens
         .into_iter()
-        .map(|t| to_fts_phrase(t))
+        .map(to_fts_phrase)
         .collect::<Vec<_>>()
         .join(" AND ")
 }
 
 fn to_fts_phrase(string: &str) -> String {
-    let escaped = string.replace(r#"""#, r#""""#);
+    let escaped = string.replace('"', r#""""#);
     format!(r#""{escaped}""#)
 }

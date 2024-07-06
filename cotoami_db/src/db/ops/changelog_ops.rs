@@ -142,7 +142,7 @@ pub(crate) fn import_change<'a>(
         );
 
         // Import the change only if the same change has not yet been imported before.
-        let log_entry = if contains_change(&log).run(ctx)? {
+        let log_entry = if contains_change(log).run(ctx)? {
             debug!(
                 "Change {} skipped (origin node: {}, origin number: {})",
                 log.serial_number, log.origin_node_id, log.origin_serial_number

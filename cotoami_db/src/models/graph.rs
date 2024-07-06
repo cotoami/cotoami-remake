@@ -48,7 +48,7 @@ impl Graph {
     pub fn add_link(&mut self, link: Link) {
         self.links
             .entry(link.source_coto_id)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(link);
     }
 

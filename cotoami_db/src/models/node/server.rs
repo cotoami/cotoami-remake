@@ -118,18 +118,10 @@ impl FromSql<Binary, Sqlite> for EncryptedPassword {
 /// In the document (<https://diesel.rs/guides/all-about-updates.html>), the only way
 /// introduced is to use an [AsChangeset] struct with `#[diesel(treat_none_as_null = true)]`
 /// or to have the field be of type `Option<Option<T>>`.
-#[derive(AsChangeset)]
+#[derive(Default, AsChangeset)]
 #[diesel(table_name = server_nodes, treat_none_as_null = true)]
 pub struct ClearServerPassword {
     encrypted_password: Option<EncryptedPassword>,
-}
-
-impl ClearServerPassword {
-    pub fn new() -> Self {
-        Self {
-            encrypted_password: None,
-        }
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -175,7 +167,7 @@ fn encrypt_password(plaintext: &str, encryption_password: &str) -> Result<Encryp
     let key: &Key<Aes256Gcm> = &key.into();
 
     // Encrypt the password.
-    let cipher = Aes256Gcm::new(&key);
+    let cipher = Aes256Gcm::new(key);
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
     let ciphertext = cipher.encrypt(&nonce, plaintext.as_bytes())?;
     Ok(EncryptedPassword {
@@ -199,8 +191,8 @@ fn decrypt_password(
     let key: &Key<Aes256Gcm> = &key.into();
 
     // Decrypt the password.
-    let cipher = Aes256Gcm::new(&key);
+    let cipher = Aes256Gcm::new(key);
     let nonce = GenericArray::from_slice(&encrypted_password.nonce[..]);
-    let plaintext = cipher.decrypt(&nonce, encrypted_password.ciphertext.as_ref())?;
+    let plaintext = cipher.decrypt(nonce, encrypted_password.ciphertext.as_ref())?;
     Ok(String::from_utf8(plaintext)?)
 }

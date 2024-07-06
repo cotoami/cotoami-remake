@@ -118,7 +118,7 @@ pub(crate) fn get_by_ids<Conn: AsReadableConn>(
             .map(|c| (c.uuid, c))
             .collect();
         // Sort the results in order of the `ids` param.
-        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
         Ok(cotonomas)
     })
 }
@@ -134,7 +134,7 @@ pub(crate) fn get_by_coto_ids<Conn: AsReadableConn>(
             .map(|c| (c.coto_id, c))
             .collect();
         // Sort the results in order of the `ids` param.
-        let cotonomas = ids.iter().map(|id| map.remove(id)).flatten().collect();
+        let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
         Ok(cotonomas)
     })
 }

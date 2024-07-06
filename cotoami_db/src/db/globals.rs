@@ -113,10 +113,7 @@ impl Globals {
     }
 
     pub fn parent_node(&self, id: &Id<Node>) -> Option<ParentNode> {
-        self.parent_nodes
-            .read()
-            .get(id)
-            .map(|parent| parent.clone())
+        self.parent_nodes.read().get(id).cloned()
     }
 
     pub(crate) fn cache_parent_node(&self, parent: ParentNode) {

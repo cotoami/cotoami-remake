@@ -25,8 +25,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (link1, changelog1) = ds.connect(
-        &coto1.uuid,
-        &coto2.uuid,
+        (&coto1.uuid, &coto2.uuid),
         Some("hello"),
         None,
         None,
@@ -86,8 +85,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (link2, _) = ds.connect(
-        &coto1.uuid,
-        &coto3.uuid,
+        (&coto1.uuid, &coto3.uuid),
         Some("bye"),
         Some("some details"),
         None,
@@ -128,8 +126,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (link3, _) = ds.connect(
-        &coto1.uuid,
-        &coto4.uuid,
+        (&coto1.uuid, &coto4.uuid),
         None,
         None,
         Some(1),

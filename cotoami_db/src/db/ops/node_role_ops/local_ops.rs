@@ -63,7 +63,7 @@ pub(crate) fn start_session<'a>(
         local_node
             .start_session(password, duration)
             .context(DatabaseError::AuthenticationFailed)?;
-        *local_node = update(&local_node).run(ctx)?;
+        *local_node = update(local_node).run(ctx)?;
         Ok(())
     })
 }
@@ -71,7 +71,7 @@ pub(crate) fn start_session<'a>(
 pub(crate) fn clear_session(local_node: &mut LocalNode) -> impl Operation<WritableConn, ()> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         local_node.clear_session();
-        *local_node = update(&local_node).run(ctx)?;
+        *local_node = update(local_node).run(ctx)?;
         Ok(())
     })
 }
