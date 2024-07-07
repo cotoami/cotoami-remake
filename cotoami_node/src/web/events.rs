@@ -136,7 +136,7 @@ async fn post_event(
             }
             NodeSentEvent::Response(response) => {
                 debug!("Received a response from {}", parent_service.description());
-                let response_id = response.id().clone();
+                let response_id = *response.id();
                 state
                     .pubsub()
                     .responses()

@@ -169,8 +169,11 @@ impl ServerConnections {
         self.0.write().insert(server_id, server_conn);
     }
 
+    #[allow(clippy::await_holding_lock)]
     pub async fn connect_all(&self) {
-        // NOTE: The each read lock guard is held across calls to .await.
+        // Configured the `send_guard` feature of parking_lot to be enabled,
+        // so that the each read lock guard can be held across calls to .await.
+        // https://github.com/Amanieu/parking_lot/issues/197
         for conn in self.0.read().values() {
             conn.connect().await;
         }
