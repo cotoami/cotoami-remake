@@ -150,15 +150,13 @@ object Modal {
 
   def view[M <: Model](
       modalType: Class[M],
-      rootElementClasses: String,
-      title: Seq[ReactElement],
-      body: Seq[ReactElement],
+      elementClasses: String,
       dispatch: AppMsg => Unit,
       closeButton: Boolean = false,
       error: Option[String] = None
-  ): ReactElement =
+  )(title: ReactElement*)(body: ReactElement*): ReactElement =
     dialog(
-      className := rootElementClasses,
+      className := elementClasses,
       slinky.web.html.open := true,
       data - "tauri-drag-region" := "default"
     )(
@@ -170,7 +168,7 @@ object Modal {
               onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
             )
           },
-          h1()(title: _*)
+          h1()(title)
         ),
         error.map(e => section(className := "error")(e)),
         div(className := "body")(body: _*)
