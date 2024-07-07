@@ -121,10 +121,18 @@ object ParentStatus {
 }
 
 object Nodes {
-  def apply(dataset: InitialDataset) =
+  def apply(dataset: InitialDataset): Nodes =
     new Nodes(
       map = dataset.nodes,
       localId = Some(dataset.localNodeId),
+      operatingId = Some(dataset.localNodeId),
+      parentIds = dataset.parentNodeIds.toSeq
+    ).addServers(dataset.servers)
+
+  def fromRemote(dataset: InitialDataset): Nodes =
+    // the localId should be maintained
+    new Nodes(
+      map = dataset.nodes,
       operatingId = Some(dataset.localNodeId),
       parentIds = dataset.parentNodeIds.toSeq
     ).addServers(dataset.servers)
