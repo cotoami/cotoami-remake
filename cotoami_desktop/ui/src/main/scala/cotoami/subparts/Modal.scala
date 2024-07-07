@@ -19,6 +19,7 @@ object Modal {
   ) extends Model
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Model
+  case class OperateAs(model: ModalOperateAs.Model) extends Model
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
@@ -61,6 +62,7 @@ object Modal {
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
+    case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
   }
 
   def open(modal: Model): Cmd[AppMsg] =
@@ -109,6 +111,14 @@ object Modal {
               (model.copy(modalStack = stack.update(ParentSync(modal))), cmds)
             }
         }
+
+      case Msg.OperateAsMsg(modalMsg) =>
+        stack.get[OperateAs].map { case OperateAs(modalModel) =>
+          ModalOperateAs.update(modalMsg, modalModel)
+            .pipe { case (modal, cmds) =>
+              (model.copy(modalStack = stack.update(OperateAs(modal))), cmds)
+            }
+        }
     }).getOrElse((model, Seq.empty))
   }
 
@@ -127,5 +137,8 @@ object Modal {
 
       case ParentSync(modalModel) =>
         Some(ModalParentSync(modalModel, model.parentSync, dispatch))
+
+      case OperateAs(modalModel) =>
+        Some(ModalOperateAs(modalModel, dispatch))
     }
 }
