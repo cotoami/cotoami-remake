@@ -33,7 +33,7 @@ object ModalOperateAs {
     )(
       article()(
         header()(
-          h1()("Switch Operating Node")
+          h1()("Switching Operating Node")
         ),
         div(className := "body")(
         )

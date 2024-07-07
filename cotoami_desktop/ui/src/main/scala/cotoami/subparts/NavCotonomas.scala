@@ -180,7 +180,14 @@ object NavCotonomas {
             classes = "operate",
             tip = "Operate as",
             symbol = "switch_account",
-            onClick = (() => ())
+            onClick = (
+                () =>
+                  dispatch(
+                    Modal.Msg.OpenModal(
+                      Modal.OperateAs(domain.nodes.operating.get, node)
+                    ).toApp
+                  )
+            )
           )
         }
       )

@@ -7,6 +7,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Model => AppModel, Msg => AppMsg}
+import cotoami.backend.Node
 import cotoami.models.Context
 import cotoami.repositories.Domain
 
@@ -20,6 +21,10 @@ object Modal {
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Model
   case class OperateAs(model: ModalOperateAs.Model) extends Model
+  object OperateAs {
+    def apply(current: Node, switchingTo: Node): OperateAs =
+      OperateAs(ModalOperateAs.Model(current, switchingTo))
+  }
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
