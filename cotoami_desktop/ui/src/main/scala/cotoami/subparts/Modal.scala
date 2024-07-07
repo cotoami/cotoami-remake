@@ -149,10 +149,8 @@ object Modal {
     }
 
   def view[M <: Model](
-      modalType: Class[M],
       elementClasses: String,
-      dispatch: AppMsg => Unit,
-      closeButton: Boolean = false,
+      closeButton: Option[(Class[M], AppMsg => Unit)] = None,
       error: Option[String] = None
   )(title: ReactElement*)(body: ReactElement*): ReactElement =
     dialog(
@@ -162,7 +160,7 @@ object Modal {
     )(
       article()(
         header()(
-          Option.when(closeButton) {
+          closeButton.map { case (modalType, dispatch) =>
             button(
               className := "close default",
               onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))

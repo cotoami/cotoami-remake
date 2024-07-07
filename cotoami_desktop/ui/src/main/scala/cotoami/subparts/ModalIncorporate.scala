@@ -184,39 +184,25 @@ object ModalIncorporate {
       context: Context,
       domain: Domain
   ): ReactElement =
-    dialog(
-      className := "incorporate",
-      open := true,
-      data - "tauri-drag-region" := "default"
+    Modal.view(
+      elementClasses = "incorporate",
+      closeButton = Some((classOf[Modal.Incorporate], dispatch))
     )(
-      article()(
-        header()(
-          button(
-            className := "close default",
-            onClick := (_ =>
-              dispatch(
-                Modal.Msg.CloseModal(classOf[Modal.Incorporate]).toApp
-              )
-            )
-          ),
-          h1()(
-            "Incorporate Remote Database",
-            buttonHelp(
-              model.helpIntro,
-              () => dispatch(Msg.HelpIntro(true).toApp)
-            )
-          )
+      "Incorporate Remote Database",
+      buttonHelp(
+        model.helpIntro,
+        () => dispatch(Msg.HelpIntro(true).toApp)
+      )
+    )(
+      section(className := "preview")(
+        sectionHelp(
+          model.helpIntro,
+          () => dispatch(Msg.HelpIntro(false).toApp),
+          context.help.ModalIncorporate_intro
         ),
-        div(className := "body")(
-          sectionHelp(
-            model.helpIntro,
-            () => dispatch(Msg.HelpIntro(false).toApp),
-            context.help.ModalIncorporate_intro
-          ),
-          model.nodeSession
-            .map(sectionIncorporate(model, _, dispatch))
-            .getOrElse(sectionConnect(model, domain.nodes, dispatch))
-        )
+        model.nodeSession
+          .map(sectionIncorporate(model, _, dispatch))
+          .getOrElse(sectionConnect(model, domain.nodes, dispatch))
       )
     )
 

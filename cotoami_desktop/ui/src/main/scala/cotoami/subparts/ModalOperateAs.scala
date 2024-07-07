@@ -27,10 +27,8 @@ object ModalOperateAs {
       dispatch: AppMsg => Unit
   ): ReactElement =
     Modal.view(
-      modalType = classOf[Modal.OperateAs],
       elementClasses = "operate-as",
-      closeButton = true,
-      dispatch = dispatch
+      closeButton = Some((classOf[Modal.OperateAs], dispatch))
     )(
       "Switch Operating Node"
     )(
