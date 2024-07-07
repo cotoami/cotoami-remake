@@ -26,17 +26,16 @@ object ModalOperateAs {
       model: Model,
       dispatch: AppMsg => Unit
   ): ReactElement =
-    dialog(
-      className := "operate-as",
-      open := true,
-      data - "tauri-drag-region" := "default"
+    Modal.view(
+      modalType = classOf[Modal.OperateAs],
+      elementClasses = "operate-as",
+      closeButton = true,
+      dispatch = dispatch
     )(
-      article()(
-        header()(
-          h1()("Switching Operating Node")
-        ),
-        div(className := "body")(
-        )
+      "Switch Operating Node"
+    )(
+      section(className := "preview")(
+        p("You are about to switch the operating node as below:")
       )
     )
 }
