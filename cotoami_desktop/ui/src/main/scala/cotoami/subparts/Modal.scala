@@ -3,6 +3,7 @@ package cotoami.subparts
 import scala.util.chaining._
 import scala.reflect.{classTag, ClassTag}
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
@@ -146,4 +147,33 @@ object Modal {
       case OperateAs(modalModel) =>
         Some(ModalOperateAs(modalModel, dispatch))
     }
+
+  def view[M <: Model](
+      modalType: Class[M],
+      rootElementClasses: String,
+      title: Seq[ReactElement],
+      body: Seq[ReactElement],
+      dispatch: AppMsg => Unit,
+      closeButton: Boolean = false,
+      error: Option[String] = None
+  ): ReactElement =
+    dialog(
+      className := rootElementClasses,
+      slinky.web.html.open := true,
+      data - "tauri-drag-region" := "default"
+    )(
+      article()(
+        header()(
+          Option.when(closeButton) {
+            button(
+              className := "close default",
+              onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
+            )
+          },
+          h1()(title: _*)
+        ),
+        error.map(e => section(className := "error")(e)),
+        div(className := "body")(body: _*)
+      )
+    )
 }
