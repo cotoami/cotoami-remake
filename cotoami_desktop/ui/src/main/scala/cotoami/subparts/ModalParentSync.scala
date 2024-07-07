@@ -40,24 +40,17 @@ object ModalParentSync {
       parentSync: ParentSync,
       dispatch: AppMsg => Unit
   )(implicit domain: Domain): ReactElement =
-    dialog(
-      className := "parent-sync",
-      open := true,
-      data - "tauri-drag-region" := "default"
+    Modal.view(
+      elementClasses = "parent-sync"
     )(
-      article()(
-        header()(
-          h1()("Syncing with remote nodes")
-        ),
-        div(className := "body")(
-          Option.when(!parentSync.syncing.isEmpty) {
-            sectionSyncing(parentSync, dispatch)
-          },
-          Option.when(!parentSync.synced.isEmpty) {
-            sectionSynced(parentSync, dispatch)
-          }
-        )
-      )
+      "Syncing with Remote Nodes"
+    )(
+      Option.when(!parentSync.syncing.isEmpty) {
+        sectionSyncing(parentSync, dispatch)
+      },
+      Option.when(!parentSync.synced.isEmpty) {
+        sectionSynced(parentSync, dispatch)
+      }
     )
 
   private def sectionSyncing(
