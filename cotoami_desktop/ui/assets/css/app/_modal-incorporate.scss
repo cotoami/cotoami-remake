@@ -11,10 +11,7 @@ dialog.incorporate {
         margin-top: var(--spacing);
         margin-bottom: var(--spacing);
         font-size: 0.9rem;
-
-        span.privileges {
-          font-weight: 700;
-        }
+        opacity: 0.8;
       }
 
       section.node-description {
