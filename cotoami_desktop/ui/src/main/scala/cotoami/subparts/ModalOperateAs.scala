@@ -14,23 +14,35 @@ object ModalOperateAs {
   case class Model(
       current: Node,
       switchingTo: Node,
-      switching: Boolean = false
+      switching: Boolean = false,
+      switchingError: Option[String] = None
   )
 
   sealed trait Msg {
     def toApp: AppMsg = Modal.Msg.OperateAsMsg(this).pipe(AppMsg.ModalMsg)
   }
 
+  object Msg {
+    case object Switch extends Msg
+  }
+
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
-    (model, Seq.empty)
+    msg match {
+      case Msg.Switch =>
+        (
+          model.copy(switching = true, switchingError = None),
+          Seq.empty
+        )
+    }
 
   def apply(
       model: Model,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val modalType = classOf[Modal.OperateAs]
     Modal.view(
       elementClasses = "operate-as",
-      closeButton = Some((classOf[Modal.OperateAs], dispatch))
+      closeButton = Some((modalType, dispatch))
     )(
       "Switch Operating Node"
     )(
@@ -47,7 +59,8 @@ object ModalOperateAs {
       div(className := "buttons")(
         button(
           `type` := "button",
-          className := "cancel contrast outline"
+          className := "cancel contrast outline",
+          onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
         )("Cancel"),
         button(
           `type` := "button",
@@ -55,4 +68,5 @@ object ModalOperateAs {
         )("Switch")
       )
     )
+  }
 }
