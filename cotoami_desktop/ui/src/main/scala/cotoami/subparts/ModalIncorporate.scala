@@ -285,14 +285,14 @@ object ModalIncorporate {
         section(className := "node")(spanNode(nodeSession.server)),
         nodeSession.asChild.map(child =>
           section(className := "child-privileges")(
-            "Privileges: ",
+            "Your privileges to this node: ",
             span(className := "privileges")(
               if (child.asOwner)
-                "Owner"
+                "owner"
               else if (child.canEditLinks)
-                "Post, Edit links"
+                "post, edit links"
               else
-                "Post"
+                "post"
             )
           )
         ),
