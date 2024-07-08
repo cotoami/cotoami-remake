@@ -144,7 +144,7 @@ object Main {
       case Msg.SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
-          .modify(_.domain).using(_.init(info.initialDataset))
+          .modify(_.domain).setTo(Domain(info.initialDataset))
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
@@ -165,6 +165,14 @@ object Main {
               model.error("Failed to initialize server connections.", Some(e))
           },
           Seq.empty
+        )
+
+      case Msg.SetRemoteInitialDataset(dataset) =>
+        (
+          model
+            .modify(_.domain).setTo(Domain.fromRemote(dataset))
+            .info("Remote dataset received.", Some(dataset.debug)),
+          Seq(Browser.pushUrl(Route.index.url(())))
         )
 
       case Msg.OpenOrClosePane(name, open) =>

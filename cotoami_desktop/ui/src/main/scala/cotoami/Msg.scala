@@ -32,6 +32,7 @@ object Msg {
   case class SetDatabaseInfo(info: DatabaseInfo) extends Msg
   case class ServerConnectionsInitialized(result: Either[ErrorJson, Null])
       extends Msg
+  case class SetRemoteInitialDataset(dataset: InitialDataset) extends Msg
 
   // UI
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
