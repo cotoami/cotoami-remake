@@ -5,6 +5,7 @@ use cotoami_db::prelude::*;
 use cotoami_node::{prelude::*, Abortables};
 use parking_lot::RwLock;
 use tauri::AppHandle;
+use tracing::debug;
 
 use self::error::Error;
 use crate::event;
@@ -50,6 +51,7 @@ pub async fn operate_as(
     let node_state = state.inner();
 
     // Switch the operating node.
+    debug!("Switching the operating node to {parent_id:?}...");
     operating_as.operate_as(parent_id, node_state.clone(), app_handle)?;
 
     // Fetch the [InitialDataset] from the new operating node.
