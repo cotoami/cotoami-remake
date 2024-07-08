@@ -7,9 +7,9 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{log_error, tauri, Msg => AppMsg}
-import cotoami.backend.{ErrorJson, Id, InitialDatasetJson, Node}
+import cotoami.backend.{ErrorJson, Id, InitialDataset, InitialDatasetJson, Node}
+import cotoami.repositories.Domain
 import cotoami.components.materialSymbol
-import cotoami.backend.InitialDataset
 
 object ModalOperateAs {
 
@@ -33,12 +33,22 @@ object ModalOperateAs {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(
+      msg: Msg,
+      model: Model,
+      domain: Domain
+  ): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
       case Msg.Switch =>
         (
           model.copy(switching = true, switchingError = None),
-          Seq.empty
+          Seq(
+            switchTo(
+              Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
+                model.switchingTo.id
+              )
+            )
+          )
         )
 
       case Msg.Switched(Right(json)) =>
@@ -106,7 +116,8 @@ object ModalOperateAs {
         )("Cancel"),
         button(
           `type` := "button",
-          aria - "busy" := model.switching.toString()
+          aria - "busy" := model.switching.toString(),
+          onClick := (e => dispatch(Msg.Switch.toApp))
         )("Switch")
       )
     )

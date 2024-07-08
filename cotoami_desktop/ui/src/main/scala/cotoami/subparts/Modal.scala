@@ -120,7 +120,7 @@ object Modal {
 
       case Msg.OperateAsMsg(modalMsg) =>
         stack.get[OperateAs].map { case OperateAs(modalModel) =>
-          ModalOperateAs.update(modalMsg, modalModel)
+          ModalOperateAs.update(modalMsg, modalModel, model.domain)
             .pipe { case (modal, cmds) =>
               (model.copy(modalStack = stack.update(OperateAs(modal))), cmds)
             }

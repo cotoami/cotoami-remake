@@ -23,6 +23,8 @@ case class Nodes(
 
   def local: Option[Node] = this.localId.flatMap(this.get)
 
+  def isLocal(id: Id[Node]): Boolean = Some(id) == this.localId
+
   def operating: Option[Node] = this.operatingId.flatMap(this.get)
 
   def operatingRemote: Boolean = (this.localId, this.operatingId) match {
