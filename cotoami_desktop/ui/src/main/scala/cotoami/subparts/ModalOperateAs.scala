@@ -81,7 +81,7 @@ object ModalOperateAs {
         "operate_as",
         js.Dynamic
           .literal(
-            parent_id = parentId.map(_.uuid).getOrElse(null)
+            parentId = parentId.map(_.uuid).getOrElse(null)
           )
       )
       .map(Msg.toApp(Msg.Switched(_)))
