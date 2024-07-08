@@ -6,8 +6,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Msg => AppMsg}
-import cotoami.backend.{ErrorJson, InitialDatasetJson, Node}
+import cotoami.{log_error, tauri, Msg => AppMsg}
+import cotoami.backend.{ErrorJson, Id, InitialDatasetJson, Node}
 import cotoami.components.materialSymbol
 import cotoami.backend.InitialDataset
 
@@ -25,6 +25,9 @@ object ModalOperateAs {
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): T => AppMsg =
+      tagger andThen Modal.Msg.OperateAsMsg andThen AppMsg.ModalMsg
+
     case object Switch extends Msg
     case class Switched(result: Either[ErrorJson, InitialDatasetJson])
         extends Msg
@@ -61,6 +64,17 @@ object ModalOperateAs {
           )
         )
     }
+
+  private def switchTo(parentId: Option[Id[Node]]): Cmd[AppMsg] =
+    tauri
+      .invokeCommand(
+        "operate_as",
+        js.Dynamic
+          .literal(
+            parent_id = parentId.map(_.uuid).getOrElse(null)
+          )
+      )
+      .map(Msg.toApp(Msg.Switched(_)))
 
   def apply(
       model: Model,
