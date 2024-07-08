@@ -40,7 +40,7 @@ dialog {
     }
 
     .input-field {
-      margin-bottom: var(--spacing);
+      margin-top: var(--spacing);
 
       .validation-error {
         font-size: 95%;
@@ -49,10 +49,15 @@ dialog {
     }
 
     div.buttons {
+      margin-top: var(--spacing);
       text-align: right;
 
       button {
         display: inline-block;
+
+        &:nth-of-type(n+2) {
+          margin-left: 10px;
+        }
       }
     }
   }

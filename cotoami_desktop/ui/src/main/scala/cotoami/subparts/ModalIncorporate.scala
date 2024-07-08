@@ -194,16 +194,14 @@ object ModalIncorporate {
         () => dispatch(Msg.HelpIntro(true).toApp)
       )
     )(
-      section(className := "preview")(
-        sectionHelp(
-          model.helpIntro,
-          () => dispatch(Msg.HelpIntro(false).toApp),
-          context.help.ModalIncorporate_intro
-        ),
-        model.nodeSession
-          .map(sectionIncorporate(model, _, dispatch))
-          .getOrElse(sectionConnect(model, domain.nodes, dispatch))
-      )
+      sectionHelp(
+        model.helpIntro,
+        () => dispatch(Msg.HelpIntro(false).toApp),
+        context.help.ModalIncorporate_intro
+      ),
+      model.nodeSession
+        .map(sectionIncorporate(model, _, dispatch))
+        .getOrElse(sectionConnect(model, domain.nodes, dispatch))
     )
 
   private def sectionConnect(
@@ -284,10 +282,7 @@ object ModalIncorporate {
 
       // Node preview
       section(className := "node-preview")(
-        section(className := "node-name")(
-          nodeImg(nodeSession.server),
-          span(className := "name")(nodeSession.server.name)
-        ),
+        section(className := "node")(spanNode(nodeSession.server)),
         nodeSession.asChild.map(child =>
           section(className := "child-privileges")(
             "Privileges: ",

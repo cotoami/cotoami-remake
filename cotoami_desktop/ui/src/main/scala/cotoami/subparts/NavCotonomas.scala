@@ -287,7 +287,7 @@ object NavCotonomas {
       cotonoma: Cotonoma
   )(implicit domain: Domain): ReactElement =
     Fragment(
-      domain.nodes.get(cotonoma.nodeId).map(nodeImg),
+      domain.nodes.get(cotonoma.nodeId).map(imgNode),
       cotonoma.name
     )
 }

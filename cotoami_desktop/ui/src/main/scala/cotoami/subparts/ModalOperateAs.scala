@@ -7,12 +7,14 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Msg => AppMsg}
 import cotoami.backend.Node
+import cotoami.components.materialSymbol
 
 object ModalOperateAs {
 
   case class Model(
       current: Node,
-      switchingTo: Node
+      switchingTo: Node,
+      switching: Boolean = false
   )
 
   sealed trait Msg {
@@ -33,7 +35,24 @@ object ModalOperateAs {
       "Switch Operating Node"
     )(
       section(className := "preview")(
-        p("You are about to switch the operating node as below:")
+        p("You are about to switch the operating node as below:"),
+        section(className := "current")(
+          spanNode(model.current)
+        ),
+        div(className := "arrow")(materialSymbol("arrow_downward", "arrow")),
+        section(className := "switching-to")(
+          spanNode(model.switchingTo)
+        )
+      ),
+      div(className := "buttons")(
+        button(
+          `type` := "button",
+          className := "cancel contrast outline"
+        )("Cancel"),
+        button(
+          `type` := "button",
+          aria - "busy" := model.switching.toString()
+        )("Switch")
       )
     )
 }

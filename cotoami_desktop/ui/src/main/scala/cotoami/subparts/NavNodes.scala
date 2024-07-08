@@ -98,7 +98,7 @@ object NavNodes {
       disabled := nodes.isSelecting(node.id),
       onClick := ((e) => dispatch(AppMsg.SelectNode(node.id)))
     )(
-      nodeImg(node),
+      imgNode(node),
       status.map(s => span(className := s"status ${s.slug}")(s.icon))
     )
   }
