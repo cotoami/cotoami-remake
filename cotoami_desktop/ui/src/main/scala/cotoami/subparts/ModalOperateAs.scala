@@ -89,7 +89,7 @@ object ModalOperateAs {
   def apply(
       model: Model,
       dispatch: AppMsg => Unit
-  ): ReactElement = {
+  )(implicit domain: Domain): ReactElement = {
     val modalType = classOf[Modal.OperateAs]
     Modal.view(
       elementClasses = "operate-as",
@@ -100,13 +100,9 @@ object ModalOperateAs {
     )(
       section(className := "preview")(
         p("You are about to switch the operating node as below:"),
-        section(className := "current")(
-          spanNode(model.current)
-        ),
+        sectionNode(model.current, "current"),
         div(className := "arrow")(materialSymbol("arrow_downward", "arrow")),
-        section(className := "switching-to")(
-          spanNode(model.switchingTo)
-        )
+        sectionNode(model.switchingTo, "switching-to")
       ),
       div(className := "buttons")(
         button(
@@ -122,4 +118,14 @@ object ModalOperateAs {
       )
     )
   }
+
+  private def sectionNode(node: Node, elementClasses: String)(implicit
+      domain: Domain
+  ): ReactElement =
+    section(className := elementClasses)(
+      spanNode(node),
+      Option.when(domain.nodes.isLocal(node.id)) {
+        span(className := "is-local")("(local)")
+      }
+    )
 }

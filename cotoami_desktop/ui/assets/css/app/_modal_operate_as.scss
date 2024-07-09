@@ -21,5 +21,11 @@ dialog.operate-as {
     section.switching-to {
       padding: 5px;
     }
+
+    span.is-local {
+      margin-left: 5px;
+      vertical-align: middle;
+      color: var(--muted-color);
+    }
   }
 }
