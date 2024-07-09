@@ -104,7 +104,7 @@ case class Nodes(
     }
 
   def postableTo(id: Id[Node]): Boolean =
-    if (Some(id) == this.localId)
+    if (Some(id) == this.localId || Some(id) == this.operatingId)
       true
     else
       this.parentStatus(id).map {
