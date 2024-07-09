@@ -6,7 +6,7 @@ nav.nodes {
   align-items: center;
   justify-content: flex-start;
 
-  padding-top: 20px;
+  padding-top: 22px;
 
   span.material-symbols {
     font-size: 24px;
@@ -19,17 +19,14 @@ nav.nodes {
     width: 70%;
   }
 
-  button.add {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-  }
-
-  button.selectable {
+  button {
     display: block;
     width: 100%;
     text-align: center;
+  }
+
+  button.selectable,
+  button.switch-back {
 
     span.material-symbols,
     img {
@@ -59,8 +56,6 @@ nav.nodes {
   }
 
   button.node {
-    position: relative;
-
     img.node-icon {
       width: var(--node-icon-size);
       height: var(--node-icon-size);
@@ -101,6 +96,10 @@ nav.nodes {
         color: var(--form-element-invalid-border-color);
       }
     }
+  }
+
+  button.switch-back {
+    margin-bottom: 8px;
   }
 
   ul.nodes {
