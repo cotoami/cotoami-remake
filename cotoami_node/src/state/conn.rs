@@ -52,12 +52,9 @@ impl ServerConnection {
     /// The state of this connection will be published via
     /// [crate::event::local::LocalNodeEvent].
     pub async fn connect(&self) {
-        if self.server.disabled {
+        if self.server.disabled || self.not_connected().is_none() {
             return;
         }
-
-        // To avoid leaking the existing running tasks.
-        self.disconnect(None);
 
         debug!("Server connection initializing: {}", self.server.node_id);
         let task = tokio::spawn(self.clone().try_connect());
