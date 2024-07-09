@@ -175,6 +175,11 @@ pub async fn open_database(
         None => {
             app_handle.debug("Creating a new NodeState.", None);
             let node_state = NodeState::new(node_config).await?;
+
+            // Update RecentDatabases
+            let local_node = node_state.local_node().await?;
+            RecentDatabases::update(&app_handle, folder.clone(), &local_node);
+
             app_handle.manage(node_state.clone());
             node_state
         }
@@ -189,9 +194,8 @@ pub async fn open_database(
 
     // DatabaseInfo
     let initial_dataset = initial_dataset(&node_state, &app_handle.state::<OperatingAs>()).await?;
-    let db_info = DatabaseInfo::new(folder.clone(), initial_dataset);
+    let db_info = DatabaseInfo::new(folder, initial_dataset);
     app_handle.info("Database opened.", Some(&db_info.local_node().name));
-    RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
     Ok(db_info)
 }
