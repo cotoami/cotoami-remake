@@ -1,6 +1,6 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
@@ -34,6 +34,7 @@ object NavNodes {
       )
     )(
       paneToggle(PaneName, dispatch),
+      buttonSwitchBack(nodes, dispatch),
       button(
         className := optionalClasses(
           Seq(
@@ -64,19 +65,47 @@ object NavNodes {
       ul(className := "nodes")(
         nodes.local.map(node =>
           li(className := "local", key := node.id.uuid)(
-            nodeButton(node, nodes, dispatch)
+            buttonNode(node, nodes, dispatch)
           )
         ),
         nodes.parents.map(node =>
           li(className := "parent", key := node.id.uuid)(
-            nodeButton(node, nodes, dispatch)
+            buttonNode(node, nodes, dispatch)
           )
         )
       )
     )
   }
 
-  private def nodeButton(
+  private def buttonSwitchBack(
+      nodes: Nodes,
+      dispatch: AppMsg => Unit
+  ): ReactElement =
+    (nodes.operatingRemote, nodes.operating, nodes.local) match {
+      case (true, Some(operatingNode), Some(localNode)) =>
+        Some(
+          Fragment(
+            button(
+              className := "node default",
+              data - "tooltip" := "Switch back to local",
+              data - "placement" := "right",
+              onClick := (_ =>
+                dispatch(
+                  Modal.Msg.OpenModal(
+                    Modal.OperateAs(operatingNode, localNode)
+                  ).toApp
+                )
+              )
+            )(
+              imgNode(localNode)
+            ),
+            div(className := "separator")()
+          )
+        )
+      case _ => None
+    }
+
+  private def buttonNode(
       node: Node,
       nodes: Nodes,
       dispatch: AppMsg => Unit
@@ -97,7 +126,7 @@ object NavNodes {
       data - "tooltip" := tooltip,
       data - "placement" := "right",
       disabled := nodes.isSelecting(node.id),
-      onClick := ((e) => dispatch(AppMsg.SelectNode(node.id)))
+      onClick := (_ => dispatch(AppMsg.SelectNode(node.id)))
     )(
       imgNode(node),
       status.map(s => span(className := s"status ${s.slug}")(s.icon))
