@@ -3,10 +3,12 @@ package cotoami.subparts
 import scala.util.chaining._
 import scala.reflect.{classTag, ClassTag}
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Model => AppModel, Msg => AppMsg}
+import cotoami.backend.Node
 import cotoami.models.Context
 import cotoami.repositories.Domain
 
@@ -19,6 +21,11 @@ object Modal {
   ) extends Model
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Model
+  case class OperateAs(model: ModalOperateAs.Model) extends Model
+  object OperateAs {
+    def apply(current: Node, switchingTo: Node): OperateAs =
+      OperateAs(ModalOperateAs.Model(current, switchingTo))
+  }
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
@@ -61,6 +68,7 @@ object Modal {
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
+    case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
   }
 
   def open(modal: Model): Cmd[AppMsg] =
@@ -109,6 +117,14 @@ object Modal {
               (model.copy(modalStack = stack.update(ParentSync(modal))), cmds)
             }
         }
+
+      case Msg.OperateAsMsg(modalMsg) =>
+        stack.get[OperateAs].map { case OperateAs(modalModel) =>
+          ModalOperateAs.update(modalMsg, modalModel, model.domain)
+            .pipe { case (modal, cmds) =>
+              (model.copy(modalStack = stack.update(OperateAs(modal))), cmds)
+            }
+        }
     }).getOrElse((model, Seq.empty))
   }
 
@@ -127,5 +143,33 @@ object Modal {
 
       case ParentSync(modalModel) =>
         Some(ModalParentSync(modalModel, model.parentSync, dispatch))
+
+      case OperateAs(modalModel) =>
+        Some(ModalOperateAs(modalModel, dispatch))
     }
+
+  def view[M <: Model](
+      elementClasses: String,
+      closeButton: Option[(Class[M], AppMsg => Unit)] = None,
+      error: Option[String] = None
+  )(title: ReactElement*)(body: ReactElement*): ReactElement =
+    dialog(
+      className := elementClasses,
+      slinky.web.html.open := true,
+      data - "tauri-drag-region" := "default"
+    )(
+      article()(
+        header()(
+          closeButton.map { case (modalType, dispatch) =>
+            button(
+              className := "close default",
+              onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
+            )
+          },
+          h1()(title)
+        ),
+        error.map(e => section(className := "error")(e)),
+        div(className := "body")(body: _*)
+      )
+    )
 }

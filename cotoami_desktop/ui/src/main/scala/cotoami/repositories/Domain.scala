@@ -16,12 +16,6 @@ case class Domain(
     links: Links = Links(),
     graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def init(dataset: InitialDataset): Domain =
-    this.copy(
-      lastChangeNumber = dataset.lastChangeNumber,
-      nodes = Nodes(dataset)
-    )
-
   def clearSelection(): Domain =
     this.copy(
       nodes = this.nodes.select(None),
@@ -294,6 +288,18 @@ case class Domain(
 }
 
 object Domain {
+
+  def apply(dataset: InitialDataset): Domain =
+    Domain(
+      lastChangeNumber = dataset.lastChangeNumber,
+      nodes = Nodes(dataset)
+    )
+
+  def fromRemote(dataset: InitialDataset): Domain =
+    Domain(
+      lastChangeNumber = dataset.lastChangeNumber,
+      nodes = Nodes.fromRemote(dataset)
+    )
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.DomainMsg(this)

@@ -11,11 +11,17 @@ import cotoami.components.materialSymbol
 
 package object subparts {
 
-  def nodeImg(node: Node): ReactElement =
+  def imgNode(node: Node): ReactElement =
     img(
       className := "node-icon",
       alt := node.name,
       src := s"data:image/png;base64,${node.icon}"
+    )
+
+  def spanNode(node: Node): ReactElement =
+    span(className := "node")(
+      imgNode(node),
+      span(className := "name")(node.name)
     )
 
   def buttonHelp(disable: Boolean, onButtonClick: () => Unit): ReactElement =

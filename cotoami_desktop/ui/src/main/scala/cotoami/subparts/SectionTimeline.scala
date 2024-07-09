@@ -1,6 +1,6 @@
 package cotoami.subparts
 
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import com.softwaremill.quicklens._
@@ -272,11 +272,6 @@ object SectionTimeline {
       nodes: Nodes
   ): ReactElement =
     address(className := "reposter")(
-      nodes.get(coto.postedById).map(node =>
-        Fragment(
-          nodeImg(node),
-          node.name
-        )
-      )
+      nodes.get(coto.postedById).map(spanNode)
     )
 }

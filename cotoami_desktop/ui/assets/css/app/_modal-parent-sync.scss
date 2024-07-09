@@ -10,8 +10,6 @@ dialog.parent-sync {
       img.node-icon {
         width: 22px;
         height: 22px;
-        border-radius: 4px;
-        margin-right: 6px;
       }
     }
 
@@ -19,12 +17,14 @@ dialog.parent-sync {
       margin-left: var(--spacing);
       color: var(--muted-color);
       font-size: 90%;
+      vertical-align: middle;
     }
 
     span.result {
       margin-left: var(--spacing);
       color: var(--muted-color);
       font-size: 90%;
+      vertical-align: middle;
 
       span.changes {
         margin-left: var(--spacing);

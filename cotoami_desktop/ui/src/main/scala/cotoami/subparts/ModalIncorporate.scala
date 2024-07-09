@@ -184,40 +184,24 @@ object ModalIncorporate {
       context: Context,
       domain: Domain
   ): ReactElement =
-    dialog(
-      className := "incorporate",
-      open := true,
-      data - "tauri-drag-region" := "default"
+    Modal.view(
+      elementClasses = "incorporate",
+      closeButton = Some((classOf[Modal.Incorporate], dispatch))
     )(
-      article()(
-        header()(
-          button(
-            className := "close default",
-            onClick := (_ =>
-              dispatch(
-                Modal.Msg.CloseModal(classOf[Modal.Incorporate]).toApp
-              )
-            )
-          ),
-          h1()(
-            "Incorporate Remote Database",
-            buttonHelp(
-              model.helpIntro,
-              () => dispatch(Msg.HelpIntro(true).toApp)
-            )
-          )
-        ),
-        div(className := "body")(
-          sectionHelp(
-            model.helpIntro,
-            () => dispatch(Msg.HelpIntro(false).toApp),
-            context.help.ModalIncorporate_intro
-          ),
-          model.nodeSession
-            .map(sectionIncorporate(model, _, dispatch))
-            .getOrElse(sectionConnect(model, domain.nodes, dispatch))
-        )
+      "Incorporate Remote Database",
+      buttonHelp(
+        model.helpIntro,
+        () => dispatch(Msg.HelpIntro(true).toApp)
       )
+    )(
+      sectionHelp(
+        model.helpIntro,
+        () => dispatch(Msg.HelpIntro(false).toApp),
+        context.help.ModalIncorporate_intro
+      ),
+      model.nodeSession
+        .map(sectionIncorporate(model, _, dispatch))
+        .getOrElse(sectionConnect(model, domain.nodes, dispatch))
     )
 
   private def sectionConnect(
@@ -298,20 +282,17 @@ object ModalIncorporate {
 
       // Node preview
       section(className := "node-preview")(
-        section(className := "node-name")(
-          nodeImg(nodeSession.server),
-          span(className := "name")(nodeSession.server.name)
-        ),
+        section(className := "node")(spanNode(nodeSession.server)),
         nodeSession.asChild.map(child =>
           section(className := "child-privileges")(
-            "Privileges: ",
+            "Your privileges to this node: ",
             span(className := "privileges")(
               if (child.asOwner)
-                "Owner"
+                "owner"
               else if (child.canEditLinks)
-                "Post, Edit links"
+                "post, edit links"
               else
-                "Post"
+                "post"
             )
           )
         ),

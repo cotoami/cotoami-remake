@@ -286,7 +286,7 @@ object PaneStock {
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
-                    domain.nodes.get(coto.nodeId).map(nodeImg),
+                    domain.nodes.get(coto.nodeId).map(imgNode),
                     coto.nameAsCotonoma
                   )
                 else

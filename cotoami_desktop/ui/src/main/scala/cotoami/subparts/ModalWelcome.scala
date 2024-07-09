@@ -269,30 +269,21 @@ object ModalWelcome {
       recentDatabases: Seq[DatabaseOpenedJson],
       dispatch: AppMsg => Unit
   ): ReactElement =
-    dialog(
-      className := "welcome",
-      open := true,
-      data - "tauri-drag-region" := "default"
+    Modal.view(
+      elementClasses = "welcome",
+      error = model.error
     )(
-      article()(
-        header()(
-          h1()(
-            img(
-              className := "app-icon",
-              alt := "Cotoami",
-              src := "/images/logo/logomark.svg"
-            ),
-            "Welcome to Cotoami"
-          )
-        ),
-        model.error.map(e => section(className := "error")(e)),
-        div(className := "body")(
-          sectionRecent(model, recentDatabases, dispatch),
-          div(className := "create-or-open")(
-            sectionNewDatabase(model, dispatch),
-            sectionOpenDatabase(model, dispatch)
-          )
-        )
+      img(
+        className := "app-icon",
+        alt := "Cotoami",
+        src := "/images/logo/logomark.svg"
+      ),
+      "Welcome to Cotoami"
+    )(
+      sectionRecent(model, recentDatabases, dispatch),
+      div(className := "create-or-open")(
+        sectionNewDatabase(model, dispatch),
+        sectionOpenDatabase(model, dispatch)
       )
     )
 

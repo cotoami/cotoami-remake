@@ -29,12 +29,7 @@ object ViewCoto {
       nodes: Nodes
   ): ReactElement =
     address(className := "author")(
-      nodes.get(coto.postedById).map(node =>
-        Fragment(
-          nodeImg(node),
-          node.name
-        )
-      )
+      nodes.get(coto.postedById).map(spanNode)
     )
 
   def divClassifiedAs(
@@ -92,7 +87,7 @@ object ViewCoto {
               dispatch(AppMsg.SelectCotonoma(cotonoma))
             })
           )(
-            domain.nodes.get(cotonoma.nodeId).map(nodeImg),
+            domain.nodes.get(cotonoma.nodeId).map(imgNode),
             cotonoma.name
           )
         )
@@ -107,7 +102,7 @@ object ViewCoto {
       post.nameAsCotonoma.map(name =>
         section(className := "cotonoma-content")(
           span(className := "cotonoma")(
-            domain.nodes.get(post.postedIn.nodeId).map(nodeImg),
+            domain.nodes.get(post.postedIn.nodeId).map(imgNode),
             name
           )
         )

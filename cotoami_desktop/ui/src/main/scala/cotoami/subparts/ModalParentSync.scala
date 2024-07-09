@@ -40,24 +40,17 @@ object ModalParentSync {
       parentSync: ParentSync,
       dispatch: AppMsg => Unit
   )(implicit domain: Domain): ReactElement =
-    dialog(
-      className := "parent-sync",
-      open := true,
-      data - "tauri-drag-region" := "default"
+    Modal.view(
+      elementClasses = "parent-sync"
     )(
-      article()(
-        header()(
-          h1()("Syncing with remote nodes")
-        ),
-        div(className := "body")(
-          Option.when(!parentSync.syncing.isEmpty) {
-            sectionSyncing(parentSync, dispatch)
-          },
-          Option.when(!parentSync.synced.isEmpty) {
-            sectionSynced(parentSync, dispatch)
-          }
-        )
-      )
+      "Syncing with Remote Nodes"
+    )(
+      Option.when(!parentSync.syncing.isEmpty) {
+        sectionSyncing(parentSync, dispatch)
+      },
+      Option.when(!parentSync.synced.isEmpty) {
+        sectionSynced(parentSync, dispatch)
+      }
     )
 
   private def sectionSyncing(
@@ -119,14 +112,10 @@ object ModalParentSync {
     )
 
   private def spanNode(id: Id[Node])(implicit domain: Domain): ReactElement =
-    domain.nodes.get(id).map(node =>
-      span(className := "node")(
-        nodeImg(node),
-        span(className := "name")(node.name)
+    domain.nodes.get(id).map(cotoami.subparts.spanNode)
+      .getOrElse(
+        span(className := "node not-found")(
+          s"Node not found: ${id}"
+        )
       )
-    ).getOrElse(
-      span(className := "node not-found")(
-        s"Node not found: ${id}"
-      )
-    )
 }

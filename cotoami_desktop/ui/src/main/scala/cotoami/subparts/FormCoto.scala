@@ -597,8 +597,7 @@ object FormCoto {
       Validation.sectionValidationError(validation),
       section(className := "post")(
         address(className := "poster")(
-          nodeImg(operatingNode),
-          operatingNode.name
+          spanNode(operatingNode)
         ),
         div(className := "buttons")(
           Option.when(model.form.isInstanceOf[CotoForm]) {

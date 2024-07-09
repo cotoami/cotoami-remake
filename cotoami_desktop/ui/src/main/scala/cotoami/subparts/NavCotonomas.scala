@@ -176,12 +176,17 @@ object NavCotonomas {
             domain.nodes.operatingAsChild(node.id)
               .map(_.asOwner).getOrElse(false)
         ) {
-          Some(
-            ToolButton(
-              classes = "operate",
-              tip = "Operate as",
-              symbol = "switch_account",
-              onClick = (() => ())
+          ToolButton(
+            classes = "operate",
+            tip = "Operate as",
+            symbol = "switch_account",
+            onClick = (
+                () =>
+                  dispatch(
+                    Modal.Msg.OpenModal(
+                      Modal.OperateAs(domain.nodes.operating.get, node)
+                    ).toApp
+                  )
             )
           )
         }
@@ -282,7 +287,7 @@ object NavCotonomas {
       cotonoma: Cotonoma
   )(implicit domain: Domain): ReactElement =
     Fragment(
-      domain.nodes.get(cotonoma.nodeId).map(nodeImg),
+      domain.nodes.get(cotonoma.nodeId).map(imgNode),
       cotonoma.name
     )
 }

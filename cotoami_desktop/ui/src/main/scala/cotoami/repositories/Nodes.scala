@@ -23,6 +23,8 @@ case class Nodes(
 
   def local: Option[Node] = this.localId.flatMap(this.get)
 
+  def isLocal(id: Id[Node]): Boolean = Some(id) == this.localId
+
   def operating: Option[Node] = this.operatingId.flatMap(this.get)
 
   def operatingRemote: Boolean = (this.localId, this.operatingId) match {
@@ -102,7 +104,7 @@ case class Nodes(
     }
 
   def postableTo(id: Id[Node]): Boolean =
-    if (Some(id) == this.localId)
+    if (Some(id) == this.localId || Some(id) == this.operatingId)
       true
     else
       this.parentStatus(id).map {
@@ -121,10 +123,18 @@ object ParentStatus {
 }
 
 object Nodes {
-  def apply(dataset: InitialDataset) =
+  def apply(dataset: InitialDataset): Nodes =
     new Nodes(
       map = dataset.nodes,
       localId = Some(dataset.localNodeId),
+      operatingId = Some(dataset.localNodeId),
+      parentIds = dataset.parentNodeIds.toSeq
+    ).addServers(dataset.servers)
+
+  def fromRemote(dataset: InitialDataset): Nodes =
+    // the localId should be maintained
+    new Nodes(
+      map = dataset.nodes,
       operatingId = Some(dataset.localNodeId),
       parentIds = dataset.parentNodeIds.toSeq
     ).addServers(dataset.servers)

@@ -45,7 +45,7 @@ object AppHeader {
                   e.preventDefault()
                   dispatch(AppMsg.SelectNode(node.id))
                 })
-              )(nodeImg(node)),
+              )(imgNode(node)),
               cotonoma.map(cotonoma =>
                 Fragment(
                   materialSymbol("chevron_right", "arrow"),

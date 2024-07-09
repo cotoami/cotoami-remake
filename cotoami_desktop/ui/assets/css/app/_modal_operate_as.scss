@@ -1,0 +1,25 @@
+dialog.operate-as {
+  section.preview {
+    span.node {
+      font-weight: 700;
+    }
+
+    section.current {
+      margin-top: var(--spacing);
+      padding: 5px;
+    }
+
+    div.arrow {
+      text-align: center;
+
+      span.material-symbols {
+        font-size: 20px;
+        font-weight: 700;
+      }
+    }
+
+    section.switching-to {
+      padding: 5px;
+    }
+  }
+}
