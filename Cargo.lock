@@ -885,6 +885,7 @@ dependencies = [
  "chrono",
  "cotoami_db",
  "cotoami_node",
+ "derive-new",
  "futures",
  "futures-util",
  "indoc",

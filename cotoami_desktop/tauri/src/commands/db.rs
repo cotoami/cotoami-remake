@@ -6,6 +6,7 @@ use std::{
 
 use cotoami_db::{Database, Node};
 use cotoami_node::prelude::*;
+use derive_new::new;
 use tauri::Manager;
 
 use self::recent::RecentDatabases;
@@ -17,26 +18,33 @@ use crate::{
 
 pub(crate) mod recent;
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, new)]
 pub struct DatabaseInfo {
     folder: String,
     initial_dataset: InitialDataset,
 }
 
 impl DatabaseInfo {
-    async fn new(folder: String, node_state: &NodeState) -> Result<Self, Error> {
-        let opr = node_state.local_node_as_operator()?;
-        let initial_dataset = node_state.initial_dataset(Arc::new(opr)).await?;
-        Ok(Self {
-            folder,
-            initial_dataset,
-        })
-    }
-
     pub fn local_node(&self) -> &Node {
         self.initial_dataset
             .local_node()
             .unwrap_or_else(|| unreachable!("The local node must exist in the node data."))
+    }
+}
+
+pub(crate) async fn initial_dataset(
+    node_state: &NodeState,
+    operating_as: &OperatingAs,
+) -> Result<InitialDataset, Error> {
+    if let Some(parent_id) = operating_as.parent_id() {
+        let parent_service = node_state.parent_services().try_get(&parent_id)?;
+        parent_service.initial_dataset().await.map_err(Error::from)
+    } else {
+        let opr = node_state.local_node_as_operator()?;
+        node_state
+            .initial_dataset(Arc::new(opr))
+            .await
+            .map_err(Error::from)
     }
 }
 
@@ -106,15 +114,16 @@ pub async fn create_database(
     // Operating as the local node.
     let operating_as = OperatingAs::default();
     operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
-    app_handle.manage(operating_as);
 
     // DatabaseInfo
-    let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
+    let initial_dataset = initial_dataset(&node_state, &operating_as).await?;
+    let db_info = DatabaseInfo::new(folder.clone(), initial_dataset);
     app_handle.info("Database created.", Some(&db_info.local_node().name));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
-    // Store the state.
+    // Store the states.
     app_handle.manage(node_state);
+    app_handle.manage(operating_as);
 
     Ok(db_info)
 }
@@ -163,22 +172,24 @@ pub async fn open_database(
             app_handle.debug("Reusing the existing NodeState.", None);
             state.inner().clone()
         }
-        _ => {
+        None => {
             app_handle.debug("Creating a new NodeState.", None);
             let node_state = NodeState::new(node_config).await?;
-
-            // Operating as the local node.
-            let operating_as = OperatingAs::default();
-            operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
-            app_handle.manage(operating_as);
-
             app_handle.manage(node_state.clone());
             node_state
         }
     };
 
+    // Init OperatingAs
+    if let None = app_handle.try_state::<OperatingAs>() {
+        let operating_as = OperatingAs::default();
+        operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
+        app_handle.manage(operating_as);
+    };
+
     // DatabaseInfo
-    let db_info = DatabaseInfo::new(folder.clone(), &node_state).await?;
+    let initial_dataset = initial_dataset(&node_state, &app_handle.state::<OperatingAs>()).await?;
+    let db_info = DatabaseInfo::new(folder.clone(), initial_dataset);
     app_handle.info("Database opened.", Some(&db_info.local_node().name));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
