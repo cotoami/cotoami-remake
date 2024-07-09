@@ -102,10 +102,10 @@ pub struct InitialDataset {
 }
 
 impl InitialDataset {
-    pub fn local_node(&self) -> Option<&Node> {
-        self.nodes
-            .iter()
-            .find(|node| node.uuid == self.local_node_id)
+    pub fn local_node(&self) -> Option<&Node> { self.node(&self.local_node_id) }
+
+    pub fn node(&self, id: &Id<Node>) -> Option<&Node> {
+        self.nodes.iter().find(|node| node.uuid == *id)
     }
 }
 

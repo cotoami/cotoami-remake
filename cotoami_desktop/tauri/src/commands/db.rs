@@ -4,9 +4,8 @@ use std::{
     sync::Arc,
 };
 
-use cotoami_db::{Database, Node};
+use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
-use derive_new::new;
 use tauri::Manager;
 
 use self::recent::RecentDatabases;
@@ -18,17 +17,30 @@ use crate::{
 
 pub(crate) mod recent;
 
-#[derive(serde::Serialize, new)]
+#[derive(serde::Serialize)]
 pub struct DatabaseInfo {
     folder: String,
-    initial_dataset: InitialDataset,
+    local_node_id: Id<Node>,
+    initial_dataset: InitialDataset, // could be from a remote node
 }
 
 impl DatabaseInfo {
+    pub async fn new(
+        folder: String,
+        node_state: &NodeState,
+        operating_as: &OperatingAs,
+    ) -> Result<Self, Error> {
+        Ok(Self {
+            folder,
+            local_node_id: node_state.try_get_local_node_id()?,
+            initial_dataset: initial_dataset(node_state, operating_as).await?,
+        })
+    }
+
     pub fn local_node(&self) -> &Node {
         self.initial_dataset
-            .local_node()
-            .unwrap_or_else(|| unreachable!("The local node must exist in the node data."))
+            .node(&self.local_node_id)
+            .unwrap_or_else(|| unreachable!("The local node must exist in the dataset."))
     }
 }
 
@@ -116,9 +128,8 @@ pub async fn create_database(
     operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
 
     // DatabaseInfo
-    let initial_dataset = initial_dataset(&node_state, &operating_as).await?;
-    let db_info = DatabaseInfo::new(folder.clone(), initial_dataset);
-    app_handle.info("Database created.", Some(&db_info.local_node().name));
+    let db_info = DatabaseInfo::new(folder.clone(), &node_state, &operating_as).await?;
+    app_handle.info("Database created.", Some(&folder));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
     // Store the states.
@@ -193,9 +204,13 @@ pub async fn open_database(
     };
 
     // DatabaseInfo
-    let initial_dataset = initial_dataset(&node_state, &app_handle.state::<OperatingAs>()).await?;
-    let db_info = DatabaseInfo::new(folder, initial_dataset);
-    app_handle.info("Database opened.", Some(&db_info.local_node().name));
+    let db_info = DatabaseInfo::new(
+        folder.clone(),
+        &node_state,
+        &app_handle.state::<OperatingAs>(),
+    )
+    .await?;
+    app_handle.info("Database opened.", Some(&folder));
 
     Ok(db_info)
 }

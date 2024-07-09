@@ -289,16 +289,10 @@ case class Domain(
 
 object Domain {
 
-  def apply(dataset: InitialDataset): Domain =
+  def apply(dataset: InitialDataset, localId: Id[Node]): Domain =
     Domain(
       lastChangeNumber = dataset.lastChangeNumber,
-      nodes = Nodes(dataset)
-    )
-
-  def fromRemote(dataset: InitialDataset, localId: Id[Node]): Domain =
-    Domain(
-      lastChangeNumber = dataset.lastChangeNumber,
-      nodes = Nodes.fromRemote(dataset, localId)
+      nodes = Nodes(dataset, localId)
     )
 
   sealed trait Msg {

@@ -144,7 +144,7 @@ object Main {
       case Msg.SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
-          .modify(_.domain).setTo(Domain(info.initialDataset))
+          .modify(_.domain).setTo(Domain(info.initialDataset, info.localNodeId))
           .info("Database opened.", Some(info.debug)) match {
           case model =>
             applyUrlChange(model.url, model).modify(_._2).using(
@@ -171,7 +171,7 @@ object Main {
         (
           model
             .modify(_.domain).setTo(
-              Domain.fromRemote(dataset, model.domain.nodes.localId.get)
+              Domain(dataset, model.domain.nodes.localId.get)
             )
             .info("Remote dataset received.", Some(dataset.debug)),
           Seq(Browser.pushUrl(Route.index.url(())))
