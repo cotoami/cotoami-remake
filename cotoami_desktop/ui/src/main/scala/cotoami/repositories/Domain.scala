@@ -295,10 +295,10 @@ object Domain {
       nodes = Nodes(dataset)
     )
 
-  def fromRemote(dataset: InitialDataset): Domain =
+  def fromRemote(dataset: InitialDataset, localId: Id[Node]): Domain =
     Domain(
       lastChangeNumber = dataset.lastChangeNumber,
-      nodes = Nodes.fromRemote(dataset)
+      nodes = Nodes.fromRemote(dataset, localId)
     )
 
   sealed trait Msg {

@@ -131,10 +131,10 @@ object Nodes {
       parentIds = dataset.parentNodeIds.toSeq
     ).addServers(dataset.servers)
 
-  def fromRemote(dataset: InitialDataset): Nodes =
-    // the localId should be maintained
+  def fromRemote(dataset: InitialDataset, localId: Id[Node]): Nodes =
     new Nodes(
       map = dataset.nodes,
+      localId = Some(localId),
       operatingId = Some(dataset.localNodeId),
       parentIds = dataset.parentNodeIds.toSeq
     ).addServers(dataset.servers)

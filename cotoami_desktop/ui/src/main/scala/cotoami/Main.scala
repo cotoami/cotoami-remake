@@ -170,7 +170,9 @@ object Main {
       case Msg.SetRemoteInitialDataset(dataset) =>
         (
           model
-            .modify(_.domain).setTo(Domain.fromRemote(dataset))
+            .modify(_.domain).setTo(
+              Domain.fromRemote(dataset, model.domain.nodes.localId.get)
+            )
             .info("Remote dataset received.", Some(dataset.debug)),
           Seq(Browser.pushUrl(Route.index.url(())))
         )

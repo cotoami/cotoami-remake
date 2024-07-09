@@ -6,6 +6,8 @@ nav.nodes {
   align-items: center;
   justify-content: flex-start;
 
+  padding-top: 20px;
+
   span.material-symbols {
     font-size: 24px;
   }
@@ -28,16 +30,6 @@ nav.nodes {
     display: block;
     width: 100%;
     text-align: center;
-
-    &.all {
-      margin-top: 20px;
-    }
-
-    img.node-icon {
-      width: var(--node-icon-size);
-      height: var(--node-icon-size);
-      border-radius: 4px;
-    }
 
     span.material-symbols,
     img {
@@ -68,6 +60,12 @@ nav.nodes {
 
   button.node {
     position: relative;
+
+    img.node-icon {
+      width: var(--node-icon-size);
+      height: var(--node-icon-size);
+      border-radius: 4px;
+    }
 
     span.status {
       position: absolute;
