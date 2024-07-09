@@ -50,6 +50,7 @@ object NavNodes {
       )(
         materialSymbol("stacks")
       ),
+      div(className := "separator")(),
       button(
         className := "add default",
         data - "tooltip" := "Add node",

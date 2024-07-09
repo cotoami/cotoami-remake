@@ -3,23 +3,24 @@ nav.nodes {
 
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
 
   span.material-symbols {
     font-size: 24px;
   }
 
+  div.separator {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-top: 1px solid var(--pane-border-color);
+    width: 70%;
+  }
+
   button.add {
     display: block;
-    width: 70%;
-
-    margin-top: 8px;
     margin-left: auto;
     margin-right: auto;
-    padding-top: 8px;
-
-    border-top: 1px solid var(--pane-border-color);
-
     text-align: center;
   }
 
