@@ -151,12 +151,13 @@ pub async fn open_database(
         configs.save(&app_handle);
         config
     } else {
+        // Since the database folder has been vailidated:
         unreachable!();
     };
 
     // Reuse an existing state or create a new one.
-    // TODO: Support opening another database. Currently, it will reuse an existing state
-    //       whatever database it belongs.
+    // TODO: Support opening another database.
+    //       Currently, it will reuse an existing state whatever database it belongs.
     let node_state = match app_handle.try_state::<NodeState>() {
         Some(state) => {
             app_handle.debug("Reusing the existing NodeState.", None);
