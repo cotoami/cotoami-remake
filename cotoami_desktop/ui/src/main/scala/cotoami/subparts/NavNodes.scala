@@ -97,7 +97,8 @@ object NavNodes {
                 )
               )
             )(
-              imgNode(localNode)
+              imgNode(localNode, "local"),
+              imgNode(operatingNode, "operating")
             ),
             div(className := "separator")()
           )

@@ -25,8 +25,7 @@ nav.nodes {
     text-align: center;
   }
 
-  button.selectable,
-  button.switch-back {
+  button.selectable {
 
     span.material-symbols,
     img {
@@ -99,7 +98,28 @@ nav.nodes {
   }
 
   button.switch-back {
+    position: relative;
     margin-bottom: 8px;
+    height: 30px;
+
+    img.node-icon {
+      width: calc(var(--node-icon-size) - 4px);
+      height: calc(var(--node-icon-size) - 4px);
+      border-radius: 4px;
+    }
+
+    img.local {
+      position: absolute;
+      top: 0;
+      left: 8px;
+      opacity: 0.5;
+    }
+
+    img.operating {
+      position: absolute;
+      bottom: 0;
+      right: 8px;
+    }
   }
 
   ul.nodes {

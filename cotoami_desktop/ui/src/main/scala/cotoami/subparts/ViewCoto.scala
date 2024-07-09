@@ -87,7 +87,7 @@ object ViewCoto {
               dispatch(AppMsg.SelectCotonoma(cotonoma))
             })
           )(
-            domain.nodes.get(cotonoma.nodeId).map(imgNode),
+            domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             cotonoma.name
           )
         )
@@ -102,7 +102,7 @@ object ViewCoto {
       post.nameAsCotonoma.map(name =>
         section(className := "cotonoma-content")(
           span(className := "cotonoma")(
-            domain.nodes.get(post.postedIn.nodeId).map(imgNode),
+            domain.nodes.get(post.postedIn.nodeId).map(imgNode(_)),
             name
           )
         )
