@@ -7,6 +7,7 @@ nav.cotonomas {
 
   header {
     margin-top: 23px;
+    padding-bottom: 6px;
 
     .home {
       span.material-symbols {
@@ -17,7 +18,7 @@ nav.cotonomas {
     }
 
     .node-tools {
-      margin-top: 1rem;
+      margin-top: 12px;
 
       details.node-status {
         border-style: none;
@@ -120,7 +121,7 @@ nav.cotonomas {
     }
 
     section.current {
-      margin-top: 16px;
+      margin-top: 6px;
     }
 
     section.recent {
@@ -129,7 +130,7 @@ nav.cotonomas {
       // Prevent the flex item from expanding beyond the expected height.
       min-height: 0;
 
-      margin-top: 16px;
+      margin-top: 6px;
     }
 
     .more {
