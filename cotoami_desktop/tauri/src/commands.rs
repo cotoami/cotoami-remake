@@ -41,6 +41,29 @@ pub async fn node_command(
     response.json().map_err(Error::from)
 }
 
+/// An tauri command that is the entry point to the Operate-as feature.
+///
+/// The Operate-as feature allows to switch the operating node between the
+/// local node (default) and one of the parent nodes to which the local node
+/// has owner privilege.
+///
+/// This feature is implemented by the following elements:
+/// * This tauri command: [operate_as].
+/// * The [OperatingAs] struct which holds the ID of the current operating node,
+///   and tasks piping events from the node to the frontend. It is stored in
+///   [tauri::State] and modified from the [operate_as] command.
+/// * [event::pipe] spawns tasks piping each [ChangelogEntry] and [LocalNodeEvent]
+///   from the operating node to the frontend.
+/// * An [InitialDataset] will be fetched when the operating node is switched.
+///   [commands::db::initial_dataset] returns an [InitialDataset] according to
+///   the current [OperatingAs].
+/// * The tauri command [node_command] changes the destination of [Command]s
+///   according to the current [OperatingAs]. If the destination is one of the
+///   parent nodes, it sets [Request::as_owner] to true so that the [Operator]
+///   of requests will be replaced with the owner of the parent.
+///   (cf. [cotoami_node::event::remote::handle_event_from_operator])
+/// * In a REST/SSE environment, [Request::as_owner] will be translated as a
+///   `x-cotoami-operate-as-owner` header. (cf. [cotoami_node::web::require_operator])
 #[tauri::command]
 pub async fn operate_as(
     app_handle: tauri::AppHandle,
@@ -84,7 +107,7 @@ impl OperatingAs {
                 _ => {
                     return Err(Error::new(
                         "permission-error",
-                        "The local node does not have owner privilege of the target node.",
+                        "The local node does not have owner privilege to the target node.",
                     ))
                 }
             }
