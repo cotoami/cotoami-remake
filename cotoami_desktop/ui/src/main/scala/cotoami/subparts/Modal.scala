@@ -15,17 +15,27 @@ import cotoami.subparts.modals._
 
 object Modal {
   sealed trait Model
+
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Model
+
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Model
+
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Model
+
   case class OperateAs(model: ModalOperateAs.Model) extends Model
   object OperateAs {
     def apply(current: Node, switchingTo: Node): OperateAs =
       OperateAs(ModalOperateAs.Model(current, switchingTo))
+  }
+
+  case class NodeProfile(model: ModalNodeProfile.Model) extends Model
+  object NodeProfile {
+    def apply(node: Node): NodeProfile =
+      NodeProfile(ModalNodeProfile.Model(node))
   }
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
@@ -70,6 +80,7 @@ object Modal {
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
+    case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
   }
 
   def open(modal: Model): Cmd[AppMsg] =
@@ -78,10 +89,7 @@ object Modal {
   def close[M <: Model](modalType: Class[M]): Cmd[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
-  def update(
-      msg: Msg,
-      model: AppModel
-  ): (AppModel, Seq[Cmd[AppMsg]]) = {
+  def update(msg: Msg, model: AppModel): (AppModel, Seq[Cmd[AppMsg]]) = {
     val stack = model.modalStack
     (msg match {
       case Msg.OpenModal(modal) =>
@@ -126,6 +134,14 @@ object Modal {
               (model.copy(modalStack = stack.update(OperateAs(modal))), cmds)
             }
         }
+
+      case Msg.NodeProfileMsg(modalMsg) =>
+        stack.get[NodeProfile].map { case NodeProfile(modalModel) =>
+          ModalNodeProfile.update(modalMsg, modalModel)
+            .pipe { case (modal, cmds) =>
+              (model.copy(modalStack = stack.update(NodeProfile(modal))), cmds)
+            }
+        }
     }).getOrElse((model, Seq.empty))
   }
 
@@ -133,7 +149,7 @@ object Modal {
       model: AppModel,
       dispatch: AppMsg => Unit
   )(implicit context: Context, domain: Domain): ReactElement =
-    model.modalStack.top.map {
+    model.modalStack.top.flatMap {
       case Welcome(modalModel) =>
         model.systemInfo.map(info =>
           ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
@@ -147,6 +163,9 @@ object Modal {
 
       case OperateAs(modalModel) =>
         Some(ModalOperateAs(modalModel, dispatch))
+
+      case NodeProfile(modalModel) =>
+        Some(ModalNodeProfile(modalModel, dispatch))
     }
 
   def view[M <: Model](
