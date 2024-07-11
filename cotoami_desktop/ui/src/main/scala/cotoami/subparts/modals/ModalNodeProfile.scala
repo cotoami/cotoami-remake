@@ -7,7 +7,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Msg => AppMsg}
 import cotoami.backend.Node
-import cotoami.subparts.Modal
+import cotoami.subparts.{imgNode, Modal}
 
 object ModalNodeProfile {
 
@@ -32,8 +32,35 @@ object ModalNodeProfile {
       elementClasses = "node-profile",
       closeButton = Some((classOf[Modal.NodeProfile], dispatch))
     )(
-      "Node"
+      "Node Profile"
     )(
-      section()()
+      div(className := "sidebar")(
+        section(className := "node-icon")(imgNode(model.node))
+      ),
+      div(className := "settings")(
+        // Name
+        div(className := "input-field node-name")(
+          label(htmlFor := "node-name")("Name"),
+          input(
+            `type` := "text",
+            id := "node-name",
+            name := "nodeName",
+            readOnly := true,
+            value := model.node.name
+          )
+        ),
+
+        // ID
+        div(className := "input-field")(
+          label(htmlFor := "node-id")("ID"),
+          input(
+            `type` := "text",
+            id := "node-id",
+            name := "nodeId",
+            readOnly := true,
+            value := model.node.id.uuid
+          )
+        )
+      )
     )
 }
