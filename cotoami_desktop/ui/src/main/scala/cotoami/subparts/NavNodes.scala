@@ -87,7 +87,7 @@ object NavNodes {
           Fragment(
             button(
               className := "node default switch-back",
-              data - "tooltip" := "Switch back to local",
+              data - "tooltip" := s"Back to ${localNode.name}",
               data - "placement" := "right",
               onClick := (_ =>
                 dispatch(

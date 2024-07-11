@@ -5,6 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
 import cotoami.backend.{Cotonoma, Node}
+import cotoami.repositories.Domain
 import cotoami.components.materialSymbol
 
 object AppHeader {
@@ -12,7 +13,7 @@ object AppHeader {
   def apply(
       model: Model,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit domain: Domain): ReactElement =
     header(
       data - "tauri-drag-region" := "default",
       data - "os" := model.systemInfo.map(_.os).getOrElse("")
@@ -31,7 +32,10 @@ object AppHeader {
             src := "/images/logo/logomark.svg"
           )
         ),
-        model.domain.location.map(sectionLocation(_, dispatch))
+        domain.location.map(sectionLocation(_, dispatch)),
+        section(className := "tools")(
+          domain.nodes.operating.map(buttonNodeProfile(_, dispatch))
+        )
       )
     )
 
@@ -60,4 +64,20 @@ object AppHeader {
       )
     )
   }
+
+  private def buttonNodeProfile(
+      node: Node,
+      dispatch: AppMsg => Unit
+  ): ReactElement =
+    button(
+      className := "node-profile, default",
+      title := "Node profile",
+      onClick := (_ =>
+        dispatch(
+          Modal.Msg.OpenModal(Modal.NodeProfile(node)).toApp
+        )
+      )
+    )(
+      imgNode(node)
+    )
 }
