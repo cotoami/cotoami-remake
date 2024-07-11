@@ -21,7 +21,7 @@ impl NodeState {
     pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<Cotonoma, ServiceError> {
         self.get(move |ds| {
             let (cotonoma, _) = ds.try_get_cotonoma(&id)?;
-            Ok::<_, anyhow::Error>(cotonoma)
+            Ok(cotonoma)
         })
         .await
     }
@@ -34,7 +34,7 @@ impl NodeState {
             let (cotonoma, coto) = ds.try_get_cotonoma(&id)?;
             let supers = ds.super_cotonomas(&coto)?;
             let subs = ds.sub_cotonomas(&cotonoma.uuid, DEFAULT_SUB_PAGE_SIZE, 0)?;
-            Ok::<_, anyhow::Error>(CotonomaDetails::new(cotonoma, coto, supers, subs))
+            Ok(CotonomaDetails::new(cotonoma, coto, supers, subs))
         })
         .await
     }
@@ -46,7 +46,7 @@ impl NodeState {
     ) -> Result<Cotonoma, ServiceError> {
         self.get(move |ds| {
             let (cotonoma, _) = ds.try_get_cotonoma_by_name(&name, &node)?;
-            Ok::<_, anyhow::Error>(cotonoma)
+            Ok(cotonoma)
         })
         .await
     }
