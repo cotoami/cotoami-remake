@@ -4,6 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
+import cotoami.backend.{Cotonoma, Node}
 import cotoami.components.materialSymbol
 
 object AppHeader {
@@ -30,30 +31,33 @@ object AppHeader {
             src := "/images/logo/logomark.svg"
           )
         ),
-        model
-          .domain
-          .location
-          .map { case (node, cotonoma) =>
-            section(
-              className := "location",
-              data - "tauri-drag-region" := "default"
-            )(
-              a(
-                className := "node-home",
-                title := node.name,
-                onClick := ((e) => {
-                  e.preventDefault()
-                  dispatch(AppMsg.SelectNode(node.id))
-                })
-              )(imgNode(node)),
-              cotonoma.map(cotonoma =>
-                Fragment(
-                  materialSymbol("chevron_right", "arrow"),
-                  h1(className := "current-cotonoma")(cotonoma.name)
-                )
-              )
-            )
-          }
+        model.domain.location.map(sectionLocation(_, dispatch))
       )
     )
+
+  private def sectionLocation(
+      location: (Node, Option[Cotonoma]),
+      dispatch: AppMsg => Unit
+  ): ReactElement = {
+    val (node, cotonoma) = location
+    section(
+      className := "location",
+      data - "tauri-drag-region" := "default"
+    )(
+      a(
+        className := "node-home",
+        title := node.name,
+        onClick := ((e) => {
+          e.preventDefault()
+          dispatch(AppMsg.SelectNode(node.id))
+        })
+      )(imgNode(node)),
+      cotonoma.map(cotonoma =>
+        Fragment(
+          materialSymbol("chevron_right", "arrow"),
+          h1(className := "current-cotonoma")(cotonoma.name)
+        )
+      )
+    )
+  }
 }
