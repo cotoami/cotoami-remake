@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.reflect.ClassTag
 import scala.scalajs.js
 import org.scalajs.dom.URL
 import com.softwaremill.quicklens._
@@ -59,6 +60,9 @@ case class Model(
       waitingPosts = WaitingPosts(),
       traversals = SectionTraversals.Model()
     )
+
+  def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
+    this.copy(modalStack = this.modalStack.update(newState))
 
   def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {
     // ServerStateChanged

@@ -100,10 +100,9 @@ object Modal {
 
       case Msg.WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modalModel) =>
-          ModalWelcome.update(modalMsg, modalModel)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(Welcome(modal))), cmds)
-            }
+          ModalWelcome.update(modalMsg, modalModel).pipe { case (modal, cmds) =>
+            (model.updateModal(Welcome(modal)), cmds)
+          }
         }
 
       case Msg.IncorporateMsg(modalMsg) =>
@@ -112,7 +111,7 @@ object Modal {
             .pipe { case (modal, nodes, cmds) =>
               (
                 model
-                  .modify(_.modalStack).using(_.update(Incorporate(modal)))
+                  .updateModal(Incorporate(modal))
                   .modify(_.domain.nodes).setTo(nodes),
                 cmds
               )
@@ -121,26 +120,23 @@ object Modal {
 
       case Msg.ParentSyncMsg(modalMsg) =>
         stack.get[ParentSync].map { case ParentSync(modalModel) =>
-          ModalParentSync.update(modalMsg, modalModel)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(ParentSync(modal))), cmds)
-            }
+          ModalParentSync.update(modalMsg, modalModel).pipe {
+            case (modal, cmds) => (model.updateModal(ParentSync(modal)), cmds)
+          }
         }
 
       case Msg.OperateAsMsg(modalMsg) =>
         stack.get[OperateAs].map { case OperateAs(modalModel) =>
-          ModalOperateAs.update(modalMsg, modalModel, model.domain)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(OperateAs(modal))), cmds)
-            }
+          ModalOperateAs.update(modalMsg, modalModel, model.domain).pipe {
+            case (modal, cmds) => (model.updateModal(OperateAs(modal)), cmds)
+          }
         }
 
       case Msg.NodeProfileMsg(modalMsg) =>
         stack.get[NodeProfile].map { case NodeProfile(modalModel) =>
-          ModalNodeProfile.update(modalMsg, modalModel)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(NodeProfile(modal))), cmds)
-            }
+          ModalNodeProfile.update(modalMsg, modalModel).pipe {
+            case (modal, cmds) => (model.updateModal(NodeProfile(modal)), cmds)
+          }
         }
     }).getOrElse((model, Seq.empty))
   }
