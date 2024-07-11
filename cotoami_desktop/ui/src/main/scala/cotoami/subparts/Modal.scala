@@ -35,7 +35,7 @@ object Modal {
   case class NodeProfile(model: ModalNodeProfile.Model) extends Model
   object NodeProfile {
     def apply(node: Node): NodeProfile =
-      NodeProfile(ModalNodeProfile.Model(node))
+      NodeProfile(ModalNodeProfile.Model(node, None))
   }
 
   case class Stack(modals: Seq[Model] = Seq.empty) {

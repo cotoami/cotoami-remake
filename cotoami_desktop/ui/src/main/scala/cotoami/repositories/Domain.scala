@@ -304,15 +304,18 @@ object Domain {
       tagger andThen AppMsg.DomainMsg
 
     case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
+
     case class CotosMsg(subMsg: Cotos.Msg) extends Msg
 
     case class CotonomaDetailsFetched(
         result: Either[ErrorJson, CotonomaDetailsJson]
     ) extends Msg
+
     case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
         extends Msg
 
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
+
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
         extends Msg
   }

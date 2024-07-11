@@ -6,13 +6,14 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Msg => AppMsg}
-import cotoami.backend.Node
+import cotoami.backend.{Coto, Node}
 import cotoami.subparts.{imgNode, Modal}
 
 object ModalNodeProfile {
 
   case class Model(
-      node: Node
+      node: Node,
+      rootCoto: Option[Coto]
   )
 
   sealed trait Msg {
