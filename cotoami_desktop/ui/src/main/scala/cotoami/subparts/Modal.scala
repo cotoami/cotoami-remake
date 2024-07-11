@@ -15,17 +15,27 @@ import cotoami.subparts.modals._
 
 object Modal {
   sealed trait Model
+
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Model
+
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Model
+
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Model
+
   case class OperateAs(model: ModalOperateAs.Model) extends Model
   object OperateAs {
     def apply(current: Node, switchingTo: Node): OperateAs =
       OperateAs(ModalOperateAs.Model(current, switchingTo))
+  }
+
+  case class NodeProfile(model: ModalNodeProfile.Model) extends Model
+  object NodeProfile {
+    def apply(node: Node): NodeProfile =
+      NodeProfile(ModalNodeProfile.Model(node, None))
   }
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
@@ -63,13 +73,15 @@ object Modal {
   }
 
   object Msg {
-    case class OpenModal(modal: Model) extends Msg
+    case class OpenModal(modal: Model, cmds: Seq[Cmd[AppMsg]] = Seq.empty)
+        extends Msg
     case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
 
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
+    case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
   }
 
   def open(modal: Model): Cmd[AppMsg] =
@@ -78,24 +90,20 @@ object Modal {
   def close[M <: Model](modalType: Class[M]): Cmd[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
-  def update(
-      msg: Msg,
-      model: AppModel
-  ): (AppModel, Seq[Cmd[AppMsg]]) = {
+  def update(msg: Msg, model: AppModel): (AppModel, Seq[Cmd[AppMsg]]) = {
     val stack = model.modalStack
     (msg match {
-      case Msg.OpenModal(modal) =>
-        Some((model.modify(_.modalStack).using(_.open(modal)), Seq.empty))
+      case Msg.OpenModal(modal, cmds) =>
+        Some((model.modify(_.modalStack).using(_.open(modal)), cmds))
 
       case Msg.CloseModal(modalType) =>
         Some((model.modify(_.modalStack).using(_.close(modalType)), Seq.empty))
 
       case Msg.WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modalModel) =>
-          ModalWelcome.update(modalMsg, modalModel)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(Welcome(modal))), cmds)
-            }
+          ModalWelcome.update(modalMsg, modalModel).pipe { case (modal, cmds) =>
+            (model.updateModal(Welcome(modal)), cmds)
+          }
         }
 
       case Msg.IncorporateMsg(modalMsg) =>
@@ -104,7 +112,7 @@ object Modal {
             .pipe { case (modal, nodes, cmds) =>
               (
                 model
-                  .modify(_.modalStack).using(_.update(Incorporate(modal)))
+                  .updateModal(Incorporate(modal))
                   .modify(_.domain.nodes).setTo(nodes),
                 cmds
               )
@@ -113,18 +121,23 @@ object Modal {
 
       case Msg.ParentSyncMsg(modalMsg) =>
         stack.get[ParentSync].map { case ParentSync(modalModel) =>
-          ModalParentSync.update(modalMsg, modalModel)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(ParentSync(modal))), cmds)
-            }
+          ModalParentSync.update(modalMsg, modalModel).pipe {
+            case (modal, cmds) => (model.updateModal(ParentSync(modal)), cmds)
+          }
         }
 
       case Msg.OperateAsMsg(modalMsg) =>
         stack.get[OperateAs].map { case OperateAs(modalModel) =>
-          ModalOperateAs.update(modalMsg, modalModel, model.domain)
-            .pipe { case (modal, cmds) =>
-              (model.copy(modalStack = stack.update(OperateAs(modal))), cmds)
-            }
+          ModalOperateAs.update(modalMsg, modalModel, model.domain).pipe {
+            case (modal, cmds) => (model.updateModal(OperateAs(modal)), cmds)
+          }
+        }
+
+      case Msg.NodeProfileMsg(modalMsg) =>
+        stack.get[NodeProfile].map { case NodeProfile(modalModel) =>
+          ModalNodeProfile.update(modalMsg, modalModel).pipe {
+            case (modal, cmds) => (model.updateModal(NodeProfile(modal)), cmds)
+          }
         }
     }).getOrElse((model, Seq.empty))
   }
@@ -133,7 +146,7 @@ object Modal {
       model: AppModel,
       dispatch: AppMsg => Unit
   )(implicit context: Context, domain: Domain): ReactElement =
-    model.modalStack.top.map {
+    model.modalStack.top.flatMap {
       case Welcome(modalModel) =>
         model.systemInfo.map(info =>
           ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
@@ -147,6 +160,9 @@ object Modal {
 
       case OperateAs(modalModel) =>
         Some(ModalOperateAs(modalModel, dispatch))
+
+      case NodeProfile(modalModel) =>
+        Some(ModalNodeProfile(modalModel, dispatch))
     }
 
   def view[M <: Model](

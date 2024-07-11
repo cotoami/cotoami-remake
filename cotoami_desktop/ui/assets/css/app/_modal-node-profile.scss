@@ -1,0 +1,28 @@
+dialog.node-profile {
+  article {
+    width: 600px;
+  }
+
+  div.body {
+    display: flex;
+    flex-direction: row;
+
+    div.sidebar {
+      width: 120px;
+      padding-right: 16px;
+
+      section.node-icon img {
+        border-radius: 4px;
+      }
+    }
+
+    div.settings {
+      flex: 1;
+      padding-left: 16px;
+
+      div.node-name {
+        margin-top: 0;
+      }
+    }
+  }
+}

@@ -169,7 +169,10 @@ object NavCotonomas {
           classes = "settings",
           tip = "Node settings",
           symbol = "settings",
-          onClick = (() => ())
+          onClick = () =>
+            dispatch(
+              Modal.Msg.OpenModal(Modal.NodeProfile(node)).toApp
+            )
         ),
         Option.when(
           !domain.nodes.operatingRemote &&
@@ -180,14 +183,12 @@ object NavCotonomas {
             classes = "operate",
             tip = "Operate as",
             symbol = "switch_account",
-            onClick = (
-                () =>
-                  dispatch(
-                    Modal.Msg.OpenModal(
-                      Modal.OperateAs(domain.nodes.operating.get, node)
-                    ).toApp
-                  )
-            )
+            onClick = () =>
+              dispatch(
+                Modal.Msg.OpenModal(
+                  Modal.OperateAs(domain.nodes.operating.get, node)
+                ).toApp
+              )
           )
         }
       )
