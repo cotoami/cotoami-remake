@@ -73,7 +73,8 @@ object Modal {
   }
 
   object Msg {
-    case class OpenModal(modal: Model) extends Msg
+    case class OpenModal(modal: Model, cmds: Seq[Cmd[AppMsg]] = Seq.empty)
+        extends Msg
     case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
 
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
@@ -92,8 +93,8 @@ object Modal {
   def update(msg: Msg, model: AppModel): (AppModel, Seq[Cmd[AppMsg]]) = {
     val stack = model.modalStack
     (msg match {
-      case Msg.OpenModal(modal) =>
-        Some((model.modify(_.modalStack).using(_.open(modal)), Seq.empty))
+      case Msg.OpenModal(modal, cmds) =>
+        Some((model.modify(_.modalStack).using(_.open(modal)), cmds))
 
       case Msg.CloseModal(modalType) =>
         Some((model.modify(_.modalStack).using(_.close(modalType)), Seq.empty))
