@@ -1,4 +1,4 @@
-package cotoami.subparts
+package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
@@ -10,6 +10,7 @@ import cotoami.{log_error, tauri, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, Id, InitialDataset, InitialDatasetJson, Node}
 import cotoami.repositories.Domain
 import cotoami.components.materialSymbol
+import cotoami.subparts.{spanNode, Modal}
 
 object ModalOperateAs {
 

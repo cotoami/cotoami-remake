@@ -11,6 +11,7 @@ import cotoami.{Model => AppModel, Msg => AppMsg}
 import cotoami.backend.Node
 import cotoami.models.Context
 import cotoami.repositories.Domain
+import cotoami.subparts.modals._
 
 object Modal {
   sealed trait Model

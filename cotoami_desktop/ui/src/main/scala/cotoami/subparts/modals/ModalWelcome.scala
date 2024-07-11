@@ -1,4 +1,4 @@
-package cotoami.subparts
+package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
@@ -16,6 +16,7 @@ import cotoami.backend.{
   ErrorJson,
   Node
 }
+import cotoami.subparts.Modal
 
 object ModalWelcome {
 

@@ -1,4 +1,4 @@
-package cotoami.subparts
+package cotoami.subparts.modals
 
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
@@ -10,6 +10,7 @@ import cotoami.{Msg => AppMsg}
 import cotoami.backend.{Id, Node, Nullable}
 import cotoami.repositories.Domain
 import cotoami.models.ParentSync
+import cotoami.subparts.Modal
 
 object ModalParentSync {
 

@@ -1,4 +1,4 @@
-package cotoami.subparts
+package cotoami.subparts.modals
 
 import scala.scalajs.js
 import scala.util.chaining._
@@ -19,6 +19,7 @@ import cotoami.backend.{
 }
 import cotoami.repositories.{Domain, Nodes}
 import cotoami.models.Context
+import cotoami.subparts.{buttonHelp, sectionHelp, spanNode, Modal, ViewCoto}
 
 object ModalIncorporate {
 
