@@ -16,9 +16,7 @@ class Runtime[Model, Msg](
   private var state = init._1
   private val subs: MutableMap[String, Option[Sub.Unsubscribe]] = MutableMap()
 
-  def dispatch(msg: Msg): Unit = {
-    apply(program.update(msg, state))
-  }
+  def dispatch(msg: Msg): Unit = apply(program.update(msg, state))
 
   def apply(change: (Model, Seq[Cmd[Msg]])): Unit = {
     import cats.effect.unsafe.implicits.global
