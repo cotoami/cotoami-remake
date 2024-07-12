@@ -171,7 +171,9 @@ object NavCotonomas {
           symbol = "settings",
           onClick = () =>
             dispatch(
-              Modal.Msg.OpenModal(Modal.NodeProfile(node)).toApp
+              (Modal.Msg.OpenModal.apply _).tupled(
+                Modal.NodeProfile(node)
+              ).toApp
             )
         ),
         Option.when(
