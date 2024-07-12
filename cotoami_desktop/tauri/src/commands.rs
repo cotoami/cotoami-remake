@@ -21,7 +21,7 @@ pub async fn node_command(
     operating_as: tauri::State<'_, OperatingAs>,
     command: Command,
 ) -> Result<String, Error> {
-    let node_state = state.inner();
+    debug!("node_command: {command:?}");
 
     let mut request = command.into_request();
     request.set_accept(SerializeFormat::Json);
@@ -33,8 +33,8 @@ pub async fn node_command(
         parent_service.call(request).await?
     } else {
         // Send the request to the local node
-        request.set_from(Arc::new(node_state.local_node_as_operator()?));
-        node_state.call(request).await?
+        request.set_from(Arc::new(state.local_node_as_operator()?));
+        state.call(request).await?
     };
 
     // Return the result as a JSON string
