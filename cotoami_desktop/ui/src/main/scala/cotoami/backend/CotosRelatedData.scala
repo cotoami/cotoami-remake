@@ -7,6 +7,14 @@ case class CotosRelatedData(json: CotosRelatedDataJson) {
   def asCotonomas: js.Array[Cotonoma] =
     this.json.as_cotonomas.map(Cotonoma(_))
   def originals: js.Array[Coto] = this.json.originals.map(Coto(_))
+
+  def debug: String = {
+    val s = new StringBuilder
+    s ++= s"postedIn: ${this.postedIn.size}"
+    s ++= s", asCotonomas: ${this.asCotonomas.size}"
+    s ++= s", originals: ${this.originals.size}"
+    s.result()
+  }
 }
 
 @js.native

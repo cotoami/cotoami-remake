@@ -311,7 +311,7 @@ object Domain {
         result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
 
-    case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
+    case class TimelineFetched(result: Either[ErrorJson, PaginatedCotos])
         extends Msg
 
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
@@ -354,9 +354,9 @@ object Domain {
 
       case Msg.TimelineFetched(Right(cotos)) =>
         (
-          model.appendTimelinePage(PaginatedCotos(cotos)),
+          model.appendTimelinePage(cotos),
           Seq(
-            log_info("Timeline fetched.", Some(PaginatedCotosJson.debug(cotos)))
+            log_info("Timeline fetched.", Some(cotos.debug))
           )
         )
 
@@ -392,9 +392,9 @@ object Domain {
       pageIndex: Double
   ): Cmd[AppMsg] =
     query.map(query =>
-      Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
+      PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
     ).getOrElse(
-      Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
+      PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
     ).map(Msg.toApp(Msg.TimelineFetched))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[AppMsg] =
