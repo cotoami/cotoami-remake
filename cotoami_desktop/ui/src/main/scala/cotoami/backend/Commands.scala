@@ -17,6 +17,9 @@ object Commands {
 
   val LocalNode = jso(LocalNode = null)
 
+  def NodeDetails(id: Id[Node]) =
+    jso(NodeDetails = jso(id = id.uuid))
+
   def TryConnectServerNode(
       url_prefix: String,
       password: String,

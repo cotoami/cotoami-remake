@@ -53,3 +53,17 @@ trait DatabaseRoleJson extends js.Object {
   val Parent: js.UndefOr[ParentNodeJson] = js.native
   val Child: js.UndefOr[ChildNodeJson] = js.native
 }
+
+case class NodeDetails(json: NodeDetailsJson) {
+  def node: Node = Node(this.json.node)
+  def root: Option[(Cotonoma, Coto)] =
+    Nullable.toOption(this.json.root).map(pair =>
+      (Cotonoma(pair._1), Coto(pair._2))
+    )
+}
+
+@js.native
+trait NodeDetailsJson extends js.Object {
+  val node: NodeJson = js.native
+  val root: Nullable[js.Tuple2[CotonomaJson, CotoJson]] = js.native
+}
