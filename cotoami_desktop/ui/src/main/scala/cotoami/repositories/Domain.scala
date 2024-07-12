@@ -308,7 +308,7 @@ object Domain {
     case class CotosMsg(subMsg: Cotos.Msg) extends Msg
 
     case class CotonomaDetailsFetched(
-        result: Either[ErrorJson, CotonomaDetailsJson]
+        result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
 
     case class TimelineFetched(result: Either[ErrorJson, PaginatedCotosJson])
@@ -345,13 +345,8 @@ object Domain {
 
       case Msg.CotonomaDetailsFetched(Right(details)) =>
         (
-          model.setCotonomaDetails(CotonomaDetails(details)),
-          Seq(
-            log_info(
-              "Cotonoma details fetched.",
-              Some(CotonomaDetailsJson.debug(details))
-            )
-          )
+          model.setCotonomaDetails(details),
+          Seq(log_info("Cotonoma details fetched.", Some(details.debug)))
         )
 
       case Msg.CotonomaDetailsFetched(Left(e)) =>
@@ -388,8 +383,7 @@ object Domain {
     }
 
   def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[AppMsg] =
-    Commands.send(Commands.CotonomaDetails(id))
-      .map(Msg.toApp(Msg.CotonomaDetailsFetched))
+    CotonomaDetails.fetch(id).map(Msg.toApp(Msg.CotonomaDetailsFetched))
 
   def fetchTimeline(
       nodeId: Option[Id[Node]],

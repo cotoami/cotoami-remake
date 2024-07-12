@@ -8,6 +8,14 @@ case class Paginated[T <: Entity[T], J](json: PaginatedJson[J], map: J => T) {
   def pageSize: Double = this.json.page_size
   def pageIndex: Double = this.json.page_index
   def totalRows: Double = this.json.total_rows
+
+  def debug[T]: String = {
+    val s = new StringBuilder
+    s ++= s"pageIndex: ${this.pageIndex}"
+    s ++= s", pageSize: ${this.pageSize}"
+    s ++= s", totalRows: ${this.totalRows}"
+    s.result()
+  }
 }
 
 @js.native
