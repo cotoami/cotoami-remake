@@ -316,7 +316,7 @@ object Domain {
 
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
 
-    case class CotoGraphFetched(result: Either[ErrorJson, CotoGraphJson])
+    case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
   }
 
@@ -374,8 +374,8 @@ object Domain {
 
       case Msg.CotoGraphFetched(Right(graph)) =>
         (
-          model.importCotoGraph(CotoGraph(graph)),
-          Seq(log_info("Coto graph fetched.", Some(CotoGraphJson.debug(graph))))
+          model.importCotoGraph(graph),
+          Seq(log_info("Coto graph fetched.", Some(graph.debug)))
         )
 
       case Msg.CotoGraphFetched(Left(e)) =>
@@ -398,10 +398,8 @@ object Domain {
     ).map(Msg.toApp(Msg.TimelineFetched))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[AppMsg] =
-    Commands.send(Commands.GraphFromCoto(coto))
-      .map(Msg.toApp(Msg.CotoGraphFetched))
+    CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[AppMsg] =
-    Commands.send(Commands.GraphFromCotonoma(cotonoma))
-      .map(Msg.toApp(Msg.CotoGraphFetched))
+    CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.toApp(Msg.CotoGraphFetched))
 }
