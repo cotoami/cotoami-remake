@@ -9,13 +9,7 @@ import fui._
 import cotoami.{log_error, tauri, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
-import cotoami.backend.{
-  DatabaseInfo,
-  DatabaseInfoJson,
-  DatabaseOpenedJson,
-  ErrorJson,
-  Node
-}
+import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson, Node}
 import cotoami.subparts.Modal
 
 object ModalWelcome {
@@ -76,7 +70,7 @@ object ModalWelcome {
         extends Msg
     case object OpenDatabase extends Msg
     case class OpenDatabaseIn(folder: String) extends Msg
-    case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfoJson])
+    case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
         extends Msg
   }
 
@@ -186,7 +180,7 @@ object ModalWelcome {
         (
           model.copy(processing = true),
           Seq(
-            cotoami.openDatabase(model.databaseFolder).map(
+            DatabaseInfo.openDatabase(model.databaseFolder).map(
               Msg.toApp(Msg.DatabaseOpened(_))
             )
           )
@@ -196,17 +190,17 @@ object ModalWelcome {
         (
           model.copy(processing = true),
           Seq(
-            cotoami.openDatabase(folder).map(
+            DatabaseInfo.openDatabase(folder).map(
               Msg.toApp(Msg.DatabaseOpened(_))
             )
           )
         )
 
-      case Msg.DatabaseOpened(Right(json)) => {
+      case Msg.DatabaseOpened(Right(info)) => {
         (
           model,
           Seq(
-            Browser.send(AppMsg.SetDatabaseInfo(DatabaseInfo(json))),
+            Browser.send(AppMsg.SetDatabaseInfo(info)),
             Modal.close(classOf[Modal.Welcome])
           )
         )

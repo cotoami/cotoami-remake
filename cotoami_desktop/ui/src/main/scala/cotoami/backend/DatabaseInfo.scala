@@ -1,6 +1,8 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import fui.Cmd
+import cotoami.tauri
 
 case class DatabaseInfo(json: DatabaseInfoJson) {
   def folder: String = this.json.folder
@@ -16,9 +18,26 @@ case class DatabaseInfo(json: DatabaseInfoJson) {
   }
 }
 
+object DatabaseInfo {
+  def openDatabase(folder: String): Cmd[Either[ErrorJson, DatabaseInfo]] =
+    DatabaseInfoJson.openDatabase(folder).map(_.map(DatabaseInfo(_)))
+}
+
 @js.native
 trait DatabaseInfoJson extends js.Object {
   val folder: String = js.native
   val local_node_id: String = js.native
   val initial_dataset: InitialDatasetJson = js.native
+}
+
+object DatabaseInfoJson {
+  def openDatabase(folder: String): Cmd[Either[ErrorJson, DatabaseInfoJson]] =
+    tauri
+      .invokeCommand(
+        "open_database",
+        js.Dynamic
+          .literal(
+            databaseFolder = folder
+          )
+      )
 }

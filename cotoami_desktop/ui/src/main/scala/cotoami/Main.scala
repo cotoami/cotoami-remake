@@ -57,7 +57,7 @@ object Main {
         UiState.restore(Msg.UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
-          _.map(openDatabase(_).map(Msg.DatabaseOpened))
+          _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened))
             .getOrElse(Modal.open(Modal.Welcome()))
         ),
         flowInputCmd.map(Msg.FlowInputMsg)
@@ -135,8 +135,8 @@ object Main {
           Seq.empty
         )
 
-      case Msg.DatabaseOpened(Right(json)) =>
-        (model, Seq(Browser.send(Msg.SetDatabaseInfo(DatabaseInfo(json)))))
+      case Msg.DatabaseOpened(Right(info)) =>
+        (model, Seq(Browser.send(Msg.SetDatabaseInfo(info))))
 
       case Msg.DatabaseOpened(Left(e)) =>
         (model.error(e.default_message, Some(e)), Seq())
@@ -253,7 +253,7 @@ object Main {
           model.copy(domain = Domain()),
           Seq(
             model.databaseFolder.map(
-              openDatabase(_).map(Msg.DatabaseOpened)
+              DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened)
             ).getOrElse(Cmd.none)
           )
         )

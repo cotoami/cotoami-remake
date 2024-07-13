@@ -1,9 +1,7 @@
-import scala.scalajs.js
 import cats.effect.IO
 
 import fui._
 import cotoami.utils.Log
-import cotoami.backend.{DatabaseInfoJson, ErrorJson}
 
 package object cotoami {
 
@@ -15,14 +13,4 @@ package object cotoami {
     Cmd(IO { Some(Msg.AddLogEntry(Log.Warn, message, details)) })
   def log_error(message: String, details: Option[String] = None): Cmd[Msg] =
     Cmd(IO { Some(Msg.AddLogEntry(Log.Error, message, details)) })
-
-  def openDatabase(folder: String): Cmd[Either[ErrorJson, DatabaseInfoJson]] =
-    tauri
-      .invokeCommand(
-        "open_database",
-        js.Dynamic
-          .literal(
-            databaseFolder = folder
-          )
-      )
 }
