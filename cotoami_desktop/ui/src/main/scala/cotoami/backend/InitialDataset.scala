@@ -1,6 +1,8 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import fui.Cmd
+import cotoami.tauri
 
 case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = this.json.last_change_number
@@ -29,6 +31,14 @@ case class InitialDataset(json: InitialDatasetJson) {
   }
 }
 
+object InitialDataset {
+  def switchOperatingNodeTo(
+      parentId: Option[Id[Node]]
+  ): Cmd[Either[ErrorJson, InitialDataset]] =
+    InitialDatasetJson.switchOperatingNodeTo(parentId)
+      .map(_.map(InitialDataset(_)))
+}
+
 @js.native
 trait InitialDatasetJson extends js.Object {
   val last_change_number: Double = js.native
@@ -36,4 +46,18 @@ trait InitialDatasetJson extends js.Object {
   val local_node_id: String = js.native
   val parent_node_ids: js.Array[String] = js.native
   val servers: js.Array[ServerJson] = js.native
+}
+
+object InitialDatasetJson {
+  def switchOperatingNodeTo(
+      parentId: Option[Id[Node]]
+  ): Cmd[Either[ErrorJson, InitialDatasetJson]] =
+    tauri
+      .invokeCommand(
+        "operate_as",
+        js.Dynamic
+          .literal(
+            parentId = parentId.map(_.uuid).getOrElse(null)
+          )
+      )
 }

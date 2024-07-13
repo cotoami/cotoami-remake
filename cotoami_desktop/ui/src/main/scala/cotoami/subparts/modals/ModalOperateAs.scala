@@ -6,8 +6,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, tauri, Msg => AppMsg}
-import cotoami.backend.{ErrorJson, Id, InitialDataset, InitialDatasetJson, Node}
+import cotoami.{log_error, Msg => AppMsg}
+import cotoami.backend.{ErrorJson, InitialDataset, Node}
 import cotoami.repositories.Domain
 import cotoami.components.materialSymbol
 import cotoami.subparts.{spanNode, Modal}
@@ -30,8 +30,7 @@ object ModalOperateAs {
       tagger andThen Modal.Msg.OperateAsMsg andThen AppMsg.ModalMsg
 
     case object Switch extends Msg
-    case class Switched(result: Either[ErrorJson, InitialDatasetJson])
-        extends Msg
+    case class Switched(result: Either[ErrorJson, InitialDataset]) extends Msg
   }
 
   def update(
@@ -44,19 +43,19 @@ object ModalOperateAs {
         (
           model.copy(switching = true, switchingError = None),
           Seq(
-            switchTo(
+            InitialDataset.switchOperatingNodeTo(
               Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
                 model.switchingTo.id
               )
-            )
+            ).map(Msg.toApp(Msg.Switched(_)))
           )
         )
 
-      case Msg.Switched(Right(json)) =>
+      case Msg.Switched(Right(dataset)) =>
         (
           model.copy(switching = false, switchingError = None),
           Seq(
-            Browser.send(AppMsg.SetRemoteInitialDataset(InitialDataset(json))),
+            Browser.send(AppMsg.SetRemoteInitialDataset(dataset)),
             Modal.close(classOf[Modal.OperateAs])
           )
         )
@@ -75,17 +74,6 @@ object ModalOperateAs {
           )
         )
     }
-
-  private def switchTo(parentId: Option[Id[Node]]): Cmd[AppMsg] =
-    tauri
-      .invokeCommand(
-        "operate_as",
-        js.Dynamic
-          .literal(
-            parentId = parentId.map(_.uuid).getOrElse(null)
-          )
-      )
-      .map(Msg.toApp(Msg.Switched(_)))
 
   def apply(
       model: Model,
