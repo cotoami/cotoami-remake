@@ -19,6 +19,14 @@ case class DatabaseInfo(json: DatabaseInfoJson) {
 }
 
 object DatabaseInfo {
+  def createDatabase(
+      databaseName: String,
+      baseFolder: String,
+      folderName: String
+  ): Cmd[Either[ErrorJson, DatabaseInfo]] =
+    DatabaseInfoJson.createDatabase(databaseName, baseFolder, folderName)
+      .map(_.map(DatabaseInfo(_)))
+
   def openDatabase(folder: String): Cmd[Either[ErrorJson, DatabaseInfo]] =
     DatabaseInfoJson.openDatabase(folder).map(_.map(DatabaseInfo(_)))
 }
@@ -31,6 +39,22 @@ trait DatabaseInfoJson extends js.Object {
 }
 
 object DatabaseInfoJson {
+  def createDatabase(
+      databaseName: String,
+      baseFolder: String,
+      folderName: String
+  ): Cmd[Either[ErrorJson, DatabaseInfoJson]] =
+    tauri
+      .invokeCommand(
+        "create_database",
+        js.Dynamic
+          .literal(
+            databaseName = databaseName,
+            baseFolder = baseFolder,
+            folderName = folderName
+          )
+      )
+
   def openDatabase(folder: String): Cmd[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
       .invokeCommand(

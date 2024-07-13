@@ -129,7 +129,16 @@ object ModalWelcome {
         )
 
       case Msg.CreateDatabase =>
-        (model.copy(processing = true), Seq(createDatabase(model)))
+        (
+          model.copy(processing = true),
+          Seq(
+            DatabaseInfo.createDatabase(
+              model.databaseName,
+              model.baseFolder,
+              model.folderName
+            ).map(Msg.toApp(Msg.DatabaseOpened(_)))
+          )
+        )
 
       case Msg.SelectDatabaseFolder =>
         (
@@ -229,19 +238,6 @@ object ModalWelcome {
       )
     else
       Seq()
-
-  private def createDatabase(model: Model): Cmd[AppMsg] =
-    tauri
-      .invokeCommand(
-        "create_database",
-        js.Dynamic
-          .literal(
-            databaseName = model.databaseName,
-            baseFolder = model.baseFolder,
-            folderName = model.folderName
-          )
-      )
-      .map(Msg.toApp(Msg.DatabaseOpened(_)))
 
   private def validateDatabaseFolder(model: Model): Seq[Cmd[AppMsg]] =
     if (!model.databaseFolder.isBlank)
