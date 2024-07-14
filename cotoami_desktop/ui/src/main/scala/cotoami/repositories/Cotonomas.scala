@@ -143,9 +143,8 @@ object Cotonomas {
 
     case class OneFetched(result: Either[ErrorJson, Cotonoma]) extends Msg
     case object FetchMoreRecent extends Msg
-    case class RecentFetched(
-        result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
-    ) extends Msg
+    case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
+        extends Msg
     case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
     case class SubsFetched(
         result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
@@ -180,7 +179,7 @@ object Cotonomas {
         }
 
       case Msg.RecentFetched(Right(page)) =>
-        (model.appendPageOfRecent(Paginated(page, Cotonoma(_))), Seq.empty)
+        (model.appendPageOfRecent(page), Seq.empty)
 
       case Msg.RecentFetched(Left(e)) =>
         (
@@ -214,7 +213,7 @@ object Cotonomas {
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd[AppMsg] =
-    Commands.send(Commands.RecentCotonomas(nodeId, pageIndex))
+    Cotonoma.fetchRecent(nodeId, pageIndex)
       .map(Msg.toApp(Msg.RecentFetched))
 
   def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[AppMsg] =
