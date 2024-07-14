@@ -7,14 +7,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Msg => AppMsg}
-import cotoami.backend.{
-  Commands,
-  Coto,
-  ErrorJson,
-  Node,
-  NodeDetails,
-  NodeDetailsJson
-}
+import cotoami.backend.{Coto, ErrorJson, Node, NodeDetails}
 import cotoami.subparts.{imgNode, Modal}
 
 object ModalNodeProfile {
@@ -30,8 +23,7 @@ object ModalNodeProfile {
       (
         Model(node, None),
         Seq(
-          Commands
-            .send(Commands.NodeDetails(node.id))
+          NodeDetails.fetch(node.id)
             .map(Msg.toApp(Msg.NodeDetailsFetched(_)))
         )
       )
@@ -45,14 +37,13 @@ object ModalNodeProfile {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen Modal.Msg.NodeProfileMsg andThen AppMsg.ModalMsg
 
-    case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetailsJson])
+    case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.NodeDetailsFetched(Right(json)) => {
-        val details = NodeDetails(json)
+      case Msg.NodeDetailsFetched(Right(details)) => {
         (
           model.copy(node = details.node, rootCoto = details.root.map(_._2)),
           Seq.empty
