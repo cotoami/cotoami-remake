@@ -2,6 +2,8 @@ package cotoami.backend
 
 import scala.scalajs.js
 import java.time.Instant
+
+import fui.Cmd
 import cotoami.utils.Validation
 
 case class Cotonoma(json: CotonomaJson) extends Entity[Cotonoma] {
@@ -30,6 +32,9 @@ object Cotonoma {
       Validation.length(fieldName, name, 1, NameMaxLength)
     ).flatten
   }
+
+  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, Cotonoma]] =
+    CotonomaJson.fetch(id).map(_.map(Cotonoma(_)))
 }
 
 @js.native
@@ -41,4 +46,9 @@ trait CotonomaJson extends js.Object {
   val created_at: String = js.native
   val updated_at: String = js.native
   val posts: Int = js.native
+}
+
+object CotonomaJson {
+  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, CotonomaJson]] =
+    Commands.send(Commands.Cotonoma(id))
 }

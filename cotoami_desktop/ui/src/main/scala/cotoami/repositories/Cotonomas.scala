@@ -119,7 +119,10 @@ case class Cotonomas(
     (
       this.modify(_.recentIds).using(_.prependId(id)),
       if (!this.contains(id))
-        Seq(Cotonomas.fetchOne(id))
+        Seq(
+          Cotonoma.fetch(id)
+            .map(Cotonomas.Msg.toApp(Cotonomas.Msg.OneFetched))
+        )
       else
         Seq.empty
     )
@@ -138,7 +141,7 @@ object Cotonomas {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen Domain.Msg.CotonomasMsg andThen AppMsg.DomainMsg
 
-    case class OneFetched(result: Either[ErrorJson, CotonomaJson]) extends Msg
+    case class OneFetched(result: Either[ErrorJson, Cotonoma]) extends Msg
     case object FetchMoreRecent extends Msg
     case class RecentFetched(
         result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
@@ -155,10 +158,10 @@ object Cotonomas {
       nodeId: Option[Id[Node]]
   ): (Cotonomas, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.OneFetched(Right(cotonomaJson)) =>
+      case Msg.OneFetched(Right(cotonoma)) =>
         (
-          model.add(Cotonoma(cotonomaJson)),
-          Seq(log_info("Cotonoma fetched.", Some(cotonomaJson.name)))
+          model.add(cotonoma),
+          Seq(log_info("Cotonoma fetched.", Some(cotonoma.name)))
         )
 
       case Msg.OneFetched(Left(e)) =>
@@ -206,9 +209,6 @@ object Cotonomas {
           Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
         )
     }
-
-  def fetchOne(id: Id[Cotonoma]): Cmd[AppMsg] =
-    Commands.send(Commands.Cotonoma(id)).map(Msg.toApp(Msg.OneFetched))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
