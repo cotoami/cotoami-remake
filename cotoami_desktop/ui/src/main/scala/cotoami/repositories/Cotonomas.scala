@@ -146,9 +146,8 @@ object Cotonomas {
     case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
         extends Msg
     case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
-    case class SubsFetched(
-        result: Either[ErrorJson, PaginatedJson[CotonomaJson]]
-    ) extends Msg
+    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
+        extends Msg
   }
 
   def update(
@@ -194,13 +193,13 @@ object Cotonomas {
           model.subIds.nextPageIndex.map(i =>
             (
               model.copy(subsLoading = true),
-              Seq(fetchSubs(id, i))
+              Seq(Cotonoma.fetchSubs(id, i).map(Msg.toApp(Msg.SubsFetched)))
             )
           ).getOrElse((model, Seq.empty))
         }
 
       case Msg.SubsFetched(Right(page)) =>
-        (model.appendPageOfSubs(Paginated(page, Cotonoma(_))), Seq.empty)
+        (model.appendPageOfSubs(page), Seq.empty)
 
       case Msg.SubsFetched(Left(e)) =>
         (
@@ -215,8 +214,4 @@ object Cotonomas {
   ): Cmd[AppMsg] =
     Cotonoma.fetchRecent(nodeId, pageIndex)
       .map(Msg.toApp(Msg.RecentFetched))
-
-  def fetchSubs(id: Id[Cotonoma], pageIndex: Double): Cmd[AppMsg] =
-    Commands.send(Commands.SubCotonomas(id, pageIndex))
-      .map(Msg.toApp(Msg.SubsFetched))
 }
