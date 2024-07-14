@@ -23,6 +23,16 @@ dialog.node-profile {
       div.node-name {
         margin-top: 0;
       }
+
+      section.node-description {
+        border: 1px solid var(--pane-border-color);
+        padding: var(--spacing);
+        background-color: var(--card-background-color);
+
+        min-height: 42px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
     }
   }
 }
