@@ -23,13 +23,3 @@ trait CotosRelatedDataJson extends js.Object {
   val as_cotonomas: js.Array[CotonomaJson] = js.native
   val originals: js.Array[CotoJson] = js.native
 }
-
-object CotosRelatedDataJson {
-  def debug(data: CotosRelatedDataJson): String = {
-    val s = new StringBuilder
-    s ++= s"posted_in: ${data.posted_in.size}"
-    s ++= s", as_cotonomas: ${data.as_cotonomas.size}"
-    s ++= s", originals: ${data.originals.size}"
-    s.result()
-  }
-}
