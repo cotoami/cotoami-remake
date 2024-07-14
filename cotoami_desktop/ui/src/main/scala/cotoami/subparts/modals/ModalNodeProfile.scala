@@ -8,6 +8,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{log_error, Msg => AppMsg}
 import cotoami.backend.{Coto, ErrorJson, Node, NodeDetails}
+import cotoami.components.ToolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 
 object ModalNodeProfile {
@@ -86,12 +87,21 @@ object ModalNodeProfile {
         // Name
         div(className := "input-field node-name")(
           label(htmlFor := "node-profile-name")("Name"),
-          input(
-            `type` := "text",
-            id := "node-profile-name",
-            name := "nodeName",
-            readOnly := true,
-            value := model.node.name
+          div(className := "input-with-tools")(
+            input(
+              `type` := "text",
+              id := "node-profile-name",
+              name := "nodeName",
+              readOnly := true,
+              value := model.node.name
+            ),
+            div(className := "tools")(
+              ToolButton(
+                classes = "edit",
+                tip = "Edit",
+                symbol = "edit"
+              )
+            )
           )
         ),
 
@@ -99,8 +109,17 @@ object ModalNodeProfile {
         model.rootCoto.map(coto =>
           div(className := "input-field node-description")(
             label(htmlFor := "node-profile-description")("Description"),
-            section(className := "node-description")(
-              ViewCoto.sectionCotoContentDetails(coto)
+            div(className := "input-with-tools")(
+              section(className := "node-description")(
+                ViewCoto.sectionCotoContentDetails(coto)
+              ),
+              div(className := "tools")(
+                ToolButton(
+                  classes = "edit",
+                  tip = "Edit",
+                  symbol = "edit"
+                )
+              )
             )
           )
         )

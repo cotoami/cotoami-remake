@@ -1,6 +1,7 @@
 dialog.node-profile {
   article {
     width: 600px;
+    padding-bottom: 20px;
   }
 
   div.body {
@@ -32,6 +33,21 @@ dialog.node-profile {
         min-height: 42px;
         max-height: 200px;
         overflow-y: auto;
+      }
+    }
+  }
+
+  div.input-with-tools {
+    position: relative;
+
+    div.tools {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 10px;
+
+      button {
+        height: 100%;
       }
     }
   }
