@@ -71,6 +71,18 @@ object ModalNodeProfile {
         section(className := "node-icon")(imgNode(model.node))
       ),
       div(className := "settings")(
+        // ID
+        div(className := "input-field node-id")(
+          label(htmlFor := "node-profile-id")("ID"),
+          input(
+            `type` := "text",
+            id := "node-profile-id",
+            name := "nodeId",
+            readOnly := true,
+            value := model.node.id.uuid
+          )
+        ),
+
         // Name
         div(className := "input-field node-name")(
           label(htmlFor := "node-profile-name")("Name"),
@@ -83,21 +95,9 @@ object ModalNodeProfile {
           )
         ),
 
-        // ID
-        div(className := "input-field")(
-          label(htmlFor := "node-profile-id")("ID"),
-          input(
-            `type` := "text",
-            id := "node-profile-id",
-            name := "nodeId",
-            readOnly := true,
-            value := model.node.id.uuid
-          )
-        ),
-
         // Description
         model.rootCoto.map(coto =>
-          div(className := "input-field")(
+          div(className := "input-field node-description")(
             label(htmlFor := "node-profile-description")("Description"),
             section(className := "node-description")(
               ViewCoto.sectionCotoContentDetails(coto)
