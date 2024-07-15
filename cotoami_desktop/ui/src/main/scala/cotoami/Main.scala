@@ -1,6 +1,5 @@
 package cotoami
 
-import scala.util.chaining._
 import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
@@ -259,56 +258,58 @@ object Main {
         )
       }
 
-      case Msg.DomainMsg(subMsg) =>
-        Domain.update(subMsg, model.domain)
-          .pipe(r => (model.copy(domain = r._1), r._2))
+      case Msg.DomainMsg(submsg) => {
+        val (submodel, cmds) = Domain.update(submsg, model.domain)
+        (model.copy(domain = submodel), cmds)
+      }
 
-      case Msg.ModalMsg(subMsg) => Modal.update(subMsg, model)
+      case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
-      case Msg.NavCotonomasMsg(subMsg) =>
-        NavCotonomas.update(subMsg, model.navCotonomas)
-          .pipe(r => (model.copy(navCotonomas = r._1), r._2))
+      case Msg.NavCotonomasMsg(submsg) => {
+        val (submodel, cmds) = NavCotonomas.update(submsg, model.navCotonomas)
+        (model.copy(navCotonomas = submodel), cmds)
+      }
 
-      case Msg.FlowInputMsg(subMsg) =>
-        FormCoto.update(
-          subMsg,
+      case Msg.FlowInputMsg(submsg) => {
+        val (flowInput, waitingPosts, log, subcmds) = FormCoto.update(
+          submsg,
           model.domain.currentCotonoma,
           model.flowInput,
           model.waitingPosts,
           model.log
-        ).pipe(r =>
-          (
-            model.copy(
-              flowInput = r._1,
-              waitingPosts = r._2,
-              log = r._3
-            ),
-            r._4.map(_.map(Msg.FlowInputMsg))
-          )
         )
+        (
+          model.copy(
+            flowInput = flowInput,
+            waitingPosts = waitingPosts,
+            log = log
+          ),
+          subcmds.map(_.map(Msg.FlowInputMsg))
+        )
+      }
 
-      case Msg.SectionTimelineMsg(subMsg) =>
-        SectionTimeline.update(subMsg, model)
+      case Msg.SectionTimelineMsg(submsg) =>
+        SectionTimeline.update(submsg, model)
 
-      case Msg.SectionTraversalsMsg(subMsg) =>
-        SectionTraversals.update(
-          subMsg,
+      case Msg.SectionTraversalsMsg(submsg) => {
+        val (submodel, cmds) = SectionTraversals.update(
+          submsg,
           model.traversals,
           model.domain
-        ).pipe(r =>
-          (
-            model.copy(traversals = r._1),
-            (subMsg, model.uiState) match {
-              // Open the stock pane on OpenTraversal if it's closed.
-              case (SectionTraversals.Msg.OpenTraversal(_), Some(uiState))
-                  if !uiState.paneOpened(PaneStock.PaneName) =>
-                Browser.send(
-                  Msg.OpenOrClosePane(PaneStock.PaneName, true)
-                ) +: r._2
-              case _ => r._2
-            }
-          )
         )
+        (
+          model.copy(traversals = submodel),
+          (submsg, model.uiState) match {
+            // Open the stock pane on OpenTraversal if it's closed.
+            case (SectionTraversals.Msg.OpenTraversal(_), Some(uiState))
+                if !uiState.paneOpened(PaneStock.PaneName) =>
+              Browser.send(
+                Msg.OpenOrClosePane(PaneStock.PaneName, true)
+              ) +: cmds
+            case _ => cmds
+          }
+        )
+      }
     }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
