@@ -11,6 +11,7 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 
 import fui._
+import cotoami.Context
 import cotoami.utils.{Log, Validation}
 import cotoami.backend._
 import cotoami.models.{WaitingPost, WaitingPosts}
@@ -197,35 +198,35 @@ object FormCoto {
 
   def update(
       msg: Msg,
-      currentCotonoma: Option[Cotonoma],
       model: Model,
-      waitingPosts: WaitingPosts,
-      log: Log
-  ): (Model, WaitingPosts, Log, Seq[Cmd[Msg]]) =
-    (msg, model.form, currentCotonoma) match {
+      waitingPosts: WaitingPosts
+  )(implicit context: Context): (Model, WaitingPosts, Log, Seq[Cmd[Msg]]) = {
+    val default = (model, waitingPosts, context.log, Seq.empty)
+    (msg, model.form, context.domain.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
-        model.copy(form = CotoForm()) match {
-          case model => (model, waitingPosts, log, Seq(model.restore))
-        }
+        default.copy(
+          _1 = model.copy(form = CotoForm()),
+          _4 = Seq(model.restore)
+        )
 
       case (Msg.SetCotonomaForm, _, _) =>
-        (model.copy(form = CotonomaForm()), waitingPosts, log, Seq.empty)
+        default.copy(_1 = model.copy(form = CotonomaForm()))
 
       case (Msg.CotoRestored(Some(coto)), form: CotoForm, _) =>
-        (
-          if (form.cotoInput.isBlank())
-            model.copy(form = form.copy(cotoInput = coto))
-          else
-            model,
-          waitingPosts,
-          log.info("Coto draft restored"),
-          Seq()
+        default.copy(
+          _1 =
+            if (form.cotoInput.isBlank())
+              model.copy(form = form.copy(cotoInput = coto))
+            else
+              model,
+          _3 = context.log.info("Coto draft restored")
         )
 
       case (Msg.CotoInput(coto), form: CotoForm, _) =>
-        model.copy(form = form.copy(cotoInput = coto)) match {
-          case model => (model, waitingPosts, log, Seq(model.save))
-        }
+        default.copy(
+          _1 = model.copy(form = form.copy(cotoInput = coto)),
+          _4 = Seq(model.save)
+        )
 
       case (
             Msg.CotonomaNameInput(name),
@@ -234,19 +235,18 @@ object FormCoto {
           ) => {
         val (newForm, cmds) =
           form.copy(nameInput = name).validate(cotonoma.nodeId)
-        (
-          model.copy(form = newForm),
-          waitingPosts,
-          log,
-          if (!model.imeActive)
-            cmds
-          else
-            Seq.empty
+        default.copy(
+          _1 = model.copy(form = newForm),
+          _4 =
+            if (!model.imeActive)
+              cmds
+            else
+              Seq.empty
         )
       }
 
       case (Msg.ImeCompositionStart, _, _) =>
-        (model.copy(imeActive = true), waitingPosts, log, Seq.empty)
+        default.copy(_1 = model.copy(imeActive = true))
 
       case (Msg.ImeCompositionEnd, form, currentCotonoma) =>
         model.copy(imeActive = false) match {
@@ -254,14 +254,12 @@ object FormCoto {
             (form, currentCotonoma) match {
               case (form: CotonomaForm, Some(cotonoma)) => {
                 val (newForm, cmds) = form.validate(cotonoma.nodeId)
-                (
-                  model.copy(form = newForm),
-                  waitingPosts,
-                  log,
-                  cmds
+                default.copy(
+                  _1 = model.copy(form = newForm),
+                  _4 = cmds
                 )
               }
-              case _ => (model, waitingPosts, log, Seq.empty)
+              case _ => default
             }
           }
         }
@@ -281,50 +279,36 @@ object FormCoto {
               )
             )
           ) match {
-            case form =>
-              (
-                model.copy(form = form),
-                waitingPosts,
-                log,
-                Seq.empty
-              )
+            case form => default.copy(_1 = model.copy(form = form))
           }
         else
-          (model, waitingPosts, log, Seq.empty)
+          default
 
       case (Msg.CotonomaByName(name, Left(error)), form: CotonomaForm, _) =>
         if (name == form.name && error.code == "not-found")
           form.copy(validation = Validation.Result.validated) match {
-            case form =>
-              (
-                model.copy(form = form),
-                waitingPosts,
-                log,
-                Seq.empty
-              )
+            case form => default.copy(_1 = model.copy(form = form))
           }
         else
-          (
-            model,
-            waitingPosts,
-            log.error("CotonomaByName error.", Some(js.JSON.stringify(error))),
-            Seq.empty
+          default.copy(_3 =
+            context.log.error(
+              "CotonomaByName error.",
+              Some(js.JSON.stringify(error))
+            )
           )
 
       case (Msg.SetFocus(focus), _, _) =>
-        (model.copy(focused = focus), waitingPosts, log, Seq.empty)
+        default.copy(_1 = model.copy(focused = focus))
 
       case (Msg.EditorResizeStart, _, _) =>
-        (model.copy(editorBeingResized = true), waitingPosts, log, Seq.empty)
+        default.copy(_1 = model.copy(editorBeingResized = true))
 
       case (Msg.EditorResizeEnd, _, _) =>
-        (
-          model.copy(editorBeingResized = false),
-          waitingPosts,
-          log,
+        default.copy(
+          _1 = model.copy(editorBeingResized = false),
           // Return the focus to the editor in order for it
           // not to be folded when it's empty.
-          Seq(Cmd(IO {
+          _4 = Seq(Cmd(IO {
             dom.document.getElementById(model.editorId) match {
               case element: HTMLElement => element.focus()
               case _                    => ()
@@ -334,17 +318,16 @@ object FormCoto {
         )
 
       case (Msg.TogglePreview, _, _) =>
-        (model.modify(_.inPreview).using(!_), waitingPosts, log, Seq.empty)
+        default.copy(_1 = model.modify(_.inPreview).using(!_))
 
       case (Msg.Post, form: CotoForm, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
         model.copy(posting = true).clear match {
           case model =>
-            (
-              model,
-              waitingPosts.addCoto(postId, form, cotonoma),
-              log,
-              Seq(
+            default.copy(
+              _1 = model,
+              _2 = waitingPosts.addCoto(postId, form, cotonoma),
+              _4 = Seq(
                 postCoto(postId, form, cotonoma.id),
                 model.save
               )
@@ -356,62 +339,58 @@ object FormCoto {
         val postId = WaitingPost.newPostId()
         model.copy(posting = true).clear match {
           case model =>
-            (
-              model,
-              waitingPosts.addCotonoma(postId, form, cotonoma),
-              log,
-              Seq(postCotonoma(postId, form, cotonoma.id))
+            default.copy(
+              _1 = model,
+              _2 = waitingPosts.addCotonoma(postId, form, cotonoma),
+              _4 = Seq(postCotonoma(postId, form, cotonoma.id))
             )
         }
       }
 
       case (Msg.CotoPosted(postId, Right(cotoJson)), _, _) =>
-        (
-          model.copy(posting = false),
-          waitingPosts.remove(postId),
-          log.info("Coto posted.", Some(cotoJson.uuid)),
-          Seq.empty
+        default.copy(
+          _1 = model.copy(posting = false),
+          _2 = waitingPosts.remove(postId),
+          _3 = context.log.info("Coto posted.", Some(cotoJson.uuid))
         )
 
       case (Msg.CotoPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
-        (
-          model.copy(posting = false),
-          waitingPosts.setError(
+        default.copy(
+          _1 = model.copy(posting = false),
+          _2 = waitingPosts.setError(
             postId,
             s"Couldn't post this coto: ${error}"
           ),
-          log.error("Couldn't post a coto.", Some(error)),
-          Seq.empty
+          _3 = context.log.error("Couldn't post a coto.", Some(error))
         )
       }
 
       case (Msg.CotonomaPosted(postId, Right(cotonoma)), _, _) =>
-        (
-          model.copy(posting = false),
-          waitingPosts.remove(postId),
-          log.info(
+        default.copy(
+          _1 = model.copy(posting = false),
+          _2 = waitingPosts.remove(postId),
+          _3 = context.log.info(
             "Cotonoma posted.",
             Some(js.JSON.stringify(cotonoma._1))
-          ),
-          Seq.empty
+          )
         )
 
       case (Msg.CotonomaPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
-        (
-          model.copy(posting = false),
-          waitingPosts.setError(
+        default.copy(
+          _1 = model.copy(posting = false),
+          _2 = waitingPosts.setError(
             postId,
             s"Couldn't post this cotonoma: ${error}"
           ),
-          log.error("Couldn't post a cotonoma.", Some(error)),
-          Seq.empty
+          _3 = context.log.error("Couldn't post a cotonoma.", Some(error))
         )
       }
 
-      case (_, _, _) => (model, waitingPosts, log, Seq.empty)
+      case (_, _, _) => default
     }
+  }
 
   private def cotonomaByName(name: String, nodeId: Id[Node]): Cmd[Msg] =
     Commands

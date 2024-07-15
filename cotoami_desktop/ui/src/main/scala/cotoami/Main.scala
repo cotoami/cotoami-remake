@@ -273,11 +273,9 @@ object Main {
       case Msg.FlowInputMsg(submsg) => {
         val (flowInput, waitingPosts, log, subcmds) = FormCoto.update(
           submsg,
-          model.domain.currentCotonoma,
           model.flowInput,
-          model.waitingPosts,
-          model.log
-        )
+          model.waitingPosts
+        )(model)
         (
           model.copy(
             flowInput = flowInput,
