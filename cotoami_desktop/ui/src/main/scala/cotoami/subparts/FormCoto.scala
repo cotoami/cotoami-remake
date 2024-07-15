@@ -191,7 +191,7 @@ object FormCoto {
     case object EditorResizeEnd extends Msg
     case object TogglePreview extends Msg
     case object Post extends Msg
-    case class CotoPosted(postId: String, result: Either[ErrorJson, CotoJson])
+    case class CotoPosted(postId: String, result: Either[ErrorJson, Coto])
         extends Msg
     case class CotonomaPosted(
         postId: String,
@@ -350,11 +350,11 @@ object FormCoto {
         }
       }
 
-      case (Msg.CotoPosted(postId, Right(cotoJson)), _, _) =>
+      case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
           _2 = waitingPosts.remove(postId),
-          _3 = context.log.info("Coto posted.", Some(cotoJson.uuid))
+          _3 = context.log.info("Coto posted.", Some(coto.id.uuid))
         )
 
       case (Msg.CotoPosted(postId, Left(e)), _, _) => {
@@ -398,12 +398,9 @@ object FormCoto {
   private def postCoto(
       postId: String,
       form: CotoForm,
-      post_to: Id[Cotonoma]
+      postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Commands
-      .send(
-        Commands.PostCoto(form.content.getOrElse(""), form.summary, post_to)
-      )
+    Coto.post(form.content.getOrElse(""), form.summary, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(

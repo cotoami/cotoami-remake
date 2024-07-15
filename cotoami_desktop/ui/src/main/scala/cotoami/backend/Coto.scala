@@ -3,6 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
+import fui.Cmd
 import cotoami.utils.{Remark, StripMarkdown, Validation}
 
 trait CotoContent {
@@ -79,6 +80,14 @@ object Coto {
       Validation.nonBlank(fieldName, content)
     ).flatten
   }
+
+  def post(
+      content: String,
+      summary: Option[String],
+      postTo: Id[Cotonoma]
+  ): Cmd[Either[ErrorJson, Coto]] =
+    CotoJson.post(content, summary, postTo)
+      .map(_.map(Coto(_)))
 }
 
 @js.native
@@ -95,4 +104,13 @@ trait CotoJson extends js.Object {
   val created_at: String = js.native
   val updated_at: String = js.native
   val outgoing_links: Int = js.native
+}
+
+object CotoJson {
+  def post(
+      content: String,
+      summary: Option[String],
+      postTo: Id[Cotonoma]
+  ): Cmd[Either[ErrorJson, CotoJson]] =
+    Commands.send(Commands.PostCoto(content, summary, postTo))
 }
