@@ -12,17 +12,25 @@ import cotoami.models._
 import cotoami.subparts._
 import cotoami.subparts.Modal
 
+trait Context {
+  def time: Time
+  def i18n: I18n
+  def domain: Domain
+}
+
 case class Model(
     url: URL,
-    log: Log = Log(),
-    context: Context = Context(),
-    logViewToggle: Boolean = false,
-    systemInfo: Option[SystemInfoJson] = None,
-    databaseFolder: Option[String] = None,
+    time: Time = Time(),
+    i18n: I18n = I18n(),
 
-    // uiState that can be saved in localStorage separately from app data.
-    // It will be `None` before being restored from localStorage on init.
-    uiState: Option[UiState] = None,
+    // Log
+    log: Log = Log(),
+    logViewToggle: Boolean = false,
+
+    // Initial data to be loaded in Main.init()
+    systemInfo: Option[SystemInfoJson] = None,
+    databaseFolder: Option[String] = None, // saved in sessionStorage
+    uiState: Option[UiState] = None, // saved in localStorage
 
     // This value will be updated by and referred to from subparts that need to
     // control text input according to IME state.
@@ -42,7 +50,7 @@ case class Model(
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     flowInput: FormCoto.Model,
     traversals: SectionTraversals.Model = SectionTraversals.Model()
-) {
+) extends Context {
   def path: String = this.url.pathname + this.url.search + this.url.hash
 
   def debug(message: String, details: Option[String] = None): Model =

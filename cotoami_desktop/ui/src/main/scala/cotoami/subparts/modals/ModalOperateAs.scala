@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Msg => AppMsg}
+import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, InitialDataset, Node}
 import cotoami.repositories.Domain
 import cotoami.components.materialSymbol
@@ -78,7 +78,7 @@ object ModalOperateAs {
   def apply(
       model: Model,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement = {
+  )(implicit context: Context): ReactElement = {
     val modalType = classOf[Modal.OperateAs]
     Modal.view(
       elementClasses = "operate-as",
@@ -109,11 +109,11 @@ object ModalOperateAs {
   }
 
   private def sectionNode(node: Node, elementClasses: String)(implicit
-      domain: Domain
+      context: Context
   ): ReactElement =
     section(className := elementClasses)(
       spanNode(node),
-      Option.when(domain.nodes.isLocal(node.id)) {
+      Option.when(context.domain.nodes.isLocal(node.id)) {
         span(className := "is-local")("(local)")
       }
     )

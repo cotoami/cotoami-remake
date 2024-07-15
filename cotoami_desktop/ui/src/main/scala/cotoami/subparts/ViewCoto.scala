@@ -9,7 +9,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.{Msg => AppMsg}
+import cotoami.{Context, Msg => AppMsg}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -19,7 +19,7 @@ import cotoami.components.{
   ToolButton
 }
 import cotoami.backend.{Coto, CotoContent, Link}
-import cotoami.repositories.{Domain, Nodes}
+import cotoami.repositories.Nodes
 import cotoami.models.WaitingPost
 
 object ViewCoto {
@@ -34,28 +34,26 @@ object ViewCoto {
 
   def divClassifiedAs(
       coto: Coto,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     div(className := "classified-as")(
-      ulOtherCotonomas(coto, domain, dispatch),
-      Option.when(domain.pinned(coto.id)) {
+      ulOtherCotonomas(coto, dispatch),
+      Option.when(context.domain.pinned(coto.id)) {
         div(className := "pinned")(materialSymbol("push_pin"))
       }
     )
 
   private def ulOtherCotonomas(
       coto: Coto,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
-          !domain.isCurrentRoot(id) &&
-            !domain.cotonomas.isSelecting(id)
+          !context.domain.isCurrentRoot(id) &&
+            !context.domain.cotonomas.isSelecting(id)
         )
-        .map(domain.cotonomas.get)
+        .map(context.domain.cotonomas.get)
         .flatten
         .reverse
         .map(cotonoma =>
@@ -73,11 +71,10 @@ object ViewCoto {
 
   def divContent(
       coto: Coto,
-      domain: Domain,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     div(className := "content")(
-      domain.cotonomas.asCotonoma(coto).map(cotonoma =>
+      context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-content")(
           a(
             className := "cotonoma",
@@ -87,7 +84,7 @@ object ViewCoto {
               dispatch(AppMsg.SelectCotonoma(cotonoma))
             })
           )(
-            domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             cotonoma.name
           )
         )
@@ -95,14 +92,13 @@ object ViewCoto {
     )
 
   def divWaitingPostContent(
-      post: WaitingPost,
-      domain: Domain
-  ): ReactElement =
+      post: WaitingPost
+  )(implicit context: Context): ReactElement =
     div(className := "content")(
       post.nameAsCotonoma.map(name =>
         section(className := "cotonoma-content")(
           span(className := "cotonoma")(
-            domain.nodes.get(post.postedIn.nodeId).map(imgNode(_)),
+            context.domain.nodes.get(post.postedIn.nodeId).map(imgNode(_)),
             name
           )
         )

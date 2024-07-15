@@ -4,7 +4,6 @@ import slinky.core.facade.ReactElement
 
 import cotoami.{Model, Msg => AppMsg}
 import cotoami.models.UiState
-import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, SplitPane}
 
 object AppBody {
@@ -13,7 +12,7 @@ object AppBody {
       model: Model,
       uiState: UiState,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): Seq[ReactElement] = Seq(
+  ): Seq[ReactElement] = Seq(
     NavNodes(model, uiState, dispatch),
     SplitPane(
       vertical = true,
@@ -44,7 +43,7 @@ object AppBody {
       )(
         paneToggle(NavCotonomas.PaneName, dispatch),
         model.domain.nodes.current.map(
-          NavCotonomas(model.navCotonomas, _, dispatch)
+          NavCotonomas(model.navCotonomas, _, dispatch)(model)
         )
       ),
       SplitPane.Secondary(className = None, onClick = None)(

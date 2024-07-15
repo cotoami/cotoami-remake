@@ -6,9 +6,8 @@ import slinky.web.html
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{Msg => AppMsg}
+import cotoami.{Context, Msg => AppMsg}
 import cotoami.backend.{Id, Node, Nullable}
-import cotoami.repositories.Domain
 import cotoami.models.ParentSync
 import cotoami.subparts.Modal
 
@@ -40,7 +39,7 @@ object ModalParentSync {
       model: Model,
       parentSync: ParentSync,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     Modal.view(
       elementClasses = "parent-sync"
     )(
@@ -57,7 +56,7 @@ object ModalParentSync {
   private def sectionSyncing(
       parentSync: ParentSync,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     section(className := "syncing")(
       h2()("Syncing"),
       ul()(
@@ -80,7 +79,7 @@ object ModalParentSync {
   private def sectionSynced(
       parentSync: ParentSync,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     section(className := "synced")(
       h2()("Synced"),
       ul()(
@@ -112,8 +111,8 @@ object ModalParentSync {
       )
     )
 
-  private def spanNode(id: Id[Node])(implicit domain: Domain): ReactElement =
-    domain.nodes.get(id).map(cotoami.subparts.spanNode)
+  private def spanNode(id: Id[Node])(implicit context: Context): ReactElement =
+    context.domain.nodes.get(id).map(cotoami.subparts.spanNode)
       .getOrElse(
         span(className := "node not-found")(
           s"Node not found: ${id}"

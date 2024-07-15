@@ -5,9 +5,9 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_debug, log_error, Msg => AppMsg}
+import cotoami.{log_debug, log_error, Context, Msg => AppMsg}
 import cotoami.backend.{Commands, Cotonoma, ErrorJson, Id, Node}
-import cotoami.repositories.{Cotonomas, Domain, ParentStatus}
+import cotoami.repositories.{Cotonomas, ParentStatus}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -66,7 +66,8 @@ object NavCotonomas {
       model: Model,
       currentNode: Node,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement = {
+  )(implicit context: Context): ReactElement = {
+    val domain = context.domain
     val cotonomas = domain.cotonomas
     nav(className := "cotonomas header-and-body")(
       header()(
@@ -89,7 +90,7 @@ object NavCotonomas {
           )
         },
         domain.nodes.selected.map(
-          sectionNodeTools(model, _, dispatch)
+          sectionNodeTools(_, model, dispatch)
         )
       ),
       section(className := "cotonomas body")(
@@ -115,13 +116,13 @@ object NavCotonomas {
   }
 
   private def sectionNodeTools(
-      model: Model,
       node: Node,
+      model: Model,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement = {
+  )(implicit context: Context): ReactElement = {
+    val domain = context.domain
     val status = domain.nodes.parentStatus(node.id)
     val statusParts = status.flatMap(parentStatusParts(_))
-
     section(className := "node-tools")(
       statusParts.map(parts =>
         details(
@@ -200,7 +201,8 @@ object NavCotonomas {
   private def sectionCurrent(
       selectedCotonoma: Cotonoma,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement = {
+    val domain = context.domain
     section(className := "current")(
       h2()("Current"),
       ul(
@@ -250,11 +252,12 @@ object NavCotonomas {
         )
       )
     )
+  }
 
   private def sectionRecent(
       cotonomas: Seq[Cotonoma],
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
       ul()(cotonomas.map(liCotonoma(_, dispatch)): _*)
@@ -263,14 +266,14 @@ object NavCotonomas {
   private def liCotonoma(
       cotonoma: Cotonoma,
       dispatch: AppMsg => Unit
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     li(
       className := optionalClasses(
-        Seq(("selected", domain.cotonomas.isSelecting(cotonoma.id)))
+        Seq(("selected", context.domain.cotonomas.isSelecting(cotonoma.id)))
       ),
       key := cotonoma.id.uuid
     )(
-      if (domain.cotonomas.isSelecting(cotonoma.id)) {
+      if (context.domain.cotonomas.isSelecting(cotonoma.id)) {
         span(className := "cotonoma")(cotonomaLabel(cotonoma))
       } else {
         a(
@@ -288,9 +291,9 @@ object NavCotonomas {
 
   private def cotonomaLabel(
       cotonoma: Cotonoma
-  )(implicit domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     Fragment(
-      domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+      context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
       cotonoma.name
     )
 }

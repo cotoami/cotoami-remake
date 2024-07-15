@@ -3,37 +3,33 @@ package cotoami.models
 import java.time._
 import java.time.format.DateTimeFormatter
 
-import cotoami.i18n.Help
-
-case class Context(
+case class Time(
     zone: ZoneId = ZoneId.of("UTC")
 ) {
-  def setZoneOffsetInSeconds(seconds: Int): Context =
+  def setZoneOffsetInSeconds(seconds: Int): Time =
     this.copy(zone = ZoneOffset.ofTotalSeconds(seconds))
 
   def toDateTime(instant: Instant): LocalDateTime =
     LocalDateTime.ofInstant(instant, this.zone)
 
   def formatDateTime(instant: Instant): String = {
-    this.toDateTime(instant).format(Context.DefaultDateTimeFormatter)
+    this.toDateTime(instant).format(Time.DefaultDateTimeFormatter)
   }
 
   def display(instant: Instant): String = {
     val now = LocalDateTime.now(this.zone)
     val dateTime = this.toDateTime(instant)
     if (dateTime.toLocalDate() == now.toLocalDate()) {
-      dateTime.format(Context.SameDayFormatter)
+      dateTime.format(Time.SameDayFormatter)
     } else if (dateTime.getYear() == now.getYear()) {
-      dateTime.format(Context.SameYearFormatter)
+      dateTime.format(Time.SameYearFormatter)
     } else {
       dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)
     }
   }
-
-  lazy val help: Help = Help.inLang("")
 }
 
-object Context {
+object Time {
   val DefaultDateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   val SameYearFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")

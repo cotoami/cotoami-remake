@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Msg => AppMsg}
+import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.backend.{
   ClientNodeSession,
@@ -17,8 +17,7 @@ import cotoami.backend.{
   ServerJson,
   ServerNode
 }
-import cotoami.repositories.{Domain, Nodes}
-import cotoami.models.Context
+import cotoami.repositories.Nodes
 import cotoami.subparts.{buttonHelp, sectionHelp, spanNode, Modal, ViewCoto}
 
 object ModalIncorporate {
@@ -182,8 +181,7 @@ object ModalIncorporate {
       .map(Msg.toApp(Msg.NodeIncorporated(_)))
 
   def apply(model: Model, dispatch: AppMsg => Unit)(implicit
-      context: Context,
-      domain: Domain
+      context: Context
   ): ReactElement =
     Modal.view(
       elementClasses = "incorporate",
@@ -198,16 +196,15 @@ object ModalIncorporate {
       sectionHelp(
         model.helpIntro,
         () => dispatch(Msg.HelpIntro(false).toApp),
-        context.help.ModalIncorporate_intro
+        context.i18n.help.ModalIncorporate_intro
       ),
       model.nodeSession
         .map(sectionIncorporate(model, _, dispatch))
-        .getOrElse(sectionConnect(model, domain.nodes, dispatch))
+        .getOrElse(sectionConnect(model, dispatch))
     )
 
   private def sectionConnect(
       model: Model,
-      nodes: Nodes,
       dispatch: AppMsg => Unit
   )(implicit context: Context): ReactElement =
     section(className := "connect")(
@@ -223,8 +220,8 @@ object ModalIncorporate {
         sectionHelp(
           model.helpConnect,
           () => dispatch(Msg.HelpConnect(false).toApp),
-          context.help.ModalIncorporate_connect(
-            nodes.operatingId.map(_.uuid).getOrElse("")
+          context.i18n.help.ModalIncorporate_connect(
+            context.domain.nodes.operatingId.map(_.uuid).getOrElse("")
           )
         ),
 

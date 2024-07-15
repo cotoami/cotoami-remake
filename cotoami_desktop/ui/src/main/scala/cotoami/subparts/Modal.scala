@@ -7,10 +7,8 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
-import cotoami.{Model => AppModel, Msg => AppMsg}
+import cotoami.{Context, Model => AppModel, Msg => AppMsg}
 import cotoami.backend.Node
-import cotoami.models.Context
-import cotoami.repositories.Domain
 import cotoami.subparts.modals._
 
 object Modal {
@@ -145,7 +143,7 @@ object Modal {
   def apply(
       model: AppModel,
       dispatch: AppMsg => Unit
-  )(implicit context: Context, domain: Domain): ReactElement =
+  )(implicit context: Context): ReactElement =
     model.modalStack.top.flatMap {
       case Welcome(modalModel) =>
         model.systemInfo.map(info =>

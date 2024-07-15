@@ -112,7 +112,7 @@ object Main {
         (
           model
             .modify(_.systemInfo).setTo(Some(systemInfo))
-            .modify(_.context).using(
+            .modify(_.time).using(
               _.setZoneOffsetInSeconds(systemInfo.time_zone_offset_in_sec)
             )
             .modify(
@@ -365,8 +365,7 @@ object Main {
         .map(Msg.BackendChange)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement = {
-    implicit val context = model.context
-    implicit val dmain = model.domain
+    implicit val context: Context = model
     Fragment(
       AppHeader(model, dispatch),
       div(id := "app-body", className := "body")(

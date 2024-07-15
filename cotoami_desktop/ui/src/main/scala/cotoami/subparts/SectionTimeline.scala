@@ -6,10 +6,10 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{Model, Msg => AppMsg}
+import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
-import cotoami.models.{Context, WaitingPost, WaitingPosts}
+import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -98,17 +98,16 @@ object SectionTimeline {
       sectionTimeline(
         model.domain.timeline,
         model.waitingPosts,
-        model,
         dispatch
-      )
+      )(model)
     )
 
   private def sectionTimeline(
       cotos: Seq[Coto],
       waitingPosts: WaitingPosts,
-      model: Model,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement = {
+    val domain = context.domain
     section(className := "timeline header-and-body")(
       header(className := "tools")(
         ToolButton(
@@ -122,7 +121,7 @@ object SectionTimeline {
           symbol = "calendar_month",
           onClick = (() => dispatch(Msg.OpenCalendar.toApp))
         ),
-        model.domain.cotos.query.map(query =>
+        domain.cotos.query.map(query =>
           div(className := "search")(
             input(
               `type` := "search",
@@ -157,21 +156,21 @@ object SectionTimeline {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Cotos.Msg.FetchMoreTimeline.toApp)
         )(
-          (waitingPosts.posts.map(sectionWaitingPost(_, model.domain)) ++
+          (waitingPosts.posts.map(sectionWaitingPost(_)) ++
             cotos.map(
-              sectionPost(_, model.domain, model.context, dispatch)
+              sectionPost(_, dispatch)
             ) :+ div(
               className := "more",
-              aria - "busy" := model.domain.cotos.timelineLoading.toString()
+              aria - "busy" := domain.cotos.timelineLoading.toString()
             )()): _*
         )
       )
     )
+  }
 
   private def sectionWaitingPost(
-      post: WaitingPost,
-      domain: Domain
-  ): ReactElement =
+      post: WaitingPost
+  )(implicit context: Context): ReactElement =
     section(
       className := "waiting-post",
       key := post.postId,
@@ -180,17 +179,15 @@ object SectionTimeline {
       article(className := "coto")(
         post.error.map(section(className := "error")(_)),
         div(className := "body")(
-          ViewCoto.divWaitingPostContent(post, domain)
+          ViewCoto.divWaitingPostContent(post)
         )
       )
     )
 
   private def sectionPost(
       coto: Coto,
-      domain: Domain,
-      context: Context,
       dispatch: AppMsg => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -200,48 +197,44 @@ object SectionTimeline {
       ),
       key := coto.id.uuid
     )(
-      coto.repostOfId.map(_ => repostHeader(coto, domain, dispatch)),
-      ViewCoto.ulParents(domain.parentsOf(coto.id), dispatch),
+      coto.repostOfId.map(_ => repostHeader(coto, dispatch)),
+      ViewCoto.ulParents(context.domain.parentsOf(coto.id), dispatch),
       articleCoto(
-        domain.cotos.getOriginal(coto),
-        domain,
-        context,
+        context.domain.cotos.getOriginal(coto),
         dispatch
       ),
       ViewCoto.divLinksTraversal(coto, "top", dispatch)
     )
 
-  private def articleCoto(
-      coto: Coto,
-      domain: Domain,
-      context: Context,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+  private def articleCoto(coto: Coto, dispatch: AppMsg => Unit)(implicit
+      context: Context
+  ): ReactElement = {
+    val domain = context.domain
     article(className := "coto")(
       header()(
-        ViewCoto.divClassifiedAs(coto, domain, dispatch),
+        ViewCoto.divClassifiedAs(coto, dispatch),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
           ViewCoto.addressAuthor(coto, domain.nodes)
         }
       ),
       div(className := "body")(
-        ViewCoto.divContent(coto, domain, dispatch)
+        ViewCoto.divContent(coto, dispatch)
       ),
       footer()(
         time(
           className := "posted-at",
-          title := context.formatDateTime(coto.createdAt)
+          title := context.time.formatDateTime(coto.createdAt)
         )(
-          context.display(coto.createdAt)
+          context.time.display(coto.createdAt)
         )
       )
     )
+  }
 
-  private def repostHeader(
-      coto: Coto,
-      domain: Domain,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+  private def repostHeader(coto: Coto, dispatch: AppMsg => Unit)(implicit
+      context: Context
+  ): ReactElement = {
+    val domain = context.domain
     section(className := "repost-header")(
       materialSymbol("repeat"),
       Option.when(domain.cotonomas.selectedId.isEmpty) {
@@ -251,6 +244,7 @@ object SectionTimeline {
         reposter(coto, domain.nodes)
       }
     )
+  }
 
   private def repostedIn(
       coto: Coto,
@@ -267,10 +261,7 @@ object SectionTimeline {
       )(cotonoma.name)
     )
 
-  private def reposter(
-      coto: Coto,
-      nodes: Nodes
-  ): ReactElement =
+  private def reposter(coto: Coto, nodes: Nodes): ReactElement =
     address(className := "reposter")(
       nodes.get(coto.postedById).map(spanNode)
     )
