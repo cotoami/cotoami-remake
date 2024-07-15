@@ -36,6 +36,12 @@ object Cotonoma {
   def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, Cotonoma]] =
     CotonomaJson.fetch(id).map(_.map(Cotonoma(_)))
 
+  def fetchByName(
+      name: String,
+      nodeId: Id[Node]
+  ): Cmd[Either[ErrorJson, Cotonoma]] =
+    CotonomaJson.fetchByName(name, nodeId).map(_.map(Cotonoma(_)))
+
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
@@ -65,6 +71,12 @@ trait CotonomaJson extends js.Object {
 object CotonomaJson {
   def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, CotonomaJson]] =
     Commands.send(Commands.Cotonoma(id))
+
+  def fetchByName(
+      name: String,
+      nodeId: Id[Node]
+  ): Cmd[Either[ErrorJson, CotonomaJson]] =
+    Commands.send(Commands.CotonomaByName(name, nodeId))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],

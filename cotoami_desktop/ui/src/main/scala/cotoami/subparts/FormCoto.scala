@@ -157,7 +157,10 @@ object FormCoto {
                 // Now that the local validation has passed,
                 // wait for backend validation to be done.
                 Validation.Result.toBeValidated,
-                Seq(cotonomaByName(this.name, nodeId))
+                Seq(
+                  Cotonoma.fetchByName(this.name, nodeId)
+                    .map(Msg.CotonomaByName(this.name, _))
+                )
               )
             case errors => (Validation.Result(errors), Seq.empty)
           }
@@ -181,7 +184,7 @@ object FormCoto {
     case object ImeCompositionEnd extends Msg
     case class CotonomaByName(
         name: String,
-        result: Either[ErrorJson, CotonomaJson]
+        result: Either[ErrorJson, Cotonoma]
     ) extends Msg
     case class SetFocus(focus: Boolean) extends Msg
     case object EditorResizeStart extends Msg
@@ -265,17 +268,17 @@ object FormCoto {
         }
 
       case (
-            Msg.CotonomaByName(name, Right(cotonomaJson)),
+            Msg.CotonomaByName(name, Right(cotonoma)),
             form: CotonomaForm,
             _
           ) =>
-        if (cotonomaJson.name == form.name)
+        if (cotonoma.name == form.name)
           form.modify(_.validation).setTo(
             Validation.Result(
               Validation.Error(
                 "cotonoma-already-exists",
-                s"The cotonoma \"${cotonomaJson.name}\" already exists in this node.",
-                Map("name" -> cotonomaJson.name, "id" -> cotonomaJson.uuid)
+                s"The cotonoma \"${cotonoma.name}\" already exists in this node.",
+                Map("name" -> cotonoma.name, "id" -> cotonoma.id.uuid)
               )
             )
           ) match {
@@ -391,11 +394,6 @@ object FormCoto {
       case (_, _, _) => default
     }
   }
-
-  private def cotonomaByName(name: String, nodeId: Id[Node]): Cmd[Msg] =
-    Commands
-      .send(Commands.CotonomaByName(name, nodeId))
-      .map(Msg.CotonomaByName(name, _))
 
   private def postCoto(
       postId: String,
