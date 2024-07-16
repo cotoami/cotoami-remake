@@ -6,7 +6,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{Context, Model, Msg => AppMsg}
+import cotoami.{Context, Msg => AppMsg}
 import cotoami.backend.Coto
 import cotoami.repositories._
 import cotoami.models.{WaitingPost, WaitingPosts}
@@ -18,6 +18,10 @@ import cotoami.components.{
 }
 
 object SectionTimeline {
+
+  case class Model(
+      imeActive: Boolean = false
+  )
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionTimelineMsg(this)
@@ -32,74 +36,64 @@ object SectionTimeline {
     case object OpenCalendar extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
+    val domain = context.domain
+    val default = (model, domain, Seq.empty)
     msg match {
       case Msg.InitSearch =>
-        (model.modify(_.domain.cotos.query).setTo(Some("")), Seq.empty)
+        default.copy(
+          _2 = domain.modify(_.cotos.query).setTo(Some(""))
+        )
 
       case Msg.CloseSearch =>
-        (
-          model.modify(_.domain.cotos.query).setTo(None),
-          Seq(fetchDefaultTimeline(model))
+        default.copy(
+          _2 = domain.modify(_.cotos.query).setTo(None),
+          _3 = Seq(domain.fetchTimeline(None, 0))
         )
 
       case Msg.QueryInput(query) =>
-        (
-          model.modify(_.domain.cotos.query).setTo(Some(query)),
-          if (model.imeActive)
-            Seq.empty
-          else
-            Seq(fetchTimeline(query, model))
+        default.copy(
+          _2 = domain.modify(_.cotos.query).setTo(Some(query)),
+          _3 =
+            if (model.imeActive)
+              Seq.empty
+            else
+              Seq(domain.fetchTimeline(Some(query), 0))
         )
 
       case Msg.ImeCompositionStart =>
-        (model.modify(_.imeActive).setTo(true), Seq.empty)
+        default.copy(_1 = model.copy(imeActive = true))
 
       case Msg.ImeCompositionEnd =>
-        (
-          model.modify(_.imeActive).setTo(false),
-          model.domain.cotos.query.map(query =>
-            Seq(fetchTimeline(query, model))
-          ).getOrElse(Seq.empty)
+        default.copy(
+          _1 = model.copy(imeActive = false),
+          _3 = Seq(
+            domain.fetchTimeline(domain.cotos.query, 0)
+          )
         )
 
       case Msg.OpenCalendar =>
-        (model, Seq.empty)
+        default
     }
-
-  private def fetchDefaultTimeline(model: Model): Cmd[AppMsg] =
-    Domain.fetchTimeline(
-      model.domain.nodes.selectedId,
-      model.domain.cotonomas.selectedId,
-      None,
-      0
-    )
-
-  private def fetchTimeline(query: String, model: Model): Cmd[AppMsg] =
-    if (query.isBlank())
-      fetchDefaultTimeline(model)
-    else
-      Domain.fetchTimeline(
-        model.domain.nodes.selectedId,
-        model.domain.cotonomas.selectedId,
-        Some(query),
-        0
-      )
+  }
 
   def apply(
       model: Model,
+      waitingPosts: WaitingPosts,
       dispatch: AppMsg => Unit
-  ): Option[ReactElement] =
+  )(implicit context: Context): Option[ReactElement] =
     Option.when(
-      !model.domain.timeline.isEmpty ||
-        !model.waitingPosts.isEmpty ||
-        model.domain.cotos.query.isDefined
+      !context.domain.timeline.isEmpty ||
+        !waitingPosts.isEmpty ||
+        context.domain.cotos.query.isDefined
     )(
       sectionTimeline(
-        model.domain.timeline,
-        model.waitingPosts,
+        context.domain.timeline,
+        waitingPosts,
         dispatch
-      )(model)
+      )
     )
 
   private def sectionTimeline(

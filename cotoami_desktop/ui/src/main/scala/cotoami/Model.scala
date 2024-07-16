@@ -33,10 +33,6 @@ case class Model(
     databaseFolder: Option[String] = None, // saved in sessionStorage
     uiState: Option[UiState] = None, // saved in localStorage
 
-    // This value will be updated by and referred to from subparts that need to
-    // control text input according to IME state.
-    imeActive: Boolean = false,
-
     // Domain aggregate root
     domain: Domain = Domain(),
 
@@ -50,6 +46,7 @@ case class Model(
     modalStack: Modal.Stack = Modal.Stack(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     flowInput: FormCoto.Model,
+    timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model()
 ) extends Context {
   def path: String = this.url.pathname + this.url.search + this.url.hash

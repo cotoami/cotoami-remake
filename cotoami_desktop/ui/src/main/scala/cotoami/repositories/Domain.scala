@@ -107,6 +107,17 @@ case class Domain(
       case None => this.cotos.timeline
     }
 
+  def fetchTimeline(
+      query: Option[String],
+      pageIndex: Double
+  ): Cmd[AppMsg] =
+    Domain.fetchTimeline(
+      this.nodes.selectedId,
+      this.cotonomas.selectedId,
+      query,
+      pageIndex
+    )
+
   lazy val pinnedCotos: Seq[(Link, Coto)] =
     this.currentCotonoma.map(cotonoma =>
       this.childrenOf(cotonoma.cotoId)
@@ -392,7 +403,10 @@ object Domain {
       pageIndex: Double
   ): Cmd[AppMsg] =
     query.map(query =>
-      PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
+      if (query.isBlank())
+        PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
+      else
+        PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
     ).getOrElse(
       PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
     ).map(Msg.toApp(Msg.TimelineFetched))

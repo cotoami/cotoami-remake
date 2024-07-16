@@ -19,7 +19,9 @@ object NavCotonomas {
   final val PaneName = "NavCotonomas"
   final val DefaultWidth = 230
 
-  case class Model(togglingSync: Boolean = false)
+  case class Model(
+      togglingSync: Boolean = false
+  )
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.NavCotonomasMsg(this)

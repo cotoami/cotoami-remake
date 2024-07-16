@@ -64,7 +64,8 @@ object Main {
     )
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) = {
+    implicit val context: Context = model
     msg match {
       case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
 
@@ -286,8 +287,11 @@ object Main {
         )
       }
 
-      case Msg.SectionTimelineMsg(submsg) =>
-        SectionTimeline.update(submsg, model)
+      case Msg.SectionTimelineMsg(submsg) => {
+        val (submodel, domain, cmds) =
+          SectionTimeline.update(submsg, model.timeline)
+        (model.copy(timeline = submodel, domain = domain), cmds)
+      }
 
       case Msg.SectionTraversalsMsg(submsg) => {
         val (submodel, cmds) = SectionTraversals.update(
@@ -309,6 +313,7 @@ object Main {
         )
       }
     }
+  }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
