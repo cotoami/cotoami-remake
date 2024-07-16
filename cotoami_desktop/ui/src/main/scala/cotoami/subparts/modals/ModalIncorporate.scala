@@ -8,14 +8,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.backend.{
-  ClientNodeSession,
-  Commands,
-  ErrorJson,
-  Server,
-  ServerJson,
-  ServerNode
-}
+import cotoami.backend.{ClientNodeSession, ErrorJson, Server, ServerNode}
 import cotoami.repositories.Nodes
 import cotoami.subparts.{buttonHelp, sectionHelp, spanNode, Modal, ViewCoto}
 
@@ -65,8 +58,7 @@ object ModalIncorporate {
         extends Msg
     case object Cancel extends Msg
     case object Incorporate extends Msg
-    case class NodeIncorporated(result: Either[ErrorJson, ServerJson])
-        extends Msg
+    case class NodeIncorporated(result: Either[ErrorJson, Server]) extends Msg
   }
 
   def update(
@@ -148,13 +140,16 @@ object ModalIncorporate {
         (
           model.copy(incorporating = true, incorporatingError = None),
           nodes,
-          Seq(addParentNode(model.nodeUrl, model.password))
+          Seq(
+            Server.addServer(model.nodeUrl, model.password)
+              .map(Msg.toApp(Msg.NodeIncorporated(_)))
+          )
         )
 
-      case Msg.NodeIncorporated(Right(json)) =>
+      case Msg.NodeIncorporated(Right(server)) =>
         (
           model.copy(incorporating = false, incorporatingError = None),
-          nodes.addServer(Server(json)),
+          nodes.addServer(server),
           Seq(Modal.close(classOf[Modal.Incorporate]))
         )
 
@@ -170,11 +165,6 @@ object ModalIncorporate {
           )
         )
     }
-
-  private def addParentNode(url: String, password: String): Cmd[AppMsg] =
-    Commands
-      .send(Commands.AddServerNode(url, password))
-      .map(Msg.toApp(Msg.NodeIncorporated(_)))
 
   def apply(model: Model, dispatch: AppMsg => Unit)(implicit
       context: Context

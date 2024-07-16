@@ -2,6 +2,8 @@ package cotoami.backend
 
 import scala.scalajs.js
 import java.time.Instant
+
+import fui.Cmd
 import cotoami.utils.Validation
 
 case class Server(
@@ -19,6 +21,14 @@ object Server {
       Nullable.toOption(json.not_connected).map(NotConnected(_)),
       Nullable.toOption(json.client_as_child).map(ChildNode(_))
     )
+
+  def addServer(
+      url: String,
+      password: String,
+      clientRole: Option[String] = None
+  ): Cmd[Either[ErrorJson, Server]] =
+    ServerJson.addServer(url, password, clientRole)
+      .map(_.map(Server(_)))
 }
 
 @js.native
@@ -27,6 +37,15 @@ trait ServerJson extends js.Object {
   val role: Nullable[DatabaseRoleJson] = js.native
   val not_connected: Nullable[NotConnectedJson] = js.native
   val client_as_child: Nullable[ChildNodeJson] = js.native
+}
+
+object ServerJson {
+  def addServer(
+      url: String,
+      password: String,
+      clientRole: Option[String] = None
+  ): Cmd[Either[ErrorJson, ServerJson]] =
+    Commands.send(Commands.AddServerNode(url, password, clientRole))
 }
 
 case class ServerNode(json: ServerNodeJson) {
