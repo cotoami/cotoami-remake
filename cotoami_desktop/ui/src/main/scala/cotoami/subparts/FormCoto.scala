@@ -195,7 +195,7 @@ object FormCoto {
         extends Msg
     case class CotonomaPosted(
         postId: String,
-        result: Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]
+        result: Either[ErrorJson, (Cotonoma, Coto)]
     ) extends Msg
   }
 
@@ -369,14 +369,11 @@ object FormCoto {
         )
       }
 
-      case (Msg.CotonomaPosted(postId, Right(cotonoma)), _, _) =>
+      case (Msg.CotonomaPosted(postId, Right((cotonoma, _))), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
           _2 = waitingPosts.remove(postId),
-          _3 = context.log.info(
-            "Cotonoma posted.",
-            Some(js.JSON.stringify(cotonoma._1))
-          )
+          _3 = context.log.info("Cotonoma posted.", Some(cotonoma.name))
         )
 
       case (Msg.CotonomaPosted(postId, Left(e)), _, _) => {
@@ -406,11 +403,9 @@ object FormCoto {
   private def postCotonoma(
       postId: String,
       form: CotonomaForm,
-      post_to: Id[Cotonoma]
+      postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Commands
-      .send(Commands.PostCotonoma(form.name, post_to))
-      .map(Msg.CotonomaPosted(postId, _))
+    Cotonoma.post(form.name, postTo).map(Msg.CotonomaPosted(postId, _))
 
   /////////////////////////////////////////////////////////////////////////////
   // view

@@ -120,20 +120,20 @@ object Commands {
   def PostCoto(
       content: String,
       summary: Option[String],
-      post_to: Id[Cotonoma]
+      postTo: Id[Cotonoma]
   ) =
     jso(PostCoto =
       jso(
         input = jso(content = content, summary = summary.getOrElse(null)),
-        post_to = post_to.uuid
+        post_to = postTo.uuid
       )
     )
 
-  def PostCotonoma(name: String, post_to: Id[Cotonoma]) =
+  def PostCotonoma(name: String, postTo: Id[Cotonoma]) =
     jso(PostCotonoma =
       jso(
         input = jso(name = name),
-        post_to = post_to.uuid
+        post_to = postTo.uuid
       )
     )
 }

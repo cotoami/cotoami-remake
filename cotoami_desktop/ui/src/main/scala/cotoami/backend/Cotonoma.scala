@@ -55,6 +55,13 @@ object Cotonoma {
   ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     CotonomaJson.fetchSubs(id, pageIndex)
       .map(_.map(Paginated(_, Cotonoma(_))))
+
+  def post(
+      name: String,
+      postTo: Id[Cotonoma]
+  ): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
+    CotonomaJson.post(name, postTo)
+      .map(_.map(pair => (Cotonoma(pair._1), Coto(pair._2))))
 }
 
 @js.native
@@ -89,4 +96,10 @@ object CotonomaJson {
       pageIndex: Double
   ): Cmd[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
     Commands.send(Commands.SubCotonomas(id, pageIndex))
+
+  def post(
+      name: String,
+      postTo: Id[Cotonoma]
+  ): Cmd[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+    Commands.send(Commands.PostCotonoma(name, postTo))
 }
