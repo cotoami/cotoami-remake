@@ -6,7 +6,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_debug, log_error, Context, Msg => AppMsg}
-import cotoami.backend.{Commands, Cotonoma, ErrorJson, Id, Node}
+import cotoami.backend.{Cotonoma, ErrorJson, Id, Node, ServerNode}
 import cotoami.repositories.{Cotonomas, ParentStatus}
 import cotoami.components.{
   materialSymbol,
@@ -29,21 +29,30 @@ object NavCotonomas {
       tagger andThen AppMsg.NavCotonomasMsg
 
     case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
-    case class SyncToggled(result: Either[ErrorJson, Null]) extends Msg
+    case class SyncToggled(result: Either[ErrorJson, ServerNode]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
       case Msg.SetSyncDisabled(id, disable) =>
-        (model.copy(togglingSync = true), Seq(setSyncDisabled(id, disable)))
+        (
+          model.copy(togglingSync = true),
+          Seq(
+            ServerNode.update(id, Some(disable), None)
+              .map(Msg.toApp(Msg.SyncToggled(_)))
+          )
+        )
 
       case Msg.SyncToggled(result) =>
         (
           model.copy(togglingSync = false),
           Seq(
             result match {
-              case Right(_) =>
-                log_debug("Parent sync disabled.", None)
+              case Right(server) =>
+                log_debug(
+                  "Parent sync disabled.",
+                  Some(server.disabled.toString())
+                )
               case Left(e) =>
                 log_error(
                   "Failed to disable parent sync.",
@@ -53,14 +62,6 @@ object NavCotonomas {
           )
         )
     }
-
-  private def setSyncDisabled(
-      id: Id[Node],
-      disable: Boolean
-  ): Cmd[AppMsg] =
-    Commands
-      .send(Commands.UpdateServerNode(id, Some(disable), None))
-      .map(Msg.toApp(Msg.SyncToggled(_)))
 
   def apply(
       model: Model,

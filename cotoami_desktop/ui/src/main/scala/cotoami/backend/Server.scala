@@ -66,6 +66,14 @@ object ServerNode {
       Validation.httpUrl(fieldName, url)
     ).flatten
   }
+
+  def update(
+      id: Id[Node],
+      disabled: Option[Boolean],
+      url: Option[String]
+  ): Cmd[Either[ErrorJson, ServerNode]] =
+    ServerNodeJson.update(id, disabled, url)
+      .map(_.map(ServerNode(_)))
 }
 
 @js.native
@@ -74,6 +82,15 @@ trait ServerNodeJson extends js.Object {
   val created_at: String = js.native
   val url_prefix: String = js.native
   val disabled: Boolean = js.native
+}
+
+object ServerNodeJson {
+  def update(
+      id: Id[Node],
+      disabled: Option[Boolean],
+      url: Option[String]
+  ): Cmd[Either[ErrorJson, ServerNodeJson]] =
+    Commands.send(Commands.UpdateServerNode(id, disabled, url))
 }
 
 sealed trait NotConnected

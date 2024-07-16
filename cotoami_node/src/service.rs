@@ -160,7 +160,7 @@ pub enum Command {
     /// Request to add a new [Server].
     AddServerNode(LogIntoServer),
 
-    /// Request to update a server node.
+    /// Request to update a server node and return an updated [ServerNode].
     UpdateServerNode {
         id: Id<Node>,
         values: UpdateServerNode,

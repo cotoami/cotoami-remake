@@ -148,7 +148,7 @@ impl NodeState {
         node_id: Id<Node>,
         values: UpdateServerNode,
         operator: Arc<Operator>,
-    ) -> Result<(), ServiceError> {
+    ) -> Result<ServerNode, ServiceError> {
         if let Err(errors) = values.validate() {
             return ("update_server_node", errors).into_result();
         }
@@ -181,10 +181,10 @@ impl NodeState {
 
         // Recreate a connection with the updated [ServerNode].
         let server = self.server_node(node_id, operator).await?;
-        let conn = ServerConnection::new(server, self.clone());
+        let conn = ServerConnection::new(server.clone(), self.clone());
         conn.connect().await;
         self.server_conns().put(node_id, conn);
 
-        Ok(())
+        Ok(server)
     }
 }
