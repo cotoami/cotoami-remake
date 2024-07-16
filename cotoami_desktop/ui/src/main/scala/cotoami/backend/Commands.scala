@@ -20,12 +20,12 @@ object Commands {
   def NodeDetails(id: Id[Node]) =
     jso(NodeDetails = jso(id = id.uuid))
 
-  def TryConnectServerNode(
+  def TryLogIntoServer(
       url_prefix: String,
       password: String,
       client_role: Option[String] = None
   ) =
-    jso(TryConnectServerNode =
+    jso(TryLogIntoServer =
       jso(
         url_prefix = url_prefix,
         password = password,

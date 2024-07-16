@@ -40,8 +40,8 @@ impl NodeState {
             Command::CreateClientNodeSession(input) => {
                 format.to_bytes(self.create_client_node_session(input).await)
             }
-            Command::TryConnectServerNode(input) => format.to_bytes(
-                self.connect_server_node(input)
+            Command::TryLogIntoServer(input) => format.to_bytes(
+                self.log_into_server(input)
                     .await
                     .map(|(session, _)| session),
             ),

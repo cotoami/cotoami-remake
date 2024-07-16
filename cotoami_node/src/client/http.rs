@@ -108,7 +108,7 @@ impl HttpClient {
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
-            Command::TryConnectServerNode(input) => {
+            Command::TryLogIntoServer(input) => {
                 self.get(&format!("{API_PATH_SERVERS}/try")).query(&input)
             }
             Command::AddServerNode(input) => self.post(API_PATH_SERVERS).form(&input),

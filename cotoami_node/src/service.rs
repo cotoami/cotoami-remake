@@ -154,11 +154,11 @@ pub enum Command {
     /// Request a new [ClientNodeSession] on the local node.
     CreateClientNodeSession(CreateClientNodeSession),
 
-    /// Request to connect the server node and return a [ClientNodeSession] if succeeded.
-    TryConnectServerNode(ConnectServerNode),
+    /// Request to log into the server node and return a [ClientNodeSession] if succeeded.
+    TryLogIntoServer(LogIntoServer),
 
     /// Request to add a new [Server].
-    AddServerNode(ConnectServerNode),
+    AddServerNode(LogIntoServer),
 
     /// Request to update a server node.
     UpdateServerNode {

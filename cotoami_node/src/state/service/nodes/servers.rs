@@ -10,7 +10,7 @@ use crate::{
     client::HttpClient,
     service::{
         error::IntoServiceResult,
-        models::{ClientNodeSession, ConnectServerNode, Server, UpdateServerNode},
+        models::{ClientNodeSession, LogIntoServer, Server, UpdateServerNode},
         RemoteNodeServiceExt, ServiceError,
     },
     state::{NodeState, ServerConnection},
@@ -53,9 +53,9 @@ impl NodeState {
         .await
     }
 
-    pub async fn connect_server_node(
+    pub async fn log_into_server(
         &self,
-        input: ConnectServerNode,
+        input: LogIntoServer,
     ) -> Result<(ClientNodeSession, HttpClient), ServiceError> {
         if let Err(errors) = input.validate() {
             return ("connect_server_node", errors).into_result();
@@ -75,7 +75,7 @@ impl NodeState {
 
     pub async fn add_server_node(
         &self,
-        input: ConnectServerNode,
+        input: LogIntoServer,
         operator: Arc<Operator>,
     ) -> Result<Server, ServiceError> {
         if let Err(errors) = input.validate() {
@@ -86,7 +86,7 @@ impl NodeState {
         let password = input.password.clone().unwrap_or_else(|| unreachable!());
 
         // TODO: change the password on adding the node
-        let (client_session, http_client) = self.connect_server_node(input).await?;
+        let (client_session, http_client) = self.log_into_server(input).await?;
         let server_id = client_session.server.uuid;
 
         // Register the server node

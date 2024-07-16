@@ -172,7 +172,7 @@ object ModalIncorporate {
 
   private def connect(url: String, password: String): Cmd[AppMsg] =
     Commands
-      .send(Commands.TryConnectServerNode(url, password))
+      .send(Commands.TryLogIntoServer(url, password))
       .map(Msg.toApp(Msg.NodeConnected(_)))
 
   private def addParentNode(url: String, password: String): Cmd[AppMsg] =

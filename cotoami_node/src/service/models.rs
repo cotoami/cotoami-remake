@@ -124,7 +124,7 @@ pub struct NodeDetails {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct ConnectServerNode {
+pub struct LogIntoServer {
     #[validate(required, url)]
     pub url_prefix: Option<String>,
 
@@ -136,7 +136,7 @@ pub struct ConnectServerNode {
     pub client_role: Option<NodeRole>,
 }
 
-impl ConnectServerNode {
+impl LogIntoServer {
     pub fn into_session_request(self, client: Node) -> Result<CreateClientNodeSession> {
         self.validate()?;
         Ok(CreateClientNodeSession {
