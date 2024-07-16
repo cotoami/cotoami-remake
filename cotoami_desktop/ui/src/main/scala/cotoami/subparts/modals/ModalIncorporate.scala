@@ -10,7 +10,6 @@ import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.backend.{
   ClientNodeSession,
-  ClientNodeSessionJson,
   Commands,
   ErrorJson,
   Server,
@@ -62,7 +61,7 @@ object ModalIncorporate {
     case class NodeUrlInput(url: String) extends Msg
     case class PasswordInput(password: String) extends Msg
     case object Connect extends Msg
-    case class NodeConnected(result: Either[ErrorJson, ClientNodeSessionJson])
+    case class NodeConnected(result: Either[ErrorJson, ClientNodeSession])
         extends Msg
     case object Cancel extends Msg
     case object Incorporate extends Msg
@@ -92,11 +91,13 @@ object ModalIncorporate {
         (
           model.copy(connecting = true, connectingError = None),
           nodes,
-          Seq(connect(model.nodeUrl, model.password))
+          Seq(
+            ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
+              .map(Msg.toApp(Msg.NodeConnected(_)))
+          )
         )
 
-      case Msg.NodeConnected(Right(json)) => {
-        val session = ClientNodeSession(json)
+      case Msg.NodeConnected(Right(session)) => {
         if (nodes.containsServer(session.server.id))
           (
             model.copy(
@@ -169,11 +170,6 @@ object ModalIncorporate {
           )
         )
     }
-
-  private def connect(url: String, password: String): Cmd[AppMsg] =
-    Commands
-      .send(Commands.TryLogIntoServer(url, password))
-      .map(Msg.toApp(Msg.NodeConnected(_)))
 
   private def addParentNode(url: String, password: String): Cmd[AppMsg] =
     Commands

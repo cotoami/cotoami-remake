@@ -3,6 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
+import fui.Cmd
+
 case class Session(json: SessionJson) {
   def token: String = this.json.token
   lazy val expiresAt: Instant = parseJsonDateTime(this.json.expires_at)
@@ -25,6 +27,15 @@ case class ClientNodeSession(json: ClientNodeSessionJson) {
     Nullable.toOption(this.json.as_child).map(ChildNode(_))
 }
 
+object ClientNodeSession {
+  def logIntoServer(
+      url: String,
+      password: String
+  ): Cmd[Either[ErrorJson, ClientNodeSession]] =
+    ClientNodeSessionJson.logIntoServer(url, password)
+      .map(_.map(ClientNodeSession(_)))
+}
+
 @js.native
 trait ClientNodeSessionJson extends js.Object {
   val session: SessionJson = js.native
@@ -32,4 +43,12 @@ trait ClientNodeSessionJson extends js.Object {
   val server_root_cotonoma: Nullable[js.Tuple2[CotonomaJson, CotoJson]] =
     js.native
   val as_child: Nullable[ChildNodeJson] = js.native
+}
+
+object ClientNodeSessionJson {
+  def logIntoServer(
+      url: String,
+      password: String
+  ): Cmd[Either[ErrorJson, ClientNodeSessionJson]] =
+    Commands.send(Commands.TryLogIntoServer(url, password))
 }
