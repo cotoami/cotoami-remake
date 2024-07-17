@@ -3,11 +3,9 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import com.softwaremill.quicklens._
-
 import fui._
 import cotoami.{Context, Msg => AppMsg}
-import cotoami.backend.Coto
+import cotoami.backend.{Coto, PaginatedIds}
 import cotoami.repositories._
 import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
@@ -20,6 +18,9 @@ import cotoami.components.{
 object SectionTimeline {
 
   case class Model(
+      cotoIds: PaginatedIds[Coto] = PaginatedIds(),
+      query: Option[String] = None,
+      loading: Boolean = false,
       imeActive: Boolean = false
   )
 
@@ -38,46 +39,35 @@ object SectionTimeline {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
-    val domain = context.domain
-    val default = (model, domain, Seq.empty)
+  ): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
       case Msg.InitSearch =>
-        default.copy(
-          _2 = domain.modify(_.cotos.query).setTo(Some(""))
-        )
+        (model.copy(query = Some("")), Seq.empty)
 
       case Msg.CloseSearch =>
-        default.copy(
-          _2 = domain.modify(_.cotos.query).setTo(None),
-          _3 = Seq(domain.fetchTimeline(None, 0))
-        )
+        (model.copy(query = None), Seq(context.domain.fetchTimeline(None, 0)))
 
       case Msg.QueryInput(query) =>
-        default.copy(
-          _2 = domain.modify(_.cotos.query).setTo(Some(query)),
-          _3 =
-            if (model.imeActive)
-              Seq.empty
-            else
-              Seq(domain.fetchTimeline(Some(query), 0))
+        (
+          model.copy(query = Some(query)),
+          if (model.imeActive)
+            Seq.empty
+          else
+            Seq(context.domain.fetchTimeline(Some(query), 0))
         )
 
       case Msg.ImeCompositionStart =>
-        default.copy(_1 = model.copy(imeActive = true))
+        (model.copy(imeActive = true), Seq.empty)
 
       case Msg.ImeCompositionEnd =>
-        default.copy(
-          _1 = model.copy(imeActive = false),
-          _3 = Seq(
-            domain.fetchTimeline(domain.cotos.query, 0)
-          )
+        (
+          model.copy(imeActive = false),
+          Seq(context.domain.fetchTimeline(model.query, 0))
         )
 
       case Msg.OpenCalendar =>
-        default
+        (model, Seq.empty)
     }
-  }
 
   def apply(
       model: Model,
