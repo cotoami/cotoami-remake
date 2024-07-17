@@ -36,6 +36,22 @@ object SectionTimeline {
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
         .modify(_.loading).setTo(false)
+
+    def timeline()(implicit context: Context): Seq[Coto] = {
+      val rawTimeline = this.cotoIds.order.map(context.domain.cotos.get).flatten
+      context.domain.nodes.current.map(node =>
+        rawTimeline.filter(_.nameAsCotonoma != Some(node.name))
+      ).getOrElse(rawTimeline)
+    }
+
+    def post(cotoId: Id[Coto]): Model =
+      this
+        .modify(_.cotoIds).using(cotoIds =>
+          if (this.query.isEmpty)
+            cotoIds.prependId(cotoId)
+          else
+            cotoIds
+        )
   }
 
   sealed trait Msg {
@@ -149,25 +165,21 @@ object SectionTimeline {
       model: Model,
       waitingPosts: WaitingPosts,
       dispatch: AppMsg => Unit
-  )(implicit context: Context): Option[ReactElement] =
+  )(implicit context: Context): Option[ReactElement] = {
+    val timeline = model.timeline()
     Option.when(
-      !context.domain.timeline.isEmpty ||
-        !waitingPosts.isEmpty ||
-        context.domain.cotos.query.isDefined
+      model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
     )(
-      sectionTimeline(
-        context.domain.timeline,
-        waitingPosts,
-        dispatch
-      )
+      sectionTimeline(model, timeline, waitingPosts, dispatch)
     )
+  }
 
   private def sectionTimeline(
+      model: Model,
       cotos: Seq[Coto],
       waitingPosts: WaitingPosts,
       dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
-    val domain = context.domain
+  )(implicit context: Context): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
         ToolButton(
@@ -181,7 +193,7 @@ object SectionTimeline {
           symbol = "calendar_month",
           onClick = (() => dispatch(Msg.OpenCalendar.toApp))
         ),
-        domain.cotos.query.map(query =>
+        model.query.map(query =>
           div(className := "search")(
             input(
               `type` := "search",
@@ -221,12 +233,11 @@ object SectionTimeline {
               sectionPost(_, dispatch)
             ) :+ div(
               className := "more",
-              aria - "busy" := domain.cotos.timelineLoading.toString()
+              aria - "busy" := model.loading.toString()
             )()): _*
         )
       )
     )
-  }
 
   private def sectionWaitingPost(
       post: WaitingPost

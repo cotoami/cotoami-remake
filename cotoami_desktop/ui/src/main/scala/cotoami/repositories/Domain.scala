@@ -100,13 +100,6 @@ case class Domain(
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
 
-  lazy val timeline: Seq[Coto] =
-    this.nodes.current match {
-      case Some(node) =>
-        this.cotos.timeline.filter(_.nameAsCotonoma != Some(node.name))
-      case None => this.cotos.timeline
-    }
-
   lazy val pinnedCotos: Seq[(Link, Coto)] =
     this.currentCotonoma.map(cotonoma =>
       this.childrenOf(cotonoma.cotoId)

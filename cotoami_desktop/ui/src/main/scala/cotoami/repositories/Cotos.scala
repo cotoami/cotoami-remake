@@ -4,12 +4,7 @@ import com.softwaremill.quicklens._
 import cotoami.backend._
 
 case class Cotos(
-    map: Map[Id[Coto], Coto] = Map.empty,
-
-    // Timeline
-    timelineIds: PaginatedIds[Coto] = PaginatedIds(),
-    timelineLoading: Boolean = false,
-    query: Option[String] = None
+    map: Map[Id[Coto], Coto] = Map.empty
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
@@ -30,16 +25,4 @@ case class Cotos(
     this
       .addAll(graph.cotos)
       .addAll(graph.cotosRelatedData.originals)
-
-  def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
-
-  def post(coto: Coto): Cotos =
-    this
-      .add(coto)
-      .modify(_.timelineIds).using(timeline =>
-        if (this.query.isEmpty)
-          timeline.prependId(coto.id)
-        else
-          timeline
-      )
 }
