@@ -6,7 +6,15 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.backend.{Coto, ErrorJson, PaginatedCotos, PaginatedIds}
+import cotoami.backend.{
+  Coto,
+  Cotonoma,
+  ErrorJson,
+  Id,
+  Node,
+  PaginatedCotos,
+  PaginatedIds
+}
 import cotoami.repositories._
 import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
@@ -35,6 +43,9 @@ object SectionTimeline {
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): T => AppMsg =
+      tagger andThen AppMsg.SectionTimelineMsg
+
     case object FetchMore extends Msg
     case class Fetched(result: Either[ErrorJson, PaginatedCotos]) extends Msg
     case object InitSearch extends Msg
@@ -56,7 +67,7 @@ object SectionTimeline {
           model.cotoIds.nextPageIndex.map(i =>
             (
               model.copy(loading = true),
-              Seq(context.domain.fetchTimeline(model.query, i))
+              Seq(fetch(model.query, i))
             )
           ).getOrElse((model, Seq.empty))
 
@@ -78,7 +89,7 @@ object SectionTimeline {
         (model.copy(query = Some("")), Seq.empty)
 
       case Msg.CloseSearch =>
-        (model.copy(query = None), Seq(context.domain.fetchTimeline(None, 0)))
+        (model.copy(query = None), Seq(fetch(None, 0)))
 
       case Msg.QueryInput(query) =>
         (
@@ -86,7 +97,7 @@ object SectionTimeline {
           if (model.imeActive)
             Seq.empty
           else
-            Seq(context.domain.fetchTimeline(Some(query), 0))
+            Seq(fetch(Some(query), 0))
         )
 
       case Msg.ImeCompositionStart =>
@@ -95,12 +106,38 @@ object SectionTimeline {
       case Msg.ImeCompositionEnd =>
         (
           model.copy(imeActive = false),
-          Seq(context.domain.fetchTimeline(model.query, 0))
+          Seq(fetch(model.query, 0))
         )
 
       case Msg.OpenCalendar =>
         (model, Seq.empty)
     }
+
+  def fetch(
+      query: Option[String],
+      pageIndex: Double
+  )(implicit context: Context): Cmd[AppMsg] =
+    fetch(
+      context.domain.nodes.selectedId,
+      context.domain.cotonomas.selectedId,
+      query,
+      pageIndex
+    )
+
+  def fetch(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]],
+      query: Option[String],
+      pageIndex: Double
+  ): Cmd[AppMsg] =
+    query.map(query =>
+      if (query.isBlank())
+        PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
+      else
+        PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
+    ).getOrElse(
+      PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
+    ).map(Msg.toApp(Msg.Fetched))
 
   def apply(
       model: Model,

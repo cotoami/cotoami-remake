@@ -316,32 +316,23 @@ object Main {
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
-      case Route.index(_) => {
-        val (domain, cmds) = model.domain.selectNode(None)
-        (model.copy(domain = domain), cmds)
-      }
+      case Route.index(_) =>
+        model.selectNode(None)
 
       case Route.node(id) =>
-        if (model.domain.nodes.contains(id)) {
-          val (domain, cmds) = model.domain.selectNode(Some(id))
-          (model.copy(domain = domain), cmds)
-        } else {
+        if (model.domain.nodes.contains(id))
+          model.selectNode(Some(id))
+        else
           (
             model.warn(s"Node [${id}] not found.", None),
             Seq(Browser.pushUrl(Route.index.url(())))
           )
-        }
 
-      case Route.cotonoma(id) => {
-        val (domain, cmds) = model.domain.selectCotonoma(None, id)
-        (model.copy(domain = domain), cmds)
-      }
+      case Route.cotonoma(id) =>
+        model.selectCotonoma(None, id)
 
-      case Route.cotonomaInNode((nodeId, cotonomaId)) => {
-        val (domain, cmds) =
-          model.domain.selectCotonoma(Some(nodeId), cotonomaId)
-        (model.copy(domain = domain), cmds)
-      }
+      case Route.cotonomaInNode((nodeId, cotonomaId)) =>
+        model.selectCotonoma(Some(nodeId), cotonomaId)
 
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))

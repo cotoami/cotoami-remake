@@ -21,19 +21,17 @@ case class Cotos(
 
   def addAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ add _)
 
+  def importFrom(cotos: PaginatedCotos): Cotos =
+    this
+      .addAll(cotos.page.rows)
+      .addAll(cotos.relatedData.originals)
+
   def importFrom(graph: CotoGraph): Cotos =
     this
       .addAll(graph.cotos)
       .addAll(graph.cotosRelatedData.originals)
 
   def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
-
-  def appendTimelinePage(cotos: PaginatedCotos): Cotos =
-    this
-      .addAll(cotos.page.rows)
-      .addAll(cotos.relatedData.originals)
-      .modify(_.timelineLoading).setTo(false)
-      .modify(_.timelineIds).using(_.appendPage(cotos.page))
 
   def post(coto: Coto): Cotos =
     this
