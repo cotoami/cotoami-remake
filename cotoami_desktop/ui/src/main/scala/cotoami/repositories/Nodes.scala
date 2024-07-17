@@ -32,6 +32,8 @@ case class Nodes(
     case _                              => false
   }
 
+  def isOperating(id: Id[Node]): Boolean = this.operatingId == Some(id)
+
   def parents: Seq[Node] = this.parentIds.map(this.get).flatten
 
   def select(id: Option[Id[Node]]): Nodes =
@@ -42,8 +44,7 @@ case class Nodes(
         this
     ).getOrElse(this.copy(selectedId = None))
 
-  def isSelecting(id: Id[Node]): Boolean =
-    this.selectedId.map(_ == id).getOrElse(false)
+  def isSelecting(id: Id[Node]): Boolean = this.selectedId == Some(id)
 
   def selected: Option[Node] = this.selectedId.flatMap(this.get)
 

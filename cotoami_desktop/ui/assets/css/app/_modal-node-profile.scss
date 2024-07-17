@@ -12,8 +12,22 @@ dialog.node-profile {
       width: 120px;
       padding-right: 16px;
 
-      section.node-icon img {
-        border-radius: 4px;
+      section.node-icon {
+        position: relative;
+
+        img {
+          border-radius: 4px;
+        }
+
+        button.edit {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 24px;
+          height: 24px;
+          background-color: rgba(0, 0, 0, .5);
+          text-align: center;
+        }
       }
     }
 

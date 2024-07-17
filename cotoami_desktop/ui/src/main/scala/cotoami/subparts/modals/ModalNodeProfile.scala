@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Msg => AppMsg}
+import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.backend.{Coto, ErrorJson, Node, NodeDetails}
 import cotoami.components.ToolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
@@ -17,7 +17,10 @@ object ModalNodeProfile {
       node: Node,
       rootCoto: Option[Coto],
       error: Option[String] = None
-  )
+  ) {
+    def isOperatingNode()(implicit context: Context): Boolean =
+      context.domain.nodes.isOperating(this.node.id)
+  }
 
   object Model {
     def apply(node: Node): (Model, Seq[Cmd[AppMsg]]) =
@@ -60,7 +63,9 @@ object ModalNodeProfile {
         )
     }
 
-  def apply(model: Model, dispatch: AppMsg => Unit): ReactElement =
+  def apply(model: Model, dispatch: AppMsg => Unit)(implicit
+      context: Context
+  ): ReactElement =
     Modal.view(
       elementClasses = "node-profile",
       closeButton = Some((classOf[Modal.NodeProfile], dispatch)),
@@ -69,10 +74,18 @@ object ModalNodeProfile {
       "Node Profile"
     )(
       div(className := "sidebar")(
-        section(className := "node-icon")(imgNode(model.node))
+        section(className := "node-icon")(
+          imgNode(model.node),
+          Option.when(model.isOperatingNode()) {
+            ToolButton(
+              classes = "edit",
+              tip = "Edit",
+              symbol = "edit"
+            )
+          }
+        )
       ),
       div(className := "settings")(
-        // ID
         div(className := "input-field node-id")(
           label(htmlFor := "node-profile-id")("ID"),
           input(
@@ -83,18 +96,47 @@ object ModalNodeProfile {
             value := model.node.id.uuid
           )
         ),
+        fieldName(model, dispatch),
+        fieldDescription(model, dispatch)
+      )
+    )
 
-        // Name
-        div(className := "input-field node-name")(
-          label(htmlFor := "node-profile-name")("Name"),
-          div(className := "input-with-tools")(
-            input(
-              `type` := "text",
-              id := "node-profile-name",
-              name := "nodeName",
-              readOnly := true,
-              value := model.node.name
-            ),
+  private def fieldName(model: Model, dispatch: AppMsg => Unit)(implicit
+      context: Context
+  ): ReactElement =
+    div(className := "input-field node-name")(
+      label(htmlFor := "node-profile-name")("Name"),
+      div(className := "input-with-tools")(
+        input(
+          `type` := "text",
+          id := "node-profile-name",
+          name := "nodeName",
+          readOnly := true,
+          value := model.node.name
+        ),
+        Option.when(model.isOperatingNode()) {
+          div(className := "tools")(
+            ToolButton(
+              classes = "edit",
+              tip = "Edit",
+              symbol = "edit"
+            )
+          )
+        }
+      )
+    )
+
+  private def fieldDescription(model: Model, dispatch: AppMsg => Unit)(implicit
+      context: Context
+  ): ReactElement =
+    model.rootCoto.map(coto =>
+      div(className := "input-field node-description")(
+        label(htmlFor := "node-profile-description")("Description"),
+        div(className := "input-with-tools")(
+          section(className := "node-description")(
+            ViewCoto.sectionCotoContentDetails(coto)
+          ),
+          Option.when(model.isOperatingNode()) {
             div(className := "tools")(
               ToolButton(
                 classes = "edit",
@@ -102,26 +144,7 @@ object ModalNodeProfile {
                 symbol = "edit"
               )
             )
-          )
-        ),
-
-        // Description
-        model.rootCoto.map(coto =>
-          div(className := "input-field node-description")(
-            label(htmlFor := "node-profile-description")("Description"),
-            div(className := "input-with-tools")(
-              section(className := "node-description")(
-                ViewCoto.sectionCotoContentDetails(coto)
-              ),
-              div(className := "tools")(
-                ToolButton(
-                  classes = "edit",
-                  tip = "Edit",
-                  symbol = "edit"
-                )
-              )
-            )
-          )
+          }
         )
       )
     )
