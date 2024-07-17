@@ -1,8 +1,8 @@
 use anyhow::Result;
-use assert_matches::assert_matches;
 use chrono::{offset::Utc, Duration};
 use common::assert_approximately_now;
 use cotoami_db::prelude::*;
+use googletest::prelude::*;
 use image::ImageFormat;
 use tempfile::tempdir;
 
@@ -17,7 +17,7 @@ fn default_state() -> Result<()> {
 
     // then
     assert!(!db.globals().has_local_node());
-    assert!(session.all_nodes()?.is_empty());
+    assert_that!(session.all_nodes()?, empty());
 
     Ok(())
 }
@@ -33,49 +33,48 @@ fn init_as_empty_node() -> Result<()> {
     let ((local_node, node), changelog) = ds.init_as_node(None, None)?;
 
     // then
-    assert_matches!(
+    assert_that!(
         node,
-        Node {
-            rowid: 1,
-            ref name,
-            root_cotonoma_id: None,
-            version: 1,
-            ..
-        } if name == ""
+        matches_pattern!(Node {
+            rowid: eq(1),
+            name: eq(""),
+            root_cotonoma_id: none(),
+            version: eq(1)
+        })
     );
     assert_icon_generated(&node)?;
     assert_approximately_now(node.created_at());
 
-    assert_matches!(
+    assert_that!(
         local_node,
-        LocalNode {
-            node_id,
-            rowid: 1,
-            owner_password_hash: None,
-            owner_session_token: None,
-            owner_session_expires_at: None,
-            ..
-        } if node_id == node.uuid
+        matches_pattern!(LocalNode {
+            node_id: eq(node.uuid),
+            rowid: eq(1),
+            owner_password_hash: none(),
+            owner_session_token: none(),
+            owner_session_expires_at: none()
+        })
     );
 
     let operator = db.globals().local_node_as_operator()?;
-    assert_matches!(
+    assert_that!(
         ds.local_node_pair(&operator)?,
-        (a, b) if a == local_node && b == node
+        eq((local_node, node.clone()))
     );
     assert_eq!(ds.node(&node.uuid)?.unwrap(), node);
-    assert_matches!(&ds.all_nodes()?[..], [a] if a == &node);
+    assert_that!(ds.all_nodes()?, elements_are![eq_deref_of(&node)]);
 
-    assert_matches!(
+    assert_that!(
         changelog,
-        ChangelogEntry {
-            serial_number: 1,
-            origin_node_id,
-            origin_serial_number: 1,
-            change: Change::CreateNode {node: a, root: None},
-            ..
-        } if origin_node_id == node.uuid &&
-             a == Node { rowid: 0, ..node }
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(1),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(1),
+            change: matches_pattern!(Change::CreateNode {
+                node: eq(Node { rowid: 0, ..node }),
+                root: none()
+            }),
+        })
     );
 
     Ok(())
@@ -169,87 +168,86 @@ fn init_as_node() -> Result<()> {
     // then
     let (root_cotonoma, root_coto) = ds.root_cotonoma()?.unwrap();
 
-    assert_matches!(
+    assert_that!(
         node,
-        Node {
-            rowid: 1,
-            ref name,
-            version: 2,  // root_cotonoma_id has been updated
-            ..
-        } if name == "My Node"
+        matches_pattern!(Node {
+            rowid: eq(1),
+            name: eq("My Node"),
+            version: eq(2), // root_cotonoma_id has been updated
+        })
     );
     assert_icon_generated(&node)?;
     assert_approximately_now(node.created_at());
 
-    assert_matches!(
+    assert_that!(
         local_node,
-        LocalNode {
-            node_id,
-            rowid: 1,
-            owner_password_hash: None,
-            owner_session_token: None,
-            owner_session_expires_at: None,
-            ..
-        } if node_id == node.uuid
+        matches_pattern!(LocalNode {
+            node_id: eq(node.uuid),
+            rowid: eq(1),
+            owner_password_hash: none(),
+            owner_session_token: none(),
+            owner_session_expires_at: none()
+        })
     );
 
     let operator = db.globals().local_node_as_operator()?;
-    assert_matches!(
+    assert_that!(
         ds.local_node_pair(&operator)?,
-        (a, b) if a == local_node && b == node
+        eq((local_node, node.clone()))
     );
     assert_eq!(ds.node(&node.uuid)?.unwrap(), node);
-    assert_matches!(&ds.all_nodes()?[..], [a] if a == &node);
+    assert_that!(ds.all_nodes()?, elements_are![eq_deref_of(&node)]);
 
-    assert_matches!(
+    assert_that!(
         root_cotonoma,
-        Cotonoma {
-            uuid,
-            node_id,
-            coto_id,
-            ref name,
-            ..
-        } if Some(uuid) == node.root_cotonoma_id &&
-             node_id == node.uuid &&
-             coto_id == root_coto.uuid &&
-             name == "My Node"
+        matches_pattern!(Cotonoma {
+            uuid: eq(node.root_cotonoma_id.unwrap()),
+            node_id: eq(node.uuid),
+            coto_id: eq(root_coto.uuid),
+            name: eq("My Node")
+        })
     );
     assert_approximately_now(root_cotonoma.created_at());
     assert_approximately_now(root_cotonoma.updated_at());
-    assert_matches!(&ds.all_cotonomas()?[..], [a] if a == &root_cotonoma);
+    assert_that!(
+        ds.all_cotonomas()?,
+        elements_are![eq_deref_of(&root_cotonoma)]
+    );
 
-    assert_matches!(
+    assert_that!(
         root_coto,
-        Coto {
-            node_id,
-            posted_in_id: None,
-            posted_by_id,
-            content: None,
-            summary: Some(ref summary),
-            is_cotonoma: true,
-            repost_of_id: None,
-            reposted_in_ids: None,
-            ..
-        } if node_id == node.uuid &&
-             posted_by_id == node.uuid &&
-             summary == "My Node"
+        matches_pattern!(Coto {
+            node_id: eq(node.uuid),
+            posted_in_id: none(),
+            posted_by_id: eq(node.uuid),
+            content: none(),
+            summary: some(eq("My Node")),
+            is_cotonoma: eq(true),
+            repost_of_id: none(),
+            reposted_in_ids: none()
+        })
     );
     assert_approximately_now(root_coto.created_at());
     assert_approximately_now(root_coto.updated_at());
-    assert_matches!(&ds.all_cotos()?[..], [a] if a == &root_coto);
+    assert_that!(ds.all_cotos()?, elements_are![eq_deref_of(&root_coto)]);
 
-    assert_matches!(
+    assert_that!(
         changelog,
-        ChangelogEntry {
-            serial_number: 1,
-            origin_node_id,
-            origin_serial_number: 1,
-            change: Change::CreateNode { node: a, root: Some((b, c)) },
-            ..
-        } if origin_node_id == node.uuid &&
-             a == Node { rowid: 0, ..node } &&
-             b == root_cotonoma &&
-             c == Coto { rowid: 0, ..root_coto }
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(1),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(1),
+            change: matches_pattern!(Change::CreateNode {
+                node: eq(Node { rowid: 0, ..node }),
+                root: some(eq((
+                    root_cotonoma,
+                    Coto {
+                        rowid: 0,
+                        ..root_coto
+                    }
+                )))
+            })
+        })
     );
 
     Ok(())

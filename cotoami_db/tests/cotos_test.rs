@@ -1,6 +1,6 @@
 use anyhow::Result;
-use assert_matches::assert_matches;
 use cotoami_db::prelude::*;
+use googletest::prelude::*;
 
 pub mod common;
 
@@ -22,22 +22,18 @@ fn crud_operations() -> Result<()> {
     let (coto, changelog2) = ds.post_coto("hello", None, &root_cotonoma, &operator)?;
 
     // check the inserted coto
-    assert_matches!(
+    assert_that!(
         coto,
-        Coto {
-            node_id,
-            posted_in_id,
-            posted_by_id,
-            content: Some(ref content),
-            summary: None,
-            is_cotonoma: false,
-            repost_of_id: None,
-            reposted_in_ids: None,
-            ..
-        } if node_id == node.uuid &&
-             posted_in_id == Some(root_cotonoma.uuid) &&
-             posted_by_id == node.uuid &&
-             content == "hello"
+        matches_pattern!(Coto {
+            node_id: eq(node.uuid),
+            posted_in_id: some(eq(root_cotonoma.uuid)),
+            posted_by_id: eq(node.uuid),
+            content: some(eq("hello")),
+            summary: none(),
+            is_cotonoma: eq(false),
+            repost_of_id: none(),
+            reposted_in_ids: none()
+        })
     );
     common::assert_approximately_now(coto.created_at());
     common::assert_approximately_now(coto.updated_at());
@@ -45,34 +41,44 @@ fn crud_operations() -> Result<()> {
 
     // check if it is stored in the db
     assert!(ds.contains_coto(&coto.uuid)?);
-    assert_eq!(ds.coto(&coto.uuid)?, Some(coto.clone()));
+    assert_that!(ds.coto(&coto.uuid)?, some(eq_deref_of(&coto)));
 
     // check if `recent_cotos` contains it
-    let recent_cotos = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
-    assert_eq!(recent_cotos.rows.len(), 1);
-    assert_eq!(recent_cotos.rows[0], coto);
+    assert_that!(
+        ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
+        matches_pattern!(Paginated {
+            page_size: eq(5),
+            page_index: eq(0),
+            total_rows: eq(1),
+            rows: elements_are![eq_deref_of(&coto)]
+        })
+    );
 
     // check if the number of posts of the root cotonoma has been incremented
     let (root_cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_eq!(root_cotonoma.posts, 1);
-    assert_eq!(root_cotonoma.updated_at, coto.updated_at);
+    assert_that!(
+        root_cotonoma,
+        matches_pattern!(Cotonoma {
+            posts: eq(1),
+            updated_at: eq(coto.updated_at)
+        })
+    );
 
     // check the super cotonomas
-    let supers = ds.super_cotonomas(&coto)?;
-    assert_eq!(supers.len(), 1);
-    assert_eq!(supers[0], root_cotonoma);
+    assert_that!(
+        ds.super_cotonomas(&coto)?,
+        elements_are![eq_deref_of(&root_cotonoma)]
+    );
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog2,
-        ChangelogEntry {
-            serial_number: 2,
-            origin_node_id,
-            origin_serial_number: 2,
-            change: Change::CreateCoto(change_coto),
-            ..
-        } if origin_node_id == node.uuid &&
-             change_coto == Coto { rowid: 0, ..coto }
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(2),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(2),
+            change: matches_pattern!(Change::CreateCoto(eq(Coto { rowid: 0, ..coto })))
+        })
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -82,48 +88,38 @@ fn crud_operations() -> Result<()> {
     let (edited_coto, changelog3) = ds.edit_coto(&coto.uuid, "bar", Some("foo"), &operator)?;
 
     // check the edited coto
-    assert_matches!(
+    assert_that!(
         edited_coto,
-        Coto {
-            node_id,
-            posted_in_id,
-            posted_by_id,
-            content: Some(ref content),
-            summary: Some(ref summary),
-            is_cotonoma: false,
-            repost_of_id: None,
-            reposted_in_ids: None,
-            ..
-        } if node_id == node.uuid &&
-             posted_in_id == Some(root_cotonoma.uuid) &&
-             posted_by_id == node.uuid &&
-             content == "bar" &&
-             summary == "foo"
+        matches_pattern!(Coto {
+            node_id: eq(node.uuid),
+            posted_in_id: some(eq(root_cotonoma.uuid)),
+            posted_by_id: eq(node.uuid),
+            content: some(eq("bar")),
+            summary: some(eq("foo")),
+            is_cotonoma: eq(false),
+            repost_of_id: none(),
+            reposted_in_ids: none(),
+        })
     );
     common::assert_approximately_now(edited_coto.updated_at());
 
     // check if it is stored in the db
-    assert_eq!(ds.coto(&coto.uuid)?, Some(edited_coto.clone()));
+    assert_that!(ds.coto(&coto.uuid)?, some(eq_deref_of(&edited_coto)));
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog3,
-        ChangelogEntry {
-            serial_number: 3,
-            origin_node_id,
-            origin_serial_number: 3,
-            change: Change::EditCoto {
-                coto_id,
-                content,
-                summary: Some(ref summary),
-                updated_at,
-            },
-            ..
-        } if origin_node_id == node.uuid &&
-             coto_id == coto.uuid &&
-             content == "bar" &&
-             summary == "foo" &&
-             updated_at == edited_coto.updated_at
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(3),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(3),
+            change: matches_pattern!(Change::EditCoto {
+                coto_id: eq(coto.uuid),
+                content: eq("bar"),
+                summary: some(eq("foo")),
+                updated_at: eq(edited_coto.updated_at),
+            })
+        })
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -135,25 +131,31 @@ fn crud_operations() -> Result<()> {
     // check if it is deleted from the db
     assert!(!ds.contains_coto(&coto.uuid)?);
     assert_eq!(ds.coto(&coto.uuid)?, None);
-    let all_cotos = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?;
-    assert_eq!(all_cotos.rows.len(), 0);
+    assert_that!(
+        ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
+        matches_pattern!(Paginated {
+            page_size: eq(5),
+            page_index: eq(0),
+            total_rows: eq(0)
+        })
+    );
 
     // check if the number of posts in the cotonoma has been decremented
     let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
     assert_eq!(cotonoma.posts, 0);
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog4,
-        ChangelogEntry {
-            serial_number: 4,
-            origin_node_id,
-            origin_serial_number: 4,
-            change: Change::DeleteCoto { coto_id, deleted_at },
-            ..
-        } if origin_node_id == node.uuid &&
-             coto_id == coto.uuid &&
-             deleted_at == cotonoma.updated_at
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(4),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(4),
+            change: matches_pattern!(Change::DeleteCoto {
+                coto_id: eq(coto.uuid),
+                deleted_at: eq(cotonoma.updated_at)
+            })
+        })
     );
 
     Ok(())

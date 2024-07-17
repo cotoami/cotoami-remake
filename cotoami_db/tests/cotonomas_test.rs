@@ -1,6 +1,6 @@
 use anyhow::Result;
-use assert_matches::assert_matches;
 use cotoami_db::prelude::*;
+use googletest::prelude::*;
 
 pub mod common;
 
@@ -22,17 +22,14 @@ fn crud_operations() -> Result<()> {
     let ((cotonoma, coto), changelog2) = ds.post_cotonoma("test", &root_cotonoma, &operator)?;
 
     // check the inserted cotonoma/coto
-    assert_matches!(
+    assert_that!(
         cotonoma,
-        Cotonoma {
-            node_id,
-            ref name,
-            coto_id,
-            posts: 0,
-            ..
-        } if node_id == node.uuid &&
-             coto_id == coto.uuid &&
-             name == "test"
+        matches_pattern!(Cotonoma {
+            node_id: eq(node.uuid),
+            name: eq("test"),
+            coto_id: eq(coto.uuid),
+            posts: eq(0)
+        })
     );
     common::assert_approximately_now(cotonoma.created_at());
     common::assert_approximately_now(cotonoma.updated_at());
@@ -46,18 +43,17 @@ fn crud_operations() -> Result<()> {
     assert_eq!(root_cotonoma.updated_at, coto.created_at);
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog2,
-        ChangelogEntry {
-            serial_number: 2,
-            origin_node_id,
-            origin_serial_number: 2,
-            change: Change::CreateCotonoma(change_cotonoma, change_coto),
-            ..
-        } if origin_node_id == node.uuid &&
-             change_cotonoma == cotonoma &&
-             change_coto == Coto { rowid: 0, ..coto }
-
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(2),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(2),
+            change: matches_pattern!(Change::CreateCotonoma(
+                eq(cotonoma),
+                eq(Coto { rowid: 0, ..coto })
+            )),
+        })
     );
 
     Ok(())

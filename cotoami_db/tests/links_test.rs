@@ -1,6 +1,6 @@
 use anyhow::Result;
-use assert_matches::assert_matches;
 use cotoami_db::prelude::*;
+use googletest::prelude::*;
 
 pub mod common;
 
@@ -34,24 +34,18 @@ fn crud_operations() -> Result<()> {
     )?;
 
     // check the created link
-    assert_matches!(
+    assert_that!(
         link1,
-        Link {
-            node_id,
-            created_in_id,
-            created_by_id,
-            source_coto_id,
-            target_coto_id,
-            linking_phrase: Some(ref linking_phrase),
-            details: None,
-            order: 1,
-            ..
-        } if node_id == node.uuid &&
-             created_in_id == Some(root_cotonoma.uuid) &&
-             created_by_id == node.uuid &&
-             source_coto_id == coto1.uuid &&
-             target_coto_id == coto2.uuid &&
-             linking_phrase == "hello"
+        matches_pattern!(Link {
+            node_id: eq(node.uuid),
+            created_in_id: some(eq(root_cotonoma.uuid)),
+            created_by_id: eq(node.uuid),
+            source_coto_id: eq(coto1.uuid),
+            target_coto_id: eq(coto2.uuid),
+            linking_phrase: some(eq("hello")),
+            details: none(),
+            order: eq(1)
+        })
     );
     common::assert_approximately_now(link1.created_at());
     common::assert_approximately_now(link1.updated_at());
@@ -60,21 +54,25 @@ fn crud_operations() -> Result<()> {
     assert_eq!(ds.link(&link1.uuid)?.as_ref(), Some(&link1));
 
     // check if `recent_links` contains it
-    let recent_links = ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
-    assert_eq!(recent_links.rows.len(), 1);
-    assert_eq!(recent_links.rows[0], link1);
+    assert_that!(
+        ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
+        matches_pattern!(Paginated {
+            page_size: eq(5),
+            page_index: eq(0),
+            total_rows: eq(1),
+            rows: elements_are![eq_deref_of(&link1)]
+        })
+    );
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog1,
-        ChangelogEntry {
-            serial_number: 6,
-            origin_node_id,
-            origin_serial_number: 6,
-            change: Change::CreateLink(link),
-            ..
-        } if origin_node_id == node.uuid &&
-             link == link1
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(6),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(6),
+            change: matches_pattern!(Change::CreateLink(eq_deref_of(&link1)))
+        })
     );
 
     // check if the number of outgoing links has been incremented
@@ -94,29 +92,30 @@ fn crud_operations() -> Result<()> {
     )?;
 
     // check the created link
-    assert_matches!(
+    assert_that!(
         link2,
-        Link {
-            source_coto_id,
-            target_coto_id,
-            linking_phrase: Some(ref linking_phrase),
-            details: Some(ref details),
-            order: 2,
-            ..
-        } if source_coto_id == coto1.uuid &&
-             target_coto_id == coto3.uuid &&
-             linking_phrase == "bye" &&
-             details == "some details"
+        matches_pattern!(Link {
+            source_coto_id: eq(coto1.uuid),
+            target_coto_id: eq(coto3.uuid),
+            linking_phrase: some(eq("bye")),
+            details: some(eq("some details")),
+            order: eq(2)
+        })
     );
 
     // check if it is stored in the db
-    assert_eq!(ds.link(&link2.uuid)?.as_ref(), Some(&link2));
+    assert_that!(ds.link(&link2.uuid)?, some(eq_deref_of(&link2)));
 
     // check if `recent_links` contains it
-    let recent_links = ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?;
-    assert_eq!(recent_links.rows.len(), 2);
-    assert_eq!(recent_links.rows[0], link2);
-    assert_eq!(recent_links.rows[1], link1);
+    assert_that!(
+        ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
+        matches_pattern!(Paginated {
+            page_size: eq(5),
+            page_index: eq(0),
+            total_rows: eq(2),
+            rows: elements_are![eq_deref_of(&link2), eq_deref_of(&link1)]
+        })
+    );
 
     // check if the number of outgoing links has been incremented
     assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 2);
@@ -150,35 +149,28 @@ fn crud_operations() -> Result<()> {
         ds.edit_link(&link1.uuid, Some("hello"), Some("hello details"), &operator)?;
 
     // check the edited link
-    assert_matches!(
+    assert_that!(
         edited_link1,
-        Link {
-            linking_phrase: Some(ref linking_phrase),
-            details: Some(ref details),
-            ..
-        } if linking_phrase == "hello" &&
-             details == "hello details"
+        matches_pattern!(Link {
+            linking_phrase: some(eq("hello")),
+            details: some(eq("hello details"))
+        })
     );
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog2,
-        ChangelogEntry {
-            serial_number: 9,
-            origin_node_id,
-            origin_serial_number: 9,
-            change: Change::EditLink {
-                link_id,
-                linking_phrase: Some(ref linking_phrase),
-                details: Some(ref details),
-                updated_at,
-            },
-            ..
-        } if origin_node_id == node.uuid &&
-             link_id == link1.uuid &&
-             linking_phrase == "hello" &&
-             details == "hello details" &&
-             updated_at == edited_link1.updated_at
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(9),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(9),
+            change: matches_pattern!(Change::EditLink {
+                link_id: eq(link1.uuid),
+                linking_phrase: some(eq("hello")),
+                details: some(eq("hello details")),
+                updated_at: eq(edited_link1.updated_at),
+            })
+        })
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -191,16 +183,14 @@ fn crud_operations() -> Result<()> {
     assert_eq!(ds.link(&link1.uuid)?, None);
 
     // check the content of the ChangelogEntry
-    assert_matches!(
+    assert_that!(
         changelog3,
-        ChangelogEntry {
-            serial_number: 10,
-            origin_node_id,
-            origin_serial_number: 10,
-            change: Change::DeleteLink (change_link_id),
-            ..
-        } if origin_node_id == node.uuid &&
-             change_link_id == link1.uuid
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(10),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(10),
+            change: matches_pattern!(Change::DeleteLink(eq(link1.uuid)))
+        })
     );
 
     // check if the number of outgoing links has been decremented

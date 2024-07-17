@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cotoami_db::prelude::*;
+use googletest::prelude::*;
 use indoc::indoc;
 use petgraph::dot::Dot;
 
@@ -156,8 +157,8 @@ fn graph() -> Result<()> {
 }
 
 fn assert_graph(graph: Graph, expected_dot: &str) {
-    assert_eq!(
+    assert_that!(
         Dot::new(&graph.into_petgraph(true)).to_string(),
-        expected_dot
+        eq(expected_dot)
     );
 }

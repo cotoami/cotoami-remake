@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cotoami_db::prelude::{Coto, DatabaseSession};
+use googletest::prelude::*;
 
 pub mod common;
 
@@ -60,12 +61,12 @@ fn search_cotos() -> Result<()> {
 }
 
 fn assert_search(ds: &mut DatabaseSession<'_>, query: &str, expect: Vec<&Coto>) -> Result<()> {
-    assert_eq!(
+    assert_that!(
         ds.search_cotos(query, None, None, 10, 0)?
             .rows
             .iter()
             .collect::<Vec<_>>(),
-        expect
+        eq(expect)
     );
     Ok(())
 }
