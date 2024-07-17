@@ -58,60 +58,66 @@ object SectionTimeline {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Seq[Cmd[AppMsg]]) =
+  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
+    val default = (model, context.domain, Seq.empty)
     msg match {
       case Msg.FetchMore =>
         if (model.loading)
-          (model, Seq.empty)
+          default
         else
           model.cotoIds.nextPageIndex.map(i =>
-            (
-              model.copy(loading = true),
-              Seq(fetch(model.query, i))
+            default.copy(
+              _1 = model.copy(loading = true),
+              _3 = Seq(fetch(model.query, i))
             )
-          ).getOrElse((model, Seq.empty))
+          ).getOrElse(default)
 
       case Msg.Fetched(Right(cotos)) =>
-        (
-          model.appendPage(cotos), // TODO: update domain
-          Seq(
+        default.copy(
+          _1 = model.appendPage(cotos),
+          _2 = context.domain.importFrom(cotos),
+          _3 = Seq(
             log_info("Timeline fetched.", Some(cotos.debug))
           )
         )
 
       case Msg.Fetched(Left(e)) =>
-        (
-          model.copy(loading = false),
-          Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
+        default.copy(
+          _1 = model.copy(loading = false),
+          _3 = Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
         )
 
       case Msg.InitSearch =>
-        (model.copy(query = Some("")), Seq.empty)
+        default.copy(_1 = model.copy(query = Some("")))
 
       case Msg.CloseSearch =>
-        (model.copy(query = None), Seq(fetch(None, 0)))
+        default.copy(
+          _1 = model.copy(query = None),
+          _3 = Seq(fetch(None, 0))
+        )
 
       case Msg.QueryInput(query) =>
-        (
-          model.copy(query = Some(query)),
-          if (model.imeActive)
-            Seq.empty
-          else
-            Seq(fetch(Some(query), 0))
+        default.copy(
+          _1 = model.copy(query = Some(query)),
+          _3 =
+            if (model.imeActive)
+              Seq.empty
+            else
+              Seq(fetch(Some(query), 0))
         )
 
       case Msg.ImeCompositionStart =>
-        (model.copy(imeActive = true), Seq.empty)
+        default.copy(_1 = model.copy(imeActive = true))
 
       case Msg.ImeCompositionEnd =>
-        (
-          model.copy(imeActive = false),
-          Seq(fetch(model.query, 0))
+        default.copy(
+          _1 = model.copy(imeActive = false),
+          _3 = Seq(fetch(model.query, 0))
         )
 
-      case Msg.OpenCalendar =>
-        (model, Seq.empty)
+      case Msg.OpenCalendar => default
     }
+  }
 
   def fetch(
       query: Option[String],

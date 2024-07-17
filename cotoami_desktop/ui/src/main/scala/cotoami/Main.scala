@@ -288,8 +288,9 @@ object Main {
       }
 
       case Msg.SectionTimelineMsg(submsg) => {
-        val (submodel, cmds) = SectionTimeline.update(submsg, model.timeline)
-        (model.copy(timeline = submodel), cmds)
+        val (submodel, domain, cmds) =
+          SectionTimeline.update(submsg, model.timeline)
+        (model.copy(timeline = submodel, domain = domain), cmds)
       }
 
       case Msg.SectionTraversalsMsg(submsg) => {
