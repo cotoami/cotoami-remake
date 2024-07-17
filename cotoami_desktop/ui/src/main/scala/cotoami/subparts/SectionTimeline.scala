@@ -29,6 +29,7 @@ object SectionTimeline {
   }
 
   object Msg {
+    case object FetchMore extends Msg
     case object InitSearch extends Msg
     case object CloseSearch extends Msg
     case class QueryInput(query: String) extends Msg
@@ -41,6 +42,17 @@ object SectionTimeline {
       context: Context
   ): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
+      case Msg.FetchMore =>
+        if (model.loading)
+          (model, Seq.empty)
+        else
+          model.cotoIds.nextPageIndex.map(i =>
+            (
+              model.copy(loading = true),
+              Seq(context.domain.fetchTimeline(model.query, i))
+            )
+          ).getOrElse((model, Seq.empty))
+
       case Msg.InitSearch =>
         (model.copy(query = Some("")), Seq.empty)
 
