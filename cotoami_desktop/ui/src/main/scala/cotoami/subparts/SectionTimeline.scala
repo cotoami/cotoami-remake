@@ -2,10 +2,11 @@ package cotoami.subparts
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
+import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{Context, Msg => AppMsg}
-import cotoami.backend.{Coto, PaginatedIds}
+import cotoami.{log_info, Context, Msg => AppMsg}
+import cotoami.backend.{Coto, ErrorJson, PaginatedCotos, PaginatedIds}
 import cotoami.repositories._
 import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
@@ -22,7 +23,12 @@ object SectionTimeline {
       query: Option[String] = None,
       loading: Boolean = false,
       imeActive: Boolean = false
-  )
+  ) {
+    def appendPage(cotos: PaginatedCotos): Model =
+      this
+        .modify(_.cotoIds).using(_.appendPage(cotos.page))
+        .modify(_.loading).setTo(false)
+  }
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionTimelineMsg(this)
@@ -30,6 +36,7 @@ object SectionTimeline {
 
   object Msg {
     case object FetchMore extends Msg
+    case class Fetched(result: Either[ErrorJson, PaginatedCotos]) extends Msg
     case object InitSearch extends Msg
     case object CloseSearch extends Msg
     case class QueryInput(query: String) extends Msg
@@ -52,6 +59,20 @@ object SectionTimeline {
               Seq(context.domain.fetchTimeline(model.query, i))
             )
           ).getOrElse((model, Seq.empty))
+
+      case Msg.Fetched(Right(cotos)) =>
+        (
+          model.appendPage(cotos), // TODO: update domain
+          Seq(
+            log_info("Timeline fetched.", Some(cotos.debug))
+          )
+        )
+
+      case Msg.Fetched(Left(e)) =>
+        (
+          model.copy(loading = false),
+          Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
+        )
 
       case Msg.InitSearch =>
         (model.copy(query = Some("")), Seq.empty)
