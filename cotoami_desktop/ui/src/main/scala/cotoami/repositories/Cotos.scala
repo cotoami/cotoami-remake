@@ -1,10 +1,6 @@
 package cotoami.repositories
 
-import scala.util.chaining._
 import com.softwaremill.quicklens._
-
-import fui._
-import cotoami.{Msg => AppMsg}
 import cotoami.backend._
 
 case class Cotos(
@@ -48,35 +44,4 @@ case class Cotos(
         else
           timeline
       )
-}
-
-object Cotos {
-
-  sealed trait Msg {
-    def toApp: AppMsg = Domain.Msg.CotosMsg(this).pipe(AppMsg.DomainMsg)
-  }
-
-  object Msg {
-    case object FetchMoreTimeline extends Msg
-  }
-
-  def update(
-      msg: Msg,
-      model: Cotos,
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]]
-  ): (Cotos, Seq[Cmd[AppMsg]]) =
-    msg match {
-      case Msg.FetchMoreTimeline =>
-        if (model.timelineLoading) {
-          (model, Seq.empty)
-        } else {
-          model.timelineIds.nextPageIndex.map(i =>
-            (
-              model.copy(timelineLoading = true),
-              Seq(Domain.fetchTimeline(nodeId, cotonomaId, model.query, i))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-    }
 }

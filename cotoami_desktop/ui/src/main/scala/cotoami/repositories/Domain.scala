@@ -316,8 +316,6 @@ object Domain {
 
     case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
 
-    case class CotosMsg(subMsg: Cotos.Msg) extends Msg
-
     case class CotonomaDetailsFetched(
         result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
@@ -341,17 +339,6 @@ object Domain {
             model.nodes.selectedId
           )
         (model.copy(cotonomas = cotonomas), cmds)
-      }
-
-      case Msg.CotosMsg(subMsg) => {
-        val (cotos, cmds) =
-          Cotos.update(
-            subMsg,
-            model.cotos,
-            model.nodes.selectedId,
-            model.cotonomas.selectedId
-          )
-        (model.copy(cotos = cotos), cmds)
       }
 
       case Msg.CotonomaDetailsFetched(Right(details)) =>

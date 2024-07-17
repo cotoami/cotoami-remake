@@ -150,7 +150,7 @@ object SectionTimeline {
           scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Cotos.Msg.FetchMoreTimeline.toApp)
+          onScrollToBottom = () => dispatch(Msg.FetchMore.toApp)
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
             cotos.map(
