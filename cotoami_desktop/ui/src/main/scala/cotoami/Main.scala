@@ -64,7 +64,8 @@ object Main {
     )
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) =
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) = {
+    implicit val context: Context = model
     msg match {
       case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
 
@@ -82,25 +83,16 @@ object Main {
           Seq.empty
         )
 
-      case Msg.BackendChange(log) => {
-        val (domain, cmds) = model.domain.importChangelog(log)
-        (
-          model.copy(domain = domain)
-            .debug(
-              "BackendChange received.",
-              Some(js.JSON.stringify(log))
-            ),
-          cmds
-        )
-      }
+      case Msg.BackendChange(log) =>
+        model
+          .debug("BackendChange received.", Some(js.JSON.stringify(log)))
+          .importChangelog(log)
 
       case Msg.BackendEvent(event) =>
         (
-          model.handleLocalNodeEvent(event)
-            .debug(
-              "BackendEvent received.",
-              Some(js.JSON.stringify(event))
-            ),
+          model
+            .debug("BackendEvent received.", Some(js.JSON.stringify(event)))
+            .handleLocalNodeEvent(event),
           Seq.empty
         )
 
@@ -286,8 +278,11 @@ object Main {
         )
       }
 
-      case Msg.SectionTimelineMsg(submsg) =>
-        SectionTimeline.update(submsg, model)
+      case Msg.SectionTimelineMsg(submsg) => {
+        val (submodel, domain, cmds) =
+          SectionTimeline.update(submsg, model.timeline)
+        (model.copy(timeline = submodel, domain = domain), cmds)
+      }
 
       case Msg.SectionTraversalsMsg(submsg) => {
         val (submodel, cmds) = SectionTraversals.update(
@@ -309,35 +304,27 @@ object Main {
         )
       }
     }
+  }
 
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
-      case Route.index(_) => {
-        val (domain, cmds) = model.domain.selectNode(None)
-        (model.copy(domain = domain), cmds)
-      }
+      case Route.index(_) =>
+        model.selectNode(None)
 
       case Route.node(id) =>
-        if (model.domain.nodes.contains(id)) {
-          val (domain, cmds) = model.domain.selectNode(Some(id))
-          (model.copy(domain = domain), cmds)
-        } else {
+        if (model.domain.nodes.contains(id))
+          model.selectNode(Some(id))
+        else
           (
             model.warn(s"Node [${id}] not found.", None),
             Seq(Browser.pushUrl(Route.index.url(())))
           )
-        }
 
-      case Route.cotonoma(id) => {
-        val (domain, cmds) = model.domain.selectCotonoma(None, id)
-        (model.copy(domain = domain), cmds)
-      }
+      case Route.cotonoma(id) =>
+        model.selectCotonoma(None, id)
 
-      case Route.cotonomaInNode((nodeId, cotonomaId)) => {
-        val (domain, cmds) =
-          model.domain.selectCotonoma(Some(nodeId), cotonomaId)
-        (model.copy(domain = domain), cmds)
-      }
+      case Route.cotonomaInNode((nodeId, cotonomaId)) =>
+        model.selectCotonoma(Some(nodeId), cotonomaId)
 
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))

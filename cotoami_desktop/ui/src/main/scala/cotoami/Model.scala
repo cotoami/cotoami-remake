@@ -5,6 +5,7 @@ import scala.scalajs.js
 import org.scalajs.dom.URL
 import com.softwaremill.quicklens._
 
+import fui.{Browser, Cmd}
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
@@ -33,10 +34,6 @@ case class Model(
     databaseFolder: Option[String] = None, // saved in sessionStorage
     uiState: Option[UiState] = None, // saved in localStorage
 
-    // This value will be updated by and referred to from subparts that need to
-    // control text input according to IME state.
-    imeActive: Boolean = false,
-
     // Domain aggregate root
     domain: Domain = Domain(),
 
@@ -50,6 +47,7 @@ case class Model(
     modalStack: Modal.Stack = Modal.Stack(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     flowInput: FormCoto.Model,
+    timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model()
 ) extends Context {
   def path: String = this.url.pathname + this.url.search + this.url.hash
@@ -72,6 +70,57 @@ case class Model(
 
   def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
     this.copy(modalStack = this.modalStack.update(newState))
+
+  def selectNode(nodeId: Option[Id[Node]]): (Model, Seq[Cmd[Msg]]) =
+    this
+      .modify(_.domain).using(_.clearSelection())
+      .modify(_.domain.nodes).using(_.select(nodeId))
+      .modify(_.domain.cotonomas.recentLoading).setTo(true)
+      .modify(_.timeline.loading).setTo(true) match {
+      case model =>
+        (
+          model,
+          Seq(
+            Cotonomas.fetchRecent(nodeId, 0),
+            SectionTimeline.fetch(nodeId, None, None, 0),
+            model.domain.currentCotonomaId
+              .map(Domain.fetchGraphFromCotonoma)
+              .getOrElse(Cmd.none)
+          )
+        )
+    }
+
+  def selectCotonoma(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Id[Cotonoma]
+  ): (Model, Seq[Cmd[Msg]]) = {
+    val shouldFetchCotonomas =
+      // the selected node is changed
+      nodeId != this.domain.nodes.selectedId ||
+        // or no recent cotonomas has been loaded yet (which means the page being reloaded)
+        this.domain.cotonomas.recentIds.isEmpty
+    val (cotonomas, cmds) = this.domain.cotonomas.selectAndFetch(cotonomaId)
+    this
+      .modify(_.domain.nodes).using(_.select(nodeId))
+      .modify(_.domain.cotonomas).setTo(cotonomas)
+      .modify(_.domain.cotos).setTo(Cotos())
+      .modify(_.domain.links).setTo(Links())
+      .modify(_.domain.cotonomas.recentLoading).setTo(shouldFetchCotonomas)
+      .modify(_.timeline.loading).setTo(true) match {
+      case model =>
+        (
+          model,
+          cmds ++ Seq(
+            if (shouldFetchCotonomas)
+              Cotonomas.fetchRecent(nodeId, 0)
+            else
+              Cmd.none,
+            SectionTimeline.fetch(None, Some(cotonomaId), None, 0),
+            Domain.fetchGraphFromCotonoma(cotonomaId)
+          )
+        )
+    }
+  }
 
   def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {
     // ServerStateChanged
@@ -103,5 +152,90 @@ case class Model(
     }
 
     this
+  }
+
+  def importChangelog(log: ChangelogEntryJson): (Model, Seq[Cmd[Msg]]) = {
+    val expectedNumber = this.domain.lastChangeNumber + 1
+    if (log.serial_number == expectedNumber)
+      this
+        .applyChange(log.change)
+        .modify(_._1.domain.lastChangeNumber).setTo(log.serial_number)
+    else
+      (
+        this.info(
+          s"Unexpected change number (expected: ${expectedNumber})",
+          Some(log.serial_number.toString())
+        ),
+        Seq(Browser.send(Msg.ReloadDomain))
+      )
+  }
+
+  private def applyChange(change: ChangeJson): (Model, Seq[Cmd[Msg]]) = {
+    // CreateCoto
+    for (cotoJson <- change.CreateCoto.toOption) {
+      return this.postCoto(cotoJson)
+    }
+
+    // CreateCotonoma
+    for (cotonomaJson <- change.CreateCotonoma.toOption) {
+      return this.postCotonoma(cotonomaJson)
+    }
+
+    // CreateLink
+    for (linkJson <- change.CreateLink.toOption) {
+      val link = Link(linkJson)
+      return (this.modify(_.domain.links).using(_.add(link)), Seq.empty)
+    }
+
+    // UpsertNode
+    for (nodeJson <- change.UpsertNode.toOption) {
+      val node = Node(nodeJson)
+      return (this.modify(_.domain.nodes).using(_.add(node)), Seq.empty)
+    }
+
+    // CreateNode
+    for (createNodeJson <- change.CreateNode.toOption) {
+      val model =
+        this.modify(_.domain.nodes)
+          .using(_.add(Node(createNodeJson.node)))
+      return Nullable.toOption(createNodeJson.root)
+        .map(model.postCotonoma(_))
+        .getOrElse((model, Seq.empty))
+    }
+
+    (this, Seq.empty)
+  }
+
+  private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
+    val coto = Coto(cotoJson, true)
+    val cotos = this.domain.cotos.add(coto)
+    val (cotonomas, cmds) =
+      coto.postedInId.map(this.domain.cotonomas.updated(_))
+        .getOrElse(this.domain.cotonomas, Seq.empty)
+    val timeline =
+      if (
+        this.domain.inCurrentRoot ||
+        coto.postedInId == this.domain.currentCotonomaId
+      )
+        this.timeline.post(coto.id)
+      else
+        this.timeline
+    (
+      this
+        .modify(_.domain.cotos).setTo(cotos)
+        .modify(_.domain.cotonomas).setTo(cotonomas)
+        .modify(_.timeline).setTo(timeline),
+      cmds
+    )
+  }
+
+  private def postCotonoma(
+      jsonPair: (CotonomaJson, CotoJson)
+  ): (Model, Seq[Cmd[Msg]]) = {
+    val cotonoma = Cotonoma(jsonPair._1)
+    val coto = Coto(jsonPair._2)
+    this
+      .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
+      .postCoto(jsonPair._2)
   }
 }

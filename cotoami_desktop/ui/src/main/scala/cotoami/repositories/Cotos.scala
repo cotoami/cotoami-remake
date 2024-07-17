@@ -1,19 +1,10 @@
 package cotoami.repositories
 
-import scala.util.chaining._
 import com.softwaremill.quicklens._
-
-import fui._
-import cotoami.{Msg => AppMsg}
 import cotoami.backend._
 
 case class Cotos(
-    map: Map[Id[Coto], Coto] = Map.empty,
-
-    // Timeline
-    timelineIds: PaginatedIds[Coto] = PaginatedIds(),
-    timelineLoading: Boolean = false,
-    query: Option[String] = None
+    map: Map[Id[Coto], Coto] = Map.empty
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
@@ -25,58 +16,13 @@ case class Cotos(
 
   def addAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ add _)
 
+  def importFrom(cotos: PaginatedCotos): Cotos =
+    this
+      .addAll(cotos.page.rows)
+      .addAll(cotos.relatedData.originals)
+
   def importFrom(graph: CotoGraph): Cotos =
     this
       .addAll(graph.cotos)
       .addAll(graph.cotosRelatedData.originals)
-
-  def timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
-
-  def appendTimelinePage(cotos: PaginatedCotos): Cotos =
-    this
-      .addAll(cotos.page.rows)
-      .addAll(cotos.relatedData.originals)
-      .modify(_.timelineLoading).setTo(false)
-      .modify(_.timelineIds).using(_.appendPage(cotos.page))
-
-  def post(coto: Coto): Cotos =
-    this
-      .add(coto)
-      .modify(_.timelineIds).using(timeline =>
-        if (this.query.isEmpty)
-          timeline.prependId(coto.id)
-        else
-          timeline
-      )
-}
-
-object Cotos {
-
-  sealed trait Msg {
-    def toApp: AppMsg = Domain.Msg.CotosMsg(this).pipe(AppMsg.DomainMsg)
-  }
-
-  object Msg {
-    case object FetchMoreTimeline extends Msg
-  }
-
-  def update(
-      msg: Msg,
-      model: Cotos,
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]]
-  ): (Cotos, Seq[Cmd[AppMsg]]) =
-    msg match {
-      case Msg.FetchMoreTimeline =>
-        if (model.timelineLoading) {
-          (model, Seq.empty)
-        } else {
-          model.timelineIds.nextPageIndex.map(i =>
-            (
-              model.copy(timelineLoading = true),
-              Seq(Domain.fetchTimeline(nodeId, cotonomaId, model.query, i))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-    }
 }

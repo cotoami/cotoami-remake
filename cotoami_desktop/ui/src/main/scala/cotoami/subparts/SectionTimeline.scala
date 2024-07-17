@@ -2,12 +2,19 @@ package cotoami.subparts
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
-
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{Context, Model, Msg => AppMsg}
-import cotoami.backend.Coto
+import cotoami.{log_info, Context, Msg => AppMsg}
+import cotoami.backend.{
+  Coto,
+  Cotonoma,
+  ErrorJson,
+  Id,
+  Node,
+  PaginatedCotos,
+  PaginatedIds
+}
 import cotoami.repositories._
 import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
@@ -19,11 +26,44 @@ import cotoami.components.{
 
 object SectionTimeline {
 
+  case class Model(
+      cotoIds: PaginatedIds[Coto] = PaginatedIds(),
+      query: Option[String] = None,
+      loading: Boolean = false,
+      imeActive: Boolean = false
+  ) {
+    def appendPage(cotos: PaginatedCotos): Model =
+      this
+        .modify(_.cotoIds).using(_.appendPage(cotos.page))
+        .modify(_.loading).setTo(false)
+
+    def timeline()(implicit context: Context): Seq[Coto] = {
+      val rawTimeline = this.cotoIds.order.map(context.domain.cotos.get).flatten
+      context.domain.nodes.current.map(node =>
+        rawTimeline.filter(_.nameAsCotonoma != Some(node.name))
+      ).getOrElse(rawTimeline)
+    }
+
+    def post(cotoId: Id[Coto]): Model =
+      this
+        .modify(_.cotoIds).using(cotoIds =>
+          if (this.query.isEmpty)
+            cotoIds.prependId(cotoId)
+          else
+            cotoIds
+        )
+  }
+
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionTimelineMsg(this)
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): T => AppMsg =
+      tagger andThen AppMsg.SectionTimelineMsg
+
+    case object FetchMore extends Msg
+    case class Fetched(result: Either[ErrorJson, PaginatedCotos]) extends Msg
     case object InitSearch extends Msg
     case object CloseSearch extends Msg
     case class QueryInput(query: String) extends Msg
@@ -32,82 +72,114 @@ object SectionTimeline {
     case object OpenCalendar extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
+    val default = (model, context.domain, Seq.empty)
     msg match {
+      case Msg.FetchMore =>
+        if (model.loading)
+          default
+        else
+          model.cotoIds.nextPageIndex.map(i =>
+            default.copy(
+              _1 = model.copy(loading = true),
+              _3 = Seq(fetch(model.query, i))
+            )
+          ).getOrElse(default)
+
+      case Msg.Fetched(Right(cotos)) =>
+        default.copy(
+          _1 = model.appendPage(cotos),
+          _2 = context.domain.importFrom(cotos),
+          _3 = Seq(
+            log_info("Timeline fetched.", Some(cotos.debug))
+          )
+        )
+
+      case Msg.Fetched(Left(e)) =>
+        default.copy(
+          _1 = model.copy(loading = false),
+          _3 = Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
+        )
+
       case Msg.InitSearch =>
-        (model.modify(_.domain.cotos.query).setTo(Some("")), Seq.empty)
+        default.copy(_1 = model.copy(query = Some("")))
 
       case Msg.CloseSearch =>
-        (
-          model.modify(_.domain.cotos.query).setTo(None),
-          Seq(fetchDefaultTimeline(model))
+        default.copy(
+          _1 = model.copy(query = None),
+          _3 = Seq(fetch(None, 0))
         )
 
       case Msg.QueryInput(query) =>
-        (
-          model.modify(_.domain.cotos.query).setTo(Some(query)),
-          if (model.imeActive)
-            Seq.empty
-          else
-            Seq(fetchTimeline(query, model))
+        default.copy(
+          _1 = model.copy(query = Some(query)),
+          _3 =
+            if (model.imeActive)
+              Seq.empty
+            else
+              Seq(fetch(Some(query), 0))
         )
 
       case Msg.ImeCompositionStart =>
-        (model.modify(_.imeActive).setTo(true), Seq.empty)
+        default.copy(_1 = model.copy(imeActive = true))
 
       case Msg.ImeCompositionEnd =>
-        (
-          model.modify(_.imeActive).setTo(false),
-          model.domain.cotos.query.map(query =>
-            Seq(fetchTimeline(query, model))
-          ).getOrElse(Seq.empty)
+        default.copy(
+          _1 = model.copy(imeActive = false),
+          _3 = Seq(fetch(model.query, 0))
         )
 
-      case Msg.OpenCalendar =>
-        (model, Seq.empty)
+      case Msg.OpenCalendar => default
     }
+  }
 
-  private def fetchDefaultTimeline(model: Model): Cmd[AppMsg] =
-    Domain.fetchTimeline(
-      model.domain.nodes.selectedId,
-      model.domain.cotonomas.selectedId,
-      None,
-      0
+  def fetch(
+      query: Option[String],
+      pageIndex: Double
+  )(implicit context: Context): Cmd[AppMsg] =
+    fetch(
+      context.domain.nodes.selectedId,
+      context.domain.cotonomas.selectedId,
+      query,
+      pageIndex
     )
 
-  private def fetchTimeline(query: String, model: Model): Cmd[AppMsg] =
-    if (query.isBlank())
-      fetchDefaultTimeline(model)
-    else
-      Domain.fetchTimeline(
-        model.domain.nodes.selectedId,
-        model.domain.cotonomas.selectedId,
-        Some(query),
-        0
-      )
+  def fetch(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]],
+      query: Option[String],
+      pageIndex: Double
+  ): Cmd[AppMsg] =
+    query.map(query =>
+      if (query.isBlank())
+        PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
+      else
+        PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
+    ).getOrElse(
+      PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
+    ).map(Msg.toApp(Msg.Fetched))
 
   def apply(
       model: Model,
+      waitingPosts: WaitingPosts,
       dispatch: AppMsg => Unit
-  ): Option[ReactElement] =
+  )(implicit context: Context): Option[ReactElement] = {
+    val timeline = model.timeline()
     Option.when(
-      !model.domain.timeline.isEmpty ||
-        !model.waitingPosts.isEmpty ||
-        model.domain.cotos.query.isDefined
+      model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
     )(
-      sectionTimeline(
-        model.domain.timeline,
-        model.waitingPosts,
-        dispatch
-      )(model)
+      sectionTimeline(model, timeline, waitingPosts, dispatch)
     )
+  }
 
   private def sectionTimeline(
+      model: Model,
       cotos: Seq[Coto],
       waitingPosts: WaitingPosts,
       dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
-    val domain = context.domain
+  )(implicit context: Context): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
         ToolButton(
@@ -121,7 +193,7 @@ object SectionTimeline {
           symbol = "calendar_month",
           onClick = (() => dispatch(Msg.OpenCalendar.toApp))
         ),
-        domain.cotos.query.map(query =>
+        model.query.map(query =>
           div(className := "search")(
             input(
               `type` := "search",
@@ -154,19 +226,18 @@ object SectionTimeline {
           scrollableElementId = None,
           autoHide = true,
           bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Cotos.Msg.FetchMoreTimeline.toApp)
+          onScrollToBottom = () => dispatch(Msg.FetchMore.toApp)
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
             cotos.map(
               sectionPost(_, dispatch)
             ) :+ div(
               className := "more",
-              aria - "busy" := domain.cotos.timelineLoading.toString()
+              aria - "busy" := model.loading.toString()
             )()): _*
         )
       )
     )
-  }
 
   private def sectionWaitingPost(
       post: WaitingPost

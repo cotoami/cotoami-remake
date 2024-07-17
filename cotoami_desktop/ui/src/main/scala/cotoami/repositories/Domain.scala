@@ -77,9 +77,9 @@ case class Domain(
       }
     )
 
-  def appendTimelinePage(cotos: PaginatedCotos): Domain =
+  def importFrom(cotos: PaginatedCotos): Domain =
     this
-      .modify(_.cotos).using(_.appendTimelinePage(cotos))
+      .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.links).using(_.addAll(cotos.outgoingLinks))
 
@@ -99,13 +99,6 @@ case class Domain(
     val rootId = this.currentRootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
-
-  lazy val timeline: Seq[Coto] =
-    this.nodes.current match {
-      case Some(node) =>
-        this.cotos.timeline.filter(_.nameAsCotonoma != Some(node.name))
-      case None => this.cotos.timeline
-    }
 
   lazy val pinnedCotos: Seq[(Link, Coto)] =
     this.currentCotonoma.map(cotonoma =>
@@ -143,57 +136,6 @@ case class Domain(
       this.links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
-  def selectNode(nodeId: Option[Id[Node]]): (Domain, Seq[Cmd[AppMsg]]) =
-    this
-      .clearSelection()
-      .modify(_.nodes).using(_.select(nodeId))
-      .modify(_.cotonomas.recentLoading).setTo(true)
-      .modify(_.cotos.timelineLoading).setTo(true) match {
-      case domain =>
-        (
-          domain,
-          Seq(
-            Cotonomas.fetchRecent(nodeId, 0),
-            Domain.fetchTimeline(nodeId, None, None, 0),
-            domain.currentCotonomaId
-              .map(Domain.fetchGraphFromCotonoma)
-              .getOrElse(Cmd.none)
-          )
-        )
-    }
-
-  def selectCotonoma(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Id[Cotonoma]
-  ): (Domain, Seq[Cmd[AppMsg]]) = {
-    val shouldFetchCotonomas =
-      // the selected node is changed
-      nodeId != this.nodes.selectedId ||
-        // or no recent cotonomas has been loaded yet (which means the page being reloaded)
-        this.cotonomas.recentIds.isEmpty
-    val (cotonomas, cmds) = this.cotonomas.selectAndFetch(cotonomaId)
-    this
-      .modify(_.nodes).using(_.select(nodeId))
-      .modify(_.cotonomas).setTo(cotonomas)
-      .modify(_.cotos).setTo(Cotos())
-      .modify(_.links).setTo(Links())
-      .modify(_.cotonomas.recentLoading).setTo(shouldFetchCotonomas)
-      .modify(_.cotos.timelineLoading).setTo(true) match {
-      case domain =>
-        (
-          domain,
-          cmds ++ Seq(
-            if (shouldFetchCotonomas)
-              Cotonomas.fetchRecent(nodeId, 0)
-            else
-              Cmd.none,
-            Domain.fetchTimeline(None, Some(cotonomaId), None, 0),
-            Domain.fetchGraphFromCotonoma(cotonomaId)
-          )
-        )
-    }
-  }
-
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
   def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[AppMsg] =
@@ -203,88 +145,6 @@ case class Domain(
       else
         Cmd.none
     }).getOrElse(Cmd.none)
-
-  def importChangelog(
-      log: ChangelogEntryJson
-  ): (Domain, Seq[Cmd[AppMsg]]) =
-    if (log.serial_number == (this.lastChangeNumber + 1)) {
-      this
-        .applyChange(log.change)
-        .modify(_._1.lastChangeNumber).setTo(log.serial_number)
-    } else {
-      (this, Seq(Browser.send(AppMsg.ReloadDomain)))
-    }
-
-  private def applyChange(
-      change: ChangeJson
-  ): (Domain, Seq[Cmd[AppMsg]]) = {
-    // CreateCoto
-    for (cotoJson <- change.CreateCoto.toOption) {
-      return this
-        .postCoto(cotoJson)
-
-    }
-
-    // CreateCotonoma
-    for (cotonomaJson <- change.CreateCotonoma.toOption) {
-      return this.postCotonoma(cotonomaJson)
-    }
-
-    // CreateLink
-    for (linkJson <- change.CreateLink.toOption) {
-      return (this.addLink(Link(linkJson)), Seq.empty)
-    }
-
-    // UpsertNode
-    for (nodeJson <- change.UpsertNode.toOption) {
-      return (this.addNode(Node(nodeJson)), Seq.empty)
-    }
-
-    // CreateNode
-    for (createNodeJson <- change.CreateNode.toOption) {
-      val domain = this.addNode(Node(createNodeJson.node))
-      return Nullable.toOption(createNodeJson.root)
-        .map(this.postCotonoma(_))
-        .getOrElse((domain, Seq.empty))
-    }
-
-    (this, Seq.empty)
-  }
-
-  private def addNode(node: Node): Domain =
-    this.modify(_.nodes).using(_.add(node))
-
-  private def postCoto(cotoJson: CotoJson): (Domain, Seq[Cmd[AppMsg]]) = {
-    val coto = Coto(cotoJson, true)
-    this.modify(_.cotos).using(cotos =>
-      if (this.inCurrentRoot || coto.postedInId == this.currentCotonomaId)
-        cotos.post(coto)
-      else
-        cotos
-    ).cotonomaUpdated(coto.postedInId)
-  }
-
-  private def postCotonoma(
-      jsonPair: (CotonomaJson, CotoJson)
-  ): (Domain, Seq[Cmd[AppMsg]]) = {
-    val cotonoma = Cotonoma(jsonPair._1)
-    val coto = Coto(jsonPair._2)
-    this
-      .modify(_.cotonomas).using(_.post(cotonoma, coto))
-      .postCoto(jsonPair._2)
-  }
-
-  private def cotonomaUpdated(
-      id: Option[Id[Cotonoma]]
-  ): (Domain, Seq[Cmd[AppMsg]]) = {
-    id.map(id => {
-      val (cotonomas, cmds) = this.cotonomas.updated(id)
-      (this.copy(cotonomas = cotonomas), cmds)
-    }).getOrElse((this, Seq.empty))
-  }
-
-  private def addLink(link: Link): Domain =
-    this.modify(_.links).using(_.add(link))
 }
 
 object Domain {
@@ -305,14 +165,9 @@ object Domain {
 
     case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
 
-    case class CotosMsg(subMsg: Cotos.Msg) extends Msg
-
     case class CotonomaDetailsFetched(
         result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
-
-    case class TimelineFetched(result: Either[ErrorJson, PaginatedCotos])
-        extends Msg
 
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
 
@@ -332,17 +187,6 @@ object Domain {
         (model.copy(cotonomas = cotonomas), cmds)
       }
 
-      case Msg.CotosMsg(subMsg) => {
-        val (cotos, cmds) =
-          Cotos.update(
-            subMsg,
-            model.cotos,
-            model.nodes.selectedId,
-            model.cotonomas.selectedId
-          )
-        (model.copy(cotos = cotos), cmds)
-      }
-
       case Msg.CotonomaDetailsFetched(Right(details)) =>
         (
           model.setCotonomaDetails(details),
@@ -351,20 +195,6 @@ object Domain {
 
       case Msg.CotonomaDetailsFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch cotonoma details.")))
-
-      case Msg.TimelineFetched(Right(cotos)) =>
-        (
-          model.appendTimelinePage(cotos),
-          Seq(
-            log_info("Timeline fetched.", Some(cotos.debug))
-          )
-        )
-
-      case Msg.TimelineFetched(Left(e)) =>
-        (
-          model.modify(_.cotos.timelineLoading).setTo(false),
-          Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
-        )
 
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
@@ -384,18 +214,6 @@ object Domain {
 
   def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[AppMsg] =
     CotonomaDetails.fetch(id).map(Msg.toApp(Msg.CotonomaDetailsFetched))
-
-  def fetchTimeline(
-      nodeId: Option[Id[Node]],
-      cotonomaId: Option[Id[Cotonoma]],
-      query: Option[String],
-      pageIndex: Double
-  ): Cmd[AppMsg] =
-    query.map(query =>
-      PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
-    ).getOrElse(
-      PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
-    ).map(Msg.toApp(Msg.TimelineFetched))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))
