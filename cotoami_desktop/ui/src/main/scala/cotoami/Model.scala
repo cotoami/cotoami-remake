@@ -5,7 +5,7 @@ import scala.scalajs.js
 import org.scalajs.dom.URL
 import com.softwaremill.quicklens._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repositories._
@@ -152,5 +152,90 @@ case class Model(
     }
 
     this
+  }
+
+  def importChangelog(log: ChangelogEntryJson): (Model, Seq[Cmd[Msg]]) = {
+    val expectedNumber = this.domain.lastChangeNumber + 1
+    if (log.serial_number == expectedNumber)
+      this
+        .applyChange(log.change)
+        .modify(_._1.domain.lastChangeNumber).setTo(log.serial_number)
+    else
+      (
+        this.info(
+          s"Unexpected change number (expected: ${expectedNumber})",
+          Some(log.serial_number.toString())
+        ),
+        Seq(Browser.send(Msg.ReloadDomain))
+      )
+  }
+
+  private def applyChange(change: ChangeJson): (Model, Seq[Cmd[Msg]]) = {
+    // CreateCoto
+    for (cotoJson <- change.CreateCoto.toOption) {
+      return this.postCoto(cotoJson)
+    }
+
+    // CreateCotonoma
+    for (cotonomaJson <- change.CreateCotonoma.toOption) {
+      return this.postCotonoma(cotonomaJson)
+    }
+
+    // CreateLink
+    for (linkJson <- change.CreateLink.toOption) {
+      val link = Link(linkJson)
+      return (this.modify(_.domain.links).using(_.add(link)), Seq.empty)
+    }
+
+    // UpsertNode
+    for (nodeJson <- change.UpsertNode.toOption) {
+      val node = Node(nodeJson)
+      return (this.modify(_.domain.nodes).using(_.add(node)), Seq.empty)
+    }
+
+    // CreateNode
+    for (createNodeJson <- change.CreateNode.toOption) {
+      val model =
+        this.modify(_.domain.nodes)
+          .using(_.add(Node(createNodeJson.node)))
+      return Nullable.toOption(createNodeJson.root)
+        .map(model.postCotonoma(_))
+        .getOrElse((model, Seq.empty))
+    }
+
+    (this, Seq.empty)
+  }
+
+  private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
+    val coto = Coto(cotoJson, true)
+    val cotos = this.domain.cotos.add(coto)
+    val (cotonomas, cmds) =
+      coto.postedInId.map(this.domain.cotonomas.updated(_))
+        .getOrElse(this.domain.cotonomas, Seq.empty)
+    val timeline =
+      if (
+        this.domain.inCurrentRoot ||
+        coto.postedInId == this.domain.currentCotonomaId
+      )
+        this.timeline.post(coto.id)
+      else
+        this.timeline
+    (
+      this
+        .modify(_.domain.cotos).setTo(cotos)
+        .modify(_.domain.cotonomas).setTo(cotonomas)
+        .modify(_.timeline).setTo(timeline),
+      cmds
+    )
+  }
+
+  private def postCotonoma(
+      jsonPair: (CotonomaJson, CotoJson)
+  ): (Model, Seq[Cmd[Msg]]) = {
+    val cotonoma = Cotonoma(jsonPair._1)
+    val coto = Coto(jsonPair._2)
+    this
+      .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
+      .postCoto(jsonPair._2)
   }
 }

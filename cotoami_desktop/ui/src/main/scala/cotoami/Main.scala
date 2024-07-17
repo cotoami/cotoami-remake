@@ -83,25 +83,16 @@ object Main {
           Seq.empty
         )
 
-      case Msg.BackendChange(log) => {
-        val (domain, cmds) = model.domain.importChangelog(log)
-        (
-          model.copy(domain = domain)
-            .debug(
-              "BackendChange received.",
-              Some(js.JSON.stringify(log))
-            ),
-          cmds
-        )
-      }
+      case Msg.BackendChange(log) =>
+        model
+          .debug("BackendChange received.", Some(js.JSON.stringify(log)))
+          .importChangelog(log)
 
       case Msg.BackendEvent(event) =>
         (
-          model.handleLocalNodeEvent(event)
-            .debug(
-              "BackendEvent received.",
-              Some(js.JSON.stringify(event))
-            ),
+          model
+            .debug("BackendEvent received.", Some(js.JSON.stringify(event)))
+            .handleLocalNodeEvent(event),
           Seq.empty
         )
 
