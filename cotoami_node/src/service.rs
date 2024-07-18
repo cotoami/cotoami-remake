@@ -147,6 +147,9 @@ pub enum Command {
     /// Request a [ChunkOfChanges] from a change number `from`.
     ChunkOfChanges { from: i64 },
 
+    /// Request to change the icon of the local node and and return a [Node] if succeeded.
+    SetLocalNodeIcon { icon: Bytes },
+
     /// Request a [NodeDetails] of the given ID.
     NodeDetails { id: Id<Node> },
 

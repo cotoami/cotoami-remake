@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{Path, State},
-    routing::get,
+    routing::{get, put},
     Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
@@ -21,6 +23,7 @@ mod servers;
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/local", get(local_node))
+        .route("/local/icon", put(put_local_node_icon))
         .route("/:node_id/details", get(get_node_details))
         .nest("/:node_id/cotonomas", cotonomas::routes())
         .nest("/:node_id/cotos", cotos::routes())
@@ -54,5 +57,21 @@ async fn local_node(
     Extension(_operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
 ) -> Result<Content<Node>, ServiceError> {
-    state.local_node().await.map(|x| Content(x, accept))
+    state.local_node().await.map(|node| Content(node, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/nodes/local/icon
+/////////////////////////////////////////////////////////////////////////////
+
+async fn put_local_node_icon(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    body: axum::body::Bytes,
+) -> Result<Content<Node>, ServiceError> {
+    state
+        .set_local_node_icon(body, Arc::new(operator))
+        .await
+        .map(|node| Content(node, accept))
 }

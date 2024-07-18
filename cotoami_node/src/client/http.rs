@@ -100,11 +100,14 @@ impl HttpClient {
 
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
-            Command::LocalNode => self.get(&format!("{API_PATH_NODES}/local")),
+            Command::LocalNode => self.get(API_PATH_LOCAL),
             Command::InitialDataset => self.get(API_PATH_DATA),
             Command::ChunkOfChanges { from } => self
                 .get(API_PATH_CHANGES)
                 .query(&[("from", from.to_string())]),
+            Command::SetLocalNodeIcon { icon } => self
+                .put(&format!("{API_PATH_NODES}/icon"))
+                .body(bytes::Bytes::from(icon)),
             Command::NodeDetails { id } => self.get(&format!("{API_PATH_NODES}/{id}/details")),
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
@@ -240,6 +243,7 @@ impl HttpClient {
 const API_PATH_DATA: &'static str = "/api/data";
 const API_PATH_CHANGES: &'static str = concatcp!(API_PATH_DATA, "/changes");
 const API_PATH_NODES: &'static str = concatcp!(API_PATH_DATA, "/nodes");
+const API_PATH_LOCAL: &'static str = concatcp!(API_PATH_NODES, "/local");
 const API_PATH_SERVERS: &'static str = concatcp!(API_PATH_NODES, "/servers");
 const API_PATH_CLIENTS: &'static str = concatcp!(API_PATH_NODES, "/clients");
 const API_PATH_COTONOMAS: &'static str = concatcp!(API_PATH_DATA, "/cotonomas");

@@ -1,7 +1,6 @@
 use std::convert::Infallible;
 
 use axum::{
-    body::Bytes,
     extract::{Extension, State},
     http::StatusCode,
     middleware,
@@ -111,7 +110,7 @@ fn error_event<E: ToString>(e: E) -> SseEvent {
 async fn post_event(
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
-    body: Bytes,
+    body: axum::body::Bytes,
 ) -> Result<StatusCode, ServiceError> {
     if let ClientSession::ParentNode(parent) = session {
         let parent_service = state.parent_services().try_get(&parent.node_id)?;

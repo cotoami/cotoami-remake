@@ -230,6 +230,10 @@ impl From<bytes::Bytes> for Bytes {
     fn from(bytes: bytes::Bytes) -> Bytes { Bytes(bytes) }
 }
 
+impl From<Bytes> for bytes::Bytes {
+    fn from(bytes: Bytes) -> bytes::Bytes { bytes.0 }
+}
+
 impl ser::Serialize for Bytes {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
