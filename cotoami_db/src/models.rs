@@ -2,6 +2,7 @@
 
 use std::{
     cmp::Ordering,
+    fmt,
     fmt::{Debug, Display},
     hash::{Hash, Hasher},
     marker::PhantomData,
@@ -18,7 +19,7 @@ use diesel::{
     sqlite::Sqlite,
     FromSqlRow,
 };
-use serde::Deserializer;
+use serde::{de, ser, Deserializer};
 use uuid::Uuid;
 
 use self::{
@@ -197,12 +198,9 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A binary type that can be stored to or restored from a database via Diesel.
-/// It can be also serialized to or deserialized from a Base64 string via Serde.
-#[derive(
-    Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
-)]
+/// It can be also serialized or deserialized via Serde.
+#[derive(Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Binary)]
-#[serde(transparent)]
 pub struct Bytes(bytes::Bytes);
 
 impl Bytes {
@@ -222,6 +220,62 @@ impl AsRef<[u8]> for Bytes {
 
 impl From<Vec<u8>> for Bytes {
     fn from(vec: Vec<u8>) -> Bytes { Bytes(bytes::Bytes::from(vec)) }
+}
+
+impl ser::Serialize for Bytes {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        if serializer.is_human_readable() {
+            crate::as_base64(self, serializer)
+        } else {
+            serializer.serialize_bytes(self.as_ref())
+        }
+    }
+}
+
+impl<'de> de::Deserialize<'de> for Bytes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        struct BytesVisitor;
+        impl<'de> de::Visitor<'de> for BytesVisitor {
+            type Value = Bytes;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.write_str("a byte array")
+            }
+
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Bytes::from(v.to_vec()))
+            }
+
+            // It is never correct to implement `visit_byte_buf` without implementing `visit_bytes`.
+            // Implement neither, both, or just visit_bytes.
+            // https://docs.rs/serde/latest/serde/de/trait.Visitor.html#method.visit_byte_buf
+            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Bytes::from(v))
+            }
+        }
+
+        if deserializer.is_human_readable() {
+            Bytes::from_base64(deserializer)
+        } else {
+            // Deserialize implementations that benefit from taking ownership of `Vec<u8>` data
+            // should indicate that to the deserializer by using `Deserializer::deserialize_byte_buf`
+            // rather than `Deserializer::deserialize_bytes`, although not every deserializer will
+            // honor such a request.
+            deserializer.deserialize_byte_buf(BytesVisitor)
+        }
+    }
 }
 
 impl ToSql<Binary, Sqlite> for Bytes {

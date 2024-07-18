@@ -48,10 +48,6 @@ pub struct Node {
     pub rowid: i64,
 
     /// Icon image
-    #[serde(
-        serialize_with = "crate::as_base64",
-        deserialize_with = "Bytes::from_base64"
-    )]
     #[debug(skip)]
     pub icon: Bytes,
 
