@@ -163,7 +163,7 @@ impl NodeState {
         .map_err(ServiceError::from)
     }
 
-    pub(crate) async fn change<Input, Change, Apply, Forward>(
+    pub(crate) async fn change_in_cotonoma<Input, Change, Apply, Forward>(
         self,
         input: Input,
         cotonoma: Id<Cotonoma>,
