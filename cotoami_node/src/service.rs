@@ -145,11 +145,11 @@ pub enum Command {
     /// Request an [InitialDataset].
     InitialDataset,
 
-    /// Request a [NodeDetails] of the given ID.
-    NodeDetails { id: Id<Node> },
-
     /// Request a [ChunkOfChanges] from a change number `from`.
     ChunkOfChanges { from: i64 },
+
+    /// Request a [NodeDetails] of the given ID.
+    NodeDetails { id: Id<Node> },
 
     /// Request a new [ClientNodeSession] on the local node.
     CreateClientNodeSession(CreateClientNodeSession),

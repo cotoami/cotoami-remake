@@ -103,7 +103,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn set_local_node_icon(
         &self,
-        icon: &bytes::Bytes,
+        icon: &[u8],
         operator: &Operator,
     ) -> Result<(Node, ChangelogEntry)> {
         operator.requires_to_be_owner()?;

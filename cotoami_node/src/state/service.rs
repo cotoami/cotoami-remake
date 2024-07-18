@@ -35,8 +35,8 @@ impl NodeState {
         match request.command() {
             Command::LocalNode => format.to_bytes(self.local_node().await),
             Command::InitialDataset => format.to_bytes(self.initial_dataset(opr?).await),
-            Command::NodeDetails { id } => format.to_bytes(self.node_details(id).await),
             Command::ChunkOfChanges { from } => format.to_bytes(self.chunk_of_changes(from).await),
+            Command::NodeDetails { id } => format.to_bytes(self.node_details(id).await),
             Command::CreateClientNodeSession(input) => {
                 format.to_bytes(self.create_client_node_session(input).await)
             }

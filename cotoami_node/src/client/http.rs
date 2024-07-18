@@ -101,10 +101,10 @@ impl HttpClient {
         let http_req = match request.command() {
             Command::LocalNode => self.get(&format!("{API_PATH_NODES}/local")),
             Command::InitialDataset => self.get(API_PATH_DATA),
-            Command::NodeDetails { id } => self.get(&format!("{API_PATH_NODES}/{id}/details")),
             Command::ChunkOfChanges { from } => self
                 .get(API_PATH_CHANGES)
                 .query(&[("from", from.to_string())]),
+            Command::NodeDetails { id } => self.get(&format!("{API_PATH_NODES}/{id}/details")),
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)
             }
