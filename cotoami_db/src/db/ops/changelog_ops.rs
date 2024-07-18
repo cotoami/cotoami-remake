@@ -191,7 +191,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 node_ops::rename(node_id, name, Some(*updated_at)).run(ctx)?;
             }
             Change::SetNodeIcon { node_id, icon } => {
-                node_ops::set_icon(node_id, icon).run(ctx)?;
+                node_ops::set_icon(node_id, icon.as_ref()).run(ctx)?;
             }
             Change::SetRootCotonoma {
                 node_id,

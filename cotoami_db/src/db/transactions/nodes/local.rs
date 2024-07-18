@@ -112,7 +112,7 @@ impl<'a> DatabaseSession<'a> {
             let node = node_ops::set_icon(&local_node_id, icon).run(ctx)?;
             let change = Change::SetNodeIcon {
                 node_id: local_node_id,
-                icon: node.icon.inner(),
+                icon: node.icon.clone(),
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok((node, changelog))

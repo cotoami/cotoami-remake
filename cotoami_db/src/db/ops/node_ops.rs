@@ -113,7 +113,7 @@ fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableConn,
 
 pub(crate) fn set_icon<'a>(
     id: &'a Id<Node>,
-    icon: &'a bytes::Bytes,
+    icon: &'a [u8],
 ) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let node = try_get(id).run(ctx)??;

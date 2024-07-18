@@ -10,7 +10,7 @@ use diesel::{
     sql_types::Binary, sqlite::Sqlite, FromSqlRow,
 };
 
-use super::{coto::Coto, cotonoma::Cotonoma, link::Link, node::Node, Id};
+use super::{coto::Coto, cotonoma::Cotonoma, link::Link, node::Node, Bytes, Id};
 use crate::schema::changelog;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ pub enum Change {
     } = 3,
     SetNodeIcon {
         node_id: Id<Node>,
-        icon: bytes::Bytes,
+        icon: Bytes,
     } = 4,
     SetRootCotonoma {
         node_id: Id<Node>,
