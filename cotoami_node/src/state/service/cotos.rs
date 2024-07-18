@@ -73,13 +73,12 @@ impl NodeState {
         self.change_in_cotonoma(
             input,
             post_to,
-            operator,
-            |ds, input, cotonoma, opr| {
+            move |ds, input, cotonoma| {
                 ds.post_coto(
                     &input.content.unwrap_or_else(|| unreachable!()),
                     input.summary.as_deref(),
                     &cotonoma,
-                    opr,
+                    operator.as_ref(),
                 )
             },
             |parent, input, cotonoma| parent.post_coto(input, cotonoma.uuid).boxed(),

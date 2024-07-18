@@ -99,12 +99,11 @@ impl NodeState {
         self.change_in_cotonoma(
             input,
             post_to,
-            operator,
-            |ds, input, cotonoma, opr| {
+            move |ds, input, cotonoma| {
                 ds.post_cotonoma(
                     &input.name.unwrap_or_else(|| unreachable!()),
                     &cotonoma,
-                    opr,
+                    operator.as_ref(),
                 )
             },
             |parent, input, cotonoma| parent.post_cotonoma(input, cotonoma.uuid).boxed(),

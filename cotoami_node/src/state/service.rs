@@ -184,19 +184,13 @@ impl NodeState {
         self,
         input: Input,
         cotonoma: Id<Cotonoma>,
-        operator: Arc<Operator>,
         apply: Apply,
         forward: Forward,
     ) -> Result<Change, ServiceError>
     where
         Input: Send + 'static,
         Change: Send + 'static,
-        Apply: FnOnce(
-                &mut DatabaseSession<'_>,
-                Input,
-                &Cotonoma,
-                &Operator,
-            ) -> Result<(Change, ChangelogEntry)>
+        Apply: FnOnce(&mut DatabaseSession<'_>, Input, &Cotonoma) -> Result<(Change, ChangelogEntry)>
             + Send
             + 'static,
         Forward: for<'a> FnOnce(
@@ -211,7 +205,7 @@ impl NodeState {
                 let mut ds = this.db().new_session()?;
                 let (cotonoma, _) = ds.try_get_cotonoma(&cotonoma)?;
                 if this.db().globals().is_local(&cotonoma) {
-                    let (change, log) = apply(&mut ds, input, &cotonoma, operator.as_ref())?;
+                    let (change, log) = apply(&mut ds, input, &cotonoma)?;
                     this.pubsub().publish_change(log);
                     Ok::<_, anyhow::Error>(ChangeResult::Changed(change))
                 } else {
