@@ -269,6 +269,7 @@ impl ClientSession {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
+    use googletest::prelude::*;
 
     use super::*;
 
@@ -276,25 +277,51 @@ mod tests {
     struct Foo();
 
     #[test]
-    fn json_serialization() -> Result<()> {
+    fn id_json_serialization() -> Result<()> {
         let id: Id<Foo> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
 
         let json_string = serde_json::to_string(&id)?;
-        assert_eq!(json_string, r#""00000000-0000-0000-0000-000000000001""#);
-        println!("json_string size: {}", json_string.as_bytes().len());
+        assert_that!(json_string, eq(r#""00000000-0000-0000-0000-000000000001""#));
+        println!("Id json_string size: {}", json_string.as_bytes().len());
 
         let deserialized: Id<Foo> = serde_json::from_str(&json_string)?;
-        assert_eq!(deserialized, id);
+        assert_that!(deserialized, eq(id));
         Ok(())
     }
 
     #[test]
-    fn message_pack_serialization() -> Result<()> {
+    fn id_message_pack_serialization() -> Result<()> {
         let id: Id<Foo> = Id::from_str("00000000-0000-0000-0000-000000000001")?;
+
         let msgpack_bytes = rmp_serde::to_vec(&id)?;
-        println!("msgpack_bytes size: {}", msgpack_bytes.len());
+        println!("Id msgpack_bytes size: {}", msgpack_bytes.len());
+
         let deserialized: Id<Foo> = rmp_serde::from_slice(&msgpack_bytes)?;
-        assert_eq!(deserialized, id);
+        assert_that!(deserialized, eq(id));
+        Ok(())
+    }
+
+    #[test]
+    fn bytes_json_serialization() -> Result<()> {
+        let bytes: Bytes = Bytes(bytes::Bytes::from("Hello world"));
+
+        let json_string = serde_json::to_string(&bytes)?;
+        println!("Bytes json_string size: {}", json_string.as_bytes().len());
+
+        let deserialized: Bytes = serde_json::from_str(&json_string)?;
+        assert_that!(deserialized, eq(bytes));
+        Ok(())
+    }
+
+    #[test]
+    fn bytes_message_pack_serialization() -> Result<()> {
+        let bytes: Bytes = Bytes(bytes::Bytes::from("Hello world"));
+
+        let msgpack_bytes = rmp_serde::to_vec(&bytes)?;
+        println!("Bytes msgpack_bytes size: {}", msgpack_bytes.len());
+
+        let deserialized: Bytes = rmp_serde::from_slice(&msgpack_bytes)?;
+        assert_that!(deserialized, eq(bytes));
         Ok(())
     }
 }
