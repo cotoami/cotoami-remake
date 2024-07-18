@@ -3,7 +3,6 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use bytes::Bytes;
 use cotoami_db::prelude::*;
 use futures::future::{BoxFuture, FutureExt};
 use serde_json::json;

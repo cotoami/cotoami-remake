@@ -44,7 +44,7 @@ pub(crate) mod prelude {
         link::*,
         node::{child::*, client::*, local::*, parent::*, roles::*, server::*, *},
         operator::*,
-        ClientSession, Id, Ids,
+        Bytes, ClientSession, Id, Ids,
     };
 }
 
@@ -198,7 +198,11 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A binary type that can be stored to or restored from a database via Diesel.
-/// It can be also serialized or deserialized via Serde.
+///
+/// This type supports switching serialize/deserialize format according to
+/// the return values of [ser::Serializer::is_human_readable] and
+/// [de::Deserializer::is_human_readable]. Therefore, it is also suited to
+/// be in a data structure sent via network.
 #[derive(Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Binary)]
 pub struct Bytes(bytes::Bytes);
@@ -220,6 +224,10 @@ impl AsRef<[u8]> for Bytes {
 
 impl From<Vec<u8>> for Bytes {
     fn from(vec: Vec<u8>) -> Bytes { Bytes(bytes::Bytes::from(vec)) }
+}
+
+impl From<bytes::Bytes> for Bytes {
+    fn from(bytes: bytes::Bytes) -> Bytes { Bytes(bytes) }
 }
 
 impl ser::Serialize for Bytes {

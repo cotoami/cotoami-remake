@@ -16,7 +16,6 @@
 use std::{future::Future, sync::Arc};
 
 use anyhow::{bail, Context, Result};
-use bytes::Bytes;
 use cotoami_db::prelude::*;
 use derive_new::new;
 use dyn_clone::DynClone;
@@ -253,9 +252,11 @@ impl Response {
     pub fn content<T: DeserializeOwned>(self) -> Result<T> {
         let bytes = self.body.map_err(BackendServiceError)?;
         match self.body_format {
-            SerializeFormat::Json => serde_json::from_slice(&bytes).context("Invalid JSON bytes"),
+            SerializeFormat::Json => {
+                serde_json::from_slice(bytes.as_ref()).context("Invalid JSON bytes")
+            }
             SerializeFormat::MessagePack => {
-                rmp_serde::from_slice(&bytes).context("Invalid MessagePack bytes")
+                rmp_serde::from_slice(bytes.as_ref()).context("Invalid MessagePack bytes")
             }
         }
     }
@@ -266,7 +267,7 @@ impl Response {
         }
 
         let bytes = self.body.map_err(BackendServiceError)?;
-        std::str::from_utf8(&bytes)
+        std::str::from_utf8(bytes.as_ref())
             .map(Into::into)
             .map_err(anyhow::Error::from)
     }

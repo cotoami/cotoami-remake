@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use const_format::concatcp;
+use cotoami_db::models::Bytes;
 use futures::future::FutureExt;
 use parking_lot::RwLock;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -209,21 +210,27 @@ impl HttpClient {
         Self::convert_response(request_id, http_req.send().await?).await
     }
 
-    async fn convert_response(id: Uuid, from: reqwest::Response) -> Result<Response> {
-        let body_format = detect_response_body_format(&from);
-        if from.status().is_success() {
-            return Ok(Response::new(id, body_format, Ok(from.bytes().await?)));
+    async fn convert_response(id: Uuid, http_response: reqwest::Response) -> Result<Response> {
+        let body_format = detect_response_body_format(&http_response);
+        if http_response.status().is_success() {
+            return Ok(Response::new(
+                id,
+                body_format,
+                Ok(Bytes::from(http_response.bytes().await?)),
+            ));
         }
 
-        let error = match from.status() {
-            StatusCode::BAD_REQUEST => ServiceError::Request(from.json::<RequestError>().await?),
+        let error = match http_response.status() {
+            StatusCode::BAD_REQUEST => {
+                ServiceError::Request(http_response.json::<RequestError>().await?)
+            }
             StatusCode::UNAUTHORIZED => ServiceError::Unauthorized,
             StatusCode::FORBIDDEN => ServiceError::Permission,
             StatusCode::NOT_FOUND => ServiceError::NotFound(None),
             StatusCode::UNPROCESSABLE_ENTITY => {
-                ServiceError::Input(from.json::<InputErrors>().await?)
+                ServiceError::Input(http_response.json::<InputErrors>().await?)
             }
-            StatusCode::INTERNAL_SERVER_ERROR => ServiceError::Server(from.text().await?),
+            StatusCode::INTERNAL_SERVER_ERROR => ServiceError::Server(http_response.text().await?),
             _ => ServiceError::Unknown("".to_string()),
         };
         Ok(Response::new(id, body_format, Err(error)))
