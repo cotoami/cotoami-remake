@@ -36,8 +36,8 @@ impl NodeState {
     }
 }
 
-fn graph<'a>(
-    ds: &mut DatabaseSession<'a>,
+fn graph(
+    ds: &mut DatabaseSession<'_>,
     root_coto: Coto,
     root_cotonoma: Option<Cotonoma>,
 ) -> Result<CotoGraph> {

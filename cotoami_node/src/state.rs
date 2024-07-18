@@ -122,7 +122,9 @@ impl Drop for State {
 }
 
 #[derive(Clone, Default)]
-pub struct ParentServices(Arc<RwLock<HashMap<Id<Node>, Box<dyn NodeService>>>>);
+pub struct ParentServices(
+    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, Box<dyn NodeService>>>>,
+);
 
 impl ParentServices {
     pub fn get(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
@@ -148,7 +150,9 @@ impl ParentServices {
 }
 
 #[derive(Clone, Default)]
-pub struct ServerConnections(Arc<RwLock<HashMap<Id<Node>, ServerConnection>>>);
+pub struct ServerConnections(
+    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, ServerConnection>>>,
+);
 
 impl ServerConnections {
     pub fn contains(&self, server_id: &Id<Node>) -> bool { self.0.read().contains_key(server_id) }
