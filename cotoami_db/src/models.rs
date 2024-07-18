@@ -196,6 +196,8 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
 // Bytes
 /////////////////////////////////////////////////////////////////////////////
 
+/// A binary type that can be stored to or restored from a database via Diesel.
+/// It can be also serialized to or deserialized from a Base64 string via Serde.
 #[derive(
     Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
