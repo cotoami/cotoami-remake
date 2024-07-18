@@ -16,7 +16,7 @@ fn default_state() -> Result<()> {
     let mut session = db.new_session()?;
 
     // then
-    assert!(!db.globals().has_local_node());
+    assert_that!(db.globals().has_local_node(), eq(false));
     assert_that!(session.all_nodes()?, empty());
 
     Ok(())
@@ -111,7 +111,7 @@ fn owner_session() -> Result<()> {
     let ((mut local_node, _), _) = ds.init_as_node(None, Some("foo"))?;
 
     // then
-    assert!(local_node.start_session("bar", duration).is_err());
+    assert_that!(local_node.start_session("bar", duration), err(anything()));
 
     let session_id = local_node.start_session("foo", duration)?.to_owned();
     assert_eq!(
@@ -120,36 +120,27 @@ fn owner_session() -> Result<()> {
     );
     assert_approximately_now(local_node.session_expires_at_as_local_time().unwrap() - duration);
     local_node.verify_session(&session_id)?;
-    assert_eq!(
-        local_node
-            .verify_session("invalid-token")
-            .unwrap_err()
-            .to_string(),
-        "The passed session token is invalid."
+    assert_that!(
+        local_node.verify_session("invalid-token"),
+        err(displays_as(eq("The passed session token is invalid.")))
     );
 
     // when
     local_node.owner_session_expires_at = Some(Utc::now().naive_utc() - Duration::seconds(1));
 
     // then
-    assert_eq!(
-        local_node
-            .verify_session(&session_id)
-            .unwrap_err()
-            .to_string(),
-        "Session has been expired."
+    assert_that!(
+        local_node.verify_session(&session_id),
+        err(displays_as(eq("Session has been expired.")))
     );
 
     // when
     local_node.clear_session();
 
     // then
-    assert_eq!(
-        local_node
-            .verify_session(&session_id)
-            .unwrap_err()
-            .to_string(),
-        "Session doesn't exist."
+    assert_that!(
+        local_node.verify_session(&session_id),
+        err(displays_as(eq("Session doesn't exist.")))
     );
 
     Ok(())
@@ -195,7 +186,7 @@ fn init_as_node() -> Result<()> {
         ds.local_node_pair(&operator)?,
         eq((local_node, node.clone()))
     );
-    assert_eq!(ds.node(&node.uuid)?.unwrap(), node);
+    assert_that!(ds.node(&node.uuid), ok(some(eq_deref_of(&node))));
     assert_that!(ds.all_nodes()?, elements_are![eq_deref_of(&node)]);
 
     assert_that!(
@@ -210,8 +201,8 @@ fn init_as_node() -> Result<()> {
     assert_approximately_now(root_cotonoma.created_at());
     assert_approximately_now(root_cotonoma.updated_at());
     assert_that!(
-        ds.all_cotonomas()?,
-        elements_are![eq_deref_of(&root_cotonoma)]
+        ds.all_cotonomas(),
+        ok(elements_are![eq_deref_of(&root_cotonoma)])
     );
 
     assert_that!(
@@ -229,7 +220,7 @@ fn init_as_node() -> Result<()> {
     );
     assert_approximately_now(root_coto.created_at());
     assert_approximately_now(root_coto.updated_at());
-    assert_that!(ds.all_cotos()?, elements_are![eq_deref_of(&root_coto)]);
+    assert_that!(ds.all_cotos(), ok(elements_are![eq_deref_of(&root_coto)]));
 
     assert_that!(
         changelog,
