@@ -230,6 +230,8 @@ impl IntoResponse for ServiceError {
 
 const SESSION_COOKIE_NAME: &str = "session_token";
 
+// https://github.com/rust-lang/rust-clippy/issues/9776
+#[allow(clippy::declare_interior_mutable_const)]
 pub(crate) const SESSION_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-session-token");
 
@@ -279,6 +281,8 @@ async fn require_session<B>(
 // Operator
 /////////////////////////////////////////////////////////////////////////////
 
+// https://github.com/rust-lang/rust-clippy/issues/9776
+#[allow(clippy::declare_interior_mutable_const)]
 pub(crate) const OPERATE_AS_OWNER_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-operate-as-owner");
 

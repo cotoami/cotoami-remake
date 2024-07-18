@@ -154,7 +154,7 @@ impl ServerConnections {
     pub fn contains(&self, server_id: &Id<Node>) -> bool { self.0.read().contains_key(server_id) }
 
     pub fn get(&self, server_id: &Id<Node>) -> Option<ServerConnection> {
-        self.0.read().get(server_id).map(Clone::clone)
+        self.0.read().get(server_id).cloned()
     }
 
     pub fn try_get(&self, server_id: &Id<Node>) -> Result<ServerConnection> {

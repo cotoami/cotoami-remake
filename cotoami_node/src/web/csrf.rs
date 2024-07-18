@@ -17,6 +17,8 @@ use crate::web::ServerConfig;
 
 const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTIONS];
 
+// https://github.com/rust-lang/rust-clippy/issues/9776
+#[allow(clippy::declare_interior_mutable_const)]
 pub(crate) const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
 pub(super) async fn protect_from_forgery<B>(
