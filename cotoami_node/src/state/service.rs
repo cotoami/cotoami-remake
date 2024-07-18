@@ -163,6 +163,23 @@ impl NodeState {
         .map_err(ServiceError::from)
     }
 
+    pub(crate) async fn change<Change, Apply>(self, apply: Apply) -> Result<Change, ServiceError>
+    where
+        Change: Send + 'static,
+        Apply:
+            FnOnce(&mut DatabaseSession<'_>) -> Result<(Change, ChangelogEntry)> + Send + 'static,
+    {
+        spawn_blocking({
+            move || {
+                let mut ds = self.db().new_session()?;
+                let (change, log) = apply(&mut ds)?;
+                self.pubsub().publish_change(log);
+                Ok(change)
+            }
+        })
+        .await?
+    }
+
     pub(crate) async fn change_in_cotonoma<Input, Change, Apply, Forward>(
         self,
         input: Input,
