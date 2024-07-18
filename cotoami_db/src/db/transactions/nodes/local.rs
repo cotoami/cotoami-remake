@@ -101,6 +101,24 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn set_local_node_icon(
+        &self,
+        icon: &bytes::Bytes,
+        operator: &Operator,
+    ) -> Result<(Node, ChangelogEntry)> {
+        operator.requires_to_be_owner()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let node = node_ops::set_icon(&local_node_id, icon).run(ctx)?;
+            let change = Change::SetNodeIcon {
+                node_id: local_node_id,
+                icon: node.icon.inner(),
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((node, changelog))
+        })
+    }
+
     pub fn set_root_cotonoma(
         &self,
         cotonoma_id: &Id<Cotonoma>,

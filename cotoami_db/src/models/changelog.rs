@@ -99,36 +99,40 @@ pub enum Change {
         name: String,
         updated_at: NaiveDateTime,
     } = 3,
+    SetNodeIcon {
+        node_id: Id<Node>,
+        icon: bytes::Bytes,
+    } = 4,
     SetRootCotonoma {
         node_id: Id<Node>,
         cotonoma_id: Id<Cotonoma>,
-    } = 4,
-    CreateCoto(Coto) = 5,
+    } = 5,
+    CreateCoto(Coto) = 6,
     EditCoto {
         coto_id: Id<Coto>,
         content: String,
         summary: Option<String>,
         updated_at: NaiveDateTime,
-    } = 6,
+    } = 7,
     // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
-    } = 7,
-    CreateCotonoma(Cotonoma, Coto) = 8,
+    } = 8,
+    CreateCotonoma(Cotonoma, Coto) = 9,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 9,
-    CreateLink(Link) = 10,
+    } = 10,
+    CreateLink(Link) = 11,
     EditLink {
         link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,
-    } = 11,
-    DeleteLink(Id<Link>) = 12,
+    } = 12,
+    DeleteLink(Id<Link>) = 13,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -139,7 +143,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 13,
+    } = 14,
 }
 
 impl Change {

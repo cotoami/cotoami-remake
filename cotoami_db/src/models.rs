@@ -210,6 +210,8 @@ impl Bytes {
     {
         crate::from_base64(deserializer).map(Bytes::from)
     }
+
+    pub fn inner(&self) -> bytes::Bytes { self.0.clone() }
 }
 
 impl AsRef<[u8]> for Bytes {

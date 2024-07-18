@@ -77,20 +77,6 @@ pub(crate) fn update<'a>(update_node: &'a UpdateNode) -> impl Operation<Writable
     })
 }
 
-pub(crate) fn set_name<'a>(
-    id: &'a Id<Node>,
-    name: &'a str,
-) -> impl Operation<WritableConn, Node> + 'a {
-    use crate::schema::nodes;
-    write_op(move |conn| {
-        diesel::update(nodes::table)
-            .filter(nodes::uuid.eq(id))
-            .set((nodes::name.eq(name), nodes::version.eq(nodes::version + 1)))
-            .get_result(conn.deref_mut())
-            .map_err(anyhow::Error::from)
-    })
-}
-
 /// Renames the specified node.
 ///
 /// The name of the root cotonoma will be also updated to the same name.
@@ -111,6 +97,29 @@ pub(crate) fn rename<'a>(
         } else {
             bail!("A node without a root cotonoma cannot be renamed.");
         }
+    })
+}
+
+fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableConn, Node> + 'a {
+    use crate::schema::nodes;
+    write_op(move |conn| {
+        diesel::update(nodes::table)
+            .filter(nodes::uuid.eq(id))
+            .set((nodes::name.eq(name), nodes::version.eq(nodes::version + 1)))
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn set_icon<'a>(
+    id: &'a Id<Node>,
+    icon: &'a bytes::Bytes,
+) -> impl Operation<WritableConn, Node> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let node = try_get(id).run(ctx)??;
+        let mut update_node = node.to_update();
+        update_node.icon = icon;
+        update(&update_node).run(ctx)
     })
 }
 
@@ -143,7 +152,7 @@ pub(crate) fn create_root_cotonoma<'a>(
 }
 
 /// Upserting a node is an idempotent operation that inserts or updates a node
-/// based on the specified [Node] data.
+/// based on the given [Node] data.
 ///
 /// The update will be done only when the ID of the passed data already exists
 /// in the local database and the version of it is larger than the existing one.
