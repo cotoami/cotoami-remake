@@ -77,7 +77,7 @@ impl NodeState {
                 ds.post_coto(
                     &input.content.unwrap_or_else(|| unreachable!()),
                     input.summary.as_deref(),
-                    &cotonoma,
+                    cotonoma,
                     operator.as_ref(),
                 )
             },

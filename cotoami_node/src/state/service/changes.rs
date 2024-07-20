@@ -28,7 +28,7 @@ impl NodeState {
                     {
                         Ok(ChunkOfChanges::OutOfRange { max: *max })
                     } else {
-                        Err(anyhow_err.into())
+                        Err(anyhow_err)
                     }
                 }
             },
