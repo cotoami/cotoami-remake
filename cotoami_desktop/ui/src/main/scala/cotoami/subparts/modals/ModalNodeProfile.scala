@@ -80,7 +80,9 @@ object ModalNodeProfile {
             ToolButton(
               classes = "edit",
               tip = "Edit",
-              symbol = "edit"
+              symbol = "edit",
+              onClick = () =>
+                dispatch(Modal.Msg.OpenModal(Modal.Image("Node Icon")).toApp)
             )
           }
         )
