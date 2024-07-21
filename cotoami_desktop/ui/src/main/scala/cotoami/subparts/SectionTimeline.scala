@@ -32,6 +32,14 @@ object SectionTimeline {
       loading: Boolean = false,
       imeActive: Boolean = false
   ) {
+    def init: Model =
+      this.copy(
+        cotoIds = PaginatedIds(),
+        query = None,
+        loading = true,
+        imeActive = false
+      )
+
     def appendPage(cotos: PaginatedCotos): Model =
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))

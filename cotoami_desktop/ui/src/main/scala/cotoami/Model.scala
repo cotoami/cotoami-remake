@@ -76,7 +76,7 @@ case class Model(
       .modify(_.domain).using(_.clearSelection())
       .modify(_.domain.nodes).using(_.select(nodeId))
       .modify(_.domain.cotonomas.recentLoading).setTo(true)
-      .modify(_.timeline.loading).setTo(true) match {
+      .modify(_.timeline).using(_.init) match {
       case model =>
         (
           model,
@@ -106,7 +106,7 @@ case class Model(
       .modify(_.domain.cotos).setTo(Cotos())
       .modify(_.domain.links).setTo(Links())
       .modify(_.domain.cotonomas.recentLoading).setTo(shouldFetchCotonomas)
-      .modify(_.timeline.loading).setTo(true) match {
+      .modify(_.timeline).using(_.init) match {
       case model =>
         (
           model,
