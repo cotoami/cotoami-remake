@@ -32,61 +32,61 @@ impl NodeState {
         let format = request.accept();
         let opr = request.try_auth().map(Clone::clone);
         match request.command() {
-            Command::LocalNode => format.to_bytes(self.local_node().await),
-            Command::InitialDataset => format.to_bytes(self.initial_dataset(opr?).await),
-            Command::ChunkOfChanges { from } => format.to_bytes(self.chunk_of_changes(from).await),
+            Command::LocalNode => format.serialize(self.local_node().await),
+            Command::InitialDataset => format.serialize(self.initial_dataset(opr?).await),
+            Command::ChunkOfChanges { from } => format.serialize(self.chunk_of_changes(from).await),
             Command::SetLocalNodeIcon { icon } => {
-                format.to_bytes(self.set_local_node_icon(icon.into(), opr?).await)
+                format.serialize(self.set_local_node_icon(icon.into(), opr?).await)
             }
-            Command::NodeDetails { id } => format.to_bytes(self.node_details(id).await),
+            Command::NodeDetails { id } => format.serialize(self.node_details(id).await),
             Command::CreateClientNodeSession(input) => {
-                format.to_bytes(self.create_client_node_session(input).await)
+                format.serialize(self.create_client_node_session(input).await)
             }
-            Command::TryLogIntoServer(input) => format.to_bytes(
+            Command::TryLogIntoServer(input) => format.serialize(
                 self.log_into_server(input)
                     .await
                     .map(|(session, _)| session),
             ),
             Command::AddServerNode(input) => {
-                format.to_bytes(self.add_server_node(input, opr?).await)
+                format.serialize(self.add_server_node(input, opr?).await)
             }
             Command::UpdateServerNode { id, values } => {
-                format.to_bytes(self.update_server_node(id, values, opr?).await)
+                format.serialize(self.update_server_node(id, values, opr?).await)
             }
             Command::AddClientNode(input) => {
-                format.to_bytes(self.add_client_node(input, opr?).await)
+                format.serialize(self.add_client_node(input, opr?).await)
             }
             Command::RecentCotonomas { node, pagination } => {
-                format.to_bytes(self.recent_cotonomas(node, pagination).await)
+                format.serialize(self.recent_cotonomas(node, pagination).await)
             }
-            Command::Cotonoma { id } => format.to_bytes(self.cotonoma(id).await),
-            Command::CotonomaDetails { id } => format.to_bytes(self.cotonoma_details(id).await),
+            Command::Cotonoma { id } => format.serialize(self.cotonoma(id).await),
+            Command::CotonomaDetails { id } => format.serialize(self.cotonoma_details(id).await),
             Command::CotonomaByName { name, node } => {
-                format.to_bytes(self.cotonoma_by_name(name, node).await)
+                format.serialize(self.cotonoma_by_name(name, node).await)
             }
             Command::SubCotonomas { id, pagination } => {
-                format.to_bytes(self.sub_cotonomas(id, pagination).await)
+                format.serialize(self.sub_cotonomas(id, pagination).await)
             }
             Command::RecentCotos {
                 node,
                 cotonoma,
                 pagination,
-            } => format.to_bytes(self.recent_cotos(node, cotonoma, pagination).await),
+            } => format.serialize(self.recent_cotos(node, cotonoma, pagination).await),
             Command::SearchCotos {
                 query,
                 node,
                 cotonoma,
                 pagination,
-            } => format.to_bytes(self.search_cotos(query, node, cotonoma, pagination).await),
-            Command::GraphFromCoto { coto } => format.to_bytes(self.graph_from_coto(coto).await),
+            } => format.serialize(self.search_cotos(query, node, cotonoma, pagination).await),
+            Command::GraphFromCoto { coto } => format.serialize(self.graph_from_coto(coto).await),
             Command::GraphFromCotonoma { cotonoma } => {
-                format.to_bytes(self.graph_from_cotonoma(cotonoma).await)
+                format.serialize(self.graph_from_cotonoma(cotonoma).await)
             }
             Command::PostCoto { input, post_to } => {
-                format.to_bytes(self.post_coto(input, post_to, opr?).await)
+                format.serialize(self.post_coto(input, post_to, opr?).await)
             }
             Command::PostCotonoma { input, post_to } => {
-                format.to_bytes(self.post_cotonoma(input, post_to, opr?).await)
+                format.serialize(self.post_cotonoma(input, post_to, opr?).await)
             }
         }
     }

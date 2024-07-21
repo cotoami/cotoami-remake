@@ -283,7 +283,7 @@ pub enum SerializeFormat {
 }
 
 impl SerializeFormat {
-    pub(crate) fn to_bytes<T: serde::Serialize>(
+    pub(crate) fn serialize<T: serde::Serialize>(
         &self,
         result: Result<T, ServiceError>,
     ) -> Result<Bytes, ServiceError> {

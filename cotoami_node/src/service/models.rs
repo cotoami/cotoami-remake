@@ -260,11 +260,8 @@ pub struct CotosRelatedData {
 
 impl CotosRelatedData {
     pub(crate) fn fetch<'a>(ds: &'a mut DatabaseSession<'_>, cotos: &[Coto]) -> Result<Self> {
-        let original_ids: Vec<Id<Coto>> = cotos
-            .iter()
-            .map(|coto| coto.repost_of_id)
-            .flatten()
-            .collect();
+        let original_ids: Vec<Id<Coto>> =
+            cotos.iter().filter_map(|coto| coto.repost_of_id).collect();
         let originals = ds.cotos(original_ids)?;
         let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
         let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
