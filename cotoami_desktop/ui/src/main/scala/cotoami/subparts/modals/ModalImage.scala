@@ -52,6 +52,7 @@ object ModalImage {
         Seq.empty
       )
       val dropzone = useDropzone(new Options {
+        override val accept = js.Dictionary("image/*" -> js.Array[String]())
         override val onDrop = onDropCallback
       })
 

@@ -49,6 +49,13 @@ object ReactDropzone extends js.Object {
         additionalProps: js.Dictionary[js.Any] = js.Dictionary.empty
     ): js.Dictionary[js.Any] = js.native
     def getInputProps(): js.Dictionary[js.Any] = js.native
+
+    val isFocused: Boolean = js.native
     val isDragActive: Boolean = js.native
+
+    // isDragAccept and isDragReject won't work on Safari
+    // https://github.com/react-dropzone/react-dropzone/issues/1266
+    val isDragAccept: Boolean = js.native
+    val isDragReject: Boolean = js.native
   }
 }
