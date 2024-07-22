@@ -29,6 +29,9 @@ object ModalImage {
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): T => AppMsg =
+      tagger andThen Modal.Msg.ImageMsg andThen AppMsg.ModalMsg
+
     case class ImageInput(image: dom.Blob) extends Msg
   }
 
@@ -44,7 +47,7 @@ object ModalImage {
     )(
       model.title
     )(
-      InputFile(model = model, dispatch = dispatch),
+      InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch),
       model.image.map(image => {
         val url = dom.URL.createObjectURL(image)
         section(className := "preview")(
@@ -57,9 +60,9 @@ object ModalImage {
       })
     )
 
-  @react object InputFile {
+  @react object InputImage {
     case class Props(
-        model: Model,
+        tagger: dom.Blob => AppMsg,
         dispatch: AppMsg => Unit
     )
 
@@ -67,7 +70,7 @@ object ModalImage {
       val onDropCallback: OnDrop = useCallback(
         (accepted, rejected, event) => {
           if (accepted.length > 0) {
-            props.dispatch(Msg.ImageInput(accepted(0)).toApp)
+            props.dispatch(props.tagger(accepted(0)))
           }
         },
         Seq.empty
