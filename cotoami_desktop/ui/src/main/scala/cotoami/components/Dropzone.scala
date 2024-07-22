@@ -15,10 +15,16 @@ object ReactDropzone extends js.Object {
     val accept: js.UndefOr[js.Dictionary[js.Array[String]]] = js.undefined
 
     // Callback for when the drop event occurs.
-    val onDrop: js.UndefOr[
-      js.Function3[js.Array[dom.File], js.Array[FileRejection], js.Any, Unit]
-    ] = js.undefined
+    val onDrop: js.UndefOr[OnDrop] = js.undefined
   }
+
+  // OnDrop arguments
+  // 1. acceptedFiles: Array.<File>
+  // 2. fileRejections: Array.<FileRejection>
+  // 3. event: (DragEvent | Event) — A drag event or input change event
+  //    (if files were selected via the file dialog)
+  type OnDrop =
+    js.Function3[js.Array[dom.File], js.Array[FileRejection], js.Any, Unit]
 
   @js.native
   trait FileRejection extends js.Object {
@@ -31,11 +37,11 @@ object ReactDropzone extends js.Object {
     val code: String = js.native
     val message: String = js.native
   }
-}
 
-@js.native
-trait Dropzone extends js.Object {
-  def getRootProps(): Any = js.native
-  def getInputProps(): Any = js.native
-  def isDragActive(): Boolean = js.native
+  @js.native
+  trait Dropzone extends js.Object {
+    def getRootProps(): js.Dictionary[js.Any] = js.native
+    def getInputProps(): js.Dictionary[js.Any] = js.native
+    val isDragActive: Boolean = js.native
+  }
 }
