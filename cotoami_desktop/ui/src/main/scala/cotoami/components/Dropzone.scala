@@ -10,6 +10,7 @@ import org.scalajs.dom
 object ReactDropzone extends js.Object {
   def useDropzone(options: Options): Dropzone = js.native
 
+  // https://react-dropzone.js.org/#src
   trait Options extends js.Object {
     // Set accepted file types.
     val accept: js.UndefOr[js.Dictionary[js.Array[String]]] = js.undefined
@@ -40,7 +41,13 @@ object ReactDropzone extends js.Object {
 
   @js.native
   trait Dropzone extends js.Object {
-    def getRootProps(): js.Dictionary[js.Any] = js.native
+    // Whatever other props you want to add to the element where the props from
+    // getRootProps() are set, you should always pass them through that function
+    // rather than applying them on the element itself. This is in order to avoid
+    // your props being overridden (or overriding the props returned by getRootProps()).
+    def getRootProps(
+        additionalProps: js.Dictionary[js.Any] = js.Dictionary.empty
+    ): js.Dictionary[js.Any] = js.native
     def getInputProps(): js.Dictionary[js.Any] = js.native
     val isDragActive: Boolean = js.native
   }

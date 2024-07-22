@@ -82,7 +82,9 @@ object ModalNodeProfile {
               tip = "Edit",
               symbol = "edit",
               onClick = () =>
-                dispatch(Modal.Msg.OpenModal(Modal.Image("Node Icon")).toApp)
+                dispatch(
+                  Modal.Msg.OpenModal(Modal.Image("Change Node Icon")).toApp
+                )
             )
           }
         )

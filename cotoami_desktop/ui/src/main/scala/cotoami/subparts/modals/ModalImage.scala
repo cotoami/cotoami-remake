@@ -11,6 +11,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Msg => AppMsg}
+import cotoami.components.optionalClasses
 import cotoami.components.ReactDropzone._
 import cotoami.subparts.Modal
 
@@ -56,12 +57,18 @@ object ModalImage {
 
       React.createElement(
         "section",
-        dropzone.getRootProps(),
+        dropzone.getRootProps(
+          js.Dictionary(
+            "className" -> optionalClasses(
+              Seq(
+                ("input-file", true),
+                ("drag-active", dropzone.isDragActive)
+              )
+            )
+          )
+        ),
         React.createElement("input", dropzone.getInputProps()),
-        if (dropzone.isDragActive)
-          p()("Drop the file here ..")
-        else
-          p()("Drag 'n' drop an image file here, or click to select one")
+        p()("Drag and drop an image file here, or click to select one")
       )
     }
   }
