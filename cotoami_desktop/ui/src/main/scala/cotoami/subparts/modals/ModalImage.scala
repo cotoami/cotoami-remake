@@ -47,7 +47,6 @@ object ModalImage {
     )(
       model.title
     )(
-      InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch),
       model.image.map(image => {
         val url = dom.URL.createObjectURL(image)
         section(className := "preview")(
@@ -57,7 +56,9 @@ object ModalImage {
             onLoad := (_ => dom.URL.revokeObjectURL(url))
           )
         )
-      })
+      }).getOrElse(
+        InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
+      )
     )
 
   @react object InputImage {
