@@ -11,10 +11,11 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Msg => AppMsg}
+import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.backend.{ErrorJson, Node}
+import cotoami.repositories.Nodes
 import cotoami.components.FixedAspectCrop
 import cotoami.components.FixedAspectCrop.Area
-import cotoami.backend.{ErrorJson, Node}
 import cotoami.subparts.{InputImage, Modal}
 
 object ModalNodeIcon {
@@ -40,18 +41,20 @@ object ModalNodeIcon {
     case class Saved(result: Either[ErrorJson, Node]) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Nodes, Seq[Cmd[AppMsg]]) = {
+    val default = (model, context.domain.nodes, Seq.empty)
     msg match {
       case Msg.ImageInput(image) =>
-        (
-          model.copy(sourceImage = Some(image), croppedImage = Some(image)),
-          Seq.empty
+        default.copy(
+          _1 = model.copy(sourceImage = Some(image), croppedImage = Some(image))
         )
 
       case Msg.Save =>
-        (
-          model.copy(saving = true),
-          Seq(
+        default.copy(
+          _1 = model.copy(saving = true),
+          _3 = Seq(
             model.croppedImage.map(image =>
               Browser.encodeAsBase64(image).flatMap {
                 case Right(base64) =>
@@ -64,16 +67,20 @@ object ModalNodeIcon {
         )
 
       case Msg.Saved(Right(node)) =>
-        (model.copy(saving = false), Seq.empty)
+        default.copy(
+          _1 = model.copy(saving = false),
+          _2 = context.domain.nodes.put(node)
+        )
 
       case Msg.Saved(Left(e)) =>
-        (
-          model.copy(error = Some(e.default_message)),
-          Seq(
+        default.copy(
+          _1 = model.copy(error = Some(e.default_message)),
+          _3 = Seq(
             log_error("Icon saving error.", Some(js.JSON.stringify(e)))
           )
         )
     }
+  }
 
   def apply(model: Model, dispatch: AppMsg => Unit): ReactElement =
     Modal.view(

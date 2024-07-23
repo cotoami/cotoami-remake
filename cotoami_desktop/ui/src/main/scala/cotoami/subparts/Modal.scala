@@ -92,7 +92,9 @@ object Modal {
   def close[M <: Model](modalType: Class[M]): Cmd[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
-  def update(msg: Msg, model: AppModel): (AppModel, Seq[Cmd[AppMsg]]) = {
+  def update(msg: Msg, model: AppModel)(implicit
+      context: Context
+  ): (AppModel, Seq[Cmd[AppMsg]]) = {
     val stack = model.modalStack
     (msg match {
       case Msg.OpenModal(modal, cmds) =>
@@ -145,8 +147,13 @@ object Modal {
       case Msg.NodeIconMsg(modalMsg) =>
         stack.get[NodeIcon].map { case NodeIcon(modalModel) =>
           ModalNodeIcon.update(modalMsg, modalModel).pipe {
-            case (modal, cmds) =>
-              (model.updateModal(NodeIcon(modal)), cmds)
+            case (modal, nodes, cmds) =>
+              (
+                model
+                  .updateModal(NodeIcon(modal))
+                  .modify(_.domain.nodes).setTo(nodes),
+                cmds
+              )
           }
         }
     }).getOrElse((model, Seq.empty))
