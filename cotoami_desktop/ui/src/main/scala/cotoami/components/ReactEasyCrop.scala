@@ -14,15 +14,24 @@ object ReactEasyCrop extends js.Object
   case class Props(
       image: String,
       onCropChange: Position => Unit,
-      onMediaLoaded: Option[() => Unit] = None,
       crop: Position = position(0, 0),
-      aspect: Option[Double] = None
+      aspect: Option[Double] = None,
+      onMediaLoaded: Option[() => Unit] = None,
+      onCropComplete: Option[(Area, Area) => Unit] = None
   )
 
   @js.native
   trait Position extends js.Object {
     val x: Int = js.native
     val y: Int = js.native
+  }
+
+  @js.native
+  trait Area extends js.Object {
+    val x: Double = js.native
+    val y: Double = js.native
+    val width: Double = js.native
+    val height: Double = js.native
   }
 
   def position(x: Int, y: Int): Position =
