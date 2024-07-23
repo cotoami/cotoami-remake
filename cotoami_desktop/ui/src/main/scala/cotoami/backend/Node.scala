@@ -22,6 +22,9 @@ case class Node(json: NodeJson) {
 object Node {
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
+
+  def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
+    NodeJson.setLocalNodeIcon(icon).map(_.map(Node(_)))
 }
 
 @js.native
@@ -32,6 +35,11 @@ trait NodeJson extends js.Object {
   val root_cotonoma_id: Nullable[String] = js.native
   val version: Int = js.native
   val created_at: String = js.native
+}
+
+object NodeJson {
+  def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, NodeJson]] =
+    Commands.send(Commands.SetLocalNodeIcon(icon))
 }
 
 sealed trait DatabaseRole
