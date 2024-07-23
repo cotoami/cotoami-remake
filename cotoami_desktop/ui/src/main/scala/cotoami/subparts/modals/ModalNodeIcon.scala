@@ -1,10 +1,12 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
 import org.scalajs.dom
 
+import slinky.core._
+import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
+import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.Cmd
@@ -43,21 +45,35 @@ object ModalNodeIcon {
       "Node Icon"
     )(
       model.image.map(image => {
-        val url = dom.URL.createObjectURL(image)
-        section(className := "crop")(
-          EasyCrop(
-            image = url,
-            onCropChange = (crop: EasyCrop.Position) =>
-              println(s"crop: ${js.JSON.stringify(crop)}"),
-            onMediaLoaded = Some(() => {
-              println("onMediaLoaded")
-              dom.URL.revokeObjectURL(url)
-            }),
-            aspect = Some(1.0)
-          )
+        div()(
+          SectionCrop(image = image)
         )
       }).getOrElse(
         InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
       )
     )
+
+  @react object SectionCrop {
+    case class Props(
+        image: dom.Blob
+    )
+
+    val component = FunctionalComponent[Props] { props =>
+      val (crop, setCrop) = useState(EasyCrop.position(0, 0))
+      val url = dom.URL.createObjectURL(props.image)
+
+      section(className := "crop")(
+        EasyCrop(
+          image = url,
+          crop = crop,
+          onCropChange = setCrop,
+          onMediaLoaded = Some(() => {
+            println("onMediaLoaded")
+            dom.URL.revokeObjectURL(url)
+          }),
+          aspect = Some(1.0)
+        )
+      )
+    }
+  }
 }
