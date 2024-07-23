@@ -69,12 +69,16 @@ object ModalNodeIcon {
       case Msg.Saved(Right(node)) =>
         default.copy(
           _1 = model.copy(saving = false),
-          _2 = context.domain.nodes.put(node)
+          _2 = context.domain.nodes.put(node),
+          _3 = Seq(
+            Browser.send(ModalNodeProfile.Msg.SetNode(node).toApp),
+            Modal.close(classOf[Modal.NodeIcon])
+          )
         )
 
       case Msg.Saved(Left(e)) =>
         default.copy(
-          _1 = model.copy(error = Some(e.default_message)),
+          _1 = model.copy(saving = false, error = Some(e.default_message)),
           _3 = Seq(
             log_error("Icon saving error.", Some(js.JSON.stringify(e)))
           )
@@ -113,7 +117,8 @@ object ModalNodeIcon {
         )("Cancel"),
         button(
           `type` := "button",
-          aria - "busy" := model.saving.toString()
+          aria - "busy" := model.saving.toString(),
+          onClick := (_ => dispatch(Msg.Save.toApp))
         )("OK")
       )
     )
