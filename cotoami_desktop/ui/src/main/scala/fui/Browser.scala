@@ -101,14 +101,22 @@ object Browser {
       }
     })
 
-  def encodeAsBase64(blob: dom.Blob): Cmd[Either[dom.ProgressEvent, String]] =
+  def encodeAsBase64(
+      blob: dom.Blob,
+      removePadding: Boolean = false
+  ): Cmd[Either[dom.ProgressEvent, String]] =
     Cmd(IO.async { cb =>
       IO {
         val reader = new dom.FileReader()
         reader.onload = _ => {
           val url = reader.result.asInstanceOf[String]
           val base64 = url.substring(url.indexOf(',') + 1)
-          cb(Right(Some(Right(base64))))
+          if (removePadding) {
+            val base64WithoutPadding = base64.replaceAll("=+$", "")
+            cb(Right(Some(Right(base64WithoutPadding))))
+          } else {
+            cb(Right(Some(Right(base64))))
+          }
         }
         reader.onerror = (e: dom.ProgressEvent) => {
           cb(Right(Some(Left(e))))

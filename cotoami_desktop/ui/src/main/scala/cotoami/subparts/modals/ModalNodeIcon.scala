@@ -56,7 +56,7 @@ object ModalNodeIcon {
           _1 = model.copy(saving = true),
           _3 = Seq(
             model.croppedImage.map(image =>
-              Browser.encodeAsBase64(image).flatMap {
+              Browser.encodeAsBase64(image, true).flatMap {
                 case Right(base64) =>
                   Node.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
                 case Left(e) =>
