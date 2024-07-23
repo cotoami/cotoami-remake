@@ -6,11 +6,7 @@ import scala.scalajs.js.annotation.JSImport
 import slinky.core._
 import slinky.core.annotations.react
 
-@js.native
-@JSImport("react-easy-crop", JSImport.Default)
-object ReactEasyCrop extends js.Object
-
-@react object EasyCrop extends ExternalComponent {
+@react object FixedAspectCrop extends ExternalComponent {
   case class Props(
       image: String,
       onCropChange: Position => Unit,
@@ -39,3 +35,7 @@ object ReactEasyCrop extends js.Object
 
   override val component = ReactEasyCrop
 }
+
+@js.native
+@JSImport("react-easy-crop", JSImport.Default)
+object ReactEasyCrop extends js.Object

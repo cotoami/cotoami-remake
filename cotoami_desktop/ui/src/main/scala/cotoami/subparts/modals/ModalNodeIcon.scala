@@ -12,8 +12,8 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Msg => AppMsg}
-import cotoami.components.EasyCrop
-import cotoami.components.EasyCrop.Area
+import cotoami.components.FixedAspectCrop
+import cotoami.components.FixedAspectCrop.Area
 import cotoami.backend.{ErrorJson, Node}
 import cotoami.subparts.{InputImage, Modal}
 
@@ -109,7 +109,7 @@ object ModalNodeIcon {
     )
 
     val component = FunctionalComponent[Props] { props =>
-      val (crop, setCrop) = useState(EasyCrop.position(0, 0))
+      val (crop, setCrop) = useState(FixedAspectCrop.position(0, 0))
 
       useEffect(
         () => { () => dom.URL.revokeObjectURL(props.imageUrl) },
@@ -117,7 +117,7 @@ object ModalNodeIcon {
       )
 
       section(className := "crop")(
-        EasyCrop(
+        FixedAspectCrop(
           image = props.imageUrl,
           crop = crop,
           onCropChange = setCrop,
