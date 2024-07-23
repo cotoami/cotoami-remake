@@ -13,17 +13,20 @@ object ReactEasyCrop extends js.Object
 @react object EasyCrop extends ExternalComponent {
   case class Props(
       image: String,
-      crop: Position = new Position {
-        override val x = 0
-        override val y = 0
-      },
-      aspect: Option[Float]
+      onCropChange: Position => Unit,
+      onMediaLoaded: Option[() => Unit] = None,
+      crop: Position = position(0, 0),
+      aspect: Option[Double] = None
   )
 
+  @js.native
   trait Position extends js.Object {
-    val x: Int
-    val y: Int
+    val x: Int = js.native
+    val y: Int = js.native
   }
+
+  def position(x: Int, y: Int): Position =
+    js.Dynamic.literal(x = x, y = y).asInstanceOf[Position]
 
   override val component = ReactEasyCrop
 }

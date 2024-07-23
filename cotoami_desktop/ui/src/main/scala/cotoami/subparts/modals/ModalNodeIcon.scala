@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.scalajs.js
 import org.scalajs.dom
 
 import slinky.core.facade.ReactElement
@@ -8,6 +9,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Msg => AppMsg}
+import cotoami.components.EasyCrop
 import cotoami.subparts.{InputImage, Modal}
 
 object ModalNodeIcon {
@@ -42,11 +44,16 @@ object ModalNodeIcon {
     )(
       model.image.map(image => {
         val url = dom.URL.createObjectURL(image)
-        section(className := "preview")(
-          img(
-            src := url,
-            // Revoke data uri after image is loaded
-            onLoad := (_ => dom.URL.revokeObjectURL(url))
+        section(className := "crop")(
+          EasyCrop(
+            image = url,
+            onCropChange = (crop: EasyCrop.Position) =>
+              println(s"crop: ${js.JSON.stringify(crop)}"),
+            onMediaLoaded = Some(() => {
+              println("onMediaLoaded")
+              dom.URL.revokeObjectURL(url)
+            }),
+            aspect = Some(1.0)
           )
         )
       }).getOrElse(
