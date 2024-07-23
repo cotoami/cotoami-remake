@@ -18,7 +18,9 @@ import cotoami.subparts.{InputImage, Modal}
 object ModalNodeIcon {
 
   case class Model(
-      image: Option[dom.Blob] = None
+      sourceImage: Option[dom.Blob] = None,
+      croppedImage: Option[dom.Blob] = None,
+      saving: Boolean = false
   )
 
   sealed trait Msg {
@@ -35,7 +37,11 @@ object ModalNodeIcon {
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.ImageInput(image) => (model.copy(image = Some(image)), Seq.empty)
+      case Msg.ImageInput(image) =>
+        (
+          model.copy(sourceImage = Some(image), croppedImage = Some(image)),
+          Seq.empty
+        )
     }
 
   def apply(model: Model, dispatch: AppMsg => Unit): ReactElement =
@@ -43,14 +49,33 @@ object ModalNodeIcon {
       elementClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch))
     )(
-      "Node Icon"
+      "Change Node Icon"
     )(
-      model.image.map(image => {
-        div()(
-          SectionCrop(imageUrl = dom.URL.createObjectURL(image))
+      model.sourceImage.map(divPreview(_, model, dispatch))
+        .getOrElse(
+          InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
         )
-      }).getOrElse(
-        InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
+    )
+
+  private def divPreview(
+      image: dom.Blob,
+      model: Model,
+      dispatch: AppMsg => Unit
+  ): ReactElement =
+    div(className := "preview")(
+      SectionCrop(imageUrl = dom.URL.createObjectURL(image)),
+      div(className := "buttons")(
+        button(
+          `type` := "button",
+          className := "cancel contrast outline",
+          onClick := (_ =>
+            dispatch(Modal.Msg.CloseModal(classOf[Modal.NodeIcon]).toApp)
+          )
+        )("Cancel"),
+        button(
+          `type` := "button",
+          aria - "busy" := model.saving.toString()
+        )("OK")
       )
     )
 
