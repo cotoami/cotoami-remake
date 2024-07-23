@@ -46,7 +46,11 @@ import cotoami.components.ReactDropzone._
         )
       ),
       React.createElement("input", dropzone.getInputProps()),
-      p()("Drag and drop an image file here, or click to select one")
+      p()(
+        "Drag and drop an image file here,",
+        br(),
+        "or click to select one"
+      )
     )
   }
 }
