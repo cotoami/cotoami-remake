@@ -10,7 +10,7 @@ import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{log_error, Msg => AppMsg}
 import cotoami.components.FixedAspectCrop
 import cotoami.components.FixedAspectCrop.Area
@@ -52,6 +52,14 @@ object ModalNodeIcon {
         (
           model.copy(saving = true),
           Seq(
+            model.croppedImage.map(image =>
+              Browser.encodeAsBase64(image).flatMap {
+                case Right(base64) =>
+                  Node.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
+                case Left(e) =>
+                  log_error("Icon encoding error.", Some(js.JSON.stringify(e)))
+              }
+            ).getOrElse(Cmd.none)
           )
         )
 
