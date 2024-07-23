@@ -7,7 +7,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
-import cotoami.backend.{Coto, ErrorJson, Node, NodeDetails}
+import cotoami.backend.{Coto, ErrorJson, Id, Node, NodeDetails}
 import cotoami.components.ToolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 
@@ -26,10 +26,7 @@ object ModalNodeProfile {
     def apply(node: Node): (Model, Seq[Cmd[AppMsg]]) =
       (
         Model(node, None),
-        Seq(
-          NodeDetails.fetch(node.id)
-            .map(Msg.toApp(Msg.NodeDetailsFetched(_)))
-        )
+        Seq(fetchNodeDetails(node.id))
       )
   }
 
@@ -43,6 +40,7 @@ object ModalNodeProfile {
 
     case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
+    case class SetNode(node: Node) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
@@ -61,7 +59,17 @@ object ModalNodeProfile {
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
         )
+
+      case Msg.SetNode(node) =>
+        (
+          model.copy(node = node),
+          Seq(fetchNodeDetails(node.id))
+        )
     }
+
+  private def fetchNodeDetails(id: Id[Node]): Cmd[AppMsg] =
+    NodeDetails.fetch(id)
+      .map(Msg.toApp(Msg.NodeDetailsFetched(_)))
 
   def apply(model: Model, dispatch: AppMsg => Unit)(implicit
       context: Context
@@ -80,7 +88,11 @@ object ModalNodeProfile {
             ToolButton(
               classes = "edit",
               tip = "Edit",
-              symbol = "edit"
+              symbol = "edit",
+              onClick = () =>
+                dispatch(
+                  Modal.Msg.OpenModal(Modal.NodeIcon()).toApp
+                )
             )
           }
         )

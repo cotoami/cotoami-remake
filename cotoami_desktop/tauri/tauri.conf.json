@@ -74,7 +74,8 @@
         "width": 1000,
         "height": 800,
         "hiddenTitle": true,
-        "titleBarStyle": "Overlay"
+        "titleBarStyle": "Overlay",
+        "fileDropEnabled": false
       }
     ]
   }

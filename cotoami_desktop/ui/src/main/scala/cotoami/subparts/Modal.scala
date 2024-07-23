@@ -36,6 +36,9 @@ object Modal {
       ModalNodeProfile.Model(node).pipe(r => (NodeProfile(r._1), r._2))
   }
 
+  case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())
+      extends Model
+
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
       this.close(modal.getClass()).modify(_.modals).using(modal +: _)
@@ -80,6 +83,7 @@ object Modal {
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
     case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
+    case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
   }
 
   def open(modal: Model): Cmd[AppMsg] =
@@ -88,7 +92,9 @@ object Modal {
   def close[M <: Model](modalType: Class[M]): Cmd[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
-  def update(msg: Msg, model: AppModel): (AppModel, Seq[Cmd[AppMsg]]) = {
+  def update(msg: Msg, model: AppModel)(implicit
+      context: Context
+  ): (AppModel, Seq[Cmd[AppMsg]]) = {
     val stack = model.modalStack
     (msg match {
       case Msg.OpenModal(modal, cmds) =>
@@ -137,6 +143,19 @@ object Modal {
             case (modal, cmds) => (model.updateModal(NodeProfile(modal)), cmds)
           }
         }
+
+      case Msg.NodeIconMsg(modalMsg) =>
+        stack.get[NodeIcon].map { case NodeIcon(modalModel) =>
+          ModalNodeIcon.update(modalMsg, modalModel).pipe {
+            case (modal, nodes, cmds) =>
+              (
+                model
+                  .updateModal(NodeIcon(modal))
+                  .modify(_.domain.nodes).setTo(nodes),
+                cmds
+              )
+          }
+        }
     }).getOrElse((model, Seq.empty))
   }
 
@@ -161,6 +180,9 @@ object Modal {
 
       case NodeProfile(modalModel) =>
         Some(ModalNodeProfile(modalModel, dispatch))
+
+      case NodeIcon(modalModel) =>
+        Some(ModalNodeIcon(modalModel, dispatch))
     }
 
   def view[M <: Model](

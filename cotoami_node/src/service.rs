@@ -136,7 +136,7 @@ impl Request {
     pub fn command(self) -> Command { self.command }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,
@@ -148,7 +148,10 @@ pub enum Command {
     ChunkOfChanges { from: i64 },
 
     /// Request to change the icon of the local node and and return a [Node] if succeeded.
-    SetLocalNodeIcon { icon: Bytes },
+    SetLocalNodeIcon {
+        #[debug(skip)]
+        icon: Bytes,
+    },
 
     /// Request a [NodeDetails] of the given ID.
     NodeDetails { id: Id<Node> },

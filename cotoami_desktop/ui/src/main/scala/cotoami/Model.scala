@@ -184,20 +184,20 @@ case class Model(
     // CreateLink
     for (linkJson <- change.CreateLink.toOption) {
       val link = Link(linkJson)
-      return (this.modify(_.domain.links).using(_.add(link)), Seq.empty)
+      return (this.modify(_.domain.links).using(_.put(link)), Seq.empty)
     }
 
     // UpsertNode
     for (nodeJson <- change.UpsertNode.toOption) {
       val node = Node(nodeJson)
-      return (this.modify(_.domain.nodes).using(_.add(node)), Seq.empty)
+      return (this.modify(_.domain.nodes).using(_.put(node)), Seq.empty)
     }
 
     // CreateNode
     for (createNodeJson <- change.CreateNode.toOption) {
       val model =
         this.modify(_.domain.nodes)
-          .using(_.add(Node(createNodeJson.node)))
+          .using(_.put(Node(createNodeJson.node)))
       return Nullable.toOption(createNodeJson.root)
         .map(model.postCotonoma(_))
         .getOrElse((model, Seq.empty))
@@ -208,7 +208,7 @@ case class Model(
 
   private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
     val coto = Coto(cotoJson, true)
-    val cotos = this.domain.cotos.add(coto)
+    val cotos = this.domain.cotos.put(coto)
     val (cotonomas, cmds) =
       coto.postedInId.map(this.domain.cotonomas.updated(_))
         .getOrElse(this.domain.cotonomas, Seq.empty)

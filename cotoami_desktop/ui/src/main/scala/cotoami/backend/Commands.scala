@@ -17,6 +17,9 @@ object Commands {
 
   val LocalNode = jso(LocalNode = null)
 
+  def SetLocalNodeIcon(icon: String) =
+    jso(SetLocalNodeIcon = jso(icon = icon))
+
   def NodeDetails(id: Id[Node]) =
     jso(NodeDetails = jso(id = id.uuid))
 

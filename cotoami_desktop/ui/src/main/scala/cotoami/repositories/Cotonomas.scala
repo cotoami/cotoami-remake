@@ -31,29 +31,29 @@ case class Cotonomas(
 
   def contains(id: Id[Cotonoma]): Boolean = this.map.contains(id)
 
-  def add(cotonoma: Cotonoma): Cotonomas = {
+  def put(cotonoma: Cotonoma): Cotonomas = {
     this
       .modify(_.map).using(_ + (cotonoma.id -> cotonoma))
       .modify(_.mapByCotoId).using(_ + (cotonoma.cotoId -> cotonoma.id))
   }
 
-  def addAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
-    cotonomas.foldLeft(this)(_ add _)
+  def putAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
+    cotonomas.foldLeft(this)(_ put _)
 
   def importFrom(data: CotosRelatedData): Cotonomas =
     this
-      .addAll(data.postedIn)
-      .addAll(data.asCotonomas)
+      .putAll(data.postedIn)
+      .putAll(data.asCotonomas)
 
   def importFrom(graph: CotoGraph): Cotonomas =
-    graph.rootCotonoma.map(this.add).getOrElse(this)
+    graph.rootCotonoma.map(this.put).getOrElse(this)
       .importFrom(graph.cotosRelatedData)
 
   def setCotonomaDetails(details: CotonomaDetails): Cotonomas = {
     this
-      .add(details.cotonoma)
-      .addAll(details.supers)
-      .addAll(details.subs.rows)
+      .put(details.cotonoma)
+      .putAll(details.supers)
+      .putAll(details.subs.rows)
       .select(Some(details.cotonoma.id))
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
       .modify(_.subIds).using(_.appendPage(details.subs))
@@ -91,7 +91,7 @@ case class Cotonomas(
 
   def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
-      .addAll(page.rows)
+      .putAll(page.rows)
       .modify(_.subsLoading).setTo(false)
       .modify(_.subIds).using(_.appendPage(page))
 
@@ -99,13 +99,13 @@ case class Cotonomas(
 
   def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
     this
-      .addAll(page.rows)
+      .putAll(page.rows)
       .modify(_.recentLoading).setTo(false)
       .modify(_.recentIds).using(_.appendPage(page))
 
   def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
     this
-      .add(cotonoma)
+      .put(cotonoma)
       .modify(_.recentIds).using(_.prependId(cotonoma.id))
       .modify(_.subIds).using(subIds =>
         (cotonomaCoto.postedInId, this.selectedId) match {
@@ -158,7 +158,7 @@ object Cotonomas {
     msg match {
       case Msg.OneFetched(Right(cotonoma)) =>
         (
-          model.add(cotonoma),
+          model.put(cotonoma),
           Seq(log_info("Cotonoma fetched.", Some(cotonoma.name)))
         )
 

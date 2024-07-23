@@ -81,14 +81,14 @@ case class Domain(
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
-      .modify(_.links).using(_.addAll(cotos.outgoingLinks))
+      .modify(_.links).using(_.putAll(cotos.outgoingLinks))
 
   def importCotoGraph(graph: CotoGraph): Domain =
     this
       .modify(_.graphLoading).using(_ - graph.rootCotoId)
       .modify(_.cotos).using(_.importFrom(graph))
       .modify(_.cotonomas).using(_.importFrom(graph))
-      .modify(_.links).using(_.addAll(graph.links))
+      .modify(_.links).using(_.putAll(graph.links))
 
   lazy val recentCotonomas: Seq[Cotonoma] = {
     val rootId = this.currentRootCotonomaId

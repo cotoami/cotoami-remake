@@ -13,7 +13,7 @@ case class Links(
 ) {
   def get(id: Id[Link]): Option[Link] = this.map.get(id)
 
-  def add(link: Link): Links = {
+  def put(link: Link): Links = {
     this
       .modify(_.map).using(_ + (link.id -> link))
       .modify(_.mapBySourceCotoId).using(map => {
@@ -30,7 +30,7 @@ case class Links(
       })
   }
 
-  def addAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ add _)
+  def putAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ put _)
 
   def linked(from: Id[Coto], to: Id[Coto]): Boolean =
     this.mapByTargetCotoId.get(to).map(

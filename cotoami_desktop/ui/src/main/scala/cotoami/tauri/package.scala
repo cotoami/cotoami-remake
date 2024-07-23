@@ -12,7 +12,9 @@ import fui.{Cmd, Sub}
 
 package object tauri {
 
-  def invokeCommand[T, E](
+  // To distinguish a normal backend error from a system error during command invocation,
+  // which will be returned as a string from Tauri, a backend error must be defined as an Object.
+  def invokeCommand[T, E <: js.Object](
       command: String,
       args: js.Object = js.Dynamic.literal()
   ): Cmd[Either[E, T]] =
@@ -27,8 +29,14 @@ package object tauri {
               cb(Right(Some(Right(t))))
             }
             case Failure(ex: js.JavaScriptException) => {
-              val error = ex.exception.asInstanceOf[E]
-              cb(Right(Some(Left(error))))
+              if (js.typeOf(ex.exception) == "object") {
+                val error = ex.exception.asInstanceOf[E]
+                cb(Right(Some(Left(error))))
+              } else {
+                // Tauri returns a string as an error when a system error occurred
+                // during command invocation (ex. args deserialization error).
+                cb(Left(new RuntimeException(ex.exception.toString())))
+              }
             }
             case Failure(throwable) => {
               // should be unreachable
