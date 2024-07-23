@@ -22,8 +22,8 @@ object ReactEasyCrop extends js.Object
 
   @js.native
   trait Position extends js.Object {
-    val x: Int = js.native
-    val y: Int = js.native
+    val x: Double = js.native
+    val y: Double = js.native
   }
 
   @js.native
