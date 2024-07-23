@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.scalajs.js
 import org.scalajs.dom
 
 import slinky.core._
@@ -10,9 +11,10 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Msg => AppMsg}
+import cotoami.{log_error, Msg => AppMsg}
 import cotoami.components.EasyCrop
 import cotoami.components.EasyCrop.Area
+import cotoami.backend.{ErrorJson, Node}
 import cotoami.subparts.{InputImage, Modal}
 
 object ModalNodeIcon {
@@ -20,7 +22,8 @@ object ModalNodeIcon {
   case class Model(
       sourceImage: Option[dom.Blob] = None,
       croppedImage: Option[dom.Blob] = None,
-      saving: Boolean = false
+      saving: Boolean = false,
+      error: Option[String] = None
   )
 
   sealed trait Msg {
@@ -33,6 +36,8 @@ object ModalNodeIcon {
       tagger andThen Modal.Msg.NodeIconMsg andThen AppMsg.ModalMsg
 
     case class ImageInput(image: dom.Blob) extends Msg
+    case object Save extends Msg
+    case class Saved(result: Either[ErrorJson, Node]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
@@ -42,12 +47,31 @@ object ModalNodeIcon {
           model.copy(sourceImage = Some(image), croppedImage = Some(image)),
           Seq.empty
         )
+
+      case Msg.Save =>
+        (
+          model.copy(saving = true),
+          Seq(
+          )
+        )
+
+      case Msg.Saved(Right(node)) =>
+        (model.copy(saving = false), Seq.empty)
+
+      case Msg.Saved(Left(e)) =>
+        (
+          model.copy(error = Some(e.default_message)),
+          Seq(
+            log_error("Icon saving error.", Some(js.JSON.stringify(e)))
+          )
+        )
     }
 
   def apply(model: Model, dispatch: AppMsg => Unit): ReactElement =
     Modal.view(
       elementClasses = "image",
-      closeButton = Some((classOf[Modal.NodeIcon], dispatch))
+      closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
+      error = model.error
     )(
       "Change Node Icon"
     )(
