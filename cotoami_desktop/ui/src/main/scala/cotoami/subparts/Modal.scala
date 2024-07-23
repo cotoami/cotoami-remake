@@ -36,10 +36,8 @@ object Modal {
       ModalNodeProfile.Model(node).pipe(r => (NodeProfile(r._1), r._2))
   }
 
-  case class Image(model: ModalImage.Model) extends Model
-  object Image {
-    def apply(title: String): Image = Image(ModalImage.Model(title))
-  }
+  case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())
+      extends Model
 
   case class Stack(modals: Seq[Model] = Seq.empty) {
     def open[M <: Model: ClassTag](modal: M): Stack =
@@ -85,7 +83,7 @@ object Modal {
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
     case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
-    case class ImageMsg(msg: ModalImage.Msg) extends Msg
+    case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
   }
 
   def open(modal: Model): Cmd[AppMsg] =
@@ -144,10 +142,11 @@ object Modal {
           }
         }
 
-      case Msg.ImageMsg(modalMsg) =>
-        stack.get[Image].map { case Image(modalModel) =>
-          ModalImage.update(modalMsg, modalModel).pipe { case (modal, cmds) =>
-            (model.updateModal(Image(modal)), cmds)
+      case Msg.NodeIconMsg(modalMsg) =>
+        stack.get[NodeIcon].map { case NodeIcon(modalModel) =>
+          ModalNodeIcon.update(modalMsg, modalModel).pipe {
+            case (modal, cmds) =>
+              (model.updateModal(NodeIcon(modal)), cmds)
           }
         }
     }).getOrElse((model, Seq.empty))
@@ -175,8 +174,8 @@ object Modal {
       case NodeProfile(modalModel) =>
         Some(ModalNodeProfile(modalModel, dispatch))
 
-      case Image(modalModel) =>
-        Some(ModalImage(modalModel, dispatch))
+      case NodeIcon(modalModel) =>
+        Some(ModalNodeIcon(modalModel, dispatch))
     }
 
   def view[M <: Model](
