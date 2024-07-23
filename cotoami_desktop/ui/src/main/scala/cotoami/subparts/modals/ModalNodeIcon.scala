@@ -46,7 +46,7 @@ object ModalNodeIcon {
     )(
       model.image.map(image => {
         div()(
-          SectionCrop(image = image)
+          SectionCrop(imageUrl = dom.URL.createObjectURL(image))
         )
       }).getOrElse(
         InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
@@ -55,22 +55,23 @@ object ModalNodeIcon {
 
   @react object SectionCrop {
     case class Props(
-        image: dom.Blob
+        imageUrl: String
     )
 
     val component = FunctionalComponent[Props] { props =>
       val (crop, setCrop) = useState(EasyCrop.position(0, 0))
-      val url = dom.URL.createObjectURL(props.image)
+      println("render!")
+
+      useEffect(
+        () => { () => dom.URL.revokeObjectURL(props.imageUrl) },
+        Seq.empty
+      )
 
       section(className := "crop")(
         EasyCrop(
-          image = url,
+          image = props.imageUrl,
           crop = crop,
           onCropChange = setCrop,
-          onMediaLoaded = Some(() => {
-            println("onMediaLoaded")
-            dom.URL.revokeObjectURL(url)
-          }),
           aspect = Some(1.0)
         )
       )
