@@ -11,18 +11,18 @@ case class Cotos(
   def getOriginal(coto: Coto): Coto =
     coto.repostOfId.flatMap(this.get).getOrElse(coto)
 
-  def add(coto: Coto): Cotos =
+  def put(coto: Coto): Cotos =
     this.modify(_.map).using(_ + (coto.id -> coto))
 
-  def addAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ add _)
+  def putAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ put _)
 
   def importFrom(cotos: PaginatedCotos): Cotos =
     this
-      .addAll(cotos.page.rows)
-      .addAll(cotos.relatedData.originals)
+      .putAll(cotos.page.rows)
+      .putAll(cotos.relatedData.originals)
 
   def importFrom(graph: CotoGraph): Cotos =
     this
-      .addAll(graph.cotos)
-      .addAll(graph.cotosRelatedData.originals)
+      .putAll(graph.cotos)
+      .putAll(graph.cotosRelatedData.originals)
 }

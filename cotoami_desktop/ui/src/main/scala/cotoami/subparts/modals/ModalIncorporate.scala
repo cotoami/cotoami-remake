@@ -107,7 +107,7 @@ object ModalIncorporate {
               connectingError = None,
               nodeSession = Some(session)
             ),
-            nodes.add(session.server),
+            nodes.put(session.server),
             Seq.empty
           )
       }

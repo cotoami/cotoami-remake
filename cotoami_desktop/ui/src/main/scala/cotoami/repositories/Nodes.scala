@@ -18,7 +18,7 @@ case class Nodes(
 
   def contains(id: Id[Node]): Boolean = this.map.contains(id)
 
-  def add(node: Node): Nodes =
+  def put(node: Node): Nodes =
     this.modify(_.map).using(_ + (node.id -> node))
 
   def local: Option[Node] = this.localId.flatMap(this.get)
