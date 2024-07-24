@@ -19,7 +19,9 @@ object ModalOperateAs {
       switchingTo: Node,
       switching: Boolean = false,
       switchingError: Option[String] = None
-  )
+  ) {
+    def readyToSwitch: Boolean = !this.switching
+  }
 
   sealed trait Msg {
     def toApp: AppMsg = Modal.Msg.OperateAsMsg(this).pipe(AppMsg.ModalMsg)
@@ -101,6 +103,7 @@ object ModalOperateAs {
         )("Cancel"),
         button(
           `type` := "button",
+          disabled := !model.readyToSwitch,
           aria - "busy" := model.switching.toString(),
           onClick := (e => dispatch(Msg.Switch.toApp))
         )("Switch")

@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import scala.util.{Failure, Success}
 import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom
@@ -21,11 +22,15 @@ import cotoami.subparts.{InputImage, Modal}
 object ModalNodeIcon {
 
   case class Model(
-      sourceImage: Option[dom.Blob] = None,
+      sourceImage: Option[(dom.Blob, String)] = None,
       croppedImage: Option[dom.Blob] = None,
+      cropping: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
-  )
+  ) {
+    def readyToSave: Boolean =
+      this.croppedImage.isDefined && !this.cropping && !this.saving
+  }
 
   sealed trait Msg {
     def toApp: AppMsg =
@@ -37,6 +42,8 @@ object ModalNodeIcon {
       tagger andThen Modal.Msg.NodeIconMsg andThen AppMsg.ModalMsg
 
     case class ImageInput(image: dom.Blob) extends Msg
+    case object CropStarted extends Msg
+    case class ImageCropped(result: Either[Throwable, dom.Blob]) extends Msg
     case object Save extends Msg
     case class Saved(result: Either[ErrorJson, Node]) extends Msg
   }
@@ -47,8 +54,24 @@ object ModalNodeIcon {
     val default = (model, context.domain.nodes, Seq.empty)
     msg match {
       case Msg.ImageInput(image) =>
+        default.copy(_1 =
+          model.copy(sourceImage = Some(image, dom.URL.createObjectURL(image)))
+        )
+
+      case Msg.CropStarted =>
+        default.copy(_1 = model.copy(cropping = true))
+
+      case Msg.ImageCropped(Right(image)) =>
+        default.copy(_1 =
+          model.copy(cropping = false, croppedImage = Some(image))
+        )
+
+      case Msg.ImageCropped(Left(t)) =>
         default.copy(
-          _1 = model.copy(sourceImage = Some(image), croppedImage = Some(image))
+          _1 = model.copy(cropping = false),
+          _3 = Seq(
+            log_error("Icon cropping error.", Some(t.toString()))
+          )
         )
 
       case Msg.Save =>
@@ -94,19 +117,22 @@ object ModalNodeIcon {
     )(
       "Change Node Icon"
     )(
-      model.sourceImage.map(divPreview(_, model, dispatch))
+      model.sourceImage.map(image => divPreview(image._2, model, dispatch))
         .getOrElse(
           InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
         )
     )
 
   private def divPreview(
-      image: dom.Blob,
+      imageUrl: String,
       model: Model,
       dispatch: AppMsg => Unit
   ): ReactElement =
     div(className := "preview")(
-      SectionCrop(imageUrl = dom.URL.createObjectURL(image)),
+      SectionCrop(
+        imageUrl = imageUrl,
+        dispatch = dispatch
+      ),
       div(className := "buttons")(
         button(
           `type` := "button",
@@ -117,6 +143,7 @@ object ModalNodeIcon {
         )("Cancel"),
         button(
           `type` := "button",
+          disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString(),
           onClick := (_ => dispatch(Msg.Save.toApp))
         )("OK")
@@ -124,8 +151,12 @@ object ModalNodeIcon {
     )
 
   @react object SectionCrop {
+    // https://github.com/scala-js/scala-js-macrotask-executor
+    import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
     case class Props(
-        imageUrl: String
+        imageUrl: String,
+        dispatch: AppMsg => Unit
     )
 
     val component = FunctionalComponent[Props] { props =>
@@ -144,7 +175,16 @@ object ModalNodeIcon {
           aspect = Some(1.0),
           onCropComplete =
             Some((croppedArea: Area, croppedAreaPixels: Area) => {
-              //
+              props.dispatch(Msg.CropStarted.toApp)
+              FixedAspectCrop.getCroppedImg(
+                props.imageUrl,
+                croppedAreaPixels
+              ).onComplete {
+                case Success(blob) =>
+                  props.dispatch(Msg.ImageCropped(Right(blob)).toApp)
+                case Failure(t) =>
+                  props.dispatch(Msg.ImageCropped(Left(t)).toApp)
+              }
             })
         )
       )
