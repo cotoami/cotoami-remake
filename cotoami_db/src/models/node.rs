@@ -67,7 +67,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub const ICON_MAX_LENGTH: usize = 5_000_000; // 5MB
+    pub const ICON_MAX_SIZE: u32 = 400; // 400px * 400px
     pub const NAME_MAX_LENGTH: usize = Cotonoma::NAME_MAX_LENGTH;
 
     pub fn has_root_cotonoma(&self) -> bool { self.root_cotonoma_id.is_some() }
@@ -109,7 +109,6 @@ impl Node {
 #[diesel(table_name = nodes)]
 pub struct NewNode<'a> {
     uuid: Id<Node>,
-    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     icon: Vec<u8>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     name: &'a str,
@@ -168,7 +167,6 @@ pub struct ImportNode<'a> {
 #[diesel(table_name = nodes, primary_key(uuid))]
 pub struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
-    #[validate(length(max = "Node::ICON_MAX_LENGTH"))]
     pub icon: &'a [u8],
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     pub name: &'a str,
@@ -266,16 +264,13 @@ pub trait Principal {
 /////////////////////////////////////////////////////////////////////////////
 
 /// Generates a new identicon from an input value.
-///
-/// The defaults are:
-/// - border: 50
-/// - size: 5
-/// - scale: 500
-/// - background_color: (240, 240, 240)
-/// - mirrored: true
-/// <https://github.com/conways-glider/identicon-rs/blob/main/src/lib.rs#L54>
 fn generate_identicon(id: &str) -> Result<Vec<u8>> {
-    let icon_binary = Identicon::new(id).export_png_data()?;
+    // the image size is `scale + ( 2 * border )`
+    // 330 + ( 2 * 35 ) = 400px
+    let icon_binary = Identicon::new(id)
+        .set_scale(330)?
+        .set_border(35)
+        .export_png_data()?;
     Ok(icon_binary)
 }
 

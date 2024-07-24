@@ -246,7 +246,7 @@ fn init_as_node() -> Result<()> {
 
 fn assert_icon_generated(node: &Node) -> Result<()> {
     let image = image::load_from_memory_with_format(node.icon.as_ref(), ImageFormat::Png)?;
-    assert_eq!(image.width(), 600);
-    assert_eq!(image.height(), 600);
+    assert_that!(image.width(), eq(Node::ICON_MAX_SIZE));
+    assert_that!(image.height(), eq(Node::ICON_MAX_SIZE));
     Ok(())
 }
