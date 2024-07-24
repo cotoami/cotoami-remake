@@ -5,6 +5,7 @@ import scala.concurrent._
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import org.scalajs.dom
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
 import slinky.core.annotations.react
@@ -38,9 +39,6 @@ import slinky.core.annotations.react
   def position(x: Int, y: Int): Position =
     js.Dynamic.literal(x = x, y = y).asInstanceOf[Position]
 
-  // https://github.com/scala-js/scala-js-macrotask-executor
-  import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-
   def getCroppedImg(imageUrl: String, crop: Area): Future[dom.Blob] = {
     val promise = Promise[dom.Blob]()
     createImage(imageUrl).onComplete {
@@ -56,7 +54,7 @@ import slinky.core.annotations.react
           ctx2d.drawImage(
             image,
 
-            // the crop are in the image
+            // the cropped area in the image
             crop.x,
             crop.y,
             crop.width,
@@ -92,7 +90,14 @@ import slinky.core.annotations.react
 
     var image = new dom.Image()
     image.onload = _ => promise.success(image)
-    image.addEventListener("error", e => promise.failure(e))
+    image.addEventListener(
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement#errors
+      "error",
+      (_: dom.Event) =>
+        promise.failure(
+          new IllegalArgumentException(s"Couldn't load the image: ${url}")
+        )
+    )
     // needed to avoid cross-origin issues on CodeSandbox
     image.setAttribute("crossOrigin", "anonymous")
     image.src = url
