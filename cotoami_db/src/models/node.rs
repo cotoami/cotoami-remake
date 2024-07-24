@@ -1,5 +1,7 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
+use std::{borrow::Cow, io::Cursor};
+
 use anyhow::{anyhow, bail, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
@@ -8,6 +10,8 @@ use argon2::{
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use identicon_rs::Identicon;
+use image::imageops::FilterType;
+use tracing::debug;
 use validator::Validate;
 
 use crate::{
@@ -40,14 +44,14 @@ pub mod server;
 )]
 #[diesel(primary_key(uuid))]
 pub struct Node {
-    /// Universally unique node ID
+    /// Universally unique node ID.
     pub uuid: Id<Node>,
 
-    /// SQLite rowid (so-called "integer primary key")
+    /// SQLite rowid (so-called "integer primary key").
     #[serde(skip_serializing, skip_deserializing)]
     pub rowid: i64,
 
-    /// Icon image
+    /// Bytes of a PNG image for the icon.
     #[debug(skip)]
     pub icon: Bytes,
 
@@ -56,13 +60,13 @@ pub struct Node {
     /// The value will be an empty string if `root_cotonoma_id` is None.
     pub name: String,
 
-    /// UUID of the root cotonoma of this node
+    /// UUID of the root cotonoma of this node.
     pub root_cotonoma_id: Option<Id<Cotonoma>>,
 
-    /// Version of node info for synchronizing among databases
+    /// Version of node info for synchronizing among databases.
     pub version: i32,
 
-    /// Creation date of this node
+    /// Creation date of this node.
     pub created_at: NaiveDateTime,
 }
 
@@ -77,7 +81,7 @@ impl Node {
     pub fn to_update(&self) -> UpdateNode {
         UpdateNode {
             uuid: &self.uuid,
-            icon: self.icon.as_ref(),
+            icon: Cow::from(self.icon.as_ref()),
             name: &self.name,
             root_cotonoma_id: self.root_cotonoma_id.as_ref(),
             version: self.version + 1, // increment the version
@@ -167,11 +171,38 @@ pub struct ImportNode<'a> {
 #[diesel(table_name = nodes, primary_key(uuid))]
 pub struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
-    pub icon: &'a [u8],
+    icon: Cow<'a, [u8]>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
     pub name: &'a str,
     pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,
     version: i32,
+}
+
+impl<'a> UpdateNode<'a> {
+    pub fn set_icon(&mut self, icon: &'a [u8]) -> Result<()> {
+        let mut image = image::load_from_memory(icon)?;
+
+        // Resize the icon if it is larger than the max size.
+        if image.width() > Node::ICON_MAX_SIZE || image.height() > Node::ICON_MAX_SIZE {
+            debug!(
+                "Resizing an icon image ({} * {}) ...",
+                image.width(),
+                image.height()
+            );
+            image = image.resize(
+                Node::ICON_MAX_SIZE,
+                Node::ICON_MAX_SIZE,
+                FilterType::Lanczos3,
+            );
+        }
+
+        // Save the image as PNG.
+        let mut png_bytes: Vec<u8> = Vec::new();
+        image.write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)?;
+        self.icon = Cow::from(png_bytes);
+
+        Ok(())
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -3,6 +3,7 @@ use chrono::{offset::Utc, Duration};
 use common::assert_approximately_now;
 use cotoami_db::prelude::*;
 use googletest::prelude::*;
+use identicon_rs::Identicon;
 use image::ImageFormat;
 use tempfile::tempdir;
 
@@ -240,6 +241,37 @@ fn init_as_node() -> Result<()> {
             })
         })
     );
+
+    Ok(())
+}
+
+#[test]
+fn set_icon() -> Result<()> {
+    // setup
+    let root_dir = tempdir()?;
+    let db = Database::new(&root_dir)?;
+    let ds = db.new_session()?;
+    let ((_, node), _) = ds.init_as_node(Some("My Node"), None)?;
+    let operator = db.globals().local_node_as_operator()?;
+
+    // when
+    let new_icon = Identicon::new("test")
+        .set_scale(1000)?
+        .set_border(100)
+        .export_jpeg_data()?;
+    let (new_node, _) = ds.set_local_node_icon(new_icon.as_ref(), &operator)?;
+
+    // then
+    assert_that!(new_node.icon, not(eq(node.icon)));
+
+    assert_that!(
+        image::guess_format(new_node.icon.as_ref()),
+        ok(eq(ImageFormat::Png))
+    );
+
+    let saved_image = image::load_from_memory(new_node.icon.as_ref())?;
+    assert_that!(saved_image.width(), eq(Node::ICON_MAX_SIZE));
+    assert_that!(saved_image.height(), eq(Node::ICON_MAX_SIZE));
 
     Ok(())
 }

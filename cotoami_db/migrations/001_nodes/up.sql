@@ -16,7 +16,7 @@ CREATE TABLE nodes (
   -- This serial number is used to return nodes in registration order.
   rowid INTEGER NOT NULL PRIMARY KEY,
 
-  -- Icon image.
+  -- Bytes of a PNG image for the Node icon.
   icon BLOB NOT NULL,
 
   -- Display name.

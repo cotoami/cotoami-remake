@@ -118,7 +118,7 @@ pub(crate) fn set_icon<'a>(
     composite_op::<WritableConn, _, _>(move |ctx| {
         let node = try_get(id).run(ctx)??;
         let mut update_node = node.to_update();
-        update_node.icon = icon;
+        update_node.set_icon(icon)?;
         update(&update_node).run(ctx)
     })
 }
