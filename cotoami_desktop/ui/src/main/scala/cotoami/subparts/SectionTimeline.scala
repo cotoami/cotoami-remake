@@ -195,12 +195,6 @@ object SectionTimeline {
           tip = "Filter",
           symbol = "filter_list"
         ),
-        ToolButton(
-          classes = "calendar",
-          tip = "Calendar",
-          symbol = "calendar_month",
-          onClick = (() => dispatch(Msg.OpenCalendar.toApp))
-        ),
         model.query.map(query =>
           div(className := "search")(
             input(

@@ -19,8 +19,7 @@ import cotoami.components.{
   materialSymbol,
   optionalClasses,
   ScrollArea,
-  SplitPane,
-  ToolButton
+  SplitPane
 }
 
 object FormCoto {
@@ -541,17 +540,6 @@ object FormCoto {
             "Cotonoma"
           )
         )
-      ),
-      ToolButton(
-        classes = "image",
-        tip = "Image",
-        disabled = !model.form.isInstanceOf[CotoForm],
-        symbol = "image"
-      ),
-      ToolButton(
-        classes = "location",
-        tip = "Location",
-        symbol = "location_on"
       )
     )
 
