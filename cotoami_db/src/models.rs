@@ -5,10 +5,12 @@ use std::{
     fmt,
     fmt::{Debug, Display},
     hash::{Hash, Hasher},
+    io::Cursor,
     marker::PhantomData,
     str::FromStr,
 };
 
+use anyhow::Result;
 use derive_new::new;
 use diesel::{
     backend::Backend,
@@ -19,7 +21,9 @@ use diesel::{
     sqlite::Sqlite,
     FromSqlRow,
 };
+use image::{imageops::FilterType, ImageFormat};
 use serde::{de, ser, Deserializer};
+use tracing::debug;
 use uuid::Uuid;
 
 use self::{
@@ -326,6 +330,34 @@ impl ClientSession {
             Self::ParentNode(parent) => parent.node_id,
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Utilities
+/////////////////////////////////////////////////////////////////////////////
+
+fn resize_image(image: &[u8], max_size: u32, format: Option<ImageFormat>) -> Result<Vec<u8>> {
+    let format = if let Some(format) = format {
+        format
+    } else {
+        image::guess_format(image)?
+    };
+    let mut image = image::load_from_memory(image)?;
+
+    // Resize the image if it is larger than the max_size.
+    if image.width() > max_size || image.height() > max_size {
+        debug!(
+            "Resizing an image ({} * {}) to fit within the bounds ({max_size})",
+            image.width(),
+            image.height()
+        );
+        image = image.resize(max_size, max_size, FilterType::Lanczos3);
+    }
+
+    // Return the bytes of the resized image.
+    let mut bytes: Vec<u8> = Vec::new();
+    image.write_to(&mut Cursor::new(&mut bytes), format)?;
+    Ok(bytes)
 }
 
 /////////////////////////////////////////////////////////////////////////////

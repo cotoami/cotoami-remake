@@ -1,6 +1,6 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
-use std::{borrow::Cow, io::Cursor};
+use std::borrow::Cow;
 
 use anyhow::{anyhow, bail, Result};
 use argon2::{
@@ -10,7 +10,6 @@ use argon2::{
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use identicon_rs::Identicon;
-use image::imageops::FilterType;
 use tracing::debug;
 use validator::Validate;
 
@@ -180,27 +179,9 @@ pub struct UpdateNode<'a> {
 
 impl<'a> UpdateNode<'a> {
     pub fn set_icon(&mut self, icon: &'a [u8]) -> Result<()> {
-        let mut image = image::load_from_memory(icon)?;
-
-        // Resize the icon if it is larger than the max size.
-        if image.width() > Node::ICON_MAX_SIZE || image.height() > Node::ICON_MAX_SIZE {
-            debug!(
-                "Resizing an icon image ({} * {}) ...",
-                image.width(),
-                image.height()
-            );
-            image = image.resize(
-                Node::ICON_MAX_SIZE,
-                Node::ICON_MAX_SIZE,
-                FilterType::Lanczos3,
-            );
-        }
-
-        // Save the image as PNG.
-        let mut png_bytes: Vec<u8> = Vec::new();
-        image.write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)?;
-        self.icon = Cow::from(png_bytes);
-
+        let resized =
+            super::resize_image(icon, Node::ICON_MAX_SIZE, Some(image::ImageFormat::Png))?;
+        self.icon = Cow::from(resized);
         Ok(())
     }
 }
