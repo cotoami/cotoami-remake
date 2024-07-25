@@ -63,27 +63,29 @@ object ModalIncorporate {
 
   def update(
       msg: Msg,
-      model: Model,
-      nodes: Nodes
-  ): (Model, Nodes, Seq[Cmd[AppMsg]]) =
+      model: Model
+  )(implicit
+      context: Context
+  ): (Model, Nodes, Seq[Cmd[AppMsg]]) = {
+    val nodes = context.domain.nodes
+    val default = (model, nodes, Seq.empty)
     msg match {
       case Msg.HelpIntro(display) =>
-        (model.copy(helpIntro = display), nodes, Seq.empty)
+        default.copy(_1 = model.copy(helpIntro = display))
 
       case Msg.HelpConnect(display) =>
-        (model.copy(helpConnect = display), nodes, Seq.empty)
+        default.copy(_1 = model.copy(helpConnect = display))
 
       case Msg.NodeUrlInput(url) =>
-        (model.copy(nodeUrl = url), nodes, Seq.empty)
+        default.copy(_1 = model.copy(nodeUrl = url))
 
       case Msg.PasswordInput(password) =>
-        (model.copy(password = password), nodes, Seq.empty)
+        default.copy(_1 = model.copy(password = password))
 
       case Msg.Connect =>
-        (
-          model.copy(connecting = true, connectingError = None),
-          nodes,
-          Seq(
+        default.copy(
+          _1 = model.copy(connecting = true, connectingError = None),
+          _3 = Seq(
             ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
               .map(Msg.toApp(Msg.NodeConnected(_)))
           )
@@ -91,80 +93,73 @@ object ModalIncorporate {
 
       case Msg.NodeConnected(Right(session)) => {
         if (nodes.containsServer(session.server.id))
-          (
-            model.copy(
+          default.copy(
+            _1 = model.copy(
               connecting = false,
               connectingError =
                 Some("This node has already been registered as a server.")
-            ),
-            nodes,
-            Seq.empty
+            )
           )
         else
-          (
-            model.copy(
+          default.copy(
+            _1 = model.copy(
               connecting = false,
               connectingError = None,
               nodeSession = Some(session)
             ),
-            nodes.put(session.server),
-            Seq.empty
+            _2 = nodes.put(session.server)
           )
       }
 
       case Msg.NodeConnected(Left(e)) =>
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             connecting = false,
             connectingError = Some(e.default_message)
           ),
-          nodes,
-          Seq(
+          _3 = Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
         )
 
       case Msg.Cancel =>
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             connecting = false,
             connectingError = None,
             incorporatingError = None,
             nodeSession = None
-          ),
-          nodes,
-          Seq.empty
+          )
         )
 
       case Msg.Incorporate =>
-        (
-          model.copy(incorporating = true, incorporatingError = None),
-          nodes,
-          Seq(
+        default.copy(
+          _1 = model.copy(incorporating = true, incorporatingError = None),
+          _3 = Seq(
             Server.addServer(model.nodeUrl, model.password)
               .map(Msg.toApp(Msg.NodeIncorporated(_)))
           )
         )
 
       case Msg.NodeIncorporated(Right(server)) =>
-        (
-          model.copy(incorporating = false, incorporatingError = None),
-          nodes.addServer(server),
-          Seq(Modal.close(classOf[Modal.Incorporate]))
+        default.copy(
+          _1 = model.copy(incorporating = false, incorporatingError = None),
+          _2 = nodes.addServer(server),
+          _3 = Seq(Modal.close(classOf[Modal.Incorporate]))
         )
 
       case Msg.NodeIncorporated(Left(e)) =>
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             incorporating = false,
             incorporatingError = Some(e.default_message)
           ),
-          nodes,
-          Seq(
+          _3 = Seq(
             log_error("Node incorporating error.", Some(js.JSON.stringify(e)))
           )
         )
     }
+  }
 
   def apply(model: Model, dispatch: AppMsg => Unit)(implicit
       context: Context

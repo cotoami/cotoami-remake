@@ -112,7 +112,7 @@ object Modal {
 
       case Msg.IncorporateMsg(modalMsg) =>
         stack.get[Incorporate].map { case Incorporate(modalModel) =>
-          ModalIncorporate.update(modalMsg, modalModel, model.domain.nodes)
+          ModalIncorporate.update(modalMsg, modalModel)
             .pipe { case (modal, nodes, cmds) =>
               (
                 model
