@@ -11,4 +11,22 @@ package object components {
 
   def materialSymbol(name: String, classNames: String = ""): ReactElement =
     span(className := s"material-symbols ${classNames}")(name)
+
+  def toolButton(
+      symbol: String,
+      tip: String,
+      tipPlacement: String = "bottom",
+      classes: String = "",
+      disabled: Boolean = false,
+      onClick: () => Unit = (() => ())
+  ): ReactElement =
+    button(
+      className := s"default tool ${classes}",
+      data - "tooltip" := tip,
+      data - "placement" := tipPlacement,
+      slinky.web.html.disabled := disabled,
+      slinky.web.html.onClick := onClick
+    )(
+      materialSymbol(symbol)
+    )
 }

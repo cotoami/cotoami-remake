@@ -8,7 +8,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.backend.{Coto, ErrorJson, Id, Node, NodeDetails}
-import cotoami.components.ToolButton
+import cotoami.components.toolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 
 object ModalNodeProfile {
@@ -85,10 +85,10 @@ object ModalNodeProfile {
         section(className := "node-icon")(
           imgNode(model.node),
           Option.when(model.isOperatingNode()) {
-            ToolButton(
-              classes = "edit",
-              tip = "Edit",
+            toolButton(
               symbol = "edit",
+              tip = "Edit",
+              classes = "edit",
               onClick = () =>
                 dispatch(
                   Modal.Msg.OpenModal(Modal.NodeIcon()).toApp
@@ -128,10 +128,10 @@ object ModalNodeProfile {
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
-            ToolButton(
-              classes = "edit",
+            toolButton(
+              symbol = "edit",
               tip = "Edit",
-              symbol = "edit"
+              classes = "edit"
             )
           )
         }
@@ -150,10 +150,10 @@ object ModalNodeProfile {
           ),
           Option.when(model.isOperatingNode()) {
             div(className := "tools")(
-              ToolButton(
-                classes = "edit",
+              toolButton(
+                symbol = "edit",
                 tip = "Edit",
-                symbol = "edit"
+                classes = "edit"
               )
             )
           }

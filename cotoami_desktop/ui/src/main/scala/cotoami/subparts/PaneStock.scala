@@ -14,7 +14,7 @@ import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.models.UiState
 import cotoami.repositories.Domain
-import cotoami.components.{optionalClasses, ScrollArea, ToolButton}
+import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object PaneStock {
   final val PaneName = "PaneStock"
@@ -86,31 +86,31 @@ object PaneStock {
     val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
     section(className := "pinned-cotos header-and-body")(
       header(className := "tools")(
-        ToolButton(
+        toolButton(
+          symbol = "view_column",
+          tip = "Columns",
           classes = optionalClasses(
             Seq(
               ("view-columns", true),
               ("selected", inColumns)
             )
           ),
-          tip = "Columns",
-          symbol = "view_column",
           disabled = inColumns,
           onClick =
-            (() => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, true)))
+            () => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, true))
         ),
-        ToolButton(
+        toolButton(
+          symbol = "view_agenda",
+          tip = "Document",
           classes = optionalClasses(
             Seq(
               ("view-document", true),
               ("selected", !inColumns)
             )
           ),
-          tip = "Document",
-          symbol = "view_agenda",
           disabled = !inColumns,
           onClick =
-            (() => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, false)))
+            () => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, false))
         )
       ),
       div(
@@ -241,11 +241,11 @@ object PaneStock {
           ViewCoto.divClassifiedAs(coto, dispatch)
         ),
         div(className := "body")(
-          ToolButton(
-            classes = "unpin",
+          toolButton(
+            symbol = "push_pin",
             tip = "Unpin",
             tipPlacement = "right",
-            symbol = "push_pin"
+            classes = "unpin"
           ),
           ViewCoto.divContent(coto, dispatch)
         )
@@ -308,14 +308,13 @@ object PaneStock {
               aria - "busy" := "true"
             )()
           } else {
-            ToolButton(
-              classes = "fetch-links",
+            toolButton(
+              symbol = "view_headline",
               tip = "Display links",
               tipPlacement = "bottom",
-              symbol = "view_headline",
-              onClick = (
-                  () => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).toApp)
-              )
+              classes = "fetch-links",
+              onClick =
+                () => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).toApp)
             )
           }
         )
@@ -352,11 +351,11 @@ object PaneStock {
       ),
       article(className := "sub-coto coto")(
         header()(
-          ToolButton(
-            classes = "unlink",
+          toolButton(
+            symbol = "subdirectory_arrow_right",
             tip = "Unlink",
             tipPlacement = "right",
-            symbol = "subdirectory_arrow_right"
+            classes = "unlink"
           ),
           ViewCoto.divClassifiedAs(coto, dispatch)
         ),

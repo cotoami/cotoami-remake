@@ -20,8 +20,8 @@ import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
-  ScrollArea,
-  ToolButton
+  toolButton,
+  ScrollArea
 }
 
 object SectionTimeline {
@@ -190,10 +190,10 @@ object SectionTimeline {
   )(implicit context: Context): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
-        ToolButton(
-          classes = "filter",
+        toolButton(
+          symbol = "filter_list",
           tip = "Filter",
-          symbol = "filter_list"
+          classes = "filter"
         ),
         model.query.map(query =>
           div(className := "search")(
@@ -215,11 +215,11 @@ object SectionTimeline {
             )(materialSymbol("close"))
           )
         ).getOrElse(
-          ToolButton(
-            classes = "search",
-            tip = "Search",
+          toolButton(
             symbol = "search",
-            onClick = (() => dispatch(Msg.InitSearch.toApp))
+            tip = "Search",
+            classes = "search",
+            onClick = () => dispatch(Msg.InitSearch.toApp)
           )
         )
       ),

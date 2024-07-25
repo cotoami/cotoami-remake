@@ -11,8 +11,8 @@ import cotoami.repositories.{Cotonomas, ParentStatus}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
-  ScrollArea,
-  ToolButton
+  toolButton,
+  ScrollArea
 }
 
 object NavCotonomas {
@@ -169,10 +169,10 @@ object NavCotonomas {
           )
 
         }),
-        ToolButton(
-          classes = "settings",
-          tip = "Node settings",
+        toolButton(
           symbol = "settings",
+          tip = "Node settings",
+          classes = "settings",
           onClick = () =>
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
@@ -185,10 +185,10 @@ object NavCotonomas {
             domain.nodes.operatingAsChild(node.id)
               .map(_.asOwner).getOrElse(false)
         ) {
-          ToolButton(
-            classes = "operate",
-            tip = "Operate as",
+          toolButton(
             symbol = "switch_account",
+            tip = "Operate as",
+            classes = "operate",
             onClick = () =>
               dispatch(
                 Modal.Msg.OpenModal(

@@ -13,10 +13,10 @@ import cotoami.{Context, Msg => AppMsg}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
+  toolButton,
   Markdown,
   RehypePlugin,
-  RemarkPlugin,
-  ToolButton
+  RemarkPlugin
 }
 import cotoami.backend.{Coto, CotoContent, Link}
 import cotoami.repositories.Nodes
@@ -196,14 +196,13 @@ object ViewCoto {
   ): Option[ReactElement] =
     Option.when(coto.outgoingLinks > 0) {
       div(className := "links")(
-        ToolButton(
-          classes = "open-traversal",
+        toolButton(
+          symbol = "view_headline",
           tip = "Links",
           tipPlacement = tipPlacement,
-          symbol = "view_headline",
-          onClick = (
-              () => dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
-          )
+          classes = "open-traversal",
+          onClick =
+            () => dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
         )
       )
     }

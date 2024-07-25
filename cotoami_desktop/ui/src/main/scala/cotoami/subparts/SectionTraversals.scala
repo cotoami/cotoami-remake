@@ -19,8 +19,8 @@ import cotoami.repositories.{Domain, Links}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
-  ScrollArea,
-  ToolButton
+  toolButton,
+  ScrollArea
 }
 
 object SectionTraversals {
@@ -306,11 +306,11 @@ object SectionTraversals {
         )
       )(
         header()(
-          ToolButton(
-            classes = "unlink",
+          toolButton(
+            symbol = "subdirectory_arrow_right",
             tip = "Unlink",
             tipPlacement = "right",
-            symbol = "subdirectory_arrow_right"
+            classes = "unlink"
           ),
           ViewCoto.divClassifiedAs(coto, dispatch)
         ),
@@ -331,12 +331,12 @@ object SectionTraversals {
               coto.id
             ).toApp
             div(className := "traverse")(
-              ToolButton(
-                classes = "traverse",
+              toolButton(
+                symbol = "arrow_downward",
                 tip = "Traverse",
                 tipPlacement = "left",
-                symbol = "arrow_downward",
-                onClick = (() => dispatch(stepMsg))
+                classes = "traverse",
+                onClick = () => dispatch(stepMsg)
               )
             )
           }
