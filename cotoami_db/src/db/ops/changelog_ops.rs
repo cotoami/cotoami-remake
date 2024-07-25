@@ -211,7 +211,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             } => {
                 let coto = coto_ops::try_get(coto_id).run(ctx)??;
                 let mut update_coto = coto.edit(content, summary.as_deref());
-                update_coto.updated_at = *updated_at;
+                update_coto.updated_at = Some(*updated_at);
                 coto_ops::update(&update_coto).run(ctx)?;
             }
             Change::DeleteCoto {

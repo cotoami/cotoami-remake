@@ -4,6 +4,7 @@ use std::fmt::Display;
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -108,22 +109,12 @@ impl Coto {
 
     pub fn edit<'a>(&'a self, content: &'a str, summary: Option<&'a str>) -> UpdateCoto<'a> {
         let mut update_coto = self.to_update();
-        update_coto.content = Some(content);
-        update_coto.summary = crate::blank_to_none(summary);
+        update_coto.content = Some(Some(content));
+        update_coto.summary = Some(crate::blank_to_none(summary));
         update_coto
     }
 
-    pub fn to_update(&self) -> UpdateCoto {
-        UpdateCoto {
-            uuid: &self.uuid,
-            content: self.content.as_deref(),
-            summary: self.summary.as_deref(),
-            is_cotonoma: self.is_cotonoma,
-            repost_of_id: self.repost_of_id.as_ref(),
-            reposted_in_ids: self.reposted_in_ids.as_ref(),
-            updated_at: crate::current_datetime(),
-        }
-    }
+    pub fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub fn to_import(&self) -> NewCoto {
         NewCoto {
@@ -251,17 +242,30 @@ impl<'a> NewCoto<'a> {
 // UpdateCoto
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a coto for update
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = cotos, primary_key(uuid), treat_none_as_null = true)]
+/// A changeset of a coto for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = cotos, primary_key(uuid))]
 pub struct UpdateCoto<'a> {
     uuid: &'a Id<Coto>,
+
+    #[new(default)]
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    pub content: Option<&'a str>,
+    pub content: Option<Option<&'a str>>,
+
+    #[new(default)]
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    pub summary: Option<&'a str>,
-    pub is_cotonoma: bool,
-    pub repost_of_id: Option<&'a Id<Coto>>,
-    pub reposted_in_ids: Option<&'a Ids<Cotonoma>>,
-    pub updated_at: NaiveDateTime,
+    pub summary: Option<Option<&'a str>>,
+
+    #[new(default)]
+    pub is_cotonoma: Option<bool>,
+
+    #[new(default)]
+    pub repost_of_id: Option<Option<&'a Id<Coto>>>,
+
+    #[new(default)]
+    pub reposted_in_ids: Option<Option<&'a Ids<Cotonoma>>>,
+
+    #[new(default)]
+    pub updated_at: Option<NaiveDateTime>,
 }
