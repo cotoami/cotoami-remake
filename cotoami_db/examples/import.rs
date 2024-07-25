@@ -354,6 +354,8 @@ impl CotoJson {
             posted_in_id: self.posted_in_id,
             posted_by_id: node_id,
             content: self.content,
+            media_content: None,
+            media_type: None,
             summary: self.summary,
             is_cotonoma: self.as_cotonoma,
             repost_of_id: self.repost_id,

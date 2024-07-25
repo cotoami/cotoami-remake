@@ -7,12 +7,14 @@ use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{
-    cotonoma::Cotonoma,
-    node::{BelongsToNode, Node},
-    Id, Ids,
+use crate::{
+    models::{
+        cotonoma::Cotonoma,
+        node::{BelongsToNode, Node},
+        Bytes, Id, Ids,
+    },
+    schema::cotos,
 };
-use crate::schema::cotos;
 
 /////////////////////////////////////////////////////////////////////////////
 // Coto
@@ -20,7 +22,7 @@ use crate::schema::cotos;
 
 /// A row in `cotos` table
 #[derive(
-    Debug,
+    derive_more::Debug,
     Clone,
     PartialEq,
     Eq,
@@ -54,6 +56,13 @@ pub struct Coto {
     ///
     /// `None` if it is a repost.
     pub content: Option<String>,
+
+    /// Bytes of optional media content.
+    #[debug(skip)]
+    pub media_content: Option<Bytes>,
+
+    /// MIME type of the media content.
+    pub media_type: Option<String>,
 
     /// Optional summary of the content for compact display
     /// If this coto is a cotonoma, the summary should be the same as the cotonoma name.
