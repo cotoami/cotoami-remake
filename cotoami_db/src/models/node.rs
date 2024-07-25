@@ -1,13 +1,12 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
-use std::borrow::Cow;
-
 use anyhow::{anyhow, bail, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
 use tracing::debug;
@@ -77,15 +76,7 @@ impl Node {
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub fn to_update(&self) -> UpdateNode {
-        UpdateNode {
-            uuid: &self.uuid,
-            icon: Cow::from(self.icon.as_ref()),
-            name: &self.name,
-            root_cotonoma_id: self.root_cotonoma_id.as_ref(),
-            version: self.version + 1, // increment the version
-        }
-    }
+    pub fn to_update(&self) -> UpdateNode { UpdateNode::new(&self.uuid, self.version + 1) }
 
     /// Converting a foreign node into an importable data.
     ///
@@ -166,14 +157,22 @@ pub struct ImportNode<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// A changeset of a node for update
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = nodes, primary_key(uuid))]
 pub struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
-    icon: Cow<'a, [u8]>,
+
+    #[new(default)]
+    icon: Option<Vec<u8>>,
+
+    #[new(default)]
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
-    pub name: &'a str,
-    pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    pub name: Option<&'a str>,
+
+    #[new(default)]
+    pub root_cotonoma_id: Option<Option<&'a Id<Cotonoma>>>,
+
     version: i32,
 }
 
@@ -181,7 +180,7 @@ impl<'a> UpdateNode<'a> {
     pub fn set_icon(&mut self, icon: &'a [u8]) -> Result<()> {
         let resized =
             super::resize_image(icon, Node::ICON_MAX_SIZE, Some(image::ImageFormat::Png))?;
-        self.icon = Cow::from(resized);
+        self.icon = Some(resized);
         Ok(())
     }
 }
