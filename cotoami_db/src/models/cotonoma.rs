@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -59,13 +60,7 @@ impl Cotonoma {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub fn to_update(&self) -> UpdateCotonoma {
-        UpdateCotonoma {
-            uuid: &self.uuid,
-            name: &self.name,
-            updated_at: crate::current_datetime(),
-        }
-    }
+    pub fn to_update(&self) -> UpdateCotonoma { UpdateCotonoma::new(&self.uuid) }
 
     pub fn to_import(&self) -> NewCotonoma {
         NewCotonoma {
@@ -124,11 +119,16 @@ impl<'a> NewCotonoma<'a> {
 // UpdateCotonoma
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
+/// A changeset of a cotonoma for update.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = cotonomas, primary_key(uuid))]
 pub struct UpdateCotonoma<'a> {
     uuid: &'a Id<Cotonoma>,
+
+    #[new(default)]
     #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
-    pub name: &'a str,
+    pub name: Option<&'a str>,
+
+    #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
 }

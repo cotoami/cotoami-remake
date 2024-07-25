@@ -265,7 +265,7 @@ pub(crate) fn rename<'a>(
 
         // Update cotonoma
         let mut cotonoma = cotonoma.to_update();
-        cotonoma.name = name;
+        cotonoma.name = Some(name);
         cotonoma.updated_at = updated_at;
         let cotonoma_updated = update(&cotonoma).run(ctx)?;
 
