@@ -2,6 +2,7 @@ use anyhow::Result;
 
 use crate::{
     db::{
+        op::*,
         ops::node_role_ops::{self, server_ops, NewDatabaseRole},
         DatabaseSession,
     },
@@ -75,10 +76,12 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<ServerNode> {
         operator.requires_to_be_owner()?;
-        self.write_transaction(server_ops::save_server_password(
-            id,
-            password,
-            encryption_password,
-        ))
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let server = server_ops::try_get(id).run(ctx)??;
+            let mut update_server = server.to_update();
+            update_server.set_password(password, encryption_password)?;
+            let server = server_ops::update(&update_server).run(ctx)?;
+            Ok(server)
+        })
     }
 }

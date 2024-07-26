@@ -77,20 +77,6 @@ pub(crate) fn update<'a>(
     })
 }
 
-pub(crate) fn save_server_password<'a>(
-    id: &'a Id<Node>,
-    password: &'a str,
-    encryption_password: &'a str,
-) -> impl Operation<WritableConn, ServerNode> + 'a {
-    composite_op::<WritableConn, _, _>(|ctx| {
-        let server = try_get(id).run(ctx)??;
-        let mut update_server = server.to_update();
-        update_server.set_password(password, encryption_password)?;
-        let server_updated = update(&update_server).run(ctx)?;
-        Ok(server_updated)
-    })
-}
-
 pub(super) fn set_disabled(
     id: &Id<Node>,
     disabled: bool,
