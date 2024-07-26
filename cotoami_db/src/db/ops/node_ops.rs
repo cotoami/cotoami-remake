@@ -117,7 +117,7 @@ pub(crate) fn set_icon<'a>(
 ) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let node = try_get(id).run(ctx)??;
-        let mut update_node = node.to_update();
+        let mut update_node = node.to_update(); // incremented the node version
         update_node.set_icon(icon)?;
         update(&update_node).run(ctx)
     })
