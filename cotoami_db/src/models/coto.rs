@@ -274,7 +274,7 @@ impl<'a> NewCoto<'a> {
 
 /// A changeset of [Coto] for update.
 /// Only fields that have [Some] value will be updated.
-#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[derive(derive_more::Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = cotos, primary_key(uuid))]
 pub struct UpdateCoto<'a> {
     uuid: &'a Id<Coto>,
@@ -282,6 +282,13 @@ pub struct UpdateCoto<'a> {
     #[new(default)]
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     pub content: Option<Option<&'a str>>,
+
+    #[debug(skip)]
+    #[new(default)]
+    media_content: Option<Option<Vec<u8>>>,
+
+    #[new(default)]
+    media_type: Option<Option<&'a str>>,
 
     #[new(default)]
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
@@ -298,4 +305,16 @@ pub struct UpdateCoto<'a> {
 
     #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
+}
+
+impl<'a> UpdateCoto<'a> {
+    pub fn set_media_content(&mut self, media_content: Option<(Vec<u8>, &'a str)>) {
+        if let Some((media_content, media_type)) = media_content {
+            self.media_content = Some(Some(media_content));
+            self.media_type = Some(Some(media_type));
+        } else {
+            self.media_content = Some(None);
+            self.media_type = Some(None);
+        }
+    }
 }
