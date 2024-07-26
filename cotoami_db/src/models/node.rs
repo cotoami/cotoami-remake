@@ -177,6 +177,8 @@ pub struct UpdateNode<'a> {
 }
 
 impl<'a> UpdateNode<'a> {
+    /// The given icon image will be resized to fit within [Node::ICON_MAX_SIZE]
+    /// and converted into PNG.
     pub fn set_icon(&mut self, icon: &'a [u8]) -> Result<()> {
         let resized =
             super::resize_image(icon, Node::ICON_MAX_SIZE, Some(image::ImageFormat::Png))?;

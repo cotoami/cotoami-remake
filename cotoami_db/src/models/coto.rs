@@ -1,6 +1,6 @@
 //! A coto is a unit of data in a cotoami database.
 
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
@@ -123,6 +123,11 @@ impl Coto {
             posted_in_id: self.posted_in_id.as_ref(),
             posted_by_id: &self.posted_by_id,
             content: self.content.as_deref(),
+            media_content: self
+                .media_content
+                .as_ref()
+                .map(|bytes| Cow::from(bytes.as_ref())),
+            media_type: self.media_type.as_deref(),
             summary: self.summary.as_deref(),
             is_cotonoma: self.is_cotonoma,
             repost_of_id: self.repost_of_id.as_ref(),
@@ -164,21 +169,36 @@ impl BelongsToNode for Coto {
 /////////////////////////////////////////////////////////////////////////////
 
 /// An `Insertable` coto data
-#[derive(Debug, Insertable, Validate)]
+#[derive(derive_more::Debug, Insertable, Validate)]
 #[diesel(table_name = cotos)]
 pub struct NewCoto<'a> {
     uuid: Id<Coto>,
+
     node_id: &'a Id<Node>,
+
     posted_in_id: Option<&'a Id<Cotonoma>>,
+
     posted_by_id: &'a Id<Node>,
+
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     content: Option<&'a str>,
+
+    #[debug(skip)]
+    media_content: Option<Cow<'a, [u8]>>,
+
+    media_type: Option<&'a str>,
+
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     summary: Option<&'a str>,
+
     is_cotonoma: bool,
+
     repost_of_id: Option<&'a Id<Coto>>,
+
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
+
     created_at: NaiveDateTime,
+
     updated_at: NaiveDateTime,
 }
 
@@ -191,6 +211,8 @@ impl<'a> NewCoto<'a> {
             posted_in_id: None,
             posted_by_id,
             content: None,
+            media_content: None,
+            media_type: None,
             summary: None,
             is_cotonoma: false,
             repost_of_id: None,
@@ -205,12 +227,20 @@ impl<'a> NewCoto<'a> {
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
         content: &'a str,
+        media_content: Option<(&'a [u8], &'a str)>,
         summary: Option<&'a str>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
+
         coto.posted_in_id = Some(posted_in_id);
         coto.content = Some(content);
         coto.summary = summary;
+
+        if let Some((media_content, media_type)) = media_content {
+            coto.media_content = Some(Cow::from(media_content));
+            coto.media_type = Some(media_type);
+        }
+
         coto.validate()?;
         Ok(coto)
     }

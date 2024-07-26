@@ -24,7 +24,8 @@ fn import_changes() -> Result<()> {
     let (node1_root_cotonoma, node1_root_coto) = ds1.root_cotonoma()?.unwrap();
 
     // 2. post_coto
-    let (db1_coto, db1_change2) = ds1.post_coto("hello", None, &node1_root_cotonoma, &opr1)?;
+    let (db1_coto, db1_change2) =
+        ds1.post_coto("hello", None, None, &node1_root_cotonoma, &opr1)?;
 
     // 3. edit_coto
     let (db1_edited_coto, db1_change3) =
