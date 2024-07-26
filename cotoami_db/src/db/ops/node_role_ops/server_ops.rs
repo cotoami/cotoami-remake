@@ -82,8 +82,7 @@ pub(super) fn set_disabled(
     disabled: bool,
 ) -> impl Operation<WritableConn, ServerNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let server = try_get(id).run(ctx)??;
-        let mut update_server = server.to_update();
+        let mut update_server = UpdateServerNode::new(id);
         update_server.disabled = Some(disabled);
         let server_updated = update(&update_server).run(ctx)?;
         Ok(server_updated)
