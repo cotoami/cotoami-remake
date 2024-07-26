@@ -156,7 +156,7 @@ pub struct ImportNode<'a> {
 // UpdateNode
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a node for update
+/// A changeset of [Node] for update
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = nodes, primary_key(uuid))]

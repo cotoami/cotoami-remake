@@ -242,7 +242,7 @@ impl<'a> NewCoto<'a> {
 // UpdateCoto
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a coto for update.
+/// A changeset of [Coto] for update.
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = cotos, primary_key(uuid))]

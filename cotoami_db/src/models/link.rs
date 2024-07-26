@@ -175,7 +175,7 @@ impl<'a> NewLink<'a> {
 // UpdateLink
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a link for update.
+/// A changeset of [Link] for update.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = links, primary_key(uuid))]
 pub struct UpdateLink<'a> {

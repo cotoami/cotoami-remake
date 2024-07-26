@@ -133,7 +133,7 @@ impl<'a> NewServerNode<'a> {
 // UpdateServerNode
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a ServerNode for update.
+/// A changeset of [ServerNode] for update.
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = server_nodes, primary_key(node_id))]

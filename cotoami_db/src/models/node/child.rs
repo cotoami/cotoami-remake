@@ -71,7 +71,7 @@ impl<'a> NewChildNode<'a> {
 // UpdateChildNode
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a ChildNode for update.
+/// A changeset of [ChildNode] for update.
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = child_nodes, primary_key(node_id))]

@@ -119,7 +119,7 @@ impl<'a> NewCotonoma<'a> {
 // UpdateCotonoma
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a cotonoma for update.
+/// A changeset of [Cotonoma] for update.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = cotonomas, primary_key(uuid))]
 pub struct UpdateCotonoma<'a> {
