@@ -5,12 +5,13 @@ use std::ops::DerefMut;
 use anyhow::Context;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
-    db::{error::*, op::*},
+    db::op::*,
     models::{
         node::{
-            parent::{NewParentNode, ParentNode},
+            parent::{NewParentNode, ParentNode, UpdateParentNode},
             Node,
         },
         Id,
@@ -28,19 +29,6 @@ pub(crate) fn get<Conn: AsReadableConn>(
             .first(conn)
             .optional()
             .map_err(anyhow::Error::from)
-    })
-}
-
-/// Returns a [ParentNode] by its ID or a [DatabaseError::EntityNotFound].
-pub(crate) fn try_get<Conn: AsReadableConn>(
-    id: &Id<Node>,
-) -> impl Operation<Conn, Result<ParentNode, DatabaseError>> + '_ {
-    get(id).map(|opt| {
-        opt.ok_or(DatabaseError::not_found(
-            EntityKind::ParentNode,
-            "node_id",
-            *id,
-        ))
     })
 }
 
@@ -76,11 +64,14 @@ pub(super) fn insert<'a>(
     })
 }
 
-/// Updates a parent node row with a [ParentNode].
-pub(crate) fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, ParentNode> + '_ {
+/// Updates a parent node row with a [UpdateParentNode].
+pub(crate) fn update<'a>(
+    update_parent: &'a UpdateParentNode,
+) -> impl Operation<WritableConn, ParentNode> + 'a {
     write_op(move |conn| {
-        diesel::update(parent_node)
-            .set(parent_node)
+        update_parent.validate()?;
+        diesel::update(update_parent)
+            .set(update_parent)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
@@ -88,9 +79,9 @@ pub(crate) fn update(parent_node: &ParentNode) -> impl Operation<WritableConn, P
 
 pub(super) fn set_forked(id: &Id<Node>) -> impl Operation<WritableConn, ParentNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut parent = try_get(id).run(ctx)??;
-        parent.forked = true;
-        parent = update(&parent).run(ctx)?;
+        let mut update_parent = UpdateParentNode::new(id);
+        update_parent.forked = Some(true);
+        let parent = update(&update_parent).run(ctx)?;
         Ok(parent)
     })
 }
