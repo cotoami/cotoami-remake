@@ -77,8 +77,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<ServerNode> {
         operator.requires_to_be_owner()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let server = server_ops::try_get(id).run(ctx)??;
-            let mut update_server = server.to_update();
+            let mut update_server = UpdateServerNode::new(id);
             update_server.set_password(password, encryption_password)?;
             let server = server_ops::update(&update_server).run(ctx)?;
             Ok(server)
