@@ -5,6 +5,7 @@ use aes_gcm::{
 use anyhow::Result;
 use argon2::Argon2;
 use chrono::NaiveDateTime;
+use derive_new::new;
 use diesel::{
     backend::Backend, deserialize::FromSql, expression::AsExpression, prelude::*, serialize::ToSql,
     sql_types::Binary, sqlite::Sqlite, FromSqlRow,
@@ -24,13 +25,11 @@ use crate::{models::Id, schema::server_nodes};
 #[derive(
     derive_more::Debug,
     Clone,
-    Eq,
     PartialEq,
+    Eq,
     Identifiable,
-    AsChangeset,
     Queryable,
     Selectable,
-    Validate,
     serde::Serialize,
     serde::Deserialize,
 )]
@@ -43,7 +42,6 @@ pub struct ServerNode {
     pub created_at: NaiveDateTime,
 
     /// URL prefix to connect to this server node.
-    #[validate(url, length(max = "ServerNode::URL_PREFIX_MAX_LENGTH"))]
     pub url_prefix: String,
 
     /// Saved password to connect to this server node.
@@ -60,11 +58,6 @@ impl ServerNode {
     // cf. https://stackoverflow.com/a/417184
     pub const URL_PREFIX_MAX_LENGTH: usize = 1500;
 
-    pub fn save_password(&mut self, plaintext: &str, encryption_password: &str) -> Result<()> {
-        self.encrypted_password = Some(encrypt_password(plaintext, encryption_password)?);
-        Ok(())
-    }
-
     pub fn password(&self, encryption_password: &str) -> Result<Option<String>> {
         if let Some(ref encrypted_password) = self.encrypted_password {
             let plaintext = decrypt_password(encrypted_password, encryption_password)?;
@@ -73,6 +66,8 @@ impl ServerNode {
             Ok(None)
         }
     }
+
+    pub fn to_update(&self) -> UpdateServerNode { UpdateServerNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -131,6 +126,36 @@ impl<'a> NewServerNode<'a> {
         };
         server_node.validate()?;
         Ok(server_node)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// UpdateServerNode
+/////////////////////////////////////////////////////////////////////////////
+
+/// A changeset of a coto for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = server_nodes, primary_key(node_id))]
+pub struct UpdateServerNode<'a> {
+    node_id: &'a Id<Node>,
+
+    #[new(default)]
+    #[validate(url, length(max = "ServerNode::URL_PREFIX_MAX_LENGTH"))]
+    pub url_prefix: Option<&'a str>,
+
+    #[new(default)]
+    pub encrypted_password: Option<Option<EncryptedPassword>>,
+
+    #[new(default)]
+    pub disabled: Option<bool>,
+}
+
+impl<'a> UpdateServerNode<'a> {
+    pub fn set_password(&mut self, plaintext: &str, encryption_password: &str) -> Result<()> {
+        let encrypted_password = encrypt_password(plaintext, encryption_password)?;
+        self.encrypted_password = Some(Some(encrypted_password));
+        Ok(())
     }
 }
 

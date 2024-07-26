@@ -8,7 +8,7 @@ use crate::{
     db::{error::*, op::*},
     models::{
         node::{
-            server::{EncryptedPassword, NewServerNode, ServerNode},
+            server::{EncryptedPassword, NewServerNode, ServerNode, UpdateServerNode},
             Node,
         },
         Id,
@@ -55,21 +55,23 @@ pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(Ser
 
 /// Inserts a new server node represented as a [NewServerNode].
 pub(super) fn insert<'a>(
-    new_server_node: &'a NewServerNode<'a>,
+    new_server: &'a NewServerNode<'a>,
 ) -> impl Operation<WritableConn, ServerNode> + 'a {
     write_op(move |conn| {
         diesel::insert_into(server_nodes::table)
-            .values(new_server_node)
+            .values(new_server)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
 }
 
 /// Updates a server node row with a [ServerNode].
-pub(crate) fn update(server_node: &ServerNode) -> impl Operation<WritableConn, ServerNode> + '_ {
+pub(crate) fn update<'a>(
+    update_server: &'a UpdateServerNode,
+) -> impl Operation<WritableConn, ServerNode> + 'a {
     write_op(move |conn| {
-        diesel::update(server_node)
-            .set(server_node)
+        diesel::update(update_server)
+            .set(update_server)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
@@ -81,10 +83,11 @@ pub(crate) fn save_server_password<'a>(
     encryption_password: &'a str,
 ) -> impl Operation<WritableConn, ServerNode> + 'a {
     composite_op::<WritableConn, _, _>(|ctx| {
-        let mut server = try_get(id).run(ctx)??;
-        server.save_password(password, encryption_password)?;
-        server = update(&server).run(ctx)?;
-        Ok(server)
+        let server = try_get(id).run(ctx)??;
+        let mut update_server = server.to_update();
+        update_server.set_password(password, encryption_password)?;
+        let server_updated = update(&update_server).run(ctx)?;
+        Ok(server_updated)
     })
 }
 
@@ -93,10 +96,11 @@ pub(super) fn set_disabled(
     disabled: bool,
 ) -> impl Operation<WritableConn, ServerNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut server = try_get(id).run(ctx)??;
-        server.disabled = disabled;
-        server = update(&server).run(ctx)?;
-        Ok(server)
+        let server = try_get(id).run(ctx)??;
+        let mut update_server = server.to_update();
+        update_server.disabled = Some(disabled);
+        let server_updated = update(&update_server).run(ctx)?;
+        Ok(server_updated)
     })
 }
 
@@ -105,10 +109,11 @@ pub(crate) fn reencrypt_all_passwords<'a>(
     old_encryption_password: &'a str,
 ) -> impl Operation<WritableConn, ()> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        for (mut server, _) in all_pairs().run(ctx)? {
+        for (server, _) in all_pairs().run(ctx)? {
             if let Some(password) = server.password(old_encryption_password)? {
-                server.save_password(&password, new_encryption_password)?;
-                update(&server).run(ctx)?;
+                let mut update_server = server.to_update();
+                update_server.set_password(&password, new_encryption_password)?;
+                update(&update_server).run(ctx)?;
             }
         }
         Ok(())
