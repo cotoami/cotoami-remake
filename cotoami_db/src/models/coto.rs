@@ -266,6 +266,6 @@ pub struct UpdateCoto<'a> {
     #[new(default)]
     pub reposted_in_ids: Option<Option<&'a Ids<Cotonoma>>>,
 
-    #[new(default)]
-    pub updated_at: Option<NaiveDateTime>,
+    #[new(value = "crate::current_datetime()")]
+    pub updated_at: NaiveDateTime,
 }
