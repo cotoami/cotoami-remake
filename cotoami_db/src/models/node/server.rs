@@ -109,22 +109,6 @@ impl FromSql<Binary, Sqlite> for EncryptedPassword {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// ClearServerPassword
-/////////////////////////////////////////////////////////////////////////////
-
-/// Changeset to set NULL to [server_nodes::encrypted_password].
-///
-/// I couldn't find a straightforward way to set NULL to a field in UPDATE dsl.
-/// In the document (<https://diesel.rs/guides/all-about-updates.html>), the only way
-/// introduced is to use an [AsChangeset] struct with `#[diesel(treat_none_as_null = true)]`
-/// or to have the field be of type `Option<Option<T>>`.
-#[derive(Default, AsChangeset)]
-#[diesel(table_name = server_nodes, treat_none_as_null = true)]
-pub struct ClearServerPassword {
-    encrypted_password: Option<EncryptedPassword>,
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // NewServerNode
 /////////////////////////////////////////////////////////////////////////////
 

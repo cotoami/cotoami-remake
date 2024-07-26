@@ -8,7 +8,7 @@ use crate::{
     db::{error::*, op::*},
     models::{
         node::{
-            server::{ClearServerPassword, NewServerNode, ServerNode},
+            server::{EncryptedPassword, NewServerNode, ServerNode},
             Node,
         },
         Id,
@@ -119,7 +119,7 @@ pub(crate) fn reencrypt_all_passwords<'a>(
 pub(crate) fn clear_all_passwords() -> impl Operation<WritableConn, usize> {
     write_op(move |conn| {
         diesel::update(server_nodes::table)
-            .set(ClearServerPassword::default())
+            .set(server_nodes::encrypted_password.eq(None::<EncryptedPassword>))
             .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
