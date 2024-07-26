@@ -19,6 +19,12 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(child_ops::recent_pairs(page_size, page_index))
     }
 
+    pub fn try_get_child_node(&mut self, id: &Id<Node>, operator: &Operator) -> Result<ChildNode> {
+        operator.requires_to_be_owner()?;
+        self.read_transaction(child_ops::try_get(id))?
+            .map_err(anyhow::Error::from)
+    }
+
     pub fn edit_child_node(
         &self,
         id: &Id<Node>,

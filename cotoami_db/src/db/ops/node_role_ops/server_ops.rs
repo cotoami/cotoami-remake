@@ -3,6 +3,7 @@
 use std::ops::DerefMut;
 
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
     db::{error::*, op::*},
@@ -65,11 +66,12 @@ pub(super) fn insert<'a>(
     })
 }
 
-/// Updates a server node row with a [ServerNode].
+/// Updates a server node row with a [UpdateServerNode].
 pub(crate) fn update<'a>(
     update_server: &'a UpdateServerNode,
 ) -> impl Operation<WritableConn, ServerNode> + 'a {
     write_op(move |conn| {
+        update_server.validate()?;
         diesel::update(update_server)
             .set(update_server)
             .get_result(conn.deref_mut())
@@ -84,8 +86,8 @@ pub(super) fn set_disabled(
     composite_op::<WritableConn, _, _>(move |ctx| {
         let mut update_server = UpdateServerNode::new(id);
         update_server.disabled = Some(disabled);
-        let server_updated = update(&update_server).run(ctx)?;
-        Ok(server_updated)
+        let server = update(&update_server).run(ctx)?;
+        Ok(server)
     })
 }
 

@@ -1,6 +1,8 @@
 use anyhow::Result;
 use chrono::NaiveDateTime;
+use derive_new::new;
 use diesel::prelude::*;
+use validator::Validate;
 
 use super::Node;
 use crate::{models::Id, schema::child_nodes};
@@ -16,7 +18,6 @@ use crate::{models::Id, schema::child_nodes};
     PartialEq,
     Eq,
     Identifiable,
-    AsChangeset,
     Queryable,
     Selectable,
     serde::Serialize,
@@ -35,6 +36,10 @@ pub struct ChildNode {
 
     /// Permission to edit links in this database.
     pub can_edit_links: bool,
+}
+
+impl ChildNode {
+    pub fn to_update(&self) -> UpdateChildNode { UpdateChildNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -60,4 +65,22 @@ impl<'a> NewChildNode<'a> {
             can_edit_links,
         })
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// UpdateChildNode
+/////////////////////////////////////////////////////////////////////////////
+
+/// A changeset of a ChildNode for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = child_nodes, primary_key(node_id))]
+pub struct UpdateChildNode<'a> {
+    node_id: &'a Id<Node>,
+
+    #[new(default)]
+    pub as_owner: Option<bool>,
+
+    #[new(default)]
+    pub can_edit_links: Option<bool>,
 }
