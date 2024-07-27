@@ -1,5 +1,4 @@
 use core::time::Duration;
-use std::ops::DerefMut;
 
 use anyhow::{bail, Result};
 
@@ -153,39 +152,42 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
         let mut local_node = self.globals.try_write_local_node()?;
-        self.write_transaction(local_ops::start_session(
-            local_node.deref_mut(),
-            password,
-            duration,
-        ))?;
+        *local_node =
+            self.write_transaction(local_ops::start_session(&local_node, password, duration))?;
         Ok(local_node.clone())
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
         let mut local_node = self.globals.try_write_local_node()?;
-        self.write_transaction(local_ops::clear_session(local_node.deref_mut()))
+        *local_node = self.write_transaction(local_ops::clear_session(&local_node))?;
+        Ok(())
     }
 
     pub fn set_owner_password_if_none(&self, new_password: &str) -> Result<()> {
         let mut local_node = self.globals.try_write_local_node()?;
-        if local_node.password_hash().is_some() {
+        let mut principal = local_node.as_principal();
+        if principal.password_hash().is_some() {
             bail!("The local node already has a password.");
         }
-        local_node.update_password(new_password)?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            local_ops::update(&local_node).run(ctx)?;
+        principal.update_password(new_password)?;
+        *local_node = self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
             server_ops::clear_all_passwords().run(ctx)?;
-            Ok(())
-        })
+            Ok(local_node)
+        })?;
+        Ok(())
     }
 
     pub fn change_owner_password(&self, new_password: &str, old_password: &str) -> Result<()> {
         let mut local_node = self.globals.try_write_local_node()?;
-        local_node.verify_password(old_password)?;
-        local_node.update_password(new_password)?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            local_ops::update(&local_node).run(ctx)?;
-            server_ops::reencrypt_all_passwords(new_password, old_password).run(ctx)
-        })
+        let mut principal = local_node.as_principal();
+        principal.verify_password(old_password)?;
+        principal.update_password(new_password)?;
+        *local_node = self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
+            server_ops::reencrypt_all_passwords(new_password, old_password).run(ctx)?;
+            Ok(local_node)
+        })?;
+        Ok(())
     }
 }
