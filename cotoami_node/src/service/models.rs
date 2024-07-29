@@ -213,6 +213,8 @@ pub struct CotoInput {
     #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
     pub content: Option<String>,
 
+    /// A pair of media content data and its media type.
+    /// TODO: needs validation?
     pub media_content: Option<(Bytes, String)>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
