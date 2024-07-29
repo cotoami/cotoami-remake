@@ -61,8 +61,8 @@ pub(crate) fn start_session<'a>(
     duration: Duration,
 ) -> impl Operation<WritableConn, LocalNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut principal = local_node.as_principal();
         let duration = chrono::Duration::from_std(duration)?;
+        let mut principal = local_node.as_principal();
         principal
             .start_session(password, duration)
             .context(DatabaseError::AuthenticationFailed)?;
