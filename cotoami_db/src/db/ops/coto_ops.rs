@@ -115,6 +115,21 @@ pub(crate) fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<Writable
     })
 }
 
+pub(crate) fn edit<'a>(
+    id: &'a Id<Coto>,
+    content: &'a str,
+    summary: Option<&'a str>,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Coto> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_coto = UpdateCoto::new(id);
+        update_coto.edit(content, summary);
+        update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
+        let coto = update(&update_coto).run(ctx)?;
+        Ok(coto)
+    })
+}
+
 pub(crate) fn delete(
     id: &Id<Coto>,
     deleted_at: Option<NaiveDateTime>,

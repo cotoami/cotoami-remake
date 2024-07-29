@@ -115,7 +115,7 @@ impl<'a> DatabaseSession<'a> {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_update_coto(&coto)?;
-            let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
+            let coto = coto_ops::edit(id, content, summary, None).run(ctx)?;
             let change = Change::EditCoto {
                 coto_id: *id,
                 content: content.into(),
