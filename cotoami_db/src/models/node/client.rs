@@ -51,8 +51,6 @@ impl ClientNode {
             session_expires_at: self.session_expires_at,
         }
     }
-
-    pub(crate) fn to_update(&self) -> UpdateClientNode { UpdateClientNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
