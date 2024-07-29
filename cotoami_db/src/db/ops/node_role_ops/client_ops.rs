@@ -5,12 +5,13 @@ use std::ops::DerefMut;
 
 use anyhow::Context;
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
     db::{error::*, op::*, ops, ops::Paginated},
     models::{
         node::{
-            client::{ClientNode, ClientNodeAsPrincipal, NewClientNode},
+            client::{ClientNode, ClientNodeAsPrincipal, NewClientNode, UpdateClientNode},
             Node, Principal,
         },
         Id,
@@ -95,7 +96,20 @@ pub(super) fn insert<'a>(
     })
 }
 
-/// Updates a client node row with a [ClientNode].
+/// Updates a client node row with a [UpdateClientNode].
+pub(crate) fn update<'a>(
+    update_client: &'a UpdateClientNode,
+) -> impl Operation<WritableConn, ClientNode> + 'a {
+    write_op(move |conn| {
+        update_client.validate()?;
+        diesel::update(update_client)
+            .set(update_client)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Updates a client node row with a [ClientNodeAsPrincipal].
 pub(crate) fn update_as_principal<'a>(
     principal: &'a ClientNodeAsPrincipal,
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
@@ -112,9 +126,9 @@ pub(super) fn set_disabled(
     disabled: bool,
 ) -> impl Operation<WritableConn, ClientNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = try_get(id).run(ctx)??;
-        client.disabled = disabled;
-        client = update(&client).run(ctx)?;
+        let mut update_client = UpdateClientNode::new(id);
+        update_client.disabled = Some(disabled);
+        let client = update(&update_client).run(ctx)?;
         Ok(client)
     })
 }

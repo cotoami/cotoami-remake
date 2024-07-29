@@ -2,7 +2,9 @@ use std::borrow::{Borrow, Cow};
 
 use anyhow::Result;
 use chrono::NaiveDateTime;
+use derive_new::new;
 use diesel::prelude::*;
+use validator::Validate;
 
 use super::{Node, Principal};
 use crate::{models::Id, schema::client_nodes};
@@ -49,6 +51,8 @@ impl ClientNode {
             session_expires_at: self.session_expires_at,
         }
     }
+
+    pub fn to_update(&self) -> UpdateClientNode { UpdateClientNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -111,4 +115,19 @@ impl<'a> Principal for ClientNodeAsPrincipal<'a> {
     fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>) {
         self.session_expires_at = expires_at;
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// UpdateClientNode
+/////////////////////////////////////////////////////////////////////////////
+
+/// A changeset of [ClientNode] for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = client_nodes, primary_key(node_id))]
+pub struct UpdateClientNode<'a> {
+    node_id: &'a Id<Node>,
+
+    #[new(default)]
+    pub disabled: Option<bool>,
 }
