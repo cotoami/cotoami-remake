@@ -114,6 +114,23 @@ impl Coto {
         update_coto
     }
 
+    pub(crate) fn set_media_content<'a>(
+        &'a mut self,
+        media_content: Option<(&'a [u8], &'a str)>,
+        image_max_size: Option<u32>,
+    ) -> Result<UpdateCoto<'a>> {
+        let mut update_coto = self.to_update();
+        if let Some((content, media_type)) = media_content {
+            let content = process_media_content((content, media_type), image_max_size)?;
+            update_coto.media_content = Some(Some(content));
+            update_coto.media_type = Some(Some(media_type));
+        } else {
+            update_coto.media_content = Some(None);
+            update_coto.media_type = Some(None);
+        }
+        Ok(update_coto)
+    }
+
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub(crate) fn to_import(&self) -> NewCoto {
@@ -307,24 +324,6 @@ pub(crate) struct UpdateCoto<'a> {
 
     #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
-}
-
-impl<'a> UpdateCoto<'a> {
-    pub fn set_media_content(
-        &mut self,
-        media_content: Option<(&'a [u8], &'a str)>,
-        image_max_size: Option<u32>,
-    ) -> Result<()> {
-        if let Some((content, media_type)) = media_content {
-            let content = process_media_content((content, media_type), image_max_size)?;
-            self.media_content = Some(Some(content));
-            self.media_type = Some(Some(media_type));
-        } else {
-            self.media_content = Some(None);
-            self.media_type = Some(None);
-        }
-        Ok(())
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
