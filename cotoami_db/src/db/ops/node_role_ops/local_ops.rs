@@ -5,11 +5,12 @@ use std::ops::DerefMut;
 
 use anyhow::Context;
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
     db::{error::*, op::*, ops::node_ops},
     models::node::{
-        local::{LocalNode, NewLocalNode, NodeOwner},
+        local::{LocalNode, NewLocalNode, NodeOwner, UpdateLocalNode},
         NewNode, Node, Principal,
     },
     schema::{local_node, nodes},
@@ -41,6 +42,19 @@ pub(crate) fn create<'a>(
             .values(new_local_node)
             .get_result(ctx.conn().deref_mut())?;
         Ok((local_node, node))
+    })
+}
+
+/// Updates the local node row with a [UpdateLocalNode].
+pub(crate) fn update<'a>(
+    update_local: &'a UpdateLocalNode,
+) -> impl Operation<WritableConn, LocalNode> + 'a {
+    write_op(move |conn| {
+        update_local.validate()?;
+        diesel::update(update_local)
+            .set(update_local)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
     })
 }
 

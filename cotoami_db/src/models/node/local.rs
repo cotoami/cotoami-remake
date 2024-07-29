@@ -2,6 +2,7 @@ use std::borrow::{Borrow, Cow};
 
 use anyhow::Result;
 use chrono::NaiveDateTime;
+use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -46,6 +47,8 @@ impl LocalNode {
             owner_session_expires_at: self.owner_session_expires_at,
         }
     }
+
+    pub fn to_update(&self) -> UpdateLocalNode { UpdateLocalNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -119,6 +122,22 @@ impl<'a> Principal for NodeOwner<'a> {
     fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>) {
         self.owner_session_expires_at = expires_at;
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// UpdateLocalNode
+/////////////////////////////////////////////////////////////////////////////
+
+/// A changeset of [LocalNode] for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = local_node, primary_key(node_id))]
+pub struct UpdateLocalNode<'a> {
+    node_id: &'a Id<Node>,
+
+    #[new(default)]
+    #[validate(range(min = 1))]
+    pub image_max_size: Option<Option<i32>>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
