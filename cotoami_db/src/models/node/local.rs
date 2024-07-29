@@ -32,6 +32,9 @@ pub struct LocalNode {
 
     /// Expiration date of node owner's session
     pub owner_session_expires_at: Option<NaiveDateTime>,
+
+    /// The maximum length of the longer side of images after they are resized (in pixels).
+    pub image_max_size: Option<i32>,
 }
 
 impl LocalNode {
@@ -139,6 +142,7 @@ mod tests {
             owner_password_hash: None,
             owner_session_token: None,
             owner_session_expires_at: None,
+            image_max_size: None,
         };
         let mut owner = local_node.as_principal();
 

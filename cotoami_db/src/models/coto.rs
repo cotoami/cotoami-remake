@@ -228,6 +228,7 @@ impl<'a> NewCoto<'a> {
         posted_by_id: &'a Id<Node>,
         content: &'a str,
         media_content: Option<(&'a [u8], &'a str)>,
+        image_max_size: Option<u32>,
         summary: Option<&'a str>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
@@ -236,8 +237,9 @@ impl<'a> NewCoto<'a> {
         coto.content = Some(content);
         coto.summary = summary;
 
-        if let Some((media_content, media_type)) = media_content {
-            coto.media_content = Some(Cow::from(media_content));
+        if let Some((content, media_type)) = media_content {
+            let content = process_media_content((content, media_type), image_max_size)?;
+            coto.media_content = Some(content);
             coto.media_type = Some(media_type);
         }
 
@@ -285,7 +287,7 @@ pub struct UpdateCoto<'a> {
 
     #[debug(skip)]
     #[new(default)]
-    media_content: Option<Option<Vec<u8>>>,
+    media_content: Option<Option<Cow<'a, [u8]>>>,
 
     #[new(default)]
     media_type: Option<Option<&'a str>>,
@@ -308,13 +310,40 @@ pub struct UpdateCoto<'a> {
 }
 
 impl<'a> UpdateCoto<'a> {
-    pub fn set_media_content(&mut self, media_content: Option<(Vec<u8>, &'a str)>) {
-        if let Some((media_content, media_type)) = media_content {
-            self.media_content = Some(Some(media_content));
+    pub fn set_media_content(
+        &mut self,
+        media_content: Option<(&'a [u8], &'a str)>,
+        image_max_size: Option<u32>,
+    ) -> Result<()> {
+        if let Some((content, media_type)) = media_content {
+            let content = process_media_content((content, media_type), image_max_size)?;
+            self.media_content = Some(Some(content));
             self.media_type = Some(Some(media_type));
         } else {
             self.media_content = Some(None);
             self.media_type = Some(None);
         }
+        Ok(())
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Internal functions
+/////////////////////////////////////////////////////////////////////////////
+
+fn process_media_content<'a>(
+    media_content: (&'a [u8], &'a str),
+    image_max_size: Option<u32>,
+) -> Result<Cow<'a, [u8]>> {
+    let (content, media_type) = media_content;
+    if media_type.starts_with("image/") {
+        if let Some(max_size) = image_max_size {
+            let resized = super::resize_image(content, max_size, None)?;
+            Ok(Cow::from(resized))
+        } else {
+            Ok(Cow::from(content))
+        }
+    } else {
+        Ok(Cow::from(content))
     }
 }

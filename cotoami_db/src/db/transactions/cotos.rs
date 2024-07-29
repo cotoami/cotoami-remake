@@ -75,14 +75,15 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.globals.ensure_local(posted_in)?;
-        let local_node_id = self.globals.try_get_local_node_id()?;
+        let local_node = self.globals.try_read_local_node()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
-            &local_node_id,
+            &local_node.node_id,
             &posted_in.uuid,
             &posted_by_id,
             content,
             media_content,
+            local_node.image_max_size.map(|size| size as u32),
             summary,
         )?;
         self.create_coto(&new_coto)
