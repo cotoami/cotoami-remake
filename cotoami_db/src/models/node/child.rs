@@ -39,7 +39,7 @@ pub struct ChildNode {
 }
 
 impl ChildNode {
-    pub fn to_update(&self) -> UpdateChildNode { UpdateChildNode::new(&self.node_id) }
+    pub(crate) fn to_update(&self) -> UpdateChildNode { UpdateChildNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ impl ChildNode {
 /// An `Insertable` child node data
 #[derive(Insertable)]
 #[diesel(table_name = child_nodes)]
-pub struct NewChildNode<'a> {
+pub(crate) struct NewChildNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
     as_owner: bool,
@@ -75,7 +75,7 @@ impl<'a> NewChildNode<'a> {
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = child_nodes, primary_key(node_id))]
-pub struct UpdateChildNode<'a> {
+pub(crate) struct UpdateChildNode<'a> {
     node_id: &'a Id<Node>,
 
     #[new(default)]

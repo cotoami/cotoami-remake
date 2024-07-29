@@ -47,15 +47,11 @@ impl NodeState {
                     .await
                     .map(|(session, _)| session),
             ),
-            Command::AddServerNode(input) => {
-                format.serialize(self.add_server_node(input, opr?).await)
+            Command::AddServer(input) => format.serialize(self.add_server(input, opr?).await),
+            Command::UpdateServer { id, values } => {
+                format.serialize(self.update_server(id, values, opr?).await)
             }
-            Command::UpdateServerNode { id, values } => {
-                format.serialize(self.update_server_node(id, values, opr?).await)
-            }
-            Command::AddClientNode(input) => {
-                format.serialize(self.add_client_node(input, opr?).await)
-            }
+            Command::AddClient(input) => format.serialize(self.add_client(input, opr?).await),
             Command::RecentCotonomas { node, pagination } => {
                 format.serialize(self.recent_cotonomas(node, pagination).await)
             }

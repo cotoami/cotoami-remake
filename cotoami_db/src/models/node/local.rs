@@ -48,7 +48,7 @@ impl LocalNode {
         }
     }
 
-    pub fn to_update(&self) -> UpdateLocalNode { UpdateLocalNode::new(&self.node_id) }
+    pub(crate) fn to_update(&self) -> UpdateLocalNode { UpdateLocalNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ impl LocalNode {
 /// An `Insertable` local node data
 #[derive(Insertable, Validate)]
 #[diesel(table_name = local_node)]
-pub struct NewLocalNode<'a> {
+pub(crate) struct NewLocalNode<'a> {
     rowid: i64,
     node_id: &'a Id<Node>,
     owner_password_hash: Option<String>,
@@ -132,7 +132,7 @@ impl<'a> Principal for NodeOwner<'a> {
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = local_node, primary_key(node_id))]
-pub struct UpdateLocalNode<'a> {
+pub(crate) struct UpdateLocalNode<'a> {
     node_id: &'a Id<Node>,
 
     #[new(default)]

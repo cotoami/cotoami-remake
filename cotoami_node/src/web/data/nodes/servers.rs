@@ -11,7 +11,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{ClientNodeSession, LogIntoServer, Server, UpdateServerNode},
+        models::{ClientNodeSession, LogIntoServer, Server, UpdateServer},
         ServiceError,
     },
     state::NodeState,
@@ -20,7 +20,7 @@ use crate::{
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
-        .route("/", get(all_servers).post(add_server_node))
+        .route("/", get(all_servers).post(add_server))
         .route("/try", get(log_into_server))
         .route("/:node_id", put(update_server_node))
 }
@@ -59,14 +59,14 @@ async fn log_into_server(
 // POST /api/data/nodes/servers
 /////////////////////////////////////////////////////////////////////////////
 
-async fn add_server_node(
+async fn add_server(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Form(form): Form<LogIntoServer>,
 ) -> Result<(StatusCode, Content<Server>), ServiceError> {
     state
-        .add_server_node(form, Arc::new(operator))
+        .add_server(form, Arc::new(operator))
         .await
         .map(|server| (StatusCode::CREATED, Content(server, accept)))
 }
@@ -79,10 +79,10 @@ async fn update_server_node(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
-    Form(form): Form<UpdateServerNode>,
+    Form(form): Form<UpdateServer>,
 ) -> Result<StatusCode, ServiceError> {
     state
-        .update_server_node(node_id, form, Arc::new(operator))
+        .update_server(node_id, form, Arc::new(operator))
         .await
         .map(|_| StatusCode::OK)
 }

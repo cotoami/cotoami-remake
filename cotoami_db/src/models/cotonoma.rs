@@ -60,9 +60,9 @@ impl Cotonoma {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub fn to_update(&self) -> UpdateCotonoma { UpdateCotonoma::new(&self.uuid) }
+    pub(crate) fn to_update(&self) -> UpdateCotonoma { UpdateCotonoma::new(&self.uuid) }
 
-    pub fn to_import(&self) -> NewCotonoma {
+    pub(crate) fn to_import(&self) -> NewCotonoma {
         NewCotonoma {
             uuid: self.uuid,
             node_id: &self.node_id,
@@ -85,7 +85,7 @@ impl BelongsToNode for Cotonoma {
 /// An `Insertable` cotonoma data
 #[derive(Insertable, Validate)]
 #[diesel(table_name = cotonomas)]
-pub struct NewCotonoma<'a> {
+pub(crate) struct NewCotonoma<'a> {
     uuid: Id<Cotonoma>,
     node_id: &'a Id<Node>,
     coto_id: &'a Id<Coto>,
@@ -122,7 +122,7 @@ impl<'a> NewCotonoma<'a> {
 /// A changeset of [Cotonoma] for update.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = cotonomas, primary_key(uuid))]
-pub struct UpdateCotonoma<'a> {
+pub(crate) struct UpdateCotonoma<'a> {
     uuid: &'a Id<Cotonoma>,
 
     #[new(default)]

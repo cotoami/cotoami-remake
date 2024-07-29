@@ -52,7 +52,7 @@ impl ClientNode {
         }
     }
 
-    pub fn to_update(&self) -> UpdateClientNode { UpdateClientNode::new(&self.node_id) }
+    pub(crate) fn to_update(&self) -> UpdateClientNode { UpdateClientNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -62,7 +62,7 @@ impl ClientNode {
 /// An `Insertable` client node data
 #[derive(Insertable)]
 #[diesel(table_name = client_nodes)]
-pub struct NewClientNode<'a> {
+pub(crate) struct NewClientNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
     password_hash: String,
@@ -125,7 +125,7 @@ impl<'a> Principal for ClientNodeAsPrincipal<'a> {
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = client_nodes, primary_key(node_id))]
-pub struct UpdateClientNode<'a> {
+pub(crate) struct UpdateClientNode<'a> {
     node_id: &'a Id<Node>,
 
     #[new(default)]

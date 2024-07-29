@@ -76,13 +76,13 @@ impl Node {
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub fn to_update(&self) -> UpdateNode { UpdateNode::new(&self.uuid, self.version + 1) }
+    pub(crate) fn to_update(&self) -> UpdateNode { UpdateNode::new(&self.uuid, self.version + 1) }
 
     /// Converting a foreign node into an importable data.
     ///
     /// - It assumes the node data came from another node.
     /// - `created_at` is the original date of the node creation, so it should be kept.
-    pub fn to_import(&self) -> ImportNode {
+    pub(crate) fn to_import(&self) -> ImportNode {
         ImportNode {
             uuid: &self.uuid,
             icon: &self.icon,
@@ -101,7 +101,7 @@ impl Node {
 /// An `Insertable` new node
 #[derive(Insertable, Validate)]
 #[diesel(table_name = nodes)]
-pub struct NewNode<'a> {
+pub(crate) struct NewNode<'a> {
     uuid: Id<Node>,
     icon: Vec<u8>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
@@ -143,7 +143,7 @@ impl<'a> NewNode<'a> {
 /// An `Insertable/AsChangeset` node data for importing/upgrading a remote node
 #[derive(Insertable, AsChangeset, Identifiable)]
 #[diesel(table_name = nodes, primary_key(uuid))]
-pub struct ImportNode<'a> {
+pub(crate) struct ImportNode<'a> {
     uuid: &'a Id<Node>,
     icon: &'a Bytes,
     name: &'a str,
@@ -160,7 +160,7 @@ pub struct ImportNode<'a> {
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = nodes, primary_key(uuid))]
-pub struct UpdateNode<'a> {
+pub(crate) struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
 
     #[new(default)]

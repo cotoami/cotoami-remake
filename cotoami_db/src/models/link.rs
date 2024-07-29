@@ -66,7 +66,7 @@ impl Link {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub fn edit<'a>(
+    pub(crate) fn edit<'a>(
         &'a self,
         linking_phrase: Option<&'a str>,
         details: Option<&'a str>,
@@ -77,9 +77,9 @@ impl Link {
         update_link
     }
 
-    pub fn to_update(&self) -> UpdateLink<'_> { UpdateLink::new(&self.uuid) }
+    pub(crate) fn to_update(&self) -> UpdateLink<'_> { UpdateLink::new(&self.uuid) }
 
-    pub fn to_import(&self) -> NewLink {
+    pub(crate) fn to_import(&self) -> NewLink {
         NewLink {
             uuid: self.uuid,
             node_id: &self.node_id,
@@ -123,7 +123,7 @@ impl BelongsToNode for Link {
 /// An `Insertable` link data
 #[derive(Insertable, Validate)]
 #[diesel(table_name = links)]
-pub struct NewLink<'a> {
+pub(crate) struct NewLink<'a> {
     uuid: Id<Link>,
     node_id: &'a Id<Node>,
     created_in_id: Option<&'a Id<Cotonoma>>,
@@ -178,7 +178,7 @@ impl<'a> NewLink<'a> {
 /// A changeset of [Link] for update.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = links, primary_key(uuid))]
-pub struct UpdateLink<'a> {
+pub(crate) struct UpdateLink<'a> {
     uuid: &'a Id<Link>,
 
     #[new(default)]

@@ -45,7 +45,7 @@ object ServerJson {
       password: String,
       clientRole: Option[String] = None
   ): Cmd[Either[ErrorJson, ServerJson]] =
-    Commands.send(Commands.AddServerNode(url, password, clientRole))
+    Commands.send(Commands.AddServer(url, password, clientRole))
 }
 
 case class ServerNode(json: ServerNodeJson) {
@@ -90,7 +90,7 @@ object ServerNodeJson {
       disabled: Option[Boolean],
       url: Option[String]
   ): Cmd[Either[ErrorJson, ServerNodeJson]] =
-    Commands.send(Commands.UpdateServerNode(id, disabled, url))
+    Commands.send(Commands.UpdateServer(id, disabled, url))
 }
 
 sealed trait NotConnected

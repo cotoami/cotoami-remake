@@ -107,16 +107,16 @@ impl Coto {
         }
     }
 
-    pub fn edit<'a>(&'a self, content: &'a str, summary: Option<&'a str>) -> UpdateCoto<'a> {
+    pub(crate) fn edit<'a>(&'a self, content: &'a str, summary: Option<&'a str>) -> UpdateCoto<'a> {
         let mut update_coto = self.to_update();
         update_coto.content = Some(Some(content));
         update_coto.summary = Some(crate::blank_to_none(summary));
         update_coto
     }
 
-    pub fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
+    pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
-    pub fn to_import(&self) -> NewCoto {
+    pub(crate) fn to_import(&self) -> NewCoto {
         NewCoto {
             uuid: self.uuid,
             node_id: &self.node_id,
@@ -171,7 +171,7 @@ impl BelongsToNode for Coto {
 /// An `Insertable` coto data
 #[derive(derive_more::Debug, Insertable, Validate)]
 #[diesel(table_name = cotos)]
-pub struct NewCoto<'a> {
+pub(crate) struct NewCoto<'a> {
     uuid: Id<Coto>,
 
     node_id: &'a Id<Node>,
@@ -278,7 +278,7 @@ impl<'a> NewCoto<'a> {
 /// Only fields that have [Some] value will be updated.
 #[derive(derive_more::Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = cotos, primary_key(uuid))]
-pub struct UpdateCoto<'a> {
+pub(crate) struct UpdateCoto<'a> {
     uuid: &'a Id<Coto>,
 
     #[new(default)]

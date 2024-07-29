@@ -52,7 +52,7 @@ pub struct ChangelogEntry {
 impl ChangelogEntry {
     pub fn inserted_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.inserted_at) }
 
-    pub fn to_import(&self) -> NewChangelogEntry {
+    pub(crate) fn to_import(&self) -> NewChangelogEntry {
         NewChangelogEntry {
             origin_node_id: &self.origin_node_id,
             origin_serial_number: self.origin_serial_number,
@@ -66,7 +66,7 @@ impl ChangelogEntry {
 /// An `Insertable` changelog entry
 #[derive(Insertable)]
 #[diesel(table_name = changelog)]
-pub struct NewChangelogEntry<'a> {
+pub(crate) struct NewChangelogEntry<'a> {
     origin_node_id: &'a Id<Node>,
     origin_serial_number: i64,
     type_number: i16,
@@ -147,7 +147,7 @@ pub enum Change {
 }
 
 impl Change {
-    pub fn new_changelog_entry<'a>(
+    pub(crate) fn new_changelog_entry<'a>(
         &'a self,
         local_node_id: &'a Id<Node>,
         serial_number: i64,

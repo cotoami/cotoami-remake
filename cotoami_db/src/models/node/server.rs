@@ -67,7 +67,7 @@ impl ServerNode {
         }
     }
 
-    pub fn to_update(&self) -> UpdateServerNode { UpdateServerNode::new(&self.node_id) }
+    pub(crate) fn to_update(&self) -> UpdateServerNode { UpdateServerNode::new(&self.node_id) }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ impl FromSql<Binary, Sqlite> for EncryptedPassword {
 /// An `Insertable` server node data
 #[derive(Insertable, Validate)]
 #[diesel(table_name = server_nodes)]
-pub struct NewServerNode<'a> {
+pub(crate) struct NewServerNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
     #[validate(url, length(max = "ServerNode::URL_PREFIX_MAX_LENGTH"))]
@@ -137,7 +137,7 @@ impl<'a> NewServerNode<'a> {
 /// Only fields that have [Some] value will be updated.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = server_nodes, primary_key(node_id))]
-pub struct UpdateServerNode<'a> {
+pub(crate) struct UpdateServerNode<'a> {
     node_id: &'a Id<Node>,
 
     #[new(default)]

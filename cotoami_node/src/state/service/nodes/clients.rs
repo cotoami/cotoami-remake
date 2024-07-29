@@ -9,18 +9,18 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClientNode, ClientNodeAdded, NodeRole},
+        models::{AddClient, ClientAdded, NodeRole},
         ServiceError,
     },
     state::NodeState,
 };
 
 impl NodeState {
-    pub async fn add_client_node(
+    pub async fn add_client(
         &self,
-        input: AddClientNode,
+        input: AddClient,
         operator: Arc<Operator>,
-    ) -> Result<ClientNodeAdded, ServiceError> {
+    ) -> Result<ClientAdded, ServiceError> {
         if let Err(errors) = input.validate() {
             return ("add_client_node", errors).into_result();
         }
@@ -47,7 +47,7 @@ impl NodeState {
                     &operator,
                 )?;
                 debug!("Client node ({}) registered as a {}", client.node_id, role);
-                Ok(ClientNodeAdded { password })
+                Ok(ClientAdded { password })
             }
         })
         .await?
