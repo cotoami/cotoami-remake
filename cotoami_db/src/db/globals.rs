@@ -58,6 +58,10 @@ impl Globals {
 
     pub fn local_node(&self) -> Option<LocalNode> { self.local_node.read().clone() }
 
+    pub fn try_get_local_node(&self) -> Result<LocalNode> {
+        Ok(self.try_read_local_node()?.clone())
+    }
+
     pub fn local_node_as_operator(&self) -> Result<Operator> {
         Ok(Operator::Owner(self.try_get_local_node_id()?))
     }

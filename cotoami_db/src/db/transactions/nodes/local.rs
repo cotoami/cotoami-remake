@@ -147,11 +147,11 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn set_image_max_size(&self, size: Option<i32>) -> Result<()> {
-        let mut local_node = self.globals.try_write_local_node()?;
-        let mut update_local = local_node.to_update();
-        update_local.image_max_size = Some(size);
-        *local_node = self.write_transaction(local_ops::update(&update_local))?;
-        Ok(())
+        self.update_local_node(|local_node| {
+            let mut update_local = local_node.to_update();
+            update_local.image_max_size = Some(size);
+            self.write_transaction(local_ops::update(&update_local))
+        })
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -159,43 +159,53 @@ impl<'a> DatabaseSession<'a> {
     /////////////////////////////////////////////////////////////////////////////
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
-        let mut local_node = self.globals.try_write_local_node()?;
-        *local_node =
-            self.write_transaction(local_ops::start_session(&local_node, password, duration))?;
-        Ok(local_node.clone())
+        self.update_local_node(|local_node| {
+            self.write_transaction(local_ops::start_session(&local_node, password, duration))
+        })?;
+        self.globals.try_get_local_node()
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
-        let mut local_node = self.globals.try_write_local_node()?;
-        *local_node = self.write_transaction(local_ops::clear_session(&local_node))?;
-        Ok(())
+        self.update_local_node(|local_node| {
+            self.write_transaction(local_ops::clear_session(&local_node))
+        })
     }
 
     pub fn set_owner_password_if_none(&self, new_password: &str) -> Result<()> {
-        let mut local_node = self.globals.try_write_local_node()?;
-        let mut principal = local_node.as_principal();
-        if principal.password_hash().is_some() {
-            bail!("The local node already has a password.");
-        }
-        principal.update_password(new_password)?;
-        *local_node = self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
-            server_ops::clear_all_passwords().run(ctx)?;
-            Ok(local_node)
-        })?;
-        Ok(())
+        self.update_local_node(|local_node| {
+            let mut principal = local_node.as_principal();
+            if principal.password_hash().is_some() {
+                bail!("The local node already has a password.");
+            }
+            principal.update_password(new_password)?;
+            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+                let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
+                server_ops::clear_all_passwords().run(ctx)?;
+                Ok(local_node)
+            })
+        })
     }
 
     pub fn change_owner_password(&self, new_password: &str, old_password: &str) -> Result<()> {
+        self.update_local_node(|local_node| {
+            let mut principal = local_node.as_principal();
+            principal.verify_password(old_password)?;
+            principal.update_password(new_password)?;
+            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+                let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
+                server_ops::reencrypt_all_passwords(new_password, old_password).run(ctx)?;
+                Ok(local_node)
+            })
+        })
+    }
+
+    /// Util function to update the [LocalNode] and make sure to update the cache.
+    fn update_local_node<Update>(&self, update: Update) -> Result<()>
+    where
+        Update: FnOnce(&LocalNode) -> Result<LocalNode>,
+    {
         let mut local_node = self.globals.try_write_local_node()?;
-        let mut principal = local_node.as_principal();
-        principal.verify_password(old_password)?;
-        principal.update_password(new_password)?;
-        *local_node = self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
-            server_ops::reencrypt_all_passwords(new_password, old_password).run(ctx)?;
-            Ok(local_node)
-        })?;
+        *local_node = update(&local_node)?; // also update the cache
         Ok(())
     }
 }
