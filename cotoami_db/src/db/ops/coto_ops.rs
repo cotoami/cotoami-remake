@@ -130,6 +130,21 @@ pub(crate) fn edit<'a>(
     })
 }
 
+pub(crate) fn set_media_content<'a>(
+    id: &'a Id<Coto>,
+    media_content: Option<(&'a [u8], &'a str)>,
+    image_max_size: Option<u32>,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Coto> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_coto = UpdateCoto::new(id);
+        update_coto.set_media_content(media_content, image_max_size)?;
+        update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
+        let coto = update(&update_coto).run(ctx)?;
+        Ok(coto)
+    })
+}
+
 pub(crate) fn delete(
     id: &Id<Coto>,
     deleted_at: Option<NaiveDateTime>,

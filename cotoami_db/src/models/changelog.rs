@@ -116,8 +116,8 @@ pub enum Change {
     } = 7,
     SetMediaContent {
         coto_id: Id<Coto>,
-        content: Option<Bytes>,
-        media_type: Option<String>,
+        content: Option<(Bytes, String)>,
+        updated_at: NaiveDateTime,
     } = 8,
     // Used to delete a coto or cotonoma
     DeleteCoto {
