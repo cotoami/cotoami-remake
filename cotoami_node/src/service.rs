@@ -163,16 +163,13 @@ pub enum Command {
     TryLogIntoServer(LogIntoServer),
 
     /// Request to add a new [Server].
-    AddServerNode(LogIntoServer),
+    AddServer(LogIntoServer),
 
     /// Request to update a server node and return an updated [ServerNode].
-    UpdateServerNode {
-        id: Id<Node>,
-        values: UpdateServerNode,
-    },
+    UpdateServer { id: Id<Node>, values: UpdateServer },
 
-    /// Request to add a new client node and return [ClientNodeAdded] if succeeded.
-    AddClientNode(AddClientNode),
+    /// Request to add a new client node and return [ClientAdded] if succeeded.
+    AddClient(AddClient),
 
     /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
     RecentCotonomas {

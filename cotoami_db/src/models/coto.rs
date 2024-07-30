@@ -1,18 +1,21 @@
 //! A coto is a unit of data in a cotoami database.
 
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{
-    cotonoma::Cotonoma,
-    node::{BelongsToNode, Node},
-    Id, Ids,
+use crate::{
+    models::{
+        cotonoma::Cotonoma,
+        node::{BelongsToNode, Node},
+        Bytes, Id, Ids,
+    },
+    schema::cotos,
 };
-use crate::schema::cotos;
 
 /////////////////////////////////////////////////////////////////////////////
 // Coto
@@ -20,7 +23,7 @@ use crate::schema::cotos;
 
 /// A row in `cotos` table
 #[derive(
-    Debug,
+    derive_more::Debug,
     Clone,
     PartialEq,
     Eq,
@@ -54,6 +57,13 @@ pub struct Coto {
     ///
     /// `None` if it is a repost.
     pub content: Option<String>,
+
+    /// Bytes of optional media content.
+    #[debug(skip)]
+    pub media_content: Option<Bytes>,
+
+    /// MIME type of the media content.
+    pub media_type: Option<String>,
 
     /// Optional summary of the content for compact display
     /// If this coto is a cotonoma, the summary should be the same as the cotonoma name.
@@ -97,32 +107,28 @@ impl Coto {
         }
     }
 
-    pub fn edit<'a>(&'a self, content: &'a str, summary: Option<&'a str>) -> UpdateCoto<'a> {
-        let mut update_coto = self.to_update();
-        update_coto.content = Some(content);
-        update_coto.summary = crate::blank_to_none(summary);
-        update_coto
-    }
-
-    pub fn to_update(&self) -> UpdateCoto {
-        UpdateCoto {
-            uuid: &self.uuid,
-            content: self.content.as_deref(),
-            summary: self.summary.as_deref(),
-            is_cotonoma: self.is_cotonoma,
-            repost_of_id: self.repost_of_id.as_ref(),
-            reposted_in_ids: self.reposted_in_ids.as_ref(),
-            updated_at: crate::current_datetime(),
+    pub fn media_content(&self) -> Option<(Bytes, String)> {
+        if let (Some(content), Some(media_type)) = (&self.media_content, &self.media_type) {
+            Some((content.clone(), media_type.clone()))
+        } else {
+            None
         }
     }
 
-    pub fn to_import(&self) -> NewCoto {
+    pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
+
+    pub(crate) fn to_import(&self) -> NewCoto {
         NewCoto {
             uuid: self.uuid,
             node_id: &self.node_id,
             posted_in_id: self.posted_in_id.as_ref(),
             posted_by_id: &self.posted_by_id,
             content: self.content.as_deref(),
+            media_content: self
+                .media_content
+                .as_ref()
+                .map(|bytes| Cow::from(bytes.as_ref())),
+            media_type: self.media_type.as_deref(),
             summary: self.summary.as_deref(),
             is_cotonoma: self.is_cotonoma,
             repost_of_id: self.repost_of_id.as_ref(),
@@ -164,21 +170,36 @@ impl BelongsToNode for Coto {
 /////////////////////////////////////////////////////////////////////////////
 
 /// An `Insertable` coto data
-#[derive(Debug, Insertable, Validate)]
+#[derive(derive_more::Debug, Insertable, Validate)]
 #[diesel(table_name = cotos)]
-pub struct NewCoto<'a> {
+pub(crate) struct NewCoto<'a> {
     uuid: Id<Coto>,
+
     node_id: &'a Id<Node>,
+
     posted_in_id: Option<&'a Id<Cotonoma>>,
+
     posted_by_id: &'a Id<Node>,
+
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     content: Option<&'a str>,
+
+    #[debug(skip)]
+    media_content: Option<Cow<'a, [u8]>>,
+
+    media_type: Option<&'a str>,
+
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     summary: Option<&'a str>,
+
     is_cotonoma: bool,
+
     repost_of_id: Option<&'a Id<Coto>>,
+
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
+
     created_at: NaiveDateTime,
+
     updated_at: NaiveDateTime,
 }
 
@@ -191,6 +212,8 @@ impl<'a> NewCoto<'a> {
             posted_in_id: None,
             posted_by_id,
             content: None,
+            media_content: None,
+            media_type: None,
             summary: None,
             is_cotonoma: false,
             repost_of_id: None,
@@ -205,12 +228,22 @@ impl<'a> NewCoto<'a> {
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
         content: &'a str,
+        media_content: Option<(&'a [u8], &'a str)>,
+        image_max_size: Option<u32>,
         summary: Option<&'a str>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
+
         coto.posted_in_id = Some(posted_in_id);
         coto.content = Some(content);
         coto.summary = summary;
+
+        if let Some((content, media_type)) = media_content {
+            let content = process_media_content((content, media_type), image_max_size)?;
+            coto.media_content = Some(content);
+            coto.media_type = Some(media_type);
+        }
+
         coto.validate()?;
         Ok(coto)
     }
@@ -242,17 +275,81 @@ impl<'a> NewCoto<'a> {
 // UpdateCoto
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a coto for update
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = cotos, primary_key(uuid), treat_none_as_null = true)]
-pub struct UpdateCoto<'a> {
+/// A changeset of [Coto] for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(derive_more::Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = cotos, primary_key(uuid))]
+pub(crate) struct UpdateCoto<'a> {
     uuid: &'a Id<Coto>,
+
+    #[new(default)]
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    pub content: Option<&'a str>,
+    pub content: Option<Option<&'a str>>,
+
+    #[debug(skip)]
+    #[new(default)]
+    pub media_content: Option<Option<Cow<'a, [u8]>>>,
+
+    #[new(default)]
+    pub media_type: Option<Option<&'a str>>,
+
+    #[new(default)]
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    pub summary: Option<&'a str>,
-    pub is_cotonoma: bool,
-    pub repost_of_id: Option<&'a Id<Coto>>,
-    pub reposted_in_ids: Option<&'a Ids<Cotonoma>>,
+    pub summary: Option<Option<&'a str>>,
+
+    #[new(default)]
+    pub is_cotonoma: Option<bool>,
+
+    #[new(default)]
+    pub repost_of_id: Option<Option<&'a Id<Coto>>>,
+
+    #[new(default)]
+    pub reposted_in_ids: Option<Option<&'a Ids<Cotonoma>>>,
+
+    #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
+}
+
+impl<'a> UpdateCoto<'a> {
+    pub fn edit(&mut self, content: &'a str, summary: Option<&'a str>) {
+        self.content = Some(Some(content));
+        self.summary = Some(crate::blank_to_none(summary));
+    }
+
+    pub fn set_media_content(
+        &mut self,
+        media_content: Option<(&'a [u8], &'a str)>,
+        image_max_size: Option<u32>,
+    ) -> Result<()> {
+        if let Some((content, media_type)) = media_content {
+            let content = process_media_content((content, media_type), image_max_size)?;
+            self.media_content = Some(Some(content));
+            self.media_type = Some(Some(media_type));
+        } else {
+            self.media_content = Some(None);
+            self.media_type = Some(None);
+        }
+        Ok(())
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Internal functions
+/////////////////////////////////////////////////////////////////////////////
+
+fn process_media_content<'a>(
+    media_content: (&'a [u8], &'a str),
+    image_max_size: Option<u32>,
+) -> Result<Cow<'a, [u8]>> {
+    let (content, media_type) = media_content;
+    if media_type.starts_with("image/") {
+        if let Some(max_size) = image_max_size {
+            let resized = super::resize_image(content, max_size, None)?;
+            Ok(Cow::from(resized))
+        } else {
+            Ok(Cow::from(content))
+        }
+    } else {
+        Ok(Cow::from(content))
+    }
 }

@@ -109,38 +109,36 @@ fn owner_session() -> Result<()> {
     let duration = Duration::minutes(30);
 
     // when
-    let ((mut local_node, _), _) = ds.init_as_node(None, Some("foo"))?;
+    let ((local_node, _), _) = ds.init_as_node(None, Some("foo"))?;
+    let mut owner = local_node.as_principal();
 
     // then
-    assert_that!(local_node.start_session("bar", duration), err(anything()));
+    assert_that!(owner.start_session("bar", duration), err(anything()));
 
-    let session_id = local_node.start_session("foo", duration)?.to_owned();
-    assert_eq!(
-        local_node.owner_session_token.as_deref().unwrap(),
-        &session_id
-    );
-    assert_approximately_now(local_node.session_expires_at_as_local_time().unwrap() - duration);
-    local_node.verify_session(&session_id)?;
+    let session_id = owner.start_session("foo", duration)?.to_owned();
+    assert_that!(owner.session_token(), some(eq(&session_id)));
+    assert_approximately_now(owner.session_expires_at_as_local_time().unwrap() - duration);
+    owner.verify_session(&session_id)?;
     assert_that!(
-        local_node.verify_session("invalid-token"),
+        owner.verify_session("invalid-token"),
         err(displays_as(eq("The passed session token is invalid.")))
     );
 
     // when
-    local_node.owner_session_expires_at = Some(Utc::now().naive_utc() - Duration::seconds(1));
+    owner.set_session_expires_at(Some(Utc::now().naive_utc() - Duration::seconds(1)));
 
     // then
     assert_that!(
-        local_node.verify_session(&session_id),
+        owner.verify_session(&session_id),
         err(displays_as(eq("Session has been expired.")))
     );
 
     // when
-    local_node.clear_session();
+    owner.clear_session();
 
     // then
     assert_that!(
-        local_node.verify_session(&session_id),
+        owner.verify_session(&session_id),
         err(displays_as(eq("Session doesn't exist.")))
     );
 

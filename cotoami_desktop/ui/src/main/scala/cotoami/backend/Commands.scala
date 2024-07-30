@@ -36,12 +36,12 @@ object Commands {
       )
     )
 
-  def AddServerNode(
+  def AddServer(
       url_prefix: String,
       password: String,
       client_role: Option[String] = None
   ) =
-    jso(AddServerNode =
+    jso(AddServer =
       jso(
         url_prefix = url_prefix,
         password = password,
@@ -49,12 +49,12 @@ object Commands {
       )
     )
 
-  def UpdateServerNode(
+  def UpdateServer(
       id: Id[Node],
       disabled: Option[Boolean],
       url_prefix: Option[String]
   ) =
-    jso(UpdateServerNode =
+    jso(UpdateServer =
       jso(
         id = id.uuid,
         values = jso(

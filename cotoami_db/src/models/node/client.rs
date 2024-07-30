@@ -1,6 +1,10 @@
+use std::borrow::{Borrow, Cow};
+
 use anyhow::Result;
 use chrono::NaiveDateTime;
+use derive_new::new;
 use diesel::prelude::*;
+use validator::Validate;
 
 use super::{Node, Principal};
 use crate::{models::Id, schema::client_nodes};
@@ -11,17 +15,9 @@ use crate::{models::Id, schema::client_nodes};
 
 /// A row in `client_nodes` table
 #[derive(
-    derive_more::Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Identifiable,
-    AsChangeset,
-    Queryable,
-    Selectable,
-    serde::Serialize,
+    derive_more::Debug, Clone, PartialEq, Eq, Identifiable, Queryable, Selectable, serde::Serialize,
 )]
-#[diesel(primary_key(node_id), treat_none_as_null = true)]
+#[diesel(primary_key(node_id))]
 pub struct ClientNode {
     /// UUID of this client node
     pub node_id: Id<Node>,
@@ -46,21 +42,14 @@ pub struct ClientNode {
     pub disabled: bool,
 }
 
-impl Principal for ClientNode {
-    fn password_hash(&self) -> Option<&str> { Some(&self.password_hash) }
-
-    fn set_password_hash(&mut self, hash: Option<String>) {
-        self.password_hash = hash.unwrap_or_default();
-    }
-
-    fn session_token(&self) -> Option<&str> { self.session_token.as_deref() }
-
-    fn set_session_token(&mut self, token: Option<String>) { self.session_token = token; }
-
-    fn session_expires_at(&self) -> Option<&NaiveDateTime> { self.session_expires_at.as_ref() }
-
-    fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>) {
-        self.session_expires_at = expires_at;
+impl ClientNode {
+    pub fn as_principal(&self) -> ClientNodeAsPrincipal {
+        ClientNodeAsPrincipal {
+            node_id: &self.node_id,
+            password_hash: Cow::from(&self.password_hash),
+            session_token: self.session_token.as_ref().map(Cow::from),
+            session_expires_at: self.session_expires_at,
+        }
     }
 }
 
@@ -71,7 +60,7 @@ impl Principal for ClientNode {
 /// An `Insertable` client node data
 #[derive(Insertable)]
 #[diesel(table_name = client_nodes)]
-pub struct NewClientNode<'a> {
+pub(crate) struct NewClientNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
     password_hash: String,
@@ -86,4 +75,57 @@ impl<'a> NewClientNode<'a> {
             password_hash,
         })
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// ClientNodeAsPrincipal
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, Identifiable, AsChangeset)]
+#[diesel(table_name = client_nodes, primary_key(node_id), treat_none_as_null = true)]
+pub struct ClientNodeAsPrincipal<'a> {
+    node_id: &'a Id<Node>,
+
+    #[debug(skip)]
+    password_hash: Cow<'a, str>,
+
+    #[debug(skip)]
+    session_token: Option<Cow<'a, str>>,
+
+    session_expires_at: Option<NaiveDateTime>,
+}
+
+impl<'a> Principal for ClientNodeAsPrincipal<'a> {
+    fn password_hash(&self) -> Option<&str> { Some(self.password_hash.borrow()) }
+
+    fn set_password_hash(&mut self, hash: Option<String>) {
+        self.password_hash = Cow::from(hash.unwrap_or_default());
+    }
+
+    fn session_token(&self) -> Option<&str> { self.session_token.as_deref() }
+
+    fn set_session_token(&mut self, token: Option<String>) {
+        self.session_token = token.map(Cow::from);
+    }
+
+    fn session_expires_at(&self) -> Option<&NaiveDateTime> { self.session_expires_at.as_ref() }
+
+    fn set_session_expires_at(&mut self, expires_at: Option<NaiveDateTime>) {
+        self.session_expires_at = expires_at;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// UpdateClientNode
+/////////////////////////////////////////////////////////////////////////////
+
+/// A changeset of [ClientNode] for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = client_nodes, primary_key(node_id))]
+pub(crate) struct UpdateClientNode<'a> {
+    node_id: &'a Id<Node>,
+
+    #[new(default)]
+    pub disabled: Option<bool>,
 }

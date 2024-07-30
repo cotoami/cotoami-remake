@@ -22,8 +22,9 @@ impl NodeState {
         let config = self.config().clone();
         spawn_blocking(move || {
             if let Some(local_node) = db.globals().local_node() {
-                if local_node.has_password() {
-                    local_node
+                let owner = local_node.as_principal();
+                if owner.has_password() {
+                    owner
                         .authenticate(config.owner_password.as_deref())
                         .context("Owner authentication has been failed.")?;
                 } else {

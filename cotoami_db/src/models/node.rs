@@ -1,16 +1,14 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
-use std::{borrow::Cow, io::Cursor};
-
 use anyhow::{anyhow, bail, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use identicon_rs::Identicon;
-use image::imageops::FilterType;
 use tracing::debug;
 use validator::Validate;
 
@@ -78,21 +76,13 @@ impl Node {
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
-    pub fn to_update(&self) -> UpdateNode {
-        UpdateNode {
-            uuid: &self.uuid,
-            icon: Cow::from(self.icon.as_ref()),
-            name: &self.name,
-            root_cotonoma_id: self.root_cotonoma_id.as_ref(),
-            version: self.version + 1, // increment the version
-        }
-    }
+    pub(crate) fn to_update(&self) -> UpdateNode { UpdateNode::new(&self.uuid, self.version + 1) }
 
     /// Converting a foreign node into an importable data.
     ///
     /// - It assumes the node data came from another node.
     /// - `created_at` is the original date of the node creation, so it should be kept.
-    pub fn to_import(&self) -> ImportNode {
+    pub(crate) fn to_import(&self) -> ImportNode {
         ImportNode {
             uuid: &self.uuid,
             icon: &self.icon,
@@ -111,7 +101,7 @@ impl Node {
 /// An `Insertable` new node
 #[derive(Insertable, Validate)]
 #[diesel(table_name = nodes)]
-pub struct NewNode<'a> {
+pub(crate) struct NewNode<'a> {
     uuid: Id<Node>,
     icon: Vec<u8>,
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
@@ -153,7 +143,7 @@ impl<'a> NewNode<'a> {
 /// An `Insertable/AsChangeset` node data for importing/upgrading a remote node
 #[derive(Insertable, AsChangeset, Identifiable)]
 #[diesel(table_name = nodes, primary_key(uuid))]
-pub struct ImportNode<'a> {
+pub(crate) struct ImportNode<'a> {
     uuid: &'a Id<Node>,
     icon: &'a Bytes,
     name: &'a str,
@@ -166,41 +156,33 @@ pub struct ImportNode<'a> {
 // UpdateNode
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of a node for update
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
+/// A changeset of [Node] for update
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
 #[diesel(table_name = nodes, primary_key(uuid))]
-pub struct UpdateNode<'a> {
+pub(crate) struct UpdateNode<'a> {
     uuid: &'a Id<Node>,
-    icon: Cow<'a, [u8]>,
+
+    #[new(default)]
+    icon: Option<Vec<u8>>,
+
+    #[new(default)]
     #[validate(length(max = "Node::NAME_MAX_LENGTH"))]
-    pub name: &'a str,
-    pub root_cotonoma_id: Option<&'a Id<Cotonoma>>,
+    pub name: Option<&'a str>,
+
+    #[new(default)]
+    pub root_cotonoma_id: Option<Option<&'a Id<Cotonoma>>>,
+
     version: i32,
 }
 
 impl<'a> UpdateNode<'a> {
+    /// The given icon image will be resized to fit within [Node::ICON_MAX_SIZE]
+    /// and converted into PNG.
     pub fn set_icon(&mut self, icon: &'a [u8]) -> Result<()> {
-        let mut image = image::load_from_memory(icon)?;
-
-        // Resize the icon if it is larger than the max size.
-        if image.width() > Node::ICON_MAX_SIZE || image.height() > Node::ICON_MAX_SIZE {
-            debug!(
-                "Resizing an icon image ({} * {}) ...",
-                image.width(),
-                image.height()
-            );
-            image = image.resize(
-                Node::ICON_MAX_SIZE,
-                Node::ICON_MAX_SIZE,
-                FilterType::Lanczos3,
-            );
-        }
-
-        // Save the image as PNG.
-        let mut png_bytes: Vec<u8> = Vec::new();
-        image.write_to(&mut Cursor::new(&mut png_bytes), image::ImageFormat::Png)?;
-        self.icon = Cow::from(png_bytes);
-
+        let resized =
+            super::resize_image(icon, Node::ICON_MAX_SIZE, Some(image::ImageFormat::Png))?;
+        self.icon = Some(resized);
         Ok(())
     }
 }

@@ -115,6 +115,36 @@ pub(crate) fn update<'a>(update_coto: &'a UpdateCoto) -> impl Operation<Writable
     })
 }
 
+pub(crate) fn edit<'a>(
+    id: &'a Id<Coto>,
+    content: &'a str,
+    summary: Option<&'a str>,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Coto> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_coto = UpdateCoto::new(id);
+        update_coto.edit(content, summary);
+        update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
+        let coto = update(&update_coto).run(ctx)?;
+        Ok(coto)
+    })
+}
+
+pub(crate) fn set_media_content<'a>(
+    id: &'a Id<Coto>,
+    media_content: Option<(&'a [u8], &'a str)>,
+    image_max_size: Option<u32>,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Coto> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_coto = UpdateCoto::new(id);
+        update_coto.set_media_content(media_content, image_max_size)?;
+        update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
+        let coto = update(&update_coto).run(ctx)?;
+        Ok(coto)
+    })
+}
+
 pub(crate) fn delete(
     id: &Id<Coto>,
     deleted_at: Option<NaiveDateTime>,
@@ -196,6 +226,8 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         posted_in_id,
                         posted_by_id,
                         content,
+                        media_content,
+                        media_type,
                         summary,
                         is_cotonoma,
                         repost_of_id,
@@ -256,6 +288,8 @@ fn search_trigram_index(
                 posted_in_id,
                 posted_by_id,
                 content,
+                media_content,
+                media_type,
                 summary,
                 is_cotonoma,
                 repost_of_id,

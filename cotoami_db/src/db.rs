@@ -80,7 +80,10 @@ impl Database {
         let db_file = ensure_dir(root_dir)?.join(Self::DATABASE_FILE_NAME);
         let mut conn = new_ro_conn(&to_file_uri(db_file)?)?;
         if let Some((local_node, node)) = op::run_read(&mut conn, local_ops::get_pair())? {
-            Ok(Some((node, local_node.password_hash().is_some())))
+            Ok(Some((
+                node,
+                local_node.as_principal().password_hash().is_some(),
+            )))
         } else {
             Ok(None)
         }

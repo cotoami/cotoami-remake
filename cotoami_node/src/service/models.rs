@@ -63,7 +63,7 @@ pub struct ClientNodeSession {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct AddClientNode {
+pub struct AddClient {
     #[validate(required)]
     pub id: Option<Id<Node>>,
 
@@ -74,7 +74,7 @@ pub struct AddClientNode {
     pub can_edit_links: Option<bool>,
 }
 
-impl AddClientNode {
+impl AddClient {
     pub fn client_role(&self) -> NodeRole { self.client_role.unwrap_or(NodeRole::Child) }
 
     pub fn as_owner(&self) -> bool { self.as_owner.unwrap_or(false) }
@@ -83,7 +83,7 @@ impl AddClientNode {
 }
 
 #[derive(serde::Serialize)]
-pub struct ClientNodeAdded {
+pub struct ClientAdded {
     /// Generated password
     pub password: String,
 }
@@ -166,7 +166,7 @@ pub enum NotConnected {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct UpdateServerNode {
+pub struct UpdateServer {
     pub disabled: Option<bool>,
     pub url_prefix: Option<String>,
 }
@@ -212,6 +212,10 @@ impl Changes {
 pub struct CotoInput {
     #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
     pub content: Option<String>,
+
+    /// A pair of media content data and its media type.
+    /// TODO: needs validation?
+    pub media_content: Option<(Bytes, String)>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     pub summary: Option<String>,

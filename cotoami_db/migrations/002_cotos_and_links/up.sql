@@ -20,9 +20,15 @@ CREATE TABLE cotos (
   -- UUID of the node whose owner has posted this coto.
   posted_by_id TEXT NOT NULL,
 
-  -- Content of this coto.
+  -- Text content of this coto.
   -- NULL if this is a repost.
   content TEXT,
+
+  -- Bytes of optional media content.
+  media_content BLOB,
+
+  -- MIME type of the media content.
+  media_type TEXT,
 
   -- Optional summary of the content for compact display.
   summary TEXT,

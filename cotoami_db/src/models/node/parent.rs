@@ -1,6 +1,8 @@
 use anyhow::Result;
 use chrono::NaiveDateTime;
+use derive_new::new;
 use diesel::prelude::*;
+use validator::Validate;
 
 use super::Node;
 use crate::{models::Id, schema::parent_nodes};
@@ -16,7 +18,6 @@ use crate::{models::Id, schema::parent_nodes};
     Eq,
     PartialEq,
     Identifiable,
-    AsChangeset,
     Queryable,
     Selectable,
     serde::Serialize,
@@ -50,7 +51,7 @@ pub struct ParentNode {
 /// An `Insertable` parent node data
 #[derive(Insertable)]
 #[diesel(table_name = parent_nodes)]
-pub struct NewParentNode<'a> {
+pub(crate) struct NewParentNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
 }
@@ -62,4 +63,25 @@ impl<'a> NewParentNode<'a> {
             created_at: crate::current_datetime(),
         })
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// UpdateParentNode
+/////////////////////////////////////////////////////////////////////////////
+
+/// A changeset of [ParentNode] for update.
+/// Only fields that have [Some] value will be updated.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = parent_nodes, primary_key(node_id))]
+pub(crate) struct UpdateParentNode<'a> {
+    node_id: &'a Id<Node>,
+
+    #[new(default)]
+    pub changes_received: Option<i64>,
+
+    #[new(default)]
+    pub last_change_received_at: Option<Option<NaiveDateTime>>,
+
+    #[new(default)]
+    pub forked: Option<bool>,
 }

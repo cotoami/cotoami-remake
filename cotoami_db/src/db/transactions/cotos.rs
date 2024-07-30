@@ -69,18 +69,21 @@ impl<'a> DatabaseSession<'a> {
     pub fn post_coto(
         &self,
         content: &str,
+        media_content: Option<(&[u8], &str)>,
         summary: Option<&str>,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         self.globals.ensure_local(posted_in)?;
-        let local_node_id = self.globals.try_get_local_node_id()?;
+        let local_node = self.globals.try_read_local_node()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
-            &local_node_id,
+            &local_node.node_id,
             &posted_in.uuid,
             &posted_by_id,
             content,
+            media_content,
+            local_node.image_max_size.map(|size| size as u32),
             summary,
         )?;
         self.create_coto(&new_coto)
@@ -112,7 +115,7 @@ impl<'a> DatabaseSession<'a> {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_update_coto(&coto)?;
-            let coto = coto_ops::update(&coto.edit(content, summary)).run(ctx)?;
+            let coto = coto_ops::edit(id, content, summary, None).run(ctx)?;
             let change = Change::EditCoto {
                 coto_id: *id,
                 content: content.into(),
@@ -120,6 +123,34 @@ impl<'a> DatabaseSession<'a> {
                 updated_at: coto.updated_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((coto, changelog))
+        })
+    }
+
+    pub fn set_media_content(
+        &self,
+        id: &Id<Coto>,
+        media_content: Option<(&'a [u8], &'a str)>,
+        operator: &Operator,
+    ) -> Result<(Coto, ChangelogEntry)> {
+        let local_node = self.globals.try_read_local_node()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let coto = coto_ops::try_get(id).run(ctx)??;
+            self.globals.ensure_local(&coto)?;
+            operator.can_update_coto(&coto)?;
+            let coto = coto_ops::set_media_content(
+                id,
+                media_content,
+                local_node.image_max_size.map(|size| size as u32),
+                None,
+            )
+            .run(ctx)?;
+            let change = Change::SetMediaContent {
+                coto_id: *id,
+                content: coto.media_content(),
+                updated_at: coto.updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
             Ok((coto, changelog))
         })
     }

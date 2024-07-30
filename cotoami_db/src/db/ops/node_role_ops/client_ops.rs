@@ -5,12 +5,13 @@ use std::ops::DerefMut;
 
 use anyhow::Context;
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
     db::{error::*, op::*, ops, ops::Paginated},
     models::{
         node::{
-            client::{ClientNode, NewClientNode},
+            client::{ClientNode, ClientNodeAsPrincipal, NewClientNode, UpdateClientNode},
             Node, Principal,
         },
         Id,
@@ -95,11 +96,26 @@ pub(super) fn insert<'a>(
     })
 }
 
-/// Updates a client node row with a [ClientNode].
-pub(crate) fn update(client_node: &ClientNode) -> impl Operation<WritableConn, ClientNode> + '_ {
+/// Updates a client node row with a [UpdateClientNode].
+pub(crate) fn update<'a>(
+    update_client: &'a UpdateClientNode,
+) -> impl Operation<WritableConn, ClientNode> + 'a {
     write_op(move |conn| {
-        diesel::update(client_node)
-            .set(client_node)
+        update_client.validate()?;
+        diesel::update(update_client)
+            .set(update_client)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+/// Updates a client node row with a [ClientNodeAsPrincipal].
+pub(crate) fn update_as_principal<'a>(
+    principal: &'a ClientNodeAsPrincipal,
+) -> impl Operation<WritableConn, ClientNode> + 'a {
+    write_op(move |conn| {
+        diesel::update(principal)
+            .set(principal)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
@@ -110,9 +126,9 @@ pub(super) fn set_disabled(
     disabled: bool,
 ) -> impl Operation<WritableConn, ClientNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = try_get(id).run(ctx)??;
-        client.disabled = disabled;
-        client = update(&client).run(ctx)?;
+        let mut update_client = UpdateClientNode::new(id);
+        update_client.disabled = Some(disabled);
+        let client = update(&update_client).run(ctx)?;
         Ok(client)
     })
 }
@@ -124,23 +140,25 @@ pub(crate) fn start_session<'a>(
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let duration = chrono::Duration::from_std(duration)?;
-        let mut client = try_get(id)
+        let client = try_get(id)
             .run(ctx)?
             // Hide a not-found error for a security reason
             .context(DatabaseError::AuthenticationFailed)?;
-        client
+        let mut principal = client.as_principal();
+        principal
             .start_session(password, duration)
             .context(DatabaseError::AuthenticationFailed)?;
-        client = update(&client).run(ctx)?;
+        let client = update_as_principal(&principal).run(ctx)?;
         Ok(client)
     })
 }
 
 pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WritableConn, ClientNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = try_get(id).run(ctx)??;
-        client.clear_session();
-        update(&client).run(ctx)?;
+        let client = try_get(id).run(ctx)??;
+        let mut principal = client.as_principal();
+        principal.clear_session();
+        let client = update_as_principal(&principal).run(ctx)?;
         Ok(client)
     })
 }
@@ -150,9 +168,10 @@ pub fn change_password<'a>(
     password: &'a str,
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut client = try_get(id).run(ctx)??;
-        client.update_password(password)?;
-        update(&client).run(ctx)?;
+        let client = try_get(id).run(ctx)??;
+        let mut principal = client.as_principal();
+        principal.update_password(password)?;
+        let client = update_as_principal(&principal).run(ctx)?;
         Ok(client)
     })
 }

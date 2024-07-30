@@ -5,11 +5,12 @@ use std::ops::DerefMut;
 
 use anyhow::Context;
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
     db::{error::*, op::*, ops::node_ops},
     models::node::{
-        local::{LocalNode, NewLocalNode},
+        local::{LocalNode, NewLocalNode, NodeOwner, UpdateLocalNode},
         NewNode, Node, Principal,
     },
     schema::{local_node, nodes},
@@ -44,34 +45,53 @@ pub(crate) fn create<'a>(
     })
 }
 
-pub(crate) fn update(local_node: &LocalNode) -> impl Operation<WritableConn, LocalNode> + '_ {
+/// Updates the local node row with a [UpdateLocalNode].
+pub(crate) fn update<'a>(
+    update_local: &'a UpdateLocalNode,
+) -> impl Operation<WritableConn, LocalNode> + 'a {
     write_op(move |conn| {
-        diesel::update(local_node)
-            .set(local_node)
+        update_local.validate()?;
+        diesel::update(update_local)
+            .set(update_local)
+            .get_result(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn update_as_principal<'a>(
+    owner: &'a NodeOwner,
+) -> impl Operation<WritableConn, LocalNode> + 'a {
+    write_op(move |conn| {
+        diesel::update(owner)
+            .set(owner)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
 }
 
 pub(crate) fn start_session<'a>(
-    local_node: &'a mut LocalNode,
+    local_node: &'a LocalNode,
     password: &'a str,
     duration: Duration,
-) -> impl Operation<WritableConn, ()> + 'a {
+) -> impl Operation<WritableConn, LocalNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let duration = chrono::Duration::from_std(duration)?;
-        local_node
+        let mut principal = local_node.as_principal();
+        principal
             .start_session(password, duration)
             .context(DatabaseError::AuthenticationFailed)?;
-        *local_node = update(local_node).run(ctx)?;
-        Ok(())
+        let local_node = update_as_principal(&principal).run(ctx)?;
+        Ok(local_node)
     })
 }
 
-pub(crate) fn clear_session(local_node: &mut LocalNode) -> impl Operation<WritableConn, ()> + '_ {
+pub(crate) fn clear_session(
+    local_node: &LocalNode,
+) -> impl Operation<WritableConn, LocalNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        local_node.clear_session();
-        *local_node = update(local_node).run(ctx)?;
-        Ok(())
+        let mut principal = local_node.as_principal();
+        principal.clear_session();
+        let local_node = update_as_principal(&principal).run(ctx)?;
+        Ok(local_node)
     })
 }

@@ -45,6 +45,7 @@ diesel::table! {
         owner_password_hash -> Nullable<Text>,
         owner_session_token -> Nullable<Text>,
         owner_session_expires_at -> Nullable<Timestamp>,
+        image_max_size -> Nullable<Integer>,
     }
 }
 diesel::joinable!(local_node -> nodes (node_id));
@@ -105,6 +106,8 @@ diesel::table! {
         posted_in_id -> Nullable<Text>,
         posted_by_id -> Text,
         content -> Nullable<Text>,
+        media_content -> Nullable<Binary>,
+        media_type -> Nullable<Text>,
         summary -> Nullable<Text>,
         is_cotonoma -> Bool,
         repost_of_id -> Nullable<Text>,
@@ -124,6 +127,8 @@ diesel::table! {
         posted_in_id -> Nullable<Text>,
         posted_by_id -> Text,
         content -> Nullable<Text>,
+        media_content -> Nullable<Binary>,
+        media_type -> Nullable<Text>,
         summary -> Nullable<Text>,
         is_cotonoma -> Bool,
         repost_of_id -> Nullable<Text>,
@@ -154,6 +159,8 @@ diesel::table! {
         posted_in_id -> Nullable<Text>,
         posted_by_id -> Text,
         content -> Nullable<Text>,
+        media_content -> Nullable<Binary>,
+        media_type -> Nullable<Text>,
         summary -> Nullable<Text>,
         is_cotonoma -> Bool,
         repost_of_id -> Nullable<Text>,

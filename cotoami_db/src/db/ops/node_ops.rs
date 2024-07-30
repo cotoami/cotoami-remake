@@ -117,7 +117,7 @@ pub(crate) fn set_icon<'a>(
 ) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let node = try_get(id).run(ctx)??;
-        let mut update_node = node.to_update();
+        let mut update_node = node.to_update(); // incremented the node version
         update_node.set_icon(icon)?;
         update(&update_node).run(ctx)
     })
@@ -134,8 +134,8 @@ pub(crate) fn set_root_cotonoma<'a>(
         let (cotonoma, _) = cotonoma_ops::try_get(cotonoma_id).run(ctx)??;
         let node = try_get(id).run(ctx)??;
         let mut update_node = node.to_update();
-        update_node.name = &cotonoma.name;
-        update_node.root_cotonoma_id = Some(&cotonoma.uuid);
+        update_node.name = Some(&cotonoma.name);
+        update_node.root_cotonoma_id = Some(Some(&cotonoma.uuid));
         update(&update_node).run(ctx)
     })
 }

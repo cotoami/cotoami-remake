@@ -259,13 +259,13 @@ pub(crate) fn rename<'a>(
 
         // Update coto
         let mut coto = coto.to_update();
-        coto.summary = Some(name);
+        coto.summary = Some(Some(name));
         coto.updated_at = updated_at;
         let coto_updated = coto_ops::update(&coto).run(ctx)?;
 
         // Update cotonoma
         let mut cotonoma = cotonoma.to_update();
-        cotonoma.name = name;
+        cotonoma.name = Some(name);
         cotonoma.updated_at = updated_at;
         let cotonoma_updated = update(&cotonoma).run(ctx)?;
 

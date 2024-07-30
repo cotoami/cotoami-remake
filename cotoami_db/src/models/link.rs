@@ -4,6 +4,7 @@ use std::fmt::Display;
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -65,27 +66,20 @@ impl Link {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub fn edit<'a>(
+    pub(crate) fn edit<'a>(
         &'a self,
         linking_phrase: Option<&'a str>,
         details: Option<&'a str>,
     ) -> UpdateLink<'a> {
         let mut update_link = self.to_update();
-        update_link.linking_phrase = crate::blank_to_none(linking_phrase);
-        update_link.details = crate::blank_to_none(details);
+        update_link.linking_phrase = Some(crate::blank_to_none(linking_phrase));
+        update_link.details = Some(crate::blank_to_none(details));
         update_link
     }
 
-    pub fn to_update(&self) -> UpdateLink<'_> {
-        UpdateLink {
-            uuid: &self.uuid,
-            linking_phrase: self.linking_phrase.as_deref(),
-            details: self.details.as_deref(),
-            updated_at: crate::current_datetime(),
-        }
-    }
+    pub(crate) fn to_update(&self) -> UpdateLink<'_> { UpdateLink::new(&self.uuid) }
 
-    pub fn to_import(&self) -> NewLink {
+    pub(crate) fn to_import(&self) -> NewLink {
         NewLink {
             uuid: self.uuid,
             node_id: &self.node_id,
@@ -129,7 +123,7 @@ impl BelongsToNode for Link {
 /// An `Insertable` link data
 #[derive(Insertable, Validate)]
 #[diesel(table_name = links)]
-pub struct NewLink<'a> {
+pub(crate) struct NewLink<'a> {
     uuid: Id<Link>,
     node_id: &'a Id<Node>,
     created_in_id: Option<&'a Id<Cotonoma>>,
@@ -181,13 +175,20 @@ impl<'a> NewLink<'a> {
 // UpdateLink
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Identifiable, AsChangeset, Validate)]
-#[diesel(table_name = links, primary_key(uuid), treat_none_as_null = true)]
-pub struct UpdateLink<'a> {
+/// A changeset of [Link] for update.
+#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[diesel(table_name = links, primary_key(uuid))]
+pub(crate) struct UpdateLink<'a> {
     uuid: &'a Id<Link>,
+
+    #[new(default)]
     #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    pub linking_phrase: Option<&'a str>,
+    pub linking_phrase: Option<Option<&'a str>>,
+
+    #[new(default)]
     #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
-    pub details: Option<&'a str>,
+    pub details: Option<Option<&'a str>>,
+
+    #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
 }

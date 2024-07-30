@@ -68,6 +68,10 @@ CREATE TABLE local_node (
   -- Expiration date of node owner's session.
   owner_session_expires_at DATETIME, -- UTC
 
+  -- The maximum length of the longer side of images after they are resized (in pixels).
+  -- NULL means no resizing will be applied to incoming coto images.
+  image_max_size INTEGER,
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );
 

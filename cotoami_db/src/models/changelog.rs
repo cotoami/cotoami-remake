@@ -52,7 +52,7 @@ pub struct ChangelogEntry {
 impl ChangelogEntry {
     pub fn inserted_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.inserted_at) }
 
-    pub fn to_import(&self) -> NewChangelogEntry {
+    pub(crate) fn to_import(&self) -> NewChangelogEntry {
         NewChangelogEntry {
             origin_node_id: &self.origin_node_id,
             origin_serial_number: self.origin_serial_number,
@@ -66,7 +66,7 @@ impl ChangelogEntry {
 /// An `Insertable` changelog entry
 #[derive(Insertable)]
 #[diesel(table_name = changelog)]
-pub struct NewChangelogEntry<'a> {
+pub(crate) struct NewChangelogEntry<'a> {
     origin_node_id: &'a Id<Node>,
     origin_serial_number: i64,
     type_number: i16,
@@ -114,25 +114,30 @@ pub enum Change {
         summary: Option<String>,
         updated_at: NaiveDateTime,
     } = 7,
+    SetMediaContent {
+        coto_id: Id<Coto>,
+        content: Option<(Bytes, String)>,
+        updated_at: NaiveDateTime,
+    } = 8,
     // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
-    } = 8,
-    CreateCotonoma(Cotonoma, Coto) = 9,
+    } = 9,
+    CreateCotonoma(Cotonoma, Coto) = 10,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 10,
-    CreateLink(Link) = 11,
+    } = 11,
+    CreateLink(Link) = 12,
     EditLink {
         link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,
-    } = 12,
-    DeleteLink(Id<Link>) = 13,
+    } = 13,
+    DeleteLink(Id<Link>) = 14,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -143,11 +148,11 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 14,
+    } = 15,
 }
 
 impl Change {
-    pub fn new_changelog_entry<'a>(
+    pub(crate) fn new_changelog_entry<'a>(
         &'a self,
         local_node_id: &'a Id<Node>,
         serial_number: i64,

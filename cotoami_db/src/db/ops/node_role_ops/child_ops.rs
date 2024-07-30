@@ -3,12 +3,13 @@
 use std::ops::DerefMut;
 
 use diesel::prelude::*;
+use validator::Validate;
 
 use crate::{
     db::{error::*, op::*, ops, ops::Paginated},
     models::{
         node::{
-            child::{ChildNode, NewChildNode},
+            child::{ChildNode, NewChildNode, UpdateChildNode},
             Node,
         },
         Id,
@@ -74,11 +75,14 @@ pub(super) fn insert<'a>(
     })
 }
 
-/// Updates a child node row with a [ChildNode].
-pub(crate) fn update(child_node: &ChildNode) -> impl Operation<WritableConn, ChildNode> + '_ {
+/// Updates a child node row with a [UpdateChildNode].
+pub(crate) fn update<'a>(
+    update_child: &'a UpdateChildNode,
+) -> impl Operation<WritableConn, ChildNode> + 'a {
     write_op(move |conn| {
-        diesel::update(child_node)
-            .set(child_node)
+        update_child.validate()?;
+        diesel::update(update_child)
+            .set(update_child)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
     })
@@ -90,10 +94,10 @@ pub(crate) fn edit(
     can_edit_links: bool,
 ) -> impl Operation<WritableConn, ChildNode> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut child = try_get(id).run(ctx)??;
-        child.as_owner = as_owner;
-        child.can_edit_links = can_edit_links;
-        child = update(&child).run(ctx)?;
+        let mut update_child = UpdateChildNode::new(id);
+        update_child.as_owner = Some(as_owner);
+        update_child.can_edit_links = Some(can_edit_links);
+        let child = update(&update_child).run(ctx)?;
         Ok(child)
     })
 }

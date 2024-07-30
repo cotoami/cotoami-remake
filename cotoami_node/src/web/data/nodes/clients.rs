@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClientNode, ClientNodeAdded, Pagination},
+        models::{AddClient, ClientAdded, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -21,7 +21,7 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/", get(recent_client_nodes).post(add_client_node))
+    Router::new().route("/", get(recent_client_nodes).post(add_client))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
@@ -58,14 +58,14 @@ async fn recent_client_nodes(
 // POST /api/data/nodes/clients
 /////////////////////////////////////////////////////////////////////////////
 
-async fn add_client_node(
+async fn add_client(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Form(form): Form<AddClientNode>,
-) -> Result<(StatusCode, Content<ClientNodeAdded>), ServiceError> {
+    Form(form): Form<AddClient>,
+) -> Result<(StatusCode, Content<ClientAdded>), ServiceError> {
     state
-        .add_client_node(form, Arc::new(operator))
+        .add_client(form, Arc::new(operator))
         .await
         .map(|added| (StatusCode::CREATED, Content(added, accept)))
 }

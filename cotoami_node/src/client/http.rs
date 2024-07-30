@@ -115,11 +115,11 @@ impl HttpClient {
             Command::TryLogIntoServer(input) => {
                 self.get(&format!("{API_PATH_SERVERS}/try")).query(&input)
             }
-            Command::AddServerNode(input) => self.post(API_PATH_SERVERS).form(&input),
-            Command::UpdateServerNode { id, values } => {
+            Command::AddServer(input) => self.post(API_PATH_SERVERS).form(&input),
+            Command::UpdateServer { id, values } => {
                 self.put(&format!("{API_PATH_SERVERS}/{id}")).form(&values)
             }
-            Command::AddClientNode(input) => self.post(API_PATH_CLIENTS).form(&input),
+            Command::AddClient(input) => self.post(API_PATH_CLIENTS).form(&input),
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
                     self.get(&format!("{API_PATH_NODES}/{node_id}/cotonomas"))

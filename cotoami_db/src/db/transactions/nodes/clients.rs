@@ -79,7 +79,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {
         // a client node?
         if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
-            if client.verify_session(token).is_ok() {
+            if client.as_principal().verify_session(token).is_ok() {
                 match self.database_role_of(&client.node_id)? {
                     Some(DatabaseRole::Parent(parent)) => {
                         return Ok(Some(ClientSession::ParentNode(parent)));
@@ -94,7 +94,7 @@ impl<'a> DatabaseSession<'a> {
 
         // the owner of local node?
         let local_node = self.globals.try_read_local_node()?;
-        if local_node.verify_session(token).is_ok() {
+        if local_node.as_principal().verify_session(token).is_ok() {
             return Ok(Some(ClientSession::Operator(Operator::Owner(
                 local_node.node_id,
             ))));
