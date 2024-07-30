@@ -127,6 +127,34 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn set_media_content(
+        &self,
+        id: &Id<Coto>,
+        media_content: Option<(&'a [u8], &'a str)>,
+        operator: &Operator,
+    ) -> Result<(Coto, ChangelogEntry)> {
+        let local_node = self.globals.try_read_local_node()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let coto = coto_ops::try_get(id).run(ctx)??;
+            self.globals.ensure_local(&coto)?;
+            operator.can_update_coto(&coto)?;
+            let coto = coto_ops::set_media_content(
+                id,
+                media_content,
+                local_node.image_max_size.map(|size| size as u32),
+                None,
+            )
+            .run(ctx)?;
+            let change = Change::SetMediaContent {
+                coto_id: *id,
+                content: coto.media_content(),
+                updated_at: coto.updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
+            Ok((coto, changelog))
+        })
+    }
+
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {

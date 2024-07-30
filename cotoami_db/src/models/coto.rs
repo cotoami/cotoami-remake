@@ -107,6 +107,14 @@ impl Coto {
         }
     }
 
+    pub fn media_content(&self) -> Option<(Bytes, String)> {
+        if let (Some(content), Some(media_type)) = (&self.media_content, &self.media_type) {
+            Some((content.clone(), media_type.clone()))
+        } else {
+            None
+        }
+    }
+
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub(crate) fn to_import(&self) -> NewCoto {

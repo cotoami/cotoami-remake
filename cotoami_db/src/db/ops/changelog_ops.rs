@@ -219,7 +219,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 coto_ops::set_media_content(
                     coto_id,
                     content.as_ref().map(|(c, t)| (c.as_ref(), t.as_str())),
-                    None,
+                    None, // TODO: needs resizing?
                     Some(*updated_at),
                 )
                 .run(ctx)?;
