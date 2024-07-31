@@ -4,13 +4,12 @@ import java.time.Instant
 import com.softwaremill.quicklens._
 
 import cotoami.backend.{CotoContent, Cotonoma}
-import cotoami.subparts.FormCoto.{CotoForm, CotonomaForm}
 
 case class WaitingPost(
     postId: String,
     content: Option[String],
-    mediaContent: Option[(String, String)],
     summary: Option[String],
+    mediaContent: Option[(String, String)],
     isCotonoma: Boolean,
     postedIn: Cotonoma,
     error: Option[String] = None
@@ -29,15 +28,17 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
 
   def addCoto(
       postId: String,
-      form: CotoForm,
+      content: String,
+      summary: Option[String],
+      mediaContent: Option[(String, String)],
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
       WaitingPost(
         postId,
-        Some(form.content),
-        None,
-        form.summary,
+        Some(content),
+        summary,
+        mediaContent,
         false,
         postedIn
       )
@@ -45,11 +46,11 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
 
   def addCotonoma(
       postId: String,
-      form: CotonomaForm,
+      name: String,
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
-      WaitingPost(postId, None, None, Some(form.name), true, postedIn)
+      WaitingPost(postId, None, Some(name), None, true, postedIn)
     )
 
   def setError(postId: String, error: String): WaitingPosts =
