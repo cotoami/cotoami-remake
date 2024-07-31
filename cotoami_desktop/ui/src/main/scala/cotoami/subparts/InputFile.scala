@@ -9,7 +9,6 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.{Msg => AppMsg}
 import cotoami.components.optionalClasses
 import cotoami.components.ReactDropzone._
 
@@ -17,15 +16,14 @@ import cotoami.components.ReactDropzone._
   case class Props(
       accept: js.Dictionary[js.Array[String]],
       message: ReactElement,
-      tagger: dom.Blob => AppMsg,
-      dispatch: AppMsg => Unit
+      onSelect: dom.Blob => Unit
   )
 
   val component = FunctionalComponent[Props] { props =>
     val onDropCallback: OnDrop = useCallback(
       (accepted, rejected, event) => {
         if (accepted.length > 0) {
-          props.dispatch(props.tagger(accepted(0)))
+          props.onSelect(accepted(0))
         }
       },
       Seq.empty

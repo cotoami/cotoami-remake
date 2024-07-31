@@ -181,6 +181,7 @@ object FormCoto {
     case class CotoRestored(coto: Option[String]) extends Msg
     case class CotoInput(coto: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
+    case class FileInput(file: dom.Blob) extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
     case class CotonomaByName(
@@ -250,6 +251,11 @@ object FormCoto {
               Seq.empty
         )
       }
+
+      case (Msg.FileInput(file), form: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = form.copy(mediaContent = Some(file)))
+        )
 
       case (Msg.ImeCompositionStart, _, _) =>
         default.copy(_1 = model.copy(imeActive = true))
@@ -533,6 +539,11 @@ object FormCoto {
                       dispatch(Msg.Post)
                     }
                   )
+                ),
+                InputFile(
+                  accept = js.Dictionary("image/*" -> js.Array[String]()),
+                  message = "Drop an image file here, or click to select one",
+                  onSelect = file => dispatch(Msg.FileInput(file))
                 )
               ),
             SplitPane.Secondary(className = None, onClick = None)(

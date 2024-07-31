@@ -126,8 +126,7 @@ object ModalNodeIcon {
               br(),
               "or click to select one"
             ),
-            tagger = Msg.toApp(Msg.ImageInput(_)),
-            dispatch = dispatch
+            onSelect = file => dispatch(Msg.ImageInput(file).toApp)
           )
         )
     )
