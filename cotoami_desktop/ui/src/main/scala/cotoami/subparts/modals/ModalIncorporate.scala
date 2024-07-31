@@ -276,11 +276,7 @@ object ModalIncorporate {
           )
         ),
         nodeSession.serverRootCotonoma.map { case (_, coto) =>
-          Option.when(coto.content.isDefined) {
-            section(className := "node-description")(
-              ViewCoto.sectionCotoContentDetails(coto)
-            )
-          }
+          ViewCoto.sectionNodeDescription(coto)
         }
       ),
 

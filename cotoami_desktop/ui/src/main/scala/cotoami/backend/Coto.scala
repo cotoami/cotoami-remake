@@ -8,6 +8,7 @@ import cotoami.utils.{Remark, StripMarkdown, Validation}
 
 trait CotoContent {
   def content: Option[String]
+  def mediaContent: Option[(String, String)]
   def summary: Option[String]
   def isCotonoma: Boolean
 
@@ -16,6 +17,9 @@ trait CotoContent {
       this.summary.orElse(this.content)
     else
       None
+
+  def hasContents: Boolean =
+    content.map(!_.isBlank()).getOrElse(false) || mediaContent.isDefined
 
   lazy val abbreviate: Option[String] =
     this.summary.orElse(
@@ -41,6 +45,15 @@ case class Coto(json: CotoJson, posted: Boolean = false)
   def postedById: Id[Node] = Id(this.json.posted_by_id)
 
   override def content: Option[String] = Nullable.toOption(this.json.content)
+
+  override def mediaContent: Option[(String, String)] = (
+    Nullable.toOption(this.json.media_content),
+    Nullable.toOption(this.json.media_type)
+  ) match {
+    case (Some(content), Some(mediaType)) => Some((content, mediaType))
+    case _                                => None
+  }
+
   override def summary: Option[String] = Nullable.toOption(this.json.summary)
 
   override def isCotonoma: Boolean = this.json.is_cotonoma
@@ -83,10 +96,11 @@ object Coto {
 
   def post(
       content: String,
+      mediaContent: Option[(String, String)],
       summary: Option[String],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, postTo)
+    CotoJson.post(content, mediaContent, summary, postTo)
       .map(_.map(Coto(_)))
 }
 
@@ -97,6 +111,8 @@ trait CotoJson extends js.Object {
   val posted_in_id: Nullable[String] = js.native
   val posted_by_id: String = js.native
   val content: Nullable[String] = js.native
+  val media_content: Nullable[String] = js.native
+  val media_type: Nullable[String] = js.native
   val summary: Nullable[String] = js.native
   val is_cotonoma: Boolean = js.native
   val repost_of_id: Nullable[String] = js.native
@@ -109,8 +125,9 @@ trait CotoJson extends js.Object {
 object CotoJson {
   def post(
       content: String,
+      mediaContent: Option[(String, String)],
       summary: Option[String],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, CotoJson]] =
-    Commands.send(Commands.PostCoto(content, summary, postTo))
+    Commands.send(Commands.PostCoto(content, mediaContent, summary, postTo))
 }

@@ -145,9 +145,7 @@ object ModalNodeProfile {
       div(className := "input-field node-description")(
         label(htmlFor := "node-profile-description")("Description"),
         div(className := "input-with-tools")(
-          section(className := "node-description")(
-            ViewCoto.sectionCotoContentDetails(coto)
-          ),
+          ViewCoto.sectionNodeDescription(coto),
           Option.when(model.isOperatingNode()) {
             div(className := "tools")(
               toolButton(

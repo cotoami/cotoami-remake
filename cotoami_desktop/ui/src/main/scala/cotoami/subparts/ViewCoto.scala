@@ -5,7 +5,7 @@ import scala.scalajs.js.Dynamic.{literal => jso}
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -110,13 +110,14 @@ object ViewCoto {
       collapsibleContentOpened: Boolean = false
   ): ReactElement =
     section(className := "coto-content")(
+      cotoContent.mediaContent.map(sectionMediaContent),
       cotoContent.summary.map(summary => {
         CollapsibleContent(
           summary = summary,
-          details = sectionCotoContentDetails(cotoContent),
+          details = sectionTextContent(cotoContent.content),
           opened = collapsibleContentOpened
         ): ReactElement
-      }).getOrElse(sectionCotoContentDetails(cotoContent))
+      }).getOrElse(sectionTextContent(cotoContent.content))
     )
 
   @react object CollapsibleContent {
@@ -157,16 +158,39 @@ object ViewCoto {
     }
   }
 
-  def sectionCotoContentDetails(content: CotoContent): ReactElement =
-    Fragment(
-      section(className := "text-content")(
-        Markdown(
-          remarkPlugins = Seq(RemarkPlugin.breaks),
-          rehypePlugins =
-            Seq(js.Tuple2(RehypePlugin.externalLinks, jso(target = "_blank")))
-        )(content.content)
-      )
+  def sectionTextContent(content: Option[String]): ReactElement =
+    section(className := "text-content")(
+      Markdown(
+        remarkPlugins = Seq(RemarkPlugin.breaks),
+        rehypePlugins =
+          Seq(js.Tuple2(RehypePlugin.externalLinks, jso(target = "_blank")))
+      )(content)
     )
+
+  def sectionMediaContent(content: (String, String)): ReactElement = {
+    val (mediaContent, mediaType) = content
+    section(className := "media-content")(
+      if (mediaType.startsWith("image/")) {
+        Some(
+          img(
+            className := "media-image",
+            alt := "Image content",
+            src := s"data:${mediaType};base64,${mediaContent}"
+          )
+        )
+      } else {
+        None
+      }
+    )
+  }
+
+  def sectionNodeDescription(nodeRoot: CotoContent): Option[ReactElement] =
+    Option.when(nodeRoot.hasContents) {
+      section(className := "node-description")(
+        nodeRoot.mediaContent.map(sectionMediaContent),
+        sectionTextContent(nodeRoot.content)
+      )
+    }
 
   def ulParents(
       parents: Seq[(Coto, Link)],

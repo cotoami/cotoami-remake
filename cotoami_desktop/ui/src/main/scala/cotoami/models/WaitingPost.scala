@@ -9,6 +9,7 @@ import cotoami.subparts.FormCoto.{CotoForm, CotonomaForm}
 case class WaitingPost(
     postId: String,
     content: Option[String],
+    mediaContent: Option[(String, String)],
     summary: Option[String],
     isCotonoma: Boolean,
     postedIn: Cotonoma,
@@ -32,7 +33,14 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
-      WaitingPost(postId, form.content, form.summary, false, postedIn)
+      WaitingPost(
+        postId,
+        Some(form.content),
+        None,
+        form.summary,
+        false,
+        postedIn
+      )
     )
 
   def addCotonoma(
@@ -41,7 +49,7 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
-      WaitingPost(postId, None, Some(form.name), true, postedIn)
+      WaitingPost(postId, None, None, Some(form.name), true, postedIn)
     )
 
   def setError(postId: String, error: String): WaitingPosts =

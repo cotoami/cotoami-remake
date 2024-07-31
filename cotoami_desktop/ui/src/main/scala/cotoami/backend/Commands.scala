@@ -122,12 +122,18 @@ object Commands {
 
   def PostCoto(
       content: String,
+      mediaContent: Option[(String, String)],
       summary: Option[String],
       postTo: Id[Cotonoma]
   ) =
     jso(PostCoto =
       jso(
-        input = jso(content = content, summary = summary.getOrElse(null)),
+        input = jso(
+          content = content,
+          media_content =
+            mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
+          summary = summary.getOrElse(null)
+        ),
         post_to = postTo.uuid
       )
     )

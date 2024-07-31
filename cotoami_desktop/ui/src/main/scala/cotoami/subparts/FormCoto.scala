@@ -102,20 +102,18 @@ object FormCoto {
 
   sealed trait Form
 
-  case class CotoForm(cotoInput: String = "") extends Form with CotoContent {
-    override def summary: Option[String] =
+  case class CotoForm(cotoInput: String = "") extends Form {
+    def summary: Option[String] =
       if (this.hasSummary)
         Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
       else
         None
 
-    override def content: Option[String] =
+    def content: String =
       if (this.hasSummary)
-        Some(this.cotoInput.stripPrefix(this.firstLine).trim)
+        this.cotoInput.stripPrefix(this.firstLine).trim
       else
-        Some(this.cotoInput.trim)
-
-    override def isCotonoma: Boolean = false
+        this.cotoInput.trim
 
     def validate: Validation.Result =
       if (this.cotoInput.isBlank())
@@ -123,7 +121,7 @@ object FormCoto {
       else {
         val errors =
           this.summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
-            Coto.validateContent(this.content.get) // this.content must be Some
+            Coto.validateContent(this.content)
         Validation.Result(errors)
       }
 
@@ -396,7 +394,7 @@ object FormCoto {
       form: CotoForm,
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content.getOrElse(""), form.summary, postTo)
+    Coto.post(form.content, None, form.summary, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(
@@ -452,7 +450,7 @@ object FormCoto {
                   section(className := "coto-preview")(
                     form.summary.map(section(className := "summary")(_)),
                     div(className := "content")(
-                      ViewCoto.sectionCotoContentDetails(form)
+                      ViewCoto.sectionTextContent(Some(form.content))
                     )
                   )
                 )
