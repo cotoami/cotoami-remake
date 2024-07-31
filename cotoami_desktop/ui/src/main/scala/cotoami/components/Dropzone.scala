@@ -15,6 +15,19 @@ object ReactDropzone extends js.Object {
     // Set accepted file types.
     val accept: js.UndefOr[js.Dictionary[js.Array[String]]] = js.undefined
 
+    // Maximum accepted number of files The default value is 0 which means
+    // there is no limitation to how many files are accepted.
+    val maxFiles: js.UndefOr[Int] = js.undefined
+
+    // Allow drag 'n' drop (or selection from the file dialog) of multiple files
+    val multiple: js.UndefOr[Boolean] = js.undefined
+
+    // Maximum file size (in bytes)
+    val maxSize: js.UndefOr[Int] = js.undefined
+
+    // Minimum file size (in bytes)
+    val minSize: js.UndefOr[Int] = js.undefined
+
     // Callback for when the drop event occurs.
     val onDrop: js.UndefOr[OnDrop] = js.undefined
   }

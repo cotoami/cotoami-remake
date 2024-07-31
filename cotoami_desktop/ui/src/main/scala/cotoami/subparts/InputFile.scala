@@ -4,7 +4,7 @@ import scala.scalajs.js
 import org.scalajs.dom
 
 import slinky.core._
-import slinky.core.facade.React
+import slinky.core.facade.{React, ReactElement}
 import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -13,8 +13,10 @@ import cotoami.{Msg => AppMsg}
 import cotoami.components.optionalClasses
 import cotoami.components.ReactDropzone._
 
-@react object InputImage {
+@react object InputFile {
   case class Props(
+      accept: js.Dictionary[js.Array[String]],
+      message: ReactElement,
       tagger: dom.Blob => AppMsg,
       dispatch: AppMsg => Unit
   )
@@ -29,7 +31,9 @@ import cotoami.components.ReactDropzone._
       Seq.empty
     )
     val dropzone = useDropzone(new Options {
-      override val accept = js.Dictionary("image/*" -> js.Array[String]())
+      override val accept = props.accept
+      override val maxFiles = 1
+      override val multiple = false
       override val onDrop = onDropCallback
     })
 
@@ -46,11 +50,7 @@ import cotoami.components.ReactDropzone._
         )
       ),
       React.createElement("input", dropzone.getInputProps()),
-      p()(
-        "Drag and drop an image file here,",
-        br(),
-        "or click to select one"
-      )
+      p()(props.message)
     )
   }
 }

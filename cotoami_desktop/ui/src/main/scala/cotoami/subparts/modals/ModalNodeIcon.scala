@@ -7,7 +7,7 @@ import org.scalajs.dom
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -17,7 +17,7 @@ import cotoami.backend.{ErrorJson, Node}
 import cotoami.repositories.Nodes
 import cotoami.components.FixedAspectCrop
 import cotoami.components.FixedAspectCrop.Area
-import cotoami.subparts.{InputImage, Modal}
+import cotoami.subparts.{InputFile, Modal}
 
 object ModalNodeIcon {
 
@@ -119,7 +119,16 @@ object ModalNodeIcon {
     )(
       model.sourceImage.map(image => divPreview(image._2, model, dispatch))
         .getOrElse(
-          InputImage(tagger = Msg.toApp(Msg.ImageInput(_)), dispatch = dispatch)
+          InputFile(
+            accept = js.Dictionary("image/*" -> js.Array[String]()),
+            message = Fragment(
+              "Drag and drop an image file here,",
+              br(),
+              "or click to select one"
+            ),
+            tagger = Msg.toApp(Msg.ImageInput(_)),
+            dispatch = dispatch
+          )
         )
     )
 
