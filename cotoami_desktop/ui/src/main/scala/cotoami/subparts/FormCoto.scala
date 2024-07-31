@@ -2,7 +2,6 @@ package cotoami.subparts
 
 import scala.scalajs.js
 import org.scalajs.dom
-import org.scalajs.dom.HTMLElement
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -18,6 +17,7 @@ import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
+  toolButton,
   ScrollArea,
   SplitPane
 }
@@ -37,17 +37,13 @@ object FormCoto {
   case class Model(
       id: String,
       form: Form = CotoForm(),
-      focused: Boolean = false,
-      editorBeingResized: Boolean = false,
+      folded: Boolean = true,
       imeActive: Boolean = false,
       autoSave: Boolean = false,
       inPreview: Boolean = false,
       posting: Boolean = false
   ) {
     def editorId: String = s"${this.id}-editor"
-
-    def folded: Boolean =
-      !this.focused && !this.editorBeingResized && !this.hasContents
 
     def hasContents: Boolean =
       this.form match {
@@ -68,6 +64,7 @@ object FormCoto {
           case form: CotoForm     => CotoForm()
           case form: CotonomaForm => CotonomaForm()
         },
+        folded = true,
         inPreview = false
       )
 
@@ -188,9 +185,7 @@ object FormCoto {
         name: String,
         result: Either[ErrorJson, Cotonoma]
     ) extends Msg
-    case class SetFocus(focus: Boolean) extends Msg
-    case object EditorResizeStart extends Msg
-    case object EditorResizeEnd extends Msg
+    case class SetFolded(folded: Boolean) extends Msg
     case object TogglePreview extends Msg
     case object Post extends Msg
     case class MediaContentEncoded(result: Either[String, (String, String)])
@@ -211,10 +206,13 @@ object FormCoto {
     val default = (model, waitingPosts, context.log, Seq.empty)
     (msg, model.form, context.domain.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
-        default.copy(
-          _1 = model.copy(form = CotoForm()),
-          _4 = Seq(model.restore)
-        )
+        model.copy(form = CotoForm()) match {
+          case model =>
+            default.copy(
+              _1 = model,
+              _4 = Seq(model.restore)
+            )
+        }
 
       case (Msg.SetCotonomaForm, _, _) =>
         default.copy(_1 = model.copy(form = CotonomaForm()))
@@ -223,17 +221,23 @@ object FormCoto {
         default.copy(
           _1 =
             if (form.cotoInput.isBlank)
-              model.copy(form = form.copy(cotoInput = coto))
+              model.copy(
+                form = form.copy(cotoInput = coto),
+                folded = coto.isBlank
+              )
             else
-              model,
+              model.copy(folded = false),
           _3 = context.log.info("Coto draft restored")
         )
 
       case (Msg.CotoInput(coto), form: CotoForm, _) =>
-        default.copy(
-          _1 = model.copy(form = form.copy(cotoInput = coto)),
-          _4 = Seq(model.save)
-        )
+        model.copy(form = form.copy(cotoInput = coto)) match {
+          case model =>
+            default.copy(
+              _1 = model,
+              _4 = Seq(model.save)
+            )
+        }
 
       case (
             Msg.CotonomaNameInput(name),
@@ -309,25 +313,8 @@ object FormCoto {
             )
           )
 
-      case (Msg.SetFocus(focus), _, _) =>
-        default.copy(_1 = model.copy(focused = focus))
-
-      case (Msg.EditorResizeStart, _, _) =>
-        default.copy(_1 = model.copy(editorBeingResized = true))
-
-      case (Msg.EditorResizeEnd, _, _) =>
-        default.copy(
-          _1 = model.copy(editorBeingResized = false),
-          // Return the focus to the editor in order for it
-          // not to be folded when it's empty.
-          _4 = Seq(Cmd(IO {
-            dom.document.getElementById(model.editorId) match {
-              case element: HTMLElement => element.focus()
-              case _                    => ()
-            }
-            None
-          }))
-        )
+      case (Msg.SetFolded(folded), _, _) =>
+        default.copy(_1 = model.copy(folded = folded))
 
       case (Msg.TogglePreview, _, _) =>
         default.copy(_1 = model.modify(_.inPreview).using(!_))
@@ -495,8 +482,8 @@ object FormCoto {
             initialPrimarySize = editorHeight,
             resizable = !model.folded,
             className = None,
-            onResizeStart = Some(() => dispatch(Msg.EditorResizeStart)),
-            onResizeEnd = Some(() => dispatch(Msg.EditorResizeEnd)),
+            onResizeStart = None,
+            onResizeEnd = None,
             onPrimarySizeChanged = Some(onEditorHeightChanged)
           )(
             if (model.inPreview)
@@ -527,8 +514,7 @@ object FormCoto {
                   id := model.editorId,
                   placeholder := "Write your Coto in Markdown",
                   value := form.cotoInput,
-                  onFocus := (_ => dispatch(Msg.SetFocus(true))),
-                  onBlur := (_ => dispatch(Msg.SetFocus(false))),
+                  onFocus := (_ => dispatch(Msg.SetFolded(false))),
                   onChange := (e => dispatch(Msg.CotoInput(e.target.value))),
                   onCompositionStart := (_ =>
                     dispatch(Msg.ImeCompositionStart)
@@ -565,8 +551,8 @@ object FormCoto {
               placeholder := "New cotonoma name",
               value := cotonomaName,
               Validation.ariaInvalid(validation),
-              onFocus := (_ => dispatch(Msg.SetFocus(true))),
-              onBlur := (_ => dispatch(Msg.SetFocus(false))),
+              onFocus := (_ => dispatch(Msg.SetFolded(false))),
+              onBlur := (_ => dispatch(Msg.SetFolded(!model.hasContents))),
               onChange := (e =>
                 dispatch(Msg.CotonomaNameInput(e.target.value))
               ),
@@ -624,15 +610,23 @@ object FormCoto {
         ),
         div(className := "buttons")(
           Option.when(model.form.isInstanceOf[CotoForm]) {
-            button(
-              className := "preview contrast outline",
-              disabled := !model.readyToPost,
-              onClick := (_ => dispatch(Msg.TogglePreview))
-            )(
-              if (model.inPreview)
-                "Edit"
-              else
-                "Preview"
+            Fragment(
+              toolButton(
+                symbol = "arrow_drop_up",
+                tip = "Fold",
+                classes = "fold",
+                onClick = () => dispatch(Msg.SetFolded(true))
+              ),
+              button(
+                className := "preview contrast outline",
+                disabled := !model.readyToPost,
+                onClick := (_ => dispatch(Msg.TogglePreview))
+              )(
+                if (model.inPreview)
+                  "Edit"
+                else
+                  "Preview"
+              )
             )
           },
           button(

@@ -161,6 +161,24 @@ section.form-coto {
         button.preview {
           margin-right: 5px;
         }
+
+        button.fold {
+          padding-top: 0;
+          padding-bottom: 0;
+          opacity: .5;
+
+          &:hover {
+            opacity: 1;
+          }
+
+          span.material-symbols {
+            display: inline-block;
+            height: 30px;
+            font-size: 30px;
+            line-height: 30px;
+            vertical-align: middle;
+          }
+        }
       }
     }
   }
@@ -168,6 +186,10 @@ section.form-coto {
   &.folded {
     .coto-editor {
       height: 2.5rem !important;
+
+      textarea {
+        overflow: hidden;
+      }
 
       section.input-file {
         display: none;
