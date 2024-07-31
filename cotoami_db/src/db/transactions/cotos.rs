@@ -69,8 +69,8 @@ impl<'a> DatabaseSession<'a> {
     pub fn post_coto(
         &self,
         content: &str,
-        media_content: Option<(&[u8], &str)>,
         summary: Option<&str>,
+        media_content: Option<(&[u8], &str)>,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
@@ -82,9 +82,9 @@ impl<'a> DatabaseSession<'a> {
             &posted_in.uuid,
             &posted_by_id,
             content,
+            summary,
             media_content,
             local_node.image_max_size.map(|size| size as u32),
-            summary,
         )?;
         self.create_coto(&new_coto)
     }

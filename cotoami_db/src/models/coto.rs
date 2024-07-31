@@ -35,7 +35,7 @@ use crate::{
 )]
 #[diesel(primary_key(uuid))]
 pub struct Coto {
-    /// Universally unique coto ID
+    /// Universally unique coto ID.
     pub uuid: Id<Coto>,
 
     /// SQLite rowid (so-called "integer primary key")
@@ -43,20 +43,24 @@ pub struct Coto {
     #[serde(skip_serializing, skip_deserializing)]
     pub rowid: i64,
 
-    /// UUID of the node in which this coto was created
+    /// UUID of the node in which this coto was created.
     pub node_id: Id<Node>,
 
     /// UUID of the cotonoma in which this coto was posted or
     /// `None` if it is the root cotonoma.
     pub posted_in_id: Option<Id<Cotonoma>>,
 
-    /// UUID of the node whose owner has posted this coto
+    /// UUID of the node whose owner has posted this coto.
     pub posted_by_id: Id<Node>,
 
-    /// Content of this coto
+    /// Text content of this coto.
     ///
     /// `None` if it is a repost.
     pub content: Option<String>,
+
+    /// Optional summary of the text content for compact display.
+    /// If this coto is a cotonoma, the summary should be the same as the cotonoma name.
+    pub summary: Option<String>,
 
     /// Bytes of optional media content.
     #[debug(skip)]
@@ -65,25 +69,21 @@ pub struct Coto {
     /// MIME type of the media content.
     pub media_type: Option<String>,
 
-    /// Optional summary of the content for compact display
-    /// If this coto is a cotonoma, the summary should be the same as the cotonoma name.
-    pub summary: Option<String>,
-
-    /// TRUE if this coto is a cotonoma
+    /// TRUE if this coto is a cotonoma.
     pub is_cotonoma: bool,
 
-    /// UUID of the original coto of this repost
+    /// UUID of the original coto of this repost.
     ///
     /// `None` if it is not a repost.
     pub repost_of_id: Option<Id<Coto>>,
 
-    /// UUIDs of the cotonomas in which this coto was reposted
+    /// UUIDs of the cotonomas in which this coto was reposted.
     pub reposted_in_ids: Option<Ids<Cotonoma>>,
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 
-    /// Number of outgoing links from this coto
+    /// Number of outgoing links from this coto.
     pub outgoing_links: i32,
 }
 
@@ -184,13 +184,13 @@ pub(crate) struct NewCoto<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     content: Option<&'a str>,
 
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    summary: Option<&'a str>,
+
     #[debug(skip)]
     media_content: Option<Cow<'a, [u8]>>,
 
     media_type: Option<&'a str>,
-
-    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    summary: Option<&'a str>,
 
     is_cotonoma: bool,
 
@@ -212,9 +212,9 @@ impl<'a> NewCoto<'a> {
             posted_in_id: None,
             posted_by_id,
             content: None,
+            summary: None,
             media_content: None,
             media_type: None,
-            summary: None,
             is_cotonoma: false,
             repost_of_id: None,
             reposted_in_ids: None,
@@ -228,9 +228,9 @@ impl<'a> NewCoto<'a> {
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
         content: &'a str,
+        summary: Option<&'a str>,
         media_content: Option<(&'a [u8], &'a str)>,
         image_max_size: Option<u32>,
-        summary: Option<&'a str>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
@@ -286,16 +286,16 @@ pub(crate) struct UpdateCoto<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     pub content: Option<Option<&'a str>>,
 
+    #[new(default)]
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    pub summary: Option<Option<&'a str>>,
+
     #[debug(skip)]
     #[new(default)]
     pub media_content: Option<Option<Cow<'a, [u8]>>>,
 
     #[new(default)]
     pub media_type: Option<Option<&'a str>>,
-
-    #[new(default)]
-    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    pub summary: Option<Option<&'a str>>,
 
     #[new(default)]
     pub is_cotonoma: Option<bool>,

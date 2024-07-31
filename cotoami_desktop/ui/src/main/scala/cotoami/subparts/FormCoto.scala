@@ -394,7 +394,7 @@ object FormCoto {
       form: CotoForm,
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content, None, form.summary, postTo)
+    Coto.post(form.content, form.summary, None, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(

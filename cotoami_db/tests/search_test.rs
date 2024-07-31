@@ -14,7 +14,7 @@ fn search_cotos() -> Result<()> {
 
     // when
     let (coto1, _) = ds.post_coto("Hello, world!", None, None, &root, &opr)?;
-    let (coto2, _) = ds.post_coto("It's a small world.", None, Some("summary"), &root, &opr)?;
+    let (coto2, _) = ds.post_coto("It's a small world.", Some("summary"), None, &root, &opr)?;
     let (coto3, _) = ds.post_coto("柿くへば鐘が鳴るなり法隆寺", None, None, &root, &opr)?;
     let (coto4, _) = ds.post_coto("旅行(行きたい)", None, None, &root, &opr)?;
 

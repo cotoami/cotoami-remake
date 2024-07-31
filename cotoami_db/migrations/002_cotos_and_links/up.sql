@@ -24,14 +24,14 @@ CREATE TABLE cotos (
   -- NULL if this is a repost.
   content TEXT,
 
+  -- Optional summary of the text content for compact display.
+  summary TEXT,
+
   -- Bytes of optional media content.
   media_content BLOB,
 
   -- MIME type of the media content.
   media_type TEXT,
-
-  -- Optional summary of the content for compact display.
-  summary TEXT,
 
   -- TRUE if this coto is a cotonoma.
   -- 0 (false) and 1 (true)

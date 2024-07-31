@@ -8,8 +8,8 @@ import cotoami.utils.{Remark, StripMarkdown, Validation}
 
 trait CotoContent {
   def content: Option[String]
-  def mediaContent: Option[(String, String)]
   def summary: Option[String]
+  def mediaContent: Option[(String, String)]
   def isCotonoma: Boolean
 
   def nameAsCotonoma: Option[String] =
@@ -46,6 +46,8 @@ case class Coto(json: CotoJson, posted: Boolean = false)
 
   override def content: Option[String] = Nullable.toOption(this.json.content)
 
+  override def summary: Option[String] = Nullable.toOption(this.json.summary)
+
   override def mediaContent: Option[(String, String)] = (
     Nullable.toOption(this.json.media_content),
     Nullable.toOption(this.json.media_type)
@@ -53,8 +55,6 @@ case class Coto(json: CotoJson, posted: Boolean = false)
     case (Some(content), Some(mediaType)) => Some((content, mediaType))
     case _                                => None
   }
-
-  override def summary: Option[String] = Nullable.toOption(this.json.summary)
 
   override def isCotonoma: Boolean = this.json.is_cotonoma
 
@@ -96,11 +96,11 @@ object Coto {
 
   def post(
       content: String,
-      mediaContent: Option[(String, String)],
       summary: Option[String],
+      mediaContent: Option[(String, String)],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, mediaContent, summary, postTo)
+    CotoJson.post(content, summary, mediaContent, postTo)
       .map(_.map(Coto(_)))
 }
 
@@ -111,9 +111,9 @@ trait CotoJson extends js.Object {
   val posted_in_id: Nullable[String] = js.native
   val posted_by_id: String = js.native
   val content: Nullable[String] = js.native
+  val summary: Nullable[String] = js.native
   val media_content: Nullable[String] = js.native
   val media_type: Nullable[String] = js.native
-  val summary: Nullable[String] = js.native
   val is_cotonoma: Boolean = js.native
   val repost_of_id: Nullable[String] = js.native
   val reposted_in_ids: Nullable[js.Array[String]] = js.native
@@ -125,9 +125,9 @@ trait CotoJson extends js.Object {
 object CotoJson {
   def post(
       content: String,
-      mediaContent: Option[(String, String)],
       summary: Option[String],
+      mediaContent: Option[(String, String)],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, CotoJson]] =
-    Commands.send(Commands.PostCoto(content, mediaContent, summary, postTo))
+    Commands.send(Commands.PostCoto(content, summary, mediaContent, postTo))
 }

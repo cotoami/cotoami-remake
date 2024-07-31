@@ -76,11 +76,11 @@ impl NodeState {
             move |ds, input, cotonoma| {
                 ds.post_coto(
                     &input.content.unwrap_or_else(|| unreachable!()),
+                    input.summary.as_deref(),
                     input
                         .media_content
                         .as_ref()
                         .map(|(c, t)| (c.as_ref(), t.as_str())),
-                    input.summary.as_deref(),
                     cotonoma,
                     operator.as_ref(),
                 )
