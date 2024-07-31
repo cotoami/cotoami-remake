@@ -47,16 +47,17 @@ object FormCoto {
     def editorId: String = s"${this.id}-editor"
 
     def folded: Boolean =
-      !this.focused && !this.editorBeingResized && this.isBlank
+      !this.focused && !this.editorBeingResized && !this.hasContents
 
-    def isBlank: Boolean =
+    def hasContents: Boolean =
       this.form match {
-        case CotoForm(content)     => content.isBlank
-        case CotonomaForm(name, _) => name.isBlank
+        case CotoForm(cotoInput, mediaContent) =>
+          !cotoInput.isBlank || mediaContent.isDefined
+        case CotonomaForm(name, _) => !name.isBlank
       }
 
     def readyToPost: Boolean =
-      !this.isBlank && !this.posting && (this.form match {
+      this.hasContents && !this.posting && (this.form match {
         case form: CotoForm              => form.validate.validated
         case CotonomaForm(_, validation) => validation.validated
       })
@@ -74,9 +75,9 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (this.autoSave, this.form) match {
-        case (true, CotoForm(coto)) =>
+        case (true, CotoForm(cotoInput, _)) =>
           Cmd(IO {
-            dom.window.localStorage.setItem(this.storageKey, coto)
+            dom.window.localStorage.setItem(this.storageKey, cotoInput)
             None
           })
 
@@ -102,7 +103,10 @@ object FormCoto {
 
   sealed trait Form
 
-  case class CotoForm(cotoInput: String = "") extends Form {
+  case class CotoForm(
+      cotoInput: String = "",
+      mediaContent: Option[dom.Blob] = None
+  ) extends Form {
     def summary: Option[String] =
       if (this.hasSummary)
         Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
@@ -116,7 +120,7 @@ object FormCoto {
         this.cotoInput.trim
 
     def validate: Validation.Result =
-      if (this.cotoInput.isBlank())
+      if (this.cotoInput.isBlank)
         Validation.Result.toBeValidated
       else {
         val errors =
@@ -215,7 +219,7 @@ object FormCoto {
       case (Msg.CotoRestored(Some(coto)), form: CotoForm, _) =>
         default.copy(
           _1 =
-            if (form.cotoInput.isBlank())
+            if (form.cotoInput.isBlank)
               model.copy(form = form.copy(cotoInput = coto))
             else
               model,
