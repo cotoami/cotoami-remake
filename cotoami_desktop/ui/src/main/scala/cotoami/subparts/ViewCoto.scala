@@ -185,7 +185,10 @@ object ViewCoto {
   }
 
   def sectionNodeDescription(nodeRoot: CotoContent): Option[ReactElement] =
-    Option.when(nodeRoot.hasContents) {
+    Option.when(
+      nodeRoot.content.map(!_.isBlank()).getOrElse(false) ||
+        nodeRoot.mediaContent.isDefined
+    ) {
       section(className := "node-description")(
         nodeRoot.mediaContent.map(sectionMediaContent),
         sectionTextContent(nodeRoot.content)

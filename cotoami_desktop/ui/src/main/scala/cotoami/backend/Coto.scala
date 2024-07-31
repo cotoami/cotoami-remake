@@ -18,9 +18,6 @@ trait CotoContent {
     else
       None
 
-  def hasContents: Boolean =
-    content.map(!_.isBlank()).getOrElse(false) || mediaContent.isDefined
-
   lazy val abbreviate: Option[String] =
     this.summary.orElse(
       this.content.map(content => {
