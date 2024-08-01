@@ -189,6 +189,8 @@ object FormCoto {
     case class SetFolded(folded: Boolean) extends Msg
     case object TogglePreview extends Msg
     case object Post extends Msg
+    case class PostCoto(form: CotoForm, mediaContent: Option[(String, String)])
+        extends Msg
     case class MediaContentEncoded(result: Either[String, (String, String)])
         extends Msg
     case class CotoPosted(postId: String, result: Either[ErrorJson, Coto])
@@ -339,24 +341,7 @@ object FormCoto {
                   )
                 )
               case None => {
-                val postId = WaitingPost.newPostId()
-                model.clear match {
-                  case model =>
-                    default.copy(
-                      _1 = model,
-                      _2 = waitingPosts.addCoto(
-                        postId,
-                        form.content,
-                        form.summary,
-                        None,
-                        cotonoma
-                      ),
-                      _4 = Seq(
-                        postCoto(postId, form, None, cotonoma.id),
-                        model.save
-                      )
-                    )
-                }
+                update(Msg.PostCoto(form, None), model, waitingPosts)
               }
             }
         }
@@ -373,11 +358,7 @@ object FormCoto {
         }
       }
 
-      case (
-            Msg.MediaContentEncoded(Right(mediaContent)),
-            form: CotoForm,
-            Some(cotonoma)
-          ) => {
+      case (Msg.PostCoto(form, mediaContent), _, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
         model.clear match {
           case model =>
@@ -387,16 +368,19 @@ object FormCoto {
                 postId,
                 form.content,
                 form.summary,
-                Some(mediaContent),
+                mediaContent,
                 cotonoma
               ),
               _4 = Seq(
-                postCoto(postId, form, Some(mediaContent), cotonoma.id),
+                postCoto(postId, form, mediaContent, cotonoma.id),
                 model.save
               )
             )
         }
       }
+
+      case (Msg.MediaContentEncoded(Right(mediaContent)), form: CotoForm, _) =>
+        update(Msg.PostCoto(form, Some(mediaContent)), model, waitingPosts)
 
       case (Msg.MediaContentEncoded(Left(e)), _, _) =>
         default.copy(
