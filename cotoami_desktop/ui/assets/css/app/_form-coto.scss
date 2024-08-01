@@ -66,6 +66,15 @@ section.form-coto {
     }
   }
 
+  section.media-preview {
+    max-height: 300px;
+    text-align: center;
+
+    img {
+      height: 100%;
+    }
+  }
+
   .coto-editor {
     display: flex;
     flex-direction: column;

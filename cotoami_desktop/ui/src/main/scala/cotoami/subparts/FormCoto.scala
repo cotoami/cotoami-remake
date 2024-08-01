@@ -477,96 +477,131 @@ object FormCoto {
       headerTools(model, dispatch),
       model.form match {
         case form: CotoForm =>
-          SplitPane(
-            vertical = false,
-            initialPrimarySize = editorHeight,
-            resizable = !model.folded,
-            className = None,
-            onResizeStart = None,
-            onResizeEnd = None,
-            onPrimarySizeChanged = Some(onEditorHeightChanged)
-          )(
-            if (model.inPreview)
-              SplitPane.Primary(
-                className = Some("coto-preview"),
-                onClick = None
-              )(
-                ScrollArea(
-                  scrollableElementId = None,
-                  autoHide = true,
-                  bottomThreshold = None,
-                  onScrollToBottom = () => ()
-                )(
-                  section(className := "coto-preview")(
-                    form.summary.map(section(className := "summary")(_)),
-                    div(className := "content")(
-                      ViewCoto.sectionTextContent(Some(form.content))
-                    )
-                  )
+          Fragment(
+            form.mediaContent.map(blob => {
+              val url = dom.URL.createObjectURL(blob)
+              section(className := "media-preview")(
+                img(
+                  src := url,
+                  onLoad := (_ => dom.URL.revokeObjectURL(url))
                 )
               )
-            else
-              SplitPane.Primary(
-                className = Some("coto-editor"),
-                onClick = None
-              )(
-                textarea(
-                  id := model.editorId,
-                  placeholder := "Write your Coto in Markdown",
-                  value := form.cotoInput,
-                  onFocus := (_ => dispatch(Msg.SetFolded(false))),
-                  onChange := (e => dispatch(Msg.CotoInput(e.target.value))),
-                  onCompositionStart := (_ =>
-                    dispatch(Msg.ImeCompositionStart)
-                  ),
-                  onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
-                  onKeyDown := (e =>
-                    if (model.readyToPost && detectCtrlEnter(e)) {
-                      dispatch(Msg.Post)
-                    }
-                  )
-                ),
-                InputFile(
-                  accept = js.Dictionary("image/*" -> js.Array[String]()),
-                  message = "Drop an image file here, or click to select one",
-                  onSelect = file => dispatch(Msg.FileInput(file))
-                )
-              ),
-            SplitPane.Secondary(className = None, onClick = None)(
-              divPost(
-                model,
-                form.validate,
-                operatingNode,
-                currentCotonoma,
-                dispatch
-              )
+            }),
+            formCoto(
+              form,
+              model,
+              operatingNode,
+              currentCotonoma,
+              editorHeight,
+              onEditorHeightChanged,
+              dispatch
             )
           )
 
-        case CotonomaForm(cotonomaName, validation) =>
-          Fragment(
-            input(
-              `type` := "text",
-              name := "cotonomaName",
-              placeholder := "New cotonoma name",
-              value := cotonomaName,
-              Validation.ariaInvalid(validation),
-              onFocus := (_ => dispatch(Msg.SetFolded(false))),
-              onBlur := (_ => dispatch(Msg.SetFolded(!model.hasContents))),
-              onChange := (e =>
-                dispatch(Msg.CotonomaNameInput(e.target.value))
-              ),
-              onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-              onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
-              onKeyDown := (e =>
-                if (model.readyToPost && detectCtrlEnter(e)) {
-                  dispatch(Msg.Post)
-                }
-              )
-            ),
-            divPost(model, validation, operatingNode, currentCotonoma, dispatch)
-          )
+        case form: CotonomaForm =>
+          formCotonoma(form, model, operatingNode, currentCotonoma, dispatch)
       }
+    )
+
+  private def formCoto(
+      form: CotoForm,
+      model: Model,
+      operatingNode: Node,
+      currentCotonoma: Cotonoma,
+      editorHeight: Int,
+      onEditorHeightChanged: Int => Unit,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    SplitPane(
+      vertical = false,
+      initialPrimarySize = editorHeight,
+      resizable = !model.folded,
+      className = None,
+      onResizeStart = None,
+      onResizeEnd = None,
+      onPrimarySizeChanged = Some(onEditorHeightChanged)
+    )(
+      if (model.inPreview)
+        SplitPane.Primary(
+          className = Some("coto-preview"),
+          onClick = None
+        )(
+          ScrollArea(
+            scrollableElementId = None,
+            autoHide = true,
+            bottomThreshold = None,
+            onScrollToBottom = () => ()
+          )(
+            section(className := "coto-preview")(
+              form.summary.map(section(className := "summary")(_)),
+              div(className := "content")(
+                ViewCoto.sectionTextContent(Some(form.content))
+              )
+            )
+          )
+        )
+      else
+        SplitPane.Primary(
+          className = Some("coto-editor"),
+          onClick = None
+        )(
+          textarea(
+            id := model.editorId,
+            placeholder := "Write your Coto in Markdown",
+            value := form.cotoInput,
+            onFocus := (_ => dispatch(Msg.SetFolded(false))),
+            onChange := (e => dispatch(Msg.CotoInput(e.target.value))),
+            onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
+            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
+            onKeyDown := (e =>
+              if (model.readyToPost && detectCtrlEnter(e)) {
+                dispatch(Msg.Post)
+              }
+            )
+          ),
+          InputFile(
+            accept = js.Dictionary("image/*" -> js.Array[String]()),
+            message = "Drop an image file here, or click to select one",
+            onSelect = file => dispatch(Msg.FileInput(file))
+          )
+        ),
+      SplitPane.Secondary(className = None, onClick = None)(
+        divPost(
+          model,
+          form.validate,
+          operatingNode,
+          currentCotonoma,
+          dispatch
+        )
+      )
+    )
+
+  private def formCotonoma(
+      form: CotonomaForm,
+      model: Model,
+      operatingNode: Node,
+      currentCotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    Fragment(
+      input(
+        `type` := "text",
+        name := "cotonomaName",
+        placeholder := "New cotonoma name",
+        value := form.nameInput,
+        Validation.ariaInvalid(form.validation),
+        onFocus := (_ => dispatch(Msg.SetFolded(false))),
+        onBlur := (_ => dispatch(Msg.SetFolded(!model.hasContents))),
+        onChange := (e => dispatch(Msg.CotonomaNameInput(e.target.value))),
+        onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
+        onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
+        onKeyDown := (e =>
+          if (model.readyToPost && detectCtrlEnter(e)) {
+            dispatch(Msg.Post)
+          }
+        )
+      ),
+      divPost(model, form.validation, operatingNode, currentCotonoma, dispatch)
     )
 
   private def headerTools(model: Model, dispatch: Msg => Unit): ReactElement =
