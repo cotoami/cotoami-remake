@@ -39,9 +39,12 @@ pub struct NodeConfig {
     pub changes_chunk_size: i64,
 
     /// `COTOAMI_IMAGE_MAX_SIZE`
-    /// [None] means no resizing will be applied to incoming images,
-    /// but for now, there's no way to configure this value to [None]
-    /// in either of node-server and desktop.
+    ///
+    /// [None] means no resizing will be applied to incoming images.
+    ///
+    /// Since the value will be deserialized to the default value even if
+    /// you omit the value in a config file or env values, there's no way to configure
+    /// this value to [None] for now.
     #[serde(default = "NodeConfig::default_image_max_size")]
     pub image_max_size: Option<i32>,
 }
