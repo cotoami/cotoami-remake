@@ -321,7 +321,7 @@ object FormCoto {
         default.copy(_1 = model.modify(_.inPreview).using(!_))
 
       case (Msg.Post, form: CotoForm, Some(cotonoma)) =>
-        model.copy(posting = true).clear match {
+        model.copy(posting = true) match {
           case model =>
             form.mediaContent match {
               case Some(blob) =>
@@ -335,26 +335,28 @@ object FormCoto {
                         Msg.MediaContentEncoded(
                           Left("Media content encoding error.")
                         )
-                    },
-                    model.save
+                    }
                   )
                 )
               case None => {
                 val postId = WaitingPost.newPostId()
-                default.copy(
-                  _1 = model,
-                  _2 = waitingPosts.addCoto(
-                    postId,
-                    form.content,
-                    form.summary,
-                    None,
-                    cotonoma
-                  ),
-                  _4 = Seq(
-                    postCoto(postId, form, None, cotonoma.id),
-                    model.save
-                  )
-                )
+                model.clear match {
+                  case model =>
+                    default.copy(
+                      _1 = model,
+                      _2 = waitingPosts.addCoto(
+                        postId,
+                        form.content,
+                        form.summary,
+                        None,
+                        cotonoma
+                      ),
+                      _4 = Seq(
+                        postCoto(postId, form, None, cotonoma.id),
+                        model.save
+                      )
+                    )
+                }
               }
             }
         }
@@ -377,18 +379,23 @@ object FormCoto {
             Some(cotonoma)
           ) => {
         val postId = WaitingPost.newPostId()
-        default.copy(
-          _2 = waitingPosts.addCoto(
-            postId,
-            form.content,
-            form.summary,
-            Some(mediaContent),
-            cotonoma
-          ),
-          _4 = Seq(
-            postCoto(postId, form, Some(mediaContent), cotonoma.id)
-          )
-        )
+        model.clear match {
+          case model =>
+            default.copy(
+              _1 = model,
+              _2 = waitingPosts.addCoto(
+                postId,
+                form.content,
+                form.summary,
+                Some(mediaContent),
+                cotonoma
+              ),
+              _4 = Seq(
+                postCoto(postId, form, Some(mediaContent), cotonoma.id),
+                model.save
+              )
+            )
+        }
       }
 
       case (Msg.MediaContentEncoded(Left(e)), _, _) =>
