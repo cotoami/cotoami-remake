@@ -21,28 +21,47 @@ impl NodeState {
         let db = self.db().clone();
         let config = self.config().clone();
         spawn_blocking(move || {
-            if let Some(local_node) = db.globals().local_node() {
+            let ds = db.new_session()?;
+
+            // Handle the existing local node or creating one.
+            let local_node = if let Some(local_node) = db.globals().local_node() {
                 let owner = local_node.as_principal();
                 if owner.has_password() {
+                    // If there is an owner password configured,
+                    // `NodeConfig::owner_password` must be verified against it.
                     owner
                         .authenticate(config.owner_password.as_deref())
                         .context("Owner authentication has been failed.")?;
                 } else {
+                    // Set the owner password if:
+                    //   1) the current password is `None`.
+                    //   2) `NodeConfig::owner_password` has `Some` value.
                     if let Some(ref new_password) = config.owner_password {
-                        db.new_session()?.set_owner_password_if_none(new_password)?;
+                        ds.set_owner_password_if_none(new_password)?;
                         debug!("The owner password has been initialized.");
                     } else {
                         debug!("Skipping authentication.");
                     }
                 }
+                local_node
             } else {
-                let ((_, node), _) = db.new_session()?.init_as_node(
+                let ((local_node, node), _) = ds.init_as_node(
                     config.node_name.as_deref(),
                     config.owner_password.as_deref(),
                 )?;
                 info!(
                     "The local node [{}]({}) has been created",
                     node.name, node.uuid
+                );
+                local_node
+            };
+
+            // Update the LocalNode settings.
+            if local_node.image_max_size != config.image_max_size {
+                ds.set_image_max_size(config.image_max_size)?;
+                debug!(
+                    "image_max_size has been updated to {:?}",
+                    config.image_max_size
                 );
             }
             Ok(())

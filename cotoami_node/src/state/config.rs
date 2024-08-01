@@ -37,6 +37,13 @@ pub struct NodeConfig {
     /// `COTOAMI_CHANGES_CHUNK_SIZE`
     #[serde(default = "NodeConfig::default_changes_chunk_size")]
     pub changes_chunk_size: i64,
+
+    /// `COTOAMI_IMAGE_MAX_SIZE`
+    /// [None] means no resizing will be applied to incoming images,
+    /// but for now, there's no way to configure this value to [None]
+    /// in either of node-server and desktop.
+    #[serde(default = "NodeConfig::default_image_max_size")]
+    pub image_max_size: Option<i32>,
 }
 
 impl NodeConfig {
@@ -55,6 +62,7 @@ impl NodeConfig {
             owner_password: None,
             session_minutes: Self::default_session_minutes(),
             changes_chunk_size: Self::default_changes_chunk_size(),
+            image_max_size: Self::default_image_max_size(),
         }
     }
 
@@ -62,6 +70,7 @@ impl NodeConfig {
     // https://github.com/serde-rs/serde/issues/368
     fn default_session_minutes() -> u64 { 60 }
     fn default_changes_chunk_size() -> i64 { 100 }
+    fn default_image_max_size() -> Option<i32> { Some(1000) }
 
     pub fn db_dir(&self) -> PathBuf {
         self.db_dir.as_ref().map(PathBuf::from).unwrap_or_else(|| {
