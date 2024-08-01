@@ -18,6 +18,29 @@ case class WaitingPost(
 object WaitingPost {
   def newPostId(): String =
     Instant.now().toEpochMilli().toString
+
+  def newCoto(
+      postId: String,
+      content: String,
+      summary: Option[String],
+      mediaContent: Option[(String, String)],
+      postedIn: Cotonoma
+  ): WaitingPost =
+    WaitingPost(
+      postId,
+      Some(content),
+      summary,
+      mediaContent,
+      false,
+      postedIn
+    )
+
+  def newCotonoma(
+      postId: String,
+      name: String,
+      postedIn: Cotonoma
+  ): WaitingPost =
+    WaitingPost(postId, None, Some(name), None, true, postedIn)
 }
 
 case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
@@ -34,14 +57,7 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
-      WaitingPost(
-        postId,
-        Some(content),
-        summary,
-        mediaContent,
-        false,
-        postedIn
-      )
+      WaitingPost.newCoto(postId, content, summary, mediaContent, postedIn)
     )
 
   def addCotonoma(
@@ -49,9 +65,7 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       name: String,
       postedIn: Cotonoma
   ): WaitingPosts =
-    this.add(
-      WaitingPost(postId, None, Some(name), None, true, postedIn)
-    )
+    this.add(WaitingPost.newCotonoma(postId, name, postedIn))
 
   def setError(postId: String, error: String): WaitingPosts =
     this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(
