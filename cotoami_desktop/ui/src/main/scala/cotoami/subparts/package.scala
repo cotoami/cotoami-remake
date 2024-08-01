@@ -54,9 +54,8 @@ package object subparts {
 
   def paneToggle(
       paneName: String,
-      dispatch: Msg => Unit,
       direction: CollapseDirection = ToLeft
-  ): ReactElement =
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     div(className := "pane-toggle")(
       button(
         className := "fold default",

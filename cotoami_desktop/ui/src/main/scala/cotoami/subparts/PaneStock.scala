@@ -23,13 +23,11 @@ object PaneStock {
 
   def apply(
       model: Model,
-      uiState: UiState,
-      dispatch: AppMsg => Unit
-  ): ReactElement = {
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val sectionTraversals = SectionTraversals(
-      model.traversals,
-      dispatch
-    )(model)
+      model.traversals
+    )(model, dispatch)
     section(
       className := optionalClasses(
         Seq(
@@ -40,7 +38,7 @@ object PaneStock {
     )(
       Fragment(
         model.domain.currentCotonoma.map(
-          sectionCatalog(uiState, _, dispatch)(model)
+          sectionCatalog(uiState, _)(model, dispatch)
         ),
         sectionTraversals
       ) match {
@@ -61,17 +59,15 @@ object PaneStock {
 
   def sectionCatalog(
       uiState: UiState,
-      currentCotonoma: Cotonoma,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      currentCotonoma: Cotonoma
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val pinnedCotos = context.domain.pinnedCotos
     section(className := "coto-catalog")(
       Option.when(!pinnedCotos.isEmpty)(
         sectionPinnedCotos(
           pinnedCotos,
           uiState,
-          currentCotonoma,
-          dispatch
+          currentCotonoma
         )
       )
     )
@@ -80,9 +76,8 @@ object PaneStock {
   def sectionPinnedCotos(
       pinned: Seq[(Link, Coto)],
       uiState: UiState,
-      currentCotonoma: Cotonoma,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      currentCotonoma: Cotonoma
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
     section(className := "pinned-cotos header-and-body")(
       header(className := "tools")(
@@ -130,7 +125,7 @@ object PaneStock {
           onScrollToBottom = () => ()
         )(
           if (inColumns)
-            olPinnedCotos(pinned, inColumns, dispatch)
+            olPinnedCotos(pinned, inColumns)
           else
             DocumentView(
               pinned = pinned,
@@ -194,20 +189,19 @@ object PaneStock {
       )
 
       div(className := "pinned-cotos-with-toc", ref := rootRef)(
-        olPinnedCotos(props.pinned, false, props.dispatch)(props.context),
-        divToc(props.pinned, props.dispatch)(props.context)
+        olPinnedCotos(props.pinned, false)(props.context, props.dispatch),
+        divToc(props.pinned)(props.context, props.dispatch)
       )
     }
   }
 
   private def olPinnedCotos(
       pinned: Seq[(Link, Coto)],
-      inColumns: Boolean,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      inColumns: Boolean
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     ol(className := "pinned-cotos")(
       pinned.map { case (pin, coto) =>
-        liPinnedCoto(pin, coto, inColumns, dispatch)
+        liPinnedCoto(pin, coto, inColumns)
       }: _*
     )
 
@@ -216,17 +210,15 @@ object PaneStock {
   private def liPinnedCoto(
       pin: Link,
       coto: Coto,
-      inColumn: Boolean,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      inColumn: Boolean
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     li(
       key := pin.id.uuid,
       className := "pin",
       id := elementIdOfPinnedCoto(pin)
     )(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
-        dispatch
+        context.domain.parentsOf(coto.id).filter(_._2.id != pin.id)
       ),
       article(
         className := optionalClasses(
@@ -238,7 +230,7 @@ object PaneStock {
         )
       )(
         header()(
-          ViewCoto.divClassifiedAs(coto, dispatch)
+          ViewCoto.divClassifiedAs(coto)
         ),
         div(className := "body")(
           toolButton(
@@ -247,10 +239,10 @@ object PaneStock {
             tipPlacement = "right",
             classes = "unpin"
           ),
-          ViewCoto.divContent(coto, dispatch)
+          ViewCoto.divContent(coto)
         )
       ),
-      olSubCotos(coto, inColumn, dispatch)
+      olSubCotos(coto, inColumn)
     )
   }
 
@@ -258,9 +250,8 @@ object PaneStock {
     s"toc-${elementIdOfPinnedCoto(pin)}"
 
   private def divToc(
-      pinned: Seq[(Link, Coto)],
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      pinned: Seq[(Link, Coto)]
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "toc")(
       ScrollArea(
         scrollableElementId = None,
@@ -295,9 +286,8 @@ object PaneStock {
 
   private def olSubCotos(
       coto: Coto,
-      inColumn: Boolean,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      inColumn: Boolean
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
       if (subCotos.size < coto.outgoingLinks)
@@ -320,7 +310,7 @@ object PaneStock {
         )
       else
         subCotos.map { case (link, subCoto) =>
-          liSubCoto(link, subCoto, dispatch)
+          liSubCoto(link, subCoto)
         }
     ) match {
       case olSubCotos =>
@@ -341,13 +331,11 @@ object PaneStock {
 
   private def liSubCoto(
       link: Link,
-      coto: Coto,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        dispatch
+        context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
       ),
       article(className := "sub-coto coto")(
         header()(
@@ -357,11 +345,11 @@ object PaneStock {
             tipPlacement = "right",
             classes = "unlink"
           ),
-          ViewCoto.divClassifiedAs(coto, dispatch)
+          ViewCoto.divClassifiedAs(coto)
         ),
         div(className := "body")(
-          ViewCoto.divContent(coto, dispatch),
-          ViewCoto.divLinksTraversal(coto, "left", dispatch)
+          ViewCoto.divContent(coto),
+          ViewCoto.divLinksTraversal(coto, "left")
         )
       )
     )

@@ -14,9 +14,8 @@ object NavNodes {
 
   def apply(
       model: Model,
-      uiState: UiState,
-      dispatch: AppMsg => Unit
-  ): ReactElement = {
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val nodes = model.domain.nodes
     nav(
       className := optionalClasses(
@@ -33,8 +32,8 @@ object NavNodes {
         }
       )
     )(
-      paneToggle(PaneName, dispatch),
-      buttonSwitchBack(nodes, dispatch),
+      paneToggle(PaneName),
+      buttonSwitchBack(nodes),
       button(
         className := optionalClasses(
           Seq(
@@ -65,12 +64,12 @@ object NavNodes {
       ul(className := "nodes")(
         nodes.operating.map(node =>
           li(className := "operating", key := node.id.uuid)(
-            buttonNode(node, nodes, dispatch)
+            buttonNode(node, nodes)
           )
         ),
         nodes.parents.map(node =>
           li(className := "parent", key := node.id.uuid)(
-            buttonNode(node, nodes, dispatch)
+            buttonNode(node, nodes)
           )
         )
       )
@@ -78,9 +77,8 @@ object NavNodes {
   }
 
   private def buttonSwitchBack(
-      nodes: Nodes,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      nodes: Nodes
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     (nodes.operatingRemote, nodes.operating, nodes.local) match {
       case (true, Some(operatingNode), Some(localNode)) =>
         Some(
@@ -108,9 +106,8 @@ object NavNodes {
 
   private def buttonNode(
       node: Node,
-      nodes: Nodes,
-      dispatch: AppMsg => Unit
-  ): ReactElement = {
+      nodes: Nodes
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val status = nodes.parentStatus(node.id).flatMap(parentStatusParts(_))
     val tooltip =
       status.map(s => s"${node.name} (${s.slug})").getOrElse(node.name)

@@ -37,25 +37,23 @@ object ModalParentSync {
 
   def apply(
       model: Model,
-      parentSync: ParentSync,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      parentSync: ParentSync
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     Modal.view(
       elementClasses = "parent-sync"
     )(
       "Syncing with Remote Nodes"
     )(
       Option.when(!parentSync.syncing.isEmpty) {
-        sectionSyncing(parentSync, dispatch)
+        sectionSyncing(parentSync)
       },
       Option.when(!parentSync.synced.isEmpty) {
-        sectionSynced(parentSync, dispatch)
+        sectionSynced(parentSync)
       }
     )
 
   private def sectionSyncing(
-      parentSync: ParentSync,
-      dispatch: AppMsg => Unit
+      parentSync: ParentSync
   )(implicit context: Context): ReactElement =
     section(className := "syncing")(
       h2()("Syncing"),
@@ -77,9 +75,8 @@ object ModalParentSync {
     )
 
   private def sectionSynced(
-      parentSync: ParentSync,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      parentSync: ParentSync
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "synced")(
       h2()("Synced"),
       ul()(

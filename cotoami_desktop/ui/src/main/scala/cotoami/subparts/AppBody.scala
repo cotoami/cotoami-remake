@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import slinky.core.facade.ReactElement
 
-import cotoami.{Model, Msg => AppMsg}
+import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.components.{optionalClasses, SplitPane}
 
@@ -10,53 +10,54 @@ object AppBody {
 
   def contents(
       model: Model,
-      uiState: UiState,
-      dispatch: AppMsg => Unit
-  ): Seq[ReactElement] = Seq(
-    NavNodes(model, uiState, dispatch),
-    SplitPane(
-      vertical = true,
-      initialPrimarySize = uiState.paneSizes.getOrElse(
-        NavCotonomas.PaneName,
-        NavCotonomas.DefaultWidth
-      ),
-      resizable = uiState.paneOpened(NavCotonomas.PaneName),
-      className = Some("node-contents"),
-      onResizeStart = None,
-      onResizeEnd = None,
-      onPrimarySizeChanged = Some((newSize) =>
-        dispatch(AppMsg.ResizePane(NavCotonomas.PaneName, newSize))
-      )
-    )(
-      SplitPane.Primary(
-        className = Some(
-          optionalClasses(
-            Seq(
-              ("pane", true),
-              ("folded", !uiState.paneOpened(NavCotonomas.PaneName))
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): Seq[ReactElement] = {
+    implicit val _context: Context = model
+    Seq(
+      NavNodes(model, uiState),
+      SplitPane(
+        vertical = true,
+        initialPrimarySize = uiState.paneSizes.getOrElse(
+          NavCotonomas.PaneName,
+          NavCotonomas.DefaultWidth
+        ),
+        resizable = uiState.paneOpened(NavCotonomas.PaneName),
+        className = Some("node-contents"),
+        onResizeStart = None,
+        onResizeEnd = None,
+        onPrimarySizeChanged = Some((newSize) =>
+          dispatch(AppMsg.ResizePane(NavCotonomas.PaneName, newSize))
+        )
+      )(
+        SplitPane.Primary(
+          className = Some(
+            optionalClasses(
+              Seq(
+                ("pane", true),
+                ("folded", !uiState.paneOpened(NavCotonomas.PaneName))
+              )
             )
+          ),
+          onClick = Option.when(!uiState.paneOpened(NavCotonomas.PaneName)) {
+            () => dispatch(AppMsg.OpenOrClosePane(NavCotonomas.PaneName, true))
+          }
+        )(
+          paneToggle(NavCotonomas.PaneName),
+          model.domain.nodes.current.map(
+            NavCotonomas(model.navCotonomas, _)
           )
         ),
-        onClick = Option.when(!uiState.paneOpened(NavCotonomas.PaneName)) {
-          () => dispatch(AppMsg.OpenOrClosePane(NavCotonomas.PaneName, true))
-        }
-      )(
-        paneToggle(NavCotonomas.PaneName, dispatch),
-        model.domain.nodes.current.map(
-          NavCotonomas(model.navCotonomas, _, dispatch)(model)
+        SplitPane.Secondary(className = None, onClick = None)(
+          flowAndStock(model, uiState)
         )
-      ),
-      SplitPane.Secondary(className = None, onClick = None)(
-        flowAndStock(model, uiState, dispatch)
       )
     )
-  )
+  }
 
   private def flowAndStock(
       model: Model,
-      uiState: UiState,
-      dispatch: AppMsg => Unit
-  ): ReactElement = {
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
     val stockOpened = uiState.paneOpened(PaneStock.PaneName)
     slinky.web.html.main()(
@@ -90,9 +91,9 @@ object AppBody {
           }
         )(
           Option.when(stockOpened) {
-            paneToggle(PaneFlow.PaneName, dispatch)
+            paneToggle(PaneFlow.PaneName)
           },
-          PaneFlow(model, uiState, dispatch)
+          PaneFlow(model, uiState)
         ),
         SplitPane.Secondary(
           className = Some(
@@ -110,9 +111,9 @@ object AppBody {
           }
         )(
           Option.when(flowOpened) {
-            paneToggle(PaneStock.PaneName, dispatch, ToRight)
+            paneToggle(PaneStock.PaneName, ToRight)
           },
-          PaneStock(model, uiState, dispatch)
+          PaneStock(model, uiState)
         )
       )
     )

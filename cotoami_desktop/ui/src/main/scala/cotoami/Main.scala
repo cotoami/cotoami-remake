@@ -351,20 +351,21 @@ object Main {
         .map(Msg.BackendChange)
 
   def view(model: Model, dispatch: Msg => Unit): ReactElement = {
-    implicit val context: Context = model
+    implicit val _context: Context = model
+    implicit val _dispatch = dispatch
     Fragment(
-      AppHeader(model, dispatch),
+      AppHeader(model),
       div(id := "app-body", className := "body")(
         model.uiState
-          .map(AppBody.contents(model, _, dispatch))
+          .map(AppBody.contents(model, _))
           .getOrElse(Seq()): _*
       ),
-      AppFooter(model, dispatch),
+      AppFooter(model),
       if (model.logViewToggle)
-        Some(ViewLog(model.log, dispatch))
+        Some(ViewLog(model.log))
       else
         None,
-      Modal(model, dispatch)
+      Modal(model)
     )
   }
 }

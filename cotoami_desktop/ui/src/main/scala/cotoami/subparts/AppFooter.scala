@@ -9,9 +9,8 @@ import cotoami.components.materialSymbol
 object AppFooter {
 
   def apply(
-      model: Model,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     footer(
       div(className := "browser-nav")(
         div(className := "path")(model.path)

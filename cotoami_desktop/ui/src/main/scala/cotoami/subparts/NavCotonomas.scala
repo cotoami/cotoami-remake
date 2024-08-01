@@ -67,9 +67,8 @@ object NavCotonomas {
 
   def apply(
       model: Model,
-      currentNode: Node,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      currentNode: Node
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
     val cotonomas = domain.cotonomas
     nav(className := "cotonomas header-and-body")(
@@ -93,7 +92,7 @@ object NavCotonomas {
           )
         },
         domain.nodes.selected.map(
-          sectionNodeTools(_, model, dispatch)
+          sectionNodeTools(_, model)
         )
       ),
       section(className := "cotonomas body")(
@@ -103,11 +102,9 @@ object NavCotonomas {
           bottomThreshold = None,
           onScrollToBottom = () => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp)
         )(
-          cotonomas.selected.map(
-            sectionCurrent(_, dispatch)
-          ),
+          cotonomas.selected.map(sectionCurrent),
           Option.when(!domain.recentCotonomas.isEmpty)(
-            sectionRecent(domain.recentCotonomas, dispatch)
+            sectionRecent(domain.recentCotonomas)
           ),
           div(
             className := "more",
@@ -120,9 +117,8 @@ object NavCotonomas {
 
   private def sectionNodeTools(
       node: Node,
-      model: Model,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      model: Model
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
     val status = domain.nodes.parentStatus(node.id)
     val statusParts = status.flatMap(parentStatusParts(_))
@@ -202,9 +198,8 @@ object NavCotonomas {
   }
 
   private def sectionCurrent(
-      selectedCotonoma: Cotonoma,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      selectedCotonoma: Cotonoma
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
     section(className := "current")(
       h2()("Current"),
@@ -217,9 +212,7 @@ object NavCotonomas {
       )(
         li(key := "super")(
           ul(className := "super-cotonomas")(
-            domain.superCotonomas.map(
-              liCotonoma(_, dispatch)
-            ): _*
+            domain.superCotonomas.map(liCotonoma): _*
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma selected")(
@@ -227,30 +220,29 @@ object NavCotonomas {
         ),
         li(key := "sub")(
           ul(className := "sub-cotonomas")(
-            domain.cotonomas.subs.map(
-              liCotonoma(_, dispatch)
-            ) ++ Option.when(
-              domain.cotonomas.subIds.nextPageIndex.isDefined
-            )(
-              li(key := "more-button")(
-                button(
-                  className := "more-sub-cotonomas default",
-                  onClick := ((e) =>
-                    dispatch(
-                      Cotonomas.Msg.FetchMoreSubs(selectedCotonoma.id).toApp
+            domain.cotonomas.subs.map(liCotonoma(_)) ++
+              Option.when(
+                domain.cotonomas.subIds.nextPageIndex.isDefined
+              )(
+                li(key := "more-button")(
+                  button(
+                    className := "more-sub-cotonomas default",
+                    onClick := ((e) =>
+                      dispatch(
+                        Cotonomas.Msg.FetchMoreSubs(selectedCotonoma.id).toApp
+                      )
                     )
+                  )(
+                    materialSymbol("more_horiz")
                   )
-                )(
-                  materialSymbol("more_horiz")
                 )
+              ) ++ Option.when(domain.cotonomas.subsLoading)(
+                li(
+                  key := "more-loading",
+                  className := "more",
+                  aria - "busy" := "true"
+                )()
               )
-            ) ++ Option.when(domain.cotonomas.subsLoading)(
-              li(
-                key := "more-loading",
-                className := "more",
-                aria - "busy" := "true"
-              )()
-            )
           )
         )
       )
@@ -258,18 +250,16 @@ object NavCotonomas {
   }
 
   private def sectionRecent(
-      cotonomas: Seq[Cotonoma],
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      cotonomas: Seq[Cotonoma]
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
-      ul()(cotonomas.map(liCotonoma(_, dispatch)): _*)
+      ul()(cotonomas.map(liCotonoma): _*)
     )
 
   private def liCotonoma(
-      cotonoma: Cotonoma,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      cotonoma: Cotonoma
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     li(
       className := optionalClasses(
         Seq(("selected", context.domain.cotonomas.isSelecting(cotonoma.id)))

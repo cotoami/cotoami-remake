@@ -157,21 +157,17 @@ object SectionTraversals {
     }
 
   def apply(
-      model: Model,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): Option[ReactElement] =
+      model: Model
+  )(implicit context: Context, dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
-        model.traversals.zipWithIndex.map(
-          sectionTraversal(_, dispatch)
-        ): _*
+        model.traversals.zipWithIndex.map(sectionTraversal): _*
       )
     }
 
   private def sectionTraversal(
-      traversal: (Traversal, Int),
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      traversal: (Traversal, Int)
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(key := traversal._1.id, className := "traversal header-and-body")(
       header(className := "tools")(
         button(
@@ -190,17 +186,16 @@ object SectionTraversals {
         )(
           divParents(
             context.domain.parentsOf(traversal._1.start),
-            traversal._2,
-            dispatch
+            traversal._2
           ),
           // traversal start
           context.domain.cotos.get(traversal._1.start).map(
-            divTraversalStep(_, None, traversal, dispatch)
+            divTraversalStep(_, None, traversal)
           ),
           // traversal steps
           traversal._1.steps.zipWithIndex.map { case (step, index) =>
             context.domain.cotos.get(step).map(
-              divTraversalStep(_, Some(index), traversal, dispatch)
+              divTraversalStep(_, Some(index), traversal)
             )
           }
         )
@@ -209,9 +204,8 @@ object SectionTraversals {
 
   private def divParents(
       parents: Seq[(Coto, Link)],
-      traversalIndex: Int,
-      dispatch: AppMsg => Unit
-  ): Option[ReactElement] =
+      traversalIndex: Int
+  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
         ul(className := "traverse-to-parents")(
@@ -237,9 +231,8 @@ object SectionTraversals {
   private def divTraversalStep(
       coto: Coto,
       stepIndex: Option[Int],
-      traversal: (Traversal, Int),
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      traversal: (Traversal, Int)
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     div(
       className := optionalClasses(
@@ -264,14 +257,14 @@ object SectionTraversals {
         )
       )(
         header()(
-          ViewCoto.divClassifiedAs(coto, dispatch)
+          ViewCoto.divClassifiedAs(coto)
         ),
         div(className := "body")(
-          ViewCoto.divContent(coto, dispatch)
+          ViewCoto.divContent(coto)
         )
       ),
       ol(className := "sub-cotos")(
-        subCotos.map(liSubCoto(_, stepIndex, traversal, dispatch))
+        subCotos.map(liSubCoto(_, stepIndex, traversal))
       )
     )
   }
@@ -286,15 +279,13 @@ object SectionTraversals {
   private def liSubCoto(
       subCoto: (Link, Coto),
       stepIndex: Option[Int],
-      traversal: (Traversal, Int),
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      traversal: (Traversal, Int)
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val (link, coto) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        dispatch
+        context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
       ),
       article(
         className := optionalClasses(
@@ -312,7 +303,7 @@ object SectionTraversals {
             tipPlacement = "right",
             classes = "unlink"
           ),
-          ViewCoto.divClassifiedAs(coto, dispatch)
+          ViewCoto.divClassifiedAs(coto)
         ),
         div(className := "body")(
           // Coto content
@@ -321,7 +312,7 @@ object SectionTraversals {
               section(className := "abbreviated-content")(coto.abbreviate)
             )
           } else {
-            ViewCoto.divContent(coto, dispatch)
+            ViewCoto.divContent(coto)
           },
           // Traverse button
           Option.when(!traversed && coto.outgoingLinks > 0) {

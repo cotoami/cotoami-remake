@@ -14,10 +14,7 @@ import cotoami.components.materialSymbol
 
 object ViewLog {
 
-  def apply(
-      log: Log,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+  def apply(log: Log)(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "log-view")(
       header(className := "tools")(
         button(

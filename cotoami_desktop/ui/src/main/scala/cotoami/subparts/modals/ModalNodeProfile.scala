@@ -71,8 +71,9 @@ object ModalNodeProfile {
     NodeDetails.fetch(id)
       .map(Msg.toApp(Msg.NodeDetailsFetched(_)))
 
-  def apply(model: Model, dispatch: AppMsg => Unit)(implicit
-      context: Context
+  def apply(model: Model)(implicit
+      context: Context,
+      dispatch: AppMsg => Unit
   ): ReactElement =
     Modal.view(
       elementClasses = "node-profile",
@@ -108,12 +109,12 @@ object ModalNodeProfile {
             value := model.node.id.uuid
           )
         ),
-        fieldName(model, dispatch),
-        fieldDescription(model, dispatch)
+        fieldName(model),
+        fieldDescription(model)
       )
     )
 
-  private def fieldName(model: Model, dispatch: AppMsg => Unit)(implicit
+  private def fieldName(model: Model)(implicit
       context: Context
   ): ReactElement =
     div(className := "input-field node-name")(
@@ -138,7 +139,7 @@ object ModalNodeProfile {
       )
     )
 
-  private def fieldDescription(model: Model, dispatch: AppMsg => Unit)(implicit
+  private def fieldDescription(model: Model)(implicit
       context: Context
   ): ReactElement =
     model.rootCoto.map(coto =>

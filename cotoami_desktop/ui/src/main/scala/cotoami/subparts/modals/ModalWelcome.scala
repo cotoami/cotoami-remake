@@ -258,9 +258,8 @@ object ModalWelcome {
 
   def apply(
       model: Model,
-      recentDatabases: Seq[DatabaseOpenedJson],
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      recentDatabases: Seq[DatabaseOpenedJson]
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     Modal.view(
       elementClasses = "welcome",
       error = model.error
@@ -272,18 +271,17 @@ object ModalWelcome {
       ),
       "Welcome to Cotoami"
     )(
-      sectionRecent(model, recentDatabases, dispatch),
+      sectionRecent(model, recentDatabases),
       div(className := "create-or-open")(
-        sectionNewDatabase(model, dispatch),
-        sectionOpenDatabase(model, dispatch)
+        sectionNewDatabase(model),
+        sectionOpenDatabase(model)
       )
     )
 
   private def sectionRecent(
       model: Model,
-      databases: Seq[DatabaseOpenedJson],
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      databases: Seq[DatabaseOpenedJson]
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     if (databases.isEmpty) {
       None
     } else {
@@ -317,14 +315,13 @@ object ModalWelcome {
     }
 
   private def sectionNewDatabase(
-      model: Model,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "new-database")(
       h2()("New database"),
       form()(
         // Name
-        inputDatabaseName(model, dispatch),
+        inputDatabaseName(model),
 
         // Base folder
         div(className := "input-field")(
@@ -373,9 +370,8 @@ object ModalWelcome {
     )
 
   private def inputDatabaseName(
-      model: Model,
-      dispatch: AppMsg => Unit
-  ): ReactElement = {
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val errors = model.validateDatabaseName
     div(className := "input-field")(
       label(htmlFor := "database-name")("Name"),
@@ -393,9 +389,8 @@ object ModalWelcome {
   }
 
   private def sectionOpenDatabase(
-      model: Model,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "open-database")(
       h2()("Open"),
       form()(

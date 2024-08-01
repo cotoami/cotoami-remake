@@ -161,8 +161,9 @@ object ModalIncorporate {
     }
   }
 
-  def apply(model: Model, dispatch: AppMsg => Unit)(implicit
-      context: Context
+  def apply(model: Model)(implicit
+      context: Context,
+      dispatch: AppMsg => Unit
   ): ReactElement =
     Modal.view(
       elementClasses = "incorporate",
@@ -180,14 +181,13 @@ object ModalIncorporate {
         context.i18n.help.ModalIncorporate_intro
       ),
       model.nodeSession
-        .map(sectionIncorporate(model, _, dispatch))
-        .getOrElse(sectionConnect(model, dispatch))
+        .map(sectionIncorporate(model, _))
+        .getOrElse(sectionConnect(model))
     )
 
   private def sectionConnect(
-      model: Model,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      model: Model
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "connect")(
       h2()(
         "Connect",
@@ -252,9 +252,8 @@ object ModalIncorporate {
 
   private def sectionIncorporate(
       model: Model,
-      nodeSession: ClientNodeSession,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      nodeSession: ClientNodeSession
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "incorporate")(
       h2()("Node"),
       model.incorporatingError.map(e => section(className := "error")(e)),

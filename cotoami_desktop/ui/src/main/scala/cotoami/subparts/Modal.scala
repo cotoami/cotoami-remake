@@ -160,29 +160,28 @@ object Modal {
   }
 
   def apply(
-      model: AppModel,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      model: AppModel
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     model.modalStack.top.flatMap {
       case Welcome(modalModel) =>
         model.systemInfo.map(info =>
-          ModalWelcome(modalModel, info.recent_databases.toSeq, dispatch)
+          ModalWelcome(modalModel, info.recent_databases.toSeq)
         )
 
       case Incorporate(modalModel) =>
-        Some(ModalIncorporate(modalModel, dispatch))
+        Some(ModalIncorporate(modalModel))
 
       case ParentSync(modalModel) =>
-        Some(ModalParentSync(modalModel, model.parentSync, dispatch))
+        Some(ModalParentSync(modalModel, model.parentSync))
 
       case OperateAs(modalModel) =>
-        Some(ModalOperateAs(modalModel, dispatch))
+        Some(ModalOperateAs(modalModel))
 
       case NodeProfile(modalModel) =>
-        Some(ModalNodeProfile(modalModel, dispatch))
+        Some(ModalNodeProfile(modalModel))
 
       case NodeIcon(modalModel) =>
-        Some(ModalNodeIcon(modalModel, dispatch))
+        Some(ModalNodeIcon(modalModel))
     }
 
   def view[M <: Model](

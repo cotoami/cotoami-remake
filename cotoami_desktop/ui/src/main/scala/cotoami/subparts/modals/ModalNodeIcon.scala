@@ -109,7 +109,7 @@ object ModalNodeIcon {
     }
   }
 
-  def apply(model: Model, dispatch: AppMsg => Unit): ReactElement =
+  def apply(model: Model)(implicit dispatch: AppMsg => Unit): ReactElement =
     Modal.view(
       elementClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
@@ -117,7 +117,7 @@ object ModalNodeIcon {
     )(
       "Change Node Icon"
     )(
-      model.sourceImage.map(image => divPreview(image._2, model, dispatch))
+      model.sourceImage.map(image => divPreview(image._2, model))
         .getOrElse(
           InputFile(
             accept = js.Dictionary("image/*" -> js.Array[String]()),
@@ -133,9 +133,8 @@ object ModalNodeIcon {
 
   private def divPreview(
       imageUrl: String,
-      model: Model,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     div(className := "preview")(
       SectionCrop(
         imageUrl = imageUrl,

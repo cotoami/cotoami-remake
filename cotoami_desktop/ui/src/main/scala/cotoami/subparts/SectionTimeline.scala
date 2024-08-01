@@ -171,23 +171,24 @@ object SectionTimeline {
 
   def apply(
       model: Model,
-      waitingPosts: WaitingPosts,
+      waitingPosts: WaitingPosts
+  )(implicit
+      context: Context,
       dispatch: AppMsg => Unit
-  )(implicit context: Context): Option[ReactElement] = {
+  ): Option[ReactElement] = {
     val timeline = model.timeline()
     Option.when(
       model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
     )(
-      sectionTimeline(model, timeline, waitingPosts, dispatch)
+      sectionTimeline(model, timeline, waitingPosts)
     )
   }
 
   private def sectionTimeline(
       model: Model,
       cotos: Seq[Coto],
-      waitingPosts: WaitingPosts,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      waitingPosts: WaitingPosts
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
         toolButton(
@@ -231,9 +232,8 @@ object SectionTimeline {
           onScrollToBottom = () => dispatch(Msg.FetchMore.toApp)
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
-            cotos.map(
-              sectionPost(_, dispatch)
-            ) :+ div(
+            cotos.map(sectionPost) :+
+            div(
               className := "more",
               aria - "busy" := model.loading.toString()
             )()): _*
@@ -258,9 +258,8 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      coto: Coto,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -270,28 +269,28 @@ object SectionTimeline {
       ),
       key := coto.id.uuid
     )(
-      coto.repostOfId.map(_ => repostHeader(coto, dispatch)),
-      ViewCoto.ulParents(context.domain.parentsOf(coto.id), dispatch),
+      coto.repostOfId.map(_ => repostHeader(coto)),
+      ViewCoto.ulParents(context.domain.parentsOf(coto.id)),
       articleCoto(
-        context.domain.cotos.getOriginal(coto),
-        dispatch
+        context.domain.cotos.getOriginal(coto)
       ),
-      ViewCoto.divLinksTraversal(coto, "top", dispatch)
+      ViewCoto.divLinksTraversal(coto, "top")
     )
 
-  private def articleCoto(coto: Coto, dispatch: AppMsg => Unit)(implicit
-      context: Context
+  private def articleCoto(coto: Coto)(implicit
+      context: Context,
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val domain = context.domain
     article(className := "coto")(
       header()(
-        ViewCoto.divClassifiedAs(coto, dispatch),
+        ViewCoto.divClassifiedAs(coto),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
           ViewCoto.addressAuthor(coto, domain.nodes)
         }
       ),
       div(className := "body")(
-        ViewCoto.divContent(coto, dispatch)
+        ViewCoto.divContent(coto)
       ),
       footer()(
         time(
@@ -304,14 +303,15 @@ object SectionTimeline {
     )
   }
 
-  private def repostHeader(coto: Coto, dispatch: AppMsg => Unit)(implicit
-      context: Context
+  private def repostHeader(coto: Coto)(implicit
+      context: Context,
+      dispatch: AppMsg => Unit
   ): ReactElement = {
     val domain = context.domain
     section(className := "repost-header")(
       materialSymbol("repeat"),
       Option.when(domain.cotonomas.selectedId.isEmpty) {
-        repostedIn(coto, domain.cotonomas, dispatch)
+        repostedIn(coto, domain.cotonomas)
       },
       Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
         reposter(coto, domain.nodes)
@@ -321,9 +321,8 @@ object SectionTimeline {
 
   private def repostedIn(
       coto: Coto,
-      cotonomas: Cotonomas,
-      dispatch: AppMsg => Unit
-  ): Option[ReactElement] =
+      cotonomas: Cotonomas
+  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",

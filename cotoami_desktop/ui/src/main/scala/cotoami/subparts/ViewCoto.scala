@@ -33,20 +33,18 @@ object ViewCoto {
     )
 
   def divClassifiedAs(
-      coto: Coto,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "classified-as")(
-      ulOtherCotonomas(coto, dispatch),
+      ulOtherCotonomas(coto),
       Option.when(context.domain.pinned(coto.id)) {
         div(className := "pinned")(materialSymbol("push_pin"))
       }
     )
 
   private def ulOtherCotonomas(
-      coto: Coto,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
@@ -70,9 +68,8 @@ object ViewCoto {
     )
 
   def divContent(
-      coto: Coto,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement =
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "content")(
       context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-content")(
@@ -196,9 +193,8 @@ object ViewCoto {
     }
 
   def ulParents(
-      parents: Seq[(Coto, Link)],
-      dispatch: AppMsg => Unit
-  ): Option[ReactElement] =
+      parents: Seq[(Coto, Link)]
+  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
         parents.map { case (parent, link) =>
@@ -218,9 +214,8 @@ object ViewCoto {
 
   def divLinksTraversal(
       coto: Coto,
-      tipPlacement: String,
-      dispatch: AppMsg => Unit
-  ): Option[ReactElement] =
+      tipPlacement: String
+  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(coto.outgoingLinks > 0) {
       div(className := "links")(
         toolButton(

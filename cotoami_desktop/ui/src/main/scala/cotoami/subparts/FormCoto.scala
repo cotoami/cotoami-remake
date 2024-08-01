@@ -455,9 +455,8 @@ object FormCoto {
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       editorHeight: Int,
-      onEditorHeightChanged: Int => Unit,
-      dispatch: Msg => Unit
-  ): ReactElement =
+      onEditorHeightChanged: Int => Unit
+  )(implicit dispatch: Msg => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -466,7 +465,7 @@ object FormCoto {
         )
       )
     )(
-      headerTools(model, dispatch),
+      headerTools(model),
       model.form match {
         case form: CotoForm =>
           Fragment(
@@ -485,13 +484,12 @@ object FormCoto {
               operatingNode,
               currentCotonoma,
               editorHeight,
-              onEditorHeightChanged,
-              dispatch
+              onEditorHeightChanged
             )
           )
 
         case form: CotonomaForm =>
-          formCotonoma(form, model, operatingNode, currentCotonoma, dispatch)
+          formCotonoma(form, model, operatingNode, currentCotonoma)
       }
     )
 
@@ -501,9 +499,8 @@ object FormCoto {
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       editorHeight: Int,
-      onEditorHeightChanged: Int => Unit,
-      dispatch: Msg => Unit
-  ): ReactElement =
+      onEditorHeightChanged: Int => Unit
+  )(implicit dispatch: Msg => Unit): ReactElement =
     SplitPane(
       vertical = false,
       initialPrimarySize = editorHeight,
@@ -562,8 +559,7 @@ object FormCoto {
           model,
           form.validate,
           operatingNode,
-          currentCotonoma,
-          dispatch
+          currentCotonoma
         )
       )
     )
@@ -572,9 +568,8 @@ object FormCoto {
       form: CotonomaForm,
       model: Model,
       operatingNode: Node,
-      currentCotonoma: Cotonoma,
-      dispatch: Msg => Unit
-  ): ReactElement =
+      currentCotonoma: Cotonoma
+  )(implicit dispatch: Msg => Unit): ReactElement =
     Fragment(
       input(
         `type` := "text",
@@ -593,10 +588,12 @@ object FormCoto {
           }
         )
       ),
-      divPost(model, form.validation, operatingNode, currentCotonoma, dispatch)
+      divPost(model, form.validation, operatingNode, currentCotonoma)
     )
 
-  private def headerTools(model: Model, dispatch: Msg => Unit): ReactElement =
+  private def headerTools(model: Model)(implicit
+      dispatch: Msg => Unit
+  ): ReactElement =
     header(className := "tools")(
       section(className := "coto-type-switch")(
         button(
@@ -626,9 +623,8 @@ object FormCoto {
       model: Model,
       validation: Validation.Result,
       operatingNode: Node,
-      currentCotonoma: Cotonoma,
-      dispatch: Msg => Unit
-  ): ReactElement =
+      currentCotonoma: Cotonoma
+  )(implicit dispatch: Msg => Unit): ReactElement =
     div(className := "post")(
       Validation.sectionValidationError(validation),
       section(className := "post")(
@@ -649,7 +645,7 @@ object FormCoto {
                   else
                     "Preview"
                 ),
-                buttonPost(model, currentCotonoma, dispatch),
+                buttonPost(model, currentCotonoma),
                 toolButton(
                   symbol = "arrow_drop_up",
                   tip = "Fold",
@@ -657,7 +653,7 @@ object FormCoto {
                   onClick = () => dispatch(Msg.SetFolded(true))
                 )
               )
-            case _ => buttonPost(model, currentCotonoma, dispatch)
+            case _ => buttonPost(model, currentCotonoma)
           }
         )
       )
@@ -665,9 +661,8 @@ object FormCoto {
 
   private def buttonPost(
       model: Model,
-      currentCotonoma: Cotonoma,
-      dispatch: Msg => Unit
-  ): ReactElement =
+      currentCotonoma: Cotonoma
+  )(implicit dispatch: Msg => Unit): ReactElement =
     button(
       className := "post",
       disabled := !model.readyToPost,

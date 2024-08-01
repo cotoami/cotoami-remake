@@ -15,9 +15,8 @@ object PaneFlow {
 
   def apply(
       model: Model,
-      uiState: UiState,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "flow")(
       (model.domain.nodes.operating, model.domain.currentCotonoma) match {
         case (Some(operatingNode), Some(cotonoma)) =>
@@ -33,9 +32,8 @@ object PaneFlow {
                     EditorDefaultHeight
                   ),
                   (newSize) =>
-                    dispatch(AppMsg.ResizePane(EditorPaneName, newSize)),
-                  subMsg => dispatch(AppMsg.FlowInputMsg(subMsg))
-                )
+                    dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
+                )(subMsg => dispatch(AppMsg.FlowInputMsg(subMsg)))
               )
             else
               None
@@ -43,8 +41,9 @@ object PaneFlow {
 
         case _ => None
       },
-      SectionTimeline(model.timeline, model.waitingPosts, dispatch)(
-        model
+      SectionTimeline(model.timeline, model.waitingPosts)(
+        model,
+        dispatch
       )
     )
 }

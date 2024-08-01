@@ -10,9 +10,8 @@ import cotoami.components.materialSymbol
 object AppHeader {
 
   def apply(
-      model: Model,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     header(
       data - "tauri-drag-region" := "default",
       data - "os" := model.systemInfo.map(_.os).getOrElse("")
@@ -31,17 +30,16 @@ object AppHeader {
             src := "/images/logo/logomark.svg"
           )
         ),
-        model.domain.location.map(sectionLocation(_, dispatch)),
+        model.domain.location.map(sectionLocation),
         section(className := "tools")(
-          model.domain.nodes.operating.map(buttonNodeProfile(_, dispatch))
+          model.domain.nodes.operating.map(buttonNodeProfile)
         )
       )
     )
 
   private def sectionLocation(
-      location: (Node, Option[Cotonoma]),
-      dispatch: AppMsg => Unit
-  ): ReactElement = {
+      location: (Node, Option[Cotonoma])
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val (node, cotonoma) = location
     section(
       className := "location",
@@ -65,9 +63,8 @@ object AppHeader {
   }
 
   private def buttonNodeProfile(
-      node: Node,
-      dispatch: AppMsg => Unit
-  ): ReactElement =
+      node: Node
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     button(
       className := "node-profile, default",
       title := "Node profile",

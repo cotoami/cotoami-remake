@@ -78,9 +78,8 @@ object ModalOperateAs {
     }
 
   def apply(
-      model: Model,
-      dispatch: AppMsg => Unit
-  )(implicit context: Context): ReactElement = {
+      model: Model
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val modalType = classOf[Modal.OperateAs]
     Modal.view(
       elementClasses = "operate-as",
