@@ -54,7 +54,8 @@ object FormCoto {
 
     def readyToPost: Boolean =
       this.hasContents && !this.posting && (this.form match {
-        case form: CotoForm              => form.validate.validated
+        case form: CotoForm =>
+          form.validate.validated || form.mediaContent.isDefined
         case CotonomaForm(_, validation) => validation.validated
       })
 
@@ -644,25 +645,29 @@ object FormCoto {
           spanNode(operatingNode)
         ),
         div(className := "buttons")(
-          Option.when(model.form.isInstanceOf[CotoForm]) {
-            Fragment(
-              toolButton(
-                symbol = "arrow_drop_up",
-                tip = "Fold",
-                classes = "fold",
-                onClick = () => dispatch(Msg.SetFolded(true))
-              ),
-              button(
-                className := "preview contrast outline",
-                disabled := !model.readyToPost,
-                onClick := (_ => dispatch(Msg.TogglePreview))
-              )(
-                if (model.inPreview)
-                  "Edit"
-                else
-                  "Preview"
+          model.form match {
+            case form: CotoForm =>
+              Some(
+                Fragment(
+                  toolButton(
+                    symbol = "arrow_drop_up",
+                    tip = "Fold",
+                    classes = "fold",
+                    onClick = () => dispatch(Msg.SetFolded(true))
+                  ),
+                  button(
+                    className := "preview contrast outline",
+                    disabled := !form.validate.validated,
+                    onClick := (_ => dispatch(Msg.TogglePreview))
+                  )(
+                    if (model.inPreview)
+                      "Edit"
+                    else
+                      "Preview"
+                  )
+                )
               )
-            )
+            case _ => None
           },
           button(
             className := "post",
