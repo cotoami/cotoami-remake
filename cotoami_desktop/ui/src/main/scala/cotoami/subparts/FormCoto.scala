@@ -654,41 +654,46 @@ object FormCoto {
         div(className := "buttons")(
           model.form match {
             case form: CotoForm =>
-              Some(
-                Fragment(
-                  toolButton(
-                    symbol = "arrow_drop_up",
-                    tip = "Fold",
-                    classes = "fold",
-                    onClick = () => dispatch(Msg.SetFolded(true))
-                  ),
-                  button(
-                    className := "preview contrast outline",
-                    disabled := !form.validate.validated,
-                    onClick := (_ => dispatch(Msg.TogglePreview))
-                  )(
-                    if (model.inPreview)
-                      "Edit"
-                    else
-                      "Preview"
-                  )
+              Fragment(
+                button(
+                  className := "preview contrast outline",
+                  disabled := !form.validate.validated,
+                  onClick := (_ => dispatch(Msg.TogglePreview))
+                )(
+                  if (model.inPreview)
+                    "Edit"
+                  else
+                    "Preview"
+                ),
+                buttonPost(model, currentCotonoma, dispatch),
+                toolButton(
+                  symbol = "arrow_drop_up",
+                  tip = "Fold",
+                  classes = "fold",
+                  onClick = () => dispatch(Msg.SetFolded(true))
                 )
               )
-            case _ => None
-          },
-          button(
-            className := "post",
-            disabled := !model.readyToPost,
-            aria - "busy" := model.posting.toString(),
-            onClick := (_ => dispatch(Msg.Post))
-          )(
-            "Post to ",
-            span(className := "target-cotonoma")(
-              currentCotonoma.abbreviateName(15)
-            ),
-            span(className := "shortcut-help")("(Ctrl + Enter)")
-          )
+            case _ => buttonPost(model, currentCotonoma, dispatch)
+          }
         )
       )
+    )
+
+  private def buttonPost(
+      model: Model,
+      currentCotonoma: Cotonoma,
+      dispatch: Msg => Unit
+  ): ReactElement =
+    button(
+      className := "post",
+      disabled := !model.readyToPost,
+      aria - "busy" := model.posting.toString(),
+      onClick := (_ => dispatch(Msg.Post))
+    )(
+      "Post to ",
+      span(className := "target-cotonoma")(
+        currentCotonoma.abbreviateName(15)
+      ),
+      span(className := "shortcut-help")("(Ctrl + Enter)")
     )
 }

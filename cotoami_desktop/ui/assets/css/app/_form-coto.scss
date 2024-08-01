@@ -172,8 +172,8 @@ section.form-coto {
         }
 
         button.fold {
-          padding-top: 0;
-          padding-bottom: 0;
+          margin-left: 4px;
+          padding: 0;
           opacity: .5;
 
           &:hover {
@@ -193,6 +193,10 @@ section.form-coto {
   }
 
   &.folded {
+    section.media-preview {
+      display: none;
+    }
+
     .coto-editor {
       height: 2.5rem !important;
 
