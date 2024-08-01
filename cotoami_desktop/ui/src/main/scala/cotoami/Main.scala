@@ -127,7 +127,7 @@ object Main {
         )
 
       case Msg.DatabaseOpened(Right(info)) =>
-        (model, Seq(Browser.send(Msg.SetDatabaseInfo(info))))
+        update(Msg.SetDatabaseInfo(info), model)
 
       case Msg.DatabaseOpened(Left(e)) =>
         (model.error(e.default_message, Some(e)), Seq())
