@@ -31,7 +31,7 @@ object ModalIncorporate {
   ) {
     def validateNodeUrl: Validation.Result =
       if (this.nodeUrl.isBlank())
-        Validation.Result.toBeValidated
+        Validation.Result.notYetValidated
       else
         Validation.Result(ServerNode.validateUrl(this.nodeUrl))
 

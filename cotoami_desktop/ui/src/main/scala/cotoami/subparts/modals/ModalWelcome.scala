@@ -19,12 +19,13 @@ object ModalWelcome {
       databaseName: String = "",
       baseFolder: String = "",
       folderName: String = "",
-      folderNameValidation: Validation.Result = Validation.Result.toBeValidated,
+      folderNameValidation: Validation.Result =
+        Validation.Result.notYetValidated,
 
       // Open an existing database
       databaseFolder: String = "",
       databaseFolderValidation: Validation.Result =
-        Validation.Result.toBeValidated,
+        Validation.Result.notYetValidated,
 
       // Shared
       processing: Boolean = false,
@@ -32,7 +33,7 @@ object ModalWelcome {
   ) {
     def validateDatabaseName: Validation.Result =
       if (this.databaseName.isBlank())
-        Validation.Result.toBeValidated
+        Validation.Result.notYetValidated
       else
         Validation.Result(Node.validateName(this.databaseName))
 
@@ -81,7 +82,7 @@ object ModalWelcome {
 
       case Msg.SelectBaseFolder =>
         (
-          model.copy(folderNameValidation = Validation.Result.toBeValidated),
+          model.copy(folderNameValidation = Validation.Result.notYetValidated),
           Seq(
             tauri
               .selectSingleDirectory(
@@ -109,7 +110,7 @@ object ModalWelcome {
       case Msg.FolderNameInput(value) =>
         model.copy(
           folderName = value,
-          folderNameValidation = Validation.Result.toBeValidated
+          folderNameValidation = Validation.Result.notYetValidated
         ) match {
           case model => (model, validateNewFolder(model))
         }
@@ -143,7 +144,7 @@ object ModalWelcome {
       case Msg.SelectDatabaseFolder =>
         (
           model.copy(databaseFolderValidation =
-            Validation.Result.toBeValidated
+            Validation.Result.notYetValidated
           ),
           Seq(
             tauri

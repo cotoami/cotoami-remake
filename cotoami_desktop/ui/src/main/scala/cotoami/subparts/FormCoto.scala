@@ -118,7 +118,7 @@ object FormCoto {
 
     def validate: Validation.Result =
       if (this.cotoInput.isBlank)
-        Validation.Result.toBeValidated
+        Validation.Result.notYetValidated
       else {
         val errors =
           this.summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
@@ -140,21 +140,21 @@ object FormCoto {
 
   case class CotonomaForm(
       nameInput: String = "",
-      validation: Validation.Result = Validation.Result.toBeValidated
+      validation: Validation.Result = Validation.Result.notYetValidated
   ) extends Form {
     def name: String = this.nameInput.trim
 
     def validate(nodeId: Id[Node]): (CotonomaForm, Seq[Cmd[Msg]]) = {
       val (validation, cmds) =
         if (this.name.isEmpty())
-          (Validation.Result.toBeValidated, Seq.empty)
+          (Validation.Result.notYetValidated, Seq.empty)
         else
           Cotonoma.validateName(this.name) match {
             case errors if errors.isEmpty =>
               (
                 // Now that the local validation has passed,
                 // wait for backend validation to be done.
-                Validation.Result.toBeValidated,
+                Validation.Result.notYetValidated,
                 Seq(
                   Cotonoma.fetchByName(this.name, nodeId)
                     .map(Msg.CotonomaByName(this.name, _))

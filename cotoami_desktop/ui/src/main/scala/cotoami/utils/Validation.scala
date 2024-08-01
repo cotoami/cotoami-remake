@@ -15,7 +15,7 @@ object Validation {
   )
 
   case class Result(errors: Option[Seq[Validation.Error]]) {
-    def toBeValidated: Boolean = this.errors.isEmpty
+    def notYetValidated: Boolean = this.errors.isEmpty
 
     def validated: Boolean =
       this.errors.map(_.isEmpty).getOrElse(false)
@@ -44,7 +44,7 @@ object Validation {
     def apply(errors: Seq[Validation.Error]): Result =
       Result(Some(errors))
 
-    lazy val toBeValidated: Result = Result(None)
+    lazy val notYetValidated: Result = Result(None)
 
     lazy val validated: Result = Result(Seq.empty)
   }
@@ -114,7 +114,7 @@ object Validation {
 
   def ariaInvalid(result: Validation.Result): AttrPair[input.tagType] = {
     (aria - "invalid") :=
-      (if (result.toBeValidated)
+      (if (result.notYetValidated)
          ""
        else if (result.validated)
          "false"
