@@ -67,11 +67,26 @@ section.form-coto {
   }
 
   section.media-preview {
+    position: relative;
     max-height: 300px;
     text-align: center;
 
     img {
       height: 100%;
+    }
+
+    button.delete {
+      position: absolute;
+      top: 0;
+      right: 0;
+
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 20px;
+      background-color: rgba(0, 0, 0, .4);
     }
   }
 

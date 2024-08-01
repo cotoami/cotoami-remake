@@ -180,6 +180,7 @@ object FormCoto {
     case class CotoInput(coto: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
     case class FileInput(file: dom.Blob) extends Msg
+    case object DeleteMediaContent extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
     case class CotonomaByName(
@@ -262,6 +263,11 @@ object FormCoto {
       case (Msg.FileInput(file), form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form = form.copy(mediaContent = Some(file)))
+        )
+
+      case (Msg.DeleteMediaContent, form: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = form.copy(mediaContent = None))
         )
 
       case (Msg.ImeCompositionStart, _, _) =>
@@ -475,6 +481,12 @@ object FormCoto {
                 img(
                   src := url,
                   onLoad := (_ => dom.URL.revokeObjectURL(url))
+                ),
+                toolButton(
+                  symbol = "close",
+                  tip = "Delete",
+                  classes = "delete",
+                  onClick = () => dispatch(Msg.DeleteMediaContent)
                 )
               )
             }),
