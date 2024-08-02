@@ -73,7 +73,7 @@ impl NodeConfig {
     // https://github.com/serde-rs/serde/issues/368
     fn default_session_minutes() -> u64 { 60 }
     fn default_changes_chunk_size() -> i64 { 100 }
-    fn default_image_max_size() -> Option<i32> { Some(1000) }
+    fn default_image_max_size() -> Option<i32> { Some(1200) }
 
     pub fn db_dir(&self) -> PathBuf {
         self.db_dir.as_ref().map(PathBuf::from).unwrap_or_else(|| {
