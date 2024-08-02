@@ -9,7 +9,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [build-dependencies]
-tauri-build = {version = "1.5.2", features = [] }
+tauri-build = {version = "1.5.2", features = []}
 
 [dependencies]
 anyhow.workspace = true
@@ -22,15 +22,16 @@ cotoami_node.workspace = true
 derive-new.workspace = true
 futures-util.workspace = true
 futures.workspace = true
+googletest.workspace = true
 indoc.workspace = true
 log = "0.4.21"
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "1.6.5", features = ["window-start-dragging", "dialog-open", "shell-open"] }
+tauri = {version = "1.6.5", features = ["window-start-dragging", "dialog-open", "shell-open"]}
 tauri-plugin-log = {git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1"}
 thiserror.workspace = true
-tokio = {version = "1.0", features = ["full"] }
+tokio = {version = "1.0", features = ["full"]}
 toml = "0.8.14"
 tracing.workspace = true
 

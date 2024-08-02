@@ -63,6 +63,7 @@ mod tests {
     use std::str::FromStr;
 
     use anyhow::Result;
+    use googletest::prelude::*;
     use indoc::indoc;
 
     use super::*;
@@ -78,23 +79,23 @@ mod tests {
             Id::from_str("00000000-0000-0000-0000-000000000002")?,
             NodeConfig::new_standalone(Some("/path/to/db2".into()), Some("Bye".into())),
         );
-        assert_eq!(
+        assert_that!(
             toml::to_string(&configs).unwrap(),
-            indoc! {r#"
+            eq(indoc! {r#"
                 [00000000-0000-0000-0000-000000000001]
                 db_dir = "/path/to/db1"
                 node_name = "Hello"
                 session_minutes = 60
                 changes_chunk_size = 100
-                image_max_size = 1000
+                image_max_size = 1200
 
                 [00000000-0000-0000-0000-000000000002]
                 db_dir = "/path/to/db2"
                 node_name = "Bye"
                 session_minutes = 60
                 changes_chunk_size = 100
-                image_max_size = 1000
-            "#}
+                image_max_size = 1200
+            "#})
         );
         Ok(())
     }

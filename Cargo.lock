@@ -951,6 +951,7 @@ dependencies = [
  "derive-new",
  "futures",
  "futures-util",
+ "googletest",
  "indoc",
  "log",
  "parking_lot",
