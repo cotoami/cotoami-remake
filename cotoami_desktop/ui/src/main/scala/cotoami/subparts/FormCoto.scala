@@ -477,26 +477,49 @@ object FormCoto {
           Fragment(
             form.mediaContent.map(blob => {
               val url = dom.URL.createObjectURL(blob)
-              section(className := "media-preview")(
-                img(
-                  src := url,
-                  onLoad := (_ => dom.URL.revokeObjectURL(url))
+              SplitPane(
+                vertical = false,
+                initialPrimarySize = 300,
+                resizable = true,
+                className = Some("coto-form-with-media"),
+                onResizeStart = None,
+                onResizeEnd = None,
+                onPrimarySizeChanged = None
+              )(
+                SplitPane.Primary(className = None, onClick = None)(
+                  section(className := "media-preview")(
+                    img(
+                      src := url,
+                      onLoad := (_ => dom.URL.revokeObjectURL(url))
+                    ),
+                    toolButton(
+                      symbol = "close",
+                      tip = "Delete",
+                      classes = "delete",
+                      onClick = () => dispatch(Msg.DeleteMediaContent)
+                    )
+                  )
                 ),
-                toolButton(
-                  symbol = "close",
-                  tip = "Delete",
-                  classes = "delete",
-                  onClick = () => dispatch(Msg.DeleteMediaContent)
+                SplitPane.Secondary(className = None, onClick = None)(
+                  formCoto(
+                    form,
+                    model,
+                    operatingNode,
+                    currentCotonoma,
+                    editorHeight,
+                    onEditorHeightChanged
+                  )
                 )
+              ): ReactElement
+            }).getOrElse(
+              formCoto(
+                form,
+                model,
+                operatingNode,
+                currentCotonoma,
+                editorHeight,
+                onEditorHeightChanged
               )
-            }),
-            formCoto(
-              form,
-              model,
-              operatingNode,
-              currentCotonoma,
-              editorHeight,
-              onEditorHeightChanged
             )
           )
 

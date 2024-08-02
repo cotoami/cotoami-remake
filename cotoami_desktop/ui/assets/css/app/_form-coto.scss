@@ -66,13 +66,24 @@ section.form-coto {
     }
   }
 
+  .coto-form-with-media {
+    .separator-inner {
+      border-style: none !important;
+    }
+  }
+
   section.media-preview {
     position: relative;
-    max-height: 300px;
     text-align: center;
 
+    // wrapped in SplitPane
+    width: 100%;
+    height: 100%;
+
     img {
-      height: 100%;
+      width: auto;
+      height: auto;
+      max-height: 100%;
     }
 
     button.delete {
@@ -188,7 +199,7 @@ section.form-coto {
 
         button.fold {
           margin-left: 4px;
-          padding: 0;
+          padding: 0 4px;
           opacity: .5;
 
           &:hover {
@@ -198,7 +209,7 @@ section.form-coto {
           span.material-symbols {
             display: inline-block;
             height: 30px;
-            font-size: 30px;
+            font-size: 24px;
             line-height: 30px;
             vertical-align: middle;
           }
