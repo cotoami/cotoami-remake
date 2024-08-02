@@ -97,10 +97,8 @@ object NavCotonomas {
       ),
       section(className := "cotonomas body")(
         ScrollArea(
-          scrollableElementId = None,
-          autoHide = true,
-          bottomThreshold = None,
-          onScrollToBottom = () => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp)
+          onScrollToBottom =
+            Some(() => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp))
         )(
           cotonomas.selected.map(sectionCurrent),
           Option.when(!domain.recentCotonomas.isEmpty)(

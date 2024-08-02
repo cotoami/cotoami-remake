@@ -44,12 +44,9 @@ object PaneStock {
       ) match {
         case fragment =>
           if (sectionTraversals.isDefined) {
-            ScrollArea(
-              scrollableElementId = Some(ScrollableElementId),
-              autoHide = true,
-              bottomThreshold = None,
-              onScrollToBottom = () => ()
-            )(fragment)
+            ScrollArea(scrollableElementId = Some(ScrollableElementId))(
+              fragment
+            )
           } else {
             fragment
           }
@@ -118,12 +115,7 @@ object PaneStock {
         ),
         id := PinnedCotosBodyId
       )(
-        ScrollArea(
-          scrollableElementId = None,
-          autoHide = true,
-          bottomThreshold = None,
-          onScrollToBottom = () => ()
-        )(
+        ScrollArea()(
           if (inColumns)
             olPinnedCotos(pinned, inColumns)
           else
@@ -253,12 +245,7 @@ object PaneStock {
       pinned: Seq[(Link, Coto)]
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "toc")(
-      ScrollArea(
-        scrollableElementId = None,
-        autoHide = true,
-        bottomThreshold = None,
-        onScrollToBottom = () => ()
-      )(
+      ScrollArea()(
         ol(className := "toc")(
           pinned.map { case (pin, coto) =>
             li(
@@ -316,12 +303,7 @@ object PaneStock {
       case olSubCotos =>
         if (inColumn) {
           div(className := "scrollable-sub-cotos")(
-            ScrollArea(
-              scrollableElementId = None,
-              autoHide = true,
-              bottomThreshold = None,
-              onScrollToBottom = () => ()
-            )(olSubCotos)
+            ScrollArea()(olSubCotos)
           )
         } else {
           olSubCotos

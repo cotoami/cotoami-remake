@@ -12,12 +12,13 @@ import slinky.core.facade.Hooks._
 
 @react object ScrollArea {
   case class Props(
-      scrollableElementId: Option[String],
-      autoHide: Boolean,
-      bottomThreshold: Option[Int],
-      onScrollToBottom: () => Unit,
-      children: ReactElement*
-  )
+      scrollableElementId: Option[String] = None,
+      autoHide: Boolean = true,
+      bottomThreshold: Option[Int] = None,
+      onScrollToBottom: Option[() => Unit] = None
+  )(_children: ReactElement*) {
+    def children: Seq[ReactElement] = this._children
+  }
 
   val DefaultBottomThreshold = 1
 
@@ -35,7 +36,7 @@ import slinky.core.facade.Hooks._
       val isBottomReached =
         (scrollHeight - clientHeight - scrollTop).abs <= bottomThreshold
       if (isBottomReached) {
-        props.onScrollToBottom()
+        props.onScrollToBottom.map(_())
       }
     }
 

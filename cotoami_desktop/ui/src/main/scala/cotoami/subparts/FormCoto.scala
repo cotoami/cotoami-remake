@@ -539,12 +539,7 @@ object FormCoto {
       primary =
         if (model.inPreview)
           SplitPane.Primary.Props(className = Some("coto-preview"))(
-            ScrollArea(
-              scrollableElementId = None,
-              autoHide = true,
-              bottomThreshold = None,
-              onScrollToBottom = () => ()
-            )(
+            ScrollArea()(
               section(className := "coto-preview")(
                 form.summary.map(section(className := "summary")(_)),
                 div(className := "content")(

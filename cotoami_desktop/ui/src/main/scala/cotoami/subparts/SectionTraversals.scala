@@ -178,12 +178,7 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
-        ScrollArea(
-          scrollableElementId = None,
-          autoHide = true,
-          bottomThreshold = None,
-          onScrollToBottom = () => ()
-        )(
+        ScrollArea()(
           divParents(
             context.domain.parentsOf(traversal._1.start),
             traversal._2
