@@ -15,12 +15,13 @@ import slinky.web.SyntheticMouseEvent
   case class Props(
       vertical: Boolean, // true: "vertical", false: "horizontal"
       initialPrimarySize: Int,
-      resizable: Boolean,
-      className: Option[String],
-      onResizeStart: Option[() => Unit],
-      onResizeEnd: Option[() => Unit],
-      onPrimarySizeChanged: Option[Int => Unit],
-      children: ReactElement*
+      resizable: Boolean = true,
+      className: Option[String] = None,
+      onResizeStart: Option[() => Unit] = None,
+      onResizeEnd: Option[() => Unit] = None,
+      onPrimarySizeChanged: Option[Int => Unit] = None,
+      primary: Primary.Props,
+      secondary: Secondary.Props
   )
 
   case class Context(
@@ -125,7 +126,7 @@ import slinky.web.SyntheticMouseEvent
       splitPaneContext.Provider(value =
         Context(props.vertical, primarySize, setPrimarySize)
       )(
-        props.children(0),
+        Primary.component(props.primary),
         div(
           className := optionalClasses(
             Seq(
@@ -138,17 +139,18 @@ import slinky.web.SyntheticMouseEvent
         )(
           div(className := "separator-inner")
         ),
-        props.children(1)
+        Secondary.component(props.secondary)
       )
     )
   }
 
   @react object Primary {
     case class Props(
-        className: Option[String],
-        onClick: Option[() => Unit],
-        children: ReactElement*
-    )
+        className: Option[String] = None,
+        onClick: Option[() => Unit] = None
+    )(_children: ReactElement*) {
+      def children: Seq[ReactElement] = this._children
+    }
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = React.createRef[html.Div]
@@ -183,10 +185,11 @@ import slinky.web.SyntheticMouseEvent
 
   @react object Secondary {
     case class Props(
-        className: Option[String],
-        onClick: Option[() => Unit],
-        children: ReactElement*
-    )
+        className: Option[String] = None,
+        onClick: Option[() => Unit] = None
+    )(_children: ReactElement*) {
+      def children: Seq[ReactElement] = this._children
+    }
 
     val component = FunctionalComponent[Props] { props =>
       div(

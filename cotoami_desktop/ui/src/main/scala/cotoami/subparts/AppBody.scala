@@ -23,13 +23,10 @@ object AppBody {
         ),
         resizable = uiState.paneOpened(NavCotonomas.PaneName),
         className = Some("node-contents"),
-        onResizeStart = None,
-        onResizeEnd = None,
         onPrimarySizeChanged = Some((newSize) =>
           dispatch(AppMsg.ResizePane(NavCotonomas.PaneName, newSize))
-        )
-      )(
-        SplitPane.Primary(
+        ),
+        primary = SplitPane.Primary.Props(
           className = Some(
             optionalClasses(
               Seq(
@@ -47,7 +44,7 @@ object AppBody {
             NavCotonomas(model.navCotonomas, _)
           )
         ),
-        SplitPane.Secondary(className = None, onClick = None)(
+        secondary = SplitPane.Secondary.Props()(
           flowAndStock(model, uiState)
         )
       )
@@ -69,13 +66,10 @@ object AppBody {
         ),
         resizable = flowOpened && stockOpened,
         className = Some("main"),
-        onResizeStart = None,
-        onResizeEnd = None,
         onPrimarySizeChanged = Some((newSize) =>
           dispatch(AppMsg.ResizePane(PaneFlow.PaneName, newSize))
-        )
-      )(
-        SplitPane.Primary(
+        ),
+        primary = SplitPane.Primary.Props(
           className = Some(
             optionalClasses(
               Seq(
@@ -95,7 +89,7 @@ object AppBody {
           },
           PaneFlow(model, uiState)
         ),
-        SplitPane.Secondary(
+        secondary = SplitPane.Secondary.Props(
           className = Some(
             optionalClasses(
               Seq(

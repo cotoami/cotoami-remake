@@ -480,13 +480,8 @@ object FormCoto {
               SplitPane(
                 vertical = false,
                 initialPrimarySize = 300,
-                resizable = true,
                 className = Some("coto-form-with-media"),
-                onResizeStart = None,
-                onResizeEnd = None,
-                onPrimarySizeChanged = None
-              )(
-                SplitPane.Primary(className = None, onClick = None)(
+                primary = SplitPane.Primary.Props()(
                   section(className := "media-preview")(
                     img(
                       src := url,
@@ -500,7 +495,7 @@ object FormCoto {
                     )
                   )
                 ),
-                SplitPane.Secondary(className = None, onClick = None)(
+                secondary = SplitPane.Secondary.Props()(
                   formCoto(
                     form,
                     model,
@@ -540,56 +535,47 @@ object FormCoto {
       vertical = false,
       initialPrimarySize = editorHeight,
       resizable = !model.folded,
-      className = None,
-      onResizeStart = None,
-      onResizeEnd = None,
-      onPrimarySizeChanged = Some(onEditorHeightChanged)
-    )(
-      if (model.inPreview)
-        SplitPane.Primary(
-          className = Some("coto-preview"),
-          onClick = None
-        )(
-          ScrollArea(
-            scrollableElementId = None,
-            autoHide = true,
-            bottomThreshold = None,
-            onScrollToBottom = () => ()
-          )(
-            section(className := "coto-preview")(
-              form.summary.map(section(className := "summary")(_)),
-              div(className := "content")(
-                ViewCoto.sectionTextContent(Some(form.content))
+      onPrimarySizeChanged = Some(onEditorHeightChanged),
+      primary =
+        if (model.inPreview)
+          SplitPane.Primary.Props(className = Some("coto-preview"))(
+            ScrollArea(
+              scrollableElementId = None,
+              autoHide = true,
+              bottomThreshold = None,
+              onScrollToBottom = () => ()
+            )(
+              section(className := "coto-preview")(
+                form.summary.map(section(className := "summary")(_)),
+                div(className := "content")(
+                  ViewCoto.sectionTextContent(Some(form.content))
+                )
               )
             )
           )
-        )
-      else
-        SplitPane.Primary(
-          className = Some("coto-editor"),
-          onClick = None
-        )(
-          textarea(
-            id := model.editorId,
-            placeholder := "Write your Coto in Markdown",
-            value := form.cotoInput,
-            onFocus := (_ => dispatch(Msg.SetFolded(false))),
-            onChange := (e => dispatch(Msg.CotoInput(e.target.value))),
-            onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
-            onKeyDown := (e =>
-              if (model.readyToPost && detectCtrlEnter(e)) {
-                dispatch(Msg.Post)
-              }
+        else
+          SplitPane.Primary.Props(className = Some("coto-editor"))(
+            textarea(
+              id := model.editorId,
+              placeholder := "Write your Coto in Markdown",
+              value := form.cotoInput,
+              onFocus := (_ => dispatch(Msg.SetFolded(false))),
+              onChange := (e => dispatch(Msg.CotoInput(e.target.value))),
+              onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
+              onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
+              onKeyDown := (e =>
+                if (model.readyToPost && detectCtrlEnter(e)) {
+                  dispatch(Msg.Post)
+                }
+              )
+            ),
+            InputFile(
+              accept = js.Dictionary("image/*" -> js.Array[String]()),
+              message = "Drop an image file here, or click to select one",
+              onSelect = file => dispatch(Msg.FileInput(file))
             )
           ),
-          InputFile(
-            accept = js.Dictionary("image/*" -> js.Array[String]()),
-            message = "Drop an image file here, or click to select one",
-            onSelect = file => dispatch(Msg.FileInput(file))
-          )
-        ),
-      SplitPane.Secondary(className = None, onClick = None)(
+      secondary = SplitPane.Secondary.Props()(
         divPost(
           model,
           form.validate,
