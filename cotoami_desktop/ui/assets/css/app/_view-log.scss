@@ -49,6 +49,10 @@ section.log-view {
         color: #{pico.$amber-400};
       }
 
+      &.debug {
+        opacity: .5;
+      }
+
       span.material-symbols {
         margin-right: 3px;
         line-height: 1rem;
