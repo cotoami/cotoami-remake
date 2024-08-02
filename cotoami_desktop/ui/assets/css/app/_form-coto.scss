@@ -74,11 +74,14 @@ section.form-coto {
 
   section.media-preview {
     position: relative;
-    text-align: center;
 
     // wrapped in SplitPane
     width: 100%;
     height: 100%;
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
 
     img {
       width: auto;
