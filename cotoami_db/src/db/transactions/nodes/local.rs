@@ -160,14 +160,14 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
         self.update_local_node(|local_node| {
-            self.write_transaction(local_ops::start_session(&local_node, password, duration))
+            self.write_transaction(local_ops::start_session(local_node, password, duration))
         })?;
         self.globals.try_get_local_node()
     }
 
     pub fn clear_owner_session(&self) -> Result<()> {
         self.update_local_node(|local_node| {
-            self.write_transaction(local_ops::clear_session(&local_node))
+            self.write_transaction(local_ops::clear_session(local_node))
         })
     }
 
