@@ -57,10 +57,7 @@ object Browser {
       None
     })
 
-  def ajaxGetJson[Msg](
-      url: String,
-      createMsg: Either[Throwable, Json] => Msg
-  ): Cmd[Msg] =
+  def ajaxGetJson(url: String): Cmd[Either[Throwable, Json]] =
     Cmd(IO.async { cb =>
       IO {
         dom.fetch(url).flatMap(_.text()).onComplete {
@@ -68,21 +65,20 @@ object Browser {
           // the error can be handled as a Msg.
           case Success(text) => {
             val parseResult = parse(text)
-            cb(Right(Some(createMsg(parseResult))))
+            cb(Right(Some(parseResult)))
           }
           case Failure(t) => {
-            cb(Right(Some(createMsg(Left(t)))))
+            cb(Right(Some(Left(t))))
           }
         }
         None // no finalizer on cancellation
       }
     })
 
-  def ajaxGet[Msg, Result](
+  def ajaxGet[Result](
       url: String,
-      decoder: Decoder[Result],
-      createMsg: Either[Throwable, Result] => Msg
-  ): Cmd[Msg] =
+      decoder: Decoder[Result]
+  ): Cmd[Either[Throwable, Result]] =
     Cmd(IO.async { cb =>
       IO {
         implicit val resultDecoder = decoder
@@ -91,10 +87,10 @@ object Browser {
           // the error can be handled as a Msg.
           case Success(text) => {
             val decoded = decode[Result](text)
-            cb(Right(Some(createMsg(decoded))))
+            cb(Right(Some(decoded)))
           }
           case Failure(t) => {
-            cb(Right(Some(createMsg(Left(t)))))
+            cb(Right(Some(Left(t))))
           }
         }
         None // no finalizer on cancellation
