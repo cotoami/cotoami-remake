@@ -219,7 +219,7 @@ object ViewCoto {
     Option.when(coto.outgoingLinks > 0) {
       div(className := "links")(
         toolButton(
-          symbol = "view_headline",
+          symbol = "arrow_forward",
           tip = "Links",
           tipPlacement = tipPlacement,
           classes = "open-traversal",

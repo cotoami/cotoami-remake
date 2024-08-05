@@ -165,11 +165,8 @@ section.timeline {
   }
 
   div.links {
+    padding-top: 3px;
     background-color: var(--card-background-color);
     text-align: center;
-
-    button.open-traversal span.material-symbols {
-      font-size: 24px;
-    }
   }
 }

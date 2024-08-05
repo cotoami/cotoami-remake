@@ -146,6 +146,17 @@ ul.parents {
   }
 }
 
+div.links {
+  button.open-traversal {
+    height: 24px;
+    line-height: 24px;
+
+    span.material-symbols {
+      font-size: 24px;
+    }
+  }
+}
+
 ol.sub-cotos {
   article.sub-coto {
     >header {
