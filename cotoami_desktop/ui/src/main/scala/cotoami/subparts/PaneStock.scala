@@ -278,7 +278,7 @@ object PaneStock {
     val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
       if (subCotos.size < coto.outgoingLinks)
-        div(className := "links")(
+        div(className := "links-not-yet-loaded")(
           if (context.domain.graphLoading.contains(coto.id)) {
             div(
               className := "loading",
@@ -287,7 +287,7 @@ object PaneStock {
           } else {
             toolButton(
               symbol = "view_headline",
-              tip = "Display links",
+              tip = "Load links",
               tipPlacement = "bottom",
               classes = "fetch-links",
               onClick =
