@@ -286,7 +286,7 @@ object PaneStock {
             )()
           } else {
             toolButton(
-              symbol = "view_headline",
+              symbol = "more_horiz",
               tip = "Load links",
               tipPlacement = "bottom",
               classes = "fetch-links",
