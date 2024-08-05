@@ -41,10 +41,10 @@ object Msg {
   case class ScrollToPinnedCoto(pin: Link) extends Msg
 
   // Transition
-  case class SelectNode(id: Id[Node]) extends Msg
-  case object DeselectNode extends Msg
-  case class SelectCotonoma(cotonoma: Cotonoma) extends Msg
-  case object DeselectCotonoma extends Msg
+  case class FocusNode(id: Id[Node]) extends Msg
+  case object UnfocusNode extends Msg
+  case class FocusCotonoma(cotonoma: Cotonoma) extends Msg
+  case object UnfocusCotonoma extends Msg
 
   // Domain
   case object ReloadDomain extends Msg

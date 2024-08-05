@@ -49,7 +49,7 @@ object ViewCoto {
       coto.postedInIds
         .filter(id =>
           !context.domain.isCurrentRoot(id) &&
-            !context.domain.cotonomas.isSelecting(id)
+            !context.domain.cotonomas.isFocusing(id)
         )
         .map(context.domain.cotonomas.get)
         .flatten
@@ -60,7 +60,7 @@ object ViewCoto {
               className := "also-posted-in",
               onClick := ((e) => {
                 e.preventDefault()
-                dispatch(AppMsg.SelectCotonoma(cotonoma))
+                dispatch(AppMsg.FocusCotonoma(cotonoma))
               })
             )(cotonoma.name)
           )
@@ -78,7 +78,7 @@ object ViewCoto {
             title := cotonoma.name,
             onClick := ((e) => {
               e.preventDefault()
-              dispatch(AppMsg.SelectCotonoma(cotonoma))
+              dispatch(AppMsg.FocusCotonoma(cotonoma))
             })
           )(
             context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),

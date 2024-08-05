@@ -25,7 +25,7 @@ nav.nodes {
     text-align: center;
   }
 
-  button.selectable {
+  button.focusable {
 
     span.material-symbols,
     img {
@@ -40,16 +40,16 @@ nav.nodes {
       }
     }
 
-    &.selected {
-      --selected-border-width: 2px;
+    &.focused {
+      --focused-border-width: 2px;
 
       cursor: default;
-      border-left: var(--selected-border-width) solid var(--selected-border-color);
+      border-left: var(--focused-border-width) solid var(--focused-border-color);
 
       span.material-symbols,
       img {
         opacity: 1;
-        margin-right: var(--selected-border-width); // to center the icon with the border-left
+        margin-right: var(--focused-border-width); // to center the icon with the border-left
       }
     }
   }
@@ -84,7 +84,7 @@ nav.nodes {
     }
 
     &:hover,
-    &.selected {
+    &.focused {
       span.status span.material-symbols {
         color: #555;
       }

@@ -73,8 +73,8 @@ object NavCotonomas {
     val cotonomas = domain.cotonomas
     nav(className := "cotonomas header-and-body")(
       header()(
-        if (cotonomas.selected.isEmpty) {
-          div(className := "cotonoma home selected")(
+        if (cotonomas.focused.isEmpty) {
+          div(className := "cotonoma home focused")(
             materialSymbol("home"),
             currentNode.name
           )
@@ -84,23 +84,21 @@ object NavCotonomas {
             title := s"${currentNode.name} home",
             onClick := ((e) => {
               e.preventDefault()
-              dispatch(AppMsg.DeselectCotonoma)
+              dispatch(AppMsg.UnfocusCotonoma)
             })
           )(
             materialSymbol("home"),
             currentNode.name
           )
         },
-        domain.nodes.selected.map(
-          sectionNodeTools(_, model)
-        )
+        domain.nodes.focused.map(sectionNodeTools(_, model))
       ),
       section(className := "cotonomas body")(
         ScrollArea(
           onScrollToBottom =
             Some(() => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp))
         )(
-          cotonomas.selected.map(sectionCurrent),
+          cotonomas.focused.map(sectionCurrent),
           Option.when(!domain.recentCotonomas.isEmpty)(
             sectionRecent(domain.recentCotonomas)
           ),
@@ -196,7 +194,7 @@ object NavCotonomas {
   }
 
   private def sectionCurrent(
-      selectedCotonoma: Cotonoma
+      focusedCotonoma: Cotonoma
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
     section(className := "current")(
@@ -213,8 +211,8 @@ object NavCotonomas {
             domain.superCotonomas.map(liCotonoma): _*
           )
         ),
-        li(key := "current", className := "current-cotonoma cotonoma selected")(
-          cotonomaLabel(selectedCotonoma)
+        li(key := "current", className := "current-cotonoma cotonoma focused")(
+          cotonomaLabel(focusedCotonoma)
         ),
         li(key := "sub")(
           ul(className := "sub-cotonomas")(
@@ -227,7 +225,7 @@ object NavCotonomas {
                     className := "more-sub-cotonomas default",
                     onClick := ((e) =>
                       dispatch(
-                        Cotonomas.Msg.FetchMoreSubs(selectedCotonoma.id).toApp
+                        Cotonomas.Msg.FetchMoreSubs(focusedCotonoma.id).toApp
                       )
                     )
                   )(
@@ -260,11 +258,11 @@ object NavCotonomas {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     li(
       className := optionalClasses(
-        Seq(("selected", context.domain.cotonomas.isSelecting(cotonoma.id)))
+        Seq(("focused", context.domain.cotonomas.isFocusing(cotonoma.id)))
       ),
       key := cotonoma.id.uuid
     )(
-      if (context.domain.cotonomas.isSelecting(cotonoma.id)) {
+      if (context.domain.cotonomas.isFocusing(cotonoma.id)) {
         span(className := "cotonoma")(cotonomaLabel(cotonoma))
       } else {
         a(
@@ -272,7 +270,7 @@ object NavCotonomas {
           title := cotonoma.name,
           onClick := ((e) => {
             e.preventDefault()
-            dispatch(AppMsg.SelectCotonoma(cotonoma))
+            dispatch(AppMsg.FocusCotonoma(cotonoma))
           })
         )(
           cotonomaLabel(cotonoma)

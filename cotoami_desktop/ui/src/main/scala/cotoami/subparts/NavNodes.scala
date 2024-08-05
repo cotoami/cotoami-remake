@@ -39,14 +39,14 @@ object NavNodes {
           Seq(
             ("all", true),
             ("default", true),
-            ("selectable", true),
-            ("selected", nodes.selected.isEmpty)
+            ("focusable", true),
+            ("focused", nodes.focused.isEmpty)
           )
         ),
         data - "tooltip" := "All nodes",
         data - "placement" := "right",
-        disabled := nodes.selected.isEmpty,
-        onClick := (_ => dispatch(AppMsg.DeselectNode))
+        disabled := nodes.focused.isEmpty,
+        onClick := (_ => dispatch(AppMsg.UnfocusNode))
       )(
         materialSymbol("stacks")
       ),
@@ -116,15 +116,15 @@ object NavNodes {
         Seq(
           ("node", true),
           ("default", true),
-          ("selectable", true),
-          ("selected", nodes.isSelecting(node.id))
+          ("focusable", true),
+          ("focused", nodes.isFocusing(node.id))
         )
       ),
-      disabled := nodes.isSelecting(node.id),
+      disabled := nodes.isFocusing(node.id),
       data - "tooltip" := tooltip,
       data - "placement" := "right",
-      disabled := nodes.isSelecting(node.id),
-      onClick := (_ => dispatch(AppMsg.SelectNode(node.id)))
+      disabled := nodes.isFocusing(node.id),
+      onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
     )(
       imgNode(node),
       status.map(s => span(className := s"status ${s.slug}")(s.icon))

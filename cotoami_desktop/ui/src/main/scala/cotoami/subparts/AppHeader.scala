@@ -50,7 +50,7 @@ object AppHeader {
         title := node.name,
         onClick := ((e) => {
           e.preventDefault()
-          dispatch(AppMsg.SelectNode(node.id))
+          dispatch(AppMsg.FocusNode(node.id))
         })
       )(imgNode(node)),
       cotonoma.map(cotonoma =>

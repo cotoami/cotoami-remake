@@ -71,10 +71,10 @@ case class Model(
   def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
     this.copy(modalStack = this.modalStack.update(newState))
 
-  def selectNode(nodeId: Option[Id[Node]]): (Model, Seq[Cmd[Msg]]) =
+  def focusNode(nodeId: Option[Id[Node]]): (Model, Seq[Cmd[Msg]]) =
     this
-      .modify(_.domain).using(_.clearSelection())
-      .modify(_.domain.nodes).using(_.select(nodeId))
+      .modify(_.domain).using(_.unfocus())
+      .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.domain.cotonomas.recentLoading).setTo(true)
       .modify(_.timeline).using(_.init) match {
       case model =>
@@ -90,18 +90,18 @@ case class Model(
         )
     }
 
-  def selectCotonoma(
+  def focusCotonoma(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
   ): (Model, Seq[Cmd[Msg]]) = {
     val shouldFetchCotonomas =
-      // the selected node is changed
-      nodeId != this.domain.nodes.selectedId ||
+      // the focused node is changed
+      nodeId != this.domain.nodes.focusedId ||
         // or no recent cotonomas has been loaded yet (which means the page being reloaded)
         this.domain.cotonomas.recentIds.isEmpty
-    val (cotonomas, cmds) = this.domain.cotonomas.selectAndFetch(cotonomaId)
+    val (cotonomas, cmds) = this.domain.cotonomas.focusAndFetch(cotonomaId)
     this
-      .modify(_.domain.nodes).using(_.select(nodeId))
+      .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.domain.cotonomas).setTo(cotonomas)
       .modify(_.domain.cotos).setTo(Cotos())
       .modify(_.domain.links).setTo(Links())

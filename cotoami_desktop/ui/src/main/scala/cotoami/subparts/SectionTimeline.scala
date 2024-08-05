@@ -148,8 +148,8 @@ object SectionTimeline {
       pageIndex: Double
   )(implicit context: Context): Cmd[AppMsg] =
     fetch(
-      context.domain.nodes.selectedId,
-      context.domain.cotonomas.selectedId,
+      context.domain.nodes.focusedId,
+      context.domain.cotonomas.focusedId,
       query,
       pageIndex
     )
@@ -307,7 +307,7 @@ object SectionTimeline {
     val domain = context.domain
     section(className := "repost-header")(
       materialSymbol("repeat"),
-      Option.when(domain.cotonomas.selectedId.isEmpty) {
+      Option.when(domain.cotonomas.focusedId.isEmpty) {
         repostedIn(coto, domain.cotonomas)
       },
       Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
@@ -325,7 +325,7 @@ object SectionTimeline {
         className := "reposted-in",
         onClick := ((e) => {
           e.preventDefault()
-          dispatch(AppMsg.SelectCotonoma(cotonoma))
+          dispatch(AppMsg.FocusCotonoma(cotonoma))
         })
       )(cotonoma.name)
     )

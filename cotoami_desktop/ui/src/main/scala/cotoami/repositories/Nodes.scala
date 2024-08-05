@@ -8,7 +8,7 @@ case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
     localId: Option[Id[Node]] = None,
     operatingId: Option[Id[Node]] = None,
-    selectedId: Option[Id[Node]] = None,
+    focusedId: Option[Id[Node]] = None,
 
     // roles
     parentIds: Seq[Id[Node]] = Seq.empty,
@@ -36,19 +36,19 @@ case class Nodes(
 
   def parents: Seq[Node] = this.parentIds.map(this.get).flatten
 
-  def select(id: Option[Id[Node]]): Nodes =
+  def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
       if (this.contains(id))
-        this.copy(selectedId = Some(id))
+        this.copy(focusedId = Some(id))
       else
         this
-    ).getOrElse(this.copy(selectedId = None))
+    ).getOrElse(this.copy(focusedId = None))
 
-  def isSelecting(id: Id[Node]): Boolean = this.selectedId == Some(id)
+  def isFocusing(id: Id[Node]): Boolean = this.focusedId == Some(id)
 
-  def selected: Option[Node] = this.selectedId.flatMap(this.get)
+  def focused: Option[Node] = this.focusedId.flatMap(this.get)
 
-  def current: Option[Node] = this.selected.orElse(this.operating)
+  def current: Option[Node] = this.focused.orElse(this.operating)
 
   def prependParentId(id: Id[Node]): Nodes =
     if (this.parentIds.contains(id)) this

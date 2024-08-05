@@ -5,8 +5,8 @@
 [data-theme="light"],
 :root:not([data-theme="dark"]) {
   --pane-border-color: #{pico.$grey-100};
-  --selected-background-color: #{pico.$grey-100};
-  --selected-border-color: #{pico.$grey-700};
+  --focused-background-color: #{pico.$grey-100};
+  --focused-border-color: #{pico.$grey-700};
   --hover-background-color: #{pico.$grey-50};
   --input-background-color: #{rgba(pico.$grey-50, 0.5)};
   --traversal-background-color: #{pico.$grey-50};
@@ -21,8 +21,8 @@
 @media only screen and (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --pane-border-color: #{pico.$grey-800};
-    --selected-background-color: #{pico.$grey-600};
-    --selected-border-color: #{pico.$grey-200};
+    --focused-background-color: #{pico.$grey-600};
+    --focused-border-color: #{pico.$grey-200};
     --hover-background-color: #{pico.$grey-800};
     --input-background-color: #{pico.$grey-900};
     --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
@@ -37,8 +37,8 @@
 // Enabled if forced with data-theme="dark"
 [data-theme="dark"] {
   --pane-border-color: #{pico.$grey-800};
-  --selected-background-color: #{pico.$grey-600};
-  --selected-border-color: #{pico.$grey-200};
+  --focused-background-color: #{pico.$grey-600};
+  --focused-border-color: #{pico.$grey-200};
   --hover-background-color: #{pico.$grey-800};
   --input-background-color: #{pico.$grey-900};
   --traversal-background-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};

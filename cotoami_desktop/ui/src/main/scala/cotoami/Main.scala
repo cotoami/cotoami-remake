@@ -208,19 +208,19 @@ object Main {
           )
         )
 
-      case Msg.SelectNode(id) =>
+      case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
-      case Msg.DeselectNode => {
-        val url = model.domain.cotonomas.selected match {
+      case Msg.UnfocusNode => {
+        val url = model.domain.cotonomas.focused match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
         }
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case Msg.SelectCotonoma(cotonoma) => {
-        val url = model.domain.nodes.selected match {
+      case Msg.FocusCotonoma(cotonoma) => {
+        val url = model.domain.nodes.focused match {
           case None => Route.cotonoma.url(cotonoma.id)
           case Some(_) =>
             if (model.domain.isRoot(cotonoma))
@@ -231,8 +231,8 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case Msg.DeselectCotonoma => {
-        val url = model.domain.nodes.selected match {
+      case Msg.UnfocusCotonoma => {
+        val url = model.domain.nodes.focused match {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
         }
@@ -309,11 +309,11 @@ object Main {
   def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
-        model.selectNode(None)
+        model.focusNode(None)
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id))
-          model.selectNode(Some(id))
+          model.focusNode(Some(id))
         else
           (
             model.warn(s"Node [${id}] not found.", None),
@@ -321,10 +321,10 @@ object Main {
           )
 
       case Route.cotonoma(id) =>
-        model.selectCotonoma(None, id)
+        model.focusCotonoma(None, id)
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        model.selectCotonoma(Some(nodeId), cotonomaId)
+        model.focusCotonoma(Some(nodeId), cotonomaId)
 
       case _ =>
         (model, Seq(Browser.pushUrl(Route.index.url(()))))

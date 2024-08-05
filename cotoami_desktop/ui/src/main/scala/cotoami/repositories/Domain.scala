@@ -16,9 +16,9 @@ case class Domain(
     links: Links = Links(),
     graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def clearSelection(): Domain =
+  def unfocus(): Domain =
     this.copy(
-      nodes = this.nodes.select(None),
+      nodes = this.nodes.focus(None),
       cotonomas = Cotonomas(),
       cotos = Cotos(),
       links = Links()
@@ -31,7 +31,7 @@ case class Domain(
     Some(id) == this.currentRootCotonomaId
 
   def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.cotonomas.selectedId.orElse(
+    this.cotonomas.focusedId.orElse(
       this.nodes.current.flatMap(_.rootCotonomaId)
     )
 
@@ -54,8 +54,8 @@ case class Domain(
   def setCotonomaDetails(details: CotonomaDetails): Domain = {
     this
       .modify(_.nodes).using(nodes =>
-        if (nodes.selectedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
-          nodes.select(Some(details.cotonoma.nodeId))
+        if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
+          nodes.focus(Some(details.cotonoma.nodeId))
         else
           nodes
       )
@@ -64,10 +64,10 @@ case class Domain(
 
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
-      // The location contains a cotonoma only when one is selected,
+      // The location contains a cotonoma only when one is focused,
       // otherwise the root cotonoma of the current node will be implicitly
       // used as the current cotonoma.
-      this.cotonomas.selected match {
+      this.cotonomas.focused match {
         case Some(cotonoma) =>
           (
             this.nodes.get(cotonoma.nodeId).getOrElse(currentNode),
@@ -182,7 +182,7 @@ object Domain {
           Cotonomas.update(
             subMsg,
             model.cotonomas,
-            model.nodes.selectedId
+            model.nodes.focusedId
           )
         (model.copy(cotonomas = cotonomas), cmds)
       }

@@ -12,8 +12,8 @@ case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
     mapByCotoId: Map[Id[Coto], Id[Cotonoma]] = Map.empty,
 
-    // The currently selected cotonoma and its super/sub cotonomas
-    selectedId: Option[Id[Cotonoma]] = None,
+    // The currently focused cotonoma and its super/sub cotonomas
+    focusedId: Option[Id[Cotonoma]] = None,
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
     subsLoading: Boolean = false,
@@ -54,7 +54,7 @@ case class Cotonomas(
       .put(details.cotonoma)
       .putAll(details.supers)
       .putAll(details.subs.rows)
-      .select(Some(details.cotonoma.id))
+      .focus(Some(details.cotonoma.id))
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
       .modify(_.subIds).using(_.appendPage(details.subs))
   }
@@ -65,25 +65,25 @@ case class Cotonomas(
     else
       None
 
-  def select(id: Option[Id[Cotonoma]]): Cotonomas =
+  def focus(id: Option[Id[Cotonoma]]): Cotonomas =
     if (id.map(this.contains(_)).getOrElse(true))
-      this.deselect.copy(selectedId = id)
+      this.unfocus.copy(focusedId = id)
     else
       this
 
-  def selectAndFetch(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[AppMsg]]) =
+  def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[AppMsg]]) =
     (
-      this.deselect.copy(selectedId = Some(id)),
+      this.unfocus.copy(focusedId = Some(id)),
       Seq(Domain.fetchCotonomaDetails(id))
     )
 
-  def deselect: Cotonomas =
-    this.copy(selectedId = None, superIds = Seq.empty, subIds = PaginatedIds())
+  def unfocus: Cotonomas =
+    this.copy(focusedId = None, superIds = Seq.empty, subIds = PaginatedIds())
 
-  def isSelecting(id: Id[Cotonoma]): Boolean =
-    this.selectedId.map(_ == id).getOrElse(false)
+  def isFocusing(id: Id[Cotonoma]): Boolean =
+    this.focusedId.map(_ == id).getOrElse(false)
 
-  def selected: Option[Cotonoma] = this.selectedId.flatMap(this.get)
+  def focused: Option[Cotonoma] = this.focusedId.flatMap(this.get)
 
   def supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
 
@@ -108,8 +108,8 @@ case class Cotonomas(
       .put(cotonoma)
       .modify(_.recentIds).using(_.prependId(cotonoma.id))
       .modify(_.subIds).using(subIds =>
-        (cotonomaCoto.postedInId, this.selectedId) match {
-          case (Some(postedIn), Some(selected)) if postedIn == selected =>
+        (cotonomaCoto.postedInId, this.focusedId) match {
+          case (Some(postedIn), Some(focused)) if postedIn == focused =>
             subIds.prependId(cotonoma.id)
           case _ => subIds
         }

@@ -6,7 +6,7 @@ section.pinned-cotos {
 
     &.selected {
       cursor: initial;
-      border-bottom: 1px solid var(--selected-border-color);
+      border-bottom: 1px solid var(--focused-border-color);
 
       span.material-symbols {
         opacity: 1;
