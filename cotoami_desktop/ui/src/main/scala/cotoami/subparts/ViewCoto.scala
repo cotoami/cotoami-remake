@@ -224,8 +224,10 @@ object ViewCoto {
           tip = "Links",
           tipPlacement = tipPlacement,
           classes = "open-traversal",
-          onClick =
-            _ => dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
+          }
         )
       )
     }
