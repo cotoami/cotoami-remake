@@ -239,6 +239,18 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
+      case Msg.FocusCoto(id) =>
+        (
+          model.modify(_.domain.cotos).using(_.focus(Some(id))),
+          Seq(model.domain.lazyFetchGraphFromCoto(id))
+        )
+
+      case Msg.UnfocusCoto =>
+        (
+          model.modify(_.domain.cotos).using(_.unfocus),
+          Seq.empty
+        )
+
       case Msg.ReloadDomain => {
         (
           model.copy(domain = Domain()),
