@@ -6,6 +6,7 @@ import slinky.web.html._
 import cotoami.{Msg => AppMsg}
 import cotoami.Context
 import cotoami.backend.Coto
+import cotoami.components.toolButton
 
 object SectionCotoDetails {
 
@@ -13,6 +14,15 @@ object SectionCotoDetails {
       coto: Coto
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "coto-details")(
+      header(
+        toolButton(
+          symbol = "arrow_back",
+          tip = "Back to list",
+          tipPlacement = "right",
+          classes = "back",
+          onClick = () => dispatch(AppMsg.UnfocusCoto)
+        )
+      ),
       articleCoto(coto)
     )
 
