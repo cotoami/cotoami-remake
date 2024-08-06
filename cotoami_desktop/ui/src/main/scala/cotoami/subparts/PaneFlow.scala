@@ -1,6 +1,6 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
@@ -18,35 +18,40 @@ object PaneFlow {
       uiState: UiState
   )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "flow")(
-      (model.domain.nodes.operating, model.domain.currentCotonoma) match {
-        case (Some(operatingNode), Some(cotonoma)) =>
-          model.domain.nodes.get(cotonoma.nodeId).flatMap(targetNode =>
-            if (model.domain.nodes.postableTo(targetNode.id))
-              Some(
-                FormCoto(
-                  model.flowInput,
-                  operatingNode,
-                  cotonoma,
-                  uiState.paneSizes.getOrElse(
-                    EditorPaneName,
-                    EditorDefaultHeight
-                  ),
-                  (newSize) =>
-                    dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
-                )(subMsg => dispatch(AppMsg.FlowInputMsg(subMsg)))
-              )
-            else
-              None
-          )
-
-        case _ => None
-      },
       model.domain.cotos.focused.map(SectionCotoDetails(_)(model, dispatch))
-        .getOrElse(
-          SectionTimeline(model.timeline, model.waitingPosts)(
-            model,
-            dispatch
-          )
-        )
+        .getOrElse(timeline(model, uiState))
     )
+
+  private def timeline(
+      model: Model,
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): ReactElement = Fragment(
+    (model.domain.nodes.operating, model.domain.currentCotonoma) match {
+      case (Some(operatingNode), Some(cotonoma)) =>
+        model.domain.nodes.get(cotonoma.nodeId).flatMap(targetNode =>
+          if (model.domain.nodes.postableTo(targetNode.id))
+            Some(
+              FormCoto(
+                model.flowInput,
+                operatingNode,
+                cotonoma,
+                uiState.paneSizes.getOrElse(
+                  EditorPaneName,
+                  EditorDefaultHeight
+                ),
+                (newSize) =>
+                  dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
+              )(subMsg => dispatch(AppMsg.FlowInputMsg(subMsg)))
+            )
+          else
+            None
+        )
+
+      case _ => None
+    },
+    SectionTimeline(model.timeline, model.waitingPosts)(
+      model,
+      dispatch
+    )
+  )
 }

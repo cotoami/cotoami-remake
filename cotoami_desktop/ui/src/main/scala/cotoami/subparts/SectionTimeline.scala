@@ -279,7 +279,10 @@ object SectionTimeline {
       dispatch: AppMsg => Unit
   ): ReactElement = {
     val domain = context.domain
-    article(className := "coto")(
+    article(
+      className := "coto",
+      onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+    )(
       header()(
         ViewCoto.divClassifiedAs(coto),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {

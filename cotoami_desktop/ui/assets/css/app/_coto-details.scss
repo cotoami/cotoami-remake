@@ -1,0 +1,13 @@
+section.coto-details {
+  article.coto {
+    padding: 1rem 0;
+
+    >header {
+      padding: 0 var(--block-spacing-horizontal);
+    }
+
+    section.media-content {
+      padding-left: 0; // fit to the left border
+    }
+  }
+}
