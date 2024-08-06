@@ -8,6 +8,8 @@ article.coto {
   padding-left: 8px;
   padding-bottom: 1rem;
 
+  cursor: pointer;
+
   &.has-children {
     border-bottom: 2px dotted var(--pane-border-color);
 
