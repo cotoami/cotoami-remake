@@ -1,0 +1,42 @@
+package cotoami.subparts
+
+import slinky.core.facade.ReactElement
+import slinky.web.html._
+
+import cotoami.{Msg => AppMsg}
+import cotoami.Context
+import cotoami.backend.Coto
+
+object SectionCotoDetails {
+
+  def apply(
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+    section(className := "coto-details")(
+      articleCoto(coto)
+    )
+
+  private def articleCoto(coto: Coto)(implicit
+      context: Context,
+      dispatch: AppMsg => Unit
+  ): ReactElement = {
+    val domain = context.domain
+    article(className := "coto")(
+      header()(
+        ViewCoto.divClassifiedAs(coto),
+        ViewCoto.addressAuthor(coto, domain.nodes)
+      ),
+      div(className := "body")(
+        ViewCoto.divContent(coto)
+      ),
+      footer()(
+        time(
+          className := "posted-at",
+          title := context.time.formatDateTime(coto.createdAt)
+        )(
+          context.time.display(coto.createdAt)
+        )
+      )
+    )
+  }
+}
