@@ -37,7 +37,7 @@ object SectionCotoDetails {
         ViewCoto.addressAuthor(coto, domain.nodes)
       ),
       div(className := "body")(
-        ViewCoto.divContent(coto)
+        ViewCoto.divContent(coto, true)
       ),
       footer()(
         time(

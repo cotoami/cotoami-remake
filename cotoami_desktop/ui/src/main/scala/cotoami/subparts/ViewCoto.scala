@@ -68,7 +68,8 @@ object ViewCoto {
     )
 
   def divContent(
-      coto: Coto
+      coto: Coto,
+      collapsibleContentOpened: Boolean = false
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "content")(
       context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
@@ -85,7 +86,7 @@ object ViewCoto {
             cotonoma.name
           )
         )
-      ).getOrElse(sectionCotoContent(coto))
+      ).getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
     )
 
   def divWaitingPostContent(
@@ -104,7 +105,7 @@ object ViewCoto {
 
   private def sectionCotoContent(
       cotoContent: CotoContent,
-      collapsibleContentOpened: Boolean = false
+      collapsibleContentOpened: Boolean
   ): ReactElement =
     section(className := "coto-content")(
       cotoContent.mediaContent.map(sectionMediaContent),
