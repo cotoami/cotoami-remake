@@ -324,7 +324,7 @@ object SectionTraversals {
                 tip = "Traverse",
                 tipPlacement = "left",
                 classes = "traverse",
-                onClick = () => dispatch(stepMsg)
+                onClick = _ => dispatch(stepMsg)
               )
             )
           }

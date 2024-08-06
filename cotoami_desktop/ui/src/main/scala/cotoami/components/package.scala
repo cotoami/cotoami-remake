@@ -1,6 +1,7 @@
 package cotoami
 
 import slinky.core.facade.ReactElement
+import slinky.web.SyntheticMouseEvent
 import slinky.web.html._
 
 package object components {
@@ -18,7 +19,7 @@ package object components {
       tipPlacement: String = "bottom",
       classes: String = "",
       disabled: Boolean = false,
-      onClick: () => Unit = (() => ())
+      onClick: SyntheticMouseEvent[_] => Unit = (_ => ())
   ): ReactElement =
     button(
       className := s"default tool ${classes}",

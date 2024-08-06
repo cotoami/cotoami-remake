@@ -89,7 +89,7 @@ object PaneStock {
           ),
           disabled = inColumns,
           onClick =
-            () => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, true))
+            _ => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, true))
         ),
         toolButton(
           symbol = "view_agenda",
@@ -102,7 +102,7 @@ object PaneStock {
           ),
           disabled = !inColumns,
           onClick =
-            () => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, false))
+            _ => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, false))
         )
       ),
       div(
@@ -292,7 +292,7 @@ object PaneStock {
               tipPlacement = "bottom",
               classes = "fetch-links",
               onClick =
-                () => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).toApp)
+                _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).toApp)
             )
           }
         )

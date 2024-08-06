@@ -20,7 +20,7 @@ object SectionCotoDetails {
           tip = "Back to list",
           tipPlacement = "right",
           classes = "back",
-          onClick = () => dispatch(AppMsg.UnfocusCoto)
+          onClick = _ => dispatch(AppMsg.UnfocusCoto)
         )
       ),
       articleCoto(coto)

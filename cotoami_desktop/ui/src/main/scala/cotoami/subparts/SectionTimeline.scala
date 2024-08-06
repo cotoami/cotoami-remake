@@ -220,7 +220,7 @@ object SectionTimeline {
             symbol = "search",
             tip = "Search",
             classes = "search",
-            onClick = () => dispatch(Msg.InitSearch.toApp)
+            onClick = _ => dispatch(Msg.InitSearch.toApp)
           )
         )
       ),
