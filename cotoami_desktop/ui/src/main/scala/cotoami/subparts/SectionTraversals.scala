@@ -249,7 +249,8 @@ object SectionTraversals {
             ("coto", true),
             ("has-children", !subCotos.isEmpty)
           )
-        )
+        ),
+        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
           ViewCoto.divClassifiedAs(coto)
@@ -289,7 +290,8 @@ object SectionTraversals {
             ("coto", true),
             ("traversed", traversed)
           )
-        )
+        ),
+        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
           toolButton(
