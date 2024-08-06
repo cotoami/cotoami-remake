@@ -244,7 +244,7 @@ pub struct PaginatedCotos {
 }
 
 impl PaginatedCotos {
-    pub(crate) fn new<'a>(page: Paginated<Coto>, ds: &'a mut DatabaseSession<'_>) -> Result<Self> {
+    pub(crate) fn new(page: Paginated<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
         let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
         let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
         let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
@@ -264,7 +264,7 @@ pub struct CotosRelatedData {
 }
 
 impl CotosRelatedData {
-    pub(crate) fn fetch<'a>(ds: &'a mut DatabaseSession<'_>, cotos: &[Coto]) -> Result<Self> {
+    pub(crate) fn fetch(ds: &mut DatabaseSession<'_>, cotos: &[Coto]) -> Result<Self> {
         let original_ids: Vec<Id<Coto>> =
             cotos.iter().filter_map(|coto| coto.repost_of_id).collect();
         let originals = ds.cotos(original_ids)?;
