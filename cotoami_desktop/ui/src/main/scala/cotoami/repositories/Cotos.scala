@@ -34,11 +34,11 @@ case class Cotos(
 
   def focused: Option[Coto] = this.focusedId.flatMap(this.get)
 
-  def focus(id: Option[Id[Coto]]): Cotos =
-    if (id.map(this.contains(_)).getOrElse(true))
-      this.copy(focusedId = id)
-    else
-      this
+  def focus(id: Id[Coto]): Cotos =
+    this.get(id).map(coto =>
+      // It can't focus on a repost, but only on an original coto.
+      this.copy(focusedId = Some(this.getOriginal(coto).id))
+    ).getOrElse(this)
 
   def unfocus: Cotos = this.copy(focusedId = None)
 }

@@ -241,7 +241,7 @@ object Main {
 
       case Msg.FocusCoto(id) =>
         (
-          model.modify(_.domain.cotos).using(_.focus(Some(id))),
+          model.modify(_.domain.cotos).using(_.focus(id)),
           Seq(model.domain.lazyFetchGraphFromCoto(id))
         )
 
