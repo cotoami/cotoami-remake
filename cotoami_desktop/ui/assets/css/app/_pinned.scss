@@ -86,6 +86,10 @@ section.pinned-cotos {
     }
   }
 
+  article.coto {
+    cursor: pointer;
+  }
+
   .document-view {
     --toc-width: 200px;
     container-type: inline-size;

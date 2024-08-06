@@ -219,7 +219,8 @@ object PaneStock {
             ("coto", true),
             ("has-children", coto.outgoingLinks > 0)
           )
-        )
+        ),
+        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
           ViewCoto.divClassifiedAs(coto)
@@ -319,7 +320,10 @@ object PaneStock {
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
       ),
-      article(className := "sub-coto coto")(
+      article(
+        className := "sub-coto coto",
+        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+      )(
         header()(
           toolButton(
             symbol = "subdirectory_arrow_right",
