@@ -16,8 +16,12 @@ import slinky.core.facade.Hooks._
       autoHide: Boolean = true,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None
-  )(_children: ReactElement*) {
-    def children: Seq[ReactElement] = this._children
+  )(children: ReactElement*) {
+    // Although @react converts `children: ReactElement*` into a curried parameter,
+    // default args can't be used if the args contain varargs.
+    // Putting the `children` in the secondary parameters seems to work without this limitation.
+    // https://github.com/shadaj/slinky/blob/v0.7.4/core/src/main/scala-2/slinky/core/annotations/react.scala#L43
+    def getChildren: Seq[ReactElement] = this.children
   }
 
   val DefaultBottomThreshold = 1
@@ -58,7 +62,7 @@ import slinky.core.facade.Hooks._
         None,
         Some(scrollableNodeRef)
       )
-    )(props.children: _*)
+    )(props.getChildren: _*)
   }
 }
 
