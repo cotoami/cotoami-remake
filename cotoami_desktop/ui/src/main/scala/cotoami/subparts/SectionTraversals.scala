@@ -88,6 +88,9 @@ object SectionTraversals {
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): (T => AppMsg) =
+      tagger andThen AppMsg.SectionTraversalsMsg
+
     case class OpenTraversal(start: Id[Coto]) extends Msg
     case class CloseTraversal(traversalIndex: Int) extends Msg
     case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])

@@ -18,7 +18,7 @@ import cotoami.components.{
   RehypePlugin,
   RemarkPlugin
 }
-import cotoami.backend.{Coto, CotoContent, Link}
+import cotoami.backend.{Coto, CotoContent, Id, Link}
 import cotoami.repositories.Nodes
 import cotoami.models.WaitingPost
 
@@ -194,7 +194,9 @@ object ViewCoto {
     }
 
   def ulParents(
-      parents: Seq[(Coto, Link)]
+      parents: Seq[(Coto, Link)],
+      onClickTagger: Id[Coto] => AppMsg =
+        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
   )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
@@ -202,11 +204,7 @@ object ViewCoto {
           li(key := link.id.uuid)(
             button(
               className := "parent default",
-              onClick := (_ =>
-                dispatch(
-                  SectionTraversals.Msg.OpenTraversal(parent.id).toApp
-                )
-              )
+              onClick := (_ => dispatch(onClickTagger(parent.id)))
             )(parent.abbreviate)
           )
         }
