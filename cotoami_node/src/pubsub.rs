@@ -62,11 +62,7 @@ where
             let mut state = self.state.lock();
             state.subscribers.insert(sub_id, Arc::clone(&sub_state));
             if let Some(topic) = topic {
-                state
-                    .topics
-                    .entry(topic.into())
-                    .or_insert_with(|| vec![])
-                    .push(sub_id);
+                state.topics.entry(topic.into()).or_default().push(sub_id);
             }
         }
 
@@ -91,8 +87,7 @@ where
                 .get(topic)
                 .unwrap_or(&vec![])
                 .iter()
-                .map(|id| state.subscribers.get(id))
-                .flatten()
+                .filter_map(|id| state.subscribers.get(id))
                 .collect::<Vec<_>>()
         } else {
             state.subscribers.values().collect::<Vec<_>>()
