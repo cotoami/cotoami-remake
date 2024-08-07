@@ -148,8 +148,8 @@ import slinky.web.SyntheticMouseEvent
     case class Props(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
-    )(_children: ReactElement*) {
-      def children: Seq[ReactElement] = this._children
+    )(children: ReactElement*) {
+      def getChildren: Seq[ReactElement] = this.children
     }
 
     val component = FunctionalComponent[Props] { props =>
@@ -178,7 +178,7 @@ import slinky.web.SyntheticMouseEvent
         onClick := props.onClick,
         ref := primaryRef
       )(
-        props.children: _*
+        props.getChildren: _*
       )
     }
   }
@@ -187,8 +187,8 @@ import slinky.web.SyntheticMouseEvent
     case class Props(
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
-    )(_children: ReactElement*) {
-      def children: Seq[ReactElement] = this._children
+    )(children: ReactElement*) {
+      def getChildren: Seq[ReactElement] = this.children
     }
 
     val component = FunctionalComponent[Props] { props =>
@@ -200,7 +200,7 @@ import slinky.web.SyntheticMouseEvent
           )
         ),
         onClick := props.onClick
-      )(props.children: _*)
+      )(props.getChildren: _*)
     }
   }
 }

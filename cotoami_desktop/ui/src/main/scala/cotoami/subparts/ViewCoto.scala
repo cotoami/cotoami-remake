@@ -18,7 +18,7 @@ import cotoami.components.{
   RehypePlugin,
   RemarkPlugin
 }
-import cotoami.backend.{Coto, CotoContent, Link}
+import cotoami.backend.{Coto, CotoContent, Id, Link}
 import cotoami.repositories.Nodes
 import cotoami.models.WaitingPost
 
@@ -68,7 +68,8 @@ object ViewCoto {
     )
 
   def divContent(
-      coto: Coto
+      coto: Coto,
+      collapsibleContentOpened: Boolean = false
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "content")(
       context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
@@ -85,7 +86,7 @@ object ViewCoto {
             cotonoma.name
           )
         )
-      ).getOrElse(sectionCotoContent(coto))
+      ).getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
     )
 
   def divWaitingPostContent(
@@ -104,7 +105,7 @@ object ViewCoto {
 
   private def sectionCotoContent(
       cotoContent: CotoContent,
-      collapsibleContentOpened: Boolean = false
+      collapsibleContentOpened: Boolean
   ): ReactElement =
     section(className := "coto-content")(
       cotoContent.mediaContent.map(sectionMediaContent),
@@ -193,7 +194,9 @@ object ViewCoto {
     }
 
   def ulParents(
-      parents: Seq[(Coto, Link)]
+      parents: Seq[(Coto, Link)],
+      onClickTagger: Id[Coto] => AppMsg =
+        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
   )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
@@ -201,11 +204,7 @@ object ViewCoto {
           li(key := link.id.uuid)(
             button(
               className := "parent default",
-              onClick := (_ =>
-                dispatch(
-                  SectionTraversals.Msg.OpenTraversal(parent.id).toApp
-                )
-              )
+              onClick := (_ => dispatch(onClickTagger(parent.id)))
             )(parent.abbreviate)
           )
         }
@@ -220,11 +219,13 @@ object ViewCoto {
       div(className := "links")(
         toolButton(
           symbol = "arrow_forward",
-          tip = "Links",
+          tip = "Traverse",
           tipPlacement = tipPlacement,
           classes = "open-traversal",
-          onClick =
-            () => dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
+          }
         )
       )
     }

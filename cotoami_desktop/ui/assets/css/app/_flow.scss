@@ -6,4 +6,9 @@ section.flow {
     flex: 1;
     min-height: 0; // let this item shrink below the content size
   }
+
+  section.coto-details {
+    flex: 1;
+    min-height: 0; // let this item shrink below the content size
+  }
 }

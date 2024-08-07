@@ -491,7 +491,7 @@ object FormCoto {
                       symbol = "close",
                       tip = "Delete",
                       classes = "delete",
-                      onClick = () => dispatch(Msg.DeleteMediaContent)
+                      onClick = _ => dispatch(Msg.DeleteMediaContent)
                     )
                   )
                 ),
@@ -666,7 +666,7 @@ object FormCoto {
                   symbol = "arrow_drop_up",
                   tip = "Fold",
                   classes = "fold",
-                  onClick = () => dispatch(Msg.SetFolded(true))
+                  onClick = _ => dispatch(Msg.SetFolded(true))
                 )
               )
             case _ => buttonPost(model, currentCotonoma)

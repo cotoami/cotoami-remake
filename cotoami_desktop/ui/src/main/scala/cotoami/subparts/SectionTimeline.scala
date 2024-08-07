@@ -220,7 +220,7 @@ object SectionTimeline {
             symbol = "search",
             tip = "Search",
             classes = "search",
-            onClick = () => dispatch(Msg.InitSearch.toApp)
+            onClick = _ => dispatch(Msg.InitSearch.toApp)
           )
         )
       ),
@@ -271,7 +271,7 @@ object SectionTimeline {
       articleCoto(
         context.domain.cotos.getOriginal(coto)
       ),
-      ViewCoto.divLinksTraversal(coto, "top")
+      ViewCoto.divLinksTraversal(coto, "bottom")
     )
 
   private def articleCoto(coto: Coto)(implicit
@@ -279,7 +279,10 @@ object SectionTimeline {
       dispatch: AppMsg => Unit
   ): ReactElement = {
     val domain = context.domain
-    article(className := "coto")(
+    article(
+      className := "coto",
+      onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+    )(
       header()(
         ViewCoto.divClassifiedAs(coto),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {

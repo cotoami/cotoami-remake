@@ -34,6 +34,10 @@ article.coto {
 
     min-height: 1rem; // empty header serves as padding-top of article.coto
 
+    address.author {
+      color: var(--muted-color);
+    }
+
     div.classified-as {
       display: flex;
       flex-direction: row;
@@ -117,6 +121,19 @@ article.coto {
         display: block;
         margin-top: 1rem;
       }
+    }
+  }
+
+  >footer {
+    background: inherit;
+    text-align: right;
+    margin: 0;
+    padding: 0 var(--block-spacing-horizontal);
+    border-style: none;
+
+    time {
+      font-size: 0.8rem;
+      opacity: .5;
     }
   }
 }

@@ -165,7 +165,7 @@ object NavCotonomas {
           symbol = "settings",
           tip = "Node settings",
           classes = "settings",
-          onClick = () =>
+          onClick = _ =>
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
                 Modal.NodeProfile(node)
@@ -181,7 +181,7 @@ object NavCotonomas {
             symbol = "switch_account",
             tip = "Operate as",
             classes = "operate",
-            onClick = () =>
+            onClick = _ =>
               dispatch(
                 Modal.Msg.OpenModal(
                   Modal.OperateAs(domain.nodes.operating.get, node)

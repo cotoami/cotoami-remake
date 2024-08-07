@@ -90,7 +90,7 @@ object ModalNodeProfile {
               symbol = "edit",
               tip = "Edit",
               classes = "edit",
-              onClick = () =>
+              onClick = _ =>
                 dispatch(
                   Modal.Msg.OpenModal(Modal.NodeIcon()).toApp
                 )

@@ -105,6 +105,10 @@ section.timeline {
         }
       }
     }
+
+    article.coto {
+      cursor: pointer;
+    }
   }
 
   .waiting-post {
@@ -140,27 +144,10 @@ section.timeline {
 
     >header {
       padding: 0 var(--block-spacing-horizontal);
-
-      address.author {
-        color: var(--muted-color);
-      }
     }
 
     section.media-content {
       padding-left: 0; // fit to the left border
-    }
-
-    footer {
-      background: inherit;
-      text-align: right;
-      margin: 0;
-      padding: 0 var(--block-spacing-horizontal);
-      border-style: none;
-
-      time {
-        font-size: 0.8rem;
-        opacity: .5;
-      }
     }
   }
 

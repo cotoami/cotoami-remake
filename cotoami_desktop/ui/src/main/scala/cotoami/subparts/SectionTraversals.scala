@@ -88,6 +88,9 @@ object SectionTraversals {
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): (T => AppMsg) =
+      tagger andThen AppMsg.SectionTraversalsMsg
+
     case class OpenTraversal(start: Id[Coto]) extends Msg
     case class CloseTraversal(traversalIndex: Int) extends Msg
     case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])
@@ -249,7 +252,8 @@ object SectionTraversals {
             ("coto", true),
             ("has-children", !subCotos.isEmpty)
           )
-        )
+        ),
+        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
           ViewCoto.divClassifiedAs(coto)
@@ -289,7 +293,8 @@ object SectionTraversals {
             ("coto", true),
             ("traversed", traversed)
           )
-        )
+        ),
+        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
           toolButton(
@@ -322,7 +327,10 @@ object SectionTraversals {
                 tip = "Traverse",
                 tipPlacement = "left",
                 classes = "traverse",
-                onClick = () => dispatch(stepMsg)
+                onClick = e => {
+                  e.stopPropagation()
+                  dispatch(stepMsg)
+                }
               )
             )
           }
