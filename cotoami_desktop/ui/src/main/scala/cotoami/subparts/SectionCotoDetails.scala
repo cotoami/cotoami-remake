@@ -98,6 +98,6 @@ object SectionCotoDetails {
           ViewCoto.divContent(coto)
         )
       ),
-      ViewCoto.divLinksTraversal(coto, "left")
+      ViewCoto.divLinksTraversal(coto, "bottom")
     )
 }

@@ -50,6 +50,8 @@ section.coto-details {
       border-bottom: 1px solid var(--pane-border-color);
 
       article.sub-coto {
+        cursor: pointer;
+
         div.classified-as {
           padding-right: 1rem;
         }
