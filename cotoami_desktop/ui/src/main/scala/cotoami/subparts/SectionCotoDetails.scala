@@ -25,6 +25,10 @@ object SectionCotoDetails {
       ),
       div(className := "body")(
         ScrollArea()(
+          ViewCoto.ulParents(
+            context.domain.parentsOf(coto.id),
+            AppMsg.FocusCoto(_)
+          ),
           articleMainCoto(coto),
           div(className := "sub-cotos")(
             olSubCotos(coto)
