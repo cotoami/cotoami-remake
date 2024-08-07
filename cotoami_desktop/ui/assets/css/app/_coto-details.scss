@@ -40,12 +40,10 @@ section.coto-details {
   }
 
   div.sub-cotos {
-    margin-top: 2rem;
     margin-bottom: var(--block-spacing-vertical);
     margin-left: var(--block-spacing-horizontal);
 
-    li.sub {
-      margin-bottom: 2rem;
+    div.sub {
       border-top: 1px solid var(--pane-border-color);
       border-bottom: 1px solid var(--pane-border-color);
 
@@ -61,6 +59,23 @@ section.coto-details {
         padding-top: 3px;
         background-color: var(--card-background-color);
         text-align: center;
+      }
+    }
+
+    div.add-sub-coto {
+      padding: 5px 0;
+      text-align: center;
+
+      button.add-sub-coto {
+        opacity: 0.3;
+
+        span.material-symbols {
+          font-size: 20px; // use px here to fix the icon size
+        }
+      }
+
+      &:hover button.add-sub-coto {
+        opacity: 1;
       }
     }
   }

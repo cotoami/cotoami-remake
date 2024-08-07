@@ -31,9 +31,20 @@ object SectionCotoDetails {
           ),
           articleMainCoto(coto),
           div(className := "sub-cotos")(
-            olSubCotos(coto)
+            olSubCotos(coto),
+            divAddSubCoto
           )
         )
+      )
+    )
+
+  private def divAddSubCoto: ReactElement =
+    div(className := "add-sub-coto")(
+      toolButton(
+        symbol = "add_circle",
+        tip = "Add coto",
+        tipPlacement = "bottom",
+        classes = "add-sub-coto"
       )
     )
 
@@ -78,26 +89,29 @@ object SectionCotoDetails {
       coto: Coto
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     li(key := link.id.uuid, className := "sub")(
-      ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
-      ),
-      article(
-        className := "sub-coto coto",
-        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
-      )(
-        header()(
-          toolButton(
-            symbol = "subdirectory_arrow_right",
-            tip = "Unlink",
-            tipPlacement = "right",
-            classes = "unlink"
-          ),
-          ViewCoto.divClassifiedAs(coto)
+      divAddSubCoto,
+      div(className := "sub")(
+        ViewCoto.ulParents(
+          context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
         ),
-        div(className := "body")(
-          ViewCoto.divContent(coto)
-        )
-      ),
-      ViewCoto.divLinksTraversal(coto, "bottom")
+        article(
+          className := "sub-coto coto",
+          onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+        )(
+          header()(
+            toolButton(
+              symbol = "subdirectory_arrow_right",
+              tip = "Unlink",
+              tipPlacement = "right",
+              classes = "unlink"
+            ),
+            ViewCoto.divClassifiedAs(coto)
+          ),
+          div(className := "body")(
+            ViewCoto.divContent(coto)
+          )
+        ),
+        ViewCoto.divLinksTraversal(coto, "bottom")
+      )
     )
 }
