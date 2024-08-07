@@ -271,7 +271,7 @@ object SectionTimeline {
       articleCoto(
         context.domain.cotos.getOriginal(coto)
       ),
-      ViewCoto.divLinksTraversal(coto, "top")
+      ViewCoto.divLinksTraversal(coto, "bottom")
     )
 
   private def articleCoto(coto: Coto)(implicit
