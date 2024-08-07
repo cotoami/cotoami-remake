@@ -23,15 +23,15 @@ object SectionCotoDetails {
           onClick = _ => dispatch(AppMsg.UnfocusCoto)
         )
       ),
-      articleCoto(coto)
+      articleCotoMain(coto)
     )
 
-  private def articleCoto(coto: Coto)(implicit
+  private def articleCotoMain(coto: Coto)(implicit
       context: Context,
       dispatch: AppMsg => Unit
   ): ReactElement = {
     val domain = context.domain
-    article(className := "coto")(
+    article(className := "coto main")(
       header()(
         ViewCoto.divClassifiedAs(coto),
         ViewCoto.addressAuthor(coto, domain.nodes)

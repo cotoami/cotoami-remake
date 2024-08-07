@@ -23,5 +23,9 @@ section.coto-details {
     section.media-content {
       padding-left: 0; // fit to the left border
     }
+
+    &.main:hover {
+      background-color: var(--card-background-color);
+    }
   }
 }
