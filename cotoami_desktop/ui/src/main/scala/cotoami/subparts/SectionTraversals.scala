@@ -327,7 +327,10 @@ object SectionTraversals {
                 tip = "Traverse",
                 tipPlacement = "left",
                 classes = "traverse",
-                onClick = _ => dispatch(stepMsg)
+                onClick = e => {
+                  e.stopPropagation()
+                  dispatch(stepMsg)
+                }
               )
             )
           }
