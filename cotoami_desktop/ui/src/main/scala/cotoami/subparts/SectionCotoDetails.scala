@@ -6,14 +6,14 @@ import slinky.web.html._
 import cotoami.{Msg => AppMsg}
 import cotoami.Context
 import cotoami.backend.Coto
-import cotoami.components.toolButton
+import cotoami.components.{toolButton, ScrollArea}
 
 object SectionCotoDetails {
 
   def apply(
       coto: Coto
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
-    section(className := "coto-details")(
+    section(className := "coto-details header-and-body")(
       header(
         toolButton(
           symbol = "arrow_back",
@@ -23,7 +23,11 @@ object SectionCotoDetails {
           onClick = _ => dispatch(AppMsg.UnfocusCoto)
         )
       ),
-      articleCotoMain(coto)
+      div(className := "body")(
+        ScrollArea()(
+          articleCotoMain(coto)
+        )
+      )
     )
 
   private def articleCotoMain(coto: Coto)(implicit

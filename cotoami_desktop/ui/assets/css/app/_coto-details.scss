@@ -13,6 +13,14 @@ section.coto-details {
     }
   }
 
+  >.body {
+
+    // SimpleBar div
+    >div {
+      height: 100%;
+    }
+  }
+
   article.coto {
     padding: 1rem 0;
 
