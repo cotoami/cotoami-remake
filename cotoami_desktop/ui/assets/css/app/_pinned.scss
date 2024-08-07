@@ -185,6 +185,7 @@ section.pinned-cotos {
     // Disable card-background-color in document-view
     article.coto,
     ol.pinned-cotos ol.sub-cotos>div.links,
+    ol.pinned-cotos ol.sub-cotos>div.links-not-yet-loaded,
     ul.parents {
       background-color: var(--background-color);
     }

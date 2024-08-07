@@ -22,18 +22,44 @@ section.coto-details {
   }
 
   article.coto {
+    section.media-content {
+      padding-left: 0; // fit to the left border
+    }
+  }
+
+  article.main-coto {
     padding: 1rem 0;
 
     >header {
       padding: 0 var(--block-spacing-horizontal);
     }
 
-    section.media-content {
-      padding-left: 0; // fit to the left border
-    }
-
-    &.main:hover {
+    &:hover {
       background-color: var(--card-background-color);
+    }
+  }
+
+  div.sub-cotos {
+    margin-top: 2rem;
+    margin-bottom: var(--block-spacing-vertical);
+    margin-left: var(--block-spacing-horizontal);
+
+    li.sub {
+      margin-bottom: 2rem;
+      border-top: 1px solid var(--pane-border-color);
+      border-bottom: 1px solid var(--pane-border-color);
+
+      article.sub-coto {
+        div.classified-as {
+          padding-right: 1rem;
+        }
+      }
+
+      div.links {
+        padding-top: 3px;
+        background-color: var(--card-background-color);
+        text-align: center;
+      }
     }
   }
 }
