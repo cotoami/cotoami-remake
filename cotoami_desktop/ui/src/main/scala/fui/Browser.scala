@@ -122,4 +122,15 @@ object Browser {
         None // no finalizer on cancellation
       }
     })
+
+  def getCurrentPosition: Cmd[Either[dom.PositionError, dom.Position]] =
+    Cmd(IO.async { cb =>
+      IO {
+        dom.window.navigator.geolocation.getCurrentPosition(
+          position => cb(Right(Some(Right(position)))),
+          error => cb(Right(Some(Left(error))))
+        )
+        None
+      }
+    })
 }
