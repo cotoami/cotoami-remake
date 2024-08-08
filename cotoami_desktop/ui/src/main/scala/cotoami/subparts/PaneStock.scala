@@ -32,6 +32,7 @@ object PaneStock {
         )
       )
     )(
+      MapLibre(id = "main-map", defaultPosition = (139.5, 35.7)),
       sectionLinkedCotos(model, uiState)(model, dispatch)
     )
   }
