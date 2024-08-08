@@ -31,7 +31,7 @@ section.stock {
     }
   }
 
-  section.coto-catalog {
+  section.linked-cotos {
     display: flex;
     flex-direction: column;
 
@@ -48,43 +48,43 @@ section.stock {
       flex: 1;
       min-height: 0; // let this item shrink below the content size
     }
-  }
 
-  &.with-traversals-opened {
+    &.with-traversals-opened {
 
-    // SimpleBar div
-    >div {
-      width: 100%;
-      height: 100%;
+      // SimpleBar div
+      >div {
+        width: 100%;
+        height: 100%;
 
-      >.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
-        overflow-x: auto;
-        overflow-y: hidden;
+        >.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+          overflow-x: auto;
+          overflow-y: hidden;
 
-        >.simplebar-content {
-          display: flex;
-          flex-direction: row;
-          height: 100%;
+          >.simplebar-content {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
 
-          section.coto-catalog {
-            min-width: 600px;
+            section.pinned-cotos {
+              min-width: 600px;
+            }
           }
+        }
+
+        &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+          scroll-behavior: smooth;
         }
       }
 
-      &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
-        scroll-behavior: smooth;
+      // prevent the column-view horizontal scrollbar from overlapping with the stock's scrollbar
+      .column-view .simplebar-horizontal {
+        bottom: 10px;
       }
     }
 
-    // prevent the column-view horizontal scrollbar from overlapping with the stock's scrollbar
-    .column-view .simplebar-horizontal {
-      bottom: 10px;
+    section.traversals {
+      // display: none;
+      border-left: 1px solid var(--pane-border-color);
     }
-  }
-
-  section.traversals {
-    // display: none;
-    border-left: 1px solid var(--pane-border-color);
   }
 }

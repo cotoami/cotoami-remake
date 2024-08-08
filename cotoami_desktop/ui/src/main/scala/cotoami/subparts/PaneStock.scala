@@ -25,49 +25,44 @@ object PaneStock {
       model: Model,
       uiState: UiState
   )(implicit dispatch: AppMsg => Unit): ReactElement = {
-    val sectionTraversals = SectionTraversals(
-      model.traversals
-    )(model, dispatch)
     section(
       className := optionalClasses(
         Seq(
-          ("stock", true),
+          ("stock", true)
+        )
+      )
+    )(
+      sectionLinkedCotos(model, uiState)(model, dispatch)
+    )
+  }
+
+  def sectionLinkedCotos(
+      model: Model,
+      uiState: UiState
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+    val pinnedCotos = context.domain.pinnedCotos
+    val sectionTraversals = SectionTraversals(model.traversals)
+    val contents = Fragment(
+      (pinnedCotos.isEmpty, model.domain.currentCotonoma) match {
+        case (false, Some(cotonoma)) =>
+          Some(sectionPinnedCotos(pinnedCotos, uiState, cotonoma))
+        case _ => None
+      },
+      sectionTraversals
+    )
+
+    section(
+      className := optionalClasses(
+        Seq(
+          ("linked-cotos", true),
           ("with-traversals-opened", sectionTraversals.isDefined)
         )
       )
     )(
-      Fragment(
-        model.domain.currentCotonoma.map(
-          sectionCatalog(uiState, _)(model, dispatch)
-        ),
-        sectionTraversals
-      ) match {
-        case fragment =>
-          if (sectionTraversals.isDefined) {
-            ScrollArea(scrollableElementId = Some(ScrollableElementId))(
-              fragment
-            )
-          } else {
-            fragment
-          }
-      }
-    )
-  }
-
-  def sectionCatalog(
-      uiState: UiState,
-      currentCotonoma: Cotonoma
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
-    val pinnedCotos = context.domain.pinnedCotos
-    section(className := "coto-catalog")(
-      MapLibre(id = "main-map", defaultPosition = (139.5, 35.7)),
-      Option.when(!pinnedCotos.isEmpty)(
-        sectionPinnedCotos(
-          pinnedCotos,
-          uiState,
-          currentCotonoma
-        )
-      )
+      if (sectionTraversals.isDefined)
+        ScrollArea(scrollableElementId = Some(ScrollableElementId))(contents)
+      else
+        contents
     )
   }
 
