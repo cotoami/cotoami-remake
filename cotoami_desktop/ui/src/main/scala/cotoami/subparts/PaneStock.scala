@@ -14,7 +14,7 @@ import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.models.UiState
 import cotoami.repositories.Domain
-import cotoami.components.{optionalClasses, toolButton, ScrollArea}
+import cotoami.components.{optionalClasses, toolButton, MapLibre, ScrollArea}
 
 object PaneStock {
   final val PaneName = "PaneStock"
@@ -60,6 +60,7 @@ object PaneStock {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val pinnedCotos = context.domain.pinnedCotos
     section(className := "coto-catalog")(
+      MapLibre(id = "main-map", defaultPosition = (139.5, 35.7)),
       Option.when(!pinnedCotos.isEmpty)(
         sectionPinnedCotos(
           pinnedCotos,
