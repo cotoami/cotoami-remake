@@ -14,10 +14,20 @@ import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.models.UiState
 import cotoami.repositories.Domain
-import cotoami.components.{optionalClasses, toolButton, MapLibre, ScrollArea}
+import cotoami.components.{
+  optionalClasses,
+  toolButton,
+  MapLibre,
+  ScrollArea,
+  SplitPane
+}
 
 object PaneStock {
   final val PaneName = "PaneStock"
+
+  final val PaneMapName = "PaneMap"
+  final val PaneMapDefaultWidth = 400
+
   final val ScrollableElementId = "scrollable-stock-with-traversals"
   final val PinnedCotosBodyId = "pinned-cotos-body"
 
@@ -32,8 +42,23 @@ object PaneStock {
         )
       )
     )(
-      MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7)),
-      sectionLinkedCotos(model, uiState)(model, dispatch)
+      SplitPane(
+        vertical = false,
+        initialPrimarySize = uiState.paneSizes.getOrElse(
+          PaneMapName,
+          PaneMapDefaultWidth
+        ),
+        onPrimarySizeChanged =
+          Some((newSize) => dispatch(AppMsg.ResizePane(PaneMapName, newSize))),
+        primary = SplitPane.Primary.Props()(
+          div(className := "map")(
+            MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7))
+          )
+        ),
+        secondary = SplitPane.Secondary.Props()(
+          sectionLinkedCotos(model, uiState)(model, dispatch)
+        )
+      )
     )
   }
 

@@ -25,18 +25,25 @@
 section.stock {
   position: relative;
 
-  display: flex;
-  flex-direction: column;
+  .split-pane {
+    height: 100%;
+  }
 
-  section.geomap {
-    // display: none;
-    flex: 0 0 400px;
-    border-bottom: 1px solid var(--pane-border-color);
+  div.map {
+    // wrapped in SplitPane
+    width: 100%;
+    height: 100%;
+
+    section.geomap {
+      width: 100%;
+      height: 100%;
+    }
   }
 
   section.linked-cotos {
-    flex: 1;
-    min-height: 0; // let this item shrink below the content size
+    // wrapped in SplitPane
+    width: 100%;
+    height: 100%;
 
     section.pinned-cotos {
       width: 100%;
