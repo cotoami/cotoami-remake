@@ -25,28 +25,28 @@
 section.stock {
   position: relative;
 
-  article.coto {
-    >header {
-      padding-right: 10px;
-    }
+  display: flex;
+  flex-direction: column;
+
+  section.map {
+    // display: none;
+    flex: 0 0 400px;
+    border-bottom: 1px solid var(--pane-border-color);
   }
 
   section.linked-cotos {
-    display: flex;
-    flex-direction: column;
-
-    width: 100%;
-    height: 100%;
-
-    section.map {
-      // display: none;
-      flex: 0 0 400px;
-      border-bottom: 1px solid var(--pane-border-color);
-    }
+    flex: 1;
+    min-height: 0; // let this item shrink below the content size
 
     section.pinned-cotos {
-      flex: 1;
-      min-height: 0; // let this item shrink below the content size
+      width: 100%;
+      height: 100%;
+    }
+
+    article.coto {
+      >header {
+        padding-right: 10px;
+      }
     }
 
     &.with-traversals-opened {
