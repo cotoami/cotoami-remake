@@ -32,7 +32,7 @@ object PaneStock {
         )
       )
     )(
-      MapLibre(id = "main-map", defaultPosition = (139.5, 35.7)),
+      MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7)),
       sectionLinkedCotos(model, uiState)(model, dispatch)
     )
   }
@@ -43,7 +43,7 @@ object PaneStock {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val pinnedCotos = context.domain.pinnedCotos
     val sectionTraversals = SectionTraversals(model.traversals)
-    val contents = Fragment(
+    val children = Fragment(
       (pinnedCotos.isEmpty, model.domain.currentCotonoma) match {
         case (false, Some(cotonoma)) =>
           Some(sectionPinnedCotos(pinnedCotos, uiState, cotonoma))
@@ -61,9 +61,9 @@ object PaneStock {
       )
     )(
       if (sectionTraversals.isDefined)
-        ScrollArea(scrollableElementId = Some(ScrollableElementId))(contents)
+        ScrollArea(scrollableElementId = Some(ScrollableElementId))(children)
       else
-        contents
+        children
     )
   }
 

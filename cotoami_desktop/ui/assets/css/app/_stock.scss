@@ -28,7 +28,7 @@ section.stock {
   display: flex;
   flex-direction: column;
 
-  section.map {
+  section.geomap {
     // display: none;
     flex: 0 0 400px;
     border-bottom: 1px solid var(--pane-border-color);

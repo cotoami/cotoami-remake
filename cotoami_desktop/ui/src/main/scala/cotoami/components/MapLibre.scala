@@ -18,7 +18,6 @@ import cotoami.maplibre._
   val component = FunctionalComponent[Props] { props =>
     useEffect(
       () => {
-        println("MapLibre effect")
         val map = new Map(new MapOptions {
           override val container = props.id
           override val zoom = 6
@@ -30,8 +29,6 @@ import cotoami.maplibre._
       Seq.empty
     )
 
-    println("MapLibre render")
-
-    section(id := props.id, className := "map")()
+    section(id := props.id, className := "geomap")()
   }
 }
