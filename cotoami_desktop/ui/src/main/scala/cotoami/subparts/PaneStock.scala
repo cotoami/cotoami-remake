@@ -1,13 +1,12 @@
 package cotoami.subparts
 
-import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{Fragment, React, ReactElement}
+import slinky.core.facade.{Fragment, ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -164,7 +163,8 @@ object PaneStock {
     final val ActiveTocEntryClass = "active"
 
     val component = FunctionalComponent[Props] { props =>
-      val rootRef = React.createRef[html.Div]
+      val rootRef = useRef[html.Div](null)
+      val tocRef = useRef[html.Div](null)
 
       useEffect(
         () => {
@@ -178,10 +178,17 @@ object PaneStock {
                 )
             }
 
+          // Initialize the TOC height
+          tocRef.current.style.height = tocHeight(viewport.offsetHeight)
+
           // Observe viewport size
           val resizeObserver = new dom.ResizeObserver((entries, observer) => {
             entries.foreach(entry => {
-              println(s"height: ${entry.contentRect.height}")
+              if (tocRef.current != null) {
+                // Resize the TOC according to the viewport size
+                tocRef.current.style.height =
+                  tocHeight(entry.contentRect.height)
+              }
             })
           })
           resizeObserver.observe(viewport)
@@ -221,9 +228,12 @@ object PaneStock {
 
       div(className := "pinned-cotos-with-toc", ref := rootRef)(
         olPinnedCotos(props.pinned, false)(props.context, props.dispatch),
-        divToc(props.pinned)(props.context, props.dispatch)
+        divToc(props.pinned, tocRef)(props.context, props.dispatch)
       )
     }
+
+    private def tocHeight(viewportHeight: Double): String =
+      s"${viewportHeight - 16}px"
   }
 
   private def olPinnedCotos(
@@ -282,9 +292,10 @@ object PaneStock {
     s"toc-${elementIdOfPinnedCoto(pin)}"
 
   private def divToc(
-      pinned: Seq[(Link, Coto)]
+      pinned: Seq[(Link, Coto)],
+      tocRef: ReactRef[dom.HTMLDivElement]
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
-    div(className := "toc")(
+    div(className := "toc", ref := tocRef)(
       ScrollArea()(
         ol(className := "toc")(
           pinned.map { case (pin, coto) =>
