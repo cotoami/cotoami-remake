@@ -169,11 +169,22 @@ object PaneStock {
       useEffect(
         () => {
           // Viewport element
-          val viewport: js.UndefOr[dom.Element] =
+          val viewport =
             dom.document.getElementById(props.viewportId) match {
               case element: HTMLElement => element
-              case _                    => ()
+              case _ =>
+                throw new IllegalArgumentException(
+                  s"Invalid viewportId: ${props.viewportId}"
+                )
             }
+
+          // Observe viewport size
+          val resizeObserver = new dom.ResizeObserver((entries, observer) => {
+            entries.foreach(entry => {
+              println(s"height: ${entry.contentRect.height}")
+            })
+          })
+          resizeObserver.observe(viewport)
 
           // Observe viewport position
           val intersectionObserver = new dom.IntersectionObserver(
@@ -201,6 +212,7 @@ object PaneStock {
           )
 
           () => {
+            resizeObserver.disconnect()
             intersectionObserver.disconnect()
           }
         },
