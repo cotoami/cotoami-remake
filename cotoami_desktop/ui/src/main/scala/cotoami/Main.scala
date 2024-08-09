@@ -195,7 +195,7 @@ object Main {
             Cmd(
               IO {
                 dom.document.getElementById(
-                  PaneStock.elementIdOfPinnedCoto(pin)
+                  SectionPinnedCotos.elementIdOfPinnedCoto(pin)
                 ) match {
                   case element: HTMLElement =>
                     element.scrollIntoView(true)
