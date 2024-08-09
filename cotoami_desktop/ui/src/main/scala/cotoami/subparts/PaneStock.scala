@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
@@ -167,13 +168,15 @@ object PaneStock {
 
       useEffect(
         () => {
-          val options = new dom.IntersectionObserverInit {
-            root = dom.document.getElementById(props.viewportId) match {
+          // Viewport element
+          val viewport: js.UndefOr[dom.Element] =
+            dom.document.getElementById(props.viewportId) match {
               case element: HTMLElement => element
               case _                    => ()
             }
-          }
-          val observer = new dom.IntersectionObserver(
+
+          // Observe viewport position
+          val intersectionObserver = new dom.IntersectionObserver(
             (entries, observer) =>
               entries.foreach(entry => {
                 val id = entry.target.getAttribute("id")
@@ -189,14 +192,16 @@ object PaneStock {
                   case _ => ()
                 }
               }),
-            options
+            new dom.IntersectionObserverInit {
+              root = viewport
+            }
           )
           rootRef.current.querySelectorAll("li.pin").foreach(
-            observer.observe(_)
+            intersectionObserver.observe(_)
           )
 
           () => {
-            observer.disconnect()
+            intersectionObserver.disconnect()
           }
         },
         props.pinned
