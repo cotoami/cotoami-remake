@@ -36,9 +36,6 @@ object Msg {
   // UI
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
-  case class SwitchPinnedView(cotonoma: Id[Cotonoma], inColumns: Boolean)
-      extends Msg
-  case class ScrollToPinnedCoto(pin: Link) extends Msg
 
   // Focus
   case class FocusNode(id: Id[Node]) extends Msg
@@ -57,5 +54,6 @@ object Msg {
   case class NavCotonomasMsg(subMsg: NavCotonomas.Msg) extends Msg
   case class FlowInputMsg(subMsg: FormCoto.Msg) extends Msg
   case class SectionTimelineMsg(subMsg: SectionTimeline.Msg) extends Msg
+  case class SectionPinnedCotosMsg(subMsg: SectionPinnedCotos.Msg) extends Msg
   case class SectionTraversalsMsg(subMsg: SectionTraversals.Msg) extends Msg
 }

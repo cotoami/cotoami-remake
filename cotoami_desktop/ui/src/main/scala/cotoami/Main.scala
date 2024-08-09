@@ -4,7 +4,6 @@ import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
-import org.scalajs.dom.HTMLElement
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.hot
@@ -181,32 +180,6 @@ object Main {
           })
           .getOrElse((model, Seq.empty))
 
-      case Msg.SwitchPinnedView(cotonoma, inColumns) =>
-        model.uiState
-          .map(_.setPinnedInColumns(cotonoma, inColumns) match {
-            case state => (model.copy(uiState = Some(state)), Seq(state.save))
-          })
-          .getOrElse((model, Seq.empty))
-
-      case Msg.ScrollToPinnedCoto(pin) =>
-        (
-          model,
-          Seq(
-            Cmd(
-              IO {
-                dom.document.getElementById(
-                  SectionPinnedCotos.elementIdOfPinnedCoto(pin)
-                ) match {
-                  case element: HTMLElement =>
-                    element.scrollIntoView(true)
-                  case _ => ()
-                }
-                None
-              }
-            )
-          )
-        )
-
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
@@ -294,6 +267,9 @@ object Main {
           SectionTimeline.update(submsg, model.timeline)
         (model.copy(timeline = submodel, domain = domain), cmds)
       }
+
+      case Msg.SectionPinnedCotosMsg(submsg) =>
+        SectionPinnedCotos.update(submsg, model)
 
       case Msg.SectionTraversalsMsg(submsg) => {
         val (submodel, cmds) = SectionTraversals.update(

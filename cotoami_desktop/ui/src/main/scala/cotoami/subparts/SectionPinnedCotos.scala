@@ -4,19 +4,60 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
+import cats.effect.IO
+
 import slinky.core._
 import slinky.core.annotations.react
 import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
+import fui.Cmd
 import cotoami.{Context, Model, Msg => AppMsg}
-import cotoami.backend.{Coto, Cotonoma, Link}
+import cotoami.backend.{Coto, Cotonoma, Id, Link}
 import cotoami.models.UiState
 import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionPinnedCotos {
+
+  sealed trait Msg {
+    def toApp: AppMsg = AppMsg.SectionPinnedCotosMsg(this)
+  }
+
+  object Msg {
+    case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
+        extends Msg
+    case class ScrollToPinnedCoto(pin: Link) extends Msg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+    msg match {
+      case Msg.SwitchView(cotonoma, inColumns) =>
+        model.uiState
+          .map(_.setPinnedInColumns(cotonoma, inColumns) match {
+            case state => (model.copy(uiState = Some(state)), Seq(state.save))
+          })
+          .getOrElse((model, Seq.empty))
+
+      case Msg.ScrollToPinnedCoto(pin) =>
+        (
+          model,
+          Seq(
+            Cmd(
+              IO {
+                dom.document.getElementById(elementIdOfPinnedCoto(pin)) match {
+                  case element: HTMLElement =>
+                    element.scrollIntoView(true)
+                  case _ => ()
+                }
+                None
+              }
+            )
+          )
+        )
+    }
+
   final val PinnedCotosBodyId = "pinned-cotos-body"
 
   def apply(
@@ -53,7 +94,7 @@ object SectionPinnedCotos {
           ),
           disabled = inColumns,
           onClick =
-            _ => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, true))
+            _ => dispatch(Msg.SwitchView(currentCotonoma.id, true).toApp)
         ),
         toolButton(
           symbol = "view_agenda",
@@ -66,7 +107,7 @@ object SectionPinnedCotos {
           ),
           disabled = !inColumns,
           onClick =
-            _ => dispatch(AppMsg.SwitchPinnedView(currentCotonoma.id, false))
+            _ => dispatch(Msg.SwitchView(currentCotonoma.id, false).toApp)
         )
       ),
       div(
@@ -247,7 +288,7 @@ object SectionPinnedCotos {
             )(
               button(
                 className := "default",
-                onClick := (_ => dispatch(AppMsg.ScrollToPinnedCoto(pin)))
+                onClick := (_ => dispatch(Msg.ScrollToPinnedCoto(pin).toApp))
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
