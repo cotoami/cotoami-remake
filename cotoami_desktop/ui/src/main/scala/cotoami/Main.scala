@@ -8,7 +8,6 @@ import org.scalajs.dom.HTMLElement
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.hot
-import slinky.web.html._
 
 import com.softwaremill.quicklens._
 
@@ -367,11 +366,7 @@ object Main {
     implicit val _dispatch = dispatch
     Fragment(
       AppHeader(model),
-      div(id := "app-body", className := "body")(
-        model.uiState
-          .map(AppBody.contents(model, _))
-          .getOrElse(Seq()): _*
-      ),
+      AppBody(model),
       AppFooter(model),
       if (model.logViewToggle)
         Some(ViewLog(model.log))

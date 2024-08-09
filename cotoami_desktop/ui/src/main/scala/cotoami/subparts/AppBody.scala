@@ -1,6 +1,7 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
+import slinky.web.html._
 
 import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.models.UiState
@@ -8,12 +9,23 @@ import cotoami.components.{optionalClasses, SplitPane}
 
 object AppBody {
 
-  def contents(
+  def apply(
+      model: Model
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
+    div(id := "app-body", className := "body")(
+      (model.uiState, model.domain.nodes.operating) match {
+        case (Some(uiState), Some(_)) =>
+          Some(nodeContents(model, uiState))
+        case _ => None
+      }
+    )
+
+  private def nodeContents(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): Seq[ReactElement] = {
+  )(implicit dispatch: AppMsg => Unit): ReactElement = {
     implicit val _context: Context = model
-    Seq(
+    Fragment(
       NavNodes(model, uiState),
       SplitPane(
         vertical = true,
