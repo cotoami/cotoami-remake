@@ -6,7 +6,7 @@ import org.scalajs.dom.HTMLElement
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{Fragment, React, ReactElement}
+import slinky.core.facade.{Fragment, ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
@@ -14,10 +14,20 @@ import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.backend.{Coto, Cotonoma, Link}
 import cotoami.models.UiState
 import cotoami.repositories.Domain
-import cotoami.components.{optionalClasses, toolButton, ScrollArea}
+import cotoami.components.{
+  optionalClasses,
+  toolButton,
+  MapLibre,
+  ScrollArea,
+  SplitPane
+}
 
 object PaneStock {
   final val PaneName = "PaneStock"
+
+  final val PaneMapName = "PaneMap"
+  final val PaneMapDefaultWidth = 400
+
   final val ScrollableElementId = "scrollable-stock-with-traversals"
   final val PinnedCotosBodyId = "pinned-cotos-body"
 
@@ -25,48 +35,60 @@ object PaneStock {
       model: Model,
       uiState: UiState
   )(implicit dispatch: AppMsg => Unit): ReactElement = {
-    val sectionTraversals = SectionTraversals(
-      model.traversals
-    )(model, dispatch)
     section(
       className := optionalClasses(
         Seq(
-          ("stock", true),
+          ("stock", true)
+        )
+      )
+    )(
+      SplitPane(
+        vertical = false,
+        initialPrimarySize = uiState.paneSizes.getOrElse(
+          PaneMapName,
+          PaneMapDefaultWidth
+        ),
+        onPrimarySizeChanged =
+          Some((newSize) => dispatch(AppMsg.ResizePane(PaneMapName, newSize))),
+        primary = SplitPane.Primary.Props()(
+          div(className := "map")(
+            MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7))
+          )
+        ),
+        secondary = SplitPane.Secondary.Props()(
+          sectionLinkedCotos(model, uiState)(model, dispatch)
+        )
+      )
+    )
+  }
+
+  def sectionLinkedCotos(
+      model: Model,
+      uiState: UiState
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+    val pinnedCotos = context.domain.pinnedCotos
+    val sectionTraversals = SectionTraversals(model.traversals)
+    val children = Fragment(
+      (pinnedCotos.isEmpty, model.domain.currentCotonoma) match {
+        case (false, Some(cotonoma)) =>
+          Some(sectionPinnedCotos(pinnedCotos, uiState, cotonoma))
+        case _ => None
+      },
+      sectionTraversals
+    )
+
+    section(
+      className := optionalClasses(
+        Seq(
+          ("linked-cotos", true),
           ("with-traversals-opened", sectionTraversals.isDefined)
         )
       )
     )(
-      Fragment(
-        model.domain.currentCotonoma.map(
-          sectionCatalog(uiState, _)(model, dispatch)
-        ),
-        sectionTraversals
-      ) match {
-        case fragment =>
-          if (sectionTraversals.isDefined) {
-            ScrollArea(scrollableElementId = Some(ScrollableElementId))(
-              fragment
-            )
-          } else {
-            fragment
-          }
-      }
-    )
-  }
-
-  def sectionCatalog(
-      uiState: UiState,
-      currentCotonoma: Cotonoma
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
-    val pinnedCotos = context.domain.pinnedCotos
-    section(className := "coto-catalog")(
-      Option.when(!pinnedCotos.isEmpty)(
-        sectionPinnedCotos(
-          pinnedCotos,
-          uiState,
-          currentCotonoma
-        )
-      )
+      if (sectionTraversals.isDefined)
+        ScrollArea(scrollableElementId = Some(ScrollableElementId))(children)
+      else
+        children
     )
   }
 
@@ -141,17 +163,38 @@ object PaneStock {
     final val ActiveTocEntryClass = "active"
 
     val component = FunctionalComponent[Props] { props =>
-      val rootRef = React.createRef[html.Div]
+      val rootRef = useRef[html.Div](null)
+      val tocRef = useRef[html.Div](null)
 
       useEffect(
         () => {
-          val options = new dom.IntersectionObserverInit {
-            root = dom.document.getElementById(props.viewportId) match {
+          // Viewport element
+          val viewport =
+            dom.document.getElementById(props.viewportId) match {
               case element: HTMLElement => element
-              case _                    => ()
+              case _ =>
+                throw new IllegalArgumentException(
+                  s"Invalid viewportId: ${props.viewportId}"
+                )
             }
-          }
-          val observer = new dom.IntersectionObserver(
+
+          // Initialize the TOC height
+          tocRef.current.style.height = tocHeight(viewport.offsetHeight)
+
+          // Observe viewport size
+          val resizeObserver = new dom.ResizeObserver((entries, observer) => {
+            entries.foreach(entry => {
+              if (tocRef.current != null) {
+                // Resize the TOC according to the viewport size
+                tocRef.current.style.height =
+                  tocHeight(entry.contentRect.height)
+              }
+            })
+          })
+          resizeObserver.observe(viewport)
+
+          // Observe viewport position
+          val intersectionObserver = new dom.IntersectionObserver(
             (entries, observer) =>
               entries.foreach(entry => {
                 val id = entry.target.getAttribute("id")
@@ -167,14 +210,17 @@ object PaneStock {
                   case _ => ()
                 }
               }),
-            options
+            new dom.IntersectionObserverInit {
+              root = viewport
+            }
           )
           rootRef.current.querySelectorAll("li.pin").foreach(
-            observer.observe(_)
+            intersectionObserver.observe(_)
           )
 
           () => {
-            observer.disconnect()
+            resizeObserver.disconnect()
+            intersectionObserver.disconnect()
           }
         },
         props.pinned
@@ -182,9 +228,12 @@ object PaneStock {
 
       div(className := "pinned-cotos-with-toc", ref := rootRef)(
         olPinnedCotos(props.pinned, false)(props.context, props.dispatch),
-        divToc(props.pinned)(props.context, props.dispatch)
+        divToc(props.pinned, tocRef)(props.context, props.dispatch)
       )
     }
+
+    private def tocHeight(viewportHeight: Double): String =
+      s"${viewportHeight - 16}px"
   }
 
   private def olPinnedCotos(
@@ -243,9 +292,10 @@ object PaneStock {
     s"toc-${elementIdOfPinnedCoto(pin)}"
 
   private def divToc(
-      pinned: Seq[(Link, Coto)]
+      pinned: Seq[(Link, Coto)],
+      tocRef: ReactRef[dom.HTMLDivElement]
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
-    div(className := "toc")(
+    div(className := "toc", ref := tocRef)(
       ScrollArea()(
         ol(className := "toc")(
           pinned.map { case (pin, coto) =>

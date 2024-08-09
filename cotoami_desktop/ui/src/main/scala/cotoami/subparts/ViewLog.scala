@@ -3,7 +3,7 @@ package cotoami.subparts
 import org.scalajs.dom.html
 
 import slinky.core._
-import slinky.core.facade.{React, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
@@ -31,7 +31,7 @@ object ViewLog {
     )
 
     val component = FunctionalComponent[Props] { props =>
-      val bottomRef = React.createRef[html.Div]
+      val bottomRef = useRef[html.Div](null)
 
       useEffect(() => {
         bottomRef.current.scrollIntoView(false)

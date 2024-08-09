@@ -20,7 +20,8 @@
     "remark": "^15.0.1",
     "remark-breaks": "^4.0.0",
     "simplebar-react": "^3.2.4",
-    "strip-markdown": "^6.0.0"
+    "strip-markdown": "^6.0.0",
+    "maplibre-gl": "^4.5.1"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",

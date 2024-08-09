@@ -7,7 +7,7 @@ import org.scalajs.dom.html
 
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{React, ReactElement, ReactRef}
+import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 
 @react object ScrollArea {
@@ -27,7 +27,7 @@ import slinky.core.facade.Hooks._
   val DefaultBottomThreshold = 1
 
   val component = FunctionalComponent[Props] { props =>
-    val scrollableNodeRef = React.createRef[html.Div]
+    val scrollableNodeRef = useRef[html.Div](null)
     val bottomThreshold =
       props.bottomThreshold.getOrElse(DefaultBottomThreshold)
 

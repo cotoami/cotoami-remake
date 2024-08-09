@@ -35,7 +35,7 @@ import slinky.web.SyntheticMouseEvent
     val (primarySize, setPrimarySize) = useState(props.initialPrimarySize)
     val (moving, setMoving) = useState(false)
 
-    val splitPaneRef = React.createRef[html.Div]
+    val splitPaneRef = useRef[html.Div](null)
     val separatorPos = useRef(Double.NaN)
 
     // To allow the callbacks to refer up-to-date state
@@ -153,7 +153,7 @@ import slinky.web.SyntheticMouseEvent
     }
 
     val component = FunctionalComponent[Props] { props =>
-      val primaryRef = React.createRef[html.Div]
+      val primaryRef = useRef[html.Div](null)
       val Context(vertical, primarySize, setPrimarySize) =
         useContext(splitPaneContext)
 
