@@ -33,18 +33,21 @@ import slinky.core.facade.Hooks._
     val bottomThreshold =
       props.bottomThreshold.getOrElse(DefaultBottomThreshold)
 
-    val onScroll: js.Function1[dom.Event, Unit] = (e: dom.Event) => {
-      // cf. https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
-      val target = e.target.asInstanceOf[dom.Element]
-      val scrollHeight = target.scrollHeight
-      val scrollTop = target.scrollTop.toFloat.round
-      val clientHeight = target.clientHeight
-      val isBottomReached =
-        (scrollHeight - clientHeight - scrollTop).abs <= bottomThreshold
-      if (isBottomReached) {
-        props.onScrollToBottom.map(_())
-      }
-    }
+    val onScroll: js.Function1[dom.Event, Unit] = useCallback(
+      (e: dom.Event) => {
+        // cf. https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
+        val target = e.target.asInstanceOf[dom.Element]
+        val scrollHeight = target.scrollHeight
+        val scrollTop = target.scrollTop.toFloat.round
+        val clientHeight = target.clientHeight
+        val isBottomReached =
+          (scrollHeight - clientHeight - scrollTop).abs <= bottomThreshold
+        if (isBottomReached) {
+          props.onScrollToBottom.map(_())
+        }
+      },
+      Seq.empty
+    )
 
     // Register onScroll
     useEffect(
