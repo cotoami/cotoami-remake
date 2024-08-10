@@ -46,6 +46,7 @@ import slinky.core.facade.Hooks._
       }
     }
 
+    // Register onScroll
     useEffect(
       () => {
         val scrollable = scrollableNodeRef.current
