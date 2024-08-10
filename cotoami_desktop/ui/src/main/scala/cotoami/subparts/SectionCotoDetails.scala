@@ -34,7 +34,7 @@ object SectionCotoDetails {
             olSubCotos(coto),
             divAddSubCoto
           )
-        )
+        ).withKey(coto.id.uuid) // Reset the state when the coto is changed
       )
     )
 
