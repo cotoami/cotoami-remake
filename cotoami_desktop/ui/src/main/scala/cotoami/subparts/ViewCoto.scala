@@ -195,8 +195,7 @@ object ViewCoto {
 
   def ulParents(
       parents: Seq[(Coto, Link)],
-      onClickTagger: Id[Coto] => AppMsg =
-        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
+      onClickTagger: Id[Coto] => AppMsg
   )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(

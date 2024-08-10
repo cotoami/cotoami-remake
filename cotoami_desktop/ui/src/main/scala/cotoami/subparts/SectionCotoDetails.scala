@@ -92,7 +92,8 @@ object SectionCotoDetails {
       divAddSubCoto,
       div(className := "sub")(
         ViewCoto.ulParents(
-          context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
+          context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+          AppMsg.FocusCoto(_)
         ),
         article(
           className := "sub-coto coto",

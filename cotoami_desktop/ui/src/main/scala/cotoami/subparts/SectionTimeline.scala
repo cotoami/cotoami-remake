@@ -267,7 +267,10 @@ object SectionTimeline {
       key := coto.id.uuid
     )(
       coto.repostOfId.map(_ => repostHeader(coto)),
-      ViewCoto.ulParents(context.domain.parentsOf(coto.id)),
+      ViewCoto.ulParents(
+        context.domain.parentsOf(coto.id),
+        AppMsg.FocusCoto(_)
+      ),
       articleCoto(
         context.domain.cotos.getOriginal(coto)
       ),

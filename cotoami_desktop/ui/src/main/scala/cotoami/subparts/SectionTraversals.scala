@@ -284,7 +284,8 @@ object SectionTraversals {
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
+        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        Msg.toApp(Msg.OpenTraversal(_))
       ),
       article(
         className := optionalClasses(

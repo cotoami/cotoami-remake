@@ -241,7 +241,8 @@ object SectionPinnedCotos {
       id := elementIdOfPinnedCoto(pin)
     )(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != pin.id)
+        context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
+        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
       ),
       article(
         className := optionalClasses(
@@ -350,7 +351,8 @@ object SectionPinnedCotos {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id)
+        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
       ),
       article(
         className := "sub-coto coto",
