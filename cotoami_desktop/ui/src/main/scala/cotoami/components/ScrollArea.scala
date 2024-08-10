@@ -17,10 +17,12 @@ import slinky.core.facade.Hooks._
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None
   )(children: ReactElement*) {
-    // While @react converts `children: ReactElement*` into a curried parameter,
-    // default parameter values can't be used if the parameters contain varargs.
-    // Putting the `children` in the secondary parameters seems to work without this limitation.
+    // While @react converts `children: ReactElement*` into a curried parameter of `ScrollArea.apply`,
+    // the varargs makes default `Props` values unusable, which is inconvenient.
+    // https://github.com/shadaj/slinky/issues/245
     // https://github.com/shadaj/slinky/blob/v0.7.4/core/src/main/scala-2/slinky/core/annotations/react.scala#L43
+    //
+    // Putting the `children` in the secondary parameters seems to work without this limitation.
     def getChildren: Seq[ReactElement] = this.children
   }
 
