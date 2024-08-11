@@ -29,7 +29,7 @@ object SectionTimeline {
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
       query: Option[String] = None,
-      scrollPos: Option[(String, Double)] = None,
+      scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
       imeActive: Boolean = false
   ) {
@@ -41,10 +41,10 @@ object SectionTimeline {
         imeActive = false
       )
 
-    def saveScrollPos(key: String, pos: Double): Model =
+    def saveScrollPos(key: Id[Cotonoma], pos: Double): Model =
       this.modify(_.scrollPos).setTo(Some((key, pos)))
 
-    def getScrollPos(key: String): Option[Double] =
+    def getScrollPos(key: Id[Cotonoma]): Option[Double] =
       this.scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
 
     def appendPage(cotos: PaginatedCotos): Model =
@@ -148,7 +148,7 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(scrollPos) =>
         context.domain.currentCotonomaId.map(cotonomaId =>
-          default.copy(_1 = model.saveScrollPos(cotonomaId.uuid, scrollPos))
+          default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
         ).getOrElse(default)
     }
   }
@@ -236,6 +236,8 @@ object SectionTimeline {
       ),
       div(className := "posts body")(
         ScrollArea(
+          initialScrollTop =
+            context.domain.currentCotonomaId.flatMap(model.getScrollPos(_)),
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp)),
           onUnmounted = Some(scrollTop =>
             dispatch(Msg.ScrollAreaUnmounted(scrollTop).toApp)

@@ -14,7 +14,7 @@ import slinky.core.facade.Hooks._
   case class Props(
       scrollableElementId: Option[String] = None,
       autoHide: Boolean = true,
-      initialScrollTop: Double = 0,
+      initialScrollTop: Option[Double] = None,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
       // Notify when being unmounted with the scroll position (scrollTop).
@@ -55,7 +55,11 @@ import slinky.core.facade.Hooks._
     // Set the initial scrollTop
     useEffect(
       () => {
-        scrollableNodeRef.current.scrollTop = props.initialScrollTop
+        props.initialScrollTop match {
+          case Some(scrollTop) =>
+            scrollableNodeRef.current.scrollTop = scrollTop
+          case None => ()
+        }
       },
       Seq.empty
     )
