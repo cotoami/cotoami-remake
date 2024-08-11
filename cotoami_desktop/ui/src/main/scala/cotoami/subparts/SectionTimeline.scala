@@ -226,7 +226,8 @@ object SectionTimeline {
       ),
       div(className := "posts body")(
         ScrollArea(
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp))
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp)),
+          onUnmounted = Some(scrollTop => println(s"scrollTop: ${scrollTop}"))
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
             cotos.map(sectionPost) :+
