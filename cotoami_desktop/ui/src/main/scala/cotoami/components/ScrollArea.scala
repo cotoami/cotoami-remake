@@ -14,8 +14,11 @@ import slinky.core.facade.Hooks._
   case class Props(
       scrollableElementId: Option[String] = None,
       autoHide: Boolean = true,
+      initialScrollTop: Option[Double] = None,
       bottomThreshold: Option[Int] = None,
-      onScrollToBottom: Option[() => Unit] = None
+      onScrollToBottom: Option[() => Unit] = None,
+      // Notify when being unmounted with the scroll position (scrollTop).
+      onUnmounted: Option[Double => Unit] = None
   )(children: ReactElement*) {
     // While @react converts `children: ReactElement*` into a curried parameter of `ScrollArea.apply`,
     // the varargs makes default `Props` values unusable, which is inconvenient.
@@ -33,18 +36,33 @@ import slinky.core.facade.Hooks._
     val bottomThreshold =
       props.bottomThreshold.getOrElse(DefaultBottomThreshold)
 
-    val onScroll: js.Function1[dom.Event, Unit] = (e: dom.Event) => {
-      // cf. https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
-      val target = e.target.asInstanceOf[dom.Element]
-      val scrollHeight = target.scrollHeight
-      val scrollTop = target.scrollTop.toFloat.round
-      val clientHeight = target.clientHeight
-      val isBottomReached =
-        (scrollHeight - clientHeight - scrollTop).abs <= bottomThreshold
-      if (isBottomReached) {
-        props.onScrollToBottom.map(_())
-      }
-    }
+    val onScroll: js.Function1[dom.Event, Unit] = useCallback(
+      (e: dom.Event) => {
+        // cf. https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight
+        val target = e.target.asInstanceOf[dom.Element]
+        val scrollHeight = target.scrollHeight
+        val scrollTop = target.scrollTop.toFloat.round
+        val clientHeight = target.clientHeight
+        val isBottomReached =
+          (scrollHeight - clientHeight - scrollTop).abs <= bottomThreshold
+        if (isBottomReached) {
+          props.onScrollToBottom.map(_())
+        }
+      },
+      Seq.empty
+    )
+
+    // Set the initial scrollTop
+    useEffect(
+      () => {
+        props.initialScrollTop match {
+          case Some(scrollTop) =>
+            scrollableNodeRef.current.scrollTop = scrollTop
+          case None => ()
+        }
+      },
+      Seq.empty
+    )
 
     // Register onScroll
     useEffect(
@@ -53,6 +71,16 @@ import slinky.core.facade.Hooks._
         scrollable.addEventListener("scroll", onScroll)
         () => {
           scrollable.removeEventListener("scroll", onScroll)
+        }
+      },
+      Seq.empty
+    )
+
+    // onUnmounted
+    useEffect(
+      () => { () =>
+        {
+          props.onUnmounted.map(_(scrollableNodeRef.current.scrollTop))
         }
       },
       Seq.empty

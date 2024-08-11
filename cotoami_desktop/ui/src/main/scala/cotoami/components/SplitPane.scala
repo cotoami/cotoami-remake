@@ -44,17 +44,20 @@ import slinky.web.SyntheticMouseEvent
     primarySizeRef.current = primarySize
 
     val onMouseDownOnSeparator =
-      (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
-        if (props.resizable) {
-          setMoving(true)
-          if (props.vertical) {
-            separatorPos.current = e.clientX
-          } else {
-            separatorPos.current = e.clientY
+      useCallback(
+        (e: SyntheticMouseEvent[dom.HTMLDivElement]) => {
+          if (props.resizable) {
+            setMoving(true)
+            if (props.vertical) {
+              separatorPos.current = e.clientX
+            } else {
+              separatorPos.current = e.clientY
+            }
+            props.onResizeStart.map(_())
           }
-          props.onResizeStart.map(_())
-        }
-      }
+        },
+        Seq.empty
+      )
 
     // Define the following event listeners as js.Function1 to avoid implicit
     // conversion from scala.Function1 to js.Function1 when passing them to
@@ -62,41 +65,47 @@ import slinky.web.SyntheticMouseEvent
     // because they become different references as a result of conversion.
 
     val onMouseMove: js.Function1[dom.MouseEvent, Unit] =
-      (e: dom.MouseEvent) => {
-        if (!separatorPos.current.isNaN()) {
-          // calculate the changed primary size from the position of the mouse cursor
-          val cursorPos = if (props.vertical) {
-            e.clientX
-          } else {
-            e.clientY
-          }
-
-          val moved = (cursorPos - separatorPos.current).toInt
-          var newSize = primarySizeRef.current + moved
-          separatorPos.current = cursorPos
-
-          // keep it from resizing beyond the borders of the SplitPane
-          if (splitPaneRef.current != null) {
-            val splitPaneSize = if (props.vertical) {
-              splitPaneRef.current.clientWidth
+      useCallback(
+        (e: dom.MouseEvent) => {
+          if (!separatorPos.current.isNaN()) {
+            // calculate the changed primary size from the position of the mouse cursor
+            val cursorPos = if (props.vertical) {
+              e.clientX
             } else {
-              splitPaneRef.current.clientHeight
+              e.clientY
             }
-            newSize = newSize.max(0).min(splitPaneSize)
+
+            val moved = (cursorPos - separatorPos.current).toInt
+            var newSize = primarySizeRef.current + moved
+            separatorPos.current = cursorPos
+
+            // keep it from resizing beyond the borders of the SplitPane
+            if (splitPaneRef.current != null) {
+              val splitPaneSize = if (props.vertical) {
+                splitPaneRef.current.clientWidth
+              } else {
+                splitPaneRef.current.clientHeight
+              }
+              newSize = newSize.max(0).min(splitPaneSize)
+            }
+
+            setPrimarySize(newSize)
           }
+        },
+        Seq.empty
+      )
 
-          setPrimarySize(newSize)
+    val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
+      (e: dom.MouseEvent) => {
+        setMoving(false)
+        if (!separatorPos.current.isNaN()) {
+          props.onPrimarySizeChanged.map(_(primarySizeRef.current))
+          props.onResizeEnd.map(_())
+          separatorPos.current = Double.NaN
         }
-      }
-
-    val onMouseUp: js.Function1[dom.MouseEvent, Unit] = (e: dom.MouseEvent) => {
-      setMoving(false)
-      if (!separatorPos.current.isNaN()) {
-        props.onPrimarySizeChanged.map(_(primarySizeRef.current))
-        props.onResizeEnd.map(_())
-        separatorPos.current = Double.NaN
-      }
-    }
+      },
+      Seq.empty
+    )
 
     useEffect(
       () => {

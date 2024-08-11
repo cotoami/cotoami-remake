@@ -49,9 +49,6 @@ object PaneFlow {
 
       case _ => None
     },
-    SectionTimeline(model.timeline, model.waitingPosts)(
-      model,
-      dispatch
-    )
+    SectionTimeline(model.timeline, model.waitingPosts)(model, dispatch)
   )
 }

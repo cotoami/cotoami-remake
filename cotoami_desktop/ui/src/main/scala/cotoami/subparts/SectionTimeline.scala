@@ -29,6 +29,7 @@ object SectionTimeline {
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
       query: Option[String] = None,
+      scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
       imeActive: Boolean = false
   ) {
@@ -39,6 +40,12 @@ object SectionTimeline {
         loading = true,
         imeActive = false
       )
+
+    def saveScrollPos(key: Id[Cotonoma], pos: Double): Model =
+      this.copy(scrollPos = Some((key, pos)))
+
+    def getScrollPos(key: Id[Cotonoma]): Option[Double] =
+      this.scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
 
     def appendPage(cotos: PaginatedCotos): Model =
       this
@@ -77,7 +84,8 @@ object SectionTimeline {
     case class QueryInput(query: String) extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
-    case object OpenCalendar extends Msg
+    case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
+        extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -139,7 +147,8 @@ object SectionTimeline {
           _3 = Seq(fetch(model.query, 0))
         )
 
-      case Msg.OpenCalendar => default
+      case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
+        default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
     }
   }
 
@@ -177,17 +186,20 @@ object SectionTimeline {
       dispatch: AppMsg => Unit
   ): Option[ReactElement] = {
     val timeline = model.timeline()
-    Option.when(
-      model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
-    )(
-      sectionTimeline(model, timeline, waitingPosts)
+    context.domain.currentCotonomaId.flatMap(cotonomaId =>
+      Option.when(
+        model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
+      )(
+        sectionTimeline(model, timeline, waitingPosts, cotonomaId)
+      )
     )
   }
 
   private def sectionTimeline(
       model: Model,
       cotos: Seq[Coto],
-      waitingPosts: WaitingPosts
+      waitingPosts: WaitingPosts,
+      currentCotonomaId: Id[Cotonoma]
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
@@ -226,7 +238,13 @@ object SectionTimeline {
       ),
       div(className := "posts body")(
         ScrollArea(
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp))
+          initialScrollTop = model.getScrollPos(currentCotonomaId),
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp)),
+          onUnmounted = Some(scrollTop =>
+            dispatch(
+              Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop).toApp
+            )
+          )
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
             cotos.map(sectionPost) :+
