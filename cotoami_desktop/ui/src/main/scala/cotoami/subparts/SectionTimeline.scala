@@ -29,6 +29,7 @@ object SectionTimeline {
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
       query: Option[String] = None,
+      scrollPos: Option[(String, Double)] = None,
       loading: Boolean = false,
       imeActive: Boolean = false
   ) {

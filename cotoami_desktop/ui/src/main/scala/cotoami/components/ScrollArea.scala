@@ -14,6 +14,7 @@ import slinky.core.facade.Hooks._
   case class Props(
       scrollableElementId: Option[String] = None,
       autoHide: Boolean = true,
+      initialScrollTop: Double = 0,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
       // Notify when being unmounted with the scroll position (scrollTop).
@@ -47,6 +48,14 @@ import slinky.core.facade.Hooks._
         if (isBottomReached) {
           props.onScrollToBottom.map(_())
         }
+      },
+      Seq.empty
+    )
+
+    // Set the initial scrollTop
+    useEffect(
+      () => {
+        scrollableNodeRef.current.scrollTop = props.initialScrollTop
       },
       Seq.empty
     )
