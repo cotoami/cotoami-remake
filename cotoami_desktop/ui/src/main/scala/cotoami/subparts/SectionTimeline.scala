@@ -41,6 +41,12 @@ object SectionTimeline {
         imeActive = false
       )
 
+    def saveScrollPos(key: String, pos: Double): Model =
+      this.modify(_.scrollPos).setTo(Some((key, pos)))
+
+    def getScrollPos(key: String): Option[Double] =
+      this.scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
+
     def appendPage(cotos: PaginatedCotos): Model =
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
@@ -78,7 +84,7 @@ object SectionTimeline {
     case class QueryInput(query: String) extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
-    case object OpenCalendar extends Msg
+    case class ScrollAreaUnmounted(scrollPos: Double) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -140,7 +146,10 @@ object SectionTimeline {
           _3 = Seq(fetch(model.query, 0))
         )
 
-      case Msg.OpenCalendar => default
+      case Msg.ScrollAreaUnmounted(scrollPos) =>
+        context.domain.currentCotonomaId.map(cotonomaId =>
+          default.copy(_1 = model.saveScrollPos(cotonomaId.uuid, scrollPos))
+        ).getOrElse(default)
     }
   }
 
@@ -228,7 +237,9 @@ object SectionTimeline {
       div(className := "posts body")(
         ScrollArea(
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp)),
-          onUnmounted = Some(scrollTop => println(s"scrollTop: ${scrollTop}"))
+          onUnmounted = Some(scrollTop =>
+            dispatch(Msg.ScrollAreaUnmounted(scrollTop).toApp)
+          )
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
             cotos.map(sectionPost) :+
