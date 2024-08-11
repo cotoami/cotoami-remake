@@ -84,7 +84,8 @@ object SectionTimeline {
     case class QueryInput(query: String) extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
-    case class ScrollAreaUnmounted(scrollPos: Double) extends Msg
+    case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
+        extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -146,10 +147,8 @@ object SectionTimeline {
           _3 = Seq(fetch(model.query, 0))
         )
 
-      case Msg.ScrollAreaUnmounted(scrollPos) =>
-        context.domain.currentCotonomaId.map(cotonomaId =>
-          default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
-        ).getOrElse(default)
+      case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
+        default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
     }
   }
 
@@ -187,17 +186,20 @@ object SectionTimeline {
       dispatch: AppMsg => Unit
   ): Option[ReactElement] = {
     val timeline = model.timeline()
-    Option.when(
-      model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
-    )(
-      sectionTimeline(model, timeline, waitingPosts)
+    context.domain.currentCotonomaId.flatMap(cotonomaId =>
+      Option.when(
+        model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
+      )(
+        sectionTimeline(model, timeline, waitingPosts, cotonomaId)
+      )
     )
   }
 
   private def sectionTimeline(
       model: Model,
       cotos: Seq[Coto],
-      waitingPosts: WaitingPosts
+      waitingPosts: WaitingPosts,
+      currentCotonomaId: Id[Cotonoma]
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
@@ -236,11 +238,12 @@ object SectionTimeline {
       ),
       div(className := "posts body")(
         ScrollArea(
-          initialScrollTop =
-            context.domain.currentCotonomaId.flatMap(model.getScrollPos(_)),
+          initialScrollTop = model.getScrollPos(currentCotonomaId),
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp)),
           onUnmounted = Some(scrollTop =>
-            dispatch(Msg.ScrollAreaUnmounted(scrollTop).toApp)
+            dispatch(
+              Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop).toApp
+            )
           )
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
