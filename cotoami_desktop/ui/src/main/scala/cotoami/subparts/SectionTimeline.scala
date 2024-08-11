@@ -42,7 +42,7 @@ object SectionTimeline {
       )
 
     def saveScrollPos(key: Id[Cotonoma], pos: Double): Model =
-      this.modify(_.scrollPos).setTo(Some((key, pos)))
+      this.copy(scrollPos = Some((key, pos)))
 
     def getScrollPos(key: Id[Cotonoma]): Option[Double] =
       this.scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
