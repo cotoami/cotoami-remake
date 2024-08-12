@@ -274,7 +274,9 @@ object SectionTimeline {
 
   private def sectionPost(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+    val originalCoto = context.domain.cotos.getOriginal(coto)
+
     section(
       className := optionalClasses(
         Seq(
@@ -284,16 +286,15 @@ object SectionTimeline {
       ),
       key := coto.id.uuid
     )(
-      coto.repostOfId.map(_ => repostHeader(coto)),
+      repostHeader(coto),
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id),
+        context.domain.parentsOf(originalCoto.id),
         AppMsg.FocusCoto(_)
       ),
-      articleCoto(
-        context.domain.cotos.getOriginal(coto)
-      ),
-      ViewCoto.divLinksTraversal(coto, "bottom")
+      articleCoto(originalCoto),
+      ViewCoto.divLinksTraversal(originalCoto, "bottom")
     )
+  }
 
   private def articleCoto(coto: Coto)(implicit
       context: Context,
@@ -327,18 +328,22 @@ object SectionTimeline {
   private def repostHeader(coto: Coto)(implicit
       context: Context,
       dispatch: AppMsg => Unit
-  ): ReactElement = {
-    val domain = context.domain
-    section(className := "repost-header")(
-      materialSymbol("repeat"),
-      Option.when(domain.cotonomas.focusedId.isEmpty) {
-        repostedIn(coto, domain.cotonomas)
-      },
-      Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
-        reposter(coto, domain.nodes)
-      }
-    )
-  }
+  ): Option[ReactElement] =
+    Option.when(coto.repostOfId.isDefined) {
+      val domain = context.domain
+
+      section(className := "repost-header")(
+        materialSymbol("repeat"),
+        // Display the cotonomas to which the coto has been reposted
+        // when the current location is a node home (no cotonoma is focused).
+        Option.when(domain.cotonomas.focusedId.isEmpty) {
+          repostedIn(coto, domain.cotonomas)
+        },
+        Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
+          reposter(coto, domain.nodes)
+        }
+      )
+    }
 
   private def repostedIn(
       coto: Coto,
