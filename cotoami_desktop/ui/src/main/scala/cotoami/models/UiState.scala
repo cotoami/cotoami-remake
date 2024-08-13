@@ -21,7 +21,8 @@ case class UiState(
       PaneStock.PaneName -> false // fold PaneStock by default
     ),
     paneSizes: Map[String, Int] = Map(),
-    pinnedInColumns: HashSet[String] = HashSet.empty
+    pinnedInColumns: HashSet[String] = HashSet.empty,
+    mapOpened: Boolean = false
 ) {
   def paneOpened(name: String): Boolean =
     this.paneToggles.getOrElse(name, true) // open by default
@@ -51,6 +52,14 @@ case class UiState(
 
   def isPinnedInColumns(cotonoma: Id[Cotonoma]): Boolean =
     this.pinnedInColumns.contains(cotonoma.uuid)
+
+  def openOrCloseMap(open: Boolean): UiState = {
+    val uiState = this.copy(mapOpened = open)
+    if (open)
+      uiState.openOrClosePane(PaneStock.PaneName, true)
+    else
+      uiState
+  }
 
   def save: Cmd[Msg] =
     Cmd(IO {

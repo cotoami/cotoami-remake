@@ -36,6 +36,7 @@ object Msg {
   // UI
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
+  case class OpenOrCloseMap(open: Boolean) extends Msg
 
   // Focus
   case class FocusNode(id: Id[Node]) extends Msg
