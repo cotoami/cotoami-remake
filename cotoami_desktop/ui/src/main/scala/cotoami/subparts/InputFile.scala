@@ -26,7 +26,7 @@ import cotoami.components.ReactDropzone._
           props.onSelect(accepted(0))
         }
       },
-      Seq.empty
+      Seq(props.onSelect)
     )
     val dropzone = useDropzone(new Options {
       override val accept = props.accept

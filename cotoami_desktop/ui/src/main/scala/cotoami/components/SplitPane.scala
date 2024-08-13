@@ -56,7 +56,7 @@ import slinky.web.SyntheticMouseEvent
             props.onResizeStart.map(_())
           }
         },
-        Seq.empty
+        Seq(props.resizable, props.vertical, props.onResizeStart)
       )
 
     // Define the following event listeners as js.Function1 to avoid implicit
@@ -92,7 +92,7 @@ import slinky.web.SyntheticMouseEvent
             setPrimarySize(newSize)
           }
         },
-        Seq.empty
+        Seq(props.vertical)
       )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
@@ -104,7 +104,7 @@ import slinky.web.SyntheticMouseEvent
           separatorPos.current = Double.NaN
         }
       },
-      Seq.empty
+      Seq(props.onPrimarySizeChanged, props.onResizeEnd)
     )
 
     useEffect(

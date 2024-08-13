@@ -49,7 +49,7 @@ import slinky.core.facade.Hooks._
           props.onScrollToBottom.map(_())
         }
       },
-      Seq.empty
+      Seq(props.onScrollToBottom)
     )
 
     // Set the initial scrollTop
