@@ -79,14 +79,15 @@ object AppHeader {
     div(className := "tool-buttons")(
       toolButton(
         symbol = "public",
-        tip = if (uiState.mapOpened) "Close map" else "Open map",
+        tip = if (uiState.geomapOpened) "Close map" else "Open map",
         classes = optionalClasses(
           Seq(
-            ("toggle-map", true),
-            ("opened", uiState.mapOpened)
+            ("toggle-geomap", true),
+            ("opened", uiState.geomapOpened)
           )
         ),
-        onClick = (_ => dispatch(AppMsg.OpenOrCloseMap(!uiState.mapOpened)))
+        onClick =
+          (_ => dispatch(AppMsg.OpenOrCloseGeomap(!uiState.geomapOpened)))
       )
     )
 

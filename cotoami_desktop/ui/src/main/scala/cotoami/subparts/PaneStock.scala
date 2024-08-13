@@ -20,7 +20,7 @@ object PaneStock {
       uiState: UiState
   )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "stock")(
-      if (uiState.mapOpened)
+      if (uiState.geomapOpened)
         SplitPane(
           vertical = false,
           initialPrimarySize = uiState.paneSizes.getOrElse(

@@ -180,9 +180,9 @@ object Main {
           })
           .getOrElse((model, Seq.empty))
 
-      case Msg.OpenOrCloseMap(open) =>
+      case Msg.OpenOrCloseGeomap(open) =>
         model.uiState
-          .map(_.openOrCloseMap(open) match {
+          .map(_.openOrCloseGeomap(open) match {
             case state => (model.copy(uiState = Some(state)), Seq(state.save))
           })
           .getOrElse((model, Seq.empty))
