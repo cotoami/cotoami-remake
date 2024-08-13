@@ -91,10 +91,30 @@ div.app>header {
           vertical-align: top;
         }
       }
+
+      button.toggle-geomap.opened span.material-symbols {
+        opacity: 0.5;
+      }
+    }
+
+    div.search {
+      position: relative;
+      margin-right: 16px;
+      padding-top: 1px;
+
+      input[type=search] {
+        margin: 0;
+        width: 20vw;
+        height: 26px;
+        border-radius: 4px;
+        border-color: var(--pane-border-color);
+        background-position: center left 8px;
+        padding-inline-start: calc(var(--form-element-spacing-horizontal) + 16px);
+        font-size: 14px;
+      }
     }
 
     button.node-profile {
-      margin-left: 16px;
       cursor: pointer;
 
       &:hover {

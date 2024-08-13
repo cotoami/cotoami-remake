@@ -4,8 +4,9 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
+import cotoami.models.UiState
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.materialSymbol
+import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 object AppHeader {
 
@@ -32,6 +33,8 @@ object AppHeader {
         ),
         model.domain.location.map(sectionLocation),
         section(className := "tools")(
+          model.uiState.map(divToolButtons),
+          divSearch,
           model.domain.nodes.operating.map(buttonNodeProfile)
         )
       )
@@ -61,6 +64,32 @@ object AppHeader {
       )
     )
   }
+
+  private def divSearch: ReactElement =
+    div(className := "search")(
+      input(
+        `type` := "search",
+        name := "query"
+      )
+    )
+
+  private def divToolButtons(
+      uiState: UiState
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
+    div(className := "tool-buttons")(
+      toolButton(
+        symbol = "public",
+        tip = if (uiState.geomapOpened) "Close map" else "Open map",
+        classes = optionalClasses(
+          Seq(
+            ("toggle-geomap", true),
+            ("opened", uiState.geomapOpened)
+          )
+        ),
+        onClick =
+          (_ => dispatch(AppMsg.OpenOrCloseGeomap(!uiState.geomapOpened)))
+      )
+    )
 
   private def buttonNodeProfile(
       node: Node

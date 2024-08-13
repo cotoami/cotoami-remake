@@ -180,6 +180,13 @@ object Main {
           })
           .getOrElse((model, Seq.empty))
 
+      case Msg.OpenOrCloseGeomap(open) =>
+        model.uiState
+          .map(_.openOrCloseGeomap(open) match {
+            case state => (model.copy(uiState = Some(state)), Seq(state.save))
+          })
+          .getOrElse((model, Seq.empty))
+
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 

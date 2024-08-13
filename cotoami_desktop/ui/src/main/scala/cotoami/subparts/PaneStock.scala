@@ -18,27 +18,30 @@ object PaneStock {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "stock")(
-      SplitPane(
-        vertical = false,
-        initialPrimarySize = uiState.paneSizes.getOrElse(
-          PaneMapName,
-          PaneMapDefaultWidth
-        ),
-        onPrimarySizeChanged =
-          Some((newSize) => dispatch(AppMsg.ResizePane(PaneMapName, newSize))),
-        primary = SplitPane.Primary.Props()(
-          div(className := "map")(
-            MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7))
+      if (uiState.geomapOpened)
+        SplitPane(
+          vertical = false,
+          initialPrimarySize = uiState.paneSizes.getOrElse(
+            PaneMapName,
+            PaneMapDefaultWidth
+          ),
+          onPrimarySizeChanged = Some((newSize) =>
+            dispatch(AppMsg.ResizePane(PaneMapName, newSize))
+          ),
+          primary = SplitPane.Primary.Props()(
+            div(className := "map")(
+              MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7))
+            )
+          ),
+          secondary = SplitPane.Secondary.Props()(
+            sectionLinkedCotos(model, uiState)(model, dispatch)
           )
-        ),
-        secondary = SplitPane.Secondary.Props()(
-          sectionLinkedCotos(model, uiState)(model, dispatch)
         )
-      )
+      else
+        sectionLinkedCotos(model, uiState)(model, dispatch)
     )
-  }
 
   def sectionLinkedCotos(
       model: Model,
