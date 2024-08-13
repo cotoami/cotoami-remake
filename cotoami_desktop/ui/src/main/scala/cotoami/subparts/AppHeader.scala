@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.materialSymbol
+import cotoami.components.{materialSymbol, toolButton}
 
 object AppHeader {
 
@@ -32,6 +32,8 @@ object AppHeader {
         ),
         model.domain.location.map(sectionLocation),
         section(className := "tools")(
+          divToolButtons,
+          divSearch,
           model.domain.nodes.operating.map(buttonNodeProfile)
         )
       )
@@ -61,6 +63,23 @@ object AppHeader {
       )
     )
   }
+
+  private def divSearch: ReactElement =
+    div(className := "search")(
+      input(
+        `type` := "search",
+        name := "query"
+      )
+    )
+
+  private def divToolButtons: ReactElement =
+    div(className := "tool-buttons")(
+      toolButton(
+        symbol = "public",
+        tip = "Map",
+        classes = "toggle-map"
+      )
+    )
 
   private def buttonNodeProfile(
       node: Node
