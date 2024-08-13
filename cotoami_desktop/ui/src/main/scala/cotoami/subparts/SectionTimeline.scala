@@ -28,7 +28,7 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
-      query: Option[String] = None,
+      query: String = "",
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
       imeActive: Boolean = false
@@ -36,7 +36,7 @@ object SectionTimeline {
     def init: Model =
       this.copy(
         cotoIds = PaginatedIds(),
-        query = None,
+        query = "",
         loading = true,
         imeActive = false
       )
@@ -79,8 +79,7 @@ object SectionTimeline {
 
     case object FetchMore extends Msg
     case class Fetched(result: Either[ErrorJson, PaginatedCotos]) extends Msg
-    case object InitSearch extends Msg
-    case object CloseSearch extends Msg
+    case object ClearQuery extends Msg
     case class QueryInput(query: String) extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
@@ -100,7 +99,7 @@ object SectionTimeline {
           model.cotoIds.nextPageIndex.map(i =>
             default.copy(
               _1 = model.copy(loading = true),
-              _3 = Seq(fetch(model.query, i))
+              _3 = Seq(fetch(Some(model.query), i))
             )
           ).getOrElse(default)
 
@@ -119,18 +118,15 @@ object SectionTimeline {
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
         )
 
-      case Msg.InitSearch =>
-        default.copy(_1 = model.copy(query = Some("")))
-
-      case Msg.CloseSearch =>
+      case Msg.ClearQuery =>
         default.copy(
-          _1 = model.copy(query = None),
+          _1 = model.copy(query = ""),
           _3 = Seq(fetch(None, 0))
         )
 
       case Msg.QueryInput(query) =>
         default.copy(
-          _1 = model.copy(query = Some(query)),
+          _1 = model.copy(query = query),
           _3 =
             if (model.imeActive)
               Seq.empty
@@ -144,7 +140,7 @@ object SectionTimeline {
       case Msg.ImeCompositionEnd =>
         default.copy(
           _1 = model.copy(imeActive = false),
-          _3 = Seq(fetch(model.query, 0))
+          _3 = Seq(fetch(Some(model.query), 0))
         )
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
@@ -188,7 +184,7 @@ object SectionTimeline {
     val timeline = model.timeline()
     context.domain.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
-        model.query.isDefined || !timeline.isEmpty || !waitingPosts.isEmpty
+        !model.query.isBlank || !timeline.isEmpty || !waitingPosts.isEmpty
       )(
         sectionTimeline(model, timeline, waitingPosts, cotonomaId)
       )
@@ -208,32 +204,23 @@ object SectionTimeline {
           tip = "Filter",
           classes = "filter"
         ),
-        model.query.map(query =>
-          div(className := "search")(
-            input(
-              `type` := "search",
-              name := "query",
-              value := query,
-              onChange := ((e) =>
-                dispatch(Msg.QueryInput(e.target.value).toApp)
-              ),
-              onCompositionStart := (_ =>
-                dispatch(Msg.ImeCompositionStart.toApp)
-              ),
-              onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd.toApp))
+        div(className := "search")(
+          input(
+            `type` := "search",
+            name := "query",
+            value := model.query,
+            onChange := ((e) => dispatch(Msg.QueryInput(e.target.value).toApp)),
+            onCompositionStart := (_ =>
+              dispatch(Msg.ImeCompositionStart.toApp)
             ),
+            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd.toApp))
+          ),
+          Option.when(!model.query.isBlank) {
             button(
-              className := "close default",
-              onClick := (_ => dispatch(Msg.CloseSearch.toApp))
+              className := "clear default",
+              onClick := (_ => dispatch(Msg.ClearQuery.toApp))
             )(materialSymbol("close"))
-          )
-        ).getOrElse(
-          toolButton(
-            symbol = "search",
-            tip = "Search",
-            classes = "search",
-            onClick = _ => dispatch(Msg.InitSearch.toApp)
-          )
+          }
         )
       ),
       div(className := "posts body")(

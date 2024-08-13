@@ -1,10 +1,12 @@
 section.timeline {
   header.tools {
     align-items: center;
+    padding-right: 5px;
 
     div.search {
       position: relative;
       margin: 0;
+      margin-right: 5px;
       padding: 0;
       width: 50%;
 
@@ -19,7 +21,7 @@ section.timeline {
         font-size: 14px;
       }
 
-      button.close {
+      button.clear {
         position: absolute;
         top: 0;
         right: 2px;
