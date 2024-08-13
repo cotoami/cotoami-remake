@@ -20,6 +20,10 @@
       overflow: hidden;
     }
   }
+
+  &.map-opened>.pane-toggle {
+    color: var(--background-color);
+  }
 }
 
 section.stock {
