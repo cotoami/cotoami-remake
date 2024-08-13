@@ -132,7 +132,10 @@ button.default {
 header.tools {
   display: flex;
   flex-direction: row-reverse;
-  padding-right: 16px;
+
+  // Some padding-right is needed to avoid a horizontal scrollbar
+  // caused by the tooltip at the right-end .  
+  padding-right: 18px;
 
   button {
     position: relative;
