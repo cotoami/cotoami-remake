@@ -50,8 +50,12 @@ section.coto-details {
       article.sub-coto {
         cursor: pointer;
 
-        div.classified-as {
-          padding-right: 1rem;
+        >header {
+          padding: 0 var(--block-spacing-horizontal);
+
+          div.classified-as {
+            padding-top: 20px; // also as padding-top for the header
+          }
         }
       }
 

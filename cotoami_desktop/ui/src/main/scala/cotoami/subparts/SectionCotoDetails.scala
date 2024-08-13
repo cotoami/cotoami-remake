@@ -53,6 +53,7 @@ object SectionCotoDetails {
       dispatch: AppMsg => Unit
   ): ReactElement = {
     val domain = context.domain
+
     article(className := "main-coto coto")(
       header()(
         ViewCoto.divClassifiedAs(coto),
@@ -87,12 +88,14 @@ object SectionCotoDetails {
   private def liSubCoto(
       link: Link,
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+    val domain = context.domain
+
     li(key := link.id.uuid, className := "sub")(
       divAddSubCoto,
       div(className := "sub")(
         ViewCoto.ulParents(
-          context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+          domain.parentsOf(coto.id).filter(_._2.id != link.id),
           AppMsg.FocusCoto(_)
         ),
         article(
@@ -106,7 +109,10 @@ object SectionCotoDetails {
               tipPlacement = "right",
               classes = "unlink"
             ),
-            ViewCoto.divClassifiedAs(coto)
+            ViewCoto.divClassifiedAs(coto),
+            Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
+              ViewCoto.addressAuthor(coto, domain.nodes)
+            }
           ),
           div(className := "body")(
             ViewCoto.divContent(coto)
@@ -115,4 +121,5 @@ object SectionCotoDetails {
         ViewCoto.divLinksTraversal(coto, "bottom")
       )
     )
+  }
 }

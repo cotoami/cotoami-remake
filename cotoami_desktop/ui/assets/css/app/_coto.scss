@@ -32,7 +32,7 @@ article.coto {
     border-style: none;
     background-color: inherit;
 
-    min-height: 1rem; // empty header serves as padding-top of article.coto
+    min-height: 20px; // empty header serves as padding-top of article.coto
 
     address.author {
       color: var(--muted-color);
@@ -177,10 +177,13 @@ div.links {
 ol.sub-cotos {
   article.sub-coto {
     >header {
-      display: flex;
-      flex-direction: row;
+      position: relative;
 
       button.unlink {
+        position: absolute;
+        top: 0;
+        left: 0;
+
         margin-top: 3px;
         margin-left: 3px;
         opacity: 0.5;
@@ -188,10 +191,6 @@ ol.sub-cotos {
         &:hover {
           opacity: 1;
         }
-      }
-
-      ul.other-cotonomas {
-        flex: 1;
       }
     }
   }
