@@ -91,6 +91,10 @@ div.app>header {
           vertical-align: top;
         }
       }
+
+      button.toggle-map.opened span.material-symbols {
+        opacity: 0.5;
+      }
     }
 
     div.search {
@@ -100,7 +104,7 @@ div.app>header {
 
       input[type=search] {
         margin: 0;
-        width: 260px;
+        width: 20vw;
         height: 26px;
         border-radius: 4px;
         border-color: var(--pane-border-color);

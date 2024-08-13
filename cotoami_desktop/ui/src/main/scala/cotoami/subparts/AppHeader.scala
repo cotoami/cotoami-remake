@@ -6,7 +6,7 @@ import slinky.web.html._
 import cotoami.{Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.backend.{Cotonoma, Node}
-import cotoami.components.{materialSymbol, toolButton}
+import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 object AppHeader {
 
@@ -80,7 +80,12 @@ object AppHeader {
       toolButton(
         symbol = "public",
         tip = if (uiState.mapOpened) "Close map" else "Open map",
-        classes = "toggle-map",
+        classes = optionalClasses(
+          Seq(
+            ("toggle-map", true),
+            ("opened", uiState.mapOpened)
+          )
+        ),
         onClick = (_ => dispatch(AppMsg.OpenOrCloseMap(!uiState.mapOpened)))
       )
     )
