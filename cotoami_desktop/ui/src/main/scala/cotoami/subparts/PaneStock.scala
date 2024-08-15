@@ -32,7 +32,12 @@ object PaneStock {
           ),
           primary = SplitPane.Primary.Props()(
             div(className := "map")(
-              MapLibre(id = "main-geomap", defaultPosition = (139.5, 35.7))
+              MapLibre(
+                id = "main-geomap",
+                defaultPosition = (139.5, 35.7),
+                defaultZoom = 8,
+                style = "/map/style.json"
+              )
             )
           ),
           secondary = SplitPane.Secondary.Props()(
