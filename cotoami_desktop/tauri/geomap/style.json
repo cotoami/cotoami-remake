@@ -7,10 +7,10 @@
   "sources": {
     "openmaptiles": {
       "type": "vector",
-      "url": "/map/japan.pmtiles"
+      "url": "/geomap/japan.pmtiles"
     }
   },
-  "glyphs": "/map/font/{fontstack}/{range}.pbf",
+  "glyphs": "/geomap/font/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",

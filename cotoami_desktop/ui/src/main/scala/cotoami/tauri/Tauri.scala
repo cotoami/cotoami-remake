@@ -28,4 +28,11 @@ object Tauri extends js.Object {
       cmd: String,
       args: js.Object = js.Dynamic.literal()
   ): js.Promise[T] = js.native
+
+  // Convert a device file path to an URL that can be loaded by the webview.
+  def convertFileSrc(
+      filePath: String,
+      protocol: js.UndefOr[String] = js.undefined
+  ): String =
+    js.native
 }

@@ -7,6 +7,7 @@ import cotoami.tauri
 @js.native
 trait SystemInfoJson extends js.Object {
   val app_version: String = js.native
+  val resource_dir: Nullable[String] = js.native
   val app_config_dir: Nullable[String] = js.native
   val app_data_dir: Nullable[String] = js.native
   val time_zone_offset_in_sec: Int = js.native
@@ -22,6 +23,7 @@ object SystemInfoJson {
     val recent_databases = info.recent_databases.map(x => (x.name, x.folder))
     val s = new StringBuilder
     s ++= s"app_version: ${info.app_version}"
+    s ++= s", resource_dir: ${info.resource_dir}"
     s ++= s", app_config_dir: ${info.app_config_dir}"
     s ++= s", app_data_dir: ${info.app_data_dir}"
     s ++= s", time_zone_offset_in_sec: ${info.time_zone_offset_in_sec}"

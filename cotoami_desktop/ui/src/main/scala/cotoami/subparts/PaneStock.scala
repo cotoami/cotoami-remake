@@ -4,6 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Context, Model, Msg => AppMsg}
+import cotoami.backend.Nullable
 import cotoami.models.UiState
 import cotoami.components.{optionalClasses, MapLibre, ScrollArea, SplitPane}
 
@@ -36,7 +37,9 @@ object PaneStock {
                 id = "main-geomap",
                 defaultPosition = (139.5, 35.7),
                 defaultZoom = 8,
-                style = "/map/style.json"
+                style = "/geomap/style.json",
+                resourceDir = model.systemInfo.map(_.resource_dir)
+                  .flatMap(Nullable.toOption)
               )
             )
           ),

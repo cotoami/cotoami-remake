@@ -19,6 +19,15 @@
       },
       "window": {
         "startDragging": true
+      },
+      "path": {
+        "all": true
+      },
+      "protocol": {
+        "asset": true,
+        "assetScope": [
+          "**/*"
+        ]
       }
     },
     "bundle": {
@@ -45,7 +54,9 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": [
+        "geomap/*"
+      ],
       "shortDescription": "",
       "targets": "all",
       "windows": {
