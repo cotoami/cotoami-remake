@@ -9,7 +9,7 @@ import slinky.web.html._
 
 import cotoami.geomap.maplibre
 import cotoami.geomap.pmtiles
-import cotoami.tauri.Tauri
+import cotoami.tauri
 
 @react object MapLibre {
 
@@ -33,8 +33,13 @@ import cotoami.tauri.Tauri
       if (isUrl(url))
         url
       else {
-        val path = this.resourceDir.getOrElse("") + url
-        Tauri.convertFileSrc(path)
+        // Can't use Tauri's `resolveResource` here since it returns Promise/Future.
+        // Instead, we replace the path separators manually assuming the given path
+        // uses "/" as separators.
+        // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
+        val path =
+          this.resourceDir.getOrElse("") + url.replace("/", tauri.Path.sep)
+        tauri.Tauri.convertFileSrc(path)
       }
   }
 
@@ -52,6 +57,10 @@ import cotoami.tauri.Tauri
             url
           else
             props.toAbsoluteUrl(url)
+
+        println(s"resourceType: ${resourceType}")
+        println(s"url: ${url}")
+        println(s"absoluteUrl: ${absoluteUrl}")
 
         new maplibre.RequestParameters {
           val url = absoluteUrl
