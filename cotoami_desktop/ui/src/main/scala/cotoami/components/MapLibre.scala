@@ -61,10 +61,6 @@ import cotoami.tauri.Tauri
     // Initialize the map
     useEffect(
       () => {
-        println(
-          s"styleUrl: ${props.styleUrl}"
-        )
-
         // Delay rendering the map to ensure it to fit to the container section.
         js.timers.setTimeout(10) {
           val map = new maplibre.Map(new maplibre.MapOptions {
