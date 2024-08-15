@@ -33,9 +33,10 @@ import cotoami.tauri
       if (isUrl(url))
         url
       else {
-        // Can't use Tauri's `resolveResource` here since it returns Promise/Future.
-        // Instead, we replace the path separators manually assuming the given path
-        // uses "/" as separators.
+        // Can't use Tauri's `resolveResource` here since it returns Promise/Future,
+        // which doesn't suit to maplibre.MapOptions.transformRequest.
+        // Instead, we manually join the `resourceDir` from `SystemInfo` and
+        // the given path with its separators replaced with the platform-specific ones.
         // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
         val path =
           this.resourceDir.getOrElse("") + url.replace("/", tauri.Path.sep)
@@ -57,10 +58,6 @@ import cotoami.tauri
             url
           else
             props.toAbsoluteUrl(url)
-
-        println(s"resourceType: ${resourceType}")
-        println(s"url: ${url}")
-        println(s"absoluteUrl: ${absoluteUrl}")
 
         new maplibre.RequestParameters {
           val url = absoluteUrl
