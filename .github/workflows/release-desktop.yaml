@@ -35,6 +35,11 @@ jobs:
       with:
         distribution: corretto
         java-version: 17
+        cache: sbt
+
+    # https://eed3si9n.com/setup-sbt/
+    - name: Install sbt
+      uses: sbt/setup-sbt@v1
 
     - name: Detect app version
       uses: salsify/action-detect-and-tag-new-version@v2
