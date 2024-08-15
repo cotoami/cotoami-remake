@@ -56,3 +56,5 @@ jobs:
         releaseName: Cotoami Desktop v${{ env.APP_VERSION }}
         releaseDraft: false
         prerelease: false
+        includeDebug: true
+
