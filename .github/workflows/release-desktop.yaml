@@ -62,4 +62,5 @@ jobs:
         releaseDraft: false
         prerelease: false
         includeDebug: true
+        includeRelease: false
 
