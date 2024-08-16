@@ -21,7 +21,7 @@ object PaneStock {
       uiState: UiState
   )(implicit dispatch: AppMsg => Unit): ReactElement =
     section(className := "stock")(
-      if (uiState.geomapOpened)
+      if (uiState.mapOpened)
         SplitPane(
           vertical = false,
           initialPrimarySize = uiState.paneSizes.getOrElse(
@@ -33,14 +33,16 @@ object PaneStock {
           ),
           primary = SplitPane.Primary.Props()(
             div(className := "map")(
-              MapLibre(
-                id = "main-geomap",
-                defaultPosition = (139.5, 35.7),
-                defaultZoom = 8,
-                style = "/geomap/style.json",
-                resourceDir = model.systemInfo.map(_.resource_dir)
-                  .flatMap(Nullable.toOption)
-              )
+              Option.when(uiState.geomapOpened) {
+                MapLibre(
+                  id = "main-geomap",
+                  defaultPosition = (139.5, 35.7),
+                  defaultZoom = 8,
+                  style = "/geomap/style.json",
+                  resourceDir = model.systemInfo.map(_.resource_dir)
+                    .flatMap(Nullable.toOption)
+                )
+              }
             )
           ),
           secondary = SplitPane.Secondary.Props()(

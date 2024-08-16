@@ -53,13 +53,13 @@ case class UiState(
   def isPinnedInColumns(cotonoma: Id[Cotonoma]): Boolean =
     this.pinnedInColumns.contains(cotonoma.uuid)
 
-  def openOrCloseGeomap(open: Boolean): UiState = {
-    val uiState = this.copy(geomapOpened = open)
-    if (open)
-      uiState.openOrClosePane(PaneStock.PaneName, true)
-    else
-      uiState
-  }
+  def openGeomap: UiState =
+    this.copy(geomapOpened = true).openOrClosePane(PaneStock.PaneName, true)
+
+  def closeMap: UiState =
+    this.copy(geomapOpened = false)
+
+  def mapOpened: Boolean = this.geomapOpened
 
   def save: Cmd[Msg] =
     Cmd(IO {

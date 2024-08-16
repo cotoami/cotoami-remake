@@ -86,8 +86,12 @@ object AppHeader {
             ("opened", uiState.geomapOpened)
           )
         ),
-        onClick =
-          (_ => dispatch(AppMsg.OpenOrCloseGeomap(!uiState.geomapOpened)))
+        onClick = (_ => {
+          if (uiState.geomapOpened)
+            dispatch(AppMsg.CloseMap)
+          else
+            dispatch(AppMsg.OpenGeomap)
+        })
       )
     )
 

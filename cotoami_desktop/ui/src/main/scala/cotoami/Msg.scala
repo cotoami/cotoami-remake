@@ -36,7 +36,8 @@ object Msg {
   // UI
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
-  case class OpenOrCloseGeomap(open: Boolean) extends Msg
+  case object OpenGeomap extends Msg
+  case object CloseMap extends Msg
 
   // Focus
   case class FocusNode(id: Id[Node]) extends Msg
