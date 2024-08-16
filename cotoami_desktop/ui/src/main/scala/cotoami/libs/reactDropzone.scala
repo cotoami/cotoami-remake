@@ -1,4 +1,4 @@
-package cotoami.components
+package cotoami.libs
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -7,7 +7,7 @@ import org.scalajs.dom
 // https://react-dropzone.js.org/
 @js.native
 @JSImport("react-dropzone", JSImport.Namespace)
-object ReactDropzone extends js.Object {
+object reactDropzone extends js.Object {
   def useDropzone(options: Options): Dropzone = js.native
 
   // https://react-dropzone.js.org/#src

@@ -1,4 +1,4 @@
-package cotoami.tauri
+package cotoami.libs.tauri
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport

@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 import fui.Cmd
-import cotoami.tauri
+import cotoami.libs.tauri
 
 case class DatabaseInfo(json: DatabaseInfoJson) {
   def folder: String = this.json.folder

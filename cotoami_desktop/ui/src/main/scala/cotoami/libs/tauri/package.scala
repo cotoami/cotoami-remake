@@ -1,4 +1,4 @@
-package cotoami
+package cotoami.libs
 
 import scala.util.{Failure, Success}
 

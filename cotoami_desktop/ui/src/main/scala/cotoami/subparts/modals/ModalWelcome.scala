@@ -6,7 +6,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui._
-import cotoami.{log_error, tauri, Msg => AppMsg}
+import cotoami.{log_error, Msg => AppMsg}
+import cotoami.libs.tauri
 import cotoami.utils.Validation
 import cotoami.components.materialSymbol
 import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson, Node}

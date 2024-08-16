@@ -14,7 +14,7 @@ import cats.effect.IO
 import cats.syntax.all._
 
 import fui._
-import cotoami.tauri
+import cotoami.libs.tauri
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.models._

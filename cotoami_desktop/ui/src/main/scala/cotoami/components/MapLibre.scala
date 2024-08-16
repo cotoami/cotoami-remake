@@ -7,9 +7,8 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.geomap.maplibre
-import cotoami.geomap.pmtiles
-import cotoami.tauri
+import cotoami.libs.tauri
+import cotoami.libs.geomap.{maplibre, pmtiles}
 
 @react object MapLibre {
 

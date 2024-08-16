@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 import fui.Cmd
-import cotoami.tauri
+import cotoami.libs.tauri
 
 @js.native
 trait SystemInfoJson extends js.Object {

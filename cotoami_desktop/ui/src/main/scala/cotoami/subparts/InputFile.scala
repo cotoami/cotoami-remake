@@ -9,8 +9,8 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
+import cotoami.libs.reactDropzone._
 import cotoami.components.optionalClasses
-import cotoami.components.ReactDropzone._
 
 @react object InputFile {
   case class Props(

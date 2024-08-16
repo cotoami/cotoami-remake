@@ -10,11 +10,10 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import cotoami.{Context, Msg => AppMsg}
+import cotoami.libs.{rehypePlugins, remarkPlugins}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
-  rehypePlugins,
-  remarkPlugins,
   toolButton,
   Markdown
 }

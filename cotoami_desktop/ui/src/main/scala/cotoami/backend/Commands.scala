@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 import fui.Cmd
-import cotoami.tauri
+import cotoami.libs.tauri
 
 object Commands {
 
