@@ -649,7 +649,7 @@ object FormCoto {
           onClick := (_ => dispatch(Msg.SetCotoForm))
         )(
           span(className := "label")(
-            materialSymbol("text_snippet"),
+            materialSymbol("chat"),
             "Coto"
           )
         ),
@@ -659,7 +659,7 @@ object FormCoto {
           onClick := (_ => dispatch(Msg.SetCotonomaForm))
         )(
           span(className := "label")(
-            materialSymbol("topic"),
+            materialSymbol("folder"),
             "Cotonoma"
           )
         )
