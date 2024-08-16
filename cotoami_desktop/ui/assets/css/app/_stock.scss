@@ -9,20 +9,22 @@
     }
   }
 
-  // prevent the icon from overflowing to right side of page 
+  &.map-opened>.pane-toggle {
+    color: var(--background-color);
+  }
+
+  // prevent the icon from overflowing to the right side of screen 
   &.folded>.pane-toggle {
     left: auto;
     right: 0;
+
+    color: var(--color);
 
     button {
       left: auto;
       right: 0;
       overflow: hidden;
     }
-  }
-
-  &.map-opened>.pane-toggle {
-    color: var(--background-color);
   }
 }
 
