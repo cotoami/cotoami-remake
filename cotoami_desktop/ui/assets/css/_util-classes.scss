@@ -108,6 +108,10 @@ button.default {
     flex: 0 0 16px !important;
     cursor: pointer;
 
+    &:hover {
+      background-color: var(--hover-background-color);
+    }
+
     *:nth-child(n+2) {
       display: none !important;
     }
