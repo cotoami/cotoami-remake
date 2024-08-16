@@ -6,7 +6,7 @@ import scala.scalajs.js.annotation.JSImport
 
 @js.native
 @JSImport("@tauri-apps/api/dialog", JSImport.Namespace)
-object Dialog extends js.Object {
+object dialog extends js.Object {
 
   /** Open a file/directory selection dialog.
     *

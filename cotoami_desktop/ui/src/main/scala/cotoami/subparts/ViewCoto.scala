@@ -13,10 +13,10 @@ import cotoami.{Context, Msg => AppMsg}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
+  rehypePlugins,
+  remarkPlugins,
   toolButton,
-  Markdown,
-  RehypePlugin,
-  RemarkPlugin
+  Markdown
 }
 import cotoami.backend.{Coto, CotoContent, Id, Link}
 import cotoami.repositories.Nodes
@@ -159,9 +159,9 @@ object ViewCoto {
   def sectionTextContent(content: Option[String]): ReactElement =
     section(className := "text-content")(
       Markdown(
-        remarkPlugins = Seq(RemarkPlugin.breaks),
+        remarkPlugins = Seq(remarkPlugins.breaks),
         rehypePlugins =
-          Seq(js.Tuple2(RehypePlugin.externalLinks, jso(target = "_blank")))
+          Seq(js.Tuple2(rehypePlugins.externalLinks, jso(target = "_blank")))
       )(content)
     )
 

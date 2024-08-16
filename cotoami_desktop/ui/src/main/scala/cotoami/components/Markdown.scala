@@ -22,14 +22,14 @@ object ReactMarkdown extends js.Object
   override val component = ReactMarkdown
 }
 
-object RemarkPlugin {
+object remarkPlugins {
   // https://github.com/remarkjs/remark-breaks
   @js.native
   @JSImport("remark-breaks", JSImport.Default)
   object breaks extends js.Object
 }
 
-object RehypePlugin {
+object rehypePlugins {
   // https://github.com/rehypejs/rehype-external-links
   @js.native
   @JSImport("rehype-external-links", JSImport.Default)

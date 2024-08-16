@@ -5,7 +5,7 @@ import scala.scalajs.js.annotation.JSImport
 
 @js.native
 @JSImport("@tauri-apps/api/path", JSImport.Namespace)
-object Path extends js.Object {
+object path extends js.Object {
 
   // The platform-specific path segment delimiter.
   val delimiter: String = js.native

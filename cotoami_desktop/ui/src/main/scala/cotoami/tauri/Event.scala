@@ -8,7 +8,22 @@ import scala.scalajs.js.annotation.JSImport
   */
 @js.native
 @JSImport("@tauri-apps/api/event", JSImport.Namespace)
-object Event extends js.Object {
+object event extends js.Object {
+
+  @js.native
+  trait Event[T] extends js.Object {
+    // Event name
+    val event: String = js.native
+
+    // Event identifier used to unlisten
+    val id: Double = js.native
+
+    // Event payload
+    val payload: T = js.native
+
+    // The label of the window that emitted this event
+    val windowLabel: String = js.native
+  }
 
   /** Emits an event to the backend and all Tauri windows.
     *
@@ -49,19 +64,4 @@ object Event extends js.Object {
       event: String,
       handler: js.Function1[Event[T], Unit]
   ): js.Promise[js.Function0[Unit]] = js.native
-}
-
-@js.native
-trait Event[T] extends js.Object {
-  // Event name
-  val event: String = js.native
-
-  // Event identifier used to unlisten
-  val id: Double = js.native
-
-  // Event payload
-  val payload: T = js.native
-
-  // The label of the window that emitted this event
-  val windowLabel: String = js.native
 }

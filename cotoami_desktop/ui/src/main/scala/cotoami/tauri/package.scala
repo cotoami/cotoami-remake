@@ -3,6 +3,7 @@ package cotoami
 import scala.util.{Failure, Success}
 
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
@@ -12,6 +13,40 @@ import fui.{Cmd, Sub}
 
 package object tauri {
 
+  /** Convert a device file path to an URL that can be loaded by the webview.
+    */
+  @js.native
+  @JSImport("@tauri-apps/api/tauri", "convertFileSrc")
+  def convertFileSrc(
+      filePath: String,
+      protocol: js.UndefOr[String] = js.undefined
+  ): String =
+    js.native
+
+  /** Sends a message to the backend.
+    *
+    * <https://tauri.app/v1/api/js/tauri#invoke>
+    *
+    * @param cmd
+    *   The command name.
+    * @param args
+    *   The optional arguments to pass to the command. It should be passed as a
+    *   JSON object with camelCase keys (when declaring arguments in Rust using
+    *   snake_case, the arguments are converted to camelCase for JavaScript).
+    *   For the Rust side, it can be of any type, as long as they implement
+    *   `serde::Deserialize`.
+    * @return
+    *   A promise resolving or rejecting to the backend response. For the Rust
+    *   side, the returned data can be of any type, as long as it implements
+    *   `serde::Serialize`.
+    */
+  @js.native
+  @JSImport("@tauri-apps/api/tauri", "invoke")
+  def invoke[T](
+      cmd: String,
+      args: js.Object = js.Dynamic.literal()
+  ): js.Promise[T] = js.native
+
   // To distinguish a normal backend error from a system error during command invocation,
   // which will be returned as a string from Tauri, a backend error must be defined as an Object.
   def invokeCommand[T, E <: js.Object](
@@ -20,8 +55,7 @@ package object tauri {
   ): Cmd[Either[E, T]] =
     Cmd(IO.async { cb =>
       IO {
-        Tauri
-          .invoke[T](command, args)
+        invoke[T](command, args)
           // implicitly convert the Promise to a Future by
           // `scala.scalajs.js.Thenable.Implicits._`
           .onComplete {
@@ -51,8 +85,8 @@ package object tauri {
     Sub.Impl[T](
       id.getOrElse(s"listen-${event}"),
       (dispatch, onSubscribe) => {
-        Event
-          .listen(event, (e: Event[T]) => dispatch(e.payload))
+        tauri.event
+          .listen(event, (e: tauri.event.Event[T]) => dispatch(e.payload))
           .foreach(unlisten => onSubscribe(Some(unlisten)))
       }
     )
@@ -63,7 +97,7 @@ package object tauri {
   ): Cmd[Either[Throwable, Option[String]]] =
     Cmd(IO.async { cb =>
       IO {
-        val options = new Dialog.OpenDialogOptions {
+        val options = new dialog.OpenDialogOptions {
           override val defaultPath = defaultDirectory match {
             case Some(path) => path
             case None       => ()
@@ -73,7 +107,7 @@ package object tauri {
           override val recursive = true
           override val title = dialogTitle
         }
-        Dialog
+        dialog
           .open(options)
           // implicitly convert the Promise to a Future by
           // `scala.scalajs.js.Thenable.Implicits._`

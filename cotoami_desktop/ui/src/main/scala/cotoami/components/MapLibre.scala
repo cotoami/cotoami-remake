@@ -39,8 +39,8 @@ import cotoami.tauri
         // the given path with its separators replaced with the platform-specific ones.
         // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
         val path =
-          this.resourceDir.getOrElse("") + url.replace("/", tauri.Path.sep)
-        tauri.Tauri.convertFileSrc(path)
+          this.resourceDir.getOrElse("") + url.replace("/", tauri.path.sep)
+        tauri.convertFileSrc(path)
       }
   }
 
