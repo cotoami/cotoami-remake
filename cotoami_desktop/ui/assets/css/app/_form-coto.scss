@@ -160,30 +160,56 @@ section.form-coto {
 
   div.post {
     margin-bottom: 3rem;
+    padding: 8px 0;
 
     section.validation-error {
-      padding: 5px 10px;
+      padding-bottom: 8px;
     }
 
     section.post {
-      position: relative;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      div.fold-button {
+        padding-left: 4px;
+
+        button.fold {
+          opacity: .5;
+
+          &:hover {
+            opacity: 1;
+          }
+
+          span.material-symbols {
+            font-size: 24px;
+          }
+        }
+      }
 
       address.poster {
-        padding-top: 8px;
+        margin: 0;
+        padding: 0;
         padding-left: 10px;
         color: var(--muted-color);
+
+        span.name {
+          vertical-align: baseline;
+        }
       }
 
       div.buttons {
-        position: absolute;
-        top: 4px;
-        right: 4px;
+        flex: 1;
 
         display: flex;
         flex-direction: row;
+        justify-content: end;
+
+        padding-right: 10px;
 
         button {
           width: auto;
+          height: 36px;
           padding: 5px 12px;
         }
 
@@ -204,24 +230,6 @@ section.form-coto {
 
         button.preview {
           margin-right: 5px;
-        }
-
-        button.fold {
-          margin-left: 4px;
-          padding: 0 4px;
-          opacity: .5;
-
-          &:hover {
-            opacity: 1;
-          }
-
-          span.material-symbols {
-            display: inline-block;
-            height: 30px;
-            font-size: 24px;
-            line-height: 30px;
-            vertical-align: middle;
-          }
         }
       }
     }

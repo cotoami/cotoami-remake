@@ -573,11 +573,32 @@ object FormCoto {
             )
           ),
       secondary = SplitPane.Secondary.Props()(
-        divPost(
-          model,
-          form.validate,
-          operatingNode,
-          currentCotonoma
+        div(className := "post")(
+          Validation.sectionValidationError(form.validate),
+          section(className := "post")(
+            div(className := "fold-button")(
+              button(
+                className := s"default fold",
+                onClick := (_ => dispatch(Msg.SetFolded(true)))
+              )(
+                materialSymbol("arrow_drop_up")
+              )
+            ),
+            addressPoster(operatingNode),
+            div(className := "buttons")(
+              button(
+                className := "preview contrast outline",
+                disabled := !form.validate.validated,
+                onClick := (_ => dispatch(Msg.TogglePreview))
+              )(
+                if (model.inPreview)
+                  "Edit"
+                else
+                  "Preview"
+              ),
+              buttonPost(model, currentCotonoma)
+            )
+          )
         )
       )
     )
@@ -606,7 +627,15 @@ object FormCoto {
           }
         )
       ),
-      divPost(model, form.validation, operatingNode, currentCotonoma)
+      div(className := "post")(
+        Validation.sectionValidationError(form.validation),
+        section(className := "post")(
+          addressPoster(operatingNode),
+          div(className := "buttons")(
+            buttonPost(model, currentCotonoma)
+          )
+        )
+      )
     )
 
   private def headerTools(model: Model)(implicit
@@ -637,44 +666,9 @@ object FormCoto {
       )
     )
 
-  private def divPost(
-      model: Model,
-      validation: Validation.Result,
-      operatingNode: Node,
-      currentCotonoma: Cotonoma
-  )(implicit dispatch: Msg => Unit): ReactElement =
-    div(className := "post")(
-      Validation.sectionValidationError(validation),
-      section(className := "post")(
-        address(className := "poster")(
-          spanNode(operatingNode)
-        ),
-        div(className := "buttons")(
-          model.form match {
-            case form: CotoForm =>
-              Fragment(
-                button(
-                  className := "preview contrast outline",
-                  disabled := !form.validate.validated,
-                  onClick := (_ => dispatch(Msg.TogglePreview))
-                )(
-                  if (model.inPreview)
-                    "Edit"
-                  else
-                    "Preview"
-                ),
-                buttonPost(model, currentCotonoma),
-                toolButton(
-                  symbol = "arrow_drop_up",
-                  tip = "Fold",
-                  classes = "fold",
-                  onClick = _ => dispatch(Msg.SetFolded(true))
-                )
-              )
-            case _ => buttonPost(model, currentCotonoma)
-          }
-        )
-      )
+  private def addressPoster(operatingNode: Node): ReactElement =
+    address(className := "poster")(
+      spanNode(operatingNode)
     )
 
   private def buttonPost(

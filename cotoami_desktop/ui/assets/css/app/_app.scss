@@ -111,6 +111,11 @@ div.app {
     }
   }
 
+  .validation-error {
+    font-size: 95%;
+    color: var(--form-element-invalid-border-color)
+  }
+
   span.node {
     img.node-icon {
       width: 26px;
