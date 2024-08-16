@@ -167,32 +167,16 @@ object Main {
         )
 
       case Msg.OpenOrClosePane(name, open) =>
-        model.uiState
-          .map(_.openOrClosePane(name, open) match {
-            case state => (model.copy(uiState = Some(state)), Seq(state.save))
-          })
-          .getOrElse((model, Seq.empty))
+        model.updateUiState(_.openOrClosePane(name, open))
 
       case Msg.ResizePane(name, newSize) =>
-        model.uiState
-          .map(_.resizePane(name, newSize) match {
-            case state => (model.copy(uiState = Some(state)), Seq(state.save))
-          })
-          .getOrElse((model, Seq.empty))
+        model.updateUiState(_.resizePane(name, newSize))
 
       case Msg.OpenGeomap =>
-        model.uiState
-          .map(_.openGeomap match {
-            case state => (model.copy(uiState = Some(state)), Seq(state.save))
-          })
-          .getOrElse((model, Seq.empty))
+        model.updateUiState(_.openGeomap)
 
       case Msg.CloseMap =>
-        model.uiState
-          .map(_.closeMap match {
-            case state => (model.copy(uiState = Some(state)), Seq(state.save))
-          })
-          .getOrElse((model, Seq.empty))
+        model.updateUiState(_.closeMap)
 
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))

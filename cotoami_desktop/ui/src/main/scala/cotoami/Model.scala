@@ -68,6 +68,13 @@ case class Model(
       traversals = SectionTraversals.Model()
     )
 
+  def updateUiState(update: UiState => UiState): (Model, Seq[Cmd[Msg]]) =
+    this.uiState
+      .map(update(_) match {
+        case state => (this.copy(uiState = Some(state)), Seq(state.save))
+      })
+      .getOrElse((this, Seq.empty))
+
   def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
     this.copy(modalStack = this.modalStack.update(newState))
 
