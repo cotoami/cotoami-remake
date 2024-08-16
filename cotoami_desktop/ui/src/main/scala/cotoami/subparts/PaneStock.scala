@@ -6,7 +6,13 @@ import slinky.web.html._
 import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.backend.Nullable
 import cotoami.models.UiState
-import cotoami.components.{optionalClasses, MapLibre, ScrollArea, SplitPane}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  MapLibre,
+  ScrollArea,
+  SplitPane
+}
 
 object PaneStock {
   final val PaneName = "PaneStock"
@@ -42,7 +48,15 @@ object PaneStock {
                   resourceDir = model.systemInfo.map(_.resource_dir)
                     .flatMap(Nullable.toOption)
                 )
-              }
+              },
+              div(className := "close-map-button")(
+                button(
+                  className := "default close-map",
+                  onClick := (_ => dispatch(AppMsg.CloseMap))
+                )(
+                  materialSymbol("arrow_drop_up")
+                )
+              )
             )
           ),
           secondary = SplitPane.Secondary.Props()(

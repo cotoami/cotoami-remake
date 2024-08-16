@@ -578,7 +578,7 @@ object FormCoto {
           section(className := "post")(
             div(className := "fold-button")(
               button(
-                className := s"default fold",
+                className := "default fold",
                 onClick := (_ => dispatch(Msg.SetFolded(true)))
               )(
                 materialSymbol("arrow_drop_up")
