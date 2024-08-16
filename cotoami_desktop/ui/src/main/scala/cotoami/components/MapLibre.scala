@@ -77,6 +77,7 @@ import cotoami.tauri
             override val style = props.styleUrl
             override val transformRequest = _transformRequest
           })
+          map.addControl(new maplibre.NavigationControl())
         }
       },
       Seq.empty

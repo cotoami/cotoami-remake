@@ -12,7 +12,13 @@ object maplibre extends js.Object {
   def addProtocol(customProtocol: String, loadFn: js.Any): Unit = js.native
 
   @js.native
-  class Map(options: MapOptions) extends js.Object
+  class Map(options: MapOptions) extends js.Object {
+    // Adds an IControl to the map, calling control.onAdd(this).
+    def addControl(
+        control: js.Any,
+        position: js.UndefOr[String] = js.undefined
+    ): Map = js.native
+  }
 
   trait MapOptions extends js.Object {
     // The HTML element in which MapLibre GL JS will render the map,
@@ -48,4 +54,8 @@ object maplibre extends js.Object {
   trait RequestParameters extends js.Object {
     val url: String
   }
+
+  // A NavigationControl control contains zoom buttons and a compass.
+  @js.native
+  class NavigationControl extends js.Object
 }
