@@ -10,7 +10,7 @@ use crate::{
 // Pubsub aggregation
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Pubsub {
     changes: ChangePubsub,
     remote_changes: RemoteChangePubsub,
@@ -20,16 +20,6 @@ pub struct Pubsub {
 }
 
 impl Pubsub {
-    pub(crate) fn new() -> Self {
-        Self {
-            changes: ChangePubsub::new(),
-            remote_changes: RemoteChangePubsub::new(),
-            events: EventPubsub::new(),
-            remote_events: RemoteEventPubsub::new(),
-            responses: ResponsePubsub::new(),
-        }
-    }
-
     pub fn changes(&self) -> &ChangePubsub { &self.changes }
 
     pub fn remote_changes(&self) -> &RemoteChangePubsub { &self.remote_changes }

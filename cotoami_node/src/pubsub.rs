@@ -22,22 +22,30 @@ pub struct Publisher<Message, Topic> {
     state: Arc<Mutex<PublisherState<Message, Topic>>>,
 }
 
-impl<Message, Topic> Publisher<Message, Topic>
+// Couldn't use #[derive(Default)] because it requires the generic types
+// to satisfy the trait bounds too.
+impl<Message, Topic> Default for Publisher<Message, Topic>
 where
     Message: Clone + Send + 'static,
     Topic: Clone + Eq + Hash + Send + 'static,
 {
-    pub fn new() -> Self {
+    fn default() -> Self {
         let state = PublisherState {
             next_subscriber_id: 0,
             subscribers: HashMap::new(),
             topics: HashMap::new(),
         };
-        Publisher {
+        Self {
             state: Arc::new(Mutex::new(state)),
         }
     }
+}
 
+impl<Message, Topic> Publisher<Message, Topic>
+where
+    Message: Clone + Send + 'static,
+    Topic: Clone + Eq + Hash + Send + 'static,
+{
     #[allow(dead_code)] // used only in tests
     pub fn count_subscribers(&self) -> usize { self.state.lock().subscribers.len() }
 
@@ -227,7 +235,7 @@ mod tests {
 
     #[tokio::test]
     async fn pubsub() {
-        let publisher = Publisher::<String, String>::new();
+        let publisher = Publisher::<String, String>::default();
 
         let mut sub1 = publisher.subscribe(None::<String>);
         let mut sub2 = publisher.subscribe(Some("animal"));
@@ -248,7 +256,7 @@ mod tests {
 
     #[tokio::test]
     async fn onetime_subscriber() {
-        let publisher = Publisher::<String, String>::new();
+        let publisher = Publisher::<String, String>::default();
         let mut sub = publisher.subscribe_onetime(Some("animal"));
 
         publisher.publish("cat".into(), Some(&"animal".into()));
@@ -260,7 +268,7 @@ mod tests {
 
     #[tokio::test]
     async fn tap_into_stream() {
-        let publisher = Publisher::<usize, ()>::new();
+        let publisher = Publisher::<usize, ()>::default();
         let mut sub = publisher.subscribe(None::<()>);
 
         let stream = futures::stream::iter(1..=3);
@@ -274,7 +282,7 @@ mod tests {
     #[tokio::test]
     async fn publisher_dropped() {
         let mut sub = {
-            let publisher = Publisher::<String, String>::new();
+            let publisher = Publisher::<String, String>::default();
             publisher.subscribe(None::<String>)
         };
         assert_eq!(sub.next().await, None);
@@ -282,7 +290,7 @@ mod tests {
 
     #[tokio::test]
     async fn subscriber_dropped() {
-        let publisher = Publisher::<String, String>::new();
+        let publisher = Publisher::<String, String>::default();
         let _sub1 = publisher.subscribe(None::<String>);
         {
             let _sub2 = publisher.subscribe(None::<String>);

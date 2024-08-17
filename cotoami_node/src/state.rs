@@ -53,7 +53,7 @@ impl NodeState {
         let inner = State {
             config: Arc::new(config),
             db: Arc::new(db),
-            pubsub: Pubsub::new(),
+            pubsub: Pubsub::default(),
             server_conns: ServerConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),

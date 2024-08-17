@@ -20,7 +20,7 @@ impl PubsubService {
     pub fn new(description: impl Into<String>, responses: ResponsePubsub) -> Self {
         Self {
             description: description.into(),
-            requests: RequestPubsub::new(),
+            requests: RequestPubsub::default(),
             responses,
         }
     }
