@@ -144,7 +144,7 @@ pub(crate) async fn handle_event_from_parent(
         }
         NodeSentEvent::Response(response) => {
             debug!("Received a response from {}", parent_id);
-            let response_id = response.id().clone();
+            let response_id = *response.id();
             state
                 .pubsub()
                 .responses()

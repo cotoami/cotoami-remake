@@ -76,7 +76,7 @@ pub(crate) async fn communicate_with_parent<
     node_state.register_parent_service(parent_id, Box::new(parent_service.clone()));
 
     // If any one of the tasks exit, abort the other.
-    if let Some(_) = tasks.join_next().await {
+    if tasks.join_next().await.is_some() {
         tasks.shutdown().await;
         on_disconnect
             .send(Arc::try_unwrap(task_error).unwrap().into_inner())
@@ -134,7 +134,7 @@ pub(crate) async fn communicate_with_operator<
             let mut changes = node_state.pubsub().changes().subscribe(None::<()>);
             async move {
                 while let Some(change) = changes.next().await {
-                    if let Err(_) = sender.send(NodeSentEvent::Change(change)).await {
+                    if sender.send(NodeSentEvent::Change(change)).await.is_err() {
                         // The receiver task has been terminated
                         break;
                     }
@@ -150,7 +150,11 @@ pub(crate) async fn communicate_with_operator<
             let mut events = node_state.pubsub().events().subscribe(None::<()>);
             async move {
                 while let Some(event) = events.next().await {
-                    if let Err(_) = sender.send(NodeSentEvent::RemoteLocal(event)).await {
+                    if sender
+                        .send(NodeSentEvent::RemoteLocal(event))
+                        .await
+                        .is_err()
+                    {
                         // The receiver task has been terminated
                         break;
                     }
@@ -172,7 +176,7 @@ pub(crate) async fn communicate_with_operator<
     }));
 
     // If any one of the tasks exit, abort the others.
-    if let Some(_) = tasks.join_next().await {
+    if tasks.join_next().await.is_some() {
         tasks.shutdown().await;
         on_disconnect
             .send(Arc::try_unwrap(task_error).unwrap().into_inner())
