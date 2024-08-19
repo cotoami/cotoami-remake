@@ -1,7 +1,10 @@
 package cotoami.subparts
 
+import scala.util.{Failure, Success}
 import scala.scalajs.js
+import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.dom
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -12,6 +15,7 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.Context
 import cotoami.utils.{Log, Validation}
+import cotoami.libs.exifr
 import cotoami.backend._
 import cotoami.models.{Geolocation, WaitingPost, WaitingPosts}
 import cotoami.components.{
@@ -264,7 +268,30 @@ object FormCoto {
 
       case (Msg.FileInput(file), form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaContent = Some(file)))
+          _1 = model.copy(form = form.copy(mediaContent = Some(file))),
+          _4 = Seq(
+            Cmd(IO.async { cb =>
+              IO {
+                exifr.gps(file).onComplete {
+                  case Success(gps) =>
+                    gps.toOption match {
+                      case Some(gps) => {
+                        val location = Geolocation(
+                          longitude = gps.longitude,
+                          latitude = gps.latitude
+                        )
+                        val msg = Msg.GeolocationInput(Right(location))
+                        cb(Right(Some(msg)))
+                      }
+                      case None => cb(Right(None))
+                    }
+                  case Failure(t) =>
+                    cb(Right(Some(Msg.GeolocationInput(Left(t.toString)))))
+                }
+                None // no finalizer on cancellation
+              }
+            })
+          )
         )
 
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>

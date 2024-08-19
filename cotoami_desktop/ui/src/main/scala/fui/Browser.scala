@@ -1,11 +1,9 @@
 package fui
 
-import scala.util.Success
-import scala.util.Failure
+import scala.util.{Failure, Success}
 import scala.scalajs.js
 import org.scalajs.dom
-import org.scalajs.dom.Element
-import org.scalajs.dom.URL
+import org.scalajs.dom.{Element, URL}
 
 import cats.effect.IO
 
