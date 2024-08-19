@@ -9,7 +9,6 @@ import cotoami.models.UiState
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
-  Geomap,
   ScrollArea,
   SplitPane
 }
