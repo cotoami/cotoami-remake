@@ -22,8 +22,8 @@ import cotoami.models.Geolocation
 
   case class Props(
       id: String,
-      defaultPosition: Geolocation = Geolocation.default,
-      defaultZoom: Int,
+      position: Geolocation = Geolocation.default,
+      zoom: Int,
       styleLocation: String = "/geomap/style.json",
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
       resourceDir: Option[String] = None
@@ -83,8 +83,8 @@ import cotoami.models.Geolocation
         js.timers.setTimeout(10) {
           val map = new maplibre.Map(new maplibre.MapOptions {
             override val container = props.id
-            override val zoom = props.defaultZoom
-            override val center = toLngLat(props.defaultPosition)
+            override val zoom = props.zoom
+            override val center = toLngLat(props.position)
             override val style = props.styleUrl
             override val transformRequest = _transformRequest
           })

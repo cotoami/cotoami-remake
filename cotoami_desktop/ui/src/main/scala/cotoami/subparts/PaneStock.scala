@@ -41,7 +41,7 @@ object PaneStock {
               Option.when(uiState.geomapOpened) {
                 Geomap(
                   id = "main-geomap",
-                  defaultZoom = 8,
+                  zoom = 8,
                   resourceDir = model.systemInfo.map(_.resource_dir)
                     .flatMap(Nullable.toOption)
                 )
