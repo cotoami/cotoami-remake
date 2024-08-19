@@ -10,7 +10,7 @@ import slinky.web.html._
 import cotoami.libs.tauri
 import cotoami.libs.geomap.{maplibre, pmtiles}
 
-@react object MapLibre {
+@react object Geomap {
 
   // Enable to load PMTiles files.
   //
