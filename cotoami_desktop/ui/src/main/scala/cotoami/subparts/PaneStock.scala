@@ -41,7 +41,6 @@ object PaneStock {
               Option.when(uiState.geomapOpened) {
                 Geomap(
                   id = "main-geomap",
-                  defaultPosition = (139.5, 35.7),
                   defaultZoom = 8,
                   style = "/geomap/style.json",
                   resourceDir = model.systemInfo.map(_.resource_dir)

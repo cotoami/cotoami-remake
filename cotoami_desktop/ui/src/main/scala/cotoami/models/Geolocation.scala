@@ -1,3 +1,8 @@
 package cotoami.models
 
-case class Geolocation(latitude: Double, longitude: Double)
+case class Geolocation(longitude: Double, latitude: Double)
+
+object Geolocation {
+  // The Tokyo station
+  val default: Geolocation = Geolocation(139.76730676352, 35.680959106959)
+}

@@ -9,6 +9,7 @@ import slinky.web.html._
 
 import cotoami.libs.tauri
 import cotoami.libs.geomap.{maplibre, pmtiles}
+import cotoami.models.Geolocation
 
 @react object Geomap {
 
@@ -21,7 +22,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   case class Props(
       id: String,
-      defaultPosition: (Double, Double),
+      defaultPosition: Geolocation = Geolocation.default,
       defaultZoom: Int,
       style: String,
       resourceDir: Option[String] = None
@@ -71,8 +72,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
           val map = new maplibre.Map(new maplibre.MapOptions {
             override val container = props.id
             override val zoom = props.defaultZoom
-            override val center =
-              js.Tuple2.fromScalaTuple2(props.defaultPosition)
+            override val center = toLngLat(props.defaultPosition)
             override val style = props.styleUrl
             override val transformRequest = _transformRequest
           })
@@ -89,4 +89,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined
+
+  private def toLngLat(location: Geolocation): js.Tuple2[Double, Double] =
+    js.Tuple2(location.longitude, location.latitude)
 }
