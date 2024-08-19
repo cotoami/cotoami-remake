@@ -309,7 +309,9 @@ object FormCoto {
 
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaContent = None))
+          _1 = model.copy(form =
+            form.copy(mediaContent = None, geolocation = None)
+          )
         )
 
       case (Msg.ImeCompositionStart, _, _) =>
