@@ -9,7 +9,6 @@ import cotoami.models.UiState
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
-  MapLibre,
   ScrollArea,
   SplitPane
 }
@@ -40,11 +39,9 @@ object PaneStock {
           primary = SplitPane.Primary.Props()(
             div(className := "map")(
               Option.when(uiState.geomapOpened) {
-                MapLibre(
+                Geomap(
                   id = "main-geomap",
-                  defaultPosition = (139.5, 35.7),
-                  defaultZoom = 8,
-                  style = "/geomap/style.json",
+                  zoom = 8,
                   resourceDir = model.systemInfo.map(_.resource_dir)
                     .flatMap(Nullable.toOption)
                 )

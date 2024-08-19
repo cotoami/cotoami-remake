@@ -1,7 +1,10 @@
 package cotoami.subparts
 
+import scala.util.{Failure, Success}
 import scala.scalajs.js
+import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.dom
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -12,8 +15,9 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.Context
 import cotoami.utils.{Log, Validation}
+import cotoami.libs.exifr
 import cotoami.backend._
-import cotoami.models.{WaitingPost, WaitingPosts}
+import cotoami.models.{Geolocation, WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -47,7 +51,7 @@ object FormCoto {
 
     def hasContents: Boolean =
       this.form match {
-        case CotoForm(cotoInput, mediaContent) =>
+        case CotoForm(cotoInput, mediaContent, _) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
@@ -73,7 +77,7 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (this.autoSave, this.form) match {
-        case (true, CotoForm(cotoInput, _)) =>
+        case (true, CotoForm(cotoInput, _, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(this.storageKey, cotoInput)
             None
@@ -103,7 +107,8 @@ object FormCoto {
 
   case class CotoForm(
       cotoInput: String = "",
-      mediaContent: Option[dom.Blob] = None
+      mediaContent: Option[dom.Blob] = None,
+      geolocation: Option[Geolocation] = None
   ) extends Form {
     def summary: Option[String] =
       if (this.hasSummary)
@@ -180,6 +185,7 @@ object FormCoto {
     case class CotoInput(coto: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
     case class FileInput(file: dom.Blob) extends Msg
+    case class GeolocationInput(result: Either[String, Geolocation]) extends Msg
     case object DeleteMediaContent extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
@@ -262,12 +268,50 @@ object FormCoto {
 
       case (Msg.FileInput(file), form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaContent = Some(file)))
+          _1 = model.copy(form = form.copy(mediaContent = Some(file))),
+          _4 = Seq(
+            Cmd(IO.async { cb =>
+              IO {
+                exifr.gps(file).onComplete {
+                  case Success(gps) =>
+                    gps.toOption match {
+                      case Some(gps) => {
+                        val location = Geolocation(
+                          longitude = gps.longitude,
+                          latitude = gps.latitude
+                        )
+                        val msg = Msg.GeolocationInput(Right(location))
+                        cb(Right(Some(msg)))
+                      }
+                      case None => cb(Right(None))
+                    }
+                  case Failure(t) =>
+                    cb(Right(Some(Msg.GeolocationInput(Left(t.toString)))))
+                }
+                None // no finalizer on cancellation
+              }
+            })
+          )
+        )
+
+      case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = form.copy(geolocation = Some(location)))
+        )
+
+      case (Msg.GeolocationInput(Left(error)), _, _) =>
+        default.copy(_3 =
+          context.log.error(
+            "Geolocation input error.",
+            Some(error)
+          )
         )
 
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaContent = None))
+          _1 = model.copy(form =
+            form.copy(mediaContent = None, geolocation = None)
+          )
         )
 
       case (Msg.ImeCompositionStart, _, _) =>
@@ -476,24 +520,12 @@ object FormCoto {
         case form: CotoForm =>
           Fragment(
             form.mediaContent.map(blob => {
-              val url = dom.URL.createObjectURL(blob)
               SplitPane(
                 vertical = false,
                 initialPrimarySize = 300,
                 className = Some("coto-form-with-media"),
                 primary = SplitPane.Primary.Props()(
-                  section(className := "media-preview")(
-                    img(
-                      src := url,
-                      onLoad := (_ => dom.URL.revokeObjectURL(url))
-                    ),
-                    toolButton(
-                      symbol = "close",
-                      tip = "Delete",
-                      classes = "delete",
-                      onClick = _ => dispatch(Msg.DeleteMediaContent)
-                    )
-                  )
+                  sectionMediaPreview(blob, form)
                 ),
                 secondary = SplitPane.Secondary.Props()(
                   formCoto(
@@ -523,6 +555,35 @@ object FormCoto {
       }
     )
 
+  private def sectionMediaPreview(mediaContent: dom.Blob, form: CotoForm)(
+      implicit dispatch: Msg => Unit
+  ): ReactElement = {
+    val url = dom.URL.createObjectURL(mediaContent)
+    section(className := "media-preview")(
+      img(
+        src := url,
+        onLoad := (_ => dom.URL.revokeObjectURL(url))
+      ),
+      toolButton(
+        symbol = "close",
+        tip = "Delete",
+        classes = "delete",
+        onClick = _ => dispatch(Msg.DeleteMediaContent)
+      )
+    )
+  }
+
+  private def sectionGeolocation(location: Geolocation): ReactElement =
+    section(className := "geolocation")(
+      button(className := "default")(
+        materialSymbol("location_on"),
+        span(className := "label")("longitude:"),
+        span(className := "value longitude")(location.longitude),
+        span(className := "label")("latitude:"),
+        span(className := "value latitude")(location.latitude)
+      )
+    )
+
   private def formCoto(
       form: CotoForm,
       model: Model,
@@ -550,6 +611,7 @@ object FormCoto {
           )
         else
           SplitPane.Primary.Props(className = Some("coto-editor"))(
+            form.geolocation.map(sectionGeolocation),
             textarea(
               id := model.editorId,
               placeholder := "Write your Coto in Markdown",

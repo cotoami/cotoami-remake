@@ -1,4 +1,4 @@
-package cotoami.components
+package cotoami.subparts
 
 import scala.scalajs.js
 
@@ -9,8 +9,9 @@ import slinky.web.html._
 
 import cotoami.libs.tauri
 import cotoami.libs.geomap.{maplibre, pmtiles}
+import cotoami.models.Geolocation
 
-@react object MapLibre {
+@react object Geomap {
 
   // Enable to load PMTiles files.
   //
@@ -21,16 +22,28 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   case class Props(
       id: String,
-      defaultPosition: (Double, Double),
-      defaultZoom: Int,
-      style: String,
+      position: Geolocation = Geolocation.default,
+      zoom: Int,
+      styleLocation: String = "/geomap/style.json",
+      vectorTilesLocation: String = "/geomap/japan.pmtiles",
       resourceDir: Option[String] = None
   ) {
-    def styleUrl: String = toAbsoluteUrl(this.style)
+    def styleUrl: String = toAbsoluteUrl(this.styleLocation)
 
-    def toAbsoluteUrl(url: String): String =
-      if (isUrl(url))
-        url
+    def vectorTilesUrl: String = toVectorTilesUrl(this.vectorTilesLocation)
+
+    def toVectorTilesUrl(location: String): String =
+      if (
+        !location.startsWith(PMTilesUrlPrefix) &&
+        location.endsWith(".pmtiles")
+      )
+        PMTilesUrlPrefix + toAbsoluteUrl(location)
+      else
+        toAbsoluteUrl(location)
+
+    def toAbsoluteUrl(location: String): String =
+      if (isUrl(location))
+        location
       else {
         // Can't use Tauri's `resolveResource` here since it returns Promise/Future,
         // which doesn't suit to maplibre.MapOptions.transformRequest.
@@ -38,7 +51,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
         // the given path with its separators replaced with the platform-specific ones.
         // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
         val path =
-          this.resourceDir.getOrElse("") + url.replace("/", tauri.path.sep)
+          this.resourceDir.getOrElse("") + location.replace("/", tauri.path.sep)
         tauri.convertFileSrc(path)
       }
   }
@@ -46,17 +59,17 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
   val component = FunctionalComponent[Props] { props =>
     val _transformRequest
         : js.Function2[String, String, maplibre.RequestParameters] =
-      (url: String, resourceType: String) => {
+      (location: String, resourceType: String) => {
         val absoluteUrl =
           if (resourceType == "Source")
-            if (url.endsWith(".pmtiles"))
-              "pmtiles://" + props.toAbsoluteUrl(url)
+            if (location == VectorTilesUrlPlaceHolder)
+              props.vectorTilesUrl
             else
-              props.toAbsoluteUrl(url)
+              props.toVectorTilesUrl(location)
           else if (resourceType == "Tile")
-            url
+            location
           else
-            props.toAbsoluteUrl(url)
+            props.toAbsoluteUrl(location)
 
         new maplibre.RequestParameters {
           val url = absoluteUrl
@@ -70,9 +83,8 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
         js.timers.setTimeout(10) {
           val map = new maplibre.Map(new maplibre.MapOptions {
             override val container = props.id
-            override val zoom = props.defaultZoom
-            override val center =
-              js.Tuple2.fromScalaTuple2(props.defaultPosition)
+            override val zoom = props.zoom
+            override val center = toLngLat(props.position)
             override val style = props.styleUrl
             override val transformRequest = _transformRequest
           })
@@ -86,7 +98,12 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
   }
 
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
+  private val PMTilesUrlPrefix = "pmtiles://"
+  private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
 
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined
+
+  private def toLngLat(location: Geolocation): js.Tuple2[Double, Double] =
+    js.Tuple2(location.longitude, location.latitude)
 }
