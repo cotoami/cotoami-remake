@@ -518,24 +518,12 @@ object FormCoto {
         case form: CotoForm =>
           Fragment(
             form.mediaContent.map(blob => {
-              val url = dom.URL.createObjectURL(blob)
               SplitPane(
                 vertical = false,
                 initialPrimarySize = 300,
                 className = Some("coto-form-with-media"),
                 primary = SplitPane.Primary.Props()(
-                  section(className := "media-preview")(
-                    img(
-                      src := url,
-                      onLoad := (_ => dom.URL.revokeObjectURL(url))
-                    ),
-                    toolButton(
-                      symbol = "close",
-                      tip = "Delete",
-                      classes = "delete",
-                      onClick = _ => dispatch(Msg.DeleteMediaContent)
-                    )
-                  )
+                  sectionMediaPreview(blob, form)
                 ),
                 secondary = SplitPane.Secondary.Props()(
                   formCoto(
@@ -564,6 +552,24 @@ object FormCoto {
           formCotonoma(form, model, operatingNode, currentCotonoma)
       }
     )
+
+  private def sectionMediaPreview(mediaContent: dom.Blob, form: CotoForm)(
+      implicit dispatch: Msg => Unit
+  ): ReactElement = {
+    val url = dom.URL.createObjectURL(mediaContent)
+    section(className := "media-preview")(
+      img(
+        src := url,
+        onLoad := (_ => dom.URL.revokeObjectURL(url))
+      ),
+      toolButton(
+        symbol = "close",
+        tip = "Delete",
+        classes = "delete",
+        onClick = _ => dispatch(Msg.DeleteMediaContent)
+      )
+    )
+  }
 
   private def formCoto(
       form: CotoForm,
