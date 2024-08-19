@@ -571,6 +571,17 @@ object FormCoto {
     )
   }
 
+  private def sectionGeolocation(location: Geolocation): ReactElement =
+    section(className := "geolocation")(
+      button(className := "default")(
+        materialSymbol("location_on"),
+        span(className := "label")("longitude:"),
+        span(className := "value longitude")(location.longitude),
+        span(className := "label")("latitude:"),
+        span(className := "value latitude")(location.latitude)
+      )
+    )
+
   private def formCoto(
       form: CotoForm,
       model: Model,
@@ -598,6 +609,7 @@ object FormCoto {
           )
         else
           SplitPane.Primary.Props(className = Some("coto-editor"))(
+            form.geolocation.map(sectionGeolocation),
             textarea(
               id := model.editorId,
               placeholder := "Write your Coto in Markdown",

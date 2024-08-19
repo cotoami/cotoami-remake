@@ -158,6 +158,28 @@ section.form-coto {
     }
   }
 
+  section.geolocation {
+    height: 1.5rem;
+    line-height: 1.5rem;
+
+    text-align: center;
+    font-size: 90%;
+
+    span.material-symbols {
+      vertical-align: middle;
+    }
+
+    span.label {
+      margin-left: 4px;
+    }
+
+    span.value {
+      margin-right: 4px;
+      font-size: 90%;
+      opacity: 0.6;
+    }
+  }
+
   div.post {
     margin-bottom: 3rem;
     padding: 8px 0;
