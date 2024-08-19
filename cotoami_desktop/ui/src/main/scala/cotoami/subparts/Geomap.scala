@@ -24,14 +24,26 @@ import cotoami.models.Geolocation
       id: String,
       defaultPosition: Geolocation = Geolocation.default,
       defaultZoom: Int,
-      style: String,
+      styleLocation: String = "/geomap/style.json",
+      vectorTilesLocation: String = "/geomap/japan.pmtiles",
       resourceDir: Option[String] = None
   ) {
-    def styleUrl: String = toAbsoluteUrl(this.style)
+    def styleUrl: String = toAbsoluteUrl(this.styleLocation)
 
-    def toAbsoluteUrl(url: String): String =
-      if (isUrl(url))
-        url
+    def vectorTilesUrl: String = toVectorTilesUrl(this.vectorTilesLocation)
+
+    def toVectorTilesUrl(location: String): String =
+      if (
+        !location.startsWith(PMTilesUrlPrefix) &&
+        location.endsWith(".pmtiles")
+      )
+        PMTilesUrlPrefix + toAbsoluteUrl(location)
+      else
+        toAbsoluteUrl(location)
+
+    def toAbsoluteUrl(location: String): String =
+      if (isUrl(location))
+        location
       else {
         // Can't use Tauri's `resolveResource` here since it returns Promise/Future,
         // which doesn't suit to maplibre.MapOptions.transformRequest.
@@ -39,7 +51,7 @@ import cotoami.models.Geolocation
         // the given path with its separators replaced with the platform-specific ones.
         // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
         val path =
-          this.resourceDir.getOrElse("") + url.replace("/", tauri.path.sep)
+          this.resourceDir.getOrElse("") + location.replace("/", tauri.path.sep)
         tauri.convertFileSrc(path)
       }
   }
@@ -47,17 +59,17 @@ import cotoami.models.Geolocation
   val component = FunctionalComponent[Props] { props =>
     val _transformRequest
         : js.Function2[String, String, maplibre.RequestParameters] =
-      (url: String, resourceType: String) => {
+      (location: String, resourceType: String) => {
         val absoluteUrl =
           if (resourceType == "Source")
-            if (url.endsWith(".pmtiles"))
-              "pmtiles://" + props.toAbsoluteUrl(url)
+            if (location == VectorTilesUrlPlaceHolder)
+              props.vectorTilesUrl
             else
-              props.toAbsoluteUrl(url)
+              props.toVectorTilesUrl(location)
           else if (resourceType == "Tile")
-            url
+            location
           else
-            props.toAbsoluteUrl(url)
+            props.toAbsoluteUrl(location)
 
         new maplibre.RequestParameters {
           val url = absoluteUrl
@@ -86,6 +98,8 @@ import cotoami.models.Geolocation
   }
 
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
+  private val PMTilesUrlPrefix = "pmtiles://"
+  private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
 
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined

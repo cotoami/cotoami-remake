@@ -42,7 +42,6 @@ object PaneStock {
                 Geomap(
                   id = "main-geomap",
                   defaultZoom = 8,
-                  style = "/geomap/style.json",
                   resourceDir = model.systemInfo.map(_.resource_dir)
                     .flatMap(Nullable.toOption)
                 )
