@@ -240,14 +240,14 @@ impl HttpClient {
     }
 }
 
-const API_PATH_DATA: &'static str = "/api/data";
-const API_PATH_CHANGES: &'static str = concatcp!(API_PATH_DATA, "/changes");
-const API_PATH_NODES: &'static str = concatcp!(API_PATH_DATA, "/nodes");
-const API_PATH_LOCAL: &'static str = concatcp!(API_PATH_NODES, "/local");
-const API_PATH_SERVERS: &'static str = concatcp!(API_PATH_NODES, "/servers");
-const API_PATH_CLIENTS: &'static str = concatcp!(API_PATH_NODES, "/clients");
-const API_PATH_COTONOMAS: &'static str = concatcp!(API_PATH_DATA, "/cotonomas");
-const API_PATH_COTOS: &'static str = concatcp!(API_PATH_DATA, "/cotos");
+const API_PATH_DATA: &str = "/api/data";
+const API_PATH_CHANGES: &str = concatcp!(API_PATH_DATA, "/changes");
+const API_PATH_NODES: &str = concatcp!(API_PATH_DATA, "/nodes");
+const API_PATH_LOCAL: &str = concatcp!(API_PATH_NODES, "/local");
+const API_PATH_SERVERS: &str = concatcp!(API_PATH_NODES, "/servers");
+const API_PATH_CLIENTS: &str = concatcp!(API_PATH_NODES, "/clients");
+const API_PATH_COTONOMAS: &str = concatcp!(API_PATH_DATA, "/cotonomas");
+const API_PATH_COTOS: &str = concatcp!(API_PATH_DATA, "/cotos");
 
 fn detect_response_body_format(response: &reqwest::Response) -> SerializeFormat {
     // The format will be MessagePack only if the Content-Type header explicitly specifies it,

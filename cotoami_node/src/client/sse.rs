@@ -80,7 +80,7 @@ impl SseClient {
                 }
 
                 // If any one of the tasks exit, abort the others.
-                if let Some(_) = tasks.join_next().await {
+                if tasks.join_next().await.is_some() {
                     tasks.shutdown().await;
                 }
             }
