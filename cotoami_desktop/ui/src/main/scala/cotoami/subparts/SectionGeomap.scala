@@ -8,14 +8,14 @@ import cotoami.models.Geolocation
 object SectionGeomap {
 
   case class Model(
-      position: Geolocation = Geolocation.default,
+      center: Geolocation = Geolocation.default,
       zoom: Int = 8
   )
 
   def apply(model: Model): ReactElement =
     MapLibre(
       id = "main-geomap",
-      position = toLngLat(model.position),
+      center = toLngLat(model.center),
       zoom = model.zoom
     )
 

@@ -24,8 +24,9 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   case class Props(
       id: String,
-      position: (Double, Double), // LngLat
+      center: (Double, Double), // LngLat
       zoom: Int,
+      focusedLocation: Option[(Double, Double)] = None, // LngLat
       styleLocation: String = "/geomap/style.json",
       vectorTilesLocation: String = "/geomap/japan.pmtiles"
   )
@@ -104,7 +105,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
               val map = new maplibre.Map(new maplibre.MapOptions {
                 override val container = props.id
                 override val zoom = props.zoom
-                override val center = js.Tuple2.fromScalaTuple2(props.position)
+                override val center = js.Tuple2.fromScalaTuple2(props.center)
                 override val style = toAbsoluteUrl(props.styleLocation)
                 override val transformRequest = _transformRequest
               })
