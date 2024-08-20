@@ -145,6 +145,20 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       Seq(props.focusedLocation)
     )
 
+    // Change the map center and zoom.
+    useEffect(
+      () => {
+        mapRef.current.foreach { map =>
+          map.easeTo(new maplibre.EaseToOptions {
+            override val center = js.Tuple2.fromScalaTuple2(props.center)
+            override val zoom = props.zoom
+            override val duration = 1000
+          })
+        }
+      },
+      Seq(props.center, props.zoom)
+    )
+
     section(id := props.id, className := "geomap")()
   }
 
