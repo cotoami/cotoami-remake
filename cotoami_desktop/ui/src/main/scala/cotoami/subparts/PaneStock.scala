@@ -4,7 +4,6 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Context, Model, Msg => AppMsg}
-import cotoami.backend.Nullable
 import cotoami.models.UiState
 import cotoami.components.{
   materialSymbol,
@@ -39,12 +38,7 @@ object PaneStock {
           primary = SplitPane.Primary.Props()(
             div(className := "map")(
               Option.when(uiState.geomapOpened) {
-                Geomap(
-                  id = "main-geomap",
-                  zoom = 8,
-                  resourceDir = model.systemInfo.map(_.resource_dir)
-                    .flatMap(Nullable.toOption)
-                )
+                SectionGeomap(model.geomap)
               },
               div(className := "close-map-button")(
                 button(

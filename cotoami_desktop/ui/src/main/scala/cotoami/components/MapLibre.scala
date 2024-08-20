@@ -1,4 +1,4 @@
-package cotoami.subparts
+package cotoami.components
 
 import scala.scalajs.js
 
@@ -9,9 +9,8 @@ import slinky.web.html._
 
 import cotoami.libs.tauri
 import cotoami.libs.geomap.{maplibre, pmtiles}
-import cotoami.models.Geolocation
 
-@react object Geomap {
+@react object MapLibre {
 
   // Enable to load PMTiles files.
   //
@@ -22,7 +21,7 @@ import cotoami.models.Geolocation
 
   case class Props(
       id: String,
-      position: Geolocation = Geolocation.default,
+      position: (Double, Double), // LngLat
       zoom: Int,
       styleLocation: String = "/geomap/style.json",
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
@@ -51,7 +50,10 @@ import cotoami.models.Geolocation
         // the given path with its separators replaced with the platform-specific ones.
         // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
         val path =
-          this.resourceDir.getOrElse("") + location.replace("/", tauri.path.sep)
+          this.resourceDir.getOrElse("") + location.replace(
+            "/",
+            tauri.path.sep
+          )
         tauri.convertFileSrc(path)
       }
   }
@@ -84,7 +86,7 @@ import cotoami.models.Geolocation
           val map = new maplibre.Map(new maplibre.MapOptions {
             override val container = props.id
             override val zoom = props.zoom
-            override val center = toLngLat(props.position)
+            override val center = js.Tuple2.fromScalaTuple2(props.position)
             override val style = props.styleUrl
             override val transformRequest = _transformRequest
           })
@@ -103,7 +105,4 @@ import cotoami.models.Geolocation
 
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined
-
-  private def toLngLat(location: Geolocation): js.Tuple2[Double, Double] =
-    js.Tuple2(location.longitude, location.latitude)
 }
