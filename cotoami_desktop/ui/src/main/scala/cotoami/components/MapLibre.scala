@@ -33,7 +33,8 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   val component = FunctionalComponent[Props] { props =>
     val resourceDirRef = useRef("")
-    val mapRef = useRef[maplibre.Map](null)
+    val mapRef = useRef[Option[maplibre.Map]](None)
+    val focusedMarkerRef = useRef[Option[maplibre.Marker]](None)
 
     // Resolve a path as an absolute URL.
     //
@@ -110,7 +111,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
                 override val transformRequest = _transformRequest
               })
               map.addControl(new maplibre.NavigationControl())
-              mapRef.current = map
+              mapRef.current = Some(map)
             }
           }
           case Failure(t) =>
@@ -118,6 +119,30 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
         }
       },
       Seq.empty
+    )
+
+    // On/Off a focused marker.
+    useEffect(
+      () => {
+        (
+          mapRef.current,
+          props.focusedLocation,
+          focusedMarkerRef.current
+        ) match {
+          case (Some(map), Some(location), _) => {
+            val marker = new maplibre.Marker()
+              .setLngLat(js.Tuple2.fromScalaTuple2(location))
+              .addTo(map)
+            focusedMarkerRef.current = Some(marker)
+          }
+          case (_, None, Some(marker)) => {
+            marker.remove()
+            focusedMarkerRef.current = None
+          }
+          case _ => ()
+        }
+      },
+      Seq(props.focusedLocation)
     )
 
     section(id := props.id, className := "geomap")()
