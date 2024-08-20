@@ -197,7 +197,7 @@ pub async fn open_database(
     };
 
     // Init OperatingAs
-    if let None = app_handle.try_state::<OperatingAs>() {
+    if app_handle.try_state::<OperatingAs>().is_none() {
         let operating_as = OperatingAs::default();
         operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
         app_handle.manage(operating_as);

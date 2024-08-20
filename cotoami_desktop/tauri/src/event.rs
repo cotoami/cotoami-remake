@@ -95,7 +95,7 @@ pub(super) async fn pipe(
     }));
 
     // If any one of the tasks exit, abort the other.
-    if let Some(_) = tasks.join_next().await {
+    if tasks.join_next().await.is_some() {
         tasks.shutdown().await;
     }
 }

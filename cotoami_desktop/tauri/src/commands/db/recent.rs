@@ -62,13 +62,8 @@ impl RecentDatabases {
     }
 
     pub fn delete_invalid_folders(&mut self, app_handle: &tauri::AppHandle) {
-        self.0.retain(|db| {
-            if let Err(_) = super::validate_database_folder(&db.folder) {
-                false
-            } else {
-                true
-            }
-        });
+        self.0
+            .retain(|db| super::validate_database_folder(&db.folder).is_ok());
         self.save(app_handle);
     }
 
