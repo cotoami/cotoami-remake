@@ -10,6 +10,10 @@ import org.scalajs.dom
 class Map(options: MapOptions) extends js.Object {
 
   /** Adds an IControl to the map, calling control.onAdd(this).
+    *
+    * @param position
+    *   Valid values are 'top-left', 'top-right', 'bottom-left', and
+    *   'bottom-right'. Defaults to 'top-right'.
     */
   def addControl(
       control: js.Any,
