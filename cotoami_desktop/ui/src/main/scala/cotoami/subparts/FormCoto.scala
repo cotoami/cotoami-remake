@@ -227,8 +227,18 @@ object FormCoto {
             )
         }
 
-      case (Msg.SetCotonomaForm, _, _) =>
-        default.copy(_1 = model.copy(form = CotonomaForm()))
+      case (Msg.SetCotonomaForm, cotoForm: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = CotonomaForm()),
+          _2 =
+            // If the focused location has been set by media EXIF info,
+            // Swithcing to CotonomaForm will abandon the focused location
+            // as well as the media content.
+            if (geomap.focusedLocation == cotoForm.mediaGeolocation)
+              geomap.copy(focusedLocation = None)
+            else
+              geomap
+        )
 
       case (Msg.CotoRestored(Some(coto)), form: CotoForm, _) =>
         default.copy(
