@@ -48,8 +48,8 @@ case class Model(
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     flowInput: FormCoto.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
-    geomap: SectionGeomap.Model = SectionGeomap.Model(),
-    traversals: SectionTraversals.Model = SectionTraversals.Model()
+    traversals: SectionTraversals.Model = SectionTraversals.Model(),
+    geomap: Geomap = Geomap()
 ) extends Context {
   def path: String = this.url.pathname + this.url.search + this.url.hash
 

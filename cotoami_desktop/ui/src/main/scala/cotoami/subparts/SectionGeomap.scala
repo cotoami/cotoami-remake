@@ -3,22 +3,16 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 
 import cotoami.components.MapLibre
-import cotoami.models.Geolocation
+import cotoami.models.{Geolocation, Geomap}
 
 object SectionGeomap {
 
-  case class Model(
-      center: Geolocation = Geolocation.default,
-      zoom: Int = 8,
-      focusedLocation: Option[Geolocation] = None
-  )
-
-  def apply(model: Model): ReactElement =
+  def apply(geomap: Geomap): ReactElement =
     MapLibre(
       id = "main-geomap",
-      center = toLngLat(model.center),
-      zoom = model.zoom,
-      focusedLocation = model.focusedLocation.map(toLngLat)
+      center = toLngLat(geomap.center),
+      zoom = geomap.zoom,
+      focusedLocation = geomap.focusedLocation.map(toLngLat)
     )
 
   private def toLngLat(location: Geolocation): (Double, Double) =
