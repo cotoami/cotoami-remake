@@ -88,6 +88,7 @@ section.form-coto {
       justify-content: center;
       align-items: center;
 
+      padding-top: 1px; // keep it from overlapping with section.coto-type-switch
       min-height: 0; // let this item shrink below the content size
 
       img {
@@ -224,11 +225,25 @@ section.form-coto {
         }
       }
 
-      div.attribute-delete {
-        width: 30px;
+      div.reset-location {
+        padding-right: 10px;
 
         display: inline-flex;
-        justify-content: start;
+        justify-content: center;
+        align-items: center;
+
+        button {
+          border: 1px solid var(--pane-border-color);
+          border-radius: var(--border-radius);
+          padding: 4px 12px;
+        }
+      }
+
+      div.attribute-delete {
+        width: 40px;
+
+        display: inline-flex;
+        justify-content: center;
         align-items: center;
 
         button.delete {

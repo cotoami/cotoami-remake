@@ -108,7 +108,7 @@ object FormCoto {
   case class CotoForm(
       cotoInput: String = "",
       mediaContent: Option[dom.Blob] = None,
-      mediaGeolocation: Option[Geolocation] = None
+      mediaLocation: Option[Geolocation] = None
   ) extends Form {
     def summary: Option[String] =
       if (this.hasSummary)
@@ -188,6 +188,7 @@ object FormCoto {
     case class GeolocationInput(result: Either[String, Geolocation]) extends Msg
     case object DeleteMediaContent extends Msg
     case object DeleteGeolocation extends Msg
+    case object ResetGeolocation extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
     case class CotonomaByName(
@@ -232,10 +233,10 @@ object FormCoto {
         default.copy(
           _1 = model.copy(form = CotonomaForm()),
           _2 =
-            // If the focused location has been set by media EXIF info,
+            // If the focused location has been set by EXIF info,
             // Swithcing to CotonomaForm will abandon the focused location
             // as well as the media content.
-            if (geomap.focusedLocation == cotoForm.mediaGeolocation)
+            if (geomap.focusedLocation == cotoForm.mediaLocation)
               geomap.copy(focusedLocation = None)
             else
               geomap
@@ -310,7 +311,7 @@ object FormCoto {
 
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaGeolocation = Some(location))),
+          _1 = model.copy(form = form.copy(mediaLocation = Some(location))),
           _2 = geomap.copy(
             center = location,
             zoom = 12,
@@ -329,13 +330,16 @@ object FormCoto {
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form =
-            form.copy(mediaContent = None, mediaGeolocation = None)
+            form.copy(mediaContent = None, mediaLocation = None)
           ),
           _2 = geomap.copy(focusedLocation = None)
         )
 
       case (Msg.DeleteGeolocation, _, _) =>
         default.copy(_2 = geomap.copy(focusedLocation = None))
+
+      case (Msg.ResetGeolocation, form: CotoForm, _) =>
+        default.copy(_2 = geomap.copy(focusedLocation = form.mediaLocation))
 
       case (Msg.ImeCompositionStart, _, _) =>
         default.copy(_1 = model.copy(imeActive = true))
@@ -603,7 +607,7 @@ object FormCoto {
           onClick = _ => dispatch(Msg.DeleteMediaContent)
         )
       ),
-      form.mediaGeolocation.map(location =>
+      form.mediaLocation.map(location =>
         section(className := "geolocation")(
           materialSymbol("photo_camera"),
           button(className := "geolocation default")(
@@ -668,7 +672,7 @@ object FormCoto {
             )
           ),
       secondary = SplitPane.Secondary.Props()(
-        geomap.focusedLocation.map(sectionAttributes),
+        sectionAttributes(geomap.focusedLocation, form.mediaLocation),
         div(className := "post")(
           Validation.sectionValidationError(form.validate),
           section(className := "post")(
@@ -724,7 +728,7 @@ object FormCoto {
           }
         )
       ),
-      geomap.focusedLocation.map(sectionAttributes),
+      sectionAttributes(geomap.focusedLocation, None),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
@@ -737,34 +741,51 @@ object FormCoto {
     )
 
   private def sectionAttributes(
-      location: Geolocation
-  )(implicit dispatch: Msg => Unit): ReactElement =
-    section(className := "attributes")(
-      div(className := "attribute")(
-        div(className := "attribute-name")(
-          materialSymbol("location_on"),
-          "Location"
-        ),
-        div(className := "attribute-value")(
-          div(className := "longitude")(
-            span(className := "label")("longitude:"),
-            span(className := "value longitude")(location.longitude)
+      location: Option[Geolocation],
+      mediaLocation: Option[Geolocation]
+  )(implicit dispatch: Msg => Unit): Option[ReactElement] =
+    Option.when(location.isDefined || mediaLocation.isDefined) {
+      section(className := "attributes")(
+        div(className := "attribute geolocation")(
+          div(className := "attribute-name")(
+            materialSymbol("location_on"),
+            "Location"
           ),
-          div(className := "latitude")(
-            span(className := "label")("latitude:"),
-            span(className := "value latitude")(location.latitude)
-          )
-        ),
-        div(className := "attribute-delete")(
-          toolButton(
-            symbol = "close",
-            tip = "Delete",
-            classes = "delete",
-            onClick = _ => dispatch(Msg.DeleteGeolocation)
-          )
+          div(className := "attribute-value")(
+            location.map(location =>
+              Fragment(
+                div(className := "longitude")(
+                  span(className := "label")("longitude:"),
+                  span(className := "value longitude")(location.longitude)
+                ),
+                div(className := "latitude")(
+                  span(className := "label")("latitude:"),
+                  span(className := "value latitude")(location.latitude)
+                )
+              )
+            )
+          ),
+          Option.when(location != mediaLocation) {
+            div(className := "reset-location")(
+              button(
+                className := "default",
+                onClick := (_ => dispatch(Msg.ResetGeolocation))
+              )("Use the image location")
+            )
+          },
+          Option.when(location.isDefined) {
+            div(className := "attribute-delete")(
+              toolButton(
+                symbol = "close",
+                tip = "Delete",
+                classes = "delete",
+                onClick = _ => dispatch(Msg.DeleteGeolocation)
+              )
+            )
+          }
         )
       )
-    )
+    }
 
   private def headerTools(model: Model)(implicit
       dispatch: Msg => Unit
