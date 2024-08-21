@@ -245,14 +245,16 @@ object Main {
       }
 
       case Msg.FlowInputMsg(submsg) => {
-        val (flowInput, waitingPosts, log, subcmds) = FormCoto.update(
+        val (flowInput, geomap, waitingPosts, log, subcmds) = FormCoto.update(
           submsg,
           model.flowInput,
+          model.geomap,
           model.waitingPosts
         )(model)
         (
           model.copy(
             flowInput = flowInput,
+            geomap = geomap,
             waitingPosts = waitingPosts,
             log = log
           ),

@@ -17,7 +17,7 @@ import cotoami.Context
 import cotoami.utils.{Log, Validation}
 import cotoami.libs.exifr
 import cotoami.backend._
-import cotoami.models.{Geolocation, WaitingPost, WaitingPosts}
+import cotoami.models.{Geolocation, Geomap, WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -211,16 +211,19 @@ object FormCoto {
   def update(
       msg: Msg,
       model: Model,
+      geomap: Geomap,
       waitingPosts: WaitingPosts
-  )(implicit context: Context): (Model, WaitingPosts, Log, Seq[Cmd[Msg]]) = {
-    val default = (model, waitingPosts, context.log, Seq.empty)
+  )(implicit
+      context: Context
+  ): (Model, Geomap, WaitingPosts, Log, Seq[Cmd[Msg]]) = {
+    val default = (model, geomap, waitingPosts, context.log, Seq.empty)
     (msg, model.form, context.domain.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
         model.copy(form = CotoForm()) match {
           case model =>
             default.copy(
               _1 = model,
-              _4 = Seq(model.restore)
+              _5 = Seq(model.restore)
             )
         }
 
@@ -237,7 +240,7 @@ object FormCoto {
               )
             else
               model.copy(folded = false),
-          _3 = context.log.info("Coto draft restored")
+          _4 = context.log.info("Coto draft restored")
         )
 
       case (Msg.CotoInput(coto), form: CotoForm, _) =>
@@ -245,7 +248,7 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
-              _4 = Seq(model.save)
+              _5 = Seq(model.save)
             )
         }
 
@@ -258,7 +261,7 @@ object FormCoto {
           form.copy(nameInput = name).validate(cotonoma.nodeId)
         default.copy(
           _1 = model.copy(form = newForm),
-          _4 =
+          _5 =
             if (!model.imeActive)
               cmds
             else
@@ -269,7 +272,7 @@ object FormCoto {
       case (Msg.FileInput(file), form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form = form.copy(mediaContent = Some(file))),
-          _4 = Seq(
+          _5 = Seq(
             Cmd(IO.async { cb =>
               IO {
                 exifr.gps(file).onComplete {
@@ -296,11 +299,16 @@ object FormCoto {
 
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(geolocation = Some(location)))
+          _1 = model.copy(form = form.copy(geolocation = Some(location))),
+          _2 = geomap.copy(
+            center = location,
+            zoom = 12,
+            focusedLocation = Some(location)
+          )
         )
 
       case (Msg.GeolocationInput(Left(error)), _, _) =>
-        default.copy(_3 =
+        default.copy(_4 =
           context.log.error(
             "Geolocation input error.",
             Some(error)
@@ -325,7 +333,7 @@ object FormCoto {
                 val (newForm, cmds) = form.validate(cotonoma.nodeId)
                 default.copy(
                   _1 = model.copy(form = newForm),
-                  _4 = cmds
+                  _5 = cmds
                 )
               }
               case _ => default
@@ -359,7 +367,7 @@ object FormCoto {
             case form => default.copy(_1 = model.copy(form = form))
           }
         else
-          default.copy(_3 =
+          default.copy(_4 =
             context.log.error(
               "CotonomaByName error.",
               Some(js.JSON.stringify(error))
@@ -379,7 +387,7 @@ object FormCoto {
               case Some(blob) =>
                 default.copy(
                   _1 = model,
-                  _4 = Seq(
+                  _5 = Seq(
                     Browser.encodeAsBase64(blob, true).map {
                       case Right(base64) =>
                         Msg.MediaContentEncoded(Right((base64, blob.`type`)))
@@ -391,7 +399,7 @@ object FormCoto {
                   )
                 )
               case None => {
-                update(Msg.PostCoto(form, None), model, waitingPosts)
+                update(Msg.PostCoto(form, None), model, geomap, waitingPosts)
               }
             }
         }
@@ -402,8 +410,8 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
-              _2 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
-              _4 = Seq(postCotonoma(postId, form, cotonoma.id))
+              _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
+              _5 = Seq(postCotonoma(postId, form, cotonoma.id))
             )
         }
       }
@@ -414,14 +422,14 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
-              _2 = waitingPosts.addCoto(
+              _3 = waitingPosts.addCoto(
                 postId,
                 form.content,
                 form.summary,
                 mediaContent,
                 cotonoma
               ),
-              _4 = Seq(
+              _5 = Seq(
                 postCoto(postId, form, mediaContent, cotonoma.id),
                 model.save
               )
@@ -430,49 +438,54 @@ object FormCoto {
       }
 
       case (Msg.MediaContentEncoded(Right(mediaContent)), form: CotoForm, _) =>
-        update(Msg.PostCoto(form, Some(mediaContent)), model, waitingPosts)
+        update(
+          Msg.PostCoto(form, Some(mediaContent)),
+          model,
+          geomap,
+          waitingPosts
+        )
 
       case (Msg.MediaContentEncoded(Left(e)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
-          _3 = context.log.error(e, None)
+          _4 = context.log.error(e, None)
         )
 
       case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
-          _2 = waitingPosts.remove(postId),
-          _3 = context.log.info("Coto posted.", Some(coto.id.uuid))
+          _3 = waitingPosts.remove(postId),
+          _4 = context.log.info("Coto posted.", Some(coto.id.uuid))
         )
 
       case (Msg.CotoPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
         default.copy(
           _1 = model.copy(posting = false),
-          _2 = waitingPosts.setError(
+          _3 = waitingPosts.setError(
             postId,
             s"Couldn't post this coto: ${error}"
           ),
-          _3 = context.log.error("Couldn't post a coto.", Some(error))
+          _4 = context.log.error("Couldn't post a coto.", Some(error))
         )
       }
 
       case (Msg.CotonomaPosted(postId, Right((cotonoma, _))), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
-          _2 = waitingPosts.remove(postId),
-          _3 = context.log.info("Cotonoma posted.", Some(cotonoma.name))
+          _3 = waitingPosts.remove(postId),
+          _4 = context.log.info("Cotonoma posted.", Some(cotonoma.name))
         )
 
       case (Msg.CotonomaPosted(postId, Left(e)), _, _) => {
         val error = js.JSON.stringify(e)
         default.copy(
           _1 = model.copy(posting = false),
-          _2 = waitingPosts.setError(
+          _3 = waitingPosts.setError(
             postId,
             s"Couldn't post this cotonoma: ${error}"
           ),
-          _3 = context.log.error("Couldn't post a cotonoma.", Some(error))
+          _4 = context.log.error("Couldn't post a cotonoma.", Some(error))
         )
       }
 

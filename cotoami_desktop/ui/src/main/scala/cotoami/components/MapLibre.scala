@@ -129,7 +129,8 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
           props.focusedLocation,
           focusedMarkerRef.current
         ) match {
-          case (Some(map), Some(location), _) => {
+          case (Some(map), Some(location), currentMarker) => {
+            currentMarker.foreach(_.remove())
             val marker = new maplibre.Marker()
               .setLngLat(js.Tuple2.fromScalaTuple2(location))
               .addTo(map)
