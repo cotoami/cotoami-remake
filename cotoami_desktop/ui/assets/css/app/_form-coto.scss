@@ -223,6 +223,18 @@ section.form-coto {
           opacity: 0.6;
         }
       }
+
+      div.attribute-delete {
+        width: 30px;
+
+        display: inline-flex;
+        justify-content: start;
+        align-items: center;
+
+        button.delete {
+          font-size: 20px;
+        }
+      }
     }
   }
 

@@ -187,6 +187,7 @@ object FormCoto {
     case class FileInput(file: dom.Blob) extends Msg
     case class GeolocationInput(result: Either[String, Geolocation]) extends Msg
     case object DeleteMediaContent extends Msg
+    case object DeleteGeolocation extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
     case class CotonomaByName(
@@ -332,6 +333,9 @@ object FormCoto {
           ),
           _2 = geomap.copy(focusedLocation = None)
         )
+
+      case (Msg.DeleteGeolocation, _, _) =>
+        default.copy(_2 = geomap.copy(focusedLocation = None))
 
       case (Msg.ImeCompositionStart, _, _) =>
         default.copy(_1 = model.copy(imeActive = true))
@@ -732,7 +736,9 @@ object FormCoto {
       )
     )
 
-  private def sectionAttributes(location: Geolocation): ReactElement =
+  private def sectionAttributes(
+      location: Geolocation
+  )(implicit dispatch: Msg => Unit): ReactElement =
     section(className := "attributes")(
       div(className := "attribute")(
         div(className := "attribute-name")(
@@ -747,6 +753,14 @@ object FormCoto {
           div(className := "latitude")(
             span(className := "label")("latitude:"),
             span(className := "value latitude")(location.latitude)
+          )
+        ),
+        div(className := "attribute-delete")(
+          toolButton(
+            symbol = "close",
+            tip = "Delete",
+            classes = "delete",
+            onClick = _ => dispatch(Msg.DeleteGeolocation)
           )
         )
       )
