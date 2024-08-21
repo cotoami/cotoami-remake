@@ -51,7 +51,7 @@ object FormCoto {
 
     def hasContents: Boolean =
       this.form match {
-        case CotoForm(cotoInput, mediaContent, _) =>
+        case CotoForm(cotoInput, mediaContent) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
@@ -77,7 +77,7 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (this.autoSave, this.form) match {
-        case (true, CotoForm(cotoInput, _, _)) =>
+        case (true, CotoForm(cotoInput, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(this.storageKey, cotoInput)
             None
@@ -107,8 +107,7 @@ object FormCoto {
 
   case class CotoForm(
       cotoInput: String = "",
-      mediaContent: Option[dom.Blob] = None,
-      geolocation: Option[Geolocation] = None
+      mediaContent: Option[dom.Blob] = None
   ) extends Form {
     def summary: Option[String] =
       if (this.hasSummary)
@@ -299,7 +298,6 @@ object FormCoto {
 
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(geolocation = Some(location))),
           _2 = geomap.copy(
             center = location,
             zoom = 12,
@@ -308,8 +306,8 @@ object FormCoto {
         )
 
       case (Msg.GeolocationInput(Left(error)), _, _) =>
-        default.copy(_4 =
-          context.log.error(
+        default.copy(
+          _4 = context.log.error(
             "Geolocation input error.",
             Some(error)
           )
@@ -317,9 +315,8 @@ object FormCoto {
 
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form =
-            form.copy(mediaContent = None, geolocation = None)
-          )
+          _1 = model.copy(form = form.copy(mediaContent = None)),
+          _2 = geomap.copy(focusedLocation = None)
         )
 
       case (Msg.ImeCompositionStart, _, _) =>
@@ -517,6 +514,7 @@ object FormCoto {
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
+      geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
   )(implicit dispatch: Msg => Unit): ReactElement =
@@ -546,6 +544,7 @@ object FormCoto {
                     model,
                     operatingNode,
                     currentCotonoma,
+                    geomap,
                     editorHeight,
                     onEditorHeightChanged
                   )
@@ -557,6 +556,7 @@ object FormCoto {
                 model,
                 operatingNode,
                 currentCotonoma,
+                geomap,
                 editorHeight,
                 onEditorHeightChanged
               )
@@ -602,6 +602,7 @@ object FormCoto {
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
+      geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
   )(implicit dispatch: Msg => Unit): ReactElement =
@@ -624,7 +625,7 @@ object FormCoto {
           )
         else
           SplitPane.Primary.Props(className = Some("coto-editor"))(
-            form.geolocation.map(sectionGeolocation),
+            geomap.focusedLocation.map(sectionGeolocation),
             textarea(
               id := model.editorId,
               placeholder := "Write your Coto in Markdown",

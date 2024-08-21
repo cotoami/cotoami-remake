@@ -35,6 +35,7 @@ object PaneFlow {
                 model.flowInput,
                 operatingNode,
                 cotonoma,
+                model.geomap,
                 uiState.paneSizes.getOrElse(
                   EditorPaneName,
                   EditorDefaultHeight
