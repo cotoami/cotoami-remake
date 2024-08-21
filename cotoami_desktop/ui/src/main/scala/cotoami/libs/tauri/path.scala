@@ -17,5 +17,5 @@ object path extends js.Object {
   def resolveResource(resourcePath: String): js.Promise[String] = js.native
 
   // Returns the path to the application's resource directory.
-  def resourceDir: js.Promise[String] = js.native
+  def resourceDir(): js.Promise[String] = js.native
 }
