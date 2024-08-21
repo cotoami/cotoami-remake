@@ -173,7 +173,7 @@ section.form-coto {
 
   section.geolocation {
     text-align: center;
-    font-size: 90%;
+    font-size: 0.9rem;
 
     span.material-symbols {
       vertical-align: middle;
@@ -185,8 +185,44 @@ section.form-coto {
 
     span.value {
       margin-right: 4px;
-      font-size: 90%;
+      font-size: 0.8rem;
       opacity: 0.6;
+    }
+  }
+
+  section.attributes {
+    border-bottom: 1px solid var(--pane-border-color);
+    padding: 6px 0;
+    font-size: 0.9rem;
+
+    div.attribute {
+      display: flex;
+      flex-direction: row;
+
+      div.attribute-name {
+        width: 100px;
+        padding-left: 10px;
+
+        display: inline-flex;
+        justify-content: start;
+        align-items: center;
+
+        font-weight: 700;
+
+        span.material-symbols {
+          margin-right: 3px;
+        }
+      }
+
+      div.attribute-value {
+        flex: 1;
+        font-size: 0.8rem;
+
+        span.value {
+          margin-left: 6px;
+          opacity: 0.6;
+        }
+      }
     }
   }
 
@@ -268,8 +304,13 @@ section.form-coto {
   }
 
   &.folded {
-    section.media-preview {
-      display: none;
+    div.coto-form-with-media {
+
+      // hide section.media-preview
+      &>div.split-pane-primary,
+      &>div.separator {
+        display: none;
+      }
     }
 
     .coto-editor {
@@ -279,9 +320,13 @@ section.form-coto {
         overflow: hidden;
       }
 
-      section.input-file {
+      div.input-image {
         display: none;
       }
+    }
+
+    section.attributes {
+      display: none;
     }
 
     div.post {

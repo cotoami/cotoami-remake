@@ -568,7 +568,7 @@ object FormCoto {
           )
 
         case form: CotonomaForm =>
-          formCotonoma(form, model, operatingNode, currentCotonoma)
+          formCotonoma(form, model, operatingNode, currentCotonoma, geomap)
       }
     )
 
@@ -592,19 +592,16 @@ object FormCoto {
       form.mediaGeolocation.map(location =>
         section(className := "geolocation")(
           materialSymbol("photo_camera"),
-          buttonGeolocation(location)
+          button(className := "geolocation default")(
+            span(className := "label")("longitude:"),
+            span(className := "value longitude")(location.longitude),
+            span(className := "label")("latitude:"),
+            span(className := "value latitude")(location.latitude)
+          )
         )
       )
     )
   }
-
-  private def buttonGeolocation(location: Geolocation): ReactElement =
-    button(className := "geolocation default")(
-      span(className := "label")("longitude:"),
-      span(className := "value longitude")(location.longitude),
-      span(className := "label")("latitude:"),
-      span(className := "value latitude")(location.latitude)
-    )
 
   private def formCoto(
       form: CotoForm,
@@ -657,6 +654,7 @@ object FormCoto {
             )
           ),
       secondary = SplitPane.Secondary.Props()(
+        geomap.focusedLocation.map(sectionAttributes),
         div(className := "post")(
           Validation.sectionValidationError(form.validate),
           section(className := "post")(
@@ -691,7 +689,8 @@ object FormCoto {
       form: CotonomaForm,
       model: Model,
       operatingNode: Node,
-      currentCotonoma: Cotonoma
+      currentCotonoma: Cotonoma,
+      geomap: Geomap
   )(implicit dispatch: Msg => Unit): ReactElement =
     Fragment(
       input(
@@ -711,12 +710,33 @@ object FormCoto {
           }
         )
       ),
+      geomap.focusedLocation.map(sectionAttributes),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
           addressPoster(operatingNode),
           div(className := "buttons")(
             buttonPost(model, currentCotonoma)
+          )
+        )
+      )
+    )
+
+  private def sectionAttributes(location: Geolocation): ReactElement =
+    section(className := "attributes")(
+      div(className := "attribute")(
+        div(className := "attribute-name")(
+          materialSymbol("location_on"),
+          "Location"
+        ),
+        div(className := "attribute-value")(
+          div(className := "longitude")(
+            span(className := "label")("longitude:"),
+            span(className := "value longitude")(location.longitude)
+          ),
+          div(className := "latitude")(
+            span(className := "label")("latitude:"),
+            span(className := "value latitude")(location.latitude)
           )
         )
       )
