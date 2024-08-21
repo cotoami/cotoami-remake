@@ -589,19 +589,21 @@ object FormCoto {
           onClick = _ => dispatch(Msg.DeleteMediaContent)
         )
       ),
-      form.mediaGeolocation.map(sectionGeolocation)
+      form.mediaGeolocation.map(location =>
+        section(className := "geolocation")(
+          materialSymbol("photo_camera"),
+          buttonGeolocation(location)
+        )
+      )
     )
   }
 
-  private def sectionGeolocation(location: Geolocation): ReactElement =
-    section(className := "geolocation")(
-      button(className := "default")(
-        materialSymbol("location_on"),
-        span(className := "label")("longitude:"),
-        span(className := "value longitude")(location.longitude),
-        span(className := "label")("latitude:"),
-        span(className := "value latitude")(location.latitude)
-      )
+  private def buttonGeolocation(location: Geolocation): ReactElement =
+    button(className := "geolocation default")(
+      span(className := "label")("longitude:"),
+      span(className := "value longitude")(location.longitude),
+      span(className := "label")("latitude:"),
+      span(className := "value latitude")(location.latitude)
     )
 
   private def formCoto(
