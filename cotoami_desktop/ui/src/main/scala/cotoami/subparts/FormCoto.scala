@@ -51,7 +51,7 @@ object FormCoto {
 
     def hasContents: Boolean =
       this.form match {
-        case CotoForm(cotoInput, mediaContent) =>
+        case CotoForm(cotoInput, mediaContent, _) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
@@ -77,7 +77,7 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (this.autoSave, this.form) match {
-        case (true, CotoForm(cotoInput, _)) =>
+        case (true, CotoForm(cotoInput, _, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(this.storageKey, cotoInput)
             None
@@ -107,7 +107,8 @@ object FormCoto {
 
   case class CotoForm(
       cotoInput: String = "",
-      mediaContent: Option[dom.Blob] = None
+      mediaContent: Option[dom.Blob] = None,
+      mediaGeolocation: Option[Geolocation] = None
   ) extends Form {
     def summary: Option[String] =
       if (this.hasSummary)
@@ -298,6 +299,7 @@ object FormCoto {
 
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
         default.copy(
+          _1 = model.copy(form = form.copy(mediaGeolocation = Some(location))),
           _2 = geomap.copy(
             center = location,
             zoom = 12,
@@ -315,7 +317,9 @@ object FormCoto {
 
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaContent = None)),
+          _1 = model.copy(form =
+            form.copy(mediaContent = None, mediaGeolocation = None)
+          ),
           _2 = geomap.copy(focusedLocation = None)
         )
 
@@ -573,16 +577,19 @@ object FormCoto {
   ): ReactElement = {
     val url = dom.URL.createObjectURL(mediaContent)
     section(className := "media-preview")(
-      img(
-        src := url,
-        onLoad := (_ => dom.URL.revokeObjectURL(url))
+      div(className := "media-content")(
+        img(
+          src := url,
+          onLoad := (_ => dom.URL.revokeObjectURL(url))
+        ),
+        toolButton(
+          symbol = "close",
+          tip = "Delete",
+          classes = "delete",
+          onClick = _ => dispatch(Msg.DeleteMediaContent)
+        )
       ),
-      toolButton(
-        symbol = "close",
-        tip = "Delete",
-        classes = "delete",
-        onClick = _ => dispatch(Msg.DeleteMediaContent)
-      )
+      form.mediaGeolocation.map(sectionGeolocation)
     )
   }
 
@@ -625,7 +632,6 @@ object FormCoto {
           )
         else
           SplitPane.Primary.Props(className = Some("coto-editor"))(
-            geomap.focusedLocation.map(sectionGeolocation),
             textarea(
               id := model.editorId,
               placeholder := "Write your Coto in Markdown",

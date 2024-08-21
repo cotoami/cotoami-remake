@@ -73,34 +73,47 @@ section.form-coto {
   }
 
   section.media-preview {
-    position: relative;
+    display: flex;
+    flex-direction: column;
 
     // wrapped in SplitPane
     width: 100%;
     height: 100%;
 
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
+    div.media-content {
+      flex: 1;
+      position: relative;
 
-    img {
-      width: auto;
-      height: auto;
-      max-height: 100%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+
+      min-height: 0; // let this item shrink below the content size
+
+      img {
+        width: auto;
+        height: auto;
+        max-height: 100%;
+      }
+
+      button.delete {
+        position: absolute;
+        top: 0;
+        right: 0;
+
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        vertical-align: middle;
+        text-align: center;
+        font-size: 20px;
+        background-color: rgba(0, 0, 0, .4);
+      }
     }
 
-    button.delete {
-      position: absolute;
-      top: 0;
-      right: 0;
-
-      width: 24px;
-      height: 24px;
-      line-height: 24px;
-      vertical-align: middle;
-      text-align: center;
-      font-size: 20px;
-      background-color: rgba(0, 0, 0, .4);
+    section.geolocation {
+      height: 30px;
+      padding-top: 4px;
     }
   }
 
@@ -159,9 +172,6 @@ section.form-coto {
   }
 
   section.geolocation {
-    height: 30px;
-    line-height: 30px;
-
     text-align: center;
     font-size: 90%;
 
