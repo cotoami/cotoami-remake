@@ -111,6 +111,12 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
                 override val transformRequest = _transformRequest
               })
               map.addControl(new maplibre.NavigationControl())
+              map.on(
+                "click",
+                (e: maplibre.MapMouseEvent) => {
+                  println(s"Click on ${e.lngLat}")
+                }
+              )
               mapRef.current = Some(map)
             }
           }

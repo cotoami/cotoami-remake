@@ -29,6 +29,29 @@ class Map(options: MapOptions) extends js.Object {
     * unless options includes essential: true.
     */
   def easeTo(options: EaseToOptions): Map = js.native
+
+  /** Adds a listener for events of a specified type, optionally limited to
+    * features in a specified style layer.
+    *
+    * @param type
+    *   The event type to listen for.
+    * @param layer
+    *   The ID of a style layer. Event will only be triggered if its location is
+    *   within a visible feature in this layer.
+    * @param listener
+    *   The function to be called when the event is fired.
+    * @return
+    */
+  def on[Event](
+      eventType: String,
+      layer: String,
+      listener: js.Function1[Event, Unit]
+  ): Map = js.native
+
+  def on[Event](
+      eventType: String,
+      listener: js.Function1[Event, Unit]
+  ): Map = js.native
 }
 
 trait MapOptions extends js.Object {
@@ -115,6 +138,26 @@ trait CenterZoomBearing extends js.Object {
 }
 
 trait EaseToOptions extends AnimationOptions with CenterZoomBearing
+
+@js.native
+trait MapMouseEvent extends js.Object {
+
+  /** Prevents subsequent default processing of the event by the map.
+    */
+  def preventDefault(): Unit = js.native
+
+  /** true if preventDefault has been called.
+    */
+  def defaultPrevented(): Boolean = js.native
+
+  /** The geographic location on the map of the mouse cursor.
+    */
+  val lngLat: LngLat = js.native
+
+  /** The event type.
+    */
+  val `type`: String = js.native
+}
 
 /** A NavigationControl control contains zoom buttons and a compass.
   */
