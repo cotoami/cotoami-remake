@@ -177,12 +177,6 @@ trait MapMouseEvent extends js.Object {
   val `type`: String = js.native
 }
 
-/** A NavigationControl control contains zoom buttons and a compass.
-  */
-@js.native
-@JSImport("maplibre-gl", "NavigationControl")
-class NavigationControl extends js.Object
-
 @js.native
 trait DragRotateHandler extends js.Object {
 

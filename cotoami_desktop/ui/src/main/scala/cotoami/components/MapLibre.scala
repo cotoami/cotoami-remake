@@ -130,7 +130,13 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
                 override val style = toAbsoluteUrl(props.styleLocation)
                 override val transformRequest = _transformRequest
               })
-              map.addControl(new maplibre.NavigationControl())
+              map.addControl(
+                new maplibre.NavigationControl(
+                  new maplibre.NavigationControlOptions() {
+                    override val showCompass = false
+                  }
+                )
+              )
 
               // Disable map rotation
               map.dragRotate.disable()
