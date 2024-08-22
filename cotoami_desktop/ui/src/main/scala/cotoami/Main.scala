@@ -176,7 +176,9 @@ object Main {
         model.updateUiState(_.openGeomap)
 
       case Msg.CloseMap =>
-        model.updateUiState(_.closeMap)
+        model
+          .modify(_.geomap.focusedLocation).setTo(None)
+          .updateUiState(_.closeMap)
 
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
