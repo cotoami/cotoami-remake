@@ -339,7 +339,13 @@ object FormCoto {
         default.copy(_2 = geomap.copy(focusedLocation = None))
 
       case (Msg.ResetGeolocation, form: CotoForm, _) =>
-        default.copy(_2 = geomap.copy(focusedLocation = form.mediaLocation))
+        default.copy(_2 =
+          geomap.copy(
+            center = form.mediaLocation.getOrElse(geomap.center),
+            zoom = 12,
+            focusedLocation = form.mediaLocation
+          )
+        )
 
       case (Msg.ImeCompositionStart, _, _) =>
         default.copy(_1 = model.copy(imeActive = true))
