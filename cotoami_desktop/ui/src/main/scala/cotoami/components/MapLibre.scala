@@ -101,9 +101,8 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
     // Initialize the map
     useEffect(
       () => {
-        val onClick: js.Function1[maplibre.MapMouseEvent, Unit] = e => {
-          onClickRef.current.foreach(_(e))
-        }
+        val onClick: js.Function1[maplibre.MapMouseEvent, Unit] =
+          e => onClickRef.current.foreach(_(e))
 
         tauri.path.resourceDir().onComplete {
           case Success(dir) => {
@@ -160,7 +159,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
           }
           case _ => ()
         },
-      Seq(props.focusedLocation)
+      Seq(props.focusedLocation.toString())
     )
 
     // Change the map center and zoom.
@@ -173,15 +172,12 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
             override val duration = 1000
           })
         ),
-      Seq(props.center, props.zoom)
+      Seq(props.center.toString(), props.zoom)
     )
 
     // Update onClickRef
     useEffect(
-      () => {
-        println("Update onClickRef")
-        onClickRef.current = props.onClick
-      },
+      () => { onClickRef.current = props.onClick },
       Seq(props.onClick)
     )
 
