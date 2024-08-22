@@ -3,7 +3,8 @@ package cotoami.models
 case class Geomap(
     center: Geolocation = Geolocation.default,
     zoom: Int = 8,
-    focusedLocation: Option[Geolocation] = None
+    focusedLocation: Option[Geolocation] = None,
+    forceSync: Int = 0
 )
 
 case class Geolocation(longitude: Double, latitude: Double)

@@ -35,6 +35,7 @@ object SectionGeomap {
       center = toLngLat(geomap.center),
       zoom = geomap.zoom,
       focusedLocation = geomap.focusedLocation.map(toLngLat),
+      forceSync = geomap.forceSync,
       onClick = Some(e => dispatch(Msg.MapClicked(e.lngLat).toApp))
     )
 

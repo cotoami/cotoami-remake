@@ -32,6 +32,9 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
 
+      // Changing this value forces to sync the map state with the current props
+      forceSync: Int = 0,
+
       // Map resources
       styleLocation: String = "/geomap/style.json",
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
@@ -167,7 +170,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
           }
           case _ => ()
         },
-      Seq(props.focusedLocation.toString())
+      Seq(props.forceSync, props.focusedLocation.toString())
     )
 
     // Change the map center and zoom.
@@ -180,7 +183,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
             override val duration = 1000
           })
         ),
-      Seq(props.center.toString(), props.zoom)
+      Seq(props.forceSync, props.center.toString(), props.zoom)
     )
 
     // Update onClickRef

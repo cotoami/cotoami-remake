@@ -317,7 +317,8 @@ object FormCoto {
           _2 = geomap.copy(
             center = location,
             zoom = 12,
-            focusedLocation = Some(location)
+            focusedLocation = Some(location),
+            forceSync = geomap.forceSync + 1
           )
         )
 
