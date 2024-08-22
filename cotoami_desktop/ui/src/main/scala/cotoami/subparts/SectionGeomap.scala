@@ -15,11 +15,18 @@ object SectionGeomap {
   }
 
   object Msg {
+    case object MapInit extends Msg
     case class MapClicked(lngLat: maplibre.LngLat) extends Msg
   }
 
   def update(msg: Msg, geomap: Geomap): (Geomap, Seq[Cmd[AppMsg]]) =
     msg match {
+      case Msg.MapInit =>
+        (
+          geomap.copy(forceSync = geomap.forceSync + 1),
+          Seq.empty
+        )
+
       case Msg.MapClicked(lngLat) =>
         (
           geomap.copy(focusedLocation =
@@ -36,6 +43,7 @@ object SectionGeomap {
       zoom = geomap.zoom,
       focusedLocation = geomap.focusedLocation.map(toLngLat),
       forceSync = geomap.forceSync,
+      onInit = Some(() => dispatch(Msg.MapInit.toApp)),
       onClick = Some(e => dispatch(Msg.MapClicked(e.lngLat).toApp))
     )
 

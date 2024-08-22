@@ -40,6 +40,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
 
       // Event handlers
+      onInit: Option[() => Unit] = None,
       onClick: Option[maplibre.MapMouseEvent => Unit] = None
   )
 
@@ -133,6 +134,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
               // Event handlers
               map.on("click", onClick)
+              props.onInit.map(_())
 
               mapRef.current = Some(map)
             }
