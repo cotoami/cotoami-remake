@@ -24,11 +24,19 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   case class Props(
       id: String,
+
+      // Viewport
       center: (Double, Double), // LngLat
       zoom: Int,
+
+      // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
+
+      // Map resources
       styleLocation: String = "/geomap/style.json",
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
+
+      // Event handlers
       onClick: Option[maplibre.MapMouseEvent => Unit] = None
   )
 
