@@ -283,7 +283,9 @@ object FormCoto {
 
       case (Msg.FileInput(file), form: CotoForm, _) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaContent = Some(file))),
+          _1 = model.copy(form =
+            form.copy(mediaContent = Some(file), mediaLocation = None)
+          ),
           _5 = Seq(
             Cmd(IO.async { cb =>
               IO {
