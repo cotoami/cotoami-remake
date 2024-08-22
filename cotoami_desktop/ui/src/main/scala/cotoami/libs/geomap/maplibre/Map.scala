@@ -52,6 +52,19 @@ class Map(options: MapOptions) extends js.Object {
       eventType: String,
       listener: js.Function1[Event, Unit]
   ): Map = js.native
+
+  /** Removes an event listener for events previously added with Map#on.
+    */
+  def off[Event](
+      eventType: String,
+      layer: String,
+      listener: js.Function1[Event, Unit]
+  ): Map = js.native
+
+  def off[Event](
+      eventType: String,
+      listener: js.Function1[Event, Unit]
+  ): Map = js.native
 }
 
 trait MapOptions extends js.Object {

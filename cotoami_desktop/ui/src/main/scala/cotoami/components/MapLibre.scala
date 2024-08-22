@@ -28,13 +28,17 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       zoom: Int,
       focusedLocation: Option[(Double, Double)] = None, // LngLat
       styleLocation: String = "/geomap/style.json",
-      vectorTilesLocation: String = "/geomap/japan.pmtiles"
+      vectorTilesLocation: String = "/geomap/japan.pmtiles",
+      onClick: Option[maplibre.MapMouseEvent => Unit] = None
   )
 
   val component = FunctionalComponent[Props] { props =>
     val resourceDirRef = useRef("")
     val mapRef = useRef[Option[maplibre.Map]](None)
     val focusedMarkerRef = useRef[Option[maplibre.Marker]](None)
+
+    val onClickRef = useRef[Option[maplibre.MapMouseEvent => Unit]](None)
+    onClickRef.current = props.onClick
 
     // Resolve a path as an absolute URL.
     //
@@ -96,6 +100,10 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
     // Initialize the map
     useEffect(
       () => {
+        val onClick: js.Function1[maplibre.MapMouseEvent, Unit] = e => {
+          onClickRef.current.foreach(_(e))
+        }
+
         tauri.path.resourceDir().onComplete {
           case Success(dir) => {
             // The tauri resource dir where local map resources are located.
@@ -111,25 +119,28 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
                 override val transformRequest = _transformRequest
               })
               map.addControl(new maplibre.NavigationControl())
-              map.on(
-                "click",
-                (e: maplibre.MapMouseEvent) => {
-                  println(s"Click on ${e.lngLat}")
-                }
-              )
+
+              // Event handlers
+              map.on("click", onClick)
+
               mapRef.current = Some(map)
             }
           }
           case Failure(t) =>
             println(s"Couldn't get tauri.path.resourceDir: ${t.toString()}")
         }
+
+        () =>
+          mapRef.current.foreach { map =>
+            map.off("click", onClick)
+          }
       },
       Seq.empty
     )
 
     // On/Off a focused marker.
     useEffect(
-      () => {
+      () =>
         (
           mapRef.current,
           props.focusedLocation,
@@ -147,22 +158,20 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
             focusedMarkerRef.current = None
           }
           case _ => ()
-        }
-      },
+        },
       Seq(props.focusedLocation)
     )
 
     // Change the map center and zoom.
     useEffect(
-      () => {
-        mapRef.current.foreach { map =>
-          map.easeTo(new maplibre.EaseToOptions {
+      () =>
+        mapRef.current.foreach(
+          _.easeTo(new maplibre.EaseToOptions {
             override val center = js.Tuple2.fromScalaTuple2(props.center)
             override val zoom = props.zoom
             override val duration = 1000
           })
-        }
-      },
+        ),
       Seq(props.center, props.zoom)
     )
 

@@ -12,7 +12,10 @@ object SectionGeomap {
       id = "main-geomap",
       center = toLngLat(geomap.center),
       zoom = geomap.zoom,
-      focusedLocation = geomap.focusedLocation.map(toLngLat)
+      focusedLocation = geomap.focusedLocation.map(toLngLat),
+      onClick = Some(e => {
+        println(s"Clicked: ${e.lngLat}")
+      })
     )
 
   private def toLngLat(location: Geolocation): (Double, Double) =
