@@ -233,15 +233,16 @@ object Main {
       }
 
       case Msg.DomainMsg(submsg) => {
-        val (submodel, cmds) = Domain.update(submsg, model.domain)
-        (model.copy(domain = submodel), cmds)
+        val (domain, cmds) = Domain.update(submsg, model.domain)
+        (model.copy(domain = domain), cmds)
       }
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
       case Msg.NavCotonomasMsg(submsg) => {
-        val (submodel, cmds) = NavCotonomas.update(submsg, model.navCotonomas)
-        (model.copy(navCotonomas = submodel), cmds)
+        val (navCotonomas, cmds) =
+          NavCotonomas.update(submsg, model.navCotonomas)
+        (model.copy(navCotonomas = navCotonomas), cmds)
       }
 
       case Msg.FlowInputMsg(submsg) => {
@@ -263,22 +264,22 @@ object Main {
       }
 
       case Msg.SectionTimelineMsg(submsg) => {
-        val (submodel, domain, cmds) =
+        val (timeline, domain, cmds) =
           SectionTimeline.update(submsg, model.timeline)
-        (model.copy(timeline = submodel, domain = domain), cmds)
+        (model.copy(timeline = timeline, domain = domain), cmds)
       }
 
       case Msg.SectionPinnedCotosMsg(submsg) =>
         SectionPinnedCotos.update(submsg, model)
 
       case Msg.SectionTraversalsMsg(submsg) => {
-        val (submodel, cmds) = SectionTraversals.update(
+        val (traversals, cmds) = SectionTraversals.update(
           submsg,
           model.traversals,
           model.domain
         )
         (
-          model.copy(traversals = submodel),
+          model.copy(traversals = traversals),
           (submsg, model.uiState) match {
             // Open the stock pane on OpenTraversal if it's closed.
             case (SectionTraversals.Msg.OpenTraversal(_), Some(uiState))
@@ -289,6 +290,11 @@ object Main {
             case _ => cmds
           }
         )
+      }
+
+      case Msg.SectionGeomapMsg(submsg) => {
+        val (geomap, cmds) = SectionGeomap.update(submsg, model.geomap)
+        (model.copy(geomap = geomap), cmds)
       }
     }
   }

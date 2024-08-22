@@ -765,7 +765,7 @@ object FormCoto {
               )
             )
           ),
-          Option.when(location != mediaLocation) {
+          Option.when(mediaLocation.isDefined && location != mediaLocation) {
             div(className := "reset-location")(
               button(
                 className := "default",

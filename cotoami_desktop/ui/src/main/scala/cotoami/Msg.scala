@@ -58,4 +58,5 @@ object Msg {
   case class SectionTimelineMsg(subMsg: SectionTimeline.Msg) extends Msg
   case class SectionPinnedCotosMsg(subMsg: SectionPinnedCotos.Msg) extends Msg
   case class SectionTraversalsMsg(subMsg: SectionTraversals.Msg) extends Msg
+  case class SectionGeomapMsg(subMsg: SectionGeomap.Msg) extends Msg
 }
