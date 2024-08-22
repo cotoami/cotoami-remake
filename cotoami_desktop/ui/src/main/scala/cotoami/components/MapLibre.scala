@@ -37,8 +37,9 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
     val mapRef = useRef[Option[maplibre.Map]](None)
     val focusedMarkerRef = useRef[Option[maplibre.Marker]](None)
 
-    val onClickRef = useRef[Option[maplibre.MapMouseEvent => Unit]](None)
-    onClickRef.current = props.onClick
+    // To allow the callbacks to access the up-to-date props.onClick
+    val onClickRef =
+      useRef[Option[maplibre.MapMouseEvent => Unit]](props.onClick)
 
     // Resolve a path as an absolute URL.
     //
@@ -173,6 +174,15 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
           })
         ),
       Seq(props.center, props.zoom)
+    )
+
+    // Update onClickRef
+    useEffect(
+      () => {
+        println("Update onClickRef")
+        onClickRef.current = props.onClick
+      },
+      Seq(props.onClick)
     )
 
     section(id := props.id, className := "geomap")()

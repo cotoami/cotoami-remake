@@ -36,9 +36,9 @@ import slinky.web.SyntheticMouseEvent
     val (moving, setMoving) = useState(false)
 
     val splitPaneRef = useRef[html.Div](null)
-    val separatorPos = useRef(Double.NaN)
+    val separatorPosRef = useRef(Double.NaN)
 
-    // To allow the callbacks to refer up-to-date state
+    // To allow the callbacks to access the up-to-date state.primarySize
     // https://stackoverflow.com/a/60643670
     val primarySizeRef = useRef(primarySize)
     primarySizeRef.current = primarySize
@@ -49,9 +49,9 @@ import slinky.web.SyntheticMouseEvent
           if (props.resizable) {
             setMoving(true)
             if (props.vertical) {
-              separatorPos.current = e.clientX
+              separatorPosRef.current = e.clientX
             } else {
-              separatorPos.current = e.clientY
+              separatorPosRef.current = e.clientY
             }
             props.onResizeStart.map(_())
           }
@@ -67,7 +67,7 @@ import slinky.web.SyntheticMouseEvent
     val onMouseMove: js.Function1[dom.MouseEvent, Unit] =
       useCallback(
         (e: dom.MouseEvent) => {
-          if (!separatorPos.current.isNaN()) {
+          if (!separatorPosRef.current.isNaN()) {
             // calculate the changed primary size from the position of the mouse cursor
             val cursorPos = if (props.vertical) {
               e.clientX
@@ -75,9 +75,9 @@ import slinky.web.SyntheticMouseEvent
               e.clientY
             }
 
-            val moved = (cursorPos - separatorPos.current).toInt
+            val moved = (cursorPos - separatorPosRef.current).toInt
             var newSize = primarySizeRef.current + moved
-            separatorPos.current = cursorPos
+            separatorPosRef.current = cursorPos
 
             // keep it from resizing beyond the borders of the SplitPane
             if (splitPaneRef.current != null) {
@@ -98,10 +98,10 @@ import slinky.web.SyntheticMouseEvent
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
       (e: dom.MouseEvent) => {
         setMoving(false)
-        if (!separatorPos.current.isNaN()) {
+        if (!separatorPosRef.current.isNaN()) {
           props.onPrimarySizeChanged.map(_(primarySizeRef.current))
           props.onResizeEnd.map(_())
-          separatorPos.current = Double.NaN
+          separatorPosRef.current = Double.NaN
         }
       },
       Seq(props.onPrimarySizeChanged, props.onResizeEnd)
