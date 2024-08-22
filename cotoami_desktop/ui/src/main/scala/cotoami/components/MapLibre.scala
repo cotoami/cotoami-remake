@@ -132,6 +132,9 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
               })
               map.addControl(new maplibre.NavigationControl())
 
+              // Disable map rotation
+              map.dragRotate.disable()
+
               // Event handlers
               map.on("click", onClick)
               props.onInit.map(_())

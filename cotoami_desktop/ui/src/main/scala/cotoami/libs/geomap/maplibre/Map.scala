@@ -65,6 +65,11 @@ class Map(options: MapOptions) extends js.Object {
       eventType: String,
       listener: js.Function1[Event, Unit]
   ): Map = js.native
+
+  /** The map's DragRotateHandler, which implements rotating the map while
+    * dragging with the right mouse button or with the Control key pressed.
+    */
+  val dragRotate: DragRotateHandler = js.native
 }
 
 trait MapOptions extends js.Object {
@@ -177,3 +182,25 @@ trait MapMouseEvent extends js.Object {
 @js.native
 @JSImport("maplibre-gl", "NavigationControl")
 class NavigationControl extends js.Object
+
+@js.native
+trait DragRotateHandler extends js.Object {
+
+  /** Disables the "drag to rotate" interaction.
+    */
+  def disable(): Unit = js.native
+
+  /** Enables the "drag to rotate" interaction.
+    */
+  def enable(): Unit = js.native
+
+  /** Returns a Boolean indicating whether the "drag to rotate" interaction is
+    * active.
+    */
+  def isActive(): Boolean = js.native
+
+  /** Returns a Boolean indicating whether the "drag to rotate" interaction is
+    * enabled.
+    */
+  def isEnabled(): Boolean = js.native
+}
