@@ -70,6 +70,11 @@ class Map(options: MapOptions) extends js.Object {
     * dragging with the right mouse button or with the Control key pressed.
     */
   val dragRotate: DragRotateHandler = js.native
+
+  /** The map's KeyboardHandler, which allows the user to zoom, rotate, and pan
+    * the map using keyboard shortcuts.
+    */
+  val keyboard: KeyboardHandler = js.native
 }
 
 trait MapOptions extends js.Object {
@@ -197,4 +202,40 @@ trait DragRotateHandler extends js.Object {
     * enabled.
     */
   def isEnabled(): Boolean = js.native
+}
+
+@js.native
+trait KeyboardHandler extends js.Object {
+
+  /** Disables the "keyboard rotate and zoom" interaction.
+    */
+  def disable(): Unit = js.native
+
+  /** Disables the "keyboard pan/rotate" interaction, leaving the "keyboard
+    * zoom" interaction enabled.
+    */
+  def disableRotation(): Unit = js.native
+
+  /** Enables the "keyboard rotate and zoom" interaction.
+    */
+  def enable(): Unit = js.native
+
+  /** Enables the "keyboard pan/rotate" interaction.
+    */
+  def enableRotation(): Unit = js.native
+
+  /** Returns true if the handler is enabled and has detected the start of a
+    * zoom/rotate gesture.
+    */
+  def isActive(): Boolean = js.native
+
+  /** Returns a Boolean indicating whether the "keyboard rotate and zoom"
+    * interaction is enabled.
+    */
+  def isEnabled(): Boolean = js.native
+
+  /** reset can be called by the manager at any time and must reset everything
+    * to it's original state
+    */
+  def reset(): Unit = js.native
 }
