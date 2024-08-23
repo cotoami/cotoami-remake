@@ -23,7 +23,7 @@ object SectionGeomap {
     msg match {
       case Msg.MapInit =>
         (
-          geomap.copy(forceSync = geomap.forceSync + 1),
+          geomap,
           Seq.empty
         )
 

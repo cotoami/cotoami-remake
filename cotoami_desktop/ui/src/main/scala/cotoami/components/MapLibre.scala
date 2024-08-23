@@ -11,7 +11,9 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import cotoami.libs.tauri
-import cotoami.libs.geomap.{maplibre, pmtiles}
+import cotoami.libs.geomap.maplibre
+import cotoami.libs.geomap.maplibre._
+import cotoami.libs.geomap.pmtiles
 
 @react object MapLibre {
 
@@ -42,17 +44,16 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
       // Event handlers
       onInit: Option[() => Unit] = None,
-      onClick: Option[maplibre.MapMouseEvent => Unit] = None
+      onClick: Option[MapMouseEvent => Unit] = None
   )
 
   val component = FunctionalComponent[Props] { props =>
     val resourceDirRef = useRef("")
-    val mapRef = useRef[Option[maplibre.Map]](None)
-    val focusedMarkerRef = useRef[Option[maplibre.Marker]](None)
+    val mapRef = useRef[Option[ExtendedMap]](None)
 
     // To allow the callbacks to access the up-to-date props.onClick
     val onClickRef =
-      useRef[Option[maplibre.MapMouseEvent => Unit]](props.onClick)
+      useRef[Option[MapMouseEvent => Unit]](props.onClick)
 
     // Resolve a path as an absolute URL.
     //
@@ -89,8 +90,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       Seq.empty
     )
 
-    val _transformRequest
-        : js.Function2[String, String, maplibre.RequestParameters] =
+    val _transformRequest: js.Function2[String, String, RequestParameters] =
       useCallback(
         (location: String, resourceType: String) => {
           val absoluteUrl =
@@ -104,7 +104,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
             else
               toAbsoluteUrl(location)
 
-          new maplibre.RequestParameters {
+          new RequestParameters {
             val url = absoluteUrl
           }
         },
@@ -114,7 +114,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
     // Initialize the map
     useEffect(
       () => {
-        val onClick: js.Function1[maplibre.MapMouseEvent, Unit] =
+        val onClick: js.Function1[MapMouseEvent, Unit] =
           e => onClickRef.current.foreach(_(e))
 
         tauri.path.resourceDir().onComplete {
@@ -124,7 +124,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
             // Delay rendering the map to ensure it to fit to the container section.
             js.timers.setTimeout(10) {
-              val map = new maplibre.Map(new maplibre.MapOptions {
+              val map = new ExtendedMap(new MapOptions {
                 override val container = props.id
                 override val zoom = props.zoom
                 override val center = js.Tuple2.fromScalaTuple2(props.center)
@@ -132,8 +132,8 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
                 override val transformRequest = _transformRequest
               })
               map.addControl(
-                new maplibre.NavigationControl(
-                  new maplibre.NavigationControlOptions() {
+                new NavigationControl(
+                  new NavigationControlOptions() {
                     override val showCompass = !props.disableRotation
                   }
                 )
@@ -141,10 +141,11 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
               // Disable map rotation
               if (props.disableRotation) {
-                map.dragRotate.disable()
-                map.keyboard.disable()
-                map.touchZoomRotate.disableRotation()
+                map.disableRotation()
               }
+
+              // Restore the state
+              props.focusedLocation.map(map.focusLocation)
 
               // Event handlers
               map.on("click", onClick)
@@ -168,23 +169,10 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
     // On/Off a focused marker.
     useEffect(
       () =>
-        (
-          mapRef.current,
-          props.focusedLocation,
-          focusedMarkerRef.current
-        ) match {
-          case (Some(map), Some(location), currentMarker) => {
-            currentMarker.foreach(_.remove())
-            val marker = new maplibre.Marker()
-              .setLngLat(js.Tuple2.fromScalaTuple2(location))
-              .addTo(map)
-            focusedMarkerRef.current = Some(marker)
-          }
-          case (_, None, Some(marker)) => {
-            marker.remove()
-            focusedMarkerRef.current = None
-          }
-          case _ => ()
+        (mapRef.current, props.focusedLocation) match {
+          case (Some(map), Some(location)) => map.focusLocation(location)
+          case (Some(map), None)           => map.unfocusLocation()
+          case _                           => ()
         },
       Seq(props.forceSync, props.focusedLocation.toString())
     )
@@ -193,7 +181,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
     useEffect(
       () =>
         mapRef.current.foreach(
-          _.easeTo(new maplibre.EaseToOptions {
+          _.easeTo(new EaseToOptions {
             override val center = js.Tuple2.fromScalaTuple2(props.center)
             override val zoom = props.zoom
             override val duration = 1000
@@ -217,4 +205,26 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
 
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined
+
+  class ExtendedMap(options: MapOptions) extends Map(options) {
+    var focusedMarker: Option[Marker] = None
+
+    def disableRotation(): Unit = {
+      this.dragRotate.disable()
+      this.keyboard.disable()
+      this.touchZoomRotate.disableRotation()
+    }
+
+    def focusLocation(lngLat: (Double, Double)): Unit = {
+      unfocusLocation()
+      val marker = new Marker()
+        .setLngLat(js.Tuple2.fromScalaTuple2(lngLat))
+        .addTo(this)
+      this.focusedMarker = Some(marker)
+    }
+
+    def unfocusLocation(): Unit = {
+      this.focusedMarker.foreach(_.remove())
+    }
+  }
 }
