@@ -141,6 +141,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
               // Disable map rotation
               map.dragRotate.disable()
               map.keyboard.disable()
+              map.touchZoomRotate.disableRotation()
 
               // Event handlers
               map.on("click", onClick)

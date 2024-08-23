@@ -75,6 +75,11 @@ class Map(options: MapOptions) extends js.Object {
     * the map using keyboard shortcuts.
     */
   val keyboard: KeyboardHandler = js.native
+
+  /** The map's TwoFingersTouchZoomRotateHandler, which allows the user to zoom
+    * or rotate the map with touch gestures.
+    */
+  val touchZoomRotate: TwoFingersTouchZoomRotateHandler = js.native
 }
 
 trait MapOptions extends js.Object {
@@ -238,4 +243,35 @@ trait KeyboardHandler extends js.Object {
     * to it's original state
     */
   def reset(): Unit = js.native
+}
+
+@js.native
+trait TwoFingersTouchZoomRotateHandler extends js.Object {
+
+  /** Disables the "pinch to rotate and zoom" interaction.
+    */
+  def disable(): Unit = js.native
+
+  /** Disables the "pinch to rotate" interaction, leaving the "pinch to zoom"
+    * interaction enabled.
+    */
+  def disableRotation(): Unit = js.native
+
+  /** Enables the "pinch to rotate and zoom" interaction.
+    */
+  def enable(): Unit = js.native
+
+  /** Enables the "pinch to rotate" interaction.
+    */
+  def enableRotation(): Unit = js.native
+
+  /** Returns true if the handler is enabled and has detected the start of a
+    * zoom/rotate gesture.
+    */
+  def isActive(): Boolean = js.native
+
+  /** Returns a Boolean indicating whether the "pinch to rotate and zoom"
+    * interaction is enabled.
+    */
+  def isEnabled(): Boolean = js.native
 }
