@@ -28,6 +28,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       // Viewport
       center: (Double, Double), // LngLat
       zoom: Int,
+      disableRotation: Boolean = true,
 
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
@@ -133,15 +134,17 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
               map.addControl(
                 new maplibre.NavigationControl(
                   new maplibre.NavigationControlOptions() {
-                    override val showCompass = false
+                    override val showCompass = !props.disableRotation
                   }
                 )
               )
 
               // Disable map rotation
-              map.dragRotate.disable()
-              map.keyboard.disable()
-              map.touchZoomRotate.disableRotation()
+              if (props.disableRotation) {
+                map.dragRotate.disable()
+                map.keyboard.disable()
+                map.touchZoomRotate.disableRotation()
+              }
 
               // Event handlers
               map.on("click", onClick)
@@ -186,7 +189,7 @@ import cotoami.libs.geomap.{maplibre, pmtiles}
       Seq(props.forceSync, props.focusedLocation.toString())
     )
 
-    // Change the map center and zoom.
+    // Change the map center and zoom with an animated transition.
     useEffect(
       () =>
         mapRef.current.foreach(
