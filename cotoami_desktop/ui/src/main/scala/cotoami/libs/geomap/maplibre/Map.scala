@@ -9,6 +9,10 @@ import org.scalajs.dom
 @JSImport("maplibre-gl", "Map")
 class Map(options: MapOptions) extends js.Object {
 
+  /** Returns the map's geographical centerpoint.
+    */
+  def getCenter(): LngLat = js.native
+
   /** Returns the map's current zoom level.
     */
   def getZoom(): Double = js.native
