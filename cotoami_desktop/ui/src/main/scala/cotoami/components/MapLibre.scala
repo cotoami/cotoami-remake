@@ -26,17 +26,16 @@ import cotoami.libs.geomap.pmtiles
 
   case class Props(
       id: String,
+      disableRotation: Boolean = true,
 
       // Viewport
       center: (Double, Double), // LngLat
-      zoom: Int,
-      disableRotation: Boolean = true,
+      zoom: Double,
+      // changing this value will apply the center/zoom to the map
+      syncCenterZoom: Int = 0,
 
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
-
-      // Changing this value forces to sync the map state with the current props
-      forceSync: Int = 0,
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -44,16 +43,19 @@ import cotoami.libs.geomap.pmtiles
 
       // Event handlers
       onInit: Option[() => Unit] = None,
-      onClick: Option[MapMouseEvent => Unit] = None
+      onClick: Option[MapMouseEvent => Unit] = None,
+      onZoomChanged: Option[Double => Unit] = None
   )
 
   val component = FunctionalComponent[Props] { props =>
     val resourceDirRef = useRef("")
     val mapRef = useRef[Option[ExtendedMap]](None)
 
-    // To allow the callbacks to access the up-to-date props.onClick
-    val onClickRef =
-      useRef[Option[MapMouseEvent => Unit]](props.onClick)
+    // To allow the callbacks to access some of up-to-date props
+    val centerRef = useRef(props.center)
+    val zoomRef = useRef(props.zoom)
+    val onClickRef = useRef(props.onClick)
+    val onZoomChangedRef = useRef(props.onZoomChanged)
 
     // Resolve a path as an absolute URL.
     //
@@ -116,6 +118,10 @@ import cotoami.libs.geomap.pmtiles
       () => {
         val onClick: js.Function1[MapMouseEvent, Unit] =
           e => onClickRef.current.foreach(_(e))
+        val onZoomend: js.Function1[MapLibreEvent, Unit] = e =>
+          if (e.target.getZoom() != zoomRef.current) {
+            onZoomChangedRef.current.foreach(_(e.target.getZoom()))
+          }
 
         tauri.path.resourceDir().onComplete {
           case Success(dir) => {
@@ -149,6 +155,7 @@ import cotoami.libs.geomap.pmtiles
 
               // Event handlers
               map.on("click", onClick)
+              map.on("zoomend", onZoomend)
               props.onInit.map(_())
 
               mapRef.current = Some(map)
@@ -161,6 +168,7 @@ import cotoami.libs.geomap.pmtiles
         () =>
           mapRef.current.foreach { map =>
             map.off("click", onClick)
+            map.off("zoomend", onZoomend)
           }
       },
       Seq.empty
@@ -174,27 +182,30 @@ import cotoami.libs.geomap.pmtiles
           case (Some(map), None)           => map.unfocusLocation()
           case _                           => ()
         },
-      Seq(props.forceSync, props.focusedLocation.toString())
+      Seq(props.focusedLocation.toString())
     )
 
-    // Change the map center and zoom with an animated transition.
+    // Sync the map center and zoom with the props
     useEffect(
-      () =>
+      () => {
         mapRef.current.foreach(
           _.easeTo(new EaseToOptions {
             override val center = js.Tuple2.fromScalaTuple2(props.center)
             override val zoom = props.zoom
             override val duration = 1000
           })
-        ),
-      Seq(props.forceSync, props.center.toString(), props.zoom)
+        )
+        centerRef.current = props.center
+        zoomRef.current = props.zoom
+      },
+      Seq(props.syncCenterZoom)
     )
 
     // Update onClickRef
-    useEffect(
-      () => { onClickRef.current = props.onClick },
-      Seq(props.onClick)
-    )
+    useEffect(() => {
+      onClickRef.current = props.onClick
+      onZoomChangedRef.current = props.onZoomChanged
+    })
 
     section(id := props.id, className := "geomap")()
   }

@@ -17,6 +17,7 @@ object SectionGeomap {
   object Msg {
     case object MapInit extends Msg
     case class MapClicked(lngLat: maplibre.LngLat) extends Msg
+    case class MapZoomChanged(zoom: Double) extends Msg
   }
 
   def update(msg: Msg, geomap: Geomap): (Geomap, Seq[Cmd[AppMsg]]) =
@@ -34,6 +35,12 @@ object SectionGeomap {
           ),
           Seq.empty
         )
+
+      case Msg.MapZoomChanged(zoom) =>
+        (
+          geomap.copy(zoom = zoom),
+          Seq.empty
+        )
     }
 
   def apply(geomap: Geomap)(implicit dispatch: AppMsg => Unit): ReactElement =
@@ -41,10 +48,11 @@ object SectionGeomap {
       id = "main-geomap",
       center = toLngLat(geomap.center),
       zoom = geomap.zoom,
+      syncCenterZoom = geomap.syncCenterZoom,
       focusedLocation = geomap.focusedLocation.map(toLngLat),
-      forceSync = geomap.forceSync,
       onInit = Some(() => dispatch(Msg.MapInit.toApp)),
-      onClick = Some(e => dispatch(Msg.MapClicked(e.lngLat).toApp))
+      onClick = Some(e => dispatch(Msg.MapClicked(e.lngLat).toApp)),
+      onZoomChanged = Some(zoom => dispatch(Msg.MapZoomChanged(zoom).toApp))
     )
 
   private def toLngLat(location: Geolocation): (Double, Double) =

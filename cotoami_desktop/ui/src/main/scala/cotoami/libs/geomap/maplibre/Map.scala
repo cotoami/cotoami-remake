@@ -9,6 +9,10 @@ import org.scalajs.dom
 @JSImport("maplibre-gl", "Map")
 class Map(options: MapOptions) extends js.Object {
 
+  /** Returns the map's current zoom level.
+    */
+  def getZoom(): Double = js.native
+
   /** Adds an IControl to the map, calling control.onAdd(this).
     *
     * @param position
@@ -103,7 +107,7 @@ trait MapOptions extends js.Object {
     * look for it in the map's style object. If it is not specified in the
     * style, either, it will default to 0.
     */
-  val zoom: js.UndefOr[Int] = js.undefined
+  val zoom: js.UndefOr[Double] = js.undefined
 
   /** The initial geographical centerpoint of the map.
     *
@@ -162,7 +166,7 @@ trait CenterZoomBearing extends js.Object {
 
   /** The desired zoom level.
     */
-  val zoom: js.UndefOr[Int] = js.undefined
+  val zoom: js.UndefOr[Double] = js.undefined
 }
 
 trait EaseToOptions extends AnimationOptions with CenterZoomBearing
@@ -185,6 +189,11 @@ trait MapMouseEvent extends js.Object {
   /** The event type.
     */
   val `type`: String = js.native
+}
+
+@js.native
+trait MapLibreEvent extends js.Object {
+  val target: Map = js.native
 }
 
 @js.native
