@@ -15,7 +15,7 @@ class Marker(options: js.UndefOr[MarkerOptions] = js.undefined)
 
   /** Set the marker's geographical position and move it.
     */
-  def setLngLat(lnglat: js.Tuple2[Double, Double]): Marker = js.native
+  def setLngLat(lnglat: LngLatLike): Marker = js.native
 
   /** Removes the marker from a map.
     */

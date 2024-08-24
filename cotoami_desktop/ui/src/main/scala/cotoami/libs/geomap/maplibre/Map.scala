@@ -119,7 +119,7 @@ trait MapOptions extends js.Object {
     * look for it in the map's style object. If it is not specified in the
     * style, either, it will default to [0, 0]
     */
-  val center: js.UndefOr[js.Tuple2[Double, Double]] = js.undefined
+  val center: js.UndefOr[LngLatLike] = js.undefined
 
   /** A callback run before the Map makes a request for an external URL.
     *
@@ -166,7 +166,7 @@ trait CenterZoomBearing extends js.Object {
 
   /** The desired center.
     */
-  val center: js.UndefOr[js.Tuple2[Double, Double]] = js.undefined
+  val center: js.UndefOr[LngLatLike] = js.undefined
 
   /** The desired zoom level.
     */
