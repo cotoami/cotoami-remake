@@ -9,7 +9,9 @@ case class Geomap(
     focusedLocation: Option[Geolocation] = None
 )
 
-case class Geolocation(longitude: Double, latitude: Double)
+case class Geolocation(longitude: Double, latitude: Double) {
+  def toLngLat: (Double, Double) = (this.longitude, this.latitude)
+}
 
 object Geolocation {
   // The Tokyo station

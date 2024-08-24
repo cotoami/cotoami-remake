@@ -49,10 +49,10 @@ object SectionGeomap {
   def apply(geomap: Geomap)(implicit dispatch: AppMsg => Unit): ReactElement =
     MapLibre(
       id = "main-geomap",
-      center = toLngLat(geomap.center),
+      center = geomap.center.toLngLat,
       zoom = geomap.zoom,
       syncCenterZoom = geomap.syncCenterZoom,
-      focusedLocation = geomap.focusedLocation.map(toLngLat),
+      focusedLocation = geomap.focusedLocation.map(_.toLngLat),
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.MapInit(bounds).toApp)
@@ -71,7 +71,4 @@ object SectionGeomap {
         dispatch(Msg.MapBoundsChanged(bounds).toApp)
       })
     )
-
-  private def toLngLat(location: Geolocation): (Double, Double) =
-    (location.longitude, location.latitude)
 }
