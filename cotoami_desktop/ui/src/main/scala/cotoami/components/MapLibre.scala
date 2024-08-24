@@ -28,7 +28,7 @@ import cotoami.libs.geomap.pmtiles
       id: String,
       disableRotation: Boolean = true,
 
-      // Viewport
+      // Center/Zoom
       center: (Double, Double), // LngLat
       zoom: Double,
       // changing this value will apply the center/zoom to the map
@@ -52,12 +52,20 @@ import cotoami.libs.geomap.pmtiles
     val resourceDirRef = useRef("")
     val mapRef = useRef[Option[ExtendedMap]](None)
 
-    // To allow the callbacks to access some of up-to-date props
+    // To track the map state
+    // (use scala types to enable to compare old/new state objects)
     val centerRef = useRef(props.center)
     val zoomRef = useRef(props.zoom)
+
+    // To allow the callbacks to access some of up-to-date props
     val onClickRef = useRef(props.onClick)
     val onZoomChangedRef = useRef(props.onZoomChanged)
     val onCenterMovedRef = useRef(props.onCenterMoved)
+    useEffect(() => {
+      onClickRef.current = props.onClick
+      onZoomChangedRef.current = props.onZoomChanged
+      onCenterMovedRef.current = props.onCenterMoved
+    })
 
     // Resolve a path as an absolute URL.
     //
@@ -123,12 +131,14 @@ import cotoami.libs.geomap.pmtiles
         val onZoomend: js.Function1[MapLibreEvent, Unit] = e => {
           val zoom = e.target.getZoom()
           if (zoom != zoomRef.current) {
+            zoomRef.current = zoom
             onZoomChangedRef.current.foreach(_(zoom))
           }
         }
         val onMoveend: js.Function1[MapLibreEvent, Unit] = e => {
           val center: (Double, Double) = e.target.getCenter().toArray()
           if (center != centerRef.current) {
+            centerRef.current = center
             onCenterMovedRef.current.foreach(_(center))
           }
         }
@@ -210,17 +220,6 @@ import cotoami.libs.geomap.pmtiles
       },
       Seq(props.syncCenterZoom)
     )
-
-    // Update refs
-    useEffect(
-      () => { centerRef.current = props.center },
-      Seq(props.center.toString())
-    )
-    useEffect(() => { zoomRef.current = props.zoom }, Seq(props.zoom))
-    useEffect(() => {
-      onClickRef.current = props.onClick
-      onZoomChangedRef.current = props.onZoomChanged
-    })
 
     section(id := props.id, className := "geomap")()
   }
