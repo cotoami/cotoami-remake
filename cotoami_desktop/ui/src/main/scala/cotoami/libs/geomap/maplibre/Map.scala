@@ -17,6 +17,12 @@ class Map(options: MapOptions) extends js.Object {
     */
   def getZoom(): Double = js.native
 
+  /** Returns the map's geographical bounds. When the bearing or pitch is
+    * non-zero, the visible region is not an axis-aligned rectangle, and the
+    * result is the smallest bounds that encompasses the visible region.
+    */
+  def getBounds(): LngLatBounds = js.native
+
   /** Adds an IControl to the map, calling control.onAdd(this).
     *
     * @param position
