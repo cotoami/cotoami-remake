@@ -9,6 +9,17 @@ import org.scalajs.dom
 @JSImport("maplibre-gl", "Map")
 class Map(options: MapOptions) extends js.Object {
 
+  /** Adds an IControl to the map, calling control.onAdd(this).
+    *
+    * @param position
+    *   Valid values are 'top-left', 'top-right', 'bottom-left', and
+    *   'bottom-right'. Defaults to 'top-right'.
+    */
+  def addControl(
+      control: js.Any,
+      position: js.UndefOr[String] = js.undefined
+  ): Map = js.native
+
   /** Returns the map's geographical centerpoint.
     */
   def getCenter(): LngLat = js.native
@@ -22,17 +33,6 @@ class Map(options: MapOptions) extends js.Object {
     * result is the smallest bounds that encompasses the visible region.
     */
   def getBounds(): LngLatBounds = js.native
-
-  /** Adds an IControl to the map, calling control.onAdd(this).
-    *
-    * @param position
-    *   Valid values are 'top-left', 'top-right', 'bottom-left', and
-    *   'bottom-right'. Defaults to 'top-right'.
-    */
-  def addControl(
-      control: js.Any,
-      position: js.UndefOr[String] = js.undefined
-  ): Map = js.native
 
   /** Changes any combination of center, zoom, bearing, pitch, and padding with
     * an animated transition between old and new values. The map will retain its
@@ -54,6 +54,15 @@ class Map(options: MapOptions) extends js.Object {
     * their operating system, unless 'options' includes essential: true.
     */
   def flyTo(options: FlyToOptions): Map = js.native
+
+  /** Pans and zooms the map to contain its visible area within the specified
+    * geographical bounds. This function will also reset the map's bearing to 0
+    * if bearing is nonzero.
+    */
+  def fitBounds(
+      bounds: LngLatBoundsLike,
+      options: js.UndefOr[FitBoundsOptions] = js.undefined
+  ): Map = js.native
 
   /** Adds a listener for events of a specified type, optionally limited to
     * features in a specified style layer.
@@ -258,6 +267,26 @@ trait FlyToOptions extends CameraOptions with AnimationOptions {
     * Default Value: 1.2
     */
   val speed: js.UndefOr[Double] = js.undefined
+}
+
+trait FitBoundsOptions extends FlyToOptions {
+
+  /** If true, the map transitions using Map#easeTo. If false, the map
+    * transitions using Map#flyTo.
+    *
+    * Default Value: false
+    */
+  val linear: js.UndefOr[Boolean] = js.undefined
+
+  /** The maximum zoom level to allow when the map view transitions to the
+    * specified bounds.
+    */
+  val maxZoom: js.UndefOr[Double] = js.undefined
+
+  /** The center of the given bounds relative to the map's center, measured in
+    * pixels.
+    */
+  val offset: js.UndefOr[js.Tuple2[Int, Int]] = js.undefined
 }
 
 @js.native
