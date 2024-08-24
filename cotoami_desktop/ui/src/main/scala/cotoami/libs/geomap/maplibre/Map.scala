@@ -44,6 +44,17 @@ class Map(options: MapOptions) extends js.Object {
     */
   def easeTo(options: EaseToOptions): Map = js.native
 
+  /** Changes any combination of center, zoom, bearing, and pitch, animating the
+    * transition along a curve that evokes flight. The animation seamlessly
+    * incorporates zooming and panning to help the user maintain her bearings
+    * even after traversing a great distance.
+    *
+    * Note: The animation will be skipped, and this will behave equivalently to
+    * jumpTo if the user has the reduced motion accessibility feature enabled in
+    * their operating system, unless 'options' includes essential: true.
+    */
+  def flyTo(options: FlyToOptions): Map = js.native
+
   /** Adds a listener for events of a specified type, optionally limited to
     * features in a specified style layer.
     *
@@ -143,6 +154,22 @@ trait RequestParameters extends js.Object {
   val url: String
 }
 
+trait CenterZoomBearing extends js.Object {
+
+  /** The desired center.
+    */
+  val center: js.UndefOr[LngLatLike] = js.undefined
+
+  /** The desired zoom level.
+    */
+  val zoom: js.UndefOr[Double] = js.undefined
+
+  /** The desired bearing in degrees. The bearing is the compass direction that
+    * is "up". For example, bearing: 90 orients the map so that east is up.
+    */
+  val bearing: js.UndefOr[Double] = js.undefined
+}
+
 /** Options common to map movement methods that involve animation, such as
   * Map#panBy and Map#easeTo, controlling the duration and easing function of
   * the animation.
@@ -168,18 +195,70 @@ trait AnimationOptions extends js.Object {
   val essential: js.UndefOr[Boolean] = js.undefined
 }
 
-trait CenterZoomBearing extends js.Object {
+/** Options common to Map#jumpTo, Map#easeTo, and Map#flyTo, controlling the
+  * desired location, zoom, bearing, and pitch of the camera.
+  */
+trait CameraOptions extends CenterZoomBearing {
 
-  /** The desired center.
+  /** If zoom is specified, around determines the point around which the zoom is
+    * centered.
     */
-  val center: js.UndefOr[LngLatLike] = js.undefined
+  val around: js.UndefOr[LngLatLike] = js.undefined
 
-  /** The desired zoom level.
+  /** The desired pitch in degrees. The pitch is the angle towards the horizon
+    * measured in degrees with a range between 0 and 60 degrees. For example,
+    * pitch: 0 provides the appearance of looking straight down at the map,
+    * while pitch: 60 tilts the user's perspective towards the horizon.
+    * Increasing the pitch value is often used to display 3D objects.
     */
-  val zoom: js.UndefOr[Double] = js.undefined
+  val pitch: js.UndefOr[Double] = js.undefined
 }
 
-trait EaseToOptions extends AnimationOptions with CenterZoomBearing
+trait EaseToOptions extends CameraOptions with AnimationOptions
+
+trait FlyToOptions extends CameraOptions with AnimationOptions {
+
+  /** The zooming "curve" that will occur along the flight path. A high value
+    * maximizes zooming for an exaggerated animation, while a low value
+    * minimizes zooming for an effect closer to Map#easeTo. 1.42 is the average
+    * value selected by participants in the user study discussed in van Wijk
+    * (2003). A value of Math.pow(6, 0.25) would be equivalent to the root mean
+    * squared average velocity. A value of 1 would produce a circular motion.
+    *
+    * Default Value: 1.42
+    */
+  val curve: js.UndefOr[Double] = js.undefined
+
+  /** The animation's maximum duration, measured in milliseconds. If duration
+    * exceeds maximum duration, it resets to 0.
+    */
+  val maxDuration: js.UndefOr[Int] = js.undefined
+
+  /** The zero-based zoom level at the peak of the flight path. If options.curve
+    * is specified, this option is ignored.
+    */
+  val minZoom: js.UndefOr[Double] = js.undefined
+
+  /** The amount of padding in pixels to add to the given bounds.
+    */
+  val padding: js.UndefOr[Double] = js.undefined
+
+  /** The average speed of the animation measured in screenfuls per second,
+    * assuming a linear timing curve. If options.speed is specified, this option
+    * is ignored.
+    */
+  val screenSpeed: js.UndefOr[Double] = js.undefined
+
+  /** The average speed of the animation defined in relation to options.curve. A
+    * speed of 1.2 means that the map appears to move along the flight path by
+    * 1.2 times options.curve screenfuls every second. A screenful is the map's
+    * visible span. It does not correspond to a fixed physical distance, but
+    * varies by zoom level.
+    *
+    * Default Value: 1.2
+    */
+  val speed: js.UndefOr[Double] = js.undefined
+}
 
 @js.native
 trait MapMouseEvent extends js.Object {

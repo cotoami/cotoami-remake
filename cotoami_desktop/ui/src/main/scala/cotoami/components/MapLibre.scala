@@ -211,10 +211,10 @@ import cotoami.libs.geomap.pmtiles
     useEffect(
       () => {
         mapRef.current.foreach(
-          _.easeTo(new EaseToOptions {
+          _.flyTo(new FlyToOptions {
             override val center = js.Tuple2.fromScalaTuple2(props.center)
             override val zoom = props.zoom
-            override val duration = 1000
+            override val duration = 2000
           })
         )
       },
