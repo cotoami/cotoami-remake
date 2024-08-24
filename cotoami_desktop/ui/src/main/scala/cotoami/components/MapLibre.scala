@@ -42,29 +42,30 @@ import cotoami.libs.geomap.pmtiles
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
 
       // Event handlers
-      onInit: Option[() => Unit] = None,
+      onInit: Option[LngLatBounds => Unit] = None,
       onClick: Option[MapMouseEvent => Unit] = None,
       onZoomChanged: Option[Double => Unit] = None,
-      onCenterMoved: Option[((Double, Double)) => Unit] = None
+      onCenterMoved: Option[LngLat => Unit] = None,
+      onBoundsChanged: Option[LngLatBounds => Unit] = None
   )
 
   val component = FunctionalComponent[Props] { props =>
     val resourceDirRef = useRef("")
     val mapRef = useRef[Option[ExtendedMap]](None)
 
-    // To track the map state
-    // (use scala types to enable to compare old/new state objects)
-    val centerRef = useRef(props.center)
-    val zoomRef = useRef(props.zoom)
+    // To track the map state to detect change
+    val boundsRef = useRef[Option[LngLatBounds]](None)
 
     // To allow the callbacks to access some of up-to-date props
     val onClickRef = useRef(props.onClick)
     val onZoomChangedRef = useRef(props.onZoomChanged)
     val onCenterMovedRef = useRef(props.onCenterMoved)
+    val onBoundsChangedRef = useRef(props.onBoundsChanged)
     useEffect(() => {
       onClickRef.current = props.onClick
       onZoomChangedRef.current = props.onZoomChanged
       onCenterMovedRef.current = props.onCenterMoved
+      onBoundsChangedRef.current = props.onBoundsChanged
     })
 
     // Resolve a path as an absolute URL.
@@ -128,19 +129,21 @@ import cotoami.libs.geomap.pmtiles
       () => {
         val onClick: js.Function1[MapMouseEvent, Unit] =
           e => onClickRef.current.foreach(_(e))
-        val onZoomend: js.Function1[MapLibreEvent, Unit] = e => {
-          val zoom = e.target.getZoom()
-          if (zoom != zoomRef.current) {
-            zoomRef.current = zoom
-            onZoomChangedRef.current.foreach(_(zoom))
+
+        val detectBoundsChange = (e: MapLibreEvent) => {
+          val bounds = e.target.getBounds()
+          if (Some(bounds).toString() != boundsRef.current.toString()) {
+            boundsRef.current = Some(bounds)
+            onBoundsChangedRef.current.foreach(_(bounds))
           }
         }
+        val onZoomend: js.Function1[MapLibreEvent, Unit] = e => {
+          onZoomChangedRef.current.foreach(_(e.target.getZoom()))
+          detectBoundsChange(e)
+        }
         val onMoveend: js.Function1[MapLibreEvent, Unit] = e => {
-          val center: (Double, Double) = e.target.getCenter().toArray()
-          if (center != centerRef.current) {
-            centerRef.current = center
-            onCenterMovedRef.current.foreach(_(center))
-          }
+          onCenterMovedRef.current.foreach(_(e.target.getCenter()))
+          detectBoundsChange(e)
         }
 
         tauri.path.resourceDir().onComplete {
@@ -173,11 +176,14 @@ import cotoami.libs.geomap.pmtiles
               // Restore the state
               props.focusedLocation.map(map.focusLocation)
 
+              // onInit
+              boundsRef.current = Some(map.getBounds())
+              props.onInit.map(_(map.getBounds()))
+
               // Event handlers
               map.on("click", onClick)
               map.on("zoomend", onZoomend)
               map.on("moveend", onMoveend)
-              props.onInit.map(_())
 
               mapRef.current = Some(map)
             }
