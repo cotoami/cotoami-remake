@@ -22,7 +22,7 @@ use crate::schema::changelog;
 /// - A `ChangelogEntry` must not be updated once it's inserted, so it
 ///   shouldn't impl `AsChangeset`.
 #[derive(
-    Debug, Clone, PartialEq, Eq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
+    Debug, Clone, PartialEq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(table_name = changelog, primary_key(serial_number))]
 #[must_use]
@@ -83,7 +83,7 @@ pub(crate) struct NewChangelogEntry<'a> {
 /// The variants are defined in terms of data change that can be shared with other nodes,
 /// so they do not necessarily match the operations in the user-facing API.
 #[derive(
-    Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
+    Debug, Clone, PartialEq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(sql_type = Binary)]
 #[repr(u8)]

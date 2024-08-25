@@ -58,14 +58,7 @@ pub(crate) mod prelude {
 
 /// A generic entity ID
 #[derive(
-    derive_more::Debug,
-    PartialEq,
-    Eq,
-    AsExpression,
-    FromSqlRow,
-    serde::Serialize,
-    serde::Deserialize,
-    new,
+    derive_more::Debug, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize, new,
 )]
 #[diesel(sql_type = Text)]
 #[serde(transparent)]
@@ -91,6 +84,13 @@ impl<T> Id<T> {
 
     pub fn as_uuid(&self) -> Uuid { self.value }
 }
+
+// Manually implement PartialEq/Eq to avoid incorrect bounds on T.
+// https://github.com/rust-lang/rust/issues/26925
+impl<T> PartialEq for Id<T> {
+    fn eq(&self, other: &Self) -> bool { self.value == other.value }
+}
+impl<T> Eq for Id<T> {}
 
 impl<T> Display for Id<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

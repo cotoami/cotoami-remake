@@ -41,6 +41,10 @@ CREATE TABLE cotos (
   -- corresponding to this coto.
   is_cotonoma INTEGER DEFAULT FALSE NOT NULL,
 
+  -- Geolocation
+  longitude REAL,
+  latitude REAL,
+
   -- UUID of the original coto of this repost,
   -- or NULL if it is not a repost.
   repost_of_id TEXT,
@@ -63,6 +67,7 @@ CREATE TABLE cotos (
 CREATE INDEX cotos_node_id ON cotos(node_id);
 CREATE INDEX cotos_posted_in_id ON cotos(posted_in_id);
 CREATE INDEX cotos_posted_by_id ON cotos(posted_by_id);
+CREATE INDEX cotos_lng_lat ON cotos(longitude, latitude);
 CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
 
 -- Some columns of a repost should be the same values as the original.

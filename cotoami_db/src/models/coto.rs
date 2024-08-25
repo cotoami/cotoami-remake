@@ -26,7 +26,6 @@ use crate::{
     derive_more::Debug,
     Clone,
     PartialEq,
-    Eq,
     Identifiable,
     Queryable,
     Selectable,
@@ -71,6 +70,9 @@ pub struct Coto {
 
     /// TRUE if this coto is a cotonoma.
     pub is_cotonoma: bool,
+
+    pub longitude: Option<f64>,
+    pub latitude: Option<f64>,
 
     /// UUID of the original coto of this repost.
     ///
