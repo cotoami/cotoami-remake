@@ -140,6 +140,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn post_cotonoma(
         &self,
         name: &str,
+        lng_lat: Option<(f64, f64)>,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
@@ -148,9 +149,14 @@ impl<'a> DatabaseSession<'a> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         let posted_by_id = operator.node_id();
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let (cotonoma, coto) =
-                cotonoma_ops::create(&local_node_id, &posted_in.uuid, &posted_by_id, name)
-                    .run(ctx)?;
+            let (cotonoma, coto) = cotonoma_ops::create(
+                &local_node_id,
+                &posted_in.uuid,
+                &posted_by_id,
+                name,
+                lng_lat,
+            )
+            .run(ctx)?;
             let change = Change::CreateCotonoma(cotonoma.clone(), coto.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok(((cotonoma, coto), changelog))

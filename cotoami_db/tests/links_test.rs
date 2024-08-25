@@ -15,10 +15,10 @@ fn crud_operations() -> Result<()> {
     let operator = db.globals().local_node_as_operator()?;
     let (root_cotonoma, _) = ds.root_cotonoma()?.unwrap();
 
-    let (coto1, _) = ds.post_coto("coto1", None, None, &root_cotonoma, &operator)?;
-    let (coto2, _) = ds.post_coto("coto2", None, None, &root_cotonoma, &operator)?;
-    let (coto3, _) = ds.post_coto("coto3", None, None, &root_cotonoma, &operator)?;
-    let (coto4, _) = ds.post_coto("coto4", None, None, &root_cotonoma, &operator)?;
+    let (coto1, _) = ds.post_coto("coto1", None, None, None, &root_cotonoma, &operator)?;
+    let (coto2, _) = ds.post_coto("coto2", None, None, None, &root_cotonoma, &operator)?;
+    let (coto3, _) = ds.post_coto("coto3", None, None, None, &root_cotonoma, &operator)?;
+    let (coto4, _) = ds.post_coto("coto4", None, None, None, &root_cotonoma, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto2

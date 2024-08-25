@@ -92,6 +92,10 @@ pub struct Coto {
 impl Coto {
     pub const CONTENT_MAX_LENGTH: usize = 1_000_000;
     pub const SUMMARY_MAX_LENGTH: usize = 200;
+    pub const LONGITUDE_MIN: f64 = -180.0;
+    pub const LONGITUDE_MAX: f64 = 180.0;
+    pub const LATITUDE_MIN: f64 = -90.0;
+    pub const LATITUDE_MAX: f64 = 90.0;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
@@ -133,6 +137,8 @@ impl Coto {
             media_type: self.media_type.as_deref(),
             summary: self.summary.as_deref(),
             is_cotonoma: self.is_cotonoma,
+            longitude: self.longitude,
+            latitude: self.latitude,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
             created_at: self.created_at,
@@ -196,12 +202,16 @@ pub(crate) struct NewCoto<'a> {
 
     is_cotonoma: bool,
 
+    #[validate(range(min = "Coto::LONGITUDE_MIN", max = "Coto::LONGITUDE_MAX"))]
+    longitude: Option<f64>,
+    #[validate(range(min = "Coto::LATITUDE_MIN", max = "Coto::LATITUDE_MAX"))]
+    latitude: Option<f64>,
+
     repost_of_id: Option<&'a Id<Coto>>,
 
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
 
     created_at: NaiveDateTime,
-
     updated_at: NaiveDateTime,
 }
 
@@ -218,6 +228,8 @@ impl<'a> NewCoto<'a> {
             media_content: None,
             media_type: None,
             is_cotonoma: false,
+            longitude: None,
+            latitude: None,
             repost_of_id: None,
             reposted_in_ids: None,
             created_at: now,
@@ -233,6 +245,7 @@ impl<'a> NewCoto<'a> {
         summary: Option<&'a str>,
         media_content: Option<(&'a [u8], &'a str)>,
         image_max_size: Option<u32>,
+        lng_lat: Option<(f64, f64)>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
@@ -246,6 +259,11 @@ impl<'a> NewCoto<'a> {
             coto.media_type = Some(media_type);
         }
 
+        if let Some((longitude, latitude)) = lng_lat {
+            coto.longitude = Some(longitude);
+            coto.latitude = Some(latitude);
+        }
+
         coto.validate()?;
         Ok(coto)
     }
@@ -255,11 +273,19 @@ impl<'a> NewCoto<'a> {
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
         name: &'a str,
+        lng_lat: Option<(f64, f64)>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
+
         coto.posted_in_id = Some(posted_in_id);
         coto.summary = Some(name); // a cotonoma name is stored as a summary
         coto.is_cotonoma = true;
+
+        if let Some((longitude, latitude)) = lng_lat {
+            coto.longitude = Some(longitude);
+            coto.latitude = Some(latitude);
+        }
+
         coto.validate()?;
         Ok(coto)
     }

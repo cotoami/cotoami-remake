@@ -214,9 +214,10 @@ pub(crate) fn create<'a>(
     posted_in_id: &'a Id<Cotonoma>,
     posted_by_id: &'a Id<Node>,
     name: &'a str,
+    lng_lat: Option<(f64, f64)>,
 ) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(|ctx| {
-        let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, name)?;
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, name, lng_lat)?;
         let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
         let new_cotonoma =
             NewCotonoma::new(node_id, &inserted_coto.uuid, name, inserted_coto.created_at)?;

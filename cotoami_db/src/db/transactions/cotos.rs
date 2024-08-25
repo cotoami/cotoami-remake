@@ -71,6 +71,7 @@ impl<'a> DatabaseSession<'a> {
         content: &str,
         summary: Option<&str>,
         media_content: Option<(&[u8], &str)>,
+        lng_lat: Option<(f64, f64)>,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
@@ -85,6 +86,7 @@ impl<'a> DatabaseSession<'a> {
             summary,
             media_content,
             local_node.image_max_size.map(|size| size as u32),
+            lng_lat,
         )?;
         self.create_coto(&new_coto)
     }
