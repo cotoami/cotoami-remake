@@ -11,7 +11,7 @@ case class Geomap(
   def focusLocation(location: Geolocation): Geomap =
     this.copy(
       center = location,
-      zoom = 12,
+      zoom = 13,
       syncCenterZoom = this.syncCenterZoom + 1,
       focusedLocation = Some(location)
     )

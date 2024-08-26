@@ -209,15 +209,13 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case Msg.FocusCoto(id) =>
-        (
-          model.modify(_.domain.cotos).using(_.focus(id)),
-          Seq(model.domain.lazyFetchGraphFromCoto(id))
-        )
+      case Msg.FocusCoto(id) => model.focusCoto(id)
 
       case Msg.UnfocusCoto =>
         (
-          model.modify(_.domain.cotos).using(_.unfocus),
+          model
+            .modify(_.domain.cotos).using(_.unfocus)
+            .modify(_.geomap.focusedLocation).setTo(None),
           Seq.empty
         )
 
