@@ -388,7 +388,7 @@ pub(crate) struct UpdateCoto<'a> {
 }
 
 impl<'a> UpdateCoto<'a> {
-    pub fn patch(
+    pub fn edit_content(
         &mut self,
         diff: &'a CotoContentDiff<'a>,
         image_max_size: Option<u32>,
