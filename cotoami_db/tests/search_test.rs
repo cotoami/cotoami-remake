@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::prelude::{Coto, DatabaseSession};
+use cotoami_db::prelude::{Coto, CotoContent, DatabaseSession};
 use googletest::prelude::*;
 
 pub mod common;
@@ -13,17 +13,14 @@ fn search_cotos() -> Result<()> {
     let (root, _) = ds.root_cotonoma()?.unwrap();
 
     // when
-    let (coto1, _) = ds.post_coto("Hello, world!", None, None, None, &root, &opr)?;
+    let (coto1, _) = ds.post_coto(CotoContent::new("Hello, world!"), &root, &opr)?;
     let (coto2, _) = ds.post_coto(
-        "It's a small world.",
-        Some("summary"),
-        None,
-        None,
+        CotoContent::new("It's a small world.").summary("summary"),
         &root,
         &opr,
     )?;
-    let (coto3, _) = ds.post_coto("柿くへば鐘が鳴るなり法隆寺", None, None, None, &root, &opr)?;
-    let (coto4, _) = ds.post_coto("旅行(行きたい)", None, None, None, &root, &opr)?;
+    let (coto3, _) = ds.post_coto(CotoContent::new("柿くへば鐘が鳴るなり法隆寺"), &root, &opr)?;
+    let (coto4, _) = ds.post_coto(CotoContent::new("旅行(行きたい)"), &root, &opr)?;
 
     // then
     assert_search(&mut ds, "hello", vec![&coto1])?;

@@ -68,10 +68,7 @@ impl<'a> DatabaseSession<'a> {
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
         &self,
-        content: &str,
-        summary: Option<&str>,
-        media_content: Option<(&[u8], &str)>,
-        lng_lat: Option<(f64, f64)>,
+        content: CotoContent,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
@@ -83,10 +80,7 @@ impl<'a> DatabaseSession<'a> {
             &posted_in.uuid,
             &posted_by_id,
             content,
-            summary,
-            media_content,
             local_node.image_max_size.map(|size| size as u32),
-            lng_lat,
         )?;
         self.create_coto(&new_coto)
     }

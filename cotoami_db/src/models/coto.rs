@@ -241,25 +241,22 @@ impl<'a> NewCoto<'a> {
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
-        content: &'a str,
-        summary: Option<&'a str>,
-        media_content: Option<(&'a [u8], &'a str)>,
+        content: CotoContent<'a>,
         image_max_size: Option<u32>,
-        lng_lat: Option<(f64, f64)>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
         coto.posted_in_id = Some(posted_in_id);
-        coto.content = Some(content);
-        coto.summary = summary;
+        coto.content = Some(content.content);
+        coto.summary = content.summary;
 
-        if let Some((content, media_type)) = media_content {
+        if let Some((content, media_type)) = content.media_content {
             let content = process_media_content((content, media_type), image_max_size)?;
             coto.media_content = Some(content);
             coto.media_type = Some(media_type);
         }
 
-        if let Some((longitude, latitude)) = lng_lat {
+        if let Some((longitude, latitude)) = content.lng_lat {
             coto.longitude = Some(longitude);
             coto.latitude = Some(latitude);
         }
@@ -296,6 +293,44 @@ impl<'a> NewCoto<'a> {
         coto.is_cotonoma = true;
         coto.validate()?;
         Ok(coto)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotoContent
+/////////////////////////////////////////////////////////////////////////////
+
+/// Grouping content-related inputs as a builder pattern.
+pub struct CotoContent<'a> {
+    content: &'a str,
+    summary: Option<&'a str>,
+    media_content: Option<(&'a [u8], &'a str)>,
+    lng_lat: Option<(f64, f64)>,
+}
+
+impl<'a> CotoContent<'a> {
+    pub fn new(content: &'a str) -> Self {
+        CotoContent {
+            content,
+            summary: None,
+            media_content: None,
+            lng_lat: None,
+        }
+    }
+
+    pub fn summary(mut self, summary: &'a str) -> Self {
+        self.summary = Some(summary);
+        self
+    }
+
+    pub fn media_content(mut self, media_content: (&'a [u8], &'a str)) -> Self {
+        self.media_content = Some(media_content);
+        self
+    }
+
+    pub fn lng_lat(mut self, lng_lat: (f64, f64)) -> Self {
+        self.lng_lat = Some(lng_lat);
+        self
     }
 }
 

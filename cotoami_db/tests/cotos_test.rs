@@ -19,7 +19,7 @@ fn crud_operations() -> Result<()> {
     // When: post_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto, changelog2) = ds.post_coto("hello", None, None, None, &root_cotonoma, &operator)?;
+    let (coto, changelog2) = ds.post_coto(CotoContent::new("hello"), &root_cotonoma, &operator)?;
 
     // check the inserted coto
     assert_that!(
