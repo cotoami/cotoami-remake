@@ -12,7 +12,7 @@ use crate::{
     models::{
         cotonoma::Cotonoma,
         node::{BelongsToNode, Node},
-        Bytes, Id, Ids,
+        Bytes, Geolocation, Id, Ids,
     },
     schema::cotos,
 };
@@ -92,10 +92,6 @@ pub struct Coto {
 impl Coto {
     pub const CONTENT_MAX_LENGTH: u64 = 1_000_000;
     pub const SUMMARY_MAX_LENGTH: u64 = 200;
-    pub const LONGITUDE_MIN: f64 = -180.0;
-    pub const LONGITUDE_MAX: f64 = 180.0;
-    pub const LATITUDE_MIN: f64 = -90.0;
-    pub const LATITUDE_MAX: f64 = 90.0;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
@@ -202,9 +198,10 @@ pub(crate) struct NewCoto<'a> {
 
     is_cotonoma: bool,
 
-    #[validate(range(min = "Coto::LONGITUDE_MIN", max = "Coto::LONGITUDE_MAX"))]
+    #[validate(range(min = "Geolocation::LONGITUDE_MIN", max = "Geolocation::LONGITUDE_MAX"))]
     longitude: Option<f64>,
-    #[validate(range(min = "Coto::LATITUDE_MIN", max = "Coto::LATITUDE_MAX"))]
+
+    #[validate(range(min = "Geolocation::LATITUDE_MIN", max = "Geolocation::LATITUDE_MAX"))]
     latitude: Option<f64>,
 
     repost_of_id: Option<&'a Id<Coto>>,
@@ -257,8 +254,10 @@ impl<'a> NewCoto<'a> {
             coto.media_type = Some(media_type.as_ref());
         }
 
-        coto.longitude = content.longitude;
-        coto.latitude = content.latitude;
+        if let Some(location) = content.geolocation.as_ref() {
+            coto.longitude = Some(location.longitude);
+            coto.latitude = Some(location.latitude);
+        }
 
         coto.validate()?;
         Ok(coto)
@@ -299,7 +298,7 @@ impl<'a> NewCoto<'a> {
 // CotoContent
 /////////////////////////////////////////////////////////////////////////////
 
-/// Grouping content-related inputs as a builder pattern.
+/// Grouping coto cntent inputs as a builder pattern.
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotoContent<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
@@ -311,11 +310,8 @@ pub struct CotoContent<'a> {
     #[debug(skip)]
     media_content: Option<(Bytes, Cow<'a, str>)>,
 
-    #[validate(range(min = "Coto::LONGITUDE_MIN", max = "Coto::LONGITUDE_MAX"))]
-    longitude: Option<f64>,
-
-    #[validate(range(min = "Coto::LATITUDE_MIN", max = "Coto::LATITUDE_MAX"))]
-    latitude: Option<f64>,
+    #[validate(nested)]
+    geolocation: Option<Geolocation>,
 }
 
 impl<'a> CotoContent<'a> {
@@ -324,8 +320,7 @@ impl<'a> CotoContent<'a> {
             content: Cow::from(content),
             summary: None,
             media_content: None,
-            longitude: None,
-            latitude: None,
+            geolocation: None,
         }
     }
 
@@ -339,9 +334,8 @@ impl<'a> CotoContent<'a> {
         self
     }
 
-    pub fn lng_lat(mut self, lng_lat: (f64, f64)) -> Self {
-        self.longitude = Some(lng_lat.0);
-        self.latitude = Some(lng_lat.1);
+    pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
+        self.geolocation = Some(geolocation);
         self
     }
 }

@@ -25,6 +25,7 @@ use image::{imageops::FilterType, ImageFormat};
 use serde::{de, ser, Deserializer};
 use tracing::debug;
 use uuid::Uuid;
+use validator::Validate;
 
 use self::{
     node::{parent::ParentNode, Node},
@@ -309,6 +310,33 @@ impl FromSql<Binary, Sqlite> for Bytes {
     fn from_sql(value: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(value)?;
         Ok(Bytes(bytes::Bytes::from(bytes)))
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Geolocation
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct Geolocation {
+    #[validate(range(min = "Self::LONGITUDE_MIN", max = "Self::LONGITUDE_MAX"))]
+    longitude: f64,
+
+    #[validate(range(min = "Self::LATITUDE_MIN", max = "Self::LATITUDE_MAX"))]
+    latitude: f64,
+}
+
+impl Geolocation {
+    pub const LONGITUDE_MIN: f64 = -180.0;
+    pub const LONGITUDE_MAX: f64 = 180.0;
+    pub const LATITUDE_MIN: f64 = -90.0;
+    pub const LATITUDE_MAX: f64 = 90.0;
+
+    pub fn from_lng_lat(lng_lat: (f64, f64)) -> Self {
+        Self {
+            longitude: lng_lat.0,
+            latitude: lng_lat.1,
+        }
     }
 }
 
