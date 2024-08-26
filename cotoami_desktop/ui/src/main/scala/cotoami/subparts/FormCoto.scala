@@ -455,6 +455,7 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
+              _2 = geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCoto(
                 postId,
                 form.content,
