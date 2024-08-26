@@ -11,6 +11,7 @@ trait CotoContent {
   def content: Option[String]
   def summary: Option[String]
   def mediaContent: Option[(String, String)]
+  def geolocation: Option[Geolocation]
   def isCotonoma: Boolean
 
   def nameAsCotonoma: Option[String] =
@@ -53,6 +54,16 @@ case class Coto(json: CotoJson, posted: Boolean = false)
     case (Some(content), Some(mediaType)) => Some((content, mediaType))
     case _                                => None
   }
+
+  override def geolocation: Option[Geolocation] =
+    (
+      Nullable.toOption(this.json.longitude),
+      Nullable.toOption(this.json.latitude)
+    ) match {
+      case (Some(longitude), Some(latitude)) =>
+        Some(Geolocation.fromLngLat((longitude, latitude)))
+      case _ => None
+    }
 
   override def isCotonoma: Boolean = this.json.is_cotonoma
 
@@ -114,6 +125,8 @@ trait CotoJson extends js.Object {
   val media_content: Nullable[String] = js.native
   val media_type: Nullable[String] = js.native
   val is_cotonoma: Boolean = js.native
+  val longitude: Nullable[Double] = js.native
+  val latitude: Nullable[Double] = js.native
   val repost_of_id: Nullable[String] = js.native
   val reposted_in_ids: Nullable[js.Array[String]] = js.native
   val created_at: String = js.native

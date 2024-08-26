@@ -438,7 +438,12 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
-              _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
+              _3 = waitingPosts.addCotonoma(
+                postId,
+                form.name,
+                geomap.focusedLocation,
+                cotonoma
+              ),
               _5 = Seq(postCotonoma(postId, form, cotonoma.id))
             )
         }
@@ -455,6 +460,7 @@ object FormCoto {
                 form.content,
                 form.summary,
                 mediaContent,
+                geomap.focusedLocation,
                 cotonoma
               ),
               _5 = Seq(
