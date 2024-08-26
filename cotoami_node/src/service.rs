@@ -215,7 +215,7 @@ pub enum Command {
 
     /// Request to create a new [Coto] in the given cotonoma (`post_to`).
     PostCoto {
-        input: CotoInput,
+        content: CotoContent<'static>,
         post_to: Id<Cotonoma>,
     },
 

@@ -78,8 +78,8 @@ impl NodeState {
             Command::GraphFromCotonoma { cotonoma } => {
                 format.serialize(self.graph_from_cotonoma(cotonoma).await)
             }
-            Command::PostCoto { input, post_to } => {
-                format.serialize(self.post_coto(input, post_to, opr?).await)
+            Command::PostCoto { content, post_to } => {
+                format.serialize(self.post_coto(content, post_to, opr?).await)
             }
             Command::PostCotonoma { input, post_to } => {
                 format.serialize(self.post_cotonoma(input, post_to, opr?).await)

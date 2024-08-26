@@ -180,9 +180,9 @@ impl HttpClient {
             Command::GraphFromCotonoma { cotonoma } => {
                 self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma}/graph"))
             }
-            Command::PostCoto { input, post_to } => self
+            Command::PostCoto { content, post_to } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{post_to}/cotos"))
-                .form(&input),
+                .json(&content),
             Command::PostCotonoma { input, post_to } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{post_to}/subs"))
                 .form(&input),

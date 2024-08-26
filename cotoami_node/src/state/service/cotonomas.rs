@@ -102,6 +102,7 @@ impl NodeState {
             move |ds, input, cotonoma| {
                 ds.post_cotonoma(
                     &input.name.unwrap_or_else(|| unreachable!()),
+                    None,
                     cotonoma,
                     operator.as_ref(),
                 )

@@ -208,20 +208,6 @@ impl Changes {
 // Coto / Cotonoma
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct CotoInput {
-    #[validate(required, length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    pub content: Option<String>,
-
-    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    pub summary: Option<String>,
-
-    /// A pair of media content data and its media type.
-    /// TODO: needs validation?
-    #[debug(skip)]
-    pub media_content: Option<(Bytes, String)>,
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotonomaInput {
     #[validate(required, length(max = "Cotonoma::NAME_MAX_LENGTH"))]

@@ -307,6 +307,8 @@ pub struct CotoContent<'a> {
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
     summary: Option<Cow<'a, str>>,
 
+    /// A pair of media content data and its media type.
+    // TODO: needs validation?
     #[debug(skip)]
     media_content: Option<(Bytes, Cow<'a, str>)>,
 
@@ -405,16 +407,6 @@ impl<'a> UpdateCoto<'a> {
             self.media_type = Some(None);
         }
         Ok(())
-    }
-
-    pub fn set_lng_lat(&mut self, lng_lat: Option<(f64, f64)>) {
-        if let Some((lng, lat)) = lng_lat {
-            self.longitude = Some(Some(lng));
-            self.latitude = Some(Some(lat));
-        } else {
-            self.longitude = Some(None);
-            self.latitude = Some(None);
-        }
     }
 }
 
