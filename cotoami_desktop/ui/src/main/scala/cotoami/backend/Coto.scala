@@ -5,6 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.{Remark, StripMarkdown, Validation}
+import cotoami.models.Geolocation
 
 trait CotoContent {
   def content: Option[String]
@@ -95,9 +96,10 @@ object Coto {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      geolocation: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, mediaContent, postTo)
+    CotoJson.post(content, summary, mediaContent, geolocation, postTo)
       .map(_.map(Coto(_)))
 }
 
@@ -124,7 +126,10 @@ object CotoJson {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      geolocation: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, CotoJson]] =
-    Commands.send(Commands.PostCoto(content, summary, mediaContent, postTo))
+    Commands.send(
+      Commands.PostCoto(content, summary, mediaContent, geolocation, postTo)
+    )
 }

@@ -458,7 +458,13 @@ object FormCoto {
                 cotonoma
               ),
               _5 = Seq(
-                postCoto(postId, form, mediaContent, cotonoma.id),
+                postCoto(
+                  postId,
+                  form,
+                  mediaContent,
+                  geomap.focusedLocation,
+                  cotonoma.id
+                ),
                 model.save
               )
             )
@@ -525,9 +531,10 @@ object FormCoto {
       postId: String,
       form: CotoForm,
       mediaContent: Option[(String, String)],
+      geolocation: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content, form.summary, mediaContent, postTo)
+    Coto.post(form.content, form.summary, mediaContent, geolocation, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(
