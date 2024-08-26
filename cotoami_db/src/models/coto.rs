@@ -298,7 +298,7 @@ impl<'a> NewCoto<'a> {
 // CotoContent
 /////////////////////////////////////////////////////////////////////////////
 
-/// Grouping coto cntent inputs as a builder pattern.
+/// Grouping coto content inputs as a builder pattern.
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotoContent<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
@@ -388,25 +388,91 @@ pub(crate) struct UpdateCoto<'a> {
 }
 
 impl<'a> UpdateCoto<'a> {
-    pub fn edit(&mut self, content: &'a str, summary: Option<&'a str>) {
-        self.content = Some(Some(content));
-        self.summary = Some(crate::blank_to_none(summary));
-    }
-
-    pub fn set_media_content(
+    pub fn patch(
         &mut self,
-        media_content: Option<(&'a [u8], &'a str)>,
+        diff: &'a CotoContentDiff<'a>,
         image_max_size: Option<u32>,
     ) -> Result<()> {
-        if let Some((content, media_type)) = media_content {
-            let content = process_media_content((content, media_type), image_max_size)?;
-            self.media_content = Some(Some(content));
-            self.media_type = Some(Some(media_type));
-        } else {
-            self.media_content = Some(None);
-            self.media_type = Some(None);
+        self.content = Some(diff.content.as_deref());
+        self.summary = diff
+            .summary
+            .as_ref()
+            .map(|s| crate::blank_to_none(s.as_deref()));
+
+        match diff.media_content.as_ref() {
+            Some(Some((content, media_type))) => {
+                let media_type = media_type.as_ref();
+                let content =
+                    process_media_content((content.as_ref(), media_type), image_max_size)?;
+                self.media_content = Some(Some(content));
+                self.media_type = Some(Some(media_type));
+            }
+            Some(None) => {
+                self.media_content = Some(None);
+                self.media_type = Some(None);
+            }
+            None => {
+                self.media_content = None;
+                self.media_type = None;
+            }
         }
+
+        match diff.geolocation.as_ref() {
+            Some(Some(geolocation)) => {
+                self.longitude = Some(Some(geolocation.longitude));
+                self.latitude = Some(Some(geolocation.latitude));
+            }
+            Some(None) => {
+                self.longitude = Some(None);
+                self.latitude = Some(None);
+            }
+            None => {
+                self.longitude = None;
+                self.latitude = None;
+            }
+        }
+
         Ok(())
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotoContentDiff
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Default, Validate)]
+pub struct CotoContentDiff<'a> {
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    content: Option<Cow<'a, str>>,
+
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    summary: Option<Option<Cow<'a, str>>>,
+
+    media_content: Option<Option<(Bytes, Cow<'a, str>)>>,
+
+    #[validate(nested)]
+    geolocation: Option<Option<Geolocation>>,
+}
+
+impl<'a> CotoContentDiff<'a> {
+    pub fn content(mut self, content: &'a str) -> Self {
+        self.content = Some(Cow::from(content));
+        self
+    }
+
+    pub fn summary(mut self, summary: Option<&'a str>) -> Self {
+        self.summary = Some(summary.map(Cow::from));
+        self
+    }
+
+    pub fn media_content(mut self, content: Option<(Bytes, &'a str)>) -> Self {
+        self.media_content = Some(content.map(|c| (c.0, Cow::from(c.1))));
+        self
+    }
+
+    pub fn geolocation(mut self, geolocation: Option<Geolocation>) -> Self {
+        self.geolocation = Some(geolocation);
+        self
     }
 }
 
