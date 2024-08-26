@@ -364,6 +364,12 @@ pub(crate) struct UpdateCoto<'a> {
     pub is_cotonoma: Option<bool>,
 
     #[new(default)]
+    pub longitude: Option<Option<f64>>,
+
+    #[new(default)]
+    pub latitude: Option<Option<f64>>,
+
+    #[new(default)]
     pub repost_of_id: Option<Option<&'a Id<Coto>>>,
 
     #[new(default)]
@@ -393,6 +399,16 @@ impl<'a> UpdateCoto<'a> {
             self.media_type = Some(None);
         }
         Ok(())
+    }
+
+    pub fn set_lng_lat(&mut self, lng_lat: Option<(f64, f64)>) {
+        if let Some((lng, lat)) = lng_lat {
+            self.longitude = Some(Some(lng));
+            self.latitude = Some(Some(lat));
+        } else {
+            self.longitude = Some(None);
+            self.latitude = Some(None);
+        }
     }
 }
 
