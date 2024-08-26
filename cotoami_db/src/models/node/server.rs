@@ -56,7 +56,7 @@ pub struct ServerNode {
 impl ServerNode {
     // 2000 characters minus 500 for an API path after the prefix.
     // cf. https://stackoverflow.com/a/417184
-    pub const URL_PREFIX_MAX_LENGTH: usize = 1500;
+    pub const URL_PREFIX_MAX_LENGTH: u64 = 1500;
 
     pub fn password(&self, encryption_password: &str) -> Result<Option<String>> {
         if let Some(ref encrypted_password) = self.encrypted_password {

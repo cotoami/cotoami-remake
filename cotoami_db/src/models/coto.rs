@@ -90,8 +90,8 @@ pub struct Coto {
 }
 
 impl Coto {
-    pub const CONTENT_MAX_LENGTH: usize = 1_000_000;
-    pub const SUMMARY_MAX_LENGTH: usize = 200;
+    pub const CONTENT_MAX_LENGTH: u64 = 1_000_000;
+    pub const SUMMARY_MAX_LENGTH: u64 = 200;
     pub const LONGITUDE_MIN: f64 = -180.0;
     pub const LONGITUDE_MAX: f64 = 180.0;
     pub const LATITUDE_MIN: f64 = -90.0;
@@ -241,25 +241,24 @@ impl<'a> NewCoto<'a> {
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
-        content: CotoContent<'a>,
+        content: &'a CotoContent<'a>,
         image_max_size: Option<u32>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
         coto.posted_in_id = Some(posted_in_id);
-        coto.content = Some(content.content);
-        coto.summary = content.summary;
+        coto.content = Some(content.content.as_ref());
+        coto.summary = content.summary.as_deref();
 
-        if let Some((content, media_type)) = content.media_content {
-            let content = process_media_content((content, media_type), image_max_size)?;
+        if let Some((content, media_type)) = content.media_content.as_ref() {
+            let content =
+                process_media_content((content.as_ref(), media_type.as_ref()), image_max_size)?;
             coto.media_content = Some(content);
-            coto.media_type = Some(media_type);
+            coto.media_type = Some(media_type.as_ref());
         }
 
-        if let Some((longitude, latitude)) = content.lng_lat {
-            coto.longitude = Some(longitude);
-            coto.latitude = Some(latitude);
-        }
+        coto.longitude = content.longitude;
+        coto.latitude = content.latitude;
 
         coto.validate()?;
         Ok(coto)
@@ -301,35 +300,48 @@ impl<'a> NewCoto<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 /// Grouping content-related inputs as a builder pattern.
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotoContent<'a> {
-    content: &'a str,
-    summary: Option<&'a str>,
-    media_content: Option<(&'a [u8], &'a str)>,
-    lng_lat: Option<(f64, f64)>,
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    content: Cow<'a, str>,
+
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    summary: Option<Cow<'a, str>>,
+
+    #[debug(skip)]
+    media_content: Option<(Bytes, Cow<'a, str>)>,
+
+    #[validate(range(min = "Coto::LONGITUDE_MIN", max = "Coto::LONGITUDE_MAX"))]
+    longitude: Option<f64>,
+
+    #[validate(range(min = "Coto::LATITUDE_MIN", max = "Coto::LATITUDE_MAX"))]
+    latitude: Option<f64>,
 }
 
 impl<'a> CotoContent<'a> {
     pub fn new(content: &'a str) -> Self {
         CotoContent {
-            content,
+            content: Cow::from(content),
             summary: None,
             media_content: None,
-            lng_lat: None,
+            longitude: None,
+            latitude: None,
         }
     }
 
     pub fn summary(mut self, summary: &'a str) -> Self {
-        self.summary = Some(summary);
+        self.summary = Some(Cow::from(summary));
         self
     }
 
-    pub fn media_content(mut self, media_content: (&'a [u8], &'a str)) -> Self {
-        self.media_content = Some(media_content);
+    pub fn media_content(mut self, content: Bytes, content_type: &'a str) -> Self {
+        self.media_content = Some((content, Cow::from(content_type)));
         self
     }
 
     pub fn lng_lat(mut self, lng_lat: (f64, f64)) -> Self {
-        self.lng_lat = Some(lng_lat);
+        self.longitude = Some(lng_lat.0);
+        self.latitude = Some(lng_lat.1);
         self
     }
 }

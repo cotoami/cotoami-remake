@@ -70,7 +70,7 @@ pub struct Node {
 
 impl Node {
     pub const ICON_MAX_SIZE: u32 = 400; // 400px * 400px
-    pub const NAME_MAX_LENGTH: usize = Cotonoma::NAME_MAX_LENGTH;
+    pub const NAME_MAX_LENGTH: u64 = Cotonoma::NAME_MAX_LENGTH;
 
     pub fn has_root_cotonoma(&self) -> bool { self.root_cotonoma_id.is_some() }
 

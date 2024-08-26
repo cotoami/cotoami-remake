@@ -59,8 +59,8 @@ pub struct Link {
 }
 
 impl Link {
-    pub const LINKING_PHRASE_MAX_LENGTH: usize = 200;
-    pub const DETAILS_MAX_LENGTH: usize = 1_000_000;
+    pub const LINKING_PHRASE_MAX_LENGTH: u64 = 200;
+    pub const DETAILS_MAX_LENGTH: u64 = 1_000_000;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 

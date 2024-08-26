@@ -68,7 +68,7 @@ impl<'a> DatabaseSession<'a> {
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
         &self,
-        content: CotoContent,
+        content: &CotoContent,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {

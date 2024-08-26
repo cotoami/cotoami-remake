@@ -54,7 +54,7 @@ pub struct Cotonoma {
 }
 
 impl Cotonoma {
-    pub const NAME_MAX_LENGTH: usize = 50;
+    pub const NAME_MAX_LENGTH: u64 = 50;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
