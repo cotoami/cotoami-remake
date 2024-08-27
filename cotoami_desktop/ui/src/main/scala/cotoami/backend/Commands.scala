@@ -130,7 +130,7 @@ object Commands {
   ) =
     jso(PostCoto =
       jso(
-        content = jso(
+        input = jso(
           content = content,
           summary = summary.getOrElse(null),
           media_content =
