@@ -125,7 +125,7 @@ object Commands {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
-      geolocation: Option[Geolocation],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ) =
     jso(PostCoto =
@@ -135,19 +135,26 @@ object Commands {
           summary = summary.getOrElse(null),
           media_content =
             mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
-          geolocation = geolocation.map(location =>
-            jso(longitude = location.longitude, latitude = location.latitude)
-          ).getOrElse(null)
+          geolocation = geolocation(location)
         ),
         post_to = postTo.uuid
       )
     )
 
-  def PostCotonoma(name: String, postTo: Id[Cotonoma]) =
+  def PostCotonoma(
+      name: String,
+      location: Option[Geolocation],
+      postTo: Id[Cotonoma]
+  ) =
     jso(PostCotonoma =
       jso(
-        input = jso(name = name),
+        input = jso(name = name, geolocation = geolocation(location)),
         post_to = postTo.uuid
       )
     )
+
+  private def geolocation(location: Option[Geolocation]) =
+    location.map(location =>
+      jso(longitude = location.longitude, latitude = location.latitude)
+    ).getOrElse(null)
 }

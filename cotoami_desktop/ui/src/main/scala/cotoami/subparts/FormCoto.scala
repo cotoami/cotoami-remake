@@ -433,13 +433,16 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
+              _2 = geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCotonoma(
                 postId,
                 form.name,
                 geomap.focusedLocation,
                 cotonoma
               ),
-              _5 = Seq(postCotonoma(postId, form, cotonoma.id))
+              _5 = Seq(
+                postCotonoma(postId, form, geomap.focusedLocation, cotonoma.id)
+              )
             )
         }
       }
@@ -533,18 +536,20 @@ object FormCoto {
       postId: String,
       form: CotoForm,
       mediaContent: Option[(String, String)],
-      geolocation: Option[Geolocation],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content, form.summary, mediaContent, geolocation, postTo)
+    Coto.post(form.content, form.summary, mediaContent, location, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(
       postId: String,
       form: CotonomaForm,
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Cotonoma.post(form.name, postTo).map(Msg.CotonomaPosted(postId, _))
+    Cotonoma.post(form.name, location, postTo)
+      .map(Msg.CotonomaPosted(postId, _))
 
   /////////////////////////////////////////////////////////////////////////////
   // view

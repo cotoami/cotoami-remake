@@ -5,6 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.Validation
+import cotoami.models.Geolocation
 
 case class Cotonoma(json: CotonomaJson) extends Entity[Cotonoma] {
   override def id: Id[Cotonoma] = Id(this.json.uuid)
@@ -58,9 +59,10 @@ object Cotonoma {
 
   def post(
       name: String,
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
-    CotonomaJson.post(name, postTo)
+    CotonomaJson.post(name, location, postTo)
       .map(_.map(pair => (Cotonoma(pair._1), Coto(pair._2))))
 }
 
@@ -99,7 +101,8 @@ object CotonomaJson {
 
   def post(
       name: String,
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
-    Commands.send(Commands.PostCotonoma(name, postTo))
+    Commands.send(Commands.PostCotonoma(name, location, postTo))
 }

@@ -107,10 +107,10 @@ object Coto {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
-      geolocation: Option[Geolocation],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, mediaContent, geolocation, postTo)
+    CotoJson.post(content, summary, mediaContent, location, postTo)
       .map(_.map(Coto(_)))
 }
 
@@ -139,10 +139,10 @@ object CotoJson {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
-      geolocation: Option[Geolocation],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, CotoJson]] =
     Commands.send(
-      Commands.PostCoto(content, summary, mediaContent, geolocation, postTo)
+      Commands.PostCoto(content, summary, mediaContent, location, postTo)
     )
 }
