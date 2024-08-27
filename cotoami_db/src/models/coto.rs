@@ -238,23 +238,23 @@ impl<'a> NewCoto<'a> {
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
-        content: &'a CotoContent<'a>,
+        input: &'a CotoInput<'a>,
         image_max_size: Option<u32>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
         coto.posted_in_id = Some(posted_in_id);
-        coto.content = Some(content.content.as_ref());
-        coto.summary = content.summary.as_deref();
+        coto.content = Some(input.content.as_ref());
+        coto.summary = input.summary.as_deref();
 
-        if let Some((content, media_type)) = content.media_content.as_ref() {
+        if let Some((content, media_type)) = input.media_content.as_ref() {
             let content =
                 process_media_content((content.as_ref(), media_type.as_ref()), image_max_size)?;
             coto.media_content = Some(content);
             coto.media_type = Some(media_type.as_ref());
         }
 
-        if let Some(location) = content.geolocation.as_ref() {
+        if let Some(location) = input.geolocation.as_ref() {
             coto.longitude = Some(location.longitude);
             coto.latitude = Some(location.latitude);
         }
@@ -295,12 +295,12 @@ impl<'a> NewCoto<'a> {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// CotoContent
+// CotoInput
 /////////////////////////////////////////////////////////////////////////////
 
-/// Grouping coto content inputs as a builder pattern.
+/// Coto input values as a serializable struct with a builder interface.
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct CotoContent<'a> {
+pub struct CotoInput<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
     content: Cow<'a, str>,
 
@@ -316,7 +316,7 @@ pub struct CotoContent<'a> {
     geolocation: Option<Geolocation>,
 }
 
-impl<'a> CotoContent<'a> {
+impl<'a> CotoInput<'a> {
     pub fn new(content: &'a str) -> Self {
         Self {
             content: Cow::from(content),

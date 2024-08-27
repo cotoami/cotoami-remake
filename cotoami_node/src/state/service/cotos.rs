@@ -63,18 +63,18 @@ impl NodeState {
 
     pub async fn post_coto(
         self,
-        content: CotoContent<'static>,
+        input: CotoInput<'static>,
         post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<Coto, ServiceError> {
-        if let Err(errors) = content.validate() {
+        if let Err(errors) = input.validate() {
             return ("post_coto", errors).into_result();
         }
         self.change_in_cotonoma(
-            content,
+            input,
             post_to,
-            move |ds, content, cotonoma| ds.post_coto(&content, cotonoma, operator.as_ref()),
-            |parent, content, cotonoma| parent.post_coto(content, cotonoma.uuid).boxed(),
+            move |ds, input, cotonoma| ds.post_coto(&input, cotonoma, operator.as_ref()),
+            |parent, input, cotonoma| parent.post_coto(input, cotonoma.uuid).boxed(),
         )
         .await
     }

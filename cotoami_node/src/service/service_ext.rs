@@ -34,12 +34,8 @@ pub trait NodeServiceExt: NodeService {
         response.content::<ChunkOfChanges>()
     }
 
-    async fn post_coto(
-        &self,
-        content: CotoContent<'static>,
-        post_to: Id<Cotonoma>,
-    ) -> Result<Coto> {
-        let request = Command::PostCoto { content, post_to }.into_request();
+    async fn post_coto(&self, input: CotoInput<'static>, post_to: Id<Cotonoma>) -> Result<Coto> {
+        let request = Command::PostCoto { input, post_to }.into_request();
         let response = self.call(request).await?;
         response.content::<Coto>()
     }

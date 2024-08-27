@@ -54,10 +54,10 @@ async fn post_coto(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Json(content): Json<CotoContent<'static>>,
+    Json(input): Json<CotoInput<'static>>,
 ) -> Result<(StatusCode, Content<Coto>), ServiceError> {
     state
-        .post_coto(content, cotonoma_id, Arc::new(operator))
+        .post_coto(input, cotonoma_id, Arc::new(operator))
         .await
         .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
 }

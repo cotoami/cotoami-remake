@@ -13,14 +13,14 @@ fn search_cotos() -> Result<()> {
     let (root, _) = ds.root_cotonoma()?.unwrap();
 
     // when
-    let (coto1, _) = ds.post_coto(&CotoContent::new("Hello, world!"), &root, &opr)?;
+    let (coto1, _) = ds.post_coto(&CotoInput::new("Hello, world!"), &root, &opr)?;
     let (coto2, _) = ds.post_coto(
-        &CotoContent::new("It's a small world.").summary("summary"),
+        &CotoInput::new("It's a small world.").summary("summary"),
         &root,
         &opr,
     )?;
-    let (coto3, _) = ds.post_coto(&CotoContent::new("柿くへば鐘が鳴るなり法隆寺"), &root, &opr)?;
-    let (coto4, _) = ds.post_coto(&CotoContent::new("旅行(行きたい)"), &root, &opr)?;
+    let (coto3, _) = ds.post_coto(&CotoInput::new("柿くへば鐘が鳴るなり法隆寺"), &root, &opr)?;
+    let (coto4, _) = ds.post_coto(&CotoInput::new("旅行(行きたい)"), &root, &opr)?;
 
     // then
     assert_search(&mut ds, "hello", vec![&coto1])?;
