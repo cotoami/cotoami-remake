@@ -10,7 +10,13 @@ use diesel::{
     sql_types::Binary, sqlite::Sqlite, FromSqlRow,
 };
 
-use super::{coto::Coto, cotonoma::Cotonoma, link::Link, node::Node, Bytes, Id};
+use super::{
+    coto::{Coto, CotoContentDiff},
+    cotonoma::Cotonoma,
+    link::Link,
+    node::Node,
+    Bytes, Id,
+};
 use crate::schema::changelog;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -110,34 +116,28 @@ pub enum Change {
     CreateCoto(Coto) = 6,
     EditCoto {
         coto_id: Id<Coto>,
-        content: String,
-        summary: Option<String>,
+        diff: CotoContentDiff<'static>,
         updated_at: NaiveDateTime,
     } = 7,
-    SetMediaContent {
-        coto_id: Id<Coto>,
-        content: Option<(Bytes, String)>,
-        updated_at: NaiveDateTime,
-    } = 8,
     // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
-    } = 9,
-    CreateCotonoma(Cotonoma, Coto) = 10,
+    } = 8,
+    CreateCotonoma(Cotonoma, Coto) = 9,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 11,
-    CreateLink(Link) = 12,
+    } = 10,
+    CreateLink(Link) = 11,
     EditLink {
         link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,
-    } = 13,
-    DeleteLink(Id<Link>) = 14,
+    } = 12,
+    DeleteLink(Id<Link>) = 13,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -148,7 +148,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 15,
+    } = 14,
 }
 
 impl Change {

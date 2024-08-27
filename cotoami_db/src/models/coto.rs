@@ -440,18 +440,20 @@ impl<'a> UpdateCoto<'a> {
 // CotoContentDiff
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Default, Validate)]
+#[derive(
+    derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, Validate,
+)]
 pub struct CotoContentDiff<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    content: Option<Cow<'a, str>>,
+    pub content: Option<Cow<'a, str>>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    summary: Option<Option<Cow<'a, str>>>,
+    pub summary: Option<Option<Cow<'a, str>>>,
 
-    media_content: Option<Option<(Bytes, Cow<'a, str>)>>,
+    pub media_content: Option<Option<(Bytes, Cow<'a, str>)>>,
 
     #[validate(nested)]
-    geolocation: Option<Option<Geolocation>>,
+    pub geolocation: Option<Option<Geolocation>>,
 }
 
 impl<'a> CotoContentDiff<'a> {

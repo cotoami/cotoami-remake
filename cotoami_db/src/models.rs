@@ -317,7 +317,7 @@ impl FromSql<Binary, Sqlite> for Bytes {
 // Geolocation
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+#[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Validate)]
 pub struct Geolocation {
     #[validate(range(min = "Self::LONGITUDE_MIN", max = "Self::LONGITUDE_MAX"))]
     longitude: f64,

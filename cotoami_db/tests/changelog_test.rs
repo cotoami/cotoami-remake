@@ -28,8 +28,10 @@ fn import_changes() -> Result<()> {
         ds1.post_coto(&CotoContent::new("hello"), &node1_root_cotonoma, &opr1)?;
 
     // 3. edit_coto
-    let (db1_edited_coto, db1_change3) =
-        ds1.edit_coto(&db1_coto.uuid, "bar", Some("foo"), &opr1)?;
+    let diff = CotoContentDiff::default()
+        .content("bar")
+        .summary(Some("foo"));
+    let (db1_edited_coto, db1_change3) = ds1.edit_coto(&db1_coto.uuid, diff, &opr1)?;
 
     // 4. delete_coto
     let db1_change4 = ds1.delete_coto(&db1_coto.uuid, &opr1)?;

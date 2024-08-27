@@ -205,24 +205,11 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             }
             Change::EditCoto {
                 coto_id,
-                content,
-                summary,
+                diff,
                 updated_at,
             } => {
-                coto_ops::edit(coto_id, content, summary.as_deref(), Some(*updated_at)).run(ctx)?;
-            }
-            Change::SetMediaContent {
-                coto_id,
-                content,
-                updated_at,
-            } => {
-                coto_ops::set_media_content(
-                    coto_id,
-                    content.as_ref().map(|(c, t)| (c.as_ref(), t.as_str())),
-                    None, // TODO: needs resizing?
-                    Some(*updated_at),
-                )
-                .run(ctx)?;
+                // Accept the image size from a parent by skipping resizing (image_max_size as None).
+                coto_ops::edit(coto_id, &diff, None, Some(*updated_at)).run(ctx)?;
             }
             Change::DeleteCoto {
                 coto_id,
