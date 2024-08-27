@@ -118,12 +118,12 @@ impl<'a> NewCotonoma<'a> {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// CotonomaContent
+// CotonomaInput
 /////////////////////////////////////////////////////////////////////////////
 
-/// Grouping cotonoma content inputs as a builder pattern.
+/// Cotonoma input values as a serializable struct with a builder interface.
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct CotonomaContent<'a> {
+pub struct CotonomaInput<'a> {
     #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
     name: Cow<'a, str>,
 
@@ -131,7 +131,7 @@ pub struct CotonomaContent<'a> {
     geolocation: Option<Geolocation>,
 }
 
-impl<'a> CotonomaContent<'a> {
+impl<'a> CotonomaInput<'a> {
     pub fn new(name: &'a str) -> Self {
         Self {
             name: Cow::from(name),
