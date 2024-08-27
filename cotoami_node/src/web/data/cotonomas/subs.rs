@@ -2,18 +2,15 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Json, Path, Query, State},
     http::StatusCode,
     routing::get,
-    Extension, Form, Router, TypedHeader,
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 
 use crate::{
-    service::{
-        models::{CotonomaInput, Pagination},
-        ServiceError,
-    },
+    service::{models::Pagination, ServiceError},
     state::NodeState,
     web::{Accept, Content},
 };
@@ -47,10 +44,10 @@ async fn post_cotonoma(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Form(form): Form<CotonomaInput>,
+    Json(input): Json<CotonomaInput<'static>>,
 ) -> Result<(StatusCode, Content<(Cotonoma, Coto)>), ServiceError> {
     state
-        .post_cotonoma(form, cotonoma_id, Arc::new(operator))
+        .post_cotonoma(input, cotonoma_id, Arc::new(operator))
         .await
         .map(|cotonoma| (StatusCode::CREATED, Content(cotonoma, accept)))
 }

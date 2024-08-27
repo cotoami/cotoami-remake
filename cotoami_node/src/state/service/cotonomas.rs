@@ -8,7 +8,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{CotonomaDetails, CotonomaInput, Pagination},
+        models::{CotonomaDetails, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -89,7 +89,7 @@ impl NodeState {
 
     pub async fn post_cotonoma(
         self,
-        input: CotonomaInput,
+        input: CotonomaInput<'static>,
         post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<(Cotonoma, Coto), ServiceError> {
@@ -99,14 +99,7 @@ impl NodeState {
         self.change_in_cotonoma(
             input,
             post_to,
-            move |ds, input, cotonoma| {
-                ds.post_cotonoma(
-                    &input.name.unwrap_or_else(|| unreachable!()),
-                    None,
-                    cotonoma,
-                    operator.as_ref(),
-                )
-            },
+            move |ds, input, cotonoma| ds.post_cotonoma(&input, cotonoma, operator.as_ref()),
             |parent, input, cotonoma| parent.post_cotonoma(input, cotonoma.uuid).boxed(),
         )
         .await
