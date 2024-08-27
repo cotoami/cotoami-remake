@@ -125,10 +125,10 @@ impl<'a> NewCotonoma<'a> {
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotonomaInput<'a> {
     #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
-    name: Cow<'a, str>,
+    pub name: Cow<'a, str>,
 
     #[validate(nested)]
-    geolocation: Option<Geolocation>,
+    pub geolocation: Option<Geolocation>,
 }
 
 impl<'a> CotonomaInput<'a> {

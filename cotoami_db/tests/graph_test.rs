@@ -60,7 +60,7 @@ fn graph() -> Result<()> {
     let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root, &opr)?;
     connect(&coto1.uuid, &coto2.uuid, None)?;
 
-    let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", None, &root, &opr)?;
+    let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("cotonoma1"), &root, &opr)?;
     connect(&coto1.uuid, &cotonoma1.coto_id, None)?;
 
     let graph = ds.graph(root_coto.clone(), true)?;

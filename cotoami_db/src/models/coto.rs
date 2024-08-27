@@ -10,7 +10,7 @@ use validator::Validate;
 
 use crate::{
     models::{
-        cotonoma::Cotonoma,
+        cotonoma::{Cotonoma, CotonomaInput},
         node::{BelongsToNode, Node},
         Bytes, Geolocation, Id, Ids,
     },
@@ -234,6 +234,11 @@ impl<'a> NewCoto<'a> {
         }
     }
 
+    fn set_geolocation(&mut self, location: &Geolocation) {
+        self.longitude = Some(location.longitude);
+        self.latitude = Some(location.latitude);
+    }
+
     pub fn new(
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
@@ -255,8 +260,7 @@ impl<'a> NewCoto<'a> {
         }
 
         if let Some(location) = input.geolocation.as_ref() {
-            coto.longitude = Some(location.longitude);
-            coto.latitude = Some(location.latitude);
+            coto.set_geolocation(location);
         }
 
         coto.validate()?;
@@ -267,18 +271,16 @@ impl<'a> NewCoto<'a> {
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
-        name: &'a str,
-        lng_lat: Option<(f64, f64)>,
+        input: &'a CotonomaInput<'a>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
         coto.posted_in_id = Some(posted_in_id);
-        coto.summary = Some(name); // a cotonoma name is stored as a summary
+        coto.summary = Some(input.name.as_ref()); // a cotonoma name is stored as a summary
         coto.is_cotonoma = true;
 
-        if let Some((longitude, latitude)) = lng_lat {
-            coto.longitude = Some(longitude);
-            coto.latitude = Some(latitude);
+        if let Some(location) = input.geolocation.as_ref() {
+            coto.set_geolocation(location);
         }
 
         coto.validate()?;
@@ -302,18 +304,18 @@ impl<'a> NewCoto<'a> {
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotoInput<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    content: Cow<'a, str>,
+    pub content: Cow<'a, str>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    summary: Option<Cow<'a, str>>,
+    pub summary: Option<Cow<'a, str>>,
 
     /// A pair of media content data and its media type.
     // TODO: needs validation?
     #[debug(skip)]
-    media_content: Option<(Bytes, Cow<'a, str>)>,
+    pub media_content: Option<(Bytes, Cow<'a, str>)>,
 
     #[validate(nested)]
-    geolocation: Option<Geolocation>,
+    pub geolocation: Option<Geolocation>,
 }
 
 impl<'a> CotoInput<'a> {
