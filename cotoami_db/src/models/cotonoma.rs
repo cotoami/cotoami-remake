@@ -1,5 +1,7 @@
 //! A cotonoma is a specific type of [Coto] in which other cotos are posted.
 
+use std::borrow::Cow;
+
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
@@ -9,7 +11,7 @@ use validator::Validate;
 use super::{
     coto::Coto,
     node::{BelongsToNode, Node},
-    Id,
+    Geolocation, Id,
 };
 use crate::schema::cotonomas;
 
@@ -112,6 +114,34 @@ impl<'a> NewCotonoma<'a> {
         };
         cotonoma.validate()?;
         Ok(cotonoma)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotonomaContent
+/////////////////////////////////////////////////////////////////////////////
+
+/// Grouping cotonoma content inputs as a builder pattern.
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct CotonomaContent<'a> {
+    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
+    name: Cow<'a, str>,
+
+    #[validate(nested)]
+    geolocation: Option<Geolocation>,
+}
+
+impl<'a> CotonomaContent<'a> {
+    pub fn new(name: &'a str) -> Self {
+        Self {
+            name: Cow::from(name),
+            geolocation: None,
+        }
+    }
+
+    pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
+        self.geolocation = Some(geolocation);
+        self
     }
 }
 

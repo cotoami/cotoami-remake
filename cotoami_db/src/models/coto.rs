@@ -318,7 +318,7 @@ pub struct CotoContent<'a> {
 
 impl<'a> CotoContent<'a> {
     pub fn new(content: &'a str) -> Self {
-        CotoContent {
+        Self {
             content: Cow::from(content),
             summary: None,
             media_content: None,
