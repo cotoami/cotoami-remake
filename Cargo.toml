@@ -22,7 +22,7 @@ clap = {version = "4.4.16", features = ["derive"]}
 cotoami_db = {path = "cotoami_db"}
 cotoami_node = {path = "cotoami_node"}
 derive-new = "0.6.0"
-derive_more = {version = "=1.0.0-beta.6", features = ["debug", "display"]}
+derive_more = {version = "1.0.0", features = ["debug", "display"]}
 futures = "0.3.30"
 futures-util = "0.3.30"
 googletest = "0.11.0"
