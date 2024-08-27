@@ -28,7 +28,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 0);
 
     // when
-    let _ = ds.post_coto("1", None, None, &root_cotonoma, &operator)?;
+    let _ = ds.post_coto(&CotoInput::new("1"), &root_cotonoma, &operator)?;
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
 
     // then
@@ -46,7 +46,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    let _ = ds.post_coto("2", None, None, &root_cotonoma, &operator)?;
+    let _ = ds.post_coto(&CotoInput::new("2"), &root_cotonoma, &operator)?;
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
 
     // then
@@ -69,7 +69,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    let _ = ds.post_coto("3", None, None, &root_cotonoma, &operator)?;
+    let _ = ds.post_coto(&CotoInput::new("3"), &root_cotonoma, &operator)?;
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
 
     // then

@@ -4,6 +4,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 import fui.Cmd
 import cotoami.libs.tauri
+import cotoami.models.Geolocation
 
 object Commands {
 
@@ -124,25 +125,36 @@ object Commands {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ) =
     jso(PostCoto =
       jso(
-        input = jso(
+        content = jso(
           content = content,
           summary = summary.getOrElse(null),
           media_content =
-            mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null)
+            mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
+          geolocation = geolocation(location)
         ),
         post_to = postTo.uuid
       )
     )
 
-  def PostCotonoma(name: String, postTo: Id[Cotonoma]) =
+  def PostCotonoma(
+      name: String,
+      location: Option[Geolocation],
+      postTo: Id[Cotonoma]
+  ) =
     jso(PostCotonoma =
       jso(
-        input = jso(name = name),
+        input = jso(name = name, geolocation = geolocation(location)),
         post_to = postTo.uuid
       )
     )
+
+  private def geolocation(location: Option[Geolocation]) =
+    location.map(location =>
+      jso(longitude = location.longitude, latitude = location.latitude)
+    ).getOrElse(null)
 }

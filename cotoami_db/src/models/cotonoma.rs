@@ -1,5 +1,7 @@
 //! A cotonoma is a specific type of [Coto] in which other cotos are posted.
 
+use std::borrow::Cow;
+
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
@@ -9,7 +11,7 @@ use validator::Validate;
 use super::{
     coto::Coto,
     node::{BelongsToNode, Node},
-    Id,
+    Geolocation, Id,
 };
 use crate::schema::cotonomas;
 
@@ -54,7 +56,7 @@ pub struct Cotonoma {
 }
 
 impl Cotonoma {
-    pub const NAME_MAX_LENGTH: usize = 50;
+    pub const NAME_MAX_LENGTH: u64 = 50;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
@@ -112,6 +114,34 @@ impl<'a> NewCotonoma<'a> {
         };
         cotonoma.validate()?;
         Ok(cotonoma)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotonomaInput
+/////////////////////////////////////////////////////////////////////////////
+
+/// Cotonoma input values as a serializable struct with a builder interface.
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct CotonomaInput<'a> {
+    #[validate(length(max = "Cotonoma::NAME_MAX_LENGTH"))]
+    pub name: Cow<'a, str>,
+
+    #[validate(nested)]
+    pub geolocation: Option<Geolocation>,
+}
+
+impl<'a> CotonomaInput<'a> {
+    pub fn new(name: &'a str) -> Self {
+        Self {
+            name: Cow::from(name),
+            geolocation: None,
+        }
+    }
+
+    pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
+        self.geolocation = Some(geolocation);
+        self
     }
 }
 

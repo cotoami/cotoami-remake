@@ -7,7 +7,7 @@ use petgraph::prelude::{Graph as Petgraph, NodeIndex};
 use super::{coto::Coto, link::Link, Id};
 
 /// A graph is a set of cotos that are connected with links
-#[derive(Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Graph {
     /// Root coto ID
     pub root_id: Id<Coto>,

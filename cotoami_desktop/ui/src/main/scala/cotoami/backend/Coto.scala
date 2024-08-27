@@ -5,11 +5,13 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.{Remark, StripMarkdown, Validation}
+import cotoami.models.Geolocation
 
 trait CotoContent {
   def content: Option[String]
   def summary: Option[String]
   def mediaContent: Option[(String, String)]
+  def geolocation: Option[Geolocation]
   def isCotonoma: Boolean
 
   def nameAsCotonoma: Option[String] =
@@ -53,6 +55,16 @@ case class Coto(json: CotoJson, posted: Boolean = false)
     case _                                => None
   }
 
+  override def geolocation: Option[Geolocation] =
+    (
+      Nullable.toOption(this.json.longitude),
+      Nullable.toOption(this.json.latitude)
+    ) match {
+      case (Some(longitude), Some(latitude)) =>
+        Some(Geolocation.fromLngLat((longitude, latitude)))
+      case _ => None
+    }
+
   override def isCotonoma: Boolean = this.json.is_cotonoma
 
   def repostOfId: Option[Id[Coto]] =
@@ -95,9 +107,10 @@ object Coto {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, mediaContent, postTo)
+    CotoJson.post(content, summary, mediaContent, location, postTo)
       .map(_.map(Coto(_)))
 }
 
@@ -112,6 +125,8 @@ trait CotoJson extends js.Object {
   val media_content: Nullable[String] = js.native
   val media_type: Nullable[String] = js.native
   val is_cotonoma: Boolean = js.native
+  val longitude: Nullable[Double] = js.native
+  val latitude: Nullable[Double] = js.native
   val repost_of_id: Nullable[String] = js.native
   val reposted_in_ids: Nullable[js.Array[String]] = js.native
   val created_at: String = js.native
@@ -124,7 +139,10 @@ object CotoJson {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, CotoJson]] =
-    Commands.send(Commands.PostCoto(content, summary, mediaContent, postTo))
+    Commands.send(
+      Commands.PostCoto(content, summary, mediaContent, location, postTo)
+    )
 }

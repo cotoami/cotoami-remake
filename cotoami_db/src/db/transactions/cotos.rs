@@ -68,9 +68,7 @@ impl<'a> DatabaseSession<'a> {
     /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
         &self,
-        content: &str,
-        summary: Option<&str>,
-        media_content: Option<(&[u8], &str)>,
+        input: &CotoInput,
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
@@ -81,9 +79,7 @@ impl<'a> DatabaseSession<'a> {
             &local_node.node_id,
             &posted_in.uuid,
             &posted_by_id,
-            content,
-            summary,
-            media_content,
+            input,
             local_node.image_max_size.map(|size| size as u32),
         )?;
         self.create_coto(&new_coto)
@@ -106,31 +102,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn edit_coto(
         &self,
         id: &Id<Coto>,
-        content: &str,
-        summary: Option<&str>,
-        operator: &Operator,
-    ) -> Result<(Coto, ChangelogEntry)> {
-        let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let coto = coto_ops::try_get(id).run(ctx)??;
-            self.globals.ensure_local(&coto)?;
-            operator.can_update_coto(&coto)?;
-            let coto = coto_ops::edit(id, content, summary, None).run(ctx)?;
-            let change = Change::EditCoto {
-                coto_id: *id,
-                content: content.into(),
-                summary: summary.map(String::from),
-                updated_at: coto.updated_at,
-            };
-            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-            Ok((coto, changelog))
-        })
-    }
-
-    pub fn set_media_content(
-        &self,
-        id: &Id<Coto>,
-        media_content: Option<(&'a [u8], &'a str)>,
+        diff: CotoContentDiff<'static>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         let local_node = self.globals.try_read_local_node()?;
@@ -138,16 +110,16 @@ impl<'a> DatabaseSession<'a> {
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_update_coto(&coto)?;
-            let coto = coto_ops::set_media_content(
+            let coto = coto_ops::edit(
                 id,
-                media_content,
+                &diff,
                 local_node.image_max_size.map(|size| size as u32),
                 None,
             )
             .run(ctx)?;
-            let change = Change::SetMediaContent {
+            let change = Change::EditCoto {
                 coto_id: *id,
-                content: coto.media_content(),
+                diff,
                 updated_at: coto.updated_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;

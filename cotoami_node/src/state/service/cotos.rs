@@ -8,7 +8,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{CotoInput, PaginatedCotos, Pagination},
+        models::{PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -63,7 +63,7 @@ impl NodeState {
 
     pub async fn post_coto(
         self,
-        input: CotoInput,
+        input: CotoInput<'static>,
         post_to: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<Coto, ServiceError> {
@@ -73,18 +73,7 @@ impl NodeState {
         self.change_in_cotonoma(
             input,
             post_to,
-            move |ds, input, cotonoma| {
-                ds.post_coto(
-                    &input.content.unwrap_or_else(|| unreachable!()),
-                    input.summary.as_deref(),
-                    input
-                        .media_content
-                        .as_ref()
-                        .map(|(c, t)| (c.as_ref(), t.as_str())),
-                    cotonoma,
-                    operator.as_ref(),
-                )
-            },
+            move |ds, input, cotonoma| ds.post_coto(&input, cotonoma, operator.as_ref()),
             |parent, input, cotonoma| parent.post_coto(input, cotonoma.uuid).boxed(),
         )
         .await

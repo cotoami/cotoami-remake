@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Json, Path, Query, State},
     http::StatusCode,
     routing::get,
-    Extension, Form, Router, TypedHeader,
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 use validator::Validate;
@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{CotoInput, PaginatedCotos, Pagination},
+        models::{PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -54,10 +54,10 @@ async fn post_coto(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-    Form(form): Form<CotoInput>,
+    Json(input): Json<CotoInput<'static>>,
 ) -> Result<(StatusCode, Content<Coto>), ServiceError> {
     state
-        .post_coto(form, cotonoma_id, Arc::new(operator))
+        .post_coto(input, cotonoma_id, Arc::new(operator))
         .await
         .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
 }

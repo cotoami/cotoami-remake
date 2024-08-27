@@ -11,7 +11,7 @@ use crate::{
     db::{error::*, op::*},
     models::{
         coto::{Coto, NewCoto},
-        cotonoma::{Cotonoma, NewCotonoma, UpdateCotonoma},
+        cotonoma::{Cotonoma, CotonomaInput, NewCotonoma, UpdateCotonoma},
         node::Node,
         Id,
     },
@@ -213,13 +213,17 @@ pub(crate) fn create<'a>(
     node_id: &'a Id<Node>,
     posted_in_id: &'a Id<Cotonoma>,
     posted_by_id: &'a Id<Node>,
-    name: &'a str,
+    input: &'a CotonomaInput<'a>,
 ) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(|ctx| {
-        let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, name)?;
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let new_coto = NewCoto::new_cotonoma(node_id, posted_in_id, posted_by_id, input)?;
         let inserted_coto = coto_ops::insert(&new_coto).run(ctx)?;
-        let new_cotonoma =
-            NewCotonoma::new(node_id, &inserted_coto.uuid, name, inserted_coto.created_at)?;
+        let new_cotonoma = NewCotonoma::new(
+            node_id,
+            &inserted_coto.uuid,
+            input.name.as_ref(),
+            inserted_coto.created_at,
+        )?;
         let inserted_cotonoma = insert(&new_cotonoma).run(ctx)?;
         Ok((inserted_cotonoma, inserted_coto))
     })

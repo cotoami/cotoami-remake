@@ -19,7 +19,7 @@ fn crud_operations() -> Result<()> {
     // When: post_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto, changelog2) = ds.post_coto("hello", None, None, &root_cotonoma, &operator)?;
+    let (coto, changelog2) = ds.post_coto(&CotoInput::new("hello"), &root_cotonoma, &operator)?;
 
     // check the inserted coto
     assert_that!(
@@ -85,7 +85,10 @@ fn crud_operations() -> Result<()> {
     // When: edit_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let (edited_coto, changelog3) = ds.edit_coto(&coto.uuid, "bar", Some("foo"), &operator)?;
+    let diff = CotoContentDiff::default()
+        .content("bar")
+        .summary(Some("foo"));
+    let (edited_coto, changelog3) = ds.edit_coto(&coto.uuid, diff, &operator)?;
 
     // check the edited coto
     assert_that!(
@@ -115,8 +118,12 @@ fn crud_operations() -> Result<()> {
             origin_serial_number: eq(3),
             change: matches_pattern!(Change::EditCoto {
                 coto_id: eq(coto.uuid),
-                content: eq("bar"),
-                summary: some(eq("foo")),
+                diff: matches_pattern!(CotoContentDiff {
+                    content: some(eq("bar")),
+                    summary: some(some(eq("foo"))),
+                    media_content: none(),
+                    geolocation: none()
+                }),
                 updated_at: eq(edited_coto.updated_at),
             })
         })

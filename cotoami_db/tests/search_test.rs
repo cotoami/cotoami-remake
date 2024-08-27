@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::prelude::{Coto, DatabaseSession};
+use cotoami_db::prelude::*;
 use googletest::prelude::*;
 
 pub mod common;
@@ -13,10 +13,14 @@ fn search_cotos() -> Result<()> {
     let (root, _) = ds.root_cotonoma()?.unwrap();
 
     // when
-    let (coto1, _) = ds.post_coto("Hello, world!", None, None, &root, &opr)?;
-    let (coto2, _) = ds.post_coto("It's a small world.", Some("summary"), None, &root, &opr)?;
-    let (coto3, _) = ds.post_coto("柿くへば鐘が鳴るなり法隆寺", None, None, &root, &opr)?;
-    let (coto4, _) = ds.post_coto("旅行(行きたい)", None, None, &root, &opr)?;
+    let (coto1, _) = ds.post_coto(&CotoInput::new("Hello, world!"), &root, &opr)?;
+    let (coto2, _) = ds.post_coto(
+        &CotoInput::new("It's a small world.").summary("summary"),
+        &root,
+        &opr,
+    )?;
+    let (coto3, _) = ds.post_coto(&CotoInput::new("柿くへば鐘が鳴るなり法隆寺"), &root, &opr)?;
+    let (coto4, _) = ds.post_coto(&CotoInput::new("旅行(行きたい)"), &root, &opr)?;
 
     // then
     assert_search(&mut ds, "hello", vec![&coto1])?;
@@ -37,13 +41,15 @@ fn search_cotos() -> Result<()> {
 
     // when: edit a coto to change English results
     // (testing the trigger: `cotos_fts_update`)
-    let (coto2, _) = ds.edit_coto(&coto2.uuid, "No Promises to Keep", None, &opr)?;
+    let diff = CotoContentDiff::default().content("No Promises to Keep");
+    let (coto2, _) = ds.edit_coto(&coto2.uuid, diff, &opr)?;
     assert_search(&mut ds, "world", vec![&coto1])?;
     assert_search(&mut ds, "promise", vec![&coto2])?;
 
     // when: edit a coto to change CJK results
     // (testing the trigger: `cotos_fts_update`)
-    let (coto3, _) = ds.edit_coto(&coto3.uuid, "色即是空空即是色", None, &opr)?;
+    let diff = CotoContentDiff::default().content("色即是空空即是色");
+    let (coto3, _) = ds.edit_coto(&coto3.uuid, diff, &opr)?;
     assert_search(&mut ds, "法隆寺", vec![])?;
     assert_search(&mut ds, "色即是空", vec![&coto3])?;
 

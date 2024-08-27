@@ -314,12 +314,7 @@ object FormCoto {
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form = form.copy(mediaLocation = Some(location))),
-          _2 = geomap.copy(
-            center = location,
-            zoom = 12,
-            syncCenterZoom = geomap.syncCenterZoom + 1,
-            focusedLocation = Some(location)
-          )
+          _2 = geomap.focusLocation(location)
         )
 
       case (Msg.GeolocationInput(Left(error)), _, _) =>
@@ -438,8 +433,16 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
-              _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
-              _5 = Seq(postCotonoma(postId, form, cotonoma.id))
+              _2 = geomap.copy(focusedLocation = None),
+              _3 = waitingPosts.addCotonoma(
+                postId,
+                form.name,
+                geomap.focusedLocation,
+                cotonoma
+              ),
+              _5 = Seq(
+                postCotonoma(postId, form, geomap.focusedLocation, cotonoma.id)
+              )
             )
         }
       }
@@ -450,15 +453,23 @@ object FormCoto {
           case model =>
             default.copy(
               _1 = model,
+              _2 = geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCoto(
                 postId,
                 form.content,
                 form.summary,
                 mediaContent,
+                geomap.focusedLocation,
                 cotonoma
               ),
               _5 = Seq(
-                postCoto(postId, form, mediaContent, cotonoma.id),
+                postCoto(
+                  postId,
+                  form,
+                  mediaContent,
+                  geomap.focusedLocation,
+                  cotonoma.id
+                ),
                 model.save
               )
             )
@@ -525,17 +536,20 @@ object FormCoto {
       postId: String,
       form: CotoForm,
       mediaContent: Option[(String, String)],
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content, form.summary, mediaContent, postTo)
+    Coto.post(form.content, form.summary, mediaContent, location, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(
       postId: String,
       form: CotonomaForm,
+      location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Cotonoma.post(form.name, postTo).map(Msg.CotonomaPosted(postId, _))
+    Cotonoma.post(form.name, location, postTo)
+      .map(Msg.CotonomaPosted(postId, _))
 
   /////////////////////////////////////////////////////////////////////////////
   // view

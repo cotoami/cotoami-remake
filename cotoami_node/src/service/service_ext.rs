@@ -3,10 +3,7 @@ use async_trait::async_trait;
 use cotoami_db::prelude::*;
 
 use crate::service::{
-    models::{
-        ChunkOfChanges, ClientNodeSession, CotoInput, CotonomaInput, CreateClientNodeSession,
-        InitialDataset,
-    },
+    models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession, InitialDataset},
     Command, NodeService, RemoteNodeService,
 };
 
@@ -35,7 +32,7 @@ pub trait NodeServiceExt: NodeService {
         response.content::<ChunkOfChanges>()
     }
 
-    async fn post_coto(&self, input: CotoInput, post_to: Id<Cotonoma>) -> Result<Coto> {
+    async fn post_coto(&self, input: CotoInput<'static>, post_to: Id<Cotonoma>) -> Result<Coto> {
         let request = Command::PostCoto { input, post_to }.into_request();
         let response = self.call(request).await?;
         response.content::<Coto>()
@@ -43,7 +40,7 @@ pub trait NodeServiceExt: NodeService {
 
     async fn post_cotonoma(
         &self,
-        input: CotonomaInput,
+        input: CotonomaInput<'static>,
         post_to: Id<Cotonoma>,
     ) -> Result<(Cotonoma, Coto)> {
         let request = Command::PostCotonoma { input, post_to }.into_request();

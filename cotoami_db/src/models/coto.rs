@@ -10,9 +10,9 @@ use validator::Validate;
 
 use crate::{
     models::{
-        cotonoma::Cotonoma,
+        cotonoma::{Cotonoma, CotonomaInput},
         node::{BelongsToNode, Node},
-        Bytes, Id, Ids,
+        Bytes, Geolocation, Id, Ids,
     },
     schema::cotos,
 };
@@ -26,7 +26,6 @@ use crate::{
     derive_more::Debug,
     Clone,
     PartialEq,
-    Eq,
     Identifiable,
     Queryable,
     Selectable,
@@ -72,6 +71,9 @@ pub struct Coto {
     /// TRUE if this coto is a cotonoma.
     pub is_cotonoma: bool,
 
+    pub longitude: Option<f64>,
+    pub latitude: Option<f64>,
+
     /// UUID of the original coto of this repost.
     ///
     /// `None` if it is not a repost.
@@ -88,8 +90,8 @@ pub struct Coto {
 }
 
 impl Coto {
-    pub const CONTENT_MAX_LENGTH: usize = 1_000_000;
-    pub const SUMMARY_MAX_LENGTH: usize = 200;
+    pub const CONTENT_MAX_LENGTH: u64 = 1_000_000;
+    pub const SUMMARY_MAX_LENGTH: u64 = 200;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
@@ -131,6 +133,8 @@ impl Coto {
             media_type: self.media_type.as_deref(),
             summary: self.summary.as_deref(),
             is_cotonoma: self.is_cotonoma,
+            longitude: self.longitude,
+            latitude: self.latitude,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
             created_at: self.created_at,
@@ -194,12 +198,17 @@ pub(crate) struct NewCoto<'a> {
 
     is_cotonoma: bool,
 
+    #[validate(range(min = "Geolocation::LONGITUDE_MIN", max = "Geolocation::LONGITUDE_MAX"))]
+    longitude: Option<f64>,
+
+    #[validate(range(min = "Geolocation::LATITUDE_MIN", max = "Geolocation::LATITUDE_MAX"))]
+    latitude: Option<f64>,
+
     repost_of_id: Option<&'a Id<Coto>>,
 
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
 
     created_at: NaiveDateTime,
-
     updated_at: NaiveDateTime,
 }
 
@@ -216,6 +225,8 @@ impl<'a> NewCoto<'a> {
             media_content: None,
             media_type: None,
             is_cotonoma: false,
+            longitude: None,
+            latitude: None,
             repost_of_id: None,
             reposted_in_ids: None,
             created_at: now,
@@ -223,25 +234,33 @@ impl<'a> NewCoto<'a> {
         }
     }
 
+    fn set_geolocation(&mut self, location: &Geolocation) {
+        self.longitude = Some(location.longitude);
+        self.latitude = Some(location.latitude);
+    }
+
     pub fn new(
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
-        content: &'a str,
-        summary: Option<&'a str>,
-        media_content: Option<(&'a [u8], &'a str)>,
+        input: &'a CotoInput<'a>,
         image_max_size: Option<u32>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
 
         coto.posted_in_id = Some(posted_in_id);
-        coto.content = Some(content);
-        coto.summary = summary;
+        coto.content = Some(input.content.as_ref());
+        coto.summary = input.summary.as_deref();
 
-        if let Some((content, media_type)) = media_content {
-            let content = process_media_content((content, media_type), image_max_size)?;
+        if let Some((content, media_type)) = input.media_content.as_ref() {
+            let content =
+                process_media_content((content.as_ref(), media_type.as_ref()), image_max_size)?;
             coto.media_content = Some(content);
-            coto.media_type = Some(media_type);
+            coto.media_type = Some(media_type.as_ref());
+        }
+
+        if let Some(location) = input.geolocation.as_ref() {
+            coto.set_geolocation(location);
         }
 
         coto.validate()?;
@@ -252,12 +271,18 @@ impl<'a> NewCoto<'a> {
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
         posted_by_id: &'a Id<Node>,
-        name: &'a str,
+        input: &'a CotonomaInput<'a>,
     ) -> Result<Self> {
         let mut coto = Self::new_base(node_id, posted_by_id);
+
         coto.posted_in_id = Some(posted_in_id);
-        coto.summary = Some(name); // a cotonoma name is stored as a summary
+        coto.summary = Some(input.name.as_ref()); // a cotonoma name is stored as a summary
         coto.is_cotonoma = true;
+
+        if let Some(location) = input.geolocation.as_ref() {
+            coto.set_geolocation(location);
+        }
+
         coto.validate()?;
         Ok(coto)
     }
@@ -268,6 +293,54 @@ impl<'a> NewCoto<'a> {
         coto.is_cotonoma = true;
         coto.validate()?;
         Ok(coto)
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotoInput
+/////////////////////////////////////////////////////////////////////////////
+
+/// Coto input values as a serializable struct with a builder interface.
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct CotoInput<'a> {
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    pub content: Cow<'a, str>,
+
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    pub summary: Option<Cow<'a, str>>,
+
+    /// A pair of media content data and its media type.
+    // TODO: needs validation?
+    #[debug(skip)]
+    pub media_content: Option<(Bytes, Cow<'a, str>)>,
+
+    #[validate(nested)]
+    pub geolocation: Option<Geolocation>,
+}
+
+impl<'a> CotoInput<'a> {
+    pub fn new(content: &'a str) -> Self {
+        Self {
+            content: Cow::from(content),
+            summary: None,
+            media_content: None,
+            geolocation: None,
+        }
+    }
+
+    pub fn summary(mut self, summary: &'a str) -> Self {
+        self.summary = Some(Cow::from(summary));
+        self
+    }
+
+    pub fn media_content(mut self, content: Bytes, content_type: &'a str) -> Self {
+        self.media_content = Some((content, Cow::from(content_type)));
+        self
+    }
+
+    pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
+        self.geolocation = Some(geolocation);
+        self
     }
 }
 
@@ -301,6 +374,12 @@ pub(crate) struct UpdateCoto<'a> {
     pub is_cotonoma: Option<bool>,
 
     #[new(default)]
+    pub longitude: Option<Option<f64>>,
+
+    #[new(default)]
+    pub latitude: Option<Option<f64>>,
+
+    #[new(default)]
     pub repost_of_id: Option<Option<&'a Id<Coto>>>,
 
     #[new(default)]
@@ -311,25 +390,93 @@ pub(crate) struct UpdateCoto<'a> {
 }
 
 impl<'a> UpdateCoto<'a> {
-    pub fn edit(&mut self, content: &'a str, summary: Option<&'a str>) {
-        self.content = Some(Some(content));
-        self.summary = Some(crate::blank_to_none(summary));
-    }
-
-    pub fn set_media_content(
+    pub fn edit_content(
         &mut self,
-        media_content: Option<(&'a [u8], &'a str)>,
+        diff: &'a CotoContentDiff<'a>,
         image_max_size: Option<u32>,
     ) -> Result<()> {
-        if let Some((content, media_type)) = media_content {
-            let content = process_media_content((content, media_type), image_max_size)?;
-            self.media_content = Some(Some(content));
-            self.media_type = Some(Some(media_type));
-        } else {
-            self.media_content = Some(None);
-            self.media_type = Some(None);
+        self.content = Some(diff.content.as_deref());
+        self.summary = diff
+            .summary
+            .as_ref()
+            .map(|s| crate::blank_to_none(s.as_deref()));
+
+        match diff.media_content.as_ref() {
+            Some(Some((content, media_type))) => {
+                let media_type = media_type.as_ref();
+                let content =
+                    process_media_content((content.as_ref(), media_type), image_max_size)?;
+                self.media_content = Some(Some(content));
+                self.media_type = Some(Some(media_type));
+            }
+            Some(None) => {
+                self.media_content = Some(None);
+                self.media_type = Some(None);
+            }
+            None => {
+                self.media_content = None;
+                self.media_type = None;
+            }
         }
+
+        match diff.geolocation.as_ref() {
+            Some(Some(geolocation)) => {
+                self.longitude = Some(Some(geolocation.longitude));
+                self.latitude = Some(Some(geolocation.latitude));
+            }
+            Some(None) => {
+                self.longitude = Some(None);
+                self.latitude = Some(None);
+            }
+            None => {
+                self.longitude = None;
+                self.latitude = None;
+            }
+        }
+
         Ok(())
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CotoContentDiff
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(
+    derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, Validate,
+)]
+pub struct CotoContentDiff<'a> {
+    #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
+    pub content: Option<Cow<'a, str>>,
+
+    #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    pub summary: Option<Option<Cow<'a, str>>>,
+
+    pub media_content: Option<Option<(Bytes, Cow<'a, str>)>>,
+
+    #[validate(nested)]
+    pub geolocation: Option<Option<Geolocation>>,
+}
+
+impl<'a> CotoContentDiff<'a> {
+    pub fn content(mut self, content: &'a str) -> Self {
+        self.content = Some(Cow::from(content));
+        self
+    }
+
+    pub fn summary(mut self, summary: Option<&'a str>) -> Self {
+        self.summary = Some(summary.map(Cow::from));
+        self
+    }
+
+    pub fn media_content(mut self, content: Option<(Bytes, &'a str)>) -> Self {
+        self.media_content = Some(content.map(|c| (c.0, Cow::from(c.1))));
+        self
+    }
+
+    pub fn geolocation(mut self, geolocation: Option<Geolocation>) -> Self {
+        self.geolocation = Some(geolocation);
+        self
     }
 }
 

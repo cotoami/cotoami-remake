@@ -66,7 +66,8 @@ case class Model(
     this.copy(
       url = url,
       waitingPosts = WaitingPosts(),
-      traversals = SectionTraversals.Model()
+      traversals = SectionTraversals.Model(),
+      geomap = Geomap()
     )
 
   def updateUiState(update: UiState => UiState): (Model, Seq[Cmd[Msg]]) =
@@ -128,6 +129,18 @@ case class Model(
           )
         )
     }
+  }
+
+  def focusCoto(cotoId: Id[Coto]): (Model, Seq[Cmd[Msg]]) = {
+    val model = this.modify(_.domain.cotos).using(_.focus(cotoId))
+    model.domain.cotos.focused.map(coto =>
+      (
+        coto.geolocation.map(location =>
+          model.modify(_.geomap).using(_.focusLocation(location))
+        ).getOrElse(model),
+        Seq(this.domain.lazyFetchGraphFromCoto(cotoId))
+      )
+    ).getOrElse(model, Seq.empty) // The coto is not found.
   }
 
   def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {

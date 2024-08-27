@@ -19,7 +19,8 @@ fn crud_operations() -> Result<()> {
     // When: post_cotonoma
     /////////////////////////////////////////////////////////////////////////////
 
-    let ((cotonoma, coto), changelog2) = ds.post_cotonoma("test", &root_cotonoma, &operator)?;
+    let ((cotonoma, coto), changelog2) =
+        ds.post_cotonoma(&CotonomaInput::new("test"), &root_cotonoma, &operator)?;
 
     // check the inserted cotonoma/coto
     assert_that!(

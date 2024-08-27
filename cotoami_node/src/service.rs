@@ -215,14 +215,14 @@ pub enum Command {
 
     /// Request to create a new [Coto] in the given cotonoma (`post_to`).
     PostCoto {
-        input: CotoInput,
+        input: CotoInput<'static>,
         post_to: Id<Cotonoma>,
     },
 
     /// Request to create a new [Cotonoma] in the given cotonoma (`post_to`).
     /// The return type is `(Cotonoma, Coto)`.
     PostCotonoma {
-        input: CotonomaInput,
+        input: CotonomaInput<'static>,
         post_to: Id<Cotonoma>,
     },
 }

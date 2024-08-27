@@ -10,6 +10,7 @@ case class WaitingPost(
     content: Option[String],
     summary: Option[String],
     mediaContent: Option[(String, String)],
+    geolocation: Option[Geolocation],
     isCotonoma: Boolean,
     postedIn: Cotonoma,
     error: Option[String] = None
@@ -24,6 +25,7 @@ object WaitingPost {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPost =
     WaitingPost(
@@ -31,6 +33,7 @@ object WaitingPost {
       Some(content),
       summary,
       mediaContent,
+      geolocation,
       false,
       postedIn
     )
@@ -38,9 +41,10 @@ object WaitingPost {
   def newCotonoma(
       postId: String,
       name: String,
+      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPost =
-    WaitingPost(postId, None, Some(name), None, true, postedIn)
+    WaitingPost(postId, None, Some(name), None, geolocation, true, postedIn)
 }
 
 case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
@@ -54,18 +58,27 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
+      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
-      WaitingPost.newCoto(postId, content, summary, mediaContent, postedIn)
+      WaitingPost.newCoto(
+        postId,
+        content,
+        summary,
+        mediaContent,
+        geolocation,
+        postedIn
+      )
     )
 
   def addCotonoma(
       postId: String,
       name: String,
+      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPosts =
-    this.add(WaitingPost.newCotonoma(postId, name, postedIn))
+    this.add(WaitingPost.newCotonoma(postId, name, geolocation, postedIn))
 
   def setError(postId: String, error: String): WaitingPosts =
     this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(

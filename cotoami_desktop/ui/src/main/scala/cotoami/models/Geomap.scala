@@ -7,7 +7,15 @@ case class Geomap(
     zoom: Double = 8,
     syncCenterZoom: Int = 0,
     focusedLocation: Option[Geolocation] = None
-)
+) {
+  def focusLocation(location: Geolocation): Geomap =
+    this.copy(
+      center = location,
+      zoom = 13,
+      syncCenterZoom = this.syncCenterZoom + 1,
+      focusedLocation = Some(location)
+    )
+}
 
 case class Geolocation(longitude: Double, latitude: Double) {
   def toLngLat: (Double, Double) = (this.longitude, this.latitude)

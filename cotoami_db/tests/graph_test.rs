@@ -40,7 +40,7 @@ fn graph() -> Result<()> {
     // When: add a child
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto1, _) = ds.post_coto("coto1", None, None, &root, &opr)?;
+    let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root, &opr)?;
     connect(&root_coto.uuid, &coto1.uuid, Some("foo"))?;
 
     let expected_dot = indoc! {r#"
@@ -57,10 +57,10 @@ fn graph() -> Result<()> {
     // When: add grandchildren
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto2, _) = ds.post_coto("coto2", None, None, &root, &opr)?;
+    let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root, &opr)?;
     connect(&coto1.uuid, &coto2.uuid, None)?;
 
-    let ((cotonoma1, _), _) = ds.post_cotonoma("cotonoma1", &root, &opr)?;
+    let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("cotonoma1"), &root, &opr)?;
     connect(&coto1.uuid, &cotonoma1.coto_id, None)?;
 
     let graph = ds.graph(root_coto.clone(), true)?;
@@ -87,7 +87,7 @@ fn graph() -> Result<()> {
     // When: add a loop
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto3, _) = ds.post_coto("coto3", None, None, &root, &opr)?;
+    let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root, &opr)?;
     connect(&coto2.uuid, &coto3.uuid, None)?;
     connect(&coto3.uuid, &coto1.uuid, None)?;
 
@@ -112,7 +112,7 @@ fn graph() -> Result<()> {
     // When: until cotonoma
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto4, _) = ds.post_coto("coto4", None, None, &root, &opr)?;
+    let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root, &opr)?;
     connect(&cotonoma1.coto_id, &coto4.uuid, None)?;
 
     // until_cotonoma = true
