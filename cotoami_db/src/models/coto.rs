@@ -395,7 +395,7 @@ impl<'a> UpdateCoto<'a> {
         diff: &'a CotoContentDiff<'a>,
         image_max_size: Option<u32>,
     ) -> Result<()> {
-        self.content = Some(diff.content.as_deref());
+        self.content = diff.content.as_ref().map(Option::as_deref);
         self.summary = diff
             .summary
             .as_ref()
@@ -447,20 +447,40 @@ impl<'a> UpdateCoto<'a> {
 )]
 pub struct CotoContentDiff<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    pub content: Option<Cow<'a, str>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::double_option"
+    )]
+    pub content: Option<Option<Cow<'a, str>>>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::double_option"
+    )]
     pub summary: Option<Option<Cow<'a, str>>>,
 
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::double_option"
+    )]
     pub media_content: Option<Option<(Bytes, Cow<'a, str>)>>,
 
     #[validate(nested)]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::double_option"
+    )]
     pub geolocation: Option<Option<Geolocation>>,
 }
 
 impl<'a> CotoContentDiff<'a> {
     pub fn content(mut self, content: &'a str) -> Self {
-        self.content = Some(Cow::from(content));
+        self.content = Some(Some(Cow::from(content)));
         self
     }
 
@@ -498,5 +518,36 @@ fn process_media_content<'a>(
         }
     } else {
         Ok(Cow::from(content))
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// tests
+/////////////////////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+    use googletest::prelude::*;
+
+    use super::*;
+
+    #[test]
+    fn serde_diff() -> Result<()> {
+        let diff = CotoContentDiff::default().summary(None);
+
+        let msgpack = rmp_serde::to_vec(&diff)?;
+        let deserialized: CotoContentDiff = rmp_serde::from_slice(&msgpack)?;
+        assert_that!(
+            deserialized,
+            matches_pattern!(CotoContentDiff {
+                content: none(),
+                summary: some(none()),
+                media_content: none(),
+                geolocation: none()
+            })
+        );
+
+        Ok(())
     }
 }

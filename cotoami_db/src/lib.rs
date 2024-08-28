@@ -25,7 +25,7 @@ pub use crate::prelude::*;
 /// Returns the current datetime in UTC.
 fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }
 
-// Generate a secret string of the given length which is 32 by default.
+/// Generate a secret string of the given length which is 32 by default.
 pub fn generate_secret(length: Option<usize>) -> String {
     let length = length.unwrap_or(32);
 
@@ -42,6 +42,18 @@ pub fn generate_secret(length: Option<usize>) -> String {
 const SECRET_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz\
                             0123456789)(*&^%$#@!~";
+
+/// Support "double option" pattern in serde deserialization.
+///
+/// https://github.com/serde-rs/serde/issues/984#issuecomment-314143738
+/// https://github.com/serde-rs/serde/issues/1042
+pub fn double_option<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    Deserialize::deserialize(deserializer).map(Some)
+}
 
 /// Base64 serialization in serde
 ///
@@ -92,6 +104,7 @@ fn abbreviate_str(s: &str, length: usize, ellipsis: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
+    use googletest::prelude::*;
 
     use super::*;
 
@@ -110,6 +123,66 @@ mod tests {
         assert_eq!(abbreviate_str("ab", 0, "…"), Some("…".into()));
         assert_eq!(abbreviate_str("ab", 1, "…"), Some("a…".into()));
         assert_eq!(abbreviate_str("ab", 2, "…"), None);
+        Ok(())
+    }
+
+    #[test]
+    fn serde_double_option() -> Result<()> {
+        #[derive(Debug, serde::Serialize, serde::Deserialize)]
+        struct Test {
+            #[serde(
+                default,
+                skip_serializing_if = "Option::is_none",
+                deserialize_with = "double_option"
+            )]
+            foo: Option<Option<String>>,
+
+            #[serde(
+                default,
+                skip_serializing_if = "Option::is_none",
+                deserialize_with = "double_option"
+            )]
+            bar: Option<Option<String>>,
+
+            #[serde(
+                default,
+                skip_serializing_if = "Option::is_none",
+                deserialize_with = "double_option"
+            )]
+            baz: Option<Option<String>>,
+        }
+
+        let test = Test {
+            foo: None,
+            bar: Some(None),
+            baz: Some(Some("hello".into())),
+        };
+
+        // via JSON
+        let json = serde_json::to_string(&test)?;
+        assert_eq!(json, "{\"bar\":null,\"baz\":\"hello\"}");
+        let deserialized: Test = serde_json::from_str(&json)?;
+        assert_that!(
+            deserialized,
+            matches_pattern!(Test {
+                foo: none(),
+                bar: some(none()),
+                baz: some(some(eq("hello")))
+            })
+        );
+
+        // via MessagePack
+        let msgpack = rmp_serde::to_vec(&test)?;
+        let deserialized: Test = rmp_serde::from_slice(&msgpack)?;
+        assert_that!(
+            deserialized,
+            matches_pattern!(Test {
+                foo: none(),
+                bar: some(none()),
+                baz: some(some(eq("hello")))
+            })
+        );
+
         Ok(())
     }
 }

@@ -82,7 +82,7 @@ fn crud_operations() -> Result<()> {
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: edit_coto
+    // When: edit_coto (1: change content, add summary)
     /////////////////////////////////////////////////////////////////////////////
 
     let diff = CotoContentDiff::default()
@@ -119,8 +119,62 @@ fn crud_operations() -> Result<()> {
             change: matches_pattern!(Change::EditCoto {
                 coto_id: eq(coto.uuid),
                 diff: matches_pattern!(CotoContentDiff {
-                    content: some(eq("bar")),
+                    content: some(some(eq("bar"))),
                     summary: some(some(eq("foo"))),
+                    media_content: none(),
+                    geolocation: none()
+                }),
+                updated_at: eq(edited_coto.updated_at),
+            })
+        })
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: edit_coto (2: remove summary)
+    /////////////////////////////////////////////////////////////////////////////
+
+    let diff = CotoContentDiff::default().summary(None);
+    assert_that!(
+        diff,
+        matches_pattern!(CotoContentDiff {
+            content: none(),
+            summary: some(none()),
+            media_content: none(),
+            geolocation: none()
+        })
+    );
+    let (edited_coto, changelog4) = ds.edit_coto(&coto.uuid, diff, &operator)?;
+
+    // check the edited coto
+    assert_that!(
+        edited_coto,
+        matches_pattern!(Coto {
+            node_id: eq(node.uuid),
+            posted_in_id: some(eq(root_cotonoma.uuid)),
+            posted_by_id: eq(node.uuid),
+            content: some(eq("bar")),
+            summary: none(),
+            is_cotonoma: eq(false),
+            repost_of_id: none(),
+            reposted_in_ids: none(),
+        })
+    );
+
+    // check if it is stored in the db
+    assert_that!(ds.coto(&coto.uuid)?, some(eq_deref_of(&edited_coto)));
+
+    // check the content of the ChangelogEntry
+    assert_that!(
+        changelog4,
+        matches_pattern!(ChangelogEntry {
+            serial_number: eq(4),
+            origin_node_id: eq(node.uuid),
+            origin_serial_number: eq(4),
+            change: matches_pattern!(Change::EditCoto {
+                coto_id: eq(coto.uuid),
+                diff: matches_pattern!(CotoContentDiff {
+                    content: none(),
+                    summary: some(none()),
                     media_content: none(),
                     geolocation: none()
                 }),
@@ -133,7 +187,7 @@ fn crud_operations() -> Result<()> {
     // When: delete_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog4 = ds.delete_coto(&coto.uuid, &operator)?;
+    let changelog5 = ds.delete_coto(&coto.uuid, &operator)?;
 
     // check if it is deleted from the db
     assert!(!ds.contains_coto(&coto.uuid)?);
@@ -153,11 +207,11 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog4,
+        changelog5,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(4),
+            serial_number: eq(5),
             origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(4),
+            origin_serial_number: eq(5),
             change: matches_pattern!(Change::DeleteCoto {
                 coto_id: eq(coto.uuid),
                 deleted_at: eq(cotonoma.updated_at)
