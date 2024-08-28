@@ -14,33 +14,33 @@ object SectionGeomap {
   }
 
   object Msg {
-    case class MapInit(bounds: GeoBounds) extends Msg
-    case class MapClicked(location: Geolocation) extends Msg
-    case class MapZoomChanged(zoom: Double) extends Msg
-    case class MapCenterMoved(center: Geolocation) extends Msg
-    case class MapBoundsChanged(bounds: GeoBounds) extends Msg
+    case class Init(bounds: GeoBounds) extends Msg
+    case class LocationClicked(location: Geolocation) extends Msg
+    case class ZoomChanged(zoom: Double) extends Msg
+    case class CenterMoved(center: Geolocation) extends Msg
+    case class BoundsChanged(bounds: GeoBounds) extends Msg
   }
 
   def update(msg: Msg, geomap: Geomap): (Geomap, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.MapInit(bounds) => {
+      case Msg.Init(bounds) => {
         println(s"map init: ${bounds}")
         (geomap, Seq.empty)
       }
 
-      case Msg.MapClicked(location) =>
+      case Msg.LocationClicked(location) =>
         (
           geomap.copy(focusedLocation = Some(location)),
           Seq.empty
         )
 
-      case Msg.MapZoomChanged(zoom) =>
+      case Msg.ZoomChanged(zoom) =>
         (geomap.copy(zoom = zoom), Seq.empty)
 
-      case Msg.MapCenterMoved(center) =>
+      case Msg.CenterMoved(center) =>
         (geomap.copy(center = center), Seq.empty)
 
-      case Msg.MapBoundsChanged(bounds) => {
+      case Msg.BoundsChanged(bounds) => {
         println(s"bounds changed: ${bounds}")
         (geomap, Seq.empty)
       }
@@ -55,20 +55,20 @@ object SectionGeomap {
       focusedLocation = geomap.focusedLocation.map(_.toLngLat),
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.MapInit(bounds).toApp)
+        dispatch(Msg.Init(bounds).toApp)
       }),
       onClick = Some(e => {
         val location = Geolocation.fromMapLibre(e.lngLat)
-        dispatch(Msg.MapClicked(location).toApp)
+        dispatch(Msg.LocationClicked(location).toApp)
       }),
-      onZoomChanged = Some(zoom => dispatch(Msg.MapZoomChanged(zoom).toApp)),
+      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom).toApp)),
       onCenterMoved = Some(center => {
         val location = Geolocation.fromMapLibre(center)
-        dispatch(Msg.MapCenterMoved(location).toApp)
+        dispatch(Msg.CenterMoved(location).toApp)
       }),
       onBoundsChanged = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.MapBoundsChanged(bounds).toApp)
+        dispatch(Msg.BoundsChanged(bounds).toApp)
       })
     )
 }

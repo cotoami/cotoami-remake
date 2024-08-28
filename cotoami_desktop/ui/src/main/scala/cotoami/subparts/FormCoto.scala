@@ -314,7 +314,7 @@ object FormCoto {
       case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form = form.copy(mediaLocation = Some(location))),
-          _2 = geomap.focusLocation(location)
+          _2 = geomap.focus(location)
         )
 
       case (Msg.GeolocationInput(Left(error)), _, _) =>

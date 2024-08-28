@@ -8,11 +8,15 @@ case class Geomap(
     syncCenterZoom: Int = 0,
     focusedLocation: Option[Geolocation] = None
 ) {
-  def focusLocation(location: Geolocation): Geomap =
+  def moveTo(location: Geolocation): Geomap =
     this.copy(
       center = location,
       zoom = 13,
-      syncCenterZoom = this.syncCenterZoom + 1,
+      syncCenterZoom = this.syncCenterZoom + 1
+    )
+
+  def focus(location: Geolocation): Geomap =
+    this.moveTo(location).copy(
       focusedLocation = Some(location)
     )
 }

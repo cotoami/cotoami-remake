@@ -136,7 +136,7 @@ case class Model(
     model.domain.cotos.focused.map(coto =>
       (
         coto.geolocation.map(location =>
-          model.modify(_.geomap).using(_.focusLocation(location))
+          model.modify(_.geomap).using(_.focus(location))
         ).getOrElse(model),
         Seq(this.domain.lazyFetchGraphFromCoto(cotoId))
       )
