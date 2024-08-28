@@ -301,14 +301,7 @@ object SectionTimeline {
       div(className := "body")(
         ViewCoto.divContent(coto)
       ),
-      footer()(
-        time(
-          className := "posted-at",
-          title := context.time.formatDateTime(coto.createdAt)
-        )(
-          context.time.display(coto.createdAt)
-        )
-      )
+      ViewCoto.articleFooter(coto)
     )
   }
 

@@ -227,4 +227,30 @@ object ViewCoto {
         )
       )
     }
+
+  def articleFooter(
+      coto: Coto
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+    footer()(
+      coto.geolocation.map(location =>
+        button(
+          className := "geolocation default",
+          onClick := (e => {
+            e.stopPropagation()
+            dispatch(AppMsg.ShowGeolocation(location))
+          })
+        )(
+          materialSymbol("location_on")
+        )
+      ),
+      time(
+        className := "posted-at",
+        title := context.time.formatDateTime(coto.createdAt),
+        onClick := (e => {
+          e.stopPropagation()
+        })
+      )(
+        context.time.display(coto.createdAt)
+      )
+    )
 }

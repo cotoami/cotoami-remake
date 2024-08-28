@@ -38,6 +38,7 @@ object Msg {
   case class ResizePane(name: String, newSize: Int) extends Msg
   case object OpenGeomap extends Msg
   case object CloseMap extends Msg
+  case class ShowGeolocation(location: Geolocation) extends Msg
 
   // Focus
   case class FocusNode(id: Id[Node]) extends Msg

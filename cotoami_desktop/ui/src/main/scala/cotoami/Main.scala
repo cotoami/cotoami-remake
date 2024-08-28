@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.util.chaining._
 import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
@@ -177,6 +178,11 @@ object Main {
 
       case Msg.CloseMap =>
         model.updateUiState(_.closeMap)
+
+      case Msg.ShowGeolocation(location) =>
+        model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
+          (model.modify(_.geomap).using(_.moveTo(location)), cmds)
+        }
 
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
