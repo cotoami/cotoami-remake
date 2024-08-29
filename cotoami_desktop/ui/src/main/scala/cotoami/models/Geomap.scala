@@ -1,6 +1,14 @@
 package cotoami.models
 
+import scala.util.{Failure, Success}
+import scala.scalajs.js.Thenable.Implicits._
+import org.scalajs.dom
+import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+import cats.effect.IO
+
+import fui.Cmd
 import cotoami.libs.geomap.maplibre.{LngLat, LngLatBounds}
+import cotoami.libs.exifr
 
 case class Geomap(
     center: Geolocation = Geolocation.default,
@@ -33,6 +41,27 @@ object Geolocation {
     Geolocation(lngLat._1, lngLat._2)
 
   def fromMapLibre(lngLat: LngLat): Geolocation = fromLngLat(lngLat.toArray())
+
+  def detect(file: dom.Blob): Cmd[Either[Throwable, Geolocation]] =
+    Cmd(IO.async { cb =>
+      IO {
+        exifr.gps(file).onComplete {
+          case Success(gps) =>
+            gps.toOption match {
+              case Some(gps) => {
+                val location = Geolocation(
+                  longitude = gps.longitude,
+                  latitude = gps.latitude
+                )
+                cb(Right(Some(Right(location))))
+              }
+              case None => cb(Right(None))
+            }
+          case Failure(t) => cb(Right(Some(Left(t))))
+        }
+        None // no finalizer on cancellation
+      }
+    })
 }
 
 case class GeoBounds(southwest: Geolocation, northeast: Geolocation)

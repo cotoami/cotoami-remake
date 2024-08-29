@@ -1,10 +1,7 @@
 package cotoami.subparts
 
-import scala.util.{Failure, Success}
 import scala.scalajs.js
-import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.dom
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -51,7 +48,7 @@ object FormCoto {
 
     def hasContents: Boolean =
       this.form match {
-        case CotoForm(cotoInput, mediaContent, _) =>
+        case CotoForm(cotoInput, mediaContent, _, _) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
@@ -77,7 +74,7 @@ object FormCoto {
 
     def save: Cmd[Msg] =
       (this.autoSave, this.form) match {
-        case (true, CotoForm(cotoInput, _, _)) =>
+        case (true, CotoForm(cotoInput, _, _, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(this.storageKey, cotoInput)
             None
@@ -108,7 +105,8 @@ object FormCoto {
   case class CotoForm(
       cotoInput: String = "",
       mediaContent: Option[dom.Blob] = None,
-      mediaLocation: Option[Geolocation] = None
+      mediaLocation: Option[Geolocation] = None,
+      mediaOrientation: Option[exifr.Rotation] = None
   ) extends Form {
     def summary: Option[String] =
       if (this.hasSummary)
@@ -185,7 +183,11 @@ object FormCoto {
     case class CotoInput(coto: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
     case class FileInput(file: dom.Blob) extends Msg
-    case class GeolocationInput(result: Either[String, Geolocation]) extends Msg
+    case class GeolocationDetected(result: Either[String, Geolocation])
+        extends Msg
+    case class OrientationDetected(
+        result: Either[String, Option[exifr.Rotation]]
+    ) extends Msg
     case object DeleteMediaContent extends Msg
     case object DeleteGeolocation extends Msg
     case object ResetGeolocation extends Msg
@@ -287,40 +289,43 @@ object FormCoto {
             form.copy(mediaContent = Some(file), mediaLocation = None)
           ),
           _5 = Seq(
-            Cmd(IO.async { cb =>
-              IO {
-                exifr.gps(file).onComplete {
-                  case Success(gps) =>
-                    gps.toOption match {
-                      case Some(gps) => {
-                        val location = Geolocation(
-                          longitude = gps.longitude,
-                          latitude = gps.latitude
-                        )
-                        val msg = Msg.GeolocationInput(Right(location))
-                        cb(Right(Some(msg)))
-                      }
-                      case None => cb(Right(None))
-                    }
-                  case Failure(t) =>
-                    cb(Right(Some(Msg.GeolocationInput(Left(t.toString)))))
-                }
-                None // no finalizer on cancellation
-              }
-            })
+            Geolocation.detect(file).map {
+              case Right(location) => Msg.GeolocationDetected(Right(location))
+              case Left(t)         => Msg.GeolocationDetected(Left(t.toString))
+            },
+            Cmd.fromFuture(exifr.rotation(file).toFuture).map {
+              case Right(orientation) =>
+                Msg.OrientationDetected(Right(orientation.toOption))
+              case Left(t) => Msg.OrientationDetected(Left(t.toString))
+            }
           )
         )
 
-      case (Msg.GeolocationInput(Right(location)), form: CotoForm, _) =>
+      case (Msg.GeolocationDetected(Right(location)), form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form = form.copy(mediaLocation = Some(location))),
           _2 = geomap.focus(location)
         )
 
-      case (Msg.GeolocationInput(Left(error)), _, _) =>
+      case (Msg.GeolocationDetected(Left(error)), _, _) =>
         default.copy(
           _4 = context.log.error(
-            "Geolocation input error.",
+            "Geolocation detection error.",
+            Some(error)
+          )
+        )
+
+      case (Msg.OrientationDetected(Right(rotation)), form: CotoForm, _) => {
+        rotation.foreach(r => println(s"rotation: ${js.JSON.stringify(r)}"))
+        default.copy(
+          _1 = model.copy(form = form.copy(mediaOrientation = rotation))
+        )
+      }
+
+      case (Msg.OrientationDetected(Left(error)), _, _) =>
+        default.copy(
+          _4 = context.log.error(
+            "Image orientation detection error.",
             Some(error)
           )
         )
