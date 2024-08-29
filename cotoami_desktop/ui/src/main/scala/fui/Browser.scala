@@ -1,6 +1,7 @@
 package fui
 
 import scala.util.{Failure, Success}
+import scala.concurrent._
 import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.{Element, URL}
@@ -131,4 +132,24 @@ object Browser {
         None
       }
     })
+
+  def createImage(url: String): Future[dom.HTMLImageElement] = {
+    val promise = Promise[dom.HTMLImageElement]()
+
+    val image = new dom.Image()
+    image.onload = _ => promise.success(image)
+    image.addEventListener(
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement#errors
+      "error",
+      (_: dom.Event) =>
+        promise.failure(
+          new IllegalArgumentException(s"Couldn't load the image: ${url}")
+        )
+    )
+    // needed to avoid cross-origin issues on CodeSandbox
+    image.setAttribute("crossOrigin", "anonymous")
+    image.src = url
+
+    promise.future
+  }
 }

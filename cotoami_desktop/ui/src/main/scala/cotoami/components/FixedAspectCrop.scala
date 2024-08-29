@@ -10,6 +10,8 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import slinky.core._
 import slinky.core.annotations.react
 
+import fui.Browser
+
 @react object FixedAspectCrop extends ExternalComponent {
   case class Props(
       image: String,
@@ -41,7 +43,7 @@ import slinky.core.annotations.react
 
   def getCroppedImg(imageUrl: String, crop: Area): Future[dom.Blob] = {
     val promise = Promise[dom.Blob]()
-    createImage(imageUrl).onComplete {
+    Browser.createImage(imageUrl).onComplete {
       case Success(image) => {
         var canvas = dom.document.createElement("canvas")
           .asInstanceOf[dom.HTMLCanvasElement]
@@ -83,26 +85,6 @@ import slinky.core.annotations.react
   @js.native
   trait ToBlob extends js.Object {
     def toBlob(callback: js.Function1[dom.Blob, Unit]): Unit = js.native
-  }
-
-  private def createImage(url: String): Future[dom.HTMLImageElement] = {
-    val promise = Promise[dom.HTMLImageElement]()
-
-    var image = new dom.Image()
-    image.onload = _ => promise.success(image)
-    image.addEventListener(
-      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement#errors
-      "error",
-      (_: dom.Event) =>
-        promise.failure(
-          new IllegalArgumentException(s"Couldn't load the image: ${url}")
-        )
-    )
-    // needed to avoid cross-origin issues on CodeSandbox
-    image.setAttribute("crossOrigin", "anonymous")
-    image.src = url
-
-    promise.future
   }
 }
 
