@@ -1,5 +1,7 @@
 package fui
 
+import scala.util.{Failure, Success}
+import scala.concurrent.Future
 import cats.effect.IO
 
 case class Cmd[+Msg](io: IO[Option[Msg]]) extends AnyVal {
@@ -13,5 +15,18 @@ case class Cmd[+Msg](io: IO[Option[Msg]]) extends AnyVal {
 }
 
 object Cmd {
+  import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
+
   def none[Msg]: Cmd[Msg] = Cmd(IO.none)
+
+  def fromFuture[T](future: Future[T]): Cmd[Either[Throwable, T]] =
+    Cmd(IO.async { cb =>
+      IO {
+        future.onComplete {
+          case Success(value) => cb(Right(Some(Right(value))))
+          case Failure(t)     => cb(Right(Some(Left(t))))
+        }
+        None
+      }
+    })
 }
