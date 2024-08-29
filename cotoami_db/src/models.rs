@@ -2,6 +2,7 @@
 
 use std::{
     cmp::Ordering,
+    convert::AsRef,
     fmt,
     fmt::{Debug, Display},
     hash::{Hash, Hasher},
@@ -49,7 +50,7 @@ pub(crate) mod prelude {
         link::*,
         node::{child::*, client::*, local::*, parent::*, roles::*, server::*, *},
         operator::*,
-        Bytes, ClientSession, Id, Ids,
+        Bytes, ClientSession, FieldDiff, Id, Ids,
     };
 }
 
@@ -310,6 +311,73 @@ impl FromSql<Binary, Sqlite> for Bytes {
     fn from_sql(value: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(value)?;
         Ok(Bytes(bytes::Bytes::from(bytes)))
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// FieldDiff
+/////////////////////////////////////////////////////////////////////////////
+
+/// Serializable data structure to represent an update to a field of type `T` in a database.
+///
+/// This kind of data can be represented as a "double option" pattern in Rust. For
+/// example, Diesel supports this pattern: https://diesel.rs/guides/all-about-updates.html
+/// However, some binary serialization libraries do not support this pattern, because
+/// they have to deal with "missing field", "null", "some value" correctly, and that seems to
+/// be inherently difficult for some binary formats. Thus we define this struct as a more safe
+/// type in terms of serialization.
+#[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default)]
+pub enum FieldDiff<T> {
+    #[default]
+    None,
+    Delete,
+    Change(T),
+}
+
+impl<T> FieldDiff<T> {
+    pub const fn as_ref(&self) -> FieldDiff<&T> {
+        match self {
+            Self::None => FieldDiff::<&T>::None,
+            Self::Delete => FieldDiff::<&T>::Delete,
+            Self::Change(t) => FieldDiff::<&T>::Change(t),
+        }
+    }
+
+    pub fn map_to_double_option<U, F>(self, f: F) -> Option<Option<U>>
+    where
+        F: FnOnce(T) -> U,
+    {
+        match self {
+            Self::None => None,
+            Self::Delete => Some(None),
+            Self::Change(t) => Some(Some(f(t))),
+        }
+    }
+}
+
+impl<T> validator::Validate for FieldDiff<T>
+where
+    T: validator::Validate,
+{
+    fn validate(&self) -> Result<(), validator::ValidationErrors> {
+        if let Self::Change(t) = self {
+            T::validate(t)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl<T> validator::ValidateLength<u64> for FieldDiff<T>
+where
+    T: validator::ValidateLength<u64>,
+{
+    fn length(&self) -> Option<u64> {
+        if let Self::Change(t) = self {
+            T::length(t)
+        } else {
+            None
+        }
     }
 }
 

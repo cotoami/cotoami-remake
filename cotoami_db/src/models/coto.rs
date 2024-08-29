@@ -1,6 +1,6 @@
 //! A coto is a unit of data in a cotoami database.
 
-use std::{borrow::Cow, fmt::Display};
+use std::{borrow::Cow, convert::AsRef, fmt::Display};
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
@@ -12,7 +12,7 @@ use crate::{
     models::{
         cotonoma::{Cotonoma, CotonomaInput},
         node::{BelongsToNode, Node},
-        Bytes, Geolocation, Id, Ids,
+        Bytes, FieldDiff, Geolocation, Id, Ids,
     },
     schema::cotos,
 };
@@ -395,42 +395,44 @@ impl<'a> UpdateCoto<'a> {
         diff: &'a CotoContentDiff<'a>,
         image_max_size: Option<u32>,
     ) -> Result<()> {
-        self.content = diff.content.as_ref().map(Option::as_deref);
-        self.summary = diff
-            .summary
-            .as_ref()
-            .map(|s| crate::blank_to_none(s.as_deref()));
+        self.content = diff.content.as_ref().map_to_double_option(AsRef::as_ref);
+
+        self.summary = match diff.summary.as_ref() {
+            FieldDiff::None => None,
+            FieldDiff::Delete => Some(None),
+            FieldDiff::Change(s) => Some(crate::blank_to_none(Some(s.as_ref()))),
+        };
 
         match diff.media_content.as_ref() {
-            Some(Some((content, media_type))) => {
+            FieldDiff::None => {
+                self.media_content = None;
+                self.media_type = None;
+            }
+            FieldDiff::Delete => {
+                self.media_content = Some(None);
+                self.media_type = Some(None);
+            }
+            FieldDiff::Change((content, media_type)) => {
                 let media_type = media_type.as_ref();
                 let content =
                     process_media_content((content.as_ref(), media_type), image_max_size)?;
                 self.media_content = Some(Some(content));
                 self.media_type = Some(Some(media_type));
             }
-            Some(None) => {
-                self.media_content = Some(None);
-                self.media_type = Some(None);
-            }
-            None => {
-                self.media_content = None;
-                self.media_type = None;
-            }
         }
 
         match diff.geolocation.as_ref() {
-            Some(Some(geolocation)) => {
-                self.longitude = Some(Some(geolocation.longitude));
-                self.latitude = Some(Some(geolocation.latitude));
+            FieldDiff::None => {
+                self.longitude = None;
+                self.latitude = None;
             }
-            Some(None) => {
+            FieldDiff::Delete => {
                 self.longitude = Some(None);
                 self.latitude = Some(None);
             }
-            None => {
-                self.longitude = None;
-                self.latitude = None;
+            FieldDiff::Change(location) => {
+                self.longitude = Some(Some(location.longitude));
+                self.latitude = Some(Some(location.latitude));
             }
         }
 
@@ -447,55 +449,47 @@ impl<'a> UpdateCoto<'a> {
 )]
 pub struct CotoContentDiff<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::double_option"
-    )]
-    pub content: Option<Option<Cow<'a, str>>>,
+    pub content: FieldDiff<Cow<'a, str>>,
 
     #[validate(length(max = "Coto::SUMMARY_MAX_LENGTH"))]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::double_option"
-    )]
-    pub summary: Option<Option<Cow<'a, str>>>,
+    pub summary: FieldDiff<Cow<'a, str>>,
 
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::double_option"
-    )]
-    pub media_content: Option<Option<(Bytes, Cow<'a, str>)>>,
+    pub media_content: FieldDiff<(Bytes, Cow<'a, str>)>,
 
     #[validate(nested)]
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "crate::double_option"
-    )]
-    pub geolocation: Option<Option<Geolocation>>,
+    pub geolocation: FieldDiff<Geolocation>,
 }
 
 impl<'a> CotoContentDiff<'a> {
     pub fn content(mut self, content: &'a str) -> Self {
-        self.content = Some(Some(Cow::from(content)));
+        self.content = FieldDiff::Change(Cow::from(content));
         self
     }
 
     pub fn summary(mut self, summary: Option<&'a str>) -> Self {
-        self.summary = Some(summary.map(Cow::from));
+        self.summary = if let Some(summary) = summary {
+            FieldDiff::Change(Cow::from(summary))
+        } else {
+            FieldDiff::Delete
+        };
         self
     }
 
     pub fn media_content(mut self, content: Option<(Bytes, &'a str)>) -> Self {
-        self.media_content = Some(content.map(|c| (c.0, Cow::from(c.1))));
+        self.media_content = if let Some((c, t)) = content {
+            FieldDiff::Change((c, Cow::from(t)))
+        } else {
+            FieldDiff::Delete
+        };
         self
     }
 
     pub fn geolocation(mut self, geolocation: Option<Geolocation>) -> Self {
-        self.geolocation = Some(geolocation);
+        self.geolocation = if let Some(geolocation) = geolocation {
+            FieldDiff::Change(geolocation)
+        } else {
+            FieldDiff::Delete
+        };
         self
     }
 }
@@ -534,17 +528,17 @@ mod tests {
 
     #[test]
     fn serde_diff() -> Result<()> {
-        let diff = CotoContentDiff::default().summary(None);
+        let diff = CotoContentDiff::default().content("hello").summary(None);
 
         let msgpack = rmp_serde::to_vec(&diff)?;
         let deserialized: CotoContentDiff = rmp_serde::from_slice(&msgpack)?;
         assert_that!(
             deserialized,
             matches_pattern!(CotoContentDiff {
-                content: none(),
-                summary: some(none()),
-                media_content: none(),
-                geolocation: none()
+                content: matches_pattern!(FieldDiff::Change(eq("hello"))),
+                summary: eq(FieldDiff::Delete),
+                media_content: eq(FieldDiff::None),
+                geolocation: eq(FieldDiff::None)
             })
         );
 

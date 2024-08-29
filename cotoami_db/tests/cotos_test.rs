@@ -119,10 +119,10 @@ fn crud_operations() -> Result<()> {
             change: matches_pattern!(Change::EditCoto {
                 coto_id: eq(coto.uuid),
                 diff: matches_pattern!(CotoContentDiff {
-                    content: some(some(eq("bar"))),
-                    summary: some(some(eq("foo"))),
-                    media_content: none(),
-                    geolocation: none()
+                    content: matches_pattern!(FieldDiff::Change(eq("bar"))),
+                    summary: matches_pattern!(FieldDiff::Change(eq("foo"))),
+                    media_content: eq(FieldDiff::None),
+                    geolocation: eq(FieldDiff::None)
                 }),
                 updated_at: eq(edited_coto.updated_at),
             })
@@ -137,10 +137,10 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         diff,
         matches_pattern!(CotoContentDiff {
-            content: none(),
-            summary: some(none()),
-            media_content: none(),
-            geolocation: none()
+            content: eq(FieldDiff::None),
+            summary: eq(FieldDiff::Delete),
+            media_content: eq(FieldDiff::None),
+            geolocation: eq(FieldDiff::None),
         })
     );
     let (edited_coto, changelog4) = ds.edit_coto(&coto.uuid, diff, &operator)?;
@@ -173,10 +173,10 @@ fn crud_operations() -> Result<()> {
             change: matches_pattern!(Change::EditCoto {
                 coto_id: eq(coto.uuid),
                 diff: matches_pattern!(CotoContentDiff {
-                    content: none(),
-                    summary: some(none()),
-                    media_content: none(),
-                    geolocation: none()
+                    content: eq(FieldDiff::None),
+                    summary: eq(FieldDiff::Delete),
+                    media_content: eq(FieldDiff::None),
+                    geolocation: eq(FieldDiff::None),
                 }),
                 updated_at: eq(edited_coto.updated_at),
             })

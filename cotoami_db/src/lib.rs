@@ -47,6 +47,8 @@ const SECRET_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
 ///
 /// https://github.com/serde-rs/serde/issues/984#issuecomment-314143738
 /// https://github.com/serde-rs/serde/issues/1042
+///
+/// rmp_serde does not support this pattern as of 1.3.0.
 pub fn double_option<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
 where
     T: Deserialize<'de>,
@@ -171,17 +173,18 @@ mod tests {
             })
         );
 
-        // via MessagePack
-        let msgpack = rmp_serde::to_vec(&test)?;
-        let deserialized: Test = rmp_serde::from_slice(&msgpack)?;
-        assert_that!(
-            deserialized,
-            matches_pattern!(Test {
-                foo: none(),
-                bar: some(none()),
-                baz: some(some(eq("hello")))
-            })
-        );
+        // via MessagePack (which does not support the "double option" pattern as of 1.3.0)
+
+        // let msgpack = rmp_serde::to_vec(&test)?;
+        // let deserialized: Test = rmp_serde::from_slice(&msgpack)?;
+        // assert_that!(
+        //     deserialized,
+        //     matches_pattern!(Test {
+        //         foo: none(),
+        //         bar: some(none()),
+        //         baz: some(some(eq("hello")))
+        //     })
+        // );
 
         Ok(())
     }
