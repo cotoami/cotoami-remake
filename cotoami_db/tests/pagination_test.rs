@@ -19,9 +19,9 @@ fn pagination() -> Result<()> {
     assert_that!(
         paginated,
         matches_pattern!(Paginated {
-            page_size: eq(2),
-            page_index: eq(0),
-            total_rows: eq(0),
+            page_size: eq(&2),
+            page_index: eq(&0),
+            total_rows: eq(&0),
             rows: empty(),
         })
     );
@@ -35,9 +35,9 @@ fn pagination() -> Result<()> {
     assert_that!(
         paginated,
         matches_pattern!(Paginated {
-            page_size: eq(2),
-            page_index: eq(0),
-            total_rows: eq(1),
+            page_size: eq(&2),
+            page_index: eq(&0),
+            total_rows: eq(&1),
             rows: elements_are![matches_pattern!(Coto {
                 content: some(eq("1"))
             })],
@@ -53,9 +53,9 @@ fn pagination() -> Result<()> {
     assert_that!(
         paginated,
         matches_pattern!(Paginated {
-            page_size: eq(2),
-            page_index: eq(0),
-            total_rows: eq(2),
+            page_size: eq(&2),
+            page_index: eq(&0),
+            total_rows: eq(&2),
             rows: elements_are![
                 matches_pattern!(Coto {
                     content: some(eq("2"))
@@ -76,9 +76,9 @@ fn pagination() -> Result<()> {
     assert_that!(
         paginated,
         matches_pattern!(Paginated {
-            page_size: eq(2),
-            page_index: eq(0),
-            total_rows: eq(3),
+            page_size: eq(&2),
+            page_index: eq(&0),
+            total_rows: eq(&3),
             rows: elements_are![
                 matches_pattern!(Coto {
                     content: some(eq("3"))
@@ -98,9 +98,9 @@ fn pagination() -> Result<()> {
     assert_that!(
         paginated,
         matches_pattern!(Paginated {
-            page_size: eq(2),
-            page_index: eq(1),
-            total_rows: eq(3),
+            page_size: eq(&2),
+            page_index: eq(&1),
+            total_rows: eq(&3),
             rows: elements_are![matches_pattern!(Coto {
                 content: some(eq("1"))
             })],

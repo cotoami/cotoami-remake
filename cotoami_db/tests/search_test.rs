@@ -72,7 +72,7 @@ fn assert_search(ds: &mut DatabaseSession<'_>, query: &str, expect: Vec<&Coto>) 
             .rows
             .iter()
             .collect::<Vec<_>>(),
-        eq(expect)
+        eq(&expect)
     );
     Ok(())
 }

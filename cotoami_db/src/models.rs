@@ -503,7 +503,7 @@ mod tests {
         println!("Bytes json_string size: {}", json_string.as_bytes().len());
 
         let deserialized: Bytes = serde_json::from_str(&json_string)?;
-        assert_that!(deserialized, eq(bytes));
+        assert_that!(deserialized, eq(&bytes));
         Ok(())
     }
 
@@ -515,7 +515,7 @@ mod tests {
         println!("Bytes msgpack_bytes size: {}", msgpack_bytes.len());
 
         let deserialized: Bytes = rmp_serde::from_slice(&msgpack_bytes)?;
-        assert_that!(deserialized, eq(bytes));
+        assert_that!(deserialized, eq(&bytes));
         Ok(())
     }
 }

@@ -25,12 +25,12 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         coto,
         matches_pattern!(Coto {
-            node_id: eq(node.uuid),
-            posted_in_id: some(eq(root_cotonoma.uuid)),
-            posted_by_id: eq(node.uuid),
+            node_id: eq(&node.uuid),
+            posted_in_id: some(eq(&root_cotonoma.uuid)),
+            posted_by_id: eq(&node.uuid),
             content: some(eq("hello")),
             summary: none(),
-            is_cotonoma: eq(false),
+            is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none()
         })
@@ -41,16 +41,16 @@ fn crud_operations() -> Result<()> {
 
     // check if it is stored in the db
     assert!(ds.contains_coto(&coto.uuid)?);
-    assert_that!(ds.coto(&coto.uuid)?, some(eq_deref_of(&coto)));
+    assert_that!(ds.coto(&coto.uuid)?, some(eq(&coto)));
 
     // check if `recent_cotos` contains it
     assert_that!(
         ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
         matches_pattern!(Paginated {
-            page_size: eq(5),
-            page_index: eq(0),
-            total_rows: eq(1),
-            rows: elements_are![eq_deref_of(&coto)]
+            page_size: eq(&5),
+            page_index: eq(&0),
+            total_rows: eq(&1),
+            rows: elements_are![eq(&coto)]
         })
     );
 
@@ -59,25 +59,25 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         root_cotonoma,
         matches_pattern!(Cotonoma {
-            posts: eq(1),
-            updated_at: eq(coto.updated_at)
+            posts: eq(&1),
+            updated_at: eq(&coto.updated_at)
         })
     );
 
     // check the super cotonomas
     assert_that!(
         ds.super_cotonomas(&coto)?,
-        elements_are![eq_deref_of(&root_cotonoma)]
+        elements_are![eq(&root_cotonoma)]
     );
 
     // check the content of the ChangelogEntry
     assert_that!(
         changelog2,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(2),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(2),
-            change: matches_pattern!(Change::CreateCoto(eq(Coto { rowid: 0, ..coto })))
+            serial_number: eq(&2),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&2),
+            change: matches_pattern!(Change::CreateCoto(eq(&Coto { rowid: 0, ..coto })))
         })
     );
 
@@ -94,12 +94,12 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         edited_coto,
         matches_pattern!(Coto {
-            node_id: eq(node.uuid),
-            posted_in_id: some(eq(root_cotonoma.uuid)),
-            posted_by_id: eq(node.uuid),
+            node_id: eq(&node.uuid),
+            posted_in_id: some(eq(&root_cotonoma.uuid)),
+            posted_by_id: eq(&node.uuid),
             content: some(eq("bar")),
             summary: some(eq("foo")),
-            is_cotonoma: eq(false),
+            is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
         })
@@ -107,24 +107,24 @@ fn crud_operations() -> Result<()> {
     common::assert_approximately_now(edited_coto.updated_at());
 
     // check if it is stored in the db
-    assert_that!(ds.coto(&coto.uuid)?, some(eq_deref_of(&edited_coto)));
+    assert_that!(ds.coto(&coto.uuid)?, some(eq(&edited_coto)));
 
     // check the content of the ChangelogEntry
     assert_that!(
         changelog3,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(3),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(3),
+            serial_number: eq(&3),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&3),
             change: matches_pattern!(Change::EditCoto {
-                coto_id: eq(coto.uuid),
+                coto_id: eq(&coto.uuid),
                 diff: matches_pattern!(CotoContentDiff {
                     content: matches_pattern!(FieldDiff::Change(eq("bar"))),
                     summary: matches_pattern!(FieldDiff::Change(eq("foo"))),
-                    media_content: eq(FieldDiff::None),
-                    geolocation: eq(FieldDiff::None)
+                    media_content: eq(&FieldDiff::None),
+                    geolocation: eq(&FieldDiff::None)
                 }),
-                updated_at: eq(edited_coto.updated_at),
+                updated_at: eq(&edited_coto.updated_at),
             })
         })
     );
@@ -137,10 +137,10 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         diff,
         matches_pattern!(CotoContentDiff {
-            content: eq(FieldDiff::None),
-            summary: eq(FieldDiff::Delete),
-            media_content: eq(FieldDiff::None),
-            geolocation: eq(FieldDiff::None),
+            content: eq(&FieldDiff::None),
+            summary: eq(&FieldDiff::Delete),
+            media_content: eq(&FieldDiff::None),
+            geolocation: eq(&FieldDiff::None),
         })
     );
     let (edited_coto, changelog4) = ds.edit_coto(&coto.uuid, diff, &operator)?;
@@ -149,36 +149,36 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         edited_coto,
         matches_pattern!(Coto {
-            node_id: eq(node.uuid),
-            posted_in_id: some(eq(root_cotonoma.uuid)),
-            posted_by_id: eq(node.uuid),
+            node_id: eq(&node.uuid),
+            posted_in_id: some(eq(&root_cotonoma.uuid)),
+            posted_by_id: eq(&node.uuid),
             content: some(eq("bar")),
             summary: none(),
-            is_cotonoma: eq(false),
+            is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
         })
     );
 
     // check if it is stored in the db
-    assert_that!(ds.coto(&coto.uuid)?, some(eq_deref_of(&edited_coto)));
+    assert_that!(ds.coto(&coto.uuid)?, some(eq(&edited_coto)));
 
     // check the content of the ChangelogEntry
     assert_that!(
         changelog4,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(4),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(4),
+            serial_number: eq(&4),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&4),
             change: matches_pattern!(Change::EditCoto {
-                coto_id: eq(coto.uuid),
+                coto_id: eq(&coto.uuid),
                 diff: matches_pattern!(CotoContentDiff {
-                    content: eq(FieldDiff::None),
-                    summary: eq(FieldDiff::Delete),
-                    media_content: eq(FieldDiff::None),
-                    geolocation: eq(FieldDiff::None),
+                    content: eq(&FieldDiff::None),
+                    summary: eq(&FieldDiff::Delete),
+                    media_content: eq(&FieldDiff::None),
+                    geolocation: eq(&FieldDiff::None),
                 }),
-                updated_at: eq(edited_coto.updated_at),
+                updated_at: eq(&edited_coto.updated_at),
             })
         })
     );
@@ -195,9 +195,9 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
         matches_pattern!(Paginated {
-            page_size: eq(5),
-            page_index: eq(0),
-            total_rows: eq(0)
+            page_size: eq(&5),
+            page_index: eq(&0),
+            total_rows: eq(&0)
         })
     );
 
@@ -209,12 +209,12 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog5,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(5),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(5),
+            serial_number: eq(&5),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&5),
             change: matches_pattern!(Change::DeleteCoto {
-                coto_id: eq(coto.uuid),
-                deleted_at: eq(cotonoma.updated_at)
+                coto_id: eq(&coto.uuid),
+                deleted_at: eq(&cotonoma.updated_at)
             })
         })
     );

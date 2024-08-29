@@ -37,10 +37,10 @@ fn init_as_empty_node() -> Result<()> {
     assert_that!(
         node,
         matches_pattern!(Node {
-            rowid: eq(1),
+            rowid: eq(&1),
             name: eq(""),
             root_cotonoma_id: none(),
-            version: eq(1)
+            version: eq(&1)
         })
     );
     assert_icon_generated(&node)?;
@@ -49,8 +49,8 @@ fn init_as_empty_node() -> Result<()> {
     assert_that!(
         local_node,
         matches_pattern!(LocalNode {
-            node_id: eq(node.uuid),
-            rowid: eq(1),
+            node_id: eq(&node.uuid),
+            rowid: eq(&1),
             owner_password_hash: none(),
             owner_session_token: none(),
             owner_session_expires_at: none()
@@ -60,19 +60,19 @@ fn init_as_empty_node() -> Result<()> {
     let operator = db.globals().local_node_as_operator()?;
     assert_that!(
         ds.local_node_pair(&operator)?,
-        eq((local_node, node.clone()))
+        eq(&(local_node, node.clone()))
     );
     assert_eq!(ds.node(&node.uuid)?.unwrap(), node);
-    assert_that!(ds.all_nodes()?, elements_are![eq_deref_of(&node)]);
+    assert_that!(ds.all_nodes()?, elements_are![eq(&node)]);
 
     assert_that!(
         changelog,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(1),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(1),
+            serial_number: eq(&1),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&1),
             change: matches_pattern!(Change::CreateNode {
-                node: eq(Node { rowid: 0, ..node }),
+                node: eq(&Node { rowid: 0, ..node }),
                 root: none()
             }),
         })
@@ -161,9 +161,9 @@ fn init_as_node() -> Result<()> {
     assert_that!(
         node,
         matches_pattern!(Node {
-            rowid: eq(1),
+            rowid: eq(&1),
             name: eq("My Node"),
-            version: eq(2), // root_cotonoma_id has been updated
+            version: eq(&2), // root_cotonoma_id has been updated
         })
     );
     assert_icon_generated(&node)?;
@@ -172,8 +172,8 @@ fn init_as_node() -> Result<()> {
     assert_that!(
         local_node,
         matches_pattern!(LocalNode {
-            node_id: eq(node.uuid),
-            rowid: eq(1),
+            node_id: eq(&node.uuid),
+            rowid: eq(&1),
             owner_password_hash: none(),
             owner_session_token: none(),
             owner_session_expires_at: none()
@@ -183,53 +183,50 @@ fn init_as_node() -> Result<()> {
     let operator = db.globals().local_node_as_operator()?;
     assert_that!(
         ds.local_node_pair(&operator)?,
-        eq((local_node, node.clone()))
+        eq(&(local_node, node.clone()))
     );
-    assert_that!(ds.node(&node.uuid), ok(some(eq_deref_of(&node))));
-    assert_that!(ds.all_nodes()?, elements_are![eq_deref_of(&node)]);
+    assert_that!(ds.node(&node.uuid), ok(some(eq(&node))));
+    assert_that!(ds.all_nodes()?, elements_are![eq(&node)]);
 
     assert_that!(
         root_cotonoma,
         matches_pattern!(Cotonoma {
-            uuid: eq(node.root_cotonoma_id.unwrap()),
-            node_id: eq(node.uuid),
-            coto_id: eq(root_coto.uuid),
+            uuid: eq(&node.root_cotonoma_id.unwrap()),
+            node_id: eq(&node.uuid),
+            coto_id: eq(&root_coto.uuid),
             name: eq("My Node")
         })
     );
     assert_approximately_now(root_cotonoma.created_at());
     assert_approximately_now(root_cotonoma.updated_at());
-    assert_that!(
-        ds.all_cotonomas(),
-        ok(elements_are![eq_deref_of(&root_cotonoma)])
-    );
+    assert_that!(ds.all_cotonomas(), ok(elements_are![eq(&root_cotonoma)]));
 
     assert_that!(
         root_coto,
         matches_pattern!(Coto {
-            node_id: eq(node.uuid),
+            node_id: eq(&node.uuid),
             posted_in_id: none(),
-            posted_by_id: eq(node.uuid),
+            posted_by_id: eq(&node.uuid),
             content: none(),
             summary: some(eq("My Node")),
-            is_cotonoma: eq(true),
+            is_cotonoma: eq(&true),
             repost_of_id: none(),
             reposted_in_ids: none()
         })
     );
     assert_approximately_now(root_coto.created_at());
     assert_approximately_now(root_coto.updated_at());
-    assert_that!(ds.all_cotos(), ok(elements_are![eq_deref_of(&root_coto)]));
+    assert_that!(ds.all_cotos(), ok(elements_are![eq(&root_coto)]));
 
     assert_that!(
         changelog,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(1),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(1),
+            serial_number: eq(&1),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&1),
             change: matches_pattern!(Change::CreateNode {
-                node: eq(Node { rowid: 0, ..node }),
-                root: some(eq((
+                node: eq(&Node { rowid: 0, ..node }),
+                root: some(eq(&(
                     root_cotonoma,
                     Coto {
                         rowid: 0,
@@ -260,11 +257,11 @@ fn set_icon() -> Result<()> {
     let (new_node, _) = ds.set_local_node_icon(new_icon.as_ref(), &operator)?;
 
     // then
-    assert_that!(new_node.icon, not(eq(node.icon)));
+    assert_that!(new_node.icon, not(eq(&node.icon)));
 
     assert_that!(
         image::guess_format(new_node.icon.as_ref()),
-        ok(eq(ImageFormat::Png))
+        ok(eq(&ImageFormat::Png))
     );
 
     let saved_image = image::load_from_memory(new_node.icon.as_ref())?;

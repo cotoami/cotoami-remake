@@ -26,10 +26,10 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         cotonoma,
         matches_pattern!(Cotonoma {
-            node_id: eq(node.uuid),
+            node_id: eq(&node.uuid),
             name: eq("test"),
-            coto_id: eq(coto.uuid),
-            posts: eq(0)
+            coto_id: eq(&coto.uuid),
+            posts: eq(&0)
         })
     );
     common::assert_approximately_now(cotonoma.created_at());
@@ -47,12 +47,12 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog2,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(2),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(2),
+            serial_number: eq(&2),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&2),
             change: matches_pattern!(Change::CreateCotonoma(
-                eq(cotonoma),
-                eq(Coto { rowid: 0, ..coto })
+                eq(&cotonoma),
+                eq(&Coto { rowid: 0, ..coto })
             )),
         })
     );

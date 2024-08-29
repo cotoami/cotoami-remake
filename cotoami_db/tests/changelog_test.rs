@@ -69,10 +69,10 @@ fn import_changes() -> Result<()> {
     assert_that!(
         db2_change3.unwrap(),
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(3),
-            origin_node_id: eq(node1.uuid),
-            origin_serial_number: eq(db1_change1.origin_serial_number),
-            change: eq(db1_change1.change)
+            serial_number: eq(&3),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change1.origin_serial_number),
+            change: eq(&db1_change1.change)
         })
     );
 
@@ -81,23 +81,20 @@ fn import_changes() -> Result<()> {
     // 2. A pair of Cotonoma and Coto (the root cotonoma of node1)
     assert_that!(
         ds2.node(&node1.uuid)?.unwrap(),
-        eq(Node {
+        eq(&Node {
             rowid: 2, // rowid=1 is db2's local node
             ..node1.clone()
         })
     );
     let (cotonoma, coto) = ds2.cotonoma(&node1_root_cotonoma.uuid)?.unwrap();
-    assert_that!(cotonoma, eq_deref_of(&node1_root_cotonoma));
-    assert_that!(coto, eq_deref_of(&node1_root_coto));
+    assert_that!(cotonoma, eq(&node1_root_cotonoma));
+    assert_that!(coto, eq(&node1_root_coto));
 
     assert_that!(
         ds2.all_cotonomas()?,
-        elements_are![eq_deref_of(&node1_root_cotonoma)]
+        elements_are![eq(&node1_root_cotonoma)]
     );
-    assert_that!(
-        ds2.all_cotos()?,
-        elements_are![eq_deref_of(&node1_root_coto)]
-    );
+    assert_that!(ds2.all_cotos()?, elements_are![eq(&node1_root_coto)]);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: import change2 (post_coto)
@@ -117,17 +114,17 @@ fn import_changes() -> Result<()> {
     assert_that!(
         db2_change4.unwrap(),
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(4),
-            origin_node_id: eq(node1.uuid),
-            origin_serial_number: eq(db1_change2.origin_serial_number),
-            change: eq(db1_change2.change)
+            serial_number: eq(&4),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change2.origin_serial_number),
+            change: eq(&db1_change2.change)
         })
     );
 
     // check if the change is applied in db2
     assert_that!(
         ds2.all_cotos()?,
-        elements_are![eq_deref_of(&node1_root_coto), eq_deref_of(&db1_coto)]
+        elements_are![eq(&node1_root_coto), eq(&db1_coto)]
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -148,17 +145,17 @@ fn import_changes() -> Result<()> {
     assert_that!(
         db2_change5.unwrap(),
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(5),
-            origin_node_id: eq(node1.uuid),
-            origin_serial_number: eq(db1_change3.origin_serial_number),
-            change: eq(db1_change3.change)
+            serial_number: eq(&5),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change3.origin_serial_number),
+            change: eq(&db1_change3.change)
         })
     );
 
     // check if the change is applied in db2
     assert_that!(
         ds2.all_cotos()?,
-        elements_are![eq_deref_of(&node1_root_coto), eq_deref_of(&db1_edited_coto)]
+        elements_are![eq(&node1_root_coto), eq(&db1_edited_coto)]
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -179,18 +176,15 @@ fn import_changes() -> Result<()> {
     assert_that!(
         db2_change6.unwrap(),
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(6),
-            origin_node_id: eq(node1.uuid),
-            origin_serial_number: eq(db1_change4.origin_serial_number),
-            change: eq(db1_change4.change),
+            serial_number: eq(&6),
+            origin_node_id: eq(&node1.uuid),
+            origin_serial_number: eq(&db1_change4.origin_serial_number),
+            change: eq(&db1_change4.change),
         })
     );
 
     // check if the change is applied in db2
-    assert_that!(
-        ds2.all_cotos()?,
-        elements_are![eq_deref_of(&node1_root_coto)]
-    );
+    assert_that!(ds2.all_cotos()?, elements_are![eq(&node1_root_coto)]);
 
     Ok(())
 }
@@ -232,9 +226,9 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     assert_that!(
         imported_change1.unwrap(),
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(4),
-            origin_node_id: eq(origin_node_id),
-            origin_serial_number: eq(1)
+            serial_number: eq(&4),
+            origin_node_id: eq(&origin_node_id),
+            origin_serial_number: eq(&1)
         })
     );
     assert_eq!(

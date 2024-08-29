@@ -25,7 +25,7 @@ derive-new = "0.6.0"
 derive_more = {version = "1.0.0", features = ["debug", "display"]}
 futures = "0.3.30"
 futures-util = "0.3.30"
-googletest = "0.11.0"
+googletest = "0.12.0"
 indoc = "2.0.5"
 once_cell = "1.19.0"
 parking_lot = {version = "0.12.3", features = ["send_guard"]}

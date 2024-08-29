@@ -37,14 +37,14 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         link1,
         matches_pattern!(Link {
-            node_id: eq(node.uuid),
-            created_in_id: some(eq(root_cotonoma.uuid)),
-            created_by_id: eq(node.uuid),
-            source_coto_id: eq(coto1.uuid),
-            target_coto_id: eq(coto2.uuid),
+            node_id: eq(&node.uuid),
+            created_in_id: some(eq(&root_cotonoma.uuid)),
+            created_by_id: eq(&node.uuid),
+            source_coto_id: eq(&coto1.uuid),
+            target_coto_id: eq(&coto2.uuid),
             linking_phrase: some(eq("hello")),
             details: none(),
-            order: eq(1)
+            order: eq(&1)
         })
     );
     common::assert_approximately_now(link1.created_at());
@@ -57,10 +57,10 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
         matches_pattern!(Paginated {
-            page_size: eq(5),
-            page_index: eq(0),
-            total_rows: eq(1),
-            rows: elements_are![eq_deref_of(&link1)]
+            page_size: eq(&5),
+            page_index: eq(&0),
+            total_rows: eq(&1),
+            rows: elements_are![eq(&link1)]
         })
     );
 
@@ -68,10 +68,10 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog1,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(6),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(6),
-            change: matches_pattern!(Change::CreateLink(eq_deref_of(&link1)))
+            serial_number: eq(&6),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&6),
+            change: matches_pattern!(Change::CreateLink(eq(&link1)))
         })
     );
 
@@ -95,25 +95,25 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         link2,
         matches_pattern!(Link {
-            source_coto_id: eq(coto1.uuid),
-            target_coto_id: eq(coto3.uuid),
+            source_coto_id: eq(&coto1.uuid),
+            target_coto_id: eq(&coto3.uuid),
             linking_phrase: some(eq("bye")),
             details: some(eq("some details")),
-            order: eq(2)
+            order: eq(&2)
         })
     );
 
     // check if it is stored in the db
-    assert_that!(ds.link(&link2.uuid)?, some(eq_deref_of(&link2)));
+    assert_that!(ds.link(&link2.uuid)?, some(eq(&link2)));
 
     // check if `recent_links` contains it
     assert_that!(
         ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
         matches_pattern!(Paginated {
-            page_size: eq(5),
-            page_index: eq(0),
-            total_rows: eq(2),
-            rows: elements_are![eq_deref_of(&link2), eq_deref_of(&link1)]
+            page_size: eq(&5),
+            page_index: eq(&0),
+            total_rows: eq(&2),
+            rows: elements_are![eq(&link2), eq(&link1)]
         })
     );
 
@@ -161,14 +161,14 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog2,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(9),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(9),
+            serial_number: eq(&9),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&9),
             change: matches_pattern!(Change::EditLink {
-                link_id: eq(link1.uuid),
+                link_id: eq(&link1.uuid),
                 linking_phrase: some(eq("hello")),
                 details: some(eq("hello details")),
-                updated_at: eq(edited_link1.updated_at),
+                updated_at: eq(&edited_link1.updated_at),
             })
         })
     );
@@ -186,10 +186,10 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog3,
         matches_pattern!(ChangelogEntry {
-            serial_number: eq(10),
-            origin_node_id: eq(node.uuid),
-            origin_serial_number: eq(10),
-            change: matches_pattern!(Change::DeleteLink(eq(link1.uuid)))
+            serial_number: eq(&10),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&10),
+            change: matches_pattern!(Change::DeleteLink(eq(&link1.uuid)))
         })
     );
 
