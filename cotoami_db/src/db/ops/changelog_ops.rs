@@ -209,7 +209,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 updated_at,
             } => {
                 // Accept the image size from a parent by skipping resizing (image_max_size as None).
-                coto_ops::edit(coto_id, &diff, None, Some(*updated_at)).run(ctx)?;
+                coto_ops::edit(coto_id, diff, None, Some(*updated_at)).run(ctx)?;
             }
             Change::DeleteCoto {
                 coto_id,
