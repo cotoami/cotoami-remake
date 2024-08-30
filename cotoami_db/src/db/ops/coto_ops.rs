@@ -90,6 +90,31 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn geolocated<'a, Conn: AsReadableConn>(
+    node_id: Option<&'a Id<Node>>,
+    posted_in_id: Option<&'a Id<Cotonoma>>,
+    limit: i64,
+) -> impl Operation<Conn, Vec<Coto>> + 'a {
+    read_op(move |conn| {
+        let geolocated_cotos = cotos::table
+            .filter(cotos::longitude.is_not_null())
+            .filter(cotos::latitude.is_not_null())
+            .into_boxed();
+
+        match (node_id, posted_in_id) {
+            (Some(node_id), None) => geolocated_cotos.filter(cotos::node_id.eq(node_id)),
+            (_, Some(posted_in_id)) => {
+                geolocated_cotos.filter(cotos::posted_in_id.eq(posted_in_id))
+            }
+            _ => geolocated_cotos,
+        }
+        .order(cotos::created_at.desc())
+        .limit(limit)
+        .load::<Coto>(conn)
+        .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto: Coto = diesel::insert_into(cotos::table)
