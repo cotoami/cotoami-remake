@@ -78,14 +78,13 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Paginated<Coto>> + 'a {
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
-            let mut query = cotos::table.into_boxed();
-            if let Some(id) = node_id {
-                query = query.filter(cotos::node_id.eq(id));
+            let all_cotos = cotos::table.into_boxed();
+            match (node_id, posted_in_id) {
+                (Some(node_id), None) => all_cotos.filter(cotos::node_id.eq(node_id)),
+                (_, Some(posted_in_id)) => all_cotos.filter(cotos::posted_in_id.eq(posted_in_id)),
+                _ => all_cotos,
             }
-            if let Some(id) = posted_in_id {
-                query = query.filter(cotos::posted_in_id.eq(id));
-            }
-            query.order(cotos::created_at.desc())
+            .order(cotos::created_at.desc())
         })
     })
 }
