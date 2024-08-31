@@ -52,6 +52,19 @@ impl NodeState {
         .await
     }
 
+    pub async fn cotos_in_geo_bounds(
+        &self,
+        southwest: Geolocation,
+        northeast: Geolocation,
+    ) -> Result<GeolocatedCotos, ServiceError> {
+        self.get(move |ds| {
+            let cotos =
+                ds.cotos_in_geo_bounds(&southwest, &northeast, GEOLOCATED_COTOS_MAX_SIZE)?;
+            GeolocatedCotos::new(cotos, ds)
+        })
+        .await
+    }
+
     pub async fn search_cotos(
         &self,
         query: String,
