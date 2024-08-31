@@ -236,6 +236,22 @@ impl PaginatedCotos {
     }
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct GeolocatedCotos {
+    pub cotos: Vec<Coto>,
+    pub related_data: CotosRelatedData,
+}
+
+impl GeolocatedCotos {
+    pub(crate) fn new(cotos: Vec<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
+        let related_data = CotosRelatedData::fetch(ds, &cotos)?;
+        Ok(GeolocatedCotos {
+            cotos,
+            related_data,
+        })
+    }
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotosRelatedData {
     pub posted_in: Vec<Cotonoma>,

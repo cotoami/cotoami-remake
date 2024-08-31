@@ -154,6 +154,24 @@ impl HttpClient {
                     self.get(API_PATH_COTOS).query(&pagination)
                 }
             }
+            Command::GeolocatedCotos { node, cotonoma } => {
+                if let Some(cotonoma_id) = cotonoma {
+                    self.get(&format!(
+                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/geolocated"
+                    ))
+                } else if let Some(node_id) = node {
+                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos/geolocated"))
+                } else {
+                    self.get(&format!("{API_PATH_COTOS}/geolocated"))
+                }
+            }
+            Command::CotosInGeoBounds {
+                southwest,
+                northeast,
+            } => self.get(&format!(
+                "{API_PATH_COTOS}/geo/{}/{}/{}/{}",
+                southwest.longitude, southwest.latitude, northeast.longitude, northeast.latitude
+            )),
             Command::SearchCotos {
                 query,
                 node,

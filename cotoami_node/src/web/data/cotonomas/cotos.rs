@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{PaginatedCotos, Pagination},
+        models::{GeolocatedCotos, PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -23,6 +23,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos).post(post_coto))
+        .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
 }
 
@@ -60,6 +61,21 @@ async fn post_coto(
         .post_coto(input, cotonoma_id, Arc::new(operator))
         .await
         .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotonomas/:cotonoma_id/geolocated
+/////////////////////////////////////////////////////////////////////////////
+
+async fn geolocated_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+) -> Result<Content<GeolocatedCotos>, ServiceError> {
+    state
+        .geolocated_cotos(None, Some(cotonoma_id))
+        .await
+        .map(|cotos| Content(cotos, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
