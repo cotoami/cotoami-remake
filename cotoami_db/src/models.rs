@@ -50,7 +50,7 @@ pub(crate) mod prelude {
         link::*,
         node::{child::*, client::*, local::*, parent::*, roles::*, server::*, *},
         operator::*,
-        Bytes, ClientSession, FieldDiff, Id, Ids,
+        Bytes, ClientSession, FieldDiff, Geolocation, Id, Ids,
     };
 }
 

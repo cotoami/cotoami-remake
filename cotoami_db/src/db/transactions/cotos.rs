@@ -54,6 +54,15 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(coto_ops::geolocated(node_id, posted_in_id, limit))
     }
 
+    pub fn cotos_in_geo_bounds(
+        &mut self,
+        southwest: &Geolocation,
+        northeast: &Geolocation,
+        limit: i64,
+    ) -> Result<Vec<Coto>> {
+        self.read_transaction(coto_ops::in_geo_bounds(southwest, northeast, limit))
+    }
+
     pub fn search_cotos(
         &mut self,
         query: &str,
