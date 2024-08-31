@@ -236,6 +236,7 @@ impl PaginatedCotos {
     }
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct GeolocatedCotos {
     pub cotos: Vec<Coto>,
     pub related_data: CotosRelatedData,

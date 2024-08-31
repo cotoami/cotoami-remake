@@ -68,6 +68,9 @@ impl NodeState {
                 cotonoma,
                 pagination,
             } => format.serialize(self.recent_cotos(node, cotonoma, pagination).await),
+            Command::GeolocatedCotos { node, cotonoma } => {
+                format.serialize(self.geolocated_cotos(node, cotonoma).await)
+            }
             Command::SearchCotos {
                 query,
                 node,

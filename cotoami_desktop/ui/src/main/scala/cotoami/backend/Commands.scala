@@ -100,6 +100,17 @@ object Commands {
       )
     )
 
+  def GeolocatedCotos(
+      nodeId: Option[Id[Node]],
+      cotonomaId: Option[Id[Cotonoma]]
+  ) =
+    jso(GeolocatedCotos =
+      jso(
+        node = nodeId.map(_.uuid).getOrElse(null),
+        cotonoma = cotonomaId.map(_.uuid).getOrElse(null)
+      )
+    )
+
   def SearchCotos(
       query: String,
       nodeId: Option[Id[Node]],

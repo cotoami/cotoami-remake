@@ -8,7 +8,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoGraph, PaginatedCotos, Pagination},
+        models::{CotoGraph, GeolocatedCotos, PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -18,6 +18,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
+        .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
         .route("/:coto_id/graph", get(get_graph))
 }
@@ -33,6 +34,20 @@ async fn recent_cotos(
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
         .recent_cotos(None, None, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotos/geolocated
+/////////////////////////////////////////////////////////////////////////////
+
+async fn geolocated_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+) -> Result<Content<GeolocatedCotos>, ServiceError> {
+    state
+        .geolocated_cotos(None, None)
         .await
         .map(|cotos| Content(cotos, accept))
 }

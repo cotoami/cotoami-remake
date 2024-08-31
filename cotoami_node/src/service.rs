@@ -199,6 +199,12 @@ pub enum Command {
         pagination: Pagination,
     },
 
+    /// Request [GeolocatedCotos] that contains recently posted cotos.
+    GeolocatedCotos {
+        node: Option<Id<Node>>,
+        cotonoma: Option<Id<Cotonoma>>,
+    },
+
     /// Request [PaginatedCotos] that match the given query and cotonoma.
     SearchCotos {
         query: String,
