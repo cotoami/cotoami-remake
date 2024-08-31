@@ -388,10 +388,10 @@ where
 #[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Validate)]
 pub struct Geolocation {
     #[validate(range(min = "Self::LONGITUDE_MIN", max = "Self::LONGITUDE_MAX"))]
-    longitude: f64,
+    pub longitude: f64,
 
     #[validate(range(min = "Self::LATITUDE_MIN", max = "Self::LATITUDE_MAX"))]
-    latitude: f64,
+    pub latitude: f64,
 }
 
 impl Geolocation {

@@ -14,7 +14,7 @@ use crate::{
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},
         cotonoma::Cotonoma,
         node::Node,
-        Id,
+        Geolocation, Id,
     },
     schema::cotos,
 };
@@ -111,6 +111,23 @@ pub(crate) fn geolocated<'a, Conn: AsReadableConn>(
         .limit(limit)
         .load::<Coto>(conn)
         .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn in_geo_bounds<'a, Conn: AsReadableConn>(
+    southwest: &'a Geolocation,
+    northeast: &'a Geolocation,
+    limit: i64,
+) -> impl Operation<Conn, Vec<Coto>> + 'a {
+    read_op(move |conn| {
+        cotos::table
+            // search against the `cotos_lng_lat` index
+            .filter(cotos::longitude.between(southwest.longitude, northeast.longitude))
+            .filter(cotos::latitude.between(southwest.latitude, northeast.latitude))
+            .order(cotos::created_at.desc())
+            .limit(limit)
+            .load::<Coto>(conn)
+            .map_err(anyhow::Error::from)
     })
 }
 
