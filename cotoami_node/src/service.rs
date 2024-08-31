@@ -199,10 +199,16 @@ pub enum Command {
         pagination: Pagination,
     },
 
-    /// Request [GeolocatedCotos] that contains recently posted cotos.
+    /// Request [GeolocatedCotos] in the given node or cotonoma.
     GeolocatedCotos {
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
+    },
+
+    /// Request [GeolocatedCotos] found in the given geo bounds.
+    CotosInGeoBounds {
+        southwest: Geolocation,
+        northeast: Geolocation,
     },
 
     /// Request [PaginatedCotos] that match the given query and cotonoma.

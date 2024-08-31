@@ -3,6 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.Cmd
 
+import cotoami.models.GeoBounds
+
 case class GeolocatedCotos(json: GeolocatedCotosJson) {
   def cotos: js.Array[Coto] = this.json.cotos.map(Coto(_))
   def relatedData: CotosRelatedData = CotosRelatedData(this.json.related_data)
@@ -22,6 +24,10 @@ object GeolocatedCotos {
   ): Cmd[Either[ErrorJson, GeolocatedCotos]] =
     GeolocatedCotosJson.fetch(nodeId, cotonomaId)
       .map(_.map(GeolocatedCotos(_)))
+
+  def inGeoBounds(bounds: GeoBounds): Cmd[Either[ErrorJson, GeolocatedCotos]] =
+    GeolocatedCotosJson.inGeoBounds(bounds)
+      .map(_.map(GeolocatedCotos(_)))
 }
 
 @js.native
@@ -36,4 +42,9 @@ object GeolocatedCotosJson {
       cotonomaId: Option[Id[Cotonoma]]
   ): Cmd[Either[ErrorJson, GeolocatedCotosJson]] =
     Commands.send(Commands.GeolocatedCotos(nodeId, cotonomaId))
+
+  def inGeoBounds(
+      bounds: GeoBounds
+  ): Cmd[Either[ErrorJson, GeolocatedCotosJson]] =
+    Commands.send(Commands.CotosInGeoBounds(bounds))
 }

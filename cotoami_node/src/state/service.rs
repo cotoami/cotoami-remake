@@ -71,6 +71,10 @@ impl NodeState {
             Command::GeolocatedCotos { node, cotonoma } => {
                 format.serialize(self.geolocated_cotos(node, cotonoma).await)
             }
+            Command::CotosInGeoBounds {
+                southwest,
+                northeast,
+            } => format.serialize(self.cotos_in_geo_bounds(southwest, northeast).await),
             Command::SearchCotos {
                 query,
                 node,

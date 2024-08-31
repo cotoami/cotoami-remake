@@ -165,6 +165,13 @@ impl HttpClient {
                     self.get(&format!("{API_PATH_COTOS}/geolocated"))
                 }
             }
+            Command::CotosInGeoBounds {
+                southwest,
+                northeast,
+            } => self.get(&format!(
+                "{API_PATH_COTOS}/geo/{}/{}/{}/{}",
+                southwest.longitude, southwest.latitude, northeast.longitude, northeast.latitude
+            )),
             Command::SearchCotos {
                 query,
                 node,

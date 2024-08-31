@@ -4,7 +4,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 import fui.Cmd
 import cotoami.libs.tauri
-import cotoami.models.Geolocation
+import cotoami.models.{GeoBounds, Geolocation}
 
 object Commands {
 
@@ -108,6 +108,20 @@ object Commands {
       jso(
         node = nodeId.map(_.uuid).getOrElse(null),
         cotonoma = cotonomaId.map(_.uuid).getOrElse(null)
+      )
+    )
+
+  def CotosInGeoBounds(bounds: GeoBounds) =
+    jso(CotosInGeoBounds =
+      jso(
+        southwest = jso(
+          longitude = bounds.southwest.longitude,
+          latitude = bounds.southwest.latitude
+        ),
+        northeast = jso(
+          longitude = bounds.northeast.longitude,
+          latitude = bounds.northeast.latitude
+        )
       )
     )
 
