@@ -8,13 +8,14 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{PaginatedCotos, Pagination},
+        models::{GeolocatedCotos, PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
 };
 
 const DEFAULT_PAGE_SIZE: i64 = 20;
+const GEOLOCATED_COTOS_MAX_SIZE: i64 = 100;
 
 impl NodeState {
     pub async fn recent_cotos(
@@ -34,6 +35,19 @@ impl NodeState {
                 pagination.page,
             )?;
             PaginatedCotos::new(page, ds)
+        })
+        .await
+    }
+
+    pub async fn geolocated_cotos(
+        &self,
+        node: Option<Id<Node>>,
+        cotonoma: Option<Id<Cotonoma>>,
+    ) -> Result<GeolocatedCotos, ServiceError> {
+        self.get(move |ds| {
+            let cotos =
+                ds.geolocated_cotos(node.as_ref(), cotonoma.as_ref(), GEOLOCATED_COTOS_MAX_SIZE)?;
+            GeolocatedCotos::new(cotos, ds)
         })
         .await
     }
