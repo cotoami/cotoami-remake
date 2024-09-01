@@ -132,7 +132,7 @@ import cotoami.libs.geomap.pmtiles
         Seq.empty
       )
 
-    // Initialize the map
+    // Initialize the map.
     useEffect(
       () => {
         val onClick: js.Function1[MapMouseEvent, Unit] =
@@ -221,7 +221,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.focusedLocation.toString())
     )
 
-    // Apply the center and zoom of the props
+    // Apply the center and zoom of the props.
     useEffect(
       () => {
         mapRef.current.foreach(
@@ -235,12 +235,20 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.applyCenterZoom)
     )
 
-    // Add or remove markers to sync with markerDefs
+    // Add or remove markers according to the IDs of props.markerDefs.
     useEffect(
       () => {
         mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs))
       },
       Seq(props.addOrRemoveMarkers)
+    )
+
+    // Refresh (clear and create) markers to sync with props.markerDefs.
+    useEffect(
+      () => {
+        mapRef.current.foreach(_.refreshMarkers(props.markerDefs))
+      },
+      Seq(props.refreshMarkers)
     )
 
     section(id := props.id, className := "geomap")()
@@ -287,6 +295,11 @@ import cotoami.libs.geomap.pmtiles
       toRemove.foreach(removeMarker)
     }
 
+    def refreshMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      clearMarkers()
+      markerDefs.foreach(putMarker)
+    }
+
     private def putMarker(markerDef: MarkerDef): Unit = {
       removeMarker(markerDef.id)
       val marker = new Marker(new MarkerOptions() {
@@ -300,9 +313,13 @@ import cotoami.libs.geomap.pmtiles
       this.markers.put(markerDef.id, marker)
     }
 
-    private def removeMarker(id: String): Unit = {
-      this.markers.remove(id).foreach(_.remove())
+    private def clearMarkers(): Unit = {
+      this.markers.values.foreach(_.remove())
+      this.markers.clear()
     }
+
+    private def removeMarker(id: String): Unit =
+      this.markers.remove(id).foreach(_.remove())
   }
 
   case class MarkerDef(
