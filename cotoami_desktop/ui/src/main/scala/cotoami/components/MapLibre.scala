@@ -1,8 +1,11 @@
 package cotoami.components
 
+import scala.collection.mutable.{Map => MutableMap}
 import scala.util.{Failure, Success}
 import scala.scalajs.js
 import scala.scalajs.js.Thenable.Implicits._
+
+import org.scalajs.dom
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
@@ -31,11 +34,16 @@ import cotoami.libs.geomap.pmtiles
       // Center/Zoom
       center: (Double, Double), // LngLat
       zoom: Double,
-      // changing this value will apply the center/zoom to the map
-      syncCenterZoom: Int = 0,
 
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
+      markerDefs: Seq[MarkerDef] = Seq.empty,
+
+      // Manual prop application
+      // Changing the following values will apply some props to the map state.
+      applyCenterZoom: Int = 0,
+      addOrRemoveMarkers: Int = 0,
+      refreshMarkers: Int = 0,
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -124,7 +132,7 @@ import cotoami.libs.geomap.pmtiles
         Seq.empty
       )
 
-    // Initialize the map
+    // Initialize the map.
     useEffect(
       () => {
         val onClick: js.Function1[MapMouseEvent, Unit] =
@@ -213,7 +221,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.focusedLocation.toString())
     )
 
-    // Sync the map center and zoom with the props
+    // Apply the center and zoom of the props.
     useEffect(
       () => {
         mapRef.current.foreach(
@@ -224,7 +232,23 @@ import cotoami.libs.geomap.pmtiles
           })
         )
       },
-      Seq(props.syncCenterZoom)
+      Seq(props.applyCenterZoom)
+    )
+
+    // Add or remove markers according to the IDs of props.markerDefs.
+    useEffect(
+      () => {
+        mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs))
+      },
+      Seq(props.addOrRemoveMarkers)
+    )
+
+    // Refresh (clear and create) markers to sync with props.markerDefs.
+    useEffect(
+      () => {
+        mapRef.current.foreach(_.refreshMarkers(props.markerDefs))
+      },
+      Seq(props.refreshMarkers)
     )
 
     section(id := props.id, className := "geomap")()
@@ -239,6 +263,7 @@ import cotoami.libs.geomap.pmtiles
 
   class ExtendedMap(options: MapOptions) extends Map(options) {
     var focusedMarker: Option[Marker] = None
+    val markers: MutableMap[String, Marker] = MutableMap.empty
 
     def disableRotation(): Unit = {
       this.dragRotate.disable()
@@ -257,5 +282,51 @@ import cotoami.libs.geomap.pmtiles
     def unfocusLocation(): Unit = {
       this.focusedMarker.foreach(_.remove())
     }
+
+    def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      val defMap = markerDefs.map(d => d.id -> d).toMap
+
+      // Add
+      val toAdd = defMap.keySet.diff(this.markers.keySet)
+      toAdd.flatMap(defMap.get).foreach(putMarker)
+
+      // Remove
+      val toRemove = this.markers.keySet.diff(defMap.keySet)
+      toRemove.foreach(removeMarker)
+    }
+
+    def refreshMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      clearMarkers()
+      markerDefs.foreach(putMarker)
+    }
+
+    private def putMarker(markerDef: MarkerDef): Unit = {
+      removeMarker(markerDef.id)
+      val marker = new Marker(new MarkerOptions() {
+        override val element = markerDef.html
+        override val className = markerDef.className match {
+          case Some(className) => className
+          case None            => ()
+        }
+      }).setLngLat(js.Tuple2.fromScalaTuple2(markerDef.lngLat))
+        .addTo(this)
+      this.markers.put(markerDef.id, marker)
+    }
+
+    private def clearMarkers(): Unit = {
+      this.markers.values.foreach(_.remove())
+      this.markers.clear()
+    }
+
+    private def removeMarker(id: String): Unit =
+      this.markers.remove(id).foreach(_.remove())
   }
+
+  case class MarkerDef(
+      id: String,
+      lngLat: (Double, Double),
+      html: dom.HTMLElement,
+      className: Option[String] = None,
+      label: Option[String] = None
+  )
 }

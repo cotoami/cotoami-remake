@@ -13,14 +13,14 @@ import cotoami.libs.exifr
 case class Geomap(
     center: Geolocation = Geolocation.default,
     zoom: Double = 8,
-    syncCenterZoom: Int = 0,
+    applyCenterZoom: Int = 0,
     focusedLocation: Option[Geolocation] = None
 ) {
   def moveTo(location: Geolocation): Geomap =
     this.copy(
       center = location,
       zoom = 13,
-      syncCenterZoom = this.syncCenterZoom + 1
+      applyCenterZoom = this.applyCenterZoom + 1
     )
 
   def focus(location: Geolocation): Geomap =

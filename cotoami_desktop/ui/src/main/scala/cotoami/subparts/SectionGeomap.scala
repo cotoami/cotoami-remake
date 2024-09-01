@@ -51,7 +51,7 @@ object SectionGeomap {
       id = "main-geomap",
       center = geomap.center.toLngLat,
       zoom = geomap.zoom,
-      syncCenterZoom = geomap.syncCenterZoom,
+      applyCenterZoom = geomap.applyCenterZoom,
       focusedLocation = geomap.focusedLocation.map(_.toLngLat),
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)

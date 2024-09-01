@@ -24,6 +24,10 @@ class Marker(options: js.UndefOr[MarkerOptions] = js.undefined)
 
 trait MarkerOptions extends js.Object {
 
+  /** Space-separated CSS class names to add to marker element.
+    */
+  val className: js.UndefOr[String] = js.undefined
+
   /** The color to use for the default marker if options.element is not
     * provided. The default is light blue.
     */
