@@ -281,6 +281,10 @@ import cotoami.libs.geomap.pmtiles
       deleteMarker(markerDef.id)
       val marker = new Marker(new MarkerOptions() {
         override val element = markerDef.html
+        override val className = markerDef.className match {
+          case Some(className) => className
+          case None            => ()
+        }
       }).setLngLat(js.Tuple2.fromScalaTuple2(markerDef.lngLat))
         .addTo(this)
       this.markers.put(markerDef.id, marker)
