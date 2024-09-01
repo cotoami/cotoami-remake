@@ -35,7 +35,7 @@ import cotoami.libs.geomap.pmtiles
       center: (Double, Double), // LngLat
       zoom: Double,
       // changing this value will apply the center/zoom to the map.
-      syncCenterZoom: Int = 0,
+      applyCenterZoom: Int = 0,
 
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
@@ -219,7 +219,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.focusedLocation.toString())
     )
 
-    // Sync the map center and zoom with the props
+    // Apply the center and zoom of the props
     useEffect(
       () => {
         mapRef.current.foreach(
@@ -230,7 +230,7 @@ import cotoami.libs.geomap.pmtiles
           })
         )
       },
-      Seq(props.syncCenterZoom)
+      Seq(props.applyCenterZoom)
     )
 
     // Sync the markers with the defs
