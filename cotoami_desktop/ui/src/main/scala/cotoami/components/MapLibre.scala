@@ -34,14 +34,16 @@ import cotoami.libs.geomap.pmtiles
       // Center/Zoom
       center: (Double, Double), // LngLat
       zoom: Double,
-      // changing this value will apply the center/zoom to the map.
-      applyCenterZoom: Int = 0,
 
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
       markerDefs: Seq[MarkerDef] = Seq.empty,
-      // changing this value will apply the markerDefs to the actual markers.
-      syncMarkers: Int = 0,
+
+      // Manual prop application
+      // Changing the following values will apply some props to the map state.
+      applyCenterZoom: Int = 0,
+      addOrRemoveMarkers: Int = 0,
+      refreshMarkers: Int = 0,
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -233,12 +235,12 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.applyCenterZoom)
     )
 
-    // Sync the markers with the defs
+    // Add or remove markers to sync with markerDefs
     useEffect(
       () => {
-        //
+        mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs))
       },
-      Seq(props.syncMarkers)
+      Seq(props.addOrRemoveMarkers)
     )
 
     section(id := props.id, className := "geomap")()
@@ -273,12 +275,20 @@ import cotoami.libs.geomap.pmtiles
       this.focusedMarker.foreach(_.remove())
     }
 
-    def syncMarkers(markerDefs: Seq[MarkerDef]): Unit = {
-      // TODO
+    def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      val defMap = markerDefs.map(d => d.id -> d).toMap
+
+      // Add
+      val toAdd = defMap.keySet.diff(this.markers.keySet)
+      toAdd.flatMap(defMap.get).foreach(putMarker)
+
+      // Remove
+      val toRemove = this.markers.keySet.diff(defMap.keySet)
+      toRemove.foreach(removeMarker)
     }
 
     private def putMarker(markerDef: MarkerDef): Unit = {
-      deleteMarker(markerDef.id)
+      removeMarker(markerDef.id)
       val marker = new Marker(new MarkerOptions() {
         override val element = markerDef.html
         override val className = markerDef.className match {
@@ -290,7 +300,7 @@ import cotoami.libs.geomap.pmtiles
       this.markers.put(markerDef.id, marker)
     }
 
-    private def deleteMarker(id: String): Unit = {
+    private def removeMarker(id: String): Unit = {
       this.markers.remove(id).foreach(_.remove())
     }
   }
