@@ -1,8 +1,11 @@
 package cotoami.components
 
+import scala.collection.mutable.{Map => MutableMap}
 import scala.util.{Failure, Success}
 import scala.scalajs.js
 import scala.scalajs.js.Thenable.Implicits._
+
+import org.scalajs.dom
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
@@ -31,11 +34,14 @@ import cotoami.libs.geomap.pmtiles
       // Center/Zoom
       center: (Double, Double), // LngLat
       zoom: Double,
-      // changing this value will apply the center/zoom to the map
+      // changing this value will apply the center/zoom to the map.
       syncCenterZoom: Int = 0,
 
       // Markers
       focusedLocation: Option[(Double, Double)] = None, // LngLat
+      markerDefs: Seq[MarkerDef] = Seq.empty,
+      // changing this value will apply the markerDefs to the actual markers.
+      syncMarkers: Int = 0,
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -227,6 +233,14 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.syncCenterZoom)
     )
 
+    // Sync the markers with the defs
+    useEffect(
+      () => {
+        //
+      },
+      Seq(props.syncMarkers)
+    )
+
     section(id := props.id, className := "geomap")()
   }
 
@@ -239,6 +253,7 @@ import cotoami.libs.geomap.pmtiles
 
   class ExtendedMap(options: MapOptions) extends Map(options) {
     var focusedMarker: Option[Marker] = None
+    val markers: MutableMap[String, Marker] = MutableMap.empty
 
     def disableRotation(): Unit = {
       this.dragRotate.disable()
@@ -257,5 +272,30 @@ import cotoami.libs.geomap.pmtiles
     def unfocusLocation(): Unit = {
       this.focusedMarker.foreach(_.remove())
     }
+
+    def syncMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      // TODO
+    }
+
+    private def putMarker(markerDef: MarkerDef): Unit = {
+      deleteMarker(markerDef.id)
+      val marker = new Marker(new MarkerOptions() {
+        override val element = markerDef.html
+      }).setLngLat(js.Tuple2.fromScalaTuple2(markerDef.lngLat))
+        .addTo(this)
+      this.markers.put(markerDef.id, marker)
+    }
+
+    private def deleteMarker(id: String): Unit = {
+      this.markers.remove(id).foreach(_.remove())
+    }
   }
+
+  case class MarkerDef(
+      id: String,
+      lngLat: (Double, Double),
+      html: dom.HTMLElement,
+      className: Option[String] = None,
+      label: Option[String] = None
+  )
 }
