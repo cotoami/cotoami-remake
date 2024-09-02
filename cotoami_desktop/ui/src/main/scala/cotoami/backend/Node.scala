@@ -5,12 +5,20 @@ import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 import java.time.Instant
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.utils.Validation
 
 case class Node(json: NodeJson) {
   def id: Id[Node] = Id(this.json.uuid)
-  def icon: String = this.json.icon
+
+  lazy val iconUrl: String = {
+    // `URL.revokeObjectURL()` wouldn't be needed because once a node object
+    // has been loaded it will be retained until the window is closed.
+    val blob = Browser.decodeBase64(this.icon, Node.IconMimeType)
+    dom.URL.createObjectURL(blob)
+  }
+  private def icon: String = this.json.icon
+
   def name: String = this.json.name
   def rootCotonomaId: Option[Id[Cotonoma]] =
     Nullable.toOption(this.json.root_cotonoma_id).map(Id(_))
@@ -21,7 +29,7 @@ case class Node(json: NodeJson) {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
     root.className = "geomap-marker coto-marker"
     val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
-    icon.src = s"data:image/png;base64,${this.icon}"
+    icon.src = this.iconUrl
     root.append(icon)
     root
   }
@@ -30,7 +38,7 @@ case class Node(json: NodeJson) {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
     root.className = "geomap-marker cotonoma-marker"
     val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
-    icon.src = s"data:image/png;base64,${this.icon}"
+    icon.src = this.iconUrl
     root.append(icon)
     root
   }
@@ -40,6 +48,8 @@ case class Node(json: NodeJson) {
 }
 
 object Node {
+  val IconMimeType = "image/png"
+
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
 

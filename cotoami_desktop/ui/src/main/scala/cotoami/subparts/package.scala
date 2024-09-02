@@ -15,7 +15,7 @@ package object subparts {
     img(
       className := s"node-icon ${additionalClasses}",
       alt := node.name,
-      src := s"data:image/png;base64,${node.icon}"
+      src := node.iconUrl
     )
 
   def spanNode(node: Node): ReactElement =
