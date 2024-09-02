@@ -39,8 +39,8 @@ import cotoami.libs.geomap.pmtiles
       focusedLocation: Option[(Double, Double)] = None, // LngLat
       markerDefs: Seq[MarkerDef] = Seq.empty,
 
-      // Manual prop application
-      // Changing the following values will apply some props to the map state.
+      // Triggers to invoke effects
+      // Changing the following values will trigger an effect.
       applyCenterZoom: Int = 0,
       addOrRemoveMarkers: Int = 0,
       refreshMarkers: Int = 0,
@@ -325,7 +325,7 @@ import cotoami.libs.geomap.pmtiles
   case class MarkerDef(
       id: String,
       lngLat: (Double, Double),
-      html: dom.HTMLElement,
+      html: dom.Element,
       className: Option[String] = None,
       label: Option[String] = None
   )

@@ -65,6 +65,8 @@ case class Coto(json: CotoJson, posted: Boolean = false)
       case _ => None
     }
 
+  def geolocated: Boolean = this.geolocation.isDefined
+
   override def isCotonoma: Boolean = this.json.is_cotonoma
 
   def repostOfId: Option[Id[Coto]] =

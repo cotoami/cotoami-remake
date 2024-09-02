@@ -152,4 +152,23 @@ div.app {
       text-align: center;
     }
   }
+
+  div.geomap-marker {
+    width: 30px;
+    height: 30px;
+
+    background-color: white;
+    border-radius: 4px;
+    padding: 2px;
+
+    &.cotonoma-marker {
+      background-color: red;
+    }
+
+    img {
+      border-radius: 4px;
+      width: 100%;
+      height: 100%;
+    }
+  }
 }

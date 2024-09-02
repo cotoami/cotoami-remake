@@ -13,20 +13,28 @@ import cotoami.libs.exifr
 case class Geomap(
     center: Geolocation = Geolocation.default,
     zoom: Double = 8,
-    applyCenterZoom: Int = 0,
-    focusedLocation: Option[Geolocation] = None
+    focusedLocation: Option[Geolocation] = None,
+    _applyCenterZoom: Int = 0,
+    _addOrRemoveMarkers: Int = 0,
+    _refreshMarkers: Int = 0
 ) {
   def moveTo(location: Geolocation): Geomap =
     this.copy(
       center = location,
       zoom = 13,
-      applyCenterZoom = this.applyCenterZoom + 1
+      _applyCenterZoom = this._applyCenterZoom + 1
     )
 
   def focus(location: Geolocation): Geomap =
     this.moveTo(location).copy(
       focusedLocation = Some(location)
     )
+
+  def addOrRemoveMarkers: Geomap =
+    this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)
+
+  def refreshMarkers: Geomap =
+    this.copy(_refreshMarkers = this._refreshMarkers + 1)
 }
 
 case class Geolocation(longitude: Double, latitude: Double) {

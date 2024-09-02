@@ -7,6 +7,7 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
 import cotoami.backend._
+import cotoami.components.MapLibre.MarkerDef
 
 case class Domain(
     lastChangeNumber: Double = 0,
@@ -145,6 +146,22 @@ case class Domain(
       else
         Cmd.none
     }).getOrElse(Cmd.none)
+
+  lazy val cotoMarkerDefs: Seq[MarkerDef] =
+    this.cotos.geolocated.flatMap { case (coto, location) =>
+      this.nodes.get(coto.nodeId).map(node =>
+        MarkerDef(
+          coto.id.uuid,
+          location.toLngLat,
+          if (coto.isCotonoma)
+            node.newCotonomaMarkerHtml
+          else
+            node.newCotoMarkerHtml,
+          None,
+          coto.nameAsCotonoma
+        )
+      )
+    }
 }
 
 object Domain {

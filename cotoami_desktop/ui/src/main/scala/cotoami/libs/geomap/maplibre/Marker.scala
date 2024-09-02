@@ -36,5 +36,5 @@ trait MarkerOptions extends js.Object {
   /** DOM element to use as a marker. The default is a light blue,
     * droplet-shaped SVG marker.
     */
-  val element: js.UndefOr[dom.HTMLElement] = js.undefined
+  val element: js.UndefOr[dom.Element] = js.undefined
 }

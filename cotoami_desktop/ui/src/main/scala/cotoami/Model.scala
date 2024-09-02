@@ -241,11 +241,17 @@ case class Model(
         this.timeline.post(coto.id)
       else
         this.timeline
+    val geomap =
+      if (coto.geolocated)
+        this.geomap.addOrRemoveMarkers
+      else
+        this.geomap
     (
       this
         .modify(_.domain.cotos).setTo(cotos)
         .modify(_.domain.cotonomas).setTo(cotonomas)
-        .modify(_.timeline).setTo(timeline),
+        .modify(_.timeline).setTo(timeline)
+        .modify(_.geomap).setTo(geomap),
       cmds
     )
   }

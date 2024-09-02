@@ -53,8 +53,11 @@ object SectionGeomap {
       id = "main-geomap",
       center = geomap.center.toLngLat,
       zoom = geomap.zoom,
-      applyCenterZoom = geomap.applyCenterZoom,
       focusedLocation = geomap.focusedLocation.map(_.toLngLat),
+      markerDefs = context.domain.cotoMarkerDefs,
+      applyCenterZoom = geomap._applyCenterZoom,
+      addOrRemoveMarkers = geomap._addOrRemoveMarkers,
+      refreshMarkers = geomap._refreshMarkers,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.Init(bounds).toApp)
