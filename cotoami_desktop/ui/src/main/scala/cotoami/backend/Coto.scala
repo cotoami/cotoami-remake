@@ -55,7 +55,7 @@ case class Coto(json: CotoJson, posted: Boolean = false)
     case _                                => None
   }
 
-  override def geolocation: Option[Geolocation] =
+  override lazy val geolocation: Option[Geolocation] =
     (
       Nullable.toOption(this.json.longitude),
       Nullable.toOption(this.json.latitude)

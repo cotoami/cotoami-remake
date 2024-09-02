@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
-import cotoami.{Msg => AppMsg}
+import cotoami.{Context, Msg => AppMsg}
 import cotoami.components.MapLibre
 import cotoami.models.{GeoBounds, Geolocation, Geomap}
 
@@ -46,7 +46,9 @@ object SectionGeomap {
       }
     }
 
-  def apply(geomap: Geomap)(implicit dispatch: AppMsg => Unit): ReactElement =
+  def apply(
+      geomap: Geomap
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
       center = geomap.center.toLngLat,
@@ -71,4 +73,5 @@ object SectionGeomap {
         dispatch(Msg.BoundsChanged(bounds).toApp)
       })
     )
+  }
 }

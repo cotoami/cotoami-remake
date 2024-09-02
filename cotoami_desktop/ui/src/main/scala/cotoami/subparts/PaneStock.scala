@@ -38,7 +38,7 @@ object PaneStock {
           primary = SplitPane.Primary.Props()(
             div(className := "map")(
               Option.when(uiState.geomapOpened) {
-                SectionGeomap(model.geomap)
+                SectionGeomap(model.geomap)(model, dispatch)
               },
               div(className := "close-map-button")(
                 button(

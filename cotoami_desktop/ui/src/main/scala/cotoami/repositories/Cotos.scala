@@ -2,6 +2,7 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 import cotoami.backend._
+import cotoami.models.Geolocation
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,
@@ -41,4 +42,7 @@ case class Cotos(
     ).getOrElse(this)
 
   def unfocus: Cotos = this.copy(focusedId = None)
+
+  lazy val geolocated: Seq[(Coto, Geolocation)] =
+    this.map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
 }
