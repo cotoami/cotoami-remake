@@ -47,6 +47,9 @@ case class Domain(
   def currentCotonoma: Option[Cotonoma] =
     this.currentCotonomaId.flatMap(this.cotonomas.get)
 
+  def currentCotonomaCoto: Option[Coto] =
+    this.currentCotonoma.flatMap(cotonoma => this.cotos.get(cotonoma.cotoId))
+
   def isRoot(cotonoma: Cotonoma): Boolean =
     this.nodes.get(cotonoma.nodeId)
       .map(_.rootCotonomaId == Some(cotonoma.id))
@@ -83,6 +86,11 @@ case class Domain(
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.links).using(_.putAll(cotos.outgoingLinks))
+
+  def importFrom(cotos: GeolocatedCotos): Domain =
+    this
+      .modify(_.cotos).using(_.importFrom(cotos))
+      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
 
   def importCotoGraph(graph: CotoGraph): Domain =
     this

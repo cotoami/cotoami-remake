@@ -4,7 +4,9 @@ import slinky.core.facade.ReactElement
 
 import fui.Cmd
 import cotoami.{Context, Msg => AppMsg}
+import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.MapLibre
+import cotoami.repositories.Domain
 import cotoami.models.{GeoBounds, Geolocation, Geomap}
 
 object SectionGeomap {
@@ -19,32 +21,50 @@ object SectionGeomap {
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
+    case class GeolocatedCotosFetched(
+        result: Either[ErrorJson, GeolocatedCotos]
+    ) extends Msg
   }
 
-  def update(msg: Msg, geomap: Geomap): (Geomap, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, geomap: Geomap)(implicit
+      context: Context
+  ): (Geomap, Domain, Seq[Cmd[AppMsg]]) = {
+    val default = (geomap, context.domain, Seq.empty)
     msg match {
-      case Msg.Init(bounds) => {
-        println(s"map init: ${bounds}")
-        (geomap, Seq.empty)
-      }
+      case Msg.Init(bounds) => default
 
       case Msg.LocationClicked(location) =>
-        (
-          geomap.copy(focusedLocation = Some(location)),
-          Seq.empty
-        )
+        default.copy(_1 = geomap.copy(focusedLocation = Some(location)))
 
       case Msg.ZoomChanged(zoom) =>
-        (geomap.copy(zoom = zoom), Seq.empty)
+        default.copy(_1 = geomap.copy(zoom = zoom))
 
       case Msg.CenterMoved(center) =>
-        (geomap.copy(center = center), Seq.empty)
+        default.copy(_1 = geomap.copy(center = center))
 
       case Msg.BoundsChanged(bounds) => {
         println(s"bounds changed: ${bounds}")
-        (geomap, Seq.empty)
+        default
       }
+
+      case Msg.GeolocatedCotosFetched(Right(cotos)) => {
+        val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
+        default.copy(
+          _1 = cotos.geoBounds match {
+            case Some(Right(bounds))  => geomap
+            case Some(Left(location)) => geomap
+            case None => center.map(geomap.moveTo(_)).getOrElse(geomap)
+          },
+          _2 = context.domain.importFrom(cotos)
+        )
+      }
+
+      case Msg.GeolocatedCotosFetched(Left(e)) =>
+        default.copy(
+          _3 = Seq(ErrorJson.log(e, "Couldn't fetch geolocated cotos."))
+        )
     }
+  }
 
   def apply(
       geomap: Geomap

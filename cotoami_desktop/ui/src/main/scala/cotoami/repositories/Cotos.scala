@@ -25,6 +25,11 @@ case class Cotos(
       .putAll(cotos.page.rows)
       .putAll(cotos.relatedData.originals)
 
+  def importFrom(cotos: GeolocatedCotos): Cotos =
+    this
+      .putAll(cotos.cotos)
+      .putAll(cotos.relatedData.originals)
+
   def importFrom(graph: CotoGraph): Cotos =
     this
       .putAll(graph.cotos)
