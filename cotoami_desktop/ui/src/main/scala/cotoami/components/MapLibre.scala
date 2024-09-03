@@ -41,6 +41,7 @@ import cotoami.libs.geomap.pmtiles
 
       // GeoBounds
       bounds: Option[LngLatBounds] = None,
+      paddingToBounds: Double = 20,
 
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
@@ -242,7 +243,16 @@ import cotoami.libs.geomap.pmtiles
     // fitBounds
     useEffect(
       () => {
-        props.bounds.map(bounds => mapRef.current.foreach(_.fitBounds(bounds)))
+        props.bounds.map(bounds =>
+          mapRef.current.foreach(
+            _.fitBounds(
+              bounds,
+              new FitBoundsOptions() {
+                override val padding = props.paddingToBounds
+              }
+            )
+          )
+        )
       },
       Seq(props.fitBounds)
     )
