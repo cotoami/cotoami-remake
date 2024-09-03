@@ -50,7 +50,7 @@ case class Model(
     flowInput: FormCoto.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
-    geomap: Geomap = Geomap()
+    geomap: SectionGeomap.Model = SectionGeomap.Model()
 ) extends Context {
   def path: String = this.url.pathname + this.url.search + this.url.hash
 
@@ -68,7 +68,7 @@ case class Model(
       url = url,
       waitingPosts = WaitingPosts(),
       traversals = SectionTraversals.Model(),
-      geomap = Geomap()
+      geomap = SectionGeomap.Model()
     )
 
   def updateUiState(update: UiState => UiState): (Model, Seq[Cmd[Msg]]) =

@@ -7,9 +7,41 @@ import cotoami.{log_info, Context, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.MapLibre
 import cotoami.repositories.Domain
-import cotoami.models.{GeoBounds, Geolocation, Geomap}
+import cotoami.models.{GeoBounds, Geolocation}
 
 object SectionGeomap {
+
+  case class Model(
+      center: Geolocation = Geolocation.default,
+      zoom: Double = 8,
+      focusedLocation: Option[Geolocation] = None,
+      bounds: Option[GeoBounds] = None,
+      _applyCenterZoom: Int = 0,
+      _addOrRemoveMarkers: Int = 0,
+      _refreshMarkers: Int = 0,
+      _fitBounds: Int = 0
+  ) {
+    def moveTo(location: Geolocation): Model =
+      this.copy(
+        center = location,
+        zoom = 13,
+        _applyCenterZoom = this._applyCenterZoom + 1
+      )
+
+    def focus(location: Geolocation): Model =
+      this.moveTo(location).copy(
+        focusedLocation = Some(location)
+      )
+
+    def addOrRemoveMarkers: Model =
+      this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)
+
+    def refreshMarkers: Model =
+      this.copy(_refreshMarkers = this._refreshMarkers + 1)
+
+    def fitBounds(bounds: GeoBounds): Model =
+      this.copy(bounds = Some(bounds), _fitBounds = this._fitBounds + 1)
+  }
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionGeomapMsg(this)
@@ -29,21 +61,21 @@ object SectionGeomap {
     ) extends Msg
   }
 
-  def update(msg: Msg, geomap: Geomap)(implicit
+  def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Geomap, Domain, Seq[Cmd[AppMsg]]) = {
-    val default = (geomap, context.domain, Seq.empty)
+  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
+    val default = (model, context.domain, Seq.empty)
     msg match {
-      case Msg.Init(bounds) => default.copy(_1 = geomap.addOrRemoveMarkers)
+      case Msg.Init(bounds) => default.copy(_1 = model.addOrRemoveMarkers)
 
       case Msg.LocationClicked(location) =>
-        default.copy(_1 = geomap.copy(focusedLocation = Some(location)))
+        default.copy(_1 = model.copy(focusedLocation = Some(location)))
 
       case Msg.ZoomChanged(zoom) =>
-        default.copy(_1 = geomap.copy(zoom = zoom))
+        default.copy(_1 = model.copy(zoom = zoom))
 
       case Msg.CenterMoved(center) =>
-        default.copy(_1 = geomap.copy(center = center))
+        default.copy(_1 = model.copy(center = center))
 
       case Msg.BoundsChanged(bounds) => {
         println(s"bounds changed: ${bounds}")
@@ -55,10 +87,10 @@ object SectionGeomap {
         default.copy(
           _1 = (cotos.geoBounds match {
             case Some(Right(bounds)) =>
-              center.map(geomap.moveTo(_)).getOrElse(geomap.fitBounds(bounds))
+              center.map(model.moveTo(_)).getOrElse(model.fitBounds(bounds))
             case Some(Left(location)) =>
-              geomap.moveTo(center.getOrElse(location))
-            case None => center.map(geomap.moveTo(_)).getOrElse(geomap)
+              model.moveTo(center.getOrElse(location))
+            case None => center.map(model.moveTo(_)).getOrElse(model)
           }).addOrRemoveMarkers,
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(
@@ -75,19 +107,19 @@ object SectionGeomap {
   }
 
   def apply(
-      geomap: Geomap
+      model: Model
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
-      center = geomap.center.toMapLibre,
-      zoom = geomap.zoom,
-      focusedLocation = geomap.focusedLocation.map(_.toMapLibre),
+      center = model.center.toMapLibre,
+      zoom = model.zoom,
+      focusedLocation = model.focusedLocation.map(_.toMapLibre),
       markerDefs = context.domain.cotoMarkerDefs,
-      bounds = geomap.bounds.map(_.toMapLibre),
-      applyCenterZoom = geomap._applyCenterZoom,
-      addOrRemoveMarkers = geomap._addOrRemoveMarkers,
-      refreshMarkers = geomap._refreshMarkers,
-      fitBounds = geomap._fitBounds,
+      bounds = model.bounds.map(_.toMapLibre),
+      applyCenterZoom = model._applyCenterZoom,
+      addOrRemoveMarkers = model._addOrRemoveMarkers,
+      refreshMarkers = model._refreshMarkers,
+      fitBounds = model._fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.Init(bounds).toApp)

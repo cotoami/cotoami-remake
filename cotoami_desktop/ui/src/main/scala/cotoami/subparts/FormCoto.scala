@@ -14,7 +14,7 @@ import cotoami.Context
 import cotoami.utils.{Log, Validation}
 import cotoami.libs.exifr
 import cotoami.backend._
-import cotoami.models.{Geolocation, Geomap, WaitingPost, WaitingPosts}
+import cotoami.models.{Geolocation, WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -22,6 +22,7 @@ import cotoami.components.{
   ScrollArea,
   SplitPane
 }
+import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object FormCoto {
   final val StorageKeyPrefix = "FormCoto."

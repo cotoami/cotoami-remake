@@ -10,38 +10,6 @@ import fui.Cmd
 import cotoami.libs.geomap.maplibre.{LngLat, LngLatBounds}
 import cotoami.libs.exifr
 
-case class Geomap(
-    center: Geolocation = Geolocation.default,
-    zoom: Double = 8,
-    focusedLocation: Option[Geolocation] = None,
-    bounds: Option[GeoBounds] = None,
-    _applyCenterZoom: Int = 0,
-    _addOrRemoveMarkers: Int = 0,
-    _refreshMarkers: Int = 0,
-    _fitBounds: Int = 0
-) {
-  def moveTo(location: Geolocation): Geomap =
-    this.copy(
-      center = location,
-      zoom = 13,
-      _applyCenterZoom = this._applyCenterZoom + 1
-    )
-
-  def focus(location: Geolocation): Geomap =
-    this.moveTo(location).copy(
-      focusedLocation = Some(location)
-    )
-
-  def addOrRemoveMarkers: Geomap =
-    this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)
-
-  def refreshMarkers: Geomap =
-    this.copy(_refreshMarkers = this._refreshMarkers + 1)
-
-  def fitBounds(bounds: GeoBounds): Geomap =
-    this.copy(bounds = Some(bounds), _fitBounds = this._fitBounds + 1)
-}
-
 case class Geolocation(longitude: Double, latitude: Double) {
   def toLngLat: (Double, Double) = (this.longitude, this.latitude)
 
