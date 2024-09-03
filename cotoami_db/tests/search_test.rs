@@ -38,6 +38,7 @@ fn search_cotos() -> Result<()> {
 
     assert_search(&mut ds, "summary", vec![&coto2])?;
     assert_search(&mut ds, "small world", vec![&coto2])?; // AND
+    assert_search(&mut ds, "柿 法隆寺", vec![&coto3])?; // AND
 
     // when: edit a coto to change English results
     // (testing the trigger: `cotos_fts_update`)

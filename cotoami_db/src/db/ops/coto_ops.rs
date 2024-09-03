@@ -1,6 +1,6 @@
 //! Coto related operations
 
-use std::{collections::HashMap, ops::DerefMut};
+use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 
 use anyhow::{Context, Result};
 use chrono::NaiveDateTime;
@@ -244,6 +244,13 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
         } else {
             use crate::schema::cotos_fts::dsl::*;
             super::paginate(conn, page_size, page_index, move || {
+                // https://sqlite.org/fts5.html#full_text_query_syntax
+                let fts_query = query
+                    .split_ascii_whitespace()
+                    .map(to_fts_phrase)
+                    .collect::<Vec<_>>()
+                    .join(" AND ");
+
                 let mut query = cotos_fts
                     .select((
                         uuid,
@@ -264,7 +271,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         updated_at,
                         outgoing_links,
                     ))
-                    .filter(whole_row.eq(to_fts_query(query)))
+                    .filter(whole_row.eq(fts_query))
                     .into_boxed();
                 if let Some(id) = filter_by_node_id {
                     query = query.filter(node_id.eq(id));
@@ -286,26 +293,26 @@ fn search_trigram_index(
     page_size: i64,
     page_index: i64,
 ) -> Result<Paginated<Coto>> {
-    use crate::schema::{cotos_fts_trigram::dsl::*, cotos_fts_trigram_vocab::dsl::*};
+    use crate::schema::cotos_fts_trigram::dsl::*;
 
-    let query = if query.chars().count() < INDEX_TOKEN_LENGTH {
-        let tokens: Vec<String> = cotos_fts_trigram_vocab
-            .filter(term.like(format!("{query}%")))
-            .select(term)
-            .load::<String>(conn)?;
-        if tokens.is_empty() {
-            // No index entries found.
-            return Ok(Paginated::empty_first(page_size));
+    // Convert the space-separated query into a FTS query with `AND` and `OR` operators.
+    // https://sqlite.org/fts5.html#full_text_query_syntax
+
+    let mut subqueries: Vec<Cow<'_, str>> = Vec::new();
+    for token in query.split_ascii_whitespace() {
+        // Tokens that are shorter than trigram terms are turned into a term-search subquery.
+        if token.chars().count() < INDEX_TOKEN_LENGTH {
+            if let Some(subquery) = make_fts_query_from_short_cjk_token(conn, token)? {
+                subqueries.push(Cow::from(format!("({subquery})")))
+            } else {
+                // No index entries found for the token.
+                return Ok(Paginated::empty_first(page_size));
+            }
         } else {
-            tokens
-                .into_iter()
-                .map(|t| to_fts_phrase(&t))
-                .collect::<Vec<_>>()
-                .join(" OR ")
+            subqueries.push(Cow::from(token))
         }
-    } else {
-        to_fts_query(query)
-    };
+    }
+    let query = subqueries.join(" AND ");
 
     super::paginate(conn, page_size, page_index, || {
         let mut query = cotos_fts_trigram
@@ -341,14 +348,28 @@ fn search_trigram_index(
     .with_context(|| format!("Error processing FTS query: [{query}]"))
 }
 
-// https://sqlite.org/fts5.html#full_text_query_syntax
-fn to_fts_query(string: &str) -> String {
-    let tokens: Vec<&str> = string.split_ascii_whitespace().collect();
-    tokens
-        .into_iter()
-        .map(to_fts_phrase)
-        .collect::<Vec<_>>()
-        .join(" AND ")
+fn make_fts_query_from_short_cjk_token(
+    conn: &mut SqliteConnection,
+    short_token: &str,
+) -> Result<Option<String>> {
+    use crate::schema::cotos_fts_trigram_vocab::dsl::*;
+
+    let tokens: Vec<String> = cotos_fts_trigram_vocab
+        .filter(term.like(format!("{short_token}%")))
+        .select(term)
+        .load::<String>(conn)?;
+
+    if tokens.is_empty() {
+        // No index entries found.
+        Ok(None)
+    } else {
+        let query = tokens
+            .into_iter()
+            .map(|t| to_fts_phrase(&t))
+            .collect::<Vec<_>>()
+            .join(" OR ");
+        Ok(Some(query))
+    }
 }
 
 fn to_fts_phrase(string: &str) -> String {
