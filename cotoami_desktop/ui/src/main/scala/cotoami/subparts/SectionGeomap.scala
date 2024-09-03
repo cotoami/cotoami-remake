@@ -30,9 +30,10 @@ object SectionGeomap {
       )
 
     def focus(location: Geolocation): Model =
-      this.moveTo(location).copy(
-        focusedLocation = Some(location)
-      )
+      if (this.currentBounds.map(_.contains(location)).getOrElse(false))
+        this.copy(focusedLocation = Some(location))
+      else
+        this.moveTo(location).copy(focusedLocation = Some(location))
 
     def addOrRemoveMarkers: Model =
       this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)

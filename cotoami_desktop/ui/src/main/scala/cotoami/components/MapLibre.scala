@@ -41,7 +41,7 @@ import cotoami.libs.geomap.pmtiles
 
       // GeoBounds
       bounds: Option[LngLatBounds] = None,
-      paddingToBounds: Double = 20,
+      paddingToBounds: Double = 30,
 
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
