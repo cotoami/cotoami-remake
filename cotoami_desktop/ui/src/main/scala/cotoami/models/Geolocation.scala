@@ -11,6 +11,9 @@ import cotoami.libs.geomap.maplibre.{LngLat, LngLatBounds}
 import cotoami.libs.exifr
 
 case class Geolocation(longitude: Double, latitude: Double) {
+  val lng = longitude
+  val lat = latitude
+
   def toLngLat: (Double, Double) = (this.longitude, this.latitude)
 
   def toMapLibre: LngLat = new LngLat(this.longitude, this.latitude)
@@ -48,6 +51,21 @@ object Geolocation {
 }
 
 case class GeoBounds(southwest: Geolocation, northeast: Geolocation) {
+  val sw = southwest
+  val ne = northeast
+
+  def contains(location: Geolocation): Boolean = {
+    val containsLatitude =
+      this.sw.lat <= location.lat && location.lat <= this.ne.lat
+    val containsLongitude =
+      if (this.sw.lng <= this.ne.lng)
+        this.sw.lng <= location.lng && location.lng <= this.ne.lng
+      else // wrapped coordinates
+        this.sw.lng >= location.lng && location.lng >= this.ne.lng
+
+    containsLatitude && containsLongitude
+  }
+
   def toMapLibre: LngLatBounds =
     new LngLatBounds(southwest.toMapLibre, northeast.toMapLibre)
 }
