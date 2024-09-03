@@ -32,7 +32,7 @@ case class GeolocatedCotos(json: GeolocatedCotosJson) {
 
   def debug: String = {
     val s = new StringBuilder
-    s ++= s"coto count: {${this.cotos.size}}"
+    s ++= s"coto count: ${this.cotos.size}"
     s ++= s", relatedData: {${this.relatedData.debug}}"
     s.result()
   }

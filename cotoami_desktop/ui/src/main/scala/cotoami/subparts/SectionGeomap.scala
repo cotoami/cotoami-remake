@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
-import cotoami.{Context, Msg => AppMsg}
+import cotoami.{log_info, Context, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.MapLibre
 import cotoami.repositories.Domain
@@ -16,6 +16,9 @@ object SectionGeomap {
   }
 
   object Msg {
+    def toApp[T](tagger: T => Msg): (T => AppMsg) =
+      tagger andThen AppMsg.SectionGeomapMsg
+
     case class Init(bounds: GeoBounds) extends Msg
     case class LocationClicked(location: Geolocation) extends Msg
     case class ZoomChanged(zoom: Double) extends Msg
@@ -50,14 +53,17 @@ object SectionGeomap {
       case Msg.GeolocatedCotosFetched(Right(cotos)) => {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
         default.copy(
-          _1 = cotos.geoBounds match {
+          _1 = (cotos.geoBounds match {
             case Some(Right(bounds)) =>
               center.map(geomap.moveTo(_)).getOrElse(geomap.fitBounds(bounds))
             case Some(Left(location)) =>
               geomap.moveTo(center.getOrElse(location))
             case None => center.map(geomap.moveTo(_)).getOrElse(geomap)
-          },
-          _2 = context.domain.importFrom(cotos)
+          }).addOrRemoveMarkers,
+          _2 = context.domain.importFrom(cotos),
+          _3 = Seq(
+            log_info(s"Geolocated cotos fetched.", Some(cotos.debug))
+          )
         )
       }
 

@@ -47,6 +47,7 @@ object Msg {
   case object UnfocusCotonoma extends Msg
   case class FocusCoto(id: Id[Coto]) extends Msg
   case object UnfocusCoto extends Msg
+  case class InitCurrentCotonoma(cotonoma: (Cotonoma, Coto)) extends Msg
 
   // Domain
   case object ReloadDomain extends Msg
