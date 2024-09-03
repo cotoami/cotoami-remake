@@ -34,7 +34,7 @@ object SectionGeomap {
   ): (Geomap, Domain, Seq[Cmd[AppMsg]]) = {
     val default = (geomap, context.domain, Seq.empty)
     msg match {
-      case Msg.Init(bounds) => default
+      case Msg.Init(bounds) => default.copy(_1 = geomap.addOrRemoveMarkers)
 
       case Msg.LocationClicked(location) =>
         default.copy(_1 = geomap.copy(focusedLocation = Some(location)))
