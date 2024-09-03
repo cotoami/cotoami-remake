@@ -14,9 +14,11 @@ case class Geomap(
     center: Geolocation = Geolocation.default,
     zoom: Double = 8,
     focusedLocation: Option[Geolocation] = None,
+    bounds: Option[GeoBounds] = None,
     _applyCenterZoom: Int = 0,
     _addOrRemoveMarkers: Int = 0,
-    _refreshMarkers: Int = 0
+    _refreshMarkers: Int = 0,
+    _fitBounds: Int = 0
 ) {
   def moveTo(location: Geolocation): Geomap =
     this.copy(
@@ -35,6 +37,9 @@ case class Geomap(
 
   def refreshMarkers: Geomap =
     this.copy(_refreshMarkers = this._refreshMarkers + 1)
+
+  def fitBounds(bounds: GeoBounds): Geomap =
+    this.copy(bounds = Some(bounds), _fitBounds = this._fitBounds + 1)
 }
 
 case class Geolocation(longitude: Double, latitude: Double) {
@@ -74,7 +79,10 @@ object Geolocation {
     })
 }
 
-case class GeoBounds(southwest: Geolocation, northeast: Geolocation)
+case class GeoBounds(southwest: Geolocation, northeast: Geolocation) {
+  def toMapLibre: LngLatBounds =
+    new LngLatBounds(southwest.toMapLibre, northeast.toMapLibre)
+}
 
 object GeoBounds {
   def fromLngLat(sw: (Double, Double), ne: (Double, Double)): GeoBounds =

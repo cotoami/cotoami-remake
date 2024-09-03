@@ -51,8 +51,10 @@ object SectionGeomap {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
         default.copy(
           _1 = cotos.geoBounds match {
-            case Some(Right(bounds))  => geomap
-            case Some(Left(location)) => geomap
+            case Some(Right(bounds)) =>
+              center.map(geomap.moveTo(_)).getOrElse(geomap.fitBounds(bounds))
+            case Some(Left(location)) =>
+              geomap.moveTo(center.getOrElse(location))
             case None => center.map(geomap.moveTo(_)).getOrElse(geomap)
           },
           _2 = context.domain.importFrom(cotos)
@@ -75,9 +77,11 @@ object SectionGeomap {
       zoom = geomap.zoom,
       focusedLocation = geomap.focusedLocation.map(_.toMapLibre),
       markerDefs = context.domain.cotoMarkerDefs,
+      bounds = geomap.bounds.map(_.toMapLibre),
       applyCenterZoom = geomap._applyCenterZoom,
       addOrRemoveMarkers = geomap._addOrRemoveMarkers,
       refreshMarkers = geomap._refreshMarkers,
+      fitBounds = geomap._fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.Init(bounds).toApp)
