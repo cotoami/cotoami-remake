@@ -39,11 +39,15 @@ import cotoami.libs.geomap.pmtiles
       focusedLocation: Option[(Double, Double)] = None, // LngLat
       markerDefs: Seq[MarkerDef] = Seq.empty,
 
+      // GeoBounds
+      bounds: Option[LngLatBounds] = None,
+
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
       applyCenterZoom: Int = 0,
       addOrRemoveMarkers: Int = 0,
       refreshMarkers: Int = 0,
+      fitBounds: Int = 0,
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -233,6 +237,14 @@ import cotoami.libs.geomap.pmtiles
         )
       },
       Seq(props.applyCenterZoom)
+    )
+
+    // fitBounds
+    useEffect(
+      () => {
+        props.bounds.map(bounds => mapRef.current.foreach(_.fitBounds(bounds)))
+      },
+      Seq(props.fitBounds)
     )
 
     // Add or remove markers according to the IDs of props.markerDefs.
