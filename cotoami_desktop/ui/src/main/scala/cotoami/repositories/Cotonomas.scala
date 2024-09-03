@@ -71,10 +71,10 @@ case class Cotonomas(
     else
       this
 
-  def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[AppMsg]]) =
+  def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Cmd[AppMsg]) =
     (
       this.unfocus.copy(focusedId = Some(id)),
-      Seq(Domain.fetchCotonomaDetails(id))
+      Domain.fetchCotonomaDetails(id)
     )
 
   def unfocus: Cotonomas =

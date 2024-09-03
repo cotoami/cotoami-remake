@@ -1,5 +1,7 @@
 package cotoami.subparts
 
+import scala.util.chaining._
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 import com.softwaremill.quicklens._
@@ -28,6 +30,7 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
+      fetchNumber: Int = 0,
       query: String = "",
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
@@ -37,7 +40,7 @@ object SectionTimeline {
       this.copy(
         cotoIds = PaginatedIds(),
         query = "",
-        loading = true,
+        loading = false,
         imeActive = false
       )
 
@@ -47,9 +50,10 @@ object SectionTimeline {
     def getScrollPos(key: Id[Cotonoma]): Option[Double] =
       this.scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
 
-    def appendPage(cotos: PaginatedCotos): Model =
+    def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
+        .modify(_.fetchNumber).setTo(fetchNumber)
         .modify(_.loading).setTo(false)
 
     def timeline()(implicit context: Context): Seq[Coto] = {
@@ -67,6 +71,34 @@ object SectionTimeline {
           else
             cotoIds
         )
+
+    def fetchFirst()(implicit context: Context): (Model, Cmd[AppMsg]) =
+      (
+        this.copy(loading = true),
+        fetch(None, 0, this.fetchNumber + 1)
+      )
+
+    def fetchMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
+      if (this.loading)
+        (this, Cmd.none)
+      else
+        this.cotoIds.nextPageIndex.map(i =>
+          (
+            this.copy(loading = true),
+            fetch(Some(this.query), i, this.fetchNumber + 1)
+          )
+        ).getOrElse((this, Cmd.none)) // no more
+
+    def inputQuery(
+        query: String
+    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+      if (this.imeActive)
+        (this.copy(query = query), Cmd.none)
+      else
+        (
+          this.copy(query = query, loading = true),
+          fetch(Some(query), 0, this.fetchNumber + 1)
+        )
   }
 
   sealed trait Msg {
@@ -78,7 +110,8 @@ object SectionTimeline {
       tagger andThen AppMsg.SectionTimelineMsg
 
     case object FetchMore extends Msg
-    case class Fetched(result: Either[ErrorJson, PaginatedCotos]) extends Msg
+    case class Fetched(number: Int, result: Either[ErrorJson, PaginatedCotos])
+        extends Msg
     case object ClearQuery extends Msg
     case class QueryInput(query: String) extends Msg
     case object ImeCompositionStart extends Msg
@@ -93,46 +126,44 @@ object SectionTimeline {
     val default = (model, context.domain, Seq.empty)
     msg match {
       case Msg.FetchMore =>
-        if (model.loading)
-          default
-        else
-          model.cotoIds.nextPageIndex.map(i =>
-            default.copy(
-              _1 = model.copy(loading = true),
-              _3 = Seq(fetch(Some(model.query), i))
+        model.fetchMore().pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = Seq(cmd))
+        }
+
+      case Msg.Fetched(number, Right(cotos)) =>
+        if (number > model.fetchNumber)
+          default.copy(
+            _1 = model.appendPage(cotos, number),
+            _2 = context.domain.importFrom(cotos),
+            _3 = Seq(
+              log_info(s"Timeline fetched: ${number}", Some(cotos.debug))
             )
-          ).getOrElse(default)
-
-      case Msg.Fetched(Right(cotos)) =>
-        default.copy(
-          _1 = model.appendPage(cotos),
-          _2 = context.domain.importFrom(cotos),
-          _3 = Seq(
-            log_info("Timeline fetched.", Some(cotos.debug))
           )
-        )
+        else
+          default.copy(
+            _3 = Seq(
+              log_info(
+                s"Fetch ${number} discarded (current: ${model.fetchNumber})",
+                None
+              )
+            )
+          )
 
-      case Msg.Fetched(Left(e)) =>
+      case Msg.Fetched(_, Left(e)) =>
         default.copy(
           _1 = model.copy(loading = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
         )
 
       case Msg.ClearQuery =>
-        default.copy(
-          _1 = model.copy(query = ""),
-          _3 = Seq(fetch(None, 0))
-        )
+        model.inputQuery("").pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = Seq(cmd))
+        }
 
       case Msg.QueryInput(query) =>
-        default.copy(
-          _1 = model.copy(query = query),
-          _3 =
-            if (model.imeActive)
-              Seq.empty
-            else
-              Seq(fetch(Some(query), 0))
-        )
+        model.inputQuery(query).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = Seq(cmd))
+        }
 
       case Msg.ImeCompositionStart =>
         default.copy(_1 = model.copy(imeActive = true))
@@ -140,7 +171,7 @@ object SectionTimeline {
       case Msg.ImeCompositionEnd =>
         default.copy(
           _1 = model.copy(imeActive = false),
-          _3 = Seq(fetch(Some(model.query), 0))
+          _3 = Seq(fetch(Some(model.query), 0, model.fetchNumber + 1))
         )
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
@@ -148,22 +179,25 @@ object SectionTimeline {
     }
   }
 
-  def fetch(
+  private def fetch(
       query: Option[String],
-      pageIndex: Double
+      pageIndex: Double,
+      fetchNumber: Int
   )(implicit context: Context): Cmd[AppMsg] =
     fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId,
       query,
-      pageIndex
+      pageIndex,
+      fetchNumber
     )
 
-  def fetch(
+  private def fetch(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       query: Option[String],
-      pageIndex: Double
+      pageIndex: Double,
+      fetchNumber: Int
   ): Cmd[AppMsg] =
     query.map(query =>
       if (query.isBlank())
@@ -172,7 +206,7 @@ object SectionTimeline {
         PaginatedCotos.search(query, nodeId, cotonomaId, pageIndex)
     ).getOrElse(
       PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
-    ).map(Msg.toApp(Msg.Fetched))
+    ).map(Msg.toApp(Msg.Fetched(fetchNumber, _)))
 
   def apply(
       model: Model,
