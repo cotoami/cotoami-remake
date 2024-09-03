@@ -15,6 +15,7 @@ object SectionGeomap {
       center: Geolocation = Geolocation.default,
       zoom: Double = 8,
       focusedLocation: Option[Geolocation] = None,
+      currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
       _applyCenterZoom: Int = 0,
       _addOrRemoveMarkers: Int = 0,
@@ -66,7 +67,10 @@ object SectionGeomap {
   ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
     val default = (model, context.domain, Seq.empty)
     msg match {
-      case Msg.Init(bounds) => default.copy(_1 = model.addOrRemoveMarkers)
+      case Msg.Init(bounds) =>
+        default.copy(_1 =
+          model.copy(currentBounds = Some(bounds)).addOrRemoveMarkers
+        )
 
       case Msg.LocationClicked(location) =>
         default.copy(_1 = model.copy(focusedLocation = Some(location)))
@@ -77,10 +81,8 @@ object SectionGeomap {
       case Msg.CenterMoved(center) =>
         default.copy(_1 = model.copy(center = center))
 
-      case Msg.BoundsChanged(bounds) => {
-        println(s"bounds changed: ${bounds}")
-        default
-      }
+      case Msg.BoundsChanged(bounds) =>
+        default.copy(_1 = model.copy(currentBounds = Some(bounds)))
 
       case Msg.GeolocatedCotosFetched(Right(cotos)) => {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
