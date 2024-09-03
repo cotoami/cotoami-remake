@@ -131,7 +131,10 @@ object ViewCoto {
         section(className := "summary")(
           button(
             className := "content-toggle default",
-            onClick := (_ => setOpened(!opened))
+            onClick := (e => {
+              e.stopPropagation()
+              setOpened(!opened)
+            })
           )(
             if (opened)
               materialSymbol("keyboard_double_arrow_up")
@@ -140,7 +143,10 @@ object ViewCoto {
           ),
           span(
             className := "summary",
-            onClick := (_ => setOpened(!opened))
+            onClick := (e => {
+              e.stopPropagation()
+              setOpened(!opened)
+            })
           )(props.summary)
         ),
         div(
