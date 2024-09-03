@@ -39,6 +39,8 @@ case class Geomap(
 
 case class Geolocation(longitude: Double, latitude: Double) {
   def toLngLat: (Double, Double) = (this.longitude, this.latitude)
+
+  def toMapLibre: LngLat = new LngLat(this.longitude, this.latitude)
 }
 
 object Geolocation {

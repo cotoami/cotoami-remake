@@ -32,11 +32,11 @@ import cotoami.libs.geomap.pmtiles
       disableRotation: Boolean = true,
 
       // Center/Zoom
-      center: (Double, Double), // LngLat
+      center: LngLat,
       zoom: Double,
 
       // Markers
-      focusedLocation: Option[(Double, Double)] = None, // LngLat
+      focusedLocation: Option[LngLat] = None,
       markerDefs: Seq[MarkerDef] = Seq.empty,
 
       // GeoBounds
@@ -168,7 +168,7 @@ import cotoami.libs.geomap.pmtiles
               val map = new ExtendedMap(new MapOptions {
                 override val container = props.id
                 override val zoom = props.zoom
-                override val center = js.Tuple2.fromScalaTuple2(props.center)
+                override val center = props.center
                 override val style = toAbsoluteUrl(props.styleLocation)
                 override val transformRequest = _transformRequest
               })
@@ -230,7 +230,7 @@ import cotoami.libs.geomap.pmtiles
       () => {
         mapRef.current.foreach(
           _.flyTo(new FlyToOptions {
-            override val center = js.Tuple2.fromScalaTuple2(props.center)
+            override val center = props.center
             override val zoom = props.zoom
             override val duration = 2000
           })
@@ -283,10 +283,10 @@ import cotoami.libs.geomap.pmtiles
       this.touchZoomRotate.disableRotation()
     }
 
-    def focusLocation(lngLat: (Double, Double)): Unit = {
+    def focusLocation(lngLat: LngLat): Unit = {
       unfocusLocation()
       val marker = new Marker()
-        .setLngLat(js.Tuple2.fromScalaTuple2(lngLat))
+        .setLngLat(lngLat)
         .addTo(this)
       this.focusedMarker = Some(marker)
     }

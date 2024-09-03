@@ -71,9 +71,9 @@ object SectionGeomap {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
-      center = geomap.center.toLngLat,
+      center = geomap.center.toMapLibre,
       zoom = geomap.zoom,
-      focusedLocation = geomap.focusedLocation.map(_.toLngLat),
+      focusedLocation = geomap.focusedLocation.map(_.toMapLibre),
       markerDefs = context.domain.cotoMarkerDefs,
       applyCenterZoom = geomap._applyCenterZoom,
       addOrRemoveMarkers = geomap._addOrRemoveMarkers,
