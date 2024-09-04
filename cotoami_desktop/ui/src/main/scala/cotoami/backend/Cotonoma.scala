@@ -34,8 +34,9 @@ object Cotonoma {
     ).flatten
   }
 
-  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, Cotonoma]] =
-    CotonomaJson.fetch(id).map(_.map(Cotonoma(_)))
+  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
+    CotonomaJson.fetch(id)
+      .map(_.map(pair => (Cotonoma(pair._1), Coto(pair._2))))
 
   def fetchByName(
       name: String,
@@ -78,7 +79,9 @@ trait CotonomaJson extends js.Object {
 }
 
 object CotonomaJson {
-  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, CotonomaJson]] =
+  def fetch(
+      id: Id[Cotonoma]
+  ): Cmd[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.Cotonoma(id))
 
   def fetchByName(

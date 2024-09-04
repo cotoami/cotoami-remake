@@ -233,9 +233,9 @@ case class Model(
   private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
     val coto = Coto(cotoJson, true)
     val cotos = this.domain.cotos.put(coto)
-    val (cotonomas, cmds) =
+    val (cotonomas, fetchCotonoma) =
       coto.postedInId.map(this.domain.cotonomas.updated(_))
-        .getOrElse(this.domain.cotonomas, Seq.empty)
+        .getOrElse((this.domain.cotonomas, Cmd.none))
     val timeline =
       if (
         this.domain.inCurrentRoot ||
@@ -255,7 +255,7 @@ case class Model(
         .modify(_.domain.cotonomas).setTo(cotonomas)
         .modify(_.timeline).setTo(timeline)
         .modify(_.geomap).setTo(geomap),
-      cmds
+      Seq(fetchCotonoma)
     )
   }
 

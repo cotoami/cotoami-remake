@@ -81,6 +81,11 @@ case class Domain(
       }
     )
 
+  def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
+    this
+      .modify(_.cotonomas).using(_.put(cotonomaPair._1))
+      .modify(_.cotos).using(_.put(cotonomaPair._2))
+
   def importFrom(cotos: PaginatedCotos): Domain =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
@@ -92,7 +97,7 @@ case class Domain(
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
 
-  def importCotoGraph(graph: CotoGraph): Domain =
+  def importFrom(graph: CotoGraph): Domain =
     this
       .modify(_.graphLoading).using(_ - graph.rootCotoId)
       .modify(_.cotos).using(_.importFrom(graph))
@@ -190,6 +195,9 @@ object Domain {
 
     case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
 
+    case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
+        extends Msg
+
     case class CotonomaDetailsFetched(
         result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
@@ -211,6 +219,15 @@ object Domain {
           )
         (model.copy(cotonomas = cotonomas), cmds)
       }
+
+      case Msg.CotonomaFetched(Right(cotonomaPair)) =>
+        (
+          model.importFrom(cotonomaPair),
+          Seq(log_info("Cotonoma fetched.", Some(cotonomaPair._1.name)))
+        )
+
+      case Msg.CotonomaFetched(Left(e)) =>
+        (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
 
       case Msg.CotonomaDetailsFetched(Right(details)) =>
         (
@@ -234,7 +251,7 @@ object Domain {
 
       case Msg.CotoGraphFetched(Right(graph)) =>
         (
-          model.importCotoGraph(graph),
+          model.importFrom(graph),
           Seq(log_info("Coto graph fetched.", Some(graph.debug)))
         )
 

@@ -18,12 +18,8 @@ const DEFAULT_SUB_PAGE_SIZE: i64 = 10;
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
 
 impl NodeState {
-    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<Cotonoma, ServiceError> {
-        self.get(move |ds| {
-            let (cotonoma, _) = ds.try_get_cotonoma(&id)?;
-            Ok(cotonoma)
-        })
-        .await
+    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<(Cotonoma, Coto), ServiceError> {
+        self.get(move |ds| ds.try_get_cotonoma(&id)).await
     }
 
     pub async fn cotonoma_details(

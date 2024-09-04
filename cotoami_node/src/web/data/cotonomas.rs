@@ -51,7 +51,7 @@ async fn get_cotonoma(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
-) -> Result<Content<Cotonoma>, ServiceError> {
+) -> Result<Content<(Cotonoma, Coto)>, ServiceError> {
     state
         .cotonoma(cotonoma_id)
         .await

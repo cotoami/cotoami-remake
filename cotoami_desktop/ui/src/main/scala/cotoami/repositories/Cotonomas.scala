@@ -5,7 +5,7 @@ import scala.scalajs.js
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{log_info, Msg => AppMsg}
+import cotoami.{Msg => AppMsg}
 import cotoami.backend._
 
 case class Cotonomas(
@@ -115,16 +115,14 @@ case class Cotonomas(
         }
       )
 
-  def updated(id: Id[Cotonoma]): (Cotonomas, Seq[Cmd[AppMsg]]) =
+  def updated(id: Id[Cotonoma]): (Cotonomas, Cmd[AppMsg]) =
     (
       this.modify(_.recentIds).using(_.prependId(id)),
       if (!this.contains(id))
-        Seq(
-          Cotonoma.fetch(id)
-            .map(Cotonomas.Msg.toApp(Cotonomas.Msg.OneFetched))
-        )
+        Cotonoma.fetch(id)
+          .map(Domain.Msg.toApp(Domain.Msg.CotonomaFetched))
       else
-        Seq.empty
+        Cmd.none
     )
 }
 
@@ -141,7 +139,6 @@ object Cotonomas {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen Domain.Msg.CotonomasMsg andThen AppMsg.DomainMsg
 
-    case class OneFetched(result: Either[ErrorJson, Cotonoma]) extends Msg
     case object FetchMoreRecent extends Msg
     case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
         extends Msg
@@ -156,15 +153,6 @@ object Cotonomas {
       nodeId: Option[Id[Node]]
   ): (Cotonomas, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.OneFetched(Right(cotonoma)) =>
-        (
-          model.put(cotonoma),
-          Seq(log_info("Cotonoma fetched.", Some(cotonoma.name)))
-        )
-
-      case Msg.OneFetched(Left(e)) =>
-        (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
-
       case Msg.FetchMoreRecent =>
         if (model.recentLoading) {
           (model, Seq.empty)

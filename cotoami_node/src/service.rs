@@ -177,7 +177,7 @@ pub enum Command {
         pagination: Pagination,
     },
 
-    /// Request a [Cotonoma] of the given ID.
+    /// Request a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)` of the given cotonoma ID.
     Cotonoma { id: Id<Cotonoma> },
 
     /// Request a [CotonomaDetails] of the given ID.
@@ -232,7 +232,7 @@ pub enum Command {
     },
 
     /// Request to create a new [Cotonoma] in the given cotonoma (`post_to`).
-    /// The return type is `(Cotonoma, Coto)`.
+    /// The return type is a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)`.
     PostCotonoma {
         input: CotonomaInput<'static>,
         post_to: Id<Cotonoma>,
