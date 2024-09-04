@@ -94,9 +94,7 @@ case class Model(
           model.domain.fetchCurrentRootCotonoma,
           Cotonomas.fetchRecent(nodeId, 0),
           fetchTimeline,
-          model.domain.currentCotonomaId
-            .map(Domain.fetchGraphFromCotonoma)
-            .getOrElse(Cmd.none)
+          model.domain.fetchGraph
         )
       )
     }
@@ -129,7 +127,7 @@ case class Model(
           else
             Cmd.none,
           fetchTimeline,
-          Domain.fetchGraphFromCotonoma(cotonomaId)
+          model.domain.fetchGraph
         )
       )
     }

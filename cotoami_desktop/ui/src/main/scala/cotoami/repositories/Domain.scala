@@ -156,6 +156,11 @@ case class Domain(
         .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
     ).getOrElse(Cmd.none)
 
+  def fetchGraph: Cmd[AppMsg] =
+    this.currentCotonomaId
+      .map(Domain.fetchGraphFromCotonoma)
+      .getOrElse(Cmd.none)
+
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
   def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[AppMsg] =
