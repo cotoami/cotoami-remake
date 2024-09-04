@@ -57,6 +57,15 @@ object SectionGeomap {
           Msg.toApp(Msg.GeolocatedCotosFetched(_))
         )
       )
+
+    def fetchCotosInBounds: (Model, Cmd[AppMsg]) =
+      this.currentBounds.map(bounds =>
+        (
+          this.copy(fetchingGeolocatedCotos = true),
+          GeolocatedCotos.inGeoBounds(bounds)
+            .map(Msg.toApp(Msg.CotosInBoundsFetched(_)))
+        )
+      ).getOrElse((this, Cmd.none))
   }
 
   sealed trait Msg {
@@ -73,6 +82,9 @@ object SectionGeomap {
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
     case class GeolocatedCotosFetched(
+        result: Either[ErrorJson, GeolocatedCotos]
+    ) extends Msg
+    case class CotosInBoundsFetched(
         result: Either[ErrorJson, GeolocatedCotos]
     ) extends Msg
   }
@@ -111,9 +123,7 @@ object SectionGeomap {
         default.copy(
           _1 = geomap.addOrRemoveMarkers.copy(fetchingGeolocatedCotos = false),
           _2 = context.domain.importFrom(cotos),
-          _3 = Seq(
-            log_info(s"Geolocated cotos fetched.", Some(cotos.debug))
-          )
+          _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
         )
       }
 
@@ -121,6 +131,19 @@ object SectionGeomap {
         default.copy(
           _1 = model.copy(fetchingGeolocatedCotos = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch geolocated cotos."))
+        )
+
+      case Msg.CotosInBoundsFetched(Right(cotos)) =>
+        default.copy(
+          _1 = model.addOrRemoveMarkers.copy(fetchingGeolocatedCotos = false),
+          _2 = context.domain.importFrom(cotos),
+          _3 = Seq(log_info(s"Cotos in the bounds fetched.", Some(cotos.debug)))
+        )
+
+      case Msg.CotosInBoundsFetched(Left(e)) =>
+        default.copy(
+          _1 = model.copy(fetchingGeolocatedCotos = false),
+          _3 = Seq(ErrorJson.log(e, "Couldn't fetch cotos in the bounds."))
         )
     }
   }
