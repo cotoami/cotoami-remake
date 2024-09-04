@@ -17,6 +17,7 @@ object SectionGeomap {
       focusedLocation: Option[Geolocation] = None,
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
+      fetchingGeolocatedCotos: Boolean = false,
       _applyCenterZoom: Int = 0,
       _addOrRemoveMarkers: Int = 0,
       _refreshMarkers: Int = 0,
@@ -43,6 +44,19 @@ object SectionGeomap {
 
     def fitBounds(bounds: GeoBounds): Model =
       this.copy(bounds = Some(bounds), _fitBounds = this._fitBounds + 1)
+
+    def fetchGeolocatedCotos()(implicit
+        context: Context
+    ): (Model, Cmd[AppMsg]) =
+      (
+        this.copy(fetchingGeolocatedCotos = true),
+        GeolocatedCotos.fetch(
+          context.domain.nodes.focusedId,
+          context.domain.cotonomas.focusedId
+        ).map(
+          Msg.toApp(Msg.GeolocatedCotosFetched(_))
+        )
+      )
   }
 
   sealed trait Msg {
@@ -87,14 +101,15 @@ object SectionGeomap {
 
       case Msg.GeolocatedCotosFetched(Right(cotos)) => {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
+        val geomap = cotos.geoBounds match {
+          case Some(Right(bounds)) =>
+            center.map(model.moveTo(_)).getOrElse(model.fitBounds(bounds))
+          case Some(Left(location)) =>
+            model.moveTo(center.getOrElse(location))
+          case None => center.map(model.moveTo(_)).getOrElse(model)
+        }
         default.copy(
-          _1 = (cotos.geoBounds match {
-            case Some(Right(bounds)) =>
-              center.map(model.moveTo(_)).getOrElse(model.fitBounds(bounds))
-            case Some(Left(location)) =>
-              model.moveTo(center.getOrElse(location))
-            case None => center.map(model.moveTo(_)).getOrElse(model)
-          }).addOrRemoveMarkers,
+          _1 = geomap.addOrRemoveMarkers.copy(fetchingGeolocatedCotos = false),
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(
             log_info(s"Geolocated cotos fetched.", Some(cotos.debug))
@@ -104,6 +119,7 @@ object SectionGeomap {
 
       case Msg.GeolocatedCotosFetched(Left(e)) =>
         default.copy(
+          _1 = model.copy(fetchingGeolocatedCotos = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch geolocated cotos."))
         )
     }
