@@ -150,6 +150,12 @@ case class Domain(
       this.links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
+  def fetchCurrentRootCotonoma: Cmd[AppMsg] =
+    this.currentRootCotonomaId.map(
+      Cotonoma.fetch(_)
+        .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
+    ).getOrElse(Cmd.none)
+
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
   def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[AppMsg] =
@@ -198,6 +204,10 @@ object Domain {
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
 
+    case class CurrentRootCotonomaFetched(
+        result: Either[ErrorJson, (Cotonoma, Coto)]
+    ) extends Msg
+
     case class CotonomaDetailsFetched(
         result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
@@ -228,6 +238,18 @@ object Domain {
 
       case Msg.CotonomaFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
+
+      case Msg.CurrentRootCotonomaFetched(Right(cotonomaPair)) =>
+        (
+          model.importFrom(cotonomaPair),
+          Seq(
+            Browser.send(AppMsg.InitCurrentCotonoma(cotonomaPair)),
+            log_info("The root cotonoma fetched.", Some(cotonomaPair._1.name))
+          )
+        )
+
+      case Msg.CurrentRootCotonomaFetched(Left(e)) =>
+        (model, Seq(ErrorJson.log(e, "Couldn't fetch the root cotonoma.")))
 
       case Msg.CotonomaDetailsFetched(Right(details)) =>
         (

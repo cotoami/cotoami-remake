@@ -91,6 +91,7 @@ case class Model(
       (
         model.copy(timeline = timeline),
         Seq(
+          model.domain.fetchCurrentRootCotonoma,
           Cotonomas.fetchRecent(nodeId, 0),
           fetchTimeline,
           model.domain.currentCotonomaId
