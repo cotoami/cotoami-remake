@@ -156,6 +156,9 @@ case class Domain(
         .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
     ).getOrElse(Cmd.none)
 
+  def fetchRecentCotonomas(pageIndex: Double): Cmd[AppMsg] =
+    Cotonomas.fetchRecent(this.nodes.focusedId, 0)
+
   def fetchGraph: Cmd[AppMsg] =
     this.currentCotonomaId
       .map(Domain.fetchGraphFromCotonoma)

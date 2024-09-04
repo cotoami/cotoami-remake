@@ -92,7 +92,7 @@ case class Model(
         model.copy(timeline = timeline),
         Seq(
           model.domain.fetchCurrentRootCotonoma,
-          Cotonomas.fetchRecent(nodeId, 0),
+          model.domain.fetchRecentCotonomas(0),
           fetchTimeline,
           model.domain.fetchGraph
         )
@@ -123,7 +123,7 @@ case class Model(
         Seq(
           fetchFocusedCotonoma,
           if (shouldFetchCotonomas)
-            Cotonomas.fetchRecent(nodeId, 0)
+            model.domain.fetchRecentCotonomas(0)
           else
             Cmd.none,
           fetchTimeline,
