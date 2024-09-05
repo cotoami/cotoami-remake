@@ -12,9 +12,9 @@ case class Cotonomas(
 
     // Id references
     focusedId: Option[Id[Cotonoma]] = None,
-    recentIds: PaginatedIds[Cotonoma] = PaginatedIds(),
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
-    subIds: PaginatedIds[Cotonoma] = PaginatedIds()
+    subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
+    recentIds: PaginatedIds[Cotonoma] = PaginatedIds()
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
@@ -79,21 +79,21 @@ case class Cotonomas(
 
   def focused: Option[Cotonoma] = this.focusedId.flatMap(this.get)
 
-  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
+  lazy val supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
 
-  def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
-    this
-      .putAll(page.rows)
-      .modify(_.recentIds).using(_.appendPage(page))
+  lazy val subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
-  def supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
-
-  def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
+  lazy val recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .putAll(page.rows)
       .modify(_.subIds).using(_.appendPage(page))
+
+  def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
+    this
+      .putAll(page.rows)
+      .modify(_.recentIds).using(_.appendPage(page))
 
   def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
     this
