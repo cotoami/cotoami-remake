@@ -156,24 +156,33 @@ div.app {
   div.geomap-marker {
     width: 30px;
     height: 30px;
-
     background-color: white;
-    border-radius: 4px;
     padding: 2px;
 
     &:hover {
       cursor: pointer;
     }
 
-    &.cotonoma-marker {
-      background-color: red;
-    }
-
     img {
-      border-radius: 4px;
       width: 100%;
       height: 100%;
       opacity: 0.5;
+    }
+
+    &.coto-marker {
+      border-radius: 15px;
+
+      img {
+        border-radius: 15px;
+      }
+    }
+
+    &.cotonoma-marker {
+      border-radius: 4px;
+
+      img {
+        border-radius: 4px;
+      }
     }
 
     &.in-context img {
