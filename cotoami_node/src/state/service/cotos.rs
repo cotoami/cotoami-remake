@@ -15,7 +15,7 @@ use crate::{
 };
 
 const DEFAULT_PAGE_SIZE: i64 = 20;
-const GEOLOCATED_COTOS_MAX_SIZE: i64 = 100;
+const GEOLOCATED_COTOS_MAX_SIZE: i64 = 30;
 
 impl NodeState {
     pub async fn recent_cotos(
