@@ -249,6 +249,7 @@ import cotoami.libs.geomap.pmtiles
               bounds,
               new FitBoundsOptions() {
                 override val padding = props.paddingToBounds
+                override val maxZoom = 18
               }
             )
           )
