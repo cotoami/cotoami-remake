@@ -35,10 +35,20 @@ object NavCotonomas {
       loading: Boolean = false,
       togglingSync: Boolean = false
   ) {
+    def cotonomas()(implicit context: Context): Seq[Cotonoma] = {
+      val cotonomas = this.cotonomaIds.order
+        .map(context.domain.cotonomas.get).flatten
+      val rootId = context.domain.currentRootCotonomaId
+      cotonomas.filter(c => Some(c.id) != rootId)
+    }
+
     def appendPage(page: Paginated[Cotonoma, _]): Model =
       this
         .modify(_.cotonomaIds).using(_.appendPage(page))
         .modify(_.loading).setTo(false)
+
+    def fetchFirst()(implicit context: Context): (Model, Cmd[AppMsg]) =
+      (this.copy(loading = true), fetch(0))
 
     def fetchMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
       if (this.loading) {
@@ -48,7 +58,7 @@ object NavCotonomas {
           case Some(nextIndex) =>
             (
               this.copy(loading = true),
-              context.domain.fetchRecentCotonomas(nextIndex)
+              fetch(nextIndex)
             )
           case None => (this, Cmd.none)
         }
@@ -122,15 +132,19 @@ object NavCotonomas {
     }
   }
 
+  def fetch(pageIndex: Double)(implicit context: Context): Cmd[AppMsg] =
+    Cotonoma.fetchRecent(context.domain.nodes.focusedId, pageIndex)
+      .map(Msg.toApp(Msg.Fetched))
+
   def apply(
       model: Model,
       currentNode: Node
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
-    val cotonomas = domain.cotonomas
+    val cotonomas = model.cotonomas()
     nav(className := "cotonomas header-and-body")(
       header()(
-        if (cotonomas.focused.isEmpty) {
+        if (domain.cotonomas.focused.isEmpty) {
           div(className := "cotonoma home focused")(
             materialSymbol("home"),
             currentNode.name
@@ -152,16 +166,15 @@ object NavCotonomas {
       ),
       section(className := "cotonomas body")(
         ScrollArea(
-          onScrollToBottom =
-            Some(() => dispatch(Cotonomas.Msg.FetchMoreRecent.toApp))
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp))
         )(
-          cotonomas.focused.map(sectionCurrent),
-          Option.when(!domain.recentCotonomas.isEmpty)(
-            sectionRecent(domain.recentCotonomas)
+          domain.cotonomas.focused.map(sectionCurrent),
+          Option.when(!cotonomas.isEmpty)(
+            sectionRecent(cotonomas)
           ),
           div(
             className := "more",
-            aria - "busy" := cotonomas.recentLoading.toString()
+            aria - "busy" := model.loading.toString()
           )()
         )
       )

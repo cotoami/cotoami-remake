@@ -16,11 +16,7 @@ case class Cotonomas(
     focusedId: Option[Id[Cotonoma]] = None,
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
-    subsLoading: Boolean = false,
-
-    // Recent
-    recentIds: PaginatedIds[Cotonoma] = PaginatedIds(),
-    recentLoading: Boolean = false
+    subsLoading: Boolean = false
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
@@ -95,14 +91,6 @@ case class Cotonomas(
       .modify(_.subsLoading).setTo(false)
       .modify(_.subIds).using(_.appendPage(page))
 
-  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
-
-  def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
-    this
-      .putAll(page.rows)
-      .modify(_.recentLoading).setTo(false)
-      .modify(_.recentIds).using(_.appendPage(page))
-
   def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
     this
       .put(cotonoma)
@@ -139,41 +127,13 @@ object Cotonomas {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen Domain.Msg.CotonomasMsg andThen AppMsg.DomainMsg
 
-    case object FetchMoreRecent extends Msg
-    case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
-        extends Msg
     case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
     case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
         extends Msg
   }
 
-  def update(
-      msg: Msg,
-      model: Cotonomas,
-      nodeId: Option[Id[Node]]
-  ): (Cotonomas, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Cotonomas): (Cotonomas, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.FetchMoreRecent =>
-        if (model.recentLoading) {
-          (model, Seq.empty)
-        } else {
-          model.recentIds.nextPageIndex.map(i =>
-            (
-              model.copy(recentLoading = true),
-              Seq(fetchRecent(nodeId, i))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-
-      case Msg.RecentFetched(Right(page)) =>
-        (model.appendPageOfRecent(page), Seq.empty)
-
-      case Msg.RecentFetched(Left(e)) =>
-        (
-          model.copy(recentLoading = false),
-          Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
-        )
-
       case Msg.FetchMoreSubs(id) =>
         if (model.subsLoading) {
           (model, Seq.empty)
@@ -195,11 +155,4 @@ object Cotonomas {
           Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
         )
     }
-
-  def fetchRecent(
-      nodeId: Option[Id[Node]],
-      pageIndex: Double
-  ): Cmd[AppMsg] =
-    Cotonoma.fetchRecent(nodeId, pageIndex)
-      .map(Msg.toApp(Msg.RecentFetched))
 }

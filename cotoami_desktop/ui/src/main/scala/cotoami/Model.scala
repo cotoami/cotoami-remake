@@ -85,14 +85,15 @@ case class Model(
     this
       .modify(_.domain).using(_.unfocus())
       .modify(_.domain.nodes).using(_.focus(nodeId))
-      .modify(_.domain.cotonomas.recentLoading).setTo(true)
       .modify(_.timeline).using(_.init) pipe { model =>
+      val (navCotonomas, fetchRecentCotonomas) =
+        model.navCotonomas.fetchFirst()(model)
       val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
       (
-        model.copy(timeline = timeline),
+        model.copy(navCotonomas = navCotonomas, timeline = timeline),
         Seq(
           model.domain.fetchCurrentRootCotonoma,
-          model.domain.fetchRecentCotonomas(0),
+          fetchRecentCotonomas,
           fetchTimeline,
           model.domain.fetchGraph
         )
@@ -106,8 +107,9 @@ case class Model(
     val shouldFetchCotonomas =
       // the focused node is changed
       nodeId != this.domain.nodes.focusedId ||
-        // or no recent cotonomas has been loaded yet (which means the page being reloaded)
-        this.domain.cotonomas.recentIds.isEmpty
+        // or no cotonomas has been loaded in NavCotonomas yet
+        // (which means the page being reloaded)
+        this.navCotonomas.cotonomaIds.isEmpty
     val (cotonomas, fetchFocusedCotonoma) =
       this.domain.cotonomas.focusAndFetch(cotonomaId)
     this
@@ -115,17 +117,18 @@ case class Model(
       .modify(_.domain.cotonomas).setTo(cotonomas)
       .modify(_.domain.cotos).setTo(Cotos())
       .modify(_.domain.links).setTo(Links())
-      .modify(_.domain.cotonomas.recentLoading).setTo(shouldFetchCotonomas)
       .modify(_.timeline).using(_.init) pipe { model =>
+      val (navCotonomas, fetchRecentCotonomas) =
+        if (shouldFetchCotonomas)
+          model.navCotonomas.fetchFirst()(model)
+        else
+          (model.navCotonomas, Cmd.none)
       val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
       (
         model.copy(timeline = timeline),
         Seq(
           fetchFocusedCotonoma,
-          if (shouldFetchCotonomas)
-            model.domain.fetchRecentCotonomas(0)
-          else
-            Cmd.none,
+          fetchRecentCotonomas,
           fetchTimeline,
           model.domain.fetchGraph
         )
