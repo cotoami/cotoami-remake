@@ -162,8 +162,26 @@ case class Domain(
         .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
     ).getOrElse(Cmd.none)
 
-  def fetchRecentCotonomas(pageIndex: Double): Cmd[AppMsg] =
-    Cotonomas.fetchRecent(this.nodes.focusedId, 0)
+  def fetchRecentCotonomas(
+      pageIndex: Double
+  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+    Cotonoma.fetchRecent(this.nodes.focusedId, pageIndex)
+
+  def fetchMoreRecentCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+    this.cotonomas.recentIds.nextPageIndex
+      .map(fetchRecentCotonomas)
+      .getOrElse(Cmd.none)
+
+  def fetchSubCotonomas(
+      pageIndex: Double
+  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+    this.cotonomas.focusedId.map(Cotonoma.fetchSubs(_, pageIndex))
+      .getOrElse(Cmd.none)
+
+  def fetchMoreSubCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+    this.cotonomas.subIds.nextPageIndex
+      .map(fetchSubCotonomas)
+      .getOrElse(Cmd.none)
 
   def fetchGraph: Cmd[AppMsg] =
     this.currentCotonomaId
@@ -213,8 +231,6 @@ object Domain {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen AppMsg.DomainMsg
 
-    case class CotonomasMsg(subMsg: Cotonomas.Msg) extends Msg
-
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
 
@@ -234,16 +250,6 @@ object Domain {
 
   def update(msg: Msg, model: Domain): (Domain, Seq[Cmd[AppMsg]]) =
     msg match {
-      case Msg.CotonomasMsg(subMsg) => {
-        val (cotonomas, cmds) =
-          Cotonomas.update(
-            subMsg,
-            model.cotonomas,
-            model.nodes.focusedId
-          )
-        (model.copy(cotonomas = cotonomas), cmds)
-      }
-
       case Msg.CotonomaFetched(Right(cotonomaPair)) =>
         (
           model.importFrom(cotonomaPair),

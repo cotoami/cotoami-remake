@@ -1,7 +1,5 @@
 package cotoami.repositories
 
-import scala.util.chaining._
-import scala.scalajs.js
 import com.softwaremill.quicklens._
 
 import fui._
@@ -12,15 +10,11 @@ case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
     mapByCotoId: Map[Id[Coto], Id[Cotonoma]] = Map.empty,
 
-    // The currently focused cotonoma and its super/sub cotonomas
+    // Id references
     focusedId: Option[Id[Cotonoma]] = None,
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
-    subsLoading: Boolean = false,
-
-    // Recent
-    recentIds: PaginatedIds[Cotonoma] = PaginatedIds(),
-    recentLoading: Boolean = false
+    recentIds: PaginatedIds[Cotonoma] = PaginatedIds()
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
@@ -85,22 +79,20 @@ case class Cotonomas(
 
   def focused: Option[Cotonoma] = this.focusedId.flatMap(this.get)
 
-  def supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
+  lazy val supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
 
-  def subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
+  lazy val subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
+
+  lazy val recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .putAll(page.rows)
-      .modify(_.subsLoading).setTo(false)
       .modify(_.subIds).using(_.appendPage(page))
-
-  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .putAll(page.rows)
-      .modify(_.recentLoading).setTo(false)
       .modify(_.recentIds).using(_.appendPage(page))
 
   def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
@@ -124,82 +116,4 @@ case class Cotonomas(
       else
         Cmd.none
     )
-}
-
-object Cotonomas {
-  def toMap(jsons: js.Array[CotonomaJson]): Map[Id[Cotonoma], Cotonoma] =
-    jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
-
-  sealed trait Msg {
-    def toApp: AppMsg =
-      Domain.Msg.CotonomasMsg(this).pipe(AppMsg.DomainMsg)
-  }
-
-  object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Domain.Msg.CotonomasMsg andThen AppMsg.DomainMsg
-
-    case object FetchMoreRecent extends Msg
-    case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
-        extends Msg
-    case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
-    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
-        extends Msg
-  }
-
-  def update(
-      msg: Msg,
-      model: Cotonomas,
-      nodeId: Option[Id[Node]]
-  ): (Cotonomas, Seq[Cmd[AppMsg]]) =
-    msg match {
-      case Msg.FetchMoreRecent =>
-        if (model.recentLoading) {
-          (model, Seq.empty)
-        } else {
-          model.recentIds.nextPageIndex.map(i =>
-            (
-              model.copy(recentLoading = true),
-              Seq(fetchRecent(nodeId, i))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-
-      case Msg.RecentFetched(Right(page)) =>
-        (model.appendPageOfRecent(page), Seq.empty)
-
-      case Msg.RecentFetched(Left(e)) =>
-        (
-          model.copy(recentLoading = false),
-          Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
-        )
-
-      case Msg.FetchMoreSubs(id) =>
-        if (model.subsLoading) {
-          (model, Seq.empty)
-        } else {
-          model.subIds.nextPageIndex.map(i =>
-            (
-              model.copy(subsLoading = true),
-              Seq(Cotonoma.fetchSubs(id, i).map(Msg.toApp(Msg.SubsFetched)))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-
-      case Msg.SubsFetched(Right(page)) =>
-        (model.appendPageOfSubs(page), Seq.empty)
-
-      case Msg.SubsFetched(Left(e)) =>
-        (
-          model.copy(subsLoading = false),
-          Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
-        )
-    }
-
-  def fetchRecent(
-      nodeId: Option[Id[Node]],
-      pageIndex: Double
-  ): Cmd[AppMsg] =
-    Cotonoma.fetchRecent(nodeId, pageIndex)
-      .map(Msg.toApp(Msg.RecentFetched))
 }

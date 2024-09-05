@@ -247,9 +247,13 @@ object Main {
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
       case Msg.NavCotonomasMsg(submsg) => {
-        val (navCotonomas, cmds) =
+        val (navCotonomas, cotonomas, cmds) =
           NavCotonomas.update(submsg, model.navCotonomas)
-        (model.copy(navCotonomas = navCotonomas), cmds)
+        (
+          model.copy(navCotonomas = navCotonomas)
+            .modify(_.domain.cotonomas).setTo(cotonomas),
+          cmds
+        )
       }
 
       case Msg.FlowInputMsg(submsg) => {
