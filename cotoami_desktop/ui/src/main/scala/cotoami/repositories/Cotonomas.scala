@@ -1,7 +1,5 @@
 package cotoami.repositories
 
-import scala.util.chaining._
-import scala.scalajs.js
 import com.softwaremill.quicklens._
 
 import fui._
@@ -12,12 +10,11 @@ case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
     mapByCotoId: Map[Id[Coto], Id[Cotonoma]] = Map.empty,
 
-    // Role references
+    // Id references
     focusedId: Option[Id[Cotonoma]] = None,
     recentIds: PaginatedIds[Cotonoma] = PaginatedIds(),
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
-    subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
-    subsLoading: Boolean = false
+    subIds: PaginatedIds[Cotonoma] = PaginatedIds()
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
 
@@ -96,7 +93,6 @@ case class Cotonomas(
   def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
       .putAll(page.rows)
-      .modify(_.subsLoading).setTo(false)
       .modify(_.subIds).using(_.appendPage(page))
 
   def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
@@ -120,47 +116,4 @@ case class Cotonomas(
       else
         Cmd.none
     )
-}
-
-object Cotonomas {
-  def toMap(jsons: js.Array[CotonomaJson]): Map[Id[Cotonoma], Cotonoma] =
-    jsons.map(json => (Id[Cotonoma](json.uuid), Cotonoma(json))).toMap
-
-  sealed trait Msg {
-    def toApp: AppMsg =
-      Domain.Msg.CotonomasMsg(this).pipe(AppMsg.DomainMsg)
-  }
-
-  object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Domain.Msg.CotonomasMsg andThen AppMsg.DomainMsg
-
-    case class FetchMoreSubs(id: Id[Cotonoma]) extends Msg
-    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
-        extends Msg
-  }
-
-  def update(msg: Msg, model: Cotonomas): (Cotonomas, Seq[Cmd[AppMsg]]) =
-    msg match {
-      case Msg.FetchMoreSubs(id) =>
-        if (model.subsLoading) {
-          (model, Seq.empty)
-        } else {
-          model.subIds.nextPageIndex.map(i =>
-            (
-              model.copy(subsLoading = true),
-              Seq(Cotonoma.fetchSubs(id, i).map(Msg.toApp(Msg.SubsFetched)))
-            )
-          ).getOrElse((model, Seq.empty))
-        }
-
-      case Msg.SubsFetched(Right(page)) =>
-        (model.appendPageOfSubs(page), Seq.empty)
-
-      case Msg.SubsFetched(Left(e)) =>
-        (
-          model.copy(subsLoading = false),
-          Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
-        )
-    }
 }

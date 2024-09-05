@@ -23,6 +23,7 @@ object NavCotonomas {
 
   case class Model(
       loadingRecent: Boolean = false,
+      loadingSubs: Boolean = false,
       togglingSync: Boolean = false
   ) {
     def fetchRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
@@ -32,7 +33,7 @@ object NavCotonomas {
           .map(Msg.toApp(Msg.RecentFetched))
       )
 
-    def fetchRecentMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchMoreRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
       if (this.loadingRecent)
         (this, Cmd.none)
       else
@@ -40,6 +41,23 @@ object NavCotonomas {
           this.copy(loadingRecent = true),
           context.domain.fetchMoreRecentCotonomas
             .map(Msg.toApp(Msg.RecentFetched))
+        )
+
+    def fetchSubs()(implicit context: Context): (Model, Cmd[AppMsg]) =
+      (
+        this.copy(loadingSubs = true),
+        context.domain.fetchSubCotonomas(0)
+          .map(Msg.toApp(Msg.SubsFetched))
+      )
+
+    def fetchMoreSubs()(implicit context: Context): (Model, Cmd[AppMsg]) =
+      if (this.loadingSubs)
+        (this, Cmd.none)
+      else
+        (
+          this.copy(loadingSubs = true),
+          context.domain.fetchMoreSubCotonomas
+            .map(Msg.toApp(Msg.SubsFetched))
         )
   }
 
@@ -50,8 +68,11 @@ object NavCotonomas {
     def toApp[T](tagger: T => Msg): (T => AppMsg) =
       tagger andThen AppMsg.NavCotonomasMsg
 
-    case object FetchRecentMore extends Msg
+    case object FetchMoreRecent extends Msg
     case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
+        extends Msg
+    case object FetchMoreSubs extends Msg
+    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
         extends Msg
     case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class SyncToggled(result: Either[ErrorJson, ServerNode]) extends Msg
@@ -62,8 +83,8 @@ object NavCotonomas {
   ): (Model, Cotonomas, Seq[Cmd[AppMsg]]) = {
     val default = (model, context.domain.cotonomas, Seq.empty)
     msg match {
-      case Msg.FetchRecentMore =>
-        model.fetchRecentMore().pipe { case (model, cmd) =>
+      case Msg.FetchMoreRecent =>
+        model.fetchMoreRecent().pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = Seq(cmd))
         }
 
@@ -78,6 +99,24 @@ object NavCotonomas {
         default.copy(
           _1 = model.copy(loadingRecent = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
+        )
+
+      case Msg.FetchMoreSubs =>
+        model.fetchMoreSubs().pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = Seq(cmd))
+        }
+
+      case Msg.SubsFetched(Right(page)) =>
+        default.copy(
+          _1 = model.copy(loadingSubs = false),
+          _2 = context.domain.cotonomas.appendPageOfSubs(page),
+          _3 = Seq(log_info(s"Sub cotonomas fetched.", Some(page.debug)))
+        )
+
+      case Msg.SubsFetched(Left(e)) =>
+        default.copy(
+          _1 = model.copy(loadingSubs = false),
+          _3 = Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
         )
 
       case Msg.SetSyncDisabled(id, disable) =>
@@ -140,9 +179,9 @@ object NavCotonomas {
       ),
       section(className := "cotonomas body")(
         ScrollArea(
-          onScrollToBottom = Some(() => dispatch(Msg.FetchRecentMore.toApp))
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMoreRecent.toApp))
         )(
-          domain.cotonomas.focused.map(sectionCurrent),
+          domain.cotonomas.focused.map(sectionCurrent(_, model)),
           Option.when(!recentCotonomas.isEmpty)(
             sectionRecent(recentCotonomas)
           ),
@@ -238,7 +277,8 @@ object NavCotonomas {
   }
 
   private def sectionCurrent(
-      focusedCotonoma: Cotonoma
+      focusedCotonoma: Cotonoma,
+      model: Model
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
     section(className := "current")(
@@ -267,16 +307,12 @@ object NavCotonomas {
                 li(key := "more-button")(
                   button(
                     className := "more-sub-cotonomas default",
-                    onClick := ((e) =>
-                      dispatch(
-                        Cotonomas.Msg.FetchMoreSubs(focusedCotonoma.id).toApp
-                      )
-                    )
+                    onClick := (_ => dispatch(Msg.FetchMoreSubs.toApp))
                   )(
                     materialSymbol("more_horiz")
                   )
                 )
-              ) ++ Option.when(domain.cotonomas.subsLoading)(
+              ) ++ Option.when(model.loadingSubs)(
                 li(
                   key := "more-loading",
                   className := "more",
