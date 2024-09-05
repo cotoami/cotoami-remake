@@ -225,10 +225,8 @@ object Main {
           Seq.empty
         )
 
-      case Msg.InitCurrentCotonoma((cotonoma, coto)) => {
-        val (geomap, fetch) = model.geomap.fetchGeolocatedCotos()
-        (model.copy(geomap = geomap), Seq(fetch))
-      }
+      case Msg.InitCurrentCotonoma((cotonoma, coto)) =>
+        (model, Seq(SectionGeomap.fetchInitialCotos()))
 
       case Msg.ReloadDomain => {
         (

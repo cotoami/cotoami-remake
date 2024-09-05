@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.util.chaining._
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
@@ -17,7 +18,9 @@ object SectionGeomap {
       focusedLocation: Option[Geolocation] = None,
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
-      fetchingGeolocatedCotos: Boolean = false,
+      nextBoundsToFetch: Option[GeoBounds] = None,
+      initialCotosFetched: Boolean = false,
+      fetchingCotosInBounds: Boolean = false,
       _applyCenterZoom: Int = 0,
       _addOrRemoveMarkers: Int = 0,
       _refreshMarkers: Int = 0,
@@ -45,27 +48,19 @@ object SectionGeomap {
     def fitBounds(bounds: GeoBounds): Model =
       this.copy(bounds = Some(bounds), _fitBounds = this._fitBounds + 1)
 
-    def fetchGeolocatedCotos()(implicit
-        context: Context
-    ): (Model, Cmd[AppMsg]) =
-      (
-        this.copy(fetchingGeolocatedCotos = true),
-        GeolocatedCotos.fetch(
-          context.domain.nodes.focusedId,
-          context.domain.cotonomas.focusedId
-        ).map(
-          Msg.toApp(Msg.GeolocatedCotosFetched(_))
-        )
-      )
-
-    def fetchCotosInBounds: (Model, Cmd[AppMsg]) =
-      this.currentBounds.map(bounds =>
+    def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd[AppMsg]) =
+      if (this.initialCotosFetched && !this.fetchingCotosInBounds)
         (
-          this.copy(fetchingGeolocatedCotos = true),
+          this.copy(fetchingCotosInBounds = true),
           GeolocatedCotos.inGeoBounds(bounds)
             .map(Msg.toApp(Msg.CotosInBoundsFetched(_)))
         )
-      ).getOrElse((this, Cmd.none))
+      else
+        (
+          // Defer this fetch to the next round
+          this.copy(nextBoundsToFetch = Some(bounds)),
+          Cmd.none
+        )
   }
 
   sealed trait Msg {
@@ -81,7 +76,7 @@ object SectionGeomap {
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
-    case class GeolocatedCotosFetched(
+    case class InitialCotosFetched(
         result: Either[ErrorJson, GeolocatedCotos]
     ) extends Msg
     case class CotosInBoundsFetched(
@@ -108,10 +103,15 @@ object SectionGeomap {
       case Msg.CenterMoved(center) =>
         default.copy(_1 = model.copy(center = center))
 
-      case Msg.BoundsChanged(bounds) =>
-        default.copy(_1 = model.copy(currentBounds = Some(bounds)))
+      case Msg.BoundsChanged(bounds) => {
+        val (geomap, fetch) = model.fetchCotosInBounds(bounds)
+        default.copy(
+          _1 = geomap.copy(currentBounds = Some(bounds)),
+          _3 = Seq(fetch)
+        )
+      }
 
-      case Msg.GeolocatedCotosFetched(Right(cotos)) => {
+      case Msg.InitialCotosFetched(Right(cotos)) => {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
         val geomap = cotos.geoBounds match {
           case Some(Right(bounds)) =>
@@ -121,32 +121,53 @@ object SectionGeomap {
           case None => center.map(model.moveTo(_)).getOrElse(model)
         }
         default.copy(
-          _1 = geomap.addOrRemoveMarkers.copy(fetchingGeolocatedCotos = false),
+          _1 = geomap.addOrRemoveMarkers.copy(initialCotosFetched = true),
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
         )
       }
 
-      case Msg.GeolocatedCotosFetched(Left(e)) =>
+      case Msg.InitialCotosFetched(Left(e)) =>
         default.copy(
-          _1 = model.copy(fetchingGeolocatedCotos = false),
+          _1 = model.copy(initialCotosFetched = true),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch geolocated cotos."))
         )
 
       case Msg.CotosInBoundsFetched(Right(cotos)) =>
-        default.copy(
-          _1 = model.addOrRemoveMarkers.copy(fetchingGeolocatedCotos = false),
-          _2 = context.domain.importFrom(cotos),
-          _3 = Seq(log_info(s"Cotos in the bounds fetched.", Some(cotos.debug)))
-        )
+        model.copy(fetchingCotosInBounds = false).pipe { model =>
+          model.nextBoundsToFetch match {
+            case Some(bounds) =>
+              model.fetchCotosInBounds(bounds).pipe { case (model, fetchNext) =>
+                (model.copy(nextBoundsToFetch = None), fetchNext)
+              }
+            case None => (model, Cmd.none)
+          }
+        }.pipe { case (model, fetchNext) =>
+          default.copy(
+            _1 = model.addOrRemoveMarkers,
+            _2 = context.domain.importFrom(cotos),
+            _3 = Seq(
+              fetchNext,
+              log_info(s"Cotos in the bounds fetched.", Some(cotos.debug))
+            )
+          )
+        }
 
       case Msg.CotosInBoundsFetched(Left(e)) =>
         default.copy(
-          _1 = model.copy(fetchingGeolocatedCotos = false),
+          _1 = model.copy(fetchingCotosInBounds = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch cotos in the bounds."))
         )
     }
   }
+
+  def fetchInitialCotos()(implicit context: Context): Cmd[AppMsg] =
+    GeolocatedCotos.fetch(
+      context.domain.nodes.focusedId,
+      context.domain.cotonomas.focusedId
+    ).map(
+      Msg.toApp(Msg.InitialCotosFetched(_))
+    )
 
   def apply(
       model: Model
