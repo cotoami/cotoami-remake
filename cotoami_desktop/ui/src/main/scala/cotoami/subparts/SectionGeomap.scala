@@ -57,7 +57,8 @@ object SectionGeomap {
         )
       else
         (
-          // Defer this fetch to the next round
+          // To avoid simultaneous fetchings, defer this fetch to the next round.
+          // The current waiting bounds will be replaced with the new one.
           this.copy(nextBoundsToFetch = Some(bounds)),
           Cmd.none
         )
