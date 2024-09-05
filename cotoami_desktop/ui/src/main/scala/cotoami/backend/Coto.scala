@@ -81,7 +81,7 @@ case class Coto(json: CotoJson, posted: Boolean = false)
 
   def outgoingLinks: Int = this.json.outgoing_links
 
-  def postedInIds: Seq[Id[Cotonoma]] =
+  lazy val postedInIds: Seq[Id[Cotonoma]] =
     Seq(this.postedInId).flatten ++
       this.repostedInIds.getOrElse(Seq.empty)
 }

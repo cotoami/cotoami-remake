@@ -55,16 +55,12 @@ case class Domain(
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
-  def setCotonomaDetails(details: CotonomaDetails): Domain = {
-    this
-      .modify(_.nodes).using(nodes =>
-        if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
-          nodes.focus(Some(details.cotonoma.nodeId))
-        else
-          nodes
-      )
-      .modify(_.cotonomas).using(_.setCotonomaDetails(details))
-  }
+  def inContext(coto: Coto): Boolean =
+    (this.nodes.focusedId, this.cotonomas.focusedId) match {
+      case (None, None)          => true
+      case (Some(nodeId), None)  => coto.nodeId == nodeId
+      case (_, Some(cotonomaId)) => coto.postedInIds.contains(cotonomaId)
+    }
 
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
@@ -80,6 +76,16 @@ case class Domain(
         case None => (currentNode, None)
       }
     )
+
+  def setCotonomaDetails(details: CotonomaDetails): Domain =
+    this
+      .modify(_.nodes).using(nodes =>
+        if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
+          nodes.focus(Some(details.cotonoma.nodeId))
+        else
+          nodes
+      )
+      .modify(_.cotonomas).using(_.setCotonomaDetails(details))
 
   def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
     this
@@ -181,9 +187,9 @@ case class Domain(
           coto.id.uuid,
           location.toLngLat,
           if (coto.isCotonoma)
-            node.newCotonomaMarkerHtml
+            node.newCotonomaMarkerHtml(this.inContext(coto))
           else
-            node.newCotoMarkerHtml,
+            node.newCotoMarkerHtml(this.inContext(coto)),
           None,
           coto.nameAsCotonoma
         )

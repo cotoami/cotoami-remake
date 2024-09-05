@@ -25,18 +25,20 @@ case class Node(json: NodeJson) {
   def version: Int = this.json.version
   lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
 
-  def newCotoMarkerHtml: dom.Element = {
+  def newCotoMarkerHtml(inContext: Boolean): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className = "geomap-marker coto-marker"
+    root.className = "geomap-marker coto-marker" +
+      (if (inContext) " in-context" else "")
     val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
     icon.src = this.iconUrl
     root.append(icon)
     root
   }
 
-  def newCotonomaMarkerHtml: dom.Element = {
+  def newCotonomaMarkerHtml(inContext: Boolean): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className = "geomap-marker cotonoma-marker"
+    root.className = "geomap-marker cotonoma-marker" +
+      (if (inContext) " in-context" else "")
     val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
     icon.src = this.iconUrl
     root.append(icon)
