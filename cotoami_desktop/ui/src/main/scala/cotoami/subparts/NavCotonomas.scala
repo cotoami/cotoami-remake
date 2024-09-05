@@ -1,12 +1,23 @@
 package cotoami.subparts
 
+import scala.util.chaining._
+
 import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
+import com.softwaremill.quicklens._
 
 import fui.Cmd
-import cotoami.{log_debug, log_error, Context, Msg => AppMsg}
-import cotoami.backend.{Cotonoma, ErrorJson, Id, Node, ServerNode}
+import cotoami.{log_debug, log_error, log_info, Context, Msg => AppMsg}
+import cotoami.backend.{
+  Cotonoma,
+  ErrorJson,
+  Id,
+  Node,
+  Paginated,
+  PaginatedIds,
+  ServerNode
+}
 import cotoami.repositories.{Cotonomas, ParentStatus}
 import cotoami.components.{
   materialSymbol,
@@ -20,8 +31,29 @@ object NavCotonomas {
   final val DefaultWidth = 230
 
   case class Model(
+      cotonomaIds: PaginatedIds[Cotonoma] = PaginatedIds(),
+      loading: Boolean = false,
       togglingSync: Boolean = false
-  )
+  ) {
+    def appendPage(page: Paginated[Cotonoma, _]): Model =
+      this
+        .modify(_.cotonomaIds).using(_.appendPage(page))
+        .modify(_.loading).setTo(false)
+
+    def fetchMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
+      if (this.loading) {
+        (this, Cmd.none)
+      } else {
+        this.cotonomaIds.nextPageIndex match {
+          case Some(nextIndex) =>
+            (
+              this.copy(loading = true),
+              context.domain.fetchRecentCotonomas(nextIndex)
+            )
+          case None => (this, Cmd.none)
+        }
+      }
+  }
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.NavCotonomasMsg(this)
@@ -30,25 +62,49 @@ object NavCotonomas {
     def toApp[T](tagger: T => Msg): (T => AppMsg) =
       tagger andThen AppMsg.NavCotonomasMsg
 
+    case object FetchMore extends Msg
+    case class Fetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
+        extends Msg
     case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class SyncToggled(result: Either[ErrorJson, ServerNode]) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cotonomas, Seq[Cmd[AppMsg]]) = {
+    val default = (model, context.domain.cotonomas, Seq.empty)
     msg match {
+      case Msg.FetchMore =>
+        model.fetchMore().pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = Seq(cmd))
+        }
+
+      case Msg.Fetched(Right(page)) =>
+        default.copy(
+          _1 = model.appendPage(page),
+          _2 = context.domain.cotonomas.putAll(page.rows),
+          _3 = Seq(log_info(s"Recent cotonomas fetched.", Some(page.debug)))
+        )
+
+      case Msg.Fetched(Left(e)) =>
+        default.copy(
+          _1 = model.copy(loading = false),
+          _3 = Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
+        )
+
       case Msg.SetSyncDisabled(id, disable) =>
-        (
-          model.copy(togglingSync = true),
-          Seq(
+        default.copy(
+          _1 = model.copy(togglingSync = true),
+          _3 = Seq(
             ServerNode.update(id, Some(disable), None)
               .map(Msg.toApp(Msg.SyncToggled(_)))
           )
         )
 
       case Msg.SyncToggled(result) =>
-        (
-          model.copy(togglingSync = false),
-          Seq(
+        default.copy(
+          _1 = model.copy(togglingSync = false),
+          _3 = Seq(
             result match {
               case Right(server) =>
                 log_debug(
@@ -64,6 +120,7 @@ object NavCotonomas {
           )
         )
     }
+  }
 
   def apply(
       model: Model,
