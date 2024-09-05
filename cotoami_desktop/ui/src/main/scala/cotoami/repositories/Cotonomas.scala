@@ -12,8 +12,9 @@ case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
     mapByCotoId: Map[Id[Coto], Id[Cotonoma]] = Map.empty,
 
-    // The currently focused cotonoma and its super/sub cotonomas
+    // Role references
     focusedId: Option[Id[Cotonoma]] = None,
+    recentIds: PaginatedIds[Cotonoma] = PaginatedIds(),
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
     subsLoading: Boolean = false
@@ -80,6 +81,13 @@ case class Cotonomas(
     this.focusedId.map(_ == id).getOrElse(false)
 
   def focused: Option[Cotonoma] = this.focusedId.flatMap(this.get)
+
+  def recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
+
+  def appendPageOfRecent(page: Paginated[Cotonoma, _]): Cotonomas =
+    this
+      .putAll(page.rows)
+      .modify(_.recentIds).using(_.appendPage(page))
 
   def supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
 

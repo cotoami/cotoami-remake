@@ -87,7 +87,7 @@ case class Model(
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.timeline).using(_.init) pipe { model =>
       val (navCotonomas, fetchRecentCotonomas) =
-        model.navCotonomas.fetchFirst()(model)
+        model.navCotonomas.fetchRecent()(model)
       val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
       (
         model.copy(navCotonomas = navCotonomas, timeline = timeline),
@@ -107,9 +107,9 @@ case class Model(
     val shouldFetchCotonomas =
       // the focused node is changed
       nodeId != this.domain.nodes.focusedId ||
-        // or no cotonomas has been loaded in NavCotonomas yet
+        // or no recent cotonomas has been loaded yet
         // (which means the page being reloaded)
-        this.navCotonomas.cotonomaIds.isEmpty
+        this.domain.cotonomas.recentIds.isEmpty
     val (cotonomas, fetchFocusedCotonoma) =
       this.domain.cotonomas.focusAndFetch(cotonomaId)
     this
@@ -120,7 +120,7 @@ case class Model(
       .modify(_.timeline).using(_.init) pipe { model =>
       val (navCotonomas, fetchRecentCotonomas) =
         if (shouldFetchCotonomas)
-          model.navCotonomas.fetchFirst()(model)
+          model.navCotonomas.fetchRecent()(model)
         else
           (model.navCotonomas, Cmd.none)
       val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)

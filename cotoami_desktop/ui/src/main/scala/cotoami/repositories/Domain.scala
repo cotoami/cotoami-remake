@@ -110,6 +110,11 @@ case class Domain(
       .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.links).using(_.putAll(graph.links))
 
+  lazy val recentCotonomas: Seq[Cotonoma] = {
+    val rootId = this.currentRootCotonomaId
+    this.cotonomas.recent.filter(c => Some(c.id) != rootId)
+  }
+
   lazy val superCotonomas: Seq[Cotonoma] = {
     val rootId = this.currentRootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
@@ -156,6 +161,16 @@ case class Domain(
       Cotonoma.fetch(_)
         .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
     ).getOrElse(Cmd.none)
+
+  def fetchRecentCotonomas(
+      pageIndex: Double
+  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+    Cotonoma.fetchRecent(this.nodes.focusedId, pageIndex)
+
+  def fetchMoreRecentCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+    this.cotonomas.recentIds.nextPageIndex
+      .map(fetchRecentCotonomas)
+      .getOrElse(Cmd.none)
 
   def fetchGraph: Cmd[AppMsg] =
     this.currentCotonomaId
