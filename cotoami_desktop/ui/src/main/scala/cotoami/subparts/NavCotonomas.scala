@@ -22,22 +22,22 @@ object NavCotonomas {
   final val DefaultWidth = 230
 
   case class Model(
-      loading: Boolean = false,
+      loadingRecent: Boolean = false,
       togglingSync: Boolean = false
   ) {
     def fetchRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
       (
-        this.copy(loading = true),
+        this.copy(loadingRecent = true),
         context.domain.fetchRecentCotonomas(0)
           .map(Msg.toApp(Msg.RecentFetched))
       )
 
     def fetchRecentMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (this.loading)
+      if (this.loadingRecent)
         (this, Cmd.none)
       else
         (
-          this.copy(loading = true),
+          this.copy(loadingRecent = true),
           context.domain.fetchMoreRecentCotonomas
             .map(Msg.toApp(Msg.RecentFetched))
         )
@@ -69,14 +69,14 @@ object NavCotonomas {
 
       case Msg.RecentFetched(Right(page)) =>
         default.copy(
-          _1 = model.copy(loading = false),
+          _1 = model.copy(loadingRecent = false),
           _2 = context.domain.cotonomas.appendPageOfRecent(page),
           _3 = Seq(log_info(s"Recent cotonomas fetched.", Some(page.debug)))
         )
 
       case Msg.RecentFetched(Left(e)) =>
         default.copy(
-          _1 = model.copy(loading = false),
+          _1 = model.copy(loadingRecent = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
         )
 
@@ -148,7 +148,7 @@ object NavCotonomas {
           ),
           div(
             className := "more",
-            aria - "busy" := model.loading.toString()
+            aria - "busy" := model.loadingRecent.toString()
           )()
         )
       )
