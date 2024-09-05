@@ -179,11 +179,6 @@ object Main {
       case Msg.CloseMap =>
         model.updateUiState(_.closeMap)
 
-      case Msg.ShowGeolocation(location) =>
-        model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
-          (model.modify(_.geomap).using(_.moveTo(location)), cmds)
-        }
-
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
@@ -224,6 +219,11 @@ object Main {
             .modify(_.geomap.focusedLocation).setTo(None),
           Seq.empty
         )
+
+      case Msg.FocusGeolocation(location) =>
+        model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
+          (model.modify(_.geomap).using(_.focus(location)), cmds)
+        }
 
       case Msg.InitCurrentCotonoma((cotonoma, coto)) =>
         (model, Seq(SectionGeomap.fetchInitialCotos()))

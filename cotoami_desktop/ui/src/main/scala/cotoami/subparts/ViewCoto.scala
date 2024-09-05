@@ -243,7 +243,7 @@ object ViewCoto {
           className := "geolocation default",
           onClick := (e => {
             e.stopPropagation()
-            dispatch(AppMsg.ShowGeolocation(location))
+            dispatch(AppMsg.FocusGeolocation(location))
           })
         )(
           materialSymbol("location_on")
