@@ -208,10 +208,12 @@ case class Domain(
         MarkerDef(
           coto.id.uuid,
           location.toLngLat,
-          if (coto.isCotonoma)
-            node.newCotonomaMarkerHtml(this.inContext(coto))
-          else
-            node.newCotoMarkerHtml(this.inContext(coto)),
+          coto.nameAsCotonoma match {
+            case Some(name) =>
+              node.newCotonomaMarkerHtml(name, this.inContext(coto))
+            case None =>
+              node.newCotoMarkerHtml(this.inContext(coto))
+          },
           None,
           coto.nameAsCotonoma
         )

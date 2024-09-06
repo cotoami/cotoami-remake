@@ -1,7 +1,12 @@
 section.geomap {
+  --marker-size: 30px;
+  --circle-marker-border-radius: calc(var(--marker-size) / 2);
+  --cotonoma-label-width: 150px;
+  --cotonoma-label-left: calc(((var(--cotonoma-label-width) / 2) - (var(--marker-size) / 2)) * -1);
+
   div.geomap-marker {
-    width: 30px;
-    height: 30px;
+    width: var(--marker-size);
+    height: var(--marker-size);
     background-color: white;
     padding: 2px;
 
@@ -16,23 +21,50 @@ section.geomap {
     }
 
     &.coto-marker {
-      border-radius: 15px;
+      z-index: 1;
+      border-radius: var(--circle-marker-border-radius);
 
       img {
-        border-radius: 15px;
+        border-radius: var(--circle-marker-border-radius);
       }
     }
 
     &.cotonoma-marker {
+      z-index: 2;
       border-radius: 4px;
 
       img {
         border-radius: 4px;
       }
+
+      .cotonoma-name {
+        position: absolute;
+        left: var(--cotonoma-label-left);
+
+        padding-top: 4px;
+
+        width: var(--cotonoma-label-width);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 14px;
+        color: #333;
+        text-shadow:
+          1px 1px 1px white,
+          -1px 1px 1px white,
+          -1px -1px 1px white,
+          1px -1px 1px white;
+        text-align: center;
+        opacity: 0.5;
+        // border: 1px solid black;
+      }
     }
 
-    &.in-context img {
-      opacity: 1;
+    &.in-context {
+
+      img,
+      .cotonoma-name {
+        opacity: 1;
+      }
     }
   }
 }

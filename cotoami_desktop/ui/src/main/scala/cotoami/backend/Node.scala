@@ -35,13 +35,20 @@ case class Node(json: NodeJson) {
     root
   }
 
-  def newCotonomaMarkerHtml(inContext: Boolean): dom.Element = {
+  def newCotonomaMarkerHtml(name: String, inContext: Boolean): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
     root.className = "geomap-marker cotonoma-marker" +
       (if (inContext) " in-context" else "")
+
     val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
     icon.src = this.iconUrl
     root.append(icon)
+
+    val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    label.className = "cotonoma-name"
+    label.textContent = name
+    root.append(label)
+
     root
   }
 
