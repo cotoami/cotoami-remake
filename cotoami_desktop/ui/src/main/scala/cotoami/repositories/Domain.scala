@@ -57,9 +57,13 @@ case class Domain(
 
   def inContext(coto: Coto): Boolean =
     (this.nodes.focusedId, this.cotonomas.focusedId) match {
-      case (None, None)          => true
-      case (Some(nodeId), None)  => coto.nodeId == nodeId
-      case (_, Some(cotonomaId)) => coto.postedInIds.contains(cotonomaId)
+      case (None, None)         => true
+      case (Some(nodeId), None) => coto.nodeId == nodeId
+      case (_, Some(cotonomaId)) =>
+        coto.postedInIds.contains(cotonomaId) || (
+          // if the coto is the current cotonoma itself
+          this.cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
+        )
     }
 
   def location: Option[(Node, Option[Cotonoma])] =
