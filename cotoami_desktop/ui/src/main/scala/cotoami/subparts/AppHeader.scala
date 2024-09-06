@@ -31,7 +31,7 @@ object AppHeader {
             src := "/images/logo/logomark.svg"
           )
         ),
-        model.domain.location.map(sectionLocation),
+        model.domain.location.map(sectionLocation(_, model.geomap)),
         section(className := "tools")(
           model.uiState.map(divToolButtons),
           divSearch,
@@ -41,7 +41,8 @@ object AppHeader {
     )
 
   private def sectionLocation(
-      location: (Node, Option[Cotonoma])
+      location: (Node, Option[Cotonoma]),
+      geomap: SectionGeomap.Model
   )(implicit dispatch: AppMsg => Unit): ReactElement = {
     val (node, cotonoma) = location
     section(
@@ -59,7 +60,18 @@ object AppHeader {
       cotonoma.map(cotonoma =>
         Fragment(
           materialSymbol("chevron_right", "arrow"),
-          h1(className := "current-cotonoma")(cotonoma.name)
+          h1(className := "current-cotonoma")(
+            cotonoma.name,
+            Option.when(geomap.cotonomaLocation.isDefined)(
+              button(
+                className := "geolocation default",
+                onClick := (e => {
+                  e.stopPropagation()
+                  dispatch(AppMsg.DisplayCotonomaGeolocation)
+                })
+              )(materialSymbol("location_on"))
+            )
+          )
         )
       )
     )

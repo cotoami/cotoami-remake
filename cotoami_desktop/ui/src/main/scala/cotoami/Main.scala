@@ -177,12 +177,6 @@ object Main {
       case Msg.ResizePane(name, newSize) =>
         model.updateUiState(_.resizePane(name, newSize))
 
-      case Msg.OpenGeomap =>
-        model.updateUiState(_.openGeomap)
-
-      case Msg.CloseMap =>
-        model.updateUiState(_.closeMap)
-
       case Msg.FocusNode(id) =>
         (model, Seq(Browser.pushUrl(Route.node.url(id))))
 
@@ -224,11 +218,6 @@ object Main {
           Seq.empty
         )
 
-      case Msg.FocusGeolocation(location) =>
-        model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
-          (model.modify(_.geomap).using(_.focus(location)), cmds)
-        }
-
       case Msg.InitCurrentCotonoma((cotonoma, coto)) =>
         (model, Seq(SectionGeomap.fetchInitialCotos()))
 
@@ -247,6 +236,26 @@ object Main {
         val (domain, cmds) = Domain.update(submsg, model.domain)
         (model.copy(domain = domain), cmds)
       }
+
+      case Msg.OpenGeomap =>
+        model.updateUiState(_.openGeomap)
+
+      case Msg.CloseMap =>
+        model.updateUiState(_.closeMap)
+
+      case Msg.FocusGeolocation(location) =>
+        model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
+          (model.modify(_.geomap).using(_.focus(location)), cmds)
+        }
+
+      case Msg.DisplayCotonomaGeolocation =>
+        model.geomap.cotonomaLocation match {
+          case Some(location) =>
+            model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
+              (model.modify(_.geomap).using(_.moveToCotonomaLocation), cmds)
+            }
+          case None => (model, Seq.empty)
+        }
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 

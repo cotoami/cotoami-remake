@@ -63,6 +63,20 @@ div.app>header {
       max-width: 40vw;
       overflow-x: hidden;
       white-space: nowrap;
+
+      button.geolocation {
+        margin-left: 10px;
+        opacity: .5;
+
+        &:hover {
+          opacity: 1;
+        }
+
+        span.material-symbols {
+          font-size: 18px; // use px here to fix the icon size
+          vertical-align: top;
+        }
+      }
     }
   }
 

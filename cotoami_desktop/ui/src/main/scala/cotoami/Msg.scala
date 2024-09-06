@@ -33,11 +33,9 @@ object Msg {
       extends Msg
   case class SetRemoteInitialDataset(dataset: InitialDataset) extends Msg
 
-  // UI
+  // Pane
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
-  case object OpenGeomap extends Msg
-  case object CloseMap extends Msg
 
   // Focus
   case class FocusNode(id: Id[Node]) extends Msg
@@ -46,12 +44,17 @@ object Msg {
   case object UnfocusCotonoma extends Msg
   case class FocusCoto(id: Id[Coto]) extends Msg
   case object UnfocusCoto extends Msg
-  case class FocusGeolocation(location: Geolocation) extends Msg
   case class InitCurrentCotonoma(cotonoma: (Cotonoma, Coto)) extends Msg
 
   // Domain
   case object ReloadDomain extends Msg
   case class DomainMsg(subMsg: Domain.Msg) extends Msg
+
+  // Map
+  case object OpenGeomap extends Msg
+  case object CloseMap extends Msg
+  case class FocusGeolocation(location: Geolocation) extends Msg
+  case object DisplayCotonomaGeolocation extends Msg
 
   // Subparts
   case class ModalMsg(subMsg: Modal.Msg) extends Msg
