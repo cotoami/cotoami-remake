@@ -106,8 +106,16 @@ div.app>header {
         }
       }
 
-      button.toggle-geomap.opened span.material-symbols {
+      button.toggle-geomap {
         opacity: 0.5;
+
+        &:hover {
+          opacity: 1.0;
+        }
+
+        &.opened {
+          opacity: 1.0;
+        }
       }
     }
 
