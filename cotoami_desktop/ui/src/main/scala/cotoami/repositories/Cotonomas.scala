@@ -79,11 +79,11 @@ case class Cotonomas(
 
   def focused: Option[Cotonoma] = this.focusedId.flatMap(this.get)
 
-  lazy val supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
+  val supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
 
-  lazy val subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
+  val subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
 
-  lazy val recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
+  val recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
 
   def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
