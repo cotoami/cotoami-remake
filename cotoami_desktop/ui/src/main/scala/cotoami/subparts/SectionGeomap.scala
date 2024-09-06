@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
@@ -13,8 +14,8 @@ import cotoami.models.{GeoBounds, Geolocation}
 object SectionGeomap {
 
   case class Model(
-      center: Geolocation = Geolocation.default,
-      zoom: Double = 8,
+      center: Option[Geolocation] = None,
+      zoom: Option[Double] = None,
       focusedLocation: Option[Geolocation] = None,
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
@@ -28,8 +29,8 @@ object SectionGeomap {
   ) {
     def moveTo(location: Geolocation): Model =
       this.copy(
-        center = location,
-        zoom = 13,
+        center = Some(location),
+        zoom = Some(13),
         _applyCenterZoom = this._applyCenterZoom + 1
       )
 
@@ -45,8 +46,11 @@ object SectionGeomap {
     def refreshMarkers: Model =
       this.copy(_refreshMarkers = this._refreshMarkers + 1)
 
+    def fitBounds: Model =
+      this.copy(_fitBounds = this._fitBounds + 1)
+
     def fitBounds(bounds: GeoBounds): Model =
-      this.copy(bounds = Some(bounds), _fitBounds = this._fitBounds + 1)
+      this.copy(bounds = Some(bounds)).fitBounds
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd[AppMsg]) =
       if (this.initialCotosFetched && !this.fetchingCotosInBounds)
@@ -92,17 +96,25 @@ object SectionGeomap {
     msg match {
       case Msg.Init(bounds) =>
         default.copy(_1 =
-          model.copy(currentBounds = Some(bounds)).addOrRemoveMarkers
+          model
+            .modify(_.currentBounds).setTo(Some(bounds))
+            .addOrRemoveMarkers
+            .pipe { model =>
+              (model.center, model.bounds) match {
+                case (None, Some(bounds)) => model.fitBounds
+                case _                    => model
+              }
+            }
         )
 
       case Msg.LocationClicked(location) =>
         default.copy(_1 = model.copy(focusedLocation = Some(location)))
 
       case Msg.ZoomChanged(zoom) =>
-        default.copy(_1 = model.copy(zoom = zoom))
+        default.copy(_1 = model.copy(zoom = Some(zoom)))
 
       case Msg.CenterMoved(center) =>
-        default.copy(_1 = model.copy(center = center))
+        default.copy(_1 = model.copy(center = Some(center)))
 
       case Msg.BoundsChanged(bounds) => {
         val (geomap, fetch) = model.fetchCotosInBounds(bounds)
@@ -175,8 +187,8 @@ object SectionGeomap {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
-      center = model.center.toMapLibre,
-      zoom = model.zoom,
+      center = model.center.getOrElse(Geolocation.default).toMapLibre,
+      zoom = model.zoom.getOrElse(8),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
       markerDefs = context.domain.cotoMarkerDefs,
       bounds = model.bounds.map(_.toMapLibre),
