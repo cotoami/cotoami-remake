@@ -154,7 +154,7 @@ object NavCotonomas {
       currentNode: Node
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
-    val recentCotonomas = context.domain.recentCotonomas
+    val recentCotonomas = context.domain.recentCotonomasWithoutRoot
     nav(className := "cotonomas header-and-body")(
       header()(
         if (domain.cotonomas.focused.isEmpty) {
@@ -281,18 +281,19 @@ object NavCotonomas {
       model: Model
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
+    val superCotonomas = domain.superCotonomasWithoutRoot
     section(className := "current")(
       h2()("Current"),
       ul(
         className := optionalClasses(
           Seq(
-            ("has-super-cotonomas", domain.superCotonomas.size > 0)
+            ("has-super-cotonomas", superCotonomas.size > 0)
           )
         )
       )(
         li(key := "super")(
           ul(className := "super-cotonomas")(
-            domain.superCotonomas.map(liCotonoma): _*
+            superCotonomas.map(liCotonoma): _*
           )
         ),
         li(key := "current", className := "current-cotonoma cotonoma focused")(

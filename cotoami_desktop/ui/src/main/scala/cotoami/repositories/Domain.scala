@@ -110,12 +110,12 @@ case class Domain(
       .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.links).using(_.putAll(graph.links))
 
-  val recentCotonomas: Seq[Cotonoma] = {
+  val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.currentRootCotonomaId
     this.cotonomas.recent.filter(c => Some(c.id) != rootId)
   }
 
-  val superCotonomas: Seq[Cotonoma] = {
+  val superCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.currentRootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
