@@ -14,18 +14,30 @@ import cotoami.models.{GeoBounds, Geolocation}
 object SectionGeomap {
 
   case class Model(
+      // Center/Zoom
       center: Option[Geolocation] = None,
       zoom: Option[Double] = None,
+      _applyCenterZoom: Int = 0,
+
+      // Focus
       focusedLocation: Option[Geolocation] = None,
+
+      // Bounds
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
-      nextBoundsToFetch: Option[GeoBounds] = None,
+      _fitBounds: Int = 0,
+
+      // Cotonoma location
+      cotonomaLocation: Option[CotonomaLocation] = None,
+
+      // Coto fetching
       initialCotosFetched: Boolean = false,
+      nextBoundsToFetch: Option[GeoBounds] = None,
       fetchingCotosInBounds: Boolean = false,
-      _applyCenterZoom: Int = 0,
+
+      // Marker operations
       _addOrRemoveMarkers: Int = 0,
-      _refreshMarkers: Int = 0,
-      _fitBounds: Int = 0
+      _refreshMarkers: Int = 0
   ) {
     def moveTo(location: Geolocation): Model =
       this.copy(
@@ -39,6 +51,16 @@ object SectionGeomap {
         this.copy(focusedLocation = Some(location))
       else
         this.moveTo(location).copy(focusedLocation = Some(location))
+
+    def moveToCotonomaLocation: Model =
+      this.cotonomaLocation match {
+        case Some(location) =>
+          location match {
+            case CotonomaCenter(location) => moveTo(location)
+            case CotonomaBounds(bounds)   => fitBounds(bounds)
+          }
+        case None => this
+      }
 
     def addOrRemoveMarkers: Model =
       this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)
@@ -67,6 +89,10 @@ object SectionGeomap {
           Cmd.none
         )
   }
+
+  sealed trait CotonomaLocation
+  case class CotonomaCenter(location: Geolocation) extends CotonomaLocation
+  case class CotonomaBounds(bounds: GeoBounds) extends CotonomaLocation
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionGeomapMsg(this)
@@ -100,10 +126,10 @@ object SectionGeomap {
             .modify(_.currentBounds).setTo(Some(bounds))
             .addOrRemoveMarkers
             .pipe { model =>
-              (model.center, model.bounds) match {
-                case (None, Some(bounds)) => model.fitBounds
-                case _                    => model
-              }
+              if (model.center.isDefined)
+                model // Keep the position set by a user
+              else
+                model.moveToCotonomaLocation
             }
         )
 
@@ -126,15 +152,21 @@ object SectionGeomap {
 
       case Msg.InitialCotosFetched(Right(cotos)) => {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
-        val geomap = cotos.geoBounds match {
-          case Some(Right(bounds)) =>
-            center.map(model.moveTo(_)).getOrElse(model.fitBounds(bounds))
-          case Some(Left(location)) =>
-            model.moveTo(center.getOrElse(location))
-          case None => center.map(model.moveTo(_)).getOrElse(model)
+        val cotonomaLocation = center match {
+          case Some(center) => Some(CotonomaCenter(center))
+          case None =>
+            cotos.geoBounds match {
+              case Some(Right(bounds))  => Some(CotonomaBounds(bounds))
+              case Some(Left(location)) => Some(CotonomaCenter(location))
+              case None                 => None
+            }
         }
         default.copy(
-          _1 = geomap.addOrRemoveMarkers.copy(initialCotosFetched = true),
+          _1 = model
+            .modify(_.initialCotosFetched).setTo(true)
+            .modify(_.cotonomaLocation).setTo(cotonomaLocation)
+            .addOrRemoveMarkers
+            .moveToCotonomaLocation,
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
         )
