@@ -53,7 +53,7 @@ impl NodeState {
         pagination: Pagination,
     ) -> Result<Paginated<Cotonoma>, ServiceError> {
         if let Err(errors) = pagination.validate() {
-            return ("sub_cotonomas", errors).into_result();
+            return errors.into_result();
         }
         self.get(move |ds| {
             ds.sub_cotonomas(
@@ -71,7 +71,7 @@ impl NodeState {
         pagination: Pagination,
     ) -> Result<Paginated<Cotonoma>, ServiceError> {
         if let Err(errors) = pagination.validate() {
-            return ("recent_cotonomas", errors).into_result();
+            return errors.into_result();
         }
         self.get(move |ds| {
             ds.recent_cotonomas(
@@ -90,7 +90,7 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<(Cotonoma, Coto), ServiceError> {
         if let Err(errors) = input.validate() {
-            return ("post_cotonoma", errors).into_result();
+            return errors.into_result();
         }
         self.change_in_cotonoma(
             input,

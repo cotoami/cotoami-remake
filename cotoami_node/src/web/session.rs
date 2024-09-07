@@ -98,7 +98,7 @@ async fn create_owner_session(
     Form(form): Form<CreateOwnerSession>,
 ) -> Result<(StatusCode, CookieJar, Content<Session>), ServiceError> {
     if let Err(errors) = form.validate() {
-        return ("session/owner", errors).into_result();
+        return errors.into_result();
     }
     spawn_blocking(move || {
         let db = state.db().new_session()?;

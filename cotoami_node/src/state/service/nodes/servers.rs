@@ -58,7 +58,7 @@ impl NodeState {
         input: LogIntoServer,
     ) -> Result<(ClientNodeSession, HttpClient), ServiceError> {
         if let Err(errors) = input.validate() {
-            return ("connect_server_node", errors).into_result();
+            return errors.into_result();
         }
 
         let url_prefix = input.url_prefix.clone().unwrap_or_else(|| unreachable!());
@@ -79,7 +79,7 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<Server, ServiceError> {
         if let Err(errors) = input.validate() {
-            return ("add_server_node", errors).into_result();
+            return errors.into_result();
         }
 
         // Save the password before moving the `input`
@@ -150,7 +150,7 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<ServerNode, ServiceError> {
         if let Err(errors) = values.validate() {
-            return ("update_server_node", errors).into_result();
+            return errors.into_result();
         }
         if !self.server_conns().contains(&node_id) {
             return Err(ServiceError::NotFound(Some(format!(

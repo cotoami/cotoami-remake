@@ -22,7 +22,7 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<ClientAdded, ServiceError> {
         if let Err(errors) = input.validate() {
-            return ("add_client_node", errors).into_result();
+            return errors.into_result();
         }
 
         // Inputs

@@ -30,7 +30,7 @@ async fn recent_cotonomas(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
-        return ("cotonomas", errors).into_result();
+        return errors.into_result();
     }
     state
         .recent_cotonomas(Some(node_id), pagination)

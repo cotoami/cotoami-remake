@@ -86,17 +86,17 @@ where
 }
 
 /// Create an [InputErrors] from a resource name and [ValidationErrors] as a tuple.
-impl From<(&str, ValidationErrors)> for InputErrors {
-    fn from((resource, src): (&str, ValidationErrors)) -> Self {
+impl From<ValidationErrors> for InputErrors {
+    fn from(src: ValidationErrors) -> Self {
         let dst = src
             .into_errors()
             .into_iter()
             .flat_map(|(field, errors_kind)| {
-                // ignore Struct and List variants in ValidationErrorsKind for now
+                // TODO: ignore Struct and List variants in ValidationErrorsKind for now
                 if let ValidationErrorsKind::Field(errors) = errors_kind {
                     errors
                         .into_iter()
-                        .map(|e| InputError::from_validation_error(resource, field, e))
+                        .map(|e| InputError::from_validation_error(field, e))
                         .collect()
                 } else {
                     Vec::new()
@@ -107,7 +107,7 @@ impl From<(&str, ValidationErrors)> for InputErrors {
     }
 }
 
-impl<T> IntoServiceResult<T> for (&str, ValidationErrors) {
+impl<T> IntoServiceResult<T> for ValidationErrors {
     fn into_result(self) -> Result<T, ServiceError> { into_result(self) }
 }
 
@@ -121,29 +121,29 @@ impl From<InputErrors> for ServiceError {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) struct InputError {
-    resource: String,
     field: String,
     code: String,
+    message: Option<String>,
     params: HashMap<String, Value>,
 }
 
 impl InputError {
     pub fn new(
-        resource: impl Into<String>,
         field: impl Into<String>,
         code: impl Into<String>,
+        message: Option<impl Into<String>>,
     ) -> Self {
         Self {
-            resource: resource.into(),
             field: field.into(),
             code: code.into(),
+            message: message.map(Into::into),
             params: HashMap::default(),
         }
     }
 
     /// Create an [InputError] from a [validator::ValidationError]
-    fn from_validation_error(resource: &str, field: &str, src: ValidationError) -> Self {
-        let mut input_error = Self::new(resource, field, src.code);
+    fn from_validation_error(field: &str, src: ValidationError) -> Self {
+        let mut input_error = Self::new(field, src.code, src.message);
         for (key, value) in src.params {
             input_error.insert_param(key, value);
         }

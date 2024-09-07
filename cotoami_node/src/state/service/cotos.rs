@@ -25,7 +25,7 @@ impl NodeState {
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
         if let Err(errors) = pagination.validate() {
-            return ("recent_cotos", errors).into_result();
+            return errors.into_result();
         }
         self.get(move |ds| {
             let page = ds.recent_cotos(
@@ -73,7 +73,7 @@ impl NodeState {
         pagination: Pagination,
     ) -> Result<PaginatedCotos, ServiceError> {
         if let Err(errors) = pagination.validate() {
-            return ("search_cotos", errors).into_result();
+            return errors.into_result();
         }
         self.get(move |ds| {
             let page = ds.search_cotos(
@@ -95,7 +95,7 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<Coto, ServiceError> {
         if let Err(errors) = input.validate() {
-            return ("post_coto", errors).into_result();
+            return errors.into_result();
         }
         self.change_in_cotonoma(
             input,

@@ -38,7 +38,7 @@ async fn recent_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
-        return ("cotos", errors).into_result();
+        return errors.into_result();
     }
     state
         .recent_cotos(None, Some(cotonoma_id), pagination)
@@ -89,7 +89,7 @@ async fn search_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
-        return ("cotos", errors).into_result();
+        return errors.into_result();
     }
     state
         .search_cotos(query, None, Some(cotonoma_id), pagination)

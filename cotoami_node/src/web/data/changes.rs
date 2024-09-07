@@ -29,7 +29,7 @@ async fn chunk_of_changes(
     Query(position): Query<Position>,
 ) -> Result<Content<ChunkOfChanges>, ServiceError> {
     if let Err(errors) = position.validate() {
-        return ("changes", errors).into_result();
+        return errors.into_result();
     }
     let from = position.from.unwrap_or_else(|| unreachable!());
     state

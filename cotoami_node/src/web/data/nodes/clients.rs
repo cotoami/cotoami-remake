@@ -37,7 +37,7 @@ async fn recent_client_nodes(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<Paginated<Node>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
-        return ("nodes/clients", errors).into_result();
+        return errors.into_result();
     }
     spawn_blocking(move || {
         let mut db = state.db().new_session()?;
