@@ -30,6 +30,15 @@ impl<'a> DatabaseSession<'a> {
     pub fn all_nodes(&mut self) -> Result<Vec<Node>> { self.read_transaction(node_ops::all()) }
 
     /// Import a node data sent from another node.
+    ///
+    /// This operation occurs during initializing a connection between two nodes
+    /// as they exchange their node info before the parent starts sending changelogs
+    /// to the child.
+    ///
+    /// A change will be made only when:
+    /// 1. The given node does not exist in the database (INSERT).
+    /// 2. The ID of the given node already exists in the database and the version of
+    ///    the given node is larger than the existing one (UPDATE).
     pub fn import_node(&self, node: &Node) -> Result<Option<(Node, ChangelogEntry)>> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
