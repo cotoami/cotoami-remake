@@ -55,6 +55,9 @@ case class Nodes(
     else
       this.modify(_.parentIds).using(id +: _)
 
+  def setIcon(id: Id[Node], icon: String): Nodes =
+    this.modify(_.map.index(id)).using(_.setIcon(icon))
+
   def getServer(id: Id[Node]): Option[Server] = this.serverMap.get(id)
 
   def addServer(server: Server): Nodes = {

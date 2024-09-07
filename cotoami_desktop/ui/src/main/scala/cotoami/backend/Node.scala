@@ -8,22 +8,28 @@ import java.time.Instant
 import fui.{Browser, Cmd}
 import cotoami.utils.Validation
 
-case class Node(json: NodeJson) {
-  def id: Id[Node] = Id(this.json.uuid)
+case class Node(
+    id: Id[Node],
+    name: String,
+    rootCotonomaId: Option[Id[Cotonoma]],
+    version: Int,
+    createdAtAsString: String
+)(icon: String) {
+
+  def setIcon(icon: String): Node = {
+    dom.URL.revokeObjectURL(this.iconUrl) // revoke the old image URL
+    this.copy(version = this.version + 1)(icon = icon)
+  }
 
   lazy val iconUrl: String = {
     // `URL.revokeObjectURL()` wouldn't be needed because once a node object
-    // has been loaded it will be retained until the window is closed.
+    // has been loaded it will be retained until the window is closed
+    // (unless the icon is changed by `setIcon` which revokes the URL).
     val blob = Browser.decodeBase64(this.icon, Node.IconMimeType)
     dom.URL.createObjectURL(blob)
   }
-  private def icon: String = this.json.icon
 
-  def name: String = this.json.name
-  def rootCotonomaId: Option[Id[Cotonoma]] =
-    Nullable.toOption(this.json.root_cotonoma_id).map(Id(_))
-  def version: Int = this.json.version
-  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
+  lazy val createdAt: Instant = parseJsonDateTime(this.createdAtAsString)
 
   def newCotoMarkerHtml(inContext: Boolean): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
@@ -58,6 +64,15 @@ case class Node(json: NodeJson) {
 
 object Node {
   val IconMimeType = "image/png"
+
+  def apply(json: NodeJson): Node =
+    Node(
+      Id(json.uuid),
+      json.name,
+      Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
+      json.version,
+      json.created_at
+    )(json.icon)
 
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)

@@ -18,6 +18,7 @@ trait ChangeJson extends js.Object {
   val CreateNode: js.UndefOr[CreateNodeJson] = js.native
   val UpsertNode: js.UndefOr[NodeJson] = js.native
   val RenameNode: js.UndefOr[RenameNodeJson] = js.native
+  val SetNodeIcon: js.UndefOr[SetNodeIconJson] = js.native
   val SetRootCotonoma: js.UndefOr[SetRootCotonomaJson] = js.native
   val CreateCoto: js.UndefOr[CotoJson] = js.native
   val EditCoto: js.UndefOr[EditCotoJson] = js.native
@@ -41,6 +42,12 @@ trait RenameNodeJson extends js.Object {
   val node_id: String = js.native
   val name: String = js.native
   val updated_at: String = js.native
+}
+
+@js.native
+trait SetNodeIconJson extends js.Object {
+  val node_id: String = js.native
+  val icon: String = js.native // Base64 encoded image binary
 }
 
 @js.native

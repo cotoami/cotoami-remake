@@ -197,6 +197,7 @@ case class Model(
   }
 
   private def applyChange(change: ChangeJson): (Model, Seq[Cmd[Msg]]) = {
+    // Handle changes in order of assumed their frequency:
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
       return this.postCoto(cotoJson)
@@ -222,11 +223,22 @@ case class Model(
     // CreateNode
     for (createNodeJson <- change.CreateNode.toOption) {
       val model =
-        this.modify(_.domain.nodes)
-          .using(_.put(Node(createNodeJson.node)))
+        this.modify(_.domain.nodes).using(_.put(Node(createNodeJson.node)))
       return Nullable.toOption(createNodeJson.root)
         .map(model.postCotonoma(_))
         .getOrElse((model, Seq.empty))
+    }
+
+    // SetNodeIcon
+    for (setNodeIconJson <- change.SetNodeIcon.toOption) {
+      return (
+        this
+          .modify(_.domain.nodes).using(
+            _.setIcon(Id(setNodeIconJson.node_id), setNodeIconJson.icon)
+          )
+          .modify(_.geomap).using(_.refreshMarkers),
+        Seq.empty
+      )
     }
 
     (this, Seq.empty)
