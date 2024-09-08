@@ -221,6 +221,12 @@ object SectionGeomap {
       id = "main-geomap",
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
       zoom = model.zoom.getOrElse(8),
+      detectZoomClass = Some(zoom =>
+        if (zoom <= 7)
+          Some("hide-labels")
+        else
+          None
+      ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
       markerDefs = context.domain.cotoMarkerDefs,
       bounds = model.bounds.map(_.toMapLibre),

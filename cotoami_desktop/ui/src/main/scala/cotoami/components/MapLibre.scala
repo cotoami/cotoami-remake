@@ -34,6 +34,7 @@ import cotoami.libs.geomap.pmtiles
       // Center/Zoom
       center: LngLat,
       zoom: Double,
+      detectZoomClass: Option[Double => Option[String]] = None,
 
       // Markers
       focusedLocation: Option[LngLat] = None,
@@ -63,6 +64,8 @@ import cotoami.libs.geomap.pmtiles
   )
 
   val component = FunctionalComponent[Props] { props =>
+    val (zoomClass, setZoomClass) = useState[Option[String]](None)
+
     val resourceDirRef = useRef("")
     val mapRef = useRef[Option[ExtendedMap]](None)
 
@@ -197,6 +200,16 @@ import cotoami.libs.geomap.pmtiles
               map.on("click", onClick)
               map.on("zoomend", onZoomend)
               map.on("moveend", onMoveend)
+              map.on(
+                "zoom",
+                (e: MapLibreEvent) => {
+                  setZoomClass(
+                    props.detectZoomClass.flatMap(detect =>
+                      detect(e.target.getZoom())
+                    )
+                  )
+                }
+              )
 
               mapRef.current = Some(map)
             }
@@ -274,7 +287,12 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.refreshMarkers)
     )
 
-    section(id := props.id, className := "geomap")()
+    div(className := s"geomap-container ${zoomClass.getOrElse("")}")(
+      // For some reason, changing the `className` of the map element dynamically
+      // breaks MapLibre display. So we have to put the `geomap-container` element and
+      // modify its `className` instead.
+      section(id := props.id, className := "geomap")()
+    )
   }
 
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
