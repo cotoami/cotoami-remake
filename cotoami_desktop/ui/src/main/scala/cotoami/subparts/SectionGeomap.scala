@@ -229,6 +229,7 @@ object SectionGeomap {
       ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
       markerDefs = context.domain.cotoMarkerDefs,
+      focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model._applyCenterZoom,
       addOrRemoveMarkers = model._addOrRemoveMarkers,

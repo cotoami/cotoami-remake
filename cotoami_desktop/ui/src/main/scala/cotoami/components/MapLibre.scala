@@ -291,7 +291,12 @@ import cotoami.libs.geomap.pmtiles
     // Focus/Unfocus marker
     useEffect(
       () => {
-        mapRef.current.foreach(_.refreshMarkers(props.markerDefs))
+        mapRef.current.foreach(map =>
+          props.focusedMarkerId match {
+            case Some(markerId) => map.focusMarker(markerId)
+            case None           => map.unfocusMarker()
+          }
+        )
       },
       Seq(props.focusedMarkerId.toString())
     )
@@ -307,6 +312,7 @@ import cotoami.libs.geomap.pmtiles
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
   private val PMTilesUrlPrefix = "pmtiles://"
   private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
+  private val FocusedLocationMarkerClassName = "focused-location-marker"
   private val FocusedMarkerClassName = "focused-marker"
 
   private def isUrl(string: String): Boolean =
@@ -328,6 +334,7 @@ import cotoami.libs.geomap.pmtiles
       val marker = new Marker()
         .setLngLat(lngLat)
         .addTo(this)
+      marker.addClassName(FocusedLocationMarkerClassName)
       this.focusedLocationMarker = Some(marker)
     }
 

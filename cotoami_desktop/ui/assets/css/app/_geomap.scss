@@ -4,6 +4,10 @@ section.geomap {
   --cotonoma-label-width: 150px;
   --cotonoma-label-left: calc(((var(--cotonoma-label-width) / 2) - (var(--marker-size) / 2)) * -1);
 
+  .focused-location-marker {
+    z-index: 3;
+  }
+
   div.geomap-marker {
     width: var(--marker-size);
     height: var(--marker-size);
@@ -12,6 +16,10 @@ section.geomap {
 
     &:hover {
       cursor: pointer;
+    }
+
+    &.focused-marker {
+      background-color: #ffa500;
     }
 
     img {
