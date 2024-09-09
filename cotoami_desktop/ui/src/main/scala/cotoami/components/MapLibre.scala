@@ -39,6 +39,7 @@ import cotoami.libs.geomap.pmtiles
       // Markers
       focusedLocation: Option[LngLat] = None,
       markerDefs: Seq[MarkerDef] = Seq.empty,
+      focusedMarkerId: Option[String] = None,
 
       // GeoBounds
       bounds: Option[LngLatBounds] = None,
@@ -228,7 +229,7 @@ import cotoami.libs.geomap.pmtiles
       Seq.empty
     )
 
-    // On/Off a focused marker.
+    // On/Off a focused location marker.
     useEffect(
       () =>
         (mapRef.current, props.focusedLocation) match {
@@ -287,6 +288,14 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.refreshMarkers)
     )
 
+    // Focus/Unfocus marker
+    useEffect(
+      () => {
+        mapRef.current.foreach(_.refreshMarkers(props.markerDefs))
+      },
+      Seq(props.focusedMarkerId.toString())
+    )
+
     div(className := s"geomap-container ${zoomClass.getOrElse("")}")(
       // For some reason, changing the `className` of the map element dynamically
       // breaks MapLibre display. So we have to put the `geomap-container` element and
@@ -298,13 +307,15 @@ import cotoami.libs.geomap.pmtiles
   private val UrlRegex = "^([a-z][a-z0-9+\\-.]*):".r
   private val PMTilesUrlPrefix = "pmtiles://"
   private val VectorTilesUrlPlaceHolder = "$mainVectorTilesUrl"
+  private val FocusedMarkerClassName = "focused-marker"
 
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined
 
   class ExtendedMap(options: MapOptions) extends Map(options) {
-    var focusedMarker: Option[Marker] = None
+    var focusedLocationMarker: Option[Marker] = None
     val markers: MutableMap[String, Marker] = MutableMap.empty
+    var focusedMarkerId: Option[String] = None
 
     def disableRotation(): Unit = {
       this.dragRotate.disable()
@@ -317,11 +328,26 @@ import cotoami.libs.geomap.pmtiles
       val marker = new Marker()
         .setLngLat(lngLat)
         .addTo(this)
-      this.focusedMarker = Some(marker)
+      this.focusedLocationMarker = Some(marker)
     }
 
     def unfocusLocation(): Unit = {
-      this.focusedMarker.foreach(_.remove())
+      this.focusedLocationMarker.foreach(_.remove())
+    }
+
+    def focusMarker(markerId: String): Unit = {
+      unfocusMarker()
+      markers.get(markerId).foreach { marker =>
+        marker.addClassName(FocusedMarkerClassName)
+        this.focusedMarkerId = Some(markerId)
+      }
+    }
+
+    def unfocusMarker(): Unit = {
+      this.focusedMarkerId.foreach(
+        markers.get(_).foreach(_.removeClassName(FocusedMarkerClassName))
+      )
+      this.focusedMarkerId = None
     }
 
     def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {

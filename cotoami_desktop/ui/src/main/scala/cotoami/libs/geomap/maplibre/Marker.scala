@@ -20,6 +20,14 @@ class Marker(options: js.UndefOr[MarkerOptions] = js.undefined)
   /** Removes the marker from a map.
     */
   def remove(): Marker = js.native
+
+  /** Adds a CSS class to the marker element.
+    */
+  def addClassName(className: String): Unit = js.native
+
+  /** Removes a CSS class from the marker element.
+    */
+  def removeClassName(className: String): Unit = js.native
 }
 
 trait MarkerOptions extends js.Object {
