@@ -36,6 +36,7 @@ object ViewCoto {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     div(className := "classified-as")(
       ulOtherCotonomas(coto),
+      buttonGeolocation(coto),
       Option.when(context.domain.pinned(coto.id)) {
         div(className := "pinned")(materialSymbol("push_pin"))
       }
@@ -237,19 +238,8 @@ object ViewCoto {
 
   def articleFooter(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context): ReactElement =
     footer()(
-      coto.geolocation.map(location =>
-        button(
-          className := "geolocation default",
-          onClick := (e => {
-            e.stopPropagation()
-            dispatch(AppMsg.FocusGeolocation(location))
-          })
-        )(
-          materialSymbol("location_on")
-        )
-      ),
       time(
         className := "posted-at",
         title := context.time.formatDateTime(coto.createdAt),
@@ -258,6 +248,21 @@ object ViewCoto {
         })
       )(
         context.time.display(coto.createdAt)
+      )
+    )
+
+  def buttonGeolocation(
+      coto: Coto
+  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
+    coto.geolocation.map(location =>
+      button(
+        className := "geolocation default",
+        onClick := (e => {
+          e.stopPropagation()
+          dispatch(AppMsg.FocusGeolocation(location))
+        })
+      )(
+        materialSymbol("location_on")
       )
     )
 }
