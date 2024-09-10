@@ -56,7 +56,7 @@ import cotoami.libs.geomap.pmtiles
       styleLocation: String = "/geomap/style.json",
       vectorTilesLocation: String = "/geomap/japan.pmtiles",
 
-      // Event handlers
+      // Event handlers (which will be registered during map or marker initialization)
       onInit: Option[LngLatBounds => Unit] = None,
       onClick: Option[MapMouseEvent => Unit] = None,
       onZoomChanged: Option[Double => Unit] = None,
@@ -72,18 +72,6 @@ import cotoami.libs.geomap.pmtiles
 
     // To track the map state to detect change
     val boundsRef = useRef[Option[LngLatBounds]](None)
-
-    // To allow the callbacks to access some of up-to-date props
-    val onClickRef = useRef(props.onClick)
-    val onZoomChangedRef = useRef(props.onZoomChanged)
-    val onCenterMovedRef = useRef(props.onCenterMoved)
-    val onBoundsChangedRef = useRef(props.onBoundsChanged)
-    useEffect(() => {
-      onClickRef.current = props.onClick
-      onZoomChangedRef.current = props.onZoomChanged
-      onCenterMovedRef.current = props.onCenterMoved
-      onBoundsChangedRef.current = props.onBoundsChanged
-    })
 
     // Resolve a path as an absolute URL.
     //
@@ -145,21 +133,27 @@ import cotoami.libs.geomap.pmtiles
     useEffect(
       () => {
         val onClick: js.Function1[MapMouseEvent, Unit] =
-          e => onClickRef.current.foreach(_(e))
+          e => props.onClick.foreach(_(e))
 
         val detectBoundsChange = (e: MapLibreEvent) => {
-          val bounds = e.target.getBounds()
-          if (Some(bounds).toString() != boundsRef.current.toString()) {
-            boundsRef.current = Some(bounds)
-            onBoundsChangedRef.current.foreach(_(bounds))
+          props.onBoundsChanged match {
+            case Some(onBoundsChanged) => {
+              val bounds = e.target.getBounds()
+              if (Some(bounds).toString() != boundsRef.current.toString()) {
+                boundsRef.current = Some(bounds)
+                onBoundsChanged(bounds)
+              }
+            }
+            case None => ()
           }
+
         }
         val onZoomend: js.Function1[MapLibreEvent, Unit] = e => {
-          onZoomChangedRef.current.foreach(_(e.target.getZoom()))
+          props.onZoomChanged.foreach(_(e.target.getZoom()))
           detectBoundsChange(e)
         }
         val onMoveend: js.Function1[MapLibreEvent, Unit] = e => {
-          onCenterMovedRef.current.foreach(_(e.target.getCenter()))
+          props.onCenterMoved.foreach(_(e.target.getCenter()))
           detectBoundsChange(e)
         }
 
