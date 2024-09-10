@@ -4,7 +4,7 @@ import scala.util.chaining._
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, GeolocatedCotos, Id}
 import cotoami.components.MapLibre
@@ -113,6 +113,7 @@ object SectionGeomap {
     case class CotosInBoundsFetched(
         result: Either[ErrorJson, GeolocatedCotos]
     ) extends Msg
+    case class MarkerClicked(id: String) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -203,6 +204,18 @@ object SectionGeomap {
           _1 = model.copy(fetchingCotosInBounds = false),
           _3 = Seq(ErrorJson.log(e, "Couldn't fetch cotos in the bounds."))
         )
+
+      case Msg.MarkerClicked(id) =>
+        context.uiState match {
+          case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
+            default.copy(_3 = Seq(Browser.send(AppMsg.FocusCoto(Id(id)))))
+          case _ =>
+            default.copy(_3 =
+              Seq(
+                Browser.send(SectionTraversals.Msg.OpenTraversal(Id(id)).toApp)
+              )
+            )
+        }
     }
   }
 
@@ -252,9 +265,7 @@ object SectionGeomap {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.BoundsChanged(bounds).toApp)
       }),
-      onMarkerClick = Some(id => {
-        dispatch(AppMsg.FocusCoto(Id(id)))
-      })
+      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id).toApp))
     )
   }
 }

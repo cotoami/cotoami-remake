@@ -18,6 +18,7 @@ trait Context {
   def time: Time
   def i18n: I18n
   def log: Log
+  def uiState: Option[UiState]
   def domain: Domain
 }
 
