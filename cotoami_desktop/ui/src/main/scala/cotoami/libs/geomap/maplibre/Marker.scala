@@ -28,6 +28,18 @@ class Marker(options: js.UndefOr[MarkerOptions] = js.undefined)
   /** Removes a CSS class from the marker element.
     */
   def removeClassName(className: String): Unit = js.native
+
+  /** Returns the Marker's HTML element.
+    */
+  def getElement(): dom.HTMLElement = js.native
+
+  /** Adds a listener to a specified event type.
+    */
+  def on[Event](
+      eventType: String,
+      listener: js.Function1[Event, Unit]
+  ): Map = js.native
+
 }
 
 trait MarkerOptions extends js.Object {

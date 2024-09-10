@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 
 import fui.Cmd
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.backend.{ErrorJson, GeolocatedCotos}
+import cotoami.backend.{ErrorJson, GeolocatedCotos, Id}
 import cotoami.components.MapLibre
 import cotoami.repositories.Domain
 import cotoami.models.{GeoBounds, Geolocation}
@@ -251,6 +251,9 @@ object SectionGeomap {
       onBoundsChanged = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.BoundsChanged(bounds).toApp)
+      }),
+      onMarkerClick = Some(id => {
+        dispatch(AppMsg.FocusCoto(Id(id)))
       })
     )
   }

@@ -61,7 +61,8 @@ import cotoami.libs.geomap.pmtiles
       onClick: Option[MapMouseEvent => Unit] = None,
       onZoomChanged: Option[Double => Unit] = None,
       onCenterMoved: Option[LngLat => Unit] = None,
-      onBoundsChanged: Option[LngLatBounds => Unit] = None
+      onBoundsChanged: Option[LngLatBounds => Unit] = None,
+      onMarkerClick: Option[String => Unit] = None
   )
 
   val component = FunctionalComponent[Props] { props =>
@@ -164,13 +165,16 @@ import cotoami.libs.geomap.pmtiles
 
             // Delay rendering the map to ensure it to fit to the container section.
             js.timers.setTimeout(10) {
-              val map = new ExtendedMap(new MapOptions {
-                override val container = props.id
-                override val zoom = props.zoom
-                override val center = props.center
-                override val style = toAbsoluteUrl(props.styleLocation)
-                override val transformRequest = _transformRequest
-              })
+              val map = new ExtendedMap(
+                new MapOptions {
+                  override val container = props.id
+                  override val zoom = props.zoom
+                  override val center = props.center
+                  override val style = toAbsoluteUrl(props.styleLocation)
+                  override val transformRequest = _transformRequest
+                },
+                props.onMarkerClick
+              )
               map.addControl(
                 new NavigationControl(
                   new NavigationControlOptions() {
@@ -312,7 +316,10 @@ import cotoami.libs.geomap.pmtiles
   private def isUrl(string: String): Boolean =
     UrlRegex.findFirstIn(string).isDefined
 
-  class ExtendedMap(options: MapOptions) extends Map(options) {
+  class ExtendedMap(
+      options: MapOptions,
+      onMarkerClick: Option[String => Unit] = None
+  ) extends Map(options) {
     var focusedLocationMarker: Option[Marker] = None
     val markers: MutableMap[String, Marker] = MutableMap.empty
     var focusedMarkerId: Option[String] = None
@@ -378,6 +385,14 @@ import cotoami.libs.geomap.pmtiles
         }
       }).setLngLat(js.Tuple2.fromScalaTuple2(markerDef.lngLat))
         .addTo(this)
+      marker.getElement().addEventListener(
+        "click",
+        (e: dom.MouseEvent) => {
+          e.stopPropagation()
+          this.onMarkerClick.foreach(_(markerDef.id))
+        }
+      )
+
       this.markers.put(markerDef.id, marker)
     }
 
