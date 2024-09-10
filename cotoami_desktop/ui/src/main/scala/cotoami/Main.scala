@@ -208,7 +208,13 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
-      case Msg.FocusCoto(id) => model.focusCoto(id)
+      case Msg.FocusCoto(id) =>
+        update(Msg.OpenOrClosePane(PaneFlow.PaneName, true), model) match {
+          case (model, cmds1) =>
+            model.focusCoto(id) match {
+              case (model, cmds2) => (model, cmds1 ++ cmds2)
+            }
+        }
 
       case Msg.UnfocusCoto =>
         (
