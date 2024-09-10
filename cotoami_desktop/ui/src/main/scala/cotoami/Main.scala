@@ -297,23 +297,9 @@ object Main {
         SectionPinnedCotos.update(submsg, model)
 
       case Msg.SectionTraversalsMsg(submsg) => {
-        val (traversals, cmds) = SectionTraversals.update(
-          submsg,
-          model.traversals,
-          model.domain
-        )
-        (
-          model.copy(traversals = traversals),
-          (submsg, model.uiState) match {
-            // Open the stock pane on OpenTraversal if it's closed.
-            case (SectionTraversals.Msg.OpenTraversal(_), Some(uiState))
-                if !uiState.paneOpened(PaneStock.PaneName) =>
-              Browser.send(
-                Msg.OpenOrClosePane(PaneStock.PaneName, true)
-              ) +: cmds
-            case _ => cmds
-          }
-        )
+        val (traversals, cmds) =
+          SectionTraversals.update(submsg, model.traversals)
+        (model.copy(traversals = traversals), cmds)
       }
 
       case Msg.SectionGeomapMsg(submsg) => {

@@ -12,10 +12,10 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 import java.time.Instant
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Msg => AppMsg}
 import cotoami.backend.{Coto, Id, Link}
-import cotoami.repositories.{Domain, Links}
+import cotoami.repositories.Links
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -98,17 +98,18 @@ object SectionTraversals {
     case class StepToParent(traversalIndex: Int, parentId: Id[Coto]) extends Msg
   }
 
-  def update(
-      msg: Msg,
-      model: Model,
-      domain: Domain
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
   ): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
       case Msg.OpenTraversal(start) =>
         (
           model.openTraversal(start),
-          // scroll to the right end on opening a traversal.
           Seq(
+            Browser.send(
+              AppMsg.OpenOrClosePane(PaneStock.PaneName, true)
+            ),
+            // scroll to the right end on opening a traversal.
             Cmd(IO.async { cb =>
               IO {
                 js.timers.setTimeout(10) {
@@ -124,7 +125,7 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            domain.lazyFetchGraphFromCoto(start)
+            context.domain.lazyFetchGraphFromCoto(start)
           )
         )
 
@@ -151,12 +152,15 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            domain.lazyFetchGraphFromCoto(step)
+            context.domain.lazyFetchGraphFromCoto(step)
           )
         )
 
       case Msg.StepToParent(traversalIndex, parentId) =>
-        (model.stepToParent(traversalIndex, parentId, domain.links), Seq.empty)
+        (
+          model.stepToParent(traversalIndex, parentId, context.domain.links),
+          Seq.empty
+        )
     }
 
   def apply(
