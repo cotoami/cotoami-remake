@@ -59,6 +59,7 @@ object ViewCoto {
               className := "also-posted-in",
               onClick := ((e) => {
                 e.preventDefault()
+                e.stopPropagation()
                 dispatch(AppMsg.FocusCotonoma(cotonoma))
               })
             )(cotonoma.name)
