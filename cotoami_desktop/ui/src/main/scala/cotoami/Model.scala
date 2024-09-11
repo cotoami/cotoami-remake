@@ -69,8 +69,7 @@ case class Model(
     this.copy(
       url = url,
       waitingPosts = WaitingPosts(),
-      traversals = SectionTraversals.Model(),
-      geomap = SectionGeomap.Model()
+      traversals = SectionTraversals.Model()
     )
 
   def updateUiState(update: UiState => UiState): (Model, Seq[Cmd[Msg]]) =

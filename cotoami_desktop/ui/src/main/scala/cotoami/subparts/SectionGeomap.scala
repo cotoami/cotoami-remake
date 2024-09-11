@@ -39,6 +39,9 @@ object SectionGeomap {
       _addOrRemoveMarkers: Int = 0,
       _refreshMarkers: Int = 0
   ) {
+    def applyCenterZoom: Model =
+      this.copy(_applyCenterZoom = this._applyCenterZoom + 1)
+
     def moveTo(location: Geolocation): Model =
       this.copy(
         center = Some(location),
@@ -90,6 +93,12 @@ object SectionGeomap {
           this.copy(nextBoundsToFetch = Some(bounds)),
           Cmd.none
         )
+
+    def fetchCotosInCurrentBounds: (Model, Cmd[AppMsg]) =
+      this.currentBounds match {
+        case Some(currentBounds) => fetchCotosInBounds(currentBounds)
+        case None                => (this, Cmd.none)
+      }
   }
 
   sealed trait CotonomaLocation
@@ -128,13 +137,7 @@ object SectionGeomap {
           model
             .modify(_.currentBounds).setTo(Some(bounds))
             .addOrRemoveMarkers
-            .pipe { model =>
-              if (model.center.isDefined)
-                model // Keep the position set by a user
-              else
-                model.moveToCotonomaLocation
-            }
-        )
+        ).pipe(moveToCotonomaOrFetchInCurrentBounds)
 
       case Msg.LocationClicked(location) =>
         default.copy(_1 = model.copy(focusedLocation = Some(location)))
@@ -168,11 +171,10 @@ object SectionGeomap {
           _1 = model
             .modify(_.initialCotosFetched).setTo(true)
             .modify(_.cotonomaLocation).setTo(cotonomaLocation)
-            .addOrRemoveMarkers
-            .moveToCotonomaLocation,
+            .addOrRemoveMarkers,
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
-        )
+        ).pipe(moveToCotonomaOrFetchInCurrentBounds)
       }
 
       case Msg.InitialCotosFetched(Left(e)) =>
@@ -220,6 +222,18 @@ object SectionGeomap {
         }
     }
   }
+
+  private def moveToCotonomaOrFetchInCurrentBounds(
+      result: (Model, Domain, Seq[Cmd[AppMsg]])
+  ): (Model, Domain, Seq[Cmd[AppMsg]]) =
+    result.pipe { case (model, domain, cmds) =>
+      if (model.cotonomaLocation.isDefined)
+        (model.moveToCotonomaLocation, domain, cmds)
+      else
+        model.fetchCotosInCurrentBounds.pipe { case (model, cmd) =>
+          (model, domain, cmds :+ cmd)
+        }
+    }
 
   def fetchInitialCotos()(implicit context: Context): Cmd[AppMsg] =
     GeolocatedCotos.fetch(
