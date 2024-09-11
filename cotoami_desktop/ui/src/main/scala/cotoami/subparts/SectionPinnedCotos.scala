@@ -255,7 +255,7 @@ object SectionPinnedCotos {
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
-          ViewCoto.divClassifiedAs(coto)
+          ViewCoto.divAttributes(coto)
         ),
         div(className := "body")(
           toolButton(
@@ -365,7 +365,7 @@ object SectionPinnedCotos {
             tipPlacement = "right",
             classes = "unlink"
           ),
-          ViewCoto.divClassifiedAs(coto)
+          ViewCoto.divAttributes(coto)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto),

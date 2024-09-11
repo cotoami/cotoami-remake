@@ -327,7 +327,7 @@ object SectionTimeline {
       onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
     )(
       header()(
-        ViewCoto.divClassifiedAs(coto),
+        ViewCoto.divAttributes(coto),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
           ViewCoto.addressAuthor(coto, domain.nodes)
         }

@@ -56,7 +56,7 @@ object SectionCotoDetails {
 
     article(className := "main-coto coto")(
       header()(
-        ViewCoto.divClassifiedAs(coto),
+        ViewCoto.divAttributes(coto),
         ViewCoto.addressAuthor(coto, domain.nodes)
       ),
       div(className := "body")(
@@ -102,7 +102,7 @@ object SectionCotoDetails {
               tipPlacement = "right",
               classes = "unlink"
             ),
-            ViewCoto.divClassifiedAs(coto),
+            ViewCoto.divAttributes(coto),
             Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
               ViewCoto.addressAuthor(coto, domain.nodes)
             }

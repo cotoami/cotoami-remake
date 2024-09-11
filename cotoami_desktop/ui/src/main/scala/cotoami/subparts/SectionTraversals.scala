@@ -260,7 +260,7 @@ object SectionTraversals {
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         header()(
-          ViewCoto.divClassifiedAs(coto)
+          ViewCoto.divAttributes(coto)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto)
@@ -308,7 +308,7 @@ object SectionTraversals {
             tipPlacement = "right",
             classes = "unlink"
           ),
-          ViewCoto.divClassifiedAs(coto)
+          ViewCoto.divAttributes(coto)
         ),
         div(className := "body")(
           // Coto content

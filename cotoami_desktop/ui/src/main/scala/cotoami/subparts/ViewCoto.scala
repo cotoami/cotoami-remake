@@ -31,10 +31,10 @@ object ViewCoto {
       nodes.get(coto.postedById).map(spanNode)
     )
 
-  def divClassifiedAs(
+  def divAttributes(
       coto: Coto
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
-    div(className := "classified-as")(
+    div(className := "attributes")(
       ulOtherCotonomas(coto),
       buttonGeolocation(coto),
       Option.when(context.domain.pinned(coto.id)) {
