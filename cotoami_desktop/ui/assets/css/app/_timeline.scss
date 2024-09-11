@@ -150,7 +150,9 @@ section.timeline {
 
     div.content {
       section.media-content {
-        padding-left: 0; // fit to the left border
+        // fit to the left and right border
+        padding-left: 0;
+        padding-right: 0;
       }
     }
   }
