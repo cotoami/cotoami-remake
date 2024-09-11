@@ -54,6 +54,7 @@ object Msg {
   case object OpenGeomap extends Msg
   case object CloseMap extends Msg
   case class FocusGeolocation(location: Geolocation) extends Msg
+  case object UnfocusGeolocation extends Msg
   case object DisplayCotonomaGeolocation extends Msg
 
   // Subparts

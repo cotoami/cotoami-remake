@@ -20,6 +20,7 @@ trait Context {
   def log: Log
   def uiState: Option[UiState]
   def domain: Domain
+  def focusedLocation: Option[Geolocation]
 }
 
 case class Model(
@@ -148,6 +149,9 @@ case class Model(
       )
     ).getOrElse(model, Seq.empty) // The coto is not found.
   }
+
+  override def focusedLocation: Option[Geolocation] =
+    this.geomap.focusedLocation
 
   def handleLocalNodeEvent(event: LocalNodeEventJson): Model = {
     // ServerStateChanged

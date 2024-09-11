@@ -253,16 +253,28 @@ object ViewCoto {
 
   def buttonGeolocation(
       coto: Coto
-  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
-    coto.geolocation.map(location =>
+  )(implicit context: Context, dispatch: AppMsg => Unit): Option[ReactElement] =
+    coto.geolocation.map { location =>
+      val focused = Some(location) == context.focusedLocation
       button(
-        className := "geolocation default",
+        className := optionalClasses(
+          Seq(
+            ("geolocation", true),
+            ("default", true),
+            ("focused", focused)
+          )
+        ),
         onClick := (e => {
           e.stopPropagation()
-          dispatch(AppMsg.FocusGeolocation(location))
+          dispatch(
+            if (focused)
+              AppMsg.UnfocusGeolocation
+            else
+              AppMsg.FocusGeolocation(location)
+          )
         })
       )(
         materialSymbol("location_on")
       )
-    )
+    }
 }

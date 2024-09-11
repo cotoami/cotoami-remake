@@ -63,7 +63,7 @@ article.coto {
         margin-left: 8px;
         opacity: .5;
 
-        &:hover {
+        &.focused {
           opacity: 1;
         }
 

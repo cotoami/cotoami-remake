@@ -254,6 +254,9 @@ object Main {
           (model.modify(_.geomap).using(_.focus(location)), cmds)
         }
 
+      case Msg.UnfocusGeolocation =>
+        (model.modify(_.geomap).using(_.unfocus), Seq.empty)
+
       case Msg.DisplayCotonomaGeolocation =>
         model.geomap.cotonomaLocation match {
           case Some(location) =>

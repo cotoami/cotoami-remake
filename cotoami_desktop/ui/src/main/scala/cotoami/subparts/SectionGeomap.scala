@@ -52,6 +52,8 @@ object SectionGeomap {
       else
         this.moveTo(location).copy(focusedLocation = Some(location))
 
+    def unfocus: Model = this.copy(focusedLocation = None)
+
     def moveToCotonomaLocation: Model =
       this.cotonomaLocation match {
         case Some(location) =>

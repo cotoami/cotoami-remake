@@ -336,7 +336,7 @@ object FormCoto {
           _1 = model.copy(form =
             form.copy(mediaContent = None, mediaLocation = None)
           ),
-          _2 = geomap.copy(focusedLocation = None)
+          _2 = geomap.unfocus
         )
 
       case (Msg.DeleteGeolocation, _, _) =>
