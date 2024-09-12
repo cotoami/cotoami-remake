@@ -253,8 +253,8 @@ object SectionGeomap {
       markerOfCotos.location.toLngLat,
       markerOfCotos.cotos match {
         case Seq(coto) => {
-          singleCotoMarkerHtml(
-            markerOfCotos.nodeIconUrls.headOption,
+          markerHtml(
+            markerOfCotos.nodeIconUrls,
             context.domain.inContext(coto),
             coto.nameAsCotonoma
           )
@@ -264,8 +264,8 @@ object SectionGeomap {
       None
     )
 
-  private def singleCotoMarkerHtml(
-      iconUrl: Option[String],
+  private def markerHtml(
+      iconUrls: Set[String],
       inContext: Boolean,
       cotonomaName: Option[String]
   ): dom.Element = {
@@ -279,8 +279,9 @@ object SectionGeomap {
       )
     )
 
-    iconUrl.foreach { url =>
+    iconUrls.foreach { url =>
       val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
+      icon.className = "icon"
       icon.src = url
       root.append(icon)
     }
