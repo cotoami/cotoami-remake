@@ -9,7 +9,7 @@ import slinky.core.facade.ReactElement
 import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, GeolocatedCotos, Id}
-import cotoami.components.MapLibre
+import cotoami.components.{optionalClasses, MapLibre}
 import cotoami.repositories.Domain
 import cotoami.models.{GeoBounds, Geolocation}
 
@@ -253,56 +253,44 @@ object SectionGeomap {
       markerOfCotos.location.toLngLat,
       markerOfCotos.cotos match {
         case Seq(coto) => {
-          val iconUrl = markerOfCotos.nodeIconUrls.headOption
-          val inContext = context.domain.inContext(coto)
-          coto.nameAsCotonoma match {
-            case Some(name) =>
-              cotonomaMarkerHtml(name, iconUrl, inContext)
-            case None =>
-              cotoMarkerHtml(iconUrl, inContext)
-          }
+          singleCotoMarkerHtml(
+            markerOfCotos.nodeIconUrls.headOption,
+            context.domain.inContext(coto),
+            coto.nameAsCotonoma
+          )
         }
         case _ => createElement("div")
       },
       None
     )
 
-  private def cotoMarkerHtml(
+  private def singleCotoMarkerHtml(
       iconUrl: Option[String],
-      inContext: Boolean
+      inContext: Boolean,
+      cotonomaName: Option[String]
   ): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className =
-      "geomap-marker coto-marker" + (if (inContext) " in-context" else "")
+    root.className = optionalClasses(
+      Seq(
+        ("geomap-marker", true),
+        ("coto-marker", cotonomaName.isEmpty),
+        ("cotonoma-marker", cotonomaName.isDefined),
+        ("in-context", inContext)
+      )
+    )
 
-    iconUrl.foreach { iconUrl =>
+    iconUrl.foreach { url =>
       val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
-      icon.src = iconUrl
+      icon.src = url
       root.append(icon)
     }
 
-    root
-  }
-
-  private def cotonomaMarkerHtml(
-      name: String,
-      iconUrl: Option[String],
-      inContext: Boolean
-  ): dom.Element = {
-    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className = "geomap-marker cotonoma-marker" +
-      (if (inContext) " in-context" else "")
-
-    iconUrl.foreach { iconUrl =>
-      val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
-      icon.src = iconUrl
-      root.append(icon)
+    cotonomaName.foreach { name =>
+      val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
+      label.className = "cotonoma-name"
+      label.textContent = name
+      root.append(label)
     }
-
-    val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    label.className = "cotonoma-name"
-    label.textContent = name
-    root.append(label)
 
     root
   }
