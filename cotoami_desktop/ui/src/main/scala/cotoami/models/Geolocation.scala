@@ -9,6 +9,7 @@ import cats.effect.IO
 import fui.Cmd
 import cotoami.libs.geomap.maplibre.LngLat
 import cotoami.libs.exifr
+import cotoami.backend.{Coto, Id}
 
 case class Geolocation(longitude: Double, latitude: Double) {
   val lng = longitude
@@ -48,4 +49,11 @@ object Geolocation {
         None // no finalizer on cancellation
       }
     })
+
+  case class MarkerOfCotos(
+      location: Geolocation,
+      ids: Seq[Id[Coto]],
+      containsCotonomas: Boolean,
+      nodeIconUrls: Seq[String]
+  )
 }
