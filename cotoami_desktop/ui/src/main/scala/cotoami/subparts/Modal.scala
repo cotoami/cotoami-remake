@@ -202,7 +202,7 @@ object Modal {
               onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
             )
           },
-          h1()(title)
+          h1()(title: _*)
         ),
         error.map(e => section(className := "error")(e)),
         div(className := "body")(body: _*)
