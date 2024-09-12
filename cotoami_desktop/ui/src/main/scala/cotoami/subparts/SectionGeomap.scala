@@ -1,6 +1,8 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import org.scalajs.dom
+import org.scalajs.dom.document.createElement
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
@@ -243,6 +245,68 @@ object SectionGeomap {
       Msg.toApp(Msg.InitialCotosFetched(_))
     )
 
+  private def toMarkerDef(markerOfCotos: Geolocation.MarkerOfCotos)(implicit
+      context: Context
+  ): MapLibre.MarkerDef =
+    MapLibre.MarkerDef(
+      markerOfCotos.cotos.map(_.id.uuid).mkString(","),
+      markerOfCotos.location.toLngLat,
+      markerOfCotos.cotos match {
+        case Seq(coto) => {
+          val iconUrl = markerOfCotos.nodeIconUrls.headOption
+          val inContext = context.domain.inContext(coto)
+          coto.nameAsCotonoma match {
+            case Some(name) =>
+              cotonomaMarkerHtml(name, iconUrl, inContext)
+            case None =>
+              cotoMarkerHtml(iconUrl, inContext)
+          }
+        }
+        case _ => createElement("div")
+      },
+      None
+    )
+
+  private def cotoMarkerHtml(
+      iconUrl: Option[String],
+      inContext: Boolean
+  ): dom.Element = {
+    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    root.className =
+      "geomap-marker coto-marker" + (if (inContext) " in-context" else "")
+
+    iconUrl.foreach { iconUrl =>
+      val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
+      icon.src = iconUrl
+      root.append(icon)
+    }
+
+    root
+  }
+
+  private def cotonomaMarkerHtml(
+      name: String,
+      iconUrl: Option[String],
+      inContext: Boolean
+  ): dom.Element = {
+    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    root.className = "geomap-marker cotonoma-marker" +
+      (if (inContext) " in-context" else "")
+
+    iconUrl.foreach { iconUrl =>
+      val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
+      icon.src = iconUrl
+      root.append(icon)
+    }
+
+    val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    label.className = "cotonoma-name"
+    label.textContent = name
+    root.append(label)
+
+    root
+  }
+
   def apply(
       model: Model
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
@@ -257,7 +321,7 @@ object SectionGeomap {
           None
       ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = context.domain.cotoMarkerDefs,
+      markerDefs = context.domain.locationMarkers.map(toMarkerDef(_)),
       focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model._applyCenterZoom,
