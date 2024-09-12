@@ -214,8 +214,7 @@ case class Domain(
             case None =>
               node.newCotoMarkerHtml(this.inContext(coto))
           },
-          None,
-          coto.nameAsCotonoma
+          None
         )
       )
     }
