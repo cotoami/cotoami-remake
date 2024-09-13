@@ -53,14 +53,20 @@ object Geolocation {
   case class MarkerOfCotos(
       location: Geolocation,
       cotos: Seq[Coto],
-      nodeIconUrls: Set[String]
+      nodeIconUrls: Set[String],
+      inContext: Boolean
   ) {
     def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
 
-    def addCoto(coto: Coto, nodeIconUrl: String): MarkerOfCotos =
+    def addCoto(
+        coto: Coto,
+        nodeIconUrl: String,
+        inContext: Boolean
+    ): MarkerOfCotos =
       this.copy(
         cotos = this.cotos :+ coto,
-        nodeIconUrls = this.nodeIconUrls + nodeIconUrl
+        nodeIconUrls = this.nodeIconUrls + nodeIconUrl,
+        inContext = inContext || this.inContext
       )
   }
 }

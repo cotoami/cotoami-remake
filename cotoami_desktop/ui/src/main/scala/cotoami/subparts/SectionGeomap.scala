@@ -245,8 +245,13 @@ object SectionGeomap {
       Msg.toApp(Msg.InitialCotosFetched(_))
     )
 
-  private def toMarkerDef(markerOfCotos: Geolocation.MarkerOfCotos)(implicit
-      context: Context
+  private def toMarkerDefs(
+      markers: Seq[Geolocation.MarkerOfCotos]
+  ): Seq[MapLibre.MarkerDef] =
+    markers.map(toMarkerDef(_))
+
+  private def toMarkerDef(
+      markerOfCotos: Geolocation.MarkerOfCotos
   ): MapLibre.MarkerDef =
     MapLibre.MarkerDef(
       markerOfCotos.cotos.map(_.id.uuid).mkString(","),
@@ -255,7 +260,7 @@ object SectionGeomap {
         case Seq(coto) => {
           markerHtml(
             markerOfCotos.nodeIconUrls,
-            context.domain.inContext(coto),
+            markerOfCotos.inContext,
             coto.nameAsCotonoma
           )
         }
@@ -310,7 +315,7 @@ object SectionGeomap {
           None
       ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = context.domain.locationMarkers.map(toMarkerDef(_)),
+      markerDefs = toMarkerDefs(context.domain.locationMarkers),
       focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model._applyCenterZoom,

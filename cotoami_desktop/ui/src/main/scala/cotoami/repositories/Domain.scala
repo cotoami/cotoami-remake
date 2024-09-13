@@ -208,13 +208,14 @@ case class Domain(
       this.nodes.get(coto.nodeId).foreach(node =>
         markers = markers.updatedWith(location) {
           case Some(marker) =>
-            Some(marker.addCoto(coto, node.iconUrl))
+            Some(marker.addCoto(coto, node.iconUrl, inContext(coto)))
           case None =>
             Some(
               Geolocation.MarkerOfCotos(
                 location,
                 Seq(coto),
-                Set(node.iconUrl)
+                Set(node.iconUrl),
+                inContext(coto)
               )
             )
         }
