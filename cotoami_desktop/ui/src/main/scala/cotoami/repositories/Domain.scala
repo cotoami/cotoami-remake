@@ -55,17 +55,6 @@ case class Domain(
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
-  def inFocus(coto: Coto): Boolean =
-    (this.nodes.focusedId, this.cotonomas.focusedId) match {
-      case (None, None)         => true
-      case (Some(nodeId), None) => coto.nodeId == nodeId
-      case (_, Some(cotonomaId)) =>
-        coto.postedInIds.contains(cotonomaId) || (
-          // if the coto is the current cotonoma itself
-          this.cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
-        )
-    }
-
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
       // The location contains a cotonoma only when one is focused,
@@ -223,6 +212,17 @@ case class Domain(
     }
     markers.values.toSeq
   }
+
+  private def inFocus(coto: Coto): Boolean =
+    (this.nodes.focusedId, this.cotonomas.focusedId) match {
+      case (None, None)         => true
+      case (Some(nodeId), None) => coto.nodeId == nodeId
+      case (_, Some(cotonomaId)) =>
+        coto.postedInIds.contains(cotonomaId) || (
+          // if the coto is the current cotonoma itself
+          this.cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
+        )
+    }
 }
 
 object Domain {
