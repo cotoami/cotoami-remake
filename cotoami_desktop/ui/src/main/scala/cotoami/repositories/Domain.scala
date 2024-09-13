@@ -55,7 +55,7 @@ case class Domain(
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
-  def inContext(coto: Coto): Boolean =
+  def inFocus(coto: Coto): Boolean =
     (this.nodes.focusedId, this.cotonomas.focusedId) match {
       case (None, None)         => true
       case (Some(nodeId), None) => coto.nodeId == nodeId
@@ -208,14 +208,14 @@ case class Domain(
       this.nodes.get(coto.nodeId).foreach(node =>
         markers = markers.updatedWith(location) {
           case Some(marker) =>
-            Some(marker.addCoto(coto, node.iconUrl, inContext(coto)))
+            Some(marker.addCoto(coto, node.iconUrl, inFocus(coto)))
           case None =>
             Some(
               Geolocation.MarkerOfCotos(
                 location,
                 Seq(coto),
                 Set(node.iconUrl),
-                inContext(coto)
+                inFocus(coto)
               )
             )
         }

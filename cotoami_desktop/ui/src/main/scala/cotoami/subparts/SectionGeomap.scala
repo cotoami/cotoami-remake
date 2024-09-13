@@ -260,7 +260,7 @@ object SectionGeomap {
         case Seq(coto) => {
           markerHtml(
             markerOfCotos.nodeIconUrls,
-            markerOfCotos.inContext,
+            markerOfCotos.inFocus,
             coto.nameAsCotonoma
           )
         }
@@ -271,7 +271,7 @@ object SectionGeomap {
 
   private def markerHtml(
       iconUrls: Set[String],
-      inContext: Boolean,
+      inFocus: Boolean,
       cotonomaName: Option[String]
   ): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
@@ -280,7 +280,7 @@ object SectionGeomap {
         ("geomap-marker", true),
         ("coto-marker", cotonomaName.isEmpty),
         ("cotonoma-marker", cotonomaName.isDefined),
-        ("in-context", inContext)
+        ("in-focus", inFocus)
       )
     )
 

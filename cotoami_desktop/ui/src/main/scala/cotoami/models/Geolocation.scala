@@ -54,19 +54,19 @@ object Geolocation {
       location: Geolocation,
       cotos: Seq[Coto],
       nodeIconUrls: Set[String],
-      inContext: Boolean
+      inFocus: Boolean
   ) {
     def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
 
     def addCoto(
         coto: Coto,
         nodeIconUrl: String,
-        inContext: Boolean
+        inFocus: Boolean
     ): MarkerOfCotos =
       this.copy(
         cotos = this.cotos :+ coto,
         nodeIconUrls = this.nodeIconUrls + nodeIconUrl,
-        inContext = inContext || this.inContext
+        inFocus = inFocus || this.inFocus
       )
   }
 }
