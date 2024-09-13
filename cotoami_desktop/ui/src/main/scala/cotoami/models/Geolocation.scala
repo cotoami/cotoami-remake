@@ -56,5 +56,11 @@ object Geolocation {
       nodeIconUrls: Set[String]
   ) {
     def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
+
+    def addCoto(coto: Coto, nodeIconUrl: String): MarkerOfCotos =
+      this.copy(
+        cotos = this.cotos :+ coto,
+        nodeIconUrls = this.nodeIconUrls + nodeIconUrl
+      )
   }
 }

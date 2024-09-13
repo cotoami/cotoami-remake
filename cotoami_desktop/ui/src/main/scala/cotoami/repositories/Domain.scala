@@ -202,16 +202,26 @@ case class Domain(
         Cmd.none
     }).getOrElse(Cmd.none)
 
-  lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] =
-    this.cotos.geolocated.flatMap { case (coto, location) =>
-      this.nodes.get(coto.nodeId).map(node =>
-        Geolocation.MarkerOfCotos(
-          location,
-          Seq(coto),
-          Set(node.iconUrl)
-        )
+  lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
+    var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
+    this.cotos.geolocated.foreach { case (coto, location) =>
+      this.nodes.get(coto.nodeId).foreach(node =>
+        markers = markers.updatedWith(location) {
+          case Some(marker) =>
+            Some(marker.addCoto(coto, node.iconUrl))
+          case None =>
+            Some(
+              Geolocation.MarkerOfCotos(
+                location,
+                Seq(coto),
+                Set(node.iconUrl)
+              )
+            )
+        }
       )
     }
+    markers.values.toSeq
+  }
 }
 
 object Domain {
