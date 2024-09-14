@@ -2,7 +2,6 @@ package cotoami.backend
 
 import scala.scalajs.js
 import org.scalajs.dom
-import org.scalajs.dom.document.createElement
 import java.time.Instant
 
 import fui.{Browser, Cmd}
@@ -30,33 +29,6 @@ case class Node(
   }
 
   lazy val createdAt: Instant = parseJsonDateTime(this.createdAtAsString)
-
-  def newCotoMarkerHtml(inContext: Boolean): dom.Element = {
-    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className = "geomap-marker coto-marker" +
-      (if (inContext) " in-context" else "")
-    val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
-    icon.src = this.iconUrl
-    root.append(icon)
-    root
-  }
-
-  def newCotonomaMarkerHtml(name: String, inContext: Boolean): dom.Element = {
-    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className = "geomap-marker cotonoma-marker" +
-      (if (inContext) " in-context" else "")
-
-    val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
-    icon.src = this.iconUrl
-    root.append(icon)
-
-    val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    label.className = "cotonoma-name"
-    label.textContent = name
-    root.append(label)
-
-    root
-  }
 
   def debug: String =
     s"id: ${this.id}, name: ${this.name}, version: ${this.version}"

@@ -7,8 +7,9 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import cats.effect.IO
 
 import fui.Cmd
-import cotoami.libs.geomap.maplibre.{LngLat, LngLatBounds}
+import cotoami.libs.geomap.maplibre.LngLat
 import cotoami.libs.exifr
+import cotoami.backend.Coto
 
 case class Geolocation(longitude: Double, latitude: Double) {
   val lng = longitude
@@ -48,32 +49,34 @@ object Geolocation {
         None // no finalizer on cancellation
       }
     })
-}
 
-case class GeoBounds(southwest: Geolocation, northeast: Geolocation) {
-  val sw = southwest
-  val ne = northeast
+  case class MarkerOfCotos(
+      location: Geolocation,
+      cotos: Seq[Coto],
+      nodeIconUrls: Set[String],
+      inFocus: Boolean
+  ) {
+    def addCoto(
+        coto: Coto,
+        nodeIconUrl: String,
+        inFocus: Boolean
+    ): MarkerOfCotos =
+      this.copy(
+        cotos = this.cotos :+ coto,
+        nodeIconUrls = this.nodeIconUrls + nodeIconUrl,
+        inFocus = inFocus || this.inFocus
+      )
 
-  def contains(location: Geolocation): Boolean = {
-    val containsLatitude =
-      this.sw.lat <= location.lat && location.lat <= this.ne.lat
-    val containsLongitude =
-      if (this.sw.lng <= this.ne.lng)
-        this.sw.lng <= location.lng && location.lng <= this.ne.lng
-      else // wrapped coordinates
-        this.sw.lng >= location.lng && location.lng >= this.ne.lng
+    def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
 
-    containsLatitude && containsLongitude
+    def label: Option[String] = this.cotos match {
+      case Seq()     => None
+      case Seq(coto) => coto.nameAsCotonoma
+      case cotos =>
+        cotos.flatMap(_.nameAsCotonoma) match {
+          case Seq() => None
+          case names => Some(names.mkString(" / "))
+        }
+    }
   }
-
-  def toMapLibre: LngLatBounds =
-    new LngLatBounds(southwest.toMapLibre, northeast.toMapLibre)
-}
-
-object GeoBounds {
-  def fromLngLat(sw: (Double, Double), ne: (Double, Double)): GeoBounds =
-    GeoBounds(Geolocation.fromLngLat(sw), Geolocation.fromLngLat(ne))
-
-  def fromMapLibre(bounds: LngLatBounds): GeoBounds =
-    fromLngLat(bounds.getSouthWest().toArray(), bounds.getNorthEast().toArray())
 }

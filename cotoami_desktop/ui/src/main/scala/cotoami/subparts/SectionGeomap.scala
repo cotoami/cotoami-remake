@@ -1,13 +1,15 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import org.scalajs.dom
+import org.scalajs.dom.document.createElement
 import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
 import cotoami.backend.{ErrorJson, GeolocatedCotos, Id}
-import cotoami.components.MapLibre
+import cotoami.components.{optionalClasses, MapLibre}
 import cotoami.repositories.Domain
 import cotoami.models.{GeoBounds, Geolocation}
 
@@ -210,13 +212,26 @@ object SectionGeomap {
         )
 
       case Msg.MarkerClicked(id) =>
-        context.uiState match {
-          case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
-            default.copy(_3 = Seq(Browser.send(AppMsg.FocusCoto(Id(id)))))
-          case _ =>
+        id.split(IdSeparator).toSeq match {
+          case Seq(id) =>
+            context.uiState match {
+              case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
+                default.copy(_3 = Seq(Browser.send(AppMsg.FocusCoto(Id(id)))))
+              case _ =>
+                default.copy(_3 =
+                  Seq(
+                    Browser.send(
+                      SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                    )
+                  )
+                )
+            }
+          case ids =>
             default.copy(_3 =
-              Seq(
-                Browser.send(SectionTraversals.Msg.OpenTraversal(Id(id)).toApp)
+              ids.map(id =>
+                Browser.send(
+                  SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                )
               )
             )
         }
@@ -243,6 +258,71 @@ object SectionGeomap {
       Msg.toApp(Msg.InitialCotosFetched(_))
     )
 
+  private def toMarkerDefs(
+      markers: Seq[Geolocation.MarkerOfCotos]
+  ): Seq[MapLibre.MarkerDef] =
+    markers.map(toMarkerDef(_))
+
+  val IdSeparator = ","
+
+  private def toMarkerDef(
+      markerOfCotos: Geolocation.MarkerOfCotos
+  ): MapLibre.MarkerDef =
+    MapLibre.MarkerDef(
+      markerOfCotos.cotos.map(_.id.uuid).mkString(IdSeparator),
+      markerOfCotos.location.toLngLat,
+      markerHtml(
+        markerOfCotos.nodeIconUrls.take(4),
+        markerOfCotos.inFocus,
+        markerOfCotos.cotos.size,
+        markerOfCotos.containsCotonomas,
+        markerOfCotos.label
+      ),
+      None
+    )
+
+  private def markerHtml(
+      iconUrls: Set[String],
+      inFocus: Boolean,
+      countOfCotos: Int,
+      containsCotonomas: Boolean,
+      label: Option[String]
+  ): dom.Element = {
+    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    root.className = optionalClasses(
+      Seq(
+        ("geomap-marker", true),
+        ("coto-marker", !containsCotonomas),
+        ("cotonoma-marker", containsCotonomas),
+        ("in-focus", inFocus),
+        (s"icon-count-${iconUrls.size}", true)
+      )
+    )
+
+    iconUrls.foreach { url =>
+      val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
+      icon.className = "icon"
+      icon.src = url
+      root.append(icon)
+    }
+
+    if (countOfCotos > 1) {
+      val count = createElement("div").asInstanceOf[dom.HTMLDivElement]
+      count.className = "count-of-cotos"
+      count.textContent = countOfCotos.toString()
+      root.append(count)
+    }
+
+    label.foreach { name =>
+      val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
+      label.className = "label"
+      label.textContent = name
+      root.append(label)
+    }
+
+    root
+  }
+
   def apply(
       model: Model
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
@@ -257,7 +337,7 @@ object SectionGeomap {
           None
       ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = context.domain.cotoMarkerDefs,
+      markerDefs = toMarkerDefs(context.domain.locationMarkers),
       focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model._applyCenterZoom,

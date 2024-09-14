@@ -7,7 +7,7 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
 import cotoami.backend._
-import cotoami.components.MapLibre.MarkerDef
+import cotoami.models.Geolocation
 
 case class Domain(
     lastChangeNumber: Double = 0,
@@ -54,17 +54,6 @@ case class Domain(
     this.nodes.get(cotonoma.nodeId)
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
-
-  def inContext(coto: Coto): Boolean =
-    (this.nodes.focusedId, this.cotonomas.focusedId) match {
-      case (None, None)         => true
-      case (Some(nodeId), None) => coto.nodeId == nodeId
-      case (_, Some(cotonomaId)) =>
-        coto.postedInIds.contains(cotonomaId) || (
-          // if the coto is the current cotonoma itself
-          this.cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
-        )
-    }
 
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
@@ -202,22 +191,37 @@ case class Domain(
         Cmd.none
     }).getOrElse(Cmd.none)
 
-  lazy val cotoMarkerDefs: Seq[MarkerDef] =
-    this.cotos.geolocated.flatMap { case (coto, location) =>
-      this.nodes.get(coto.nodeId).map(node =>
-        MarkerDef(
-          coto.id.uuid,
-          location.toLngLat,
-          coto.nameAsCotonoma match {
-            case Some(name) =>
-              node.newCotonomaMarkerHtml(name, this.inContext(coto))
-            case None =>
-              node.newCotoMarkerHtml(this.inContext(coto))
-          },
-          None,
-          coto.nameAsCotonoma
-        )
+  lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
+    var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
+    this.cotos.geolocated.foreach { case (coto, location) =>
+      this.nodes.get(coto.nodeId).foreach(node =>
+        markers = markers.updatedWith(location) {
+          case Some(marker) =>
+            Some(marker.addCoto(coto, node.iconUrl, inFocus(coto)))
+          case None =>
+            Some(
+              Geolocation.MarkerOfCotos(
+                location,
+                Seq(coto),
+                Set(node.iconUrl),
+                inFocus(coto)
+              )
+            )
+        }
       )
+    }
+    markers.values.toSeq
+  }
+
+  private def inFocus(coto: Coto): Boolean =
+    (this.nodes.focusedId, this.cotonomas.focusedId) match {
+      case (None, None)         => true
+      case (Some(nodeId), None) => coto.nodeId == nodeId
+      case (_, Some(cotonomaId)) =>
+        coto.postedInIds.contains(cotonomaId) || (
+          // if the coto is the current cotonoma itself
+          this.cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
+        )
     }
 }
 

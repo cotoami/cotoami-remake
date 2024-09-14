@@ -409,7 +409,6 @@ import cotoami.libs.geomap.pmtiles
       id: String,
       lngLat: (Double, Double),
       html: dom.Element,
-      className: Option[String] = None,
-      label: Option[String] = None
+      className: Option[String] = None
   )
 }
