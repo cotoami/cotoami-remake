@@ -212,13 +212,26 @@ object SectionGeomap {
         )
 
       case Msg.MarkerClicked(id) =>
-        context.uiState match {
-          case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
-            default.copy(_3 = Seq(Browser.send(AppMsg.FocusCoto(Id(id)))))
-          case _ =>
+        id.split(IdSeparator).toSeq match {
+          case Seq(id) =>
+            context.uiState match {
+              case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
+                default.copy(_3 = Seq(Browser.send(AppMsg.FocusCoto(Id(id)))))
+              case _ =>
+                default.copy(_3 =
+                  Seq(
+                    Browser.send(
+                      SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                    )
+                  )
+                )
+            }
+          case ids =>
             default.copy(_3 =
-              Seq(
-                Browser.send(SectionTraversals.Msg.OpenTraversal(Id(id)).toApp)
+              ids.map(id =>
+                Browser.send(
+                  SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                )
               )
             )
         }
@@ -250,11 +263,13 @@ object SectionGeomap {
   ): Seq[MapLibre.MarkerDef] =
     markers.map(toMarkerDef(_))
 
+  val IdSeparator = ","
+
   private def toMarkerDef(
       markerOfCotos: Geolocation.MarkerOfCotos
   ): MapLibre.MarkerDef =
     MapLibre.MarkerDef(
-      markerOfCotos.cotos.map(_.id.uuid).mkString(","),
+      markerOfCotos.cotos.map(_.id.uuid).mkString(IdSeparator),
       markerOfCotos.location.toLngLat,
       markerHtml(
         markerOfCotos.nodeIconUrls.take(4),
