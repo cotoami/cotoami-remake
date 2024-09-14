@@ -56,8 +56,6 @@ object Geolocation {
       nodeIconUrls: Set[String],
       inFocus: Boolean
   ) {
-    def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
-
     def addCoto(
         coto: Coto,
         nodeIconUrl: String,
@@ -68,5 +66,17 @@ object Geolocation {
         nodeIconUrls = this.nodeIconUrls + nodeIconUrl,
         inFocus = inFocus || this.inFocus
       )
+
+    def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
+
+    def label: Option[String] = this.cotos match {
+      case Seq()     => None
+      case Seq(coto) => coto.nameAsCotonoma
+      case cotos =>
+        cotos.flatMap(_.nameAsCotonoma) match {
+          case Seq() => None
+          case names => Some(names.mkString(" / "))
+        }
+    }
   }
 }

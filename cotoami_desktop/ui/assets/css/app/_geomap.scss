@@ -1,8 +1,8 @@
 section.geomap {
   --marker-size: 30px;
   --circle-marker-border-radius: calc(var(--marker-size) / 2);
-  --cotonoma-label-width: 150px;
-  --cotonoma-label-left: calc(((var(--cotonoma-label-width) / 2) - (var(--marker-size) / 2)) * -1);
+  --label-width: 150px;
+  --label-left: calc(((var(--label-width) / 2) - (var(--marker-size) / 2)) * -1);
 
   .focused-location-marker {
     z-index: 3;
@@ -44,39 +44,39 @@ section.geomap {
       img {
         border-radius: 4px;
       }
+    }
 
-      .cotonoma-name {
-        position: absolute;
-        left: var(--cotonoma-label-left);
+    .label {
+      position: absolute;
+      left: var(--label-left);
 
-        padding-top: 4px;
+      padding-top: 4px;
 
-        width: var(--cotonoma-label-width);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 14px;
-        color: #333;
-        text-shadow:
-          1px 1px 1px white,
-          -1px 1px 1px white,
-          -1px -1px 1px white,
-          1px -1px 1px white;
-        text-align: center;
-        opacity: 0.5;
-        // border: 1px solid black;
-      }
+      width: var(--label-width);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 14px;
+      color: #333;
+      text-shadow:
+        1px 1px 1px white,
+        -1px 1px 1px white,
+        -1px -1px 1px white,
+        1px -1px 1px white;
+      text-align: center;
+      opacity: 0.5;
+      // border: 1px solid black;
     }
 
     &.in-focus {
 
       img,
-      .cotonoma-name {
+      .label {
         opacity: 1;
       }
     }
   }
 }
 
-.geomap-container.hide-labels .cotonoma-name {
+.geomap-container.hide-labels .label {
   display: none;
 }

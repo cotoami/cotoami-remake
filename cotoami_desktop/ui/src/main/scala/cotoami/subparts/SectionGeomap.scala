@@ -256,31 +256,31 @@ object SectionGeomap {
     MapLibre.MarkerDef(
       markerOfCotos.cotos.map(_.id.uuid).mkString(","),
       markerOfCotos.location.toLngLat,
-      markerOfCotos.cotos match {
-        case Seq(coto) => {
-          markerHtml(
-            markerOfCotos.nodeIconUrls,
-            markerOfCotos.inFocus,
-            coto.nameAsCotonoma
-          )
-        }
-        case _ => createElement("div")
-      },
+      markerHtml(
+        markerOfCotos.nodeIconUrls.take(4),
+        markerOfCotos.inFocus,
+        markerOfCotos.cotos.size,
+        markerOfCotos.containsCotonomas,
+        markerOfCotos.label
+      ),
       None
     )
 
   private def markerHtml(
       iconUrls: Set[String],
       inFocus: Boolean,
-      cotonomaName: Option[String]
+      countOfCotos: Int,
+      containsCotonomas: Boolean,
+      label: Option[String]
   ): dom.Element = {
     val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
     root.className = optionalClasses(
       Seq(
         ("geomap-marker", true),
-        ("coto-marker", cotonomaName.isEmpty),
-        ("cotonoma-marker", cotonomaName.isDefined),
-        ("in-focus", inFocus)
+        ("coto-marker", !containsCotonomas),
+        ("cotonoma-marker", containsCotonomas),
+        ("in-focus", inFocus),
+        (s"icon-count-${iconUrls.size}", true)
       )
     )
 
@@ -291,9 +291,16 @@ object SectionGeomap {
       root.append(icon)
     }
 
-    cotonomaName.foreach { name =>
+    if (countOfCotos > 1) {
+      val count = createElement("div").asInstanceOf[dom.HTMLDivElement]
+      count.className = "count-of-cotos"
+      count.textContent = countOfCotos.toString()
+      root.append(count)
+    }
+
+    label.foreach { name =>
       val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
-      label.className = "cotonoma-name"
+      label.className = "label"
       label.textContent = name
       root.append(label)
     }
