@@ -30,6 +30,19 @@ pub struct NodeConfig {
     /// 4. as a master password to encrypt other passwords.
     pub owner_password: Option<String>,
 
+    /// `COTOAMI_OWNER_CHILD_ID`
+    ///
+    /// If this value and [Self::owner_child_password] is configured, it registers the node of
+    /// the given ID as an owner of this node during launching a node server.
+    ///
+    /// Because this value and [Self::owner_child_password] is used only to register the given
+    /// child node, if there is already an exising child node with the same ID, these values
+    /// to have no effect.
+    pub owner_child_id: Option<String>,
+
+    /// `COTOAMI_OWNER_CHILD_PASSWORD`
+    pub owner_child_password: Option<String>,
+
     /// `COTOAMI_SESSION_MINUTES`
     #[serde(default = "NodeConfig::default_session_minutes")]
     pub session_minutes: u64,
@@ -63,6 +76,8 @@ impl NodeConfig {
             db_dir,
             node_name,
             owner_password: None,
+            owner_child_id: None,
+            owner_child_password: None,
             session_minutes: Self::default_session_minutes(),
             changes_chunk_size: Self::default_changes_chunk_size(),
             image_max_size: Self::default_image_max_size(),
