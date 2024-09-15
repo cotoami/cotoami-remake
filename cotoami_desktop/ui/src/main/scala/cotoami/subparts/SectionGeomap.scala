@@ -288,39 +288,50 @@ object SectionGeomap {
       containsCotonomas: Boolean,
       label: Option[String]
   ): dom.Element = {
-    val root = createElement("div").asInstanceOf[dom.HTMLDivElement]
-    root.className = optionalClasses(
+    // div.geomap-marker
+    val marker = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    marker.className = optionalClasses(
       Seq(
         ("geomap-marker", true),
         ("coto-marker", !containsCotonomas),
         ("cotonoma-marker", containsCotonomas),
-        ("in-focus", inFocus),
-        (s"icon-count-${iconUrls.size}", true)
+        ("in-focus", inFocus)
       )
     )
 
+    // div.icons
+    val icons = createElement("div").asInstanceOf[dom.HTMLDivElement]
+    icons.className = optionalClasses(
+      Seq(
+        ("icons", true),
+        (s"icon-count-${iconUrls.size}", true)
+      )
+    )
     iconUrls.foreach { url =>
       val icon = createElement("img").asInstanceOf[dom.HTMLImageElement]
       icon.className = "icon"
       icon.src = url
-      root.append(icon)
+      icons.append(icon)
     }
+    marker.append(icons)
 
+    // div.count-of-cotos
     if (countOfCotos > 1) {
       val count = createElement("div").asInstanceOf[dom.HTMLDivElement]
       count.className = "count-of-cotos"
       count.textContent = countOfCotos.toString()
-      root.append(count)
+      marker.append(count)
     }
 
+    // div.label
     label.foreach { name =>
       val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
       label.className = "label"
       label.textContent = name
-      root.append(label)
+      marker.append(label)
     }
 
-    root
+    marker
   }
 
   def apply(

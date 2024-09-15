@@ -1,18 +1,20 @@
 section.geomap {
   --marker-size: 30px;
+  --marker-padding: 2px;
   --circle-marker-border-radius: calc(var(--marker-size) / 2);
   --label-width: 150px;
   --label-left: calc(((var(--label-width) / 2) - (var(--marker-size) / 2)) * -1);
+  --icon-clip-length: calc((var(--marker-size) / 2) - var(--marker-padding));
 
   .focused-location-marker {
-    z-index: 3;
+    z-index: 10;
   }
 
   div.geomap-marker {
     width: var(--marker-size);
     height: var(--marker-size);
     background-color: white;
-    padding: 2px;
+    padding: var(--marker-padding);
 
     &:hover {
       cursor: pointer;
@@ -22,7 +24,87 @@ section.geomap {
       background-color: #ffa500;
     }
 
-    img {
+    div.icons {
+      width: 100%;
+      height: 100%;
+
+      &.icon-count-2 {
+        position: relative;
+
+        img:first-child {
+          position: absolute;
+          top: 0;
+          left: 0;
+          clip-path: inset(0 var(--icon-clip-length) 0 0);
+        }
+
+        img:last-child {
+          position: absolute;
+          top: 0;
+          right: 0;
+          clip-path: inset(0 0 0 var(--icon-clip-length));
+        }
+      }
+
+      &.icon-count-3 {
+        position: relative;
+
+        img:first-child {
+          position: absolute;
+          top: 0;
+          left: 0;
+          clip-path: inset(0 var(--icon-clip-length) 0 0);
+        }
+
+        img:nth-child(2) {
+          position: absolute;
+          top: 0;
+          right: 0;
+          clip-path: inset(0 0 var(--icon-clip-length) var(--icon-clip-length));
+        }
+
+        img:last-child {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          clip-path: inset(var(--icon-clip-length) 0 0 var(--icon-clip-length));
+        }
+      }
+
+      &.icon-count-4 {
+        position: relative;
+
+        img:first-child {
+          position: absolute;
+          top: 0;
+          left: 0;
+          clip-path: inset(0 var(--icon-clip-length) var(--icon-clip-length) 0);
+        }
+
+        img:nth-child(2) {
+          position: absolute;
+          top: 0;
+          right: 0;
+          clip-path: inset(0 0 var(--icon-clip-length) var(--icon-clip-length));
+        }
+
+        img:nth-child(3) {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          clip-path: inset(var(--icon-clip-length) var(--icon-clip-length) 0 0);
+        }
+
+        img:last-child {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          clip-path: inset(var(--icon-clip-length) 0 0 var(--icon-clip-length));
+        }
+      }
+    }
+
+    img.icon {
       width: 100%;
       height: 100%;
       opacity: 0.5;
@@ -89,6 +171,14 @@ section.geomap {
       .count-of-cotos {
         opacity: 1;
       }
+    }
+
+    &.in-focus.coto-marker {
+      z-index: 3;
+    }
+
+    &.in-focus.cotonoma-marker {
+      z-index: 4;
     }
   }
 }
