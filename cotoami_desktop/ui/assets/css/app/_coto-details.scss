@@ -22,8 +22,12 @@ section.coto-details {
   }
 
   article.coto {
-    section.media-content {
-      padding-left: 0; // fit to the left border
+    div.content {
+      section.media-content {
+        // fit to the left and right border
+        padding-left: 0;
+        padding-right: 0;
+      }
     }
   }
 
