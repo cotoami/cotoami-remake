@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::{Context, Result};
 use cotoami_db::Principal;
 use futures::StreamExt;
@@ -6,12 +8,14 @@ use tracing::{debug, info};
 
 use crate::{
     event::local::LocalNodeEvent,
+    service::models::{AddClient, NodeRole},
     state::{NodeState, ServerConnection},
 };
 
 impl NodeState {
     pub(crate) async fn init(&self) -> Result<()> {
         self.init_local_node().await?;
+        self.register_owner_remote_node().await?;
         self.start_handling_local_events();
         self.restore_server_conns().await?;
         Ok(())
@@ -67,6 +71,37 @@ impl NodeState {
             Ok(())
         })
         .await?
+    }
+
+    async fn register_owner_remote_node(&self) -> Result<()> {
+        match (
+            self.config().owner_remote_node_id,
+            self.config().owner_remote_node_password.as_ref(),
+        ) {
+            (Some(node_id), Some(password)) => {
+                let add_client = AddClient {
+                    id: Some(node_id),
+                    password: Some(password.to_owned()),
+                    client_role: Some(NodeRole::Child),
+                    as_owner: Some(true),
+                    can_edit_links: Some(true),
+                };
+                let opr = self.local_node_as_operator()?;
+                match self.add_client(add_client, Arc::new(opr)).await {
+                    Ok(_) => {
+                        info!("An owner remote node has been registered: {node_id}");
+                    }
+                    Err(service_error) => {
+                        debug!("Error registering an owner remote node: {service_error:?}");
+                    }
+                }
+                Ok(())
+            }
+            _ => {
+                debug!("No owner remote node settings are given.");
+                Ok(())
+            }
+        }
     }
 
     fn start_handling_local_events(&self) {

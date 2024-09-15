@@ -66,7 +66,7 @@ pub struct ClientNodeSession {
 pub struct AddClient {
     #[validate(required)]
     pub id: Option<Id<Node>>,
-
+    pub password: Option<String>,
     pub client_role: Option<NodeRole>,
 
     // Client as a child

@@ -26,13 +26,17 @@ impl NodeState {
         }
 
         // Inputs
-        let password = cotoami_db::generate_secret(None);
         let role = match input.client_role() {
             NodeRole::Parent => NewDatabaseRole::Parent,
             NodeRole::Child => NewDatabaseRole::Child {
                 as_owner: input.as_owner(),
                 can_edit_links: input.can_edit_links(),
             },
+        };
+        let password = if let Some(password) = input.password {
+            password
+        } else {
+            cotoami_db::generate_secret(None)
         };
 
         // Register the node as a client
