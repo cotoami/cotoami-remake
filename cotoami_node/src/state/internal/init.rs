@@ -4,11 +4,14 @@ use anyhow::{Context, Result};
 use cotoami_db::Principal;
 use futures::StreamExt;
 use tokio::task::spawn_blocking;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 use crate::{
     event::local::LocalNodeEvent,
-    service::models::{AddClient, NodeRole},
+    service::{
+        error::ServiceError,
+        models::{AddClient, NodeRole},
+    },
     state::{NodeState, ServerConnection},
 };
 
@@ -91,9 +94,12 @@ impl NodeState {
                     Ok(_) => {
                         info!("An owner remote node has been registered: {node_id}");
                     }
-                    Err(service_error) => {
-                        debug!("Error registering an owner remote node: {service_error:?}");
-                    }
+                    Err(service_error) => match service_error {
+                        ServiceError::Request(e) if e.code == "invalid-node-role" => {
+                            debug!("The owner remote node ({node_id}) has already been registered.")
+                        }
+                        e => error!("Error registering an owner remote node: {e:?}"),
+                    },
                 }
                 Ok(())
             }
