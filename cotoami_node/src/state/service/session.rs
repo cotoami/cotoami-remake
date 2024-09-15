@@ -32,8 +32,12 @@ impl NodeState {
                 (NodeRole::Child, Some(DatabaseRole::Child(_))) => (),
                 _ => {
                     return Err(ServiceError::request(
-                        "wrong-database-role",
-                        "Invalid request of client role.",
+                        "invalid-requested-role",
+                        format!(
+                            "The requested role ({client_role:?}) doesn't \
+                            match to the actual role of the client node ({}).",
+                            input.client.name
+                        ),
                     ));
                 }
             }
