@@ -137,6 +137,9 @@ where
                 return Self::request("authentication-failed", "Authentication failed.");
             }
             Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
+            Some(DatabaseError::NodeRoleConflict) => {
+                return Self::request("invalid-node-role", "Couldn't attach the role to the node.");
+            }
             _ => (),
         }
 

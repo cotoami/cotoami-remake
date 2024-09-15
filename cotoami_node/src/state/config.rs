@@ -30,6 +30,20 @@ pub struct NodeConfig {
     /// 4. as a master password to encrypt other passwords.
     pub owner_password: Option<String>,
 
+    /// `COTOAMI_OWNER_REMOTE_NODE_ID`
+    ///
+    /// If this value and [Self::owner_remote_node_password] is configured, it registers
+    /// the node of the given ID as a client/child that has an owner privilege to this node
+    /// during launching a node server.
+    ///
+    /// Because this value and [Self::owner_remote_node_password] is used only to register
+    /// the given node as a new client/child, if there is already an exising child node with
+    /// the same ID, these values have no effect.
+    pub owner_remote_node_id: Option<Id<Node>>,
+
+    /// `COTOAMI_OWNER_REMOTE_NODE_PASSWORD`
+    pub owner_remote_node_password: Option<String>,
+
     /// `COTOAMI_SESSION_MINUTES`
     #[serde(default = "NodeConfig::default_session_minutes")]
     pub session_minutes: u64,
@@ -63,6 +77,8 @@ impl NodeConfig {
             db_dir,
             node_name,
             owner_password: None,
+            owner_remote_node_id: None,
+            owner_remote_node_password: None,
             session_minutes: Self::default_session_minutes(),
             changes_chunk_size: Self::default_changes_chunk_size(),
             image_max_size: Self::default_image_max_size(),
