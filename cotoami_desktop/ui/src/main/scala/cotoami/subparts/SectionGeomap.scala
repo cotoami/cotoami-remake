@@ -173,7 +173,7 @@ object SectionGeomap {
           _1 = model
             .modify(_.initialCotosFetched).setTo(true)
             .modify(_.cotonomaLocation).setTo(cotonomaLocation)
-            .addOrRemoveMarkers,
+            .refreshMarkers,
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
         ).pipe(moveToCotonomaOrFetchInCurrentBounds)
