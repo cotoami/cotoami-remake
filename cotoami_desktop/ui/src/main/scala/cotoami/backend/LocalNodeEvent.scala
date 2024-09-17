@@ -1,6 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
+import cotoami.models.Node
 
 @js.native
 trait LocalNodeEventJson extends js.Object {

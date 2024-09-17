@@ -5,7 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.{Remark, StripMarkdown, Validation}
-import cotoami.models.Geolocation
+import cotoami.models.{Geolocation, Node}
 
 trait CotoContent {
   def content: Option[String]

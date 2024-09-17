@@ -4,6 +4,8 @@ import scala.math.Ordering
 import scala.scalajs.js
 import java.time.Instant
 
+import cotoami.models.Node
+
 case class Link(json: LinkJson) extends Entity[Link] {
   override def id: Id[Link] = Id(this.json.uuid)
   def nodeId: Id[Node] = Id(this.json.node_id)

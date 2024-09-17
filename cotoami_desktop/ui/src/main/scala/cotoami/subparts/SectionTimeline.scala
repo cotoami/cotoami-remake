@@ -8,17 +8,16 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Context, Msg => AppMsg}
+import cotoami.models.{Node, WaitingPost, WaitingPosts}
+import cotoami.repositories._
 import cotoami.backend.{
   Coto,
   Cotonoma,
   ErrorJson,
   Id,
-  Node,
   PaginatedCotos,
   PaginatedIds
 }
-import cotoami.repositories._
-import cotoami.models.{WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,

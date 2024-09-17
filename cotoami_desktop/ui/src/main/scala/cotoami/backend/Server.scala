@@ -5,6 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.Validation
+import cotoami.models.Node
 
 case class Server(
     server: ServerNode,

@@ -3,6 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
+import cotoami.models.Node
+
 case class ChildNode(json: ChildNodeJson) {
   def nodeId: Id[Node] = Id(this.json.node_id)
   lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)

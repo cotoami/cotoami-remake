@@ -5,7 +5,7 @@ import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
 import cotoami.{Msg => AppMsg}
-import cotoami.backend.Node
+import cotoami.models.Node
 import cotoami.repositories.ParentStatus
 import cotoami.components.materialSymbol
 

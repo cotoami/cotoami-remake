@@ -13,8 +13,9 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{log_error, Context, Msg => AppMsg}
-import cotoami.backend.{ErrorJson, Node}
+import cotoami.models.Node
 import cotoami.repositories.Nodes
+import cotoami.backend.ErrorJson
 import cotoami.components.FixedAspectCrop
 import cotoami.components.FixedAspectCrop.Area
 import cotoami.subparts.{InputFile, Modal}

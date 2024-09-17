@@ -7,7 +7,7 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
 import cotoami.backend._
-import cotoami.models.Geolocation
+import cotoami.models.{Geolocation, Node}
 
 case class Domain(
     lastChangeNumber: Double = 0,

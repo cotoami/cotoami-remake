@@ -14,7 +14,7 @@ import cotoami.Context
 import cotoami.utils.{Log, Validation}
 import cotoami.libs.exifr
 import cotoami.backend._
-import cotoami.models.{Geolocation, WaitingPost, WaitingPosts}
+import cotoami.models.{Geolocation, Node, WaitingPost, WaitingPosts}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,

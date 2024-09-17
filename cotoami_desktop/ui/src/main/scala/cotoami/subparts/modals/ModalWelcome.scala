@@ -9,8 +9,9 @@ import fui._
 import cotoami.{log_error, Msg => AppMsg}
 import cotoami.libs.tauri
 import cotoami.utils.Validation
+import cotoami.models.Node
 import cotoami.components.materialSymbol
-import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson, Node}
+import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson}
 import cotoami.subparts.Modal
 
 object ModalWelcome {
