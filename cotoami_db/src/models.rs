@@ -23,7 +23,7 @@ use diesel::{
     sqlite::Sqlite,
     FromSqlRow,
 };
-use image::{imageops::FilterType, ImageFormat};
+use image::{imageops::FilterType, DynamicImage, ImageFormat};
 use serde::{de, ser, Deserializer};
 use tracing::debug;
 use uuid::Uuid;
@@ -438,22 +438,22 @@ impl ClientSession {
 
 fn process_image<'a>(
     image_bytes: &'a [u8],
-    resize_to: Option<u32>,
+    max_size: Option<u32>,
     format: Option<ImageFormat>,
 ) -> Result<Cow<'a, [u8]>> {
+    let mut image = image::load_from_memory(image_bytes)?;
+
     let orientation = crate::exif::Orientation::from_image_bytes(image_bytes);
-    debug!("Exif orientation: {orientation:?}");
+    let resize_required = resize_required(&image, max_size);
 
     // Return the input bytes as is if no processing is needed.
     if (orientation.is_none() || matches!(orientation, Some(Orientation::NoTransforms)))
-        && resize_to.is_none()
+        && resize_required.is_none()
         && format.is_none()
     {
         debug!("No processing is needed for the image.");
         return Ok(Cow::from(image_bytes));
     }
-
-    let mut image = image::load_from_memory(image_bytes)?;
 
     // Apply Exif orientation to the image
     if let Some(orientation) = orientation {
@@ -462,15 +462,13 @@ fn process_image<'a>(
     }
 
     // Resize the image if it is larger than the max_size
-    if let Some(resize_to) = resize_to {
-        if image.width() > resize_to || image.height() > resize_to {
-            debug!(
-                "Resizing an image ({} * {}) to fit within the bounds ({resize_to})",
-                image.width(),
-                image.height()
-            );
-            image = image.resize(resize_to, resize_to, FilterType::Lanczos3);
-        }
+    if let Some(new_size) = resize_required {
+        debug!(
+            "Resizing an image ({} * {}) to fit within the bounds ({new_size})",
+            image.width(),
+            image.height()
+        );
+        image = image.resize(new_size, new_size, FilterType::Lanczos3);
     }
 
     // Return the bytes of the resized image.
@@ -482,6 +480,18 @@ fn process_image<'a>(
     let mut bytes: Vec<u8> = Vec::new();
     image.write_to(&mut Cursor::new(&mut bytes), format)?;
     Ok(Cow::from(bytes))
+}
+
+fn resize_required(image: &DynamicImage, max_size: Option<u32>) -> Option<u32> {
+    if let Some(max_size) = max_size {
+        if image.width() > max_size || image.height() > max_size {
+            Some(max_size)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
