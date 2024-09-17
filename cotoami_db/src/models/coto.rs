@@ -504,12 +504,7 @@ fn process_media_content<'a>(
 ) -> Result<Cow<'a, [u8]>> {
     let (content, media_type) = media_content;
     if media_type.starts_with("image/") {
-        if let Some(max_size) = image_max_size {
-            let resized = super::resize_image(content, max_size, None)?;
-            Ok(Cow::from(resized))
-        } else {
-            Ok(Cow::from(content))
-        }
+        super::process_image(content, image_max_size, None)
     } else {
         Ok(Cow::from(content))
     }

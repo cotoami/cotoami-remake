@@ -6,6 +6,7 @@ use rand::Rng;
 use serde::{Deserialize, Deserializer, Serializer};
 
 pub mod db;
+mod exif;
 pub mod models;
 mod schema;
 
