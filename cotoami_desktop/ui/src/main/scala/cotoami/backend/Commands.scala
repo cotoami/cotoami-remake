@@ -4,7 +4,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 import fui.Cmd
 import cotoami.libs.tauri
-import cotoami.models.{GeoBounds, Geolocation, Node}
+import cotoami.models.{GeoBounds, Geolocation, Id, Node}
 
 object Commands {
 

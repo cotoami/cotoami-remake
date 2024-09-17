@@ -5,7 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.Validation
-import cotoami.models.{Geolocation, Node}
+import cotoami.models.{Entity, Geolocation, Id, Node}
 
 case class Cotonoma(json: CotonomaJson) extends Entity[Cotonoma] {
   override def id: Id[Cotonoma] = Id(this.json.uuid)

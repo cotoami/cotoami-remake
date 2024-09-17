@@ -1,8 +1,9 @@
 package cotoami.repositories
 
 import com.softwaremill.quicklens._
+
+import cotoami.models.{Geolocation, Id}
 import cotoami.backend._
-import cotoami.models.Geolocation
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,

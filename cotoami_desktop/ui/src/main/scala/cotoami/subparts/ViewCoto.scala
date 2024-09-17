@@ -11,15 +11,15 @@ import slinky.web.html._
 
 import cotoami.{Context, Msg => AppMsg}
 import cotoami.libs.{rehypePlugins, remarkPlugins}
+import cotoami.models.{Id, WaitingPost}
+import cotoami.repositories.Nodes
+import cotoami.backend.{Coto, CotoContent, Link}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
   Markdown
 }
-import cotoami.backend.{Coto, CotoContent, Id, Link}
-import cotoami.repositories.Nodes
-import cotoami.models.WaitingPost
 
 object ViewCoto {
 

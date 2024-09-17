@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 import fui.Cmd
 import cotoami.libs.tauri
-import cotoami.models.Node
+import cotoami.models.{Id, Node}
 
 case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = this.json.last_change_number

@@ -8,10 +8,10 @@ import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.backend.{ErrorJson, GeolocatedCotos, Id}
-import cotoami.components.{optionalClasses, MapLibre}
+import cotoami.models.{GeoBounds, Geolocation, Id}
 import cotoami.repositories.Domain
-import cotoami.models.{GeoBounds, Geolocation}
+import cotoami.backend.{ErrorJson, GeolocatedCotos}
+import cotoami.components.{optionalClasses, MapLibre}
 
 object SectionGeomap {
 

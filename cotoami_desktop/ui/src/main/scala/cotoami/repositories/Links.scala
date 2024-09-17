@@ -2,6 +2,8 @@ package cotoami.repositories
 
 import scala.collection.immutable.{HashSet, TreeSet}
 import com.softwaremill.quicklens._
+
+import cotoami.models.Id
 import cotoami.backend._
 
 case class Links(

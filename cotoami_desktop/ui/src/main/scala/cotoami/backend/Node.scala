@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.Node
+import cotoami.models.{Id, Node}
 
 @js.native
 trait NodeJson extends js.Object {

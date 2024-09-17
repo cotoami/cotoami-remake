@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import java.time.Instant
 
-import cotoami.models.Node
+import cotoami.models.{Id, Node}
 
 case class ChildNode(json: ChildNodeJson) {
   def nodeId: Id[Node] = Id(this.json.node_id)

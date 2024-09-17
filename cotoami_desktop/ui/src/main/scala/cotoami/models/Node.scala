@@ -5,7 +5,7 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.utils.Validation
-import cotoami.backend.{Cotonoma, Id}
+import cotoami.backend.Cotonoma
 
 case class Node(
     id: Id[Node],
@@ -13,7 +13,8 @@ case class Node(
     rootCotonomaId: Option[Id[Cotonoma]],
     version: Int,
     createdAt: Instant
-)(icon: String) {
+)(icon: String)
+    extends Entity[Node] {
 
   def setIcon(icon: String): Node = {
     dom.URL.revokeObjectURL(this.iconUrl) // revoke the old image URL

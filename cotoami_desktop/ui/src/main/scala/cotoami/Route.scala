@@ -1,8 +1,8 @@
 package cotoami
 
 import trail._
-import cotoami.models.Node
-import cotoami.backend.{Cotonoma, Id}
+import cotoami.models.{Id, Node}
+import cotoami.backend.Cotonoma
 
 object Route {
   implicit case object NodeIdCodec extends IdCodec[Node]
