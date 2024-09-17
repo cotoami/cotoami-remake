@@ -436,12 +436,6 @@ impl ClientSession {
 /////////////////////////////////////////////////////////////////////////////
 
 fn resize_image(image_bytes: &[u8], max_size: u32, format: Option<ImageFormat>) -> Result<Vec<u8>> {
-    let format = if let Some(format) = format {
-        format
-    } else {
-        image::guess_format(image_bytes)?
-    };
-
     let mut image = image::load_from_memory(image_bytes)?;
 
     // Apply Exif orientation to the image
@@ -461,6 +455,11 @@ fn resize_image(image_bytes: &[u8], max_size: u32, format: Option<ImageFormat>) 
     }
 
     // Return the bytes of the resized image.
+    let format = if let Some(format) = format {
+        format
+    } else {
+        image::guess_format(image_bytes)?
+    };
     let mut bytes: Vec<u8> = Vec::new();
     image.write_to(&mut Cursor::new(&mut bytes), format)?;
     Ok(bytes)
