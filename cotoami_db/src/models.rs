@@ -28,9 +28,12 @@ use tracing::debug;
 use uuid::Uuid;
 use validator::Validate;
 
-use self::{
-    node::{parent::ParentNode, Node},
-    operator::Operator,
+use crate::{
+    exif::DynamicImageExifExt,
+    models::{
+        node::{parent::ParentNode, Node},
+        operator::Operator,
+    },
 };
 
 pub mod changelog;
@@ -432,25 +435,27 @@ impl ClientSession {
 // Utilities
 /////////////////////////////////////////////////////////////////////////////
 
-fn resize_image(image: &[u8], max_size: u32, format: Option<ImageFormat>) -> Result<Vec<u8>> {
+fn resize_image(image_bytes: &[u8], max_size: u32, format: Option<ImageFormat>) -> Result<Vec<u8>> {
     let format = if let Some(format) = format {
         format
     } else {
-        image::guess_format(image)?
+        image::guess_format(image_bytes)?
     };
 
-    let mut image_reader = std::io::Cursor::new(image);
+    let mut image = image::load_from_memory(image_bytes)?;
+
+    // Apply Exif orientation to the image
+    let mut image_reader = std::io::Cursor::new(image_bytes);
     let exif_reader = exif::Reader::new();
     let exif = exif_reader.read_from_container(&mut image_reader)?;
-    match exif.get_field(exif::Tag::Orientation, exif::In::PRIMARY) {
-        Some(orientation) => match orientation.value.get_uint(0) {
-            Some(v @ 1..=8) => println!("Orientation {}", v),
-            _ => eprintln!("Orientation value is broken"),
-        },
-        None => println!("Orientation tag is missing"),
+    if let Some(orientation) = exif.get_field(exif::Tag::Orientation, exif::In::PRIMARY) {
+        if let Some(value) = orientation.value.get_uint(0) {
+            if let Some(orientation) = crate::exif::Orientation::from_exif(value as u8) {
+                debug!("Applying Exif orientation {orientation:?} ...");
+                image.apply_orientation(orientation);
+            }
+        }
     }
-
-    let mut image = image::load_from_memory(image)?;
 
     // Resize the image if it is larger than the max_size.
     if image.width() > max_size || image.height() > max_size {
