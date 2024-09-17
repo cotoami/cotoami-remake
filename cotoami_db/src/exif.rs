@@ -1,4 +1,5 @@
 use image::{imageops, DynamicImage};
+use tracing::debug;
 
 pub(crate) trait DynamicImageExifExt {
     fn apply_orientation(&mut self, orientation: Orientation);
@@ -74,5 +75,25 @@ impl Orientation {
             8 => Some(Self::Rotate270),
             0 | 9.. => None,
         }
+    }
+
+    pub fn from_image_bytes(image_bytes: &[u8]) -> Option<Self> {
+        let mut image_reader = std::io::Cursor::new(image_bytes);
+        let exif_reader = exif::Reader::new();
+        match exif_reader.read_from_container(&mut image_reader) {
+            Ok(exif) => {
+                if let Some(orientation) = exif.get_field(exif::Tag::Orientation, exif::In::PRIMARY)
+                {
+                    if let Some(value) = orientation.value.get_uint(0) {
+                        return Self::from_exif(value as u8);
+                    }
+                }
+            }
+            Err(e) => {
+                // Treat [exif::Error] as not-found (return None)
+                debug!("Ignored exif parsing error: {e:?}");
+            }
+        }
+        None
     }
 }

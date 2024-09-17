@@ -445,16 +445,9 @@ fn resize_image(image_bytes: &[u8], max_size: u32, format: Option<ImageFormat>) 
     let mut image = image::load_from_memory(image_bytes)?;
 
     // Apply Exif orientation to the image
-    let mut image_reader = std::io::Cursor::new(image_bytes);
-    let exif_reader = exif::Reader::new();
-    let exif = exif_reader.read_from_container(&mut image_reader)?;
-    if let Some(orientation) = exif.get_field(exif::Tag::Orientation, exif::In::PRIMARY) {
-        if let Some(value) = orientation.value.get_uint(0) {
-            if let Some(orientation) = crate::exif::Orientation::from_exif(value as u8) {
-                debug!("Applying Exif orientation {orientation:?} ...");
-                image.apply_orientation(orientation);
-            }
-        }
+    if let Some(orientation) = crate::exif::Orientation::from_image_bytes(image_bytes) {
+        debug!("Applying Exif orientation {orientation:?} ...");
+        image.apply_orientation(orientation);
     }
 
     // Resize the image if it is larger than the max_size.
