@@ -1,3 +1,6 @@
+//! Exif Orientation related utilities copied from:
+//! https://github.com/image-rs/image/pull/2299
+
 use image::{imageops, DynamicImage};
 use tracing::debug;
 
