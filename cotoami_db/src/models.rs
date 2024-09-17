@@ -1,6 +1,7 @@
 //! Data structure that represents a Cotoami database
 
 use std::{
+    borrow::Cow,
     cmp::Ordering,
     convert::AsRef,
     fmt,
@@ -29,7 +30,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
-    exif::DynamicImageExifExt,
+    exif::{DynamicImageExifExt, Orientation},
     models::{
         node::{parent::ParentNode, Node},
         operator::Operator,
@@ -435,23 +436,41 @@ impl ClientSession {
 // Utilities
 /////////////////////////////////////////////////////////////////////////////
 
-fn resize_image(image_bytes: &[u8], max_size: u32, format: Option<ImageFormat>) -> Result<Vec<u8>> {
+fn process_image<'a>(
+    image_bytes: &'a [u8],
+    resize_to: Option<u32>,
+    format: Option<ImageFormat>,
+) -> Result<Cow<'a, [u8]>> {
+    let orientation = crate::exif::Orientation::from_image_bytes(image_bytes);
+    debug!("Exif orientation: {orientation:?}");
+
+    // Return the input bytes as is if no processing is needed.
+    if (orientation.is_none() || matches!(orientation, Some(Orientation::NoTransforms)))
+        && resize_to.is_none()
+        && format.is_none()
+    {
+        debug!("No processing is needed for the image.");
+        return Ok(Cow::from(image_bytes));
+    }
+
     let mut image = image::load_from_memory(image_bytes)?;
 
     // Apply Exif orientation to the image
-    if let Some(orientation) = crate::exif::Orientation::from_image_bytes(image_bytes) {
+    if let Some(orientation) = orientation {
         debug!("Applying Exif orientation {orientation:?} ...");
         image.apply_orientation(orientation);
     }
 
-    // Resize the image if it is larger than the max_size.
-    if image.width() > max_size || image.height() > max_size {
-        debug!(
-            "Resizing an image ({} * {}) to fit within the bounds ({max_size})",
-            image.width(),
-            image.height()
-        );
-        image = image.resize(max_size, max_size, FilterType::Lanczos3);
+    // Resize the image if it is larger than the max_size
+    if let Some(resize_to) = resize_to {
+        if image.width() > resize_to || image.height() > resize_to {
+            debug!(
+                "Resizing an image ({} * {}) to fit within the bounds ({resize_to})",
+                image.width(),
+                image.height()
+            );
+            image = image.resize(resize_to, resize_to, FilterType::Lanczos3);
+        }
     }
 
     // Return the bytes of the resized image.
@@ -462,7 +481,7 @@ fn resize_image(image_bytes: &[u8], max_size: u32, format: Option<ImageFormat>) 
     };
     let mut bytes: Vec<u8> = Vec::new();
     image.write_to(&mut Cursor::new(&mut bytes), format)?;
-    Ok(bytes)
+    Ok(Cow::from(bytes))
 }
 
 /////////////////////////////////////////////////////////////////////////////
