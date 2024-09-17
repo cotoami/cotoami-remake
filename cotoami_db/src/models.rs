@@ -438,6 +438,18 @@ fn resize_image(image: &[u8], max_size: u32, format: Option<ImageFormat>) -> Res
     } else {
         image::guess_format(image)?
     };
+
+    let mut image_reader = std::io::Cursor::new(image);
+    let exif_reader = exif::Reader::new();
+    let exif = exif_reader.read_from_container(&mut image_reader)?;
+    match exif.get_field(exif::Tag::Orientation, exif::In::PRIMARY) {
+        Some(orientation) => match orientation.value.get_uint(0) {
+            Some(v @ 1..=8) => println!("Orientation {}", v),
+            _ => eprintln!("Orientation value is broken"),
+        },
+        None => println!("Orientation tag is missing"),
+    }
+
     let mut image = image::load_from_memory(image)?;
 
     // Resize the image if it is larger than the max_size.
