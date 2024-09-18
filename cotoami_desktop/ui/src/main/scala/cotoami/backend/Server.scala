@@ -3,15 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{
-  ChildNode,
-  DatabaseRole,
-  Id,
-  Node,
-  NotConnected,
-  Server,
-  ServerNode
-}
+import cotoami.models.{Id, Node, NotConnected, Server, ServerNode}
 
 @js.native
 trait ServerJson extends js.Object {
@@ -34,9 +26,9 @@ object ServerBackend {
   def toModel(json: ServerJson): Server =
     Server(
       ServerNodeBackend.toModel(json.server),
-      Nullable.toOption(json.role).map(DatabaseRole(_)),
+      Nullable.toOption(json.role).map(DatabaseRoleBackend.toModel(_)),
       Nullable.toOption(json.not_connected).map(NotConnectedBackend.toModel(_)),
-      Nullable.toOption(json.client_as_child).map(ChildNode(_))
+      Nullable.toOption(json.client_as_child).map(ChildNodeBackend.toModel(_))
     )
 
   def addServer(
