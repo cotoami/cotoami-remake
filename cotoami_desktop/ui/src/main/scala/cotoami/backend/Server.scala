@@ -5,7 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.Validation
-import cotoami.models.{DatabaseRole, Id, Node}
+import cotoami.models.{ChildNode, DatabaseRole, Id, Node}
 
 case class Server(
     server: ServerNode,
