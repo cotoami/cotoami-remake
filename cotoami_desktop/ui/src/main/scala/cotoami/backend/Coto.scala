@@ -5,32 +5,7 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.{Remark, StripMarkdown, Validation}
-import cotoami.models.{Cotonoma, Entity, Geolocation, Id, Node}
-
-trait CotoContent {
-  def content: Option[String]
-  def summary: Option[String]
-  def mediaContent: Option[(String, String)]
-  def geolocation: Option[Geolocation]
-  def isCotonoma: Boolean
-
-  def nameAsCotonoma: Option[String] =
-    if (this.isCotonoma)
-      this.summary.orElse(this.content)
-    else
-      None
-
-  lazy val abbreviate: Option[String] =
-    this.summary.orElse(
-      this.content.map(content => {
-        val text = Coto.stripMarkdown.processSync(content).toString()
-        if (text.size > Cotonoma.NameMaxLength)
-          s"${text.substring(0, Cotonoma.NameMaxLength)}…"
-        else
-          text
-      })
-    )
-}
+import cotoami.models.{CotoContent, Cotonoma, Entity, Geolocation, Id, Node}
 
 case class Coto(json: CotoJson, posted: Boolean = false)
     extends Entity[Coto]
