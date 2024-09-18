@@ -12,7 +12,7 @@ case class Node(
     name: String,
     rootCotonomaId: Option[Id[Cotonoma]],
     version: Int,
-    createdAt: Instant
+    createdAtUtcIso: String
 )(
     // Make the raw icon data private to force a client to use `iconUrl`
     // and remove it from `equals` since the `version` should be enough
@@ -38,6 +38,8 @@ case class Node(
     dom.URL.createObjectURL(blob)
   }
 
+  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
+
   def debug: String =
     s"id: ${this.id}, name: ${this.name}, version: ${this.version}"
 }
@@ -48,7 +50,7 @@ object Node {
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
 
-  import cotoami.backend.{parseJsonDateTime, ErrorJson, NodeJson, Nullable}
+  import cotoami.backend.{ErrorJson, NodeJson, Nullable}
 
   def apply(json: NodeJson): Node =
     Node(
@@ -56,7 +58,7 @@ object Node {
       json.name,
       Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
       json.version,
-      parseJsonDateTime(json.created_at)
+      json.created_at
     )(json.icon)
 
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
