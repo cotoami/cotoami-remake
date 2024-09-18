@@ -214,7 +214,7 @@ case class Model(
 
     // CreateLink
     for (linkJson <- change.CreateLink.toOption) {
-      val link = Link(linkJson)
+      val link = LinkBackend.toModel(linkJson)
       return (this.modify(_.domain.links).using(_.put(link)), Seq.empty)
     }
 

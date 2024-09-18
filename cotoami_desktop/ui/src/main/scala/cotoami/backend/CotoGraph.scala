@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.Cmd
 
-import cotoami.models.{Coto, Cotonoma, Id}
+import cotoami.models.{Coto, Cotonoma, Id, Link}
 
 case class CotoGraph(json: CotoGraphJson) {
   def rootCotoId: Id[Coto] = Id(this.json.root_coto_id)
@@ -12,7 +12,7 @@ case class CotoGraph(json: CotoGraphJson) {
   def cotos: js.Array[Coto] = this.json.cotos.map(CotoBackend.toModel(_))
   def cotosRelatedData: CotosRelatedData =
     CotosRelatedData(this.json.cotos_related_data)
-  def links: js.Array[Link] = this.json.links.map(Link(_))
+  def links: js.Array[Link] = this.json.links.map(LinkBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder

@@ -14,8 +14,7 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Msg => AppMsg}
-import cotoami.models.{Coto, Id}
-import cotoami.backend.Link
+import cotoami.models.{Coto, Id, Link}
 import cotoami.repositories.Links
 import cotoami.components.{
   materialSymbol,

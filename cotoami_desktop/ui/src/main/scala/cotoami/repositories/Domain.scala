@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Node}
+import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Link, Node}
 import cotoami.backend.{
   CotoGraph,
   CotonomaBackend,
@@ -14,7 +14,6 @@ import cotoami.backend.{
   ErrorJson,
   GeolocatedCotos,
   InitialDataset,
-  Link,
   Paginated,
   PaginatedCotos
 }
