@@ -5,7 +5,7 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.utils.Validation
-import cotoami.backend.Cotonoma
+import cotoami.backend.{ChildNode, Cotonoma, ParentNode}
 
 case class Node(
     id: Id[Node],
@@ -34,9 +34,12 @@ case class Node(
 }
 
 object Node {
-  import cotoami.backend.{parseJsonDateTime, ErrorJson, NodeJson, Nullable}
-
   val IconMimeType = "image/png"
+
+  def validateName(name: String): Seq[Validation.Error] =
+    Cotonoma.validateName(name)
+
+  import cotoami.backend.{parseJsonDateTime, ErrorJson, NodeJson, Nullable}
 
   def apply(json: NodeJson): Node =
     Node(
@@ -47,9 +50,25 @@ object Node {
       parseJsonDateTime(json.created_at)
     )(json.icon)
 
-  def validateName(name: String): Seq[Validation.Error] =
-    Cotonoma.validateName(name)
-
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
     NodeJson.setLocalNodeIcon(icon).map(_.map(Node(_)))
+}
+
+sealed trait DatabaseRole
+
+object DatabaseRole {
+  case class Parent(info: ParentNode) extends DatabaseRole
+  case class Child(info: ChildNode) extends DatabaseRole
+
+  import cotoami.backend.DatabaseRoleJson
+
+  def apply(json: DatabaseRoleJson): DatabaseRole = {
+    for (parent <- json.Parent.toOption) {
+      return Parent(ParentNode(parent))
+    }
+    for (child <- json.Child.toOption) {
+      return Child(ChildNode(child))
+    }
+    return null // this should be unreachable
+  }
 }

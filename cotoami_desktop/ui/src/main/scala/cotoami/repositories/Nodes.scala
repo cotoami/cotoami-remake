@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{Id, Node}
+import cotoami.models.{DatabaseRole, Id, Node}
 import cotoami.backend._
 
 case class Nodes(
@@ -65,8 +65,8 @@ case class Nodes(
     val nodes =
       this.modify(_.serverMap).using(_ + (server.server.nodeId -> server))
     server.role.map {
-      case Parent(parent) => nodes.prependParentId(parent.nodeId)
-      case Child(child)   => nodes
+      case DatabaseRole.Parent(parent) => nodes.prependParentId(parent.nodeId)
+      case DatabaseRole.Child(child)   => nodes
     }.getOrElse(nodes)
   }
 
