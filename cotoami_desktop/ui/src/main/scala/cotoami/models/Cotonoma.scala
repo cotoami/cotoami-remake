@@ -4,7 +4,6 @@ import java.time.Instant
 
 import fui.Cmd
 import cotoami.utils.Validation
-import cotoami.backend.Coto
 
 case class Cotonoma(
     id: Id[Cotonoma],

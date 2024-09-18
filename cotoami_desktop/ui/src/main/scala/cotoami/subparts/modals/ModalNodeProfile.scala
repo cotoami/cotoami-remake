@@ -7,8 +7,8 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
-import cotoami.models.{Id, Node}
-import cotoami.backend.{Coto, ErrorJson, NodeDetails}
+import cotoami.models.{Coto, Id, Node}
+import cotoami.backend.{ErrorJson, NodeDetails}
 import cotoami.components.toolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 

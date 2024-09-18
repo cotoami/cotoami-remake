@@ -1,95 +1,9 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import java.time.Instant
 
 import fui.Cmd
-import cotoami.utils.{Remark, StripMarkdown, Validation}
-import cotoami.models.{CotoContent, Cotonoma, Entity, Geolocation, Id, Node}
-
-case class Coto(json: CotoJson, posted: Boolean = false)
-    extends Entity[Coto]
-    with CotoContent {
-  override def id: Id[Coto] = Id(this.json.uuid)
-  def nodeId: Id[Node] = Id(this.json.node_id)
-
-  def postedInId: Option[Id[Cotonoma]] =
-    Nullable.toOption(this.json.posted_in_id).map(Id(_))
-
-  def postedById: Id[Node] = Id(this.json.posted_by_id)
-
-  override def content: Option[String] = Nullable.toOption(this.json.content)
-
-  override def summary: Option[String] = Nullable.toOption(this.json.summary)
-
-  override def mediaContent: Option[(String, String)] = (
-    Nullable.toOption(this.json.media_content),
-    Nullable.toOption(this.json.media_type)
-  ) match {
-    case (Some(content), Some(mediaType)) => Some((content, mediaType))
-    case _                                => None
-  }
-
-  override lazy val geolocation: Option[Geolocation] =
-    (
-      Nullable.toOption(this.json.longitude),
-      Nullable.toOption(this.json.latitude)
-    ) match {
-      case (Some(longitude), Some(latitude)) =>
-        Some(Geolocation.fromLngLat((longitude, latitude)))
-      case _ => None
-    }
-
-  def geolocated: Boolean = this.geolocation.isDefined
-
-  override def isCotonoma: Boolean = this.json.is_cotonoma
-
-  def repostOfId: Option[Id[Coto]] =
-    Nullable.toOption(this.json.repost_of_id).map(Id(_))
-
-  def repostedInIds: Option[Seq[Id[Cotonoma]]] =
-    Nullable.toOption(this.json.reposted_in_ids)
-      .map(_.map(Id[Cotonoma](_)).toSeq)
-
-  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
-  lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
-
-  def outgoingLinks: Int = this.json.outgoing_links
-
-  lazy val postedInIds: Seq[Id[Cotonoma]] =
-    Seq(this.postedInId).flatten ++
-      this.repostedInIds.getOrElse(Seq.empty)
-}
-
-object Coto {
-  final val SummaryMaxLength = 200
-  final val stripMarkdown = Remark.remark().use(StripMarkdown)
-
-  def validateSummary(summary: String): Seq[Validation.Error] = {
-    val fieldName = "summary"
-    Vector(
-      Validation.nonBlank(fieldName, summary),
-      Validation.length(fieldName, summary, 1, SummaryMaxLength)
-    ).flatten
-  }
-
-  def validateContent(content: String): Seq[Validation.Error] = {
-    val fieldName = "content"
-    Vector(
-      Validation.nonBlank(fieldName, content)
-    ).flatten
-  }
-
-  def post(
-      content: String,
-      summary: Option[String],
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      postTo: Id[Cotonoma]
-  ): Cmd[Either[ErrorJson, Coto]] =
-    CotoJson.post(content, summary, mediaContent, location, postTo)
-      .map(_.map(Coto(_)))
-}
+import cotoami.models.{Cotonoma, Geolocation, Id}
 
 @js.native
 trait CotoJson extends js.Object {

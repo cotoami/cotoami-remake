@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{Geolocation, Id}
+import cotoami.models.{Coto, Geolocation, Id}
 import cotoami.backend._
 
 case class Cotos(

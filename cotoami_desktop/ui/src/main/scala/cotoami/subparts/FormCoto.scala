@@ -13,8 +13,8 @@ import fui._
 import cotoami.Context
 import cotoami.utils.{Log, Validation}
 import cotoami.libs.exifr
-import cotoami.backend._
 import cotoami.models.{
+  Coto,
   Cotonoma,
   Geolocation,
   Id,
@@ -22,6 +22,7 @@ import cotoami.models.{
   WaitingPost,
   WaitingPosts
 }
+import cotoami.backend.ErrorJson
 import cotoami.components.{
   materialSymbol,
   optionalClasses,

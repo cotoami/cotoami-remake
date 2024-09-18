@@ -4,8 +4,14 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id}
-import cotoami.backend._
+import cotoami.models.{Coto, Cotonoma, Id}
+import cotoami.backend.{
+  CotoGraph,
+  CotonomaDetails,
+  CotosRelatedData,
+  Paginated,
+  PaginatedIds
+}
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,

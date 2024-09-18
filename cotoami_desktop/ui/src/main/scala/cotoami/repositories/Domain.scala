@@ -6,8 +6,17 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Geolocation, Id, Node}
-import cotoami.backend._
+import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Node}
+import cotoami.backend.{
+  CotoGraph,
+  CotonomaDetails,
+  ErrorJson,
+  GeolocatedCotos,
+  InitialDataset,
+  Link,
+  Paginated,
+  PaginatedCotos
+}
 
 case class Domain(
     lastChangeNumber: Double = 0,

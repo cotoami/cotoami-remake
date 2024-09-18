@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{Cotonoma, Id, Node}
+import cotoami.models.{Coto, Cotonoma, Id, Node}
 
 case class NodeDetails(json: NodeDetailsJson) {
   def node: Node = Node(this.json.node)
