@@ -5,7 +5,6 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.utils.Validation
-import cotoami.backend.Cotonoma
 
 case class Node(
     id: Id[Node],

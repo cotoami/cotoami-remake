@@ -3,7 +3,8 @@ package cotoami.models
 import java.time.Instant
 import com.softwaremill.quicklens._
 
-import cotoami.backend.{CotoContent, Cotonoma}
+import cotoami.models.Cotonoma
+import cotoami.backend.CotoContent
 
 case class WaitingPost(
     postId: String,

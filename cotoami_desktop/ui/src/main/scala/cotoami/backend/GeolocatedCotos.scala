@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.Cmd
 
-import cotoami.models.{GeoBounds, Geolocation, Id, Node}
+import cotoami.models.{Cotonoma, GeoBounds, Geolocation, Id, Node}
 
 case class GeolocatedCotos(json: GeolocatedCotosJson) {
   def cotos: js.Array[Coto] = this.json.cotos.map(Coto(_))

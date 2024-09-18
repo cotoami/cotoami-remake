@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.Cmd
 
-import cotoami.models.{Id, Node}
+import cotoami.models.{Cotonoma, Id, Node}
 
 case class PaginatedCotos(json: PaginatedCotosJson) {
   def page: Paginated[Coto, _] = Paginated(this.json.page, Coto(_, false))

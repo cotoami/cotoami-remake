@@ -13,7 +13,7 @@ import io.circe.parser._
 import fui.Cmd
 import cotoami.Msg
 import cotoami.utils.Log
-import cotoami.backend.Cotonoma
+import cotoami.models.Cotonoma
 import cotoami.subparts.{PaneFlow, PaneStock}
 
 case class UiState(

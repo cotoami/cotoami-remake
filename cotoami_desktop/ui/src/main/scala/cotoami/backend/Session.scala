@@ -4,7 +4,7 @@ import scala.scalajs.js
 import java.time.Instant
 
 import fui.Cmd
-import cotoami.models.{ChildNode, Node}
+import cotoami.models.{ChildNode, Cotonoma, Node}
 
 case class Session(json: SessionJson) {
   def token: String = this.json.token

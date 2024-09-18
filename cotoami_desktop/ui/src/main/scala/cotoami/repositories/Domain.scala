@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
-import cotoami.models.{Geolocation, Id, Node}
+import cotoami.models.{Cotonoma, Geolocation, Id, Node}
 import cotoami.backend._
 
 case class Domain(

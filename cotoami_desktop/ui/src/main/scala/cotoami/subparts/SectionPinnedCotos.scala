@@ -14,9 +14,9 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Model, Msg => AppMsg}
-import cotoami.models.{Id, UiState}
+import cotoami.models.{Cotonoma, Id, UiState}
 import cotoami.repositories.Domain
-import cotoami.backend.{Coto, Cotonoma, Link}
+import cotoami.backend.{Coto, Link}
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionPinnedCotos {

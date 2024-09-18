@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.Cmd
 
-import cotoami.models.Id
+import cotoami.models.{Cotonoma, Id}
 
 case class CotoGraph(json: CotoGraphJson) {
   def rootCotoId: Id[Coto] = Id(this.json.root_coto_id)

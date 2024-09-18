@@ -4,7 +4,7 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{Msg => AppMsg}
-import cotoami.models.Id
+import cotoami.models.{Cotonoma, Id}
 import cotoami.backend._
 
 case class Cotonomas(
