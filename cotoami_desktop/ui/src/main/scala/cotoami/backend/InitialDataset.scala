@@ -10,7 +10,9 @@ case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = this.json.last_change_number
 
   lazy val nodes: Map[Id[Node], Node] =
-    this.json.nodes.map(Node(_)).map(node => (node.id, node)).toMap
+    this.json.nodes.map(NodeBackend.toModel(_))
+      .map(node => (node.id, node))
+      .toMap
 
   def localNodeId: Id[Node] = Id(this.json.local_node_id)
 

@@ -15,7 +15,7 @@ import fui.{Browser, Cmd}
 import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.repositories.Nodes
-import cotoami.backend.ErrorJson
+import cotoami.backend.{ErrorJson, NodeBackend}
 import cotoami.components.FixedAspectCrop
 import cotoami.components.FixedAspectCrop.Area
 import cotoami.subparts.{InputFile, Modal}
@@ -82,7 +82,7 @@ object ModalNodeIcon {
             model.croppedImage.map(image =>
               Browser.encodeAsBase64(image, true).flatMap {
                 case Right(base64) =>
-                  Node.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
+                  NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
                 case Left(e) =>
                   log_error("Icon encoding error.", Some(js.JSON.stringify(e)))
               }

@@ -19,7 +19,7 @@ trait SessionJson extends js.Object {
 
 case class ClientNodeSession(json: ClientNodeSessionJson) {
   def session: Session = Session(this.json.session)
-  def server: Node = Node(this.json.server)
+  def server: Node = NodeBackend.toModel(this.json.server)
   def serverRootCotonoma: Option[(Cotonoma, Coto)] =
     Nullable.toOption(this.json.server_root_cotonoma).map(pair =>
       (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))

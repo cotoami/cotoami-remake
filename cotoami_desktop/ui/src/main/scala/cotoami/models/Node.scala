@@ -3,7 +3,7 @@ package cotoami.models
 import org.scalajs.dom
 import java.time.Instant
 
-import fui.{Browser, Cmd}
+import fui.Browser
 import cotoami.utils.Validation
 
 case class Node(
@@ -48,18 +48,4 @@ object Node {
 
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
-
-  import cotoami.backend.{ErrorJson, NodeJson, Nullable}
-
-  def apply(json: NodeJson): Node =
-    Node(
-      id = Id(json.uuid),
-      name = json.name,
-      rootCotonomaId = Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
-      version = json.version,
-      createdAtUtcIso = json.created_at
-    )(json.icon)
-
-  def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
-    NodeJson.setLocalNodeIcon(icon).map(_.map(Node(_)))
 }

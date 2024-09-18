@@ -3,6 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
+import cotoami.models.{Id, Node}
 
 @js.native
 trait NodeJson extends js.Object {
@@ -17,4 +18,18 @@ trait NodeJson extends js.Object {
 object NodeJson {
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, NodeJson]] =
     Commands.send(Commands.SetLocalNodeIcon(icon))
+}
+
+object NodeBackend {
+  def toModel(json: NodeJson): Node =
+    Node(
+      id = Id(json.uuid),
+      name = json.name,
+      rootCotonomaId = Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
+      version = json.version,
+      createdAtUtcIso = json.created_at
+    )(json.icon)
+
+  def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
+    NodeJson.setLocalNodeIcon(icon).map(_.map(toModel(_)))
 }

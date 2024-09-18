@@ -220,14 +220,16 @@ case class Model(
 
     // UpsertNode
     for (nodeJson <- change.UpsertNode.toOption) {
-      val node = Node(nodeJson)
+      val node = NodeBackend.toModel(nodeJson)
       return (this.modify(_.domain.nodes).using(_.put(node)), Seq.empty)
     }
 
     // CreateNode
     for (createNodeJson <- change.CreateNode.toOption) {
       val model =
-        this.modify(_.domain.nodes).using(_.put(Node(createNodeJson.node)))
+        this.modify(_.domain.nodes).using(
+          _.put(NodeBackend.toModel(createNodeJson.node))
+        )
       return Nullable.toOption(createNodeJson.root)
         .map(model.postCotonoma(_))
         .getOrElse((model, Seq.empty))
