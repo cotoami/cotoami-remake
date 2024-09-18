@@ -23,39 +23,45 @@ object DatabaseRole {
 
 case class ParentNode(
     nodeId: Id[Node],
-    createdAt: Instant,
+    createdAtUtcIso: String,
     changesReceived: Double,
-    lastChangeReceivedAt: Option[Instant],
+    lastChangeReceivedAtUtcIso: Option[String],
     forked: Boolean
-)
+) {
+  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
+  lazy val lastChangeReceivedAt: Option[Instant] =
+    this.lastChangeReceivedAtUtcIso.map(parseUtcIso)
+}
 
 object ParentNode {
-  import cotoami.backend.{parseJsonDateTime, Nullable, ParentNodeJson}
+  import cotoami.backend.{Nullable, ParentNodeJson}
 
   def apply(json: ParentNodeJson): ParentNode =
     ParentNode(
       Id(json.node_id),
-      parseJsonDateTime(json.created_at),
+      json.created_at,
       json.changes_received,
-      Nullable.toOption(json.last_change_received_at).map(parseJsonDateTime),
+      Nullable.toOption(json.last_change_received_at),
       json.forked
     )
 }
 
 case class ChildNode(
     nodeId: Id[Node],
-    createdAt: Instant,
+    createdAtUtcIso: String,
     asOwner: Boolean,
     canEditLinks: Boolean
-)
+) {
+  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
+}
 
 object ChildNode {
-  import cotoami.backend.{parseJsonDateTime, ChildNodeJson}
+  import cotoami.backend.ChildNodeJson
 
   def apply(json: ChildNodeJson): ChildNode =
     ChildNode(
       Id(json.node_id),
-      parseJsonDateTime(json.created_at),
+      json.created_at,
       json.as_owner,
       json.can_edit_links
     )
