@@ -14,6 +14,13 @@ case class Cotonoma(
     updatedAtUtcIso: String,
     posts: Int
 ) extends Entity[Cotonoma] {
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Cotonoma =>
+        (this.id, this.updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
+      case _ => false
+    }
+
   lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
   lazy val updatedAt: Instant = parseUtcIso(this.updatedAtUtcIso)
 
@@ -39,13 +46,13 @@ object Cotonoma {
 
   def apply(json: CotonomaJson): Cotonoma =
     Cotonoma(
-      Id(json.uuid),
-      Id(json.node_id),
-      Id(json.coto_id),
-      json.name,
-      json.created_at,
-      json.updated_at,
-      json.posts
+      id = Id(json.uuid),
+      nodeId = Id(json.node_id),
+      cotoId = Id(json.coto_id),
+      name = json.name,
+      createdAtUtcIso = json.created_at,
+      updatedAtUtcIso = json.updated_at,
+      posts = json.posts
     )
 
   def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =

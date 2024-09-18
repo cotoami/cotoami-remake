@@ -48,6 +48,13 @@ case class Coto(
     posted: Boolean
 ) extends Entity[Coto]
     with CotoContent {
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Coto =>
+        (this.id, this.updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
+      case _ => false
+    }
+
   def geolocated: Boolean = this.geolocation.isDefined
 
   lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)

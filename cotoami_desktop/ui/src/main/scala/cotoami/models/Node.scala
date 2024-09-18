@@ -14,13 +14,13 @@ case class Node(
     createdAtUtcIso: String
 )(
     // Make the raw icon data private to force a client to use `iconUrl`
-    // and remove it from `equals` since the `version` should be enough
-    // to decide equality of nodes.
+    // and remove it from `equals` since the `id` and `version` should be
+    // enough to decide equality of nodes.
     icon: String
 ) extends Entity[Node] {
   override def equals(that: Any): Boolean =
     that match {
-      case that: Node => version.equals(that.version)
+      case that: Node => (this.id, this.version) == (that.id, that.version)
       case _          => false
     }
 
@@ -53,11 +53,11 @@ object Node {
 
   def apply(json: NodeJson): Node =
     Node(
-      Id(json.uuid),
-      json.name,
-      Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
-      json.version,
-      json.created_at
+      id = Id(json.uuid),
+      name = json.name,
+      rootCotonomaId = Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
+      version = json.version,
+      createdAtUtcIso = json.created_at
     )(json.icon)
 
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =

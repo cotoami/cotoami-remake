@@ -38,11 +38,12 @@ object ParentNode {
 
   def apply(json: ParentNodeJson): ParentNode =
     ParentNode(
-      Id(json.node_id),
-      json.created_at,
-      json.changes_received,
-      Nullable.toOption(json.last_change_received_at),
-      json.forked
+      nodeId = Id(json.node_id),
+      createdAtUtcIso = json.created_at,
+      changesReceived = json.changes_received,
+      lastChangeReceivedAtUtcIso =
+        Nullable.toOption(json.last_change_received_at),
+      forked = json.forked
     )
 }
 
@@ -60,9 +61,9 @@ object ChildNode {
 
   def apply(json: ChildNodeJson): ChildNode =
     ChildNode(
-      Id(json.node_id),
-      json.created_at,
-      json.as_owner,
-      json.can_edit_links
+      nodeId = Id(json.node_id),
+      createdAtUtcIso = json.created_at,
+      asOwner = json.as_owner,
+      canEditLinks = json.can_edit_links
     )
 }
