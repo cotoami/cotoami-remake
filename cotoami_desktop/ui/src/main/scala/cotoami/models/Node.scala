@@ -13,8 +13,17 @@ case class Node(
     rootCotonomaId: Option[Id[Cotonoma]],
     version: Int,
     createdAt: Instant
-)(icon: String)
-    extends Entity[Node] {
+)(
+    // Make the raw icon data private to force a client to use `iconUrl`
+    // and remove it from `equals` since the `version` should be enough
+    // to decide equality of nodes.
+    icon: String
+) extends Entity[Node] {
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Node => version.equals(that.version)
+      case _          => false
+    }
 
   def setIcon(icon: String): Node = {
     dom.URL.revokeObjectURL(this.iconUrl) // revoke the old image URL
