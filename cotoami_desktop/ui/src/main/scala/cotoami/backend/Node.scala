@@ -18,9 +18,3 @@ object NodeJson {
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, NodeJson]] =
     Commands.send(Commands.SetLocalNodeIcon(icon))
 }
-
-@js.native
-trait DatabaseRoleJson extends js.Object {
-  val Parent: js.UndefOr[ParentNodeJson] = js.native
-  val Child: js.UndefOr[ChildNodeJson] = js.native
-}

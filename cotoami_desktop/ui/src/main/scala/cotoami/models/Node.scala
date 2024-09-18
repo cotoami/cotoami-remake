@@ -5,7 +5,7 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.utils.Validation
-import cotoami.backend.{ChildNode, Cotonoma, ParentNode}
+import cotoami.backend.Cotonoma
 
 case class Node(
     id: Id[Node],
@@ -52,23 +52,4 @@ object Node {
 
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
     NodeJson.setLocalNodeIcon(icon).map(_.map(Node(_)))
-}
-
-sealed trait DatabaseRole
-
-object DatabaseRole {
-  case class Parent(info: ParentNode) extends DatabaseRole
-  case class Child(info: ChildNode) extends DatabaseRole
-
-  import cotoami.backend.DatabaseRoleJson
-
-  def apply(json: DatabaseRoleJson): DatabaseRole = {
-    for (parent <- json.Parent.toOption) {
-      return Parent(ParentNode(parent))
-    }
-    for (child <- json.Child.toOption) {
-      return Child(ChildNode(child))
-    }
-    return null // this should be unreachable
-  }
 }
