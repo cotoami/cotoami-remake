@@ -2,7 +2,6 @@ package cotoami.models
 
 import java.time.Instant
 
-import fui.Cmd
 import cotoami.utils.Validation
 
 case class Cotonoma(
@@ -41,49 +40,4 @@ object Cotonoma {
       Validation.length(fieldName, name, 1, NameMaxLength)
     ).flatten
   }
-
-  import cotoami.backend.{CotoBackend, CotonomaJson, ErrorJson, Paginated}
-
-  def apply(json: CotonomaJson): Cotonoma =
-    Cotonoma(
-      id = Id(json.uuid),
-      nodeId = Id(json.node_id),
-      cotoId = Id(json.coto_id),
-      name = json.name,
-      createdAtUtcIso = json.created_at,
-      updatedAtUtcIso = json.updated_at,
-      posts = json.posts
-    )
-
-  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
-    CotonomaJson.fetch(id)
-      .map(_.map(pair => (Cotonoma(pair._1), CotoBackend.toModel(pair._2))))
-
-  def fetchByName(
-      name: String,
-      nodeId: Id[Node]
-  ): Cmd[Either[ErrorJson, Cotonoma]] =
-    CotonomaJson.fetchByName(name, nodeId).map(_.map(Cotonoma(_)))
-
-  def fetchRecent(
-      nodeId: Option[Id[Node]],
-      pageIndex: Double
-  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    CotonomaJson.fetchRecent(nodeId, pageIndex)
-      .map(_.map(Paginated(_, Cotonoma(_: CotonomaJson))))
-
-  def fetchSubs(
-      id: Id[Cotonoma],
-      pageIndex: Double
-  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    CotonomaJson.fetchSubs(id, pageIndex)
-      .map(_.map(Paginated(_, Cotonoma(_: CotonomaJson))))
-
-  def post(
-      name: String,
-      location: Option[Geolocation],
-      postTo: Id[Cotonoma]
-  ): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
-    CotonomaJson.post(name, location, postTo)
-      .map(_.map(pair => (Cotonoma(pair._1), CotoBackend.toModel(pair._2))))
 }

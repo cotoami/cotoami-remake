@@ -22,7 +22,7 @@ case class ClientNodeSession(json: ClientNodeSessionJson) {
   def server: Node = Node(this.json.server)
   def serverRootCotonoma: Option[(Cotonoma, Coto)] =
     Nullable.toOption(this.json.server_root_cotonoma).map(pair =>
-      (Cotonoma(pair._1), CotoBackend.toModel(pair._2))
+      (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
     )
   def asChild: Option[ChildNode] =
     Nullable.toOption(this.json.as_child).map(ChildNode(_))

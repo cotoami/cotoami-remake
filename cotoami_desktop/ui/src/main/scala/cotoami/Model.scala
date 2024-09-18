@@ -280,7 +280,7 @@ case class Model(
   private def postCotonoma(
       jsonPair: (CotonomaJson, CotoJson)
   ): (Model, Seq[Cmd[Msg]]) = {
-    val cotonoma = Cotonoma(jsonPair._1)
+    val cotonoma = CotonomaBackend.toModel(jsonPair._1)
     val coto = CotoBackend.toModel(jsonPair._2)
     this
       .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))

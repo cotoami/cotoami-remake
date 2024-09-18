@@ -8,7 +8,7 @@ import cotoami.models.{Coto, Cotonoma, Id}
 case class CotoGraph(json: CotoGraphJson) {
   def rootCotoId: Id[Coto] = Id(this.json.root_coto_id)
   def rootCotonoma: Option[Cotonoma] =
-    Nullable.toOption(this.json.root_cotonoma).map(Cotonoma(_))
+    Nullable.toOption(this.json.root_cotonoma).map(CotonomaBackend.toModel(_))
   def cotos: js.Array[Coto] = this.json.cotos.map(CotoBackend.toModel(_))
   def cotosRelatedData: CotosRelatedData =
     CotosRelatedData(this.json.cotos_related_data)

@@ -9,6 +9,7 @@ import cotoami.{log_info, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Node}
 import cotoami.backend.{
   CotoGraph,
+  CotonomaBackend,
   CotonomaDetails,
   ErrorJson,
   GeolocatedCotos,
@@ -160,14 +161,14 @@ case class Domain(
 
   def fetchCurrentRootCotonoma: Cmd[AppMsg] =
     this.currentRootCotonomaId.map(
-      Cotonoma.fetch(_)
+      CotonomaBackend.fetch(_)
         .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
     ).getOrElse(Cmd.none)
 
   def fetchRecentCotonomas(
       pageIndex: Double
   ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    Cotonoma.fetchRecent(this.nodes.focusedId, pageIndex)
+    CotonomaBackend.fetchRecent(this.nodes.focusedId, pageIndex)
 
   def fetchMoreRecentCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     this.cotonomas.recentIds.nextPageIndex
@@ -177,7 +178,7 @@ case class Domain(
   def fetchSubCotonomas(
       pageIndex: Double
   ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    this.cotonomas.focusedId.map(Cotonoma.fetchSubs(_, pageIndex))
+    this.cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
   def fetchMoreSubCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =

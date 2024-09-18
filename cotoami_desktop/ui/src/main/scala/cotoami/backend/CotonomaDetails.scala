@@ -6,11 +6,12 @@ import fui.Cmd
 import cotoami.models.{Coto, Cotonoma, Id}
 
 case class CotonomaDetails(json: CotonomaDetailsJson) {
-  def cotonoma: Cotonoma = Cotonoma(this.json.cotonoma)
+  def cotonoma: Cotonoma = CotonomaBackend.toModel(this.json.cotonoma)
   def coto: Coto = CotoBackend.toModel(this.json.coto)
-  def supers: js.Array[Cotonoma] = this.json.supers.map(Cotonoma(_))
+  def supers: js.Array[Cotonoma] =
+    this.json.supers.map(CotonomaBackend.toModel(_))
   def subs: Paginated[Cotonoma, _] =
-    Paginated(this.json.subs, Cotonoma(_: CotonomaJson))
+    Paginated(this.json.subs, CotonomaBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder
