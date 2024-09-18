@@ -9,7 +9,7 @@ case class NodeDetails(json: NodeDetailsJson) {
   def node: Node = Node(this.json.node)
   def root: Option[(Cotonoma, Coto)] =
     Nullable.toOption(this.json.root).map(pair =>
-      (Cotonoma(pair._1), Coto(pair._2))
+      (Cotonoma(pair._1), CotoBackend.toModel(pair._2))
     )
 }
 

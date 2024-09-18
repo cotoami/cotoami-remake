@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{Cotonoma, Geolocation, Id}
+import cotoami.models.{Coto, Cotonoma, Geolocation, Id}
 
 @js.native
 trait CotoJson extends js.Object {
@@ -36,4 +36,49 @@ object CotoJson {
     Commands.send(
       Commands.PostCoto(content, summary, mediaContent, location, postTo)
     )
+}
+
+object CotoBackend {
+  def toModel(json: CotoJson, posted: Boolean = false): Coto =
+    Coto(
+      id = Id(json.uuid),
+      nodeId = Id(json.node_id),
+      postedInId = Nullable.toOption(json.posted_in_id).map(Id(_)),
+      postedById = Id(json.posted_by_id),
+      content = Nullable.toOption(json.content),
+      summary = Nullable.toOption(json.summary),
+      mediaContent = (
+        Nullable.toOption(json.media_content),
+        Nullable.toOption(json.media_type)
+      ) match {
+        case (Some(content), Some(mediaType)) => Some((content, mediaType))
+        case _                                => None
+      },
+      geolocation = (
+        Nullable.toOption(json.longitude),
+        Nullable.toOption(json.latitude)
+      ) match {
+        case (Some(longitude), Some(latitude)) =>
+          Some(Geolocation.fromLngLat((longitude, latitude)))
+        case _ => None
+      },
+      isCotonoma = json.is_cotonoma,
+      repostOfId = Nullable.toOption(json.repost_of_id).map(Id(_)),
+      repostedInIds = Nullable.toOption(json.reposted_in_ids)
+        .map(_.map(Id[Cotonoma](_)).toSeq),
+      createdAtUtcIso = json.created_at,
+      updatedAtUtcIso = json.updated_at,
+      outgoingLinks = json.outgoing_links,
+      posted = posted
+    )
+
+  def post(
+      content: String,
+      summary: Option[String],
+      mediaContent: Option[(String, String)],
+      location: Option[Geolocation],
+      postTo: Id[Cotonoma]
+  ): Cmd[Either[ErrorJson, Coto]] =
+    CotoJson.post(content, summary, mediaContent, location, postTo)
+      .map(_.map(CotoBackend.toModel(_)))
 }

@@ -42,7 +42,7 @@ object Cotonoma {
     ).flatten
   }
 
-  import cotoami.backend.{CotonomaJson, ErrorJson, Paginated}
+  import cotoami.backend.{CotoBackend, CotonomaJson, ErrorJson, Paginated}
 
   def apply(json: CotonomaJson): Cotonoma =
     Cotonoma(
@@ -57,7 +57,7 @@ object Cotonoma {
 
   def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.fetch(id)
-      .map(_.map(pair => (Cotonoma(pair._1), Coto(pair._2))))
+      .map(_.map(pair => (Cotonoma(pair._1), CotoBackend.toModel(pair._2))))
 
   def fetchByName(
       name: String,
@@ -85,5 +85,5 @@ object Cotonoma {
       postTo: Id[Cotonoma]
   ): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.post(name, location, postTo)
-      .map(_.map(pair => (Cotonoma(pair._1), Coto(pair._2))))
+      .map(_.map(pair => (Cotonoma(pair._1), CotoBackend.toModel(pair._2))))
 }

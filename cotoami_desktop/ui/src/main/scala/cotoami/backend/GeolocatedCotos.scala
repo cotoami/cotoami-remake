@@ -6,7 +6,7 @@ import fui.Cmd
 import cotoami.models.{Coto, Cotonoma, GeoBounds, Geolocation, Id, Node}
 
 case class GeolocatedCotos(json: GeolocatedCotosJson) {
-  def cotos: js.Array[Coto] = this.json.cotos.map(Coto(_))
+  def cotos: js.Array[Coto] = this.json.cotos.map(CotoBackend.toModel(_))
   def relatedData: CotosRelatedData = CotosRelatedData(this.json.related_data)
 
   def geoBounds: Option[Either[Geolocation, GeoBounds]] = {

@@ -9,7 +9,7 @@ case class CotoGraph(json: CotoGraphJson) {
   def rootCotoId: Id[Coto] = Id(this.json.root_coto_id)
   def rootCotonoma: Option[Cotonoma] =
     Nullable.toOption(this.json.root_cotonoma).map(Cotonoma(_))
-  def cotos: js.Array[Coto] = this.json.cotos.map(Coto(_))
+  def cotos: js.Array[Coto] = this.json.cotos.map(CotoBackend.toModel(_))
   def cotosRelatedData: CotosRelatedData =
     CotosRelatedData(this.json.cotos_related_data)
   def links: js.Array[Link] = this.json.links.map(Link(_))

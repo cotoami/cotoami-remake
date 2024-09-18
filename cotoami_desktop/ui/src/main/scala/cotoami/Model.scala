@@ -249,7 +249,7 @@ case class Model(
   }
 
   private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
-    val coto = Coto(cotoJson, true)
+    val coto = CotoBackend.toModel(cotoJson, true)
     val cotos = this.domain.cotos.put(coto)
     val (cotonomas, fetchCotonoma) =
       coto.postedInId.map(this.domain.cotonomas.updated(_))
@@ -281,7 +281,7 @@ case class Model(
       jsonPair: (CotonomaJson, CotoJson)
   ): (Model, Seq[Cmd[Msg]]) = {
     val cotonoma = Cotonoma(jsonPair._1)
-    val coto = Coto(jsonPair._2)
+    val coto = CotoBackend.toModel(jsonPair._2)
     this
       .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
       .postCoto(jsonPair._2)

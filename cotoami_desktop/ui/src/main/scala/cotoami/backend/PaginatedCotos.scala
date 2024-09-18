@@ -7,7 +7,7 @@ import cotoami.models.{Coto, Cotonoma, Id, Node}
 
 case class PaginatedCotos(json: PaginatedCotosJson) {
   def page: Paginated[Coto, _] =
-    Paginated(this.json.page, Coto(_: CotoJson, false))
+    Paginated(this.json.page, CotoBackend.toModel(_, false))
   def relatedData: CotosRelatedData = CotosRelatedData(this.json.related_data)
   def outgoingLinks: js.Array[Link] = this.json.outgoing_links.map(Link(_))
 

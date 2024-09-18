@@ -22,7 +22,7 @@ import cotoami.models.{
   WaitingPost,
   WaitingPosts
 }
-import cotoami.backend.ErrorJson
+import cotoami.backend.{CotoBackend, ErrorJson}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -550,7 +550,7 @@ object FormCoto {
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content, form.summary, mediaContent, location, postTo)
+    CotoBackend.post(form.content, form.summary, mediaContent, location, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(

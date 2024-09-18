@@ -7,7 +7,7 @@ import cotoami.models.{Coto, Cotonoma, Id}
 
 case class CotonomaDetails(json: CotonomaDetailsJson) {
   def cotonoma: Cotonoma = Cotonoma(this.json.cotonoma)
-  def coto: Coto = Coto(this.json.coto)
+  def coto: Coto = CotoBackend.toModel(this.json.coto)
   def supers: js.Array[Cotonoma] = this.json.supers.map(Cotonoma(_))
   def subs: Paginated[Cotonoma, _] =
     Paginated(this.json.subs, Cotonoma(_: CotonomaJson))
