@@ -1,6 +1,8 @@
 package cotoami.models
 
-import cotoami.backend.{ChildNode, ParentNode}
+import java.time.Instant
+
+import cotoami.backend.ChildNode
 
 sealed trait DatabaseRole
 
@@ -19,4 +21,25 @@ object DatabaseRole {
     }
     return null // this should be unreachable
   }
+}
+
+case class ParentNode(
+    nodeId: Id[Node],
+    createdAt: Instant,
+    changesReceived: Double,
+    lastChangeReceivedAt: Option[Instant],
+    forked: Boolean
+)
+
+object ParentNode {
+  import cotoami.backend.{parseJsonDateTime, Nullable, ParentNodeJson}
+
+  def apply(json: ParentNodeJson): ParentNode =
+    ParentNode(
+      Id(json.node_id),
+      parseJsonDateTime(json.created_at),
+      json.changes_received,
+      Nullable.toOption(json.last_change_received_at).map(parseJsonDateTime),
+      json.forked
+    )
 }
