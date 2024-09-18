@@ -1,35 +1,16 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import java.time.Instant
 
 import fui.Cmd
-import cotoami.utils.Validation
-import cotoami.models.{ChildNode, DatabaseRole, Id, Node}
-
-case class Server(
-    server: ServerNode,
-    role: Option[DatabaseRole],
-    notConnected: Option[NotConnected],
-    clientAsChild: Option[ChildNode]
-)
-
-object Server {
-  def apply(json: ServerJson): Server =
-    Server(
-      ServerNode(json.server),
-      Nullable.toOption(json.role).map(DatabaseRole(_)),
-      Nullable.toOption(json.not_connected).map(NotConnected(_)),
-      Nullable.toOption(json.client_as_child).map(ChildNode(_))
-    )
-
-  def addServer(
-      url: String,
-      password: String,
-      clientRole: Option[String] = None
-  ): Cmd[Either[ErrorJson, Server]] =
-    ServerJson.addServer(url, password, clientRole)
-      .map(_.map(Server(_)))
+import cotoami.models.{
+  ChildNode,
+  DatabaseRole,
+  Id,
+  Node,
+  NotConnected,
+  Server,
+  ServerNode
 }
 
 @js.native
@@ -49,32 +30,22 @@ object ServerJson {
     Commands.send(Commands.AddServer(url, password, clientRole))
 }
 
-case class ServerNode(json: ServerNodeJson) {
-  def nodeId: Id[Node] = Id(this.json.node_id)
-  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
-  def urlPrefix: String = this.json.url_prefix
-  def disabled: Boolean = this.json.disabled
-}
+object ServerBackend {
+  def toModel(json: ServerJson): Server =
+    Server(
+      ServerNodeBackend.toModel(json.server),
+      Nullable.toOption(json.role).map(DatabaseRole(_)),
+      Nullable.toOption(json.not_connected).map(NotConnectedBackend.toModel(_)),
+      Nullable.toOption(json.client_as_child).map(ChildNode(_))
+    )
 
-object ServerNode {
-  final val UrlMaxLength = 1500
-
-  def validateUrl(url: String): Seq[Validation.Error] = {
-    val fieldName = "node URL"
-    Seq(
-      Validation.nonBlank(fieldName, url),
-      Validation.length(fieldName, url, 1, UrlMaxLength),
-      Validation.httpUrl(fieldName, url)
-    ).flatten
-  }
-
-  def update(
-      id: Id[Node],
-      disabled: Option[Boolean],
-      url: Option[String]
-  ): Cmd[Either[ErrorJson, ServerNode]] =
-    ServerNodeJson.update(id, disabled, url)
-      .map(_.map(ServerNode(_)))
+  def addServer(
+      url: String,
+      password: String,
+      clientRole: Option[String] = None
+  ): Cmd[Either[ErrorJson, Server]] =
+    ServerJson.addServer(url, password, clientRole)
+      .map(_.map(toModel(_)))
 }
 
 @js.native
@@ -94,24 +65,35 @@ object ServerNodeJson {
     Commands.send(Commands.UpdateServer(id, disabled, url))
 }
 
-sealed trait NotConnected
+object ServerNodeBackend {
+  def toModel(json: ServerNodeJson): ServerNode =
+    ServerNode(
+      nodeId = Id(json.node_id),
+      createdAtUtcIso = json.created_at,
+      urlPrefix = json.url_prefix,
+      disabled = json.disabled
+    )
 
-object NotConnected {
-  def apply(json: NotConnectedJson): NotConnected = json.reason match {
-    case "Disabled"     => Disabled
-    case "Connecting"   => Connecting(Option(json.details))
-    case "InitFailed"   => InitFailed(json.details)
-    case "Disconnected" => Disconnected(Option(json.details))
-  }
-
-  case object Disabled extends NotConnected
-  case class Connecting(details: Option[String]) extends NotConnected
-  case class InitFailed(details: String) extends NotConnected
-  case class Disconnected(details: Option[String]) extends NotConnected
+  def update(
+      id: Id[Node],
+      disabled: Option[Boolean],
+      url: Option[String]
+  ): Cmd[Either[ErrorJson, ServerNode]] =
+    ServerNodeJson.update(id, disabled, url)
+      .map(_.map(toModel(_)))
 }
 
 @js.native
 trait NotConnectedJson extends js.Object {
   val reason: String = js.native
   val details: String = js.native
+}
+
+object NotConnectedBackend {
+  def toModel(json: NotConnectedJson): NotConnected = json.reason match {
+    case "Disabled"     => NotConnected.Disabled
+    case "Connecting"   => NotConnected.Connecting(Option(json.details))
+    case "InitFailed"   => NotConnected.InitFailed(json.details)
+    case "Disconnected" => NotConnected.Disconnected(Option(json.details))
+  }
 }

@@ -2,7 +2,7 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{ChildNode, DatabaseRole, Id, Node}
+import cotoami.models.{ChildNode, DatabaseRole, Id, Node, NotConnected, Server}
 import cotoami.backend._
 
 case class Nodes(

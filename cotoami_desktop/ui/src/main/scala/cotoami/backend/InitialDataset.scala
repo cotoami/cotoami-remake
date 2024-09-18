@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 import fui.Cmd
 import cotoami.libs.tauri
-import cotoami.models.{Id, Node}
+import cotoami.models.{Id, Node, Server}
 
 case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = this.json.last_change_number
@@ -22,7 +22,8 @@ case class InitialDataset(json: InitialDatasetJson) {
   lazy val parentNodeIds: js.Array[Id[Node]] =
     this.json.parent_node_ids.map(Id[Node](_))
 
-  lazy val servers: js.Array[Server] = this.json.servers.map(Server(_))
+  lazy val servers: js.Array[Server] =
+    this.json.servers.map(ServerBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder
