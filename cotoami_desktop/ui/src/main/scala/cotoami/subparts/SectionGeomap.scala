@@ -277,7 +277,8 @@ object SectionGeomap {
         markerOfCotos.cotos.size,
         markerOfCotos.containsCotonomas,
         markerOfCotos.label
-      )
+      ),
+      Some("<div>hello</div>")
     )
 
   private def markerElement(
