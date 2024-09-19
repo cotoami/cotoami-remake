@@ -271,7 +271,7 @@ object SectionGeomap {
     MapLibre.MarkerDef(
       markerOfCotos.cotos.map(_.id.uuid).mkString(IdSeparator),
       markerOfCotos.location.toLngLat,
-      markerHtml(
+      markerElement(
         markerOfCotos.nodeIconUrls.take(4),
         markerOfCotos.inFocus,
         markerOfCotos.cotos.size,
@@ -281,7 +281,7 @@ object SectionGeomap {
       None
     )
 
-  private def markerHtml(
+  private def markerElement(
       iconUrls: Set[String],
       inFocus: Boolean,
       countOfCotos: Int,

@@ -378,7 +378,7 @@ import cotoami.libs.geomap.pmtiles
     private def putMarker(markerDef: MarkerDef): Unit = {
       removeMarker(markerDef.id)
       val marker = new Marker(new MarkerOptions() {
-        override val element = markerDef.html
+        override val element = markerDef.markerElement
         override val className = markerDef.className match {
           case Some(className) => className
           case None            => ()
@@ -408,7 +408,7 @@ import cotoami.libs.geomap.pmtiles
   case class MarkerDef(
       id: String,
       lngLat: (Double, Double),
-      html: dom.Element,
+      markerElement: dom.Element,
       className: Option[String] = None
   )
 }
