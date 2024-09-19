@@ -1,7 +1,7 @@
 package cotoami.models
 
 import com.softwaremill.quicklens._
-import cotoami.backend.{ParentSyncEnd, ParentSyncProgress}
+import cotoami.backend.ParentSyncEnd
 
 case class ParentSync(
     syncing: Seq[ParentSyncProgress] = Seq.empty,
@@ -41,3 +41,5 @@ case class ParentSync(
 
   def comingManyChanges: Boolean = this.remaining > ManyThreshold
 }
+
+case class ParentSyncProgress(nodeId: Id[Node], progress: Double, total: Double)

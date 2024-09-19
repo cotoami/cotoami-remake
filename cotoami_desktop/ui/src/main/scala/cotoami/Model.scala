@@ -169,7 +169,8 @@ case class Model(
 
     // ParentSyncProgress
     for (progress <- event.ParentSyncProgress.toOption) {
-      val parentSync = this.parentSync.progress(ParentSyncProgress(progress))
+      val parentSync =
+        this.parentSync.progress(ParentSyncProgressBackend.toModel(progress))
       val modalStack =
         if (parentSync.comingManyChanges)
           this.modalStack.openIfNot(Modal.ParentSync())

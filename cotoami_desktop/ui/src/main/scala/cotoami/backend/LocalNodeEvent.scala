@@ -1,7 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import cotoami.models.{Id, Node}
+import cotoami.models.{Id, Node, ParentSyncProgress}
 
 @js.native
 trait LocalNodeEventJson extends js.Object {
@@ -25,17 +25,20 @@ trait ParentSyncStartJson extends js.Object {
   val parent_description: String = js.native
 }
 
-case class ParentSyncProgress(json: ParentSyncProgressJson) {
-  def nodeId: Id[Node] = Id(this.json.node_id)
-  def progress: Double = this.json.progress
-  def total: Double = this.json.total
-}
-
 @js.native
 trait ParentSyncProgressJson extends js.Object {
   val node_id: String = js.native
   val progress: Double = js.native
   val total: Double = js.native
+}
+
+object ParentSyncProgressBackend {
+  def toModel(json: ParentSyncProgressJson): ParentSyncProgress =
+    ParentSyncProgress(
+      nodeId = Id(json.node_id),
+      progress = json.progress,
+      total = json.total
+    )
 }
 
 case class ParentSyncEnd(json: ParentSyncEndJson) {
