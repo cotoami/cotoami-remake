@@ -2,12 +2,15 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
+import com.softwaremill.quicklens._
+
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Node}
+import cotoami.models.{Id, Node}
+import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, NodeDetails}
 import cotoami.components.toolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
@@ -16,7 +19,6 @@ object ModalNodeProfile {
 
   case class Model(
       nodeId: Id[Node],
-      rootCoto: Option[Coto],
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
@@ -43,23 +45,31 @@ object ModalNodeProfile {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
+    val default = (model, context.domain, Seq.empty)
     msg match {
-      case Msg.NodeDetailsFetched(Right(details)) => {
-        (
-          model.copy(rootCoto = details.root.map(_._2)),
-          Seq.empty
-        )
-      }
+      case Msg.NodeDetailsFetched(Right(details)) =>
+        details.root match {
+          case Some((cotonoma, coto)) =>
+            default.copy(
+              _2 = context.domain
+                .modify(_.cotonomas).using(_.put(cotonoma))
+                .modify(_.cotos).using(_.put(coto))
+            )
+          case None => default
+        }
 
       case Msg.NodeDetailsFetched(Left(e)) =>
-        (
-          model.copy(error = Some(e.default_message)),
-          Seq(
+        default.copy(
+          _1 = model.copy(error = Some(e.default_message)),
+          _3 = Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
         )
     }
+  }
 
   private def fetchNodeDetails(id: Id[Node]): Cmd[AppMsg] =
     NodeDetails.fetch(id)
@@ -146,7 +156,7 @@ object ModalNodeProfile {
   private def fieldDescription(model: Model)(implicit
       context: Context
   ): ReactElement =
-    model.rootCoto.map(coto =>
+    context.domain.rootOf(model.nodeId).map { case (_, coto) =>
       div(className := "input-field node-description")(
         label(htmlFor := "node-profile-description")("Description"),
         div(className := "input-with-tools")(
@@ -162,5 +172,5 @@ object ModalNodeProfile {
           }
         )
       )
-    )
+    }
 }

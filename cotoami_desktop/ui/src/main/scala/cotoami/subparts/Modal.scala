@@ -140,7 +140,13 @@ object Modal {
       case Msg.NodeProfileMsg(modalMsg) =>
         stack.get[NodeProfile].map { case NodeProfile(modalModel) =>
           ModalNodeProfile.update(modalMsg, modalModel).pipe {
-            case (modal, cmds) => (model.updateModal(NodeProfile(modal)), cmds)
+            case (modal, domain, cmds) =>
+              (
+                model
+                  .updateModal(NodeProfile(modal))
+                  .modify(_.domain).setTo(domain),
+                cmds
+              )
           }
         }
 

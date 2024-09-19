@@ -64,6 +64,11 @@ case class Domain(
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
+  def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
+    this.nodes.get(nodeId)
+      .flatMap(node => node.rootCotonomaId.flatMap(this.cotonomas.get))
+      .flatMap(cotonoma => this.cotos.get(cotonoma.cotoId).map(cotonoma -> _))
+
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
       // The location contains a cotonoma only when one is focused,
