@@ -114,7 +114,7 @@ object AppHeader {
       title := "Node profile",
       onClick := (_ =>
         dispatch(
-          (Modal.Msg.OpenModal.apply _).tupled(Modal.NodeProfile(node)).toApp
+          (Modal.Msg.OpenModal.apply _).tupled(Modal.NodeProfile(node.id)).toApp
         )
       )
     )(

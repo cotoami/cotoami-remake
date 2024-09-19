@@ -94,10 +94,7 @@ object ModalNodeIcon {
         default.copy(
           _1 = model.copy(saving = false),
           _2 = context.domain.nodes.put(node),
-          _3 = Seq(
-            Browser.send(ModalNodeProfile.Msg.SetNode(node).toApp),
-            Modal.close(classOf[Modal.NodeIcon])
-          )
+          _3 = Seq(Modal.close(classOf[Modal.NodeIcon]))
         )
 
       case Msg.Saved(Left(e)) =>

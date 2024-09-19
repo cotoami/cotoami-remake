@@ -2,7 +2,7 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
@@ -15,19 +15,19 @@ import cotoami.subparts.{imgNode, Modal, ViewCoto}
 object ModalNodeProfile {
 
   case class Model(
-      node: Node,
+      nodeId: Id[Node],
       rootCoto: Option[Coto],
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
-      context.domain.nodes.isOperating(this.node.id)
+      context.domain.nodes.isOperating(this.nodeId)
   }
 
   object Model {
-    def apply(node: Node): (Model, Seq[Cmd[AppMsg]]) =
+    def apply(nodeId: Id[Node]): (Model, Seq[Cmd[AppMsg]]) =
       (
-        Model(node, None),
-        Seq(fetchNodeDetails(node.id))
+        Model(nodeId, None),
+        Seq(fetchNodeDetails(nodeId))
       )
   }
 
@@ -41,14 +41,13 @@ object ModalNodeProfile {
 
     case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
-    case class SetNode(node: Node) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
     msg match {
       case Msg.NodeDetailsFetched(Right(details)) => {
         (
-          model.copy(node = details.node, rootCoto = details.root.map(_._2)),
+          model.copy(rootCoto = details.root.map(_._2)),
           Seq.empty
         )
       }
@@ -59,12 +58,6 @@ object ModalNodeProfile {
           Seq(
             log_error("Node connecting error.", Some(js.JSON.stringify(e)))
           )
-        )
-
-      case Msg.SetNode(node) =>
-        (
-          model.copy(node = node),
-          Seq(fetchNodeDetails(node.id))
         )
     }
 
@@ -83,9 +76,19 @@ object ModalNodeProfile {
     )(
       "Node Profile"
     )(
+      context.domain.nodes.get(model.nodeId)
+        .map(modalContent(_, model))
+        .getOrElse(s"Node ${model.nodeId} not found.")
+    )
+
+  private def modalContent(node: Node, model: Model)(implicit
+      context: Context,
+      dispatch: AppMsg => Unit
+  ): ReactElement =
+    Fragment(
       div(className := "sidebar")(
         section(className := "node-icon")(
-          imgNode(model.node),
+          imgNode(node),
           Option.when(model.isOperatingNode()) {
             toolButton(
               symbol = "edit",
@@ -107,15 +110,15 @@ object ModalNodeProfile {
             id := "node-profile-id",
             name := "nodeId",
             readOnly := true,
-            value := model.node.id.uuid
+            value := node.id.uuid
           )
         ),
-        fieldName(model),
+        fieldName(node, model),
         fieldDescription(model)
       )
     )
 
-  private def fieldName(model: Model)(implicit
+  private def fieldName(node: Node, model: Model)(implicit
       context: Context
   ): ReactElement =
     div(className := "input-field node-name")(
@@ -126,7 +129,7 @@ object ModalNodeProfile {
           id := "node-profile-name",
           name := "nodeName",
           readOnly := true,
-          value := model.node.name
+          value := node.name
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(

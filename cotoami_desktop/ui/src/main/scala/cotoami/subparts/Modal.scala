@@ -8,7 +8,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Model => AppModel, Msg => AppMsg}
-import cotoami.models.Node
+import cotoami.models.{Id, Node}
 import cotoami.subparts.modals._
 
 object Modal {
@@ -32,8 +32,8 @@ object Modal {
 
   case class NodeProfile(model: ModalNodeProfile.Model) extends Model
   object NodeProfile {
-    def apply(node: Node): (NodeProfile, Seq[Cmd[AppMsg]]) =
-      ModalNodeProfile.Model(node).pipe(r => (NodeProfile(r._1), r._2))
+    def apply(nodeId: Id[Node]): (NodeProfile, Seq[Cmd[AppMsg]]) =
+      ModalNodeProfile.Model(nodeId).pipe(r => (NodeProfile(r._1), r._2))
   }
 
   case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())

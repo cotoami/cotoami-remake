@@ -252,7 +252,7 @@ object NavCotonomas {
           onClick = _ =>
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.NodeProfile(node)
+                Modal.NodeProfile(node.id)
               ).toApp
             )
         ),
