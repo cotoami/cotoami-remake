@@ -25,17 +25,16 @@ case class Node(
     }
 
   def setIcon(icon: String): Node = {
-    dom.URL.revokeObjectURL(this.iconUrl) // revoke the old image URL
+    revokeIconUrl()
     this.copy(version = this.version + 1)(icon = icon)
   }
 
   lazy val iconUrl: String = {
-    // `URL.revokeObjectURL()` wouldn't be needed because once a node object
-    // has been loaded it will be retained until the window is closed
-    // (unless the icon is changed by `setIcon` which revokes the URL).
     val blob = Browser.decodeBase64(this.icon, Node.IconMimeType)
     dom.URL.createObjectURL(blob)
   }
+
+  def revokeIconUrl(): Unit = dom.URL.revokeObjectURL(this.iconUrl)
 
   lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
 

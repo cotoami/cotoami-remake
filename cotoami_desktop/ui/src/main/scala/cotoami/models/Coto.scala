@@ -62,7 +62,7 @@ case class Coto(
       (dom.URL.createObjectURL(blob), mimeType)
   }
 
-  def revokeMediaUrl() = this.mediaUrl.foreach { case (url, _) =>
+  def revokeMediaUrl(): Unit = this.mediaUrl.foreach { case (url, _) =>
     dom.URL.revokeObjectURL(url)
   }
 

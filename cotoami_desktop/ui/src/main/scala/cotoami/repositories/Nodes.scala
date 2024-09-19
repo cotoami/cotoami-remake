@@ -20,7 +20,10 @@ case class Nodes(
   def contains(id: Id[Node]): Boolean = this.map.contains(id)
 
   def put(node: Node): Nodes =
-    this.modify(_.map).using(_ + (node.id -> node))
+    this.modify(_.map).using { map =>
+      map.get(node.id).foreach(_.revokeIconUrl()) // Side-effect!
+      map + (node.id -> node)
+    }
 
   def local: Option[Node] = this.localId.flatMap(this.get)
 
