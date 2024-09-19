@@ -296,7 +296,8 @@ object SectionGeomap {
       else
         Some(s"""<div class="text">${text}</div>""")
     }
-    val imageHtml = imageUrl.map(url => s"""<img src="${url}" />""")
+    val imageHtml =
+      imageUrl.map(url => s"""<div class="image"><img src="${url}" /></div>""")
 
     if (textHtml.isEmpty && imageHtml.isEmpty)
       None
