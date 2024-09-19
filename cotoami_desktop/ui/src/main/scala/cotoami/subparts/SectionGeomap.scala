@@ -173,6 +173,8 @@ object SectionGeomap {
           _1 = model
             .modify(_.initialCotosFetched).setTo(true)
             .modify(_.cotonomaLocation).setTo(cotonomaLocation)
+            // Force to refresh when the cotonoma has been changed
+            // (ex. marker's `in-focus` state could be changed)
             .refreshMarkers,
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
