@@ -181,6 +181,22 @@ section.geomap {
       z-index: 4;
     }
   }
+
+  div.maplibregl-popup {
+    z-index: 5;
+
+    div.geomap-marker-popup {
+      div.image img {
+        width: auto;
+        height: auto;
+        max-height: 150px;
+      }
+
+      div.text {
+        color: #333;
+      }
+    }
+  }
 }
 
 .geomap-container.hide-labels .label,

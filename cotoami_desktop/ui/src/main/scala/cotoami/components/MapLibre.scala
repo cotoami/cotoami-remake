@@ -377,14 +377,13 @@ import cotoami.libs.geomap.pmtiles
 
     private def putMarker(markerDef: MarkerDef): Unit = {
       removeMarker(markerDef.id)
+
+      val lngLat = js.Tuple2.fromScalaTuple2(markerDef.lngLat)
+
       val marker = new Marker(new MarkerOptions() {
-        override val element = markerDef.html
-        override val className = markerDef.className match {
-          case Some(className) => className
-          case None            => ()
-        }
-      }).setLngLat(js.Tuple2.fromScalaTuple2(markerDef.lngLat))
-        .addTo(this)
+        override val element = markerDef.markerElement
+      }).setLngLat(lngLat).addTo(this)
+
       marker.getElement().addEventListener(
         "click",
         (e: dom.MouseEvent) => {
@@ -392,6 +391,28 @@ import cotoami.libs.geomap.pmtiles
           this.onMarkerClick.foreach(_(markerDef.id))
         }
       )
+
+      markerDef.popupHtml match {
+        case Some(html) => {
+          val popup = new Popup(new PopupOptions() {
+            override val closeButton = false
+            override val closeOnClick = false
+          })
+          marker.getElement().addEventListener(
+            "mouseenter",
+            (e: dom.MouseEvent) => {
+              popup.setLngLat(lngLat).setHTML(html).addTo(this)
+            }
+          )
+          marker.getElement().addEventListener(
+            "mouseleave",
+            (e: dom.MouseEvent) => {
+              popup.remove()
+            }
+          )
+        }
+        case None => ()
+      }
 
       this.markers.put(markerDef.id, marker)
     }
@@ -408,7 +429,7 @@ import cotoami.libs.geomap.pmtiles
   case class MarkerDef(
       id: String,
       lngLat: (Double, Double),
-      html: dom.Element,
-      className: Option[String] = None
+      markerElement: dom.Element,
+      popupHtml: Option[String]
   )
 }

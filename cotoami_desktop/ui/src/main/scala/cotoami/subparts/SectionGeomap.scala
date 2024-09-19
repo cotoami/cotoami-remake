@@ -173,6 +173,8 @@ object SectionGeomap {
           _1 = model
             .modify(_.initialCotosFetched).setTo(true)
             .modify(_.cotonomaLocation).setTo(cotonomaLocation)
+            // Force to refresh when the cotonoma has been changed
+            // (ex. marker's `in-focus` state could be changed)
             .refreshMarkers,
           _2 = context.domain.importFrom(cotos),
           _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
@@ -271,17 +273,50 @@ object SectionGeomap {
     MapLibre.MarkerDef(
       markerOfCotos.cotos.map(_.id.uuid).mkString(IdSeparator),
       markerOfCotos.location.toLngLat,
-      markerHtml(
+      markerElement(
         markerOfCotos.nodeIconUrls.take(4),
         markerOfCotos.inFocus,
         markerOfCotos.cotos.size,
         markerOfCotos.containsCotonomas,
         markerOfCotos.label
       ),
-      None
+      markerOfCotos.cotos match {
+        case Seq(coto) =>
+          popupHtml(
+            if (coto.isCotonoma) None else coto.abbreviate,
+            coto.mediaUrl.map(_._1)
+          )
+        case _ => None
+      }
     )
 
-  private def markerHtml(
+  private def popupHtml(
+      text: Option[String],
+      imageUrl: Option[String]
+  ): Option[String] = {
+    val textHtml = text.flatMap { text =>
+      if (text.isBlank())
+        None
+      else
+        Some(s"""<div class="text">${text}</div>""")
+    }
+    val imageHtml =
+      imageUrl.map(url => s"""<div class="image"><img src="${url}" /></div>""")
+
+    if (textHtml.isEmpty && imageHtml.isEmpty)
+      None
+    else
+      Some(
+        s"""
+        |<div class="geomap-marker-popup">
+        | ${imageHtml.getOrElse("")}
+        | ${textHtml.getOrElse("")}
+        |</div>
+        """.stripMargin
+      )
+  }
+
+  private def markerElement(
       iconUrls: Set[String],
       inFocus: Boolean,
       countOfCotos: Int,
@@ -327,7 +362,7 @@ object SectionGeomap {
     label.foreach { name =>
       val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
       label.className = "label"
-      label.textContent = name
+      label.textContent = name // using textContent can prevent XSS attacks.
       marker.append(label)
     }
 
