@@ -358,7 +358,7 @@ object SectionGeomap {
     label.foreach { name =>
       val label = createElement("div").asInstanceOf[dom.HTMLDivElement]
       label.className = "label"
-      label.textContent = name
+      label.textContent = name // using textContent can prevent XSS attacks.
       marker.append(label)
     }
 
