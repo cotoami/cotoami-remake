@@ -30,7 +30,7 @@ case class Domain(
     this.copy(
       nodes = this.nodes.focus(None),
       cotonomas = Cotonomas(),
-      cotos = Cotos(),
+      cotos = this.cotos.destroyAndCreate(),
       links = Links()
     )
 

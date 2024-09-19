@@ -116,7 +116,7 @@ case class Model(
     this
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.domain.cotonomas).setTo(cotonomas)
-      .modify(_.domain.cotos).setTo(Cotos())
+      .modify(_.domain.cotos).using(_.destroyAndCreate())
       .modify(_.domain.links).setTo(Links())
       .modify(_.timeline).using(_.init) pipe { model =>
       val (navCotonomas, fetchRecentCotonomas) =

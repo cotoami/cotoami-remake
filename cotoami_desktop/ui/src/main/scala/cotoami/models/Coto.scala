@@ -1,13 +1,15 @@
 package cotoami.models
 
+import org.scalajs.dom
 import java.time.Instant
 
+import fui.Browser
 import cotoami.utils.{Remark, StripMarkdown, Validation}
 
 trait CotoContent {
   def content: Option[String]
   def summary: Option[String]
-  def mediaContent: Option[(String, String)]
+  def mediaUrl: Option[(String, String)]
   def geolocation: Option[Geolocation]
   def isCotonoma: Boolean
 
@@ -53,6 +55,16 @@ case class Coto(
         (this.id, this.updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
       case _ => false
     }
+
+  lazy val mediaUrl: Option[(String, String)] = this.mediaContent.map {
+    case (content, mimeType) =>
+      val blob = Browser.decodeBase64(content, mimeType)
+      (dom.URL.createObjectURL(blob), mimeType)
+  }
+
+  def revokeMediaUrl() = this.mediaUrl.foreach { case (url, _) =>
+    dom.URL.revokeObjectURL(url)
+  }
 
   def geolocated: Boolean = this.geolocation.isDefined
 

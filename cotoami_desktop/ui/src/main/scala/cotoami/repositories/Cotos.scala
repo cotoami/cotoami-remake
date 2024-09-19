@@ -17,9 +17,17 @@ case class Cotos(
   def contains(id: Id[Coto]): Boolean = this.map.contains(id)
 
   def put(coto: Coto): Cotos =
-    this.modify(_.map).using(_ + (coto.id -> coto))
+    this.modify(_.map).using { map =>
+      map.get(coto.id).foreach(_.revokeMediaUrl()) // Side-effect!
+      map + (coto.id -> coto)
+    }
 
   def putAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ put _)
+
+  def destroyAndCreate(): Cotos = {
+    this.map.values.foreach(_.revokeMediaUrl()) // Side-effect!
+    Cotos()
+  }
 
   def importFrom(cotos: PaginatedCotos): Cotos =
     this

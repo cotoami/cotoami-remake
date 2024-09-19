@@ -108,7 +108,7 @@ object ViewCoto {
       collapsibleContentOpened: Boolean
   ): ReactElement =
     section(className := "coto-content")(
-      cotoContent.mediaContent.map(sectionMediaContent),
+      cotoContent.mediaUrl.map(sectionMediaContent),
       cotoContent.summary.map(summary => {
         CollapsibleContent(
           summary = summary,
@@ -171,15 +171,15 @@ object ViewCoto {
       )(content)
     )
 
-  def sectionMediaContent(content: (String, String)): ReactElement = {
-    val (mediaContent, mediaType) = content
+  def sectionMediaContent(urlAndType: (String, String)): ReactElement = {
+    val (url, mediaType) = urlAndType
     section(className := "media-content")(
       if (mediaType.startsWith("image/")) {
         Some(
           img(
             className := "media-image",
             alt := "Image content",
-            src := s"data:${mediaType};base64,${mediaContent}"
+            src := url
           )
         )
       } else {
@@ -191,10 +191,10 @@ object ViewCoto {
   def sectionNodeDescription(nodeRoot: CotoContent): Option[ReactElement] =
     Option.when(
       nodeRoot.content.map(!_.isBlank()).getOrElse(false) ||
-        nodeRoot.mediaContent.isDefined
+        nodeRoot.mediaUrl.isDefined
     ) {
       section(className := "node-description")(
-        nodeRoot.mediaContent.map(sectionMediaContent),
+        nodeRoot.mediaUrl.map(sectionMediaContent),
         sectionTextContent(nodeRoot.content)
       )
     }

@@ -1,7 +1,10 @@
 package cotoami.models
 
+import org.scalajs.dom
 import java.time.Instant
 import com.softwaremill.quicklens._
+
+import fui.Browser
 
 case class WaitingPost(
     postId: String,
@@ -12,7 +15,17 @@ case class WaitingPost(
     isCotonoma: Boolean,
     postedIn: Cotonoma,
     error: Option[String] = None
-) extends CotoContent
+) extends CotoContent {
+  val mediaUrl: Option[(String, String)] = this.mediaContent.map {
+    case (content, mimeType) =>
+      val blob = Browser.decodeBase64(content, mimeType)
+      (dom.URL.createObjectURL(blob), mimeType)
+  }
+
+  def revokeMediaUrl() = this.mediaUrl.foreach { case (url, _) =>
+    dom.URL.revokeObjectURL(url)
+  }
+}
 
 object WaitingPost {
   def newPostId(): String =
@@ -84,5 +97,11 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
     )
 
   def remove(postId: String): WaitingPosts =
-    this.modify(_.posts).using(_.filterNot(_.postId == postId))
+    this.modify(_.posts).using(_.flatMap { post =>
+      if (post.postId == postId) {
+        post.revokeMediaUrl() // Side-effect!
+        None
+      } else
+        Some(post)
+    })
 }
