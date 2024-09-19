@@ -2,11 +2,15 @@ package cotoami.backend
 
 import scala.scalajs.js
 
+import cotoami.models.{Coto, Cotonoma}
+
 case class CotosRelatedData(json: CotosRelatedDataJson) {
-  def postedIn: js.Array[Cotonoma] = this.json.posted_in.map(Cotonoma(_))
+  def postedIn: js.Array[Cotonoma] =
+    this.json.posted_in.map(CotonomaBackend.toModel(_))
   def asCotonomas: js.Array[Cotonoma] =
-    this.json.as_cotonomas.map(Cotonoma(_))
-  def originals: js.Array[Coto] = this.json.originals.map(Coto(_))
+    this.json.as_cotonomas.map(CotonomaBackend.toModel(_))
+  def originals: js.Array[Coto] =
+    this.json.originals.map(CotoBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder

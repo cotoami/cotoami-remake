@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Msg => AppMsg}
 import cotoami.Context
-import cotoami.backend.{Coto, Link}
+import cotoami.models.{Coto, Link}
 import cotoami.components.{toolButton, ScrollArea}
 
 object SectionCotoDetails {

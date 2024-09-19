@@ -7,8 +7,8 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Msg => AppMsg}
-import cotoami.backend.{Id, Node, Nullable}
-import cotoami.models.ParentSync
+import cotoami.models.{Id, Node, ParentSync}
+import cotoami.backend.Nullable
 import cotoami.subparts.Modal
 
 object ModalParentSync {

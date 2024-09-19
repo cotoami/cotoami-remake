@@ -157,9 +157,11 @@ case class Model(
     for (change <- event.ServerStateChanged.toOption) {
       val nodeId = Id[Node](change.node_id)
       val notConnected =
-        Nullable.toOption(change.not_connected).map(NotConnected(_))
+        Nullable.toOption(change.not_connected)
+          .map(NotConnectedBackend.toModel(_))
       val clientAsChild =
-        Nullable.toOption(change.client_as_child).map(ChildNode(_))
+        Nullable.toOption(change.client_as_child)
+          .map(ChildNodeBackend.toModel(_))
       return this.modify(_.domain.nodes).using(
         _.setServerState(nodeId, notConnected, clientAsChild)
       )
@@ -167,7 +169,8 @@ case class Model(
 
     // ParentSyncProgress
     for (progress <- event.ParentSyncProgress.toOption) {
-      val parentSync = this.parentSync.progress(ParentSyncProgress(progress))
+      val parentSync =
+        this.parentSync.progress(ParentSyncProgressBackend.toModel(progress))
       val modalStack =
         if (parentSync.comingManyChanges)
           this.modalStack.openIfNot(Modal.ParentSync())
@@ -178,7 +181,9 @@ case class Model(
 
     // ParentSyncEnd
     for (end <- event.ParentSyncEnd.toOption) {
-      return this.modify(_.parentSync).using(_.end(ParentSyncEnd(end)))
+      return this.modify(_.parentSync).using(
+        _.end(ParentSyncEndBackend.toModel(end))
+      )
     }
 
     this
@@ -214,20 +219,22 @@ case class Model(
 
     // CreateLink
     for (linkJson <- change.CreateLink.toOption) {
-      val link = Link(linkJson)
+      val link = LinkBackend.toModel(linkJson)
       return (this.modify(_.domain.links).using(_.put(link)), Seq.empty)
     }
 
     // UpsertNode
     for (nodeJson <- change.UpsertNode.toOption) {
-      val node = Node(nodeJson)
+      val node = NodeBackend.toModel(nodeJson)
       return (this.modify(_.domain.nodes).using(_.put(node)), Seq.empty)
     }
 
     // CreateNode
     for (createNodeJson <- change.CreateNode.toOption) {
       val model =
-        this.modify(_.domain.nodes).using(_.put(Node(createNodeJson.node)))
+        this.modify(_.domain.nodes).using(
+          _.put(NodeBackend.toModel(createNodeJson.node))
+        )
       return Nullable.toOption(createNodeJson.root)
         .map(model.postCotonoma(_))
         .getOrElse((model, Seq.empty))
@@ -249,7 +256,7 @@ case class Model(
   }
 
   private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
-    val coto = Coto(cotoJson, true)
+    val coto = CotoBackend.toModel(cotoJson, true)
     val cotos = this.domain.cotos.put(coto)
     val (cotonomas, fetchCotonoma) =
       coto.postedInId.map(this.domain.cotonomas.updated(_))
@@ -280,8 +287,8 @@ case class Model(
   private def postCotonoma(
       jsonPair: (CotonomaJson, CotoJson)
   ): (Model, Seq[Cmd[Msg]]) = {
-    val cotonoma = Cotonoma(jsonPair._1)
-    val coto = Coto(jsonPair._2)
+    val cotonoma = CotonomaBackend.toModel(jsonPair._1)
+    val coto = CotoBackend.toModel(jsonPair._2)
     this
       .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
       .postCoto(jsonPair._2)

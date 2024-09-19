@@ -4,6 +4,7 @@ import scala.scalajs.js
 import java.time.Instant
 
 import fui.Cmd
+import cotoami.models.{ChildNode, Coto, Cotonoma, Node}
 
 case class Session(json: SessionJson) {
   def token: String = this.json.token
@@ -18,13 +19,13 @@ trait SessionJson extends js.Object {
 
 case class ClientNodeSession(json: ClientNodeSessionJson) {
   def session: Session = Session(this.json.session)
-  def server: Node = Node(this.json.server)
+  def server: Node = NodeBackend.toModel(this.json.server)
   def serverRootCotonoma: Option[(Cotonoma, Coto)] =
     Nullable.toOption(this.json.server_root_cotonoma).map(pair =>
-      (Cotonoma(pair._1), Coto(pair._2))
+      (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
     )
   def asChild: Option[ChildNode] =
-    Nullable.toOption(this.json.as_child).map(ChildNode(_))
+    Nullable.toOption(this.json.as_child).map(ChildNodeBackend.toModel(_))
 }
 
 object ClientNodeSession {

@@ -4,7 +4,15 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{Msg => AppMsg}
-import cotoami.backend._
+import cotoami.models.{Coto, Cotonoma, Id}
+import cotoami.backend.{
+  CotoGraph,
+  CotonomaBackend,
+  CotonomaDetails,
+  CotosRelatedData,
+  Paginated,
+  PaginatedIds
+}
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
@@ -111,7 +119,7 @@ case class Cotonomas(
     (
       this.modify(_.recentIds).using(_.prependId(id)),
       if (!this.contains(id))
-        Cotonoma.fetch(id)
+        CotonomaBackend.fetch(id)
           .map(Domain.Msg.toApp(Domain.Msg.CotonomaFetched))
       else
         Cmd.none

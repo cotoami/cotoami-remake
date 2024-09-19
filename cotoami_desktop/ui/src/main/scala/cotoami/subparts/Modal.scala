@@ -8,7 +8,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Model => AppModel, Msg => AppMsg}
-import cotoami.backend.Node
+import cotoami.models.Node
 import cotoami.subparts.modals._
 
 object Modal {

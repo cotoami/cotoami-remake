@@ -8,8 +8,9 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_debug, log_error, log_info, Context, Msg => AppMsg}
-import cotoami.backend.{Cotonoma, ErrorJson, Id, Node, Paginated, ServerNode}
+import cotoami.models.{Cotonoma, Id, Node, ServerNode}
 import cotoami.repositories.{Cotonomas, ParentStatus}
+import cotoami.backend.{ErrorJson, Paginated, ServerNodeBackend}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -123,7 +124,7 @@ object NavCotonomas {
         default.copy(
           _1 = model.copy(togglingSync = true),
           _3 = Seq(
-            ServerNode.update(id, Some(disable), None)
+            ServerNodeBackend.update(id, Some(disable), None)
               .map(Msg.toApp(Msg.SyncToggled(_)))
           )
         )

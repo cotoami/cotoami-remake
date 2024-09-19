@@ -1,14 +1,18 @@
 package cotoami.backend
 
 import scala.scalajs.js
+
 import fui.Cmd
 import cotoami.libs.tauri
+import cotoami.models.{Id, Node, Server}
 
 case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = this.json.last_change_number
 
   lazy val nodes: Map[Id[Node], Node] =
-    this.json.nodes.map(Node(_)).map(node => (node.id, node)).toMap
+    this.json.nodes.map(NodeBackend.toModel(_))
+      .map(node => (node.id, node))
+      .toMap
 
   def localNodeId: Id[Node] = Id(this.json.local_node_id)
 
@@ -18,7 +22,8 @@ case class InitialDataset(json: InitialDatasetJson) {
   lazy val parentNodeIds: js.Array[Id[Node]] =
     this.json.parent_node_ids.map(Id[Node](_))
 
-  lazy val servers: js.Array[Server] = this.json.servers.map(Server(_))
+  lazy val servers: js.Array[Server] =
+    this.json.servers.map(ServerBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder

@@ -2,7 +2,8 @@ package cotoami.repositories
 
 import scala.collection.immutable.{HashSet, TreeSet}
 import com.softwaremill.quicklens._
-import cotoami.backend._
+
+import cotoami.models.{Coto, Id, Link}
 
 case class Links(
     map: Map[Id[Link], Link] = Map.empty,

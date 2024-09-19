@@ -4,8 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Model, Msg => AppMsg}
-import cotoami.models.UiState
-import cotoami.backend.Node
+import cotoami.models.{Node, UiState}
 import cotoami.repositories.Nodes
 import cotoami.components.{materialSymbol, optionalClasses}
 

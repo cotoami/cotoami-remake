@@ -13,8 +13,16 @@ import fui._
 import cotoami.Context
 import cotoami.utils.{Log, Validation}
 import cotoami.libs.exifr
-import cotoami.backend._
-import cotoami.models.{Geolocation, WaitingPost, WaitingPosts}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  Geolocation,
+  Id,
+  Node,
+  WaitingPost,
+  WaitingPosts
+}
+import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -161,7 +169,7 @@ object FormCoto {
                 // wait for backend validation to be done.
                 Validation.Result.notYetValidated,
                 Seq(
-                  Cotonoma.fetchByName(this.name, nodeId)
+                  CotonomaBackend.fetchByName(this.name, nodeId)
                     .map(Msg.CotonomaByName(this.name, _))
                 )
               )
@@ -542,7 +550,7 @@ object FormCoto {
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Coto.post(form.content, form.summary, mediaContent, location, postTo)
+    CotoBackend.post(form.content, form.summary, mediaContent, location, postTo)
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(
@@ -551,7 +559,7 @@ object FormCoto {
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
   ): Cmd[Msg] =
-    Cotonoma.post(form.name, location, postTo)
+    CotonomaBackend.post(form.name, location, postTo)
       .map(Msg.CotonomaPosted(postId, _))
 
   /////////////////////////////////////////////////////////////////////////////

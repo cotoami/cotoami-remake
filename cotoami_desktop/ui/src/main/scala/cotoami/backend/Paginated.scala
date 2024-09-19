@@ -3,6 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 import com.softwaremill.quicklens._
 
+import cotoami.models.{Entity, Id}
+
 case class Paginated[T <: Entity[T], J](json: PaginatedJson[J], map: J => T) {
   def rows: js.Array[T] = this.json.rows.map(this.map)
   def pageSize: Double = this.json.page_size

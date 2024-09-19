@@ -1,29 +1,8 @@
 package cotoami.backend
 
-import scala.math.Ordering
 import scala.scalajs.js
-import java.time.Instant
 
-case class Link(json: LinkJson) extends Entity[Link] {
-  override def id: Id[Link] = Id(this.json.uuid)
-  def nodeId: Id[Node] = Id(this.json.node_id)
-  def createdInId: Option[Id[Cotonoma]] =
-    Nullable.toOption(this.json.created_in_id).map(Id(_))
-  def createdById: Id[Node] = Id(this.json.created_by_id)
-  def sourceCotoId: Id[Coto] = Id(this.json.source_coto_id)
-  def targetCotoId: Id[Coto] = Id(this.json.target_coto_id)
-  def linkingPhrase: Option[String] =
-    Nullable.toOption(this.json.linking_phrase)
-  def details: Option[String] = Nullable.toOption(this.json.details)
-  def order: Int = this.json.order
-  lazy val createdAt: Instant = parseJsonDateTime(this.json.created_at)
-  lazy val updatedAt: Instant = parseJsonDateTime(this.json.updated_at)
-}
-
-object Link {
-  implicit val ordering: Ordering[Link] =
-    Ordering.fromLessThan[Link](_.order < _.order)
-}
+import cotoami.models.{Id, Link}
 
 @js.native
 trait LinkJson extends js.Object {
@@ -38,4 +17,21 @@ trait LinkJson extends js.Object {
   val order: Int = js.native
   val created_at: String = js.native
   val updated_at: String = js.native
+}
+
+object LinkBackend {
+  def toModel(json: LinkJson): Link =
+    Link(
+      id = Id(json.uuid),
+      nodeId = Id(json.node_id),
+      createdInId = Nullable.toOption(json.created_in_id).map(Id(_)),
+      createdById = Id(json.created_by_id),
+      sourceCotoId = Id(json.source_coto_id),
+      targetCotoId = Id(json.target_coto_id),
+      linkingPhrase = Nullable.toOption(json.linking_phrase),
+      details = Nullable.toOption(json.details),
+      order = json.order,
+      createdAtUtcIso = json.created_at,
+      updatedAtUtcIso = json.updated_at
+    )
 }

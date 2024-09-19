@@ -9,7 +9,6 @@ import cats.effect.IO
 import fui.Cmd
 import cotoami.libs.geomap.maplibre.LngLat
 import cotoami.libs.exifr
-import cotoami.backend.Coto
 
 case class Geolocation(longitude: Double, latitude: Double) {
   val lng = longitude

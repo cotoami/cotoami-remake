@@ -8,7 +8,8 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.backend.{ClientNodeSession, ErrorJson, Server, ServerNode}
+import cotoami.models.{Server, ServerNode}
+import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
 import cotoami.repositories.Nodes
 import cotoami.subparts.{buttonHelp, sectionHelp, spanNode, Modal, ViewCoto}
 
@@ -136,7 +137,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(incorporating = true, incorporatingError = None),
           _3 = Seq(
-            Server.addServer(model.nodeUrl, model.password)
+            ServerBackend.addServer(model.nodeUrl, model.password)
               .map(Msg.toApp(Msg.NodeIncorporated(_)))
           )
         )
