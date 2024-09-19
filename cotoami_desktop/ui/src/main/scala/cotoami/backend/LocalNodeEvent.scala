@@ -1,7 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import cotoami.models.{Id, Node, ParentSyncProgress}
+import cotoami.models.{Id, ParentSyncEnd, ParentSyncProgress}
 
 @js.native
 trait LocalNodeEventJson extends js.Object {
@@ -41,18 +41,18 @@ object ParentSyncProgressBackend {
     )
 }
 
-case class ParentSyncEnd(json: ParentSyncEndJson) {
-  def nodeId: Id[Node] = Id(this.json.node_id)
-  def range: Option[(Double, Double)] =
-    Nullable.toOption(this.json.range).map(js.Tuple2.toScalaTuple2(_))
-  def error: Option[String] = Nullable.toOption(this.json.error)
-
-  def noChanges: Boolean = this.range.isEmpty && this.error.isEmpty
-}
-
 @js.native
 trait ParentSyncEndJson extends js.Object {
   val node_id: String = js.native
   val range: Nullable[js.Tuple2[Double, Double]] = js.native
   val error: Nullable[String] = js.native
+}
+
+object ParentSyncEndBackend {
+  def toModel(json: ParentSyncEndJson): ParentSyncEnd =
+    ParentSyncEnd(
+      nodeId = Id(json.node_id),
+      range = Nullable.toOption(json.range).map(js.Tuple2.toScalaTuple2(_)),
+      error = Nullable.toOption(json.error)
+    )
 }

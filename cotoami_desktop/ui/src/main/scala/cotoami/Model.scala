@@ -181,7 +181,9 @@ case class Model(
 
     // ParentSyncEnd
     for (end <- event.ParentSyncEnd.toOption) {
-      return this.modify(_.parentSync).using(_.end(ParentSyncEnd(end)))
+      return this.modify(_.parentSync).using(
+        _.end(ParentSyncEndBackend.toModel(end))
+      )
     }
 
     this
