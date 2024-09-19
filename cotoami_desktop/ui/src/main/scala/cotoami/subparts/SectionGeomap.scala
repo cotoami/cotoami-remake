@@ -281,8 +281,12 @@ object SectionGeomap {
         markerOfCotos.label
       ),
       markerOfCotos.cotos match {
-        case Seq(coto) => popupHtml(coto.abbreviate, coto.mediaUrl.map(_._1))
-        case _         => None
+        case Seq(coto) =>
+          popupHtml(
+            if (coto.isCotonoma) None else coto.abbreviate,
+            coto.mediaUrl.map(_._1)
+          )
+        case _ => None
       }
     )
 
