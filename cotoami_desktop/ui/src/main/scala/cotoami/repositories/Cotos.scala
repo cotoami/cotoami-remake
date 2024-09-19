@@ -18,8 +18,18 @@ case class Cotos(
 
   def put(coto: Coto): Cotos =
     this.modify(_.map).using { map =>
-      map.get(coto.id).foreach(_.revokeMediaUrl()) // Side-effect!
-      map + (coto.id -> coto)
+      map.get(coto.id) match {
+        case Some(existingCoto) if existingCoto == coto => {
+          // To avoid redundant media url changes,
+          // a coto with the same content as the existing one won't be stored.
+          map
+        }
+        case Some(existingCoto) => {
+          existingCoto.revokeMediaUrl() // Side-effect!
+          map + (coto.id -> coto)
+        }
+        case None => map + (coto.id -> coto)
+      }
     }
 
   def putAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ put _)
