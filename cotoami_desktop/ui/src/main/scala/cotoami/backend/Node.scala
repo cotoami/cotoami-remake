@@ -24,11 +24,12 @@ object NodeBackend {
   def toModel(json: NodeJson): Node =
     Node(
       id = Id(json.uuid),
+      icon = Node.decodeBase64Icon(json.icon),
       name = json.name,
       rootCotonomaId = Nullable.toOption(json.root_cotonoma_id).map(Id(_)),
       version = json.version,
       createdAtUtcIso = json.created_at
-    )(json.icon)
+    )
 
   def setLocalNodeIcon(icon: String): Cmd[Either[ErrorJson, Node]] =
     NodeJson.setLocalNodeIcon(icon).map(_.map(toModel(_)))

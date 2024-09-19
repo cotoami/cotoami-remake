@@ -8,15 +8,11 @@ import cotoami.utils.Validation
 
 case class Node(
     id: Id[Node],
+    icon: dom.Blob,
     name: String,
     rootCotonomaId: Option[Id[Cotonoma]],
     version: Int,
     createdAtUtcIso: String
-)(
-    // Make the raw icon data private to force a client to use `iconUrl`
-    // and remove it from `equals` since the `id` and `version` should be
-    // enough to decide equality of nodes.
-    icon: String
 ) extends Entity[Node] {
   override def equals(that: Any): Boolean =
     that match {
@@ -26,13 +22,13 @@ case class Node(
 
   def setIcon(icon: String): Node = {
     revokeIconUrl()
-    this.copy(version = this.version + 1)(icon = icon)
+    this.copy(
+      icon = Node.decodeBase64Icon(icon),
+      version = this.version + 1
+    )
   }
 
-  lazy val iconUrl: String = {
-    val blob = Browser.decodeBase64(this.icon, Node.IconMimeType)
-    dom.URL.createObjectURL(blob)
-  }
+  lazy val iconUrl: String = dom.URL.createObjectURL(this.icon)
 
   def revokeIconUrl(): Unit = dom.URL.revokeObjectURL(this.iconUrl)
 
@@ -44,6 +40,9 @@ case class Node(
 
 object Node {
   val IconMimeType = "image/png"
+
+  def decodeBase64Icon(icon: String): dom.Blob =
+    Browser.decodeBase64(icon, IconMimeType)
 
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
