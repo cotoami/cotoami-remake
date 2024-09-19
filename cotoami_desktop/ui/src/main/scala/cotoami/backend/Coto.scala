@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.models.{Coto, Cotonoma, Geolocation, Id}
 
 @js.native
@@ -51,8 +51,9 @@ object CotoBackend {
         Nullable.toOption(json.media_content),
         Nullable.toOption(json.media_type)
       ) match {
-        case (Some(content), Some(mediaType)) => Some((content, mediaType))
-        case _                                => None
+        case (Some(content), Some(mediaType)) =>
+          Some((Browser.decodeBase64(content, mediaType), mediaType))
+        case _ => None
       },
       geolocation = (
         Nullable.toOption(json.longitude),

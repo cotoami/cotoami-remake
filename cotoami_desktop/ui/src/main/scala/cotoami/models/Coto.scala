@@ -3,7 +3,6 @@ package cotoami.models
 import org.scalajs.dom
 import java.time.Instant
 
-import fui.Browser
 import cotoami.utils.{Remark, StripMarkdown, Validation}
 
 trait CotoContent {
@@ -38,7 +37,7 @@ case class Coto(
     postedById: Id[Node],
     content: Option[String],
     summary: Option[String],
-    mediaContent: Option[(String, String)],
+    mediaContent: Option[(dom.Blob, String)],
     geolocation: Option[Geolocation],
     isCotonoma: Boolean,
     repostOfId: Option[Id[Coto]],
@@ -57,9 +56,7 @@ case class Coto(
     }
 
   lazy val mediaUrl: Option[(String, String)] = this.mediaContent.map {
-    case (content, mimeType) =>
-      val blob = Browser.decodeBase64(content, mimeType)
-      (dom.URL.createObjectURL(blob), mimeType)
+    case (content, mimeType) => (dom.URL.createObjectURL(content), mimeType)
   }
 
   def revokeMediaUrl(): Unit = this.mediaUrl.foreach { case (url, _) =>
