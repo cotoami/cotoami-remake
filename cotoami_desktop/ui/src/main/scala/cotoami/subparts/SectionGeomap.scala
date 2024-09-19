@@ -278,8 +278,36 @@ object SectionGeomap {
         markerOfCotos.containsCotonomas,
         markerOfCotos.label
       ),
-      Some("<div>hello</div>")
+      markerOfCotos.cotos match {
+        case Seq(coto) => popupHtml(coto.abbreviate, coto.mediaUrl.map(_._1))
+        case _         => None
+      }
     )
+
+  private def popupHtml(
+      text: Option[String],
+      imageUrl: Option[String]
+  ): Option[String] = {
+    val textHtml = text.flatMap { text =>
+      if (text.isBlank())
+        None
+      else
+        Some(s"""<div class="text">${text}</div>""")
+    }
+    val imageHtml = imageUrl.map(url => s"""<img src="${url}" />""")
+
+    if (textHtml.isEmpty && imageHtml.isEmpty)
+      None
+    else
+      Some(
+        s"""
+        |<div class="geomap-marker-popup">
+        | ${imageHtml.getOrElse("")}
+        | ${textHtml.getOrElse("")}
+        |</div>
+        """.stripMargin
+      )
+  }
 
   private def markerElement(
       iconUrls: Set[String],
