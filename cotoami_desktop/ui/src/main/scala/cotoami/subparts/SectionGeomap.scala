@@ -8,7 +8,7 @@ import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.models.{GeoBounds, Geolocation, Id}
+import cotoami.models.{Coto, GeoBounds, Geolocation, Id}
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.{optionalClasses, MapLibre}
@@ -163,7 +163,7 @@ object SectionGeomap {
         val cotonomaLocation = center match {
           case Some(center) => Some(CotonomaCenter(center))
           case None =>
-            cotos.geoBounds match {
+            Coto.geolocationOf(cotos.cotos.toSeq) match {
               case Some(Right(bounds))  => Some(CotonomaBounds(bounds))
               case Some(Left(location)) => Some(CotonomaCenter(location))
               case None                 => None
