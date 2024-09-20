@@ -8,7 +8,7 @@ import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.models.{Coto, GeoBounds, Geolocation, Id}
+import cotoami.models.{Coto, CotonomaLocation, GeoBounds, Geolocation, Id}
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.{optionalClasses, MapLibre}
@@ -63,8 +63,8 @@ object SectionGeomap {
       this.cotonomaLocation match {
         case Some(location) =>
           location match {
-            case CotonomaCenter(location) => moveTo(location)
-            case CotonomaBounds(bounds)   => fitBounds(bounds)
+            case CotonomaLocation.Center(location) => moveTo(location)
+            case CotonomaLocation.Bounds(bounds)   => fitBounds(bounds)
           }
         case None => this
       }
@@ -102,10 +102,6 @@ object SectionGeomap {
         case None                => (this, Cmd.none)
       }
   }
-
-  sealed trait CotonomaLocation
-  case class CotonomaCenter(location: Geolocation) extends CotonomaLocation
-  case class CotonomaBounds(bounds: GeoBounds) extends CotonomaLocation
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionGeomapMsg(this)
@@ -161,12 +157,14 @@ object SectionGeomap {
       case Msg.InitialCotosFetched(Right(cotos)) => {
         val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
         val cotonomaLocation = center match {
-          case Some(center) => Some(CotonomaCenter(center))
+          case Some(center) => Some(CotonomaLocation.Center(center))
           case None =>
             Coto.geolocationOf(cotos.cotos.toSeq) match {
-              case Some(Right(bounds))  => Some(CotonomaBounds(bounds))
-              case Some(Left(location)) => Some(CotonomaCenter(location))
-              case None                 => None
+              case Some(Right(bounds)) =>
+                Some(CotonomaLocation.Bounds(bounds))
+              case Some(Left(location)) =>
+                Some(CotonomaLocation.Center(location))
+              case None => None
             }
         }
         default.copy(
