@@ -8,7 +8,7 @@ import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.models.{GeoBounds, Geolocation, Id}
+import cotoami.models.{CenterOrBounds, GeoBounds, Geolocation, Id}
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.{optionalClasses, MapLibre}
@@ -21,16 +21,13 @@ object SectionGeomap {
       zoom: Option[Double] = None,
       _applyCenterZoom: Int = 0,
 
-      // Focus
-      focusedLocation: Option[Geolocation] = None,
-
       // Bounds
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
       _fitBounds: Int = 0,
 
-      // Cotonoma location
-      cotonomaLocation: Option[CotonomaLocation] = None,
+      // Focus
+      focusedLocation: Option[Geolocation] = None,
 
       // Coto fetching
       initialCotosFetched: Boolean = false,
@@ -51,6 +48,18 @@ object SectionGeomap {
         _applyCenterZoom = this._applyCenterZoom + 1
       )
 
+    def moveTo(centerOrBounds: CenterOrBounds): Model =
+      centerOrBounds match {
+        case Left(location) => moveTo(location)
+        case Right(bounds)  => fitBounds(bounds)
+      }
+
+    def fitBounds: Model =
+      this.copy(_fitBounds = this._fitBounds + 1)
+
+    def fitBounds(bounds: GeoBounds): Model =
+      this.copy(bounds = Some(bounds)).fitBounds
+
     def focus(location: Geolocation): Model =
       if (this.currentBounds.map(_.contains(location)).getOrElse(false))
         this.copy(focusedLocation = Some(location))
@@ -59,27 +68,11 @@ object SectionGeomap {
 
     def unfocus: Model = this.copy(focusedLocation = None)
 
-    def moveToCotonomaLocation: Model =
-      this.cotonomaLocation match {
-        case Some(location) =>
-          location match {
-            case CotonomaCenter(location) => moveTo(location)
-            case CotonomaBounds(bounds)   => fitBounds(bounds)
-          }
-        case None => this
-      }
-
     def addOrRemoveMarkers: Model =
       this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)
 
     def refreshMarkers: Model =
       this.copy(_refreshMarkers = this._refreshMarkers + 1)
-
-    def fitBounds: Model =
-      this.copy(_fitBounds = this._fitBounds + 1)
-
-    def fitBounds(bounds: GeoBounds): Model =
-      this.copy(bounds = Some(bounds)).fitBounds
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd[AppMsg]) =
       if (this.initialCotosFetched && !this.fetchingCotosInBounds)
@@ -102,10 +95,6 @@ object SectionGeomap {
         case None                => (this, Cmd.none)
       }
   }
-
-  sealed trait CotonomaLocation
-  case class CotonomaCenter(location: Geolocation) extends CotonomaLocation
-  case class CotonomaBounds(bounds: GeoBounds) extends CotonomaLocation
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.SectionGeomapMsg(this)
@@ -135,11 +124,17 @@ object SectionGeomap {
     val default = (model, context.domain, Seq.empty)
     msg match {
       case Msg.Init(bounds) =>
-        default.copy(_1 =
-          model
-            .modify(_.currentBounds).setTo(Some(bounds))
-            .addOrRemoveMarkers
-        ).pipe(moveToCotonomaOrFetchInCurrentBounds)
+        (context.domain.geolocationInFocus match {
+          case Some(location) => (model.moveTo(location), Cmd.none)
+          case None           => model.fetchCotosInCurrentBounds
+        }) pipe { case (model, cmd) =>
+          default.copy(
+            _1 = model
+              .modify(_.currentBounds).setTo(Some(bounds))
+              .addOrRemoveMarkers,
+            _3 = Seq(cmd)
+          )
+        }
 
       case Msg.LocationClicked(location) =>
         default.copy(_1 = model.copy(focusedLocation = Some(location)))
@@ -159,26 +154,21 @@ object SectionGeomap {
       }
 
       case Msg.InitialCotosFetched(Right(cotos)) => {
-        val center = context.domain.currentCotonomaCoto.flatMap(_.geolocation)
-        val cotonomaLocation = center match {
-          case Some(center) => Some(CotonomaCenter(center))
-          case None =>
-            cotos.geoBounds match {
-              case Some(Right(bounds))  => Some(CotonomaBounds(bounds))
-              case Some(Left(location)) => Some(CotonomaCenter(location))
-              case None                 => None
-            }
+        val domain = context.domain.importFrom(cotos)
+        (domain.geolocationInFocus match {
+          case Some(location) => (model.moveTo(location), Cmd.none)
+          case None           => model.fetchCotosInCurrentBounds
+        }) pipe { case (model, cmd) =>
+          default.copy(
+            _1 = model
+              .modify(_.initialCotosFetched).setTo(true)
+              // Force to refresh when the cotonoma has been changed
+              // (ex. marker's `in-focus` state could be changed)
+              .refreshMarkers,
+            _2 = context.domain.importFrom(cotos),
+            _3 = Seq(cmd)
+          )
         }
-        default.copy(
-          _1 = model
-            .modify(_.initialCotosFetched).setTo(true)
-            .modify(_.cotonomaLocation).setTo(cotonomaLocation)
-            // Force to refresh when the cotonoma has been changed
-            // (ex. marker's `in-focus` state could be changed)
-            .refreshMarkers,
-          _2 = context.domain.importFrom(cotos),
-          _3 = Seq(log_info(s"Geolocated cotos fetched.", Some(cotos.debug)))
-        ).pipe(moveToCotonomaOrFetchInCurrentBounds)
       }
 
       case Msg.InitialCotosFetched(Left(e)) =>
@@ -239,18 +229,6 @@ object SectionGeomap {
         }
     }
   }
-
-  private def moveToCotonomaOrFetchInCurrentBounds(
-      result: (Model, Domain, Seq[Cmd[AppMsg]])
-  ): (Model, Domain, Seq[Cmd[AppMsg]]) =
-    result.pipe { case (model, domain, cmds) =>
-      if (model.cotonomaLocation.isDefined)
-        (model.moveToCotonomaLocation, domain, cmds)
-      else
-        model.fetchCotosInCurrentBounds.pipe { case (model, cmd) =>
-          (model, domain, cmds :+ cmd)
-        }
-    }
 
   def fetchInitialCotos()(implicit context: Context): Cmd[AppMsg] =
     GeolocatedCotos.fetch(

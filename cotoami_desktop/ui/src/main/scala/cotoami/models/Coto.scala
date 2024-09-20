@@ -91,4 +91,24 @@ object Coto {
       Validation.nonBlank(fieldName, content)
     ).flatten
   }
+
+  def centerOrBoundsOf(cotos: Seq[Coto]): Option[CenterOrBounds] =
+    cotos match {
+      case Seq()     => None
+      case Seq(coto) => coto.geolocation.map(Left(_))
+      case cotos => {
+        val locations = cotos.flatMap(_.geolocation)
+        val bounds = GeoBounds(
+          southwest = Geolocation(
+            longitude = locations.map(_.longitude).min,
+            latitude = locations.map(_.latitude).min
+          ),
+          northeast = Geolocation(
+            longitude = locations.map(_.longitude).max,
+            latitude = locations.map(_.latitude).max
+          )
+        )
+        Some(Right(bounds))
+      }
+    }
 }

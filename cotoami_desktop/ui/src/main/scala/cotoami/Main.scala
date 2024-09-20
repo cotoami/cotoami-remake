@@ -257,11 +257,14 @@ object Main {
       case Msg.UnfocusGeolocation =>
         (model.modify(_.geomap).using(_.unfocus), Seq.empty)
 
-      case Msg.DisplayCotonomaGeolocation =>
-        model.geomap.cotonomaLocation match {
+      case Msg.DisplayGeolocationInFocus =>
+        model.domain.geolocationInFocus match {
           case Some(location) =>
             model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
-              (model.modify(_.geomap).using(_.moveToCotonomaLocation), cmds)
+              (
+                model.modify(_.geomap).using(_.moveTo(location)),
+                cmds
+              )
             }
           case None => (model, Seq.empty)
         }

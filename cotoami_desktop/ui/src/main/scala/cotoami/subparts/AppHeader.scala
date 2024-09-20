@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg => AppMsg}
+import cotoami.{Context, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
@@ -11,7 +11,7 @@ object AppHeader {
 
   def apply(
       model: Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
     header(
       data - "tauri-drag-region" := "default",
       data - "os" := model.systemInfo.map(_.os).getOrElse("")
@@ -30,7 +30,7 @@ object AppHeader {
             src := "/images/logo/logomark.svg"
           )
         ),
-        model.domain.location.map(sectionLocation(_, model.geomap)),
+        model.domain.location.map(sectionLocation(_)),
         section(className := "tools")(
           model.uiState.map(divToolButtons),
           divSearch,
@@ -40,9 +40,8 @@ object AppHeader {
     )
 
   private def sectionLocation(
-      location: (Node, Option[Cotonoma]),
-      geomap: SectionGeomap.Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement = {
+      location: (Node, Option[Cotonoma])
+  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val (node, cotonoma) = location
     section(
       className := "location",
@@ -59,19 +58,17 @@ object AppHeader {
       cotonoma.map(cotonoma =>
         Fragment(
           materialSymbol("chevron_right", "arrow"),
-          h1(className := "current-cotonoma")(
-            cotonoma.name,
-            Option.when(geomap.cotonomaLocation.isDefined)(
-              button(
-                className := "geolocation default",
-                onClick := (e => {
-                  e.stopPropagation()
-                  dispatch(AppMsg.DisplayCotonomaGeolocation)
-                })
-              )(materialSymbol("location_on"))
-            )
-          )
+          h1(className := "current-cotonoma")(cotonoma.name)
         )
+      ),
+      Option.when(context.domain.geolocationInFocus.isDefined)(
+        button(
+          className := "geolocation default",
+          onClick := (e => {
+            e.stopPropagation()
+            dispatch(AppMsg.DisplayGeolocationInFocus)
+          })
+        )(materialSymbol("location_on"))
       )
     )
   }
