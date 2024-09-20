@@ -6,7 +6,15 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Link, Node}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  CotonomaLocation,
+  Geolocation,
+  Id,
+  Link,
+  Node
+}
 import cotoami.backend.{
   CotoGraph,
   CotonomaBackend,
@@ -204,6 +212,22 @@ case class Domain(
       else
         Cmd.none
     }).getOrElse(Cmd.none)
+
+  lazy val cotonomaLocation: Option[CotonomaLocation] = {
+    this.currentCotonomaCoto.flatMap(_.geolocation) match {
+      case Some(center) => Some(CotonomaLocation.Center(center))
+      case None => {
+        val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
+        Coto.geoBoundsOf(cotos) match {
+          case Some(Right(bounds)) =>
+            Some(CotonomaLocation.Bounds(bounds))
+          case Some(Left(location)) =>
+            Some(CotonomaLocation.Center(location))
+          case None => None
+        }
+      }
+    }
+  }
 
   lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
     var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
