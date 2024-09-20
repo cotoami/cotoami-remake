@@ -11,7 +11,7 @@ object PaneFlow {
   final val DefaultWidth = 500
 
   final val EditorPaneName = "PaneFlow.editor"
-  final val EditorDefaultHeight = 150
+  final val EditorDefaultHeight = 300
 
   def apply(
       model: Model,
