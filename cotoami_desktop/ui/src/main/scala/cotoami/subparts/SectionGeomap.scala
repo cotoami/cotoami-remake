@@ -159,7 +159,7 @@ object SectionGeomap {
         val cotonomaLocation = center match {
           case Some(center) => Some(CotonomaLocation.Center(center))
           case None =>
-            Coto.geolocationOf(cotos.cotos.toSeq) match {
+            Coto.geoBoundsOf(cotos.cotos.toSeq) match {
               case Some(Right(bounds)) =>
                 Some(CotonomaLocation.Bounds(bounds))
               case Some(Left(location)) =>
