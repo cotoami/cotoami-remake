@@ -92,7 +92,7 @@ object Coto {
     ).flatten
   }
 
-  def geoBoundsOf(cotos: Seq[Coto]): Option[Either[Geolocation, GeoBounds]] =
+  def centerOrBoundsOf(cotos: Seq[Coto]): Option[CenterOrBounds] =
     cotos match {
       case Seq()     => None
       case Seq(coto) => coto.geolocation.map(Left(_))

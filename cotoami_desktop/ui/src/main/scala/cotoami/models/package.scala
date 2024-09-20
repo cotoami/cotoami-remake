@@ -10,5 +10,7 @@ package object models {
     def id: Id[T]
   }
 
+  type CenterOrBounds = Either[Geolocation, GeoBounds]
+
   def parseUtcIso(s: String): Instant = Instant.parse(s"${s}Z")
 }

@@ -55,7 +55,7 @@ object Msg {
   case object CloseMap extends Msg
   case class FocusGeolocation(location: Geolocation) extends Msg
   case object UnfocusGeolocation extends Msg
-  case object DisplayCotonomaGeolocation extends Msg
+  case object DisplayGeolocationInFocus extends Msg
 
   // Subparts
   case class ModalMsg(subMsg: Modal.Msg) extends Msg
