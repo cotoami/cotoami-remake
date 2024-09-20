@@ -58,19 +58,17 @@ object AppHeader {
       cotonoma.map(cotonoma =>
         Fragment(
           materialSymbol("chevron_right", "arrow"),
-          h1(className := "current-cotonoma")(
-            cotonoma.name,
-            Option.when(context.domain.geolocationInFocus.isDefined)(
-              button(
-                className := "geolocation default",
-                onClick := (e => {
-                  e.stopPropagation()
-                  dispatch(AppMsg.DisplayGeolocationInFocus)
-                })
-              )(materialSymbol("location_on"))
-            )
-          )
+          h1(className := "current-cotonoma")(cotonoma.name)
         )
+      ),
+      Option.when(context.domain.geolocationInFocus.isDefined)(
+        button(
+          className := "geolocation default",
+          onClick := (e => {
+            e.stopPropagation()
+            dispatch(AppMsg.DisplayGeolocationInFocus)
+          })
+        )(materialSymbol("location_on"))
       )
     )
   }
