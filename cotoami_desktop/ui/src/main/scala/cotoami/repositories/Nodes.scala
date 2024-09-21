@@ -105,7 +105,7 @@ case class Nodes(
     else
       None
 
-  def operatingAsChild(parentId: Id[Node]): Option[ChildNode] =
+  def asChildOf(parentId: Id[Node]): Option[ChildNode] =
     parentStatus(parentId) match {
       case Some(ParentStatus.Connected(child)) => child
       case _                                   => None
