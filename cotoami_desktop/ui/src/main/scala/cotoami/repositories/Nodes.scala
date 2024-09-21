@@ -2,8 +2,16 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{ChildNode, DatabaseRole, Id, Node, NotConnected, Server}
-import cotoami.backend._
+import cotoami.models.{
+  ChildNode,
+  DatabaseRole,
+  Id,
+  Node,
+  NotConnected,
+  ParentStatus,
+  Server
+}
+import cotoami.backend.InitialDataset
 
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
@@ -119,15 +127,6 @@ case class Nodes(
         case ParentStatus.Connected(Some(child)) => true
         case _                                   => false
       }.getOrElse(false)
-}
-
-sealed trait ParentStatus
-object ParentStatus {
-  case class Connected(child: Option[ChildNode]) extends ParentStatus
-  case object Disabled extends ParentStatus
-  case class Connecting(message: Option[String]) extends ParentStatus
-  case class InitFailed(message: String) extends ParentStatus
-  case class Disconnected(message: Option[String]) extends ParentStatus
 }
 
 object Nodes {

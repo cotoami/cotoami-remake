@@ -8,8 +8,8 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_debug, log_error, log_info, Context, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, ServerNode}
-import cotoami.repositories.{Cotonomas, ParentStatus}
+import cotoami.models.{Cotonoma, Id, Node, ParentStatus, ServerNode}
+import cotoami.repositories.Cotonomas
 import cotoami.backend.{ErrorJson, Paginated, ServerNodeBackend}
 import cotoami.components.{
   materialSymbol,

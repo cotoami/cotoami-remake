@@ -21,6 +21,15 @@ case class ParentNode(
     this.lastChangeReceivedAtUtcIso.map(parseUtcIso)
 }
 
+sealed trait ParentStatus
+object ParentStatus {
+  case class Connected(child: Option[ChildNode]) extends ParentStatus
+  case object Disabled extends ParentStatus
+  case class Connecting(message: Option[String]) extends ParentStatus
+  case class InitFailed(message: String) extends ParentStatus
+  case class Disconnected(message: Option[String]) extends ParentStatus
+}
+
 case class ChildNode(
     nodeId: Id[Node],
     createdAtUtcIso: String,
