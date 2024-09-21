@@ -74,9 +74,10 @@ div.app {
   button.help {
     margin-left: 8px;
     vertical-align: middle;
+    opacity: 0.5;
 
     &:disabled {
-      opacity: 0.3;
+      opacity: 1;
     }
   }
 
@@ -96,18 +97,6 @@ div.app {
       width: 16px;
       height: 16px;
       background-size: auto 0.8rem;
-    }
-
-    animation: slide-in-top 0.1s linear;
-
-    @keyframes slide-in-top {
-      0% {
-        transform: translateY(-50px);
-      }
-
-      100% {
-        transform: translateY(0);
-      }
     }
   }
 
