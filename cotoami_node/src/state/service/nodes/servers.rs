@@ -82,27 +82,28 @@ impl NodeState {
             return errors.into_result();
         }
 
-        // Save the password before moving the `input`
+        // Clone the password before moving the `input` to `log_into_server`
         let password = input.password.clone().unwrap_or_else(|| unreachable!());
 
+        // Log into the server to create a session
         // TODO: change the password on adding the node
         let (client_session, http_client) = self.log_into_server(input).await?;
         let server_id = client_session.server.uuid;
 
         // Register the server node
-        let (server, server_node, server_role) = spawn_blocking({
+        let (server, server_node, server_role, local_as_child) = spawn_blocking({
             let state = self.clone();
             let operator = operator.clone();
             let url_prefix = http_client.url_prefix().to_string();
             move || {
                 let mut ds = state.db().new_session()?;
 
-                // Import the server node data, which is required for registering a [ServerNode]
+                // Import the server node data, which is necessary for registering a ServerNode
                 if let Some((_, changelog)) = ds.import_node(&client_session.server)? {
                     state.pubsub().publish_change(changelog);
                 }
 
-                // Database role of the server
+                // Register a ServerNode
                 let server_role = if client_session.as_child.is_some() {
                     NewDatabaseRole::Parent
                 } else {
@@ -112,17 +113,17 @@ impl NodeState {
                         can_edit_links: false,
                     }
                 };
-
-                // Register a [ServerNode] and save the password into it
-                let owner_password = state.config().try_get_owner_password()?;
                 let (_, server_role) =
                     ds.register_server_node(&server_id, &url_prefix, server_role, &operator)?;
-                let server =
-                    ds.save_server_password(&server_id, &password, owner_password, &operator)?;
 
-                // Get the imported node data
+                // Save the password in the ServerNode for auto-login
+                let master_password = state.config().try_get_owner_password()?;
+                let server =
+                    ds.save_server_password(&server_id, &password, master_password, &operator)?;
+
+                // Results
                 let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());
-                Ok::<_, ServiceError>((server, node, server_role))
+                Ok::<_, ServiceError>((server, node, server_role, client_session.as_child))
             }
         })
         .await??;
@@ -130,7 +131,9 @@ impl NodeState {
 
         // Create a ServerConnection
         let server_conn = ServerConnection::new(server.clone(), self.clone());
-        server_conn.start_event_loop(http_client.clone()).await?;
+        server_conn
+            .start_event_loop(http_client.clone(), local_as_child)
+            .await?;
         self.server_conns().put(server_id, server_conn.clone());
 
         // Return a Server as a response

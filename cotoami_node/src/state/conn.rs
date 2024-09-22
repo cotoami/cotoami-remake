@@ -79,9 +79,10 @@ impl ServerConnection {
         let mut http_client = HttpClient::new(&self.server.url_prefix)?;
 
         // Attempt to log into the server node
+        let master_password = self.node_state.config().try_get_owner_password()?;
         let password = self
             .server
-            .password(self.node_state.config().try_get_owner_password()?)?
+            .password(master_password)?
             .ok_or(anyhow!("Server password is missing."))?;
         let session = http_client
             .create_client_node_session(CreateClientNodeSession {
@@ -101,16 +102,20 @@ impl ServerConnection {
             bail!("The remote server ID does not match the stored value.");
         }
 
-        *self.local_as_child.write() = session.as_child;
-
-        self.start_event_loop(http_client).await
+        self.start_event_loop(http_client, session.as_child).await
     }
 
     /// Starts a event loop using an [HttpClient] that already has a session token.
-    pub async fn start_event_loop(&self, http_client: HttpClient) -> Result<()> {
+    pub async fn start_event_loop(
+        &self,
+        http_client: HttpClient,
+        local_as_child: Option<ChildNode>,
+    ) -> Result<()> {
         if self.server.disabled {
             return Ok(());
         }
+
+        *self.local_as_child.write() = local_as_child;
 
         // Try to connect via WebSocket first
         let mut ws_client =

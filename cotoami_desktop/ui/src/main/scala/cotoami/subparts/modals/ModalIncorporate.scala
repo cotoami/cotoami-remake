@@ -142,12 +142,14 @@ object ModalIncorporate {
           )
         )
 
-      case Msg.NodeIncorporated(Right(server)) =>
+      case Msg.NodeIncorporated(Right(server)) => {
+        println(s"NodeIncorporated: ${server}")
         default.copy(
           _1 = model.copy(incorporating = false, incorporatingError = None),
           _2 = nodes.addServer(server),
           _3 = Seq(Modal.close(classOf[Modal.Incorporate]))
         )
+      }
 
       case Msg.NodeIncorporated(Left(e)) =>
         default.copy(
