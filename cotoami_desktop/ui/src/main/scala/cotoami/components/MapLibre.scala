@@ -89,9 +89,11 @@ import cotoami.libs.geomap.pmtiles
           // Instead, we manually join the `resourceDir` and the given path with
           // its separators replaced with the platform-specific ones.
           // https://github.com/tauri-apps/tauri/issues/8599#issuecomment-1890982596
-          val path =
-            resourceDirRef.current + location.replace("/", tauri.path.sep)
-          tauri.convertFileSrc(path)
+          val resourcePath =
+            location.replace("/", tauri.path.sep).stripPrefix(tauri.path.sep)
+          val absolutePath =
+            resourceDirRef.current + tauri.path.sep + resourcePath
+          tauri.convertFileSrc(absolutePath)
         },
       Seq.empty
     )
@@ -161,7 +163,8 @@ import cotoami.libs.geomap.pmtiles
         tauri.path.resourceDir().onComplete {
           case Success(dir) => {
             // The tauri resource dir where local map resources are located.
-            resourceDirRef.current = dir
+            // Remove the trailing path separator of the path returned by `tauri.path.resourceDir()`.
+            resourceDirRef.current = dir.stripSuffix(tauri.path.sep)
 
             // Delay rendering the map to ensure it to fit to the container section.
             js.timers.setTimeout(10) {
