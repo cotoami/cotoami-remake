@@ -14,6 +14,8 @@ import fui.{Cmd, Sub}
 package object tauri {
 
   /** Convert a device file path to an URL that can be loaded by the webview.
+    *
+    * <https://tauri.app/v1/api/js/tauri#convertfilesrc>
     */
   @js.native
   @JSImport("@tauri-apps/api/tauri", "convertFileSrc")
