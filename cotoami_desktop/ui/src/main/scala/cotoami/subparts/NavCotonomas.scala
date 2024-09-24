@@ -227,7 +227,7 @@ object NavCotonomas {
             span(
               className := "sync-switch",
               data - "tooltip" := (
-                if (syncDisabled) "Sync OFF" else "Sync ON"
+                if (syncDisabled) "Connect" else "Disconnect"
               ),
               data - "placement" := "bottom"
             )(
