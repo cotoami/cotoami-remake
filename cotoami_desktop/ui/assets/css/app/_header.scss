@@ -4,30 +4,10 @@ div.app>header {
   }
 
   &[data-os="macos"] div.header-content {
-    margin-left: 70px;
-  }
-
-  button.app-info {
-    display: inline-block;
-    position: absolute;
-    top: 2px;
-    left: 8px;
-    opacity: .8;
-    cursor: pointer;
-
-    &:hover {
-      opacity: 1;
-    }
-
-    img.app-icon {
-      width: 26px;
-      height: 26px;
-      margin-top: 2px;
-    }
+    margin-left: 80px;
   }
 
   section.location {
-    text-align: center;
     height: var(--header-height);
     line-height: var(--header-height);
 
@@ -56,7 +36,7 @@ div.app>header {
       height: 100%;
 
       // fix the font size since the header height is fixed
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
 
       // abbreviate a long cotonoma name
@@ -125,7 +105,7 @@ div.app>header {
 
       input[type=search] {
         margin: 0;
-        width: 20vw;
+        width: 25vw;
         height: 26px;
         border-radius: 4px;
         border-color: var(--pane-border-color);

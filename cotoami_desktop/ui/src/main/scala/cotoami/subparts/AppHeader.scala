@@ -20,16 +20,6 @@ object AppHeader {
         className := "header-content",
         data - "tauri-drag-region" := "default"
       )(
-        button(
-          className := "app-info default",
-          title := "View app info"
-        )(
-          img(
-            className := "app-icon",
-            alt := "Cotoami",
-            src := "/images/logo/logomark.svg"
-          )
-        ),
         model.domain.location.map(sectionLocation(_)),
         section(className := "tools")(
           model.uiState.map(divToolButtons),
