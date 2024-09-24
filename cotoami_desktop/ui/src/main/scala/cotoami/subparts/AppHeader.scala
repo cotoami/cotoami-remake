@@ -35,6 +35,12 @@ object AppHeader {
     val (node, cotonoma) = location
     section(
       className := "location",
+      className := optionalClasses(
+        Seq(
+          ("location", true),
+          ("cotonoma-focused", cotonoma.isDefined)
+        )
+      ),
       data - "tauri-drag-region" := "default"
     )(
       a(
@@ -44,7 +50,10 @@ object AppHeader {
           e.preventDefault()
           dispatch(AppMsg.FocusNode(node.id))
         })
-      )(imgNode(node)),
+      )(
+        imgNode(node),
+        span(className := "node-name")(node.name)
+      ),
       cotonoma.map(cotonoma =>
         Fragment(
           materialSymbol("chevron_right", "arrow"),

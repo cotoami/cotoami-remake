@@ -8,47 +8,59 @@ div.app>header {
   }
 
   section.location {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
     height: var(--header-height);
-    line-height: var(--header-height);
 
     a.node-home {
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+
+      span.node-name {
+        margin-bottom: 1px;
+        margin-left: 8px;
+        color: var(--h3-color);
+        font-size: 16px;
+        font-weight: 700;
+      }
+
       &:hover {
         text-decoration: none;
       }
+    }
 
-      img.node-icon {
-        vertical-align: top;
-        margin-top: 6px;
-        margin-right: 4px;
+    &.cotonoma-focused a.node-home {
+      span.node-name {
+        color: var(--muted-color);
+      }
+
+      &:hover {
+        span.node-name {
+          color: var(--h3-color);
+        }
       }
     }
 
     .arrow {
+      margin-top: 1px;
       font-size: 30px; // use px here to fix the icon size.
-      vertical-align: top;
       opacity: .3;
     }
 
     h1.current-cotonoma {
-      display: inline-block;
-
       margin: 0;
-      height: 100%;
+      margin-bottom: 1px;
 
       // fix the font size since the header height is fixed
       font-size: 16px;
       font-weight: 700;
-
-      // abbreviate a long cotonoma name
-      max-width: 40vw;
-      overflow-x: hidden;
-      white-space: nowrap;
     }
 
     button.geolocation {
+      margin-top: 2px;
       margin-left: 8px;
-      height: 100%;
-      vertical-align: top;
       opacity: .5;
 
       &:hover {
