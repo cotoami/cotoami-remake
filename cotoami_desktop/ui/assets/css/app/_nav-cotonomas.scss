@@ -51,7 +51,7 @@ nav.cotonomas {
 
         &.init-failed {
           summary {
-            color: var(--form-element-invalid-border-color);
+            color: var(--error-color);
           }
         }
 
