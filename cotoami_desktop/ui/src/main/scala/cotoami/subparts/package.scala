@@ -87,48 +87,48 @@ package object subparts {
   def detectCtrlEnter[T](e: SyntheticKeyboardEvent[T]): Boolean =
     e.key == EnterKey && (e.ctrlKey || e.metaKey)
 
-  case class ParentStatusParts(
-      status: ParentStatus,
-      slug: String,
+  case class ParentStatusView(
+      className: String,
       icon: ReactElement,
+      title: String,
       message: Option[String]
   )
 
-  def parentStatusParts(status: ParentStatus): Option[ParentStatusParts] =
+  def viewParentStatus(status: ParentStatus): Option[ParentStatusView] =
     status match {
       case ParentStatus.Disabled =>
         Some(
-          ParentStatusParts(
-            status,
+          ParentStatusView(
             "disabled",
             materialSymbol("link_off"),
+            "not synced",
             None
           )
         )
       case ParentStatus.Connecting(message) =>
         Some(
-          ParentStatusParts(
-            status,
+          ParentStatusView(
             "connecting",
             span(className := "busy", aria - "busy" := "true")(),
+            "connecting",
             message
           )
         )
       case ParentStatus.InitFailed(message) =>
         Some(
-          ParentStatusParts(
-            status,
+          ParentStatusView(
             "init-failed",
             materialSymbol("error"),
+            "initialization failed",
             Some(message)
           )
         )
       case ParentStatus.Disconnected(message) =>
         Some(
-          ParentStatusParts(
-            status,
+          ParentStatusView(
             "disconnected",
             materialSymbol("do_not_disturb_on"),
+            "disconnected",
             message
           )
         )

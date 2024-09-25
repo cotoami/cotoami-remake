@@ -201,23 +201,23 @@ object NavCotonomas {
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
     val domain = context.domain
     val status = domain.nodes.parentStatus(node.id)
-    val statusParts = status.flatMap(parentStatusParts(_))
+    val statusView = status.flatMap(viewParentStatus(_))
     section(className := "node-tools")(
-      statusParts.map(parts =>
+      statusView.map(view =>
         details(
           className := optionalClasses(
             Seq(
               ("node-status", true),
-              (parts.slug, true),
-              ("no-message", parts.message.isEmpty)
+              (view.className, true),
+              ("no-message", view.message.isEmpty)
             )
           )
         )(
           summary()(
-            parts.icon,
-            span(className := "name")(parts.slug)
+            view.icon,
+            span(className := "name")(view.title)
           ),
-          parts.message.map(p(className := "message")(_))
+          view.message.map(p(className := "message")(_))
         )
       ),
       div(className := "tools")(

@@ -107,9 +107,9 @@ object NavNodes {
       node: Node,
       nodes: Nodes
   )(implicit dispatch: AppMsg => Unit): ReactElement = {
-    val status = nodes.parentStatus(node.id).flatMap(parentStatusParts(_))
+    val status = nodes.parentStatus(node.id).flatMap(viewParentStatus(_))
     val tooltip =
-      status.map(s => s"${node.name} (${s.slug})").getOrElse(node.name)
+      status.map(s => s"${node.name} (${s.title})").getOrElse(node.name)
     button(
       className := optionalClasses(
         Seq(
@@ -126,7 +126,7 @@ object NavNodes {
       onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
     )(
       imgNode(node),
-      status.map(s => span(className := s"status ${s.slug}")(s.icon))
+      status.map(s => span(className := s"status ${s.className}")(s.icon))
     )
   }
 }
