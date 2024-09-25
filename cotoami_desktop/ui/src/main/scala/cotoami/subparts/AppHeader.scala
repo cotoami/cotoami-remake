@@ -85,19 +85,30 @@ object AppHeader {
   )(implicit dispatch: AppMsg => Unit): ReactElement =
     div(className := "tool-buttons")(
       toolButton(
-        symbol = "public",
-        tip = if (uiState.geomapOpened) "Close map" else "Open map",
         classes = optionalClasses(
           Seq(
             ("toggle-geomap", true),
             ("opened", uiState.geomapOpened)
           )
         ),
+        symbol = "public",
+        tip = if (uiState.geomapOpened) "Close map" else "Open map",
         onClick = (_ => {
           if (uiState.geomapOpened)
             dispatch(AppMsg.CloseMap)
           else
             dispatch(AppMsg.OpenGeomap)
+        })
+      ),
+      toolButton(
+        classes = "toggle-dark-mode",
+        symbol = if (uiState.isDarkMode) "light_mode" else "dark_mode",
+        tip = if (uiState.isDarkMode) "Light mode" else "Dark mode",
+        onClick = (_ => {
+          val theme =
+            if (uiState.isDarkMode) UiState.LightMode
+            else UiState.DarkMode
+          dispatch(AppMsg.SetTheme(theme))
         })
       )
     )

@@ -17,6 +17,7 @@ import cotoami.models.Cotonoma
 import cotoami.subparts.{PaneFlow, PaneStock}
 
 case class UiState(
+    theme: String = UiState.DefaultTheme,
     paneToggles: Map[String, Boolean] = Map(
       PaneStock.PaneName -> false // fold PaneStock by default
     ),
@@ -24,6 +25,8 @@ case class UiState(
     pinnedInColumns: HashSet[String] = HashSet.empty,
     geomapOpened: Boolean = false
 ) {
+  def isDarkMode: Boolean = this.theme == UiState.DarkMode
+
   def paneOpened(name: String): Boolean =
     this.paneToggles.getOrElse(name, true) // open by default
 
@@ -71,6 +74,9 @@ case class UiState(
 
 object UiState {
   final val StorageKey = "UiState"
+  final val DarkMode = "dark"
+  final val LightMode = "light"
+  final val DefaultTheme = DarkMode
 
   implicit val encoder: Encoder[UiState] = deriveEncoder
   implicit val decoder: Decoder[UiState] = deriveDecoder

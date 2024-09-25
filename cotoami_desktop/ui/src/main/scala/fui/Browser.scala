@@ -97,6 +97,12 @@ object Browser {
       }
     })
 
+  def setHtmlTheme[Msg](theme: String): Cmd[Msg] =
+    Cmd(IO {
+      dom.window.document.documentElement.setAttribute("data-theme", theme)
+      None
+    })
+
   def encodeAsBase64(
       blob: dom.Blob,
       removePadding: Boolean = false

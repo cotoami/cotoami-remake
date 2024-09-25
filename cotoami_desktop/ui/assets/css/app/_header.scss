@@ -86,6 +86,7 @@ div.app>header {
       margin-right: 16px;
 
       button {
+        margin-left: 4px;
         height: 24px;
         line-height: 24px;
 
@@ -96,6 +97,16 @@ div.app>header {
         span.material-symbols {
           font-size: 18px; // use px here to fix the icon size
           vertical-align: top;
+        }
+      }
+
+      button.toggle-dark-mode {
+        span.material-symbols {
+          opacity: 0.5;
+        }
+
+        &:hover span.material-symbols {
+          opacity: 1;
         }
       }
 

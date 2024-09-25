@@ -126,7 +126,11 @@ object Main {
           model
             .modify(_.uiState).setTo(Some(uiState.getOrElse(UiState())))
             .info("UiState restored.", Some(uiState.toString())),
-          Seq.empty
+          Seq(
+            Browser.setHtmlTheme(
+              uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
+            )
+          )
         )
 
       case Msg.DatabaseOpened(Right(info)) =>
@@ -170,6 +174,10 @@ object Main {
             .info("Remote dataset received.", Some(dataset.debug)),
           Seq(Browser.pushUrl(Route.index.url(())))
         )
+
+      case Msg.SetTheme(theme) =>
+        model.updateUiState(_.copy(theme = theme))
+          .modify(_._2).using(_ :+ Browser.setHtmlTheme(theme))
 
       case Msg.OpenOrClosePane(name, open) =>
         model.updateUiState(_.openOrClosePane(name, open))

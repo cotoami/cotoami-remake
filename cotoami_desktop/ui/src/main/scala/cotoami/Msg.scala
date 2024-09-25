@@ -33,7 +33,8 @@ object Msg {
       extends Msg
   case class SetRemoteInitialDataset(dataset: InitialDataset) extends Msg
 
-  // Pane
+  // UI
+  case class SetTheme(theme: String) extends Msg
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
 
