@@ -99,6 +99,17 @@ object AppHeader {
           else
             dispatch(AppMsg.OpenGeomap)
         })
+      ),
+      toolButton(
+        classes = "toggle-dark-mode",
+        symbol = if (uiState.isDarkMode) "light_mode" else "dark_mode",
+        tip = if (uiState.isDarkMode) "Light mode" else "Dark mode",
+        onClick = (_ => {
+          val theme =
+            if (uiState.isDarkMode) UiState.LightMode
+            else UiState.DarkMode
+          dispatch(AppMsg.SetTheme(theme))
+        })
       )
     )
 
