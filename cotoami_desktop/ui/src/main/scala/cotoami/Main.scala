@@ -126,7 +126,11 @@ object Main {
           model
             .modify(_.uiState).setTo(Some(uiState.getOrElse(UiState())))
             .info("UiState restored.", Some(uiState.toString())),
-          Seq.empty
+          Seq(
+            Browser.setHtmlTheme(
+              uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
+            )
+          )
         )
 
       case Msg.DatabaseOpened(Right(info)) =>

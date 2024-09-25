@@ -17,6 +17,7 @@ import cotoami.models.Cotonoma
 import cotoami.subparts.{PaneFlow, PaneStock}
 
 case class UiState(
+    theme: String = UiState.DefaultTheme,
     paneToggles: Map[String, Boolean] = Map(
       PaneStock.PaneName -> false // fold PaneStock by default
     ),
@@ -71,6 +72,7 @@ case class UiState(
 
 object UiState {
   final val StorageKey = "UiState"
+  final val DefaultTheme = "dark"
 
   implicit val encoder: Encoder[UiState] = deriveEncoder
   implicit val decoder: Decoder[UiState] = deriveDecoder
