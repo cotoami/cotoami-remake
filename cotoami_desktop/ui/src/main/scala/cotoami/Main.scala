@@ -175,6 +175,10 @@ object Main {
           Seq(Browser.pushUrl(Route.index.url(())))
         )
 
+      case Msg.SetTheme(theme) =>
+        model.updateUiState(_.copy(theme = theme))
+          .modify(_._2).using(_ :+ Browser.setHtmlTheme(theme))
+
       case Msg.OpenOrClosePane(name, open) =>
         model.updateUiState(_.openOrClosePane(name, open))
 

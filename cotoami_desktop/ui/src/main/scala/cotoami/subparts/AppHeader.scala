@@ -85,14 +85,14 @@ object AppHeader {
   )(implicit dispatch: AppMsg => Unit): ReactElement =
     div(className := "tool-buttons")(
       toolButton(
-        symbol = "public",
-        tip = if (uiState.geomapOpened) "Close map" else "Open map",
         classes = optionalClasses(
           Seq(
             ("toggle-geomap", true),
             ("opened", uiState.geomapOpened)
           )
         ),
+        symbol = "public",
+        tip = if (uiState.geomapOpened) "Close map" else "Open map",
         onClick = (_ => {
           if (uiState.geomapOpened)
             dispatch(AppMsg.CloseMap)
