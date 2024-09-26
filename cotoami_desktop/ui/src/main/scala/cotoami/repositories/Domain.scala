@@ -53,12 +53,6 @@ case class Domain(
       this.nodes.current.flatMap(_.rootCotonomaId)
     )
 
-  def inCurrentRoot: Boolean =
-    (this.currentCotonomaId, this.currentRootCotonomaId) match {
-      case (Some(current), Some(root)) => current == root
-      case _                           => false
-    }
-
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
   // return `None` if the cotonoma data of that ID has not been fetched.
   def currentCotonoma: Option[Cotonoma] =

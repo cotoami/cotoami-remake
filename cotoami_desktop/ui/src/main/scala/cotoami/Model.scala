@@ -262,13 +262,19 @@ case class Model(
       coto.postedInId.map(this.domain.cotonomas.updated(_))
         .getOrElse((this.domain.cotonomas, Cmd.none))
     val timeline =
-      if (
-        this.domain.inCurrentRoot ||
-        coto.postedInId == this.domain.currentCotonomaId
-      )
-        this.timeline.post(coto.id)
-      else
-        this.timeline
+      (this.domain.nodes.focused, this.domain.cotonomas.focused) match {
+        case (None, None) => this.timeline.post(coto.id) // all posts
+        case (Some(node), None) =>
+          if (coto.nodeId == node.id)
+            this.timeline.post(coto.id) // posts in the focused node
+          else
+            this.timeline
+        case (_, Some(cotonom)) =>
+          if (coto.postedInId == Some(cotonom.id))
+            this.timeline.post(coto.id) // posts in the focused cotonoma
+          else
+            this.timeline
+      }
     val geomap =
       if (coto.geolocated)
         this.geomap.addOrRemoveMarkers
