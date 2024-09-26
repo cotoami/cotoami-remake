@@ -49,6 +49,11 @@ case class Domain(
         }
     }
 
+  def focusedCotonoma: Option[(Cotonoma, Coto)] =
+    this.cotonomas.focused.flatMap(cotonoma =>
+      this.cotos.get(cotonoma.cotoId).map(cotonoma -> _)
+    )
+
   def unfocus(): Domain =
     this.copy(
       nodes = this.nodes.focus(None),
@@ -90,9 +95,6 @@ case class Domain(
   // return `None` if the cotonoma data of that ID has not been fetched.
   def currentCotonoma: Option[Cotonoma] =
     this.currentCotonomaId.flatMap(this.cotonomas.get)
-
-  def currentCotonomaCoto: Option[Coto] =
-    this.currentCotonoma.flatMap(cotonoma => this.cotos.get(cotonoma.cotoId))
 
   /////////////////////////////////////////////////////////////////////////////
   // Other queries
@@ -145,7 +147,7 @@ case class Domain(
     ).getOrElse(false)
 
   lazy val geolocationInFocus: Option[CenterOrBounds] = {
-    this.currentCotonomaCoto.flatMap(_.geolocation) match {
+    this.focusedCotonoma.map(_._2).flatMap(_.geolocation) match {
       case Some(center) => Some(Left(center))
       case None => {
         val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
