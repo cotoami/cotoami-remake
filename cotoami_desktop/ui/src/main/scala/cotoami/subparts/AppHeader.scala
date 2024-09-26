@@ -20,7 +20,18 @@ object AppHeader {
         className := "header-content",
         data - "tauri-drag-region" := "default"
       )(
-        model.domain.location.map(sectionLocation(_)),
+        model.domain.currentFocus.map(sectionCurrentFocus(_)).getOrElse(
+          button(
+            className := "app-info default",
+            title := "View app info"
+          )(
+            img(
+              className := "app-icon",
+              alt := "Cotoami",
+              src := "/images/logo/logomark.svg"
+            )
+          )
+        ),
         section(className := "tools")(
           model.uiState.map(divToolButtons),
           divSearch,
@@ -29,15 +40,14 @@ object AppHeader {
       )
     )
 
-  private def sectionLocation(
-      location: (Node, Option[Cotonoma])
+  private def sectionCurrentFocus(
+      focus: (Node, Option[Cotonoma])
   )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
-    val (node, cotonoma) = location
+    val (node, cotonoma) = focus
     section(
-      className := "location",
       className := optionalClasses(
         Seq(
-          ("location", true),
+          ("current-focus", true),
           ("cotonoma-focused", cotonoma.isDefined)
         )
       ),

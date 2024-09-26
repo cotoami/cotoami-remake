@@ -38,20 +38,16 @@ case class Domain(
   // Focus
   /////////////////////////////////////////////////////////////////////////////
 
-  def location: Option[(Node, Option[Cotonoma])] =
-    this.nodes.current.map(currentNode =>
-      // The location contains a cotonoma only when one is focused,
-      // otherwise the root cotonoma of the current node will be implicitly
-      // used as the current cotonoma.
-      this.cotonomas.focused match {
-        case Some(cotonoma) =>
-          (
-            this.nodes.get(cotonoma.nodeId).getOrElse(currentNode),
-            Some(cotonoma)
-          )
-        case None => (currentNode, None)
-      }
-    )
+  def currentFocus: Option[(Node, Option[Cotonoma])] =
+    (this.nodes.focused, this.cotonomas.focused) match {
+      case (None, None)       => None
+      case (Some(node), None) => Some((node, None))
+      case (_, Some(cotonoma)) =>
+        this.nodes.get(cotonoma.nodeId) match {
+          case Some(node) => Some((node, Some(cotonoma)))
+          case None       => None // should be unreachable
+        }
+    }
 
   def unfocus(): Domain =
     this.copy(
