@@ -61,7 +61,7 @@ case class Domain(
   def currentCotonomaCoto: Option[Coto] =
     this.currentCotonoma.flatMap(cotonoma => this.cotos.get(cotonoma.cotoId))
 
-  def isRoot(cotonoma: Cotonoma): Boolean =
+  def isNodeRoot(cotonoma: Cotonoma): Boolean =
     this.nodes.get(cotonoma.nodeId)
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)

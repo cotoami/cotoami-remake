@@ -198,9 +198,13 @@ object Main {
 
       case Msg.FocusCotonoma(cotonoma) => {
         val url = model.domain.nodes.focused match {
+          // Maintain node unfocus
           case None => Route.cotonoma.url(cotonoma.id)
+          // Maintain node focus
           case Some(_) =>
-            if (model.domain.isRoot(cotonoma))
+            if (model.domain.isNodeRoot(cotonoma))
+              // Don't allow to focus a root cotonoma while maintaining node focus,
+              // which should be converted into node focus.
               Route.node.url(cotonoma.nodeId)
             else
               Route.cotonomaInNode.url((cotonoma.nodeId, cotonoma.id))
