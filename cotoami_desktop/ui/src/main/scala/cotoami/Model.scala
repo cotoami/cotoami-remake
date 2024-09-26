@@ -111,7 +111,7 @@ case class Model(
         // or no recent cotonomas has been loaded yet
         // (which means the page being reloaded)
         this.domain.cotonomas.recentIds.isEmpty
-    val (cotonomas, fetchFocusedCotonoma) =
+    val (cotonomas, fetchFocusedCotonomaDetails) =
       this.domain.cotonomas.focusAndFetch(cotonomaId)
     this
       .modify(_.domain.nodes).using(_.focus(nodeId))
@@ -128,7 +128,7 @@ case class Model(
         (
           model.copy(timeline = timeline),
           Seq(
-            fetchFocusedCotonoma,
+            fetchFocusedCotonomaDetails,
             fetchRecentCotonomas,
             fetchTimeline,
             model.domain.fetchGraph,
