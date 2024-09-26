@@ -128,11 +128,10 @@ case class Model(
         (
           model.copy(timeline = timeline),
           Seq(
-            fetchFocusedCotonomaDetails,
+            fetchFocusedCotonomaDetails.map(Msg.FocusedCotonomaDetailsFetched),
             fetchRecentCotonomas,
             fetchTimeline,
-            model.domain.fetchGraph,
-            SectionGeomap.fetchInitialCotos(model)
+            model.domain.fetchGraph
           )
         )
       }

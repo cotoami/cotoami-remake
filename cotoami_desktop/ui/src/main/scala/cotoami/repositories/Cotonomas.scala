@@ -11,7 +11,8 @@ import cotoami.backend.{
   CotonomaDetails,
   CotosRelatedData,
   Paginated,
-  PaginatedIds
+  PaginatedIds,
+  ErrorJson
 }
 
 case class Cotonomas(
@@ -73,10 +74,12 @@ case class Cotonomas(
     else
       this
 
-  def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Cmd[AppMsg]) =
+  def focusAndFetch(
+      id: Id[Cotonoma]
+  ): (Cotonomas, Cmd[Either[ErrorJson, CotonomaDetails]]) =
     (
       this.unfocus.copy(focusedId = Some(id)),
-      Domain.fetchCotonomaDetails(id)
+      CotonomaDetails.fetch(id)
     )
 
   def unfocus: Cotonomas =

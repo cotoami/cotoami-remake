@@ -191,6 +191,7 @@ case class Domain(
           nodes
       )
       .modify(_.cotonomas).using(_.setCotonomaDetails(details))
+      .modify(_.cotos).using(_.put(details.coto))
 
   def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
     this
@@ -290,10 +291,6 @@ object Domain {
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
 
-    case class CotonomaDetailsFetched(
-        result: Either[ErrorJson, CotonomaDetails]
-    ) extends Msg
-
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
 
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
@@ -311,15 +308,6 @@ object Domain {
       case Msg.CotonomaFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
 
-      case Msg.CotonomaDetailsFetched(Right(details)) =>
-        (
-          model.setCotonomaDetails(details),
-          Seq(log_info("Cotonoma details fetched.", Some(details.debug)))
-        )
-
-      case Msg.CotonomaDetailsFetched(Left(e)) =>
-        (model, Seq(ErrorJson.log(e, "Couldn't fetch cotonoma details.")))
-
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
           model.modify(_.graphLoading).using(_ + cotoId),
@@ -335,9 +323,6 @@ object Domain {
       case Msg.CotoGraphFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
     }
-
-  def fetchCotonomaDetails(id: Id[Cotonoma]): Cmd[AppMsg] =
-    CotonomaDetails.fetch(id).map(Msg.toApp(Msg.CotonomaDetailsFetched))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))

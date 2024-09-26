@@ -212,6 +212,17 @@ object Main {
         (model, Seq(Browser.pushUrl(url)))
       }
 
+      case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
+        (
+          model
+            .modify(_.domain).using(_.setCotonomaDetails(details))
+            .debug("Cotonoma details fetched.", Some(details.debug)),
+          Seq(SectionGeomap.fetchInitialCotos(model))
+        )
+
+      case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
+        (model.error("Couldn't fetch cotonoma details.", Some(e)), Seq.empty)
+
       case Msg.UnfocusCotonoma => {
         val url = model.domain.nodes.focused match {
           case None       => Route.index.url(())
