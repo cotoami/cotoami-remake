@@ -86,20 +86,20 @@ case class Model(
     this
       .modify(_.domain).using(_.unfocus())
       .modify(_.domain.nodes).using(_.focus(nodeId))
-      .modify(_.timeline).using(_.init) pipe { model =>
-      val (navCotonomas, fetchRecentCotonomas) =
-        model.navCotonomas.fetchRecent()(model)
-      val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
-      (
-        model.copy(navCotonomas = navCotonomas, timeline = timeline),
-        Seq(
-          fetchRecentCotonomas,
-          fetchTimeline,
-          model.domain.fetchGraph,
-          SectionGeomap.fetchInitialCotos(this)
+      .modify(_.timeline).using(_.init).pipe { model =>
+        val (navCotonomas, fetchRecentCotonomas) =
+          model.navCotonomas.fetchRecent()(model)
+        val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
+        (
+          model.copy(navCotonomas = navCotonomas, timeline = timeline),
+          Seq(
+            fetchRecentCotonomas,
+            fetchTimeline,
+            model.domain.fetchGraph,
+            SectionGeomap.fetchInitialCotos(model)
+          )
         )
-      )
-    }
+      }
 
   def focusCotonoma(
       nodeId: Option[Id[Node]],
@@ -118,24 +118,24 @@ case class Model(
       .modify(_.domain.cotonomas).setTo(cotonomas)
       .modify(_.domain.cotos).using(_.destroyAndCreate())
       .modify(_.domain.links).setTo(Links())
-      .modify(_.timeline).using(_.init) pipe { model =>
-      val (navCotonomas, fetchRecentCotonomas) =
-        if (shouldFetchCotonomas)
-          model.navCotonomas.fetchRecent()(model)
-        else
-          (model.navCotonomas, Cmd.none)
-      val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
-      (
-        model.copy(timeline = timeline),
-        Seq(
-          fetchFocusedCotonoma,
-          fetchRecentCotonomas,
-          fetchTimeline,
-          model.domain.fetchGraph,
-          SectionGeomap.fetchInitialCotos(this)
+      .modify(_.timeline).using(_.init).pipe { model =>
+        val (navCotonomas, fetchRecentCotonomas) =
+          if (shouldFetchCotonomas)
+            model.navCotonomas.fetchRecent()(model)
+          else
+            (model.navCotonomas, Cmd.none)
+        val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
+        (
+          model.copy(timeline = timeline),
+          Seq(
+            fetchFocusedCotonoma,
+            fetchRecentCotonomas,
+            fetchTimeline,
+            model.domain.fetchGraph,
+            SectionGeomap.fetchInitialCotos(model)
+          )
         )
-      )
-    }
+      }
   }
 
   def focusCoto(cotoId: Id[Coto]): (Model, Seq[Cmd[Msg]]) = {
