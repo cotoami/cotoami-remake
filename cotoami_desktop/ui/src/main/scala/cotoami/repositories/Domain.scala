@@ -34,42 +34,9 @@ case class Domain(
     links: Links = Links(),
     graphLoading: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def unfocus(): Domain =
-    this.copy(
-      nodes = this.nodes.focus(None),
-      cotonomas = Cotonomas(),
-      cotos = this.cotos.destroyAndCreate(),
-      links = Links()
-    )
-
-  def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
-    this.nodes.current.flatMap(_.rootCotonomaId)
-
-  def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
-    Some(id) == this.currentNodeRootCotonomaId
-
-  def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.cotonomas.focusedId.orElse(
-      this.nodes.current.flatMap(_.rootCotonomaId)
-    )
-
-  // Note: Even if `currentCotonomaId` has `Some` value, this method will
-  // return `None` if the cotonoma data of that ID has not been fetched.
-  def currentCotonoma: Option[Cotonoma] =
-    this.currentCotonomaId.flatMap(this.cotonomas.get)
-
-  def currentCotonomaCoto: Option[Coto] =
-    this.currentCotonoma.flatMap(cotonoma => this.cotos.get(cotonoma.cotoId))
-
-  def isNodeRoot(cotonoma: Cotonoma): Boolean =
-    this.nodes.get(cotonoma.nodeId)
-      .map(_.rootCotonomaId == Some(cotonoma.id))
-      .getOrElse(false)
-
-  def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
-    this.nodes.get(nodeId)
-      .flatMap(node => node.rootCotonomaId.flatMap(this.cotonomas.get))
-      .flatMap(cotonoma => this.cotos.get(cotonoma.cotoId).map(cotonoma -> _))
+  /////////////////////////////////////////////////////////////////////////////
+  // Focus
+  /////////////////////////////////////////////////////////////////////////////
 
   def location: Option[(Node, Option[Cotonoma])] =
     this.nodes.current.map(currentNode =>
@@ -86,38 +53,54 @@ case class Domain(
       }
     )
 
-  def setCotonomaDetails(details: CotonomaDetails): Domain =
-    this
-      .modify(_.nodes).using(nodes =>
-        if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
-          nodes.focus(Some(details.cotonoma.nodeId))
-        else
-          nodes
-      )
-      .modify(_.cotonomas).using(_.setCotonomaDetails(details))
+  def unfocus(): Domain =
+    this.copy(
+      nodes = this.nodes.focus(None),
+      cotonomas = Cotonomas(),
+      cotos = this.cotos.destroyAndCreate(),
+      links = Links()
+    )
 
-  def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
-    this
-      .modify(_.cotonomas).using(_.put(cotonomaPair._1))
-      .modify(_.cotos).using(_.put(cotonomaPair._2))
+  /////////////////////////////////////////////////////////////////////////////
+  // Node root cotonoma
+  /////////////////////////////////////////////////////////////////////////////
 
-  def importFrom(cotos: PaginatedCotos): Domain =
-    this
-      .modify(_.cotos).using(_.importFrom(cotos))
-      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
-      .modify(_.links).using(_.putAll(cotos.outgoingLinks))
+  def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
+    this.nodes.current.flatMap(_.rootCotonomaId)
 
-  def importFrom(cotos: GeolocatedCotos): Domain =
-    this
-      .modify(_.cotos).using(_.importFrom(cotos))
-      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
+  def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
+    Some(id) == this.currentNodeRootCotonomaId
 
-  def importFrom(graph: CotoGraph): Domain =
-    this
-      .modify(_.graphLoading).using(_ - graph.rootCotoId)
-      .modify(_.cotos).using(_.importFrom(graph))
-      .modify(_.cotonomas).using(_.importFrom(graph))
-      .modify(_.links).using(_.putAll(graph.links))
+  def isNodeRoot(cotonoma: Cotonoma): Boolean =
+    this.nodes.get(cotonoma.nodeId)
+      .map(_.rootCotonomaId == Some(cotonoma.id))
+      .getOrElse(false)
+
+  def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
+    this.nodes.get(nodeId)
+      .flatMap(node => node.rootCotonomaId.flatMap(this.cotonomas.get))
+      .flatMap(cotonoma => this.cotos.get(cotonoma.cotoId).map(cotonoma -> _))
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Current cotonoma
+  /////////////////////////////////////////////////////////////////////////////
+
+  def currentCotonomaId: Option[Id[Cotonoma]] =
+    this.cotonomas.focusedId.orElse(
+      this.nodes.current.flatMap(_.rootCotonomaId)
+    )
+
+  // Note: Even if `currentCotonomaId` has `Some` value, this method will
+  // return `None` if the cotonoma data of that ID has not been fetched.
+  def currentCotonoma: Option[Cotonoma] =
+    this.currentCotonomaId.flatMap(this.cotonomas.get)
+
+  def currentCotonomaCoto: Option[Coto] =
+    this.currentCotonoma.flatMap(cotonoma => this.cotos.get(cotonoma.cotoId))
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Other queries
+  /////////////////////////////////////////////////////////////////////////////
 
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.currentNodeRootCotonomaId
@@ -165,6 +148,79 @@ case class Domain(
       this.links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
+  lazy val geolocationInFocus: Option[CenterOrBounds] = {
+    this.currentCotonomaCoto.flatMap(_.geolocation) match {
+      case Some(center) => Some(Left(center))
+      case None => {
+        val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
+        Coto.centerOrBoundsOf(cotos)
+      }
+    }
+  }
+
+  lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
+    var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
+    this.cotos.geolocated.foreach { case (coto, location) =>
+      this.nodes.get(coto.nodeId).foreach(node =>
+        markers = markers.updatedWith(location) {
+          case Some(marker) =>
+            Some(marker.addCoto(coto, node.iconUrl, inFocus(coto)))
+          case None =>
+            Some(
+              Geolocation.MarkerOfCotos(
+                location,
+                Seq(coto),
+                Set(node.iconUrl),
+                inFocus(coto)
+              )
+            )
+        }
+      )
+    }
+    markers.values.toSeq
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Import
+  /////////////////////////////////////////////////////////////////////////////
+
+  def setCotonomaDetails(details: CotonomaDetails): Domain =
+    this
+      .modify(_.nodes).using(nodes =>
+        if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
+          nodes.focus(Some(details.cotonoma.nodeId))
+        else
+          nodes
+      )
+      .modify(_.cotonomas).using(_.setCotonomaDetails(details))
+
+  def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
+    this
+      .modify(_.cotonomas).using(_.put(cotonomaPair._1))
+      .modify(_.cotos).using(_.put(cotonomaPair._2))
+
+  def importFrom(cotos: PaginatedCotos): Domain =
+    this
+      .modify(_.cotos).using(_.importFrom(cotos))
+      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
+      .modify(_.links).using(_.putAll(cotos.outgoingLinks))
+
+  def importFrom(cotos: GeolocatedCotos): Domain =
+    this
+      .modify(_.cotos).using(_.importFrom(cotos))
+      .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
+
+  def importFrom(graph: CotoGraph): Domain =
+    this
+      .modify(_.graphLoading).using(_ - graph.rootCotoId)
+      .modify(_.cotos).using(_.importFrom(graph))
+      .modify(_.cotonomas).using(_.importFrom(graph))
+      .modify(_.links).using(_.putAll(graph.links))
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Commands
+  /////////////////////////////////////////////////////////////////////////////
+
   def fetchCurrentNodeRootCotonoma: Cmd[AppMsg] =
     this.currentNodeRootCotonomaId.map(
       CotonomaBackend.fetch(_)
@@ -207,37 +263,9 @@ case class Domain(
         Cmd.none
     }).getOrElse(Cmd.none)
 
-  lazy val geolocationInFocus: Option[CenterOrBounds] = {
-    this.currentCotonomaCoto.flatMap(_.geolocation) match {
-      case Some(center) => Some(Left(center))
-      case None => {
-        val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
-        Coto.centerOrBoundsOf(cotos)
-      }
-    }
-  }
-
-  lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
-    var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
-    this.cotos.geolocated.foreach { case (coto, location) =>
-      this.nodes.get(coto.nodeId).foreach(node =>
-        markers = markers.updatedWith(location) {
-          case Some(marker) =>
-            Some(marker.addCoto(coto, node.iconUrl, inFocus(coto)))
-          case None =>
-            Some(
-              Geolocation.MarkerOfCotos(
-                location,
-                Seq(coto),
-                Set(node.iconUrl),
-                inFocus(coto)
-              )
-            )
-        }
-      )
-    }
-    markers.values.toSeq
-  }
+  /////////////////////////////////////////////////////////////////////////////
+  // Private
+  /////////////////////////////////////////////////////////////////////////////
 
   private def inFocus(coto: Coto): Boolean =
     (this.nodes.focusedId, this.cotonomas.focusedId) match {
