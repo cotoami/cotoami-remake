@@ -131,7 +131,8 @@ case class Model(
           fetchFocusedCotonoma,
           fetchRecentCotonomas,
           fetchTimeline,
-          model.domain.fetchGraph
+          model.domain.fetchGraph,
+          SectionGeomap.fetchInitialCotos(this)
         )
       )
     }

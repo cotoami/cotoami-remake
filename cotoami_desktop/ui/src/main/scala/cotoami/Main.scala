@@ -236,9 +236,6 @@ object Main {
           Seq.empty
         )
 
-      case Msg.InitCurrentCotonoma((cotonoma, coto)) =>
-        (model, Seq(SectionGeomap.fetchInitialCotos(context)))
-
       case Msg.ReloadDomain => {
         (
           model.copy(domain = Domain()),

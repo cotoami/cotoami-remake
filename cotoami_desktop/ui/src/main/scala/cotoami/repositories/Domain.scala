@@ -314,12 +314,7 @@ object Domain {
       case Msg.CotonomaDetailsFetched(Right(details)) =>
         (
           model.setCotonomaDetails(details),
-          Seq(
-            Browser.send(
-              AppMsg.InitCurrentCotonoma((details.cotonoma, details.coto))
-            ),
-            log_info("Cotonoma details fetched.", Some(details.debug))
-          )
+          Seq(log_info("Cotonoma details fetched.", Some(details.debug)))
         )
 
       case Msg.CotonomaDetailsFetched(Left(e)) =>
