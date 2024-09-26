@@ -42,11 +42,11 @@ case class Domain(
       links = Links()
     )
 
-  def currentRootCotonomaId: Option[Id[Cotonoma]] =
+  def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
     this.nodes.current.flatMap(_.rootCotonomaId)
 
-  def isCurrentRoot(id: Id[Cotonoma]): Boolean =
-    Some(id) == this.currentRootCotonomaId
+  def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
+    Some(id) == this.currentNodeRootCotonomaId
 
   def currentCotonomaId: Option[Id[Cotonoma]] =
     this.cotonomas.focusedId.orElse(
@@ -120,12 +120,12 @@ case class Domain(
       .modify(_.links).using(_.putAll(graph.links))
 
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
-    val rootId = this.currentRootCotonomaId
+    val rootId = this.currentNodeRootCotonomaId
     this.cotonomas.recent.filter(c => Some(c.id) != rootId)
   }
 
   val superCotonomasWithoutRoot: Seq[Cotonoma] = {
-    val rootId = this.currentRootCotonomaId
+    val rootId = this.currentNodeRootCotonomaId
     this.cotonomas.supers.filter(c => Some(c.id) != rootId)
   }
 
@@ -165,8 +165,8 @@ case class Domain(
       this.links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
-  def fetchCurrentRootCotonoma: Cmd[AppMsg] =
-    this.currentRootCotonomaId.map(
+  def fetchCurrentNodeRootCotonoma: Cmd[AppMsg] =
+    this.currentNodeRootCotonomaId.map(
       CotonomaBackend.fetch(_)
         .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
     ).getOrElse(Cmd.none)
