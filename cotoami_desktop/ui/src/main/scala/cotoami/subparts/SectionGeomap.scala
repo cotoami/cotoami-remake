@@ -230,7 +230,7 @@ object SectionGeomap {
     }
   }
 
-  def fetchInitialCotos()(implicit context: Context): Cmd[AppMsg] =
+  def fetchInitialCotos(context: Context): Cmd[AppMsg] =
     GeolocatedCotos.fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId

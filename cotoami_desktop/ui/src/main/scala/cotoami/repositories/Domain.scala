@@ -219,12 +219,6 @@ case class Domain(
   // Commands
   /////////////////////////////////////////////////////////////////////////////
 
-  def fetchCurrentNodeRootCotonoma: Cmd[AppMsg] =
-    this.currentNodeRootCotonomaId.map(
-      CotonomaBackend.fetch(_)
-        .map(Domain.Msg.toApp(Domain.Msg.CurrentRootCotonomaFetched))
-    ).getOrElse(Cmd.none)
-
   def fetchRecentCotonomas(
       pageIndex: Double
   ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
@@ -296,10 +290,6 @@ object Domain {
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
 
-    case class CurrentRootCotonomaFetched(
-        result: Either[ErrorJson, (Cotonoma, Coto)]
-    ) extends Msg
-
     case class CotonomaDetailsFetched(
         result: Either[ErrorJson, CotonomaDetails]
     ) extends Msg
@@ -320,18 +310,6 @@ object Domain {
 
       case Msg.CotonomaFetched(Left(e)) =>
         (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
-
-      case Msg.CurrentRootCotonomaFetched(Right(cotonomaPair)) =>
-        (
-          model.importFrom(cotonomaPair),
-          Seq(
-            Browser.send(AppMsg.InitCurrentCotonoma(cotonomaPair)),
-            log_info("The root cotonoma fetched.", Some(cotonomaPair._1.name))
-          )
-        )
-
-      case Msg.CurrentRootCotonomaFetched(Left(e)) =>
-        (model, Seq(ErrorJson.log(e, "Couldn't fetch the root cotonoma.")))
 
       case Msg.CotonomaDetailsFetched(Right(details)) =>
         (

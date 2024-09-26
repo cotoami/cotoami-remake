@@ -93,10 +93,10 @@ case class Model(
       (
         model.copy(navCotonomas = navCotonomas, timeline = timeline),
         Seq(
-          model.domain.fetchCurrentNodeRootCotonoma,
           fetchRecentCotonomas,
           fetchTimeline,
-          model.domain.fetchGraph
+          model.domain.fetchGraph,
+          SectionGeomap.fetchInitialCotos(this)
         )
       )
     }
