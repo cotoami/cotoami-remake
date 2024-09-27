@@ -22,7 +22,7 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
-      fetchNumber: Int = 0, // to avoid rendering old results
+      fetchNumber: Int = 0, // to avoid rendering old results unintentionally
       query: String = "",
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
@@ -36,11 +36,11 @@ object SectionTimeline {
         imeActive = false
       )
 
-    def saveScrollPos(key: Id[Cotonoma], pos: Double): Model =
-      copy(scrollPos = Some((key, pos)))
-
-    def getScrollPos(key: Id[Cotonoma]): Option[Double] =
-      scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
+    def cotos(domain: Domain): Seq[Coto] = {
+      val cotos = cotoIds.order.map(domain.cotos.get).flatten
+      val rootCotoId = domain.currentNodeRoot.map(_._2.id)
+      cotos.filter(c => Some(c.id) != rootCotoId)
+    }
 
     def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
       this
@@ -48,12 +48,11 @@ object SectionTimeline {
         .modify(_.fetchNumber).setTo(fetchNumber)
         .modify(_.loading).setTo(false)
 
-    def timeline()(implicit context: Context): Seq[Coto] = {
-      val rawTimeline = cotoIds.order.map(context.domain.cotos.get).flatten
-      context.domain.nodes.current.map(node =>
-        rawTimeline.filter(_.nameAsCotonoma != Some(node.name))
-      ).getOrElse(rawTimeline)
-    }
+    def saveScrollPos(key: Id[Cotonoma], pos: Double): Model =
+      copy(scrollPos = Some((key, pos)))
+
+    def getScrollPos(key: Id[Cotonoma]): Option[Double] =
+      scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
 
     def post(cotoId: Id[Coto]): Model =
       this
@@ -207,12 +206,12 @@ object SectionTimeline {
       context: Context,
       dispatch: AppMsg => Unit
   ): Option[ReactElement] = {
-    val timeline = model.timeline()
+    val cotos = model.cotos(context.domain)
     context.domain.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
-        !model.query.isBlank || !timeline.isEmpty || !waitingPosts.isEmpty
+        !model.query.isBlank || !cotos.isEmpty || !waitingPosts.isEmpty
       )(
-        sectionTimeline(model, timeline, waitingPosts, cotonomaId)
+        sectionTimeline(model, cotos, waitingPosts, cotonomaId)
       )
     )
   }
