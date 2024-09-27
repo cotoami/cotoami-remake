@@ -137,7 +137,7 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let mut ds = db.new_session()?;
 
     // Init a context
-    let Some((root_cotonoma, _)) = ds.root_cotonoma()? else {
+    let Some((root_cotonoma, _)) = ds.local_node_root()? else {
         bail!("The root cotonoma is required for import.")
     };
     let mut context = Context::new(

@@ -18,6 +18,16 @@ use crate::{
     schema::{cotonomas, cotos},
 };
 
+pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
+    read_op(move |conn| {
+        let count: i64 = cotonomas::table
+            .select(diesel::dsl::count_star())
+            .filter(cotonomas::uuid.eq(id))
+            .first(conn)?;
+        Ok(count > 0)
+    })
+}
+
 pub(crate) fn get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
@@ -88,25 +98,6 @@ pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
         .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "name", name)))
 }
 
-pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operation<Conn, bool> + '_ {
-    read_op(move |conn| {
-        let count: i64 = cotonomas::table
-            .select(diesel::dsl::count_star())
-            .filter(cotonomas::uuid.eq(id))
-            .first(conn)?;
-        Ok(count > 0)
-    })
-}
-
-pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
-    read_op(move |conn| {
-        cotonomas::table
-            .order(cotonomas::created_at.asc())
-            .load::<Cotonoma>(conn)
-            .map_err(anyhow::Error::from)
-    })
-}
-
 pub(crate) fn get_by_ids<Conn: AsReadableConn>(
     ids: Vec<Id<Cotonoma>>,
 ) -> impl Operation<Conn, Vec<Cotonoma>> {
@@ -116,6 +107,24 @@ pub(crate) fn get_by_ids<Conn: AsReadableConn>(
             .load::<Cotonoma>(conn)?
             .into_iter()
             .map(|c| (c.uuid, c))
+            .collect();
+        // Sort the results in order of the `ids` param.
+        let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
+        Ok(cotonomas)
+    })
+}
+
+pub(crate) fn get_pairs_by_ids<Conn: AsReadableConn>(
+    ids: Vec<Id<Cotonoma>>,
+) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> {
+    read_op(move |conn| {
+        let mut map: HashMap<Id<Cotonoma>, (Cotonoma, Coto)> = cotonomas::table
+            .inner_join(cotos::table)
+            .filter(cotonomas::uuid.eq_any(&ids))
+            .select((Cotonoma::as_select(), Coto::as_select()))
+            .load::<(Cotonoma, Coto)>(conn)?
+            .into_iter()
+            .map(|pair| (pair.0.uuid, pair))
             .collect();
         // Sort the results in order of the `ids` param.
         let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
@@ -136,6 +145,15 @@ pub(crate) fn get_by_coto_ids<Conn: AsReadableConn>(
         // Sort the results in order of the `ids` param.
         let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
         Ok(cotonomas)
+    })
+}
+
+pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>> {
+    read_op(move |conn| {
+        cotonomas::table
+            .order(cotonomas::created_at.asc())
+            .load::<Cotonoma>(conn)
+            .map_err(anyhow::Error::from)
     })
 }
 

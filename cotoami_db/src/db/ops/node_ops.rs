@@ -16,12 +16,12 @@ use crate::{
         node::{NewNode, Node, UpdateNode},
         Id,
     },
+    schema::nodes,
 };
 
 pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Node>) -> impl Operation<Conn, Option<Node>> + '_ {
-    use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
-        nodes
+        nodes::table
             .find(id)
             .first(conn)
             .optional()
@@ -36,19 +36,27 @@ pub(crate) fn try_get<Conn: AsReadableConn>(
 }
 
 pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
-    use crate::schema::nodes::dsl::*;
     read_op(move |conn| {
-        nodes
-            .order(rowid.asc())
+        nodes::table
+            .order(nodes::rowid.asc())
             .load::<Node>(conn)
             .map_err(anyhow::Error::from)
     })
 }
 
+pub(crate) fn root_cotonoma_ids<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Id<Cotonoma>>> {
+    read_op(move |conn| {
+        let ids = nodes::table
+            .filter(nodes::root_cotonoma_id.is_not_null())
+            .select(nodes::root_cotonoma_id)
+            .load::<Option<Id<Cotonoma>>>(conn)?;
+        Ok(ids.into_iter().flatten().collect())
+    })
+}
+
 pub(crate) fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Node> + 'a {
-    use crate::schema::nodes::dsl::*;
     write_op(move |conn| {
-        diesel::insert_into(nodes)
+        diesel::insert_into(nodes::table)
             .values(new_node)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
@@ -101,7 +109,6 @@ pub(crate) fn rename<'a>(
 }
 
 fn set_name<'a>(id: &'a Id<Node>, name: &'a str) -> impl Operation<WritableConn, Node> + 'a {
-    use crate::schema::nodes;
     write_op(move |conn| {
         diesel::update(nodes::table)
             .filter(nodes::uuid.eq(id))

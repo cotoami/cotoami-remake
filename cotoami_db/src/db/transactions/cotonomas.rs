@@ -1,23 +1,31 @@
 use std::collections::HashSet;
 
 use anyhow::Result;
+use diesel::sqlite::SqliteConnection;
 
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, coto_ops, cotonoma_ops, Paginated},
+        ops::{changelog_ops, coto_ops, cotonoma_ops, node_ops, Paginated},
         DatabaseSession,
     },
     models::prelude::*,
 };
 
 impl<'a> DatabaseSession<'a> {
-    pub fn root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
+    pub fn local_node_root(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
         if let Some(id) = self.globals.root_cotonoma_id() {
             self.cotonoma(&id)
         } else {
             Ok(None)
         }
+    }
+
+    pub fn all_node_roots(&mut self) -> Result<Vec<(Cotonoma, Coto)>> {
+        self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
+            let cotonoma_ids = node_ops::root_cotonoma_ids().run(ctx)?;
+            cotonoma_ops::get_pairs_by_ids(cotonoma_ids).run(ctx)
+        })
     }
 
     pub fn cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {

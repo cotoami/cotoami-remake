@@ -21,7 +21,7 @@ fn import_changes() -> Result<()> {
     let ((_, node1), db1_change1) = ds1.init_as_node(Some("My Node"), None)?;
 
     let opr1 = db1.globals().local_node_as_operator()?;
-    let (node1_root_cotonoma, node1_root_coto) = ds1.root_cotonoma()?.unwrap();
+    let (node1_root_cotonoma, node1_root_coto) = ds1.local_node_root()?.unwrap();
 
     // 2. post_coto
     let (db1_coto, db1_change2) =

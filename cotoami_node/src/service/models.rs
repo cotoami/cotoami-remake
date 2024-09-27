@@ -54,7 +54,7 @@ pub struct Session {
 pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
-    pub server_root_cotonoma: Option<(Cotonoma, Coto)>,
+    pub server_root: Option<(Cotonoma, Coto)>,
     pub as_child: Option<ChildNode>,
 }
 
@@ -96,6 +96,7 @@ pub struct ClientAdded {
 pub struct InitialDataset {
     pub last_change_number: i64,
     pub nodes: Vec<Node>,
+    pub node_roots: Vec<(Cotonoma, Coto)>,
     pub local_node_id: Id<Node>,
     pub parent_node_ids: Vec<Id<Node>>,
     pub servers: Vec<Server>,

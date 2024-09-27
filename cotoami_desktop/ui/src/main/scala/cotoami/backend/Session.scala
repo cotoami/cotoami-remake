@@ -7,8 +7,8 @@ import fui.Cmd
 import cotoami.models.{ChildNode, Coto, Cotonoma, Node}
 
 case class Session(json: SessionJson) {
-  def token: String = this.json.token
-  lazy val expiresAt: Instant = parseJsonDateTime(this.json.expires_at)
+  def token: String = json.token
+  lazy val expiresAt: Instant = parseJsonDateTime(json.expires_at)
 }
 
 @js.native
@@ -18,14 +18,14 @@ trait SessionJson extends js.Object {
 }
 
 case class ClientNodeSession(json: ClientNodeSessionJson) {
-  def session: Session = Session(this.json.session)
-  def server: Node = NodeBackend.toModel(this.json.server)
-  def serverRootCotonoma: Option[(Cotonoma, Coto)] =
-    Nullable.toOption(this.json.server_root_cotonoma).map(pair =>
+  def session: Session = Session(json.session)
+  def server: Node = NodeBackend.toModel(json.server)
+  def serverRoot: Option[(Cotonoma, Coto)] =
+    Nullable.toOption(json.server_root).map(pair =>
       (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
     )
   def asChild: Option[ChildNode] =
-    Nullable.toOption(this.json.as_child).map(ChildNodeBackend.toModel(_))
+    Nullable.toOption(json.as_child).map(ChildNodeBackend.toModel(_))
 }
 
 object ClientNodeSession {
@@ -41,7 +41,7 @@ object ClientNodeSession {
 trait ClientNodeSessionJson extends js.Object {
   val session: SessionJson = js.native
   val server: NodeJson = js.native
-  val server_root_cotonoma: Nullable[js.Tuple2[CotonomaJson, CotoJson]] =
+  val server_root: Nullable[js.Tuple2[CotonomaJson, CotoJson]] =
     js.native
   val as_child: Nullable[ChildNodeJson] = js.native
 }

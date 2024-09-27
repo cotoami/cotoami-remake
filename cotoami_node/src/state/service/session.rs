@@ -68,9 +68,9 @@ impl NodeState {
                     expires_at: client.session_expires_at.unwrap(),
                 },
                 server: ds.local_node()?,
-                server_root_cotonoma: match client_role {
+                server_root: match client_role {
                     NodeRole::Parent => None,
-                    NodeRole::Child => ds.root_cotonoma()?,
+                    NodeRole::Child => ds.local_node_root()?,
                 },
                 as_child: if let Some(DatabaseRole::Child(child)) = db_role {
                     Some(child)

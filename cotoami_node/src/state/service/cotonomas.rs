@@ -22,6 +22,10 @@ impl NodeState {
         self.get(move |ds| ds.try_get_cotonoma(&id)).await
     }
 
+    pub async fn all_node_roots(&self) -> Result<Vec<(Cotonoma, Coto)>, ServiceError> {
+        self.get(move |ds| ds.all_node_roots()).await
+    }
+
     pub async fn cotonoma_details(
         &self,
         id: Id<Cotonoma>,

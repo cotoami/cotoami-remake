@@ -156,7 +156,7 @@ fn init_as_node() -> Result<()> {
     let ((local_node, node), changelog) = ds.init_as_node(Some("My Node"), None)?;
 
     // then
-    let (root_cotonoma, root_coto) = ds.root_cotonoma()?.unwrap();
+    let (root_cotonoma, root_coto) = ds.local_node_root()?.unwrap();
 
     assert_that!(
         node,

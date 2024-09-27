@@ -10,7 +10,7 @@ fn pagination() -> Result<()> {
     let (_root_dir, db, _node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
     let operator = db.globals().local_node_as_operator()?;
-    let (root_cotonoma, _) = ds.root_cotonoma()?.unwrap();
+    let (root_cotonoma, _) = ds.local_node_root()?.unwrap();
 
     // when
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), 2, 0)?;
