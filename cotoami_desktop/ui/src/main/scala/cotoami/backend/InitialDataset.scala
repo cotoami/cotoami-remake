@@ -4,34 +4,39 @@ import scala.scalajs.js
 
 import fui.Cmd
 import cotoami.libs.tauri
-import cotoami.models.{Id, Node, Server}
+import cotoami.models.{Coto, Cotonoma, Id, Node, Server}
 
 case class InitialDataset(json: InitialDatasetJson) {
-  def lastChangeNumber: Double = this.json.last_change_number
+  def lastChangeNumber: Double = json.last_change_number
 
   lazy val nodes: Map[Id[Node], Node] =
-    this.json.nodes.map(NodeBackend.toModel(_))
+    json.nodes.map(NodeBackend.toModel(_))
       .map(node => (node.id, node))
       .toMap
 
-  def localNodeId: Id[Node] = Id(this.json.local_node_id)
+  lazy val rootCotonomas: js.Array[(Cotonoma, Coto)] =
+    json.root_cotonomas.map(pair =>
+      (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
+    )
 
-  def localNode: Option[Node] =
-    this.nodes.get(this.localNodeId)
+  def localNodeId: Id[Node] = Id(json.local_node_id)
+
+  def localNode: Option[Node] = nodes.get(localNodeId)
 
   lazy val parentNodeIds: js.Array[Id[Node]] =
-    this.json.parent_node_ids.map(Id[Node](_))
+    json.parent_node_ids.map(Id[Node](_))
 
   lazy val servers: js.Array[Server] =
-    this.json.servers.map(ServerBackend.toModel(_))
+    json.servers.map(ServerBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder
-    s ++= s"lastChangeNumber: ${this.lastChangeNumber}"
-    s ++= s", nodes: ${this.nodes.size}"
-    s ++= s", localNode: {${this.localNode.map(_.debug)}}"
-    s ++= s", parentNodes: ${this.parentNodeIds.size}"
-    s ++= s", servers: ${this.servers.size}"
+    s ++= s"lastChangeNumber: ${lastChangeNumber}"
+    s ++= s", nodes: ${nodes.size}"
+    s ++= s", rootCotonomas: ${rootCotonomas.size}"
+    s ++= s", localNode: {${localNode.map(_.debug)}}"
+    s ++= s", parentNodes: ${parentNodeIds.size}"
+    s ++= s", servers: ${servers.size}"
     s.result()
   }
 }
@@ -48,6 +53,7 @@ object InitialDataset {
 trait InitialDatasetJson extends js.Object {
   val last_change_number: Double = js.native
   val nodes: js.Array[NodeJson] = js.native
+  val root_cotonomas: js.Array[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val local_node_id: String = js.native
   val parent_node_ids: js.Array[String] = js.native
   val servers: js.Array[ServerJson] = js.native
