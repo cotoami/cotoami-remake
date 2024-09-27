@@ -114,11 +114,6 @@ case class Domain(
     cotonomas.supers.filter(c => Some(c.id) != currentNodeRootCotonomaId)
   }
 
-  val timelineWithoutRoot: Seq[Coto] = {
-    val rootCotoId = currentNodeRoot.map(_._2.id)
-    cotos.timeline.filter(c => Some(c.id) != rootCotoId)
-  }
-
   lazy val pinnedCotos: Seq[(Link, Coto)] =
     currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
       .getOrElse(Seq.empty)
