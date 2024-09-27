@@ -7,7 +7,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Msg => AppMsg}
-import cotoami.models.{Id, Node}
+import cotoami.models.{Coto, Id, Node}
 import cotoami.repositories.Domain
 import cotoami.components.toolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
@@ -85,7 +85,9 @@ object ModalNodeProfile {
           )
         ),
         fieldName(node, model),
-        fieldDescription(model)
+        context.domain.rootOf(model.nodeId).map { case (_, coto) =>
+          fieldDescription(coto, model)
+        }
       )
     )
 
@@ -114,24 +116,22 @@ object ModalNodeProfile {
       )
     )
 
-  private def fieldDescription(model: Model)(implicit
+  private def fieldDescription(rootCoto: Coto, model: Model)(implicit
       context: Context
   ): ReactElement =
-    context.domain.rootOf(model.nodeId).map { case (_, coto) =>
-      div(className := "input-field node-description")(
-        label(htmlFor := "node-profile-description")("Description"),
-        div(className := "input-with-tools")(
-          ViewCoto.sectionNodeDescription(coto),
-          Option.when(model.isOperatingNode()) {
-            div(className := "tools")(
-              toolButton(
-                symbol = "edit",
-                tip = "Edit",
-                classes = "edit"
-              )
+    div(className := "input-field node-description")(
+      label(htmlFor := "node-profile-description")("Description"),
+      div(className := "input-with-tools")(
+        ViewCoto.sectionNodeDescription(rootCoto),
+        Option.when(model.isOperatingNode()) {
+          div(className := "tools")(
+            toolButton(
+              symbol = "edit",
+              tip = "Edit",
+              classes = "edit"
             )
-          }
-        )
+          )
+        }
       )
-    }
+    )
 }
