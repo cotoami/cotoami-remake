@@ -22,7 +22,7 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
-      fetchNumber: Int = 0,
+      fetchNumber: Int = 0, // to avoid rendering old results
       query: String = "",
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
