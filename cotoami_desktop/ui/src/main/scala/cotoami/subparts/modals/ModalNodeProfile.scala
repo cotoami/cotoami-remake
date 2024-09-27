@@ -1,17 +1,14 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
-import com.softwaremill.quicklens._
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.{Context, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.repositories.Domain
-import cotoami.backend.{ErrorJson, NodeDetails}
 import cotoami.components.toolButton
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 
@@ -22,17 +19,8 @@ object ModalNodeProfile {
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
-      context.domain.nodes.isOperating(this.nodeId)
+      context.domain.nodes.isOperating(nodeId)
   }
-
-  object Model {
-    def apply(nodeId: Id[Node]): (Model, Seq[Cmd[AppMsg]]) =
-      (
-        Model(nodeId, None),
-        Seq(fetchNodeDetails(nodeId))
-      )
-  }
-
   sealed trait Msg {
     def toApp: AppMsg = Modal.Msg.NodeProfileMsg(this).pipe(AppMsg.ModalMsg)
   }
@@ -40,40 +28,13 @@ object ModalNodeProfile {
   object Msg {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen Modal.Msg.NodeProfileMsg andThen AppMsg.ModalMsg
-
-    case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
-        extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
-    val default = (model, context.domain, Seq.empty)
-    msg match {
-      case Msg.NodeDetailsFetched(Right(details)) =>
-        details.root match {
-          case Some((cotonoma, coto)) =>
-            default.copy(
-              _2 = context.domain
-                .modify(_.cotonomas).using(_.put(cotonoma))
-                .modify(_.cotos).using(_.put(coto))
-            )
-          case None => default
-        }
-
-      case Msg.NodeDetailsFetched(Left(e)) =>
-        default.copy(
-          _1 = model.copy(error = Some(e.default_message)),
-          _3 = Seq(
-            log_error("Node connecting error.", Some(js.JSON.stringify(e)))
-          )
-        )
-    }
+    (model, context.domain, Seq.empty)
   }
-
-  private def fetchNodeDetails(id: Id[Node]): Cmd[AppMsg] =
-    NodeDetails.fetch(id)
-      .map(Msg.toApp(Msg.NodeDetailsFetched(_)))
 
   def apply(model: Model)(implicit
       context: Context,
