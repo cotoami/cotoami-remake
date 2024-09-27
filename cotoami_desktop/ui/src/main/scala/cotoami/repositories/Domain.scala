@@ -39,26 +39,26 @@ case class Domain(
   /////////////////////////////////////////////////////////////////////////////
 
   def currentFocus: Option[(Node, Option[Cotonoma])] =
-    (this.nodes.focused, this.cotonomas.focused) match {
+    (nodes.focused, cotonomas.focused) match {
       case (None, None)       => None
       case (Some(node), None) => Some((node, None))
       case (_, Some(cotonoma)) =>
-        this.nodes.get(cotonoma.nodeId) match {
+        nodes.get(cotonoma.nodeId) match {
           case Some(node) => Some((node, Some(cotonoma)))
           case None       => None // should be unreachable
         }
     }
 
   def focusedCotonoma: Option[(Cotonoma, Coto)] =
-    this.cotonomas.focused.flatMap(cotonoma =>
-      this.cotos.get(cotonoma.cotoId).map(cotonoma -> _)
+    cotonomas.focused.flatMap(cotonoma =>
+      cotos.get(cotonoma.cotoId).map(cotonoma -> _)
     )
 
   def unfocus(): Domain =
-    this.copy(
-      nodes = this.nodes.focus(None),
+    copy(
+      nodes = nodes.focus(None),
       cotonomas = Cotonomas(),
-      cotos = this.cotos.destroyAndCreate(),
+      cotos = cotos.destroyAndCreate(),
       links = Links()
     )
 
@@ -67,71 +67,72 @@ case class Domain(
   /////////////////////////////////////////////////////////////////////////////
 
   def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
-    this.nodes.current.flatMap(_.rootCotonomaId)
+    nodes.current.flatMap(_.rootCotonomaId)
+
+  def currentNodeRoot: Option[(Cotonoma, Coto)] =
+    currentNodeRootCotonomaId.flatMap(cotonomaPair)
 
   def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
-    Some(id) == this.currentNodeRootCotonomaId
+    Some(id) == currentNodeRootCotonomaId
 
   def isNodeRoot(cotonoma: Cotonoma): Boolean =
-    this.nodes.get(cotonoma.nodeId)
+    nodes.get(cotonoma.nodeId)
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
   def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
-    this.nodes.get(nodeId)
-      .flatMap(node => node.rootCotonomaId.flatMap(this.cotonomas.get))
-      .flatMap(cotonoma => this.cotos.get(cotonoma.cotoId).map(cotonoma -> _))
+    nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonomaPair))
 
   /////////////////////////////////////////////////////////////////////////////
   // Current cotonoma
   /////////////////////////////////////////////////////////////////////////////
 
   def currentCotonomaId: Option[Id[Cotonoma]] =
-    this.cotonomas.focusedId.orElse(
-      this.nodes.current.flatMap(_.rootCotonomaId)
+    cotonomas.focusedId.orElse(
+      nodes.current.flatMap(_.rootCotonomaId)
     )
 
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
   // return `None` if the cotonoma data of that ID has not been fetched.
   def currentCotonoma: Option[Cotonoma] =
-    this.currentCotonomaId.flatMap(this.cotonomas.get)
+    currentCotonomaId.flatMap(cotonomas.get)
 
   /////////////////////////////////////////////////////////////////////////////
   // Other queries
   /////////////////////////////////////////////////////////////////////////////
 
+  def cotonomaPair(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
+    cotonomas.get(id).flatMap(cotonoma =>
+      cotos.get(cotonoma.cotoId).map(cotonoma -> _)
+    )
+
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
-    val rootId = this.currentNodeRootCotonomaId
-    this.cotonomas.recent.filter(c => Some(c.id) != rootId)
+    cotonomas.recent.filter(c => Some(c.id) != currentNodeRootCotonomaId)
   }
 
   val superCotonomasWithoutRoot: Seq[Cotonoma] = {
-    val rootId = this.currentNodeRootCotonomaId
-    this.cotonomas.supers.filter(c => Some(c.id) != rootId)
+    cotonomas.supers.filter(c => Some(c.id) != currentNodeRootCotonomaId)
   }
 
   lazy val pinnedCotos: Seq[(Link, Coto)] =
-    this.currentCotonoma.map(cotonoma =>
-      this.childrenOf(cotonoma.cotoId)
-    ).getOrElse(Seq.empty)
+    currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
+      .getOrElse(Seq.empty)
 
   def childrenOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
-    this.links.linksFrom(cotoId).toSeq
-      .map(link =>
-        this.cotos.get(link.targetCotoId).map(child => (link, child))
-      )
+    links.linksFrom(cotoId).toSeq
+      .map(link => cotos.get(link.targetCotoId).map(child => (link, child)))
       .flatten
 
   def parentsOf(
       cotoId: Id[Coto],
       excludeCurrentCotonoma: Boolean = true
   ): Seq[(Coto, Link)] =
-    this.links.linksTo(cotoId)
+    links.linksTo(cotoId)
       .map(link =>
-        this.cotos.get(link.sourceCotoId).flatMap(parent =>
+        cotos.get(link.sourceCotoId).flatMap(parent =>
           if (
             excludeCurrentCotonoma &&
-            this.currentCotonoma.map(_.cotoId == parent.id)
+            currentCotonoma.map(_.cotoId == parent.id)
               .getOrElse(false)
           )
             None
@@ -142,12 +143,12 @@ case class Domain(
       .flatten
 
   def pinned(cotoId: Id[Coto]): Boolean =
-    this.currentCotonoma.map(cotonoma =>
-      this.links.linked(cotonoma.cotoId, cotoId)
+    currentCotonoma.map(cotonoma =>
+      links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
   lazy val geolocationInFocus: Option[CenterOrBounds] = {
-    this.focusedCotonoma.map(_._2).flatMap(_.geolocation) match {
+    focusedCotonoma.map(_._2).flatMap(_.geolocation) match {
       case Some(center) => Some(Left(center))
       case None => {
         val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
@@ -158,8 +159,8 @@ case class Domain(
 
   lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
     var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
-    this.cotos.geolocated.foreach { case (coto, location) =>
-      this.nodes.get(coto.nodeId).foreach(node =>
+    cotos.geolocated.foreach { case (coto, location) =>
+      nodes.get(coto.nodeId).foreach(node =>
         markers = markers.updatedWith(location) {
           case Some(marker) =>
             Some(marker.addCoto(coto, node.iconUrl, inFocus(coto)))
@@ -223,34 +224,34 @@ case class Domain(
   def fetchRecentCotonomas(
       pageIndex: Double
   ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    CotonomaBackend.fetchRecent(this.nodes.focusedId, pageIndex)
+    CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
 
   def fetchMoreRecentCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    this.cotonomas.recentIds.nextPageIndex
+    cotonomas.recentIds.nextPageIndex
       .map(fetchRecentCotonomas)
       .getOrElse(Cmd.none)
 
   def fetchSubCotonomas(
       pageIndex: Double
   ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    this.cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
+    cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
   def fetchMoreSubCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
-    this.cotonomas.subIds.nextPageIndex
+    cotonomas.subIds.nextPageIndex
       .map(fetchSubCotonomas)
       .getOrElse(Cmd.none)
 
   def fetchGraph: Cmd[AppMsg] =
-    this.currentCotonomaId
+    currentCotonomaId
       .map(Domain.fetchGraphFromCotonoma)
       .getOrElse(Cmd.none)
 
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
   def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[AppMsg] =
-    this.cotos.get(cotoId).map(coto => {
-      if (this.childrenOf(cotoId).size < coto.outgoingLinks)
+    cotos.get(cotoId).map(coto => {
+      if (childrenOf(cotoId).size < coto.outgoingLinks)
         Domain.fetchGraphFromCoto(cotoId)
       else
         Cmd.none
@@ -261,13 +262,13 @@ case class Domain(
   /////////////////////////////////////////////////////////////////////////////
 
   private def inFocus(coto: Coto): Boolean =
-    (this.nodes.focusedId, this.cotonomas.focusedId) match {
+    (nodes.focusedId, cotonomas.focusedId) match {
       case (None, None)         => true
       case (Some(nodeId), None) => coto.nodeId == nodeId
       case (_, Some(cotonomaId)) =>
         coto.postedInIds.contains(cotonomaId) || (
           // if the coto is the current cotonoma itself
-          this.cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
+          cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
         )
     }
 }

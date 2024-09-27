@@ -10,16 +10,16 @@ import cotoami.backend.{
   CotonomaBackend,
   CotonomaDetails,
   CotosRelatedData,
+  ErrorJson,
   Paginated,
-  PaginatedIds,
-  ErrorJson
+  PaginatedIds
 }
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
     mapByCotoId: Map[Id[Coto], Id[Cotonoma]] = Map.empty,
 
-    // Id references
+    // Classified IDs
     focusedId: Option[Id[Cotonoma]] = None,
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
