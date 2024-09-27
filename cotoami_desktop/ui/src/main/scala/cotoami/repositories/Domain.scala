@@ -280,7 +280,7 @@ object Domain {
       lastChangeNumber = dataset.lastChangeNumber,
       nodes = Nodes(dataset, localId)
     )
-    dataset.rootCotonomas.foldLeft(domain) { case (domain, (cotonoma, coto)) =>
+    dataset.nodeRoots.foldLeft(domain) { case (domain, (cotonoma, coto)) =>
       domain
         .modify(_.cotonomas).using(_.put(cotonoma))
         .modify(_.cotos).using(_.put(coto))

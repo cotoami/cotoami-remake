@@ -15,8 +15,8 @@ case class InitialDataset(json: InitialDatasetJson) {
       .map(node => node.id -> node)
       .toMap
 
-  lazy val rootCotonomas: js.Array[(Cotonoma, Coto)] =
-    json.root_cotonomas.map(pair =>
+  lazy val nodeRoots: js.Array[(Cotonoma, Coto)] =
+    json.node_roots.map(pair =>
       (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
     )
 
@@ -34,7 +34,7 @@ case class InitialDataset(json: InitialDatasetJson) {
     val s = new StringBuilder
     s ++= s"lastChangeNumber: ${lastChangeNumber}"
     s ++= s", nodes: ${nodes.size}"
-    s ++= s", rootCotonomas: ${rootCotonomas.size}"
+    s ++= s", nodeRoots: ${nodeRoots.size}"
     s ++= s", localNode: {${localNode.map(_.debug)}}"
     s ++= s", parentNodes: ${parentNodeIds.size}"
     s ++= s", servers: ${servers.size}"
@@ -54,7 +54,7 @@ object InitialDataset {
 trait InitialDatasetJson extends js.Object {
   val last_change_number: Double = js.native
   val nodes: js.Array[NodeJson] = js.native
-  val root_cotonomas: js.Array[js.Tuple2[CotonomaJson, CotoJson]] = js.native
+  val node_roots: js.Array[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val local_node_id: String = js.native
   val parent_node_ids: js.Array[String] = js.native
   val servers: js.Array[ServerJson] = js.native
