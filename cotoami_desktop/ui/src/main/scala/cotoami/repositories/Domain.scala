@@ -107,11 +107,16 @@ case class Domain(
     )
 
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
-    this.cotonomas.recent.filter(c => Some(c.id) != currentNodeRootCotonomaId)
+    cotonomas.recent.filter(c => Some(c.id) != currentNodeRootCotonomaId)
   }
 
   val superCotonomasWithoutRoot: Seq[Cotonoma] = {
-    this.cotonomas.supers.filter(c => Some(c.id) != currentNodeRootCotonomaId)
+    cotonomas.supers.filter(c => Some(c.id) != currentNodeRootCotonomaId)
+  }
+
+  val recentCotosWithoutRoot: Seq[Coto] = {
+    val rootCotoId = currentNodeRoot.map(_._2.id)
+    cotos.recent.filter(c => Some(c.id) != rootCotoId)
   }
 
   lazy val pinnedCotos: Seq[(Link, Coto)] =
