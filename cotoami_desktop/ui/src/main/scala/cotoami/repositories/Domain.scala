@@ -69,8 +69,11 @@ case class Domain(
   def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
     this.nodes.current.flatMap(_.rootCotonomaId)
 
+  def currentNodeRoot: Option[(Cotonoma, Coto)] =
+    currentNodeRootCotonomaId.flatMap(cotonomaPair)
+
   def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
-    Some(id) == this.currentNodeRootCotonomaId
+    Some(id) == currentNodeRootCotonomaId
 
   def isNodeRoot(cotonoma: Cotonoma): Boolean =
     this.nodes.get(cotonoma.nodeId)
@@ -114,9 +117,8 @@ case class Domain(
   }
 
   lazy val pinnedCotos: Seq[(Link, Coto)] =
-    this.currentCotonoma.map(cotonoma =>
-      this.childrenOf(cotonoma.cotoId)
-    ).getOrElse(Seq.empty)
+    currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
+      .getOrElse(Seq.empty)
 
   def childrenOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
     this.links.linksFrom(cotoId).toSeq
