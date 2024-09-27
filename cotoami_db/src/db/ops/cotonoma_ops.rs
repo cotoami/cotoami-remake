@@ -114,6 +114,24 @@ pub(crate) fn get_by_ids<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn get_pairs_by_ids<Conn: AsReadableConn>(
+    ids: Vec<Id<Cotonoma>>,
+) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> {
+    read_op(move |conn| {
+        let mut map: HashMap<Id<Cotonoma>, (Cotonoma, Coto)> = cotonomas::table
+            .inner_join(cotos::table)
+            .filter(cotonomas::uuid.eq_any(&ids))
+            .select((Cotonoma::as_select(), Coto::as_select()))
+            .load::<(Cotonoma, Coto)>(conn)?
+            .into_iter()
+            .map(|pair| (pair.0.uuid, pair))
+            .collect();
+        // Sort the results in order of the `ids` param.
+        let cotonomas = ids.iter().filter_map(|id| map.remove(id)).collect();
+        Ok(cotonomas)
+    })
+}
+
 pub(crate) fn get_by_coto_ids<Conn: AsReadableConn>(
     ids: Vec<Id<Coto>>,
 ) -> impl Operation<Conn, Vec<Cotonoma>> {
