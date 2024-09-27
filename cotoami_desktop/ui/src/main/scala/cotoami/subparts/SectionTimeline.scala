@@ -22,8 +22,10 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
-      fetchNumber: Int = 0, // to avoid rendering old results unintentionally
+      // to avoid rendering old results unintentionally
+      fetchNumber: Int = 0,
       query: String = "",
+      // to restore the scroll position when back to timeline
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
       imeActive: Boolean = false
