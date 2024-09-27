@@ -126,7 +126,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // Local root cotonoma
-        let Some((_, local_root_coto)) = self.root_cotonoma()? else {
+        let Some((_, local_root_coto)) = self.local_node_root()? else {
             return Ok(None);
         };
 

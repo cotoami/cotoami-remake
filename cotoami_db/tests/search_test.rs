@@ -10,7 +10,7 @@ fn search_cotos() -> Result<()> {
     let (_root_dir, db, _node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
     let opr = db.globals().local_node_as_operator()?;
-    let (root, _) = ds.root_cotonoma()?.unwrap();
+    let (root, _) = ds.local_node_root()?.unwrap();
 
     // when
     let (coto1, _) = ds.post_coto(&CotoInput::new("Hello, world!"), &root, &opr)?;

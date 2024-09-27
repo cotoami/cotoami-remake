@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     let node = ds.local_node()?;
     println!("Node name: {}", node.name);
     let (_, root_coto) = ds
-        .root_cotonoma()?
+        .local_node_root()?
         .ok_or(anyhow!("The root cotonoma is required."))?;
 
     test_traversal(&mut ds, &root_coto, &args)?;

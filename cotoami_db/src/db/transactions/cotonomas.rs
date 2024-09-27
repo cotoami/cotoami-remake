@@ -13,7 +13,7 @@ use crate::{
 };
 
 impl<'a> DatabaseSession<'a> {
-    pub fn root_cotonoma(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
+    pub fn local_node_root(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
         if let Some(id) = self.globals.root_cotonoma_id() {
             self.cotonoma(&id)
         } else {

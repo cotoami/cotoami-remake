@@ -15,7 +15,7 @@ fn graph() -> Result<()> {
     let (_root_dir, db, _node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
     let opr = db.globals().local_node_as_operator()?;
-    let (root, root_coto) = ds.root_cotonoma()?.unwrap();
+    let (root, root_coto) = ds.local_node_root()?.unwrap();
 
     let connect = {
         let ds = db.new_session()?;
