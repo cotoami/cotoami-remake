@@ -29,34 +29,34 @@ object NavCotonomas {
   ) {
     def fetchRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
       (
-        this.copy(loadingRecent = true),
+        copy(loadingRecent = true),
         context.domain.fetchRecentCotonomas(0)
           .map(Msg.toApp(Msg.RecentFetched))
       )
 
     def fetchMoreRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (this.loadingRecent)
+      if (loadingRecent)
         (this, Cmd.none)
       else
         (
-          this.copy(loadingRecent = true),
+          copy(loadingRecent = true),
           context.domain.fetchMoreRecentCotonomas
             .map(Msg.toApp(Msg.RecentFetched))
         )
 
     def fetchSubs()(implicit context: Context): (Model, Cmd[AppMsg]) =
       (
-        this.copy(loadingSubs = true),
+        copy(loadingSubs = true),
         context.domain.fetchSubCotonomas(0)
           .map(Msg.toApp(Msg.SubsFetched))
       )
 
     def fetchMoreSubs()(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (this.loadingSubs)
+      if (loadingSubs)
         (this, Cmd.none)
       else
         (
-          this.copy(loadingSubs = true),
+          copy(loadingSubs = true),
           context.domain.fetchMoreSubCotonomas
             .map(Msg.toApp(Msg.SubsFetched))
         )
