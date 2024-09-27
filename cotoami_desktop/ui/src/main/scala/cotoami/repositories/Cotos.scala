@@ -7,7 +7,10 @@ import cotoami.backend._
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,
-    focusedId: Option[Id[Coto]] = None
+
+    // Classified IDs
+    focusedId: Option[Id[Coto]] = None,
+    recentIds: PaginatedIds[Coto] = PaginatedIds()
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
@@ -66,6 +69,8 @@ case class Cotos(
     ).getOrElse(this)
 
   def unfocus: Cotos = this.copy(focusedId = None)
+
+  val recent: Seq[Coto] = this.recentIds.order.map(this.get).flatten
 
   lazy val geolocated: Seq[(Coto, Geolocation)] =
     this.map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
