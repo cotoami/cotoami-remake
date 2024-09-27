@@ -31,14 +31,14 @@ object ModalIncorporate {
       incorporatingError: Option[String] = None
   ) {
     def validateNodeUrl: Validation.Result =
-      if (this.nodeUrl.isBlank())
+      if (nodeUrl.isBlank())
         Validation.Result.notYetValidated
       else
-        Validation.Result(ServerNode.validateUrl(this.nodeUrl))
+        Validation.Result(ServerNode.validateUrl(nodeUrl))
 
-    def readyToConnect: Boolean = !this.connecting && validateNodeUrl.validated
+    def readyToConnect: Boolean = !connecting && validateNodeUrl.validated
 
-    def readyToIncorporate: Boolean = !this.connecting && !this.incorporating
+    def readyToIncorporate: Boolean = !connecting && !incorporating
   }
 
   sealed trait Msg {
@@ -277,7 +277,7 @@ object ModalIncorporate {
             )
           )
         ),
-        nodeSession.serverRootCotonoma.map { case (_, coto) =>
+        nodeSession.serverRoot.map { case (_, coto) =>
           ViewCoto.sectionNodeDescription(coto)
         }
       ),

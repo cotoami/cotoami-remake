@@ -54,7 +54,7 @@ pub struct Session {
 pub struct ClientNodeSession {
     pub session: Session,
     pub server: Node,
-    pub server_root_cotonoma: Option<(Cotonoma, Coto)>,
+    pub server_root: Option<(Cotonoma, Coto)>,
     pub as_child: Option<ChildNode>,
 }
 
