@@ -10,8 +10,9 @@ case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = json.last_change_number
 
   lazy val nodes: Map[Id[Node], Node] =
-    json.nodes.map(NodeBackend.toModel(_))
-      .map(node => (node.id, node))
+    json.nodes
+      .map(NodeBackend.toModel(_))
+      .map(node => node.id -> node)
       .toMap
 
   lazy val rootCotonomas: js.Array[(Cotonoma, Coto)] =
