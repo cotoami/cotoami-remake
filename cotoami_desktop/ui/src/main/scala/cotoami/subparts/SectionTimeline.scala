@@ -29,7 +29,7 @@ object SectionTimeline {
       imeActive: Boolean = false
   ) {
     def init: Model =
-      this.copy(
+      copy(
         cotoIds = PaginatedIds(),
         query = "",
         loading = false,
@@ -37,10 +37,10 @@ object SectionTimeline {
       )
 
     def saveScrollPos(key: Id[Cotonoma], pos: Double): Model =
-      this.copy(scrollPos = Some((key, pos)))
+      copy(scrollPos = Some((key, pos)))
 
     def getScrollPos(key: Id[Cotonoma]): Option[Double] =
-      this.scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
+      scrollPos.flatMap(pos => Option.when(pos._1 == key)(pos._2))
 
     def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
       this
@@ -49,7 +49,7 @@ object SectionTimeline {
         .modify(_.loading).setTo(false)
 
     def timeline()(implicit context: Context): Seq[Coto] = {
-      val rawTimeline = this.cotoIds.order.map(context.domain.cotos.get).flatten
+      val rawTimeline = cotoIds.order.map(context.domain.cotos.get).flatten
       context.domain.nodes.current.map(node =>
         rawTimeline.filter(_.nameAsCotonoma != Some(node.name))
       ).getOrElse(rawTimeline)
@@ -58,7 +58,7 @@ object SectionTimeline {
     def post(cotoId: Id[Coto]): Model =
       this
         .modify(_.cotoIds).using(cotoIds =>
-          if (this.query.isEmpty)
+          if (query.isEmpty)
             cotoIds.prependId(cotoId)
           else
             cotoIds
@@ -66,30 +66,30 @@ object SectionTimeline {
 
     def fetchFirst()(implicit context: Context): (Model, Cmd[AppMsg]) =
       (
-        this.copy(loading = true),
-        fetch(None, 0, this.fetchNumber + 1)
+        copy(loading = true),
+        fetch(None, 0, fetchNumber + 1)
       )
 
     def fetchMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (this.loading)
+      if (loading)
         (this, Cmd.none)
       else
-        this.cotoIds.nextPageIndex.map(i =>
+        cotoIds.nextPageIndex.map(i =>
           (
-            this.copy(loading = true),
-            fetch(Some(this.query), i, this.fetchNumber + 1)
+            copy(loading = true),
+            fetch(Some(query), i, fetchNumber + 1)
           )
         ).getOrElse((this, Cmd.none)) // no more
 
     def inputQuery(
         query: String
     )(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (this.imeActive)
-        (this.copy(query = query), Cmd.none)
+      if (imeActive)
+        (copy(query = query), Cmd.none)
       else
         (
-          this.copy(query = query, loading = true),
-          fetch(Some(query), 0, this.fetchNumber + 1)
+          copy(query = query, loading = true),
+          fetch(Some(query), 0, fetchNumber + 1)
         )
   }
 
