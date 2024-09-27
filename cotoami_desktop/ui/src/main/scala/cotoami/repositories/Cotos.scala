@@ -10,7 +10,7 @@ case class Cotos(
 
     // Classified IDs
     focusedId: Option[Id[Coto]] = None,
-    recentIds: PaginatedIds[Coto] = PaginatedIds()
+    timelineIds: PaginatedIds[Coto] = PaginatedIds()
 ) {
   def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
 
@@ -70,7 +70,7 @@ case class Cotos(
 
   def unfocus: Cotos = this.copy(focusedId = None)
 
-  val recent: Seq[Coto] = this.recentIds.order.map(this.get).flatten
+  val timeline: Seq[Coto] = this.timelineIds.order.map(this.get).flatten
 
   lazy val geolocated: Seq[(Coto, Geolocation)] =
     this.map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
