@@ -78,9 +78,7 @@ case class Domain(
       .getOrElse(false)
 
   def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
-    this.nodes.get(nodeId)
-      .flatMap(node => node.rootCotonomaId.flatMap(this.cotonomas.get))
-      .flatMap(cotonoma => this.cotos.get(cotonoma.cotoId).map(cotonoma -> _))
+    this.nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonomaPair))
 
   /////////////////////////////////////////////////////////////////////////////
   // Current cotonoma
@@ -99,6 +97,11 @@ case class Domain(
   /////////////////////////////////////////////////////////////////////////////
   // Other queries
   /////////////////////////////////////////////////////////////////////////////
+
+  def cotonomaPair(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
+    this.cotonomas.get(id).flatMap(cotonoma =>
+      this.cotos.get(cotonoma.cotoId).map(cotonoma -> _)
+    )
 
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     val rootId = this.currentNodeRootCotonomaId
