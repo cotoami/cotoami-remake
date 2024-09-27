@@ -44,6 +44,16 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Node>> {
     })
 }
 
+pub(crate) fn root_cotonoma_ids<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Id<Cotonoma>>> {
+    read_op(move |conn| {
+        let ids = nodes::table
+            .filter(nodes::root_cotonoma_id.is_not_null())
+            .select(nodes::root_cotonoma_id)
+            .load::<Option<Id<Cotonoma>>>(conn)?;
+        Ok(ids.into_iter().flatten().collect())
+    })
+}
+
 pub(crate) fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Node> + 'a {
     write_op(move |conn| {
         diesel::insert_into(nodes::table)
