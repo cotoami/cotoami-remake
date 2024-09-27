@@ -9,12 +9,12 @@ case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,
     focusedId: Option[Id[Coto]] = None
 ) {
-  def get(id: Id[Coto]): Option[Coto] = this.map.get(id)
+  def get(id: Id[Coto]): Option[Coto] = map.get(id)
 
   def getOriginal(coto: Coto): Coto =
-    coto.repostOfId.flatMap(this.get).getOrElse(coto)
+    coto.repostOfId.flatMap(get).getOrElse(coto)
 
-  def contains(id: Id[Coto]): Boolean = this.map.contains(id)
+  def contains(id: Id[Coto]): Boolean = map.contains(id)
 
   def put(coto: Coto): Cotos =
     this.modify(_.map).using { map =>
@@ -55,18 +55,18 @@ case class Cotos(
       .putAll(graph.cotosRelatedData.originals)
 
   def isFocusing(id: Id[Coto]): Boolean =
-    this.focusedId.map(_ == id).getOrElse(false)
+    focusedId.map(_ == id).getOrElse(false)
 
-  def focused: Option[Coto] = this.focusedId.flatMap(this.get)
+  def focused: Option[Coto] = focusedId.flatMap(get)
 
   def focus(id: Id[Coto]): Cotos =
-    this.get(id).map(coto =>
+    get(id).map(coto =>
       // It can't focus on a repost, but only on an original coto.
-      this.copy(focusedId = Some(this.getOriginal(coto).id))
+      copy(focusedId = Some(getOriginal(coto).id))
     ).getOrElse(this)
 
-  def unfocus: Cotos = this.copy(focusedId = None)
+  def unfocus: Cotos = copy(focusedId = None)
 
   lazy val geolocated: Seq[(Coto, Geolocation)] =
-    this.map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
+    map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
 }
