@@ -6,6 +6,9 @@ import org.scalajs.dom.Element
 import org.scalajs.dom.URL
 import org.scalajs.dom.Event
 
+import cats.effect.unsafe.implicits.global
+import cats.syntax.parallel._
+
 import slinky.web.ReactDOM
 
 class Runtime[Model, Msg](
@@ -19,7 +22,6 @@ class Runtime[Model, Msg](
   def dispatch(msg: Msg): Unit = apply(program.update(msg, state))
 
   def apply(change: (Model, Cmd[Msg])): Unit = {
-
     val (model, cmd) = change
     state = model
 
@@ -27,22 +29,37 @@ class Runtime[Model, Msg](
 
     // Run side effects
     cmd match {
-      case cmd: Cmd.Single[Msg] => runSingleCmd(cmd)
-      case Cmd.Batch(cmds @ _*) => for (cmd <- cmds) runSingleCmd(cmd)
+      case cmd: Cmd.Single[Msg]       => run(cmd)
+      case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) run(cmd)
+      case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)
     }
 
     updateSubs(state)
   }
 
-  def runSingleCmd(cmd: Cmd.Single[Msg]): Unit = {
-    import cats.effect.unsafe.implicits.global
+  private def run(cmd: Cmd.Single[Msg]): Unit = {
     cmd.io.unsafeRunAsync {
       case Right(optionMsg) => optionMsg.map(dispatch)
       case Left(e) => throw e // IO should return Right even when it fails
     }
   }
 
-  def updateSubs(model: Model): Unit = {
+  private def runSequence(batches: List[Cmd.Batch[Msg]]): Unit = {
+    batches match {
+      case Nil => ()
+      case head :: tail => {
+        head.cmds.map(_.io).parSequence.unsafeRunAsync {
+          case Right(optionMsgs) => {
+            optionMsgs.foreach(_.map(dispatch))
+            runSequence(tail)
+          }
+          case Left(e) => throw e // IO should return Right even when it fails
+        }
+      }
+    }
+  }
+
+  private def updateSubs(model: Model): Unit = {
     val nextSubs = Sub.toMap(program.subscriptions(model))
     val keysToAdd = nextSubs.keySet.diff(subs.keySet)
     val keysToRemove = subs.keySet.diff(nextSubs.keySet)
