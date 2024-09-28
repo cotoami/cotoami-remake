@@ -223,33 +223,35 @@ case class Domain(
 
   def fetchRecentCotonomas(
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
 
-  def fetchMoreRecentCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  def fetchMoreRecentCotonomas
+      : Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     cotonomas.recentIds.nextPageIndex
       .map(fetchRecentCotonomas)
       .getOrElse(Cmd.none)
 
   def fetchSubCotonomas(
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
-  def fetchMoreSubCotonomas: Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  def fetchMoreSubCotonomas
+      : Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     cotonomas.subIds.nextPageIndex
       .map(fetchSubCotonomas)
       .getOrElse(Cmd.none)
 
-  def fetchGraph: Cmd[AppMsg] =
+  def fetchGraph: Cmd.Single[AppMsg] =
     currentCotonomaId
       .map(Domain.fetchGraphFromCotonoma)
       .getOrElse(Cmd.none)
 
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
-  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd[AppMsg] =
+  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd.Single[AppMsg] =
     cotos.get(cotoId).map(coto => {
       if (childrenOf(cotoId).size < coto.outgoingLinks)
         Domain.fetchGraphFromCoto(cotoId)
@@ -304,36 +306,36 @@ object Domain {
         extends Msg
   }
 
-  def update(msg: Msg, model: Domain): (Domain, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
     msg match {
       case Msg.CotonomaFetched(Right(cotonomaPair)) =>
         (
           model.importFrom(cotonomaPair),
-          Seq(log_info("Cotonoma fetched.", Some(cotonomaPair._1.name)))
+          log_info("Cotonoma fetched.", Some(cotonomaPair._1.name))
         )
 
       case Msg.CotonomaFetched(Left(e)) =>
-        (model, Seq(ErrorJson.log(e, "Couldn't fetch a cotonoma.")))
+        (model, ErrorJson.log(e, "Couldn't fetch a cotonoma."))
 
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
           model.modify(_.graphLoading).using(_ + cotoId),
-          Seq(fetchGraphFromCoto(cotoId))
+          fetchGraphFromCoto(cotoId)
         )
 
       case Msg.CotoGraphFetched(Right(graph)) =>
         (
           model.importFrom(graph),
-          Seq(log_info("Coto graph fetched.", Some(graph.debug)))
+          log_info("Coto graph fetched.", Some(graph.debug))
         )
 
       case Msg.CotoGraphFetched(Left(e)) =>
-        (model, Seq(ErrorJson.log(e, "Couldn't fetch a coto graph.")))
+        (model, ErrorJson.log(e, "Couldn't fetch a coto graph."))
     }
 
-  def fetchGraphFromCoto(coto: Id[Coto]): Cmd[AppMsg] =
+  def fetchGraphFromCoto(coto: Id[Coto]): Cmd.Single[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))
 
-  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd[AppMsg] =
+  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.Single[AppMsg] =
     CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.toApp(Msg.CotoGraphFetched))
 }

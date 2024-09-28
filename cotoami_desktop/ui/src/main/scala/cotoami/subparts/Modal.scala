@@ -74,8 +74,7 @@ object Modal {
   }
 
   object Msg {
-    case class OpenModal(modal: Model, cmds: Seq[Cmd[AppMsg]] = Seq.empty)
-        extends Msg
+    case class OpenModal(modal: Model, cmd: Cmd[AppMsg] = Cmd.none) extends Msg
     case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
 
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
@@ -86,22 +85,22 @@ object Modal {
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
   }
 
-  def open(modal: Model): Cmd[AppMsg] =
+  def open(modal: Model): Cmd.Single[AppMsg] =
     Browser.send(Msg.OpenModal(modal).toApp)
 
-  def close[M <: Model](modalType: Class[M]): Cmd[AppMsg] =
+  def close[M <: Model](modalType: Class[M]): Cmd.Single[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
   def update(msg: Msg, model: AppModel)(implicit
       context: Context
-  ): (AppModel, Seq[Cmd[AppMsg]]) = {
+  ): (AppModel, Cmd[AppMsg]) = {
     val stack = model.modalStack
     (msg match {
-      case Msg.OpenModal(modal, cmds) =>
-        Some((model.modify(_.modalStack).using(_.open(modal)), cmds))
+      case Msg.OpenModal(modal, cmd) =>
+        Some((model.modify(_.modalStack).using(_.open(modal)), cmd))
 
       case Msg.CloseModal(modalType) =>
-        Some((model.modify(_.modalStack).using(_.close(modalType)), Seq.empty))
+        Some((model.modify(_.modalStack).using(_.close(modalType)), Cmd.none))
 
       case Msg.WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modalModel) =>
@@ -162,7 +161,7 @@ object Modal {
               )
           }
         }
-    }).getOrElse((model, Seq.empty))
+    }).getOrElse((model, Cmd.none))
   }
 
   def apply(

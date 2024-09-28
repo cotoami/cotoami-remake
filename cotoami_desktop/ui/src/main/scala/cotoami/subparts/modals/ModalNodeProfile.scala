@@ -32,8 +32,8 @@ object ModalNodeProfile {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
-    (model, context.domain, Seq.empty)
+  ): (Model, Domain, Cmd[AppMsg]) = {
+    (model, context.domain, Cmd.none)
   }
 
   def apply(model: Model)(implicit

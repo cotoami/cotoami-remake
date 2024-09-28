@@ -21,11 +21,13 @@ object GeolocatedCotos {
   def fetch(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]]
-  ): Cmd[Either[ErrorJson, GeolocatedCotos]] =
+  ): Cmd.Single[Either[ErrorJson, GeolocatedCotos]] =
     GeolocatedCotosJson.fetch(nodeId, cotonomaId)
       .map(_.map(GeolocatedCotos(_)))
 
-  def inGeoBounds(bounds: GeoBounds): Cmd[Either[ErrorJson, GeolocatedCotos]] =
+  def inGeoBounds(
+      bounds: GeoBounds
+  ): Cmd.Single[Either[ErrorJson, GeolocatedCotos]] =
     GeolocatedCotosJson.inGeoBounds(bounds)
       .map(_.map(GeolocatedCotos(_)))
 }
@@ -40,11 +42,11 @@ object GeolocatedCotosJson {
   def fetch(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]]
-  ): Cmd[Either[ErrorJson, GeolocatedCotosJson]] =
+  ): Cmd.Single[Either[ErrorJson, GeolocatedCotosJson]] =
     Commands.send(Commands.GeolocatedCotos(nodeId, cotonomaId))
 
   def inGeoBounds(
       bounds: GeoBounds
-  ): Cmd[Either[ErrorJson, GeolocatedCotosJson]] =
+  ): Cmd.Single[Either[ErrorJson, GeolocatedCotosJson]] =
     Commands.send(Commands.CotosInGeoBounds(bounds))
 }

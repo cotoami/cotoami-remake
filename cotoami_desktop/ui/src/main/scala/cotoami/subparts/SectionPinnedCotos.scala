@@ -30,29 +30,27 @@ object SectionPinnedCotos {
     case class ScrollToPinnedCoto(pin: Link) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.SwitchView(cotonoma, inColumns) =>
         model.uiState
           .map(_.setPinnedInColumns(cotonoma, inColumns) match {
-            case state => (model.copy(uiState = Some(state)), Seq(state.save))
+            case state => (model.copy(uiState = Some(state)), state.save)
           })
-          .getOrElse((model, Seq.empty))
+          .getOrElse((model, Cmd.none))
 
       case Msg.ScrollToPinnedCoto(pin) =>
         (
           model,
-          Seq(
-            Cmd(
-              IO {
-                dom.document.getElementById(elementIdOfPinnedCoto(pin)) match {
-                  case element: HTMLElement =>
-                    element.scrollIntoView(true)
-                  case _ => ()
-                }
-                None
+          Cmd(
+            IO {
+              dom.document.getElementById(elementIdOfPinnedCoto(pin)) match {
+                case element: HTMLElement =>
+                  element.scrollIntoView(true)
+                case _ => ()
               }
-            )
+              None
+            }
           )
         )
     }

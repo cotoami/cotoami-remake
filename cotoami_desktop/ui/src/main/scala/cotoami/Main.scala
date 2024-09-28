@@ -37,21 +37,21 @@ object Main {
   object DatabaseFolder {
     val SessionStorageKey = "DatabaseFolder"
 
-    def save(folder: String): Cmd[Msg] = Cmd(IO {
+    def save(folder: String): Cmd.Single[Msg] = Cmd(IO {
       dom.window.sessionStorage.setItem(SessionStorageKey, folder)
       None
     })
 
-    def restore: Cmd[Option[String]] = Cmd(IO {
+    def restore: Cmd.Single[Option[String]] = Cmd(IO {
       Some(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
     })
   }
 
-  def init(url: URL): (Model, Seq[Cmd[Msg]]) = {
+  def init(url: URL): (Model, Cmd[Msg]) = {
     val (flowInput, flowInputCmd) = FormCoto.init("flowInput", true)
     (
       Model(url = url, flowInput = flowInput),
-      Seq(
+      Cmd.Batch(
         UiState.restore(Msg.UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
@@ -63,7 +63,7 @@ object Main {
     )
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[Msg]]) = {
+  def update(msg: Msg, model: Model): (Model, Cmd[Msg]) = {
     if (LinkingInfo.developmentMode) {
       println(s"Main.update: ${msg.getClass()}")
     }
@@ -75,7 +75,7 @@ object Main {
       case Msg.AddLogEntry(level, message, details) =>
         (
           model.modify(_.log).using(_.log(level, message, details)),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.LogEvent(event) =>
@@ -83,7 +83,7 @@ object Main {
           model.modify(_.log).using(
             _.addEntry(LogEventJson.toLogEntry(event))
           ),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.BackendChange(log) =>
@@ -96,11 +96,11 @@ object Main {
           model
             .debug("BackendEvent received.", Some(js.JSON.stringify(event)))
             .handleLocalNodeEvent(event),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.ToggleLogView =>
-        (model.copy(logViewToggle = !model.logViewToggle), Seq.empty)
+        (model.copy(logViewToggle = !model.logViewToggle), Cmd.none)
 
       case Msg.SystemInfoFetched(Right(systemInfo)) =>
         (
@@ -116,20 +116,18 @@ object Main {
               "SystemInfo fetched.",
               Some(SystemInfoJson.debug(systemInfo))
             ),
-          Seq.empty
+          Cmd.none
         )
 
-      case Msg.SystemInfoFetched(Left(_)) => (model, Seq.empty)
+      case Msg.SystemInfoFetched(Left(_)) => (model, Cmd.none)
 
       case Msg.UiStateRestored(uiState) =>
         (
           model
             .modify(_.uiState).setTo(Some(uiState.getOrElse(UiState())))
             .info("UiState restored.", Some(uiState.toString())),
-          Seq(
-            Browser.setHtmlTheme(
-              uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
-            )
+          Browser.setHtmlTheme(
+            uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
           )
         )
 
@@ -137,21 +135,23 @@ object Main {
         update(Msg.SetDatabaseInfo(info), model)
 
       case Msg.DatabaseOpened(Left(e)) =>
-        (model.error(e.default_message, Some(e)), Seq())
+        (model.error(e.default_message, Some(e)), Cmd.none)
 
       case Msg.SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.domain).setTo(Domain(info.initialDataset, info.localNodeId))
-          .info("Database opened.", Some(info.debug)) match {
-          case model =>
-            applyUrlChange(model.url, model).modify(_._2).using(
-              Seq(
+          .info("Database opened.", Some(info.debug))
+          .pipe(model => applyUrlChange(model.url, model))
+          .pipe { case (model, cmd) =>
+            (
+              model,
+              Cmd.Batch(
                 DatabaseFolder.save(info.folder),
                 connectToServers()
-              ) ++ _
+              ) ++ cmd
             )
-        }
+          }
       }
 
       case Msg.ServerConnectionsInitialized(result) =>
@@ -162,7 +162,7 @@ object Main {
             case Left(e) =>
               model.error("Failed to initialize server connections.", Some(e))
           },
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.SetRemoteInitialDataset(dataset) =>
@@ -172,12 +172,13 @@ object Main {
               Domain(dataset, model.domain.nodes.localId.get)
             )
             .info("Remote dataset received.", Some(dataset.debug)),
-          Seq(Browser.pushUrl(Route.index.url(())))
+          Browser.pushUrl(Route.index.url(()))
         )
 
       case Msg.SetTheme(theme) =>
-        model.updateUiState(_.copy(theme = theme))
-          .modify(_._2).using(_ :+ Browser.setHtmlTheme(theme))
+        model.updateUiState(_.copy(theme = theme)).pipe { case (model, cmd) =>
+          (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
+        }
 
       case Msg.OpenOrClosePane(name, open) =>
         model.updateUiState(_.openOrClosePane(name, open))
@@ -186,14 +187,14 @@ object Main {
         model.updateUiState(_.resizePane(name, newSize))
 
       case Msg.FocusNode(id) =>
-        (model, Seq(Browser.pushUrl(Route.node.url(id))))
+        (model, Browser.pushUrl(Route.node.url(id)))
 
       case Msg.UnfocusNode => {
         val url = model.domain.cotonomas.focused match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
         }
-        (model, Seq(Browser.pushUrl(url)))
+        (model, Browser.pushUrl(url))
       }
 
       case Msg.FocusCotonoma(cotonoma) => {
@@ -209,25 +210,25 @@ object Main {
             else
               Route.cotonomaInNode.url((cotonoma.nodeId, cotonoma.id))
         }
-        (model, Seq(Browser.pushUrl(url)))
+        (model, Browser.pushUrl(url))
       }
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
         model
           .modify(_.domain).using(_.setCotonomaDetails(details))
           .pipe { model =>
-            (model, Seq(SectionGeomap.fetchInitialCotos(model)))
+            (model, SectionGeomap.fetchInitialCotos(model))
           }
 
       case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
-        (model.error("Couldn't fetch cotonoma details.", Some(e)), Seq.empty)
+        (model.error("Couldn't fetch cotonoma details.", Some(e)), Cmd.none)
 
       case Msg.UnfocusCotonoma => {
         val url = model.domain.nodes.focused match {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
         }
-        (model, Seq(Browser.pushUrl(url)))
+        (model, Browser.pushUrl(url))
       }
 
       case Msg.FocusCoto(id) =>
@@ -243,17 +244,15 @@ object Main {
           model
             .modify(_.domain.cotos).using(_.unfocus)
             .modify(_.geomap.focusedLocation).setTo(None),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.ReloadDomain => {
         (
           model.copy(domain = Domain()),
-          Seq(
-            model.databaseFolder.map(
-              DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened)
-            ).getOrElse(Cmd.none)
-          )
+          model.databaseFolder.map(
+            DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened)
+          ).getOrElse(Cmd.none)
         )
       }
 
@@ -274,7 +273,7 @@ object Main {
         }
 
       case Msg.UnfocusGeolocation =>
-        (model.modify(_.geomap).using(_.unfocus), Seq.empty)
+        (model.modify(_.geomap).using(_.unfocus), Cmd.none)
 
       case Msg.DisplayGeolocationInFocus =>
         model.domain.geolocationInFocus match {
@@ -285,7 +284,7 @@ object Main {
                 cmds
               )
             }
-          case None => (model, Seq.empty)
+          case None => (model, Cmd.none)
         }
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
@@ -301,7 +300,7 @@ object Main {
       }
 
       case Msg.FlowInputMsg(submsg) => {
-        val (flowInput, geomap, waitingPosts, log, subcmds) = FormCoto.update(
+        val (flowInput, geomap, waitingPosts, log, subcmd) = FormCoto.update(
           submsg,
           model.flowInput,
           model.geomap,
@@ -314,7 +313,7 @@ object Main {
             waitingPosts = waitingPosts,
             log = log
           ),
-          subcmds.map(_.map(Msg.FlowInputMsg))
+          subcmd.map(Msg.FlowInputMsg)
         )
       }
 
@@ -328,19 +327,19 @@ object Main {
         SectionPinnedCotos.update(submsg, model)
 
       case Msg.SectionTraversalsMsg(submsg) => {
-        val (traversals, cmds) =
+        val (traversals, cmd) =
           SectionTraversals.update(submsg, model.traversals)
-        (model.copy(traversals = traversals), cmds)
+        (model.copy(traversals = traversals), cmd)
       }
 
       case Msg.SectionGeomapMsg(submsg) => {
-        val (geomap, domain, cmds) = SectionGeomap.update(submsg, model.geomap)
-        (model.copy(geomap = geomap, domain = domain), cmds)
+        val (geomap, domain, cmd) = SectionGeomap.update(submsg, model.geomap)
+        (model.copy(geomap = geomap, domain = domain), cmd)
       }
     }
   }
 
-  def applyUrlChange(url: URL, model: Model): (Model, Seq[Cmd[Msg]]) =
+  def applyUrlChange(url: URL, model: Model): (Model, Cmd.Batch[Msg]) =
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
         model.focusNode(None)
@@ -351,7 +350,7 @@ object Main {
         else
           (
             model.warn(s"Node [${id}] not found.", None),
-            Seq(Browser.pushUrl(Route.index.url(())))
+            Cmd.Batch(Browser.pushUrl(Route.index.url(())))
           )
 
       case Route.cotonoma(id) =>
@@ -361,10 +360,10 @@ object Main {
         model.focusCotonoma(Some(nodeId), cotonomaId)
 
       case _ =>
-        (model, Seq(Browser.pushUrl(Route.index.url(()))))
+        (model, Cmd.Batch(Browser.pushUrl(Route.index.url(()))))
     }
 
-  private def connectToServers(): Cmd[Msg] =
+  private def connectToServers(): Cmd.Single[Msg] =
     tauri.invokeCommand("connect_to_servers").map(
       Msg.ServerConnectionsInitialized
     )

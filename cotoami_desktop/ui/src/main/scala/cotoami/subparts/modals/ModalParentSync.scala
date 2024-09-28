@@ -23,12 +23,12 @@ object ModalParentSync {
     case object Close extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.Close =>
         (
           model,
-          Seq(
+          Cmd.Batch(
             Modal.close(classOf[Modal.ParentSync]),
             Browser.send(AppMsg.ReloadDomain)
           )

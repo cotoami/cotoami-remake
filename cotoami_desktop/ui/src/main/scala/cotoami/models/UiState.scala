@@ -64,7 +64,7 @@ case class UiState(
 
   def mapOpened: Boolean = this.geomapOpened
 
-  def save: Cmd[Msg] =
+  def save: Cmd.Single[Msg] =
     Cmd(IO {
       dom.window.localStorage
         .setItem(UiState.StorageKey, this.asJson.toString())
@@ -81,7 +81,7 @@ object UiState {
   implicit val encoder: Encoder[UiState] = deriveEncoder
   implicit val decoder: Decoder[UiState] = deriveDecoder
 
-  def restore(createMsg: Option[UiState] => Msg): Cmd[Msg] =
+  def restore(createMsg: Option[UiState] => Msg): Cmd.Single[Msg] =
     Cmd(IO {
       val value = dom.window.localStorage.getItem(StorageKey)
       val msg = if (value != null) {

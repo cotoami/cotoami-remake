@@ -67,9 +67,9 @@ object ModalIncorporate {
       model: Model
   )(implicit
       context: Context
-  ): (Model, Nodes, Seq[Cmd[AppMsg]]) = {
+  ): (Model, Nodes, Cmd[AppMsg]) = {
     val nodes = context.domain.nodes
-    val default = (model, nodes, Seq.empty)
+    val default = (model, nodes, Cmd.none)
     msg match {
       case Msg.HelpIntro(display) =>
         default.copy(_1 = model.copy(helpIntro = display))
@@ -86,10 +86,8 @@ object ModalIncorporate {
       case Msg.Connect =>
         default.copy(
           _1 = model.copy(connecting = true, connectingError = None),
-          _3 = Seq(
-            ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
-              .map(Msg.toApp(Msg.NodeConnected(_)))
-          )
+          _3 = ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
+            .map(Msg.toApp(Msg.NodeConnected(_)))
         )
 
       case Msg.NodeConnected(Right(session)) => {
@@ -118,9 +116,7 @@ object ModalIncorporate {
             connecting = false,
             connectingError = Some(e.default_message)
           ),
-          _3 = Seq(
-            log_error("Node connecting error.", Some(js.JSON.stringify(e)))
-          )
+          _3 = log_error("Node connecting error.", Some(js.JSON.stringify(e)))
         )
 
       case Msg.Cancel =>
@@ -136,10 +132,8 @@ object ModalIncorporate {
       case Msg.Incorporate =>
         default.copy(
           _1 = model.copy(incorporating = true, incorporatingError = None),
-          _3 = Seq(
-            ServerBackend.addServer(model.nodeUrl, model.password)
-              .map(Msg.toApp(Msg.NodeIncorporated(_)))
-          )
+          _3 = ServerBackend.addServer(model.nodeUrl, model.password)
+            .map(Msg.toApp(Msg.NodeIncorporated(_)))
         )
 
       case Msg.NodeIncorporated(Right(server)) => {
@@ -147,7 +141,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(incorporating = false, incorporatingError = None),
           _2 = nodes.addServer(server),
-          _3 = Seq(Modal.close(classOf[Modal.Incorporate]))
+          _3 = Modal.close(classOf[Modal.Incorporate])
         )
       }
 
@@ -157,9 +151,8 @@ object ModalIncorporate {
             incorporating = false,
             incorporatingError = Some(e.default_message)
           ),
-          _3 = Seq(
+          _3 =
             log_error("Node incorporating error.", Some(js.JSON.stringify(e)))
-          )
         )
     }
   }

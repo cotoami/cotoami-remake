@@ -72,17 +72,17 @@ case class Model(
       traversals = SectionTraversals.Model()
     )
 
-  def updateUiState(update: UiState => UiState): (Model, Seq[Cmd[Msg]]) =
+  def updateUiState(update: UiState => UiState): (Model, Cmd.Single[Msg]) =
     uiState
       .map(update(_) match {
-        case state => (copy(uiState = Some(state)), Seq(state.save))
+        case state => (copy(uiState = Some(state)), state.save)
       })
-      .getOrElse((this, Seq.empty))
+      .getOrElse((this, Cmd.none))
 
   def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
     copy(modalStack = modalStack.update(newState))
 
-  def focusNode(nodeId: Option[Id[Node]]): (Model, Seq[Cmd[Msg]]) =
+  def focusNode(nodeId: Option[Id[Node]]): (Model, Cmd.Batch[Msg]) =
     this
       .modify(_.domain).using(_.unfocus())
       .modify(_.domain.nodes).using(_.focus(nodeId))
@@ -92,7 +92,7 @@ case class Model(
         val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
         (
           model.copy(navCotonomas = navCotonomas, timeline = timeline),
-          Seq(
+          Cmd.Batch(
             fetchRecentCotonomas,
             fetchTimeline,
             model.domain.fetchGraph,
@@ -104,7 +104,7 @@ case class Model(
   def focusCotonoma(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
-  ): (Model, Seq[Cmd[Msg]]) = {
+  ): (Model, Cmd.Batch[Msg]) = {
     val shouldFetchCotonomas =
       // the focused node is changed
       nodeId != domain.nodes.focusedId ||
@@ -127,7 +127,7 @@ case class Model(
         val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
         (
           model.copy(timeline = timeline),
-          Seq(
+          Cmd.Batch(
             fetchFocusedCotonomaDetails.map(Msg.FocusedCotonomaDetailsFetched),
             fetchRecentCotonomas,
             fetchTimeline,
@@ -137,16 +137,16 @@ case class Model(
       }
   }
 
-  def focusCoto(cotoId: Id[Coto]): (Model, Seq[Cmd[Msg]]) = {
+  def focusCoto(cotoId: Id[Coto]): (Model, Cmd.Single[Msg]) = {
     val model = this.modify(_.domain.cotos).using(_.focus(cotoId))
     model.domain.cotos.focused.map(coto =>
       (
         coto.geolocation.map(location =>
           model.modify(_.geomap).using(_.focus(location))
         ).getOrElse(model),
-        Seq(domain.lazyFetchGraphFromCoto(cotoId))
+        domain.lazyFetchGraphFromCoto(cotoId)
       )
-    ).getOrElse(model, Seq.empty) // The coto is not found.
+    ).getOrElse((model, Cmd.none)) // The coto is not found.
   }
 
   override def focusedLocation: Option[Geolocation] = geomap.focusedLocation
@@ -188,7 +188,7 @@ case class Model(
     this
   }
 
-  def importChangelog(log: ChangelogEntryJson): (Model, Seq[Cmd[Msg]]) = {
+  def importChangelog(log: ChangelogEntryJson): (Model, Cmd[Msg]) = {
     val expectedNumber = domain.lastChangeNumber + 1
     if (log.serial_number == expectedNumber)
       this
@@ -200,11 +200,11 @@ case class Model(
           s"Unexpected change number (expected: ${expectedNumber})",
           Some(log.serial_number.toString())
         ),
-        Seq(Browser.send(Msg.ReloadDomain))
+        Browser.send(Msg.ReloadDomain)
       )
   }
 
-  private def applyChange(change: ChangeJson): (Model, Seq[Cmd[Msg]]) = {
+  private def applyChange(change: ChangeJson): (Model, Cmd[Msg]) = {
     // Handle changes in order of assumed their frequency:
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
@@ -219,13 +219,13 @@ case class Model(
     // CreateLink
     for (linkJson <- change.CreateLink.toOption) {
       val link = LinkBackend.toModel(linkJson)
-      return (this.modify(_.domain.links).using(_.put(link)), Seq.empty)
+      return (this.modify(_.domain.links).using(_.put(link)), Cmd.none)
     }
 
     // UpsertNode
     for (nodeJson <- change.UpsertNode.toOption) {
       val node = NodeBackend.toModel(nodeJson)
-      return (this.modify(_.domain.nodes).using(_.put(node)), Seq.empty)
+      return (this.modify(_.domain.nodes).using(_.put(node)), Cmd.none)
     }
 
     // CreateNode
@@ -236,7 +236,7 @@ case class Model(
         )
       return Nullable.toOption(createNodeJson.root)
         .map(model.postCotonoma(_))
-        .getOrElse((model, Seq.empty))
+        .getOrElse((model, Cmd.none))
     }
 
     // SetNodeIcon
@@ -247,14 +247,14 @@ case class Model(
             _.setIcon(Id(setNodeIconJson.node_id), setNodeIconJson.icon)
           )
           .modify(_.geomap).using(_.refreshMarkers),
-        Seq.empty
+        Cmd.none
       )
     }
 
-    (this, Seq.empty)
+    (this, Cmd.none)
   }
 
-  private def postCoto(cotoJson: CotoJson): (Model, Seq[Cmd[Msg]]) = {
+  private def postCoto(cotoJson: CotoJson): (Model, Cmd.Single[Msg]) = {
     val coto = CotoBackend.toModel(cotoJson, true)
     val cotos = domain.cotos.put(coto)
     val (cotonomas, fetchCotonoma) =
@@ -285,13 +285,13 @@ case class Model(
         .modify(_.domain.cotonomas).setTo(cotonomas)
         .modify(_.timeline).setTo(timeline)
         .modify(_.geomap).setTo(geomap),
-      Seq(fetchCotonoma)
+      fetchCotonoma
     )
   }
 
   private def postCotonoma(
       jsonPair: (CotonomaJson, CotoJson)
-  ): (Model, Seq[Cmd[Msg]]) = {
+  ): (Model, Cmd.Single[Msg]) = {
     val cotonoma = CotonomaBackend.toModel(jsonPair._1)
     val coto = CotoBackend.toModel(jsonPair._2)
     this

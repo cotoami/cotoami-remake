@@ -25,7 +25,7 @@ case class CotonomaDetails(json: CotonomaDetailsJson) {
 }
 
 object CotonomaDetails {
-  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, CotonomaDetails]] =
+  def fetch(id: Id[Cotonoma]): Cmd.Single[Either[ErrorJson, CotonomaDetails]] =
     CotonomaDetailsJson.fetch(id).map(_.map(CotonomaDetails(_)))
 }
 
@@ -38,6 +38,8 @@ trait CotonomaDetailsJson extends js.Object {
 }
 
 object CotonomaDetailsJson {
-  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, CotonomaDetailsJson]] =
+  def fetch(
+      id: Id[Cotonoma]
+  ): Cmd.Single[Either[ErrorJson, CotonomaDetailsJson]] =
     Commands.send(Commands.CotonomaDetails(id))
 }

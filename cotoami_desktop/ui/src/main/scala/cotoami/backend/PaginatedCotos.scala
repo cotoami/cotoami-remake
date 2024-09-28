@@ -26,7 +26,7 @@ object PaginatedCotos {
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, PaginatedCotos]] =
+  ): Cmd.Single[Either[ErrorJson, PaginatedCotos]] =
     PaginatedCotosJson.fetchRecent(nodeId, cotonomaId, pageIndex)
       .map(_.map(PaginatedCotos(_)))
 
@@ -35,7 +35,7 @@ object PaginatedCotos {
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, PaginatedCotos]] =
+  ): Cmd.Single[Either[ErrorJson, PaginatedCotos]] =
     PaginatedCotosJson.search(query, nodeId, cotonomaId, pageIndex)
       .map(_.map(PaginatedCotos(_)))
 }
@@ -52,7 +52,7 @@ object PaginatedCotosJson {
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, PaginatedCotosJson]] =
+  ): Cmd.Single[Either[ErrorJson, PaginatedCotosJson]] =
     Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
 
   def search(
@@ -60,6 +60,6 @@ object PaginatedCotosJson {
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, PaginatedCotosJson]] =
+  ): Cmd.Single[Either[ErrorJson, PaginatedCotosJson]] =
     Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
 }

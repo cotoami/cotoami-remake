@@ -18,7 +18,7 @@ object ServerJson {
       url: String,
       password: String,
       clientRole: Option[String] = None
-  ): Cmd[Either[ErrorJson, ServerJson]] =
+  ): Cmd.Single[Either[ErrorJson, ServerJson]] =
     Commands.send(Commands.AddServer(url, password, clientRole))
 }
 
@@ -35,7 +35,7 @@ object ServerBackend {
       url: String,
       password: String,
       clientRole: Option[String] = None
-  ): Cmd[Either[ErrorJson, Server]] =
+  ): Cmd.Single[Either[ErrorJson, Server]] =
     ServerJson.addServer(url, password, clientRole)
       .map(_.map(toModel(_)))
 }
@@ -53,7 +53,7 @@ object ServerNodeJson {
       id: Id[Node],
       disabled: Option[Boolean],
       url: Option[String]
-  ): Cmd[Either[ErrorJson, ServerNodeJson]] =
+  ): Cmd.Single[Either[ErrorJson, ServerNodeJson]] =
     Commands.send(Commands.UpdateServer(id, disabled, url))
 }
 
@@ -70,7 +70,7 @@ object ServerNodeBackend {
       id: Id[Node],
       disabled: Option[Boolean],
       url: Option[String]
-  ): Cmd[Either[ErrorJson, ServerNode]] =
+  ): Cmd.Single[Either[ErrorJson, ServerNode]] =
     ServerNodeJson.update(id, disabled, url)
       .map(_.map(toModel(_)))
 }

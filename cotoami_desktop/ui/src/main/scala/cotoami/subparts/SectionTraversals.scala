@@ -100,12 +100,12 @@ object SectionTraversals {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Seq[Cmd[AppMsg]]) =
+  ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.OpenTraversal(start) =>
         (
           model.openTraversal(start),
-          Seq(
+          Cmd.Batch(
             Browser.send(
               AppMsg.OpenOrClosePane(PaneStock.PaneName, true)
             ),
@@ -130,13 +130,13 @@ object SectionTraversals {
         )
 
       case Msg.CloseTraversal(traversalIndex) =>
-        (model.closeTraversal(traversalIndex), Seq.empty)
+        (model.closeTraversal(traversalIndex), Cmd.none)
 
       case Msg.Step(traversalIndex, stepIndex, step) =>
         (
           model.step(traversalIndex, stepIndex, step),
           // scroll to the new step
-          Seq(
+          Cmd.Batch(
             Cmd(IO.async { cb =>
               IO {
                 js.timers.setTimeout(10) {
@@ -159,7 +159,7 @@ object SectionTraversals {
       case Msg.StepToParent(traversalIndex, parentId) =>
         (
           model.stepToParent(traversalIndex, parentId, context.domain.links),
-          Seq.empty
+          Cmd.none
         )
     }
 

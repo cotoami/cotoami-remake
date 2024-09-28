@@ -18,22 +18,28 @@ class Runtime[Model, Msg](
 
   def dispatch(msg: Msg): Unit = apply(program.update(msg, state))
 
-  def apply(change: (Model, Seq[Cmd[Msg]])): Unit = {
-    import cats.effect.unsafe.implicits.global
+  def apply(change: (Model, Cmd[Msg])): Unit = {
 
-    val (model, cmds) = change
+    val (model, cmd) = change
     state = model
 
     ReactDOM.render(program.view(model, dispatch), container)
 
     // Run side effects
-    for (cmd <- cmds) {
-      cmd.io.unsafeRunAsync {
-        case Right(optionMsg) => optionMsg.map(dispatch)
-        case Left(e) => throw e // IO should return Right even when it fails
-      }
+    cmd match {
+      case cmd: Cmd.Single[Msg] => runSingleCmd(cmd)
+      case Cmd.Batch(cmds @ _*) => for (cmd <- cmds) runSingleCmd(cmd)
     }
+
     updateSubs(state)
+  }
+
+  def runSingleCmd(cmd: Cmd.Single[Msg]): Unit = {
+    import cats.effect.unsafe.implicits.global
+    cmd.io.unsafeRunAsync {
+      case Right(optionMsg) => optionMsg.map(dispatch)
+      case Left(e) => throw e // IO should return Right even when it fails
+    }
   }
 
   def updateSubs(model: Model): Unit = {
