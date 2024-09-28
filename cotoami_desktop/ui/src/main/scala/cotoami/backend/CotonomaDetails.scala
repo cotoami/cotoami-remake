@@ -6,20 +6,20 @@ import fui.Cmd
 import cotoami.models.{Coto, Cotonoma, Id}
 
 case class CotonomaDetails(json: CotonomaDetailsJson) {
-  def cotonoma: Cotonoma = CotonomaBackend.toModel(this.json.cotonoma)
-  def coto: Coto = CotoBackend.toModel(this.json.coto)
+  def cotonoma: Cotonoma = CotonomaBackend.toModel(json.cotonoma)
+  def coto: Coto = CotoBackend.toModel(json.coto)
   def supers: js.Array[Cotonoma] =
-    this.json.supers.map(CotonomaBackend.toModel(_))
+    json.supers.map(CotonomaBackend.toModel(_))
   def subs: Paginated[Cotonoma, _] =
-    Paginated(this.json.subs, CotonomaBackend.toModel(_))
+    Paginated(json.subs, CotonomaBackend.toModel(_))
 
   def debug: String = {
     val s = new StringBuilder
-    s ++= s"id: ${this.cotonoma.id}"
-    s ++= s", cotoId: ${this.cotonoma.cotoId}"
-    s ++= s", name: ${this.cotonoma.name}"
-    s ++= s", supers: ${this.supers.size}"
-    s ++= s", subs: {${this.subs.debug}}"
+    s ++= s"id: ${cotonoma.id}"
+    s ++= s", cotoId: ${cotonoma.cotoId}"
+    s ++= s", name: ${cotonoma.name}"
+    s ++= s", supers: ${supers.size}"
+    s ++= s", subs: {${subs.debug}}"
     s.result()
   }
 }
