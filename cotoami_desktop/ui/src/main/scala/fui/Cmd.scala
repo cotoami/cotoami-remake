@@ -4,7 +4,7 @@ import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import cats.effect.IO
 
-sealed trait Cmd[+Msg] {
+sealed trait Cmd[+Msg] extends Any {
   def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg]
   def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg]
 }
@@ -14,7 +14,7 @@ object Cmd {
 
   def apply[Msg](io: IO[Option[Msg]]): One[Msg] = One(io)
 
-  case class One[+Msg](io: IO[Option[Msg]]) extends Cmd[Msg] {
+  case class One[+Msg](io: IO[Option[Msg]]) extends AnyVal with Cmd[Msg] {
     override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] = One(
       io.map(_.map(f))
     )
@@ -26,8 +26,10 @@ object Cmd {
       that match {
         case o: One[LubMsg]         => Batch(this, o)
         case Batch(cmds @ _*)       => Batch.fromSeq(this +: cmds)
-        case Sequence(batches @ _*) => Sequence.fromSeq(Batch(this) +: batches)
+        case Sequence(batches @ _*) => Sequence.fromSeq(toBatch +: batches)
       }
+
+    def toBatch: Batch[Msg] = Batch(this)
   }
 
   case class Batch[+Msg](cmds: One[Msg]*) extends Cmd[Msg] {
@@ -57,7 +59,7 @@ object Cmd {
 
     override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
       that match {
-        case o: One[LubMsg]         => Sequence.fromSeq(batches :+ Batch(o))
+        case o: One[LubMsg]         => Sequence.fromSeq(batches :+ o.toBatch)
         case b: Batch[LubMsg]       => Sequence.fromSeq(batches :+ b)
         case Sequence(batches @ _*) => Sequence.fromSeq(this.batches ++ batches)
       }
