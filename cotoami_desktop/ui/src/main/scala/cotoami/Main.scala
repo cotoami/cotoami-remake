@@ -339,7 +339,7 @@ object Main {
     }
   }
 
-  def applyUrlChange(url: URL, model: Model): (Model, Cmd.Batch[Msg]) =
+  def applyUrlChange(url: URL, model: Model): (Model, Cmd[Msg]) =
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
         model.focusNode(None)
@@ -350,7 +350,7 @@ object Main {
         else
           (
             model.warn(s"Node [${id}] not found.", None),
-            Cmd.Batch(Browser.pushUrl(Route.index.url(())))
+            Browser.pushUrl(Route.index.url(()))
           )
 
       case Route.cotonoma(id) =>
@@ -360,7 +360,7 @@ object Main {
         model.focusCotonoma(Some(nodeId), cotonomaId)
 
       case _ =>
-        (model, Cmd.Batch(Browser.pushUrl(Route.index.url(()))))
+        (model, Browser.pushUrl(Route.index.url(())))
     }
 
   private def connectToServers(): Cmd.One[Msg] =
