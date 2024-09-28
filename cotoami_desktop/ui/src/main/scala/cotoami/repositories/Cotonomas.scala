@@ -10,7 +10,6 @@ import cotoami.backend.{
   CotonomaBackend,
   CotonomaDetails,
   CotosRelatedData,
-  ErrorJson,
   Paginated,
   PaginatedIds
 }
@@ -49,7 +48,7 @@ case class Cotonomas(
       .putAll(data.asCotonomas)
 
   def importFrom(graph: CotoGraph): Cotonomas =
-    graph.rootCotonoma.map(this.put).getOrElse(this)
+    graph.rootCotonoma.map(put).getOrElse(this)
       .importFrom(graph.cotosRelatedData)
 
   def setCotonomaDetails(details: CotonomaDetails): Cotonomas = {
@@ -69,17 +68,15 @@ case class Cotonomas(
       None
 
   def focus(id: Option[Id[Cotonoma]]): Cotonomas =
-    if (id.map(this.contains(_)).getOrElse(true))
+    if (id.map(contains(_)).getOrElse(true))
       this.unfocus.copy(focusedId = id)
     else
       this
 
-  def focusAndFetch(
-      id: Id[Cotonoma]
-  ): (Cotonomas, Cmd.One[Either[ErrorJson, CotonomaDetails]]) =
+  def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Cmd.One[AppMsg]) =
     (
       this.unfocus.copy(focusedId = Some(id)),
-      CotonomaDetails.fetch(id)
+      CotonomaDetails.fetch(id).map(AppMsg.CotonomaDetailsFetched)
     )
 
   def unfocus: Cotonomas =

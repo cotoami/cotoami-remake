@@ -213,12 +213,12 @@ object Main {
         (model, Browser.pushUrl(url))
       }
 
-      case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
+      case Msg.CotonomaDetailsFetched(Right(details)) =>
         model.modify(_.domain).using(_.setCotonomaDetails(details)).pipe {
           model => (model, SectionGeomap.fetchInitialCotos(model))
         }
 
-      case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
+      case Msg.CotonomaDetailsFetched(Left(e)) =>
         (model.error("Couldn't fetch cotonoma details.", Some(e)), Cmd.none)
 
       case Msg.UnfocusCotonoma => {
