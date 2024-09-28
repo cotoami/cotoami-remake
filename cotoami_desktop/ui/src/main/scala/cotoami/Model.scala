@@ -82,7 +82,7 @@ case class Model(
   def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
     copy(modalStack = modalStack.update(newState))
 
-  def focusNode(nodeId: Option[Id[Node]]): (Model, Cmd.Batch[Msg]) =
+  def focusNode(nodeId: Option[Id[Node]]): (Model, Cmd[Msg]) =
     this
       .modify(_.domain).using(_.unfocus())
       .modify(_.domain.nodes).using(_.focus(nodeId))
@@ -104,7 +104,7 @@ case class Model(
   def focusCotonoma(
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma]
-  ): (Model, Cmd.Batch[Msg]) = {
+  ): (Model, Cmd[Msg]) = {
     val shouldFetchCotonomas =
       // the focused node is changed
       nodeId != domain.nodes.focusedId ||
@@ -128,7 +128,9 @@ case class Model(
         (
           model.copy(timeline = timeline),
           Cmd.Batch(
-            fetchFocusedCotonomaDetails.map(Msg.FocusedCotonomaDetailsFetched),
+            fetchFocusedCotonomaDetails.map(
+              Msg.FocusedCotonomaDetailsFetched
+            ),
             fetchRecentCotonomas,
             fetchTimeline,
             model.domain.fetchGraph

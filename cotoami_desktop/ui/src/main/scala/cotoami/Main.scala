@@ -214,11 +214,9 @@ object Main {
       }
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
-        model
-          .modify(_.domain).using(_.setCotonomaDetails(details))
-          .pipe { model =>
-            (model, SectionGeomap.fetchInitialCotos(model))
-          }
+        model.modify(_.domain).using(_.setCotonomaDetails(details)).pipe {
+          model => (model, SectionGeomap.fetchInitialCotos(model))
+        }
 
       case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
         (model.error("Couldn't fetch cotonoma details.", Some(e)), Cmd.none)
