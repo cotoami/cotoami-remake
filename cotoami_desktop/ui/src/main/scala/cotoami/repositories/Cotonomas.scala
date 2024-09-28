@@ -24,14 +24,14 @@ case class Cotonomas(
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
     recentIds: PaginatedIds[Cotonoma] = PaginatedIds()
 ) {
-  def get(id: Id[Cotonoma]): Option[Cotonoma] = this.map.get(id)
+  def get(id: Id[Cotonoma]): Option[Cotonoma] = map.get(id)
 
   def getByCotoId(id: Id[Coto]): Option[Cotonoma] =
-    this.mapByCotoId.get(id).flatMap(this.get)
+    mapByCotoId.get(id).flatMap(get)
 
-  def isEmpty: Boolean = this.map.isEmpty
+  def isEmpty: Boolean = map.isEmpty
 
-  def contains(id: Id[Cotonoma]): Boolean = this.map.contains(id)
+  def contains(id: Id[Cotonoma]): Boolean = map.contains(id)
 
   def put(cotonoma: Cotonoma): Cotonomas = {
     this
@@ -63,35 +63,35 @@ case class Cotonomas(
 
   def asCotonoma(coto: Coto): Option[Cotonoma] =
     if (coto.isCotonoma)
-      this.getByCotoId(coto.repostOfId.getOrElse(coto.id))
+      getByCotoId(coto.repostOfId.getOrElse(coto.id))
     else
       None
 
   def focus(id: Option[Id[Cotonoma]]): Cotonomas =
     if (id.map(contains(_)).getOrElse(true))
-      this.unfocus.copy(focusedId = id)
+      unfocus.copy(focusedId = id)
     else
       this
 
   def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Cmd.One[AppMsg]) =
     (
-      this.unfocus.copy(focusedId = Some(id)),
+      unfocus.copy(focusedId = Some(id)),
       CotonomaDetails.fetch(id).map(AppMsg.CotonomaDetailsFetched)
     )
 
   def unfocus: Cotonomas =
-    this.copy(focusedId = None, superIds = Seq.empty, subIds = PaginatedIds())
+    copy(focusedId = None, superIds = Seq.empty, subIds = PaginatedIds())
 
   def isFocusing(id: Id[Cotonoma]): Boolean =
-    this.focusedId.map(_ == id).getOrElse(false)
+    focusedId.map(_ == id).getOrElse(false)
 
-  def focused: Option[Cotonoma] = this.focusedId.flatMap(this.get)
+  def focused: Option[Cotonoma] = focusedId.flatMap(get)
 
-  val supers: Seq[Cotonoma] = this.superIds.map(this.get).flatten
+  val supers: Seq[Cotonoma] = superIds.map(get).flatten
 
-  val subs: Seq[Cotonoma] = this.subIds.order.map(this.get).flatten
+  val subs: Seq[Cotonoma] = subIds.order.map(get).flatten
 
-  val recent: Seq[Cotonoma] = this.recentIds.order.map(this.get).flatten
+  val recent: Seq[Cotonoma] = recentIds.order.map(get).flatten
 
   def appendPageOfSubs(page: Paginated[Cotonoma, _]): Cotonomas =
     this
@@ -108,7 +108,7 @@ case class Cotonomas(
       .put(cotonoma)
       .modify(_.recentIds).using(_.prependId(cotonoma.id))
       .modify(_.subIds).using(subIds =>
-        (cotonomaCoto.postedInId, this.focusedId) match {
+        (cotonomaCoto.postedInId, focusedId) match {
           case (Some(postedIn), Some(focused)) if postedIn == focused =>
             subIds.prependId(cotonoma.id)
           case _ => subIds
@@ -118,7 +118,7 @@ case class Cotonomas(
   def updated(id: Id[Cotonoma]): (Cotonomas, Cmd.One[AppMsg]) =
     (
       this.modify(_.recentIds).using(_.prependId(id)),
-      if (!this.contains(id))
+      if (!contains(id))
         CotonomaBackend.fetch(id)
           .map(Domain.Msg.toApp(Domain.Msg.CotonomaFetched))
       else
