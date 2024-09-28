@@ -74,7 +74,7 @@ object SectionGeomap {
     def refreshMarkers: Model =
       this.copy(_refreshMarkers = this._refreshMarkers + 1)
 
-    def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.Single[AppMsg]) =
+    def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
       if (this.initialCotosFetched && !this.fetchingCotosInBounds)
         (
           this.copy(fetchingCotosInBounds = true),
@@ -89,7 +89,7 @@ object SectionGeomap {
           Cmd.none
         )
 
-    def fetchCotosInCurrentBounds: (Model, Cmd.Single[AppMsg]) =
+    def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
       this.currentBounds match {
         case Some(currentBounds) => fetchCotosInBounds(currentBounds)
         case None                => (this, Cmd.none)
@@ -230,7 +230,7 @@ object SectionGeomap {
     }
   }
 
-  def fetchInitialCotos(context: Context): Cmd.Single[AppMsg] =
+  def fetchInitialCotos(context: Context): Cmd.One[AppMsg] =
     GeolocatedCotos.fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId

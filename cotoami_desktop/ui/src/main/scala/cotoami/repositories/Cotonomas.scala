@@ -76,7 +76,7 @@ case class Cotonomas(
 
   def focusAndFetch(
       id: Id[Cotonoma]
-  ): (Cotonomas, Cmd.Single[Either[ErrorJson, CotonomaDetails]]) =
+  ): (Cotonomas, Cmd.One[Either[ErrorJson, CotonomaDetails]]) =
     (
       this.unfocus.copy(focusedId = Some(id)),
       CotonomaDetails.fetch(id)
@@ -118,7 +118,7 @@ case class Cotonomas(
         }
       )
 
-  def updated(id: Id[Cotonoma]): (Cotonomas, Cmd.Single[AppMsg]) =
+  def updated(id: Id[Cotonoma]): (Cotonomas, Cmd.One[AppMsg]) =
     (
       this.modify(_.recentIds).using(_.prependId(id)),
       if (!this.contains(id))

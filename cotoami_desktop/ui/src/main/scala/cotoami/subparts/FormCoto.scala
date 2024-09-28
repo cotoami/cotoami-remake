@@ -35,7 +35,7 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 object FormCoto {
   final val StorageKeyPrefix = "FormCoto."
 
-  def init(id: String, autoSave: Boolean): (Model, Cmd.Single[Msg]) =
+  def init(id: String, autoSave: Boolean): (Model, Cmd.One[Msg]) =
     Model(id, autoSave = autoSave) match {
       case model => (model, model.restore)
     }
@@ -81,7 +81,7 @@ object FormCoto {
 
     def storageKey: String = StorageKeyPrefix + this.id
 
-    def save: Cmd.Single[Msg] =
+    def save: Cmd.One[Msg] =
       (this.autoSave, this.form) match {
         case (true, CotoForm(cotoInput, _, _, _)) =>
           Cmd(IO {
@@ -92,7 +92,7 @@ object FormCoto {
         case _ => Cmd.none
       }
 
-    def restore: Cmd.Single[Msg] =
+    def restore: Cmd.One[Msg] =
       (this.autoSave, this.form) match {
         case (true, form: CotoForm) =>
           restoreCoto.map(Msg.CotoRestored)
@@ -100,7 +100,7 @@ object FormCoto {
         case _ => Cmd.none
       }
 
-    private def restoreCoto: Cmd.Single[Option[String]] = Cmd(IO {
+    private def restoreCoto: Cmd.One[Option[String]] = Cmd(IO {
       Some(Option(dom.window.localStorage.getItem(this.storageKey)))
     })
   }
@@ -157,7 +157,7 @@ object FormCoto {
   ) extends Form {
     def name: String = this.nameInput.trim
 
-    def validate(nodeId: Id[Node]): (CotonomaForm, Cmd.Single[Msg]) = {
+    def validate(nodeId: Id[Node]): (CotonomaForm, Cmd.One[Msg]) = {
       val (validation, cmd) =
         if (this.name.isEmpty())
           (Validation.Result.notYetValidated, Cmd.none)
@@ -544,7 +544,7 @@ object FormCoto {
       mediaContent: Option[(String, String)],
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
-  ): Cmd.Single[Msg] =
+  ): Cmd.One[Msg] =
     CotoBackend.post(form.content, form.summary, mediaContent, location, postTo)
       .map(Msg.CotoPosted(postId, _))
 
@@ -553,7 +553,7 @@ object FormCoto {
       form: CotonomaForm,
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
-  ): Cmd.Single[Msg] =
+  ): Cmd.One[Msg] =
     CotonomaBackend.post(form.name, location, postTo)
       .map(Msg.CotonomaPosted(postId, _))
 

@@ -25,13 +25,13 @@ object DatabaseInfo {
       databaseName: String,
       baseFolder: String,
       folderName: String
-  ): Cmd.Single[Either[ErrorJson, DatabaseInfo]] =
+  ): Cmd.One[Either[ErrorJson, DatabaseInfo]] =
     DatabaseInfoJson.createDatabase(databaseName, baseFolder, folderName)
       .map(_.map(DatabaseInfo(_)))
 
   def openDatabase(
       folder: String
-  ): Cmd.Single[Either[ErrorJson, DatabaseInfo]] =
+  ): Cmd.One[Either[ErrorJson, DatabaseInfo]] =
     DatabaseInfoJson.openDatabase(folder).map(_.map(DatabaseInfo(_)))
 }
 
@@ -47,7 +47,7 @@ object DatabaseInfoJson {
       databaseName: String,
       baseFolder: String,
       folderName: String
-  ): Cmd.Single[Either[ErrorJson, DatabaseInfoJson]] =
+  ): Cmd.One[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
       .invokeCommand(
         "create_database",
@@ -61,7 +61,7 @@ object DatabaseInfoJson {
 
   def openDatabase(
       folder: String
-  ): Cmd.Single[Either[ErrorJson, DatabaseInfoJson]] =
+  ): Cmd.One[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
       .invokeCommand(
         "open_database",

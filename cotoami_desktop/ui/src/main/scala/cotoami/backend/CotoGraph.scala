@@ -26,12 +26,12 @@ case class CotoGraph(json: CotoGraphJson) {
 }
 
 object CotoGraph {
-  def fetchFromCoto(coto: Id[Coto]): Cmd.Single[Either[ErrorJson, CotoGraph]] =
+  def fetchFromCoto(coto: Id[Coto]): Cmd.One[Either[ErrorJson, CotoGraph]] =
     CotoGraphJson.fetchFromCoto(coto).map(_.map(CotoGraph(_)))
 
   def fetchFromCotonoma(
       cotonoma: Id[Cotonoma]
-  ): Cmd.Single[Either[ErrorJson, CotoGraph]] =
+  ): Cmd.One[Either[ErrorJson, CotoGraph]] =
     CotoGraphJson.fetchFromCotonoma(cotonoma).map(_.map(CotoGraph(_)))
 }
 
@@ -47,11 +47,11 @@ trait CotoGraphJson extends js.Object {
 object CotoGraphJson {
   def fetchFromCoto(
       coto: Id[Coto]
-  ): Cmd.Single[Either[ErrorJson, CotoGraphJson]] =
+  ): Cmd.One[Either[ErrorJson, CotoGraphJson]] =
     Commands.send(Commands.GraphFromCoto(coto))
 
   def fetchFromCotonoma(
       cotonoma: Id[Cotonoma]
-  ): Cmd.Single[Either[ErrorJson, CotoGraphJson]] =
+  ): Cmd.One[Either[ErrorJson, CotoGraphJson]] =
     Commands.send(Commands.GraphFromCotonoma(cotonoma))
 }

@@ -29,7 +29,7 @@ class Runtime[Model, Msg](
 
     // Run side effects
     cmd match {
-      case cmd: Cmd.Single[Msg]       => run(cmd)
+      case cmd: Cmd.One[Msg]          => run(cmd)
       case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) run(cmd)
       case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)
     }
@@ -37,7 +37,7 @@ class Runtime[Model, Msg](
     updateSubs(state)
   }
 
-  private def run(cmd: Cmd.Single[Msg]): Unit = {
+  private def run(cmd: Cmd.One[Msg]): Unit = {
     cmd.io.unsafeRunAsync {
       case Right(optionMsg) => optionMsg.map(dispatch)
       case Left(e) => throw e // IO should return Right even when it fails

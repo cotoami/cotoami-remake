@@ -14,7 +14,7 @@ case class NodeDetails(json: NodeDetailsJson) {
 }
 
 object NodeDetails {
-  def fetch(id: Id[Node]): Cmd.Single[Either[ErrorJson, NodeDetails]] =
+  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, NodeDetails]] =
     NodeDetailsJson.fetch(id).map(_.map(NodeDetails(_)))
 }
 
@@ -25,6 +25,6 @@ trait NodeDetailsJson extends js.Object {
 }
 
 object NodeDetailsJson {
-  def fetch(id: Id[Node]): Cmd.Single[Either[ErrorJson, NodeDetailsJson]] =
+  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, NodeDetailsJson]] =
     Commands.send(Commands.NodeDetails(id))
 }

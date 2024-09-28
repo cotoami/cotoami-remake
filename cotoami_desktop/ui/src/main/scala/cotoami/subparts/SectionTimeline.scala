@@ -65,13 +65,13 @@ object SectionTimeline {
             cotoIds
         )
 
-    def fetchFirst()(implicit context: Context): (Model, Cmd.Single[AppMsg]) =
+    def fetchFirst()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
         fetch(None, 0, fetchNumber + 1)
       )
 
-    def fetchMore()(implicit context: Context): (Model, Cmd.Single[AppMsg]) =
+    def fetchMore()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -172,7 +172,7 @@ object SectionTimeline {
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
-  )(implicit context: Context): Cmd.Single[AppMsg] =
+  )(implicit context: Context): Cmd.One[AppMsg] =
     fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId,
@@ -187,7 +187,7 @@ object SectionTimeline {
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
-  ): Cmd.Single[AppMsg] =
+  ): Cmd.One[AppMsg] =
     query.map(query =>
       if (query.isBlank())
         PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)

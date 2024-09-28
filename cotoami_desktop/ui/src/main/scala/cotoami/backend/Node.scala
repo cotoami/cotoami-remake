@@ -16,7 +16,7 @@ trait NodeJson extends js.Object {
 }
 
 object NodeJson {
-  def setLocalNodeIcon(icon: String): Cmd.Single[Either[ErrorJson, NodeJson]] =
+  def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, NodeJson]] =
     Commands.send(Commands.SetLocalNodeIcon(icon))
 }
 
@@ -31,6 +31,6 @@ object NodeBackend {
       createdAtUtcIso = json.created_at
     )
 
-  def setLocalNodeIcon(icon: String): Cmd.Single[Either[ErrorJson, Node]] =
+  def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, Node]] =
     NodeJson.setLocalNodeIcon(icon).map(_.map(toModel(_)))
 }

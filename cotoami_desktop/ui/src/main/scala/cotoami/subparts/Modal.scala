@@ -85,10 +85,10 @@ object Modal {
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
   }
 
-  def open(modal: Model): Cmd.Single[AppMsg] =
+  def open(modal: Model): Cmd.One[AppMsg] =
     Browser.send(Msg.OpenModal(modal).toApp)
 
-  def close[M <: Model](modalType: Class[M]): Cmd.Single[AppMsg] =
+  def close[M <: Model](modalType: Class[M]): Cmd.One[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
   def update(msg: Msg, model: AppModel)(implicit

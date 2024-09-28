@@ -37,12 +37,12 @@ object Main {
   object DatabaseFolder {
     val SessionStorageKey = "DatabaseFolder"
 
-    def save(folder: String): Cmd.Single[Msg] = Cmd(IO {
+    def save(folder: String): Cmd.One[Msg] = Cmd(IO {
       dom.window.sessionStorage.setItem(SessionStorageKey, folder)
       None
     })
 
-    def restore: Cmd.Single[Option[String]] = Cmd(IO {
+    def restore: Cmd.One[Option[String]] = Cmd(IO {
       Some(Option(dom.window.sessionStorage.getItem(SessionStorageKey)))
     })
   }
@@ -363,7 +363,7 @@ object Main {
         (model, Cmd.Batch(Browser.pushUrl(Route.index.url(()))))
     }
 
-  private def connectToServers(): Cmd.Single[Msg] =
+  private def connectToServers(): Cmd.One[Msg] =
     tauri.invokeCommand("connect_to_servers").map(
       Msg.ServerConnectionsInitialized
     )

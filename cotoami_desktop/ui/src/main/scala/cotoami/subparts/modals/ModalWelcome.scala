@@ -211,7 +211,7 @@ object ModalWelcome {
         )
     }
 
-  private def validateNewFolder(model: Model): Cmd.Single[AppMsg] =
+  private def validateNewFolder(model: Model): Cmd.One[AppMsg] =
     if (!model.baseFolder.isBlank && !model.folderName.isBlank)
       tauri
         .invokeCommand(
@@ -226,7 +226,7 @@ object ModalWelcome {
     else
       Cmd.none
 
-  private def validateDatabaseFolder(model: Model): Cmd.Single[AppMsg] =
+  private def validateDatabaseFolder(model: Model): Cmd.One[AppMsg] =
     if (!model.databaseFolder.isBlank)
       tauri
         .invokeCommand(

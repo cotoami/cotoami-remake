@@ -223,35 +223,35 @@ case class Domain(
 
   def fetchRecentCotonomas(
       pageIndex: Double
-  ): Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
 
   def fetchMoreRecentCotonomas
-      : Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+      : Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     cotonomas.recentIds.nextPageIndex
       .map(fetchRecentCotonomas)
       .getOrElse(Cmd.none)
 
   def fetchSubCotonomas(
       pageIndex: Double
-  ): Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
   def fetchMoreSubCotonomas
-      : Cmd.Single[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+      : Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     cotonomas.subIds.nextPageIndex
       .map(fetchSubCotonomas)
       .getOrElse(Cmd.none)
 
-  def fetchGraph: Cmd.Single[AppMsg] =
+  def fetchGraph: Cmd.One[AppMsg] =
     currentCotonomaId
       .map(Domain.fetchGraphFromCotonoma)
       .getOrElse(Cmd.none)
 
   // Fetch the graph from the given coto if it has outgoing links that
   // have not yet been loaded (the target cotos of them should also be loaded).
-  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd.Single[AppMsg] =
+  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd.One[AppMsg] =
     cotos.get(cotoId).map(coto => {
       if (childrenOf(cotoId).size < coto.outgoingLinks)
         Domain.fetchGraphFromCoto(cotoId)
@@ -333,9 +333,9 @@ object Domain {
         (model, ErrorJson.log(e, "Couldn't fetch a coto graph."))
     }
 
-  def fetchGraphFromCoto(coto: Id[Coto]): Cmd.Single[AppMsg] =
+  def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))
 
-  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.Single[AppMsg] =
+  def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.toApp(Msg.CotoGraphFetched))
 }

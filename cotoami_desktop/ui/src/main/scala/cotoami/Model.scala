@@ -72,7 +72,7 @@ case class Model(
       traversals = SectionTraversals.Model()
     )
 
-  def updateUiState(update: UiState => UiState): (Model, Cmd.Single[Msg]) =
+  def updateUiState(update: UiState => UiState): (Model, Cmd.One[Msg]) =
     uiState
       .map(update(_) match {
         case state => (copy(uiState = Some(state)), state.save)
@@ -137,7 +137,7 @@ case class Model(
       }
   }
 
-  def focusCoto(cotoId: Id[Coto]): (Model, Cmd.Single[Msg]) = {
+  def focusCoto(cotoId: Id[Coto]): (Model, Cmd.One[Msg]) = {
     val model = this.modify(_.domain.cotos).using(_.focus(cotoId))
     model.domain.cotos.focused.map(coto =>
       (
@@ -254,7 +254,7 @@ case class Model(
     (this, Cmd.none)
   }
 
-  private def postCoto(cotoJson: CotoJson): (Model, Cmd.Single[Msg]) = {
+  private def postCoto(cotoJson: CotoJson): (Model, Cmd.One[Msg]) = {
     val coto = CotoBackend.toModel(cotoJson, true)
     val cotos = domain.cotos.put(coto)
     val (cotonomas, fetchCotonoma) =
@@ -291,7 +291,7 @@ case class Model(
 
   private def postCotonoma(
       jsonPair: (CotonomaJson, CotoJson)
-  ): (Model, Cmd.Single[Msg]) = {
+  ): (Model, Cmd.One[Msg]) = {
     val cotonoma = CotonomaBackend.toModel(jsonPair._1)
     val coto = CotoBackend.toModel(jsonPair._2)
     this

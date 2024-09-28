@@ -27,7 +27,7 @@ object NavCotonomas {
       loadingSubs: Boolean = false,
       togglingSync: Boolean = false
   ) {
-    def fetchRecent()(implicit context: Context): (Model, Cmd.Single[AppMsg]) =
+    def fetchRecent()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingRecent = true),
         context.domain.fetchRecentCotonomas(0)
@@ -36,7 +36,7 @@ object NavCotonomas {
 
     def fetchMoreRecent()(implicit
         context: Context
-    ): (Model, Cmd.Single[AppMsg]) =
+    ): (Model, Cmd.One[AppMsg]) =
       if (loadingRecent)
         (this, Cmd.none)
       else
@@ -46,7 +46,7 @@ object NavCotonomas {
             .map(Msg.toApp(Msg.RecentFetched))
         )
 
-    def fetchSubs()(implicit context: Context): (Model, Cmd.Single[AppMsg]) =
+    def fetchSubs()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.domain.fetchSubCotonomas(0)
@@ -55,7 +55,7 @@ object NavCotonomas {
 
     def fetchMoreSubs()(implicit
         context: Context
-    ): (Model, Cmd.Single[AppMsg]) =
+    ): (Model, Cmd.One[AppMsg]) =
       if (loadingSubs)
         (this, Cmd.none)
       else
