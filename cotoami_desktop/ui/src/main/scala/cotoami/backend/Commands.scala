@@ -8,7 +8,7 @@ import cotoami.models._
 
 object Commands {
 
-  def send[T](command: js.Object): Cmd[Either[ErrorJson, T]] =
+  def send[T](command: js.Object): Cmd.One[Either[ErrorJson, T]] =
     tauri.invokeCommand(
       "node_command",
       js.Dynamic.literal(command = command)

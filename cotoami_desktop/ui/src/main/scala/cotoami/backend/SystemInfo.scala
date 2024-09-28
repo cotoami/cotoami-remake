@@ -16,7 +16,7 @@ trait SystemInfoJson extends js.Object {
 }
 
 object SystemInfoJson {
-  def fetch(): Cmd[Either[Unit, SystemInfoJson]] =
+  def fetch(): Cmd.One[Either[Unit, SystemInfoJson]] =
     tauri.invokeCommand("system_info")
 
   def debug(info: SystemInfoJson): String = {

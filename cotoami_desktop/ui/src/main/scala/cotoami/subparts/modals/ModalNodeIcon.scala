@@ -51,8 +51,8 @@ object ModalNodeIcon {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Nodes, Seq[Cmd[AppMsg]]) = {
-    val default = (model, context.domain.nodes, Seq.empty)
+  ): (Model, Nodes, Cmd[AppMsg]) = {
+    val default = (model, context.domain.nodes, Cmd.none)
     msg match {
       case Msg.ImageInput(image) =>
         default.copy(_1 =
@@ -70,39 +70,33 @@ object ModalNodeIcon {
       case Msg.ImageCropped(Left(t)) =>
         default.copy(
           _1 = model.copy(cropping = false),
-          _3 = Seq(
-            log_error("Icon cropping error.", Some(t.toString()))
-          )
+          _3 = log_error("Icon cropping error.", Some(t.toString()))
         )
 
       case Msg.Save =>
         default.copy(
           _1 = model.copy(saving = true),
-          _3 = Seq(
-            model.croppedImage.map(image =>
-              Browser.encodeAsBase64(image, true).flatMap {
-                case Right(base64) =>
-                  NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
-                case Left(e) =>
-                  log_error("Icon encoding error.", Some(js.JSON.stringify(e)))
-              }
-            ).getOrElse(Cmd.none)
-          )
+          _3 = model.croppedImage.map(image =>
+            Browser.encodeAsBase64(image, true).flatMap {
+              case Right(base64) =>
+                NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
+              case Left(e) =>
+                log_error("Icon encoding error.", Some(js.JSON.stringify(e)))
+            }
+          ).getOrElse(Cmd.none)
         )
 
       case Msg.Saved(Right(node)) =>
         default.copy(
           _1 = model.copy(saving = false),
           _2 = context.domain.nodes.put(node),
-          _3 = Seq(Modal.close(classOf[Modal.NodeIcon]))
+          _3 = Modal.close(classOf[Modal.NodeIcon])
         )
 
       case Msg.Saved(Left(e)) =>
         default.copy(
           _1 = model.copy(saving = false, error = Some(e.default_message)),
-          _3 = Seq(
-            log_error("Icon saving error.", Some(js.JSON.stringify(e)))
-          )
+          _3 = log_error("Icon saving error.", Some(js.JSON.stringify(e)))
         )
     }
   }

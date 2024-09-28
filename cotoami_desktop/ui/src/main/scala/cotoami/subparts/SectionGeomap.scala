@@ -74,7 +74,7 @@ object SectionGeomap {
     def refreshMarkers: Model =
       this.copy(_refreshMarkers = this._refreshMarkers + 1)
 
-    def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd[AppMsg]) =
+    def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
       if (this.initialCotosFetched && !this.fetchingCotosInBounds)
         (
           this.copy(fetchingCotosInBounds = true),
@@ -89,7 +89,7 @@ object SectionGeomap {
           Cmd.none
         )
 
-    def fetchCotosInCurrentBounds: (Model, Cmd[AppMsg]) =
+    def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
       this.currentBounds match {
         case Some(currentBounds) => fetchCotosInBounds(currentBounds)
         case None                => (this, Cmd.none)
@@ -120,8 +120,8 @@ object SectionGeomap {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
-    val default = (model, context.domain, Seq.empty)
+  ): (Model, Domain, Cmd[AppMsg]) = {
+    val default = (model, context.domain, Cmd.none)
     msg match {
       case Msg.Init(bounds) =>
         (context.domain.geolocationInFocus match {
@@ -132,7 +132,7 @@ object SectionGeomap {
             _1 = model
               .modify(_.currentBounds).setTo(Some(bounds))
               .addOrRemoveMarkers,
-            _3 = Seq(cmd)
+            _3 = cmd
           )
         }
 
@@ -149,7 +149,7 @@ object SectionGeomap {
         val (geomap, fetch) = model.fetchCotosInBounds(bounds)
         default.copy(
           _1 = geomap.copy(currentBounds = Some(bounds)),
-          _3 = Seq(fetch)
+          _3 = fetch
         )
       }
 
@@ -166,7 +166,7 @@ object SectionGeomap {
               // (ex. marker's `in-focus` state could be changed)
               .refreshMarkers,
             _2 = context.domain.importFrom(cotos),
-            _3 = Seq(cmd)
+            _3 = cmd
           )
         }
       }
@@ -174,7 +174,7 @@ object SectionGeomap {
       case Msg.InitialCotosFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(initialCotosFetched = true),
-          _3 = Seq(ErrorJson.log(e, "Couldn't fetch geolocated cotos."))
+          _3 = ErrorJson.log(e, "Couldn't fetch geolocated cotos.")
         )
 
       case Msg.CotosInBoundsFetched(Right(cotos)) =>
@@ -190,7 +190,7 @@ object SectionGeomap {
           default.copy(
             _1 = model.addOrRemoveMarkers,
             _2 = context.domain.importFrom(cotos),
-            _3 = Seq(
+            _3 = Cmd.Batch(
               fetchNext,
               log_info(s"Cotos in the bounds fetched.", Some(cotos.debug))
             )
@@ -200,7 +200,7 @@ object SectionGeomap {
       case Msg.CotosInBoundsFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(fetchingCotosInBounds = false),
-          _3 = Seq(ErrorJson.log(e, "Couldn't fetch cotos in the bounds."))
+          _3 = ErrorJson.log(e, "Couldn't fetch cotos in the bounds.")
         )
 
       case Msg.MarkerClicked(id) =>
@@ -208,21 +208,21 @@ object SectionGeomap {
           case Seq(id) =>
             context.uiState match {
               case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
-                default.copy(_3 = Seq(Browser.send(AppMsg.FocusCoto(Id(id)))))
+                default.copy(_3 = Browser.send(AppMsg.FocusCoto(Id(id))))
               case _ =>
                 default.copy(_3 =
-                  Seq(
-                    Browser.send(
-                      SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
-                    )
+                  Browser.send(
+                    SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
                   )
                 )
             }
           case ids =>
             default.copy(_3 =
-              ids.map(id =>
-                Browser.send(
-                  SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+              Cmd.Batch.fromSeq(
+                ids.map(id =>
+                  Browser.send(
+                    SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                  )
                 )
               )
             )
@@ -230,7 +230,7 @@ object SectionGeomap {
     }
   }
 
-  def fetchInitialCotos(context: Context): Cmd[AppMsg] =
+  def fetchInitialCotos(context: Context): Cmd.One[AppMsg] =
     GeolocatedCotos.fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId

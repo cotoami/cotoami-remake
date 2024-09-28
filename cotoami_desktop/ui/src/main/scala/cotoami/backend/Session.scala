@@ -32,7 +32,7 @@ object ClientNodeSession {
   def logIntoServer(
       url: String,
       password: String
-  ): Cmd[Either[ErrorJson, ClientNodeSession]] =
+  ): Cmd.One[Either[ErrorJson, ClientNodeSession]] =
     ClientNodeSessionJson.logIntoServer(url, password)
       .map(_.map(ClientNodeSession(_)))
 }
@@ -50,6 +50,6 @@ object ClientNodeSessionJson {
   def logIntoServer(
       url: String,
       password: String
-  ): Cmd[Either[ErrorJson, ClientNodeSessionJson]] =
+  ): Cmd.One[Either[ErrorJson, ClientNodeSessionJson]] =
     Commands.send(Commands.TryLogIntoServer(url, password))
 }

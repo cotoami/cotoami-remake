@@ -4,23 +4,74 @@ import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import cats.effect.IO
 
-case class Cmd[+Msg](io: IO[Option[Msg]]) extends AnyVal {
-  def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg] = Cmd(
-    this.io.map(_.map(f))
-  )
-
-  def flatMap[OtherMsg](f: Msg => Cmd[OtherMsg]): Cmd[OtherMsg] = Cmd(
-    this.io.flatMap(_.map(f(_).io).getOrElse(IO.none))
-  )
+sealed trait Cmd[+Msg] {
+  def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg]
+  def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg]
 }
 
 object Cmd {
   import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
-  def none[Msg]: Cmd[Msg] = Cmd(IO.none)
+  def apply[Msg](io: IO[Option[Msg]]): One[Msg] = One(io)
 
-  def fromFuture[T](future: Future[T]): Cmd[Either[Throwable, T]] =
-    Cmd(IO.async { cb =>
+  case class One[+Msg](io: IO[Option[Msg]]) extends Cmd[Msg] {
+    override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] = One(
+      io.map(_.map(f))
+    )
+
+    def flatMap[OtherMsg](f: Msg => One[OtherMsg]): One[OtherMsg] =
+      One(io.flatMap(_.map(f(_).io).getOrElse(IO.none)))
+
+    override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
+      that match {
+        case o: One[LubMsg]         => Batch(this, o)
+        case Batch(cmds @ _*)       => Batch.fromSeq(this +: cmds)
+        case Sequence(batches @ _*) => Sequence.fromSeq(Batch(this) +: batches)
+      }
+  }
+
+  case class Batch[+Msg](cmds: One[Msg]*) extends Cmd[Msg] {
+    def :+[LubMsg >: Msg](one: One[LubMsg]): Batch[LubMsg] =
+      Batch.fromSeq(cmds :+ one)
+    def +:[LubMsg >: Msg](one: One[LubMsg]): Batch[LubMsg] =
+      Batch.fromSeq(one +: cmds)
+
+    override def map[OtherMsg](f: Msg => OtherMsg): Batch[OtherMsg] =
+      Batch.fromSeq(cmds.map(_.map(f)))
+
+    override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
+      that match {
+        case o: One[LubMsg]         => Batch.fromSeq(cmds :+ o)
+        case Batch(cmds @ _*)       => Batch.fromSeq(this.cmds ++ cmds)
+        case Sequence(batches @ _*) => Sequence.fromSeq(this +: batches)
+      }
+  }
+
+  object Batch {
+    def fromSeq[Msg](cmds: Seq[One[Msg]]): Batch[Msg] = Batch(cmds: _*)
+  }
+
+  case class Sequence[+Msg](batches: Batch[Msg]*) extends Cmd[Msg] {
+    override def map[OtherMsg](f: Msg => OtherMsg): Sequence[OtherMsg] =
+      Sequence(batches.map(_.map(f)): _*)
+
+    override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
+      that match {
+        case o: One[LubMsg]         => Sequence.fromSeq(batches :+ Batch(o))
+        case b: Batch[LubMsg]       => Sequence.fromSeq(batches :+ b)
+        case Sequence(batches @ _*) => Sequence.fromSeq(this.batches ++ batches)
+      }
+  }
+
+  object Sequence {
+    def fromSeq[Msg](batches: Seq[Batch[Msg]]): Sequence[Msg] =
+      Sequence(batches: _*)
+  }
+
+  def none[Msg]: One[Msg] = One(IO.none)
+
+  def fromFuture[T](future: Future[T]): One[Either[Throwable, T]] =
+    One(IO.async { cb =>
       IO {
         future.onComplete {
           case Success(value) => cb(Right(Some(Right(value))))

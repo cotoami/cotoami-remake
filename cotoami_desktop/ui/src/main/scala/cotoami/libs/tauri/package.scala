@@ -54,7 +54,7 @@ package object tauri {
   def invokeCommand[T, E <: js.Object](
       command: String,
       args: js.Object = js.Dynamic.literal()
-  ): Cmd[Either[E, T]] =
+  ): Cmd.One[Either[E, T]] =
     Cmd(IO.async { cb =>
       IO {
         invoke[T](command, args)
@@ -96,7 +96,7 @@ package object tauri {
   def selectSingleDirectory(
       dialogTitle: String,
       defaultDirectory: Option[String] = None
-  ): Cmd[Either[Throwable, Option[String]]] =
+  ): Cmd.One[Either[Throwable, Option[String]]] =
     Cmd(IO.async { cb =>
       IO {
         val options = new dialog.OpenDialogOptions {

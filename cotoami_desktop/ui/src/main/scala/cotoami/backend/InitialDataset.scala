@@ -45,7 +45,7 @@ case class InitialDataset(json: InitialDatasetJson) {
 object InitialDataset {
   def switchOperatingNodeTo(
       parentId: Option[Id[Node]]
-  ): Cmd[Either[ErrorJson, InitialDataset]] =
+  ): Cmd.One[Either[ErrorJson, InitialDataset]] =
     InitialDatasetJson.switchOperatingNodeTo(parentId)
       .map(_.map(InitialDataset(_)))
 }
@@ -63,7 +63,7 @@ trait InitialDatasetJson extends js.Object {
 object InitialDatasetJson {
   def switchOperatingNodeTo(
       parentId: Option[Id[Node]]
-  ): Cmd[Either[ErrorJson, InitialDatasetJson]] =
+  ): Cmd.One[Either[ErrorJson, InitialDatasetJson]] =
     tauri
       .invokeCommand(
         "operate_as",

@@ -30,12 +30,12 @@ object Browser {
     listenersOnPushUrl = runtime.onPushUrl _ :: listenersOnPushUrl
   }
 
-  def send[Msg](msg: Msg): Cmd[Msg] = Cmd(IO(Some(msg)))
+  def send[Msg](msg: Msg): Cmd.One[Msg] = Cmd(IO(Some(msg)))
 
   /** Change the URL, but do not trigger a page load. This will add a new entry
     * to the browser history.
     */
-  def pushUrl[Msg](url: String): Cmd[Msg] =
+  def pushUrl[Msg](url: String): Cmd.One[Msg] =
     Cmd(IO {
       dom.window.history.pushState((), "", url)
       listenersOnPushUrl.foreach(_(new URL(dom.window.location.href)))
@@ -45,19 +45,19 @@ object Browser {
   /** Change the URL, but do not trigger a page load. This will not add a new
     * entry to the browser history.
     */
-  def replaceUrl[Msg](url: String): Cmd[Msg] =
+  def replaceUrl[Msg](url: String): Cmd.One[Msg] =
     Cmd(IO {
       dom.window.history.replaceState((), "", url)
       None
     })
 
-  def reload[Msg](): Cmd[Msg] =
+  def reload[Msg](): Cmd.One[Msg] =
     Cmd(IO {
       dom.window.location.reload()
       None
     })
 
-  def ajaxGetJson(url: String): Cmd[Either[Throwable, Json]] =
+  def ajaxGetJson(url: String): Cmd.One[Either[Throwable, Json]] =
     Cmd(IO.async { cb =>
       IO {
         dom.fetch(url).flatMap(_.text()).onComplete {
@@ -78,7 +78,7 @@ object Browser {
   def ajaxGet[Result](
       url: String,
       decoder: Decoder[Result]
-  ): Cmd[Either[Throwable, Result]] =
+  ): Cmd.One[Either[Throwable, Result]] =
     Cmd(IO.async { cb =>
       IO {
         implicit val resultDecoder = decoder
@@ -97,7 +97,7 @@ object Browser {
       }
     })
 
-  def setHtmlTheme[Msg](theme: String): Cmd[Msg] =
+  def setHtmlTheme[Msg](theme: String): Cmd.One[Msg] =
     Cmd(IO {
       dom.window.document.documentElement.setAttribute("data-theme", theme)
       None
@@ -106,7 +106,7 @@ object Browser {
   def encodeAsBase64(
       blob: dom.Blob,
       removePadding: Boolean = false
-  ): Cmd[Either[dom.ProgressEvent, String]] =
+  ): Cmd.One[Either[dom.ProgressEvent, String]] =
     Cmd(IO.async { cb =>
       IO {
         val reader = new dom.FileReader()
@@ -149,7 +149,7 @@ object Browser {
     )
   }
 
-  def getCurrentPosition: Cmd[Either[dom.PositionError, dom.Position]] =
+  def getCurrentPosition: Cmd.One[Either[dom.PositionError, dom.Position]] =
     Cmd(IO.async { cb =>
       IO {
         dom.window.navigator.geolocation.getCurrentPosition(

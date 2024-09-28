@@ -77,22 +77,20 @@ object ModalWelcome {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Seq[Cmd[AppMsg]]) =
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.DatabaseNameInput(value) =>
-        (model.copy(databaseName = value), Seq.empty)
+        (model.copy(databaseName = value), Cmd.none)
 
       case Msg.SelectBaseFolder =>
         (
           model.copy(folderNameValidation = Validation.Result.notYetValidated),
-          Seq(
-            tauri
-              .selectSingleDirectory(
-                "Select a base folder",
-                Some(model.baseFolder)
-              )
-              .map(Msg.toApp(Msg.BaseFolderSelected(_)))
-          )
+          tauri
+            .selectSingleDirectory(
+              "Select a base folder",
+              Some(model.baseFolder)
+            )
+            .map(Msg.toApp(Msg.BaseFolderSelected(_)))
         )
 
       case Msg.BaseFolderSelected(Right(path)) => {
@@ -104,9 +102,7 @@ object ModalWelcome {
       case Msg.BaseFolderSelected(Left(error)) =>
         (
           model.copy(error = Some(error.toString())),
-          Seq(
-            log_error("Folder selection error.", Some(error.toString()))
-          )
+          log_error("Folder selection error.", Some(error.toString()))
         )
 
       case Msg.FolderNameInput(value) =>
@@ -120,7 +116,7 @@ object ModalWelcome {
       case Msg.NewFolderValidation(Right(_)) =>
         (
           model.copy(folderNameValidation = Validation.Result.validated),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.NewFolderValidation(Left(error)) =>
@@ -128,19 +124,17 @@ object ModalWelcome {
           model.copy(folderNameValidation =
             Validation.Result(Seq(ErrorJson.toValidationError(error)))
           ),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.CreateDatabase =>
         (
           model.copy(processing = true),
-          Seq(
-            DatabaseInfo.createDatabase(
-              model.databaseName,
-              model.baseFolder,
-              model.folderName
-            ).map(Msg.toApp(Msg.DatabaseOpened(_)))
-          )
+          DatabaseInfo.createDatabase(
+            model.databaseName,
+            model.baseFolder,
+            model.folderName
+          ).map(Msg.toApp(Msg.DatabaseOpened(_)))
         )
 
       case Msg.SelectDatabaseFolder =>
@@ -148,14 +142,12 @@ object ModalWelcome {
           model.copy(databaseFolderValidation =
             Validation.Result.notYetValidated
           ),
-          Seq(
-            tauri
-              .selectSingleDirectory(
-                "Select a database folder",
-                None
-              )
-              .map(Msg.toApp(Msg.DatabaseFolderSelected(_)))
-          )
+          tauri
+            .selectSingleDirectory(
+              "Select a database folder",
+              None
+            )
+            .map(Msg.toApp(Msg.DatabaseFolderSelected(_)))
         )
 
       case Msg.DatabaseFolderSelected(Right(path)) => {
@@ -169,15 +161,13 @@ object ModalWelcome {
       case Msg.DatabaseFolderSelected(Left(error)) =>
         (
           model.copy(error = Some(error.toString())),
-          Seq(
-            log_error("Folder selection error.", Some(error.toString()))
-          )
+          log_error("Folder selection error.", Some(error.toString()))
         )
 
       case Msg.DatabaseFolderValidation(Right(_)) =>
         (
           model.copy(databaseFolderValidation = Validation.Result.validated),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.DatabaseFolderValidation(Left(error)) =>
@@ -185,33 +175,29 @@ object ModalWelcome {
           model.copy(databaseFolderValidation =
             Validation.Result(Seq(ErrorJson.toValidationError(error)))
           ),
-          Seq.empty
+          Cmd.none
         )
 
       case Msg.OpenDatabase =>
         (
           model.copy(processing = true),
-          Seq(
-            DatabaseInfo.openDatabase(model.databaseFolder).map(
-              Msg.toApp(Msg.DatabaseOpened(_))
-            )
+          DatabaseInfo.openDatabase(model.databaseFolder).map(
+            Msg.toApp(Msg.DatabaseOpened(_))
           )
         )
 
       case Msg.OpenDatabaseIn(folder) =>
         (
           model.copy(processing = true),
-          Seq(
-            DatabaseInfo.openDatabase(folder).map(
-              Msg.toApp(Msg.DatabaseOpened(_))
-            )
+          DatabaseInfo.openDatabase(folder).map(
+            Msg.toApp(Msg.DatabaseOpened(_))
           )
         )
 
       case Msg.DatabaseOpened(Right(info)) => {
         (
           model,
-          Seq(
+          Cmd.Batch(
             Browser.send(AppMsg.SetDatabaseInfo(info)),
             Modal.close(classOf[Modal.Welcome])
           )
@@ -221,42 +207,38 @@ object ModalWelcome {
       case Msg.DatabaseOpened(Left(e)) =>
         (
           model.copy(processing = false, error = Some(e.default_message)),
-          Seq(log_error(e.default_message, Some(e.toString())))
+          log_error(e.default_message, Some(e.toString()))
         )
     }
 
-  private def validateNewFolder(model: Model): Seq[Cmd[AppMsg]] =
+  private def validateNewFolder(model: Model): Cmd.One[AppMsg] =
     if (!model.baseFolder.isBlank && !model.folderName.isBlank)
-      Seq(
-        tauri
-          .invokeCommand(
-            "validate_new_database_folder",
-            js.Dynamic
-              .literal(
-                baseFolder = model.baseFolder,
-                folderName = model.folderName
-              )
-          )
-          .map(Msg.toApp(Msg.NewFolderValidation(_)))
-      )
+      tauri
+        .invokeCommand(
+          "validate_new_database_folder",
+          js.Dynamic
+            .literal(
+              baseFolder = model.baseFolder,
+              folderName = model.folderName
+            )
+        )
+        .map(Msg.toApp(Msg.NewFolderValidation(_)))
     else
-      Seq()
+      Cmd.none
 
-  private def validateDatabaseFolder(model: Model): Seq[Cmd[AppMsg]] =
+  private def validateDatabaseFolder(model: Model): Cmd.One[AppMsg] =
     if (!model.databaseFolder.isBlank)
-      Seq(
-        tauri
-          .invokeCommand(
-            "validate_database_folder",
-            js.Dynamic
-              .literal(
-                folder = model.databaseFolder
-              )
-          )
-          .map(Msg.toApp(Msg.DatabaseFolderValidation(_)))
-      )
+      tauri
+        .invokeCommand(
+          "validate_database_folder",
+          js.Dynamic
+            .literal(
+              folder = model.databaseFolder
+            )
+        )
+        .map(Msg.toApp(Msg.DatabaseFolderValidation(_)))
     else
-      Seq()
+      Cmd.none
 
   def apply(
       model: Model,

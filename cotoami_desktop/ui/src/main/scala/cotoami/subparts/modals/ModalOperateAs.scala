@@ -40,24 +40,22 @@ object ModalOperateAs {
       msg: Msg,
       model: Model,
       domain: Domain
-  ): (Model, Seq[Cmd[AppMsg]]) =
+  ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.Switch =>
         (
           model.copy(switching = true, switchingError = None),
-          Seq(
-            InitialDataset.switchOperatingNodeTo(
-              Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
-                model.switchingTo.id
-              )
-            ).map(Msg.toApp(Msg.Switched(_)))
-          )
+          InitialDataset.switchOperatingNodeTo(
+            Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
+              model.switchingTo.id
+            )
+          ).map(Msg.toApp(Msg.Switched(_)))
         )
 
       case Msg.Switched(Right(dataset)) =>
         (
           model.copy(switching = false, switchingError = None),
-          Seq(
+          Cmd.Batch(
             Browser.send(AppMsg.SetRemoteInitialDataset(dataset)),
             Modal.close(classOf[Modal.OperateAs])
           )
@@ -69,11 +67,9 @@ object ModalOperateAs {
             switching = false,
             switchingError = Some(e.default_message)
           ),
-          Seq(
-            log_error(
-              "Couldn't switch the operating node.",
-              Some(js.JSON.stringify(e))
-            )
+          log_error(
+            "Couldn't switch the operating node.",
+            Some(js.JSON.stringify(e))
           )
         )
     }

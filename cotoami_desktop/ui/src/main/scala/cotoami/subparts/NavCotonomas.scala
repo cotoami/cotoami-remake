@@ -27,14 +27,16 @@ object NavCotonomas {
       loadingSubs: Boolean = false,
       togglingSync: Boolean = false
   ) {
-    def fetchRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchRecent()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingRecent = true),
         context.domain.fetchRecentCotonomas(0)
           .map(Msg.toApp(Msg.RecentFetched))
       )
 
-    def fetchMoreRecent()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchMoreRecent()(implicit
+        context: Context
+    ): (Model, Cmd.One[AppMsg]) =
       if (loadingRecent)
         (this, Cmd.none)
       else
@@ -44,14 +46,16 @@ object NavCotonomas {
             .map(Msg.toApp(Msg.RecentFetched))
         )
 
-    def fetchSubs()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchSubs()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.domain.fetchSubCotonomas(0)
           .map(Msg.toApp(Msg.SubsFetched))
       )
 
-    def fetchMoreSubs()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchMoreSubs()(implicit
+        context: Context
+    ): (Model, Cmd.One[AppMsg]) =
       if (loadingSubs)
         (this, Cmd.none)
       else
@@ -81,71 +85,67 @@ object NavCotonomas {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Cotonomas, Seq[Cmd[AppMsg]]) = {
-    val default = (model, context.domain.cotonomas, Seq.empty)
+  ): (Model, Cotonomas, Cmd[AppMsg]) = {
+    val default = (model, context.domain.cotonomas, Cmd.none)
     msg match {
       case Msg.FetchMoreRecent =>
         model.fetchMoreRecent().pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = Seq(cmd))
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.RecentFetched(Right(page)) =>
         default.copy(
           _1 = model.copy(loadingRecent = false),
           _2 = context.domain.cotonomas.appendPageOfRecent(page),
-          _3 = Seq(log_info(s"Recent cotonomas fetched.", Some(page.debug)))
+          _3 = log_info(s"Recent cotonomas fetched.", Some(page.debug))
         )
 
       case Msg.RecentFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(loadingRecent = false),
-          _3 = Seq(ErrorJson.log(e, "Couldn't fetch recent cotonomas."))
+          _3 = ErrorJson.log(e, "Couldn't fetch recent cotonomas.")
         )
 
       case Msg.FetchMoreSubs =>
         model.fetchMoreSubs().pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = Seq(cmd))
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.SubsFetched(Right(page)) =>
         default.copy(
           _1 = model.copy(loadingSubs = false),
           _2 = context.domain.cotonomas.appendPageOfSubs(page),
-          _3 = Seq(log_info(s"Sub cotonomas fetched.", Some(page.debug)))
+          _3 = log_info(s"Sub cotonomas fetched.", Some(page.debug))
         )
 
       case Msg.SubsFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(loadingSubs = false),
-          _3 = Seq(ErrorJson.log(e, "Couldn't fetch sub cotonomas."))
+          _3 = ErrorJson.log(e, "Couldn't fetch sub cotonomas.")
         )
 
       case Msg.SetSyncDisabled(id, disable) =>
         default.copy(
           _1 = model.copy(togglingSync = true),
-          _3 = Seq(
-            ServerNodeBackend.update(id, Some(disable), None)
-              .map(Msg.toApp(Msg.SyncToggled(_)))
-          )
+          _3 = ServerNodeBackend.update(id, Some(disable), None)
+            .map(Msg.toApp(Msg.SyncToggled(_)))
         )
 
       case Msg.SyncToggled(result) =>
         default.copy(
           _1 = model.copy(togglingSync = false),
-          _3 = Seq(
-            result match {
-              case Right(server) =>
-                log_debug(
-                  "Parent sync disabled.",
-                  Some(server.disabled.toString())
-                )
-              case Left(e) =>
-                log_error(
-                  "Failed to disable parent sync.",
-                  Some(js.JSON.stringify(e))
-                )
-            }
-          )
+          _3 = result match {
+            case Right(server) =>
+              log_debug(
+                "Parent sync disabled.",
+                Some(server.disabled.toString())
+              )
+            case Left(e) =>
+              log_error(
+                "Failed to disable parent sync.",
+                Some(js.JSON.stringify(e))
+              )
+          }
         )
     }
   }

@@ -19,32 +19,32 @@ trait CotonomaJson extends js.Object {
 object CotonomaJson {
   def fetch(
       id: Id[Cotonoma]
-  ): Cmd[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.Cotonoma(id))
 
   def fetchByName(
       name: String,
       nodeId: Id[Node]
-  ): Cmd[Either[ErrorJson, CotonomaJson]] =
+  ): Cmd.One[Either[ErrorJson, CotonomaJson]] =
     Commands.send(Commands.CotonomaByName(name, nodeId))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
+  ): Cmd.One[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
+  ): Cmd.One[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
     Commands.send(Commands.SubCotonomas(id, pageIndex))
 
   def post(
       name: String,
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
-  ): Cmd[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.PostCotonoma(name, location, postTo))
 }
 
@@ -60,27 +60,27 @@ object CotonomaBackend {
       posts = json.posts
     )
 
-  def fetch(id: Id[Cotonoma]): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
+  def fetch(id: Id[Cotonoma]): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.fetch(id)
       .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
 
   def fetchByName(
       name: String,
       nodeId: Id[Node]
-  ): Cmd[Either[ErrorJson, Cotonoma]] =
+  ): Cmd.One[Either[ErrorJson, Cotonoma]] =
     CotonomaJson.fetchByName(name, nodeId).map(_.map(toModel(_)))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     CotonomaJson.fetchRecent(nodeId, pageIndex)
       .map(_.map(Paginated(_, toModel(_))))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
-  ): Cmd[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
     CotonomaJson.fetchSubs(id, pageIndex)
       .map(_.map(Paginated(_, toModel(_))))
 
@@ -88,7 +88,7 @@ object CotonomaBackend {
       name: String,
       location: Option[Geolocation],
       postTo: Id[Cotonoma]
-  ): Cmd[Either[ErrorJson, (Cotonoma, Coto)]] =
+  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.post(name, location, postTo)
       .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
 }

@@ -65,13 +65,13 @@ object SectionTimeline {
             cotoIds
         )
 
-    def fetchFirst()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchFirst()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
         fetch(None, 0, fetchNumber + 1)
       )
 
-    def fetchMore()(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def fetchMore()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -115,12 +115,12 @@ object SectionTimeline {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Seq[Cmd[AppMsg]]) = {
-    val default = (model, context.domain, Seq.empty)
+  ): (Model, Domain, Cmd[AppMsg]) = {
+    val default = (model, context.domain, Cmd.none)
     msg match {
       case Msg.FetchMore =>
         model.fetchMore().pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = Seq(cmd))
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.Fetched(number, Right(cotos)) =>
@@ -128,34 +128,30 @@ object SectionTimeline {
           default.copy(
             _1 = model.appendPage(cotos, number),
             _2 = context.domain.importFrom(cotos),
-            _3 = Seq(
-              log_info(s"Timeline fetched: ${number}", Some(cotos.debug))
-            )
+            _3 = log_info(s"Timeline fetched: ${number}", Some(cotos.debug))
           )
         else
           default.copy(
-            _3 = Seq(
-              log_info(
-                s"Fetch ${number} discarded (current: ${model.fetchNumber})",
-                None
-              )
+            _3 = log_info(
+              s"Fetch ${number} discarded (current: ${model.fetchNumber})",
+              None
             )
           )
 
       case Msg.Fetched(_, Left(e)) =>
         default.copy(
           _1 = model.copy(loading = false),
-          _3 = Seq(ErrorJson.log(e, "Couldn't fetch timeline cotos."))
+          _3 = ErrorJson.log(e, "Couldn't fetch timeline cotos.")
         )
 
       case Msg.ClearQuery =>
         model.inputQuery("").pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = Seq(cmd))
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.QueryInput(query) =>
         model.inputQuery(query).pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = Seq(cmd))
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.ImeCompositionStart =>
@@ -164,7 +160,7 @@ object SectionTimeline {
       case Msg.ImeCompositionEnd =>
         default.copy(
           _1 = model.copy(imeActive = false),
-          _3 = Seq(fetch(Some(model.query), 0, model.fetchNumber + 1))
+          _3 = fetch(Some(model.query), 0, model.fetchNumber + 1)
         )
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
@@ -176,7 +172,7 @@ object SectionTimeline {
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
-  )(implicit context: Context): Cmd[AppMsg] =
+  )(implicit context: Context): Cmd.One[AppMsg] =
     fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId,
@@ -191,7 +187,7 @@ object SectionTimeline {
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
-  ): Cmd[AppMsg] =
+  ): Cmd.One[AppMsg] =
     query.map(query =>
       if (query.isBlank())
         PaginatedCotos.fetchRecent(nodeId, cotonomaId, pageIndex)
