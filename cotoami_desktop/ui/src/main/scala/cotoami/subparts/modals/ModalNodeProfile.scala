@@ -21,6 +21,15 @@ object ModalNodeProfile {
     def isOperatingNode()(implicit context: Context): Boolean =
       context.domain.nodes.isOperating(nodeId)
   }
+
+  object Model {
+    def apply(nodeId: Id[Node]): (Model, Cmd[AppMsg]) =
+      (
+        Model(nodeId, None),
+        Domain.fetchNodeDetails(nodeId)
+      )
+  }
+
   sealed trait Msg {
     def toApp: AppMsg = Modal.Msg.NodeProfileMsg(this).pipe(AppMsg.ModalMsg)
   }

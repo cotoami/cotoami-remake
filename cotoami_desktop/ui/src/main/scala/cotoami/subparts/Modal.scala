@@ -32,8 +32,10 @@ object Modal {
 
   case class NodeProfile(model: ModalNodeProfile.Model) extends Model
   object NodeProfile {
-    def apply(nodeId: Id[Node]): NodeProfile =
-      NodeProfile(ModalNodeProfile.Model(nodeId))
+    def apply(nodeId: Id[Node]): (NodeProfile, Cmd[AppMsg]) =
+      ModalNodeProfile.Model(nodeId).pipe { case (model, cmd) =>
+        (NodeProfile(model), cmd)
+      }
   }
 
   case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())
