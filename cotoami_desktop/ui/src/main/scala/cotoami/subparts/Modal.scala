@@ -43,19 +43,19 @@ object Modal {
 
   case class Stack(modals: Seq[Modal] = Seq.empty) {
     def open[M <: Modal: ClassTag](modal: M): Stack =
-      this.close(modal.getClass()).modify(_.modals).using(modal +: _)
+      close(modal.getClass()).modify(_.modals).using(modal +: _)
 
     def opened[M <: Modal: ClassTag]: Boolean =
-      this.modals.exists(classTag[M].runtimeClass.isInstance(_))
+      modals.exists(classTag[M].runtimeClass.isInstance(_))
 
     def openIfNot[M <: Modal: ClassTag](modal: M): Stack =
-      if (this.opened[M]) this else this.open(modal)
+      if (opened[M]) this else open(modal)
 
     def get[M <: Modal: ClassTag]: Option[M] =
-      this.modals.find(classTag[M].runtimeClass.isInstance(_))
+      modals.find(classTag[M].runtimeClass.isInstance(_))
         .map(_.asInstanceOf[M])
 
-    def top: Option[Modal] = this.modals.headOption
+    def top: Option[Modal] = modals.headOption
 
     def update[M <: Modal: ClassTag](newState: M): Stack =
       this.modify(_.modals).using(
