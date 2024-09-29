@@ -14,6 +14,9 @@ case class Node(
     version: Int,
     createdAtUtcIso: String
 ) extends Entity[Node] {
+
+  // If two node objects have the same ID and version,
+  // they can be regarded as the same node.
   override def equals(that: Any): Boolean =
     that match {
       case that: Node => (this.id, this.version) == (that.id, that.version)

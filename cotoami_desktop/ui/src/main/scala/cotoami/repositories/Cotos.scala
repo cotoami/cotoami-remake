@@ -20,8 +20,8 @@ case class Cotos(
     this.modify(_.map).using { map =>
       map.get(coto.id) match {
         case Some(existingCoto) if existingCoto == coto => {
-          // To avoid redundant media url changes,
-          // a coto with the same content as the existing one won't be stored.
+          // To avoid a redundant media url change,
+          // it won't be replaced with the same coto.
           map
         }
         case Some(existingCoto) => {

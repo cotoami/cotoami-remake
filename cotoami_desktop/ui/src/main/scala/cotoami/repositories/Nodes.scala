@@ -29,8 +29,18 @@ case class Nodes(
 
   def put(node: Node): Nodes =
     this.modify(_.map).using { map =>
-      map.get(node.id).foreach(_.revokeIconUrl()) // Side-effect!
-      map + (node.id -> node)
+      map.get(node.id) match {
+        case Some(existingNode) if existingNode == node => {
+          // To avoid a redundant icon url change,
+          // it won't be replaced with the same node.
+          map
+        }
+        case Some(existingNode) => {
+          existingNode.revokeIconUrl() // Side-effect!
+          map + (node.id -> node)
+        }
+        case None => map + (node.id -> node)
+      }
     }
 
   def local: Option[Node] = this.localId.flatMap(this.get)
