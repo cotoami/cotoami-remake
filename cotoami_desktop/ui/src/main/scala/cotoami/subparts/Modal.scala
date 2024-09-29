@@ -11,26 +11,26 @@ import cotoami.{Context, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.subparts.modals._
 
-object Modal {
-  sealed trait Model
+sealed trait Modal
 
+object Modal {
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
-      extends Model
+      extends Modal
 
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
-  ) extends Model
+  ) extends Modal
 
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
-      extends Model
+      extends Modal
 
-  case class OperateAs(model: ModalOperateAs.Model) extends Model
+  case class OperateAs(model: ModalOperateAs.Model) extends Modal
   object OperateAs {
     def apply(current: Node, switchingTo: Node): OperateAs =
       OperateAs(ModalOperateAs.Model(current, switchingTo))
   }
 
-  case class NodeProfile(model: ModalNodeProfile.Model) extends Model
+  case class NodeProfile(model: ModalNodeProfile.Model) extends Modal
   object NodeProfile {
     def apply(nodeId: Id[Node]): (NodeProfile, Cmd[AppMsg]) =
       ModalNodeProfile.Model(nodeId).pipe { case (model, cmd) =>
@@ -39,25 +39,25 @@ object Modal {
   }
 
   case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())
-      extends Model
+      extends Modal
 
-  case class Stack(modals: Seq[Model] = Seq.empty) {
-    def open[M <: Model: ClassTag](modal: M): Stack =
+  case class Stack(modals: Seq[Modal] = Seq.empty) {
+    def open[M <: Modal: ClassTag](modal: M): Stack =
       this.close(modal.getClass()).modify(_.modals).using(modal +: _)
 
-    def opened[M <: Model: ClassTag]: Boolean =
+    def opened[M <: Modal: ClassTag]: Boolean =
       this.modals.exists(classTag[M].runtimeClass.isInstance(_))
 
-    def openIfNot[M <: Model: ClassTag](modal: M): Stack =
+    def openIfNot[M <: Modal: ClassTag](modal: M): Stack =
       if (this.opened[M]) this else this.open(modal)
 
-    def get[M <: Model: ClassTag]: Option[M] =
+    def get[M <: Modal: ClassTag]: Option[M] =
       this.modals.find(classTag[M].runtimeClass.isInstance(_))
         .map(_.asInstanceOf[M])
 
-    def top: Option[Model] = this.modals.headOption
+    def top: Option[Modal] = this.modals.headOption
 
-    def update[M <: Model: ClassTag](newState: M): Stack =
+    def update[M <: Modal: ClassTag](newState: M): Stack =
       this.modify(_.modals).using(
         _.map(modal =>
           if (classTag[M].runtimeClass.isInstance(modal))
@@ -67,7 +67,7 @@ object Modal {
         )
       )
 
-    def close[M <: Model](modalType: Class[M]): Stack =
+    def close[M <: Modal](modalType: Class[M]): Stack =
       this.modify(_.modals).using(_.filterNot(modalType.isInstance(_)))
   }
 
@@ -76,8 +76,8 @@ object Modal {
   }
 
   object Msg {
-    case class OpenModal(modal: Model, cmd: Cmd[AppMsg] = Cmd.none) extends Msg
-    case class CloseModal[M <: Model](modalType: Class[M]) extends Msg
+    case class OpenModal(modal: Modal, cmd: Cmd[AppMsg] = Cmd.none) extends Msg
+    case class CloseModal[M <: Modal](modalType: Class[M]) extends Msg
 
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
@@ -87,10 +87,10 @@ object Modal {
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
   }
 
-  def open(modal: Model): Cmd.One[AppMsg] =
+  def open(modal: Modal): Cmd.One[AppMsg] =
     Browser.send(Msg.OpenModal(modal).toApp)
 
-  def close[M <: Model](modalType: Class[M]): Cmd.One[AppMsg] =
+  def close[M <: Modal](modalType: Class[M]): Cmd.One[AppMsg] =
     Browser.send(Msg.CloseModal(modalType).toApp)
 
   def update(msg: Msg, model: AppModel)(implicit
@@ -191,7 +191,7 @@ object Modal {
         Some(ModalNodeIcon(modalModel))
     }
 
-  def view[M <: Model](
+  def view[M <: Modal](
       elementClasses: String,
       closeButton: Option[(Class[M], AppMsg => Unit)] = None,
       error: Option[String] = None

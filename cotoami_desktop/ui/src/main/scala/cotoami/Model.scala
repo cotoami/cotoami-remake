@@ -79,7 +79,7 @@ case class Model(
       })
       .getOrElse((this, Cmd.none))
 
-  def updateModal[M <: Modal.Model: ClassTag](newState: M): Model =
+  def updateModal[M <: Modal: ClassTag](newState: M): Model =
     copy(modalStack = modalStack.update(newState))
 
   def focusNode(nodeId: Option[Id[Node]]): (Model, Cmd[Msg]) =
