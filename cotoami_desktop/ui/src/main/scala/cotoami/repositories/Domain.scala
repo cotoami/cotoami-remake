@@ -1,5 +1,6 @@
 package cotoami.repositories
 
+import scala.util.chaining._
 import scala.collection.immutable.HashSet
 
 import com.softwaremill.quicklens._
@@ -22,6 +23,7 @@ import cotoami.backend.{
   ErrorJson,
   GeolocatedCotos,
   InitialDataset,
+  NodeDetails,
   Paginated,
   PaginatedCotos
 }
@@ -297,6 +299,9 @@ object Domain {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen AppMsg.DomainMsg
 
+    case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
+        extends Msg
+
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
 
@@ -308,6 +313,23 @@ object Domain {
 
   def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
     msg match {
+      case Msg.NodeDetailsFetched(Right(details)) =>
+        (
+          model.modify(_.nodes).using(_.put(details.node)).pipe { model =>
+            details.root match {
+              case Some((cotonoma, coto)) =>
+                model
+                  .modify(_.cotonomas).using(_.put(cotonoma))
+                  .modify(_.cotos).using(_.put(coto))
+              case None => model
+            }
+          },
+          Cmd.none
+        )
+
+      case Msg.NodeDetailsFetched(Left(e)) =>
+        (model, ErrorJson.log(e, "Couldn't fetch node details."))
+
       case Msg.CotonomaFetched(Right(cotonomaPair)) =>
         (
           model.importFrom(cotonomaPair),
@@ -332,6 +354,9 @@ object Domain {
       case Msg.CotoGraphFetched(Left(e)) =>
         (model, ErrorJson.log(e, "Couldn't fetch a coto graph."))
     }
+
+  def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
+    NodeDetails.fetch(id).map(Msg.toApp(Msg.NodeDetailsFetched(_)))
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))
