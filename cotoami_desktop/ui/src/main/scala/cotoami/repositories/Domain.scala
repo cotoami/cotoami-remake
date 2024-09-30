@@ -279,17 +279,11 @@ case class Domain(
 
 object Domain {
 
-  def apply(dataset: InitialDataset, localId: Id[Node]): Domain = {
-    val domain = Domain(
+  def apply(dataset: InitialDataset, localId: Id[Node]): Domain =
+    Domain(
       lastChangeNumber = dataset.lastChangeNumber,
       nodes = Nodes(dataset, localId)
     )
-    dataset.nodeRoots.foldLeft(domain) { case (domain, (cotonoma, coto)) =>
-      domain
-        .modify(_.cotonomas).using(_.put(cotonoma))
-        .modify(_.cotos).using(_.put(coto))
-    }
-  }
 
   sealed trait Msg {
     def toApp: AppMsg = AppMsg.DomainMsg(this)

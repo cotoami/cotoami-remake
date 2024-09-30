@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 import fui.Cmd
 import cotoami.libs.tauri
-import cotoami.models.{Coto, Cotonoma, Id, Node, Server}
+import cotoami.models.{Id, Node, Server}
 
 case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = json.last_change_number
@@ -14,11 +14,6 @@ case class InitialDataset(json: InitialDatasetJson) {
       .map(NodeBackend.toModel(_))
       .map(node => node.id -> node)
       .toMap
-
-  lazy val nodeRoots: js.Array[(Cotonoma, Coto)] =
-    json.node_roots.map(pair =>
-      (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
-    )
 
   def localNodeId: Id[Node] = Id(json.local_node_id)
 
@@ -34,7 +29,6 @@ case class InitialDataset(json: InitialDatasetJson) {
     val s = new StringBuilder
     s ++= s"lastChangeNumber: ${lastChangeNumber}"
     s ++= s", nodes: ${nodes.size}"
-    s ++= s", nodeRoots: ${nodeRoots.size}"
     s ++= s", localNode: {${localNode.map(_.debug)}}"
     s ++= s", parentNodes: ${parentNodeIds.size}"
     s ++= s", servers: ${servers.size}"
@@ -54,7 +48,6 @@ object InitialDataset {
 trait InitialDatasetJson extends js.Object {
   val last_change_number: Double = js.native
   val nodes: js.Array[NodeJson] = js.native
-  val node_roots: js.Array[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val local_node_id: String = js.native
   val parent_node_ids: js.Array[String] = js.native
   val servers: js.Array[ServerJson] = js.native
@@ -67,9 +60,8 @@ object InitialDatasetJson {
     tauri
       .invokeCommand(
         "operate_as",
-        js.Dynamic
-          .literal(
-            parentId = parentId.map(_.uuid).getOrElse(null)
-          )
+        js.Dynamic.literal(
+          parentId = parentId.map(_.uuid).getOrElse(null)
+        )
       )
 }
