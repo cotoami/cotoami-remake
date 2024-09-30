@@ -10,7 +10,7 @@ import cotoami.{Context, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Node}
 import cotoami.repositories.Domain
 import cotoami.components.toolButton
-import cotoami.subparts.{imgNode, Modal, ViewCoto}
+import cotoami.subparts.{imgNode, labeledField, Modal, ViewCoto}
 
 object ModalNodeProfile {
 
@@ -83,16 +83,7 @@ object ModalNodeProfile {
         )
       ),
       div(className := "settings")(
-        div(className := "input-field node-id")(
-          label(htmlFor := "node-profile-id")("ID"),
-          input(
-            `type` := "text",
-            id := "node-profile-id",
-            name := "nodeId",
-            readOnly := true,
-            value := node.id.uuid
-          )
-        ),
+        fieldId(node),
         fieldName(node, model),
         context.domain.rootOf(model.nodeId).map { case (_, coto) =>
           fieldDescription(coto, model)
@@ -100,11 +91,29 @@ object ModalNodeProfile {
       )
     )
 
+  private def fieldId(node: Node): ReactElement =
+    labeledField(
+      classes = "node-id",
+      label = "ID",
+      labelFor = Some("node-profile-id")
+    )(
+      input(
+        `type` := "text",
+        id := "node-profile-id",
+        name := "nodeId",
+        readOnly := true,
+        value := node.id.uuid
+      )
+    )
+
   private def fieldName(node: Node, model: Model)(implicit
       context: Context
   ): ReactElement =
-    div(className := "input-field node-name")(
-      label(htmlFor := "node-profile-name")("Name"),
+    labeledField(
+      classes = "node-name",
+      label = "Name",
+      labelFor = Some("node-profile-name")
+    )(
       div(className := "input-with-tools")(
         input(
           `type` := "text",
@@ -128,8 +137,11 @@ object ModalNodeProfile {
   private def fieldDescription(rootCoto: Coto, model: Model)(implicit
       context: Context
   ): ReactElement =
-    div(className := "input-field node-description")(
-      label(htmlFor := "node-profile-description")("Description"),
+    labeledField(
+      classes = "node-description",
+      label = "Description",
+      labelFor = Some("node-profile-description")
+    )(
       div(className := "input-with-tools")(
         ViewCoto.sectionNodeDescription(rootCoto).getOrElse(
           section(className := "node-description")()

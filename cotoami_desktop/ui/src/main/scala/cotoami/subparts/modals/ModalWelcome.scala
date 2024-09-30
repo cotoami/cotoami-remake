@@ -12,7 +12,7 @@ import cotoami.utils.Validation
 import cotoami.models.Node
 import cotoami.components.materialSymbol
 import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson}
-import cotoami.subparts.Modal
+import cotoami.subparts.{Modal, labeledField}
 
 object ModalWelcome {
 
@@ -308,8 +308,10 @@ object ModalWelcome {
         inputDatabaseName(model),
 
         // Base folder
-        div(className := "input-field")(
-          label(htmlFor := "select-base-folder")("Base folder"),
+        labeledField(
+          label = "Base folder",
+          labelFor = Some("select-base-folder")
+        )(
           div(className := "file-select")(
             div(className := "file-path")(model.baseFolder),
             button(

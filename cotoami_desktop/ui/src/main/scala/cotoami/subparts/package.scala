@@ -1,6 +1,7 @@
 package cotoami
 
 import slinky.core.facade.ReactElement
+import slinky.web.html
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
@@ -21,6 +22,16 @@ package object subparts {
     span(className := "node")(
       imgNode(node),
       span(className := "name")(node.name)
+    )
+
+  def labeledField(
+      classes: String = "",
+      label: String,
+      labelFor: Option[String] = None
+  )(field: ReactElement): ReactElement =
+    div(className := s"input-field ${classes}")(
+      html.label(htmlFor := labelFor)(label),
+      field
     )
 
   def buttonHelp(disable: Boolean, onButtonClick: () => Unit): ReactElement =
