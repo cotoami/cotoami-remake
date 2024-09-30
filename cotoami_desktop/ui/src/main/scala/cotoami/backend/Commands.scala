@@ -67,6 +67,16 @@ object Commands {
       )
     )
 
+  def RecentClients(pageIndex: Double, pageSize: Option[Double] = None) =
+    jso(RecentClients =
+      jso(
+        pagination = jso(
+          page = pageIndex,
+          page_size = pageSize.getOrElse(null).asInstanceOf[js.Any]
+        )
+      )
+    )
+
   def RecentCotonomas(nodeId: Option[Id[Node]], pageIndex: Double) =
     jso(RecentCotonomas =
       jso(
