@@ -9,13 +9,37 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClient, ClientAdded, NodeRole},
+        models::{AddClient, ClientAdded, NodeRole, Pagination},
         ServiceError,
     },
     state::NodeState,
 };
 
+const DEFAULT_RECENT_PAGE_SIZE: i64 = 20;
+
 impl NodeState {
+    pub async fn recent_clients(
+        &self,
+        pagination: Pagination,
+        operator: Arc<Operator>,
+    ) -> Result<Paginated<ClientNode>, ServiceError> {
+        if let Err(errors) = pagination.validate() {
+            return errors.into_result();
+        }
+        self.get(move |ds| {
+            let page = ds
+                .recent_client_nodes(
+                    pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
+                    pagination.page,
+                    &operator,
+                )?
+                .map(|(client, _)| client)
+                .into();
+            Ok(page)
+        })
+        .await
+    }
+
     pub async fn add_client(
         &self,
         input: AddClient,
