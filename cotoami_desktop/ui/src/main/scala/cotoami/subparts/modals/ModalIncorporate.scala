@@ -11,7 +11,14 @@ import cotoami.utils.Validation
 import cotoami.models.{Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
 import cotoami.repositories.Nodes
-import cotoami.subparts.{buttonHelp, sectionHelp, spanNode, Modal, ViewCoto}
+import cotoami.subparts.{
+  buttonHelp,
+  labeledInputField,
+  sectionHelp,
+  spanNode,
+  Modal,
+  ViewCoto
+}
 
 object ModalIncorporate {
 
@@ -203,32 +210,23 @@ object ModalIncorporate {
         ),
 
         // Node URL
-        div(className := "input-field")(
-          label(htmlFor := "node-url")("Node URL"),
-          input(
-            `type` := "text",
-            id := "node-url",
-            name := "nodeUrl",
-            placeholder := "https://example.com",
-            value := model.nodeUrl,
-            Validation.ariaInvalid(model.validateNodeUrl),
-            onChange := ((e) =>
-              dispatch(Msg.NodeUrlInput(e.target.value).toApp)
-            )
-          ),
-          Validation.sectionValidationError(model.validateNodeUrl)
+        labeledInputField(
+          label = "Node URL",
+          inputId = "node-url",
+          inputType = "text",
+          inputPlaceholder = Some("https://example.com"),
+          inputValue = model.nodeUrl,
+          inputErrors = model.validateNodeUrl,
+          onInput = (input => dispatch(Msg.NodeUrlInput(input).toApp))
         ),
 
         // Password
-        div(className := "input-field")(
-          label(htmlFor := "password")("Password"),
-          input(
-            `type` := "password",
-            id := "password",
-            name := "password",
-            value := model.password,
-            onChange := (e => dispatch(Msg.PasswordInput(e.target.value).toApp))
-          )
+        labeledInputField(
+          label = "Password",
+          inputId = "password",
+          inputType = "password",
+          inputValue = model.password,
+          onInput = (input => dispatch(Msg.PasswordInput(input).toApp))
         ),
 
         // Preview

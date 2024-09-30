@@ -6,6 +6,7 @@ import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
 import cotoami.{Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.{Node, ParentStatus}
 import cotoami.components.materialSymbol
 
@@ -28,10 +29,38 @@ package object subparts {
       classes: String = "",
       label: String,
       labelFor: Option[String] = None
-  )(field: ReactElement): ReactElement =
+  )(field: ReactElement*): ReactElement =
     div(className := s"input-field ${classes}")(
       html.label(htmlFor := labelFor)(label),
       field
+    )
+
+  def labeledInputField(
+      classes: String = "",
+      label: String,
+      inputId: String,
+      inputType: String,
+      inputPlaceholder: Option[String] = None,
+      inputValue: String,
+      inputErrors: Validation.Result = Validation.Result.notYetValidated,
+      onInput: String => Unit
+  ): ReactElement =
+    labeledField(
+      classes = classes,
+      label = label,
+      labelFor = Some(inputId)
+    )(
+      input(
+        `type` := inputType,
+        id := inputId,
+        placeholder := inputPlaceholder,
+        value := inputValue,
+        Validation.ariaInvalid(inputErrors),
+        // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
+        // (onChange is almost the same as onInput in React)
+        onChange := (e => onInput(e.target.value))
+      ),
+      Validation.sectionValidationError(inputErrors)
     )
 
   def buttonHelp(disable: Boolean, onButtonClick: () => Unit): ReactElement =

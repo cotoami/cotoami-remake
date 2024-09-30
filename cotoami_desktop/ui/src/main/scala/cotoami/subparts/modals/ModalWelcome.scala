@@ -12,7 +12,7 @@ import cotoami.utils.Validation
 import cotoami.models.Node
 import cotoami.components.materialSymbol
 import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson}
-import cotoami.subparts.{Modal, labeledField}
+import cotoami.subparts.{labeledField, labeledInputField, Modal}
 
 object ModalWelcome {
 
@@ -216,11 +216,10 @@ object ModalWelcome {
       tauri
         .invokeCommand(
           "validate_new_database_folder",
-          js.Dynamic
-            .literal(
-              baseFolder = model.baseFolder,
-              folderName = model.folderName
-            )
+          js.Dynamic.literal(
+            baseFolder = model.baseFolder,
+            folderName = model.folderName
+          )
         )
         .map(Msg.toApp(Msg.NewFolderValidation(_)))
     else
@@ -231,10 +230,9 @@ object ModalWelcome {
       tauri
         .invokeCommand(
           "validate_database_folder",
-          js.Dynamic
-            .literal(
-              folder = model.databaseFolder
-            )
+          js.Dynamic.literal(
+            folder = model.databaseFolder
+          )
         )
         .map(Msg.toApp(Msg.DatabaseFolderValidation(_)))
     else
@@ -305,7 +303,14 @@ object ModalWelcome {
       h2()("New database"),
       form()(
         // Name
-        inputDatabaseName(model),
+        labeledInputField(
+          label = "Name",
+          inputId = "database-name",
+          inputType = "text",
+          inputValue = model.databaseName,
+          inputErrors = model.validateDatabaseName,
+          onInput = (input => dispatch(Msg.DatabaseNameInput(input).toApp))
+        ),
 
         // Base folder
         labeledField(
@@ -324,21 +329,13 @@ object ModalWelcome {
         ),
 
         // Folder name
-        div(className := "input-field")(
-          label(htmlFor := "folder-name")("Folder name to create"),
-          input(
-            `type` := "text",
-            id := "folder-name",
-            name := "folderName",
-            value := model.folderName,
-            Validation.ariaInvalid(model.folderNameValidation),
-            // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
-            // (onChange is almost the same as onInput in React)
-            onChange := ((e) =>
-              dispatch(Msg.FolderNameInput(e.target.value).toApp)
-            )
-          ),
-          Validation.sectionValidationError(model.folderNameValidation)
+        labeledInputField(
+          label = "Folder name to create",
+          inputId = "folder-name",
+          inputType = "text",
+          inputValue = model.folderName,
+          inputErrors = model.folderNameValidation,
+          onInput = (input => dispatch(Msg.FolderNameInput(input).toApp))
         ),
 
         // Create button
@@ -355,25 +352,6 @@ object ModalWelcome {
       )
     )
 
-  private def inputDatabaseName(
-      model: Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement = {
-    val errors = model.validateDatabaseName
-    div(className := "input-field")(
-      label(htmlFor := "database-name")("Name"),
-      input(
-        `type` := "text",
-        id := "database-name",
-        name := "databaseName",
-        value := model.databaseName,
-        Validation.ariaInvalid(errors),
-        // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
-        onChange := (e => dispatch(Msg.DatabaseNameInput(e.target.value).toApp))
-      ),
-      Validation.sectionValidationError(errors)
-    )
-  }
-
   private def sectionOpenDatabase(
       model: Model
   )(implicit dispatch: AppMsg => Unit): ReactElement =
@@ -381,8 +359,10 @@ object ModalWelcome {
       h2()("Open"),
       form()(
         // Database folder
-        div(className := "input-field")(
-          label(htmlFor := "select-database-folder")("Database folder"),
+        labeledField(
+          label = "Database folder",
+          labelFor = Some("select-database-folder")
+        )(
           div(className := "file-select")(
             div(className := "file-path")(model.databaseFolder),
             button(
