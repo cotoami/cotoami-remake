@@ -45,7 +45,7 @@ impl<'a> DatabaseSession<'a> {
         password: &str,
         database_role: NewDatabaseRole,
         operator: &Operator,
-    ) -> Result<(ClientNode, DatabaseRole)> {
+    ) -> Result<(ClientNode, Node, DatabaseRole)> {
         operator.requires_to_be_owner()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
@@ -55,7 +55,7 @@ impl<'a> DatabaseSession<'a> {
             if let DatabaseRole::Parent(parent) = &database_role {
                 self.globals.cache_parent_node(parent.clone());
             }
-            Ok((client, database_role))
+            Ok((client, node, database_role))
         })
     }
 

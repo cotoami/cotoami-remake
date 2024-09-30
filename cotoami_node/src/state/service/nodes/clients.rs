@@ -68,14 +68,18 @@ impl NodeState {
             let state = self.clone();
             move || {
                 let ds = state.db().new_session()?;
-                let (client, role) = ds.register_client_node(
+                let (client, node, role) = ds.register_client_node(
                     input.id.unwrap_or_else(|| unreachable!()),
                     &password,
                     role,
                     &operator,
                 )?;
                 debug!("Client node ({}) registered as a {}", client.node_id, role);
-                Ok(ClientAdded { password })
+                Ok(ClientAdded {
+                    password,
+                    client,
+                    node,
+                })
             }
         })
         .await?

@@ -86,6 +86,8 @@ impl AddClient {
 pub struct ClientAdded {
     /// Generated password
     pub password: String,
+    pub client: ClientNode,
+    pub node: Node,
 }
 
 /////////////////////////////////////////////////////////////////////////////

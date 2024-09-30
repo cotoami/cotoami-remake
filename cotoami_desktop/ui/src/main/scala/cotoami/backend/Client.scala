@@ -30,4 +30,6 @@ object ClientNodeJson {
 @js.native
 trait ClientAddedJson extends js.Object {
   val password: String = js.native
+  val client: ClientNodeJson = js.native
+  val node: NodeJson = js.native
 }
