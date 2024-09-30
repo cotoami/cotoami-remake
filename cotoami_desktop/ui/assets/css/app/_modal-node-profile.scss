@@ -33,9 +33,28 @@ dialog.node-profile {
       }
     }
 
-    div.settings {
+    div.fields {
       flex: 1;
       padding-left: 16px;
+
+      input[readOnly] {
+        background-color: var(--card-background-color);
+      }
+
+      div.input-with-tools {
+        position: relative;
+
+        div.tools {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          right: 10px;
+
+          button {
+            height: 100%;
+          }
+        }
+      }
 
       div.node-id {
         margin-top: 0;
@@ -43,27 +62,21 @@ dialog.node-profile {
 
       section.node-description {
         border: 1px solid var(--pane-border-color);
-        padding: var(--spacing);
-        background-color: var(--card-background-color);
+        padding: 10px var(--spacing);
 
         min-height: 42px;
         max-height: 200px;
         overflow-y: auto;
       }
-    }
-  }
 
-  div.input-with-tools {
-    position: relative;
+      section.child-nodes-count {
+        border: 1px solid var(--pane-border-color);
+        border-radius: var(--border-radius);
+        padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
 
-    div.tools {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 10px;
-
-      button {
-        height: 100%;
+        span.separator {
+          margin-left: 8px;
+        }
       }
     }
   }

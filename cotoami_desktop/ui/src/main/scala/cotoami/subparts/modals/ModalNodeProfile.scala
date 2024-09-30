@@ -82,11 +82,14 @@ object ModalNodeProfile {
           }
         )
       ),
-      div(className := "settings")(
+      div(className := "fields")(
         fieldId(node),
         fieldName(node, model),
         context.domain.rootOf(model.nodeId).map { case (_, coto) =>
           fieldDescription(coto, model)
+        },
+        Option.when(model.isOperatingNode()) {
+          fieldChildNodes(model)
         }
       )
     )
@@ -145,6 +148,34 @@ object ModalNodeProfile {
       div(className := "input-with-tools")(
         ViewCoto.sectionNodeDescription(rootCoto).getOrElse(
           section(className := "node-description")()
+        ),
+        Option.when(model.isOperatingNode()) {
+          div(className := "tools")(
+            toolButton(
+              symbol = "edit",
+              tip = "Edit",
+              classes = "edit"
+            )
+          )
+        }
+      )
+    )
+
+  private def fieldChildNodes(model: Model)(implicit
+      context: Context
+  ): ReactElement =
+    labeledField(
+      classes = "child-nodes",
+      label = "Child nodes",
+      labelFor = Some("node-profile-child-nodes")
+    )(
+      div(className := "input-with-tools")(
+        section(className := "child-nodes-count")(
+          code(className := "connecting")("0"),
+          "connecting",
+          span(className := "separator")("/"),
+          code(className := "nodes")("0"),
+          "nodes"
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
