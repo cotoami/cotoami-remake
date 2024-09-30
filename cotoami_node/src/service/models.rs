@@ -66,8 +66,8 @@ pub struct ClientNodeSession {
 pub struct AddClient {
     #[validate(required)]
     pub id: Option<Id<Node>>,
-    pub password: Option<String>,
-    pub client_role: Option<NodeRole>,
+    pub password: Option<String>, // if None, the password will be auto-generated
+    pub client_role: Option<NodeRole>, // the default values is: NodeRole::Child
 
     // Client as a child
     pub as_owner: Option<bool>,

@@ -77,6 +77,15 @@ object Commands {
       )
     )
 
+  def AddClient(nodeId: Id[Node], canEditLinks: Boolean, asOowner: Boolean) =
+    jso(AddClient =
+      jso(
+        id = nodeId.uuid,
+        as_owner = asOowner,
+        can_edit_links = canEditLinks
+      )
+    )
+
   def RecentCotonomas(nodeId: Option[Id[Node]], pageIndex: Double) =
     jso(RecentCotonomas =
       jso(
