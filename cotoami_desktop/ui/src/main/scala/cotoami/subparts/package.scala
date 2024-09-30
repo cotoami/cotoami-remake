@@ -29,10 +29,10 @@ package object subparts {
       classes: String = "",
       label: String,
       labelFor: Option[String] = None
-  )(field: ReactElement*): ReactElement =
-    div(className := s"input-field ${classes}")(
+  )(fieldContent: ReactElement*): ReactElement =
+    div(className := s"labeled-field ${classes}")(
       html.label(htmlFor := labelFor)(label),
-      field
+      fieldContent
     )
 
   def labeledInputField(
