@@ -89,7 +89,7 @@ object ModalNodeProfile {
           fieldDescription(coto, model)
         },
         Option.when(model.isOperatingNode()) {
-          fieldChildNodes(model)
+          fieldClientNodes(model)
         }
       )
     )
@@ -161,16 +161,16 @@ object ModalNodeProfile {
       )
     )
 
-  private def fieldChildNodes(model: Model)(implicit
+  private def fieldClientNodes(model: Model)(implicit
       context: Context
   ): ReactElement =
     labeledField(
-      classes = "child-nodes",
-      label = "Child nodes",
-      labelFor = Some("node-profile-child-nodes")
+      classes = "client-nodes",
+      label = "Client nodes",
+      labelFor = Some("node-profile-client-nodes")
     )(
       div(className := "input-with-tools")(
-        section(className := "child-nodes-count")(
+        section(className := "client-nodes-count")(
           code(className := "connecting")("0"),
           "connecting",
           span(className := "separator")("/"),
