@@ -24,4 +24,6 @@ pub enum LocalNodeEvent {
         error: Option<String>,
     },
     ParentDisconnected(Id<Node>),
+    ClientConnected(Id<Node>),
+    ClientDisconnected(Id<Node>),
 }

@@ -5,12 +5,13 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
+use derive_new::new;
 use parking_lot::RwLock;
 use tokio::task::JoinHandle;
 use tracing::debug;
 use validator::Validate;
 
-use crate::{service::NodeService, Abortables};
+use crate::{event::local::LocalNodeEvent, service::NodeService, Abortables};
 
 mod config;
 mod internal;
@@ -82,6 +83,14 @@ impl NodeState {
     pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
 
     pub fn server_conns(&self) -> &ServerConnections { &self.inner.server_conns }
+
+    pub fn client_conns(&self) -> &ClientConnections { &self.inner.client_conns }
+
+    pub fn put_client_conn(&self, client_conn: ClientConnection) {
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ClientConnected(client_conn.client_id));
+        self.client_conns().put(client_conn);
+    }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
@@ -192,6 +201,7 @@ impl ServerConnections {
     }
 }
 
+#[derive(new)]
 pub struct ClientConnection {
     client_id: Id<Node>,
 }
@@ -202,8 +212,8 @@ pub struct ClientConnections(
 );
 
 impl ClientConnections {
-    pub fn put(&self, client_id: Id<Node>, client_conn: ClientConnection) {
-        self.0.write().insert(client_id, client_conn);
+    pub fn put(&self, client_conn: ClientConnection) {
+        self.0.write().insert(client_conn.client_id, client_conn);
     }
 
     pub fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {

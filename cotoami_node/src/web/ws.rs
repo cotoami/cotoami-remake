@@ -16,7 +16,7 @@ use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
     event::remote::tungstenite::{communicate_with_operator, communicate_with_parent},
-    state::NodeState,
+    state::{ClientConnection, NodeState},
     Abortables,
 };
 
@@ -43,6 +43,8 @@ async fn ws_handler(
 
 /// Actual websocket statemachine (one will be spawned per connection)
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
+    state.put_client_conn(ClientConnection::new(session.client_node_id()));
+
     let (sink, stream) = socket.split();
 
     // Adapt axum's sink/stream to handle tungstenite messages
