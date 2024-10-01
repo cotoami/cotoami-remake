@@ -54,7 +54,10 @@ async fn handle_socket(
 ) {
     // Publish connect and disconnect
     let client_id = session.client_node_id();
-    state.put_client_conn(ClientConnection::new(client_id, remote_addr.to_string()));
+    state.put_client_conn(ClientConnection::new(
+        client_id,
+        remote_addr.ip().to_string(),
+    ));
     let on_disconnect = listener_on_disconnect(client_id, state.clone());
     futures::pin_mut!(on_disconnect);
 
