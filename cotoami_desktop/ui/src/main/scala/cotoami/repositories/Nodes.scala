@@ -22,6 +22,7 @@ case class Nodes(
 
     // remote nodes
     servers: Servers = Servers(),
+    activeClients: ActiveClients = ActiveClients(),
     parentIds: Seq[Id[Node]] = Seq.empty
 ) {
   def get(id: Id[Node]): Option[Node] = map.get(id)
@@ -133,5 +134,7 @@ object Nodes {
       localId = Some(localId),
       operatingId = Some(dataset.localNodeId),
       parentIds = dataset.parentNodeIds.toSeq
-    ).addServers(dataset.servers)
+    )
+      .addServers(dataset.servers)
+      .modify(_.activeClients).using(_.putAll(dataset.activeClients))
 }
