@@ -30,6 +30,7 @@ struct State {
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: ServerConnections,
+    client_conns: ClientConnections,
     parent_services: ParentServices,
     abortables: Abortables,
 }
@@ -55,6 +56,7 @@ impl NodeState {
             db: Arc::new(db),
             pubsub: Pubsub::default(),
             server_conns: ServerConnections::default(),
+            client_conns: ClientConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
         };
@@ -187,5 +189,24 @@ impl ServerConnections {
         for conn in self.0.read().values() {
             conn.disconnect(None);
         }
+    }
+}
+
+pub struct ClientConnection {
+    client_id: Id<Node>,
+}
+
+#[derive(Clone, Default)]
+pub struct ClientConnections(
+    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, ClientConnection>>>,
+);
+
+impl ClientConnections {
+    pub fn put(&self, client_id: Id<Node>, client_conn: ClientConnection) {
+        self.0.write().insert(client_id, client_conn);
+    }
+
+    pub fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
+        self.0.write().remove(client_id)
     }
 }
