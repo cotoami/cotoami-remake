@@ -171,7 +171,9 @@ object ModalNodeProfile {
     )(
       div(className := "input-with-tools")(
         section(className := "client-nodes-count")(
-          code(className := "connecting")("0"),
+          code(className := "connecting")(
+            context.domain.nodes.activeClients.count
+          ),
           "connecting",
           span(className := "separator")("/"),
           code(className := "nodes")("0"),
