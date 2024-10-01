@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{Id, Node}
+import cotoami.models.{ActiveClient, ClientNode, Id, Node}
 
 @js.native
 trait ClientNodeJson extends js.Object {
@@ -15,9 +15,10 @@ trait ClientNodeJson extends js.Object {
 
 object ClientNodeJson {
   def fetchRecent(
-      pageIndex: Double
+      pageIndex: Double,
+      pageSize: Option[Double] = None
   ): Cmd.One[Either[ErrorJson, PaginatedJson[ClientNodeJson]]] =
-    Commands.send(Commands.RecentClients(pageIndex))
+    Commands.send(Commands.RecentClients(pageIndex, pageSize))
 
   def add(
       nodeId: Id[Node],
@@ -27,9 +28,40 @@ object ClientNodeJson {
     Commands.send(Commands.AddClient(nodeId, canEditLinks, asOowner))
 }
 
+object ClientNodeBackend {
+  def toModel(json: ClientNodeJson): ClientNode =
+    ClientNode(
+      nodeId = Id(json.node_id),
+      createdAtUtcIso = json.created_at,
+      sessionExpiresAtUtcIso = json.session_expires_at,
+      disabled = json.disabled
+    )
+
+  def fetchRecent(
+      pageIndex: Double,
+      pageSize: Option[Double] = None
+  ): Cmd.One[Either[ErrorJson, Paginated[ClientNode, _]]] =
+    ClientNodeJson.fetchRecent(pageIndex, pageSize)
+      .map(_.map(Paginated(_, toModel(_))))
+}
+
 @js.native
 trait ClientAddedJson extends js.Object {
   val password: String = js.native
   val client: ClientNodeJson = js.native
   val node: NodeJson = js.native
+}
+
+@js.native
+trait ActiveClientJson extends js.Object {
+  val node_id: String = js.native
+  val remote_addr: String = js.native
+}
+
+object ActiveClientBackend {
+  def toModel(json: ActiveClientJson): ActiveClient =
+    ActiveClient(
+      nodeId = Id(json.node_id),
+      remoteAddr = json.remote_addr
+    )
 }

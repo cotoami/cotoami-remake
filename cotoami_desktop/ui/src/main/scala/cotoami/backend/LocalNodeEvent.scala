@@ -65,12 +65,6 @@ trait ParentDisconnectedJson extends js.Object {
 }
 
 @js.native
-trait ActiveClientJson extends js.Object {
-  val node_id: String = js.native
-  val remote_addr: String = js.native
-}
-
-@js.native
 trait ClientDisconnectedJson extends js.Object {
   val node_id: String = js.native
   val error: Nullable[String] = js.native
