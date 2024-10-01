@@ -1,5 +1,6 @@
 package cotoami.repositories
 
+import scala.util.chaining._
 import com.softwaremill.quicklens._
 
 import cotoami.models.{
@@ -19,13 +20,13 @@ case class Nodes(
     operatingId: Option[Id[Node]] = None,
     focusedId: Option[Id[Node]] = None,
 
-    // roles
-    parentIds: Seq[Id[Node]] = Seq.empty,
-    serverMap: Map[Id[Node], Server] = Map.empty
+    // remote nodes
+    servers: Servers = Servers(),
+    parentIds: Seq[Id[Node]] = Seq.empty
 ) {
-  def get(id: Id[Node]): Option[Node] = this.map.get(id)
+  def get(id: Id[Node]): Option[Node] = map.get(id)
 
-  def contains(id: Id[Node]): Boolean = this.map.contains(id)
+  def contains(id: Id[Node]): Boolean = map.contains(id)
 
   def put(node: Node): Nodes =
     this.modify(_.map).using { map =>
@@ -43,71 +44,57 @@ case class Nodes(
       }
     }
 
-  def local: Option[Node] = this.localId.flatMap(this.get)
+  def local: Option[Node] = localId.flatMap(get)
 
-  def isLocal(id: Id[Node]): Boolean = Some(id) == this.localId
+  def isLocal(id: Id[Node]): Boolean = Some(id) == localId
 
-  def operating: Option[Node] = this.operatingId.flatMap(this.get)
+  def operating: Option[Node] = operatingId.flatMap(get)
 
-  def operatingRemote: Boolean = (this.localId, this.operatingId) match {
+  def operatingRemote: Boolean = (localId, operatingId) match {
     case (Some(local), Some(operating)) => local != operating
     case _                              => false
   }
 
-  def isOperating(id: Id[Node]): Boolean = this.operatingId == Some(id)
+  def isOperating(id: Id[Node]): Boolean = operatingId == Some(id)
 
-  def parents: Seq[Node] = this.parentIds.map(this.get).flatten
+  def parents: Seq[Node] = parentIds.map(get).flatten
 
   def focus(id: Option[Id[Node]]): Nodes =
     id.map(id =>
-      if (this.contains(id))
-        this.copy(focusedId = Some(id))
+      if (contains(id))
+        copy(focusedId = Some(id))
       else
         this
-    ).getOrElse(this.copy(focusedId = None))
+    ).getOrElse(copy(focusedId = None))
 
-  def isFocusing(id: Id[Node]): Boolean = this.focusedId == Some(id)
+  def isFocusing(id: Id[Node]): Boolean = focusedId == Some(id)
 
-  def focused: Option[Node] = this.focusedId.flatMap(this.get)
+  def focused: Option[Node] = focusedId.flatMap(get)
 
-  def current: Option[Node] = this.focused.orElse(this.operating)
+  def current: Option[Node] = focused.orElse(operating)
 
   def prependParentId(id: Id[Node]): Nodes =
-    if (this.parentIds.contains(id)) this
+    if (parentIds.contains(id)) this
     else
       this.modify(_.parentIds).using(id +: _)
 
   def setIcon(id: Id[Node], icon: String): Nodes =
     this.modify(_.map.index(id)).using(_.setIcon(icon))
 
-  def getServer(id: Id[Node]): Option[Server] = this.serverMap.get(id)
-
-  def addServer(server: Server): Nodes = {
-    val nodes =
-      this.modify(_.serverMap).using(_ + (server.server.nodeId -> server))
-    server.role.map {
-      case DatabaseRole.Parent(parent) => nodes.prependParentId(parent.nodeId)
-      case DatabaseRole.Child(child)   => nodes
-    }.getOrElse(nodes)
-  }
+  def addServer(server: Server): Nodes =
+    this.modify(_.servers).using(_.put(server)).pipe { nodes =>
+      server.role.map {
+        case DatabaseRole.Parent(parent) => nodes.prependParentId(parent.nodeId)
+        case DatabaseRole.Child(child)   => nodes
+      }.getOrElse(nodes)
+    }
 
   def addServers(servers: Iterable[Server]): Nodes =
     servers.foldLeft(this)(_ addServer _)
 
-  def setServerState(
-      id: Id[Node],
-      notConnected: Option[NotConnected],
-      clientAsChild: Option[ChildNode]
-  ): Nodes =
-    this.modify(_.serverMap.index(id)).using(
-      _.copy(notConnected = notConnected, clientAsChild = clientAsChild)
-    )
-
-  def containsServer(id: Id[Node]): Boolean = this.serverMap.contains(id)
-
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] =
-    if (this.parentIds.contains(parentId))
-      this.getServer(parentId).map(server =>
+    if (parentIds.contains(parentId))
+      servers.get(parentId).map(server =>
         server.notConnected.map {
           case NotConnected.Disabled => ParentStatus.Disabled
           case NotConnected.Connecting(details) =>
@@ -130,10 +117,10 @@ case class Nodes(
     }
 
   def postableTo(id: Id[Node]): Boolean =
-    if (Some(id) == this.localId || Some(id) == this.operatingId)
+    if (Some(id) == localId || Some(id) == operatingId)
       true
     else
-      this.parentStatus(id).map {
+      parentStatus(id).map {
         case ParentStatus.Connected(Some(child)) => true
         case _                                   => false
       }.getOrElse(false)

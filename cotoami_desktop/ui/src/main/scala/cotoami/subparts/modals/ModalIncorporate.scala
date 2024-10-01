@@ -98,7 +98,7 @@ object ModalIncorporate {
         )
 
       case Msg.NodeConnected(Right(session)) => {
-        if (nodes.containsServer(session.server.id))
+        if (nodes.servers.contains(session.server.id))
           default.copy(
             _1 = model.copy(
               connecting = false,
