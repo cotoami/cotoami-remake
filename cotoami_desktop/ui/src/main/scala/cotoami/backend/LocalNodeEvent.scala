@@ -10,7 +10,7 @@ trait LocalNodeEventJson extends js.Object {
   val ParentSyncProgress: js.UndefOr[ParentSyncProgressJson] = js.native
   val ParentSyncEnd: js.UndefOr[ParentSyncEndJson] = js.native
   val ParentDisconnected: js.UndefOr[ParentDisconnectedJson] = js.native
-  val ClientConnected: js.UndefOr[ClientConnectedJson] = js.native
+  val ClientConnected: js.UndefOr[ActiveClientJson] = js.native
   val ClientDisconnected: js.UndefOr[ClientDisconnectedJson] = js.native
 }
 
@@ -65,8 +65,9 @@ trait ParentDisconnectedJson extends js.Object {
 }
 
 @js.native
-trait ClientConnectedJson extends js.Object {
+trait ActiveClientJson extends js.Object {
   val node_id: String = js.native
+  val remote_addr: String = js.native
 }
 
 @js.native

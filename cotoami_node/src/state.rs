@@ -5,13 +5,16 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use derive_new::new;
 use parking_lot::RwLock;
 use tokio::task::JoinHandle;
 use tracing::debug;
 use validator::Validate;
 
-use crate::{event::local::LocalNodeEvent, service::NodeService, Abortables};
+use crate::{
+    event::local::LocalNodeEvent,
+    service::{models::ActiveClient, NodeService},
+    Abortables,
+};
 
 mod config;
 mod internal;
@@ -88,9 +91,7 @@ impl NodeState {
 
     pub fn put_client_conn(&self, client_conn: ClientConnection) {
         self.pubsub()
-            .publish_event(LocalNodeEvent::ClientConnected {
-                node_id: client_conn.client_id,
-            });
+            .publish_event(LocalNodeEvent::ClientConnected(client_conn.client.clone()));
         self.client_conns().put(client_conn);
     }
 
@@ -212,9 +213,18 @@ impl ServerConnections {
     }
 }
 
-#[derive(new)]
 pub struct ClientConnection {
-    client_id: Id<Node>,
+    client: ActiveClient,
+}
+
+impl ClientConnection {
+    pub fn new(node_id: Id<Node>, remote_addr: String) -> Self {
+        ClientConnection {
+            client: ActiveClient::new(node_id, remote_addr),
+        }
+    }
+
+    pub fn client_id(&self) -> Id<Node> { self.client.node_id }
 }
 
 #[derive(Clone, Default)]
@@ -224,7 +234,7 @@ pub struct ClientConnections(
 
 impl ClientConnections {
     pub fn put(&self, client_conn: ClientConnection) {
-        self.0.write().insert(client_conn.client_id, client_conn);
+        self.0.write().insert(client_conn.client_id(), client_conn);
     }
 
     pub fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {

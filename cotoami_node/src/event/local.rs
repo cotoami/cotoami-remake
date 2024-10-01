@@ -1,6 +1,6 @@
 use cotoami_db::prelude::*;
 
-use crate::service::models::NotConnected;
+use crate::service::models::{ActiveClient, NotConnected};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LocalNodeEvent {
@@ -26,9 +26,7 @@ pub enum LocalNodeEvent {
     ParentDisconnected {
         node_id: Id<Node>,
     },
-    ClientConnected {
-        node_id: Id<Node>,
-    },
+    ClientConnected(ActiveClient),
     ClientDisconnected {
         node_id: Id<Node>,
         error: Option<String>,

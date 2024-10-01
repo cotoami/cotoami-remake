@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     extract::{
         ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade},
-        State,
+        ConnectInfo, State,
     },
     middleware,
     response::IntoResponse,
@@ -38,17 +38,23 @@ pub(super) fn routes() -> Router<NodeState> {
 /// websocket protocol will occur.
 async fn ws_handler(
     ws: WebSocketUpgrade,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(socket, state, session))
+    ws.on_upgrade(move |socket| handle_socket(socket, addr, state, session))
 }
 
 /// Actual websocket statemachine (one will be spawned per connection)
-async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
+async fn handle_socket(
+    socket: WebSocket,
+    remote_addr: SocketAddr,
+    state: NodeState,
+    session: ClientSession,
+) {
     // Publish connect and disconnect
     let client_id = session.client_node_id();
-    state.put_client_conn(ClientConnection::new(client_id));
+    state.put_client_conn(ClientConnection::new(client_id, remote_addr.to_string()));
     let on_disconnect = listener_on_disconnect(client_id, state.clone());
     futures::pin_mut!(on_disconnect);
 
