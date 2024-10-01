@@ -35,6 +35,7 @@ case class InitialDataset(json: InitialDatasetJson) {
     s ++= s", localNode: {${localNode.map(_.debug)}}"
     s ++= s", parentNodes: ${parentNodeIds.size}"
     s ++= s", servers: ${servers.size}"
+    s ++= s", activeClients: ${activeClients.size}"
     s.result()
   }
 }

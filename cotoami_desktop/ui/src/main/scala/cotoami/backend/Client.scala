@@ -24,7 +24,7 @@ object ClientNodeJson {
       nodeId: Id[Node],
       canEditLinks: Boolean,
       asOowner: Boolean
-  ): Cmd.One[Either[ErrorJson, PaginatedJson[ClientAddedJson]]] =
+  ): Cmd.One[Either[ErrorJson, ClientAddedJson]] =
     Commands.send(Commands.AddClient(nodeId, canEditLinks, asOowner))
 }
 
