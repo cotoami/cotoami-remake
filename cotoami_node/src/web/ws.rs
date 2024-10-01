@@ -43,7 +43,8 @@ async fn ws_handler(
 
 /// Actual websocket statemachine (one will be spawned per connection)
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
-    state.put_client_conn(ClientConnection::new(session.client_node_id()));
+    let client_id = session.client_node_id();
+    state.put_client_conn(ClientConnection::new(client_id));
 
     let (sink, stream) = socket.split();
 

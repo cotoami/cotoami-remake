@@ -94,6 +94,15 @@ impl NodeState {
         self.client_conns().put(client_conn);
     }
 
+    pub fn remove_client_conn(&self, client_id: &Id<Node>, disconnection_error: Option<String>) {
+        self.client_conns().remove(&client_id);
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ClientDisconnected {
+                node_id: *client_id,
+                error: disconnection_error,
+            });
+    }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn parent_services(&self) -> &ParentServices { &self.inner.parent_services }
