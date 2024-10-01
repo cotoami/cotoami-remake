@@ -10,13 +10,29 @@ case class Page[T](
     totalRows: Double
 )
 
+trait Paginated {
+  def pageSize: Double
+  def pageIndex: Option[Double]
+  def totalItems: Double
+
+  def totalPages: Double =
+    if (pageSize == 0) 0
+    else (totalItems / pageSize).ceil
+
+  def nextPageIndex: Option[Double] =
+    pageIndex match {
+      case Some(i) => if ((i + 1) < totalPages) Some(i + 1) else None
+      case None    => Some(0)
+    }
+}
+
 case class PaginatedIds[T <: Entity[T]](
     ids: Set[Id[T]] = Set.empty[Id[T]],
     order: Seq[Id[T]] = Seq.empty,
     pageSize: Double = 0,
     pageIndex: Option[Double] = None,
-    total: Double = 0
-) {
+    totalItems: Double = 0
+) extends Paginated {
   def isEmpty: Boolean = this.ids.isEmpty
 
   def appendPage(page: Page[T]): PaginatedIds[T] = {
@@ -35,7 +51,7 @@ case class PaginatedIds[T <: Entity[T]](
       order = self.order ++ idsToAdd,
       pageSize = page.size,
       pageIndex = Some(page.index),
-      total = page.totalRows
+      totalItems = page.totalRows
     )
   }
 
@@ -57,14 +73,4 @@ case class PaginatedIds[T <: Entity[T]](
           index
         }
       )
-
-  def nextPageIndex: Option[Double] =
-    this.pageIndex match {
-      case Some(i) => if ((i + 1) < this.totalPages) Some(i + 1) else None
-      case None    => Some(0)
-    }
-
-  def totalPages: Double =
-    if (this.pageSize == 0) 0
-    else (this.total / this.pageSize).ceil
 }
