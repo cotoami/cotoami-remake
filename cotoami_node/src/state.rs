@@ -104,6 +104,8 @@ impl NodeState {
             });
     }
 
+    pub fn active_clients(&self) -> Vec<ActiveClient> { self.client_conns().active_clients() }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn parent_services(&self) -> &ParentServices { &self.inner.parent_services }
@@ -239,5 +241,13 @@ impl ClientConnections {
 
     pub fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
         self.0.write().remove(client_id)
+    }
+
+    pub fn active_clients(&self) -> Vec<ActiveClient> {
+        self.0
+            .read()
+            .values()
+            .map(|conn| conn.client.clone())
+            .collect()
     }
 }

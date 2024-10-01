@@ -101,6 +101,7 @@ pub struct InitialDataset {
     pub local_node_id: Id<Node>,
     pub parent_node_ids: Vec<Id<Node>>,
     pub servers: Vec<Server>,
+    pub active_clients: Vec<ActiveClient>,
 }
 
 impl InitialDataset {
