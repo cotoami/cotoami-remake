@@ -11,11 +11,14 @@ use axum::{
     Extension, Router,
 };
 use cotoami_db::prelude::*;
-use futures::{SinkExt, StreamExt};
+use futures::{sink::Sink, SinkExt, StreamExt};
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
-    event::remote::tungstenite::{communicate_with_operator, communicate_with_parent},
+    event::remote::{
+        tungstenite::{communicate_with_operator, communicate_with_parent},
+        EventLoopError,
+    },
     state::{ClientConnection, NodeState},
     Abortables,
 };
@@ -43,8 +46,11 @@ async fn ws_handler(
 
 /// Actual websocket statemachine (one will be spawned per connection)
 async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
+    // Publish connect and disconnect
     let client_id = session.client_node_id();
     state.put_client_conn(ClientConnection::new(client_id));
+    let on_disconnect = listener_on_disconnect(client_id, state.clone());
+    futures::pin_mut!(on_disconnect);
 
     let (sink, stream) = socket.split();
 
@@ -64,7 +70,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 Arc::new(opr),
                 sink,
                 stream,
-                futures::sink::drain(),
+                on_disconnect,
                 communication_tasks,
             )
             .await;
@@ -76,12 +82,25 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,
                 stream,
-                futures::sink::drain(),
+                on_disconnect,
                 communication_tasks,
             )
             .await;
         }
     }
+}
+
+fn listener_on_disconnect(
+    client_id: Id<Node>,
+    state: NodeState,
+) -> impl Sink<Option<EventLoopError>, Error = futures::never::Never> + 'static {
+    futures::sink::unfold((), move |(), error: Option<EventLoopError>| {
+        let state = state.clone();
+        async move {
+            state.remove_client_conn(&client_id, error.map(|e| e.to_string()));
+            Ok(())
+        }
+    })
 }
 
 /// Convert an axum's [Message] into a tungstenite's [ts::Message].
