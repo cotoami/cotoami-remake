@@ -23,7 +23,14 @@ pub enum LocalNodeEvent {
         range: Option<(i64, i64)>,
         error: Option<String>,
     },
-    ParentDisconnected(Id<Node>),
-    ClientConnected(Id<Node>),
-    ClientDisconnected(Id<Node>),
+    ParentDisconnected {
+        node_id: Id<Node>,
+    },
+    ClientConnected {
+        node_id: Id<Node>,
+    },
+    ClientDisconnected {
+        node_id: Id<Node>,
+        error: Option<String>,
+    },
 }

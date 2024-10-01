@@ -88,7 +88,9 @@ impl NodeState {
 
     pub fn put_client_conn(&self, client_conn: ClientConnection) {
         self.pubsub()
-            .publish_event(LocalNodeEvent::ClientConnected(client_conn.client_id));
+            .publish_event(LocalNodeEvent::ClientConnected {
+                node_id: client_conn.client_id,
+            });
         self.client_conns().put(client_conn);
     }
 

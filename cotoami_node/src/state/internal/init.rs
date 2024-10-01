@@ -117,8 +117,8 @@ impl NodeState {
             while let Some(event) = events.next().await {
                 debug!("Internal event: {event:?}");
                 match event {
-                    LocalNodeEvent::ParentDisconnected(parent_id) => {
-                        this.parent_services().remove(&parent_id);
+                    LocalNodeEvent::ParentDisconnected { node_id } => {
+                        this.parent_services().remove(&node_id);
                     }
                     _ => (),
                 }
