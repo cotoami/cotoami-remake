@@ -8,7 +8,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoGraph, GeolocatedCotos, PaginatedCotos, Pagination},
+        models::{CotoGraph, CotosPage, GeolocatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -35,7 +35,7 @@ async fn recent_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<PaginatedCotos>, ServiceError> {
+) -> Result<Content<CotosPage>, ServiceError> {
     state
         .recent_cotos(None, None, pagination)
         .await
@@ -83,7 +83,7 @@ async fn search_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(query): Path<String>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<PaginatedCotos>, ServiceError> {
+) -> Result<Content<CotosPage>, ServiceError> {
     state
         .search_cotos(query, None, None, pagination)
         .await

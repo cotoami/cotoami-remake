@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{GeolocatedCotos, PaginatedCotos, Pagination},
+        models::{CotosPage, GeolocatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -36,7 +36,7 @@ async fn recent_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<PaginatedCotos>, ServiceError> {
+) -> Result<Content<CotosPage>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }
@@ -87,7 +87,7 @@ async fn search_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<PaginatedCotos>, ServiceError> {
+) -> Result<Content<CotosPage>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }

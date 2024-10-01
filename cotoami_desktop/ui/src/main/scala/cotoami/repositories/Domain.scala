@@ -21,11 +21,11 @@ import cotoami.backend.{
   CotoGraph,
   CotonomaBackend,
   CotonomaDetails,
+  CotosPage,
   ErrorJson,
   GeolocatedCotos,
   InitialDataset,
-  NodeDetails,
-  PaginatedCotos
+  NodeDetails
 }
 
 case class Domain(
@@ -201,7 +201,7 @@ case class Domain(
       .modify(_.cotonomas).using(_.put(cotonomaPair._1))
       .modify(_.cotos).using(_.put(cotonomaPair._2))
 
-  def importFrom(cotos: PaginatedCotos): Domain =
+  def importFrom(cotos: CotosPage): Domain =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
