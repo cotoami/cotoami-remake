@@ -43,6 +43,14 @@ object ClientNodeBackend {
   ): Cmd.One[Either[ErrorJson, Paginated[ClientNode, _]]] =
     ClientNodeJson.fetchRecent(pageIndex, pageSize)
       .map(_.map(Paginated(_, toModel(_))))
+
+  def add(
+      nodeId: Id[Node],
+      canEditLinks: Boolean,
+      asOowner: Boolean
+  ): Cmd.One[Either[ErrorJson, ClientAdded]] =
+    ClientNodeJson.add(nodeId, canEditLinks, asOowner)
+      .map(_.map(ClientAdded(_)))
 }
 
 @js.native
@@ -50,6 +58,12 @@ trait ClientAddedJson extends js.Object {
   val password: String = js.native
   val client: ClientNodeJson = js.native
   val node: NodeJson = js.native
+}
+
+case class ClientAdded(json: ClientAddedJson) {
+  def password: String = json.password
+  def client: ClientNode = ClientNodeBackend.toModel(json.client)
+  def node: Node = NodeBackend.toModel(json.node)
 }
 
 @js.native
