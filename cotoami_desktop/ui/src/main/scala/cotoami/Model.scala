@@ -193,6 +193,13 @@ case class Model(
       )
     }
 
+    // ClientDisconnected
+    for (json <- event.ClientDisconnected.toOption) {
+      return this.modify(_.domain.nodes.activeClients).using(
+        _.remove(Id(json.node_id))
+      )
+    }
+
     this
   }
 
