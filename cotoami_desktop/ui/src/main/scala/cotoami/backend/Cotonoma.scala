@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Node}
+import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Node, Page}
 
 @js.native
 trait CotonomaJson extends js.Object {
@@ -31,13 +31,13 @@ object CotonomaJson {
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
+  ): Cmd.One[Either[ErrorJson, PageJson[CotonomaJson]]] =
     Commands.send(Commands.RecentCotonomas(nodeId, pageIndex))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, PaginatedJson[CotonomaJson]]] =
+  ): Cmd.One[Either[ErrorJson, PageJson[CotonomaJson]]] =
     Commands.send(Commands.SubCotonomas(id, pageIndex))
 
   def post(
@@ -73,16 +73,16 @@ object CotonomaBackend {
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchRecent(nodeId, pageIndex)
-      .map(_.map(Paginated(_, toModel(_))))
+      .map(_.map(PageBackend.toModel(_, toModel(_))))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchSubs(id, pageIndex)
-      .map(_.map(Paginated(_, toModel(_))))
+      .map(_.map(PageBackend.toModel(_, toModel(_))))
 
   def post(
       name: String,

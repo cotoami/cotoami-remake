@@ -14,18 +14,18 @@ import cotoami.models.{
   Geolocation,
   Id,
   Link,
-  Node
+  Node,
+  Page
 }
 import cotoami.backend.{
   CotoGraph,
   CotonomaBackend,
   CotonomaDetails,
+  CotosPage,
   ErrorJson,
   GeolocatedCotos,
   InitialDataset,
-  NodeDetails,
-  Paginated,
-  PaginatedCotos
+  NodeDetails
 }
 
 case class Domain(
@@ -201,7 +201,7 @@ case class Domain(
       .modify(_.cotonomas).using(_.put(cotonomaPair._1))
       .modify(_.cotos).using(_.put(cotonomaPair._2))
 
-  def importFrom(cotos: PaginatedCotos): Domain =
+  def importFrom(cotos: CotosPage): Domain =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
@@ -225,23 +225,21 @@ case class Domain(
 
   def fetchRecentCotonomas(
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
 
-  def fetchMoreRecentCotonomas
-      : Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  def fetchMoreRecentCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     cotonomas.recentIds.nextPageIndex
       .map(fetchRecentCotonomas)
       .getOrElse(Cmd.none)
 
   def fetchSubCotonomas(
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
-  def fetchMoreSubCotonomas
-      : Cmd.One[Either[ErrorJson, Paginated[Cotonoma, _]]] =
+  def fetchMoreSubCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     cotonomas.subIds.nextPageIndex
       .map(fetchSubCotonomas)
       .getOrElse(Cmd.none)

@@ -51,6 +51,9 @@ impl NodeState {
             Command::UpdateServer { id, values } => {
                 format.serialize(self.update_server(id, values, opr?).await)
             }
+            Command::RecentClients { pagination } => {
+                format.serialize(self.recent_clients(pagination, opr?).await)
+            }
             Command::AddClient(input) => format.serialize(self.add_client(input, opr?).await),
             Command::RecentCotonomas { node, pagination } => {
                 format.serialize(self.recent_cotonomas(node, pagination).await)
@@ -274,6 +277,7 @@ impl NodeState {
             local_node_id: self.db().globals().try_get_local_node_id()?,
             parent_node_ids: self.db().globals().parent_node_ids(),
             servers: self.all_servers(operator).await?,
+            active_clients: self.active_clients(),
         })
     }
 }

@@ -36,7 +36,7 @@ pub(crate) async fn communicate_with_parent<
     MsgSinkErr: Into<anyhow::Error>,
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
     MsgStreamErr: Into<anyhow::Error> + Send + 'static,
-    OnDisconnect: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
+    OnDisconnect: Sink<Option<EventLoopError>> + Unpin,
 {
     let mut tasks = JoinSet::new();
     let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
@@ -104,7 +104,7 @@ pub(crate) async fn communicate_with_operator<
     MsgSinkErr: Into<anyhow::Error>,
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
     MsgStreamErr: Into<anyhow::Error> + Send + 'static,
-    OnDisconnect: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
+    OnDisconnect: Sink<Option<EventLoopError>> + Unpin,
 {
     let node_id = opr.node_id();
 

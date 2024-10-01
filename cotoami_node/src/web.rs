@@ -46,7 +46,8 @@ pub async fn launch_server(
     // Build a Web API server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     let web_api = router(Arc::new(config), node_state);
-    let server = axum::Server::bind(&addr).serve(web_api.into_make_service());
+    let server = axum::Server::bind(&addr)
+        .serve(web_api.into_make_service_with_connect_info::<SocketAddr>());
 
     // Prepare a way to gracefully shutdown a server
     // https://hyper.rs/guides/0.14/server/graceful-shutdown/

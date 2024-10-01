@@ -6,7 +6,7 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{coto_ops, Paginated};
+use super::{coto_ops, Page};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -161,7 +161,7 @@ pub(crate) fn recent<Conn: AsReadableConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<Cotonoma>> + '_ {
+) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let mut query = cotonomas::table.into_boxed();
@@ -183,9 +183,9 @@ pub(crate) fn subs<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<Cotonoma>> + '_ {
+) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
-        let cotonoma_cotos: Paginated<Coto> =
+        let cotonoma_cotos: Page<Coto> =
             super::paginate(ctx.conn().readable(), page_size, page_index, || {
                 cotos::table
                     .filter(cotos::is_cotonoma.eq(true))
@@ -204,10 +204,10 @@ pub(crate) fn subs<Conn: AsReadableConn>(
             .collect();
         let cotonomas = get_by_coto_ids(coto_ids).run(ctx)?;
 
-        Ok(Paginated {
+        Ok(Page {
             rows: cotonomas,
-            page_size: cotonoma_cotos.page_size,
-            page_index: cotonoma_cotos.page_index,
+            size: cotonoma_cotos.size,
+            index: cotonoma_cotos.index,
             total_rows: cotonoma_cotos.total_rows,
         })
     })

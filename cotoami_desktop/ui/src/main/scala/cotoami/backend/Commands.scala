@@ -67,6 +67,25 @@ object Commands {
       )
     )
 
+  def RecentClients(pageIndex: Double, pageSize: Option[Double] = None) =
+    jso(RecentClients =
+      jso(
+        pagination = jso(
+          page = pageIndex,
+          page_size = pageSize.getOrElse(null).asInstanceOf[js.Any]
+        )
+      )
+    )
+
+  def AddClient(nodeId: Id[Node], canEditLinks: Boolean, asOowner: Boolean) =
+    jso(AddClient =
+      jso(
+        id = nodeId.uuid,
+        as_owner = asOowner,
+        can_edit_links = canEditLinks
+      )
+    )
+
   def RecentCotonomas(nodeId: Option[Id[Node]], pageIndex: Double) =
     jso(RecentCotonomas =
       jso(

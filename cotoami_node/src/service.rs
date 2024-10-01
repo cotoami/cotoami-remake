@@ -168,10 +168,13 @@ pub enum Command {
     /// Request to update a server node and return an updated [ServerNode].
     UpdateServer { id: Id<Node>, values: UpdateServer },
 
+    /// Request a [Page<ClientNode>] that contains recently registered clients.
+    RecentClients { pagination: Pagination },
+
     /// Request to add a new client node and return [ClientAdded] if succeeded.
     AddClient(AddClient),
 
-    /// Request a `Paginated<Cotonoma>` that contains recently updated cotonomas.
+    /// Request a [Page<Cotonoma>] that contains recently updated cotonomas.
     RecentCotonomas {
         node: Option<Id<Node>>,
         pagination: Pagination,
@@ -186,13 +189,13 @@ pub enum Command {
     /// Request a [Cotonoma] of the given name in the given node.
     CotonomaByName { name: String, node: Id<Node> },
 
-    /// Request a `Paginated<Cotonoma>` that contains sub cotonomas of the given cotonoma.
+    /// Request a [Page<Cotonoma>] that contains sub cotonomas of the given cotonoma.
     SubCotonomas {
         id: Id<Cotonoma>,
         pagination: Pagination,
     },
 
-    /// Request [PaginatedCotos] that contains recently posted cotos.
+    /// Request [CotosPage] that contains recently posted cotos.
     RecentCotos {
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
@@ -211,7 +214,7 @@ pub enum Command {
         northeast: Geolocation,
     },
 
-    /// Request [PaginatedCotos] that match the given query and cotonoma.
+    /// Request [CotosPage] that match the given query and cotonoma.
     SearchCotos {
         query: String,
         node: Option<Id<Node>>,

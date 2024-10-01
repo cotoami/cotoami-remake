@@ -6,7 +6,7 @@ use diesel::prelude::*;
 use validator::Validate;
 
 use crate::{
-    db::{error::*, op::*, ops, ops::Paginated},
+    db::{error::*, op::*, ops, ops::Page},
     models::{
         node::{
             child::{ChildNode, NewChildNode, UpdateChildNode},
@@ -52,7 +52,7 @@ pub(crate) fn get_by_node_ids<Conn: AsReadableConn>(
 pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<(ChildNode, Node)>> + 'a {
+) -> impl Operation<Conn, Page<(ChildNode, Node)>> + 'a {
     read_op(move |conn| {
         ops::paginate(conn, page_size, page_index, || {
             child_nodes::table

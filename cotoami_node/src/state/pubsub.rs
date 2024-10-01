@@ -83,7 +83,7 @@ impl EventPubsub {
     }
 
     pub fn parent_disconnected(&self, node_id: Id<Node>) {
-        self.publish(LocalNodeEvent::ParentDisconnected(node_id), None);
+        self.publish(LocalNodeEvent::ParentDisconnected { node_id }, None);
     }
 }
 

@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use validator::Validate;
 
 use crate::{
-    db::{error::*, op::*, ops, ops::Paginated},
+    db::{error::*, op::*, ops, ops::Page},
     models::{
         node::{
             client::{ClientNode, ClientNodeAsPrincipal, NewClientNode, UpdateClientNode},
@@ -73,7 +73,7 @@ pub(crate) fn all_pairs<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<(Cli
 pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<(ClientNode, Node)>> + 'a {
+) -> impl Operation<Conn, Page<(ClientNode, Node)>> + 'a {
     read_op(move |conn| {
         ops::paginate(conn, page_size, page_index, || {
             client_nodes::table

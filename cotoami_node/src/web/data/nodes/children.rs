@@ -26,7 +26,7 @@ async fn recent_child_nodes(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<Node>>, ServiceError> {
+) -> Result<Content<Page<Node>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }

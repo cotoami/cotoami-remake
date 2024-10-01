@@ -4,7 +4,7 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, coto_ops, Paginated},
+        ops::{changelog_ops, coto_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -36,7 +36,7 @@ impl<'a> DatabaseSession<'a> {
         posted_in_id: Option<&Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
-    ) -> Result<Paginated<Coto>> {
+    ) -> Result<Page<Coto>> {
         self.read_transaction(coto_ops::recent(
             node_id,
             posted_in_id,
@@ -70,7 +70,7 @@ impl<'a> DatabaseSession<'a> {
         posted_in_id: Option<&Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
-    ) -> Result<Paginated<Coto>> {
+    ) -> Result<Page<Coto>> {
         self.read_transaction(coto_ops::full_text_search(
             query,
             node_id,

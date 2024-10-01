@@ -119,6 +119,7 @@ impl HttpClient {
             Command::UpdateServer { id, values } => {
                 self.put(&format!("{API_PATH_SERVERS}/{id}")).form(&values)
             }
+            Command::RecentClients { pagination } => self.get(API_PATH_CLIENTS).query(&pagination),
             Command::AddClient(input) => self.post(API_PATH_CLIENTS).form(&input),
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {

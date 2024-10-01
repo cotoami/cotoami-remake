@@ -66,8 +66,8 @@ pub struct ClientNodeSession {
 pub struct AddClient {
     #[validate(required)]
     pub id: Option<Id<Node>>,
-    pub password: Option<String>,
-    pub client_role: Option<NodeRole>,
+    pub password: Option<String>, // if None, the password will be auto-generated
+    pub client_role: Option<NodeRole>, // the default values is: NodeRole::Child
 
     // Client as a child
     pub as_owner: Option<bool>,
@@ -86,6 +86,8 @@ impl AddClient {
 pub struct ClientAdded {
     /// Generated password
     pub password: String,
+    pub client: ClientNode,
+    pub node: Node,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -99,6 +101,7 @@ pub struct InitialDataset {
     pub local_node_id: Id<Node>,
     pub parent_node_ids: Vec<Id<Node>>,
     pub servers: Vec<Server>,
+    pub active_clients: Vec<ActiveClient>,
 }
 
 impl InitialDataset {
@@ -172,6 +175,16 @@ pub struct UpdateServer {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// Client
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, new)]
+pub struct ActiveClient {
+    pub node_id: Id<Node>,
+    pub remote_addr: String,
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Changes
 /////////////////////////////////////////////////////////////////////////////
 
@@ -213,22 +226,22 @@ pub struct CotonomaDetails {
     pub cotonoma: Cotonoma,
     pub coto: Coto,
     pub supers: Vec<Cotonoma>,
-    pub subs: Paginated<Cotonoma>,
+    pub subs: Page<Cotonoma>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct PaginatedCotos {
-    pub page: Paginated<Coto>,
+pub struct CotosPage {
+    pub page: Page<Coto>,
     pub related_data: CotosRelatedData,
     pub outgoing_links: Vec<Link>,
 }
 
-impl PaginatedCotos {
-    pub(crate) fn new(page: Paginated<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
+impl CotosPage {
+    pub(crate) fn new(page: Page<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
         let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
         let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
         let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
-        Ok(PaginatedCotos {
+        Ok(CotosPage {
             page,
             related_data,
             outgoing_links,

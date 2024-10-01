@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     extract::{
         ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade},
-        State,
+        ConnectInfo, State,
     },
     middleware,
     response::IntoResponse,
@@ -11,12 +11,15 @@ use axum::{
     Extension, Router,
 };
 use cotoami_db::prelude::*;
-use futures::{SinkExt, StreamExt};
+use futures::{sink::Sink, SinkExt, StreamExt};
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
-    event::remote::tungstenite::{communicate_with_operator, communicate_with_parent},
-    state::NodeState,
+    event::remote::{
+        tungstenite::{communicate_with_operator, communicate_with_parent},
+        EventLoopError,
+    },
+    state::{ClientConnection, NodeState},
     Abortables,
 };
 
@@ -35,14 +38,29 @@ pub(super) fn routes() -> Router<NodeState> {
 /// websocket protocol will occur.
 async fn ws_handler(
     ws: WebSocketUpgrade,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(socket, state, session))
+    ws.on_upgrade(move |socket| handle_socket(socket, addr, state, session))
 }
 
 /// Actual websocket statemachine (one will be spawned per connection)
-async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSession) {
+async fn handle_socket(
+    socket: WebSocket,
+    remote_addr: SocketAddr,
+    state: NodeState,
+    session: ClientSession,
+) {
+    // Publish connect and disconnect
+    let client_id = session.client_node_id();
+    state.put_client_conn(ClientConnection::new(
+        client_id,
+        remote_addr.ip().to_string(),
+    ));
+    let on_disconnect = listener_on_disconnect(client_id, state.clone());
+    futures::pin_mut!(on_disconnect);
+
     let (sink, stream) = socket.split();
 
     // Adapt axum's sink/stream to handle tungstenite messages
@@ -61,7 +79,7 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 Arc::new(opr),
                 sink,
                 stream,
-                futures::sink::drain(),
+                on_disconnect,
                 communication_tasks,
             )
             .await;
@@ -73,12 +91,25 @@ async fn handle_socket(socket: WebSocket, state: NodeState, session: ClientSessi
                 format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,
                 stream,
-                futures::sink::drain(),
+                on_disconnect,
                 communication_tasks,
             )
             .await;
         }
     }
+}
+
+fn listener_on_disconnect(
+    client_id: Id<Node>,
+    state: NodeState,
+) -> impl Sink<Option<EventLoopError>, Error = futures::never::Never> + 'static {
+    futures::sink::unfold((), move |(), error: Option<EventLoopError>| {
+        let state = state.clone();
+        async move {
+            state.remove_client_conn(&client_id, error.map(|e| e.to_string()));
+            Ok(())
+        }
+    })
 }
 
 /// Convert an axum's [Message] into a tungstenite's [ts::Message].

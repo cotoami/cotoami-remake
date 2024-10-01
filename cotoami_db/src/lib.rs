@@ -14,7 +14,7 @@ pub mod prelude {
     pub use crate::{
         db::{
             error::*,
-            ops::{node_role_ops::*, Paginated},
+            ops::{node_role_ops::*, Page},
             transactions::DatabaseSession,
             Database,
         },

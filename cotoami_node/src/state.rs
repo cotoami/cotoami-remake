@@ -10,15 +10,19 @@ use tokio::task::JoinHandle;
 use tracing::debug;
 use validator::Validate;
 
-use crate::{service::NodeService, Abortables};
+use crate::{
+    event::local::LocalNodeEvent,
+    service::{models::ActiveClient, NodeService},
+    Abortables,
+};
 
 mod config;
-mod conn;
 mod internal;
 mod pubsub;
+mod server_conn;
 mod service;
 
-pub use self::{config::NodeConfig, conn::*, pubsub::*};
+pub use self::{config::NodeConfig, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -30,6 +34,7 @@ struct State {
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: ServerConnections,
+    client_conns: ClientConnections,
     parent_services: ParentServices,
     abortables: Abortables,
 }
@@ -55,6 +60,7 @@ impl NodeState {
             db: Arc::new(db),
             pubsub: Pubsub::default(),
             server_conns: ServerConnections::default(),
+            client_conns: ClientConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
         };
@@ -80,6 +86,25 @@ impl NodeState {
     pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
 
     pub fn server_conns(&self) -> &ServerConnections { &self.inner.server_conns }
+
+    pub fn client_conns(&self) -> &ClientConnections { &self.inner.client_conns }
+
+    pub fn put_client_conn(&self, client_conn: ClientConnection) {
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ClientConnected(client_conn.client.clone()));
+        self.client_conns().put(client_conn);
+    }
+
+    pub fn remove_client_conn(&self, client_id: &Id<Node>, disconnection_error: Option<String>) {
+        self.client_conns().remove(&client_id);
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ClientDisconnected {
+                node_id: *client_id,
+                error: disconnection_error,
+            });
+    }
+
+    pub fn active_clients(&self) -> Vec<ActiveClient> { self.client_conns().active_clients() }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
@@ -187,5 +212,42 @@ impl ServerConnections {
         for conn in self.0.read().values() {
             conn.disconnect(None);
         }
+    }
+}
+
+pub struct ClientConnection {
+    client: ActiveClient,
+}
+
+impl ClientConnection {
+    pub fn new(node_id: Id<Node>, remote_addr: String) -> Self {
+        ClientConnection {
+            client: ActiveClient::new(node_id, remote_addr),
+        }
+    }
+
+    pub fn client_id(&self) -> Id<Node> { self.client.node_id }
+}
+
+#[derive(Clone, Default)]
+pub struct ClientConnections(
+    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, ClientConnection>>>,
+);
+
+impl ClientConnections {
+    pub fn put(&self, client_conn: ClientConnection) {
+        self.0.write().insert(client_conn.client_id(), client_conn);
+    }
+
+    pub fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
+        self.0.write().remove(client_id)
+    }
+
+    pub fn active_clients(&self) -> Vec<ActiveClient> {
+        self.0
+            .read()
+            .values()
+            .map(|conn| conn.client.clone())
+            .collect()
     }
 }

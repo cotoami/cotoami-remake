@@ -161,8 +161,8 @@ case class Model(
       val clientAsChild =
         Nullable.toOption(change.client_as_child)
           .map(ChildNodeBackend.toModel(_))
-      return this.modify(_.domain.nodes).using(
-        _.setServerState(nodeId, notConnected, clientAsChild)
+      return this.modify(_.domain.nodes.servers).using(
+        _.setState(nodeId, notConnected, clientAsChild)
       )
     }
 
@@ -182,6 +182,21 @@ case class Model(
     for (end <- event.ParentSyncEnd.toOption) {
       return this.modify(_.parentSync).using(
         _.end(ParentSyncEndBackend.toModel(end))
+      )
+    }
+
+    // ClientConnected
+    for (activeClientJson <- event.ClientConnected.toOption) {
+      val activeClient = ActiveClientBackend.toModel(activeClientJson)
+      return this.modify(_.domain.nodes.activeClients).using(
+        _.put(activeClient)
+      )
+    }
+
+    // ClientDisconnected
+    for (json <- event.ClientDisconnected.toOption) {
+      return this.modify(_.domain.nodes.activeClients).using(
+        _.remove(Id(json.node_id))
       )
     }
 

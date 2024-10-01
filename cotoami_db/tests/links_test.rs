@@ -56,9 +56,9 @@ fn crud_operations() -> Result<()> {
     // check if `recent_links` contains it
     assert_that!(
         ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
-        matches_pattern!(Paginated {
-            page_size: eq(&5),
-            page_index: eq(&0),
+        matches_pattern!(Page {
+            size: eq(&5),
+            index: eq(&0),
             total_rows: eq(&1),
             rows: elements_are![eq(&link1)]
         })
@@ -109,9 +109,9 @@ fn crud_operations() -> Result<()> {
     // check if `recent_links` contains it
     assert_that!(
         ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
-        matches_pattern!(Paginated {
-            page_size: eq(&5),
-            page_index: eq(&0),
+        matches_pattern!(Page {
+            size: eq(&5),
+            index: eq(&0),
             total_rows: eq(&2),
             rows: elements_are![eq(&link2), eq(&link1)]
         })

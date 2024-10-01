@@ -28,7 +28,7 @@ async fn sub_cotonomas(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
+) -> Result<Content<Page<Cotonoma>>, ServiceError> {
     state
         .sub_cotonomas(cotonoma_id, pagination)
         .await
