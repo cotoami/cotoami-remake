@@ -185,6 +185,14 @@ case class Model(
       )
     }
 
+    // ClientConnected
+    for (activeClientJson <- event.ClientConnected.toOption) {
+      val activeClient = ActiveClientBackend.toModel(activeClientJson)
+      return this.modify(_.domain.nodes.activeClients).using(
+        _.put(activeClient)
+      )
+    }
+
     this
   }
 
