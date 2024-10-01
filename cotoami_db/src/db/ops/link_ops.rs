@@ -6,7 +6,7 @@ use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 use validator::Validate;
 
-use super::{coto_ops, Paginated};
+use super::{coto_ops, Page};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -51,7 +51,7 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
     created_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<Link>> + 'a {
+) -> impl Operation<Conn, Page<Link>> + 'a {
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let mut query = links::table.into_boxed();

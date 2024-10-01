@@ -7,7 +7,7 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{cotonoma_ops, Paginated};
+use super::{cotonoma_ops, Page};
 use crate::{
     db::{error::*, op::*, ops::detect_cjk_chars},
     models::{
@@ -75,7 +75,7 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
     posted_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<Coto>> + 'a {
+) -> impl Operation<Conn, Page<Coto>> + 'a {
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
             let all_cotos = cotos::table.into_boxed();
@@ -230,7 +230,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
     filter_by_posted_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> impl Operation<Conn, Paginated<Coto>> + 'a {
+) -> impl Operation<Conn, Page<Coto>> + 'a {
     read_op(move |conn| {
         if detect_cjk_chars(query) {
             search_trigram_index(
@@ -292,7 +292,7 @@ fn search_trigram_index(
     filter_by_posted_in_id: Option<&Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
-) -> Result<Paginated<Coto>> {
+) -> Result<Page<Coto>> {
     use crate::schema::cotos_fts_trigram::dsl::*;
 
     // Convert the space-separated query into a FTS query with `AND` and `OR` operators.
@@ -306,7 +306,7 @@ fn search_trigram_index(
                 subqueries.push(Cow::from(format!("({subquery})")))
             } else {
                 // No index entries found for the token.
-                return Ok(Paginated::empty_first(page_size));
+                return Ok(Page::empty_first(page_size));
             }
         } else {
             subqueries.push(Cow::from(token))

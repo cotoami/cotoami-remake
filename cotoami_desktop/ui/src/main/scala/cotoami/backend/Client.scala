@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{ActiveClient, ClientNode, Id, Node, Paginated}
+import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page}
 
 @js.native
 trait ClientNodeJson extends js.Object {
@@ -17,7 +17,7 @@ object ClientNodeJson {
   def fetchRecent(
       pageIndex: Double,
       pageSize: Option[Double] = None
-  ): Cmd.One[Either[ErrorJson, PaginatedJson[ClientNodeJson]]] =
+  ): Cmd.One[Either[ErrorJson, PageJson[ClientNodeJson]]] =
     Commands.send(Commands.RecentClients(pageIndex, pageSize))
 
   def add(
@@ -40,9 +40,9 @@ object ClientNodeBackend {
   def fetchRecent(
       pageIndex: Double,
       pageSize: Option[Double] = None
-  ): Cmd.One[Either[ErrorJson, Paginated[ClientNode]]] =
+  ): Cmd.One[Either[ErrorJson, Page[ClientNode]]] =
     ClientNodeJson.fetchRecent(pageIndex, pageSize)
-      .map(_.map(PaginatedBackend.toModel(_, toModel(_))))
+      .map(_.map(PageBackend.toModel(_, toModel(_))))
 
   def add(
       nodeId: Id[Node],

@@ -226,18 +226,18 @@ pub struct CotonomaDetails {
     pub cotonoma: Cotonoma,
     pub coto: Coto,
     pub supers: Vec<Cotonoma>,
-    pub subs: Paginated<Cotonoma>,
+    pub subs: Page<Cotonoma>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct PaginatedCotos {
-    pub page: Paginated<Coto>,
+    pub page: Page<Coto>,
     pub related_data: CotosRelatedData,
     pub outgoing_links: Vec<Link>,
 }
 
 impl PaginatedCotos {
-    pub(crate) fn new(page: Paginated<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
+    pub(crate) fn new(page: Page<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
         let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
         let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
         let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;

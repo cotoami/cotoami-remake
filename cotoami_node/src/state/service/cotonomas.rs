@@ -55,7 +55,7 @@ impl NodeState {
         &self,
         id: Id<Cotonoma>,
         pagination: Pagination,
-    ) -> Result<Paginated<Cotonoma>, ServiceError> {
+    ) -> Result<Page<Cotonoma>, ServiceError> {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }
@@ -73,7 +73,7 @@ impl NodeState {
         &self,
         node: Option<Id<Node>>,
         pagination: Pagination,
-    ) -> Result<Paginated<Cotonoma>, ServiceError> {
+    ) -> Result<Page<Cotonoma>, ServiceError> {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }

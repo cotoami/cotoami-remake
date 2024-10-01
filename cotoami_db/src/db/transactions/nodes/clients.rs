@@ -8,7 +8,7 @@ use crate::{
         ops::{
             node_ops,
             node_role_ops::{self, client_ops, NewDatabaseRole},
-            Paginated,
+            Page,
         },
         DatabaseSession,
     },
@@ -26,7 +26,7 @@ impl<'a> DatabaseSession<'a> {
         page_size: i64,
         page_index: i64,
         operator: &Operator,
-    ) -> Result<Paginated<(ClientNode, Node)>> {
+    ) -> Result<Page<(ClientNode, Node)>> {
         operator.requires_to_be_owner()?;
         self.read_transaction(client_ops::recent_pairs(page_size, page_index))
     }

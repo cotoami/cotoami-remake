@@ -36,7 +36,7 @@ async fn recent_cotonomas(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
+) -> Result<Content<Page<Cotonoma>>, ServiceError> {
     state
         .recent_cotonomas(None, pagination)
         .await

@@ -22,7 +22,7 @@ impl NodeState {
         &self,
         pagination: Pagination,
         operator: Arc<Operator>,
-    ) -> Result<Paginated<ClientNode>, ServiceError> {
+    ) -> Result<Page<ClientNode>, ServiceError> {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }

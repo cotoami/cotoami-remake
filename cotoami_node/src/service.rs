@@ -168,13 +168,13 @@ pub enum Command {
     /// Request to update a server node and return an updated [ServerNode].
     UpdateServer { id: Id<Node>, values: UpdateServer },
 
-    /// Request a [Paginated<ClientNode>] that contains recently registered clients.
+    /// Request a [Page<ClientNode>] that contains recently registered clients.
     RecentClients { pagination: Pagination },
 
     /// Request to add a new client node and return [ClientAdded] if succeeded.
     AddClient(AddClient),
 
-    /// Request a [Paginated<Cotonoma>] that contains recently updated cotonomas.
+    /// Request a [Page<Cotonoma>] that contains recently updated cotonomas.
     RecentCotonomas {
         node: Option<Id<Node>>,
         pagination: Pagination,

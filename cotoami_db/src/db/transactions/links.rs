@@ -4,7 +4,7 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, link_ops, Paginated},
+        ops::{changelog_ops, link_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -25,7 +25,7 @@ impl<'a> DatabaseSession<'a> {
         created_in_id: Option<&Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
-    ) -> Result<Paginated<Link>> {
+    ) -> Result<Page<Link>> {
         self.read_transaction(link_ops::recent(
             node_id,
             created_in_id,

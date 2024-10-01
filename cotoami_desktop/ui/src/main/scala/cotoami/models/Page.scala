@@ -3,10 +3,10 @@ package cotoami.models
 import scala.scalajs.js
 import com.softwaremill.quicklens._
 
-case class Paginated[T](
+case class Page[T](
     rows: js.Array[T],
-    pageSize: Double,
-    pageIndex: Double,
+    size: Double,
+    index: Double,
     totalRows: Double
 )
 
@@ -19,10 +19,10 @@ case class PaginatedIds[T <: Entity[T]](
 ) {
   def isEmpty: Boolean = this.ids.isEmpty
 
-  def appendPage(page: Paginated[T]): PaginatedIds[T] = {
+  def appendPage(page: Page[T]): PaginatedIds[T] = {
     // Reset values when adding the first page (index == 0).
     val self =
-      if (page.pageIndex == 0)
+      if (page.index == 0)
         PaginatedIds[T]()
       else
         this
@@ -33,8 +33,8 @@ case class PaginatedIds[T <: Entity[T]](
     self.copy(
       ids = self.ids ++ idsToAdd,
       order = self.order ++ idsToAdd,
-      pageSize = page.pageSize,
-      pageIndex = Some(page.pageIndex),
+      pageSize = page.size,
+      pageIndex = Some(page.index),
       total = page.totalRows
     )
   }
@@ -67,12 +67,4 @@ case class PaginatedIds[T <: Entity[T]](
   def totalPages: Double =
     if (this.pageSize == 0) 0
     else (this.total / this.pageSize).ceil
-
-  def debug: String = {
-    val s = new StringBuilder
-    s ++= s"local: ${this.ids.size}"
-    s ++= s", page: ${this.pageIndex} of ${this.totalPages}"
-    s ++= s", total: ${this.total}"
-    s.result()
-  }
 }

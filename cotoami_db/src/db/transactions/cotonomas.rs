@@ -6,7 +6,7 @@ use diesel::sqlite::SqliteConnection;
 use crate::{
     db::{
         op::*,
-        ops::{changelog_ops, coto_ops, cotonoma_ops, node_ops, Paginated},
+        ops::{changelog_ops, coto_ops, cotonoma_ops, node_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -84,7 +84,7 @@ impl<'a> DatabaseSession<'a> {
         node_id: Option<&Id<Node>>,
         page_size: i64,
         page_index: i64,
-    ) -> Result<Paginated<Cotonoma>> {
+    ) -> Result<Page<Cotonoma>> {
         self.read_transaction(cotonoma_ops::recent(node_id, page_size, page_index))
     }
 
@@ -104,7 +104,7 @@ impl<'a> DatabaseSession<'a> {
         id: &Id<Cotonoma>,
         page_size: i64,
         page_index: i64,
-    ) -> Result<Paginated<Cotonoma>> {
+    ) -> Result<Page<Cotonoma>> {
         self.read_transaction(cotonoma_ops::subs(id, page_size, page_index))
     }
 

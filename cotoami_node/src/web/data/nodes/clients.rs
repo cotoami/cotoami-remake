@@ -32,7 +32,7 @@ async fn recent_clients(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<ClientNode>>, ServiceError> {
+) -> Result<Content<Page<ClientNode>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }

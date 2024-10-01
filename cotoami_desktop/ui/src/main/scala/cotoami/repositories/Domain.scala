@@ -15,7 +15,7 @@ import cotoami.models.{
   Id,
   Link,
   Node,
-  Paginated
+  Page
 }
 import cotoami.backend.{
   CotoGraph,
@@ -225,22 +225,21 @@ case class Domain(
 
   def fetchRecentCotonomas(
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma]]] =
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
 
-  def fetchMoreRecentCotonomas
-      : Cmd.One[Either[ErrorJson, Paginated[Cotonoma]]] =
+  def fetchMoreRecentCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     cotonomas.recentIds.nextPageIndex
       .map(fetchRecentCotonomas)
       .getOrElse(Cmd.none)
 
   def fetchSubCotonomas(
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Paginated[Cotonoma]]] =
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
       .getOrElse(Cmd.none)
 
-  def fetchMoreSubCotonomas: Cmd.One[Either[ErrorJson, Paginated[Cotonoma]]] =
+  def fetchMoreSubCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     cotonomas.subIds.nextPageIndex
       .map(fetchSubCotonomas)
       .getOrElse(Cmd.none)

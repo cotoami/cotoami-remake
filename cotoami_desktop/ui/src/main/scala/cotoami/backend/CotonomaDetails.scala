@@ -3,15 +3,15 @@ package cotoami.backend
 import scala.scalajs.js
 import fui.Cmd
 
-import cotoami.models.{Coto, Cotonoma, Id, Paginated}
+import cotoami.models.{Coto, Cotonoma, Id, Page}
 
 case class CotonomaDetails(json: CotonomaDetailsJson) {
   def cotonoma: Cotonoma = CotonomaBackend.toModel(json.cotonoma)
   def coto: Coto = CotoBackend.toModel(json.coto)
   def supers: js.Array[Cotonoma] =
     json.supers.map(CotonomaBackend.toModel(_))
-  def subs: Paginated[Cotonoma] =
-    PaginatedBackend.toModel(json.subs, CotonomaBackend.toModel(_))
+  def subs: Page[Cotonoma] =
+    PageBackend.toModel(json.subs, CotonomaBackend.toModel(_))
 }
 
 object CotonomaDetails {
@@ -24,7 +24,7 @@ trait CotonomaDetailsJson extends js.Object {
   val cotonoma: CotonomaJson = js.native
   val coto: CotoJson = js.native
   val supers: js.Array[CotonomaJson] = js.native
-  val subs: PaginatedJson[CotonomaJson] = js.native
+  val subs: PageJson[CotonomaJson] = js.native
 }
 
 object CotonomaDetailsJson {

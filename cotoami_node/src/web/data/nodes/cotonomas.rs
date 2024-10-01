@@ -28,7 +28,7 @@ async fn recent_cotonomas(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<Paginated<Cotonoma>>, ServiceError> {
+) -> Result<Content<Page<Cotonoma>>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }

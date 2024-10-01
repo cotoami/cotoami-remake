@@ -23,26 +23,24 @@ pub(crate) mod node_role_ops;
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct Paginated<T> {
+pub struct Page<T> {
     pub rows: Vec<T>,
-    pub page_size: i64,
-    pub page_index: i64,
+    pub size: i64,
+    pub index: i64,
     pub total_rows: i64,
 }
 
-impl<T> Paginated<T> {
-    pub fn empty_first(page_size: i64) -> Self {
+impl<T> Page<T> {
+    pub fn empty_first(size: i64) -> Self {
         Self {
             rows: Vec::new(),
-            page_size,
-            page_index: 0,
+            size,
+            index: 0,
             total_rows: 0,
         }
     }
 
-    pub fn total_pages(&self) -> i64 {
-        (self.total_rows as f64 / self.page_size as f64).ceil() as i64
-    }
+    pub fn total_pages(&self) -> i64 { (self.total_rows as f64 / self.size as f64).ceil() as i64 }
 
     pub fn map<U, F>(self, f: F) -> MappedPage<T, F>
     where
@@ -55,19 +53,19 @@ impl<T> Paginated<T> {
 
 #[must_use]
 pub struct MappedPage<T, F> {
-    page: Paginated<T>,
+    page: Page<T>,
     f: F,
 }
 
-impl<T, U, F> From<MappedPage<T, F>> for Paginated<U>
+impl<T, U, F> From<MappedPage<T, F>> for Page<U>
 where
     F: FnMut(T) -> U,
 {
     fn from(MappedPage { page, f }: MappedPage<T, F>) -> Self {
-        Paginated {
+        Page {
             rows: page.rows.into_iter().map(f).collect(),
-            page_size: page.page_size,
-            page_index: page.page_index,
+            size: page.size,
+            index: page.index,
             total_rows: page.total_rows,
         }
     }
@@ -84,7 +82,7 @@ fn paginate<'a, R, F, Q>(
     page_size: i64,
     page_index: i64,
     query_builder: F,
-) -> Result<Paginated<R>>
+) -> Result<Page<R>>
 where
     F: Fn() -> Q,
     Q: LimitDsl + SelectDsl<CountStar>,
@@ -106,10 +104,10 @@ where
             .get_result(conn)?
     };
 
-    Ok(Paginated {
+    Ok(Page {
         rows,
-        page_size,
-        page_index,
+        size: page_size,
+        index: page_index,
         total_rows,
     })
 }
@@ -142,22 +140,22 @@ mod tests {
 
     #[test]
     fn total_pages() -> Result<()> {
-        let mut paginated: Paginated<usize> = Paginated {
+        let mut page: Page<usize> = Page {
             rows: Vec::new(),
-            page_size: 2,
-            page_index: 0,
+            size: 2,
+            index: 0,
             total_rows: 0,
         };
-        assert_eq!(paginated.total_pages(), 0);
+        assert_eq!(page.total_pages(), 0);
 
-        paginated.total_rows = 1;
-        assert_eq!(paginated.total_pages(), 1);
+        page.total_rows = 1;
+        assert_eq!(page.total_pages(), 1);
 
-        paginated.total_rows = 2;
-        assert_eq!(paginated.total_pages(), 1);
+        page.total_rows = 2;
+        assert_eq!(page.total_pages(), 1);
 
-        paginated.total_rows = 3;
-        assert_eq!(paginated.total_pages(), 2);
+        page.total_rows = 3;
+        assert_eq!(page.total_pages(), 2);
 
         Ok(())
     }

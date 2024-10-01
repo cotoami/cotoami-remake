@@ -8,7 +8,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Context, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, Paginated, ParentStatus, ServerNode}
+import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
 import cotoami.repositories.Cotonomas
 import cotoami.backend.{ErrorJson, ServerNodeBackend}
 import cotoami.components.{
@@ -74,10 +74,10 @@ object NavCotonomas {
       tagger andThen AppMsg.NavCotonomasMsg
 
     case object FetchMoreRecent extends Msg
-    case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma]])
+    case class RecentFetched(result: Either[ErrorJson, Page[Cotonoma]])
         extends Msg
     case object FetchMoreSubs extends Msg
-    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma]])
+    case class SubsFetched(result: Either[ErrorJson, Page[Cotonoma]])
         extends Msg
     case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class SyncToggled(result: Either[ErrorJson, ServerNode]) extends Msg

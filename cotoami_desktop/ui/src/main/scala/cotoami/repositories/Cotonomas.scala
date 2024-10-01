@@ -4,7 +4,7 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Paginated, PaginatedIds}
+import cotoami.models.{Coto, Cotonoma, Id, Page, PaginatedIds}
 import cotoami.backend.{
   CotoGraph,
   CotonomaBackend,
@@ -91,12 +91,12 @@ case class Cotonomas(
 
   val recent: Seq[Cotonoma] = recentIds.order.map(get).flatten
 
-  def appendPageOfSubs(page: Paginated[Cotonoma]): Cotonomas =
+  def appendPageOfSubs(page: Page[Cotonoma]): Cotonomas =
     this
       .putAll(page.rows)
       .modify(_.subIds).using(_.appendPage(page))
 
-  def appendPageOfRecent(page: Paginated[Cotonoma]): Cotonomas =
+  def appendPageOfRecent(page: Page[Cotonoma]): Cotonomas =
     this
       .putAll(page.rows)
       .modify(_.recentIds).using(_.appendPage(page))
