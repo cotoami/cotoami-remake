@@ -13,12 +13,12 @@ use validator::Validate;
 use crate::{service::NodeService, Abortables};
 
 mod config;
-mod conn;
 mod internal;
 mod pubsub;
+mod server_conn;
 mod service;
 
-pub use self::{config::NodeConfig, conn::*, pubsub::*};
+pub use self::{config::NodeConfig, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {
