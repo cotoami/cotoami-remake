@@ -1,24 +1,8 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import com.softwaremill.quicklens._
 
-import cotoami.models.{Entity, Id}
-
-case class Paginated[T, J](json: PaginatedJson[J], map: J => T) {
-  def rows: js.Array[T] = this.json.rows.map(this.map)
-  def pageSize: Double = this.json.page_size
-  def pageIndex: Double = this.json.page_index
-  def totalRows: Double = this.json.total_rows
-
-  def debug[T]: String = {
-    val s = new StringBuilder
-    s ++= s"pageIndex: ${this.pageIndex}"
-    s ++= s", pageSize: ${this.pageSize}"
-    s ++= s", totalRows: ${this.totalRows}"
-    s.result()
-  }
-}
+import cotoami.models.Paginated
 
 @js.native
 trait PaginatedJson[T] extends js.Object {
@@ -28,69 +12,12 @@ trait PaginatedJson[T] extends js.Object {
   val total_rows: Double = js.native
 }
 
-case class PaginatedIds[T <: Entity[T]](
-    ids: Set[Id[T]] = Set.empty[Id[T]],
-    order: Seq[Id[T]] = Seq.empty,
-    pageSize: Double = 0,
-    pageIndex: Option[Double] = None,
-    total: Double = 0
-) {
-  def isEmpty: Boolean = this.ids.isEmpty
-
-  def appendPage(page: Paginated[T, _]): PaginatedIds[T] = {
-    // Reset values when adding the first page (index == 0).
-    val self =
-      if (page.pageIndex == 0)
-        PaginatedIds[T]()
-      else
-        this
-
-    // Filter IDs that have already added to avoid duplicates.
-    val idsToAdd = page.rows.map(_.id).filterNot(self.ids.contains)
-
-    self.copy(
-      ids = self.ids ++ idsToAdd,
-      order = self.order ++ idsToAdd,
-      pageSize = page.pageSize,
-      pageIndex = Some(page.pageIndex),
-      total = page.totalRows
+object PaginatedBackend {
+  def toModel[T, J](json: PaginatedJson[J], map: J => T): Paginated[T] =
+    Paginated(
+      rows = json.rows.map(map),
+      pageSize = json.page_size,
+      pageIndex = json.page_index,
+      totalRows = json.total_rows
     )
-  }
-
-  def prependId(id: Id[T]): PaginatedIds[T] =
-    this
-      .modify(_.order).using(order =>
-        id +: (if (this.ids.contains(id))
-                 order.filterNot(_ == id)
-               else
-                 order)
-      )
-      .modify(_.ids).using(_ + id)
-      .modify(_.pageIndex).using(index =>
-        if (this.pageSize > 0) {
-          // recalculate the page index according to the size after prepending
-          val pages = (this.ids.size / this.pageSize).floor
-          if (pages > 0) Some(pages - 1) else None
-        } else {
-          index
-        }
-      )
-
-  def nextPageIndex: Option[Double] =
-    this.pageIndex match {
-      case Some(i) => if ((i + 1) < this.totalPages) Some(i + 1) else None
-      case None    => Some(0)
-    }
-
-  def totalPages: Double =
-    if (this.pageSize == 0) 0
-    else (this.total / this.pageSize).ceil
-
-  def debug: String = {
-    val s = new StringBuilder
-    s ++= s"local: ${this.ids.size}"
-    s ++= s", page: ${this.pageIndex} of ${this.totalPages}"
-    s ++= s", total: ${this.total}"
-    s.result()
-  }
 }

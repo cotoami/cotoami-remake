@@ -8,9 +8,17 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{log_info, Context, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  Id,
+  Node,
+  PaginatedIds,
+  WaitingPost,
+  WaitingPosts
+}
 import cotoami.repositories._
-import cotoami.backend.{ErrorJson, PaginatedCotos, PaginatedIds}
+import cotoami.backend.{ErrorJson, PaginatedCotos}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -127,8 +135,7 @@ object SectionTimeline {
         if (number > model.fetchNumber)
           default.copy(
             _1 = model.appendPage(cotos, number),
-            _2 = context.domain.importFrom(cotos),
-            _3 = log_info(s"Timeline fetched: ${number}", Some(cotos.debug))
+            _2 = context.domain.importFrom(cotos)
           )
         else
           default.copy(

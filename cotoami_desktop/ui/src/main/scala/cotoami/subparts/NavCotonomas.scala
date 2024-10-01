@@ -7,10 +7,10 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_debug, log_error, log_info, Context, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, ParentStatus, ServerNode}
+import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.models.{Cotonoma, Id, Node, Paginated, ParentStatus, ServerNode}
 import cotoami.repositories.Cotonomas
-import cotoami.backend.{ErrorJson, Paginated, ServerNodeBackend}
+import cotoami.backend.{ErrorJson, ServerNodeBackend}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -74,10 +74,10 @@ object NavCotonomas {
       tagger andThen AppMsg.NavCotonomasMsg
 
     case object FetchMoreRecent extends Msg
-    case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
+    case class RecentFetched(result: Either[ErrorJson, Paginated[Cotonoma]])
         extends Msg
     case object FetchMoreSubs extends Msg
-    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma, _]])
+    case class SubsFetched(result: Either[ErrorJson, Paginated[Cotonoma]])
         extends Msg
     case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class SyncToggled(result: Either[ErrorJson, ServerNode]) extends Msg
@@ -96,8 +96,7 @@ object NavCotonomas {
       case Msg.RecentFetched(Right(page)) =>
         default.copy(
           _1 = model.copy(loadingRecent = false),
-          _2 = context.domain.cotonomas.appendPageOfRecent(page),
-          _3 = log_info(s"Recent cotonomas fetched.", Some(page.debug))
+          _2 = context.domain.cotonomas.appendPageOfRecent(page)
         )
 
       case Msg.RecentFetched(Left(e)) =>
@@ -114,8 +113,7 @@ object NavCotonomas {
       case Msg.SubsFetched(Right(page)) =>
         default.copy(
           _1 = model.copy(loadingSubs = false),
-          _2 = context.domain.cotonomas.appendPageOfSubs(page),
-          _3 = log_info(s"Sub cotonomas fetched.", Some(page.debug))
+          _2 = context.domain.cotonomas.appendPageOfSubs(page)
         )
 
       case Msg.SubsFetched(Left(e)) =>
@@ -135,11 +133,7 @@ object NavCotonomas {
         default.copy(
           _1 = model.copy(togglingSync = false),
           _3 = result match {
-            case Right(server) =>
-              log_debug(
-                "Parent sync disabled.",
-                Some(server.disabled.toString())
-              )
+            case Right(server) => Cmd.none
             case Left(e) =>
               log_error(
                 "Failed to disable parent sync.",
