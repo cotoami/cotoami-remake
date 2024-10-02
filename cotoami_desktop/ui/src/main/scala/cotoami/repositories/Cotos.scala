@@ -41,7 +41,7 @@ case class Cotos(
 
   def importFrom(cotos: CotosPage): Cotos =
     this
-      .putAll(cotos.page.rows)
+      .putAll(cotos.page.items)
       .putAll(cotos.relatedData.originals)
 
   def importFrom(cotos: GeolocatedCotos): Cotos =

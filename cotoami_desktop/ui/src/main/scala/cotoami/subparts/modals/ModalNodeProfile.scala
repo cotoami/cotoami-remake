@@ -50,7 +50,7 @@ object ModalNodeProfile {
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
     msg match {
       case Msg.ClientCountFetched(Right(page)) =>
-        (model.copy(clientCount = page.totalRows), Cmd.none)
+        (model.copy(clientCount = page.totalItems), Cmd.none)
 
       case Msg.ClientCountFetched(Left(e)) =>
         (

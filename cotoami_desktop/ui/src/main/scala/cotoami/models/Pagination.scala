@@ -4,10 +4,10 @@ import scala.scalajs.js
 import com.softwaremill.quicklens._
 
 case class Page[T](
-    rows: js.Array[T],
+    items: js.Array[T],
     size: Double,
     index: Double,
-    totalRows: Double
+    totalItems: Double
 )
 
 trait Paginated {
@@ -44,14 +44,14 @@ case class PaginatedIds[T <: Entity[T]](
         this
 
     // Filter IDs that have already added to avoid duplicates.
-    val idsToAdd = page.rows.map(_.id).filterNot(self.ids.contains)
+    val idsToAdd = page.items.map(_.id).filterNot(self.ids.contains)
 
     self.copy(
       ids = self.ids ++ idsToAdd,
       order = self.order ++ idsToAdd,
       pageSize = page.size,
       pageIndex = Some(page.index),
-      totalItems = page.totalRows
+      totalItems = page.totalItems
     )
   }
 

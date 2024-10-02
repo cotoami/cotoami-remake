@@ -15,9 +15,9 @@ trait PageJson[T] extends js.Object {
 object PageBackend {
   def toModel[T, J](json: PageJson[J], map: J => T): Page[T] =
     Page(
-      rows = json.rows.map(map),
+      items = json.rows.map(map),
       size = json.size,
       index = json.index,
-      totalRows = json.total_rows
+      totalItems = json.total_rows
     )
 }

@@ -53,7 +53,7 @@ case class Cotonomas(
     this
       .put(details.cotonoma)
       .putAll(details.supers)
-      .putAll(details.subs.rows)
+      .putAll(details.subs.items)
       .focus(Some(details.cotonoma.id))
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
       .modify(_.subIds).using(_.appendPage(details.subs))
@@ -93,12 +93,12 @@ case class Cotonomas(
 
   def appendPageOfSubs(page: Page[Cotonoma]): Cotonomas =
     this
-      .putAll(page.rows)
+      .putAll(page.items)
       .modify(_.subIds).using(_.appendPage(page))
 
   def appendPageOfRecent(page: Page[Cotonoma]): Cotonomas =
     this
-      .putAll(page.rows)
+      .putAll(page.items)
       .modify(_.recentIds).using(_.appendPage(page))
 
   def post(cotonoma: Cotonoma, cotonomaCoto: Coto): Cotonomas =
