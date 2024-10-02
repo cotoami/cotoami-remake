@@ -9,7 +9,7 @@ import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page}
 trait ClientNodeJson extends js.Object {
   val node_id: String = js.native
   val created_at: String = js.native
-  val session_expires_at: Option[String] = js.native
+  val session_expires_at: Nullable[String] = js.native
   val disabled: Boolean = js.native
 }
 
@@ -33,7 +33,7 @@ object ClientNodeBackend {
     ClientNode(
       nodeId = Id(json.node_id),
       createdAtUtcIso = json.created_at,
-      sessionExpiresAtUtcIso = json.session_expires_at,
+      sessionExpiresAtUtcIso = Nullable.toOption(json.session_expires_at),
       disabled = json.disabled
     )
 

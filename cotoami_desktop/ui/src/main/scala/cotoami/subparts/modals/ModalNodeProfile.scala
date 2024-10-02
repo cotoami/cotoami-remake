@@ -1,14 +1,15 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-
+import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Context, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Node}
+import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.models.{ClientNode, Coto, Id, Node, Page}
 import cotoami.repositories.Domain
+import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.toolButton
 import cotoami.subparts.{imgNode, labeledField, Modal, ViewCoto}
 
@@ -16,6 +17,7 @@ object ModalNodeProfile {
 
   case class Model(
       nodeId: Id[Node],
+      clientCount: Double = 0,
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
@@ -25,8 +27,11 @@ object ModalNodeProfile {
   object Model {
     def apply(nodeId: Id[Node]): (Model, Cmd[AppMsg]) =
       (
-        Model(nodeId, None),
-        Domain.fetchNodeDetails(nodeId)
+        Model(nodeId),
+        Cmd.Batch(
+          Domain.fetchNodeDetails(nodeId),
+          fetchClientCount
+        )
       )
   }
 
@@ -37,13 +42,30 @@ object ModalNodeProfile {
   object Msg {
     def toApp[T](tagger: T => Msg): T => AppMsg =
       tagger andThen Modal.Msg.NodeProfileMsg andThen AppMsg.ModalMsg
+
+    case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
+        extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
-      context: Context
-  ): (Model, Domain, Cmd[AppMsg]) = {
-    (model, context.domain, Cmd.none)
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
+    msg match {
+      case Msg.ClientCountFetched(Right(page)) =>
+        (model.copy(clientCount = page.totalRows), Cmd.none)
+
+      case Msg.ClientCountFetched(Left(e)) =>
+        (
+          model,
+          log_error(
+            "Couldn't fetch client count.",
+            Some(js.JSON.stringify(e))
+          )
+        )
+    }
   }
+
+  def fetchClientCount: Cmd.One[AppMsg] =
+    ClientNodeBackend.fetchRecent(0, Some(1))
+      .map(Msg.toApp(Msg.ClientCountFetched(_)))
 
   def apply(model: Model)(implicit
       context: Context,
@@ -176,7 +198,7 @@ object ModalNodeProfile {
           ),
           "connecting",
           span(className := "separator")("/"),
-          code(className := "nodes")("0"),
+          code(className := "nodes")(model.clientCount),
           "nodes"
         ),
         Option.when(model.isOperatingNode()) {
