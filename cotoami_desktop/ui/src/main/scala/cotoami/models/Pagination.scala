@@ -12,7 +12,7 @@ case class Page[T](
 
 trait Paginated {
   def pageSize: Double
-  def pageIndex: Option[Double]
+  def lastLoadedIndex: Option[Double]
   def totalItems: Double
 
   def totalPages: Double =
@@ -20,7 +20,7 @@ trait Paginated {
     else (totalItems / pageSize).ceil
 
   def nextPageIndex: Option[Double] =
-    pageIndex match {
+    lastLoadedIndex match {
       case Some(i) => if ((i + 1) < totalPages) Some(i + 1) else None
       case None    => Some(0)
     }
@@ -30,7 +30,7 @@ case class PaginatedIds[T <: Entity[T]](
     ids: Set[Id[T]] = Set.empty[Id[T]],
     order: Seq[Id[T]] = Seq.empty,
     pageSize: Double = 0,
-    pageIndex: Option[Double] = None,
+    lastLoadedIndex: Option[Double] = None,
     totalItems: Double = 0
 ) extends Paginated {
   def isEmpty: Boolean = this.ids.isEmpty
@@ -50,7 +50,7 @@ case class PaginatedIds[T <: Entity[T]](
       ids = self.ids ++ idsToAdd,
       order = self.order ++ idsToAdd,
       pageSize = page.size,
-      pageIndex = Some(page.index),
+      lastLoadedIndex = Some(page.index),
       totalItems = page.totalItems
     )
   }
@@ -64,7 +64,7 @@ case class PaginatedIds[T <: Entity[T]](
                  order)
       )
       .modify(_.ids).using(_ + id)
-      .modify(_.pageIndex).using(index =>
+      .modify(_.lastLoadedIndex).using(index =>
         if (this.pageSize > 0) {
           // recalculate the page index according to the size after prepending
           val pages = (this.ids.size / this.pageSize).floor
