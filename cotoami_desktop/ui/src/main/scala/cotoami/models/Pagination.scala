@@ -26,6 +26,34 @@ trait Paginated {
     }
 }
 
+case class PaginatedItems[T](
+    items: Seq[T] = Seq.empty,
+    pageSize: Double = 0,
+    lastLoadedIndex: Option[Double] = None,
+    totalItems: Double = 0
+) extends Paginated {
+  def isEmpty: Boolean = items.isEmpty
+
+  def appendPage(page: Page[T]): PaginatedItems[T] = {
+    val self =
+      if (page.index == 0)
+        // Reset values when adding the first page.
+        PaginatedItems[T]()
+      else if (page.index <= lastLoadedIndex.getOrElse(-1.0))
+        // Do nothing if the page has been already appended.
+        return this
+      else
+        this
+
+    self.copy(
+      items = self.items ++ page.items,
+      pageSize = page.size,
+      lastLoadedIndex = Some(page.index),
+      totalItems = page.totalItems
+    )
+  }
+}
+
 case class PaginatedIds[T <: Entity[T]](
     ids: Set[Id[T]] = Set.empty[Id[T]],
     order: Seq[Id[T]] = Seq.empty,
@@ -33,13 +61,16 @@ case class PaginatedIds[T <: Entity[T]](
     lastLoadedIndex: Option[Double] = None,
     totalItems: Double = 0
 ) extends Paginated {
-  def isEmpty: Boolean = this.ids.isEmpty
+  def isEmpty: Boolean = ids.isEmpty
 
   def appendPage(page: Page[T]): PaginatedIds[T] = {
-    // Reset values when adding the first page (index == 0).
     val self =
       if (page.index == 0)
+        // Reset values when adding the first page.
         PaginatedIds[T]()
+      else if (page.index <= lastLoadedIndex.getOrElse(-1.0))
+        // Do nothing if the page has been already appended.
+        return this
       else
         this
 
@@ -58,16 +89,16 @@ case class PaginatedIds[T <: Entity[T]](
   def prependId(id: Id[T]): PaginatedIds[T] =
     this
       .modify(_.order).using(order =>
-        id +: (if (this.ids.contains(id))
+        id +: (if (ids.contains(id))
                  order.filterNot(_ == id)
                else
                  order)
       )
       .modify(_.ids).using(_ + id)
       .modify(_.lastLoadedIndex).using(index =>
-        if (this.pageSize > 0) {
+        if (pageSize > 0) {
           // recalculate the page index according to the size after prepending
-          val pages = (this.ids.size / this.pageSize).floor
+          val pages = (ids.size / pageSize).floor
           if (pages > 0) Some(pages - 1) else None
         } else {
           index
