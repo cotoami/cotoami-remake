@@ -66,7 +66,7 @@ object ModalNodeProfile {
 
   def apply(model: Model)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
       elementClasses = "node-profile",
@@ -82,7 +82,7 @@ object ModalNodeProfile {
 
   private def modalContent(node: Node, model: Model)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Fragment(
       div(className := "sidebar")(
@@ -93,10 +93,7 @@ object ModalNodeProfile {
               symbol = "edit",
               tip = "Edit",
               classes = "edit",
-              onClick = _ =>
-                dispatch(
-                  Modal.Msg.OpenModal(Modal.NodeIcon()).into
-                )
+              onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon()))
             )
           }
         )
@@ -182,7 +179,7 @@ object ModalNodeProfile {
 
   private def fieldClientNodes(model: Model)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     labeledField(
       classes = "client-nodes",
@@ -209,7 +206,7 @@ object ModalNodeProfile {
                 dispatch(
                   (Modal.Msg.OpenModal.apply _).tupled(
                     Modal.Clients()
-                  ).into
+                  )
                 )
             )
           )

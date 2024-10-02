@@ -162,7 +162,10 @@ object SectionTraversals {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): Option[ReactElement] =
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
     Option.when(!model.traversals.isEmpty) {
       section(className := "traversals")(
         model.traversals.zipWithIndex.map(sectionTraversal): _*
@@ -171,12 +174,12 @@ object SectionTraversals {
 
   private def sectionTraversal(
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(key := traversal._1.id, className := "traversal header-and-body")(
       header(className := "tools")(
         button(
           className := "close-traversal default",
-          onClick := (_ => dispatch(Msg.CloseTraversal(traversal._2).into))
+          onClick := (_ => dispatch(Msg.CloseTraversal(traversal._2)))
         )(
           materialSymbol("close")
         )
@@ -204,7 +207,7 @@ object SectionTraversals {
   private def divParents(
       parents: Seq[(Coto, Link)],
       traversalIndex: Int
-  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
+  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
         ul(className := "traverse-to-parents")(
@@ -213,9 +216,7 @@ object SectionTraversals {
               button(
                 className := "parent default",
                 onClick := (_ =>
-                  dispatch(
-                    Msg.StepToParent(traversalIndex, parent.id).into
-                  )
+                  dispatch(Msg.StepToParent(traversalIndex, parent.id))
                 )
               )(parent.abbreviate)
             )
@@ -231,7 +232,7 @@ object SectionTraversals {
       coto: Coto,
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     div(
       className := optionalClasses(
@@ -280,13 +281,13 @@ object SectionTraversals {
       subCoto: (Link, Coto),
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (link, coto) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        Msg.OpenTraversal(_).into
+        Msg.OpenTraversal(_)
       ),
       article(
         className := optionalClasses(
@@ -322,7 +323,7 @@ object SectionTraversals {
               traversal._2,
               stepIndex.map(_ + 1).getOrElse(0),
               coto.id
-            ).into
+            )
             div(className := "traverse")(
               toolButton(
                 symbol = "arrow_downward",

@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Msg => AppMsg}
+import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
 import cotoami.models.{Coto, Link}
 import cotoami.components.{toolButton, ScrollArea}
@@ -12,7 +12,7 @@ object SectionCotoDetails {
 
   def apply(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-details header-and-body")(
       header(
         toolButton(
@@ -50,7 +50,7 @@ object SectionCotoDetails {
 
   private def articleMainCoto(coto: Coto)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val domain = context.domain
 
@@ -68,7 +68,7 @@ object SectionCotoDetails {
 
   private def olSubCotos(coto: Coto)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
@@ -81,7 +81,7 @@ object SectionCotoDetails {
   private def liSubCoto(
       link: Link,
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
 
     li(key := link.id.uuid, className := "sub")(

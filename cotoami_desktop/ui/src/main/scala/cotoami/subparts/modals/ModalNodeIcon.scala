@@ -97,7 +97,9 @@ object ModalNodeIcon {
     }
   }
 
-  def apply(model: Model)(implicit dispatch: AppMsg => Unit): ReactElement =
+  def apply(
+      model: Model
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       elementClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
@@ -114,7 +116,7 @@ object ModalNodeIcon {
               br(),
               "or click to select one"
             ),
-            onSelect = file => dispatch(Msg.ImageInput(file).into)
+            onSelect = file => dispatch(Msg.ImageInput(file))
           )
         )
     )
@@ -122,7 +124,7 @@ object ModalNodeIcon {
   private def divPreview(
       imageUrl: String,
       model: Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "preview")(
       SectionCrop(
         imageUrl = imageUrl,
@@ -133,14 +135,14 @@ object ModalNodeIcon {
           `type` := "button",
           className := "cancel contrast outline",
           onClick := (_ =>
-            dispatch(Modal.Msg.CloseModal(classOf[Modal.NodeIcon]).into)
+            dispatch(Modal.Msg.CloseModal(classOf[Modal.NodeIcon]))
           )
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString(),
-          onClick := (_ => dispatch(Msg.Save.into))
+          onClick := (_ => dispatch(Msg.Save))
         )("OK")
       )
     )
@@ -151,7 +153,7 @@ object ModalNodeIcon {
 
     case class Props(
         imageUrl: String,
-        dispatch: AppMsg => Unit
+        dispatch: Into[AppMsg] => Unit
     )
 
     val component = FunctionalComponent[Props] { props =>
@@ -170,15 +172,15 @@ object ModalNodeIcon {
           aspect = Some(1.0),
           onCropComplete =
             Some((croppedArea: Area, croppedAreaPixels: Area) => {
-              props.dispatch(Msg.CropStarted.into)
+              props.dispatch(Msg.CropStarted)
               FixedAspectCrop.getCroppedImg(
                 props.imageUrl,
                 croppedAreaPixels
               ).onComplete {
                 case Success(blob) =>
-                  props.dispatch(Msg.ImageCropped(Right(blob)).into)
+                  props.dispatch(Msg.ImageCropped(Right(blob)))
                 case Failure(t) =>
-                  props.dispatch(Msg.ImageCropped(Left(t)).into)
+                  props.dispatch(Msg.ImageCropped(Left(t)))
               }
             })
         )

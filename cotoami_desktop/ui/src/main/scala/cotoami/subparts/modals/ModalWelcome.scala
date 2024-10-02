@@ -236,7 +236,7 @@ object ModalWelcome {
   def apply(
       model: Model,
       recentDatabases: Seq[DatabaseOpenedJson]
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       elementClasses = "welcome",
       error = model.error
@@ -258,7 +258,7 @@ object ModalWelcome {
   private def sectionRecent(
       model: Model,
       databases: Seq[DatabaseOpenedJson]
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     if (databases.isEmpty) {
       None
     } else {
@@ -272,7 +272,7 @@ object ModalWelcome {
                   className := "database default",
                   title := db.name,
                   disabled := model.processing,
-                  onClick := (_ => dispatch(Msg.OpenDatabaseIn(db.folder).into))
+                  onClick := (_ => dispatch(Msg.OpenDatabaseIn(db.folder)))
                 )(
                   img(
                     className := "node-icon",
@@ -291,7 +291,7 @@ object ModalWelcome {
 
   private def sectionNewDatabase(
       model: Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "new-database")(
       h2()("New database"),
       form()(
@@ -302,7 +302,7 @@ object ModalWelcome {
           inputType = "text",
           inputValue = model.databaseName,
           inputErrors = model.validateDatabaseName,
-          onInput = input => dispatch(Msg.DatabaseNameInput(input).into)
+          onInput = input => dispatch(Msg.DatabaseNameInput(input))
         ),
 
         // Base folder
@@ -316,7 +316,7 @@ object ModalWelcome {
               id := "select-base-folder",
               `type` := "button",
               className := "secondary",
-              onClick := (_ => dispatch(Msg.SelectBaseFolder.into))
+              onClick := (_ => dispatch(Msg.SelectBaseFolder))
             )(materialSymbol("folder"))
           )
         ),
@@ -328,7 +328,7 @@ object ModalWelcome {
           inputType = "text",
           inputValue = model.folderName,
           inputErrors = model.folderNameValidation,
-          onInput = input => dispatch(Msg.FolderNameInput(input).into)
+          onInput = input => dispatch(Msg.FolderNameInput(input))
         ),
 
         // Create button
@@ -338,7 +338,7 @@ object ModalWelcome {
             disabled := !model.readyToCreate,
             onClick := (e => {
               e.preventDefault()
-              dispatch(Msg.CreateDatabase.into)
+              dispatch(Msg.CreateDatabase)
             })
           )("Create")
         )
@@ -347,7 +347,7 @@ object ModalWelcome {
 
   private def sectionOpenDatabase(
       model: Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "open-database")(
       h2()("Open"),
       form()(
@@ -362,7 +362,7 @@ object ModalWelcome {
               id := "select-database-folder",
               `type` := "button",
               className := "secondary",
-              onClick := (_ => dispatch(Msg.SelectDatabaseFolder.into))
+              onClick := (_ => dispatch(Msg.SelectDatabaseFolder))
             )(materialSymbol("folder"))
           ),
           Validation.sectionValidationError(model.databaseFolderValidation)
@@ -375,7 +375,7 @@ object ModalWelcome {
             disabled := !model.readyToOpen,
             onClick := (e => {
               e.preventDefault()
-              dispatch(Msg.OpenDatabase.into)
+              dispatch(Msg.OpenDatabase)
             })
           )("Open")
         )

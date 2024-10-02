@@ -62,7 +62,7 @@ object SectionPinnedCotos {
       uiState: UiState
   )(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
     (context.domain.pinnedCotos, model.domain.currentCotonoma) match {
       case (pinnedCotos, Some(cotonoma)) if !pinnedCotos.isEmpty =>
@@ -75,7 +75,7 @@ object SectionPinnedCotos {
       pinnedCotos: Seq[(Link, Coto)],
       uiState: UiState,
       currentCotonoma: Cotonoma
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
 
     section(className := "pinned-cotos header-and-body")(
@@ -90,7 +90,7 @@ object SectionPinnedCotos {
             )
           ),
           disabled = inColumns,
-          onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, true).into)
+          onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, true))
         ),
         toolButton(
           symbol = "view_agenda",
@@ -102,8 +102,7 @@ object SectionPinnedCotos {
             )
           ),
           disabled = !inColumns,
-          onClick =
-            _ => dispatch(Msg.SwitchView(currentCotonoma.id, false).into)
+          onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, false))
         )
       ),
       div(
@@ -136,7 +135,7 @@ object SectionPinnedCotos {
         pinnedCotos: Seq[(Link, Coto)],
         viewportId: String,
         context: Context,
-        dispatch: AppMsg => Unit
+        dispatch: Into[AppMsg] => Unit
     )
 
     final val ActiveTocEntryClass = "active"
@@ -217,7 +216,7 @@ object SectionPinnedCotos {
   private def olPinnedCotos(
       pinnedCotos: Seq[(Link, Coto)],
       inColumns: Boolean
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     ol(className := "pinned-cotos")(
       pinnedCotos.map { case (pin, coto) =>
         liPinnedCoto(pin, coto, inColumns)
@@ -230,7 +229,7 @@ object SectionPinnedCotos {
       pin: Link,
       coto: Coto,
       inColumn: Boolean
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     li(
       key := pin.id.uuid,
       className := "pin",
@@ -273,7 +272,7 @@ object SectionPinnedCotos {
   private def divToc(
       pinnedCotos: Seq[(Link, Coto)],
       tocRef: ReactRef[dom.HTMLDivElement]
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
         ol(className := "toc")(
@@ -285,7 +284,7 @@ object SectionPinnedCotos {
             )(
               button(
                 className := "default",
-                onClick := (_ => dispatch(Msg.ScrollToPinnedCoto(pin).into))
+                onClick := (_ => dispatch(Msg.ScrollToPinnedCoto(pin)))
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
@@ -304,7 +303,7 @@ object SectionPinnedCotos {
   private def olSubCotos(
       coto: Coto,
       inColumn: Boolean
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
       if (subCotos.size < coto.outgoingLinks)
@@ -320,8 +319,7 @@ object SectionPinnedCotos {
               tip = "Load links",
               tipPlacement = "bottom",
               classes = "fetch-links",
-              onClick =
-                _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).into)
+              onClick = _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id))
             )
           }
         )
@@ -344,7 +342,7 @@ object SectionPinnedCotos {
   private def liSubCoto(
       link: Link,
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),

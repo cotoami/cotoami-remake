@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Context, Model, Msg => AppMsg}
+import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.components.{
   materialSymbol,
@@ -23,7 +23,7 @@ object PaneStock {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "stock")(
       if (uiState.mapOpened)
         SplitPane(
@@ -61,7 +61,7 @@ object PaneStock {
   def sectionLinkedCotos(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val sectionTraversals = SectionTraversals(model.traversals)
     val contents = Fragment(
       SectionPinnedCotos(model, uiState),

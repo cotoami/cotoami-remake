@@ -3,14 +3,14 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.{Model, Msg => AppMsg}
+import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.components.materialSymbol
 
 object AppFooter {
 
   def apply(
       model: Model
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     footer(
       div(className := "browser-nav")(
         div(className := "path")(model.path)

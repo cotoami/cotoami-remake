@@ -9,7 +9,7 @@ import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.{Context, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.libs.{rehypePlugins, remarkPlugins}
 import cotoami.models.{Coto, CotoContent, Id, Link, WaitingPost}
 import cotoami.repositories.Nodes
@@ -32,7 +32,7 @@ object ViewCoto {
 
   def divAttributes(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "attributes")(
       ulOtherCotonomas(coto),
       buttonGeolocation(coto),
@@ -43,7 +43,7 @@ object ViewCoto {
 
   private def ulOtherCotonomas(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
@@ -70,7 +70,7 @@ object ViewCoto {
   def divContent(
       coto: Coto,
       collapsibleContentOpened: Boolean = false
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "content")(
       context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-content")(
@@ -201,8 +201,8 @@ object ViewCoto {
 
   def ulParents(
       parents: Seq[(Coto, Link)],
-      onClickTagger: Id[Coto] => AppMsg
-  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
+      onClickTagger: Id[Coto] => Into[AppMsg]
+  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
         parents.map { case (parent, link) =>
@@ -219,7 +219,7 @@ object ViewCoto {
   def divLinksTraversal(
       coto: Coto,
       tipPlacement: String
-  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
+  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     Option.when(coto.outgoingLinks > 0) {
       div(className := "links")(
         toolButton(
@@ -229,7 +229,7 @@ object ViewCoto {
           classes = "open-traversal",
           onClick = e => {
             e.stopPropagation()
-            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).into)
+            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id))
           }
         )
       )
@@ -252,7 +252,10 @@ object ViewCoto {
 
   def buttonGeolocation(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): Option[ReactElement] =
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
     coto.geolocation.map { location =>
       val focused = Some(location) == context.focusedLocation
       button(

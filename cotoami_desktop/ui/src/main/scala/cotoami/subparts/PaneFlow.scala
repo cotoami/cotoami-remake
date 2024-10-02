@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg => AppMsg}
+import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 
 object PaneFlow {
@@ -16,7 +16,7 @@ object PaneFlow {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "flow")(
       model.domain.cotos.focused.map(SectionCotoDetails(_)(model, dispatch))
         .getOrElse(timeline(model, uiState))
@@ -25,7 +25,7 @@ object PaneFlow {
   private def timeline(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): ReactElement = Fragment(
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = Fragment(
     (model.domain.nodes.operating, model.domain.currentCotonoma) match {
       case (Some(operatingNode), Some(cotonoma)) =>
         model.domain.nodes.get(cotonoma.nodeId).flatMap(targetNode =>

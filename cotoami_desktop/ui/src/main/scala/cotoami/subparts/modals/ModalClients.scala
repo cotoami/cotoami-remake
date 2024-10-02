@@ -53,7 +53,7 @@ object ModalClients {
       .map(Msg.ClientsFetched(_).into)
 
   def apply(model: Model)(implicit
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
       elementClasses = "client-nodes",

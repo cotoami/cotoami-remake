@@ -206,7 +206,7 @@ object SectionTimeline {
       waitingPosts: WaitingPosts
   )(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
     val cotos = model.cotos(context.domain)
     context.domain.currentCotonomaId.flatMap(cotonomaId =>
@@ -223,7 +223,7 @@ object SectionTimeline {
       cotos: Seq[Coto],
       waitingPosts: WaitingPosts,
       currentCotonomaId: Id[Cotonoma]
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
         toolButton(
@@ -236,14 +236,14 @@ object SectionTimeline {
             `type` := "search",
             name := "query",
             value := model.query,
-            onChange := ((e) => dispatch(Msg.QueryInput(e.target.value).into)),
-            onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart.into)),
-            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd.into))
+            onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
+            onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
+            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd))
           ),
           Option.when(!model.query.isBlank) {
             button(
               className := "clear default",
-              onClick := (_ => dispatch(Msg.ClearQuery.into))
+              onClick := (_ => dispatch(Msg.ClearQuery))
             )(materialSymbol("close"))
           }
         )
@@ -251,10 +251,10 @@ object SectionTimeline {
       div(className := "posts body")(
         ScrollArea(
           initialScrollTop = model.getScrollPos(currentCotonomaId),
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.into)),
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
           onUnmounted = Some(scrollTop =>
             dispatch(
-              Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop).into
+              Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop)
             )
           )
         )(
@@ -286,7 +286,7 @@ object SectionTimeline {
 
   private def sectionPost(
       coto: Coto
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val originalCoto = context.domain.cotos.getOriginal(coto)
 
     section(
@@ -310,7 +310,7 @@ object SectionTimeline {
 
   private def articleCoto(coto: Coto)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val domain = context.domain
     article(
@@ -332,7 +332,7 @@ object SectionTimeline {
 
   private def repostHeader(coto: Coto)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
     Option.when(coto.repostOfId.isDefined) {
       val domain = context.domain
@@ -353,7 +353,7 @@ object SectionTimeline {
   private def repostedIn(
       coto: Coto,
       cotonomas: Cotonomas
-  )(implicit dispatch: AppMsg => Unit): Option[ReactElement] =
+  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     coto.postedInId.flatMap(cotonomas.get).map(cotonoma =>
       a(
         className := "reposted-in",

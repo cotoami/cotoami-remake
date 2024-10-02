@@ -38,7 +38,7 @@ object ModalParentSync {
   def apply(
       model: Model,
       parentSync: ParentSync
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       elementClasses = "parent-sync"
     )(
@@ -76,7 +76,7 @@ object ModalParentSync {
 
   private def sectionSynced(
       parentSync: ParentSync
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "synced")(
       h2()("Synced"),
       ul()(
@@ -103,7 +103,7 @@ object ModalParentSync {
         button(
           `type` := "button",
           disabled := !parentSync.syncing.isEmpty,
-          onClick := (e => dispatch(Msg.Close.into))
+          onClick := (e => dispatch(Msg.Close))
         )("OK")
       )
     )

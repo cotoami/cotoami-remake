@@ -145,7 +145,7 @@ object NavCotonomas {
   def apply(
       model: Model,
       currentNode: Node
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
     val recentCotonomas = context.domain.recentCotonomasWithoutRoot
     nav(className := "cotonomas header-and-body")(
@@ -172,7 +172,7 @@ object NavCotonomas {
       ),
       section(className := "cotonomas body")(
         ScrollArea(
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMoreRecent.into))
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMoreRecent))
         )(
           domain.cotonomas.focused.map(sectionCurrent(_, model)),
           Option.when(!recentCotonomas.isEmpty)(
@@ -190,7 +190,7 @@ object NavCotonomas {
   private def sectionNodeTools(
       node: Node,
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
     val status = domain.nodes.parentStatus(node.id)
     val statusView = status.flatMap(viewParentStatus(_))
@@ -229,7 +229,7 @@ object NavCotonomas {
                 checked := !syncDisabled,
                 disabled := model.togglingSync,
                 onChange := (_ =>
-                  dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).into)
+                  dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled))
                 )
               )
             ),
@@ -245,7 +245,7 @@ object NavCotonomas {
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
                 Modal.NodeProfile(node.id)
-              ).into
+              )
             )
         ),
         Option.when(
@@ -261,7 +261,7 @@ object NavCotonomas {
               dispatch(
                 Modal.Msg.OpenModal(
                   Modal.OperateAs(domain.nodes.operating.get, node)
-                ).into
+                )
               )
           )
         }
@@ -272,7 +272,7 @@ object NavCotonomas {
   private def sectionCurrent(
       focusedCotonoma: Cotonoma,
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
     val superCotonomas = domain.superCotonomasWithoutRoot
     section(className := "current")(
@@ -301,7 +301,7 @@ object NavCotonomas {
                 li(key := "more-button")(
                   button(
                     className := "more-sub-cotonomas default",
-                    onClick := (_ => dispatch(Msg.FetchMoreSubs.into))
+                    onClick := (_ => dispatch(Msg.FetchMoreSubs))
                   )(
                     materialSymbol("more_horiz")
                   )
@@ -321,7 +321,7 @@ object NavCotonomas {
 
   private def sectionRecent(
       cotonomas: Seq[Cotonoma]
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "recent")(
       h2()("Recent"),
       ul()(cotonomas.map(liCotonoma): _*)
@@ -329,7 +329,7 @@ object NavCotonomas {
 
   private def liCotonoma(
       cotonoma: Cotonoma
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(
       className := optionalClasses(
         Seq(("focused", context.domain.cotonomas.isFocusing(cotonoma.id)))

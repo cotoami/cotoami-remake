@@ -162,7 +162,7 @@ object ModalIncorporate {
 
   def apply(model: Model)(implicit
       context: Context,
-      dispatch: AppMsg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
       elementClasses = "incorporate",
@@ -171,12 +171,12 @@ object ModalIncorporate {
       "Incorporate Remote Database",
       buttonHelp(
         model.helpIntro,
-        () => dispatch(Msg.HelpIntro(true).into)
+        () => dispatch(Msg.HelpIntro(true))
       )
     )(
       sectionHelp(
         model.helpIntro,
-        () => dispatch(Msg.HelpIntro(false).into),
+        () => dispatch(Msg.HelpIntro(false)),
         context.i18n.help.ModalIncorporate_intro
       ),
       model.nodeSession
@@ -186,20 +186,20 @@ object ModalIncorporate {
 
   private def sectionConnect(
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
       h2()(
         "Connect",
         buttonHelp(
           model.helpConnect,
-          () => dispatch(Msg.HelpConnect(true).into)
+          () => dispatch(Msg.HelpConnect(true))
         )
       ),
       model.connectingError.map(e => section(className := "error")(e)),
       form()(
         sectionHelp(
           model.helpConnect,
-          () => dispatch(Msg.HelpConnect(false).into),
+          () => dispatch(Msg.HelpConnect(false)),
           context.i18n.help.ModalIncorporate_connect(
             context.domain.nodes.operatingId.map(_.uuid).getOrElse("")
           )
@@ -213,7 +213,7 @@ object ModalIncorporate {
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrl,
           inputErrors = model.validateNodeUrl,
-          onInput = (input => dispatch(Msg.NodeUrlInput(input).into))
+          onInput = (input => dispatch(Msg.NodeUrlInput(input)))
         ),
 
         // Password
@@ -222,7 +222,7 @@ object ModalIncorporate {
           inputId = "password",
           inputType = "password",
           inputValue = model.password,
-          onInput = (input => dispatch(Msg.PasswordInput(input).into))
+          onInput = (input => dispatch(Msg.PasswordInput(input)))
         ),
 
         // Preview
@@ -233,7 +233,7 @@ object ModalIncorporate {
             aria - "busy" := model.connecting.toString(),
             onClick := (e => {
               e.preventDefault()
-              dispatch(Msg.Connect.into)
+              dispatch(Msg.Connect)
             })
           )("Preview")
         )
@@ -243,7 +243,7 @@ object ModalIncorporate {
   private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "incorporate")(
       h2()("Node"),
       model.incorporatingError.map(e => section(className := "error")(e)),
@@ -274,13 +274,13 @@ object ModalIncorporate {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (e => dispatch(Msg.Cancel.into))
+          onClick := (e => dispatch(Msg.Cancel))
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToIncorporate,
           aria - "busy" := model.incorporating.toString(),
-          onClick := (e => dispatch(Msg.Incorporate.into))
+          onClick := (e => dispatch(Msg.Incorporate))
         )("Incorporate")
       )
     )

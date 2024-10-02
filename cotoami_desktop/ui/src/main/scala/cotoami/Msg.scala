@@ -8,7 +8,9 @@ import cotoami.repositories._
 import cotoami.models._
 import cotoami.subparts._
 
-sealed trait Msg
+sealed trait Msg extends Into[Msg] {
+  def into = this
+}
 
 object Msg {
   case class UrlChanged(url: URL) extends Msg

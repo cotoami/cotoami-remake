@@ -73,7 +73,7 @@ object ModalOperateAs {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.OperateAs]
     Modal.view(
       elementClasses = "operate-as",
@@ -92,13 +92,13 @@ object ModalOperateAs {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).into))
+          onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToSwitch,
           aria - "busy" := model.switching.toString(),
-          onClick := (e => dispatch(Msg.Switch.into))
+          onClick := (e => dispatch(Msg.Switch))
         )("Switch")
       )
     )

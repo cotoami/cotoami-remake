@@ -8,13 +8,13 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.{Msg => AppMsg}
+import cotoami.{Into, Msg => AppMsg}
 import cotoami.utils.Log
 import cotoami.components.materialSymbol
 
 object ViewLog {
 
-  def apply(log: Log)(implicit dispatch: AppMsg => Unit): ReactElement =
+  def apply(log: Log)(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "log-view")(
       header(className := "tools")(
         button(

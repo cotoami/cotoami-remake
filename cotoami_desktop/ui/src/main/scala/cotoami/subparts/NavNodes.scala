@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Model, Msg => AppMsg}
+import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
 import cotoami.repositories.Nodes
 import cotoami.components.{materialSymbol, optionalClasses}
@@ -14,7 +14,7 @@ object NavNodes {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
     val nodes = model.domain.nodes
     nav(
       className := optionalClasses(
@@ -54,9 +54,7 @@ object NavNodes {
         className := "add default",
         data - "tooltip" := "Add node",
         data - "placement" := "right",
-        onClick := (_ =>
-          dispatch(Modal.Msg.OpenModal(Modal.Incorporate()).into)
-        )
+        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Incorporate())))
       )(
         materialSymbol("add")
       ),
@@ -77,7 +75,7 @@ object NavNodes {
 
   private def buttonSwitchBack(
       nodes: Nodes
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     (nodes.operatingRemote, nodes.operating, nodes.local) match {
       case (true, Some(operatingNode), Some(localNode)) =>
         Some(
@@ -90,7 +88,7 @@ object NavNodes {
                 dispatch(
                   Modal.Msg.OpenModal(
                     Modal.OperateAs(operatingNode, localNode)
-                  ).into
+                  )
                 )
               )
             )(
@@ -106,7 +104,7 @@ object NavNodes {
   private def buttonNode(
       node: Node,
       nodes: Nodes
-  )(implicit dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
     val status = nodes.parentStatus(node.id).flatMap(viewParentStatus(_))
     val tooltip =
       status.map(s => s"${node.name} (${s.title})").getOrElse(node.name)

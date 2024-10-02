@@ -30,7 +30,14 @@ object Main {
 
     Browser.runProgram(
       dom.document.getElementById("app"),
-      Program(init, view, update, subscriptions, Some(Msg.UrlChanged))
+      Program(
+        init,
+        (model: Model, dispatch: Msg => Unit) =>
+          view(model, msg => dispatch(msg.into)),
+        update,
+        subscriptions,
+        Some(Msg.UrlChanged)
+      )
     )
   }
 
@@ -381,7 +388,7 @@ object Main {
       tauri.listen[ChangelogEntryJson]("backend-change", None)
         .map(Msg.BackendChange)
 
-  def view(model: Model, dispatch: Msg => Unit): ReactElement = {
+  def view(model: Model, dispatch: Into[Msg] => Unit): ReactElement = {
     implicit val _context: Context = model
     implicit val _dispatch = dispatch
     Fragment(

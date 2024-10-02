@@ -178,7 +178,7 @@ object Modal {
 
   def apply(
       model: AppModel
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.modalStack.top.flatMap {
       case Welcome(modalModel) =>
         model.systemInfo.map(info =>
@@ -206,7 +206,7 @@ object Modal {
 
   def view[M <: Modal](
       elementClasses: String,
-      closeButton: Option[(Class[M], AppMsg => Unit)] = None,
+      closeButton: Option[(Class[M], Into[AppMsg] => Unit)] = None,
       error: Option[String] = None
   )(title: ReactElement*)(body: ReactElement*): ReactElement =
     dialog(
@@ -219,7 +219,7 @@ object Modal {
           closeButton.map { case (modalType, dispatch) =>
             button(
               className := "close default",
-              onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).into))
+              onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
             )
           },
           h1()(title: _*)

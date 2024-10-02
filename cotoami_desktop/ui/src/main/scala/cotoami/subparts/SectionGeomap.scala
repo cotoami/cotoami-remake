@@ -344,7 +344,7 @@ object SectionGeomap {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     MapLibre(
       id = "main-geomap",
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
@@ -365,22 +365,22 @@ object SectionGeomap {
       fitBounds = model._fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.Init(bounds).into)
+        dispatch(Msg.Init(bounds))
       }),
       onClick = Some(e => {
         val location = Geolocation.fromMapLibre(e.lngLat)
-        dispatch(Msg.LocationClicked(location).into)
+        dispatch(Msg.LocationClicked(location))
       }),
-      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom).into)),
+      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
       onCenterMoved = Some(center => {
         val location = Geolocation.fromMapLibre(center)
-        dispatch(Msg.CenterMoved(location).into)
+        dispatch(Msg.CenterMoved(location))
       }),
       onBoundsChanged = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.BoundsChanged(bounds).into)
+        dispatch(Msg.BoundsChanged(bounds))
       }),
-      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id).into))
+      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id)))
     )
   }
 }

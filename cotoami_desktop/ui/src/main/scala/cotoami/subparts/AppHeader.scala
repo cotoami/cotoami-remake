@@ -3,7 +3,7 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Context, Model, Msg => AppMsg}
+import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
@@ -11,7 +11,7 @@ object AppHeader {
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     header(
       data - "tauri-drag-region" := "default",
       data - "os" := model.systemInfo.map(_.os).getOrElse("")
@@ -42,7 +42,7 @@ object AppHeader {
 
   private def sectionCurrentFocus(
       focus: (Node, Option[Cotonoma])
-  )(implicit context: Context, dispatch: AppMsg => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (node, cotonoma) = focus
     section(
       className := optionalClasses(
@@ -92,7 +92,7 @@ object AppHeader {
 
   private def divToolButtons(
       uiState: UiState
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "tool-buttons")(
       toolButton(
         classes = optionalClasses(
@@ -125,7 +125,7 @@ object AppHeader {
 
   private def buttonNodeProfile(
       node: Node
-  )(implicit dispatch: AppMsg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "node-profile, default",
       title := "Node profile",
@@ -133,7 +133,7 @@ object AppHeader {
         dispatch(
           (Modal.Msg.OpenModal.apply _).tupled(
             Modal.NodeProfile(node.id)
-          ).into
+          )
         )
       )
     )(
