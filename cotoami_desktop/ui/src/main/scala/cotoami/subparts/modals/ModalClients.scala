@@ -7,15 +7,29 @@ import com.softwaremill.quicklens._
 
 import fui.Cmd
 import cotoami.{log_error, Into, Msg => AppMsg}
-import cotoami.models.{ClientNode, Page, PaginatedItems}
+import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
+import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.Modal
 
 object ModalClients {
 
   case class Model(
-      clients: PaginatedItems[ClientNode] = PaginatedItems(),
+      clientNodes: PaginatedItems[ClientNode] = PaginatedItems(),
       error: Option[String] = None
+  ) {
+    def clients(nodes: Nodes): Seq[Client] =
+      clientNodes.items.flatMap { client =>
+        nodes.get(client.nodeId).map { node =>
+          Client(node, client, nodes.activeClients.get(client.nodeId))
+        }
+      }
+  }
+
+  case class Client(
+      node: Node,
+      client: ClientNode,
+      active: Option[ActiveClient]
   )
 
   object Model {
@@ -38,7 +52,7 @@ object ModalClients {
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
     msg match {
       case Msg.ClientsFetched(Right(page)) =>
-        (model.modify(_.clients).using(_.appendPage(page)), Cmd.none)
+        (model.modify(_.clientNodes).using(_.appendPage(page)), Cmd.none)
 
       case Msg.ClientsFetched(Left(e)) =>
         (
