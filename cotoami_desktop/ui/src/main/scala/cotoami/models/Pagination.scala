@@ -38,7 +38,7 @@ case class PaginatedItems[T](
     val self =
       if (page.index == 0)
         // Reset values when adding the first page.
-        PaginatedItems[T]()
+        PaginatedItems()
       else if (page.index <= lastLoadedIndex.getOrElse(-1.0))
         // Do nothing if the page has been already appended.
         return this
@@ -77,7 +77,7 @@ case class PaginatedIds[T <: Entity[T]](
     // The actual page position could be moved when inserts or deletes occur in
     // the database. For example, inserts could move the position backward and
     // as a result the page could contain IDs that have already been appended.
-    // So it needs to filter the duplicate IDs. As for the opposite case (some 
+    // So it needs to filter the duplicate IDs. As for the opposite case (some
     // missing entities in the page), we can do nothing about it here.
     val idsToAdd = page.items.map(_.id).filterNot(self.ids.contains)
 

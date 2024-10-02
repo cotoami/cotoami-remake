@@ -184,7 +184,8 @@ object ModalNodeProfile {
     )
 
   private def fieldClientNodes(model: Model)(implicit
-      context: Context
+      context: Context,
+      dispatch: AppMsg => Unit
   ): ReactElement =
     labeledField(
       classes = "client-nodes",
@@ -206,7 +207,13 @@ object ModalNodeProfile {
             toolButton(
               symbol = "edit",
               tip = "Edit",
-              classes = "edit"
+              classes = "edit",
+              onClick = _ =>
+                dispatch(
+                  (Modal.Msg.OpenModal.apply _).tupled(
+                    Modal.Clients()
+                  ).toApp
+                )
             )
           )
         }

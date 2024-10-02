@@ -32,14 +32,22 @@ object Modal {
 
   case class NodeProfile(model: ModalNodeProfile.Model) extends Modal
   object NodeProfile {
-    def apply(nodeId: Id[Node]): (NodeProfile, Cmd[AppMsg]) =
-      ModalNodeProfile.Model(nodeId).pipe { case (model, cmd) =>
-        (NodeProfile(model), cmd)
-      }
+    def apply(nodeId: Id[Node]): (NodeProfile, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalNodeProfile.Model(nodeId)
+      (NodeProfile(model), cmd)
+    }
   }
 
   case class NodeIcon(model: ModalNodeIcon.Model = ModalNodeIcon.Model())
       extends Modal
+
+  case class Clients(model: ModalClients.Model) extends Modal
+  object Clients {
+    def apply(): (Clients, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalClients.Model()
+      (Clients(model), cmd)
+    }
+  }
 
   case class Stack(modals: Seq[Modal] = Seq.empty) {
     def open[M <: Modal: ClassTag](modal: M): Stack =
@@ -85,6 +93,7 @@ object Modal {
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
     case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
+    case class ClientsMsg(msg: ModalClients.Msg) extends Msg
   }
 
   def open(modal: Modal): Cmd.One[AppMsg] =
@@ -157,6 +166,13 @@ object Modal {
               )
           }
         }
+
+      case Msg.ClientsMsg(modalMsg) =>
+        stack.get[Clients].map { case Clients(modalModel) =>
+          ModalClients.update(modalMsg, modalModel).pipe { case (modal, cmds) =>
+            (model.updateModal(Clients(modal)), cmds)
+          }
+        }
     }).getOrElse((model, Cmd.none))
   }
 
@@ -183,6 +199,9 @@ object Modal {
 
       case NodeIcon(modalModel) =>
         Some(ModalNodeIcon(modalModel))
+
+      case Clients(modalModel) =>
+        Some(ModalClients(modalModel))
     }
 
   def view[M <: Modal](
