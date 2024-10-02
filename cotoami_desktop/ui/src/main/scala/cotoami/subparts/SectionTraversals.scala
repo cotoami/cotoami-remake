@@ -88,9 +88,6 @@ object SectionTraversals {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): (T => AppMsg) =
-      tagger andThen AppMsg.SectionTraversalsMsg
-
     case class OpenTraversal(start: Id[Coto]) extends Msg
     case class CloseTraversal(traversalIndex: Int) extends Msg
     case class Step(traversalIndex: Int, stepIndex: Int, step: Id[Coto])
@@ -289,7 +286,7 @@ object SectionTraversals {
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        Msg.toApp(Msg.OpenTraversal(_))
+        Msg.OpenTraversal(_).toApp
       ),
       article(
         className := optionalClasses(

@@ -40,9 +40,6 @@ object ModalNodeProfile {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.NodeProfileMsg andThen AppMsg.ModalMsg
-
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
         extends Msg
   }
@@ -65,7 +62,7 @@ object ModalNodeProfile {
 
   def fetchClientCount: Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(0, Some(1))
-      .map(Msg.toApp(Msg.ClientCountFetched(_)))
+      .map(Msg.ClientCountFetched(_).toApp)
 
   def apply(model: Model)(implicit
       context: Context,

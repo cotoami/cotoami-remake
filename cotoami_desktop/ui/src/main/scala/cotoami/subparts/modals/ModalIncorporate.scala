@@ -54,9 +54,6 @@ object ModalIncorporate {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.IncorporateMsg andThen AppMsg.ModalMsg
-
     case class HelpIntro(display: Boolean) extends Msg
     case class HelpConnect(display: Boolean) extends Msg
     case class NodeUrlInput(url: String) extends Msg
@@ -94,7 +91,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(connecting = true, connectingError = None),
           _3 = ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
-            .map(Msg.toApp(Msg.NodeConnected(_)))
+            .map(Msg.NodeConnected(_).toApp)
         )
 
       case Msg.NodeConnected(Right(session)) => {
@@ -140,7 +137,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(incorporating = true, incorporatingError = None),
           _3 = ServerBackend.addServer(model.nodeUrl, model.password)
-            .map(Msg.toApp(Msg.NodeIncorporated(_)))
+            .map(Msg.NodeIncorporated(_).toApp)
         )
 
       case Msg.NodeIncorporated(Right(server)) => {

@@ -31,7 +31,7 @@ object NavCotonomas {
       (
         copy(loadingRecent = true),
         context.domain.fetchRecentCotonomas(0)
-          .map(Msg.toApp(Msg.RecentFetched))
+          .map(Msg.RecentFetched(_).toApp)
       )
 
     def fetchMoreRecent()(implicit
@@ -43,14 +43,14 @@ object NavCotonomas {
         (
           copy(loadingRecent = true),
           context.domain.fetchMoreRecentCotonomas
-            .map(Msg.toApp(Msg.RecentFetched))
+            .map(Msg.RecentFetched(_).toApp)
         )
 
     def fetchSubs()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.domain.fetchSubCotonomas(0)
-          .map(Msg.toApp(Msg.SubsFetched))
+          .map(Msg.SubsFetched(_).toApp)
       )
 
     def fetchMoreSubs()(implicit
@@ -62,7 +62,7 @@ object NavCotonomas {
         (
           copy(loadingSubs = true),
           context.domain.fetchMoreSubCotonomas
-            .map(Msg.toApp(Msg.SubsFetched))
+            .map(Msg.SubsFetched(_).toApp)
         )
   }
 
@@ -70,9 +70,6 @@ object NavCotonomas {
     def toApp: AppMsg = AppMsg.NavCotonomasMsg(this)
   }
   object Msg {
-    def toApp[T](tagger: T => Msg): (T => AppMsg) =
-      tagger andThen AppMsg.NavCotonomasMsg
-
     case object FetchMoreRecent extends Msg
     case class RecentFetched(result: Either[ErrorJson, Page[Cotonoma]])
         extends Msg
@@ -126,7 +123,7 @@ object NavCotonomas {
         default.copy(
           _1 = model.copy(togglingSync = true),
           _3 = ServerNodeBackend.update(id, Some(disable), None)
-            .map(Msg.toApp(Msg.SyncToggled(_)))
+            .map(Msg.SyncToggled(_).toApp)
         )
 
       case Msg.SyncToggled(result) =>

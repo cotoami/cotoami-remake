@@ -239,7 +239,7 @@ object SectionPinnedCotos {
     )(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
-        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
+        SectionTraversals.Msg.OpenTraversal(_).toApp
       ),
       article(
         className := optionalClasses(
@@ -349,7 +349,7 @@ object SectionPinnedCotos {
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        SectionTraversals.Msg.toApp(SectionTraversals.Msg.OpenTraversal(_))
+        SectionTraversals.Msg.OpenTraversal(_).toApp
       ),
       article(
         className := "sub-coto coto",

@@ -39,9 +39,6 @@ object ModalNodeIcon {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.NodeIconMsg andThen AppMsg.ModalMsg
-
     case class ImageInput(image: dom.Blob) extends Msg
     case object CropStarted extends Msg
     case class ImageCropped(result: Either[Throwable, dom.Blob]) extends Msg

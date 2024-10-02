@@ -288,17 +288,11 @@ object Domain {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen AppMsg.DomainMsg
-
     case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
-
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
-
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
-
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
   }
@@ -348,11 +342,11 @@ object Domain {
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
-    NodeDetails.fetch(id).map(Msg.toApp(Msg.NodeDetailsFetched(_)))
+    NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).toApp)
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
-    CotoGraph.fetchFromCoto(coto).map(Msg.toApp(Msg.CotoGraphFetched))
+    CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).toApp)
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.toApp(Msg.CotoGraphFetched))
+    CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.CotoGraphFetched(_).toApp)
 }

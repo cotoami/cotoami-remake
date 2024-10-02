@@ -107,9 +107,6 @@ object SectionTimeline {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen AppMsg.SectionTimelineMsg
-
     case object FetchMore extends Msg
     case class Fetched(number: Int, result: Either[ErrorJson, CotosPage])
         extends Msg
@@ -202,7 +199,7 @@ object SectionTimeline {
         CotosPage.search(query, nodeId, cotonomaId, pageIndex)
     ).getOrElse(
       CotosPage.fetchRecent(nodeId, cotonomaId, pageIndex)
-    ).map(Msg.toApp(Msg.Fetched(fetchNumber, _)))
+    ).map(Msg.Fetched(fetchNumber, _).toApp)
 
   def apply(
       model: Model,

@@ -29,9 +29,6 @@ object ModalOperateAs {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.OperateAsMsg andThen AppMsg.ModalMsg
-
     case object Switch extends Msg
     case class Switched(result: Either[ErrorJson, InitialDataset]) extends Msg
   }
@@ -49,7 +46,7 @@ object ModalOperateAs {
             Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
               model.switchingTo.id
             )
-          ).map(Msg.toApp(Msg.Switched(_)))
+          ).map(Msg.Switched(_).toApp)
         )
 
       case Msg.Switched(Right(dataset)) =>

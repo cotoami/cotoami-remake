@@ -53,9 +53,6 @@ object ModalWelcome {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.WelcomeMsg andThen AppMsg.ModalMsg
-
     // New database
     case class DatabaseNameInput(query: String) extends Msg
     case object SelectBaseFolder extends Msg
@@ -90,7 +87,7 @@ object ModalWelcome {
               "Select a base folder",
               Some(model.baseFolder)
             )
-            .map(Msg.toApp(Msg.BaseFolderSelected(_)))
+            .map(Msg.BaseFolderSelected(_).toApp)
         )
 
       case Msg.BaseFolderSelected(Right(path)) => {
@@ -134,7 +131,7 @@ object ModalWelcome {
             model.databaseName,
             model.baseFolder,
             model.folderName
-          ).map(Msg.toApp(Msg.DatabaseOpened(_)))
+          ).map(Msg.DatabaseOpened(_).toApp)
         )
 
       case Msg.SelectDatabaseFolder =>
@@ -147,7 +144,7 @@ object ModalWelcome {
               "Select a database folder",
               None
             )
-            .map(Msg.toApp(Msg.DatabaseFolderSelected(_)))
+            .map(Msg.DatabaseFolderSelected(_).toApp)
         )
 
       case Msg.DatabaseFolderSelected(Right(path)) => {
@@ -181,17 +178,15 @@ object ModalWelcome {
       case Msg.OpenDatabase =>
         (
           model.copy(processing = true),
-          DatabaseInfo.openDatabase(model.databaseFolder).map(
-            Msg.toApp(Msg.DatabaseOpened(_))
-          )
+          DatabaseInfo.openDatabase(model.databaseFolder)
+            .map(Msg.DatabaseOpened(_).toApp)
         )
 
       case Msg.OpenDatabaseIn(folder) =>
         (
           model.copy(processing = true),
-          DatabaseInfo.openDatabase(folder).map(
-            Msg.toApp(Msg.DatabaseOpened(_))
-          )
+          DatabaseInfo.openDatabase(folder)
+            .map(Msg.DatabaseOpened(_).toApp)
         )
 
       case Msg.DatabaseOpened(Right(info)) => {
@@ -221,7 +216,7 @@ object ModalWelcome {
             folderName = model.folderName
           )
         )
-        .map(Msg.toApp(Msg.NewFolderValidation(_)))
+        .map(Msg.NewFolderValidation(_).toApp)
     else
       Cmd.none
 
@@ -234,7 +229,7 @@ object ModalWelcome {
             folder = model.databaseFolder
           )
         )
-        .map(Msg.toApp(Msg.DatabaseFolderValidation(_)))
+        .map(Msg.DatabaseFolderValidation(_).toApp)
     else
       Cmd.none
 

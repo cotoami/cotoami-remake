@@ -79,7 +79,7 @@ object SectionGeomap {
         (
           this.copy(fetchingCotosInBounds = true),
           GeolocatedCotos.inGeoBounds(bounds)
-            .map(Msg.toApp(Msg.CotosInBoundsFetched(_)))
+            .map(Msg.CotosInBoundsFetched(_).toApp)
         )
       else
         (
@@ -101,9 +101,6 @@ object SectionGeomap {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): (T => AppMsg) =
-      tagger andThen AppMsg.SectionGeomapMsg
-
     case class Init(bounds: GeoBounds) extends Msg
     case class LocationClicked(location: Geolocation) extends Msg
     case class ZoomChanged(zoom: Double) extends Msg
@@ -234,9 +231,7 @@ object SectionGeomap {
     GeolocatedCotos.fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId
-    ).map(
-      Msg.toApp(Msg.InitialCotosFetched(_))
-    )
+    ).map(Msg.InitialCotosFetched(_).toApp)
 
   private def toMarkerDefs(
       markers: Seq[Geolocation.MarkerOfCotos]

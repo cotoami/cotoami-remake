@@ -31,9 +31,6 @@ object ModalClients {
   }
 
   object Msg {
-    def toApp[T](tagger: T => Msg): T => AppMsg =
-      tagger andThen Modal.Msg.ClientsMsg andThen AppMsg.ModalMsg
-
     case class ClientsFetched(result: Either[ErrorJson, Page[ClientNode]])
         extends Msg
   }
@@ -53,7 +50,7 @@ object ModalClients {
 
   def fetchClients(pageIndex: Double): Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(pageIndex)
-      .map(Msg.toApp(Msg.ClientsFetched(_)))
+      .map(Msg.ClientsFetched(_).toApp)
 
   def apply(model: Model)(implicit
       dispatch: AppMsg => Unit
