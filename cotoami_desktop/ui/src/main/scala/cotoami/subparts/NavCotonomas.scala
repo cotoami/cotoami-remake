@@ -7,7 +7,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
 import cotoami.repositories.Cotonomas
 import cotoami.backend.{ErrorJson, ServerNodeBackend}
@@ -31,7 +31,7 @@ object NavCotonomas {
       (
         copy(loadingRecent = true),
         context.domain.fetchRecentCotonomas(0)
-          .map(Msg.RecentFetched(_).toApp)
+          .map(Msg.RecentFetched(_).into)
       )
 
     def fetchMoreRecent()(implicit
@@ -43,14 +43,14 @@ object NavCotonomas {
         (
           copy(loadingRecent = true),
           context.domain.fetchMoreRecentCotonomas
-            .map(Msg.RecentFetched(_).toApp)
+            .map(Msg.RecentFetched(_).into)
         )
 
     def fetchSubs()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
         context.domain.fetchSubCotonomas(0)
-          .map(Msg.SubsFetched(_).toApp)
+          .map(Msg.SubsFetched(_).into)
       )
 
     def fetchMoreSubs()(implicit
@@ -62,13 +62,14 @@ object NavCotonomas {
         (
           copy(loadingSubs = true),
           context.domain.fetchMoreSubCotonomas
-            .map(Msg.SubsFetched(_).toApp)
+            .map(Msg.SubsFetched(_).into)
         )
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.NavCotonomasMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.NavCotonomasMsg(this)
   }
+
   object Msg {
     case object FetchMoreRecent extends Msg
     case class RecentFetched(result: Either[ErrorJson, Page[Cotonoma]])
@@ -123,7 +124,7 @@ object NavCotonomas {
         default.copy(
           _1 = model.copy(togglingSync = true),
           _3 = ServerNodeBackend.update(id, Some(disable), None)
-            .map(Msg.SyncToggled(_).toApp)
+            .map(Msg.SyncToggled(_).into)
         )
 
       case Msg.SyncToggled(result) =>
@@ -171,7 +172,7 @@ object NavCotonomas {
       ),
       section(className := "cotonomas body")(
         ScrollArea(
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMoreRecent.toApp))
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMoreRecent.into))
         )(
           domain.cotonomas.focused.map(sectionCurrent(_, model)),
           Option.when(!recentCotonomas.isEmpty)(
@@ -228,7 +229,7 @@ object NavCotonomas {
                 checked := !syncDisabled,
                 disabled := model.togglingSync,
                 onChange := (_ =>
-                  dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).toApp)
+                  dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled).into)
                 )
               )
             ),
@@ -244,7 +245,7 @@ object NavCotonomas {
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
                 Modal.NodeProfile(node.id)
-              ).toApp
+              ).into
             )
         ),
         Option.when(
@@ -260,7 +261,7 @@ object NavCotonomas {
               dispatch(
                 Modal.Msg.OpenModal(
                   Modal.OperateAs(domain.nodes.operating.get, node)
-                ).toApp
+                ).into
               )
           )
         }
@@ -300,7 +301,7 @@ object NavCotonomas {
                 li(key := "more-button")(
                   button(
                     className := "more-sub-cotonomas default",
-                    onClick := (_ => dispatch(Msg.FetchMoreSubs.toApp))
+                    onClick := (_ => dispatch(Msg.FetchMoreSubs.into))
                   )(
                     materialSymbol("more_horiz")
                   )

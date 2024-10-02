@@ -7,7 +7,7 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
-import cotoami.{log_info, Context, Msg => AppMsg}
+import cotoami.{log_info, Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, GeoBounds, Geolocation, Id}
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
@@ -79,7 +79,7 @@ object SectionGeomap {
         (
           this.copy(fetchingCotosInBounds = true),
           GeolocatedCotos.inGeoBounds(bounds)
-            .map(Msg.CotosInBoundsFetched(_).toApp)
+            .map(Msg.CotosInBoundsFetched(_).into)
         )
       else
         (
@@ -96,8 +96,8 @@ object SectionGeomap {
       }
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.SectionGeomapMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.SectionGeomapMsg(this)
   }
 
   object Msg {
@@ -209,7 +209,7 @@ object SectionGeomap {
               case _ =>
                 default.copy(_3 =
                   Browser.send(
-                    SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                    SectionTraversals.Msg.OpenTraversal(Id(id)).into
                   )
                 )
             }
@@ -218,7 +218,7 @@ object SectionGeomap {
               Cmd.Batch.fromSeq(
                 ids.map(id =>
                   Browser.send(
-                    SectionTraversals.Msg.OpenTraversal(Id(id)).toApp
+                    SectionTraversals.Msg.OpenTraversal(Id(id)).into
                   )
                 )
               )
@@ -231,7 +231,7 @@ object SectionGeomap {
     GeolocatedCotos.fetch(
       context.domain.nodes.focusedId,
       context.domain.cotonomas.focusedId
-    ).map(Msg.InitialCotosFetched(_).toApp)
+    ).map(Msg.InitialCotosFetched(_).into)
 
   private def toMarkerDefs(
       markers: Seq[Geolocation.MarkerOfCotos]
@@ -365,22 +365,22 @@ object SectionGeomap {
       fitBounds = model._fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.Init(bounds).toApp)
+        dispatch(Msg.Init(bounds).into)
       }),
       onClick = Some(e => {
         val location = Geolocation.fromMapLibre(e.lngLat)
-        dispatch(Msg.LocationClicked(location).toApp)
+        dispatch(Msg.LocationClicked(location).into)
       }),
-      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom).toApp)),
+      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom).into)),
       onCenterMoved = Some(center => {
         val location = Geolocation.fromMapLibre(center)
-        dispatch(Msg.CenterMoved(location).toApp)
+        dispatch(Msg.CenterMoved(location).into)
       }),
       onBoundsChanged = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.BoundsChanged(bounds).toApp)
+        dispatch(Msg.BoundsChanged(bounds).into)
       }),
-      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id).toApp))
+      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id).into))
     )
   }
 }

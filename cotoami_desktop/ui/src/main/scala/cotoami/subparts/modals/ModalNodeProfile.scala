@@ -6,7 +6,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page}
 import cotoami.repositories.Domain
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
@@ -35,8 +35,8 @@ object ModalNodeProfile {
       )
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = Modal.Msg.NodeProfileMsg(this).pipe(AppMsg.ModalMsg)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.NodeProfileMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -62,7 +62,7 @@ object ModalNodeProfile {
 
   def fetchClientCount: Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(0, Some(1))
-      .map(Msg.ClientCountFetched(_).toApp)
+      .map(Msg.ClientCountFetched(_).into)
 
   def apply(model: Model)(implicit
       context: Context,
@@ -95,7 +95,7 @@ object ModalNodeProfile {
               classes = "edit",
               onClick = _ =>
                 dispatch(
-                  Modal.Msg.OpenModal(Modal.NodeIcon()).toApp
+                  Modal.Msg.OpenModal(Modal.NodeIcon()).into
                 )
             )
           }
@@ -209,7 +209,7 @@ object ModalNodeProfile {
                 dispatch(
                   (Modal.Msg.OpenModal.apply _).tupled(
                     Modal.Clients()
-                  ).toApp
+                  ).into
                 )
             )
           )

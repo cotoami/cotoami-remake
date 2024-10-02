@@ -12,7 +12,7 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.repositories.Nodes
 import cotoami.backend.{ErrorJson, NodeBackend}
@@ -33,9 +33,8 @@ object ModalNodeIcon {
       this.croppedImage.isDefined && !this.cropping && !this.saving
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg =
-      Modal.Msg.NodeIconMsg(this).pipe(AppMsg.ModalMsg)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.NodeIconMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -76,7 +75,7 @@ object ModalNodeIcon {
           _3 = model.croppedImage.map(image =>
             Browser.encodeAsBase64(image, true).flatMap {
               case Right(base64) =>
-                NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).toApp)
+                NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).into)
               case Left(e) =>
                 log_error("Icon encoding error.", Some(js.JSON.stringify(e)))
             }
@@ -115,7 +114,7 @@ object ModalNodeIcon {
               br(),
               "or click to select one"
             ),
-            onSelect = file => dispatch(Msg.ImageInput(file).toApp)
+            onSelect = file => dispatch(Msg.ImageInput(file).into)
           )
         )
     )
@@ -134,14 +133,14 @@ object ModalNodeIcon {
           `type` := "button",
           className := "cancel contrast outline",
           onClick := (_ =>
-            dispatch(Modal.Msg.CloseModal(classOf[Modal.NodeIcon]).toApp)
+            dispatch(Modal.Msg.CloseModal(classOf[Modal.NodeIcon]).into)
           )
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString(),
-          onClick := (_ => dispatch(Msg.Save.toApp))
+          onClick := (_ => dispatch(Msg.Save.into))
         )("OK")
       )
     )
@@ -171,15 +170,15 @@ object ModalNodeIcon {
           aspect = Some(1.0),
           onCropComplete =
             Some((croppedArea: Area, croppedAreaPixels: Area) => {
-              props.dispatch(Msg.CropStarted.toApp)
+              props.dispatch(Msg.CropStarted.into)
               FixedAspectCrop.getCroppedImg(
                 props.imageUrl,
                 croppedAreaPixels
               ).onComplete {
                 case Success(blob) =>
-                  props.dispatch(Msg.ImageCropped(Right(blob)).toApp)
+                  props.dispatch(Msg.ImageCropped(Right(blob)).into)
                 case Failure(t) =>
-                  props.dispatch(Msg.ImageCropped(Left(t)).toApp)
+                  props.dispatch(Msg.ImageCropped(Left(t)).into)
               }
             })
         )

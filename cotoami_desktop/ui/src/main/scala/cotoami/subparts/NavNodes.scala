@@ -55,7 +55,7 @@ object NavNodes {
         data - "tooltip" := "Add node",
         data - "placement" := "right",
         onClick := (_ =>
-          dispatch(Modal.Msg.OpenModal(Modal.Incorporate()).toApp)
+          dispatch(Modal.Msg.OpenModal(Modal.Incorporate()).into)
         )
       )(
         materialSymbol("add")
@@ -90,7 +90,7 @@ object NavNodes {
                 dispatch(
                   Modal.Msg.OpenModal(
                     Modal.OperateAs(operatingNode, localNode)
-                  ).toApp
+                  ).into
                 )
               )
             )(

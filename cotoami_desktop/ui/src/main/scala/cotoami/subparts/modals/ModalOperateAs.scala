@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, InitialDataset}
@@ -24,8 +24,8 @@ object ModalOperateAs {
     def readyToSwitch: Boolean = !this.switching
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = Modal.Msg.OperateAsMsg(this).pipe(AppMsg.ModalMsg)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.OperateAsMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -46,7 +46,7 @@ object ModalOperateAs {
             Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
               model.switchingTo.id
             )
-          ).map(Msg.Switched(_).toApp)
+          ).map(Msg.Switched(_).into)
         )
 
       case Msg.Switched(Right(dataset)) =>
@@ -92,13 +92,13 @@ object ModalOperateAs {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
+          onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).into))
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToSwitch,
           aria - "busy" := model.switching.toString(),
-          onClick := (e => dispatch(Msg.Switch.toApp))
+          onClick := (e => dispatch(Msg.Switch.into))
         )("Switch")
       )
     )

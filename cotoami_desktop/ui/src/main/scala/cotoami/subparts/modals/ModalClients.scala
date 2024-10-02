@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import com.softwaremill.quicklens._
 
 import fui.Cmd
-import cotoami.{log_error, Msg => AppMsg}
+import cotoami.{log_error, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Page, PaginatedItems}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.Modal
@@ -26,8 +26,8 @@ object ModalClients {
       )
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = Modal.Msg.ClientsMsg(this).pipe(AppMsg.ModalMsg)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.ClientsMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -50,7 +50,7 @@ object ModalClients {
 
   def fetchClients(pageIndex: Double): Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(pageIndex)
-      .map(Msg.ClientsFetched(_).toApp)
+      .map(Msg.ClientsFetched(_).into)
 
   def apply(model: Model)(implicit
       dispatch: AppMsg => Unit

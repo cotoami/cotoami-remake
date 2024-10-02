@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Msg => AppMsg}
+import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
@@ -48,9 +48,8 @@ object ModalIncorporate {
     def readyToIncorporate: Boolean = !connecting && !incorporating
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg =
-      Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.IncorporateMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -91,7 +90,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(connecting = true, connectingError = None),
           _3 = ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
-            .map(Msg.NodeConnected(_).toApp)
+            .map(Msg.NodeConnected(_).into)
         )
 
       case Msg.NodeConnected(Right(session)) => {
@@ -137,7 +136,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(incorporating = true, incorporatingError = None),
           _3 = ServerBackend.addServer(model.nodeUrl, model.password)
-            .map(Msg.NodeIncorporated(_).toApp)
+            .map(Msg.NodeIncorporated(_).into)
         )
 
       case Msg.NodeIncorporated(Right(server)) => {
@@ -172,12 +171,12 @@ object ModalIncorporate {
       "Incorporate Remote Database",
       buttonHelp(
         model.helpIntro,
-        () => dispatch(Msg.HelpIntro(true).toApp)
+        () => dispatch(Msg.HelpIntro(true).into)
       )
     )(
       sectionHelp(
         model.helpIntro,
-        () => dispatch(Msg.HelpIntro(false).toApp),
+        () => dispatch(Msg.HelpIntro(false).into),
         context.i18n.help.ModalIncorporate_intro
       ),
       model.nodeSession
@@ -193,14 +192,14 @@ object ModalIncorporate {
         "Connect",
         buttonHelp(
           model.helpConnect,
-          () => dispatch(Msg.HelpConnect(true).toApp)
+          () => dispatch(Msg.HelpConnect(true).into)
         )
       ),
       model.connectingError.map(e => section(className := "error")(e)),
       form()(
         sectionHelp(
           model.helpConnect,
-          () => dispatch(Msg.HelpConnect(false).toApp),
+          () => dispatch(Msg.HelpConnect(false).into),
           context.i18n.help.ModalIncorporate_connect(
             context.domain.nodes.operatingId.map(_.uuid).getOrElse("")
           )
@@ -214,7 +213,7 @@ object ModalIncorporate {
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrl,
           inputErrors = model.validateNodeUrl,
-          onInput = (input => dispatch(Msg.NodeUrlInput(input).toApp))
+          onInput = (input => dispatch(Msg.NodeUrlInput(input).into))
         ),
 
         // Password
@@ -223,7 +222,7 @@ object ModalIncorporate {
           inputId = "password",
           inputType = "password",
           inputValue = model.password,
-          onInput = (input => dispatch(Msg.PasswordInput(input).toApp))
+          onInput = (input => dispatch(Msg.PasswordInput(input).into))
         ),
 
         // Preview
@@ -234,7 +233,7 @@ object ModalIncorporate {
             aria - "busy" := model.connecting.toString(),
             onClick := (e => {
               e.preventDefault()
-              dispatch(Msg.Connect.toApp)
+              dispatch(Msg.Connect.into)
             })
           )("Preview")
         )
@@ -275,13 +274,13 @@ object ModalIncorporate {
         button(
           `type` := "button",
           className := "cancel contrast outline",
-          onClick := (e => dispatch(Msg.Cancel.toApp))
+          onClick := (e => dispatch(Msg.Cancel.into))
         )("Cancel"),
         button(
           `type` := "button",
           disabled := !model.readyToIncorporate,
           aria - "busy" := model.incorporating.toString(),
-          onClick := (e => dispatch(Msg.Incorporate.toApp))
+          onClick := (e => dispatch(Msg.Incorporate.into))
         )("Incorporate")
       )
     )

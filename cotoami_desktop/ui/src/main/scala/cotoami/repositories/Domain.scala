@@ -6,7 +6,7 @@ import scala.collection.immutable.HashSet
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{log_info, Msg => AppMsg}
+import cotoami.{log_info, Into, Msg => AppMsg}
 import cotoami.models.{
   CenterOrBounds,
   Coto,
@@ -283,8 +283,8 @@ object Domain {
       nodes = Nodes(dataset, localId)
     )
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.DomainMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.DomainMsg(this)
   }
 
   object Msg {
@@ -342,11 +342,11 @@ object Domain {
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
-    NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).toApp)
+    NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).into)
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
-    CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).toApp)
+    CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).into)
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.CotoGraphFetched(_).toApp)
+    CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.CotoGraphFetched(_).into)
 }

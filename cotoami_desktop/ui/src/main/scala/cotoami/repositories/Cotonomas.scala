@@ -118,7 +118,7 @@ case class Cotonomas(
       this.modify(_.recentIds).using(_.prependId(id)),
       if (!contains(id))
         CotonomaBackend.fetch(id)
-          .map(Domain.Msg.CotonomaFetched(_).toApp)
+          .map(Domain.Msg.CotonomaFetched(_).into)
       else
         Cmd.none
     )

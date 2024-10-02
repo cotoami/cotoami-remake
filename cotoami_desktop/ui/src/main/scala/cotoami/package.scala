@@ -5,6 +5,10 @@ import cotoami.utils.Log
 
 package object cotoami {
 
+  trait Into[T] {
+    def into: T
+  }
+
   def log_debug(
       message: String,
       details: Option[String] = None

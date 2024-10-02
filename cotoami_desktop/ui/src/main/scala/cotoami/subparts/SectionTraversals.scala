@@ -13,7 +13,7 @@ import com.softwaremill.quicklens._
 import java.time.Instant
 
 import fui.{Browser, Cmd}
-import cotoami.{Context, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link}
 import cotoami.repositories.Links
 import cotoami.components.{
@@ -83,8 +83,8 @@ object SectionTraversals {
       }).getOrElse(false)
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.SectionTraversalsMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.SectionTraversalsMsg(this)
   }
 
   object Msg {
@@ -176,7 +176,7 @@ object SectionTraversals {
       header(className := "tools")(
         button(
           className := "close-traversal default",
-          onClick := (_ => dispatch(Msg.CloseTraversal(traversal._2).toApp))
+          onClick := (_ => dispatch(Msg.CloseTraversal(traversal._2).into))
         )(
           materialSymbol("close")
         )
@@ -214,7 +214,7 @@ object SectionTraversals {
                 className := "parent default",
                 onClick := (_ =>
                   dispatch(
-                    Msg.StepToParent(traversalIndex, parent.id).toApp
+                    Msg.StepToParent(traversalIndex, parent.id).into
                   )
                 )
               )(parent.abbreviate)
@@ -286,7 +286,7 @@ object SectionTraversals {
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        Msg.OpenTraversal(_).toApp
+        Msg.OpenTraversal(_).into
       ),
       article(
         className := optionalClasses(
@@ -322,7 +322,7 @@ object SectionTraversals {
               traversal._2,
               stepIndex.map(_ + 1).getOrElse(0),
               coto.id
-            ).toApp
+            ).into
             div(className := "traverse")(
               toolButton(
                 symbol = "arrow_downward",

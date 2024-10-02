@@ -229,7 +229,7 @@ object ViewCoto {
           classes = "open-traversal",
           onClick = e => {
             e.stopPropagation()
-            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).toApp)
+            dispatch(SectionTraversals.Msg.OpenTraversal(coto.id).into)
           }
         )
       )

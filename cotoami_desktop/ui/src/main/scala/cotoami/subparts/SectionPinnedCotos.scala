@@ -13,15 +13,15 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Context, Model, Msg => AppMsg}
+import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Link, UiState}
 import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionPinnedCotos {
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.SectionPinnedCotosMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.SectionPinnedCotosMsg(this)
   }
 
   object Msg {
@@ -90,8 +90,7 @@ object SectionPinnedCotos {
             )
           ),
           disabled = inColumns,
-          onClick =
-            _ => dispatch(Msg.SwitchView(currentCotonoma.id, true).toApp)
+          onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, true).into)
         ),
         toolButton(
           symbol = "view_agenda",
@@ -104,7 +103,7 @@ object SectionPinnedCotos {
           ),
           disabled = !inColumns,
           onClick =
-            _ => dispatch(Msg.SwitchView(currentCotonoma.id, false).toApp)
+            _ => dispatch(Msg.SwitchView(currentCotonoma.id, false).into)
         )
       ),
       div(
@@ -239,7 +238,7 @@ object SectionPinnedCotos {
     )(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
-        SectionTraversals.Msg.OpenTraversal(_).toApp
+        SectionTraversals.Msg.OpenTraversal(_).into
       ),
       article(
         className := optionalClasses(
@@ -286,7 +285,7 @@ object SectionPinnedCotos {
             )(
               button(
                 className := "default",
-                onClick := (_ => dispatch(Msg.ScrollToPinnedCoto(pin).toApp))
+                onClick := (_ => dispatch(Msg.ScrollToPinnedCoto(pin).into))
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
@@ -322,7 +321,7 @@ object SectionPinnedCotos {
               tipPlacement = "bottom",
               classes = "fetch-links",
               onClick =
-                _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).toApp)
+                _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id).into)
             )
           }
         )
@@ -349,7 +348,7 @@ object SectionPinnedCotos {
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
-        SectionTraversals.Msg.OpenTraversal(_).toApp
+        SectionTraversals.Msg.OpenTraversal(_).into
       ),
       article(
         className := "sub-coto coto",

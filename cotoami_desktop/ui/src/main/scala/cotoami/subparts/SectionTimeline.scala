@@ -7,7 +7,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{log_info, Context, Msg => AppMsg}
+import cotoami.{log_info, Context, Into, Msg => AppMsg}
 import cotoami.models.{
   Coto,
   Cotonoma,
@@ -102,8 +102,8 @@ object SectionTimeline {
         )
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.SectionTimelineMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.SectionTimelineMsg(this)
   }
 
   object Msg {
@@ -199,7 +199,7 @@ object SectionTimeline {
         CotosPage.search(query, nodeId, cotonomaId, pageIndex)
     ).getOrElse(
       CotosPage.fetchRecent(nodeId, cotonomaId, pageIndex)
-    ).map(Msg.Fetched(fetchNumber, _).toApp)
+    ).map(Msg.Fetched(fetchNumber, _).into)
 
   def apply(
       model: Model,
@@ -236,16 +236,14 @@ object SectionTimeline {
             `type` := "search",
             name := "query",
             value := model.query,
-            onChange := ((e) => dispatch(Msg.QueryInput(e.target.value).toApp)),
-            onCompositionStart := (_ =>
-              dispatch(Msg.ImeCompositionStart.toApp)
-            ),
-            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd.toApp))
+            onChange := ((e) => dispatch(Msg.QueryInput(e.target.value).into)),
+            onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart.into)),
+            onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd.into))
           ),
           Option.when(!model.query.isBlank) {
             button(
               className := "clear default",
-              onClick := (_ => dispatch(Msg.ClearQuery.toApp))
+              onClick := (_ => dispatch(Msg.ClearQuery.into))
             )(materialSymbol("close"))
           }
         )
@@ -253,10 +251,10 @@ object SectionTimeline {
       div(className := "posts body")(
         ScrollArea(
           initialScrollTop = model.getScrollPos(currentCotonomaId),
-          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.toApp)),
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore.into)),
           onUnmounted = Some(scrollTop =>
             dispatch(
-              Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop).toApp
+              Msg.ScrollAreaUnmounted(currentCotonomaId, scrollTop).into
             )
           )
         )(

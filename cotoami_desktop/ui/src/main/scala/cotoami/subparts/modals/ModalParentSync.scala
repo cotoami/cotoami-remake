@@ -6,7 +6,7 @@ import slinky.web.html
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{Context, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node, ParentSync}
 import cotoami.backend.Nullable
 import cotoami.subparts.Modal
@@ -15,8 +15,8 @@ object ModalParentSync {
 
   case class Model()
 
-  sealed trait Msg {
-    def toApp: AppMsg = Modal.Msg.ParentSyncMsg(this).pipe(AppMsg.ModalMsg)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.ParentSyncMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -103,7 +103,7 @@ object ModalParentSync {
         button(
           `type` := "button",
           disabled := !parentSync.syncing.isEmpty,
-          onClick := (e => dispatch(Msg.Close.toApp))
+          onClick := (e => dispatch(Msg.Close.into))
         )("OK")
       )
     )

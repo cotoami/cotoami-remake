@@ -133,7 +133,7 @@ object AppHeader {
         dispatch(
           (Modal.Msg.OpenModal.apply _).tupled(
             Modal.NodeProfile(node.id)
-          ).toApp
+          ).into
         )
       )
     )(

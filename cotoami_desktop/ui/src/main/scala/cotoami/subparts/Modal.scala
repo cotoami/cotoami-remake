@@ -7,7 +7,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
-import cotoami.{Context, Model => AppModel, Msg => AppMsg}
+import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.subparts.modals._
 
@@ -79,8 +79,8 @@ object Modal {
       this.modify(_.modals).using(_.filterNot(modalType.isInstance(_)))
   }
 
-  sealed trait Msg {
-    def toApp: AppMsg = AppMsg.ModalMsg(this)
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.ModalMsg(this)
   }
 
   object Msg {
@@ -97,10 +97,10 @@ object Modal {
   }
 
   def open(modal: Modal): Cmd.One[AppMsg] =
-    Browser.send(Msg.OpenModal(modal).toApp)
+    Browser.send(Msg.OpenModal(modal).into)
 
   def close[M <: Modal](modalType: Class[M]): Cmd.One[AppMsg] =
-    Browser.send(Msg.CloseModal(modalType).toApp)
+    Browser.send(Msg.CloseModal(modalType).into)
 
   def update(msg: Msg, model: AppModel)(implicit
       context: Context
@@ -219,7 +219,7 @@ object Modal {
           closeButton.map { case (modalType, dispatch) =>
             button(
               className := "close default",
-              onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).toApp))
+              onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType).into))
             )
           },
           h1()(title: _*)
