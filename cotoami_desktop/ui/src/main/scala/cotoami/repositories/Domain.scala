@@ -149,15 +149,18 @@ case class Domain(
       links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
-  lazy val geolocationInFocus: Option[CenterOrBounds] = {
-    focusedCotonoma.map(_._2).flatMap(_.geolocation) match {
-      case Some(center) => Some(Left(center))
-      case None => {
-        val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
-        Coto.centerOrBoundsOf(cotos)
-      }
+  lazy val geolocationInFocus: Option[CenterOrBounds] =
+    cotos.focused.flatMap(_.geolocation) match {
+      case Some(cotoLocation) => Some(Left(cotoLocation))
+      case None =>
+        focusedCotonoma.map(_._2).flatMap(_.geolocation) match {
+          case Some(center) => Some(Left(center))
+          case None => {
+            val cotos = this.cotos.geolocated.map(_._1).filter(inFocus)
+            Coto.centerOrBoundsOf(cotos)
+          }
+        }
     }
-  }
 
   lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
     var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
