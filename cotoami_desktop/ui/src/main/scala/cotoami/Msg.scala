@@ -48,7 +48,7 @@ object Msg {
       result: Either[ErrorJson, CotonomaDetails]
   ) extends Msg
   case object UnfocusCotonoma extends Msg
-  case class FocusCoto(id: Id[Coto]) extends Msg
+  case class FocusCoto(id: Id[Coto], moveTo: Boolean = true) extends Msg
   case object UnfocusCoto extends Msg
 
   // Domain

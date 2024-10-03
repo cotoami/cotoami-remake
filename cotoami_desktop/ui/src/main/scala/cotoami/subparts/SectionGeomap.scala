@@ -205,7 +205,7 @@ object SectionGeomap {
           case Seq(id) =>
             context.uiState match {
               case Some(uiState) if uiState.paneOpened(PaneFlow.PaneName) =>
-                default.copy(_3 = Browser.send(AppMsg.FocusCoto(Id(id))))
+                default.copy(_3 = Browser.send(AppMsg.FocusCoto(Id(id), false)))
               case _ =>
                 default.copy(_3 =
                   Browser.send(

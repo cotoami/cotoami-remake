@@ -236,10 +236,10 @@ object Main {
         (model, Browser.pushUrl(url))
       }
 
-      case Msg.FocusCoto(id) =>
+      case Msg.FocusCoto(id, moveTo) =>
         update(Msg.OpenOrClosePane(PaneFlow.PaneName, true), model) match {
           case (model, cmds1) =>
-            model.focusCoto(id) match {
+            model.focusCoto(id, moveTo) match {
               case (model, cmds2) => (model, cmds1 ++ cmds2)
             }
         }
