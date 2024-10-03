@@ -8,12 +8,12 @@ case class GeoBounds(southwest: Geolocation, northeast: Geolocation) {
 
   def contains(location: Geolocation): Boolean = {
     val containsLatitude =
-      this.sw.lat <= location.lat && location.lat <= this.ne.lat
+      sw.lat <= location.lat && location.lat <= ne.lat
     val containsLongitude =
-      if (this.sw.lng <= this.ne.lng)
-        this.sw.lng <= location.lng && location.lng <= this.ne.lng
+      if (sw.lng <= ne.lng)
+        sw.lng <= location.lng && location.lng <= ne.lng
       else // wrapped coordinates
-        this.sw.lng >= location.lng && location.lng >= this.ne.lng
+        sw.lng >= location.lng && location.lng >= ne.lng
 
     containsLatitude && containsLongitude
   }
