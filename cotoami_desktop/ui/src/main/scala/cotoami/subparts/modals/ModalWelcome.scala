@@ -238,7 +238,7 @@ object ModalWelcome {
       recentDatabases: Seq[DatabaseOpenedJson]
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
-      elementClasses = "welcome",
+      dialogClasses = "welcome",
       error = model.error
     )(
       img(

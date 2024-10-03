@@ -40,7 +40,7 @@ object ModalParentSync {
       parentSync: ParentSync
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
-      elementClasses = "parent-sync"
+      dialogClasses = "parent-sync"
     )(
       "Syncing with Remote Nodes"
     )(

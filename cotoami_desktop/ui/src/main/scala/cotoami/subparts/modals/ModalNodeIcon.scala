@@ -101,7 +101,7 @@ object ModalNodeIcon {
       model: Model
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
-      elementClasses = "image",
+      dialogClasses = "image",
       closeButton = Some((classOf[Modal.NodeIcon], dispatch)),
       error = model.error
     )(

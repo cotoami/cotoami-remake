@@ -205,12 +205,13 @@ object Modal {
     }
 
   def view[M <: Modal](
-      elementClasses: String,
+      dialogClasses: String,
       closeButton: Option[(Class[M], Into[AppMsg] => Unit)] = None,
-      error: Option[String] = None
+      error: Option[String] = None,
+      bodyClasses: String = ""
   )(title: ReactElement*)(body: ReactElement*): ReactElement =
     dialog(
-      className := elementClasses,
+      className := dialogClasses,
       slinky.web.html.open := true,
       data - "tauri-drag-region" := "default"
     )(
@@ -225,7 +226,7 @@ object Modal {
           h1()(title: _*)
         ),
         error.map(e => section(className := "error")(e)),
-        div(className := "body")(body: _*)
+        div(className := s"body ${bodyClasses}")(body: _*)
       )
     )
 }

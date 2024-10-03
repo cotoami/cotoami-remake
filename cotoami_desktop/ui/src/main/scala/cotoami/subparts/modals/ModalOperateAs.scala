@@ -76,7 +76,7 @@ object ModalOperateAs {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.OperateAs]
     Modal.view(
-      elementClasses = "operate-as",
+      dialogClasses = "operate-as",
       closeButton = Some((modalType, dispatch)),
       error = model.switchingError
     )(

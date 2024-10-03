@@ -70,7 +70,7 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      elementClasses = "node-profile",
+      dialogClasses = "node-profile",
       closeButton = Some((classOf[Modal.NodeProfile], dispatch)),
       error = model.error
     )(

@@ -165,7 +165,7 @@ object ModalIncorporate {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      elementClasses = "incorporate",
+      dialogClasses = "incorporate",
       closeButton = Some((classOf[Modal.Incorporate], dispatch))
     )(
       "Incorporate Remote Database",
