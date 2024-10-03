@@ -168,7 +168,8 @@ object ModalNodeProfile {
   private def fieldClientNodes(model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val connecting = context.domain.nodes.activeClients.count
     labeledField(
       classes = "client-nodes",
       label = "Client nodes",
@@ -176,11 +177,15 @@ object ModalNodeProfile {
     )(
       div(className := "input-with-tools")(
         section(className := "client-nodes-count")(
-          code(className := "connecting")(
-            context.domain.nodes.activeClients.count
-          ),
-          "connecting",
-          span(className := "separator")("/"),
+          Option.when(connecting > 0) {
+            Fragment(
+              code(className := "connecting")(
+                context.domain.nodes.activeClients.count
+              ),
+              "connecting",
+              span(className := "separator")("/")
+            )
+          },
           code(className := "nodes")(model.clientCount),
           "nodes"
         ),
@@ -197,6 +202,7 @@ object ModalNodeProfile {
         }
       )
     )
+  }
 
   private def buttonEdit(
       onClick: SyntheticMouseEvent[_] => Unit
