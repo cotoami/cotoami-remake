@@ -248,7 +248,13 @@ object Main {
         (
           model
             .modify(_.domain.cotos).using(_.unfocus)
-            .modify(_.geomap.focusedLocation).setTo(None),
+            .modify(_.geomap.focusedLocation).setTo(None).pipe { model =>
+              model.domain.geolocationInFocus match {
+                case Some(location) =>
+                  model.modify(_.geomap).using(_.moveTo(location))
+                case None => model
+              }
+            },
           Cmd.none
         )
 
