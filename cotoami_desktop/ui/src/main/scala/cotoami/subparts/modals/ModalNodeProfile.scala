@@ -4,6 +4,7 @@ import scala.util.chaining._
 import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
+import slinky.web.SyntheticMouseEvent
 
 import fui.Cmd
 import cotoami.{log_error, Context, Into, Msg => AppMsg}
@@ -89,12 +90,7 @@ object ModalNodeProfile {
         section(className := "node-icon")(
           imgNode(node),
           Option.when(model.isOperatingNode()) {
-            toolButton(
-              symbol = "edit",
-              tip = "Edit",
-              classes = "edit",
-              onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon()))
-            )
+            buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
           }
         )
       ),
@@ -143,11 +139,7 @@ object ModalNodeProfile {
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
-            toolButton(
-              symbol = "edit",
-              tip = "Edit",
-              classes = "edit"
-            )
+            buttonEdit(_ => ())
           )
         }
       )
@@ -167,11 +159,7 @@ object ModalNodeProfile {
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
-            toolButton(
-              symbol = "edit",
-              tip = "Edit",
-              classes = "edit"
-            )
+            buttonEdit(_ => ())
           )
         }
       )
@@ -198,19 +186,25 @@ object ModalNodeProfile {
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
-            toolButton(
-              symbol = "edit",
-              tip = "Edit",
-              classes = "edit",
-              onClick = _ =>
-                dispatch(
-                  (Modal.Msg.OpenModal.apply _).tupled(
-                    Modal.Clients()
-                  )
+            buttonEdit(_ =>
+              dispatch(
+                (Modal.Msg.OpenModal.apply _).tupled(
+                  Modal.Clients()
                 )
+              )
             )
           )
         }
       )
+    )
+
+  private def buttonEdit(
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    toolButton(
+      symbol = "edit",
+      tip = "Edit",
+      classes = "edit",
+      onClick = onClick
     )
 }
