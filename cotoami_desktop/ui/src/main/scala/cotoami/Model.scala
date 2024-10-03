@@ -139,14 +139,18 @@ case class Model(
 
   def focusCoto(cotoId: Id[Coto]): (Model, Cmd.One[Msg]) = {
     val model = this.modify(_.domain.cotos).using(_.focus(cotoId))
-    model.domain.cotos.focused.map(coto =>
-      (
-        coto.geolocation.map(location =>
-          model.modify(_.geomap).using(_.focus(location))
-        ).getOrElse(model),
-        domain.lazyFetchGraphFromCoto(cotoId)
-      )
-    ).getOrElse((model, Cmd.none)) // The coto is not found.
+    model.domain.cotos.focused match {
+      case Some(focusedCoto) =>
+        (
+          focusedCoto.geolocation match {
+            case Some(location) =>
+              model.modify(_.geomap).using(_.focus(location))
+            case None => model
+          },
+          domain.lazyFetchGraphFromCoto(cotoId)
+        )
+      case None => (model, Cmd.none)
+    }
   }
 
   override def focusedLocation: Option[Geolocation] = geomap.focusedLocation
