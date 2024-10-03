@@ -6,7 +6,7 @@ import slinky.web.html._
 import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
 import cotoami.repositories.Nodes
-import cotoami.components.{materialSymbol, optionalClasses}
+import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 object NavNodes {
   final val PaneName = "nav-nodes"
@@ -50,13 +50,12 @@ object NavNodes {
         materialSymbol("stacks")
       ),
       div(className := "separator")(),
-      button(
-        className := "add default",
-        data - "tooltip" := "Add node",
-        data - "placement" := "right",
-        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Incorporate())))
-      )(
-        materialSymbol("add")
+      toolButton(
+        symbol = "add",
+        tip = "Add node",
+        tipPlacement = "right",
+        classes = "add",
+        onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.Incorporate()))
       ),
       ul(className := "nodes")(
         nodes.operating.map(node =>

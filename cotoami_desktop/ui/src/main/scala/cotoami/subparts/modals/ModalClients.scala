@@ -2,14 +2,17 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import scala.scalajs.js
-import slinky.core.facade.ReactElement
 import com.softwaremill.quicklens._
+
+import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{log_error, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
 import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
+import cotoami.components.toolButton
 import cotoami.subparts.Modal
 
 object ModalClients {
@@ -70,11 +73,23 @@ object ModalClients {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      elementClasses = "client-nodes",
+      elementClasses = "client-nodes header-and-body",
       closeButton = Some((classOf[Modal.Clients], dispatch)),
       error = model.error
     )(
       "Client nodes"
     )(
+      header()(
+        toolButton(
+          symbol = "add",
+          tip = "Add node",
+          tipPlacement = "bottom",
+          classes = "add",
+          onClick = _ => ()
+        )
+      ),
+      div(className := "body")(
+        //
+      )
     )
 }
