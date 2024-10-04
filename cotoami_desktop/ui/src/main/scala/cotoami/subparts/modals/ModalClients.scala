@@ -8,7 +8,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Into, Msg => AppMsg}
+import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
 import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
@@ -70,6 +70,7 @@ object ModalClients {
       .map(Msg.ClientsFetched(_).into)
 
   def apply(model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
@@ -80,17 +81,24 @@ object ModalClients {
     )(
       "Client nodes"
     )(
-      header()(
+      header(className := "tools")(
         toolButton(
           symbol = "add",
           tip = "Add node",
-          tipPlacement = "bottom",
+          tipPlacement = "right",
           classes = "add",
           onClick = _ => ()
         )
       ),
       div(className := "body")(
-        //
+        model.clients(context.domain.nodes) match {
+          case Seq() =>
+            div(className := "empty")(
+              "No client nodes registered yet."
+            )
+          case clients =>
+            clients.size.toString()
+        }
       )
     )
 }

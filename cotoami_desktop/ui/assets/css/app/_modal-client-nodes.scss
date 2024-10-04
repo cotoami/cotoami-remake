@@ -2,4 +2,27 @@ dialog.client-nodes {
   article {
     min-width: 600px;
   }
+
+  div.modal-body {
+    padding-top: 0;
+
+    header.tools {
+      margin: 0 -10px;
+      padding: 0;
+      flex-direction: row;
+
+      span.material-symbols {
+        font-size: 24px;
+      }
+    }
+
+    div.body {
+      min-height: 30px;
+
+      div.empty {
+        text-align: center;
+        color: var(--muted-color);
+      }
+    }
+  }
 }

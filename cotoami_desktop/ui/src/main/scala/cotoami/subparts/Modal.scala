@@ -226,7 +226,7 @@ object Modal {
           h1()(title: _*)
         ),
         error.map(e => section(className := "error")(e)),
-        div(className := s"body ${bodyClasses}")(body: _*)
+        div(className := s"modal-body ${bodyClasses}")(body: _*)
       )
     )
 }
