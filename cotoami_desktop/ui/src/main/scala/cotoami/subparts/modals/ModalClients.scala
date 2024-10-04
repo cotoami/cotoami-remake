@@ -81,7 +81,7 @@ object ModalClients {
     )(
       "Client nodes"
     )(
-      header(className := "tools")(
+      header()(
         toolButton(
           symbol = "add",
           tip = "Add node",

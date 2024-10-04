@@ -6,10 +6,12 @@ dialog.client-nodes {
   div.modal-body {
     padding-top: 0;
 
-    header.tools {
+    header {
+      display: flex;
+      flex-direction: row;
+
       margin: 0 -10px;
       padding: 0;
-      flex-direction: row;
 
       span.material-symbols {
         font-size: 24px;
