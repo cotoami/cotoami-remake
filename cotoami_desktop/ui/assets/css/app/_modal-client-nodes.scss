@@ -11,7 +11,7 @@ dialog.client-nodes {
       flex-direction: row;
 
       margin: 0 -10px;
-      padding: 0;
+      padding-top: 4px;
 
       span.material-symbols {
         font-size: 24px;
@@ -24,6 +24,54 @@ dialog.client-nodes {
       div.empty {
         text-align: center;
         color: var(--muted-color);
+      }
+
+      table.client-nodes {
+        th {
+          text-align: center;
+        }
+
+        td.id {
+          white-space: nowrap;
+        }
+
+        td.name {
+          text-align: left;
+          white-space: nowrap;
+        }
+
+        td.status {
+          text-align: center;
+          padding: 0;
+
+          span.status {
+            cursor: default;
+            border-style: none;
+
+            &.connected {
+              color: var(--form-element-valid-border-color);
+            }
+          }
+
+          span.material-symbols {
+            font-size: 24px;
+          }
+        }
+
+        td.enabled {
+          text-align: center;
+        }
+
+        td.settings {
+          text-align: center;
+          padding: 0;
+          padding-left: 16px;
+          padding-right: 16px;
+
+          span.material-symbols {
+            font-size: 18px;
+          }
+        }
       }
     }
   }

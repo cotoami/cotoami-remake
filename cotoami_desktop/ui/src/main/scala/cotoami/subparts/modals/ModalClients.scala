@@ -12,8 +12,8 @@ import cotoami.{log_error, Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
 import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
-import cotoami.components.toolButton
-import cotoami.subparts.Modal
+import cotoami.components.{materialSymbol, toolButton}
+import cotoami.subparts.{spanNode, Modal}
 
 object ModalClients {
 
@@ -97,8 +97,61 @@ object ModalClients {
               "No client nodes registered yet."
             )
           case clients =>
-            clients.size.toString()
+            table(className := "client-nodes", role := "grid")(
+              thead()(
+                tr()(
+                  th()("Node ID"),
+                  th()("Name"),
+                  th()("Status"),
+                  th()("Enabled"),
+                  th()()
+                )
+              ),
+              tbody()(
+                clients.map(trClient)
+              )
+            )
         }
+      )
+    )
+
+  private def trClient(client: Client): ReactElement =
+    tr()(
+      td(className := "id")(client.node.id.uuid),
+      td(className := "name")(spanNode(client.node)),
+      td(className := "status")(
+        if (client.active.isDefined)
+          span(
+            className := "status connected",
+            data - "tooltip" := "Connected",
+            data - "placement" := "bottom"
+          )(
+            materialSymbol("link")
+          )
+        else
+          span(
+            className := "status disconnected",
+            data - "tooltip" := "Disconnected",
+            data - "placement" := "bottom"
+          )(
+            materialSymbol("do_not_disturb_on")
+          )
+      ),
+      td(className := "enabled")(
+        input(
+          `type` := "checkbox",
+          role := "switch",
+          checked := !client.client.disabled,
+          onChange := (_ => ())
+        )
+      ),
+      td(className := "settings")(
+        toolButton(
+          symbol = "settings",
+          tip = "Settings",
+          tipPlacement = "bottom",
+          onClick = _ => ()
+        )
       )
     )
 }
