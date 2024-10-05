@@ -18,8 +18,19 @@ object ModalNewClient {
       asOwner: Boolean = false,
       error: Option[String] = None
   ) {
-    def validateNodeId: Validation.Result =
-      Validation.Result.notYetValidated
+    def validateNodeId: Validation.Result = {
+      val fieldName = "node ID"
+      if (nodeId.isBlank())
+        Validation.Result.notYetValidated
+      else
+        Validation.Result(
+          Seq(
+            Validation.nonBlank(fieldName, nodeId),
+            Validation.uuid(fieldName, nodeId)
+          ).flatten
+        )
+    }
+
   }
 
   sealed trait Msg extends Into[AppMsg] {

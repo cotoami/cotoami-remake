@@ -98,7 +98,7 @@ object Validation {
   val HttpSchemes = Seq("http", "https")
 
   def httpUrl(name: String, value: String): Option[Error] =
-    this.url(name, value) match {
+    url(name, value) match {
       case Right(url) =>
         if (HttpSchemes.contains(url.getScheme()))
           None
@@ -110,6 +110,21 @@ object Validation {
             )
           )
       case Left(e) => Some(e)
+    }
+
+  private val UuidRegex =
+    "^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$".r
+
+  def uuid(name: String, value: String): Option[Error] =
+    UuidRegex.findFirstIn(value) match {
+      case Some(_) => None
+      case None =>
+        Some(
+          Error(
+            "non-uuid",
+            s"${name.capitalize} must be a valid UUID."
+          )
+        )
     }
 
   def ariaInvalid(result: Validation.Result): AttrPair[input.tagType] = {
