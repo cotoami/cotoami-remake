@@ -18,6 +18,15 @@ use crate::{
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 20;
 
 impl NodeState {
+    pub async fn client_node(
+        &self,
+        id: Id<Node>,
+        operator: Arc<Operator>,
+    ) -> Result<ClientNode, ServiceError> {
+        self.get(move |ds| ds.try_get_client_nodes(&id, &operator))
+            .await
+    }
+
     pub async fn recent_clients(
         &self,
         pagination: Pagination,

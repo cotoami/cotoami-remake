@@ -31,6 +31,16 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(client_ops::recent_pairs(page_size, page_index))
     }
 
+    pub fn try_get_client_nodes(
+        &mut self,
+        id: &Id<Node>,
+        operator: &Operator,
+    ) -> Result<ClientNode> {
+        operator.requires_to_be_owner()?;
+        self.read_transaction(client_ops::try_get(id))?
+            .map_err(anyhow::Error::from)
+    }
+
     /// Registers the specified node as a client.
     ///
     /// This operation is assumed to be invoked by a node owner to allow another node
