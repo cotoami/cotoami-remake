@@ -1,6 +1,6 @@
 package cotoami
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
@@ -8,6 +8,7 @@ import slinky.web.SyntheticKeyboardEvent
 import cotoami.{Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Node, ParentStatus}
+import cotoami.repositories.Nodes
 import cotoami.components.materialSymbol
 
 package object subparts {
@@ -174,4 +175,24 @@ package object subparts {
         )
       case _ => None
     }
+
+  def sectionClientNodesCount(
+      clientCount: Double,
+      nodes: Nodes
+  ): ReactElement = {
+    val connecting = nodes.activeClients.count
+    section(className := "client-nodes-count")(
+      Option.when(connecting > 0) {
+        Fragment(
+          code(className := "connecting")(
+            nodes.activeClients.count
+          ),
+          "connecting",
+          span(className := "separator")("/")
+        )
+      },
+      code(className := "nodes")(clientCount),
+      "nodes"
+    )
+  }
 }

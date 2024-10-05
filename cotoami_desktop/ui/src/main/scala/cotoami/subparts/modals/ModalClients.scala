@@ -13,7 +13,7 @@ import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
 import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.{materialSymbol, toolButton}
-import cotoami.subparts.{spanNode, Modal}
+import cotoami.subparts.{sectionClientNodesCount, spanNode, Modal}
 
 object ModalClients {
 
@@ -88,6 +88,10 @@ object ModalClients {
           tipPlacement = "right",
           classes = "add",
           onClick = _ => ()
+        ),
+        sectionClientNodesCount(
+          model.clientNodes.totalItems,
+          context.domain.nodes
         )
       ),
       div(className := "body")(

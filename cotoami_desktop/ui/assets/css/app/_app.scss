@@ -141,4 +141,15 @@ div.app {
       text-align: center;
     }
   }
+
+  section.client-nodes-count {
+    code {
+      margin-right: 2px;
+    }
+
+    span.separator {
+      margin-left: 8px;
+      margin-right: 6px;
+    }
+  }
 }

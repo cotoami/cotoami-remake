@@ -12,7 +12,13 @@ import cotoami.models.{ClientNode, Coto, Id, Node, Page}
 import cotoami.repositories.Domain
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.toolButton
-import cotoami.subparts.{imgNode, labeledField, Modal, ViewCoto}
+import cotoami.subparts.{
+  imgNode,
+  labeledField,
+  sectionClientNodesCount,
+  Modal,
+  ViewCoto
+}
 
 object ModalNodeProfile {
 
@@ -168,27 +174,14 @@ object ModalNodeProfile {
   private def fieldClientNodes(model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
-    val connecting = context.domain.nodes.activeClients.count
+  ): ReactElement =
     labeledField(
       classes = "client-nodes",
       label = "Client nodes",
       labelFor = Some("node-profile-client-nodes")
     )(
       div(className := "input-with-tools")(
-        section(className := "client-nodes-count")(
-          Option.when(connecting > 0) {
-            Fragment(
-              code(className := "connecting")(
-                context.domain.nodes.activeClients.count
-              ),
-              "connecting",
-              span(className := "separator")("/")
-            )
-          },
-          code(className := "nodes")(model.clientCount),
-          "nodes"
-        ),
+        sectionClientNodesCount(model.clientCount, context.domain.nodes),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
             buttonEdit(_ =>
@@ -202,7 +195,6 @@ object ModalNodeProfile {
         }
       )
     )
-  }
 
   private def buttonEdit(
       onClick: SyntheticMouseEvent[_] => Unit
