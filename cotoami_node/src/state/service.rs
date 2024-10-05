@@ -54,6 +54,7 @@ impl NodeState {
             Command::RecentClients { pagination } => {
                 format.serialize(self.recent_clients(pagination, opr?).await)
             }
+            Command::ClientNode { id } => format.serialize(self.client_node(id, opr?).await),
             Command::AddClient(input) => format.serialize(self.add_client(input, opr?).await),
             Command::RecentCotonomas { node, pagination } => {
                 format.serialize(self.recent_cotonomas(node, pagination).await)

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     routing::get,
     Extension, Form, Router, TypedHeader,
@@ -20,7 +20,25 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/", get(recent_clients).post(add_client))
+    Router::new()
+        .route("/", get(recent_clients).post(add_client))
+        .route("/:node_id", get(get_client))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/clients/:node_id
+/////////////////////////////////////////////////////////////////////////////
+
+async fn get_client(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Content<ClientNode>, ServiceError> {
+    state
+        .client_node(node_id, Arc::new(operator))
+        .await
+        .map(|client| Content(client, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

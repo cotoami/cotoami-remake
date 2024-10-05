@@ -37,6 +37,9 @@ pub enum Command {
     /// Request a [Page<ClientNode>] that contains recently registered clients.
     RecentClients { pagination: Pagination },
 
+    /// Request a [ClientNode] of the given node ID.
+    ClientNode { id: Id<Node> },
+
     /// Request to add a new client node and return [ClientAdded] if succeeded.
     AddClient(AddClient),
 
