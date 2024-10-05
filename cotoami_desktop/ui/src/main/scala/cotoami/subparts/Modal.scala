@@ -49,6 +49,9 @@ object Modal {
     }
   }
 
+  case class NewClient(model: ModalNewClient.Model = ModalNewClient.Model())
+      extends Modal
+
   case class Stack(modals: Seq[Modal] = Seq.empty) {
     def open[M <: Modal: ClassTag](modal: M): Stack =
       close(modal.getClass()).modify(_.modals).using(modal +: _)
@@ -94,6 +97,7 @@ object Modal {
     case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
     case class ClientsMsg(msg: ModalClients.Msg) extends Msg
+    case class NewClientMsg(msg: ModalNewClient.Msg) extends Msg
   }
 
   def open(modal: Modal): Cmd.One[AppMsg] =
@@ -114,15 +118,15 @@ object Modal {
         Some((model.modify(_.modalStack).using(_.close(modalType)), Cmd.none))
 
       case Msg.WelcomeMsg(modalMsg) =>
-        stack.get[Welcome].map { case Welcome(modalModel) =>
-          ModalWelcome.update(modalMsg, modalModel).pipe { case (modal, cmds) =>
+        stack.get[Welcome].map { case Welcome(modal) =>
+          ModalWelcome.update(modalMsg, modal).pipe { case (modal, cmds) =>
             (model.updateModal(Welcome(modal)), cmds)
           }
         }
 
       case Msg.IncorporateMsg(modalMsg) =>
-        stack.get[Incorporate].map { case Incorporate(modalModel) =>
-          ModalIncorporate.update(modalMsg, modalModel)
+        stack.get[Incorporate].map { case Incorporate(modal) =>
+          ModalIncorporate.update(modalMsg, modal)
             .pipe { case (modal, nodes, cmds) =>
               (
                 model
@@ -134,29 +138,29 @@ object Modal {
         }
 
       case Msg.ParentSyncMsg(modalMsg) =>
-        stack.get[ParentSync].map { case ParentSync(modalModel) =>
-          ModalParentSync.update(modalMsg, modalModel).pipe {
-            case (modal, cmds) => (model.updateModal(ParentSync(modal)), cmds)
+        stack.get[ParentSync].map { case ParentSync(modal) =>
+          ModalParentSync.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (model.updateModal(ParentSync(modal)), cmds)
           }
         }
 
       case Msg.OperateAsMsg(modalMsg) =>
-        stack.get[OperateAs].map { case OperateAs(modalModel) =>
-          ModalOperateAs.update(modalMsg, modalModel, model.domain).pipe {
+        stack.get[OperateAs].map { case OperateAs(modal) =>
+          ModalOperateAs.update(modalMsg, modal, model.domain).pipe {
             case (modal, cmds) => (model.updateModal(OperateAs(modal)), cmds)
           }
         }
 
       case Msg.NodeProfileMsg(modalMsg) =>
-        stack.get[NodeProfile].map { case NodeProfile(modalModel) =>
-          ModalNodeProfile.update(modalMsg, modalModel).pipe {
-            case (modal, cmds) => (model.updateModal(NodeProfile(modal)), cmds)
+        stack.get[NodeProfile].map { case NodeProfile(modal) =>
+          ModalNodeProfile.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (model.updateModal(NodeProfile(modal)), cmds)
           }
         }
 
       case Msg.NodeIconMsg(modalMsg) =>
-        stack.get[NodeIcon].map { case NodeIcon(modalModel) =>
-          ModalNodeIcon.update(modalMsg, modalModel).pipe {
+        stack.get[NodeIcon].map { case NodeIcon(modal) =>
+          ModalNodeIcon.update(modalMsg, modal).pipe {
             case (modal, nodes, cmds) =>
               (
                 model
@@ -168,9 +172,16 @@ object Modal {
         }
 
       case Msg.ClientsMsg(modalMsg) =>
-        stack.get[Clients].map { case Clients(modalModel) =>
-          ModalClients.update(modalMsg, modalModel).pipe { case (modal, cmds) =>
+        stack.get[Clients].map { case Clients(modal) =>
+          ModalClients.update(modalMsg, modal).pipe { case (modal, cmds) =>
             (model.updateModal(Clients(modal)), cmds)
+          }
+        }
+
+      case Msg.NewClientMsg(modalMsg) =>
+        stack.get[NewClient].map { case NewClient(modal) =>
+          ModalNewClient.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (model.updateModal(NewClient(modal)), cmds)
           }
         }
     }).getOrElse((model, Cmd.none))
@@ -180,28 +191,24 @@ object Modal {
       model: AppModel
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.modalStack.top.flatMap {
-      case Welcome(modalModel) =>
+      case Welcome(modal) =>
         model.systemInfo.map(info =>
-          ModalWelcome(modalModel, info.recent_databases.toSeq)
+          ModalWelcome(modal, info.recent_databases.toSeq)
         )
 
-      case Incorporate(modalModel) =>
-        Some(ModalIncorporate(modalModel))
+      case Incorporate(modal) => Some(ModalIncorporate(modal))
 
-      case ParentSync(modalModel) =>
-        Some(ModalParentSync(modalModel, model.parentSync))
+      case ParentSync(modal) => Some(ModalParentSync(modal, model.parentSync))
 
-      case OperateAs(modalModel) =>
-        Some(ModalOperateAs(modalModel))
+      case OperateAs(modal) => Some(ModalOperateAs(modal))
 
-      case NodeProfile(modalModel) =>
-        Some(ModalNodeProfile(modalModel))
+      case NodeProfile(modal) => Some(ModalNodeProfile(modal))
 
-      case NodeIcon(modalModel) =>
-        Some(ModalNodeIcon(modalModel))
+      case NodeIcon(modal) => Some(ModalNodeIcon(modal))
 
-      case Clients(modalModel) =>
-        Some(ModalClients(modalModel))
+      case Clients(modal) => Some(ModalClients(modal))
+
+      case NewClient(modal) => Some(ModalNewClient(modal))
     }
 
   def view[M <: Modal](

@@ -84,10 +84,10 @@ object ModalClients {
       header()(
         toolButton(
           symbol = "add",
-          tip = "Add node",
+          tip = "Add client",
           tipPlacement = "right",
           classes = "add",
-          onClick = _ => ()
+          onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.NewClient()))
         ),
         sectionClientNodesCount(
           model.clientNodes.totalItems,
