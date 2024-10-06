@@ -46,7 +46,7 @@ package object subparts {
       inputPlaceholder: Option[String] = None,
       inputValue: String,
       readOnly: Boolean = false,
-      inputErrors: Validation.Result = Validation.Result.notYetValidated,
+      inputErrors: Option[Validation.Result] = None,
       onInput: (String => Unit) = (_ => ())
   ): ReactElement =
     labeledField(
@@ -60,12 +60,14 @@ package object subparts {
         placeholder := inputPlaceholder,
         value := inputValue,
         html.readOnly := readOnly,
-        Validation.ariaInvalid(inputErrors),
+        Validation.ariaInvalid(
+          inputErrors.getOrElse(Validation.Result.notYetValidated)
+        ),
         // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
         // (onChange is almost the same as onInput in React)
         onChange := (e => onInput(e.target.value))
       ),
-      Validation.sectionValidationError(inputErrors)
+      inputErrors.map(Validation.sectionValidationError)
     )
 
   def buttonHelp(disable: Boolean, onButtonClick: () => Unit): ReactElement =

@@ -10,7 +10,9 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id, Node}
-import cotoami.backend.{ClientNodeBackend, ErrorJson}
+import cotoami.repositories.Nodes
+import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}
+import cotoami.components.materialSymbol
 import cotoami.subparts.{labeledField, labeledInputField, Modal}
 
 object ModalNewClient {
@@ -60,16 +62,21 @@ object ModalNewClient {
     ) extends Msg
     object CanEditLinksToggled extends Msg
     object AsOwnerToggled extends Msg
+    object Register extends Msg
+    case class Registered(result: Either[ErrorJson, ClientAdded]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Cmd[AppMsg]) = {
-    val default = (model, Cmd.none)
+  ): (Model, Nodes, Cmd[AppMsg]) = {
+    val default = (model, context.domain.nodes, Cmd.none)
     msg match {
       case Msg.NodeIdInput(nodeId) =>
         model.copy(nodeId = nodeId)
           .validateNodeId(context.domain.nodes.operatingId)
+          .pipe { case (model, cmd) =>
+            default.copy(_1 = model, _3 = cmd)
+          }
 
       case Msg.ClientNodeFetched(nodeId, Right(client)) =>
         if (client.nodeId == Id(model.nodeId))
@@ -91,7 +98,7 @@ object ModalNewClient {
             model.copy(nodeIdValidation = Validation.Result.validated)
           )
         else
-          default.copy(_2 =
+          default.copy(_3 =
             cotoami.error("Couldn't fetch the client node.", error)
           )
 
@@ -100,6 +107,32 @@ object ModalNewClient {
 
       case Msg.AsOwnerToggled =>
         default.copy(_1 = model.modify(_.asOwner).using(!_))
+
+      case Msg.Register =>
+        default.copy(
+          _1 = model.copy(registering = true),
+          _3 = ClientNodeBackend.add(
+            Id(model.nodeId),
+            model.canEditLinks,
+            model.asOwner
+          ).map(Msg.Registered(_).into)
+        )
+
+      case Msg.Registered(Right(client)) =>
+        default.copy(
+          _1 = model.copy(
+            registering = false,
+            generatedPassword = Some(client.password)
+          ),
+          _2 = context.domain.nodes.put(client.node),
+          _3 = ModalClients.fetchClients(0)
+        )
+
+      case Msg.Registered(Left(e)) =>
+        default.copy(
+          _1 = model.copy(registering = false),
+          _3 = cotoami.error("Couldn't register the node as a client.", e)
+        )
     }
   }
 
@@ -113,6 +146,12 @@ object ModalNewClient {
     )(
       "New client"
     )(
+      Option.when(model.registered) {
+        section(className := "message")(
+          materialSymbol("check_circle", "completed"),
+          "The child node below has been registered."
+        )
+      },
       form()(
         // Node ID
         labeledInputField(
@@ -122,7 +161,7 @@ object ModalNewClient {
           inputType = "text",
           inputPlaceholder = Some("00000000-0000-0000-0000-000000000000"),
           inputValue = model.nodeId,
-          inputErrors = model.nodeIdValidation,
+          inputErrors = Option.when(!model.registered)(model.nodeIdValidation),
           readOnly = model.registered,
           onInput = (input => dispatch(Msg.NodeIdInput(input)))
         ),
@@ -138,7 +177,7 @@ object ModalNewClient {
               `type` := "checkbox",
               id := "can-edit-links",
               checked := model.canEditLinks,
-              readOnly := model.registered,
+              disabled := model.registered,
               onChange := (_ => dispatch(Msg.CanEditLinksToggled))
             ),
             "Permit to create links"
@@ -148,23 +187,43 @@ object ModalNewClient {
               `type` := "checkbox",
               id := "as-owner",
               checked := model.asOwner,
-              readOnly := model.registered,
+              disabled := model.registered,
               onChange := (_ => dispatch(Msg.AsOwnerToggled))
             ),
             "As an owner"
           )
         ),
 
+        // Generated password
+        Option.when(model.registered) {
+          labeledInputField(
+            label = "Generated password",
+            inputId = "password",
+            inputType = "text",
+            inputValue = model.generatedPassword.getOrElse(""),
+            readOnly = true
+          )
+        },
+
         // Register
         div(className := "buttons")(
-          button(
-            `type` := "submit",
-            disabled := !model.readyToRegister,
-            aria - "busy" := model.registering.toString(),
-            onClick := (e => {
-              e.preventDefault()
-            })
-          )("Register")
+          if (model.registered)
+            button(
+              onClick := (e => {
+                e.preventDefault()
+                dispatch(Modal.Msg.CloseModal(classOf[Modal.NewClient]))
+              })
+            )("OK")
+          else
+            button(
+              `type` := "submit",
+              disabled := !model.readyToRegister,
+              aria - "busy" := model.registering.toString(),
+              onClick := (e => {
+                e.preventDefault()
+                dispatch(Msg.Register)
+              })
+            )("Register")
         )
       )
     )

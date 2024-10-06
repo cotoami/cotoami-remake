@@ -180,8 +180,14 @@ object Modal {
 
       case Msg.NewClientMsg(modalMsg) =>
         stack.get[NewClient].map { case NewClient(modal) =>
-          ModalNewClient.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(NewClient(modal)), cmds)
+          ModalNewClient.update(modalMsg, modal).pipe {
+            case (modal, nodes, cmds) =>
+              (
+                model
+                  .updateModal(NewClient(modal))
+                  .modify(_.domain.nodes).setTo(nodes),
+                cmds
+              )
           }
         }
     }).getOrElse((model, Cmd.none))

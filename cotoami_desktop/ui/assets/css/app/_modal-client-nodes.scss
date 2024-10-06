@@ -1,5 +1,6 @@
 dialog.client-nodes {
   article {
+    max-width: 1200px;
     min-width: 600px;
   }
 
@@ -44,7 +45,14 @@ dialog.client-nodes {
 
         td.name {
           text-align: left;
+          max-width: 180px;
           white-space: nowrap;
+          overflow-x: hidden;
+          text-overflow: ellipsis;
+
+          span.not-yet-connected {
+            color: var(--muted-color);
+          }
         }
 
         td.status {
@@ -57,6 +65,10 @@ dialog.client-nodes {
 
             &.connected {
               color: var(--form-element-valid-border-color);
+            }
+
+            &.disconnected {
+              color: var(--muted-color);
             }
           }
 

@@ -301,7 +301,7 @@ object ModalWelcome {
           inputId = "database-name",
           inputType = "text",
           inputValue = model.databaseName,
-          inputErrors = model.validateDatabaseName,
+          inputErrors = Some(model.validateDatabaseName),
           onInput = input => dispatch(Msg.DatabaseNameInput(input))
         ),
 
@@ -327,7 +327,7 @@ object ModalWelcome {
           inputId = "folder-name",
           inputType = "text",
           inputValue = model.folderName,
-          inputErrors = model.folderNameValidation,
+          inputErrors = Some(model.folderNameValidation),
           onInput = input => dispatch(Msg.FolderNameInput(input))
         ),
 

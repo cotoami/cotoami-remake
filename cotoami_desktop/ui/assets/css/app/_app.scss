@@ -71,6 +71,28 @@ div.app {
     bottom: 0;
   }
 
+  section.message {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px dotted var(--pane-border-color);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background-color: var(--card-background-color);
+
+    span.material-symbols {
+      font-size: 20px;
+      margin-right: 5px;
+
+      &.completed {
+        color: var(--form-element-valid-border-color);
+      }
+    }
+  }
+
   button.help {
     margin-left: 8px;
     vertical-align: middle;

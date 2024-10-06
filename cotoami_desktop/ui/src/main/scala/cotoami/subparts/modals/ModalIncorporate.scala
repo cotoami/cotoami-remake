@@ -210,7 +210,7 @@ object ModalIncorporate {
           inputType = "text",
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrl,
-          inputErrors = model.validateNodeUrl,
+          inputErrors = Some(model.validateNodeUrl),
           onInput = (input => dispatch(Msg.NodeUrlInput(input)))
         ),
 
