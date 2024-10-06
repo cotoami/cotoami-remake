@@ -163,7 +163,7 @@ object FormCoto {
           (Validation.Result.notYetValidated, Cmd.none)
         else
           Cotonoma.validateName(this.name) match {
-            case errors if errors.isEmpty =>
+            case Seq() =>
               (
                 // Now that the local validation has passed,
                 // wait for backend validation to be done.
@@ -380,13 +380,11 @@ object FormCoto {
           ) =>
         if (cotonoma.name == form.name)
           form.modify(_.validation).setTo(
-            Validation.Result(
-              Validation.Error(
-                "cotonoma-already-exists",
-                s"The cotonoma \"${cotonoma.name}\" already exists in this node.",
-                Map("name" -> cotonoma.name, "id" -> cotonoma.id.uuid)
-              )
-            )
+            Validation.Error(
+              "cotonoma-already-exists",
+              s"The cotonoma \"${cotonoma.name}\" already exists in this node.",
+              Map("name" -> cotonoma.name, "id" -> cotonoma.id.uuid)
+            ).toResult
           ) match {
             case form => default.copy(_1 = model.copy(form = form))
           }

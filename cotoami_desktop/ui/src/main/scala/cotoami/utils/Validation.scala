@@ -12,7 +12,9 @@ object Validation {
       code: String,
       defaultMessage: String,
       params: Map[String, String] = Map.empty
-  )
+  ) {
+    def toResult: Result = Validation.Result(this)
+  }
 
   case class Result(errors: Option[Seq[Validation.Error]]) {
     def notYetValidated: Boolean = this.errors.isEmpty
