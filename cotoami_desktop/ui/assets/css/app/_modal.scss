@@ -42,6 +42,11 @@ dialog {
 
     .labeled-field {
       margin-top: var(--spacing);
+
+      >label {
+        font-weight: 600;
+        opacity: 0.8;
+      }
     }
 
     div.buttons {
