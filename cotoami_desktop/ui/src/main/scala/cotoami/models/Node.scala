@@ -49,4 +49,9 @@ object Node {
 
   def validateName(name: String): Seq[Validation.Error] =
     Cotonoma.validateName(name)
+
+  def localNodeCannotBeRemoteError = Validation.Error(
+    "local-node-cannot-be-remote",
+    "This is the local node."
+  )
 }

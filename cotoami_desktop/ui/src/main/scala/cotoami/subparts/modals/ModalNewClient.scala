@@ -6,9 +6,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{ClientNode, Id}
+import cotoami.models.{ClientNode, Id, Node}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.{labeledInputField, Modal}
 
@@ -22,12 +22,14 @@ object ModalNewClient {
       error: Option[String] = None,
       registering: Boolean = false
   ) {
-    def validateNodeId: (Model, Cmd.One[AppMsg]) = {
+    def validateNodeId(
+        localNodeId: Option[Id[Node]]
+    ): (Model, Cmd.One[AppMsg]) = {
       val (validation, cmd) =
         if (nodeId.isEmpty())
           (Validation.Result.notYetValidated, Cmd.none)
         else
-          ClientNode.validateNodeId(nodeId) match {
+          ClientNode.validateNodeId(nodeId, localNodeId) match {
             case Seq() =>
               (
                 Validation.Result.notYetValidated,
@@ -54,11 +56,14 @@ object ModalNewClient {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cmd[AppMsg]) = {
     val default = (model, Cmd.none)
     msg match {
       case Msg.NodeIdInput(nodeId) =>
-        model.copy(nodeId = nodeId).validateNodeId
+        model.copy(nodeId = nodeId)
+          .validateNodeId(context.domain.nodes.operatingId)
 
       case Msg.ClientNodeFetched(nodeId, Right(client)) =>
         if (client.nodeId == Id(model.nodeId))
