@@ -45,8 +45,9 @@ package object subparts {
       inputType: String,
       inputPlaceholder: Option[String] = None,
       inputValue: String,
+      readOnly: Boolean = false,
       inputErrors: Validation.Result = Validation.Result.notYetValidated,
-      onInput: String => Unit
+      onInput: (String => Unit) = (_ => ())
   ): ReactElement =
     labeledField(
       classes = classes,
@@ -58,6 +59,7 @@ package object subparts {
         id := inputId,
         placeholder := inputPlaceholder,
         value := inputValue,
+        html.readOnly := readOnly,
         Validation.ariaInvalid(inputErrors),
         // Use onChange instead of onInput to suppress the React 'use defaultValue' warning
         // (onChange is almost the same as onInput in React)

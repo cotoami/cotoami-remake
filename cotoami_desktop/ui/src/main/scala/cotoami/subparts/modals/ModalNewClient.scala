@@ -21,7 +21,8 @@ object ModalNewClient {
       canEditLinks: Boolean = false,
       asOwner: Boolean = false,
       error: Option[String] = None,
-      registering: Boolean = false
+      registering: Boolean = false,
+      generatedPassword: Option[String] = None
   ) {
     def validateNodeId(
         localNodeId: Option[Id[Node]]
@@ -43,6 +44,8 @@ object ModalNewClient {
     }
 
     def readyToRegister: Boolean = !registering && nodeIdValidation.validated
+
+    def registered: Boolean = generatedPassword.isDefined
   }
 
   sealed trait Msg extends Into[AppMsg] {
@@ -120,6 +123,7 @@ object ModalNewClient {
           inputPlaceholder = Some("00000000-0000-0000-0000-000000000000"),
           inputValue = model.nodeId,
           inputErrors = model.nodeIdValidation,
+          readOnly = model.registered,
           onInput = (input => dispatch(Msg.NodeIdInput(input)))
         ),
 
@@ -134,6 +138,7 @@ object ModalNewClient {
               `type` := "checkbox",
               id := "can-edit-links",
               checked := model.canEditLinks,
+              readOnly := model.registered,
               onChange := (_ => dispatch(Msg.CanEditLinksToggled))
             ),
             "Permit to create links"
@@ -143,6 +148,7 @@ object ModalNewClient {
               `type` := "checkbox",
               id := "as-owner",
               checked := model.asOwner,
+              readOnly := model.registered,
               onChange := (_ => dispatch(Msg.AsOwnerToggled))
             ),
             "As an owner"

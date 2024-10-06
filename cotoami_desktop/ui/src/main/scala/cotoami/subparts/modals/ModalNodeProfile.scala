@@ -14,6 +14,7 @@ import cotoami.components.toolButton
 import cotoami.subparts.{
   imgNode,
   labeledField,
+  labeledInputField,
   sectionClientNodesCount,
   Modal,
   ViewCoto
@@ -109,18 +110,13 @@ object ModalNodeProfile {
     )
 
   private def fieldId(node: Node): ReactElement =
-    labeledField(
+    labeledInputField(
       classes = "node-id",
       label = "ID",
-      labelFor = Some("node-profile-id")
-    )(
-      input(
-        `type` := "text",
-        id := "node-profile-id",
-        name := "nodeId",
-        readOnly := true,
-        value := node.id.uuid
-      )
+      inputId = "node-profile-id",
+      inputType = "text",
+      inputValue = node.id.uuid,
+      readOnly = true
     )
 
   private def fieldName(node: Node, model: Model)(implicit
