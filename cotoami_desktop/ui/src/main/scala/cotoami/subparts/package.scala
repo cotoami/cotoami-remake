@@ -33,7 +33,9 @@ package object subparts {
   )(fieldContent: ReactElement*): ReactElement =
     div(className := s"labeled-field ${classes}")(
       html.label(htmlFor := labelFor)(label),
-      fieldContent
+      div(className := "field")(
+        fieldContent: _*
+      )
     )
 
   def labeledInputField(

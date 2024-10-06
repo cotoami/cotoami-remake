@@ -3,7 +3,13 @@ dialog.new-client {
     width: 450px;
   }
 
-  div.labeled-field.node-id {
-    margin-top: 0;
+  div.labeled-field {
+    &.node-id {
+      margin-top: 0;
+    }
+
+    &.privileges .field {
+      padding-left: 5px;
+    }
   }
 }

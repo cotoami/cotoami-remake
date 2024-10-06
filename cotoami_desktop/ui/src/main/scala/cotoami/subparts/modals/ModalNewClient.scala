@@ -2,6 +2,7 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 
+import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -10,7 +11,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id, Node}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
-import cotoami.subparts.{labeledInputField, Modal}
+import cotoami.subparts.{labeledField, labeledInputField, Modal}
 
 object ModalNewClient {
 
@@ -54,6 +55,8 @@ object ModalNewClient {
         nodeId: String,
         result: Either[ErrorJson, ClientNode]
     ) extends Msg
+    object CanEditLinksToggled extends Msg
+    object AsOwnerToggled extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -88,6 +91,12 @@ object ModalNewClient {
           default.copy(_2 =
             cotoami.error("Couldn't fetch the client node.", error)
           )
+
+      case Msg.CanEditLinksToggled =>
+        default.copy(_1 = model.modify(_.canEditLinks).using(!_))
+
+      case Msg.AsOwnerToggled =>
+        default.copy(_1 = model.modify(_.asOwner).using(!_))
     }
   }
 
@@ -112,6 +121,32 @@ object ModalNewClient {
           inputValue = model.nodeId,
           inputErrors = model.nodeIdValidation,
           onInput = (input => dispatch(Msg.NodeIdInput(input)))
+        ),
+
+        // Privileges
+        labeledField(
+          classes = "privileges",
+          label = "Privileges",
+          labelFor = None
+        )(
+          label(htmlFor := "can-edit-links")(
+            input(
+              `type` := "checkbox",
+              id := "can-edit-links",
+              checked := model.canEditLinks,
+              onChange := (_ => dispatch(Msg.CanEditLinksToggled))
+            ),
+            "Permit to create links"
+          ),
+          label(htmlFor := "as-owner")(
+            input(
+              `type` := "checkbox",
+              id := "as-owner",
+              checked := model.asOwner,
+              onChange := (_ => dispatch(Msg.AsOwnerToggled))
+            ),
+            "As an owner"
+          )
         ),
 
         // Register
