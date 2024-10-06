@@ -23,15 +23,11 @@ object ModalNewClient {
       registering: Boolean = false
   ) {
     def validateNodeId: (Model, Cmd.One[AppMsg]) = {
-      val fieldName = "node ID"
       val (validation, cmd) =
         if (nodeId.isEmpty())
           (Validation.Result.notYetValidated, Cmd.none)
         else
-          Seq(
-            Validation.nonBlank(fieldName, nodeId),
-            Validation.uuid(fieldName, nodeId)
-          ).flatten match {
+          ClientNode.validateNodeId(nodeId) match {
             case Seq() =>
               (
                 Validation.Result.notYetValidated,
