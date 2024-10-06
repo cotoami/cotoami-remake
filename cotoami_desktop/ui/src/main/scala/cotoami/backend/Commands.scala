@@ -77,6 +77,9 @@ object Commands {
       )
     )
 
+  def ClientNode(id: Id[Node]) =
+    jso(ClientNode = jso(id = id.uuid))
+
   def AddClient(nodeId: Id[Node], canEditLinks: Boolean, asOowner: Boolean) =
     jso(AddClient =
       jso(

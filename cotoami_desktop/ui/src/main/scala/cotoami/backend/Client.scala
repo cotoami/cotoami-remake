@@ -14,6 +14,9 @@ trait ClientNodeJson extends js.Object {
 }
 
 object ClientNodeJson {
+  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ClientNodeJson]] =
+    Commands.send(Commands.ClientNode(id))
+
   def fetchRecent(
       pageIndex: Double,
       pageSize: Option[Double] = None
@@ -36,6 +39,9 @@ object ClientNodeBackend {
       sessionExpiresAtUtcIso = Nullable.toOption(json.session_expires_at),
       disabled = json.disabled
     )
+
+  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ClientNode]] =
+    ClientNodeJson.fetch(id).map(_.map(toModel))
 
   def fetchRecent(
       pageIndex: Double,
