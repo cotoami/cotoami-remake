@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui._
-import cotoami.{log_error, Into, Msg => AppMsg}
+import cotoami.{Into, Msg => AppMsg}
 import cotoami.libs.tauri
 import cotoami.utils.Validation
 import cotoami.models.Node
@@ -96,10 +96,10 @@ object ModalWelcome {
         }
       }
 
-      case Msg.BaseFolderSelected(Left(error)) =>
+      case Msg.BaseFolderSelected(Left(e)) =>
         (
-          model.copy(error = Some(error.toString())),
-          log_error("Folder selection error.", Some(error.toString()))
+          model.copy(error = Some(e.toString())),
+          cotoami.error("Folder selection error.", Some(e.toString()))
         )
 
       case Msg.FolderNameInput(value) =>
@@ -155,10 +155,10 @@ object ModalWelcome {
         }
       }
 
-      case Msg.DatabaseFolderSelected(Left(error)) =>
+      case Msg.DatabaseFolderSelected(Left(e)) =>
         (
-          model.copy(error = Some(error.toString())),
-          log_error("Folder selection error.", Some(error.toString()))
+          model.copy(error = Some(e.toString())),
+          cotoami.error("Folder selection error.", Some(e.toString()))
         )
 
       case Msg.DatabaseFolderValidation(Right(_)) =>
@@ -202,7 +202,7 @@ object ModalWelcome {
       case Msg.DatabaseOpened(Left(e)) =>
         (
           model.copy(processing = false, error = Some(e.default_message)),
-          log_error(e.default_message, Some(e.toString()))
+          cotoami.error(e.default_message, e)
         )
     }
 

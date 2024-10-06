@@ -1,12 +1,11 @@
 package cotoami.subparts.modals
 
-import scala.scalajs.js
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
@@ -119,7 +118,7 @@ object ModalIncorporate {
             connecting = false,
             connectingError = Some(e.default_message)
           ),
-          _3 = log_error("Node connecting error.", Some(js.JSON.stringify(e)))
+          _3 = cotoami.error("Node connecting error.", e)
         )
 
       case Msg.Cancel =>
@@ -154,8 +153,7 @@ object ModalIncorporate {
             incorporating = false,
             incorporatingError = Some(e.default_message)
           ),
-          _3 =
-            log_error("Node incorporating error.", Some(js.JSON.stringify(e)))
+          _3 = cotoami.error("Node incorporating error.", e)
         )
     }
   }

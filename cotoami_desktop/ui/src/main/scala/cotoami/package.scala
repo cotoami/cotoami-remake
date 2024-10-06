@@ -1,7 +1,10 @@
+import scala.scalajs.js
+
 import cats.effect.IO
 
 import fui._
 import cotoami.utils.Log
+import cotoami.backend.ErrorJson
 
 package object cotoami {
 
@@ -15,9 +18,14 @@ package object cotoami {
   ): Cmd.One[Msg] =
     Cmd(IO { Some(Msg.AddLogEntry(Log.Info, message, details)) })
 
-  def log_error(
+  def error(
       message: String,
       details: Option[String] = None
   ): Cmd.One[Msg] =
     Cmd(IO { Some(Msg.AddLogEntry(Log.Error, message, details)) })
+
+  def error(
+      message: String,
+      errorJson: ErrorJson
+  ): Cmd.One[Msg] = error(message, Some(js.JSON.stringify(errorJson)))
 }

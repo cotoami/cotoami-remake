@@ -1,12 +1,11 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, InitialDataset}
@@ -64,10 +63,7 @@ object ModalOperateAs {
             switching = false,
             switchingError = Some(e.default_message)
           ),
-          log_error(
-            "Couldn't switch the operating node.",
-            Some(js.JSON.stringify(e))
-          )
+          cotoami.error("Couldn't switch the operating node.", e)
         )
     }
 

@@ -317,13 +317,13 @@ object Domain {
         )
 
       case Msg.NodeDetailsFetched(Left(e)) =>
-        (model, ErrorJson.log(e, "Couldn't fetch node details."))
+        (model, cotoami.error("Couldn't fetch node details.", e))
 
       case Msg.CotonomaFetched(Right(cotonomaPair)) =>
         (model.importFrom(cotonomaPair), Cmd.none)
 
       case Msg.CotonomaFetched(Left(e)) =>
-        (model, ErrorJson.log(e, "Couldn't fetch a cotonoma."))
+        (model, cotoami.error("Couldn't fetch a cotonoma.", e))
 
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
@@ -335,7 +335,7 @@ object Domain {
         (model.importFrom(graph), Cmd.none)
 
       case Msg.CotoGraphFetched(Left(e)) =>
-        (model, ErrorJson.log(e, "Couldn't fetch a coto graph."))
+        (model, cotoami.error("Couldn't fetch a coto graph.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =

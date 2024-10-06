@@ -171,7 +171,7 @@ object SectionGeomap {
       case Msg.InitialCotosFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(initialCotosFetched = true),
-          _3 = ErrorJson.log(e, "Couldn't fetch geolocated cotos.")
+          _3 = cotoami.error("Couldn't fetch geolocated cotos.", e)
         )
 
       case Msg.CotosInBoundsFetched(Right(cotos)) =>
@@ -194,7 +194,7 @@ object SectionGeomap {
       case Msg.CotosInBoundsFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(fetchingCotosInBounds = false),
-          _3 = ErrorJson.log(e, "Couldn't fetch cotos in the bounds.")
+          _3 = cotoami.error("Couldn't fetch cotos in the bounds.", e)
         )
 
       case Msg.MarkerClicked(id) =>

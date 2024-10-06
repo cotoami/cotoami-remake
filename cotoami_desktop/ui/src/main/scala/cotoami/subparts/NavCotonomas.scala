@@ -2,12 +2,11 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
 import cotoami.repositories.Cotonomas
 import cotoami.backend.{ErrorJson, ServerNodeBackend}
@@ -100,7 +99,7 @@ object NavCotonomas {
       case Msg.RecentFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(loadingRecent = false),
-          _3 = ErrorJson.log(e, "Couldn't fetch recent cotonomas.")
+          _3 = cotoami.error("Couldn't fetch recent cotonomas.", e)
         )
 
       case Msg.FetchMoreSubs =>
@@ -117,7 +116,7 @@ object NavCotonomas {
       case Msg.SubsFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(loadingSubs = false),
-          _3 = ErrorJson.log(e, "Couldn't fetch sub cotonomas.")
+          _3 = cotoami.error("Couldn't fetch sub cotonomas.", e)
         )
 
       case Msg.SetSyncDisabled(id, disable) =>
@@ -132,11 +131,7 @@ object NavCotonomas {
           _1 = model.copy(togglingSync = false),
           _3 = result match {
             case Right(server) => Cmd.none
-            case Left(e) =>
-              log_error(
-                "Failed to disable parent sync.",
-                Some(js.JSON.stringify(e))
-              )
+            case Left(e) => cotoami.error("Failed to disable parent sync.", e)
           }
         )
     }

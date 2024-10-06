@@ -1,13 +1,12 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Into, Msg => AppMsg}
+import cotoami.{Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
@@ -86,10 +85,7 @@ object ModalNewClient {
           )
         else
           default.copy(_2 =
-            log_error(
-              "Couldn't fetch the client node.",
-              Some(js.JSON.stringify(error))
-            )
+            cotoami.error("Couldn't fetch the client node.", error)
           )
     }
   }

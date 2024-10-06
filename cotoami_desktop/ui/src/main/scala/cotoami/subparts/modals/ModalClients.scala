@@ -1,14 +1,13 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
 import com.softwaremill.quicklens._
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{log_error, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
 import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
@@ -58,10 +57,7 @@ object ModalClients {
         (model.modify(_.clientNodes).using(_.appendPage(page)), Cmd.none)
 
       case Msg.ClientsFetched(Left(e)) =>
-        (
-          model,
-          log_error("Couldn't fetch clients.", Some(js.JSON.stringify(e)))
-        )
+        (model, cotoami.error("Couldn't fetch clients.", e))
     }
   }
 

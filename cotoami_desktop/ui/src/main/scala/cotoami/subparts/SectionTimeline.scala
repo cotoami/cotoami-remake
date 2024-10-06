@@ -140,7 +140,7 @@ object SectionTimeline {
       case Msg.Fetched(_, Left(e)) =>
         default.copy(
           _1 = model.copy(loading = false),
-          _3 = ErrorJson.log(e, "Couldn't fetch timeline cotos.")
+          _3 = cotoami.error("Couldn't fetch timeline cotos.", e)
         )
 
       case Msg.ClearQuery =>

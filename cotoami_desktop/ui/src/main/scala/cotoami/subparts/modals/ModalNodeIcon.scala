@@ -12,7 +12,7 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
-import cotoami.{log_error, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.repositories.Nodes
 import cotoami.backend.{ErrorJson, NodeBackend}
@@ -66,7 +66,7 @@ object ModalNodeIcon {
       case Msg.ImageCropped(Left(t)) =>
         default.copy(
           _1 = model.copy(cropping = false),
-          _3 = log_error("Icon cropping error.", Some(t.toString()))
+          _3 = cotoami.error("Icon cropping error.", Some(t.toString()))
         )
 
       case Msg.Save =>
@@ -77,7 +77,10 @@ object ModalNodeIcon {
               case Right(base64) =>
                 NodeBackend.setLocalNodeIcon(base64).map(Msg.Saved(_).into)
               case Left(e) =>
-                log_error("Icon encoding error.", Some(js.JSON.stringify(e)))
+                cotoami.error(
+                  "Icon encoding error.",
+                  Some(js.JSON.stringify(e))
+                )
             }
           ).getOrElse(Cmd.none)
         )
@@ -92,7 +95,7 @@ object ModalNodeIcon {
       case Msg.Saved(Left(e)) =>
         default.copy(
           _1 = model.copy(saving = false, error = Some(e.default_message)),
-          _3 = log_error("Icon saving error.", Some(js.JSON.stringify(e)))
+          _3 = cotoami.error("Icon saving error.", e)
         )
     }
   }

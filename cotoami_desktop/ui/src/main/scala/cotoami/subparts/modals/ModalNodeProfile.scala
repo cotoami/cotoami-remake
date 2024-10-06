@@ -1,13 +1,12 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
 import fui.Cmd
-import cotoami.{log_error, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page}
 import cotoami.repositories.Domain
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
@@ -59,10 +58,7 @@ object ModalNodeProfile {
       case Msg.ClientCountFetched(Left(e)) =>
         (
           model,
-          log_error(
-            "Couldn't fetch client count.",
-            Some(js.JSON.stringify(e))
-          )
+          cotoami.error("Couldn't fetch client count.", e)
         )
     }
   }
