@@ -6,7 +6,7 @@ import scala.collection.immutable.HashSet
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{log_info, Into, Msg => AppMsg}
+import cotoami.{Into, Msg => AppMsg}
 import cotoami.models.{
   CenterOrBounds,
   Coto,
@@ -320,10 +320,7 @@ object Domain {
         (model, ErrorJson.log(e, "Couldn't fetch node details."))
 
       case Msg.CotonomaFetched(Right(cotonomaPair)) =>
-        (
-          model.importFrom(cotonomaPair),
-          log_info("Cotonoma fetched.", Some(cotonomaPair._1.name))
-        )
+        (model.importFrom(cotonomaPair), Cmd.none)
 
       case Msg.CotonomaFetched(Left(e)) =>
         (model, ErrorJson.log(e, "Couldn't fetch a cotonoma."))
@@ -335,10 +332,7 @@ object Domain {
         )
 
       case Msg.CotoGraphFetched(Right(graph)) =>
-        (
-          model.importFrom(graph),
-          log_info("Coto graph fetched.", Some(graph.debug))
-        )
+        (model.importFrom(graph), Cmd.none)
 
       case Msg.CotoGraphFetched(Left(e)) =>
         (model, ErrorJson.log(e, "Couldn't fetch a coto graph."))

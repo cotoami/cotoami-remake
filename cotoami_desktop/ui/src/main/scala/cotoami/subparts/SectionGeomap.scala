@@ -7,7 +7,7 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
-import cotoami.{log_info, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, GeoBounds, Geolocation, Id}
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
@@ -187,10 +187,7 @@ object SectionGeomap {
           default.copy(
             _1 = model.addOrRemoveMarkers,
             _2 = context.domain.importFrom(cotos),
-            _3 = Cmd.Batch(
-              fetchNext,
-              log_info(s"Cotos in the bounds fetched.", Some(cotos.debug))
-            )
+            _3 = fetchNext
           )
         }
 

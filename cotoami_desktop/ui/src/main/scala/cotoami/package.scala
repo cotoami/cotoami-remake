@@ -9,7 +9,7 @@ package object cotoami {
     def into: T
   }
 
-  def log_info(
+  def info(
       message: String,
       details: Option[String] = None
   ): Cmd.One[Msg] =

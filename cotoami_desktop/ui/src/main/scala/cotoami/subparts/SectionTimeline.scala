@@ -7,7 +7,7 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.{log_info, Context, Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{
   Coto,
   Cotonoma,
@@ -135,12 +135,7 @@ object SectionTimeline {
             _2 = context.domain.importFrom(cotos)
           )
         else
-          default.copy(
-            _3 = log_info(
-              s"Fetch ${number} discarded (current: ${model.fetchNumber})",
-              None
-            )
-          )
+          default
 
       case Msg.Fetched(_, Left(e)) =>
         default.copy(
