@@ -56,12 +56,8 @@ case class Model(
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
 
-  def debug(message: String, details: Option[String] = None): Model =
-    copy(log = log.debug(message, details))
   def info(message: String, details: Option[String] = None): Model =
     copy(log = log.info(message, details))
-  def warn(message: String, details: Option[String] = None): Model =
-    copy(log = log.warn(message, details))
   def error(message: String, error: Option[ErrorJson]): Model =
     copy(log = log.error(message, error.map(js.JSON.stringify(_))))
 

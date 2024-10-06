@@ -1,7 +1,6 @@
 package cotoami
 
 import scala.util.chaining._
-import scala.scalajs.js
 import scala.scalajs.LinkingInfo
 import org.scalajs.dom
 import org.scalajs.dom.URL
@@ -93,18 +92,10 @@ object Main {
           Cmd.none
         )
 
-      case Msg.BackendChange(log) =>
-        model
-          .debug("BackendChange received.", Some(js.JSON.stringify(log)))
-          .importChangelog(log)
+      case Msg.BackendChange(log) => model.importChangelog(log)
 
       case Msg.BackendEvent(event) =>
-        (
-          model
-            .debug("BackendEvent received.", Some(js.JSON.stringify(event)))
-            .handleLocalNodeEvent(event),
-          Cmd.none
-        )
+        (model.handleLocalNodeEvent(event), Cmd.none)
 
       case Msg.ToggleLogView =>
         (model.copy(logViewToggle = !model.logViewToggle), Cmd.none)
@@ -164,8 +155,7 @@ object Main {
       case Msg.ServerConnectionsInitialized(result) =>
         (
           result match {
-            case Right(_) =>
-              model.debug("Server connections initialized.", None)
+            case Right(_) => model
             case Left(e) =>
               model.error("Failed to initialize server connections.", Some(e))
           },
@@ -359,10 +349,7 @@ object Main {
         if (model.domain.nodes.contains(id))
           model.focusNode(Some(id))
         else
-          (
-            model.warn(s"Node [${id}] not found.", None),
-            Browser.pushUrl(Route.index.url(()))
-          )
+          (model, Browser.pushUrl(Route.index.url(())))
 
       case Route.cotonoma(id) =>
         model.focusCotonoma(None, id)
