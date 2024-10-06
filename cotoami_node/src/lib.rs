@@ -16,7 +16,7 @@ pub use crate::web::launch_server;
 pub mod prelude {
     pub use crate::{
         event::local::LocalNodeEvent,
-        service::{error::*, models::*, service_ext::*, *},
+        service::{command::*, error::*, models::*, service_ext::*, *},
         state::{NodeConfig, NodeState},
         web::ServerConfig,
     };

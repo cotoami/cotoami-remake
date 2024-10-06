@@ -31,7 +31,7 @@ pub mod pubsub;
 pub mod service_ext;
 
 pub(crate) use self::{
-    command::Command,
+    command::*,
     error::*,
     models::*,
     pubsub::*,
