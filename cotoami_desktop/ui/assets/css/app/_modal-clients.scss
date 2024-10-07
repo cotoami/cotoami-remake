@@ -1,4 +1,4 @@
-dialog.client-nodes {
+dialog.clients {
   article {
     max-width: 1200px;
     min-width: 600px;
@@ -36,6 +36,7 @@ dialog.client-nodes {
       table.client-nodes {
         th {
           text-align: center;
+          font-size: 90%;
           opacity: 0.8;
         }
 

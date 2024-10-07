@@ -70,7 +70,7 @@ object ModalClients {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      dialogClasses = "client-nodes",
+      dialogClasses = "clients",
       closeButton = Some((classOf[Modal.Clients], dispatch)),
       error = model.error,
       bodyClasses = "header-and-body"
