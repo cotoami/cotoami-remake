@@ -41,7 +41,12 @@ dialog.clients {
         }
 
         td.id {
+          font-size: 90%;
           white-space: nowrap;
+
+          code {
+            color: var(--color);
+          }
         }
 
         td.name {

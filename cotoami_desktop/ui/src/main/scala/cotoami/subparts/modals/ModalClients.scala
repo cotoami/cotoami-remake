@@ -117,7 +117,9 @@ object ModalClients {
 
   private def trClient(client: Client): ReactElement =
     tr()(
-      td(className := "id")(client.node.id.uuid),
+      td(className := "id")(
+        code()(client.node.id.uuid)
+      ),
       td(className := "name")(
         if (client.node.name.isBlank())
           span(className := "not-yet-connected")(
