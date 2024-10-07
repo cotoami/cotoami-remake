@@ -53,25 +53,25 @@ object FormCoto {
       inPreview: Boolean = false,
       posting: Boolean = false
   ) {
-    def editorId: String = s"${this.id}-editor"
+    def editorId: String = s"${id}-editor"
 
     def hasContents: Boolean =
-      this.form match {
+      form match {
         case CotoForm(cotoInput, mediaContent, _, _) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
 
     def readyToPost: Boolean =
-      this.hasContents && !this.posting && (this.form match {
+      hasContents && !posting && (form match {
         case form: CotoForm =>
           form.validate.validated || form.mediaContent.isDefined
         case CotonomaForm(_, validation) => validation.validated
       })
 
     def clear: Model =
-      this.copy(
-        form = this.form match {
+      copy(
+        form = form match {
           case form: CotoForm     => CotoForm()
           case form: CotonomaForm => CotonomaForm()
         },
@@ -79,13 +79,13 @@ object FormCoto {
         inPreview = false
       )
 
-    def storageKey: String = StorageKeyPrefix + this.id
+    def storageKey: String = StorageKeyPrefix + id
 
     def save: Cmd.One[Msg] =
-      (this.autoSave, this.form) match {
+      (autoSave, form) match {
         case (true, CotoForm(cotoInput, _, _, _)) =>
           Cmd(IO {
-            dom.window.localStorage.setItem(this.storageKey, cotoInput)
+            dom.window.localStorage.setItem(storageKey, cotoInput)
             None
           })
 
@@ -93,7 +93,7 @@ object FormCoto {
       }
 
     def restore: Cmd.One[Msg] =
-      (this.autoSave, this.form) match {
+      (autoSave, form) match {
         case (true, form: CotoForm) =>
           restoreCoto.map(Msg.CotoRestored)
 
@@ -101,7 +101,7 @@ object FormCoto {
       }
 
     private def restoreCoto: Cmd.One[Option[String]] = Cmd(IO {
-      Some(Option(dom.window.localStorage.getItem(this.storageKey)))
+      Some(Option(dom.window.localStorage.getItem(storageKey)))
     })
   }
 
@@ -118,31 +118,31 @@ object FormCoto {
       mediaOrientation: Option[exifr.Rotation] = None
   ) extends Form {
     def summary: Option[String] =
-      if (this.hasSummary)
-        Some(this.firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
+      if (hasSummary)
+        Some(firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
       else
         None
 
     def content: String =
-      if (this.hasSummary)
-        this.cotoInput.stripPrefix(this.firstLine).trim
+      if (hasSummary)
+        cotoInput.stripPrefix(firstLine).trim
       else
-        this.cotoInput.trim
+        cotoInput.trim
 
     def validate: Validation.Result =
-      if (this.cotoInput.isBlank)
+      if (cotoInput.isBlank)
         Validation.Result.notYetValidated
       else {
         val errors =
-          this.summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
-            Coto.validateContent(this.content)
+          summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
+            Coto.validateContent(content)
         Validation.Result(errors)
       }
 
     private def hasSummary: Boolean =
-      this.cotoInput.startsWith(CotoForm.SummaryPrefix)
+      cotoInput.startsWith(CotoForm.SummaryPrefix)
 
-    private def firstLine = this.cotoInput.linesIterator.next()
+    private def firstLine = cotoInput.linesIterator.next()
   }
 
   object CotoForm {
@@ -155,25 +155,25 @@ object FormCoto {
       nameInput: String = "",
       validation: Validation.Result = Validation.Result.notYetValidated
   ) extends Form {
-    def name: String = this.nameInput.trim
+    def name: String = nameInput.trim
 
     def validate(nodeId: Id[Node]): (CotonomaForm, Cmd.One[Msg]) = {
       val (validation, cmd) =
-        if (this.name.isEmpty())
+        if (name.isEmpty())
           (Validation.Result.notYetValidated, Cmd.none)
         else
-          Cotonoma.validateName(this.name) match {
+          Cotonoma.validateName(name) match {
             case Seq() =>
               (
                 // Now that the local validation has passed,
                 // wait for backend validation to be done.
                 Validation.Result.notYetValidated,
-                CotonomaBackend.fetchByName(this.name, nodeId)
-                  .map(Msg.CotonomaByName(this.name, _))
+                CotonomaBackend.fetchByName(name, nodeId)
+                  .map(Msg.CotonomaByName(name, _))
               )
             case errors => (Validation.Result(errors), Cmd.none)
           }
-      (this.copy(validation = validation), cmd)
+      (copy(validation = validation), cmd)
     }
   }
 
