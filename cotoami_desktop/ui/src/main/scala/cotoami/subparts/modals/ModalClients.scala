@@ -8,7 +8,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ActiveClient, ClientNode, Node, Page, PaginatedItems}
+import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}
 import cotoami.repositories.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.{materialSymbol, toolButton}
@@ -18,6 +18,7 @@ object ModalClients {
 
   case class Model(
       clientNodes: PaginatedItems[ClientNode] = PaginatedItems(),
+      togglingDisabled: Set[Id[Node]] = Set.empty,
       error: Option[String] = None
   ) {
     def clients(nodes: Nodes): Seq[Client] =
@@ -26,6 +27,10 @@ object ModalClients {
           Client(node, client, nodes.activeClients.get(client.nodeId))
         }
       }
+
+    def update(client: ClientNode): Model =
+      this.modify(_.clientNodes.items.eachWhere(_.nodeId == client.nodeId))
+        .setTo(client)
   }
 
   case class Client(
@@ -49,6 +54,11 @@ object ModalClients {
   object Msg {
     case class ClientsFetched(result: Either[ErrorJson, Page[ClientNode]])
         extends Msg
+    case class SetDisabled(id: Id[Node], disable: Boolean) extends Msg
+    case class ClientUpdated(
+        id: Id[Node],
+        result: Either[ErrorJson, ClientNode]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
@@ -58,6 +68,27 @@ object ModalClients {
 
       case Msg.ClientsFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch clients.", e))
+
+      case Msg.SetDisabled(id, disable) =>
+        (
+          model.modify(_.togglingDisabled).using(_ + id),
+          ClientNodeBackend.update(id, Some(disable))
+            .map(Msg.ClientUpdated(id, _).into)
+        )
+
+      case Msg.ClientUpdated(id, Right(client)) =>
+        (
+          model
+            .modify(_.togglingDisabled).using(_ - id)
+            .update(client),
+          Cmd.none
+        )
+
+      case Msg.ClientUpdated(id, Left(e)) =>
+        (
+          model.modify(_.togglingDisabled).using(_ - id),
+          cotoami.error("Couldn't update a client.", e)
+        )
     }
   }
 
@@ -108,14 +139,16 @@ object ModalClients {
                 )
               ),
               tbody()(
-                clients.map(trClient)
+                clients.map(trClient(_, model))
               )
             )
         }
       )
     )
 
-  private def trClient(client: Client): ReactElement =
+  private def trClient(client: Client, model: Model)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
     tr()(
       td(className := "id")(
         code()(client.node.id.uuid)
@@ -151,7 +184,10 @@ object ModalClients {
           `type` := "checkbox",
           role := "switch",
           checked := !client.client.disabled,
-          onChange := (_ => ())
+          disabled := model.togglingDisabled.contains(client.node.id),
+          onChange := (_ =>
+            dispatch(Msg.SetDisabled(client.node.id, !client.client.disabled))
+          )
         )
       ),
       td(className := "settings")(
