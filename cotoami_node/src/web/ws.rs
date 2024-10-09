@@ -14,6 +14,7 @@ use cotoami_db::prelude::*;
 use futures::{sink::Sink, SinkExt, StreamExt};
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite as ts;
+use tracing::debug;
 
 use crate::{
     event::remote::{
@@ -79,7 +80,10 @@ async fn handle_socket(
         let tasks = communication_tasks.clone();
         async move {
             match disconnect_receiver.await {
-                Ok(_) => tasks.abort_all(),
+                Ok(_) => {
+                    debug!("Disconnecting a client {client_id} ...");
+                    tasks.abort_all()
+                }
                 Err(_) => (), // the sender dropped
             }
         }

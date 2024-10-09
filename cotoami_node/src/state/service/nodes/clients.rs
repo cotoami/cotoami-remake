@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::debug;
@@ -92,5 +92,31 @@ impl NodeState {
             }
         })
         .await?
+    }
+
+    pub async fn set_client_disabled(
+        &self,
+        node_id: Id<Node>,
+        disabled: bool,
+        operator: Arc<Operator>,
+    ) -> Result<ClientNode, ServiceError> {
+        if disabled {
+            self.client_conns().disconnect(&node_id);
+        }
+        let client = spawn_blocking({
+            let db = self.db().clone();
+            let operator = operator.clone();
+            move || {
+                let role = db
+                    .new_session()?
+                    .set_network_disabled(&node_id, disabled, &operator)?;
+                let NetworkRole::Client(client) = role else {
+                    bail!("Unexpected node role: {role:?}");
+                };
+                Ok(client)
+            }
+        })
+        .await??;
+        Ok(client)
     }
 }
