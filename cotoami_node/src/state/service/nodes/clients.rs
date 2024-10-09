@@ -9,7 +9,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClient, ClientAdded, NodeRole, Pagination},
+        models::{AddClient, ClientAdded, NodeRole, Pagination, UpdateClient},
         ServiceError,
     },
     state::NodeState,
@@ -94,7 +94,26 @@ impl NodeState {
         .await?
     }
 
-    pub async fn set_client_disabled(
+    pub async fn update_client(
+        &self,
+        node_id: Id<Node>,
+        values: UpdateClient,
+        operator: Arc<Operator>,
+    ) -> Result<ClientNode, ServiceError> {
+        if let Err(errors) = values.validate() {
+            return errors.into_result();
+        }
+
+        // Set disabled
+        if let Some(disabled) = values.disabled {
+            self.set_client_disabled(node_id, disabled, operator.clone())
+                .await?;
+        }
+
+        self.client_node(node_id, operator).await
+    }
+
+    async fn set_client_disabled(
         &self,
         node_id: Id<Node>,
         disabled: bool,

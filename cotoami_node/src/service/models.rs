@@ -184,6 +184,11 @@ pub struct ActiveClient {
     pub remote_addr: String,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct UpdateClient {
+    pub disabled: Option<bool>,
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Changes
 /////////////////////////////////////////////////////////////////////////////
