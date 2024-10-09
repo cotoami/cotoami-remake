@@ -12,6 +12,7 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::{sink::Sink, SinkExt, StreamExt};
+use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite as ts;
 
 use crate::{
@@ -54,9 +55,11 @@ async fn handle_socket(
 ) {
     // Publish connect and disconnect
     let client_id = session.client_node_id();
+    let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
     state.put_client_conn(ClientConnection::new(
         client_id,
         remote_addr.ip().to_string(),
+        disconnect,
     ));
     let on_disconnect = listener_on_disconnect(client_id, state.clone());
     futures::pin_mut!(on_disconnect);
@@ -70,8 +73,18 @@ async fn handle_socket(
     }));
     let stream = stream.map(|r| r.map(into_tungstenite));
 
-    // The `communication_tasks` will be terminated when the connection is closed.
     let communication_tasks = Abortables::default();
+    tokio::spawn({
+        // Close the communication when a disconnect message has been received.
+        let tasks = communication_tasks.clone();
+        async move {
+            match disconnect_receiver.await {
+                Ok(_) => tasks.abort_all(),
+                Err(_) => (), // the sender dropped
+            }
+        }
+    });
+
     match session {
         ClientSession::Operator(opr) => {
             communicate_with_operator(

@@ -6,7 +6,7 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
-use tokio::task::JoinHandle;
+use tokio::{sync::oneshot::Sender, task::JoinHandle};
 use tracing::debug;
 use validator::Validate;
 
@@ -217,16 +217,20 @@ impl ServerConnections {
 
 pub struct ClientConnection {
     client: ActiveClient,
+    disconnect: Sender<()>,
 }
 
 impl ClientConnection {
-    pub fn new(node_id: Id<Node>, remote_addr: String) -> Self {
+    pub fn new(node_id: Id<Node>, remote_addr: String, disconnect: Sender<()>) -> Self {
         ClientConnection {
             client: ActiveClient::new(node_id, remote_addr),
+            disconnect,
         }
     }
 
     pub fn client_id(&self) -> Id<Node> { self.client.node_id }
+
+    pub fn disconnect(self) { let _ = self.disconnect.send(()); }
 }
 
 #[derive(Clone, Default)]
