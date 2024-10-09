@@ -247,6 +247,12 @@ impl ClientConnections {
         self.0.write().remove(client_id)
     }
 
+    pub fn disconnect(&self, client_id: &Id<Node>) {
+        if let Some(conn) = self.remove(client_id) {
+            conn.disconnect();
+        }
+    }
+
     pub fn active_clients(&self) -> Vec<ActiveClient> {
         self.0
             .read()
