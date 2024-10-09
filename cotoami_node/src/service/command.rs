@@ -31,7 +31,7 @@ pub enum Command {
     /// Request to add a new [Server].
     AddServer(LogIntoServer),
 
-    /// Request to update a server node and return an updated [ServerNode].
+    /// Request to update a server node and return the updated [ServerNode].
     UpdateServer { id: Id<Node>, values: UpdateServer },
 
     /// Request a [Page<ClientNode>] that contains recently registered clients.
@@ -42,6 +42,9 @@ pub enum Command {
 
     /// Request to add a new client node and return [ClientAdded] if succeeded.
     AddClient(AddClient),
+
+    /// Request to update a client node and return the updated [ClientNode].
+    UpdateClient { id: Id<Node>, values: UpdateClient },
 
     /// Request a [Page<Cotonoma>] that contains recently updated cotonomas.
     RecentCotonomas {
