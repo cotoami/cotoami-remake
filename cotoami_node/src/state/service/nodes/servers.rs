@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::{debug, info};
@@ -165,21 +165,8 @@ impl NodeState {
 
         // Set disabled
         if let Some(disabled) = values.disabled {
-            debug!("Updating a server node [{node_id}] to be disabled = {disabled}");
-            spawn_blocking({
-                let db = self.db().clone();
-                let operator = operator.clone();
-                move || {
-                    db.new_session()?
-                        .set_network_disabled(&node_id, disabled, &operator)
-                }
-            })
-            .await??;
-
-            if disabled {
-                // Just to publish a connection state change.
-                self.server_conns().try_get(&node_id)?.disable();
-            }
+            self.set_server_disabled(node_id, disabled, operator.clone())
+                .await?;
         }
 
         // Recreate a connection with the updated [ServerNode].
@@ -188,6 +175,34 @@ impl NodeState {
         conn.connect().await;
         self.server_conns().put(node_id, conn);
 
+        Ok(server)
+    }
+
+    async fn set_server_disabled(
+        &self,
+        node_id: Id<Node>,
+        disabled: bool,
+        operator: Arc<Operator>,
+    ) -> Result<ServerNode> {
+        debug!("Updating a server node [{node_id}] to be disabled = {disabled}");
+        let server = spawn_blocking({
+            let db = self.db().clone();
+            move || {
+                let role = db
+                    .new_session()?
+                    .set_network_disabled(&node_id, disabled, &operator)?;
+                let NetworkRole::Server(server) = role else {
+                    bail!("Unexpected node role: {role:?}");
+                };
+                Ok(server)
+            }
+        })
+        .await??;
+
+        if disabled {
+            // Just to publish a connection state change.
+            self.server_conns().try_get(&node_id)?.disable();
+        }
         Ok(server)
     }
 }
