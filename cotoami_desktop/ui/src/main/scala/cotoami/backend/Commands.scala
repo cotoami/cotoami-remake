@@ -59,8 +59,6 @@ object Commands {
       jso(
         id = id.uuid,
         values = jso(
-          // For some reason, `disabled.getOrElse(null)` causes a compile error
-          // without explicit type conversion (`asInstanceOf`).
           disabled = disabled.getOrElse(null).asInstanceOf[js.Any],
           url_prefix = url_prefix.getOrElse(null)
         )
@@ -86,6 +84,19 @@ object Commands {
         id = nodeId.uuid,
         as_owner = asOowner,
         can_edit_links = canEditLinks
+      )
+    )
+
+  def UpdateClient(
+      id: Id[Node],
+      disabled: Option[Boolean]
+  ) =
+    jso(UpdateClient =
+      jso(
+        id = id.uuid,
+        values = jso(
+          disabled = disabled.getOrElse(null).asInstanceOf[js.Any]
+        )
       )
     )
 

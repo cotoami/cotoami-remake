@@ -29,6 +29,12 @@ object ClientNodeJson {
       asOowner: Boolean
   ): Cmd.One[Either[ErrorJson, ClientAddedJson]] =
     Commands.send(Commands.AddClient(nodeId, canEditLinks, asOowner))
+
+  def update(
+      id: Id[Node],
+      disabled: Option[Boolean]
+  ): Cmd.One[Either[ErrorJson, ClientNodeJson]] =
+    Commands.send(Commands.UpdateClient(id, disabled))
 }
 
 object ClientNodeBackend {
@@ -57,6 +63,13 @@ object ClientNodeBackend {
   ): Cmd.One[Either[ErrorJson, ClientAdded]] =
     ClientNodeJson.add(nodeId, canEditLinks, asOowner)
       .map(_.map(ClientAdded(_)))
+
+  def update(
+      id: Id[Node],
+      disabled: Option[Boolean]
+  ): Cmd.One[Either[ErrorJson, ClientNode]] =
+    ClientNodeJson.update(id, disabled)
+      .map(_.map(toModel(_)))
 }
 
 @js.native
