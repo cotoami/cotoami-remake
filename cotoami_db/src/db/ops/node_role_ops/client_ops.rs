@@ -3,7 +3,7 @@
 use core::time::Duration;
 use std::ops::DerefMut;
 
-use anyhow::Context;
+use anyhow::{bail, Context};
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -139,12 +139,19 @@ pub(crate) fn start_session<'a>(
     duration: Duration,
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let duration = chrono::Duration::from_std(duration)?;
         let client = try_get(id)
             .run(ctx)?
             // Hide a not-found error for a security reason
             .context(DatabaseError::AuthenticationFailed)?;
+
+        // Do not allow a disabled client to start a session
+        if client.disabled {
+            // Hide a disabled error for a security reason
+            bail!(DatabaseError::AuthenticationFailed);
+        }
+
         let mut principal = client.as_principal();
+        let duration = chrono::Duration::from_std(duration)?;
         principal
             .start_session(password, duration)
             .context(DatabaseError::AuthenticationFailed)?;
