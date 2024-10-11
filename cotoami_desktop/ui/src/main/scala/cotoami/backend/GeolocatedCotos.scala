@@ -6,15 +6,8 @@ import fui.Cmd
 import cotoami.models.{Coto, Cotonoma, GeoBounds, Id, Node}
 
 case class GeolocatedCotos(json: GeolocatedCotosJson) {
-  def cotos: js.Array[Coto] = this.json.cotos.map(CotoBackend.toModel(_))
-  def relatedData: CotosRelatedData = CotosRelatedData(this.json.related_data)
-
-  def debug: String = {
-    val s = new StringBuilder
-    s ++= s"coto count: ${this.cotos.size}"
-    s ++= s", relatedData: {${this.relatedData.debug}}"
-    s.result()
-  }
+  def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel(_))
+  def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
 }
 
 object GeolocatedCotos {
