@@ -147,6 +147,7 @@ object ModalClients {
     )
 
   private def trClient(client: Client, model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     tr()(
@@ -184,7 +185,11 @@ object ModalClients {
           `type` := "checkbox",
           role := "switch",
           checked := !client.client.disabled,
-          disabled := model.togglingDisabled.contains(client.node.id),
+          disabled := (
+            model.togglingDisabled.contains(client.node.id) ||
+              // Avoid disabling oneself unintentionally when operating as a parent node
+              Some(client.node.id) == context.domain.nodes.localId
+          ),
           onChange := (_ =>
             dispatch(Msg.SetDisabled(client.node.id, !client.client.disabled))
           )
