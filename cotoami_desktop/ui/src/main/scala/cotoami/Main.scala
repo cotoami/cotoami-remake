@@ -139,7 +139,7 @@ object Main {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
           .modify(_.domain).setTo(Domain(info.initialDataset, info.localNodeId))
-          .info("Database opened.", Some(info.debug))
+          .info("Database opened.", Some(info.folder))
           .pipe(model => applyUrlChange(model.url, model))
           .pipe { case (model, cmd) =>
             (
@@ -167,8 +167,7 @@ object Main {
           model
             .modify(_.domain).setTo(
               Domain(dataset, model.domain.nodes.localId.get)
-            )
-            .info("Remote dataset received.", Some(dataset.debug)),
+            ),
           Browser.pushUrl(Route.index.url(()))
         )
 

@@ -27,17 +27,6 @@ case class InitialDataset(json: InitialDatasetJson) {
 
   lazy val activeClients: js.Array[ActiveClient] =
     json.active_clients.map(ActiveClientBackend.toModel(_))
-
-  def debug: String = {
-    val s = new StringBuilder
-    s ++= s"lastChangeNumber: ${lastChangeNumber}"
-    s ++= s", nodes: ${nodes.size}"
-    s ++= s", localNode: {${localNode.map(_.debug)}}"
-    s ++= s", parentNodes: ${parentNodeIds.size}"
-    s ++= s", servers: ${servers.size}"
-    s ++= s", activeClients: ${activeClients.size}"
-    s.result()
-  }
 }
 
 object InitialDataset {
