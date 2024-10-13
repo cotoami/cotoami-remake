@@ -21,8 +21,40 @@ article.coto {
     }
   }
 
+  section.coto-toolbar {
+    position: absolute;
+    top: -20px;
+    right: 10px;
+    z-index: 10;
+
+    border: 1px solid var(--pane-border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+    background-color: var(--hover-background-color);
+
+    display: none;
+
+    button.tool {
+      margin-left: 5px;
+      padding: 0 5px;
+      opacity: 0.5;
+
+      span.material-symbols {
+        font-size: 20px;
+      }
+
+      &:hover {
+        opacity: 1.0;
+      }
+    }
+  }
+
   &:hover {
     background-color: var(--hover-background-color);
+
+    section.coto-toolbar {
+      display: inline-block;
+    }
   }
 
   >header {

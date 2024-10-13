@@ -283,7 +283,6 @@ object SectionTimeline {
       coto: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val originalCoto = context.domain.cotos.getOriginal(coto)
-
     section(
       className := optionalClasses(
         Seq(
@@ -312,6 +311,7 @@ object SectionTimeline {
       className := "coto",
       onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
     )(
+      ToolbarCoto(coto),
       header()(
         ViewCoto.divAttributes(coto),
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
