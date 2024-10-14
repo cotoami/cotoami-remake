@@ -53,8 +53,8 @@ object SectionCotoDetails {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val domain = context.domain
-
     article(className := "main-coto coto")(
+      ToolbarCoto(coto),
       header()(
         ViewCoto.divAttributes(coto),
         ViewCoto.addressAuthor(coto, domain.nodes)
@@ -83,7 +83,6 @@ object SectionCotoDetails {
       coto: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
-
     li(key := link.id.uuid, className := "sub")(
       divAddSubCoto,
       div(className := "sub")(
@@ -95,6 +94,7 @@ object SectionCotoDetails {
           className := "sub-coto coto",
           onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
         )(
+          ToolbarCoto(coto),
           header()(
             toolButton(
               symbol = "subdirectory_arrow_right",

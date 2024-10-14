@@ -32,7 +32,12 @@ section.coto-details {
   }
 
   article.main-coto {
-    padding: 1rem 0;
+    padding-top: 32px; // space for the toolbar
+    padding-bottom: 16px;
+
+    >section.coto-toolbar {
+      top: 0;
+    }
 
     >header {
       padding: 0 var(--block-spacing-horizontal);
