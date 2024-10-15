@@ -249,9 +249,7 @@ object SectionPinnedCotos {
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
-        header()(
-          ViewCoto.divAttributes(coto)
-        ),
+        ToolbarCoto(coto),
         div(className := "body")(
           toolButton(
             symbol = "push_pin",
@@ -260,6 +258,9 @@ object SectionPinnedCotos {
             classes = "unpin"
           ),
           ViewCoto.divContent(coto)
+        ),
+        footer()(
+          ViewCoto.divAttributes(coto)
         )
       ),
       olSubCotos(coto, inColumn)
@@ -352,18 +353,21 @@ object SectionPinnedCotos {
         className := "sub-coto coto",
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
+        ToolbarCoto(coto),
         header()(
           toolButton(
             symbol = "subdirectory_arrow_right",
             tip = "Unlink",
             tipPlacement = "right",
             classes = "unlink"
-          ),
-          ViewCoto.divAttributes(coto)
+          )
         ),
         div(className := "body")(
           ViewCoto.divContent(coto),
           ViewCoto.divLinksTraversal(coto, "left")
+        ),
+        footer()(
+          ViewCoto.divAttributes(coto)
         )
       )
     )

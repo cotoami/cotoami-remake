@@ -30,12 +30,15 @@ section.pinned-cotos {
   }
 
   ol.pinned-cotos {
+    padding-top: 15px;
+
     li.pin {
       background-color: var(--card-background-color);
     }
 
     article.pinned-coto {
       position: relative;
+      padding-top: 20px;
 
       div.pinned {
         display: none;
@@ -87,7 +90,13 @@ section.pinned-cotos {
   }
 
   article.coto {
+    padding-bottom: 5px;
     cursor: pointer;
+
+    >footer {
+      padding: 0;
+      padding-right: 10px;
+    }
   }
 
   .document-view {
@@ -234,6 +243,7 @@ section.pinned-cotos {
       }
 
       ol.sub-cotos {
+        padding-top: 16px;
         padding-bottom: 3rem;
       }
     }

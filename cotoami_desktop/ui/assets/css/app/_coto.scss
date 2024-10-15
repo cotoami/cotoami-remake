@@ -69,48 +69,48 @@ article.coto {
     address.author {
       color: var(--muted-color);
     }
+  }
 
-    div.attributes {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
+  div.attributes {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
 
-      ul.other-cotonomas {
-        flex: 1;
-        text-align: right;
+    ul.other-cotonomas {
+      flex: 1;
+      text-align: right;
 
-        li {
-          display: inline;
+      li {
+        display: inline;
 
-          a.also-posted-in {
-            margin-left: 5px;
-            font-size: 0.8rem;
-            color: var(--muted-color);
-            text-decoration: underline;
-          }
+        a.also-posted-in {
+          margin-left: 5px;
+          font-size: 0.8rem;
+          color: var(--muted-color);
+          text-decoration: underline;
         }
       }
+    }
 
-      button.geolocation {
-        margin-left: 8px;
-        opacity: .5;
+    button.geolocation {
+      margin-left: 8px;
+      opacity: .5;
 
-        &.focused {
-          opacity: 1;
-        }
-
-        span.material-symbols {
-          vertical-align: middle;
-        }
+      &.focused {
+        opacity: 1;
       }
 
-      div.pinned {
-        margin-left: 10px;
-        padding-top: 1px;
+      span.material-symbols {
+        vertical-align: middle;
+      }
+    }
 
-        span.material-symbols {
-          opacity: 0.5;
-        }
+    div.pinned {
+      margin-left: 10px;
+      padding-top: 1px;
+
+      span.material-symbols {
+        opacity: 0.5;
       }
     }
   }
