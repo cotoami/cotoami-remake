@@ -28,7 +28,7 @@ object SectionTraversals {
   case class Model(
       traversals: Seq[Traversal] = Seq.empty
   ) {
-    def isEmpty: Boolean = this.traversals.isEmpty
+    def isEmpty: Boolean = traversals.isEmpty
 
     def openTraversal(start: Id[Coto]): Model =
       this.modify(_.traversals).using(_ :+ Traversal(start))
@@ -61,7 +61,7 @@ object SectionTraversals {
       this.modify(_.steps).using(_.take(stepIndex) :+ step)
 
     def stepToParent(parentId: Id[Coto], links: Links): Traversal = {
-      val oldStart = this.start
+      val oldStart = start
       this
         .modify(_.start).setTo(parentId)
         .modify(_.steps).using(steps =>
@@ -77,9 +77,9 @@ object SectionTraversals {
 
     def traversed(stepIndex: Option[Int], subCotoId: Id[Coto]): Boolean =
       (stepIndex match {
-        case Some(index) => this.steps.lift(index + 1).map(_ == subCotoId)
+        case Some(index) => steps.lift(index + 1).map(_ == subCotoId)
         // For the start coto of the traversal
-        case None => this.steps.headOption.map(_ == subCotoId)
+        case None => steps.headOption.map(_ == subCotoId)
       }).getOrElse(false)
   }
 
