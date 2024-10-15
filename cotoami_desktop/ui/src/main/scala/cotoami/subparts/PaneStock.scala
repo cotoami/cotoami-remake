@@ -67,7 +67,6 @@ object PaneStock {
       SectionPinnedCotos(model, uiState),
       sectionTraversals
     )
-
     section(
       className := optionalClasses(
         Seq(

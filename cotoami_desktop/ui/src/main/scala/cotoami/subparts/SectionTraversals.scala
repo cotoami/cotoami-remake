@@ -252,16 +252,18 @@ object SectionTraversals {
         className := optionalClasses(
           Seq(
             ("coto", true),
+            ("step-coto", true),
             ("has-children", !subCotos.isEmpty)
           )
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
-        header()(
-          ViewCoto.divAttributes(coto)
-        ),
+        ToolbarCoto(coto),
         div(className := "body")(
           ViewCoto.divContent(coto)
+        ),
+        footer()(
+          ViewCoto.divAttributes(coto)
         )
       ),
       ol(className := "sub-cotos")(
@@ -299,14 +301,14 @@ object SectionTraversals {
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
+        ToolbarCoto(coto),
         header()(
           toolButton(
             symbol = "subdirectory_arrow_right",
             tip = "Unlink",
             tipPlacement = "right",
             classes = "unlink"
-          ),
-          ViewCoto.divAttributes(coto)
+          )
         ),
         div(className := "body")(
           // Coto content
@@ -337,6 +339,9 @@ object SectionTraversals {
               )
             )
           }
+        ),
+        footer()(
+          ViewCoto.divAttributes(coto)
         )
       )
     )

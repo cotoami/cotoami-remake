@@ -81,7 +81,15 @@ section.stock {
     }
 
     article.coto {
+      padding-bottom: 5px;
+      cursor: pointer;
+
       >header {
+        padding-right: 10px;
+      }
+
+      >footer {
+        padding: 0;
         padding-right: 10px;
       }
     }

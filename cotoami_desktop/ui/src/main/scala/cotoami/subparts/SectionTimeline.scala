@@ -331,7 +331,6 @@ object SectionTimeline {
   ): Option[ReactElement] =
     Option.when(coto.repostOfId.isDefined) {
       val domain = context.domain
-
       section(className := "repost-header")(
         materialSymbol("repeat"),
         // Display the cotonomas to which the coto has been reposted

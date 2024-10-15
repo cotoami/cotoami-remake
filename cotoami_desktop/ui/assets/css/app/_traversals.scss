@@ -65,12 +65,20 @@ section.traversals {
     }
 
     article {
+      &.step-coto {
+        padding-top: 20px;
+      }
+
       &.traversed {
         border: 2px dashed var(--traversed-border-color);
 
         .body {
           opacity: .5;
         }
+      }
+
+      section.coto-toolbar {
+        right: 0;
       }
 
       &.sub-coto .body {
@@ -96,10 +104,6 @@ section.traversals {
           }
         }
       }
-    }
-
-    article.coto {
-      cursor: pointer;
     }
   }
 }
