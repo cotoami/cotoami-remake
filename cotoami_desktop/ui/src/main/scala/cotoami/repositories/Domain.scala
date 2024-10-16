@@ -186,12 +186,14 @@ case class Domain(
 
   def canPost: Boolean =
     currentCotonoma match {
-      case Some(cotonoma) =>
-        nodes.get(cotonoma.nodeId) match {
-          case Some(targetNode) => nodes.canPostTo(targetNode.id)
-          case None             => false
-        }
-      case None => false
+      case Some(cotonoma) => nodes.canPostTo(cotonoma.nodeId)
+      case None           => false
+    }
+
+  def canEditLinks: Boolean =
+    currentCotonoma match {
+      case Some(cotonoma) => nodes.canEditLinksIn(cotonoma.nodeId)
+      case None           => false
     }
 
   /////////////////////////////////////////////////////////////////////////////
