@@ -29,7 +29,7 @@ object PaneFlow {
     (model.domain.nodes.operating, model.domain.currentCotonoma) match {
       case (Some(operatingNode), Some(cotonoma)) =>
         model.domain.nodes.get(cotonoma.nodeId).flatMap(targetNode =>
-          if (model.domain.nodes.postableTo(targetNode.id))
+          if (model.domain.nodes.canPostTo(targetNode.id))
             Some(
               FormCoto(
                 model.flowInput,

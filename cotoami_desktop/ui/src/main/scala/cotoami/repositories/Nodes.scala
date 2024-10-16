@@ -5,6 +5,7 @@ import com.softwaremill.quicklens._
 
 import cotoami.models.{
   ChildNode,
+  Coto,
   DatabaseRole,
   Id,
   Node,
@@ -117,12 +118,24 @@ case class Nodes(
       case _                                   => None
     }
 
-  def postableTo(id: Id[Node]): Boolean =
+  def canPostTo(id: Id[Node]): Boolean =
     if (Some(id) == localId || Some(id) == operatingId)
       true
     else
       parentStatus(id).map {
         case ParentStatus.Connected(Some(child)) => true
+        case _                                   => false
+      }.getOrElse(false)
+
+  def canEdit(coto: Coto): Boolean =
+    Some(coto.postedById) == operatingId
+
+  def canEditLinksIn(id: Id[Node]): Boolean =
+    if (Some(id) == localId || Some(id) == operatingId)
+      true
+    else
+      parentStatus(id).map {
+        case ParentStatus.Connected(Some(child)) => child.canEditLinks
         case _                                   => false
       }.getOrElse(false)
 }
