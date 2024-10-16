@@ -7,31 +7,31 @@ case class Log(
     entries: Queue[Log.Entry] = Queue.empty,
     maxSize: Int = 100
 ) {
-  def lastEntry(): Option[Log.Entry] = this.entries.lastOption
+  def lastEntry(): Option[Log.Entry] = entries.lastOption
 
   def debug(message: String, details: Option[String] = None): Log =
-    this.log(Log.Debug, message, details)
+    log(Log.Debug, message, details)
   def info(message: String, details: Option[String] = None): Log =
-    this.log(Log.Info, message, details)
+    log(Log.Info, message, details)
   def warn(message: String, details: Option[String] = None): Log =
-    this.log(Log.Warn, message, details)
+    log(Log.Warn, message, details)
   def error(message: String, details: Option[String] = None): Log =
-    this.log(Log.Error, message, details)
+    log(Log.Error, message, details)
 
   def log(
       level: Log.Level,
       message: String,
       details: Option[String] = None
   ): Log = {
-    this.addEntry(Log.Entry(level, message, details))
+    addEntry(Log.Entry(level, message, details))
   }
 
   def addEntry(entry: Log.Entry): Log = {
     var entries = this.entries.enqueue(entry)
-    while (entries.size > this.maxSize) {
+    while (entries.size > maxSize) {
       entries = entries.dequeue._2
     }
-    this.copy(entries = entries)
+    copy(entries = entries)
   }
 }
 
