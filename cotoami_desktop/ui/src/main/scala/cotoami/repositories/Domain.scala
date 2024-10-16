@@ -184,6 +184,16 @@ case class Domain(
     markers.values.toSeq
   }
 
+  def canPost: Boolean =
+    currentCotonoma match {
+      case Some(cotonoma) =>
+        nodes.get(cotonoma.nodeId) match {
+          case Some(targetNode) => nodes.canPostTo(targetNode.id)
+          case None             => false
+        }
+      case None => false
+    }
+
   /////////////////////////////////////////////////////////////////////////////
   // Import
   /////////////////////////////////////////////////////////////////////////////

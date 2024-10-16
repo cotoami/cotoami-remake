@@ -26,28 +26,25 @@ object PaneFlow {
       model: Model,
       uiState: UiState
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = Fragment(
-    (model.domain.nodes.operating, model.domain.currentCotonoma) match {
-      case (Some(operatingNode), Some(cotonoma)) =>
-        model.domain.nodes.get(cotonoma.nodeId).flatMap(targetNode =>
-          if (model.domain.nodes.canPostTo(targetNode.id))
-            Some(
-              FormCoto(
-                model.flowInput,
-                operatingNode,
-                cotonoma,
-                model.geomap,
-                uiState.paneSizes.getOrElse(
-                  EditorPaneName,
-                  EditorDefaultHeight
-                ),
-                (newSize) =>
-                  dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
-              )(subMsg => dispatch(AppMsg.FlowInputMsg(subMsg)))
-            )
-          else
-            None
+    (
+      model.domain.nodes.operating,
+      model.domain.currentCotonoma,
+      model.domain.canPost
+    ) match {
+      case (Some(operatingNode), Some(cotonoma), true) =>
+        Some(
+          FormCoto(
+            model.flowInput,
+            operatingNode,
+            cotonoma,
+            model.geomap,
+            uiState.paneSizes.getOrElse(
+              EditorPaneName,
+              EditorDefaultHeight
+            ),
+            (newSize) => dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
+          )(subMsg => dispatch(AppMsg.FlowInputMsg(subMsg)))
         )
-
       case _ => None
     },
     SectionTimeline(model.timeline, model.waitingPosts)(model, dispatch)
