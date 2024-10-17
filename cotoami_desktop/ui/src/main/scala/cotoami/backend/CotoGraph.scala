@@ -6,23 +6,13 @@ import fui.Cmd
 import cotoami.models.{Coto, Cotonoma, Id, Link}
 
 case class CotoGraph(json: CotoGraphJson) {
-  def rootCotoId: Id[Coto] = Id(this.json.root_coto_id)
+  def rootCotoId: Id[Coto] = Id(json.root_coto_id)
   def rootCotonoma: Option[Cotonoma] =
-    Nullable.toOption(this.json.root_cotonoma).map(CotonomaBackend.toModel(_))
-  def cotos: js.Array[Coto] = this.json.cotos.map(CotoBackend.toModel(_))
+    Nullable.toOption(json.root_cotonoma).map(CotonomaBackend.toModel(_))
+  def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel(_))
   def cotosRelatedData: CotosRelatedData =
-    CotosRelatedData(this.json.cotos_related_data)
-  def links: js.Array[Link] = this.json.links.map(LinkBackend.toModel(_))
-
-  def debug: String = {
-    val s = new StringBuilder
-    s ++= s"rootCotoId: ${this.rootCotoId}"
-    s ++= s", rootCotonoma: ${rootCotonoma.toString()}"
-    s ++= s", cotos: ${this.cotos.size}"
-    s ++= s", cotosRelatedData: ${this.cotosRelatedData.debug}"
-    s ++= s", links: ${this.links.size}"
-    s.result()
-  }
+    CotosRelatedData(json.cotos_related_data)
+  def links: js.Array[Link] = json.links.map(LinkBackend.toModel(_))
 }
 
 object CotoGraph {

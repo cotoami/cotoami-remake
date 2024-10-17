@@ -369,7 +369,7 @@ object Main {
     // Specify the type of the event payload (`LogEvent`) here,
     // otherwise a runtime error will occur for some reason
     (tauri.listen[LogEventJson]("log", None).map(Msg.LogEvent): Sub[Msg]) <+>
-      this.listenToBackendChanges(model) <+>
+      listenToBackendChanges(model) <+>
       (tauri.listen[LocalNodeEventJson]("backend-event", None)
         .map(Msg.BackendEvent))
 
