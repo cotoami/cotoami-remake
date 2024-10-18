@@ -360,6 +360,8 @@ impl CotoJson {
             is_cotonoma: self.as_cotonoma,
             longitude: None,
             latitude: None,
+            datetime_start: None,
+            datetime_end: None,
             repost_of_id: self.repost_id,
             reposted_in_ids,
             created_at: from_timestamp_millis(self.inserted_at)?,

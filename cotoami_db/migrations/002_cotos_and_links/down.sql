@@ -7,6 +7,8 @@ DROP INDEX cotos_node_id;
 DROP INDEX cotos_posted_in_id;
 DROP INDEX cotos_posted_by_id;
 DROP INDEX cotos_lng_lat;
+DROP INDEX cotos_datetime_start;
+DROP INDEX cotos_datetime_end;
 DROP INDEX cotos_repost_of_id;
 
 DROP TABLE cotos;

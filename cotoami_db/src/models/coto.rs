@@ -71,8 +71,13 @@ pub struct Coto {
     /// TRUE if this coto is a cotonoma.
     pub is_cotonoma: bool,
 
+    /// Geolocation
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
+
+    /// Datetime range
+    pub datetime_start: Option<NaiveDateTime>,
+    pub datetime_end: Option<NaiveDateTime>,
 
     /// UUID of the original coto of this repost.
     ///
@@ -135,6 +140,8 @@ impl Coto {
             is_cotonoma: self.is_cotonoma,
             longitude: self.longitude,
             latitude: self.latitude,
+            datetime_start: self.datetime_start,
+            datetime_end: self.datetime_end,
             repost_of_id: self.repost_of_id.as_ref(),
             reposted_in_ids: self.reposted_in_ids.as_ref(),
             created_at: self.created_at,
@@ -204,6 +211,9 @@ pub(crate) struct NewCoto<'a> {
     #[validate(range(min = "Geolocation::LATITUDE_MIN", max = "Geolocation::LATITUDE_MAX"))]
     latitude: Option<f64>,
 
+    datetime_start: Option<NaiveDateTime>,
+    datetime_end: Option<NaiveDateTime>,
+
     repost_of_id: Option<&'a Id<Coto>>,
 
     reposted_in_ids: Option<&'a Ids<Cotonoma>>,
@@ -227,6 +237,8 @@ impl<'a> NewCoto<'a> {
             is_cotonoma: false,
             longitude: None,
             latitude: None,
+            datetime_start: None,
+            datetime_end: None,
             repost_of_id: None,
             reposted_in_ids: None,
             created_at: now,

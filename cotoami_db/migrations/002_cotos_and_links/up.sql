@@ -45,6 +45,10 @@ CREATE TABLE cotos (
   longitude REAL,
   latitude REAL,
 
+  -- Datetime range
+  datetime_start DATETIME, -- UTC
+  datetime_end DATETIME,   -- UTC
+
   -- UUID of the original coto of this repost,
   -- or NULL if it is not a repost.
   repost_of_id TEXT,
@@ -68,6 +72,8 @@ CREATE INDEX cotos_node_id ON cotos(node_id);
 CREATE INDEX cotos_posted_in_id ON cotos(posted_in_id);
 CREATE INDEX cotos_posted_by_id ON cotos(posted_by_id);
 CREATE INDEX cotos_lng_lat ON cotos(longitude, latitude);
+CREATE INDEX cotos_datetime_start ON cotos(datetime_start);
+CREATE INDEX cotos_datetime_end ON cotos(datetime_end);
 CREATE INDEX cotos_repost_of_id ON cotos(repost_of_id);
 
 -- Some columns of a repost should be the same values as the original.
