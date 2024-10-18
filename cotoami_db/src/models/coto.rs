@@ -413,6 +413,12 @@ pub(crate) struct UpdateCoto<'a> {
     pub latitude: Option<Option<f64>>,
 
     #[new(default)]
+    pub datetime_start: Option<Option<NaiveDateTime>>,
+
+    #[new(default)]
+    pub datetime_end: Option<Option<NaiveDateTime>>,
+
+    #[new(default)]
     pub repost_of_id: Option<Option<&'a Id<Coto>>>,
 
     #[new(default)]
@@ -469,6 +475,21 @@ impl<'a> UpdateCoto<'a> {
             }
         }
 
+        match diff.datetime_range.as_ref() {
+            FieldDiff::None => {
+                self.datetime_start = None;
+                self.datetime_end = None;
+            }
+            FieldDiff::Delete => {
+                self.datetime_start = Some(None);
+                self.datetime_end = Some(None);
+            }
+            FieldDiff::Change(datetime_range) => {
+                self.datetime_start = Some(datetime_range.start);
+                self.datetime_end = Some(datetime_range.end);
+            }
+        }
+
         Ok(())
     }
 }
@@ -491,6 +512,8 @@ pub struct CotoContentDiff<'a> {
 
     #[validate(nested)]
     pub geolocation: FieldDiff<Geolocation>,
+
+    pub datetime_range: FieldDiff<DateTimeRange>,
 }
 
 impl<'a> CotoContentDiff<'a> {
@@ -520,6 +543,15 @@ impl<'a> CotoContentDiff<'a> {
     pub fn geolocation(mut self, geolocation: Option<Geolocation>) -> Self {
         self.geolocation = if let Some(geolocation) = geolocation {
             FieldDiff::Change(geolocation)
+        } else {
+            FieldDiff::Delete
+        };
+        self
+    }
+
+    pub fn datetime_range(mut self, datetime_range: Option<DateTimeRange>) -> Self {
+        self.datetime_range = if let Some(datetime_range) = datetime_range {
+            FieldDiff::Change(datetime_range)
         } else {
             FieldDiff::Delete
         };
