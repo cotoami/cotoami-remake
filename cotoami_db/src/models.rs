@@ -360,6 +360,16 @@ impl<T> FieldDiff<T> {
     }
 }
 
+impl<T> From<Option<T>> for FieldDiff<T> {
+    fn from(option: Option<T>) -> Self {
+        if let Some(value) = option {
+            FieldDiff::Change(value)
+        } else {
+            FieldDiff::Delete
+        }
+    }
+}
+
 impl<T> validator::Validate for FieldDiff<T>
 where
     T: validator::Validate,

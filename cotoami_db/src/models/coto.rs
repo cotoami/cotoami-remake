@@ -541,20 +541,12 @@ impl<'a> CotoContentDiff<'a> {
     }
 
     pub fn geolocation(mut self, geolocation: Option<Geolocation>) -> Self {
-        self.geolocation = if let Some(geolocation) = geolocation {
-            FieldDiff::Change(geolocation)
-        } else {
-            FieldDiff::Delete
-        };
+        self.geolocation = geolocation.into();
         self
     }
 
     pub fn datetime_range(mut self, datetime_range: Option<DateTimeRange>) -> Self {
-        self.datetime_range = if let Some(datetime_range) = datetime_range {
-            FieldDiff::Change(datetime_range)
-        } else {
-            FieldDiff::Delete
-        };
+        self.datetime_range = datetime_range.into();
         self
     }
 }
