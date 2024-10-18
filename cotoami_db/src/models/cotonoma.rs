@@ -11,7 +11,7 @@ use validator::Validate;
 use super::{
     coto::Coto,
     node::{BelongsToNode, Node},
-    Geolocation, Id,
+    DateTimeRange, Geolocation, Id,
 };
 use crate::schema::cotonomas;
 
@@ -129,6 +129,8 @@ pub struct CotonomaInput<'a> {
 
     #[validate(nested)]
     pub geolocation: Option<Geolocation>,
+
+    pub datetime_range: Option<DateTimeRange>,
 }
 
 impl<'a> CotonomaInput<'a> {
@@ -136,11 +138,17 @@ impl<'a> CotonomaInput<'a> {
         Self {
             name: Cow::from(name),
             geolocation: None,
+            datetime_range: None,
         }
     }
 
     pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
         self.geolocation = Some(geolocation);
+        self
+    }
+
+    pub fn datetime_range(mut self, datetime_range: DateTimeRange) -> Self {
+        self.datetime_range = Some(datetime_range);
         self
     }
 }

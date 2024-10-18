@@ -13,6 +13,7 @@ use std::{
 };
 
 use anyhow::Result;
+use chrono::NaiveDateTime;
 use derive_new::new;
 use diesel::{
     backend::Backend,
@@ -410,6 +411,16 @@ impl Geolocation {
             latitude: lng_lat.1,
         }
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// DateTimeRange
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct DateTimeRange {
+    pub start: Option<NaiveDateTime>,
+    pub end: Option<NaiveDateTime>,
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@ use crate::{
     models::{
         cotonoma::{Cotonoma, CotonomaInput},
         node::{BelongsToNode, Node},
-        Bytes, FieldDiff, Geolocation, Id, Ids,
+        Bytes, DateTimeRange, FieldDiff, Geolocation, Id, Ids,
     },
     schema::cotos,
 };
@@ -75,7 +75,7 @@ pub struct Coto {
     pub longitude: Option<f64>,
     pub latitude: Option<f64>,
 
-    /// Datetime range
+    /// DateTime range
     pub datetime_start: Option<NaiveDateTime>,
     pub datetime_end: Option<NaiveDateTime>,
 
@@ -251,6 +251,11 @@ impl<'a> NewCoto<'a> {
         self.latitude = Some(location.latitude);
     }
 
+    fn set_datetime_range(&mut self, datetime_range: &DateTimeRange) {
+        self.datetime_start = datetime_range.start;
+        self.datetime_end = datetime_range.end;
+    }
+
     pub fn new(
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
@@ -275,6 +280,10 @@ impl<'a> NewCoto<'a> {
             coto.set_geolocation(location);
         }
 
+        if let Some(datetime_range) = input.datetime_range.as_ref() {
+            coto.set_datetime_range(datetime_range);
+        }
+
         coto.validate()?;
         Ok(coto)
     }
@@ -293,6 +302,10 @@ impl<'a> NewCoto<'a> {
 
         if let Some(location) = input.geolocation.as_ref() {
             coto.set_geolocation(location);
+        }
+
+        if let Some(datetime_range) = input.datetime_range.as_ref() {
+            coto.set_datetime_range(datetime_range);
         }
 
         coto.validate()?;
@@ -328,6 +341,8 @@ pub struct CotoInput<'a> {
 
     #[validate(nested)]
     pub geolocation: Option<Geolocation>,
+
+    pub datetime_range: Option<DateTimeRange>,
 }
 
 impl<'a> CotoInput<'a> {
@@ -337,6 +352,7 @@ impl<'a> CotoInput<'a> {
             summary: None,
             media_content: None,
             geolocation: None,
+            datetime_range: None,
         }
     }
 
@@ -352,6 +368,11 @@ impl<'a> CotoInput<'a> {
 
     pub fn geolocation(mut self, geolocation: Geolocation) -> Self {
         self.geolocation = Some(geolocation);
+        self
+    }
+
+    pub fn datetime_range(mut self, datetime_range: DateTimeRange) -> Self {
+        self.datetime_range = Some(datetime_range);
         self
     }
 }

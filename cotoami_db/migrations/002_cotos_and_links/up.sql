@@ -45,7 +45,7 @@ CREATE TABLE cotos (
   longitude REAL,
   latitude REAL,
 
-  -- Datetime range
+  -- DateTime range
   datetime_start DATETIME, -- UTC
   datetime_end DATETIME,   -- UTC
 
