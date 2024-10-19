@@ -641,17 +641,6 @@ object FormCoto {
           classes = "delete",
           onClick = _ => dispatch(Msg.DeleteMediaContent)
         )
-      ),
-      form.mediaLocation.map(location =>
-        section(className := "geolocation")(
-          materialSymbol("photo_camera"),
-          button(className := "geolocation default")(
-            span(className := "label")("longitude:"),
-            span(className := "value longitude")(location.longitude),
-            span(className := "label")("latitude:"),
-            span(className := "value latitude")(location.latitude)
-          )
-        )
       )
     )
   }
