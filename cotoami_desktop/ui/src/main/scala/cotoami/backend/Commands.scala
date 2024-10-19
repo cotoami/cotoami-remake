@@ -184,6 +184,7 @@ object Commands {
       summary: Option[String],
       mediaContent: Option[(String, String)],
       location: Option[Geolocation],
+      timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
   ) =
     jso(PostCoto =
@@ -193,7 +194,8 @@ object Commands {
           summary = summary.getOrElse(null),
           media_content =
             mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
-          geolocation = geolocation(location)
+          geolocation = geolocation(location),
+          datetime_range = dateTimeRange(timeRange)
         ),
         post_to = postTo.uuid
       )
@@ -214,5 +216,10 @@ object Commands {
   private def geolocation(location: Option[Geolocation]) =
     location.map(location =>
       jso(longitude = location.longitude, latitude = location.latitude)
+    ).getOrElse(null)
+
+  private def dateTimeRange(range: Option[DateTimeRange]) =
+    range.map(range =>
+      jso(start = range.startUtcIso, end = range.endUtcIso.getOrElse(null))
     ).getOrElse(null)
 }

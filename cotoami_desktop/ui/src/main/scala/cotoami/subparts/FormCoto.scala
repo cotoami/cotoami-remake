@@ -16,6 +16,7 @@ import cotoami.libs.exifr
 import cotoami.models.{
   Coto,
   Cotonoma,
+  DateTimeRange,
   Geolocation,
   Id,
   Node,
@@ -466,6 +467,7 @@ object FormCoto {
                   form,
                   mediaContent,
                   geomap.focusedLocation,
+                  None, // TODO
                   cotonoma.id
                 ),
                 model.save
@@ -535,9 +537,17 @@ object FormCoto {
       form: CotoForm,
       mediaContent: Option[(String, String)],
       location: Option[Geolocation],
+      timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
   ): Cmd.One[Msg] =
-    CotoBackend.post(form.content, form.summary, mediaContent, location, postTo)
+    CotoBackend.post(
+      form.content,
+      form.summary,
+      mediaContent,
+      location,
+      timeRange,
+      postTo
+    )
       .map(Msg.CotoPosted(postId, _))
 
   private def postCotonoma(
