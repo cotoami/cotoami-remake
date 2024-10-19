@@ -31,7 +31,7 @@ object DateTimeRange {
           case Success(values) => {
             val timeRange = values.toOption.flatMap(
               _.get(DateTimeTag).flatMap {
-                case date: js.Date => Some(DateTimeRange(date.toUTCString()))
+                case date: js.Date => Some(DateTimeRange(date.toISOString()))
                 case _             => None
               }
             )

@@ -57,8 +57,8 @@ object FormCoto {
 
     def hasContents: Boolean =
       form match {
-        case CotoForm(cotoInput, mediaContent, _, _) =>
-          !cotoInput.isBlank || mediaContent.isDefined
+        case form: CotoForm =>
+          !form.cotoInput.isBlank || form.mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
 
@@ -83,21 +83,18 @@ object FormCoto {
 
     def save: Cmd.One[Msg] =
       (autoSave, form) match {
-        case (true, CotoForm(cotoInput, _, _, _)) =>
+        case (true, form: CotoForm) =>
           Cmd(IO {
-            dom.window.localStorage.setItem(storageKey, cotoInput)
+            dom.window.localStorage.setItem(storageKey, form.cotoInput)
             None
           })
-
         case _ => Cmd.none
       }
 
     def restore: Cmd.One[Msg] =
       (autoSave, form) match {
-        case (true, form: CotoForm) =>
-          restoreCoto.map(Msg.CotoRestored)
-
-        case _ => Cmd.none
+        case (true, form: CotoForm) => restoreCoto.map(Msg.CotoRestored)
+        case _                      => Cmd.none
       }
 
     private def restoreCoto: Cmd.One[Option[String]] = Cmd(IO {
@@ -113,6 +110,7 @@ object FormCoto {
 
   case class CotoForm(
       cotoInput: String = "",
+      dateTimeRange: Option[DateTimeRange] = None,
       mediaContent: Option[dom.Blob] = None,
       mediaLocation: Option[Geolocation] = None,
       mediaDateTime: Option[DateTimeRange] = None
@@ -326,10 +324,14 @@ object FormCoto {
           )
         )
 
-      case (Msg.ExifDateTimeDetected(Right(dateTime)), form: CotoForm, _) =>
+      case (Msg.ExifDateTimeDetected(Right(dateTime)), form: CotoForm, _) => {
+        println(s"dateTime: ${dateTime.map(_.startUtcIso)}")
         default.copy(
-          _1 = model.copy(form = form.copy(mediaDateTime = dateTime))
+          _1 = model.copy(form =
+            form.copy(dateTimeRange = dateTime, mediaDateTime = dateTime)
+          )
         )
+      }
 
       case (Msg.ExifDateTimeDetected(Left(error)), _, _) =>
         default.copy(
@@ -470,7 +472,7 @@ object FormCoto {
                   form,
                   mediaContent,
                   geomap.focusedLocation,
-                  None, // TODO
+                  form.dateTimeRange,
                   cotonoma.id
                 ),
                 model.save
