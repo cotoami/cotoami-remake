@@ -297,7 +297,7 @@ object FormCoto {
             form.copy(mediaContent = Some(file), mediaLocation = None)
           ),
           _5 = Cmd.Batch(
-            Geolocation.detect(file).map {
+            Geolocation.fromExif(file).map {
               case Right(location) => Msg.GeolocationDetected(Right(location))
               case Left(t)         => Msg.GeolocationDetected(Left(t.toString))
             },

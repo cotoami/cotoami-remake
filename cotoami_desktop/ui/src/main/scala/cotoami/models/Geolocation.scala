@@ -28,7 +28,7 @@ object Geolocation {
 
   def fromMapLibre(lngLat: LngLat): Geolocation = fromLngLat(lngLat.toArray())
 
-  def detect(file: dom.Blob): Cmd.One[Either[Throwable, Geolocation]] =
+  def fromExif(file: dom.Blob): Cmd.One[Either[Throwable, Geolocation]] =
     Cmd(IO.async { cb =>
       IO {
         exifr.gps(file).onComplete {
