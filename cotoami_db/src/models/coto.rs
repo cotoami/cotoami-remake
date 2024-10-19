@@ -252,7 +252,7 @@ impl<'a> NewCoto<'a> {
     }
 
     fn set_datetime_range(&mut self, datetime_range: &DateTimeRange) {
-        self.datetime_start = datetime_range.start;
+        self.datetime_start = Some(datetime_range.start);
         self.datetime_end = datetime_range.end;
     }
 
@@ -485,7 +485,7 @@ impl<'a> UpdateCoto<'a> {
                 self.datetime_end = Some(None);
             }
             FieldDiff::Change(datetime_range) => {
-                self.datetime_start = Some(datetime_range.start);
+                self.datetime_start = Some(Some(datetime_range.start));
                 self.datetime_end = Some(datetime_range.end);
             }
         }

@@ -429,7 +429,7 @@ impl Geolocation {
 
 #[derive(derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DateTimeRange {
-    pub start: Option<NaiveDateTime>,
+    pub start: NaiveDateTime,
     pub end: Option<NaiveDateTime>,
 }
 
