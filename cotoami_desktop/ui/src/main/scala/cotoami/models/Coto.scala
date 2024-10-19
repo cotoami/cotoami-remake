@@ -10,6 +10,7 @@ trait CotoContent {
   def summary: Option[String]
   def mediaUrl: Option[(String, String)]
   def geolocation: Option[Geolocation]
+  def dateTimeRange: Option[DateTimeRange]
   def isCotonoma: Boolean
 
   def nameAsCotonoma: Option[String] =
@@ -39,6 +40,7 @@ case class Coto(
     summary: Option[String],
     mediaContent: Option[(dom.Blob, String)],
     geolocation: Option[Geolocation],
+    dateTimeRange: Option[DateTimeRange],
     isCotonoma: Boolean,
     repostOfId: Option[Id[Coto]],
     repostedInIds: Option[Seq[Id[Cotonoma]]],

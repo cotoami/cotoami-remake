@@ -11,7 +11,6 @@ case class WaitingPost(
     content: Option[String],
     summary: Option[String],
     mediaContent: Option[(String, String)],
-    geolocation: Option[Geolocation],
     isCotonoma: Boolean,
     postedIn: Cotonoma,
     error: Option[String] = None
@@ -21,6 +20,9 @@ case class WaitingPost(
       val blob = Browser.decodeBase64(content, mimeType)
       (dom.URL.createObjectURL(blob), mimeType)
   }
+
+  val geolocation: Option[Geolocation] = None
+  val dateTimeRange: Option[DateTimeRange] = None
 
   def revokeMediaUrl() = this.mediaUrl.foreach { case (url, _) =>
     dom.URL.revokeObjectURL(url)
@@ -36,7 +38,6 @@ object WaitingPost {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
-      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPost =
     WaitingPost(
@@ -44,7 +45,6 @@ object WaitingPost {
       Some(content),
       summary,
       mediaContent,
-      geolocation,
       false,
       postedIn
     )
@@ -52,10 +52,16 @@ object WaitingPost {
   def newCotonoma(
       postId: String,
       name: String,
-      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPost =
-    WaitingPost(postId, None, Some(name), None, geolocation, true, postedIn)
+    WaitingPost(
+      postId,
+      None,
+      Some(name),
+      None,
+      true,
+      postedIn
+    )
 }
 
 case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
@@ -69,7 +75,6 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
       content: String,
       summary: Option[String],
       mediaContent: Option[(String, String)],
-      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPosts =
     this.add(
@@ -78,7 +83,6 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
         content,
         summary,
         mediaContent,
-        geolocation,
         postedIn
       )
     )
@@ -86,10 +90,15 @@ case class WaitingPosts(posts: Seq[WaitingPost] = Seq.empty) {
   def addCotonoma(
       postId: String,
       name: String,
-      geolocation: Option[Geolocation],
       postedIn: Cotonoma
   ): WaitingPosts =
-    this.add(WaitingPost.newCotonoma(postId, name, geolocation, postedIn))
+    this.add(
+      WaitingPost.newCotonoma(
+        postId,
+        name,
+        postedIn
+      )
+    )
 
   def setError(postId: String, error: String): WaitingPosts =
     this.modify(_.posts.eachWhere(_.postId == postId).error).setTo(

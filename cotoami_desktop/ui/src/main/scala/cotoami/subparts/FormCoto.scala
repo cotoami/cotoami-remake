@@ -439,12 +439,7 @@ object FormCoto {
             default.copy(
               _1 = model,
               _2 = geomap.copy(focusedLocation = None),
-              _3 = waitingPosts.addCotonoma(
-                postId,
-                form.name,
-                geomap.focusedLocation,
-                cotonoma
-              ),
+              _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
               _5 =
                 postCotonoma(postId, form, geomap.focusedLocation, cotonoma.id)
             )
@@ -463,7 +458,6 @@ object FormCoto {
                 form.content,
                 form.summary,
                 mediaContent,
-                geomap.focusedLocation,
                 cotonoma
               ),
               _5 = Cmd.Batch(

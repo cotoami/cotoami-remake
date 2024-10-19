@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.{Browser, Cmd}
-import cotoami.models.{Coto, Cotonoma, Geolocation, Id}
+import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id}
 
 @js.native
 trait CotoJson extends js.Object {
@@ -18,6 +18,8 @@ trait CotoJson extends js.Object {
   val is_cotonoma: Boolean = js.native
   val longitude: Nullable[Double] = js.native
   val latitude: Nullable[Double] = js.native
+  val datetime_start: Nullable[String] = js.native
+  val datetime_end: Nullable[String] = js.native
   val repost_of_id: Nullable[String] = js.native
   val reposted_in_ids: Nullable[js.Array[String]] = js.native
   val created_at: String = js.native
@@ -63,6 +65,9 @@ object CotoBackend {
           Some(Geolocation.fromLngLat((longitude, latitude)))
         case _ => None
       },
+      dateTimeRange = Nullable.toOption(json.datetime_start).map(start =>
+        DateTimeRange(start, Nullable.toOption(json.datetime_end))
+      ),
       isCotonoma = json.is_cotonoma,
       repostOfId = Nullable.toOption(json.repost_of_id).map(Id(_)),
       repostedInIds = Nullable.toOption(json.reposted_in_ids)
