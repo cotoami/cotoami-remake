@@ -12,7 +12,6 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.Context
 import cotoami.utils.{Log, Validation}
-import cotoami.libs.exifr
 import cotoami.models.{
   Coto,
   Cotonoma,
@@ -58,7 +57,7 @@ object FormCoto {
 
     def hasContents: Boolean =
       form match {
-        case CotoForm(cotoInput, mediaContent, _, _) =>
+        case CotoForm(cotoInput, mediaContent, _) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
@@ -84,7 +83,7 @@ object FormCoto {
 
     def save: Cmd.One[Msg] =
       (autoSave, form) match {
-        case (true, CotoForm(cotoInput, _, _, _)) =>
+        case (true, CotoForm(cotoInput, _, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(storageKey, cotoInput)
             None
@@ -115,8 +114,7 @@ object FormCoto {
   case class CotoForm(
       cotoInput: String = "",
       mediaContent: Option[dom.Blob] = None,
-      mediaLocation: Option[Geolocation] = None,
-      mediaOrientation: Option[exifr.Rotation] = None
+      mediaLocation: Option[Geolocation] = None
   ) extends Form {
     def summary: Option[String] =
       if (hasSummary)
@@ -191,10 +189,10 @@ object FormCoto {
     case class CotoInput(coto: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
     case class FileInput(file: dom.Blob) extends Msg
-    case class GeolocationDetected(result: Either[String, Option[Geolocation]])
+    case class ExifLocationDetected(result: Either[String, Option[Geolocation]])
         extends Msg
-    case class OrientationDetected(
-        result: Either[String, Option[exifr.Rotation]]
+    case class ExifDateTimeDetected(
+        result: Either[String, Option[DateTimeRange]]
     ) extends Msg
     case object DeleteMediaContent extends Msg
     case object DeleteGeolocation extends Msg
@@ -298,19 +296,19 @@ object FormCoto {
           ),
           _5 = Cmd.Batch(
             Geolocation.fromExif(file).map {
-              case Right(location) => Msg.GeolocationDetected(Right(location))
-              case Left(t)         => Msg.GeolocationDetected(Left(t.toString))
+              case Right(location) => Msg.ExifLocationDetected(Right(location))
+              case Left(t)         => Msg.ExifLocationDetected(Left(t.toString))
             },
-            Cmd.fromFuture(exifr.rotation(file).toFuture).map {
-              case Right(orientation) =>
-                Msg.OrientationDetected(Right(orientation.toOption))
-              case Left(t) => Msg.OrientationDetected(Left(t.toString))
+            DateTimeRange.fromExif(file).map {
+              case Right(timeRange) =>
+                Msg.ExifDateTimeDetected(Right(timeRange))
+              case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString))
             }
           )
         )
 
       case (
-            Msg.GeolocationDetected(Right(Some(location))),
+            Msg.ExifLocationDetected(Right(Some(location))),
             form: CotoForm,
             _
           ) =>
@@ -319,27 +317,22 @@ object FormCoto {
           _2 = geomap.focus(location)
         )
 
-      case (Msg.GeolocationDetected(Left(error)), _, _) =>
+      case (Msg.ExifLocationDetected(Left(error)), _, _) =>
         default.copy(
           _4 = context.log.error(
-            "Geolocation detection error.",
+            "EXIF location detection error.",
             Some(error)
           )
         )
 
-      case (Msg.OrientationDetected(Right(rotation)), form: CotoForm, _) => {
-        rotation.foreach(r => println(s"rotation: ${js.JSON.stringify(r)}"))
-        default.copy(
-          _1 = model.copy(form = form.copy(mediaOrientation = rotation))
-        )
+      case (Msg.ExifDateTimeDetected(Right(timeRange)), form: CotoForm, _) => {
+        timeRange.foreach(r => println(s"timeRange: ${timeRange}"))
+        default
       }
 
-      case (Msg.OrientationDetected(Left(error)), _, _) =>
+      case (Msg.ExifDateTimeDetected(Left(error)), _, _) =>
         default.copy(
-          _4 = context.log.error(
-            "Image orientation detection error.",
-            Some(error)
-          )
+          _4 = context.log.error("EXIF DateTime detection error.", Some(error))
         )
 
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
