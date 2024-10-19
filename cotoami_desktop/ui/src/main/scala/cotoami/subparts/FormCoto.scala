@@ -441,8 +441,13 @@ object FormCoto {
               _1 = model,
               _2 = geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
-              _5 =
-                postCotonoma(postId, form, geomap.focusedLocation, cotonoma.id)
+              _5 = postCotonoma(
+                postId,
+                form,
+                geomap.focusedLocation,
+                None,
+                cotonoma.id
+              )
             )
         }
       }
@@ -554,9 +559,10 @@ object FormCoto {
       postId: String,
       form: CotonomaForm,
       location: Option[Geolocation],
+      timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
   ): Cmd.One[Msg] =
-    CotonomaBackend.post(form.name, location, postTo)
+    CotonomaBackend.post(form.name, location, timeRange, postTo)
       .map(Msg.CotonomaPosted(postId, _))
 
   /////////////////////////////////////////////////////////////////////////////

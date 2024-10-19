@@ -204,11 +204,16 @@ object Commands {
   def PostCotonoma(
       name: String,
       location: Option[Geolocation],
+      timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
   ) =
     jso(PostCotonoma =
       jso(
-        input = jso(name = name, geolocation = geolocation(location)),
+        input = jso(
+          name = name,
+          geolocation = geolocation(location),
+          datetime_range = dateTimeRange(timeRange)
+        ),
         post_to = postTo.uuid
       )
     )

@@ -3,7 +3,15 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
-import cotoami.models.{Coto, Cotonoma, Geolocation, Id, Node, Page}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  DateTimeRange,
+  Geolocation,
+  Id,
+  Node,
+  Page
+}
 
 @js.native
 trait CotonomaJson extends js.Object {
@@ -43,9 +51,10 @@ object CotonomaJson {
   def post(
       name: String,
       location: Option[Geolocation],
+      timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
-    Commands.send(Commands.PostCotonoma(name, location, postTo))
+    Commands.send(Commands.PostCotonoma(name, location, timeRange, postTo))
 }
 
 object CotonomaBackend {
@@ -87,8 +96,9 @@ object CotonomaBackend {
   def post(
       name: String,
       location: Option[Geolocation],
+      timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
-    CotonomaJson.post(name, location, postTo)
+    CotonomaJson.post(name, location, timeRange, postTo)
       .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
 }
