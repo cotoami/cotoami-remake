@@ -13,14 +13,14 @@ trait CotoContent {
   def isCotonoma: Boolean
 
   def nameAsCotonoma: Option[String] =
-    if (this.isCotonoma)
-      this.summary.orElse(this.content)
+    if (isCotonoma)
+      summary.orElse(content)
     else
       None
 
   lazy val abbreviate: Option[String] =
-    this.summary.orElse(
-      this.content.map(content => {
+    summary.orElse(
+      content.map(content => {
         val text = Coto.stripMarkdown.processSync(content).toString()
         if (text.size > Cotonoma.NameMaxLength)
           s"${text.substring(0, Cotonoma.NameMaxLength)}…"
@@ -54,26 +54,26 @@ case class Coto(
   override def equals(that: Any): Boolean =
     that match {
       case that: Coto =>
-        (this.id, this.updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
+        (id, updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
       case _ => false
     }
 
-  lazy val mediaUrl: Option[(String, String)] = this.mediaContent.map {
+  lazy val mediaUrl: Option[(String, String)] = mediaContent.map {
     case (content, mimeType) => (dom.URL.createObjectURL(content), mimeType)
   }
 
-  def revokeMediaUrl(): Unit = this.mediaUrl.foreach { case (url, _) =>
+  def revokeMediaUrl(): Unit = mediaUrl.foreach { case (url, _) =>
     dom.URL.revokeObjectURL(url)
   }
 
-  def geolocated: Boolean = this.geolocation.isDefined
+  def geolocated: Boolean = geolocation.isDefined
 
-  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
-  lazy val updatedAt: Instant = parseUtcIso(this.updatedAtUtcIso)
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
+  lazy val updatedAt: Instant = parseUtcIso(updatedAtUtcIso)
 
   lazy val postedInIds: Seq[Id[Cotonoma]] =
-    Seq(this.postedInId).flatten ++
-      this.repostedInIds.getOrElse(Seq.empty)
+    Seq(postedInId).flatten ++
+      repostedInIds.getOrElse(Seq.empty)
 }
 
 object Coto {
