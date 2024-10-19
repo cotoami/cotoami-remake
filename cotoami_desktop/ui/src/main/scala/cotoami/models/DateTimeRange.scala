@@ -6,6 +6,7 @@ import scala.scalajs.js.Thenable.Implicits._
 import org.scalajs.dom
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import java.time.Instant
+import java.time.format.DateTimeFormatter
 import cats.effect.IO
 
 import fui.Cmd
@@ -22,6 +23,12 @@ case class DateTimeRange(
 object DateTimeRange {
   val DateTimeTag = "DateTimeOriginal"
 
+  def fromJsDate(date: js.Date): DateTimeRange = {
+    DateTimeRange(
+      Time.toUtcDateTime(date).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    )
+  }
+
   def fromExif(
       file: dom.Blob
   ): Cmd.One[Either[Throwable, Option[DateTimeRange]]] =
@@ -31,7 +38,7 @@ object DateTimeRange {
           case Success(values) => {
             val timeRange = values.toOption.flatMap(
               _.get(DateTimeTag).flatMap {
-                case date: js.Date => Some(DateTimeRange(date.toISOString()))
+                case date: js.Date => Some(DateTimeRange.fromJsDate(date))
                 case _             => None
               }
             )
