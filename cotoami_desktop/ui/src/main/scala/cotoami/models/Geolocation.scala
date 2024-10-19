@@ -28,21 +28,21 @@ object Geolocation {
 
   def fromMapLibre(lngLat: LngLat): Geolocation = fromLngLat(lngLat.toArray())
 
-  def fromExif(file: dom.Blob): Cmd.One[Either[Throwable, Geolocation]] =
+  def fromExif(
+      file: dom.Blob
+  ): Cmd.One[Either[Throwable, Option[Geolocation]]] =
     Cmd(IO.async { cb =>
       IO {
         exifr.gps(file).onComplete {
-          case Success(gps) =>
-            gps.toOption match {
-              case Some(gps) => {
-                val location = Geolocation(
-                  longitude = gps.longitude,
-                  latitude = gps.latitude
-                )
-                cb(Right(Some(Right(location))))
-              }
-              case None => cb(Right(None))
-            }
+          case Success(gps) => {
+            val location = gps.toOption.map(gps =>
+              Geolocation(
+                longitude = gps.longitude,
+                latitude = gps.latitude
+              )
+            )
+            cb(Right(Some(Right(location))))
+          }
           case Failure(t) => cb(Right(Some(Left(t))))
         }
         None // no finalizer on cancellation

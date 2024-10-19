@@ -191,7 +191,7 @@ object FormCoto {
     case class CotoInput(coto: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
     case class FileInput(file: dom.Blob) extends Msg
-    case class GeolocationDetected(result: Either[String, Geolocation])
+    case class GeolocationDetected(result: Either[String, Option[Geolocation]])
         extends Msg
     case class OrientationDetected(
         result: Either[String, Option[exifr.Rotation]]
@@ -309,7 +309,11 @@ object FormCoto {
           )
         )
 
-      case (Msg.GeolocationDetected(Right(location)), form: CotoForm, _) =>
+      case (
+            Msg.GeolocationDetected(Right(Some(location))),
+            form: CotoForm,
+            _
+          ) =>
         default.copy(
           _1 = model.copy(form = form.copy(mediaLocation = Some(location))),
           _2 = geomap.focus(location)
