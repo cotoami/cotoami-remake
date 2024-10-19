@@ -57,7 +57,7 @@ object FormCoto {
 
     def hasContents: Boolean =
       form match {
-        case CotoForm(cotoInput, mediaContent, _) =>
+        case CotoForm(cotoInput, mediaContent, _, _) =>
           !cotoInput.isBlank || mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
@@ -83,7 +83,7 @@ object FormCoto {
 
     def save: Cmd.One[Msg] =
       (autoSave, form) match {
-        case (true, CotoForm(cotoInput, _, _)) =>
+        case (true, CotoForm(cotoInput, _, _, _)) =>
           Cmd(IO {
             dom.window.localStorage.setItem(storageKey, cotoInput)
             None
@@ -114,7 +114,8 @@ object FormCoto {
   case class CotoForm(
       cotoInput: String = "",
       mediaContent: Option[dom.Blob] = None,
-      mediaLocation: Option[Geolocation] = None
+      mediaLocation: Option[Geolocation] = None,
+      mediaDateTime: Option[DateTimeRange] = None
   ) extends Form {
     def summary: Option[String] =
       if (hasSummary)
@@ -308,13 +309,13 @@ object FormCoto {
         )
 
       case (
-            Msg.ExifLocationDetected(Right(Some(location))),
+            Msg.ExifLocationDetected(Right(location)),
             form: CotoForm,
             _
           ) =>
         default.copy(
-          _1 = model.copy(form = form.copy(mediaLocation = Some(location))),
-          _2 = geomap.focus(location)
+          _1 = model.copy(form = form.copy(mediaLocation = location)),
+          _2 = location.map(geomap.focus).getOrElse(geomap.unfocus)
         )
 
       case (Msg.ExifLocationDetected(Left(error)), _, _) =>
@@ -325,10 +326,10 @@ object FormCoto {
           )
         )
 
-      case (Msg.ExifDateTimeDetected(Right(timeRange)), form: CotoForm, _) => {
-        timeRange.foreach(r => println(s"timeRange: ${timeRange}"))
-        default
-      }
+      case (Msg.ExifDateTimeDetected(Right(dateTime)), form: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = form.copy(mediaDateTime = dateTime))
+        )
 
       case (Msg.ExifDateTimeDetected(Left(error)), _, _) =>
         default.copy(
