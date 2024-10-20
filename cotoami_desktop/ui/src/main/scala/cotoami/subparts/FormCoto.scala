@@ -342,7 +342,11 @@ object FormCoto {
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form =
-            form.copy(mediaContent = None, mediaLocation = None)
+            form.copy(
+              mediaContent = None,
+              mediaLocation = None,
+              mediaDateTime = None
+            )
           ),
           _2 = geomap.unfocus
         )
