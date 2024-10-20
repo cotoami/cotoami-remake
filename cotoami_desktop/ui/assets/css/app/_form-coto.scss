@@ -193,14 +193,14 @@ section.form-coto {
 
   section.attributes {
     border-bottom: 1px solid var(--pane-border-color);
-    padding: 6px 0;
     font-size: 0.9rem;
 
     div.attribute {
-      margin: 5px 0;
+      margin: 8px 0;
 
       display: flex;
       flex-direction: row;
+      align-items: center;
 
       div.attribute-name {
         width: 100px;
