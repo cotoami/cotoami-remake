@@ -5,6 +5,7 @@ import org.scalajs.dom
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
+import slinky.web.SyntheticMouseEvent
 
 import cats.effect.IO
 import com.softwaremill.quicklens._
@@ -816,11 +817,9 @@ object FormCoto {
           dateTimeRange.map(range => context.time.formatDateTime(range.start))
         ),
         Option.when(mediaDateTime.isDefined && dateTimeRange != mediaDateTime) {
-          div(className := "use-media-metadata")(
-            button(
-              className := "default",
-              onClick := (_ => dispatch(Msg.UseMediaDateTime))
-            )("Use the image timestamp")
+          divUseMediaMetadata(
+            "Use the image timestamp",
+            _ => dispatch(Msg.UseMediaDateTime)
           )
         },
         Option.when(dateTimeRange.isDefined) {
@@ -861,11 +860,9 @@ object FormCoto {
           )
         ),
         Option.when(mediaLocation.isDefined && location != mediaLocation) {
-          div(className := "use-media-metadata")(
-            button(
-              className := "default",
-              onClick := (_ => dispatch(Msg.UseMediaGeolocation))
-            )("Use the image location")
+          divUseMediaMetadata(
+            "Use the image location",
+            _ => dispatch(Msg.UseMediaGeolocation)
           )
         },
         Option.when(location.isDefined) {
@@ -880,6 +877,17 @@ object FormCoto {
         }
       )
     }
+
+  private def divUseMediaMetadata(
+      label: String,
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    div(className := "use-media-metadata")(
+      button(
+        className := "default",
+        slinky.web.html.onClick := onClick
+      )(label)
+    )
 
   private def headerTools(model: Model)(implicit
       dispatch: Msg => Unit
