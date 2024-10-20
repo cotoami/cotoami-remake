@@ -196,7 +196,7 @@ object FormCoto {
     case object DeleteMediaContent extends Msg
     case object DeleteDateTimeRange extends Msg
     case object DeleteGeolocation extends Msg
-    case object ResetGeolocation extends Msg
+    case object UseMediaGeolocation extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
     case class CotonomaByName(
@@ -359,7 +359,7 @@ object FormCoto {
       case (Msg.DeleteGeolocation, _, _) =>
         default.copy(_2 = geomap.copy(focusedLocation = None))
 
-      case (Msg.ResetGeolocation, form: CotoForm, _) =>
+      case (Msg.UseMediaGeolocation, form: CotoForm, _) =>
         default.copy(_2 = form.mediaLocation match {
           case Some(location) => geomap.focus(location)
           case None           => geomap
@@ -850,7 +850,7 @@ object FormCoto {
           div(className := "reset-location")(
             button(
               className := "default",
-              onClick := (_ => dispatch(Msg.ResetGeolocation))
+              onClick := (_ => dispatch(Msg.UseMediaGeolocation))
             )("Use the image location")
           )
         },
