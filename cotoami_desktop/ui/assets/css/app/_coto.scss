@@ -93,16 +93,19 @@ article.coto {
       }
     }
 
-    button.geolocation {
+    button {
       margin-left: 8px;
+
+      span.material-symbols {
+        vertical-align: middle;
+      }
+    }
+
+    button.geolocation {
       opacity: .5;
 
       &.focused {
         opacity: 1;
-      }
-
-      span.material-symbols {
-        vertical-align: middle;
       }
     }
 

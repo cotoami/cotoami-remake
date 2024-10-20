@@ -35,8 +35,8 @@ object ViewCoto {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "attributes")(
       ulOtherCotonomas(coto),
-      buttonGeolocation(coto),
       buttonDateTimeRange(coto),
+      buttonGeolocation(coto),
       Option.when(context.domain.pinned(coto.id)) {
         div(className := "pinned")(materialSymbol("push_pin"))
       }
@@ -288,7 +288,7 @@ object ViewCoto {
   ): Option[ReactElement] =
     coto.dateTimeRange.map(range =>
       button(
-        className := "default",
+        className := "time-range default",
         data - "tooltip" := context.time.formatDateTime(range.start),
         data - "placement" := "left",
         onClick := (e => {
