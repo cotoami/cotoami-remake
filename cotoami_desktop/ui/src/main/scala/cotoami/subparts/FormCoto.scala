@@ -194,6 +194,7 @@ object FormCoto {
         result: Either[String, Option[DateTimeRange]]
     ) extends Msg
     case object DeleteMediaContent extends Msg
+    case object DeleteDateTimeRange extends Msg
     case object DeleteGeolocation extends Msg
     case object ResetGeolocation extends Msg
     case object ImeCompositionStart extends Msg
@@ -344,6 +345,11 @@ object FormCoto {
             form.copy(mediaContent = None, mediaLocation = None)
           ),
           _2 = geomap.unfocus
+        )
+
+      case (Msg.DeleteDateTimeRange, form: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = form.copy(dateTimeRange = None))
         )
 
       case (Msg.DeleteGeolocation, _, _) =>
@@ -789,7 +795,7 @@ object FormCoto {
   private def attributeDateTimeRange(
       dateTimeRange: Option[DateTimeRange],
       mediaDateTime: Option[DateTimeRange]
-  )(implicit context: Context): Option[ReactElement] =
+  )(implicit context: Context, dispatch: Msg => Unit): Option[ReactElement] =
     Option.when(dateTimeRange.isDefined || mediaDateTime.isDefined) {
       div(className := "attribute time-range")(
         div(className := "attribute-name")(
@@ -798,7 +804,17 @@ object FormCoto {
         ),
         div(className := "attribute-value")(
           dateTimeRange.map(range => context.time.formatDateTime(range.start))
-        )
+        ),
+        Option.when(dateTimeRange.isDefined) {
+          div(className := "attribute-delete")(
+            toolButton(
+              symbol = "close",
+              tip = "Delete",
+              classes = "delete",
+              onClick = _ => dispatch(Msg.DeleteDateTimeRange)
+            )
+          )
+        }
       )
     }
 
