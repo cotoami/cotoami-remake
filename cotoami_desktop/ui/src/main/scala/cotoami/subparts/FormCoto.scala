@@ -195,6 +195,7 @@ object FormCoto {
     ) extends Msg
     case object DeleteMediaContent extends Msg
     case object DeleteDateTimeRange extends Msg
+    case object UseMediaDateTime extends Msg
     case object DeleteGeolocation extends Msg
     case object UseMediaGeolocation extends Msg
     case object ImeCompositionStart extends Msg
@@ -354,6 +355,11 @@ object FormCoto {
       case (Msg.DeleteDateTimeRange, form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form = form.copy(dateTimeRange = None))
+        )
+
+      case (Msg.UseMediaDateTime, form: CotoForm, _) =>
+        default.copy(
+          _1 = model.copy(form = form.copy(dateTimeRange = form.mediaDateTime))
         )
 
       case (Msg.DeleteGeolocation, _, _) =>
@@ -809,6 +815,14 @@ object FormCoto {
         div(className := "attribute-value")(
           dateTimeRange.map(range => context.time.formatDateTime(range.start))
         ),
+        Option.when(mediaDateTime.isDefined && dateTimeRange != mediaDateTime) {
+          div(className := "use-media-metadata")(
+            button(
+              className := "default",
+              onClick := (_ => dispatch(Msg.UseMediaDateTime))
+            )("Use the image timestamp")
+          )
+        },
         Option.when(dateTimeRange.isDefined) {
           div(className := "attribute-delete")(
             toolButton(
@@ -847,7 +861,7 @@ object FormCoto {
           )
         ),
         Option.when(mediaLocation.isDefined && location != mediaLocation) {
-          div(className := "reset-location")(
+          div(className := "use-media-metadata")(
             button(
               className := "default",
               onClick := (_ => dispatch(Msg.UseMediaGeolocation))
