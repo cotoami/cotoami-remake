@@ -110,10 +110,10 @@ object FormCoto {
 
   case class CotoForm(
       cotoInput: String = "",
-      dateTimeRange: Option[DateTimeRange] = None,
       mediaContent: Option[dom.Blob] = None,
       mediaLocation: Option[Geolocation] = None,
-      mediaDateTime: Option[DateTimeRange] = None
+      mediaDateTime: Option[DateTimeRange] = None,
+      dateTimeRange: Option[DateTimeRange] = None
   ) extends Form {
     def summary: Option[String] =
       if (hasSummary)
@@ -772,46 +772,52 @@ object FormCoto {
   )(implicit dispatch: Msg => Unit): Option[ReactElement] =
     Option.when(location.isDefined || mediaLocation.isDefined) {
       section(className := "attributes")(
-        div(className := "attribute geolocation")(
-          div(className := "attribute-name")(
-            materialSymbol("location_on"),
-            "Location"
-          ),
-          div(className := "attribute-value")(
-            location.map(location =>
-              Fragment(
-                div(className := "longitude")(
-                  span(className := "label")("longitude:"),
-                  span(className := "value longitude")(location.longitude)
-                ),
-                div(className := "latitude")(
-                  span(className := "label")("latitude:"),
-                  span(className := "value latitude")(location.latitude)
-                )
-              )
-            )
-          ),
-          Option.when(mediaLocation.isDefined && location != mediaLocation) {
-            div(className := "reset-location")(
-              button(
-                className := "default",
-                onClick := (_ => dispatch(Msg.ResetGeolocation))
-              )("Use the image location")
-            )
-          },
-          Option.when(location.isDefined) {
-            div(className := "attribute-delete")(
-              toolButton(
-                symbol = "close",
-                tip = "Delete",
-                classes = "delete",
-                onClick = _ => dispatch(Msg.DeleteGeolocation)
-              )
-            )
-          }
-        )
+        attributeGeolocation(location, mediaLocation)
       )
     }
+
+  private def attributeGeolocation(
+      location: Option[Geolocation],
+      mediaLocation: Option[Geolocation]
+  )(implicit dispatch: Msg => Unit): ReactElement =
+    div(className := "attribute geolocation")(
+      div(className := "attribute-name")(
+        materialSymbol("location_on"),
+        "Location"
+      ),
+      div(className := "attribute-value")(
+        location.map(location =>
+          Fragment(
+            div(className := "longitude")(
+              span(className := "label")("longitude:"),
+              span(className := "value longitude")(location.longitude)
+            ),
+            div(className := "latitude")(
+              span(className := "label")("latitude:"),
+              span(className := "value latitude")(location.latitude)
+            )
+          )
+        )
+      ),
+      Option.when(mediaLocation.isDefined && location != mediaLocation) {
+        div(className := "reset-location")(
+          button(
+            className := "default",
+            onClick := (_ => dispatch(Msg.ResetGeolocation))
+          )("Use the image location")
+        )
+      },
+      Option.when(location.isDefined) {
+        div(className := "attribute-delete")(
+          toolButton(
+            symbol = "close",
+            tip = "Delete",
+            classes = "delete",
+            onClick = _ => dispatch(Msg.DeleteGeolocation)
+          )
+        )
+      }
+    )
 
   private def headerTools(model: Model)(implicit
       dispatch: Msg => Unit
