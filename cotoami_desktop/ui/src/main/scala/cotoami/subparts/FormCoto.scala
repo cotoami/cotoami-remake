@@ -576,7 +576,7 @@ object FormCoto {
       geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit dispatch: Msg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -655,7 +655,7 @@ object FormCoto {
       geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit dispatch: Msg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     SplitPane(
       vertical = false,
       initialPrimarySize = editorHeight,
@@ -698,7 +698,12 @@ object FormCoto {
             )
           ),
       secondary = SplitPane.Secondary.Props()(
-        sectionAttributes(geomap.focusedLocation, form.mediaLocation),
+        sectionAttributes(
+          form.dateTimeRange,
+          form.mediaDateTime,
+          geomap.focusedLocation,
+          form.mediaLocation
+        ),
         div(className := "post")(
           Validation.sectionValidationError(form.validate),
           section(className := "post")(
@@ -735,7 +740,7 @@ object FormCoto {
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       geomap: Geomap
-  )(implicit dispatch: Msg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     Fragment(
       input(
         `type` := "text",
@@ -754,7 +759,7 @@ object FormCoto {
           }
         )
       ),
-      sectionAttributes(geomap.focusedLocation, None),
+      sectionAttributes(None, None, geomap.focusedLocation, None),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
@@ -767,57 +772,80 @@ object FormCoto {
     )
 
   private def sectionAttributes(
+      dateTimeRange: Option[DateTimeRange],
+      mediaDateTime: Option[DateTimeRange],
       location: Option[Geolocation],
       mediaLocation: Option[Geolocation]
-  )(implicit dispatch: Msg => Unit): Option[ReactElement] =
-    Option.when(location.isDefined || mediaLocation.isDefined) {
-      section(className := "attributes")(
-        attributeGeolocation(location, mediaLocation)
+  )(implicit context: Context, dispatch: Msg => Unit): Option[ReactElement] =
+    Seq(
+      attributeDateTimeRange(dateTimeRange, mediaDateTime),
+      attributeGeolocation(location, mediaLocation)
+    ).flatten match {
+      case Seq() => None
+      case attributes =>
+        Some(section(className := "attributes")(attributes: _*))
+    }
+
+  private def attributeDateTimeRange(
+      dateTimeRange: Option[DateTimeRange],
+      mediaDateTime: Option[DateTimeRange]
+  )(implicit context: Context): Option[ReactElement] =
+    Option.when(dateTimeRange.isDefined || mediaDateTime.isDefined) {
+      div(className := "attribute time-range")(
+        div(className := "attribute-name")(
+          materialSymbol("calendar_month"),
+          "Date"
+        ),
+        div(className := "attribute-value")(
+          dateTimeRange.map(range => context.time.formatDateTime(range.start))
+        )
       )
     }
 
   private def attributeGeolocation(
       location: Option[Geolocation],
       mediaLocation: Option[Geolocation]
-  )(implicit dispatch: Msg => Unit): ReactElement =
-    div(className := "attribute geolocation")(
-      div(className := "attribute-name")(
-        materialSymbol("location_on"),
-        "Location"
-      ),
-      div(className := "attribute-value")(
-        location.map(location =>
-          Fragment(
-            div(className := "longitude")(
-              span(className := "label")("longitude:"),
-              span(className := "value longitude")(location.longitude)
-            ),
-            div(className := "latitude")(
-              span(className := "label")("latitude:"),
-              span(className := "value latitude")(location.latitude)
+  )(implicit dispatch: Msg => Unit): Option[ReactElement] =
+    Option.when(location.isDefined || mediaLocation.isDefined) {
+      div(className := "attribute geolocation")(
+        div(className := "attribute-name")(
+          materialSymbol("location_on"),
+          "Location"
+        ),
+        div(className := "attribute-value")(
+          location.map(location =>
+            Fragment(
+              div(className := "longitude")(
+                span(className := "label")("longitude:"),
+                span(className := "value longitude")(location.longitude)
+              ),
+              div(className := "latitude")(
+                span(className := "label")("latitude:"),
+                span(className := "value latitude")(location.latitude)
+              )
             )
           )
-        )
-      ),
-      Option.when(mediaLocation.isDefined && location != mediaLocation) {
-        div(className := "reset-location")(
-          button(
-            className := "default",
-            onClick := (_ => dispatch(Msg.ResetGeolocation))
-          )("Use the image location")
-        )
-      },
-      Option.when(location.isDefined) {
-        div(className := "attribute-delete")(
-          toolButton(
-            symbol = "close",
-            tip = "Delete",
-            classes = "delete",
-            onClick = _ => dispatch(Msg.DeleteGeolocation)
+        ),
+        Option.when(mediaLocation.isDefined && location != mediaLocation) {
+          div(className := "reset-location")(
+            button(
+              className := "default",
+              onClick := (_ => dispatch(Msg.ResetGeolocation))
+            )("Use the image location")
           )
-        )
-      }
-    )
+        },
+        Option.when(location.isDefined) {
+          div(className := "attribute-delete")(
+            toolButton(
+              symbol = "close",
+              tip = "Delete",
+              classes = "delete",
+              onClick = _ => dispatch(Msg.DeleteGeolocation)
+            )
+          )
+        }
+      )
+    }
 
   private def headerTools(model: Model)(implicit
       dispatch: Msg => Unit

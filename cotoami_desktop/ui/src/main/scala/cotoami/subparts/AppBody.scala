@@ -11,7 +11,7 @@ object AppBody {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(id := "app-body", className := "body")(
       (model.uiState, model.domain.nodes.operating) match {
         case (Some(uiState), Some(_)) =>
@@ -23,8 +23,7 @@ object AppBody {
   private def nodeContents(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
-    implicit val _context: Context = model
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     Fragment(
       NavNodes(model, uiState),
       SplitPane(
@@ -66,7 +65,7 @@ object AppBody {
   private def flowAndStock(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
     val stockOpened = uiState.paneOpened(PaneStock.PaneName)
     slinky.web.html.main()(
