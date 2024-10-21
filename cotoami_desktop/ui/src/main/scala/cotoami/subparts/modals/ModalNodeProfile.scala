@@ -7,7 +7,7 @@ import slinky.web.SyntheticMouseEvent
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ClientNode, Coto, Id, Node, Page}
+import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
 import cotoami.repositories.Domain
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.toolButton
@@ -87,7 +87,8 @@ object ModalNodeProfile {
   private def modalContent(node: Node, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val asServer = context.domain.nodes.servers.get(model.nodeId)
     Fragment(
       div(className := "sidebar")(
         section(className := "node-icon")(
@@ -100,6 +101,7 @@ object ModalNodeProfile {
       div(className := "fields")(
         fieldId(node),
         fieldName(node, model),
+        asServer.map(fieldServerUrl),
         context.domain.rootOf(model.nodeId).map { case (_, coto) =>
           fieldDescription(coto, model)
         },
@@ -108,6 +110,7 @@ object ModalNodeProfile {
         }
       )
     )
+  }
 
   private def fieldId(node: Node): ReactElement =
     labeledInputField(
@@ -140,6 +143,25 @@ object ModalNodeProfile {
             buttonEdit(_ => ())
           )
         }
+      )
+    )
+
+  private def fieldServerUrl(server: Server): ReactElement =
+    labeledField(
+      classes = "server-url",
+      label = "Server URL",
+      labelFor = Some("node-profile-server-url")
+    )(
+      div(className := "input-with-tools")(
+        input(
+          `type` := "text",
+          id := "node-profile-server-url",
+          readOnly := true,
+          value := server.server.urlPrefix
+        ),
+        div(className := "tools")(
+          buttonEdit(_ => ())
+        )
       )
     )
 
