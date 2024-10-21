@@ -52,6 +52,7 @@ impl ClientNode {
             password_hash: Cow::from(&self.password_hash),
             session_token: self.session_token.as_ref().map(Cow::from),
             session_expires_at: self.session_expires_at,
+            last_session_created_at: self.last_session_created_at,
         }
     }
 }
@@ -96,6 +97,8 @@ pub struct ClientNodeAsPrincipal<'a> {
     session_token: Option<Cow<'a, str>>,
 
     session_expires_at: Option<NaiveDateTime>,
+
+    last_session_created_at: Option<NaiveDateTime>,
 }
 
 impl<'a> Principal for ClientNodeAsPrincipal<'a> {
@@ -109,6 +112,7 @@ impl<'a> Principal for ClientNodeAsPrincipal<'a> {
 
     fn set_session_token(&mut self, token: Option<String>) {
         self.session_token = token.map(Cow::from);
+        self.last_session_created_at = Some(crate::current_datetime());
     }
 
     fn session_expires_at(&self) -> Option<&NaiveDateTime> { self.session_expires_at.as_ref() }
