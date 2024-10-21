@@ -11,6 +11,7 @@ trait ClientNodeJson extends js.Object {
   val created_at: String = js.native
   val session_expires_at: Nullable[String] = js.native
   val disabled: Boolean = js.native
+  val last_session_created_at: Nullable[String] = js.native
 }
 
 object ClientNodeJson {
@@ -43,7 +44,9 @@ object ClientNodeBackend {
       nodeId = Id(json.node_id),
       createdAtUtcIso = json.created_at,
       sessionExpiresAtUtcIso = Nullable.toOption(json.session_expires_at),
-      disabled = json.disabled
+      disabled = json.disabled,
+      lastSessionCreatedAtUtcIso =
+        Nullable.toOption(json.last_session_created_at)
     )
 
   def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ClientNode]] =

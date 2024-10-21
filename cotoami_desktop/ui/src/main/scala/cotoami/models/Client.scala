@@ -1,13 +1,22 @@
 package cotoami.models
 
+import java.time.Instant
+
 import cotoami.utils.Validation
 
 case class ClientNode(
     nodeId: Id[Node],
     createdAtUtcIso: String,
     sessionExpiresAtUtcIso: Option[String],
-    disabled: Boolean
-)
+    disabled: Boolean,
+    lastSessionCreatedAtUtcIso: Option[String]
+) {
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
+  lazy val sessionExpiresAt: Option[Instant] =
+    sessionExpiresAtUtcIso.map(parseUtcIso)
+  lazy val lastSessionCreatedAt: Option[Instant] =
+    lastSessionCreatedAtUtcIso.map(parseUtcIso)
+}
 
 object ClientNode {
   def validateNodeId(
