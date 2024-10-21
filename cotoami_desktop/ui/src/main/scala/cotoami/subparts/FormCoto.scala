@@ -823,14 +823,7 @@ object FormCoto {
           )
         },
         Option.when(dateTimeRange.isDefined) {
-          div(className := "attribute-delete")(
-            toolButton(
-              symbol = "close",
-              tip = "Delete",
-              classes = "delete",
-              onClick = _ => dispatch(Msg.DeleteDateTimeRange)
-            )
-          )
+          divAttributeDelete(_ => dispatch(Msg.DeleteDateTimeRange))
         }
       )
     }
@@ -866,14 +859,7 @@ object FormCoto {
           )
         },
         Option.when(location.isDefined) {
-          div(className := "attribute-delete")(
-            toolButton(
-              symbol = "close",
-              tip = "Delete",
-              classes = "delete",
-              onClick = _ => dispatch(Msg.DeleteGeolocation)
-            )
-          )
+          divAttributeDelete(_ => dispatch(Msg.DeleteGeolocation))
         }
       )
     }
@@ -887,6 +873,18 @@ object FormCoto {
         className := "default",
         slinky.web.html.onClick := onClick
       )(label)
+    )
+
+  private def divAttributeDelete(
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    div(className := "attribute-delete")(
+      toolButton(
+        symbol = "close",
+        tip = "Delete",
+        classes = "delete",
+        onClick = onClick
+      )
     )
 
   private def headerTools(model: Model)(implicit
