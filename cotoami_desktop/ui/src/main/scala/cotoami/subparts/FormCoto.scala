@@ -715,7 +715,7 @@ object FormCoto {
             )
           ),
       secondary = SplitPane.Secondary.Props()(
-        sectionAttributes(
+        ulAttributes(
           form.dateTimeRange,
           form.mediaDateTime,
           geomap.focusedLocation,
@@ -776,7 +776,7 @@ object FormCoto {
           }
         )
       ),
-      sectionAttributes(None, None, geomap.focusedLocation, None),
+      ulAttributes(None, None, geomap.focusedLocation, None),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
@@ -788,27 +788,27 @@ object FormCoto {
       )
     )
 
-  private def sectionAttributes(
+  private def ulAttributes(
       dateTimeRange: Option[DateTimeRange],
       mediaDateTime: Option[DateTimeRange],
       location: Option[Geolocation],
       mediaLocation: Option[Geolocation]
   )(implicit context: Context, dispatch: Msg => Unit): Option[ReactElement] =
     Seq(
-      attributeDateTimeRange(dateTimeRange, mediaDateTime),
-      attributeGeolocation(location, mediaLocation)
+      liAttributeDateTimeRange(dateTimeRange, mediaDateTime),
+      liAttributeGeolocation(location, mediaLocation)
     ).flatten match {
       case Seq() => None
       case attributes =>
-        Some(section(className := "attributes")(attributes: _*))
+        Some(ul(className := "attributes")(attributes: _*))
     }
 
-  private def attributeDateTimeRange(
+  private def liAttributeDateTimeRange(
       dateTimeRange: Option[DateTimeRange],
       mediaDateTime: Option[DateTimeRange]
   )(implicit context: Context, dispatch: Msg => Unit): Option[ReactElement] =
     Option.when(dateTimeRange.isDefined || mediaDateTime.isDefined) {
-      div(className := "attribute time-range")(
+      li(className := "attribute time-range")(
         div(className := "attribute-name")(
           materialSymbol("calendar_month"),
           "Date"
@@ -828,12 +828,12 @@ object FormCoto {
       )
     }
 
-  private def attributeGeolocation(
+  private def liAttributeGeolocation(
       location: Option[Geolocation],
       mediaLocation: Option[Geolocation]
   )(implicit dispatch: Msg => Unit): Option[ReactElement] =
     Option.when(location.isDefined || mediaLocation.isDefined) {
-      div(className := "attribute geolocation")(
+      li(className := "attribute geolocation")(
         div(className := "attribute-name")(
           materialSymbol("location_on"),
           "Location"

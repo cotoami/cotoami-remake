@@ -191,11 +191,11 @@ section.form-coto {
     }
   }
 
-  section.attributes {
+  ul.attributes {
     border-bottom: 1px solid var(--pane-border-color);
     font-size: 0.9rem;
 
-    div.attribute {
+    li.attribute {
       margin: 8px 0;
 
       display: flex;
