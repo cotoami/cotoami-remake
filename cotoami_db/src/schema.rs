@@ -69,6 +69,7 @@ diesel::table! {
         session_token -> Nullable<Text>,
         session_expires_at -> Nullable<Timestamp>,
         disabled -> Bool,
+        last_session_created_at -> Nullable<Timestamp>,
     }
 }
 diesel::joinable!(client_nodes -> nodes (node_id));

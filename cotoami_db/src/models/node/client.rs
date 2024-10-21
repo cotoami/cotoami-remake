@@ -40,6 +40,9 @@ pub struct ClientNode {
 
     /// Local node won't allow this node to connect to it if the value is TRUE.
     pub disabled: bool,
+
+    /// Timestamp when the last session was created.
+    pub last_session_created_at: Option<NaiveDateTime>,
 }
 
 impl ClientNode {

@@ -122,6 +122,9 @@ CREATE TABLE client_nodes (
   -- Local node won't allow this node to connect to it if the value is TRUE.
   disabled INTEGER DEFAULT FALSE NOT NULL,
 
+  -- Timestamp when the last session was created.
+  last_session_created_at DATETIME, -- UTC
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;
 
