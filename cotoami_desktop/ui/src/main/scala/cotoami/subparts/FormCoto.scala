@@ -59,7 +59,7 @@ object FormCoto {
     def hasContents: Boolean =
       form match {
         case form: CotoForm =>
-          !form.cotoInput.isBlank || form.mediaContent.isDefined
+          !form.textContent.isBlank || form.mediaContent.isDefined
         case CotonomaForm(name, _) => !name.isBlank
       }
 
@@ -86,7 +86,7 @@ object FormCoto {
       (autoSave, form) match {
         case (true, form: CotoForm) =>
           Cmd(IO {
-            dom.window.localStorage.setItem(storageKey, form.cotoInput)
+            dom.window.localStorage.setItem(storageKey, form.textContent)
             None
           })
         case _ => Cmd.none
@@ -94,11 +94,12 @@ object FormCoto {
 
     def restore: Cmd.One[Msg] =
       (autoSave, form) match {
-        case (true, form: CotoForm) => restoreCoto.map(Msg.CotoRestored)
-        case _                      => Cmd.none
+        case (true, form: CotoForm) =>
+          restoreTextContent.map(Msg.TextContentRestored)
+        case _ => Cmd.none
       }
 
-    private def restoreCoto: Cmd.One[Option[String]] = Cmd(IO {
+    private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
       Some(Option(dom.window.localStorage.getItem(storageKey)))
     })
   }
@@ -110,7 +111,7 @@ object FormCoto {
   sealed trait Form
 
   case class CotoForm(
-      cotoInput: String = "",
+      textContent: String = "",
       mediaContent: Option[dom.Blob] = None,
       mediaLocation: Option[Geolocation] = None,
       mediaDateTime: Option[DateTimeRange] = None,
@@ -124,12 +125,12 @@ object FormCoto {
 
     def content: String =
       if (hasSummary)
-        cotoInput.stripPrefix(firstLine).trim
+        textContent.stripPrefix(firstLine).trim
       else
-        cotoInput.trim
+        textContent.trim
 
     def validate: Validation.Result =
-      if (cotoInput.isBlank)
+      if (textContent.isBlank)
         Validation.Result.notYetValidated
       else {
         val errors =
@@ -139,9 +140,9 @@ object FormCoto {
       }
 
     private def hasSummary: Boolean =
-      cotoInput.startsWith(CotoForm.SummaryPrefix)
+      textContent.startsWith(CotoForm.SummaryPrefix)
 
-    private def firstLine = cotoInput.linesIterator.next()
+    private def firstLine = textContent.linesIterator.next()
   }
 
   object CotoForm {
@@ -185,8 +186,8 @@ object FormCoto {
   object Msg {
     case object SetCotoForm extends Msg
     case object SetCotonomaForm extends Msg
-    case class CotoRestored(coto: Option[String]) extends Msg
-    case class CotoInput(coto: String) extends Msg
+    case class TextContentRestored(content: Option[String]) extends Msg
+    case class TextContentInput(content: String) extends Msg
     case class CotonomaNameInput(name: String) extends Msg
     case class FileInput(file: dom.Blob) extends Msg
     case class ExifLocationDetected(result: Either[String, Option[Geolocation]])
@@ -252,21 +253,21 @@ object FormCoto {
               geomap
         )
 
-      case (Msg.CotoRestored(Some(coto)), form: CotoForm, _) =>
+      case (Msg.TextContentRestored(Some(content)), form: CotoForm, _) =>
         default.copy(
           _1 =
-            if (form.cotoInput.isBlank)
+            if (form.textContent.isBlank)
               model.copy(
-                form = form.copy(cotoInput = coto),
-                folded = coto.isBlank
+                form = form.copy(textContent = content),
+                folded = content.isBlank
               )
             else
               model.copy(folded = false),
           _4 = context.log.info("Coto draft restored")
         )
 
-      case (Msg.CotoInput(coto), form: CotoForm, _) =>
-        model.copy(form = form.copy(cotoInput = coto)) match {
+      case (Msg.TextContentInput(content), form: CotoForm, _) =>
+        model.copy(form = form.copy(textContent = content)) match {
           case model =>
             default.copy(
               _1 = model,
@@ -695,9 +696,9 @@ object FormCoto {
             textarea(
               id := model.editorId,
               placeholder := "Write your Coto in Markdown",
-              value := form.cotoInput,
+              value := form.textContent,
               onFocus := (_ => dispatch(Msg.SetFolded(false))),
-              onChange := (e => dispatch(Msg.CotoInput(e.target.value))),
+              onChange := (e => dispatch(Msg.TextContentInput(e.target.value))),
               onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
               onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
               onKeyDown := (e =>
