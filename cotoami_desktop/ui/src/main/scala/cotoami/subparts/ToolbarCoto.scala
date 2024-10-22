@@ -32,6 +32,12 @@ object ToolbarCoto {
         tip = "Repost",
         tipPlacement = "left",
         classes = "repost-coto"
+      ),
+      toolButton(
+        symbol = "delete",
+        tip = "Delete",
+        tipPlacement = "left",
+        classes = "delete-coto"
       )
     )
 }
