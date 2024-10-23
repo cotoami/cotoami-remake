@@ -44,9 +44,9 @@ object ToolbarCoto {
       Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(
           symbol = "drive_folder_upload",
-          tip = "Convert into a cotonoma",
+          tip = "Promote to a cotonoma",
           tipPlacement = "left",
-          classes = "convert-into-cotonoma"
+          classes = "promote-to-cotonoma"
         )
       },
       toolButton(
