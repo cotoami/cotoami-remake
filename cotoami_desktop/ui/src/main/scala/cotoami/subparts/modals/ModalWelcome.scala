@@ -34,18 +34,18 @@ object ModalWelcome {
       error: Option[String] = None
   ) {
     def validateDatabaseName: Validation.Result =
-      if (this.databaseName.isBlank())
+      if (databaseName.isBlank())
         Validation.Result.notYetValidated
       else
-        Validation.Result(Node.validateName(this.databaseName))
+        Validation.Result(Node.validateName(databaseName))
 
     def readyToCreate: Boolean =
-      !this.processing &&
-        this.validateDatabaseName.validated &&
-        this.folderNameValidation.validated
+      !processing &&
+        validateDatabaseName.validated &&
+        folderNameValidation.validated
 
     def readyToOpen: Boolean =
-      !this.processing && this.databaseFolderValidation.validated
+      !processing && databaseFolderValidation.validated
   }
 
   sealed trait Msg extends Into[AppMsg] {
