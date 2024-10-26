@@ -20,7 +20,7 @@ object ModalOperateAs {
       switching: Boolean = false,
       switchingError: Option[String] = None
   ) {
-    def readyToSwitch: Boolean = !this.switching
+    def readyToSwitch: Boolean = !switching
   }
 
   sealed trait Msg extends Into[AppMsg] {
