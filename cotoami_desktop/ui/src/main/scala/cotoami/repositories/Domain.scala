@@ -190,6 +190,16 @@ case class Domain(
       case None           => false
     }
 
+  def canDelete(coto: Coto): Boolean = {
+    if (Some(coto.postedById) != nodes.operatingId) {
+      return false
+    }
+    if (coto.isCotonoma)
+      cotonomas.getByCotoId(coto.id).map(_.posts == 0).getOrElse(false)
+    else
+      true
+  }
+
   def canEditLinks: Boolean =
     currentCotonoma match {
       case Some(cotonoma) => nodes.canEditLinksIn(cotonoma.nodeId)

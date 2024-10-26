@@ -49,11 +49,13 @@ object ToolbarCoto {
           classes = "promote-to-cotonoma"
         )
       },
-      toolButton(
-        symbol = "delete",
-        tip = "Delete",
-        tipPlacement = "left",
-        classes = "delete-coto"
-      )
+      Option.when(context.domain.canDelete(coto)) {
+        toolButton(
+          symbol = "delete",
+          tip = "Delete",
+          tipPlacement = "left",
+          classes = "delete-coto"
+        )
+      }
     )
 }
