@@ -27,7 +27,7 @@ object ToolbarCoto {
           classes = "edit-coto"
         )
       },
-      Option.when(context.domain.canEditLinks) {
+      Option.when(context.domain.nodes.canEditLinksIn(coto.nodeId)) {
         toolButton(
           symbol = "add",
           tip = "Write a sub-coto",
