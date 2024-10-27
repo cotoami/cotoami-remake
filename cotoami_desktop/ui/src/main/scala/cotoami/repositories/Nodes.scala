@@ -120,25 +120,15 @@ case class Nodes(
     }
 
   def canPostTo(nodeId: Id[Node]): Boolean =
-    if (isOperating(nodeId))
-      true
-    else
-      asChildOf(nodeId).isDefined
+    isOperating(nodeId) || asChildOf(nodeId).isDefined
 
-  def canEdit(coto: Coto): Boolean = {
-    if (!isOperating(coto.postedById)) {
-      return false
-    }
-    if (isOperating(coto.nodeId))
-      true
-    else
-      asChildOf(coto.nodeId).isDefined
-  }
+  def canEdit(coto: Coto): Boolean =
+    isOperating(coto.postedById) && (
+      isOperating(coto.nodeId) || asChildOf(coto.nodeId).isDefined
+    )
 
   def canEditLinksIn(nodeId: Id[Node]): Boolean =
-    if (isOperating(nodeId))
-      true
-    else
+    isOperating(nodeId) ||
       asChildOf(nodeId).map(_.canEditLinks).getOrElse(false)
 }
 
