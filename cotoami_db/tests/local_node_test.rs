@@ -93,9 +93,11 @@ fn duplicate_node() -> Result<()> {
     let result = ds.init_as_node(None, None);
 
     // then
-    assert_eq!(
-        result.unwrap_err().to_string(),
-        "UNIQUE constraint failed: local_node.rowid"
+    assert_that!(
+        result,
+        err(matches_pattern!(anyhow::Error{
+            to_string(): eq("UNIQUE constraint failed: local_node.rowid")
+        }))
     );
     Ok(())
 }
