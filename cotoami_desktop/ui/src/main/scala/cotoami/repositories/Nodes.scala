@@ -119,23 +119,27 @@ case class Nodes(
       case _                                   => None
     }
 
-  def canPostTo(id: Id[Node]): Boolean =
-    if (Some(id) == localId || Some(id) == operatingId)
+  def canPostTo(nodeId: Id[Node]): Boolean =
+    if (isOperating(nodeId))
       true
     else
-      parentStatus(id).map {
-        case ParentStatus.Connected(Some(child)) => true
-        case _                                   => false
-      }.getOrElse(false)
+      asChildOf(nodeId).isDefined
 
-  def canEdit(coto: Coto): Boolean =
-    Some(coto.postedById) == operatingId
-
-  def canEditLinksIn(id: Id[Node]): Boolean =
-    if (Some(id) == localId || Some(id) == operatingId)
+  def canEdit(coto: Coto): Boolean = {
+    if (!isOperating(coto.postedById)) {
+      return false
+    }
+    if (isOperating(coto.nodeId))
       true
     else
-      asChildOf(id).map(_.canEditLinks).getOrElse(false)
+      asChildOf(coto.nodeId).isDefined
+  }
+
+  def canEditLinksIn(nodeId: Id[Node]): Boolean =
+    if (isOperating(nodeId))
+      true
+    else
+      asChildOf(nodeId).map(_.canEditLinks).getOrElse(false)
 }
 
 object Nodes {
