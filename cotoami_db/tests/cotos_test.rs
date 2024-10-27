@@ -19,7 +19,7 @@ fn crud_operations() -> Result<()> {
     // When: post_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto, changelog2) = ds.post_coto(&CotoInput::new("hello"), &root_cotonoma, &operator)?;
+    let (coto, changelog) = ds.post_coto(&CotoInput::new("hello"), &root_cotonoma, &operator)?;
 
     // check the inserted coto
     assert_that!(
@@ -72,7 +72,7 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog2,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&2),
             origin_node_id: eq(&node.uuid),
@@ -88,7 +88,7 @@ fn crud_operations() -> Result<()> {
     let diff = CotoContentDiff::default()
         .content("bar")
         .summary(Some("foo"));
-    let (edited_coto, changelog3) = ds.edit_coto(&coto.uuid, diff, &operator)?;
+    let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &operator)?;
 
     // check the edited coto
     assert_that!(
@@ -111,7 +111,7 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog3,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&3),
             origin_node_id: eq(&node.uuid),
@@ -143,7 +143,7 @@ fn crud_operations() -> Result<()> {
             geolocation: eq(&FieldDiff::None),
         })
     );
-    let (edited_coto, changelog4) = ds.edit_coto(&coto.uuid, diff, &operator)?;
+    let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &operator)?;
 
     // check the edited coto
     assert_that!(
@@ -165,7 +165,7 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog4,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&4),
             origin_node_id: eq(&node.uuid),
@@ -187,7 +187,7 @@ fn crud_operations() -> Result<()> {
     // When: delete_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog5 = ds.delete_coto(&coto.uuid, &operator)?;
+    let changelog = ds.delete_coto(&coto.uuid, &operator)?;
 
     // check if it is deleted from the db
     assert!(!ds.contains_coto(&coto.uuid)?);
@@ -207,7 +207,7 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog5,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&5),
             origin_node_id: eq(&node.uuid),

@@ -24,7 +24,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto2
     /////////////////////////////////////////////////////////////////////////////
 
-    let (link1, changelog1) = ds.connect(
+    let (link1, changelog) = ds.connect(
         (&coto1.uuid, &coto2.uuid),
         Some("hello"),
         None,
@@ -66,7 +66,7 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog1,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&6),
             origin_node_id: eq(&node.uuid),
@@ -145,7 +145,7 @@ fn crud_operations() -> Result<()> {
     // When: edit link1
     /////////////////////////////////////////////////////////////////////////////
 
-    let (edited_link1, changelog2) =
+    let (edited_link1, changelog) =
         ds.edit_link(&link1.uuid, Some("hello"), Some("hello details"), &operator)?;
 
     // check the edited link
@@ -159,7 +159,7 @@ fn crud_operations() -> Result<()> {
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog2,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&9),
             origin_node_id: eq(&node.uuid),
@@ -177,14 +177,14 @@ fn crud_operations() -> Result<()> {
     // When: delete link1
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog3 = ds.delete_link(&link1.uuid, &operator)?;
+    let changelog = ds.delete_link(&link1.uuid, &operator)?;
 
     // check if it is deleted from the db
     assert_eq!(ds.link(&link1.uuid)?, None);
 
     // check the content of the ChangelogEntry
     assert_that!(
-        changelog3,
+        changelog,
         matches_pattern!(ChangelogEntry {
             serial_number: eq(&10),
             origin_node_id: eq(&node.uuid),
