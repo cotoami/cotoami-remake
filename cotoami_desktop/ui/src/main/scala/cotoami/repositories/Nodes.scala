@@ -134,10 +134,7 @@ case class Nodes(
     if (Some(id) == localId || Some(id) == operatingId)
       true
     else
-      parentStatus(id).map {
-        case ParentStatus.Connected(Some(child)) => child.canEditLinks
-        case _                                   => false
-      }.getOrElse(false)
+      asChildOf(id).map(_.canEditLinks).getOrElse(false)
 }
 
 object Nodes {
