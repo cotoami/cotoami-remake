@@ -38,7 +38,23 @@ object ViewCoto {
       buttonDateTimeRange(coto),
       buttonGeolocation(coto),
       Option.when(context.domain.pinned(coto.id)) {
-        div(className := "pinned")(materialSymbol("push_pin"))
+        div(className := "pinned", title := "Pinned")(
+          materialSymbol("push_pin")
+        )
+      },
+      Option.when(!context.domain.nodes.isOperating(coto.nodeId)) {
+        if (context.domain.nodes.asChildOf(coto.nodeId).isDefined)
+          div(
+            className := "connection connected",
+            title := "Remote (connected)"
+          )(materialSymbol("link"))
+        else
+          div(
+            className := "connection disconnected",
+            title := "Remote (disconnected)"
+          )(
+            materialSymbol("link_off")
+          )
       }
     )
 

@@ -112,6 +112,7 @@ case class Nodes(
     else
       None
 
+  // TODO: memoization
   def asChildOf(parentId: Id[Node]): Option[ChildNode] =
     parentStatus(parentId) match {
       case Some(ParentStatus.Connected(child)) => child
