@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use futures::future::FutureExt;
 use validator::Validate;
@@ -106,6 +106,27 @@ impl NodeState {
             post_to,
             move |ds, input, cotonoma| ds.post_coto(&input, cotonoma, operator.as_ref()),
             |parent, input, cotonoma| parent.post_coto(input, cotonoma.uuid).boxed(),
+        )
+        .await
+    }
+
+    pub async fn delete_coto(
+        self,
+        id: Id<Coto>,
+        operator: Arc<Operator>,
+    ) -> Result<Id<Coto>, ServiceError> {
+        let coto = self.coto(id).await?;
+        let cotonoma_id = coto
+            .posted_in_id
+            .ok_or(anyhow!("A root cotonoma can't be deleted."))?;
+        self.change_in_cotonoma(
+            id,
+            cotonoma_id,
+            move |ds, id, _| {
+                let changelog = ds.delete_coto(&id, operator.as_ref())?;
+                Ok((id, changelog))
+            },
+            |parent, id, _| unimplemented!(),
         )
         .await
     }
