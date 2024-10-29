@@ -18,6 +18,10 @@ const DEFAULT_PAGE_SIZE: i64 = 20;
 const GEOLOCATED_COTOS_MAX_SIZE: i64 = 30;
 
 impl NodeState {
+    pub async fn coto(&self, id: Id<Coto>) -> Result<Coto, ServiceError> {
+        self.get(move |ds| ds.try_get_coto(&id)).await
+    }
+
     pub async fn recent_cotos(
         &self,
         node: Option<Id<Node>>,
