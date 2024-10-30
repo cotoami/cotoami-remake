@@ -47,6 +47,12 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<(Cotonoma, Coto)>()
     }
+
+    async fn delete_coto(&self, id: Id<Coto>) -> Result<Id<Coto>> {
+        let request = Command::DeleteCoto { id }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Id<Coto>>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}

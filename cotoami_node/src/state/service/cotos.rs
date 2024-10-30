@@ -126,7 +126,7 @@ impl NodeState {
                 let changelog = ds.delete_coto(&id, operator.as_ref())?;
                 Ok((id, changelog))
             },
-            |parent, id, _| unimplemented!(),
+            |parent, id, _| parent.delete_coto(id).boxed(),
         )
         .await
     }
