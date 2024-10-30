@@ -93,6 +93,12 @@ impl HttpClient {
             .headers(self.headers.read().clone())
     }
 
+    pub fn delete(&self, path: &str) -> RequestBuilder {
+        self.client
+            .delete(self.url(path))
+            .headers(self.headers.read().clone())
+    }
+
     async fn handle_request(self, request: Request) -> Result<Response> {
         let request_id = *request.id();
         let accept = request.accept();
@@ -209,6 +215,7 @@ impl HttpClient {
             Command::PostCotonoma { input, post_to } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{post_to}/subs"))
                 .json(&input),
+            Command::DeleteCoto { id } => self.delete(&format!("{API_PATH_COTOS}/{id}")),
         };
 
         // Set the "Accept" header from Request::accept()

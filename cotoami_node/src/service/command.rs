@@ -112,4 +112,7 @@ pub enum Command {
         input: CotonomaInput<'static>,
         post_to: Id<Cotonoma>,
     },
+
+    /// Request to delete a coto and return the [Id<Coto>] if suceeded.
+    DeleteCoto { id: Id<Coto> },
 }
