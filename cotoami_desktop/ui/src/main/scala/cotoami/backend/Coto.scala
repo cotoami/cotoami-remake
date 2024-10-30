@@ -46,6 +46,9 @@ object CotoJson {
         postTo
       )
     )
+
+  def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, String]] =
+    Commands.send(Commands.DeleteCoto(id))
 }
 
 object CotoBackend {
@@ -96,4 +99,7 @@ object CotoBackend {
   ): Cmd.One[Either[ErrorJson, Coto]] =
     CotoJson.post(content, summary, mediaContent, location, timeRange, postTo)
       .map(_.map(CotoBackend.toModel(_)))
+
+  def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, Id[Coto]]] =
+    CotoJson.delete(id).map(_.map(Id(_)))
 }

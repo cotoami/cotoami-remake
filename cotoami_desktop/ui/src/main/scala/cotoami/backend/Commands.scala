@@ -218,6 +218,9 @@ object Commands {
       )
     )
 
+  def DeleteCoto(id: Id[Coto]) =
+    jso(DeleteCoto = jso(id = id.uuid))
+
   private def geolocation(location: Option[Geolocation]) =
     location.map(location =>
       jso(longitude = location.longitude, latitude = location.latitude)
