@@ -21,9 +21,9 @@ object ModalConfirm {
       dialogClasses = "confirm",
       closeButton = Some((modalType, dispatch))
     )(
-      "Confirm"
+      "Confirmation"
     )(
-      section(className := "message")(model.message),
+      section(className := "confirmation-message")(model.message),
       div(className := "buttons")(
         button(
           `type` := "button",

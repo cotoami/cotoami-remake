@@ -3,13 +3,17 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.Context
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
+import cotoami.repositories.Domain
 import cotoami.components.toolButton
+import cotoami.subparts.Modal
 
 object ToolbarCoto {
 
-  def apply(coto: Coto)(implicit context: Context): ReactElement =
+  def apply(
+      coto: Coto
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-toolbar")(
       Option.when(context.domain.canEditLinks) {
         toolButton(
@@ -54,7 +58,18 @@ object ToolbarCoto {
           symbol = "delete",
           tip = "Delete",
           tipPlacement = "left",
-          classes = "delete-coto"
+          classes = "delete-coto",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  "Are you sure you want to delete the coto?",
+                  Domain.Msg.DeleteCoto(coto.id)
+                )
+              )
+            )
+          }
         )
       }
     )
