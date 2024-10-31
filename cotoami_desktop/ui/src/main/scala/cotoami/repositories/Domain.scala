@@ -18,6 +18,7 @@ import cotoami.models.{
   Page
 }
 import cotoami.backend.{
+  CotoBackend,
   CotoGraph,
   CotonomaBackend,
   CotonomaDetails,
@@ -319,6 +320,8 @@ object Domain {
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
+    case class DeleteCoto(id: Id[Coto]) extends Msg
+    case class CotoDeleted(result: Either[ErrorJson, Id[Coto]]) extends Msg
   }
 
   def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
@@ -357,6 +360,15 @@ object Domain {
 
       case Msg.CotoGraphFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch a coto graph.", e))
+
+      case Msg.DeleteCoto(id) =>
+        (model, CotoBackend.delete(id).map(Msg.CotoDeleted(_).into))
+
+      // Coto-deleted events are handled by Model.importChangelog
+      case Msg.CotoDeleted(Right(_)) => (model, Cmd.none)
+
+      case Msg.CotoDeleted(Left(e)) =>
+        (model, cotoami.error("Couldn't delete a coto.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =

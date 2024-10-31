@@ -516,8 +516,7 @@ object FormCoto {
       case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
-          _3 = waitingPosts.remove(postId),
-          _4 = context.log.info("Coto posted.", Some(coto.id.uuid))
+          _3 = waitingPosts.remove(postId)
         )
 
       case (Msg.CotoPosted(postId, Left(e)), _, _) => {
