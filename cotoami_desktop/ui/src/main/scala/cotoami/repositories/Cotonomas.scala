@@ -40,6 +40,21 @@ case class Cotonomas(
   def putAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
     cotonomas.foldLeft(this)(_ put _)
 
+  def deleteByCotoId(cotoId: Id[Coto]): Cotonomas =
+    mapByCotoId.get(cotoId) match {
+      case Some(cotonomaId) =>
+        this
+          .modify(_.map).using(_ - cotonomaId)
+          .modify(_.mapByCotoId).using(_ - cotoId)
+          .modify(_.focusedId).using(focusedId =>
+            if (focusedId == Some(cotonomaId))
+              None
+            else
+              focusedId
+          )
+      case None => this
+    }
+
   def importFrom(data: CotosRelatedData): Cotonomas =
     this
       .putAll(data.postedIn)
