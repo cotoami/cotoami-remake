@@ -97,6 +97,7 @@ object Modal {
     case class OpenModal(modal: Modal, cmd: Cmd[AppMsg] = Cmd.none) extends Msg
     case class CloseModal[M <: Modal](modalType: Class[M]) extends Msg
 
+    case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
@@ -123,6 +124,13 @@ object Modal {
 
       case Msg.CloseModal(modalType) =>
         Some((model.modify(_.modalStack).using(_.close(modalType)), Cmd.none))
+
+      case Msg.ConfirmMsg(modalMsg) =>
+        stack.get[Confirm].map { case Confirm(modal) =>
+          ModalConfirm.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (model.updateModal(Confirm(modal)), cmds)
+          }
+        }
 
       case Msg.WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modal) =>

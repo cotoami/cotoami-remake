@@ -61,7 +61,7 @@ object ModalClients {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.ClientsFetched(Right(page)) =>
         (model.modify(_.clientNodes).using(_.appendPage(page)), Cmd.none)
@@ -90,7 +90,6 @@ object ModalClients {
           cotoami.error("Couldn't update a client.", e)
         )
     }
-  }
 
   def fetchClients(pageIndex: Double): Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(pageIndex)

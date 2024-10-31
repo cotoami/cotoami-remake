@@ -1,8 +1,10 @@
 package cotoami.subparts.modals
 
+import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.subparts.Modal
 
@@ -12,6 +14,26 @@ object ModalConfirm {
       message: String,
       msgOnConfirm: AppMsg
   )
+
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.ConfirmMsg(this).pipe(AppMsg.ModalMsg)
+  }
+
+  object Msg {
+    case object Confirm extends Msg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+    msg match {
+      case Msg.Confirm =>
+        (
+          model,
+          Cmd.Batch(
+            Browser.send(model.msgOnConfirm),
+            Modal.close(classOf[Modal.Confirm])
+          )
+        )
+    }
 
   def apply(
       model: Model
@@ -32,7 +54,7 @@ object ModalConfirm {
         )("Cancel"),
         button(
           `type` := "button",
-          onClick := (_ => dispatch(model.msgOnConfirm))
+          onClick := (_ => dispatch(Msg.Confirm))
         )("OK")
       )
     )
