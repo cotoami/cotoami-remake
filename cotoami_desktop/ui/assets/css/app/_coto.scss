@@ -50,6 +50,14 @@ article.coto {
     }
   }
 
+  &.being-deleted {
+    opacity: 0.3;
+
+    section.coto-toolbar {
+      display: none;
+    }
+  }
+
   &:hover {
     background-color: var(--hover-background-color);
 
