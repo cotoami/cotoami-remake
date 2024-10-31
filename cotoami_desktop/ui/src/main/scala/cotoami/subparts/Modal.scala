@@ -14,6 +14,39 @@ import cotoami.subparts.modals._
 sealed trait Modal
 
 object Modal {
+
+  case class Stack(modals: Seq[Modal] = Seq.empty) {
+    def open[M <: Modal: ClassTag](modal: M): Stack =
+      close(modal.getClass()).modify(_.modals).using(modal +: _)
+
+    def opened[M <: Modal: ClassTag]: Boolean =
+      modals.exists(classTag[M].runtimeClass.isInstance(_))
+
+    def openIfNot[M <: Modal: ClassTag](modal: M): Stack =
+      if (opened[M]) this else open(modal)
+
+    def get[M <: Modal: ClassTag]: Option[M] =
+      modals.find(classTag[M].runtimeClass.isInstance(_))
+        .map(_.asInstanceOf[M])
+
+    def top: Option[Modal] = modals.headOption
+
+    def update[M <: Modal: ClassTag](newState: M): Stack =
+      this.modify(_.modals).using(
+        _.map(modal =>
+          if (classTag[M].runtimeClass.isInstance(modal))
+            newState
+          else
+            modal
+        )
+      )
+
+    def close[M <: Modal](modalType: Class[M]): Stack =
+      this.modify(_.modals).using(_.filterNot(modalType.isInstance(_)))
+  }
+
+  case class Confirm(model: ModalConfirm.Model) extends Modal
+
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Modal
 
@@ -51,36 +84,6 @@ object Modal {
 
   case class NewClient(model: ModalNewClient.Model = ModalNewClient.Model())
       extends Modal
-
-  case class Stack(modals: Seq[Modal] = Seq.empty) {
-    def open[M <: Modal: ClassTag](modal: M): Stack =
-      close(modal.getClass()).modify(_.modals).using(modal +: _)
-
-    def opened[M <: Modal: ClassTag]: Boolean =
-      modals.exists(classTag[M].runtimeClass.isInstance(_))
-
-    def openIfNot[M <: Modal: ClassTag](modal: M): Stack =
-      if (opened[M]) this else open(modal)
-
-    def get[M <: Modal: ClassTag]: Option[M] =
-      modals.find(classTag[M].runtimeClass.isInstance(_))
-        .map(_.asInstanceOf[M])
-
-    def top: Option[Modal] = modals.headOption
-
-    def update[M <: Modal: ClassTag](newState: M): Stack =
-      this.modify(_.modals).using(
-        _.map(modal =>
-          if (classTag[M].runtimeClass.isInstance(modal))
-            newState
-          else
-            modal
-        )
-      )
-
-    def close[M <: Modal](modalType: Class[M]): Stack =
-      this.modify(_.modals).using(_.filterNot(modalType.isInstance(_)))
-  }
 
   sealed trait Msg extends Into[AppMsg] {
     def into = AppMsg.ModalMsg(this)
@@ -197,6 +200,8 @@ object Modal {
       model: AppModel
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.modalStack.top.flatMap {
+      case Confirm(modal) => Some(ModalConfirm(modal))
+
       case Welcome(modal) =>
         model.systemInfo.map(info =>
           ModalWelcome(modal, info.recent_databases.toSeq)
