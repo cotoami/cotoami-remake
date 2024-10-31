@@ -35,7 +35,10 @@ case class Domain(
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
     links: Links = Links(),
-    graphLoading: HashSet[Id[Coto]] = HashSet.empty
+
+    // processing state
+    graphLoading: HashSet[Id[Coto]] = HashSet.empty,
+    cotosBeingDeleted: HashSet[Id[Coto]] = HashSet.empty
 ) {
   /////////////////////////////////////////////////////////////////////////////
   // Focus
@@ -376,10 +379,17 @@ object Domain {
         (model, cotoami.error("Couldn't fetch a coto graph.", e))
 
       case Msg.DeleteCoto(id) =>
-        (model, CotoBackend.delete(id).map(Msg.CotoDeleted(_).into))
+        (
+          model.modify(_.cotosBeingDeleted).using(_ + id),
+          CotoBackend.delete(id).map(Msg.CotoDeleted(_).into)
+        )
 
       // Coto-deleted events are handled by Model.importChangelog
-      case Msg.CotoDeleted(Right(_)) => (model, Cmd.none)
+      case Msg.CotoDeleted(Right(cotoId)) =>
+        (
+          model.modify(_.cotosBeingDeleted).using(_ - cotoId),
+          Cmd.none
+        )
 
       case Msg.CotoDeleted(Left(e)) =>
         (model, cotoami.error("Couldn't delete a coto.", e))
