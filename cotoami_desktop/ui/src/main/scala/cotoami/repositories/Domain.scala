@@ -66,7 +66,7 @@ case class Domain(
     )
 
   /////////////////////////////////////////////////////////////////////////////
-  // Node root cotonoma
+  // Cotonomas
   /////////////////////////////////////////////////////////////////////////////
 
   def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
@@ -86,10 +86,6 @@ case class Domain(
   def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
     nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonomaPair))
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Current cotonoma
-  /////////////////////////////////////////////////////////////////////////////
-
   def currentCotonomaId: Option[Id[Cotonoma]] =
     cotonomas.focusedId.orElse(
       nodes.current.flatMap(_.rootCotonomaId)
@@ -99,10 +95,6 @@ case class Domain(
   // return `None` if the cotonoma data of that ID has not been fetched.
   def currentCotonoma: Option[Cotonoma] =
     currentCotonomaId.flatMap(cotonomas.get)
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Other queries
-  /////////////////////////////////////////////////////////////////////////////
 
   def cotonomaPair(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
     cotonomas.get(id).flatMap(cotonoma =>
@@ -116,6 +108,10 @@ case class Domain(
   val superCotonomasWithoutRoot: Seq[Cotonoma] = {
     cotonomas.supers.filter(c => Some(c.id) != currentNodeRootCotonomaId)
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Links
+  /////////////////////////////////////////////////////////////////////////////
 
   lazy val pinnedCotos: Seq[(Link, Coto)] =
     currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
@@ -149,6 +145,10 @@ case class Domain(
     currentCotonoma.map(cotonoma =>
       links.linked(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Geolocation
+  /////////////////////////////////////////////////////////////////////////////
 
   lazy val geolocationInFocus: Option[CenterOrBounds] =
     cotos.focused.flatMap(_.geolocation) match {
@@ -184,6 +184,10 @@ case class Domain(
     }
     markers.values.toSeq
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Permission check
+  /////////////////////////////////////////////////////////////////////////////
 
   def canPost: Boolean =
     currentCotonoma match {
