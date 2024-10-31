@@ -308,7 +308,7 @@ object SectionTimeline {
   ): ReactElement = {
     val domain = context.domain
     article(
-      className := "coto",
+      className := optionalClasses(ViewCoto.commonArticleClasses(coto)),
       onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
     )(
       ToolbarCoto(coto),

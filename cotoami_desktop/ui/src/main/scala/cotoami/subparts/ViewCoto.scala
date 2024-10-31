@@ -22,6 +22,14 @@ import cotoami.components.{
 
 object ViewCoto {
 
+  def commonArticleClasses(
+      coto: Coto
+  )(implicit context: Context): Seq[(String, Boolean)] =
+    Seq(
+      ("coto", true),
+      ("being-deleted", context.domain.beingDeleted(coto.id))
+    )
+
   def addressAuthor(
       coto: Coto,
       nodes: Nodes

@@ -241,11 +241,11 @@ object SectionPinnedCotos {
       ),
       article(
         className := optionalClasses(
-          Seq(
-            ("pinned-coto", true),
-            ("coto", true),
-            ("has-children", coto.outgoingLinks > 0)
-          )
+          ViewCoto.commonArticleClasses(coto) ++
+            Seq(
+              ("pinned-coto", true),
+              ("has-children", coto.outgoingLinks > 0)
+            )
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
@@ -350,7 +350,10 @@ object SectionPinnedCotos {
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       article(
-        className := "sub-coto coto",
+        className := optionalClasses(
+          ViewCoto.commonArticleClasses(coto) ++
+            Seq(("sub-coto", true))
+        ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),

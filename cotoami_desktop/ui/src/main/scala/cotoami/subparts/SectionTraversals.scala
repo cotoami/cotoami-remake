@@ -250,11 +250,11 @@ object SectionTraversals {
       },
       article(
         className := optionalClasses(
-          Seq(
-            ("coto", true),
-            ("step-coto", true),
-            ("has-children", !subCotos.isEmpty)
-          )
+          ViewCoto.commonArticleClasses(coto) ++
+            Seq(
+              ("step-coto", true),
+              ("has-children", !subCotos.isEmpty)
+            )
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
@@ -293,11 +293,11 @@ object SectionTraversals {
       ),
       article(
         className := optionalClasses(
-          Seq(
-            ("sub-coto", true),
-            ("coto", true),
-            ("traversed", traversed)
-          )
+          ViewCoto.commonArticleClasses(coto) ++
+            Seq(
+              ("sub-coto", true),
+              ("traversed", traversed)
+            )
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
