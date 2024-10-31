@@ -242,6 +242,14 @@ case class Model(
       return (this.modify(_.domain.links).using(_.put(link)), Cmd.none)
     }
 
+    // DeleteCoto
+    for (deleteCotoJson <- change.DeleteCoto.toOption) {
+      return (
+        copy(domain = domain.deleteCoto(Id(deleteCotoJson.coto_id))),
+        Cmd.none
+      )
+    }
+
     // UpsertNode
     for (nodeJson <- change.UpsertNode.toOption) {
       val node = NodeBackend.toModel(nodeJson)
