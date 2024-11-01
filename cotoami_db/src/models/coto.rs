@@ -428,10 +428,7 @@ pub(crate) struct UpdateCoto<'a> {
     pub datetime_end: Option<Option<NaiveDateTime>>,
 
     #[new(default)]
-    pub repost_of_id: Option<Option<&'a Id<Coto>>>,
-
-    #[new(default)]
-    pub reposted_in_ids: Option<Option<&'a Ids<Cotonoma>>>,
+    pub reposted_in_ids: Option<Option<Ids<Cotonoma>>>,
 
     #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
@@ -500,6 +497,16 @@ impl<'a> UpdateCoto<'a> {
         }
 
         Ok(())
+    }
+
+    pub fn repost_in(&mut self, cotonoma_id: Id<Cotonoma>, original: &Coto) {
+        if let Some(ref reposted_in_ids) = original.reposted_in_ids {
+            let mut reposted_in_ids = reposted_in_ids.clone();
+            reposted_in_ids.add(cotonoma_id);
+            self.reposted_in_ids = Some(Some(reposted_in_ids))
+        } else {
+            self.reposted_in_ids = Some(Some(Ids::from_one(cotonoma_id)))
+        }
     }
 }
 

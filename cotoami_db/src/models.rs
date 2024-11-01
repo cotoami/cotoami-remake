@@ -175,6 +175,16 @@ impl<T> Hash for Id<T> {
 #[diesel(sql_type = Text)]
 pub struct Ids<T>(pub Vec<Id<T>>);
 
+impl<T> Ids<T> {
+    pub fn from_one(id: Id<T>) -> Ids<T> { Ids(vec![id]) }
+
+    pub fn add(&mut self, id: Id<T>) {
+        if !self.0.contains(&id) {
+            self.0.push(id);
+        }
+    }
+}
+
 impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {
     fn to_sql<'a>(
         &'a self,
