@@ -48,9 +48,6 @@ pub enum DatabaseError {
     #[error("Node role conflict")]
     NodeRoleConflict,
 
-    #[error("Invalid repost destination")]
-    InvalidRepostDestination,
-
     #[error("Duplicate repost")]
     DuplicateRepost,
 }
