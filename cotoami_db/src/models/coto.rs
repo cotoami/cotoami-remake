@@ -122,6 +122,15 @@ impl Coto {
         }
     }
 
+    pub fn posted_in(&self, cotonoma_id: &Id<Cotonoma>) -> bool {
+        self.posted_in_id == Some(*cotonoma_id)
+            || self
+                .reposted_in_ids
+                .as_ref()
+                .map(|ids| ids.0.contains(cotonoma_id))
+                .unwrap_or(false)
+    }
+
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub(crate) fn to_import(&self) -> NewCoto {
