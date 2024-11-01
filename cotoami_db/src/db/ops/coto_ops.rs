@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
