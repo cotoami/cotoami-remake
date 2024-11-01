@@ -329,8 +329,8 @@ impl<'a> NewCoto<'a> {
         Ok(coto)
     }
 
-    pub fn new_repost(original: &'a Coto, dest: &'a Cotonoma, posted_by_id: &'a Id<Node>) -> Self {
-        let mut coto = Self::new_base(&dest.node_id, posted_by_id);
+    pub fn new_repost(original: &'a Coto, dest: &'a Cotonoma, reposted_by: &'a Id<Node>) -> Self {
+        let mut coto = Self::new_base(&dest.node_id, reposted_by);
         coto.posted_in_id = Some(&dest.uuid);
         coto.repost_of_id = Some(&original.uuid);
         coto

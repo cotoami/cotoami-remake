@@ -159,7 +159,7 @@ pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableCo
 pub(crate) fn repost<'a>(
     id: &'a Id<Coto>,
     dest: &'a Id<Cotonoma>,
-    repost_by: &'a Id<Node>,
+    reposted_by: &'a Id<Node>,
 ) -> impl Operation<WritableConn, Coto> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto = try_get(id).run(ctx)??;
@@ -177,7 +177,7 @@ pub(crate) fn repost<'a>(
         update(&update_original).run(ctx)?;
 
         // Insert a repost
-        let new_repost = NewCoto::new_repost(&original, &dest, repost_by);
+        let new_repost = NewCoto::new_repost(&original, &dest, reposted_by);
         insert(&new_repost).run(ctx)
     })
 }

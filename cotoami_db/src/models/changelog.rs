@@ -124,20 +124,25 @@ pub enum Change {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
     } = 8,
-    CreateCotonoma(Cotonoma, Coto) = 9,
+    Repost {
+        coto_id: Id<Coto>,
+        dest: Id<Cotonoma>,
+        reposted_by: Id<Node>,
+    } = 9,
+    CreateCotonoma(Cotonoma, Coto) = 10,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 10,
-    CreateLink(Link) = 11,
+    } = 11,
+    CreateLink(Link) = 12,
     EditLink {
         link_id: Id<Link>,
         linking_phrase: Option<String>,
         details: Option<String>,
         updated_at: NaiveDateTime,
-    } = 12,
-    DeleteLink(Id<Link>) = 13,
+    } = 13,
+    DeleteLink(Id<Link>) = 14,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -148,7 +153,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 14,
+    } = 15,
 }
 
 impl Change {
