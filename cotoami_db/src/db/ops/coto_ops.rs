@@ -35,6 +35,16 @@ pub(crate) fn try_get<Conn: AsReadableConn>(
     get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, "uuid", *id)))
 }
 
+pub(crate) fn get_original<Conn: AsReadableConn>(coto: Coto) -> impl Operation<Conn, Coto> {
+    composite_op::<Conn, _, _>(move |ctx| {
+        if let Some(ref repost_of_id) = coto.repost_of_id {
+            try_get(repost_of_id).run(ctx)?.map_err(anyhow::Error::from)
+        } else {
+            Ok(coto)
+        }
+    })
+}
+
 pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, bool> + '_ {
     read_op(move |conn| {
         let count: i64 = cotos::table
