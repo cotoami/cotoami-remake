@@ -160,21 +160,15 @@ pub(crate) fn repost<'a>(
     id: &'a Id<Coto>,
     dest: &'a Id<Cotonoma>,
     repost_by: &'a Id<Node>,
-    local_node_id: &'a Id<Node>,
 ) -> impl Operation<WritableConn, Coto> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto = try_get(id).run(ctx)??;
         let original = get_original(coto).run(ctx)?;
+        let (dest, _) = cotonoma_ops::try_get(dest).run(ctx)??;
 
         // Check duplication
-        if original.posted_in(dest) {
+        if original.posted_in(&dest.uuid) {
             bail!(DatabaseError::DuplicateRepost)
-        }
-
-        // Check if the destination is valid
-        let (dest, _) = cotonoma_ops::try_get(dest).run(ctx)??;
-        if dest.node_id != *local_node_id && dest.node_id != original.node_id {
-            bail!(DatabaseError::InvalidRepostDestination)
         }
 
         // Update the original coto
