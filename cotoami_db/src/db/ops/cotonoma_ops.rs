@@ -100,16 +100,24 @@ pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
 
 pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     prefix: &str,
+    target_nodes: Option<Vec<Id<Node>>>,
     limit: i64,
 ) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> + '_ {
     read_op(move |conn| {
-        cotonomas::table
+        let query = cotonomas::table
             .inner_join(cotos::table)
             .filter(cotonomas::name.like(format!("{prefix}%")))
             .select((Cotonoma::as_select(), Coto::as_select()))
             .limit(limit)
-            .load(conn)
-            .map_err(anyhow::Error::from)
+            .into_boxed();
+
+        if let Some(target_nodes) = target_nodes {
+            query.filter(cotonomas::node_id.eq_any(target_nodes))
+        } else {
+            query
+        }
+        .load(conn)
+        .map_err(anyhow::Error::from)
     })
 }
 

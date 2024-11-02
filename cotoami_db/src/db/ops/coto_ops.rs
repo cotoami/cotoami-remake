@@ -112,6 +112,8 @@ pub(crate) fn geolocated<'a, Conn: AsReadableConn>(
         let geolocated_cotos = cotos::table
             .filter(cotos::longitude.is_not_null())
             .filter(cotos::latitude.is_not_null())
+            .order(cotos::created_at.desc())
+            .limit(limit)
             .into_boxed();
 
         match (node_id, posted_in_id) {
@@ -121,8 +123,6 @@ pub(crate) fn geolocated<'a, Conn: AsReadableConn>(
             }
             _ => geolocated_cotos,
         }
-        .order(cotos::created_at.desc())
-        .limit(limit)
         .load::<Coto>(conn)
         .map_err(anyhow::Error::from)
     })
