@@ -195,6 +195,17 @@ pub(crate) struct UpdateLink<'a> {
     pub updated_at: NaiveDateTime,
 }
 
+impl<'a> UpdateLink<'a> {
+    pub fn edit_content(&mut self, diff: &'a LinkContentDiff<'a>) {
+        self.linking_phrase = diff
+            .linking_phrase
+            .as_ref()
+            .map_to_double_option(AsRef::as_ref);
+
+        self.details = diff.details.as_ref().map_to_double_option(AsRef::as_ref);
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // LinkContentDiff
 /////////////////////////////////////////////////////////////////////////////
