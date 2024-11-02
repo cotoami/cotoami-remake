@@ -240,14 +240,10 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             }
             Change::EditLink {
                 link_id,
-                linking_phrase,
-                details,
+                diff,
                 updated_at,
             } => {
-                let link = link_ops::try_get(link_id).run(ctx)??;
-                let mut update_link = link.edit(linking_phrase.as_deref(), details.as_deref());
-                update_link.updated_at = *updated_at;
-                link_ops::update(&update_link).run(ctx)?;
+                link_ops::edit(link_id, diff, Some(*updated_at)).run(ctx)?;
             }
             Change::DeleteLink(id) => {
                 link_ops::delete(id).run(ctx)?;

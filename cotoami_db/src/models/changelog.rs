@@ -13,7 +13,7 @@ use diesel::{
 use super::{
     coto::{Coto, CotoContentDiff},
     cotonoma::Cotonoma,
-    link::Link,
+    link::{Link, LinkContentDiff},
     node::Node,
     Bytes, Id,
 };
@@ -138,8 +138,7 @@ pub enum Change {
     CreateLink(Link) = 12,
     EditLink {
         link_id: Id<Link>,
-        linking_phrase: Option<String>,
-        details: Option<String>,
+        diff: LinkContentDiff<'static>,
         updated_at: NaiveDateTime,
     } = 13,
     DeleteLink(Id<Link>) = 14,

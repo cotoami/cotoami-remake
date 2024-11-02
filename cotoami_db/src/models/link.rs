@@ -68,19 +68,6 @@ impl Link {
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub(crate) fn edit<'a>(
-        &'a self,
-        linking_phrase: Option<&'a str>,
-        details: Option<&'a str>,
-    ) -> UpdateLink<'a> {
-        let mut update_link = self.to_update();
-        update_link.linking_phrase = Some(crate::blank_to_none(linking_phrase));
-        update_link.details = Some(crate::blank_to_none(details));
-        update_link
-    }
-
-    pub(crate) fn to_update(&self) -> UpdateLink<'_> { UpdateLink::new(&self.uuid) }
-
     pub(crate) fn to_import(&self) -> NewLink {
         NewLink {
             uuid: self.uuid,

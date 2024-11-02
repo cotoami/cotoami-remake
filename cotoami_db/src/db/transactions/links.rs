@@ -80,8 +80,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn edit_link(
         &mut self,
         id: &Id<Link>,
-        linking_phrase: Option<&str>,
-        details: Option<&str>,
+        diff: LinkContentDiff<'static>,
         operator: &Operator,
     ) -> Result<(Link, ChangelogEntry)> {
         operator.can_edit_links()?;
@@ -89,11 +88,10 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let link = link_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&link)?;
-            let link = link_ops::update(&link.edit(linking_phrase, details)).run(ctx)?;
+            let link = link_ops::edit(id, &diff, None).run(ctx)?;
             let change = Change::EditLink {
                 link_id: *id,
-                linking_phrase: linking_phrase.map(String::from),
-                details: details.map(String::from),
+                diff,
                 updated_at: link.updated_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;

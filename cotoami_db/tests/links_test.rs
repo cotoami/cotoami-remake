@@ -145,8 +145,10 @@ fn crud_operations() -> Result<()> {
     // When: edit link1
     /////////////////////////////////////////////////////////////////////////////
 
-    let (edited_link1, changelog) =
-        ds.edit_link(&link1.uuid, Some("hello"), Some("hello details"), &operator)?;
+    let diff = LinkContentDiff::default()
+        .linking_phrase(Some("hello"))
+        .details(Some("hello details"));
+    let (edited_link1, changelog) = ds.edit_link(&link1.uuid, diff, &operator)?;
 
     // check the edited link
     assert_that!(
@@ -166,8 +168,10 @@ fn crud_operations() -> Result<()> {
             origin_serial_number: eq(&9),
             change: matches_pattern!(Change::EditLink {
                 link_id: eq(&link1.uuid),
-                linking_phrase: some(eq("hello")),
-                details: some(eq("hello details")),
+                diff: matches_pattern!(LinkContentDiff {
+                    linking_phrase: matches_pattern!(FieldDiff::Change(eq("hello"))),
+                    details: matches_pattern!(FieldDiff::Change(eq("hello details"))),
+                }),
                 updated_at: eq(&edited_link1.updated_at),
             })
         })
