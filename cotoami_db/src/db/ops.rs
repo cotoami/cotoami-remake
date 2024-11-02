@@ -112,6 +112,12 @@ where
     })
 }
 
+fn escape_like_pattern(pattern: &str, escape_char: char) -> String {
+    pattern
+        .replace('%', &format!("{escape_char}%"))
+        .replace('_', &format!("{escape_char}_"))
+}
+
 /// Regular expression to detect CJK characters.
 /// FIXME: perhaps it's incomplete.
 static CJK: Lazy<Regex> = Lazy::new(|| {
@@ -157,6 +163,14 @@ mod tests {
         page.total_rows = 3;
         assert_eq!(page.total_pages(), 2);
 
+        Ok(())
+    }
+
+    #[test]
+    fn escape_like_pattern() -> Result<()> {
+        assert_eq!(super::escape_like_pattern("foo", '\\'), "foo");
+        assert_eq!(super::escape_like_pattern("%foo", '\\'), "\\%foo");
+        assert_eq!(super::escape_like_pattern("_foo", '\\'), "\\_foo");
         Ok(())
     }
 

@@ -9,7 +9,11 @@ use validator::Validate;
 
 use super::{cotonoma_ops, Page};
 use crate::{
-    db::{error::*, op::*, ops::detect_cjk_chars},
+    db::{
+        error::*,
+        op::*,
+        ops::{detect_cjk_chars, escape_like_pattern},
+    },
     models::{
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},
         cotonoma::Cotonoma,
@@ -394,8 +398,9 @@ fn make_fts_query_from_short_cjk_token(
 ) -> Result<Option<String>> {
     use crate::schema::cotos_fts_trigram_vocab::dsl::*;
 
+    let short_token = escape_like_pattern(short_token, '\\');
     let tokens: Vec<String> = cotos_fts_trigram_vocab
-        .filter(term.like(format!("{short_token}%")))
+        .filter(term.like(format!("{short_token}%")).escape('\\'))
         .select(term)
         .load::<String>(conn)?;
 
