@@ -98,6 +98,21 @@ pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
         .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "name", name)))
 }
 
+pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
+    prefix: &str,
+    limit: i64,
+) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> + '_ {
+    read_op(move |conn| {
+        cotonomas::table
+            .inner_join(cotos::table)
+            .filter(cotonomas::name.like(format!("{prefix}%")))
+            .select((Cotonoma::as_select(), Coto::as_select()))
+            .limit(limit)
+            .load(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn get_by_ids<Conn: AsReadableConn>(
     ids: Vec<Id<Cotonoma>>,
 ) -> impl Operation<Conn, Vec<Cotonoma>> {
