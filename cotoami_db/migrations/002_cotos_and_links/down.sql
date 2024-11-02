@@ -18,6 +18,7 @@ DROP TABLE cotos;
 --
 DROP INDEX cotonomas_node_id;
 DROP INDEX cotonomas_coto_id;
+DROP INDEX cotonomas_name;
 
 DROP TABLE cotonomas;
 

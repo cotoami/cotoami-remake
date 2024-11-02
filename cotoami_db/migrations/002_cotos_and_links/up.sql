@@ -115,6 +115,7 @@ CREATE TABLE cotonomas (
 
 CREATE INDEX cotonomas_node_id ON cotonomas(node_id);
 CREATE INDEX cotonomas_coto_id ON cotonomas(coto_id);
+CREATE INDEX cotonomas_name ON cotonomas(name);
 
 
 --
