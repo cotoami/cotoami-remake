@@ -8,7 +8,7 @@ use validator::Validate;
 
 use super::{coto_ops, Page};
 use crate::{
-    db::{error::*, op::*},
+    db::{error::*, op::*, ops::escape_like_pattern},
     models::{
         coto::{Coto, NewCoto},
         cotonoma::{Cotonoma, CotonomaInput, NewCotonoma, UpdateCotonoma},
@@ -104,9 +104,11 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     limit: i64,
 ) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> + '_ {
     read_op(move |conn| {
+        let prefix = escape_like_pattern(prefix, '\\');
         let query = cotonomas::table
             .inner_join(cotos::table)
-            .filter(cotonomas::name.like(format!("{prefix}%")))
+            .filter(cotonomas::name.like(format!("{prefix}%")).escape('\\'))
+            .order(cotonomas::updated_at.desc())
             .select((Cotonoma::as_select(), Coto::as_select()))
             .limit(limit)
             .into_boxed();
