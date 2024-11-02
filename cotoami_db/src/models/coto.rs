@@ -521,6 +521,7 @@ impl<'a> UpdateCoto<'a> {
 // CotoContentDiff
 /////////////////////////////////////////////////////////////////////////////
 
+/// Serializable version of [UpdateCoto] exposed as a public interface for coto editing.
 #[derive(
     derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, Validate,
 )]
