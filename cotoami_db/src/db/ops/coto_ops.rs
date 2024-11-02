@@ -206,8 +206,7 @@ pub(crate) fn edit<'a>(
         let mut update_coto = UpdateCoto::new(id);
         update_coto.edit_content(diff, image_max_size)?;
         update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
-        let coto = update(&update_coto).run(ctx)?;
-        Ok(coto)
+        update(&update_coto).run(ctx)
     })
 }
 

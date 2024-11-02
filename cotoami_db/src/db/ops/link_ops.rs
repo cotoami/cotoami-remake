@@ -2,6 +2,7 @@
 
 use std::ops::DerefMut;
 
+use chrono::NaiveDateTime;
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 use validator::Validate;
@@ -12,7 +13,7 @@ use crate::{
     models::{
         coto::Coto,
         cotonoma::Cotonoma,
-        link::{Link, NewLink, UpdateLink},
+        link::{Link, LinkContentDiff, NewLink, UpdateLink},
         node::Node,
         Id,
     },
@@ -146,6 +147,19 @@ pub(crate) fn update<'a>(update_link: &'a UpdateLink) -> impl Operation<Writable
             .set(update_link)
             .get_result(conn.deref_mut())
             .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn edit<'a>(
+    id: &'a Id<Link>,
+    diff: &'a LinkContentDiff<'a>,
+    updated_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, Link> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let mut update_link = UpdateLink::new(id);
+        update_link.edit_content(diff);
+        update_link.updated_at = updated_at.unwrap_or(crate::current_datetime());
+        update(&update_link).run(ctx)
     })
 }
 
