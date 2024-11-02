@@ -547,11 +547,7 @@ impl<'a> CotoContentDiff<'a> {
     }
 
     pub fn summary(mut self, summary: Option<&'a str>) -> Self {
-        self.summary = if let Some(summary) = summary {
-            FieldDiff::Change(Cow::from(summary))
-        } else {
-            FieldDiff::Delete
-        };
+        self.summary = summary.into();
         self
     }
 

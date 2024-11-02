@@ -213,20 +213,12 @@ pub struct LinkContentDiff<'a> {
 
 impl<'a> LinkContentDiff<'a> {
     pub fn linking_phrase(mut self, phrase: Option<&'a str>) -> Self {
-        self.linking_phrase = if let Some(phrase) = phrase {
-            FieldDiff::Change(Cow::from(phrase))
-        } else {
-            FieldDiff::Delete
-        };
+        self.linking_phrase = phrase.into();
         self
     }
 
     pub fn details(mut self, details: Option<&'a str>) -> Self {
-        self.details = if let Some(details) = details {
-            FieldDiff::Change(Cow::from(details))
-        } else {
-            FieldDiff::Delete
-        };
+        self.details = details.into();
         self
     }
 }

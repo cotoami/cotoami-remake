@@ -1,7 +1,7 @@
 //! Data structure that represents a Cotoami database
 
 use std::{
-    borrow::Cow,
+    borrow::{Cow, ToOwned},
     cmp::Ordering,
     convert::AsRef,
     fmt,
@@ -374,6 +374,16 @@ impl<T> From<Option<T>> for FieldDiff<T> {
     fn from(option: Option<T>) -> Self {
         if let Some(value) = option {
             FieldDiff::Change(value)
+        } else {
+            FieldDiff::Delete
+        }
+    }
+}
+
+impl<'a, T: ToOwned + ?Sized> From<Option<&'a T>> for FieldDiff<Cow<'a, T>> {
+    fn from(option: Option<&'a T>) -> Self {
+        if let Some(value) = option {
+            FieldDiff::Change(Cow::Borrowed(value))
         } else {
             FieldDiff::Delete
         }
