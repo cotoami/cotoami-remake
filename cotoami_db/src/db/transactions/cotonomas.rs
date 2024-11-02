@@ -75,6 +75,15 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::get_by_coto_ids(ids))
     }
 
+    pub fn cotonomas_by_prefix(
+        &mut self,
+        prefix: &str,
+        target_nodes: Option<Vec<Id<Node>>>,
+        limit: i64,
+    ) -> Result<Vec<(Cotonoma, Coto)>> {
+        self.read_transaction(cotonoma_ops::search_by_prefix(prefix, target_nodes, limit))
+    }
+
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {
         self.read_transaction(cotonoma_ops::all())
     }
