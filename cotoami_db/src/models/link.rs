@@ -1,6 +1,6 @@
 //! A link is a directed edge connecting two [Coto]s.
 
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use anyhow::Result;
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
@@ -8,13 +8,15 @@ use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{
-    coto::Coto,
-    cotonoma::Cotonoma,
-    node::{BelongsToNode, Node},
-    Id,
+use crate::{
+    models::{
+        coto::Coto,
+        cotonoma::Cotonoma,
+        node::{BelongsToNode, Node},
+        FieldDiff, Id,
+    },
+    schema::links,
 };
-use crate::schema::links;
 
 /////////////////////////////////////////////////////////////////////////////
 // Link
@@ -191,4 +193,40 @@ pub(crate) struct UpdateLink<'a> {
 
     #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// LinkContentDiff
+/////////////////////////////////////////////////////////////////////////////
+
+/// Serializable version of [UpdateLink] as part of public API for link editing.
+#[derive(
+    derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, Validate,
+)]
+pub struct LinkContentDiff<'a> {
+    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
+    pub linking_phrase: FieldDiff<Cow<'a, str>>,
+
+    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    pub details: FieldDiff<Cow<'a, str>>,
+}
+
+impl<'a> LinkContentDiff<'a> {
+    pub fn linking_phrase(mut self, phrase: Option<&'a str>) -> Self {
+        self.linking_phrase = if let Some(phrase) = phrase {
+            FieldDiff::Change(Cow::from(phrase))
+        } else {
+            FieldDiff::Delete
+        };
+        self
+    }
+
+    pub fn details(mut self, details: Option<&'a str>) -> Self {
+        self.details = if let Some(details) = details {
+            FieldDiff::Change(Cow::from(details))
+        } else {
+            FieldDiff::Delete
+        };
+        self
+    }
 }
