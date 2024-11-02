@@ -36,7 +36,7 @@ fn crud_operations() -> Result<()> {
     // check the created link
     assert_that!(
         link1,
-        matches_pattern!(Link {
+        pat!(Link {
             node_id: eq(&node.uuid),
             created_in_id: some(eq(&root_cotonoma.uuid)),
             created_by_id: eq(&node.uuid),
@@ -56,7 +56,7 @@ fn crud_operations() -> Result<()> {
     // check if `recent_links` contains it
     assert_that!(
         ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&5),
             index: eq(&0),
             total_rows: eq(&1),
@@ -67,11 +67,11 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&6),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&6),
-            change: matches_pattern!(Change::CreateLink(eq(&link1)))
+            change: pat!(Change::CreateLink(eq(&link1)))
         })
     );
 
@@ -94,7 +94,7 @@ fn crud_operations() -> Result<()> {
     // check the created link
     assert_that!(
         link2,
-        matches_pattern!(Link {
+        pat!(Link {
             source_coto_id: eq(&coto1.uuid),
             target_coto_id: eq(&coto3.uuid),
             linking_phrase: some(eq("bye")),
@@ -109,7 +109,7 @@ fn crud_operations() -> Result<()> {
     // check if `recent_links` contains it
     assert_that!(
         ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&5),
             index: eq(&0),
             total_rows: eq(&2),
@@ -153,7 +153,7 @@ fn crud_operations() -> Result<()> {
     // check the edited link
     assert_that!(
         edited_link1,
-        matches_pattern!(Link {
+        pat!(Link {
             linking_phrase: some(eq("hello")),
             details: some(eq("hello details"))
         })
@@ -162,15 +162,15 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&9),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&9),
-            change: matches_pattern!(Change::EditLink {
+            change: pat!(Change::EditLink {
                 link_id: eq(&link1.uuid),
-                diff: matches_pattern!(LinkContentDiff {
-                    linking_phrase: matches_pattern!(FieldDiff::Change(eq("hello"))),
-                    details: matches_pattern!(FieldDiff::Change(eq("hello details"))),
+                diff: pat!(LinkContentDiff {
+                    linking_phrase: pat!(FieldDiff::Change(eq("hello"))),
+                    details: pat!(FieldDiff::Change(eq("hello details"))),
                 }),
                 updated_at: eq(&edited_link1.updated_at),
             })
@@ -189,11 +189,11 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&10),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&10),
-            change: matches_pattern!(Change::DeleteLink(eq(&link1.uuid)))
+            change: pat!(Change::DeleteLink(eq(&link1.uuid)))
         })
     );
 

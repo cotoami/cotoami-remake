@@ -18,7 +18,7 @@ fn pagination() -> Result<()> {
     // then
     assert_that!(
         paginated,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&2),
             index: eq(&0),
             total_rows: eq(&0),
@@ -34,11 +34,11 @@ fn pagination() -> Result<()> {
     // then
     assert_that!(
         paginated,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&2),
             index: eq(&0),
             total_rows: eq(&1),
-            rows: elements_are![matches_pattern!(Coto {
+            rows: elements_are![pat!(Coto {
                 content: some(eq("1"))
             })],
         })
@@ -52,15 +52,15 @@ fn pagination() -> Result<()> {
     // then
     assert_that!(
         paginated,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&2),
             index: eq(&0),
             total_rows: eq(&2),
             rows: elements_are![
-                matches_pattern!(Coto {
+                pat!(Coto {
                     content: some(eq("2"))
                 }),
-                matches_pattern!(Coto {
+                pat!(Coto {
                     content: some(eq("1"))
                 })
             ],
@@ -75,15 +75,15 @@ fn pagination() -> Result<()> {
     // then
     assert_that!(
         paginated,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&2),
             index: eq(&0),
             total_rows: eq(&3),
             rows: elements_are![
-                matches_pattern!(Coto {
+                pat!(Coto {
                     content: some(eq("3"))
                 }),
-                matches_pattern!(Coto {
+                pat!(Coto {
                     content: some(eq("2"))
                 })
             ],
@@ -97,11 +97,11 @@ fn pagination() -> Result<()> {
     // then
     assert_that!(
         paginated,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&2),
             index: eq(&1),
             total_rows: eq(&3),
-            rows: elements_are![matches_pattern!(Coto {
+            rows: elements_are![pat!(Coto {
                 content: some(eq("1"))
             })],
         })

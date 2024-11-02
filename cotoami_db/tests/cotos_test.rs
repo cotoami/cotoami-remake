@@ -24,7 +24,7 @@ fn crud_operations() -> Result<()> {
     // check the inserted coto
     assert_that!(
         coto,
-        matches_pattern!(Coto {
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&root_cotonoma.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -46,7 +46,7 @@ fn crud_operations() -> Result<()> {
     // check if `recent_cotos` contains it
     assert_that!(
         ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&5),
             index: eq(&0),
             total_rows: eq(&1),
@@ -58,7 +58,7 @@ fn crud_operations() -> Result<()> {
     let (root_cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
     assert_that!(
         root_cotonoma,
-        matches_pattern!(Cotonoma {
+        pat!(Cotonoma {
             posts: eq(&1),
             updated_at: eq(&coto.updated_at)
         })
@@ -73,11 +73,11 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&2),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&2),
-            change: matches_pattern!(Change::CreateCoto(eq(&Coto { rowid: 0, ..coto })))
+            change: pat!(Change::CreateCoto(eq(&Coto { rowid: 0, ..coto })))
         })
     );
 
@@ -93,7 +93,7 @@ fn crud_operations() -> Result<()> {
     // check the edited coto
     assert_that!(
         edited_coto,
-        matches_pattern!(Coto {
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&root_cotonoma.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -112,15 +112,15 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&3),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&3),
-            change: matches_pattern!(Change::EditCoto {
+            change: pat!(Change::EditCoto {
                 coto_id: eq(&coto.uuid),
-                diff: matches_pattern!(CotoContentDiff {
-                    content: matches_pattern!(FieldDiff::Change(eq("bar"))),
-                    summary: matches_pattern!(FieldDiff::Change(eq("foo"))),
+                diff: pat!(CotoContentDiff {
+                    content: pat!(FieldDiff::Change(eq("bar"))),
+                    summary: pat!(FieldDiff::Change(eq("foo"))),
                     media_content: eq(&FieldDiff::None),
                     geolocation: eq(&FieldDiff::None)
                 }),
@@ -136,7 +136,7 @@ fn crud_operations() -> Result<()> {
     let diff = CotoContentDiff::default().summary(None);
     assert_that!(
         diff,
-        matches_pattern!(CotoContentDiff {
+        pat!(CotoContentDiff {
             content: eq(&FieldDiff::None),
             summary: eq(&FieldDiff::Delete),
             media_content: eq(&FieldDiff::None),
@@ -148,7 +148,7 @@ fn crud_operations() -> Result<()> {
     // check the edited coto
     assert_that!(
         edited_coto,
-        matches_pattern!(Coto {
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&root_cotonoma.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -166,13 +166,13 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&4),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&4),
-            change: matches_pattern!(Change::EditCoto {
+            change: pat!(Change::EditCoto {
                 coto_id: eq(&coto.uuid),
-                diff: matches_pattern!(CotoContentDiff {
+                diff: pat!(CotoContentDiff {
                     content: eq(&FieldDiff::None),
                     summary: eq(&FieldDiff::Delete),
                     media_content: eq(&FieldDiff::None),
@@ -194,7 +194,7 @@ fn crud_operations() -> Result<()> {
     assert_eq!(ds.coto(&coto.uuid)?, None);
     assert_that!(
         ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
-        matches_pattern!(Page {
+        pat!(Page {
             size: eq(&5),
             index: eq(&0),
             total_rows: eq(&0)
@@ -208,11 +208,11 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&5),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&5),
-            change: matches_pattern!(Change::DeleteCoto {
+            change: pat!(Change::DeleteCoto {
                 coto_id: eq(&coto.uuid),
                 deleted_at: eq(&cotonoma.updated_at)
             })

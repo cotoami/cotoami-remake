@@ -68,7 +68,7 @@ fn import_changes() -> Result<()> {
     // check the content of the imported ChangelogEntry
     assert_that!(
         db2_change3.unwrap(),
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&3),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change1.origin_serial_number),
@@ -113,7 +113,7 @@ fn import_changes() -> Result<()> {
     // check the content of the imported ChangelogEntry
     assert_that!(
         db2_change4.unwrap(),
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&4),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change2.origin_serial_number),
@@ -144,7 +144,7 @@ fn import_changes() -> Result<()> {
     // check the content of the imported ChangelogEntry
     assert_that!(
         db2_change5.unwrap(),
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&5),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change3.origin_serial_number),
@@ -175,7 +175,7 @@ fn import_changes() -> Result<()> {
     // check the content of the imported ChangelogEntry
     assert_that!(
         db2_change6.unwrap(),
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&6),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change4.origin_serial_number),
@@ -225,7 +225,7 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
     let imported_change1 = ds1.import_change(&src_change, &node2.uuid)?;
     assert_that!(
         imported_change1.unwrap(),
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&4),
             origin_node_id: eq(&origin_node_id),
             origin_serial_number: eq(&1)

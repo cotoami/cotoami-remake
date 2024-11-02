@@ -36,7 +36,7 @@ fn init_as_empty_node() -> Result<()> {
     // then
     assert_that!(
         node,
-        matches_pattern!(Node {
+        pat!(Node {
             rowid: eq(&1),
             name: eq(""),
             root_cotonoma_id: none(),
@@ -48,7 +48,7 @@ fn init_as_empty_node() -> Result<()> {
 
     assert_that!(
         local_node,
-        matches_pattern!(LocalNode {
+        pat!(LocalNode {
             node_id: eq(&node.uuid),
             rowid: eq(&1),
             owner_password_hash: none(),
@@ -67,11 +67,11 @@ fn init_as_empty_node() -> Result<()> {
 
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&1),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&1),
-            change: matches_pattern!(Change::CreateNode {
+            change: pat!(Change::CreateNode {
                 node: eq(&Node { rowid: 0, ..node }),
                 root: none()
             }),
@@ -95,7 +95,7 @@ fn duplicate_node() -> Result<()> {
     // then
     assert_that!(
         result,
-        err(matches_pattern!(anyhow::Error{
+        err(pat!(anyhow::Error{
             to_string(): eq("UNIQUE constraint failed: local_node.rowid")
         }))
     );
@@ -162,7 +162,7 @@ fn init_as_node() -> Result<()> {
 
     assert_that!(
         node,
-        matches_pattern!(Node {
+        pat!(Node {
             rowid: eq(&1),
             name: eq("My Node"),
             version: eq(&2), // root_cotonoma_id has been updated
@@ -173,7 +173,7 @@ fn init_as_node() -> Result<()> {
 
     assert_that!(
         local_node,
-        matches_pattern!(LocalNode {
+        pat!(LocalNode {
             node_id: eq(&node.uuid),
             rowid: eq(&1),
             owner_password_hash: none(),
@@ -192,7 +192,7 @@ fn init_as_node() -> Result<()> {
 
     assert_that!(
         root_cotonoma,
-        matches_pattern!(Cotonoma {
+        pat!(Cotonoma {
             uuid: eq(&node.root_cotonoma_id.unwrap()),
             node_id: eq(&node.uuid),
             coto_id: eq(&root_coto.uuid),
@@ -205,7 +205,7 @@ fn init_as_node() -> Result<()> {
 
     assert_that!(
         root_coto,
-        matches_pattern!(Coto {
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: none(),
             posted_by_id: eq(&node.uuid),
@@ -222,11 +222,11 @@ fn init_as_node() -> Result<()> {
 
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&1),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&1),
-            change: matches_pattern!(Change::CreateNode {
+            change: pat!(Change::CreateNode {
                 node: eq(&Node { rowid: 0, ..node }),
                 root: some(eq(&(
                     root_cotonoma,

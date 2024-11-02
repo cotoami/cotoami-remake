@@ -167,7 +167,7 @@ mod tests {
         let deserialized: Test = serde_json::from_str(&json)?;
         assert_that!(
             deserialized,
-            matches_pattern!(Test {
+            pat!(Test {
                 foo: none(),
                 bar: some(none()),
                 baz: some(some(eq("hello")))
@@ -180,7 +180,7 @@ mod tests {
         // let deserialized: Test = rmp_serde::from_slice(&msgpack)?;
         // assert_that!(
         //     deserialized,
-        //     matches_pattern!(Test {
+        //     pat!(Test {
         //         foo: none(),
         //         bar: some(none()),
         //         baz: some(some(eq("hello")))

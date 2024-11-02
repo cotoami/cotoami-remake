@@ -606,8 +606,8 @@ mod tests {
         let deserialized: CotoContentDiff = rmp_serde::from_slice(&msgpack)?;
         assert_that!(
             deserialized,
-            matches_pattern!(CotoContentDiff {
-                content: matches_pattern!(FieldDiff::Change(eq("hello"))),
+            pat!(CotoContentDiff {
+                content: pat!(FieldDiff::Change(eq("hello"))),
                 summary: eq(&FieldDiff::Delete),
                 media_content: eq(&FieldDiff::None),
                 geolocation: eq(&FieldDiff::None)

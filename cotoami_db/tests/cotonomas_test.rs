@@ -25,7 +25,7 @@ fn crud_operations() -> Result<()> {
     // check the inserted cotonoma/coto
     assert_that!(
         cotonoma,
-        matches_pattern!(Cotonoma {
+        pat!(Cotonoma {
             node_id: eq(&node.uuid),
             name: eq("test"),
             coto_id: eq(&coto.uuid),
@@ -38,7 +38,7 @@ fn crud_operations() -> Result<()> {
 
     assert_that!(
         coto,
-        matches_pattern!(Coto {
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&root_cotonoma.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -58,11 +58,11 @@ fn crud_operations() -> Result<()> {
     // check the content of the ChangelogEntry
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             serial_number: eq(&2),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&2),
-            change: matches_pattern!(Change::CreateCotonoma(
+            change: pat!(Change::CreateCotonoma(
                 eq(&cotonoma),
                 eq(&Coto { rowid: 0, ..coto })
             )),
@@ -77,7 +77,7 @@ fn crud_operations() -> Result<()> {
 
     assert_that!(
         coto2,
-        matches_pattern!(Coto {
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&cotonoma.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -98,7 +98,7 @@ fn crud_operations() -> Result<()> {
 
     assert_that!(
         result,
-        err(matches_pattern!(anyhow::Error{
+        err(pat!(anyhow::Error{
             to_string(): eq("FOREIGN KEY constraint failed")
         }))
     );
@@ -112,9 +112,9 @@ fn crud_operations() -> Result<()> {
 
     assert_that!(
         changelog,
-        matches_pattern!(ChangelogEntry {
+        pat!(ChangelogEntry {
             origin_node_id: eq(&node.uuid),
-            change: matches_pattern!(Change::DeleteCoto {
+            change: pat!(Change::DeleteCoto {
                 coto_id: eq(&coto.uuid),
             })
         })
