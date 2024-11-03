@@ -128,6 +128,7 @@ pub enum Change {
         coto_id: Id<Coto>,
         dest: Id<Cotonoma>,
         reposted_by: Id<Node>,
+        reposted_at: NaiveDateTime,
     } = 9,
     CreateCotonoma(Cotonoma, Coto) = 10,
     RenameCotonoma {

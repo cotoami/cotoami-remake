@@ -174,11 +174,12 @@ impl<'a> DatabaseSession<'a> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         let reposted_by = operator.node_id();
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let repost = coto_ops::repost(coto_id, &dest.uuid, &reposted_by).run(ctx)?;
+            let repost = coto_ops::repost(coto_id, &dest.uuid, &reposted_by, None).run(ctx)?;
             let change = Change::Repost {
                 coto_id: *coto_id,
                 dest: dest.uuid,
                 reposted_by,
+                reposted_at: repost.created_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok((repost, changelog))

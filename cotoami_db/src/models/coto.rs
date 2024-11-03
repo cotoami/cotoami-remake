@@ -335,6 +335,11 @@ impl<'a> NewCoto<'a> {
         coto.repost_of_id = Some(&original.uuid);
         coto
     }
+
+    pub fn set_timestamp(&mut self, timestamp: NaiveDateTime) {
+        self.created_at = timestamp;
+        self.updated_at = timestamp;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
