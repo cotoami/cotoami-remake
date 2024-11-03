@@ -53,6 +53,12 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<Id<Coto>>()
     }
+
+    async fn repost(&self, id: Id<Coto>, dest: Id<Cotonoma>) -> Result<Coto> {
+        let request = Command::Repost { id, dest }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Coto>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}

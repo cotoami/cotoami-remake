@@ -141,7 +141,7 @@ impl NodeState {
             id,
             dest,
             move |ds, id, cotonoma| ds.repost(&id, cotonoma, operator.as_ref()),
-            |parent, id, cotonoma| unimplemented!(),
+            |parent, id, cotonoma| parent.repost(id, cotonoma.uuid),
         )
         .await
     }
