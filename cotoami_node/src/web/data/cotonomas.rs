@@ -20,7 +20,8 @@ mod subs;
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
-        .route("/", get(recent_cotonomas))
+        .route("/", get(get_recent_cotonomas))
+        .route("/prefix/:prefix", get(get_cotonomas_by_prefix))
         .route("/:cotonoma_id", get(get_cotonoma))
         .route("/:cotonoma_id/details", get(get_cotonoma_details))
         .route("/:cotonoma_id/graph", get(get_graph))
@@ -32,13 +33,34 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/data/cotonomas
 /////////////////////////////////////////////////////////////////////////////
 
-async fn recent_cotonomas(
+async fn get_recent_cotonomas(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<Page<Cotonoma>>, ServiceError> {
     state
         .recent_cotonomas(None, pagination)
+        .await
+        .map(|cotonomas| Content(cotonomas, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotonomas/prefix/:prefix
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, serde::Deserialize)]
+pub struct TargetNodesQuery {
+    node: Option<Vec<Id<Node>>>,
+}
+
+async fn get_cotonomas_by_prefix(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(prefix): Path<String>,
+    Query(target_nodes): Query<TargetNodesQuery>,
+) -> Result<Content<Vec<(Cotonoma, Coto)>>, ServiceError> {
+    state
+        .cotonomas_by_prefix(prefix, target_nodes.node)
         .await
         .map(|cotonomas| Content(cotonomas, accept))
 }

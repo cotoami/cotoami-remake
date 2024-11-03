@@ -144,8 +144,21 @@ impl HttpClient {
                 self.get(&format!("{API_PATH_COTONOMAS}/{id}/details"))
             }
             Command::CotonomaByName { name, node } => {
-                let encoded_name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
-                self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{encoded_name}"))
+                let name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
+                self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{name}"))
+            }
+            Command::CotonomasByPrefix {
+                prefix,
+                target_nodes,
+            } => {
+                let prefix = utf8_percent_encode(&prefix, NON_ALPHANUMERIC).to_string();
+                let nodes = if let Some(nodes) = target_nodes {
+                    nodes.into_iter().map(|id| ("node", id)).collect()
+                } else {
+                    Vec::new()
+                };
+                self.get(&format!("{API_PATH_COTONOMAS}/prefix/{prefix}"))
+                    .query(&nodes)
             }
             Command::SubCotonomas { id, pagination } => self
                 .get(&format!("{API_PATH_COTONOMAS}/{id}/subs"))

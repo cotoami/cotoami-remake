@@ -67,6 +67,10 @@ impl NodeState {
             Command::CotonomaByName { name, node } => {
                 format.serialize(self.cotonoma_by_name(name, node).await)
             }
+            Command::CotonomasByPrefix {
+                prefix,
+                target_nodes,
+            } => format.serialize(self.cotonomas_by_prefix(prefix, target_nodes).await),
             Command::SubCotonomas { id, pagination } => {
                 format.serialize(self.sub_cotonomas(id, pagination).await)
             }
