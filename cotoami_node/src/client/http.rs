@@ -216,6 +216,9 @@ impl HttpClient {
                 .post(&format!("{API_PATH_COTONOMAS}/{post_to}/subs"))
                 .json(&input),
             Command::DeleteCoto { id } => self.delete(&format!("{API_PATH_COTOS}/{id}")),
+            Command::Repost { id, dest } => self
+                .post(&format!("{API_PATH_COTONOMAS}/{dest}/cotos/repost"))
+                .json(&id),
         };
 
         // Set the "Accept" header from Request::accept()

@@ -4,7 +4,7 @@ use anyhow::Result;
 use axum::{
     extract::{Json, Path, Query, State},
     http::StatusCode,
-    routing::get,
+    routing::{get, post},
     Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
@@ -23,6 +23,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos).post(post_coto))
+        .route("/repost", post(repost))
         .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
 }
@@ -64,7 +65,24 @@ async fn post_coto(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/data/cotonomas/:cotonoma_id/geolocated
+// POST /api/data/cotonomas/:cotonoma_id/cotos/repost
+/////////////////////////////////////////////////////////////////////////////
+
+async fn repost(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+    Json(coto_id): Json<Id<Coto>>,
+) -> Result<(StatusCode, Content<Coto>), ServiceError> {
+    state
+        .repost(coto_id, cotonoma_id, Arc::new(operator))
+        .await
+        .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotonomas/:cotonoma_id/cotos/geolocated
 /////////////////////////////////////////////////////////////////////////////
 
 async fn geolocated_cotos(

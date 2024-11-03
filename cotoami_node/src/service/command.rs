@@ -115,4 +115,7 @@ pub enum Command {
 
     /// Request to delete a coto and return the [Id<Coto>] if suceeded.
     DeleteCoto { id: Id<Coto> },
+
+    /// Request to repost a coto to the dest cotonoma and return the repost [Coto].
+    Repost { id: Id<Coto>, dest: Id<Cotonoma> },
 }
