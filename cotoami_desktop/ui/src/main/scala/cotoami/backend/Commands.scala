@@ -221,6 +221,9 @@ object Commands {
   def DeleteCoto(id: Id[Coto]) =
     jso(DeleteCoto = jso(id = id.uuid))
 
+  def Repost(id: Id[Coto], dest: Id[Cotonoma]) =
+    jso(Repost = jso(id = id.uuid, dest = dest.uuid))
+
   private def geolocation(location: Option[Geolocation]) =
     location.map(location =>
       jso(longitude = location.longitude, latitude = location.latitude)
