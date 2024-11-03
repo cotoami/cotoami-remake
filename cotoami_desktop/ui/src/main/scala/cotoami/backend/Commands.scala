@@ -117,6 +117,14 @@ object Commands {
   def CotonomaByName(name: String, node: Id[Node]) =
     jso(CotonomaByName = jso(name = name, node = node.uuid))
 
+  def CotonomasByPrefix(
+      prefix: String,
+      targetNodes: Option[js.Array[Id[Node]]]
+  ) =
+    jso(CotonomasByPrefix =
+      jso(prefix = prefix, target_nodes = targetNodes.getOrElse((null)))
+    )
+
   def SubCotonomas(id: Id[Cotonoma], pageIndex: Double) =
     jso(SubCotonomas = jso(id = id.uuid, pagination = jso(page = pageIndex)))
 
