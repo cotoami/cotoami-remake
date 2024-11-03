@@ -24,7 +24,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/local", get(local_node))
         .route("/local/icon", put(put_local_node_icon))
-        .route("/:node_id/details", get(get_node_details))
+        .route("/:node_id/details", get(node_details))
         .nest("/:node_id/cotonomas", cotonomas::routes())
         .nest("/:node_id/cotos", cotos::routes())
         .nest("/servers", servers::routes())
@@ -37,7 +37,7 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/data/nodes/:node_id/details
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_node_details(
+async fn node_details(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,

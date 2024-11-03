@@ -20,11 +20,11 @@ mod subs;
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
-        .route("/", get(get_recent_cotonomas))
-        .route("/prefix/:prefix", get(get_cotonomas_by_prefix))
-        .route("/:cotonoma_id", get(get_cotonoma))
-        .route("/:cotonoma_id/details", get(get_cotonoma_details))
-        .route("/:cotonoma_id/graph", get(get_graph))
+        .route("/", get(recent_cotonomas))
+        .route("/prefix/:prefix", get(cotonomas_by_prefix))
+        .route("/:cotonoma_id", get(cotonoma))
+        .route("/:cotonoma_id/details", get(cotonoma_details))
+        .route("/:cotonoma_id/graph", get(graph))
         .nest("/:cotonoma_id/subs", subs::routes())
         .nest("/:cotonoma_id/cotos", cotos::routes())
 }
@@ -33,7 +33,7 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/data/cotonomas
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_recent_cotonomas(
+async fn recent_cotonomas(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
@@ -53,7 +53,7 @@ pub struct TargetNodesQuery {
     node: Option<Vec<Id<Node>>>,
 }
 
-async fn get_cotonomas_by_prefix(
+async fn cotonomas_by_prefix(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(prefix): Path<String>,
@@ -69,7 +69,7 @@ async fn get_cotonomas_by_prefix(
 // GET /api/data/cotonomas/:cotonoma_id
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_cotonoma(
+async fn cotonoma(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
@@ -84,7 +84,7 @@ async fn get_cotonoma(
 // GET /api/data/cotonomas/:cotonoma_id/details
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_cotonoma_details(
+async fn cotonoma_details(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
@@ -99,7 +99,7 @@ async fn get_cotonoma_details(
 // GET /api/data/cotonomas/:cotonoma_id/graph
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_graph(
+async fn graph(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,

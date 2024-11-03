@@ -27,7 +27,7 @@ pub(super) fn routes() -> Router<NodeState> {
             get(cotos_in_geo_bounds),
         )
         .route("/search/:query", get(search_cotos))
-        .route("/:coto_id/graph", get(get_graph))
+        .route("/:coto_id/graph", get(graph))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ async fn search_cotos(
 // GET /api/data/cotos/:coto_id/graph
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_graph(
+async fn graph(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(coto_id): Path<Id<Coto>>,

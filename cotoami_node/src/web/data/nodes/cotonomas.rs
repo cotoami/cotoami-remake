@@ -16,7 +16,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
-        .route("/:name", get(get_cotonoma_by_name))
+        .route("/:name", get(cotonoma_by_name))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ async fn recent_cotonomas(
 // GET /api/data/nodes/:node_id/cotonomas/:name
 /////////////////////////////////////////////////////////////////////////////
 
-async fn get_cotonoma_by_name(
+async fn cotonoma_by_name(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path((node_id, name)): Path<(Id<Node>, String)>,

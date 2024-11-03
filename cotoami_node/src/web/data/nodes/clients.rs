@@ -22,23 +22,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_clients).post(add_client))
-        .route("/:node_id", get(get_client).put(update_client_node))
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// GET /api/data/nodes/clients/:node_id
-/////////////////////////////////////////////////////////////////////////////
-
-async fn get_client(
-    State(state): State<NodeState>,
-    Extension(operator): Extension<Operator>,
-    TypedHeader(accept): TypedHeader<Accept>,
-    Path(node_id): Path<Id<Node>>,
-) -> Result<Content<ClientNode>, ServiceError> {
-    state
-        .client_node(node_id, Arc::new(operator))
-        .await
-        .map(|client| Content(client, accept))
+        .route("/:node_id", get(client).put(update_client_node))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -58,6 +42,22 @@ async fn recent_clients(
         .recent_clients(pagination, Arc::new(operator))
         .await
         .map(|clients| Content(clients, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/clients/:node_id
+/////////////////////////////////////////////////////////////////////////////
+
+async fn client(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Content<ClientNode>, ServiceError> {
+    state
+        .client_node(node_id, Arc::new(operator))
+        .await
+        .map(|client| Content(client, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
