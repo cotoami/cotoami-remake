@@ -130,4 +130,19 @@ impl NodeState {
         )
         .await
     }
+
+    pub async fn repost(
+        self,
+        id: Id<Coto>,
+        dest: Id<Cotonoma>,
+        operator: Arc<Operator>,
+    ) -> Result<Coto, ServiceError> {
+        self.change_in_cotonoma(
+            id,
+            dest,
+            move |ds, id, cotonoma| ds.repost(&id, cotonoma, operator.as_ref()),
+            |parent, id, cotonoma| unimplemented!(),
+        )
+        .await
+    }
 }
