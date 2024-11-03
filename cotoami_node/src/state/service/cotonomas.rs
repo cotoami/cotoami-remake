@@ -16,6 +16,7 @@ use crate::{
 
 const DEFAULT_SUB_PAGE_SIZE: i64 = 10;
 const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
+const DEFAULT_COTONOMAS_BY_PREFIX_LIMIT: i64 = 10;
 
 impl NodeState {
     pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<(Cotonoma, Coto), ServiceError> {
@@ -47,6 +48,17 @@ impl NodeState {
         self.get(move |ds| {
             let (cotonoma, _) = ds.try_get_cotonoma_by_name(&name, &node)?;
             Ok(cotonoma)
+        })
+        .await
+    }
+
+    pub async fn cotonomas_by_prefix(
+        &self,
+        prefix: String,
+        target_nodes: Option<Vec<Id<Node>>>,
+    ) -> Result<Vec<(Cotonoma, Coto)>, ServiceError> {
+        self.get(move |ds| {
+            ds.cotonomas_by_prefix(&prefix, target_nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
         })
         .await
     }
