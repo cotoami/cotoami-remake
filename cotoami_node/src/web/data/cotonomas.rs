@@ -58,7 +58,7 @@ async fn cotonomas_by_prefix(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(prefix): Path<String>,
     Query(target_nodes): Query<TargetNodesQuery>,
-) -> Result<Content<Vec<(Cotonoma, Coto)>>, ServiceError> {
+) -> Result<Content<Vec<Cotonoma>>, ServiceError> {
     state
         .cotonomas_by_prefix(prefix, target_nodes.node)
         .await

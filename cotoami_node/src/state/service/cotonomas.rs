@@ -56,7 +56,7 @@ impl NodeState {
         &self,
         prefix: String,
         target_nodes: Option<Vec<Id<Node>>>,
-    ) -> Result<Vec<(Cotonoma, Coto)>, ServiceError> {
+    ) -> Result<Vec<Cotonoma>, ServiceError> {
         self.get(move |ds| {
             ds.cotonomas_by_prefix(&prefix, target_nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
         })

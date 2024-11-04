@@ -80,7 +80,7 @@ impl<'a> DatabaseSession<'a> {
         prefix: &str,
         target_nodes: Option<Vec<Id<Node>>>,
         limit: i64,
-    ) -> Result<Vec<(Cotonoma, Coto)>> {
+    ) -> Result<Vec<Cotonoma>> {
         self.read_transaction(cotonoma_ops::search_by_prefix(prefix, target_nodes, limit))
     }
 

@@ -102,14 +102,12 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     prefix: &str,
     target_nodes: Option<Vec<Id<Node>>>,
     limit: i64,
-) -> impl Operation<Conn, Vec<(Cotonoma, Coto)>> + '_ {
+) -> impl Operation<Conn, Vec<Cotonoma>> + '_ {
     read_op(move |conn| {
         let prefix = escape_like_pattern(prefix, '\\');
         let query = cotonomas::table
-            .inner_join(cotos::table)
             .filter(cotonomas::name.like(format!("{prefix}%")).escape('\\'))
             .order(cotonomas::updated_at.desc())
-            .select((Cotonoma::as_select(), Coto::as_select()))
             .limit(limit)
             .into_boxed();
 

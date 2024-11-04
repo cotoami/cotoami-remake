@@ -21,8 +21,8 @@ fn cotonomas_by_prefix() -> Result<()> {
     assert_that!(
         cotonomas,
         elements_are![
-            (pat!(Cotonoma { name: eq("abcdef") }), anything()),
-            (pat!(Cotonoma { name: eq("abc") }), anything())
+            pat!(Cotonoma { name: eq("abcdef") }),
+            pat!(Cotonoma { name: eq("abc") })
         ]
     );
 
