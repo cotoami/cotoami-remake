@@ -43,7 +43,11 @@ object ToolbarCoto {
         symbol = "repeat",
         tip = "Repost",
         tipPlacement = "left",
-        classes = "repost-coto"
+        classes = "repost-coto",
+        onClick = e => {
+          e.stopPropagation()
+          dispatch(Modal.Msg.OpenModal(Modal.Repost(coto.id)))
+        }
       ),
       Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(

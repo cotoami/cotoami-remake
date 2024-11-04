@@ -8,7 +8,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Id, Node}
+import cotoami.models.{Coto, Id, Node}
 import cotoami.subparts.modals._
 
 sealed trait Modal
@@ -89,6 +89,11 @@ object Modal {
   case class NewClient(model: ModalNewClient.Model = ModalNewClient.Model())
       extends Modal
 
+  case class Repost(model: ModalRepost.Model) extends Modal
+  object Repost {
+    def apply(cotoId: Id[Coto]): Repost = Repost(ModalRepost.Model(cotoId))
+  }
+
   sealed trait Msg extends Into[AppMsg] {
     def into = AppMsg.ModalMsg(this)
   }
@@ -106,6 +111,7 @@ object Modal {
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
     case class ClientsMsg(msg: ModalClients.Msg) extends Msg
     case class NewClientMsg(msg: ModalNewClient.Msg) extends Msg
+    case class RepostMsg(msg: ModalRepost.Msg) extends Msg
   }
 
   def open(modal: Modal): Cmd.One[AppMsg] =
@@ -205,6 +211,13 @@ object Modal {
               )
           }
         }
+
+      case Msg.RepostMsg(modalMsg) =>
+        stack.get[Repost].map { case Repost(modal) =>
+          ModalRepost.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (model.updateModal(Repost(modal)), cmds)
+          }
+        }
     }).getOrElse((model, Cmd.none))
   }
 
@@ -232,6 +245,8 @@ object Modal {
       case Clients(modal) => Some(ModalClients(modal))
 
       case NewClient(modal) => Some(ModalNewClient(modal))
+
+      case Repost(modal) => Some(ModalRepost(modal))
     }
 
   def view[M <: Modal](
