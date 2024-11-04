@@ -49,6 +49,12 @@ object CotoJson {
 
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.DeleteCoto(id))
+
+  def repost(
+      id: Id[Coto],
+      dest: Id[Cotonoma]
+  ): Cmd.One[Either[ErrorJson, CotoJson]] =
+    Commands.send(Commands.Repost(id, dest))
 }
 
 object CotoBackend {
@@ -102,4 +108,10 @@ object CotoBackend {
 
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, Id[Coto]]] =
     CotoJson.delete(id).map(_.map(Id(_)))
+
+  def repost(
+      id: Id[Coto],
+      dest: Id[Cotonoma]
+  ): Cmd.One[Either[ErrorJson, Coto]] =
+    CotoJson.repost(id, dest).map(_.map(CotoBackend.toModel(_)))
 }
