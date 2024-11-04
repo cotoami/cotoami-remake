@@ -158,7 +158,7 @@ header.tools {
 // Text input with a button
 //
 
-div.text-input-with-button {
+.text-input-with-button {
   display: flex;
   flex-direction: row;
   margin-bottom: var(--spacing);
@@ -175,6 +175,7 @@ div.text-input-with-button {
     border-bottom-left-radius: 0;
 
     span.material-symbols {
+      font-size: 20px;
       line-height: 1rem;
       vertical-align: text-bottom;
     }

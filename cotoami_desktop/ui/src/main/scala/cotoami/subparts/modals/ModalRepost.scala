@@ -1,11 +1,13 @@
 package cotoami.subparts.modals
 
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
 import cotoami.subparts.Modal
+import cotoami.components.materialSymbol
 
 object ModalRepost {
 
@@ -27,5 +29,15 @@ object ModalRepost {
     )(
       "Repost"
     )(
+      section(className := "repost-form text-input-with-button")(
+        input(
+          `type` := "text",
+          placeholder := "Cotonoma name"
+        ),
+        button(
+          `type` := "button",
+          disabled := true
+        )(materialSymbol("repeat"))
+      )
     )
 }
