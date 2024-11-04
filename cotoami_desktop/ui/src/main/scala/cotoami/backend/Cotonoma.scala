@@ -48,6 +48,12 @@ object CotonomaJson {
   ): Cmd.One[Either[ErrorJson, PageJson[CotonomaJson]]] =
     Commands.send(Commands.SubCotonomas(id, pageIndex))
 
+  def fetchByPrefix(
+      prefix: String,
+      targetNodes: Option[js.Array[Id[Node]]]
+  ): Cmd.One[Either[ErrorJson, js.Array[CotonomaJson]]] =
+    Commands.send(Commands.CotonomasByPrefix(prefix, targetNodes))
+
   def post(
       name: String,
       location: Option[Geolocation],
@@ -92,6 +98,13 @@ object CotonomaBackend {
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchSubs(id, pageIndex)
       .map(_.map(PageBackend.toModel(_, toModel(_))))
+
+  def fetchByPrefix(
+      prefix: String,
+      targetNodes: Option[js.Array[Id[Node]]]
+  ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
+    CotonomaJson.fetchByPrefix(prefix, targetNodes)
+      .map(_.map(_.map(toModel(_))))
 
   def post(
       name: String,
