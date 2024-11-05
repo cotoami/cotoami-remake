@@ -4,9 +4,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
-import cotoami.subparts.Modal
+import cotoami.subparts.{Modal, ViewCoto}
 import cotoami.components.materialSymbol
 
 object ModalRepost {
@@ -21,6 +21,7 @@ object ModalRepost {
     (model, Cmd.none)
 
   def apply(model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
@@ -38,6 +39,17 @@ object ModalRepost {
           `type` := "button",
           disabled := true
         )(materialSymbol("repeat"))
+      ),
+      context.domain.cotos.get(model.cotoId).map(articleCoto)
+    )
+
+  private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
+    article(className := "coto")(
+      header()(
+        ViewCoto.addressAuthor(coto, context.domain.nodes)
+      ),
+      div(className := "body")(
+        ViewCoto.divContentPreview(coto)
       )
     )
 }

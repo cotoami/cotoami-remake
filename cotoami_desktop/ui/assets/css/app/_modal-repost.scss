@@ -1,5 +1,23 @@
 dialog.repost {
-  article {
+  &>article {
     min-width: 600px;
+  }
+
+  article.coto {
+    padding: 1rem 1rem;
+
+    address.author {
+      margin-bottom: 1rem;
+    }
+
+    section.text-content,
+    section.cotonoma-content,
+    section.media-content {
+      padding: 0;
+    }
+
+    &:hover {
+      background-color: inherit;
+    }
   }
 }

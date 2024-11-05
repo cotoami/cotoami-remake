@@ -114,6 +114,21 @@ object ViewCoto {
       ).getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
     )
 
+  def divContentPreview(
+      coto: Coto,
+      collapsibleContentOpened: Boolean = false
+  )(implicit context: Context): ReactElement =
+    div(className := "content")(
+      context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
+        section(className := "cotonoma-content")(
+          span(className := "cotonoma")(
+            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            cotonoma.name
+          )
+        )
+      ).getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
+    )
+
   def divWaitingPostContent(
       post: WaitingPost
   )(implicit context: Context): ReactElement =
