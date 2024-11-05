@@ -13,16 +13,18 @@ fn repost() -> Result<()> {
     let (root, _) = ds.local_node_root()?.unwrap();
 
     let (coto, _) = ds.post_coto(&CotoInput::new("Cargo"), &root, &opr)?;
-    let ((cotonoma, _), _) = ds.post_cotonoma(&CotonomaInput::new("Rust"), &root, &opr)?;
+    let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("Rust"), &root, &opr)?;
+    let ((cotonoma2, _), _) =
+        ds.post_cotonoma(&CotonomaInput::new("Package manager"), &root, &opr)?;
 
     // When
-    let (repost, changelog) = ds.repost(&coto.uuid, &cotonoma, &opr)?;
+    let (repost1, changelog) = ds.repost(&coto.uuid, &cotonoma1, &opr)?;
 
     assert_that!(
-        repost,
+        repost1,
         pat!(Coto {
             node_id: eq(&node.uuid),
-            posted_in_id: some(eq(&cotonoma.uuid)),
+            posted_in_id: some(eq(&cotonoma1.uuid)),
             posted_by_id: eq(&node.uuid),
             content: none(),
             summary: none(),
@@ -38,9 +40,9 @@ fn repost() -> Result<()> {
             origin_node_id: eq(&node.uuid),
             change: pat!(Change::Repost {
                 coto_id: eq(&coto.uuid),
-                dest: eq(&cotonoma.uuid),
+                dest: eq(&cotonoma1.uuid),
                 reposted_by: eq(&node.uuid),
-                reposted_at: eq(&repost.created_at)
+                reposted_at: eq(&repost1.created_at)
             })
         })
     );
@@ -55,8 +57,52 @@ fn repost() -> Result<()> {
             summary: none(),
             is_cotonoma: eq(&false),
             repost_of_id: none(),
-            reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma.uuid)]))),
-            updated_at: eq(&repost.created_at)
+            reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma1.uuid)]))),
+            updated_at: eq(&repost1.created_at)
+        }))
+    );
+
+    // When: repost a repost
+    let (repost2, changelog) = ds.repost(&repost1.uuid, &cotonoma2, &opr)?;
+
+    assert_that!(
+        repost2,
+        pat!(Coto {
+            node_id: eq(&node.uuid),
+            posted_in_id: some(eq(&cotonoma2.uuid)),
+            posted_by_id: eq(&node.uuid),
+            content: none(),
+            summary: none(),
+            is_cotonoma: eq(&false),
+            // The original should be the `coto`, not the `repost1`.
+            repost_of_id: some(eq(&coto.uuid)),
+            reposted_in_ids: none()
+        })
+    );
+
+    assert_that!(
+        changelog,
+        pat!(ChangelogEntry {
+            origin_node_id: eq(&node.uuid),
+            change: pat!(Change::Repost {
+                coto_id: eq(&repost1.uuid),
+                dest: eq(&cotonoma2.uuid),
+                reposted_by: eq(&node.uuid),
+                reposted_at: eq(&repost2.created_at)
+            })
+        })
+    );
+
+    assert_that!(
+        ds.coto(&coto.uuid)?,
+        some(pat!(Coto {
+            content: some(eq("Cargo")),
+            repost_of_id: none(),
+            reposted_in_ids: some(pat!(Ids(elements_are![
+                eq(&cotonoma1.uuid),
+                eq(&cotonoma2.uuid)
+            ]))),
+            updated_at: eq(&repost2.created_at)
         }))
     );
 
