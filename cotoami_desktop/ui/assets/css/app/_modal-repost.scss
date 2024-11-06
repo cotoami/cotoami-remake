@@ -10,10 +10,20 @@ dialog.repost {
       margin-bottom: 1rem;
     }
 
-    section.text-content,
-    section.cotonoma-content,
-    section.media-content {
-      padding: 0;
+    div.body {
+      height: 20vh;
+
+      // SimpleBar div
+      >div {
+        width: 100%;
+        height: 100%;
+      }
+
+      section.text-content,
+      section.cotonoma-content,
+      section.media-content {
+        padding: 0;
+      }
     }
 
     &:hover {

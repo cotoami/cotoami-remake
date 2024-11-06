@@ -7,7 +7,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
 import cotoami.subparts.{Modal, ViewCoto}
-import cotoami.components.materialSymbol
+import cotoami.components.{materialSymbol, ScrollArea}
 
 object ModalRepost {
 
@@ -49,7 +49,9 @@ object ModalRepost {
         ViewCoto.addressAuthor(coto, context.domain.nodes)
       ),
       div(className := "body")(
-        ViewCoto.divContentPreview(coto)
+        ScrollArea()(
+          ViewCoto.divContentPreview(coto)
+        )
       )
     )
 }
