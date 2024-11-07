@@ -7,10 +7,10 @@ import cotoami.models.{Coto, Cotonoma, Id, Link, Node, Page}
 
 case class CotosPage(json: CotosPageJson) {
   def page: Page[Coto] =
-    PageBackend.toModel(this.json.page, CotoBackend.toModel(_, false))
-  def relatedData: CotosRelatedData = CotosRelatedData(this.json.related_data)
+    PageBackend.toModel(json.page, CotoBackend.toModel(_, false))
+  def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
   def outgoingLinks: js.Array[Link] =
-    this.json.outgoing_links.map(LinkBackend.toModel(_))
+    json.outgoing_links.map(LinkBackend.toModel(_))
 }
 
 object CotosPage {
