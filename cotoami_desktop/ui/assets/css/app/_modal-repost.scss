@@ -3,6 +3,29 @@ dialog.repost {
     min-width: 600px;
   }
 
+  section.repost-form {
+    display: flex;
+    flex-direction: row;
+
+    .cotonoma-select {
+      flex: 1;
+
+      // Reset the pico style
+      input {
+        height: auto;
+
+        &:is(:active, :focus) {
+          box-shadow: none;
+        }
+      }
+    }
+
+    button.repost {
+      margin-left: 5px;
+      height: 39px;
+    }
+  }
+
   article.coto {
     padding: 1rem 1rem;
 

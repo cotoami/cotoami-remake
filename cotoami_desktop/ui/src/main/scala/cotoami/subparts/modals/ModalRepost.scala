@@ -7,12 +7,16 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
 import cotoami.subparts.{Modal, ViewCoto}
-import cotoami.components.{materialSymbol, ScrollArea}
+import cotoami.components.{materialSymbol, ScrollArea, Select}
 
 object ModalRepost {
 
   case class Model(
-      cotoId: Id[Coto]
+      cotoId: Id[Coto],
+      options: Seq[Select.Option] = Seq(
+        Select.Option("foo", "Foo"),
+        Select.Option("bar", "Bar")
+      )
   )
 
   sealed trait Msg
@@ -30,12 +34,10 @@ object ModalRepost {
     )(
       "Repost"
     )(
-      section(className := "repost-form text-input-with-button")(
-        input(
-          `type` := "text",
-          placeholder := "Cotonoma name"
-        ),
+      section(className := "repost-form")(
+        Select(className = "cotonoma-select", options = model.options),
         button(
+          className := "repost",
           `type` := "button",
           disabled := true
         )(materialSymbol("repeat"))

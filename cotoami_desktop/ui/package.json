@@ -23,7 +23,8 @@
     "strip-markdown": "^6.0.0",
     "maplibre-gl": "^4.5.1",
     "pmtiles": "^3.0.7",
-    "exifr": "^7.1.3"
+    "exifr": "^7.1.3",
+    "react-select": "^5.8.2"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
