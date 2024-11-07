@@ -9,6 +9,7 @@ import slinky.core.annotations.react
 @react object Select extends ExternalComponent {
   case class Props(
       className: String,
+      placeholder: scala.Option[String] = None,
       options: Seq[Option]
   )
 

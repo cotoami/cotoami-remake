@@ -35,7 +35,11 @@ object ModalRepost {
       "Repost"
     )(
       section(className := "repost-form")(
-        Select(className = "cotonoma-select", options = model.options),
+        Select(
+          className = "cotonoma-select",
+          placeholder = Some("Type cotonoma name..."),
+          options = model.options
+        ),
         button(
           className := "repost",
           `type` := "button",
