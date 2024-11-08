@@ -21,8 +21,13 @@ dialog.repost {
     }
 
     button.repost {
-      margin-left: 5px;
       height: 39px;
+      margin-left: 4px;
+      padding-top: 4px;
+
+      span.material-symbols {
+        font-size: 20px;
+      }
     }
   }
 
