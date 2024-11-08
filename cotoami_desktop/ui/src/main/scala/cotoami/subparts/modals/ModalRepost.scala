@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id}
+import cotoami.models.{Coto, Cotonoma, Id}
 import cotoami.subparts.{Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
@@ -14,10 +14,18 @@ object ModalRepost {
   case class Model(
       cotoId: Id[Coto],
       options: Seq[Select.Option] = Seq(
-        Select.Option("foo", "Foo"),
-        Select.Option("bar", "Bar")
+        new Destination("Rust"),
+        new Destination("Scala")
       )
   )
+
+  class Destination(
+      name: String,
+      cotonoma: Option[Cotonoma] = None
+  ) extends Select.Option {
+    val value: String = cotonoma.map(_.id.uuid).getOrElse("")
+    val label: String = name
+  }
 
   sealed trait Msg
 

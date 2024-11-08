@@ -13,10 +13,10 @@ import slinky.core.annotations.react
       options: Seq[Option]
   )
 
-  case class Option(
-      value: String,
-      label: String
-  )
+  trait Option extends js.Object {
+    val value: String
+    val label: String
+  }
 
   override val component = ReactSelect
 }
