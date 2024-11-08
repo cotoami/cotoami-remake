@@ -15,6 +15,7 @@
   --pinned-background-color: #{rgba(pico.$grey-50, 0.5)};
   --parent-button-color: #{rgba(pico.$grey-50, 0.5)};
   --error-color: #{pico.$red-900};
+  --color-in-white-background: #{pico.$grey-700};
 }
 
 // Dark theme (Auto)
@@ -32,6 +33,7 @@
     --pinned-background-color: #{pico.$grey-900};
     --parent-button-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
     --error-color: #{pico.$red-900};
+    --color-in-white-background: #{pico.$grey-700};
   }
 }
 
@@ -49,4 +51,5 @@
   --pinned-background-color: #{pico.$grey-900};
   --parent-button-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
   --error-color: #{pico.$red-800};
+  --color-in-white-background: #{pico.$grey-700};
 }
