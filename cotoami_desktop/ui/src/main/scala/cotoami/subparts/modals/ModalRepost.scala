@@ -13,7 +13,7 @@ object ModalRepost {
 
   case class Model(
       cotoId: Id[Coto],
-      options: Seq[Select.Option] = Seq(
+      options: Seq[Select.SelectOption] = Seq(
         new Destination("Rust"),
         new Destination("Scala")
       )
@@ -22,7 +22,7 @@ object ModalRepost {
   class Destination(
       name: String,
       cotonoma: Option[Cotonoma] = None
-  ) extends Select.Option {
+  ) extends Select.SelectOption {
     val value: String = cotonoma.map(_.id.uuid).getOrElse("")
     val label: String = name
   }
@@ -45,8 +45,9 @@ object ModalRepost {
       section(className := "repost-form")(
         Select(
           className = "cotonoma-select",
+          options = model.options,
           placeholder = Some("Type cotonoma name..."),
-          options = model.options
+          formatOptionLabel = Some(divSelectOption)
         ),
         button(
           className := "repost",
@@ -55,6 +56,12 @@ object ModalRepost {
         )(materialSymbol("repeat"))
       ),
       context.domain.cotos.get(model.cotoId).map(articleCoto)
+    )
+
+  private def divSelectOption(option: Select.SelectOption): ReactElement =
+    div()(
+      option.label,
+      " hogehoge"
     )
 
   private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
