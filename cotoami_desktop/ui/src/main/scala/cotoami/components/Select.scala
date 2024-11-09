@@ -13,12 +13,18 @@ import slinky.core.facade.ReactElement
       options: Seq[SelectOption],
       placeholder: Option[String] = None,
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
-      isLoading: Boolean = false
+      isLoading: Boolean = false,
+      noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None
   )
 
   trait SelectOption extends js.Object {
     val value: String
     val label: String
+  }
+
+  @js.native
+  trait NoOptionsMessageArg extends js.Object {
+    val inputValue: String = js.native
   }
 
   override val component = ReactSelect

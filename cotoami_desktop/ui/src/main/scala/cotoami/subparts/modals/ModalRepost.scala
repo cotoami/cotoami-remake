@@ -44,7 +44,8 @@ object ModalRepost {
         Select(
           className = "cotonoma-select",
           options = model.options,
-          placeholder = Some("Type cotonoma name..."),
+          placeholder = Some("Cotonoma name"),
+          noOptionsMessage = Some(_ => NoOptionsMessage),
           formatOptionLabel = Some(divSelectOption),
           isLoading = model.optionsLoading
         ),
@@ -56,6 +57,8 @@ object ModalRepost {
       ),
       context.domain.cotos.get(model.cotoId).map(articleCoto)
     )
+
+  private val NoOptionsMessage = div()("Type cotonoma name...")
 
   private def divSelectOption(option: Select.SelectOption): ReactElement =
     div()(
