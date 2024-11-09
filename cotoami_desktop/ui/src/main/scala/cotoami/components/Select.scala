@@ -12,7 +12,8 @@ import slinky.core.facade.ReactElement
       className: String,
       options: Seq[SelectOption],
       placeholder: Option[String] = None,
-      formatOptionLabel: Option[SelectOption => ReactElement] = None
+      formatOptionLabel: Option[SelectOption => ReactElement] = None,
+      isLoading: Boolean = false
   )
 
   trait SelectOption extends js.Object {

@@ -13,10 +13,8 @@ object ModalRepost {
 
   case class Model(
       cotoId: Id[Coto],
-      options: Seq[Select.SelectOption] = Seq(
-        new Destination("Rust"),
-        new Destination("Scala")
-      )
+      options: Seq[Select.SelectOption] = Seq.empty,
+      optionsLoading: Boolean = false
   )
 
   class Destination(
@@ -47,7 +45,8 @@ object ModalRepost {
           className = "cotonoma-select",
           options = model.options,
           placeholder = Some("Type cotonoma name..."),
-          formatOptionLabel = Some(divSelectOption)
+          formatOptionLabel = Some(divSelectOption),
+          isLoading = model.optionsLoading
         ),
         button(
           className := "repost",
