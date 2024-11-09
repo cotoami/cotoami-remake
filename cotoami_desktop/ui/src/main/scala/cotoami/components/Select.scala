@@ -12,6 +12,8 @@ import slinky.core.facade.ReactElement
       className: String,
       options: Seq[SelectOption],
       placeholder: Option[String] = None,
+      inputValue: String = "",
+      onInputChange: Option[String => Unit] = None,
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None

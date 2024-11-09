@@ -1,5 +1,6 @@
 package cotoami.subparts.modals
 
+import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -13,6 +14,7 @@ object ModalRepost {
 
   case class Model(
       cotoId: Id[Coto],
+      cotonomaName: String = "",
       options: Seq[Select.SelectOption] = Seq.empty,
       optionsLoading: Boolean = false
   )
@@ -25,10 +27,19 @@ object ModalRepost {
     val label: String = name
   }
 
-  sealed trait Msg
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.RepostMsg(this).pipe(AppMsg.ModalMsg)
+  }
+
+  object Msg {
+    case class CotonomaNameInput(name: String) extends Msg
+  }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+    msg match {
+      case Msg.CotonomaNameInput(name) =>
+        (model.copy(cotonomaName = name), Cmd.none)
+    }
 
   def apply(model: Model)(implicit
       context: Context,
@@ -45,6 +56,8 @@ object ModalRepost {
           className = "cotonoma-select",
           options = model.options,
           placeholder = Some("Cotonoma name"),
+          inputValue = model.cotonomaName,
+          onInputChange = Some(input => dispatch(Msg.CotonomaNameInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
           formatOptionLabel = Some(divSelectOption),
           isLoading = model.optionsLoading
