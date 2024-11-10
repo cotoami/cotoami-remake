@@ -24,7 +24,7 @@ fn cotonomas_by_prefix() -> Result<()> {
         elements_are![pat!(Cotonoma { name: eq("abc") }),]
     );
 
-    // When: limit 2 (both of exact and prefix matches)
+    // When: limit 2 (both exact and prefix matches)
     let cotonomas = ds.cotonomas_by_prefix("abc", None, 2)?;
     assert_that!(
         cotonomas,
