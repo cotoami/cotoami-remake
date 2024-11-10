@@ -104,20 +104,38 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     limit: i64,
 ) -> impl Operation<Conn, Vec<Cotonoma>> + '_ {
     read_op(move |conn| {
-        let prefix = escape_like_pattern(prefix, '\\');
+        // Search by exact match first
         let query = cotonomas::table
-            .filter(cotonomas::name.like(format!("{prefix}%")).escape('\\'))
+            .filter(cotonomas::name.eq(prefix))
             .order(cotonomas::updated_at.desc())
             .limit(limit)
             .into_boxed();
-
-        if let Some(target_nodes) = target_nodes {
+        let mut exact_matches: Vec<Cotonoma> = if let Some(ref target_nodes) = target_nodes {
             query.filter(cotonomas::node_id.eq_any(target_nodes))
         } else {
             query
         }
-        .load(conn)
-        .map_err(anyhow::Error::from)
+        .load(conn)?;
+
+        if exact_matches.len() as i64 == limit {
+            Ok(exact_matches)
+        } else {
+            // Then, search by prefix
+            let prefix = escape_like_pattern(prefix, '\\');
+            let query = cotonomas::table
+                .filter(cotonomas::name.like(format!("{prefix}_%")).escape('\\'))
+                .order(cotonomas::updated_at.desc())
+                .limit(limit - exact_matches.len() as i64)
+                .into_boxed();
+            let mut prefix_matches = if let Some(ref target_nodes) = target_nodes {
+                query.filter(cotonomas::node_id.eq_any(target_nodes))
+            } else {
+                query
+            }
+            .load(conn)?;
+            exact_matches.append(&mut prefix_matches);
+            Ok(exact_matches)
+        }
     })
 }
 

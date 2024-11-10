@@ -15,14 +15,17 @@ fn cotonomas_by_prefix() -> Result<()> {
     let _ = ds.post_cotonoma(&CotonomaInput::new("abc"), &root, &opr)?;
     let _ = ds.post_cotonoma(&CotonomaInput::new("abcdef"), &root, &opr)?;
     let _ = ds.post_cotonoma(&CotonomaInput::new("foo"), &root, &opr)?;
+    let _ = ds.post_cotonoma(&CotonomaInput::new("abcabc"), &root, &opr)?;
 
     // When
     let cotonomas = ds.cotonomas_by_prefix("abc", None, 5)?;
     assert_that!(
         cotonomas,
         elements_are![
-            pat!(Cotonoma { name: eq("abcdef") }),
-            pat!(Cotonoma { name: eq("abc") })
+            // exact matches should come first
+            pat!(Cotonoma { name: eq("abc") }),
+            pat!(Cotonoma { name: eq("abcabc") }),
+            pat!(Cotonoma { name: eq("abcdef") })
         ]
     );
 
