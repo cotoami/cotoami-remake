@@ -6,19 +6,11 @@ import cotoami.models.{Coto, Cotonoma}
 
 case class CotosRelatedData(json: CotosRelatedDataJson) {
   def postedIn: js.Array[Cotonoma] =
-    this.json.posted_in.map(CotonomaBackend.toModel(_))
+    json.posted_in.map(CotonomaBackend.toModel(_))
   def asCotonomas: js.Array[Cotonoma] =
-    this.json.as_cotonomas.map(CotonomaBackend.toModel(_))
+    json.as_cotonomas.map(CotonomaBackend.toModel(_))
   def originals: js.Array[Coto] =
-    this.json.originals.map(CotoBackend.toModel(_))
-
-  def debug: String = {
-    val s = new StringBuilder
-    s ++= s"postedIn: ${this.postedIn.size}"
-    s ++= s", asCotonomas: ${this.asCotonomas.size}"
-    s ++= s", originals: ${this.originals.size}"
-    s.result()
-  }
+    json.originals.map(CotoBackend.toModel(_))
 }
 
 @js.native
