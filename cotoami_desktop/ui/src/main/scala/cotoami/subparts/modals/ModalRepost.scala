@@ -7,6 +7,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id}
+import cotoami.repositories.Cotos
 import cotoami.subparts.{Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
@@ -17,7 +18,12 @@ object ModalRepost {
       cotonomaName: String = "",
       options: Seq[Select.SelectOption] = Seq.empty,
       optionsLoading: Boolean = false
-  )
+  ) {
+    def coto(cotos: Cotos): Option[Coto] = cotos.get(cotoId)
+
+    def originalCoto(cotos: Cotos): Option[Coto] =
+      coto(cotos).map(cotos.getOriginal)
+  }
 
   class Destination(
       name: String,
@@ -68,7 +74,7 @@ object ModalRepost {
           disabled := true
         )(materialSymbol("repeat"))
       ),
-      context.domain.cotos.get(model.cotoId).map(articleCoto)
+      model.originalCoto(context.domain.cotos).map(articleCoto)
     )
 
   private val NoOptionsMessage = div()("Type cotonoma name...")
