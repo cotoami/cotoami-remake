@@ -94,6 +94,8 @@ case class Nodes(
   def addServers(servers: Iterable[Server]): Nodes =
     servers.foldLeft(this)(_ addServer _)
 
+  def isParent(nodeId: Id[Node]): Boolean = parentIds.contains(nodeId)
+
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] =
     if (parentIds.contains(parentId))
       servers.get(parentId).map(server =>

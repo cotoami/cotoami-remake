@@ -1,13 +1,15 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.scalajs.js
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id}
-import cotoami.repositories.Cotos
+import cotoami.models.{Coto, Cotonoma, Id, Node}
+import cotoami.repositories.{Cotos, Domain}
 import cotoami.subparts.{Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
@@ -23,6 +25,18 @@ object ModalRepost {
 
     def originalCoto(cotos: Cotos): Option[Coto] =
       coto(cotos).map(cotos.getOriginal)
+
+    def targetNodes(domain: Domain): js.Array[Id[Node]] =
+      js.Array(
+        // You can always repost a coto to the operating node.
+        domain.nodes.operatingId,
+        // You can repost a coto to the same node in which the coto has posted
+        // only if the node is one of the parents, otherwise you don't have
+        // a permission to post.
+        coto(domain.cotos).map(_.nodeId).flatMap(nodeId =>
+          Option.when(domain.nodes.isParent(nodeId))(nodeId)
+        )
+      ).flatten
   }
 
   class Destination(
