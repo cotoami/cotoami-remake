@@ -328,9 +328,9 @@ import cotoami.libs.geomap.pmtiles
     var focusedMarkerId: Option[String] = None
 
     def disableRotation(): Unit = {
-      this.dragRotate.disable()
-      this.keyboard.disable()
-      this.touchZoomRotate.disableRotation()
+      dragRotate.disable()
+      keyboard.disable()
+      touchZoomRotate.disableRotation()
     }
 
     def focusLocation(lngLat: LngLat): Unit = {
@@ -339,37 +339,37 @@ import cotoami.libs.geomap.pmtiles
         .setLngLat(lngLat)
         .addTo(this)
       marker.addClassName(FocusedLocationMarkerClassName)
-      this.focusedLocationMarker = Some(marker)
+      focusedLocationMarker = Some(marker)
     }
 
     def unfocusLocation(): Unit = {
-      this.focusedLocationMarker.foreach(_.remove())
+      focusedLocationMarker.foreach(_.remove())
     }
 
     def focusMarker(markerId: String): Unit = {
       unfocusMarker()
       markers.get(markerId).foreach { marker =>
         marker.addClassName(FocusedMarkerClassName)
-        this.focusedMarkerId = Some(markerId)
+        focusedMarkerId = Some(markerId)
       }
     }
 
     def unfocusMarker(): Unit = {
-      this.focusedMarkerId.foreach(
+      focusedMarkerId.foreach(
         markers.get(_).foreach(_.removeClassName(FocusedMarkerClassName))
       )
-      this.focusedMarkerId = None
+      focusedMarkerId = None
     }
 
     def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {
       val defMap = markerDefs.map(d => d.id -> d).toMap
 
       // Add
-      val toAdd = defMap.keySet.diff(this.markers.keySet)
+      val toAdd = defMap.keySet.diff(markers.keySet)
       toAdd.flatMap(defMap.get).foreach(putMarker)
 
       // Remove
-      val toRemove = this.markers.keySet.diff(defMap.keySet)
+      val toRemove = markers.keySet.diff(defMap.keySet)
       toRemove.foreach(removeMarker)
     }
 
@@ -391,7 +391,7 @@ import cotoami.libs.geomap.pmtiles
         "click",
         (e: dom.MouseEvent) => {
           e.stopPropagation()
-          this.onMarkerClick.foreach(_(markerDef.id))
+          onMarkerClick.foreach(_(markerDef.id))
         }
       )
 
@@ -417,16 +417,16 @@ import cotoami.libs.geomap.pmtiles
         case None => ()
       }
 
-      this.markers.put(markerDef.id, marker)
+      markers.put(markerDef.id, marker)
     }
 
     private def clearMarkers(): Unit = {
-      this.markers.values.foreach(_.remove())
-      this.markers.clear()
+      markers.values.foreach(_.remove())
+      markers.clear()
     }
 
     private def removeMarker(id: String): Unit =
-      this.markers.remove(id).foreach(_.remove())
+      markers.remove(id).foreach(_.remove())
   }
 
   case class MarkerDef(
