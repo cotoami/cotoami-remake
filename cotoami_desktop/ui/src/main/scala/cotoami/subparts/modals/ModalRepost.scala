@@ -31,10 +31,9 @@ object ModalRepost {
         // You can always repost a coto to the operating node.
         domain.nodes.operatingId,
         // You can repost a coto to the same node in which the coto has posted
-        // only if the node is one of the parents, otherwise you don't have
-        // a permission to post.
+        // only if you have a permission to post to the node.
         coto(domain.cotos).map(_.nodeId).flatMap(nodeId =>
-          Option.when(domain.nodes.isParent(nodeId))(nodeId)
+          Option.when(domain.nodes.canPostTo(nodeId))(nodeId)
         )
       ).flatten
   }
