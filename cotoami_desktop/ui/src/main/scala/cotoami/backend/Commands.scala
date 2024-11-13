@@ -122,7 +122,10 @@ object Commands {
       targetNodes: Option[js.Array[Id[Node]]]
   ) =
     jso(CotonomasByPrefix =
-      jso(prefix = prefix, target_nodes = targetNodes.getOrElse((null)))
+      jso(
+        prefix = prefix,
+        target_nodes = targetNodes.map(_.map(_.uuid)).getOrElse((null))
+      )
     )
 
   def SubCotonomas(id: Id[Cotonoma], pageIndex: Double) =

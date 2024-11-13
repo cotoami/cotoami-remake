@@ -10,6 +10,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repositories.{Cotos, Domain}
+import cotoami.backend.{CotonomaBackend, ErrorJson}
 import cotoami.subparts.{Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
@@ -18,8 +19,9 @@ object ModalRepost {
   case class Model(
       cotoId: Id[Coto],
       cotonomaName: String = "",
-      options: Seq[Select.SelectOption] = Seq.empty,
-      optionsLoading: Boolean = false
+      options: Seq[Destination] = Seq.empty,
+      optionsLoading: Boolean = false,
+      error: Option[String] = None
   ) {
     def coto(cotos: Cotos): Option[Coto] = cotos.get(cotoId)
 
@@ -52,12 +54,53 @@ object ModalRepost {
 
   object Msg {
     case class CotonomaNameInput(name: String) extends Msg
+    case class CotonomaOptionsFetched(
+        query: String,
+        result: Either[ErrorJson, js.Array[Cotonoma]]
+    ) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.CotonomaNameInput(name) =>
-        (model.copy(cotonomaName = name), Cmd.none)
+        (
+          model.copy(cotonomaName = name),
+          CotonomaBackend.fetchByPrefix(
+            name,
+            Some(model.targetNodes(context.domain))
+          ).map(Msg.CotonomaOptionsFetched(name, _).into)
+        )
+
+      case Msg.CotonomaOptionsFetched(query, Right(cotonomas)) => {
+        val newCotonoma =
+          if (!cotonomas.exists(_.name == query))
+            Seq(new Destination(query, None))
+          else
+            Seq.empty
+        val prefixMatches =
+          cotonomas.map(cotonoma =>
+            new Destination(cotonoma.name, Some(cotonoma))
+          ).toSeq
+        (
+          model.copy(
+            options = newCotonoma ++ prefixMatches,
+            optionsLoading = false
+          ),
+          Cmd.none
+        )
+      }
+
+      case Msg.CotonomaOptionsFetched(query, Left(e)) =>
+        (
+          model.copy(
+            error = Some(e.default_message),
+            options = Seq.empty,
+            optionsLoading = false
+          ),
+          Cmd.none
+        )
     }
 
   def apply(model: Model)(implicit
@@ -66,7 +109,8 @@ object ModalRepost {
   ): ReactElement =
     Modal.view(
       dialogClasses = "repost",
-      closeButton = Some((classOf[Modal.Repost], dispatch))
+      closeButton = Some((classOf[Modal.Repost], dispatch)),
+      error = model.error
     )(
       "Repost"
     )(
