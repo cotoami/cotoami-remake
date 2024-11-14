@@ -118,7 +118,7 @@ object ModalRepost {
         Select(
           className = "cotonoma-select",
           options = model.options,
-          placeholder = Some("Cotonoma name"),
+          placeholder = Some("Repost to..."),
           inputValue = model.cotonomaName,
           onInputChange = Some(input => dispatch(Msg.CotonomaNameInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
