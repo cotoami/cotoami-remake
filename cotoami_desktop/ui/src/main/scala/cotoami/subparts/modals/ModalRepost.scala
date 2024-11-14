@@ -75,7 +75,7 @@ object ModalRepost {
 
       case Msg.CotonomaOptionsFetched(query, Right(cotonomas)) => {
         val newCotonoma =
-          if (!cotonomas.exists(_.name == query))
+          if (!query.isBlank && !cotonomas.exists(_.name == query))
             Seq(new Destination(query, None))
           else
             Seq.empty
