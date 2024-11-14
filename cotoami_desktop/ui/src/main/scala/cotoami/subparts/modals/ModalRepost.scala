@@ -18,7 +18,7 @@ object ModalRepost {
 
   case class Model(
       cotoId: Id[Coto],
-      cotonomaName: String = "",
+      query: String = "",
       options: Seq[Destination] = Seq.empty,
       optionsLoading: Boolean = false,
       error: Option[String] = None
@@ -53,7 +53,7 @@ object ModalRepost {
   }
 
   object Msg {
-    case class CotonomaNameInput(name: String) extends Msg
+    case class CotonomaQueryInput(query: String) extends Msg
     case class CotonomaOptionsFetched(
         query: String,
         result: Either[ErrorJson, js.Array[Cotonoma]]
@@ -64,16 +64,16 @@ object ModalRepost {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.CotonomaNameInput(name) =>
-        if (name.isBlank())
-          (model.copy(cotonomaName = name, options = Seq.empty), Cmd.none)
+      case Msg.CotonomaQueryInput(query) =>
+        if (query.isBlank())
+          (model.copy(query = query, options = Seq.empty), Cmd.none)
         else
           (
-            model.copy(cotonomaName = name),
+            model.copy(query = query),
             CotonomaBackend.fetchByPrefix(
-              name,
+              query,
               Some(model.targetNodes(context.domain))
-            ).map(Msg.CotonomaOptionsFetched(name, _).into)
+            ).map(Msg.CotonomaOptionsFetched(query, _).into)
           )
 
       case Msg.CotonomaOptionsFetched(query, Right(cotonomas)) => {
@@ -122,8 +122,9 @@ object ModalRepost {
           className = "cotonoma-select",
           options = model.options,
           placeholder = Some("Repost to..."),
-          inputValue = model.cotonomaName,
-          onInputChange = Some(input => dispatch(Msg.CotonomaNameInput(input))),
+          inputValue = model.query,
+          onInputChange =
+            Some(input => dispatch(Msg.CotonomaQueryInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
           formatOptionLabel = Some(divSelectOption(context.domain.nodes, _)),
           isLoading = model.optionsLoading,
