@@ -17,7 +17,8 @@ import slinky.core.facade.ReactElement
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
-      isClearable: Boolean = false
+      isClearable: Boolean = false,
+      autoFocus: Boolean = false
   )
 
   trait SelectOption extends js.Object {

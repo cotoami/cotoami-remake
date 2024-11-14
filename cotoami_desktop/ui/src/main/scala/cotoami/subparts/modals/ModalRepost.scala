@@ -127,7 +127,8 @@ object ModalRepost {
           noOptionsMessage = Some(_ => NoOptionsMessage),
           formatOptionLabel = Some(divSelectOption(context.domain.nodes, _)),
           isLoading = model.optionsLoading,
-          isClearable = true
+          isClearable = true,
+          autoFocus = true
         ),
         button(
           className := "repost",
