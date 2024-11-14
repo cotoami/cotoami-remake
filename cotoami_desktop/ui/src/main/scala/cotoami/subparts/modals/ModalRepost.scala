@@ -55,7 +55,7 @@ object ModalRepost {
 
   object Msg {
     case class CotonomaQueryInput(query: String) extends Msg
-    case class CotonomaOptionsFetched(
+    case class CotonomasFetched(
         query: String,
         result: Either[ErrorJson, js.Array[Cotonoma]]
     ) extends Msg
@@ -74,10 +74,10 @@ object ModalRepost {
             CotonomaBackend.fetchByPrefix(
               query,
               Some(model.targetNodes(context.domain))
-            ).map(Msg.CotonomaOptionsFetched(query, _).into)
+            ).map(Msg.CotonomasFetched(query, _).into)
           )
 
-      case Msg.CotonomaOptionsFetched(query, Right(cotonomas)) => {
+      case Msg.CotonomasFetched(query, Right(cotonomas)) => {
         val newCotonoma =
           if (!cotonomas.exists(_.name == query))
             Seq(new Destination(query, None))
@@ -96,7 +96,7 @@ object ModalRepost {
         )
       }
 
-      case Msg.CotonomaOptionsFetched(query, Left(e)) =>
+      case Msg.CotonomasFetched(query, Left(e)) =>
         (
           model.copy(
             error = Some(e.default_message),
