@@ -126,7 +126,8 @@ object ModalRepost {
           onInputChange = Some(input => dispatch(Msg.CotonomaNameInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
           formatOptionLabel = Some(divSelectOption(context.domain.nodes, _)),
-          isLoading = model.optionsLoading
+          isLoading = model.optionsLoading,
+          isClearable = true
         ),
         button(
           className := "repost",

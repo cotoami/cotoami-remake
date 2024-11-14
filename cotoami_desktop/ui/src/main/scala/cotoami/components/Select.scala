@@ -16,7 +16,8 @@ import slinky.core.facade.ReactElement
       onInputChange: Option[String => Unit] = None,
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
-      noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None
+      noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
+      isClearable: Boolean = false
   )
 
   trait SelectOption extends js.Object {
