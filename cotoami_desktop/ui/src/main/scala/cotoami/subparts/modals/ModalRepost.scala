@@ -7,6 +7,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
+import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repositories.{Cotos, Domain, Nodes}
@@ -129,7 +130,11 @@ object ModalRepost {
           formatOptionLabel = Some(divSelectOption(context.domain.nodes, _)),
           isLoading = model.optionsLoading,
           isClearable = true,
-          autoFocus = true
+          autoFocus = true,
+          onChange = Some(option => {
+            val opt = Nullable.toOption(option)
+            println(s"opt: ${opt}")
+          })
         ),
         button(
           className := "repost",

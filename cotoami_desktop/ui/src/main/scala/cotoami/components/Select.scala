@@ -7,6 +7,8 @@ import slinky.core._
 import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 
+import cotoami.utils.facade.Nullable
+
 @react object Select extends ExternalComponent {
   case class Props(
       className: String,
@@ -18,7 +20,8 @@ import slinky.core.facade.ReactElement
       isLoading: Boolean = false,
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
       isClearable: Boolean = false,
-      autoFocus: Boolean = false
+      autoFocus: Boolean = false,
+      onChange: Option[Nullable[SelectOption] => Unit] = None
   )
 
   trait SelectOption extends js.Object {
