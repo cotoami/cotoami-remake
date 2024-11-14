@@ -9,9 +9,9 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repositories.{Cotos, Domain}
+import cotoami.repositories.{Cotos, Domain, Nodes}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
-import cotoami.subparts.{Modal, ViewCoto}
+import cotoami.subparts.{imgNode, Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
 object ModalRepost {
@@ -41,8 +41,8 @@ object ModalRepost {
   }
 
   class Destination(
-      name: String,
-      cotonoma: Option[Cotonoma] = None
+      val name: String,
+      val cotonoma: Option[Cotonoma] = None
   ) extends Select.SelectOption {
     val value: String = cotonoma.map(_.id.uuid).getOrElse("")
     val label: String = name
@@ -122,7 +122,7 @@ object ModalRepost {
           inputValue = model.cotonomaName,
           onInputChange = Some(input => dispatch(Msg.CotonomaNameInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
-          formatOptionLabel = Some(divSelectOption),
+          formatOptionLabel = Some(divSelectOption(context.domain.nodes, _)),
           isLoading = model.optionsLoading
         ),
         button(
@@ -136,11 +136,25 @@ object ModalRepost {
 
   private val NoOptionsMessage = div()("Type cotonoma name...")
 
-  private def divSelectOption(option: Select.SelectOption): ReactElement =
-    div()(
-      option.label,
-      " hogehoge"
-    )
+  private def divSelectOption(
+      nodes: Nodes,
+      option: Select.SelectOption
+  ): ReactElement = {
+    val dest = option.asInstanceOf[Destination]
+    dest.cotonoma match {
+      case Some(cotonoma) =>
+        div(className := "existing-cotonoma")(
+          nodes.get(cotonoma.nodeId).map(imgNode(_)),
+          span(className := "cotonoma-name")(cotonoma.name)
+        )
+      case None =>
+        div(className := "new-cotonoma")(
+          span(className := "create")("Create:"),
+          nodes.operating.map(imgNode(_)),
+          span(className := "cotonoma-name")(dest.name)
+        )
+    }
+  }
 
   private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
     article(className := "coto")(

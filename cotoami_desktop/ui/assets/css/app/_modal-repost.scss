@@ -19,6 +19,23 @@ dialog.repost {
           box-shadow: none;
         }
       }
+
+      img.node-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        vertical-align: top;
+        margin-right: 5px;
+      }
+
+      span.cotonoma-name {
+        font-weight: 600;
+      }
+
+      span.create {
+        margin-right: 10px;
+        opacity: 0.7;
+      }
     }
 
     button.repost {
