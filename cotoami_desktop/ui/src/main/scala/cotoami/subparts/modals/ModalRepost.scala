@@ -65,17 +65,20 @@ object ModalRepost {
   ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.CotonomaNameInput(name) =>
-        (
-          model.copy(cotonomaName = name),
-          CotonomaBackend.fetchByPrefix(
-            name,
-            Some(model.targetNodes(context.domain))
-          ).map(Msg.CotonomaOptionsFetched(name, _).into)
-        )
+        if (name.isBlank())
+          (model.copy(cotonomaName = name, options = Seq.empty), Cmd.none)
+        else
+          (
+            model.copy(cotonomaName = name),
+            CotonomaBackend.fetchByPrefix(
+              name,
+              Some(model.targetNodes(context.domain))
+            ).map(Msg.CotonomaOptionsFetched(name, _).into)
+          )
 
       case Msg.CotonomaOptionsFetched(query, Right(cotonomas)) => {
         val newCotonoma =
-          if (!query.isBlank && !cotonomas.exists(_.name == query))
+          if (!cotonomas.exists(_.name == query))
             Seq(new Destination(query, None))
           else
             Seq.empty
