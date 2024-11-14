@@ -23,6 +23,7 @@ object ModalRepost {
       options: Seq[Destination] = Seq.empty,
       optionsLoading: Boolean = false,
       dest: Option[Destination] = None,
+      reposting: Boolean = false,
       error: Option[String] = None
   ) {
     def coto(cotos: Cotos): Option[Coto] = cotos.get(cotoId)
@@ -40,6 +41,8 @@ object ModalRepost {
           Option.when(domain.nodes.canPostTo(nodeId))(nodeId)
         )
       ).flatten
+
+    def readyToRepost: Boolean = dest.isDefined
   }
 
   class Destination(
@@ -137,14 +140,18 @@ object ModalRepost {
           isClearable = true,
           autoFocus = true,
           onChange = Some(option => {
-            val opt = Nullable.toOption(option)
-            println(s"opt: ${opt}")
+            dispatch(
+              Msg.DestinationSelected(
+                Nullable.toOption(option).map(_.asInstanceOf[Destination])
+              )
+            )
           })
         ),
         button(
           className := "repost",
           `type` := "button",
-          disabled := true
+          disabled := !model.readyToRepost,
+          aria - "busy" := model.reposting.toString()
         )(materialSymbol("repeat"))
       ),
       model.originalCoto(context.domain.cotos).map(articleCoto)
