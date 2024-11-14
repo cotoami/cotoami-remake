@@ -22,6 +22,7 @@ object ModalRepost {
       query: String = "",
       options: Seq[Destination] = Seq.empty,
       optionsLoading: Boolean = false,
+      dest: Option[Destination] = None,
       error: Option[String] = None
   ) {
     def coto(cotos: Cotos): Option[Coto] = cotos.get(cotoId)
@@ -59,6 +60,7 @@ object ModalRepost {
         query: String,
         result: Either[ErrorJson, js.Array[Cotonoma]]
     ) extends Msg
+    case class DestinationSelected(dest: Option[Destination]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -105,6 +107,9 @@ object ModalRepost {
           ),
           Cmd.none
         )
+
+      case Msg.DestinationSelected(dest) =>
+        (model.copy(dest = dest), Cmd.none)
     }
 
   def apply(model: Model)(implicit
