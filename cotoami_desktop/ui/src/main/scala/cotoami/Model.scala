@@ -8,6 +8,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.utils.Log
+import cotoami.utils.facade.Nullable
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.models._

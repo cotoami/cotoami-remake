@@ -2,6 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 
+import cotoami.utils.facade.Nullable
 import cotoami.models.{Id, Link}
 
 @js.native

@@ -1,7 +1,9 @@
 package cotoami.backend
 
 import scala.scalajs.js
+
 import fui.Cmd
+import cotoami.utils.facade.Nullable
 import cotoami.libs.tauri
 
 @js.native

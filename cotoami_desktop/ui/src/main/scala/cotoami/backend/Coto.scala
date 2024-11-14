@@ -3,6 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.{Browser, Cmd}
+import cotoami.utils.facade.Nullable
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id}
 
 @js.native

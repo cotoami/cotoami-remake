@@ -2,6 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 import cotoami.utils.Log
+import cotoami.utils.facade.Nullable
 
 @js.native
 trait LogEventJson extends js.Object {

@@ -3,6 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import fui.Cmd
+import cotoami.utils.facade.Nullable
 import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page}
 
 @js.native
