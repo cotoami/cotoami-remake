@@ -49,6 +49,40 @@ dialog.repost {
     }
   }
 
+  section.already-posted-in {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 1rem 1rem;
+    border: 1px dotted var(--pane-border-color);
+
+    h2 {
+      font-size: 1rem;
+      font-weight: inherit;
+      border-style: none;
+      opacity: 0.5;
+    }
+
+    ul {
+      padding-left: 1rem;
+
+      li {
+        margin-bottom: 8px;
+
+        span.cotonoma-name {
+          font-weight: 600;
+        }
+      }
+    }
+
+    img.node-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      vertical-align: top;
+      margin-right: 5px;
+    }
+  }
+
   article.coto {
     padding: 1rem 1rem;
 
@@ -57,7 +91,7 @@ dialog.repost {
     }
 
     div.body {
-      height: 20vh;
+      max-height: 20vh;
 
       // SimpleBar div
       >div {

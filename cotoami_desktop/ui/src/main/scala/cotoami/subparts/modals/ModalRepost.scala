@@ -3,7 +3,7 @@ package cotoami.subparts.modals
 import scala.util.chaining._
 import scala.scalajs.js
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
@@ -154,7 +154,12 @@ object ModalRepost {
           aria - "busy" := model.reposting.toString()
         )(materialSymbol("repeat"))
       ),
-      model.originalCoto(context.domain.cotos).map(articleCoto)
+      model.originalCoto(context.domain.cotos).map(coto =>
+        Fragment(
+          sectionAlreadyPostedIn(coto),
+          articleCoto(coto)
+        )
+      )
     )
 
   private val NoOptionsMessage = div()("Type cotonoma name...")
@@ -178,6 +183,21 @@ object ModalRepost {
         )
     }
   }
+
+  private def sectionAlreadyPostedIn(coto: Coto)(implicit
+      context: Context
+  ): ReactElement =
+    section(className := "already-posted-in")(
+      h2()("Already posted in:"),
+      ul()(
+        context.domain.cotonomas.posted(coto).map(cotonoma =>
+          li()(
+            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            span(className := "cotonoma-name")(cotonoma.name)
+          )
+        ): _*
+      )
+    )
 
   private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
     article(className := "coto")(
