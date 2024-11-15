@@ -138,9 +138,6 @@ case class Cotonomas(
         Cmd.none
     )
 
-  def posted(coto: Coto): Seq[Cotonoma] = {
-    val cotonomaIds: Seq[Id[Cotonoma]] =
-      Seq(coto.postedInId).flatten ++ coto.repostedInIds.getOrElse(Seq.empty)
-    cotonomaIds.map(get).flatten
-  }
+  def posted(coto: Coto): Seq[Cotonoma] =
+    coto.postedInIds.map(get).flatten
 }
