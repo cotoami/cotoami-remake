@@ -21,7 +21,8 @@ import cotoami.utils.facade.Nullable
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
-      onChange: Option[Nullable[SelectOption] => Unit] = None
+      onChange: Option[Nullable[SelectOption] => Unit] = None,
+      isOptionDisabled: Option[SelectOption => Unit] = None
   )
 
   trait SelectOption extends js.Object {
