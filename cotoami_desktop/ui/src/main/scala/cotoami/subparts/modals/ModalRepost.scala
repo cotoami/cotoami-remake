@@ -20,6 +20,7 @@ object ModalRepost {
   case class Model(
       coto: Coto,
       originalCoto: Coto,
+      alreadyPostedIn: Seq[Cotonoma],
       query: String = "",
       options: Seq[Destination] = Seq.empty,
       optionsLoading: Boolean = false,
@@ -42,8 +43,9 @@ object ModalRepost {
   object Model {
     def apply(coto: Coto, domain: Domain): Option[Model] =
       domain.cotos.getOriginal(coto) match {
-        case Some(originalCoto) => Some(Model(coto, originalCoto))
-        case _                  => None
+        case Some(originalCoto) =>
+          Some(Model(coto, originalCoto, domain.cotonomas.posted(originalCoto)))
+        case _ => None
       }
   }
 
@@ -158,7 +160,7 @@ object ModalRepost {
           aria - "busy" := model.reposting.toString()
         )(materialSymbol("repeat"))
       ),
-      sectionAlreadyPostedIn(model.originalCoto),
+      sectionAlreadyPostedIn(model),
       articleCoto(model.originalCoto)
     )
 
@@ -184,13 +186,13 @@ object ModalRepost {
     }
   }
 
-  private def sectionAlreadyPostedIn(coto: Coto)(implicit
+  private def sectionAlreadyPostedIn(model: Model)(implicit
       context: Context
   ): ReactElement =
     section(className := "already-posted-in")(
       h2()("Already posted in:"),
       ul()(
-        context.domain.cotonomas.posted(coto).map(cotonoma =>
+        model.alreadyPostedIn.map(cotonoma =>
           li()(
             context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             span(className := "cotonoma-name")(cotonoma.name)
