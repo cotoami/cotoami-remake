@@ -11,8 +11,11 @@ case class Cotos(
 ) {
   def get(id: Id[Coto]): Option[Coto] = map.get(id)
 
-  def getOriginal(coto: Coto): Coto =
-    coto.repostOfId.flatMap(get).getOrElse(coto)
+  def getOriginal(coto: Coto): Option[Coto] =
+    coto.repostOfId match {
+      case Some(repostOfId) => get(repostOfId)
+      case None             => Some(coto)
+    }
 
   def contains(id: Id[Coto]): Boolean = map.contains(id)
 
@@ -72,7 +75,7 @@ case class Cotos(
   def focus(id: Id[Coto]): Cotos =
     get(id).map(coto =>
       // It can't focus on a repost, but only on an original coto.
-      copy(focusedId = Some(getOriginal(coto).id))
+      copy(focusedId = getOriginal(coto).map(_.id))
     ).getOrElse(this)
 
   def unfocus: Cotos = copy(focusedId = None)

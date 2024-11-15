@@ -9,6 +9,7 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Node}
+import cotoami.repositories.Domain
 import cotoami.subparts.modals._
 
 sealed trait Modal
@@ -91,7 +92,8 @@ object Modal {
 
   case class Repost(model: ModalRepost.Model) extends Modal
   object Repost {
-    def apply(cotoId: Id[Coto]): Repost = Repost(ModalRepost.Model(cotoId))
+    def apply(coto: Coto, domain: Domain): Option[Repost] =
+      ModalRepost.Model(coto, domain).map(Repost(_))
   }
 
   sealed trait Msg extends Into[AppMsg] {

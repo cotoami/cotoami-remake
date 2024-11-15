@@ -46,7 +46,10 @@ object ToolbarCoto {
         classes = "repost-coto",
         onClick = e => {
           e.stopPropagation()
-          dispatch(Modal.Msg.OpenModal(Modal.Repost(coto.id)))
+          Modal.Repost(coto, context.domain) match {
+            case Some(modal) => dispatch(Modal.Msg.OpenModal(modal))
+            case None        => () // should be unreachable
+          }
         }
       ),
       Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {

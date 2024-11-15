@@ -2,7 +2,7 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
@@ -293,12 +293,16 @@ object SectionTimeline {
       key := coto.id.uuid
     )(
       repostHeader(coto),
-      ViewCoto.ulParents(
-        context.domain.parentsOf(originalCoto.id),
-        AppMsg.FocusCoto(_)
-      ),
-      articleCoto(originalCoto),
-      ViewCoto.divLinksTraversal(originalCoto, "bottom")
+      originalCoto.map(coto =>
+        Fragment(
+          ViewCoto.ulParents(
+            context.domain.parentsOf(coto.id),
+            AppMsg.FocusCoto(_)
+          ),
+          articleCoto(coto),
+          ViewCoto.divLinksTraversal(coto, "bottom")
+        )
+      )
     )
   }
 

@@ -3,14 +3,14 @@ package cotoami.subparts.modals
 import scala.util.chaining._
 import scala.scalajs.js
 
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
 import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repositories.{Cotos, Domain, Nodes}
+import cotoami.repositories.{Domain, Nodes}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
@@ -18,7 +18,8 @@ import cotoami.components.{materialSymbol, ScrollArea, Select}
 object ModalRepost {
 
   case class Model(
-      cotoId: Id[Coto],
+      coto: Coto,
+      originalCoto: Coto,
       query: String = "",
       options: Seq[Destination] = Seq.empty,
       optionsLoading: Boolean = false,
@@ -26,23 +27,24 @@ object ModalRepost {
       reposting: Boolean = false,
       error: Option[String] = None
   ) {
-    def coto(cotos: Cotos): Option[Coto] = cotos.get(cotoId)
-
-    def originalCoto(cotos: Cotos): Option[Coto] =
-      coto(cotos).map(cotos.getOriginal)
-
     def targetNodes(domain: Domain): js.Array[Id[Node]] =
       js.Array(
         // You can always repost a coto to the operating node.
         domain.nodes.operatingId,
         // You can repost a coto to the same node in which the coto has posted
         // only if you have a permission to post to the node.
-        coto(domain.cotos).map(_.nodeId).flatMap(nodeId =>
-          Option.when(domain.nodes.canPostTo(nodeId))(nodeId)
-        )
+        Option.when(domain.nodes.canPostTo(coto.nodeId))(coto.nodeId)
       ).flatten
 
     def readyToRepost: Boolean = dest.isDefined
+  }
+
+  object Model {
+    def apply(coto: Coto, domain: Domain): Option[Model] =
+      domain.cotos.getOriginal(coto) match {
+        case Some(originalCoto) => Some(Model(coto, originalCoto))
+        case _                  => None
+      }
   }
 
   class Destination(
@@ -156,12 +158,8 @@ object ModalRepost {
           aria - "busy" := model.reposting.toString()
         )(materialSymbol("repeat"))
       ),
-      model.originalCoto(context.domain.cotos).map(coto =>
-        Fragment(
-          sectionAlreadyPostedIn(coto),
-          articleCoto(coto)
-        )
-      )
+      sectionAlreadyPostedIn(model.originalCoto),
+      articleCoto(model.originalCoto)
     )
 
   private val NoOptionsMessage = div()("Type cotonoma name...")
