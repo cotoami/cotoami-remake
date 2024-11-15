@@ -47,10 +47,12 @@ object ModalRepost {
 
   class Destination(
       val name: String,
-      val cotonoma: Option[Cotonoma] = None
+      val cotonoma: Option[Cotonoma] = None,
+      val disabled: Boolean = false
   ) extends Select.SelectOption {
     val value: String = cotonoma.map(_.id.uuid).getOrElse("")
     val label: String = name
+    val isDisabled: Boolean = disabled
   }
 
   sealed trait Msg extends Into[AppMsg] {

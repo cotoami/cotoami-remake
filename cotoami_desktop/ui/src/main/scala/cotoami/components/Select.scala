@@ -28,6 +28,7 @@ import cotoami.utils.facade.Nullable
   trait SelectOption extends js.Object {
     val value: String
     val label: String
+    val isDisabled: Boolean
   }
 
   @js.native
