@@ -187,7 +187,7 @@ object ModalRepost {
         )
       case None =>
         div(className := "new-cotonoma")(
-          span(className := "create")("Create:"),
+          span(className := "description")("New cotonoma:"),
           nodes.operating.map(imgNode(_)),
           span(className := "cotonoma-name")(dest.name)
         )
