@@ -18,7 +18,7 @@ fn repost() -> Result<()> {
         ds.post_cotonoma(&CotonomaInput::new("Package manager"), &root, &opr)?;
 
     // When
-    let (repost1, changelog) = ds.repost(&coto.uuid, &cotonoma1, &opr)?;
+    let ((repost1, original), changelog) = ds.repost(&coto.uuid, &cotonoma1, &opr)?;
 
     assert_that!(
         repost1,
@@ -48,8 +48,8 @@ fn repost() -> Result<()> {
     );
 
     assert_that!(
-        ds.coto(&coto.uuid)?,
-        some(pat!(Coto {
+        original,
+        pat!(Coto {
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&root.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -59,11 +59,11 @@ fn repost() -> Result<()> {
             repost_of_id: none(),
             reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma1.uuid)]))),
             updated_at: eq(&repost1.created_at)
-        }))
+        })
     );
 
     // When: repost a repost
-    let (repost2, changelog) = ds.repost(&repost1.uuid, &cotonoma2, &opr)?;
+    let ((repost2, original), changelog) = ds.repost(&repost1.uuid, &cotonoma2, &opr)?;
 
     assert_that!(
         repost2,
@@ -94,8 +94,8 @@ fn repost() -> Result<()> {
     );
 
     assert_that!(
-        ds.coto(&coto.uuid)?,
-        some(pat!(Coto {
+        original,
+        pat!(Coto {
             content: some(eq("Cargo")),
             repost_of_id: none(),
             reposted_in_ids: some(pat!(Ids(elements_are![
@@ -103,7 +103,7 @@ fn repost() -> Result<()> {
                 eq(&cotonoma2.uuid)
             ]))),
             updated_at: eq(&repost2.created_at)
-        }))
+        })
     );
 
     Ok(())
