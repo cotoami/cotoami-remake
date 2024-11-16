@@ -89,6 +89,9 @@ object ModalRepost {
           )
 
       case Msg.CotonomasFetched(query, Right(cotonomas)) => {
+        // If there are no cotonomas whose name is the same as the `query`,
+        // add an option to create a new cotonoma with such a name and
+        // repost the coto to it.
         val newCotonoma =
           if (!cotonomas.exists(_.name == query))
             Seq(new Destination(query, None))
@@ -96,7 +99,12 @@ object ModalRepost {
             Seq.empty
         val prefixMatches =
           cotonomas.map(cotonoma =>
-            new Destination(cotonoma.name, Some(cotonoma))
+            new Destination(
+              cotonoma.name,
+              Some(cotonoma),
+              // Disable an option in which the coto has been already posted
+              model.alreadyPostedIn.exists(_.id == cotonoma.id)
+            )
           ).toSeq
         (
           model.copy(
