@@ -54,7 +54,7 @@ object CotoJson {
   def repost(
       id: Id[Coto],
       dest: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, CotoJson]] =
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotoJson, CotoJson]]] =
     Commands.send(Commands.Repost(id, dest))
 }
 
@@ -113,6 +113,10 @@ object CotoBackend {
   def repost(
       id: Id[Coto],
       dest: Id[Cotonoma]
-  ): Cmd.One[Either[ErrorJson, Coto]] =
-    CotoJson.repost(id, dest).map(_.map(CotoBackend.toModel(_)))
+  ): Cmd.One[Either[ErrorJson, (Coto, Coto)]] =
+    CotoJson.repost(id, dest).map(
+      _.map(pair =>
+        (CotoBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
+      )
+    )
 }
