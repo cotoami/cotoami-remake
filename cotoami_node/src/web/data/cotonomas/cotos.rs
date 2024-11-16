@@ -74,11 +74,11 @@ async fn repost(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Json(coto_id): Json<Id<Coto>>,
-) -> Result<(StatusCode, Content<Coto>), ServiceError> {
+) -> Result<(StatusCode, Content<(Coto, Coto)>), ServiceError> {
     state
         .repost(coto_id, cotonoma_id, Arc::new(operator))
         .await
-        .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
+        .map(|repost| (StatusCode::CREATED, Content(repost, accept)))
 }
 
 /////////////////////////////////////////////////////////////////////////////

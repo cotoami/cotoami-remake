@@ -136,7 +136,7 @@ impl NodeState {
         id: Id<Coto>,
         dest: Id<Cotonoma>,
         operator: Arc<Operator>,
-    ) -> Result<Coto, ServiceError> {
+    ) -> Result<(Coto, Coto), ServiceError> {
         self.change_in_cotonoma(
             id,
             dest,
