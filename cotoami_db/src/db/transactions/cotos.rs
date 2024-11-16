@@ -169,12 +169,13 @@ impl<'a> DatabaseSession<'a> {
         id: &Id<Coto>,
         dest: &Cotonoma,
         operator: &Operator,
-    ) -> Result<(Coto, ChangelogEntry)> {
+    ) -> Result<((Coto, Coto), ChangelogEntry)> {
         self.globals.ensure_local(dest)?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         let reposted_by = operator.node_id();
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let repost = coto_ops::repost(id, &dest.uuid, &reposted_by, None).run(ctx)?;
+            let (repost, original) =
+                coto_ops::repost(id, &dest.uuid, &reposted_by, None).run(ctx)?;
             let change = Change::Repost {
                 coto_id: *id,
                 dest: dest.uuid,
@@ -182,7 +183,7 @@ impl<'a> DatabaseSession<'a> {
                 reposted_at: repost.created_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-            Ok((repost, changelog))
+            Ok(((repost, original), changelog))
         })
     }
 }

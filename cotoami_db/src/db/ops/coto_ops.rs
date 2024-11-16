@@ -165,7 +165,7 @@ pub(crate) fn repost<'a>(
     dest: &'a Id<Cotonoma>,
     reposted_by: &'a Id<Node>,
     reposted_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, Coto> + 'a {
+) -> impl Operation<WritableConn, (Coto, Coto)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto = try_get(id).run(ctx)??;
         let original = get_original(coto).run(ctx)?;
@@ -181,12 +181,14 @@ pub(crate) fn repost<'a>(
         let mut update_original = original.to_update();
         update_original.repost_in(dest.uuid, &original);
         update_original.updated_at = reposted_at;
-        update(&update_original).run(ctx)?;
+        let original = update(&update_original).run(ctx)?;
 
         // Insert a repost
         let mut new_repost = NewCoto::new_repost(&original, &dest, reposted_by);
         new_repost.set_timestamp(reposted_at);
-        insert(&new_repost).run(ctx)
+        let repost = insert(&new_repost).run(ctx)?;
+
+        Ok((repost, original))
     })
 }
 
