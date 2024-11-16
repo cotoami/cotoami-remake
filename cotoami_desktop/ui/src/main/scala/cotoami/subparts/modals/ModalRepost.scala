@@ -168,8 +168,8 @@ object ModalRepost {
           aria - "busy" := model.reposting.toString()
         )(materialSymbol("repeat"))
       ),
-      sectionAlreadyPostedIn(model),
-      articleCoto(model.originalCoto)
+      articleCoto(model.originalCoto),
+      sectionAlreadyPostedIn(model)
     )
 
   private val NoOptionsMessage = div()("Type cotonoma name...")

@@ -49,9 +49,37 @@ dialog.repost {
     }
   }
 
+  article.coto {
+    margin-top: 1.5rem;
+    padding: 1rem 1rem;
+
+    address.author {
+      margin-bottom: 1rem;
+    }
+
+    div.body {
+      max-height: 20vh;
+
+      // SimpleBar div
+      >div {
+        width: 100%;
+        height: 100%;
+      }
+
+      section.text-content,
+      section.cotonoma-content,
+      section.media-content {
+        padding: 0;
+      }
+    }
+
+    &:hover {
+      background-color: inherit;
+    }
+  }
+
   section.already-posted-in {
     margin-top: 1.5rem;
-    margin-bottom: 1rem;
     padding: 1rem 1rem;
     border: 1px dotted var(--pane-border-color);
 
@@ -80,34 +108,6 @@ dialog.repost {
       border-radius: 4px;
       vertical-align: top;
       margin-right: 5px;
-    }
-  }
-
-  article.coto {
-    padding: 1rem 1rem;
-
-    address.author {
-      margin-bottom: 1rem;
-    }
-
-    div.body {
-      max-height: 20vh;
-
-      // SimpleBar div
-      >div {
-        width: 100%;
-        height: 100%;
-      }
-
-      section.text-content,
-      section.cotonoma-content,
-      section.media-content {
-        padding: 0;
-      }
-    }
-
-    &:hover {
-      background-color: inherit;
     }
   }
 }
