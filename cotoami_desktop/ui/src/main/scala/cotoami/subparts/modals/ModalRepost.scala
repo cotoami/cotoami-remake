@@ -11,7 +11,7 @@ import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repositories.{Domain, Nodes}
-import cotoami.backend.{CotonomaBackend, ErrorJson}
+import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
@@ -70,6 +70,7 @@ object ModalRepost {
         result: Either[ErrorJson, js.Array[Cotonoma]]
     ) extends Msg
     case class DestinationSelected(dest: Option[Destination]) extends Msg
+    case object Repost extends Msg
     case class Reposted(result: Either[ErrorJson, (Coto, Coto)]) extends Msg
   }
 
@@ -128,6 +129,23 @@ object ModalRepost {
 
       case Msg.DestinationSelected(dest) =>
         (model.copy(dest = dest), Cmd.none)
+
+      case Msg.Repost =>
+        (
+          model.copy(reposting = true),
+          model.dest match {
+            case Some(dest) =>
+              (dest.name, dest.cotonoma) match {
+                case (name, Some(cotonoma)) =>
+                  CotoBackend.repost(model.originalCoto.id, cotonoma.id).map(
+                    Msg.Reposted(_).into
+                  )
+                case (name, None) => Cmd.none // TODO
+              }
+            case None =>
+              Cmd.none
+          }
+        )
 
       case Msg.Reposted(Right((repost, original))) =>
         (
@@ -189,7 +207,8 @@ object ModalRepost {
           className := "repost",
           `type` := "button",
           disabled := !model.readyToRepost,
-          aria - "busy" := model.reposting.toString()
+          aria - "busy" := model.reposting.toString(),
+          onClick := (_ => dispatch(Msg.Repost))
         )(materialSymbol("repeat"))
       ),
       articleCoto(model.originalCoto),
