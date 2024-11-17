@@ -15,6 +15,7 @@ import cotoami.utils.facade.Nullable
       options: Seq[SelectOption],
       placeholder: Option[String] = None,
       inputValue: String = "",
+      value: SelectOption = null,
       onInputChange: Option[String => Unit] = None,
       formatOptionLabel: Option[SelectOption => ReactElement] = None,
       isLoading: Boolean = false,
