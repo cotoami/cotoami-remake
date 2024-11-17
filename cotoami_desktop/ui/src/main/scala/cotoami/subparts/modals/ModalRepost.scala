@@ -70,6 +70,7 @@ object ModalRepost {
         result: Either[ErrorJson, js.Array[Cotonoma]]
     ) extends Msg
     case class DestinationSelected(dest: Option[Destination]) extends Msg
+    case class Reposted(result: Either[ErrorJson, (Coto, Coto)]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -127,6 +128,28 @@ object ModalRepost {
 
       case Msg.DestinationSelected(dest) =>
         (model.copy(dest = dest), Cmd.none)
+
+      case Msg.Reposted(Right((repost, original))) =>
+        (
+          model.copy(
+            originalCoto = original,
+            alreadyPostedIn = context.domain.cotonomas.posted(original),
+            reposting = false,
+            query = "",
+            options = Seq.empty,
+            dest = None
+          ),
+          Cmd.none
+        )
+
+      case Msg.Reposted(Left(e)) =>
+        (
+          model.copy(
+            error = Some(e.default_message),
+            reposting = false
+          ),
+          Cmd.none
+        )
     }
 
   def apply(model: Model)(implicit
