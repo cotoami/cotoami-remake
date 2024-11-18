@@ -243,7 +243,7 @@ object ModalRepost {
     section(className := "already-posted-in")(
       h2()("Already posted in:"),
       ul()(
-        model.alreadyPostedIn.map(cotonoma =>
+        model.alreadyPostedIn.reverse.map(cotonoma =>
           li()(
             context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             span(className := "cotonoma-name")(cotonoma.name)
