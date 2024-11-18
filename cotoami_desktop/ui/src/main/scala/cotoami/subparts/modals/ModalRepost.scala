@@ -237,6 +237,18 @@ object ModalRepost {
     }
   }
 
+  private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
+    article(className := "coto")(
+      header()(
+        ViewCoto.addressAuthor(coto, context.domain.nodes)
+      ),
+      div(className := "body")(
+        ScrollArea()(
+          ViewCoto.divContentPreview(coto)
+        )
+      )
+    )
+
   private def sectionAlreadyPostedIn(model: Model)(implicit
       context: Context
   ): ReactElement =
@@ -249,18 +261,6 @@ object ModalRepost {
             span(className := "cotonoma-name")(cotonoma.name)
           )
         ): _*
-      )
-    )
-
-  private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
-    article(className := "coto")(
-      header()(
-        ViewCoto.addressAuthor(coto, context.domain.nodes)
-      ),
-      div(className := "body")(
-        ScrollArea()(
-          ViewCoto.divContentPreview(coto)
-        )
       )
     )
 }
