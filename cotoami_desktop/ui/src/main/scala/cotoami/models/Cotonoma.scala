@@ -16,18 +16,18 @@ case class Cotonoma(
   override def equals(that: Any): Boolean =
     that match {
       case that: Cotonoma =>
-        (this.id, this.updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
+        (id, updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
       case _ => false
     }
 
-  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
-  lazy val updatedAt: Instant = parseUtcIso(this.updatedAtUtcIso)
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
+  lazy val updatedAt: Instant = parseUtcIso(updatedAtUtcIso)
 
   def abbreviateName(length: Int): String =
-    if (this.name.size > length)
-      s"${this.name.substring(0, length)}…"
+    if (name.size > length)
+      s"${name.substring(0, length)}…"
     else
-      this.name
+      name
 }
 
 object Cotonoma {
