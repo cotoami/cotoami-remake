@@ -216,8 +216,14 @@ object Modal {
 
       case Msg.RepostMsg(modalMsg) =>
         stack.get[Repost].map { case Repost(modal) =>
-          ModalRepost.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(Repost(modal)), cmds)
+          ModalRepost.update(modalMsg, modal).pipe {
+            case (modal, cotonomas, cmds) =>
+              (
+                model
+                  .updateModal(Repost(modal))
+                  .modify(_.domain.cotonomas).setTo(cotonomas),
+                cmds
+              )
           }
         }
     }).getOrElse((model, Cmd.none))

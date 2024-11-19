@@ -10,7 +10,7 @@ import fui.Cmd
 import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repositories.{Domain, Nodes}
+import cotoami.repositories.{Cotonomas, Domain, Nodes}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
@@ -76,15 +76,16 @@ object ModalRepost {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Cmd[AppMsg]) =
+  ): (Model, Cotonomas, Cmd[AppMsg]) = {
+    val default = (model, context.domain.cotonomas, Cmd.none)
     msg match {
       case Msg.CotonomaQueryInput(query) =>
         if (query.isBlank())
-          (model.copy(query = query, options = Seq.empty), Cmd.none)
+          default.copy(_1 = model.copy(query = query, options = Seq.empty))
         else
-          (
-            model.copy(query = query),
-            CotonomaBackend.fetchByPrefix(
+          default.copy(
+            _1 = model.copy(query = query),
+            _3 = CotonomaBackend.fetchByPrefix(
               query,
               Some(model.targetNodes(context.domain))
             ).map(Msg.CotonomasFetched(query, _).into)
@@ -108,67 +109,73 @@ object ModalRepost {
               model.alreadyPostedIn.exists(_.id == cotonoma.id)
             )
           ).toSeq
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             options = newCotonoma ++ prefixMatches,
             optionsLoading = false
-          ),
-          Cmd.none
+          )
         )
       }
 
       case Msg.CotonomasFetched(query, Left(e)) =>
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             error = Some(e.default_message),
             options = Seq.empty,
             optionsLoading = false
-          ),
-          Cmd.none
+          )
         )
 
       case Msg.DestinationSelected(dest) =>
-        (model.copy(dest = dest), Cmd.none)
+        default.copy(_1 = model.copy(dest = dest))
 
       case Msg.Repost =>
-        (
-          model.copy(reposting = true),
-          model.dest match {
-            case Some(dest) =>
-              (dest.name, dest.cotonoma) match {
-                case (name, Some(cotonoma)) =>
-                  CotoBackend.repost(model.originalCoto.id, cotonoma.id).map(
-                    Msg.Reposted(_).into
-                  )
-                case (name, None) => Cmd.none // TODO
-              }
-            case None =>
-              Cmd.none
-          }
-        )
+        model.dest match {
+          case Some(dest) =>
+            (dest.name, dest.cotonoma) match {
+              // Repost to an existing cotonoma
+              case (name, Some(cotonoma)) =>
+                default.copy(
+                  _1 = model.copy(reposting = true),
+                  _2 = context.domain.cotonomas.put(cotonoma),
+                  _3 =
+                    CotoBackend.repost(model.originalCoto.id, cotonoma.id).map(
+                      Msg.Reposted(_).into
+                    )
+                )
+
+              // Create a new cotonoma and repost to it
+              case (name, None) =>
+                default.copy(
+                  _1 = model.copy(reposting = true)
+                  // TODO
+                )
+            }
+
+          case None => default // should be unreachable
+        }
 
       case Msg.Reposted(Right((repost, original))) =>
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             originalCoto = original,
             alreadyPostedIn = context.domain.cotonomas.posted(original),
             reposting = false,
             query = "",
             options = Seq.empty,
             dest = None
-          ),
-          Cmd.none
+          )
         )
 
       case Msg.Reposted(Left(e)) =>
-        (
-          model.copy(
+        default.copy(
+          _1 = model.copy(
             error = Some(e.default_message),
             reposting = false
-          ),
-          Cmd.none
+          )
         )
     }
+  }
 
   def apply(model: Model)(implicit
       context: Context,
