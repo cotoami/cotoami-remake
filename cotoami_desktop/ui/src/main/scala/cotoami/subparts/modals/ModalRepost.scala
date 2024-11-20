@@ -49,14 +49,22 @@ object ModalRepost {
       }
   }
 
-  class Destination(
-      val name: String,
-      val cotonoma: Option[Cotonoma] = None,
+  sealed trait Destination extends Select.SelectOption
+
+  class ExistingCotonoma(
+      val cotonoma: Cotonoma,
       val disabled: Boolean = false
-  ) extends Select.SelectOption {
-    val value: String = cotonoma.map(_.id.uuid).getOrElse("")
-    val label: String = name
+  ) extends Destination {
+    val value: String = s"cotonoma:${cotonoma.id}"
+    val label: String = cotonoma.name
     val isDisabled: Boolean = disabled
+  }
+
+  class NewCotonoma(val name: String, val targetNode: String)
+      extends Destination {
+    val value: String = s"new-cotonoma:${name}:${targetNode}"
+    val label: String = name
+    val isDisabled: Boolean = false
   }
 
   sealed trait Msg extends Into[AppMsg] {
@@ -96,22 +104,27 @@ object ModalRepost {
         // add an option to create a new cotonoma with such a name and
         // repost the coto to it.
         val newCotonoma =
-          if (!cotonomas.exists(_.name == query))
-            Seq(new Destination(query, None))
-          else
-            Seq.empty
+          model.targetNodes(context.domain).map(nodeId =>
+            if (
+              !cotonomas.exists(cotonoma =>
+                cotonoma.name == query && cotonoma.nodeId == nodeId
+              )
+            )
+              Some(new NewCotonoma(query, nodeId.uuid))
+            else
+              None
+          ).flatten
         val prefixMatches =
           cotonomas.map(cotonoma =>
-            new Destination(
-              cotonoma.name,
-              Some(cotonoma),
+            new ExistingCotonoma(
+              cotonoma,
               // Disable an option in which the coto has been already posted
               model.alreadyPostedIn.exists(_.id == cotonoma.id)
             )
-          ).toSeq
+          )
         default.copy(
           _1 = model.copy(
-            options = newCotonoma ++ prefixMatches,
+            options = (newCotonoma ++ prefixMatches).toSeq,
             optionsLoading = false
           )
         )
@@ -131,26 +144,21 @@ object ModalRepost {
 
       case Msg.Repost =>
         model.dest match {
-          case Some(dest) =>
-            (dest.name, dest.cotonoma) match {
-              // Repost to an existing cotonoma
-              case (name, Some(cotonoma)) =>
-                default.copy(
-                  _1 = model.copy(reposting = true),
-                  _2 = context.domain.cotonomas.put(cotonoma),
-                  _3 =
-                    CotoBackend.repost(model.originalCoto.id, cotonoma.id).map(
-                      Msg.Reposted(_).into
-                    )
+          case Some(dest: ExistingCotonoma) =>
+            default.copy(
+              _1 = model.copy(reposting = true),
+              _2 = context.domain.cotonomas.put(dest.cotonoma),
+              _3 =
+                CotoBackend.repost(model.originalCoto.id, dest.cotonoma.id).map(
+                  Msg.Reposted(_).into
                 )
+            )
 
-              // Create a new cotonoma and repost to it
-              case (name, None) =>
-                default.copy(
-                  _1 = model.copy(reposting = true)
-                  // TODO
-                )
-            }
+          case Some(dest: NewCotonoma) =>
+            default.copy(
+              _1 = model.copy(reposting = true)
+              // TODO
+            )
 
           case None => default // should be unreachable
         }
@@ -229,16 +237,17 @@ object ModalRepost {
       option: Select.SelectOption
   ): ReactElement = {
     val dest = option.asInstanceOf[Destination]
-    dest.cotonoma match {
-      case Some(cotonoma) =>
+    dest match {
+      case dest: ExistingCotonoma =>
         div(className := "existing-cotonoma")(
-          nodes.get(cotonoma.nodeId).map(imgNode(_)),
-          span(className := "cotonoma-name")(cotonoma.name)
+          nodes.get(dest.cotonoma.nodeId).map(imgNode(_)),
+          span(className := "cotonoma-name")(dest.cotonoma.name)
         )
-      case None =>
+
+      case dest: NewCotonoma =>
         div(className := "new-cotonoma")(
           span(className := "description")("New cotonoma:"),
-          nodes.operating.map(imgNode(_)),
+          nodes.get(Id(dest.targetNode)).map(imgNode(_)),
           span(className := "cotonoma-name")(dest.name)
         )
     }
