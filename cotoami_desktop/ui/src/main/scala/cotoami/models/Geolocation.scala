@@ -14,9 +14,9 @@ case class Geolocation(longitude: Double, latitude: Double) {
   val lng = longitude
   val lat = latitude
 
-  def toLngLat: (Double, Double) = (this.longitude, this.latitude)
+  def toLngLat: (Double, Double) = (longitude, latitude)
 
-  def toMapLibre: LngLat = new LngLat(this.longitude, this.latitude)
+  def toMapLibre: LngLat = new LngLat(longitude, latitude)
 }
 
 object Geolocation {
@@ -60,15 +60,15 @@ object Geolocation {
         nodeIconUrl: String,
         inFocus: Boolean
     ): MarkerOfCotos =
-      this.copy(
-        cotos = this.cotos :+ coto,
-        nodeIconUrls = this.nodeIconUrls + nodeIconUrl,
+      copy(
+        cotos = cotos :+ coto,
+        nodeIconUrls = nodeIconUrls + nodeIconUrl,
         inFocus = inFocus || this.inFocus
       )
 
-    def containsCotonomas: Boolean = this.cotos.exists(_.isCotonoma)
+    def containsCotonomas: Boolean = cotos.exists(_.isCotonoma)
 
-    def label: Option[String] = this.cotos match {
+    def label: Option[String] = cotos match {
       case Seq()     => None
       case Seq(coto) => coto.nameAsCotonoma
       case cotos =>
