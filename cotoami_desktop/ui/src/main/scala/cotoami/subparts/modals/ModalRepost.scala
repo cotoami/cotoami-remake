@@ -28,7 +28,7 @@ object ModalRepost {
       reposting: Boolean = false,
       error: Option[String] = None
   ) {
-    def targetNodes(domain: Domain): js.Array[Id[Node]] =
+    def targetNodeIds(domain: Domain): js.Array[Id[Node]] =
       js.Array(
         // You can always repost a coto to the operating node.
         domain.nodes.operatingId,
@@ -60,9 +60,14 @@ object ModalRepost {
     val isDisabled: Boolean = disabled
   }
 
-  class NewCotonoma(val name: String, val targetNode: String)
-      extends Destination {
-    val value: String = s"new-cotonoma:${name}:${targetNode}"
+  class NewCotonoma(
+      val name: String,
+      // While we want to use the `Id[Node]` type here, but the type can't be restored
+      // when passed back from the Select component. (Probably since it's an AnyVal the
+      // type information would be lost).
+      val targetNodeId: String
+  ) extends Destination {
+    val value: String = s"new-cotonoma:${name}:${targetNodeId}"
     val label: String = name
     val isDisabled: Boolean = false
   }
@@ -95,7 +100,7 @@ object ModalRepost {
             _1 = model.copy(query = query),
             _3 = CotonomaBackend.fetchByPrefix(
               query,
-              Some(model.targetNodes(context.domain))
+              Some(model.targetNodeIds(context.domain))
             ).map(Msg.CotonomasFetched(query, _).into)
           )
 
@@ -104,7 +109,7 @@ object ModalRepost {
         // add an option to create a new cotonoma with such a name and
         // repost the coto to it.
         val newCotonoma =
-          model.targetNodes(context.domain).map(nodeId =>
+          model.targetNodeIds(context.domain).map(nodeId =>
             if (
               !cotonomas.exists(cotonoma =>
                 cotonoma.name == query && cotonoma.nodeId == nodeId
@@ -247,7 +252,7 @@ object ModalRepost {
       case dest: NewCotonoma =>
         div(className := "new-cotonoma")(
           span(className := "description")("New cotonoma:"),
-          nodes.get(Id(dest.targetNode)).map(imgNode(_)),
+          nodes.get(Id(dest.targetNodeId)).map(imgNode(_)),
           span(className := "cotonoma-name")(dest.name)
         )
     }
