@@ -117,14 +117,11 @@ object Commands {
   def CotonomaByName(name: String, node: Id[Node]) =
     jso(CotonomaByName = jso(name = name, node = node.uuid))
 
-  def CotonomasByPrefix(
-      prefix: String,
-      targetNodes: Option[js.Array[Id[Node]]]
-  ) =
+  def CotonomasByPrefix(prefix: String, nodes: Option[js.Array[Id[Node]]]) =
     jso(CotonomasByPrefix =
       jso(
         prefix = prefix,
-        target_nodes = targetNodes.map(_.map(_.uuid)).getOrElse((null))
+        nodes = nodes.map(_.map(_.uuid)).getOrElse((null))
       )
     )
 

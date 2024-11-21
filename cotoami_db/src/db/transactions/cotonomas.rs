@@ -78,10 +78,10 @@ impl<'a> DatabaseSession<'a> {
     pub fn cotonomas_by_prefix(
         &mut self,
         prefix: &str,
-        target_nodes: Option<Vec<Id<Node>>>,
+        node_ids: Option<Vec<Id<Node>>>,
         limit: i64,
     ) -> Result<Vec<Cotonoma>> {
-        self.read_transaction(cotonoma_ops::search_by_prefix(prefix, target_nodes, limit))
+        self.read_transaction(cotonoma_ops::search_by_prefix(prefix, node_ids, limit))
     }
 
     pub fn all_cotonomas(&mut self) -> Result<Vec<Cotonoma>> {

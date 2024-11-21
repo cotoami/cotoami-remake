@@ -147,12 +147,9 @@ impl HttpClient {
                 let name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
                 self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{name}"))
             }
-            Command::CotonomasByPrefix {
-                prefix,
-                target_nodes,
-            } => {
+            Command::CotonomasByPrefix { prefix, nodes } => {
                 let prefix = utf8_percent_encode(&prefix, NON_ALPHANUMERIC).to_string();
-                let nodes = if let Some(nodes) = target_nodes {
+                let nodes = if let Some(nodes) = nodes {
                     nodes.into_iter().map(|id| ("node", id)).collect()
                 } else {
                     Vec::new()

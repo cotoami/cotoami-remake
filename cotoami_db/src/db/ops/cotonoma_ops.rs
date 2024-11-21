@@ -100,7 +100,7 @@ pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
 
 pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     prefix: &str,
-    target_nodes: Option<Vec<Id<Node>>>,
+    node_ids: Option<Vec<Id<Node>>>,
     limit: i64,
 ) -> impl Operation<Conn, Vec<Cotonoma>> + '_ {
     read_op(move |conn| {
@@ -110,8 +110,8 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
             .order(cotonomas::updated_at.desc())
             .limit(limit)
             .into_boxed();
-        let mut exact_matches: Vec<Cotonoma> = if let Some(ref target_nodes) = target_nodes {
-            query.filter(cotonomas::node_id.eq_any(target_nodes))
+        let mut exact_matches: Vec<Cotonoma> = if let Some(ref node_ids) = node_ids {
+            query.filter(cotonomas::node_id.eq_any(node_ids))
         } else {
             query
         }
@@ -127,8 +127,8 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
                 .order(cotonomas::updated_at.desc())
                 .limit(limit - exact_matches.len() as i64)
                 .into_boxed();
-            let mut prefix_matches = if let Some(ref target_nodes) = target_nodes {
-                query.filter(cotonomas::node_id.eq_any(target_nodes))
+            let mut prefix_matches = if let Some(ref node_ids) = node_ids {
+                query.filter(cotonomas::node_id.eq_any(node_ids))
             } else {
                 query
             }

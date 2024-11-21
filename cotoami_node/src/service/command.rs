@@ -64,7 +64,7 @@ pub enum Command {
     /// Request a [Vec<Cotonoma>] in `target_nodes` whose name start with the given `prefix`.
     CotonomasByPrefix {
         prefix: String,
-        target_nodes: Option<Vec<Id<Node>>>,
+        nodes: Option<Vec<Id<Node>>>,
     },
 
     /// Request a [Page<Cotonoma>] that contains sub cotonomas of the given cotonoma.

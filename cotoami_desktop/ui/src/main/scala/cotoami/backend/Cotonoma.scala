@@ -50,9 +50,9 @@ object CotonomaJson {
 
   def fetchByPrefix(
       prefix: String,
-      targetNodes: Option[js.Array[Id[Node]]]
+      nodes: Option[js.Array[Id[Node]]]
   ): Cmd.One[Either[ErrorJson, js.Array[CotonomaJson]]] =
-    Commands.send(Commands.CotonomasByPrefix(prefix, targetNodes))
+    Commands.send(Commands.CotonomasByPrefix(prefix, nodes))
 
   def post(
       name: String,
@@ -101,9 +101,9 @@ object CotonomaBackend {
 
   def fetchByPrefix(
       prefix: String,
-      targetNodes: Option[js.Array[Id[Node]]]
+      nodes: Option[js.Array[Id[Node]]]
   ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
-    CotonomaJson.fetchByPrefix(prefix, targetNodes)
+    CotonomaJson.fetchByPrefix(prefix, nodes)
       .map(_.map(_.map(toModel(_))))
 
   def post(

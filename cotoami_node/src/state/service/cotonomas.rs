@@ -55,10 +55,10 @@ impl NodeState {
     pub async fn cotonomas_by_prefix(
         &self,
         prefix: String,
-        target_nodes: Option<Vec<Id<Node>>>,
+        nodes: Option<Vec<Id<Node>>>,
     ) -> Result<Vec<Cotonoma>, ServiceError> {
         self.get(move |ds| {
-            ds.cotonomas_by_prefix(&prefix, target_nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
+            ds.cotonomas_by_prefix(&prefix, nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
         })
         .await
     }
