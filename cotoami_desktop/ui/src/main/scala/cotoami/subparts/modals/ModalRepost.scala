@@ -35,7 +35,7 @@ object ModalRepost {
         // You can repost a coto to the same node in which the coto has posted
         // only if you have a permission to post to the node.
         Option.when(domain.nodes.canPostTo(coto.nodeId))(coto.nodeId)
-      ).flatten
+      ).flatten.distinct
 
     def readyToRepost: Boolean = dest.isDefined
   }
