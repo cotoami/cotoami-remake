@@ -161,8 +161,14 @@ object ModalRepost {
 
           case Some(dest: NewCotonoma) =>
             default.copy(
-              _1 = model.copy(reposting = true)
-              // TODO
+              _1 = model.copy(reposting = true),
+              _3 = context.domain.nodes.get(Id(dest.targetNodeId))
+                .flatMap(_.rootCotonomaId)
+                .map(cotonomaId =>
+                  CotonomaBackend.post(dest.name, None, None, cotonomaId)
+                    .map(Msg.CotonomaCreated(_).into)
+                )
+                .getOrElse(Cmd.none)
             )
 
           case None => default // should be unreachable
