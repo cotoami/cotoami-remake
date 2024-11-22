@@ -30,7 +30,7 @@ object ModalNodeIcon {
       error: Option[String] = None
   ) {
     def readyToSave: Boolean =
-      this.croppedImage.isDefined && !this.cropping && !this.saving
+      croppedImage.isDefined && !cropping && !saving
   }
 
   sealed trait Msg extends Into[AppMsg] {
