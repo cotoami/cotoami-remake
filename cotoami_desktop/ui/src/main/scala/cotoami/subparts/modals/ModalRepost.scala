@@ -84,6 +84,8 @@ object ModalRepost {
     ) extends Msg
     case class DestinationSelected(dest: Option[Destination]) extends Msg
     case object Repost extends Msg
+    case class CotonomaCreated(result: Either[ErrorJson, (Cotonoma, Coto)])
+        extends Msg
     case class Reposted(result: Either[ErrorJson, (Coto, Coto)]) extends Msg
   }
 
@@ -153,10 +155,8 @@ object ModalRepost {
             default.copy(
               _1 = model.copy(reposting = true),
               _2 = context.domain.cotonomas.put(dest.cotonoma),
-              _3 =
-                CotoBackend.repost(model.originalCoto.id, dest.cotonoma.id).map(
-                  Msg.Reposted(_).into
-                )
+              _3 = CotoBackend.repost(model.originalCoto.id, dest.cotonoma.id)
+                .map(Msg.Reposted(_).into)
             )
 
           case Some(dest: NewCotonoma) =>
@@ -167,6 +167,21 @@ object ModalRepost {
 
           case None => default // should be unreachable
         }
+
+      case Msg.CotonomaCreated(Right((cotonoma, _))) =>
+        default.copy(
+          _2 = context.domain.cotonomas.put(cotonoma),
+          _3 = CotoBackend.repost(model.originalCoto.id, cotonoma.id)
+            .map(Msg.Reposted(_).into)
+        )
+
+      case Msg.CotonomaCreated(Left(e)) =>
+        default.copy(
+          _1 = model.copy(
+            error = Some(e.default_message),
+            reposting = false
+          )
+        )
 
       case Msg.Reposted(Right((repost, original))) =>
         default.copy(
