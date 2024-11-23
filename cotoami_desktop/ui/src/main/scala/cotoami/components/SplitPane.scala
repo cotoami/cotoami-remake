@@ -158,7 +158,7 @@ import slinky.web.SyntheticMouseEvent
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
     )(children: ReactElement*) {
-      def getChildren: Seq[ReactElement] = this.children
+      def getChildren: Seq[ReactElement] = children
     }
 
     val component = FunctionalComponent[Props] { props =>
@@ -197,7 +197,7 @@ import slinky.web.SyntheticMouseEvent
         className: Option[String] = None,
         onClick: Option[() => Unit] = None
     )(children: ReactElement*) {
-      def getChildren: Seq[ReactElement] = this.children
+      def getChildren: Seq[ReactElement] = children
     }
 
     val component = FunctionalComponent[Props] { props =>
