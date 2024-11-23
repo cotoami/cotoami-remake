@@ -106,5 +106,11 @@ fn repost() -> Result<()> {
         })
     );
 
+    // When: delete the original coto
+    let _ = ds.delete_coto(&coto.uuid, &opr)?;
+    assert_eq!(ds.coto(&coto.uuid)?, None);
+    assert_eq!(ds.coto(&repost1.uuid)?, None);
+    assert_eq!(ds.coto(&repost2.uuid)?, None);
+
     Ok(())
 }

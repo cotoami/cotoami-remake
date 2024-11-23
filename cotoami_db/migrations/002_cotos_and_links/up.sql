@@ -65,7 +65,7 @@ CREATE TABLE cotos (
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(posted_in_id) REFERENCES cotonomas(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(posted_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
-  FOREIGN KEY(repost_of_id) REFERENCES cotos(uuid) ON DELETE RESTRICT
+  FOREIGN KEY(repost_of_id) REFERENCES cotos(uuid) ON DELETE CASCADE
 );
 
 CREATE INDEX cotos_node_id ON cotos(node_id);
