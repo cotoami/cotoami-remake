@@ -16,9 +16,9 @@ case class ParentNode(
     lastChangeReceivedAtUtcIso: Option[String],
     forked: Boolean
 ) {
-  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val lastChangeReceivedAt: Option[Instant] =
-    this.lastChangeReceivedAtUtcIso.map(parseUtcIso)
+    lastChangeReceivedAtUtcIso.map(parseUtcIso)
 }
 
 sealed trait ParentStatus
@@ -36,5 +36,5 @@ case class ChildNode(
     asOwner: Boolean,
     canEditLinks: Boolean
 ) {
-  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
 }
