@@ -50,6 +50,7 @@ fn repost() -> Result<()> {
     assert_that!(
         original,
         pat!(Coto {
+            uuid: eq(&coto.uuid),
             node_id: eq(&node.uuid),
             posted_in_id: some(eq(&root.uuid)),
             posted_by_id: eq(&node.uuid),
@@ -96,6 +97,7 @@ fn repost() -> Result<()> {
     assert_that!(
         original,
         pat!(Coto {
+            uuid: eq(&coto.uuid),
             content: some(eq("Cargo")),
             repost_of_id: none(),
             reposted_in_ids: some(pat!(Ids(elements_are![
@@ -106,11 +108,32 @@ fn repost() -> Result<()> {
         })
     );
 
+    // When: delete a repost
+    let ChangelogEntry {
+        change: Change::DeleteCoto { deleted_at, .. },
+        ..
+    } = ds.delete_coto(&repost2.uuid, &opr)?
+    else {
+        panic!("Unexpected changelog returned from delete_coto.");
+    };
+
+    assert_eq!(ds.coto(&repost2.uuid)?, None);
+    assert_that!(
+        ds.coto(&coto.uuid)?,
+        some(pat!(Coto {
+            content: some(eq("Cargo")),
+            repost_of_id: none(),
+            // cotonoma2 should be removed from reposted_in_ids
+            reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma1.uuid)]))),
+            updated_at: eq(&deleted_at)
+        }))
+    );
+
     // When: delete the original coto
     let _ = ds.delete_coto(&coto.uuid, &opr)?;
+
     assert_eq!(ds.coto(&coto.uuid)?, None);
     assert_eq!(ds.coto(&repost1.uuid)?, None);
-    assert_eq!(ds.coto(&repost2.uuid)?, None);
 
     Ok(())
 }

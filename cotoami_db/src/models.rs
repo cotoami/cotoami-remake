@@ -178,11 +178,15 @@ pub struct Ids<T>(pub Vec<Id<T>>);
 impl<T> Ids<T> {
     pub fn from_one(id: Id<T>) -> Ids<T> { Ids(vec![id]) }
 
+    pub fn contains(&self, id: &Id<T>) -> bool { self.0.contains(id) }
+
     pub fn add(&mut self, id: Id<T>) {
-        if !self.0.contains(&id) {
+        if !self.contains(&id) {
             self.0.push(id);
         }
     }
+
+    pub fn remove(&mut self, id_to_remove: &Id<T>) { self.0.retain(|id| id != id_to_remove); }
 }
 
 impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {

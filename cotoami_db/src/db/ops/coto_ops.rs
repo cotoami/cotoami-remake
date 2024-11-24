@@ -223,14 +223,26 @@ pub(crate) fn delete(
     composite_op::<WritableConn, _, _>(move |ctx| {
         let deleted_at = deleted_at.unwrap_or(crate::current_datetime());
 
-        // The links connected to this coto will be also deleted by FOREIGN KEY ON DELETE CASCADE.
-        // If it is a cotonoma, the corresponding cotonoma row will be also deleted by
-        // FOREIGN KEY ON DELETE CASCADE.
+        // There are some related entities to be deleted by FOREIGN KEY ON DELETE CASCADE:
+        // 1. The reposts of the coto.
+        // 2. The links connected to the coto.
+        // 3. If it is a cotonoma, the corresponding cotonoma row will be deleted.
         let deleted: Option<Coto> = diesel::delete(cotos::table.find(id))
             .get_result(ctx.conn().deref_mut())
             .optional()?;
 
         if let Some(coto) = deleted {
+            // Update the original coto if the deleted coto is a report
+            if let (Some(ref repost_of_id), Some(ref posted_in_id)) =
+                (coto.repost_of_id, coto.posted_in_id)
+            {
+                let original = try_get(repost_of_id).run(ctx)??;
+                let mut update_original = original.to_update();
+                update_original.remove_reposted_in(posted_in_id, &original);
+                update_original.updated_at = deleted_at;
+                update(&update_original).run(ctx)?;
+            }
+
             // Decrement the number of posts in the cotonoma
             if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
                 cotonoma_ops::update_number_of_posts(posted_in_id, -1, deleted_at).run(ctx)?;

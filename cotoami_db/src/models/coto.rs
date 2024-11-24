@@ -127,7 +127,7 @@ impl Coto {
             || self
                 .reposted_in_ids
                 .as_ref()
-                .map(|ids| ids.0.contains(cotonoma_id))
+                .map(|ids| ids.contains(cotonoma_id))
                 .unwrap_or(false)
     }
 
@@ -518,6 +518,14 @@ impl<'a> UpdateCoto<'a> {
             self.reposted_in_ids = Some(Some(reposted_in_ids))
         } else {
             self.reposted_in_ids = Some(Some(Ids::from_one(cotonoma_id)))
+        }
+    }
+
+    pub fn remove_reposted_in(&mut self, cotonoma_id: &Id<Cotonoma>, original: &Coto) {
+        if let Some(ref reposted_in_ids) = original.reposted_in_ids {
+            let mut reposted_in_ids = reposted_in_ids.clone();
+            reposted_in_ids.remove(cotonoma_id);
+            self.reposted_in_ids = Some(Some(reposted_in_ids))
         }
     }
 }
