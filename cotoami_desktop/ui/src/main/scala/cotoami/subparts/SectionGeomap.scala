@@ -39,13 +39,13 @@ object SectionGeomap {
       _refreshMarkers: Int = 0
   ) {
     def applyCenterZoom: Model =
-      this.copy(_applyCenterZoom = this._applyCenterZoom + 1)
+      copy(_applyCenterZoom = _applyCenterZoom + 1)
 
     def moveTo(location: Geolocation): Model =
-      this.copy(
+      copy(
         center = Some(location),
         zoom = Some(13),
-        _applyCenterZoom = this._applyCenterZoom + 1
+        _applyCenterZoom = _applyCenterZoom + 1
       )
 
     def moveTo(centerOrBounds: CenterOrBounds): Model =
@@ -55,29 +55,29 @@ object SectionGeomap {
       }
 
     def fitBounds: Model =
-      this.copy(_fitBounds = this._fitBounds + 1)
+      copy(_fitBounds = _fitBounds + 1)
 
     def fitBounds(bounds: GeoBounds): Model =
-      this.copy(bounds = Some(bounds)).fitBounds
+      copy(bounds = Some(bounds)).fitBounds
 
     def focus(location: Geolocation): Model =
-      if (this.currentBounds.map(_.contains(location)).getOrElse(false))
-        this.copy(focusedLocation = Some(location))
+      if (currentBounds.map(_.contains(location)).getOrElse(false))
+        copy(focusedLocation = Some(location))
       else
-        this.moveTo(location).copy(focusedLocation = Some(location))
+        moveTo(location).copy(focusedLocation = Some(location))
 
-    def unfocus: Model = this.copy(focusedLocation = None)
+    def unfocus: Model = copy(focusedLocation = None)
 
     def addOrRemoveMarkers: Model =
-      this.copy(_addOrRemoveMarkers = this._addOrRemoveMarkers + 1)
+      copy(_addOrRemoveMarkers = _addOrRemoveMarkers + 1)
 
     def refreshMarkers: Model =
-      this.copy(_refreshMarkers = this._refreshMarkers + 1)
+      copy(_refreshMarkers = _refreshMarkers + 1)
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
-      if (this.initialCotosFetched && !this.fetchingCotosInBounds)
+      if (initialCotosFetched && !fetchingCotosInBounds)
         (
-          this.copy(fetchingCotosInBounds = true),
+          copy(fetchingCotosInBounds = true),
           GeolocatedCotos.inGeoBounds(bounds)
             .map(Msg.CotosInBoundsFetched(_).into)
         )
@@ -85,12 +85,12 @@ object SectionGeomap {
         (
           // To avoid simultaneous fetchings, defer this fetch to the next round.
           // The current waiting bounds will be replaced with the new one.
-          this.copy(nextBoundsToFetch = Some(bounds)),
+          copy(nextBoundsToFetch = Some(bounds)),
           Cmd.none
         )
 
     def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
-      this.currentBounds match {
+      currentBounds match {
         case Some(currentBounds) => fetchCotosInBounds(currentBounds)
         case None                => (this, Cmd.none)
       }
