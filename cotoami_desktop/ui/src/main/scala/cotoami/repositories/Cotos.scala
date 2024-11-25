@@ -19,6 +19,9 @@ case class Cotos(
 
   def contains(id: Id[Coto]): Boolean = map.contains(id)
 
+  def repostsOf(id: Id[Coto]): Seq[Coto] =
+    map.values.filter(_.repostOfId == Some(id)).toSeq
+
   def put(coto: Coto): Cotos =
     this.modify(_.map).using { map =>
       map.get(coto.id) match {
