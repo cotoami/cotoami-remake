@@ -12,7 +12,7 @@ case class Links(
     mapBySourceCotoId: Map[Id[Coto], TreeSet[Link]] = Map.empty,
     mapByTargetCotoId: Map[Id[Coto], HashSet[Id[Link]]] = Map.empty
 ) {
-  def get(id: Id[Link]): Option[Link] = this.map.get(id)
+  def get(id: Id[Link]): Option[Link] = map.get(id)
 
   def put(link: Link): Links = {
     this
@@ -34,17 +34,17 @@ case class Links(
   def putAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ put _)
 
   def linked(from: Id[Coto], to: Id[Coto]): Boolean =
-    this.mapByTargetCotoId.get(to).map(
-      _.exists(this.get(_).map(_.sourceCotoId == from).getOrElse(false))
+    mapByTargetCotoId.get(to).map(
+      _.exists(get(_).map(_.sourceCotoId == from).getOrElse(false))
     ).getOrElse(false)
 
   def linksFrom(id: Id[Coto]): TreeSet[Link] =
-    this.mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
+    mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
 
   def anyLinksFrom(id: Id[Coto]): Boolean =
-    this.mapBySourceCotoId.get(id).map(!_.isEmpty).getOrElse(false)
+    mapBySourceCotoId.get(id).map(!_.isEmpty).getOrElse(false)
 
   def linksTo(id: Id[Coto]): Seq[Link] =
-    this.mapByTargetCotoId.get(id).map(_.map(this.get).flatten.toSeq)
+    mapByTargetCotoId.get(id).map(_.map(get).flatten.toSeq)
       .getOrElse(Seq.empty)
 }
