@@ -7,9 +7,9 @@ import cotoami.utils.facade.Nullable
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 
 case class NodeDetails(json: NodeDetailsJson) {
-  def node: Node = NodeBackend.toModel(this.json.node)
+  def node: Node = NodeBackend.toModel(json.node)
   def root: Option[(Cotonoma, Coto)] =
-    Nullable.toOption(this.json.root).map(pair =>
+    Nullable.toOption(json.root).map(pair =>
       (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
     )
 }
