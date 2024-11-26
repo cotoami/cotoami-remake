@@ -72,11 +72,15 @@ case class Domain(
   // Cotos
   ///////////////////////////////////////////////////////////////////////////
 
-  def deleteCoto(id: Id[Coto]): Domain =
+  def deleteCoto(id: Id[Coto]): Domain = {
+    // Delete the reposts first if they exist
+    cotos.repostsOf(id).foreach(repost => deleteCoto(repost.id))
+    // then, delete the specified coto (which could be a cotonoma)
     copy(
       cotos = cotos.delete(id),
       cotonomas = cotonomas.deleteByCotoId(id)
     )
+  }
 
   def beingDeleted(cotoId: Id[Coto]): Boolean =
     cotosBeingDeleted.contains(cotoId)
