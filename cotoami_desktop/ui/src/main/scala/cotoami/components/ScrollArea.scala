@@ -26,7 +26,7 @@ import slinky.core.facade.Hooks._
     // https://github.com/shadaj/slinky/blob/v0.7.4/core/src/main/scala-2/slinky/core/annotations/react.scala#L43
     //
     // Putting the `children` in the secondary parameters seems to work without this limitation.
-    def getChildren: Seq[ReactElement] = this.children
+    def getChildren: Seq[ReactElement] = children
   }
 
   val DefaultBottomThreshold = 1
