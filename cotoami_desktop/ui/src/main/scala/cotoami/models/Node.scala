@@ -19,26 +19,23 @@ case class Node(
   // they can be regarded as the same node.
   override def equals(that: Any): Boolean =
     that match {
-      case that: Node => (this.id, this.version) == (that.id, that.version)
+      case that: Node => (id, version) == (that.id, that.version)
       case _          => false
     }
 
   def setIcon(icon: String): Node = {
     revokeIconUrl()
-    this.copy(
+    copy(
       icon = Node.decodeBase64Icon(icon),
-      version = this.version + 1
+      version = version + 1
     )
   }
 
-  lazy val iconUrl: String = dom.URL.createObjectURL(this.icon)
+  lazy val iconUrl: String = dom.URL.createObjectURL(icon)
 
-  def revokeIconUrl(): Unit = dom.URL.revokeObjectURL(this.iconUrl)
+  def revokeIconUrl(): Unit = dom.URL.revokeObjectURL(iconUrl)
 
-  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
-
-  def debug: String =
-    s"id: ${this.id}, name: ${this.name}, version: ${this.version}"
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
 }
 
 object Node {
