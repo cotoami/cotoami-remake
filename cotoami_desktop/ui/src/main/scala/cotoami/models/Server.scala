@@ -16,7 +16,7 @@ case class ServerNode(
     urlPrefix: String,
     disabled: Boolean
 ) {
-  lazy val createdAt: Instant = parseUtcIso(this.createdAtUtcIso)
+  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
 }
 
 object ServerNode {
