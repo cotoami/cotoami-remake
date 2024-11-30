@@ -12,7 +12,7 @@ case class Time(
     copy(zone = ZoneOffset.ofTotalSeconds(seconds))
 
   def toDateTime(instant: Instant): LocalDateTime =
-    LocalDateTime.ofInstant(instant, this.zone)
+    LocalDateTime.ofInstant(instant, zone)
 
   def formatDateTime(instant: Instant): String = {
     toDateTime(instant).format(Time.DefaultDateTimeFormatter)
