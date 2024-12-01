@@ -25,22 +25,22 @@ case class UiState(
     pinnedInColumns: HashSet[String] = HashSet.empty,
     geomapOpened: Boolean = false
 ) {
-  def isDarkMode: Boolean = this.theme == UiState.DarkMode
+  def isDarkMode: Boolean = theme == UiState.DarkMode
 
   def paneOpened(name: String): Boolean =
-    this.paneToggles.getOrElse(name, true) // open by default
+    paneToggles.getOrElse(name, true) // open by default
 
   def openOrClosePane(name: String, open: Boolean): UiState = {
-    val toggles = this.paneToggles + (name -> open)
+    val toggles = paneToggles + (name -> open)
     (toggles.get(PaneFlow.PaneName), toggles.get(PaneStock.PaneName)) match {
       // Not allow fold both PaneFlow and PaneStock at the same time.
       case (Some(false), Some(false)) => this
-      case _                          => this.copy(paneToggles = toggles)
+      case _                          => copy(paneToggles = toggles)
     }
   }
 
   def resizePane(name: String, newSize: Int): UiState =
-    this.copy(paneSizes = this.paneSizes + (name -> newSize))
+    copy(paneSizes = paneSizes + (name -> newSize))
 
   def setPinnedInColumns(
       cotonoma: Id[Cotonoma],
@@ -54,15 +54,15 @@ case class UiState(
     )
 
   def isPinnedInColumns(cotonoma: Id[Cotonoma]): Boolean =
-    this.pinnedInColumns.contains(cotonoma.uuid)
+    pinnedInColumns.contains(cotonoma.uuid)
 
   def openGeomap: UiState =
-    this.copy(geomapOpened = true).openOrClosePane(PaneStock.PaneName, true)
+    copy(geomapOpened = true).openOrClosePane(PaneStock.PaneName, true)
 
   def closeMap: UiState =
-    this.copy(geomapOpened = false)
+    copy(geomapOpened = false)
 
-  def mapOpened: Boolean = this.geomapOpened
+  def mapOpened: Boolean = geomapOpened
 
   def save: Cmd.One[Msg] =
     Cmd(IO {
