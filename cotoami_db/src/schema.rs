@@ -119,7 +119,6 @@ diesel::table! {
         reposted_in_ids -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        outgoing_links -> Integer,
     }
 }
 diesel::joinable!(cotos -> nodes (node_id));
@@ -144,7 +143,6 @@ diesel::table! {
         reposted_in_ids -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        outgoing_links -> Integer,
 
         // A special column with the same name as the table,
         // which is matched against in a full-text query or used to specify a special INSERT command.
@@ -180,7 +178,6 @@ diesel::table! {
         reposted_in_ids -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        outgoing_links -> Integer,
 
         #[sql_name = "cotos_fts_trigram"]
         whole_row -> Text,

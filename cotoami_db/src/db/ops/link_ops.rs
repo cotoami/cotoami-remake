@@ -7,7 +7,7 @@ use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 use validator::Validate;
 
-use super::{coto_ops, Page};
+use super::Page;
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -78,11 +78,10 @@ pub(crate) fn insert(mut new_link: NewLink<'_>) -> impl Operation<WritableConn, 
                 .unwrap_or(0);
             new_link.order = Some(last_number + 1);
         }
-        let link: Link = diesel::insert_into(links::table)
+        diesel::insert_into(links::table)
             .values(new_link)
-            .get_result(ctx.conn().deref_mut())?;
-        coto_ops::update_number_of_outgoing_links(&link.source_coto_id, 1).run(ctx)?;
-        Ok(link)
+            .get_result(ctx.conn().deref_mut())
+            .map_err(anyhow::Error::from)
     })
 }
 
@@ -168,13 +167,7 @@ pub(crate) fn delete(id: &Id<Link>) -> impl Operation<WritableConn, bool> + '_ {
         let deleted: Option<Link> = diesel::delete(links::table.find(id))
             .get_result(ctx.conn().deref_mut())
             .optional()?;
-
-        if let Some(link) = deleted {
-            coto_ops::update_number_of_outgoing_links(&link.source_coto_id, -1).run(ctx)?;
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        Ok(deleted.is_some())
     })
 }
 

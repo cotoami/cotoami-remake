@@ -89,9 +89,6 @@ pub struct Coto {
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-
-    /// Number of outgoing links from this coto.
-    pub outgoing_links: i32,
 }
 
 impl Coto {

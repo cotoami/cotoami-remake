@@ -75,9 +75,6 @@ fn crud_operations() -> Result<()> {
         })
     );
 
-    // check if the number of outgoing links has been incremented
-    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 1);
-
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto3
     /////////////////////////////////////////////////////////////////////////////
@@ -117,9 +114,6 @@ fn crud_operations() -> Result<()> {
         })
     );
 
-    // check if the number of outgoing links has been incremented
-    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 2);
-
     /////////////////////////////////////////////////////////////////////////////
     // When: create a link from coto1 to coto4 with order number 1
     /////////////////////////////////////////////////////////////////////////////
@@ -137,9 +131,6 @@ fn crud_operations() -> Result<()> {
     assert_eq!(ds.link(&link3.uuid)?.unwrap().order, 1);
     assert_eq!(ds.link(&link1.uuid)?.unwrap().order, 2);
     assert_eq!(ds.link(&link2.uuid)?.unwrap().order, 3);
-
-    // check if the number of outgoing links has been incremented
-    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 3);
 
     /////////////////////////////////////////////////////////////////////////////
     // When: edit link1
@@ -196,9 +187,6 @@ fn crud_operations() -> Result<()> {
             change: pat!(Change::DeleteLink(eq(&link1.uuid)))
         })
     );
-
-    // check if the number of outgoing links has been decremented
-    assert_eq!(ds.coto(&coto1.uuid)?.unwrap().outgoing_links, 2);
 
     Ok(())
 }

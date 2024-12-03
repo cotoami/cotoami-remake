@@ -59,9 +59,6 @@ CREATE TABLE cotos (
   created_at DATETIME NOT NULL, -- UTC
   updated_at DATETIME NOT NULL, -- UTC
 
-  -- Number of outgoing links from this coto.
-  outgoing_links INTEGER DEFAULT 0 NOT NULL,
-
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(posted_in_id) REFERENCES cotonomas(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(posted_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,

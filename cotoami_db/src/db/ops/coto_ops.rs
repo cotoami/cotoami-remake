@@ -267,18 +267,6 @@ pub(crate) fn change_owner_node<'a>(
     })
 }
 
-pub(crate) fn update_number_of_outgoing_links(
-    id: &Id<Coto>,
-    delta: i32,
-) -> impl Operation<WritableConn, i32> + '_ {
-    write_op(move |conn| {
-        let coto: Coto = diesel::update(cotos::table.find(id))
-            .set(cotos::outgoing_links.eq(cotos::outgoing_links + delta))
-            .get_result(conn.deref_mut())?;
-        Ok(coto.outgoing_links)
-    })
-}
-
 const INDEX_TOKEN_LENGTH: usize = 3;
 
 pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
@@ -328,7 +316,6 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                         reposted_in_ids,
                         created_at,
                         updated_at,
-                        outgoing_links,
                     ))
                     .filter(whole_row.eq(fts_query))
                     .into_boxed();
@@ -394,7 +381,6 @@ fn search_trigram_index(
                 reposted_in_ids,
                 created_at,
                 updated_at,
-                outgoing_links,
             ))
             .filter(whole_row.eq(&query))
             .into_boxed();

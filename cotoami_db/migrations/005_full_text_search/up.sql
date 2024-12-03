@@ -24,7 +24,6 @@ CREATE VIRTUAL TABLE cotos_fts USING fts5(
   reposted_in_ids UNINDEXED,
   created_at UNINDEXED,
   updated_at UNINDEXED,
-  outgoing_links UNINDEXED,
 
   --
   -- Configuration options
@@ -71,7 +70,6 @@ CREATE VIRTUAL TABLE cotos_fts_trigram USING fts5(
   reposted_in_ids UNINDEXED,
   created_at UNINDEXED,
   updated_at UNINDEXED,
-  outgoing_links UNINDEXED,
 
   -- The trigram tokenizer extends FTS5 to support substring matching in general, 
   -- instead of the usual token matching. When using the trigram tokenizer, 
