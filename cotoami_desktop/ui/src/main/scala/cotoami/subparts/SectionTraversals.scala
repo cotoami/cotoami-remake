@@ -122,7 +122,7 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            context.domain.lazyFetchGraphFromCoto(start)
+            context.domain.lazyFetchGraphFrom(start)
           )
         )
 
@@ -149,7 +149,7 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            context.domain.lazyFetchGraphFromCoto(step)
+            context.domain.lazyFetchGraphFrom(step)
           )
         )
 
@@ -320,7 +320,9 @@ object SectionTraversals {
             ViewCoto.divContent(coto)
           },
           // Traverse button
-          Option.when(!traversed && coto.outgoingLinks > 0) {
+          Option.when(
+            !traversed && context.domain.links.anyLinksFrom(coto.id)
+          ) {
             val stepMsg = Msg.Step(
               traversal._2,
               stepIndex.map(_ + 1).getOrElse(0),

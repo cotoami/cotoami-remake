@@ -46,7 +46,6 @@ case class Coto(
     repostedInIds: Option[Seq[Id[Cotonoma]]],
     createdAtUtcIso: String,
     updatedAtUtcIso: String,
-    outgoingLinks: Int,
     posted: Boolean
 ) extends Entity[Coto]
     with CotoContent {

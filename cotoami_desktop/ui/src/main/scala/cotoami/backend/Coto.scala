@@ -25,7 +25,6 @@ trait CotoJson extends js.Object {
   val reposted_in_ids: Nullable[js.Array[String]] = js.native
   val created_at: String = js.native
   val updated_at: String = js.native
-  val outgoing_links: Int = js.native
 }
 
 object CotoJson {
@@ -92,7 +91,6 @@ object CotoBackend {
         .map(_.map(Id[Cotonoma](_)).toSeq),
       createdAtUtcIso = json.created_at,
       updatedAtUtcIso = json.updated_at,
-      outgoingLinks = json.outgoing_links,
       posted = posted
     )
 

@@ -38,6 +38,7 @@ case class Domain(
 
     // processing state
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
+    graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
     cotosBeingDeleted: HashSet[Id[Coto]] = HashSet.empty
 ) {
   /////////////////////////////////////////////////////////////////////////////
@@ -167,6 +168,13 @@ case class Domain(
     ).getOrElse(false)
 
   /////////////////////////////////////////////////////////////////////////////
+  // Graph
+  /////////////////////////////////////////////////////////////////////////////
+
+  def alreadyLoadedGraphFrom(cotoId: Id[Coto]): Boolean =
+    graphLoaded.contains(cotoId)
+
+  /////////////////////////////////////////////////////////////////////////////
   // Geolocation
   /////////////////////////////////////////////////////////////////////////////
 
@@ -263,7 +271,7 @@ case class Domain(
 
   def importFrom(graph: CotoGraph): Domain =
     this
-      .modify(_.graphLoading).using(_ - graph.rootCotoId)
+      .modify(_.graphLoaded).using(_ + graph.rootCotoId)
       .modify(_.cotos).using(_.importFrom(graph))
       .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.links).using(_.putAll(graph.links))
@@ -298,15 +306,14 @@ case class Domain(
       .map(Domain.fetchGraphFromCotonoma)
       .getOrElse(Cmd.none)
 
-  // Fetch the graph from the given coto if it has outgoing links that
-  // have not yet been loaded (the target cotos of them should also be loaded).
-  def lazyFetchGraphFromCoto(cotoId: Id[Coto]): Cmd.One[AppMsg] =
-    cotos.get(cotoId).map(coto => {
-      if (childrenOf(cotoId).size < coto.outgoingLinks)
-        Domain.fetchGraphFromCoto(cotoId)
-      else
-        Cmd.none
-    }).getOrElse(Cmd.none)
+  def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
+    if (
+      !alreadyLoadedGraphFrom(cotoId) &&
+      cotos.get(cotoId).map(_.isCotonoma).getOrElse(false)
+    )
+      Domain.fetchGraphFromCoto(cotoId)
+    else
+      Cmd.none
 
   /////////////////////////////////////////////////////////////////////////////
   // Private
@@ -380,7 +387,12 @@ object Domain {
         )
 
       case Msg.CotoGraphFetched(Right(graph)) =>
-        (model.importFrom(graph), Cmd.none)
+        (
+          model
+            .modify(_.graphLoading).using(_ - graph.rootCotoId)
+            .importFrom(graph),
+          Cmd.none
+        )
 
       case Msg.CotoGraphFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch a coto graph.", e))

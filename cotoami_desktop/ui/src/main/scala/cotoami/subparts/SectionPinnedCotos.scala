@@ -244,7 +244,7 @@ object SectionPinnedCotos {
           ViewCoto.commonArticleClasses(coto) ++
             Seq(
               ("pinned-coto", true),
-              ("has-children", coto.outgoingLinks > 0)
+              ("has-children", context.domain.links.anyLinksFrom(coto.id))
             )
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
@@ -307,7 +307,7 @@ object SectionPinnedCotos {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
-      if (subCotos.size < coto.outgoingLinks)
+      if (coto.isCotonoma && !context.domain.alreadyLoadedGraphFrom(coto.id))
         div(className := "links-not-yet-loaded")(
           if (context.domain.graphLoading.contains(coto.id)) {
             div(

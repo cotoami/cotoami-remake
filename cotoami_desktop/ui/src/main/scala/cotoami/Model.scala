@@ -149,7 +149,7 @@ case class Model(
               )
             case None => model
           },
-          domain.lazyFetchGraphFromCoto(cotoId)
+          domain.lazyFetchGraphFrom(cotoId)
         )
       case None => (model, Cmd.none)
     }

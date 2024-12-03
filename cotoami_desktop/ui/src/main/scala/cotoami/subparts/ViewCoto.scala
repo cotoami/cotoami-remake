@@ -259,8 +259,11 @@ object ViewCoto {
   def divLinksTraversal(
       coto: Coto,
       tipPlacement: String
-  )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
-    Option.when(coto.outgoingLinks > 0) {
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] =
+    Option.when(context.domain.links.anyLinksFrom(coto.id)) {
       div(className := "links")(
         toolButton(
           symbol = "arrow_forward",
