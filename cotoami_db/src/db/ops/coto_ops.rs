@@ -150,12 +150,9 @@ pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableCo
         let coto: Coto = diesel::insert_into(cotos::table)
             .values(new_coto)
             .get_result(ctx.conn().deref_mut())?;
-
-        // Increment the number of posts in the cotonoma
-        if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
-            cotonoma_ops::update_number_of_posts(posted_in_id, 1, coto.created_at).run(ctx)?;
+        if let Some(ref posted_in_id) = coto.posted_in_id {
+            cotonoma_ops::update_timestamp(posted_in_id, coto.created_at).run(ctx)?;
         }
-
         Ok(coto)
     })
 }
@@ -241,11 +238,6 @@ pub(crate) fn delete(
                 update_original.remove_reposted_in(posted_in_id, &original);
                 update_original.updated_at = deleted_at;
                 update(&update_original).run(ctx)?;
-            }
-
-            // Decrement the number of posts in the cotonoma
-            if let Some(posted_in_id) = coto.posted_in_id.as_ref() {
-                cotonoma_ops::update_number_of_posts(posted_in_id, -1, deleted_at).run(ctx)?;
             }
             Ok(Some(deleted_at))
         } else {

@@ -336,6 +336,19 @@ pub(crate) fn rename<'a>(
     })
 }
 
+pub(crate) fn update_timestamp(
+    id: &Id<Cotonoma>,
+    updated_at: NaiveDateTime,
+) -> impl Operation<WritableConn, usize> + '_ {
+    write_op(move |conn| {
+        diesel::update(cotonomas::table)
+            .filter(cotonomas::uuid.eq(id))
+            .set(cotonomas::updated_at.eq(updated_at))
+            .execute(conn.deref_mut())
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn change_owner_node<'a>(
     from: &'a Id<Node>,
     to: &'a Id<Node>,
@@ -346,21 +359,5 @@ pub(crate) fn change_owner_node<'a>(
             .set(cotonomas::node_id.eq(to))
             .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
-    })
-}
-
-pub(crate) fn update_number_of_posts(
-    id: &Id<Cotonoma>,
-    delta: i64,
-    updated_at: NaiveDateTime,
-) -> impl Operation<WritableConn, i64> + '_ {
-    write_op(move |conn| {
-        let cotonoma: Cotonoma = diesel::update(cotonomas::table.find(id))
-            .set((
-                cotonomas::posts.eq(cotonomas::posts + delta),
-                cotonomas::updated_at.eq(updated_at),
-            ))
-            .get_result(conn.deref_mut())?;
-        Ok(cotonoma.posts)
     })
 }

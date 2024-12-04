@@ -29,7 +29,6 @@ fn crud_operations() -> Result<()> {
             node_id: eq(&node.uuid),
             name: eq("test"),
             coto_id: eq(&coto.uuid),
-            posts: eq(&0)
         })
     );
     common::assert_approximately_now(cotonoma.created_at());
@@ -52,7 +51,6 @@ fn crud_operations() -> Result<()> {
 
     // check if the number of posts of the root cotonoma has been incremented
     let (root_cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_eq!(root_cotonoma.posts, 1);
     assert_eq!(root_cotonoma.updated_at, coto.created_at);
 
     // check the content of the ChangelogEntry
@@ -87,7 +85,6 @@ fn crud_operations() -> Result<()> {
 
     // check if the number of posts of the cotonoma has been incremented
     let (cotonoma, _) = ds.try_get_cotonoma(&cotonoma.uuid)?;
-    assert_eq!(cotonoma.posts, 1);
     assert_eq!(cotonoma.updated_at, coto2.created_at);
 
     /////////////////////////////////////////////////////////////////////////////

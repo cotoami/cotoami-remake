@@ -50,9 +50,6 @@ pub struct Cotonoma {
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-
-    /// Number of posts in this cotonoma
-    pub posts: i64,
 }
 
 impl Cotonoma {

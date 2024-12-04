@@ -416,7 +416,6 @@ impl CotonomaJson {
             name: self.name,
             created_at: from_timestamp_millis(self.inserted_at)?,
             updated_at: from_timestamp_millis(self.updated_at)?,
-            posts: 0,
         })
     }
 }

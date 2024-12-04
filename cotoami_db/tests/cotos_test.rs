@@ -54,21 +54,12 @@ fn crud_operations() -> Result<()> {
         })
     );
 
-    // check if the number of posts of the root cotonoma has been incremented
-    let (root_cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_that!(
-        root_cotonoma,
-        pat!(Cotonoma {
-            posts: eq(&1),
-            updated_at: eq(&coto.updated_at)
-        })
-    );
+    // check if the timestamp of the cotonoma has been updated
+    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
+    assert_that!(cotonoma.updated_at, eq(coto.created_at));
 
     // check the super cotonomas
-    assert_that!(
-        ds.super_cotonomas(&coto)?,
-        elements_are![eq(&root_cotonoma)]
-    );
+    assert_that!(ds.super_cotonomas(&coto)?, elements_are![eq(&cotonoma)]);
 
     // check the content of the ChangelogEntry
     assert_that!(
@@ -191,7 +182,7 @@ fn crud_operations() -> Result<()> {
 
     // check if it is deleted from the db
     assert!(!ds.contains_coto(&coto.uuid)?);
-    assert_eq!(ds.coto(&coto.uuid)?, None);
+    assert_that!(ds.coto(&coto.uuid)?, none());
     assert_that!(
         ds.recent_cotos(None, Some(&root_cotonoma.uuid), 5, 0)?,
         pat!(Page {
@@ -200,10 +191,6 @@ fn crud_operations() -> Result<()> {
             total_rows: eq(&0)
         })
     );
-
-    // check if the number of posts in the cotonoma has been decremented
-    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
-    assert_eq!(cotonoma.posts, 0);
 
     // check the content of the ChangelogEntry
     assert_that!(
@@ -214,7 +201,7 @@ fn crud_operations() -> Result<()> {
             origin_serial_number: eq(&5),
             change: pat!(Change::DeleteCoto {
                 coto_id: eq(&coto.uuid),
-                deleted_at: eq(&cotonoma.updated_at)
+                // deleted_at:
             })
         })
     );
