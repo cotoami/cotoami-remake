@@ -10,8 +10,7 @@ case class Cotonoma(
     cotoId: Id[Coto],
     name: String,
     createdAtUtcIso: String,
-    updatedAtUtcIso: String,
-    posts: Int
+    updatedAtUtcIso: String
 ) extends Entity[Cotonoma] {
   override def equals(that: Any): Boolean =
     that match {

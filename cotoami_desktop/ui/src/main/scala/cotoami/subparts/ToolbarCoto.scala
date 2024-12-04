@@ -60,7 +60,7 @@ object ToolbarCoto {
           classes = "promote-to-cotonoma"
         )
       },
-      Option.when(context.domain.canDelete(coto)) {
+      Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(
           symbol = "delete",
           tip = "Delete",

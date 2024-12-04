@@ -21,7 +21,6 @@ trait CotonomaJson extends js.Object {
   val name: String = js.native
   val created_at: String = js.native
   val updated_at: String = js.native
-  val posts: Int = js.native
 }
 
 object CotonomaJson {
@@ -71,8 +70,7 @@ object CotonomaBackend {
       cotoId = Id(json.coto_id),
       name = json.name,
       createdAtUtcIso = json.created_at,
-      updatedAtUtcIso = json.updated_at,
-      posts = json.posts
+      updatedAtUtcIso = json.updated_at
     )
 
   def fetch(id: Id[Cotonoma]): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
