@@ -1,7 +1,6 @@
 use anyhow::Result;
 use chrono::{offset::Utc, Duration};
-use common::assert_approximately_now;
-use cotoami_db::prelude::*;
+use cotoami_db::{prelude::*, time};
 use googletest::prelude::*;
 use identicon_rs::Identicon;
 use image::ImageFormat;
@@ -31,6 +30,7 @@ fn init_as_empty_node() -> Result<()> {
     let mut ds = db.new_session()?;
 
     // when
+    let mock_time = time::mock_time();
     let ((local_node, node), changelog) = ds.init_as_node(None, None)?;
 
     // then
@@ -40,11 +40,11 @@ fn init_as_empty_node() -> Result<()> {
             rowid: eq(&1),
             name: eq(""),
             root_cotonoma_id: none(),
-            version: eq(&1)
+            version: eq(&1),
+            created_at: eq(&mock_time),
         })
     );
     assert_icon_generated(&node)?;
-    assert_approximately_now(node.created_at());
 
     assert_that!(
         local_node,
@@ -110,16 +110,22 @@ fn owner_session() -> Result<()> {
     let ds = db.new_session()?;
     let duration = Duration::minutes(30);
 
-    // when
     let ((local_node, _), _) = ds.init_as_node(None, Some("foo"))?;
     let mut owner = local_node.as_principal();
 
-    // then
+    // when: start_session with an invalid password
     assert_that!(owner.start_session("bar", duration), err(anything()));
 
+    // when
+    let mock_time = time::mock_time();
     let session_id = owner.start_session("foo", duration)?.to_owned();
+
+    // then
     assert_that!(owner.session_token(), some(eq(&session_id)));
-    assert_approximately_now(owner.session_expires_at_as_local_time().unwrap() - duration);
+    assert_that!(
+        owner.session_expires_at(),
+        some(eq(&(mock_time + duration)))
+    );
     owner.verify_session(&session_id)?;
     assert_that!(
         owner.verify_session("invalid-token"),
@@ -155,6 +161,7 @@ fn init_as_node() -> Result<()> {
     let mut ds = db.new_session()?;
 
     // when
+    let mock_time = time::mock_time();
     let ((local_node, node), changelog) = ds.init_as_node(Some("My Node"), None)?;
 
     // then
@@ -165,11 +172,11 @@ fn init_as_node() -> Result<()> {
         pat!(Node {
             rowid: eq(&1),
             name: eq("My Node"),
-            version: eq(&2), // root_cotonoma_id has been updated
+            version: eq(&2), // root_cotonoma_id has been updated,
+            created_at: eq(&mock_time),
         })
     );
     assert_icon_generated(&node)?;
-    assert_approximately_now(node.created_at());
 
     assert_that!(
         local_node,
@@ -196,11 +203,11 @@ fn init_as_node() -> Result<()> {
             uuid: eq(&node.root_cotonoma_id.unwrap()),
             node_id: eq(&node.uuid),
             coto_id: eq(&root_coto.uuid),
-            name: eq("My Node")
+            name: eq("My Node"),
+            created_at: eq(&mock_time),
+            updated_at: eq(&mock_time),
         })
     );
-    assert_approximately_now(root_cotonoma.created_at());
-    assert_approximately_now(root_cotonoma.updated_at());
     assert_that!(ds.all_cotonomas(), ok(elements_are![eq(&root_cotonoma)]));
 
     assert_that!(
@@ -213,11 +220,11 @@ fn init_as_node() -> Result<()> {
             summary: some(eq("My Node")),
             is_cotonoma: eq(&true),
             repost_of_id: none(),
-            reposted_in_ids: none()
+            reposted_in_ids: none(),
+            created_at: eq(&mock_time),
+            updated_at: eq(&mock_time),
         })
     );
-    assert_approximately_now(root_coto.created_at());
-    assert_approximately_now(root_coto.updated_at());
     assert_that!(ds.all_cotos(), ok(elements_are![eq(&root_coto)]));
 
     assert_that!(

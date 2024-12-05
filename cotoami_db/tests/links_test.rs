@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::prelude::*;
+use cotoami_db::{prelude::*, time};
 use googletest::prelude::*;
 
 pub mod common;
@@ -24,6 +24,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto2
     /////////////////////////////////////////////////////////////////////////////
 
+    let mock_time = time::mock_time();
     let (link1, changelog) = ds.connect(
         (&coto1.uuid, &coto2.uuid),
         Some("hello"),
@@ -44,11 +45,11 @@ fn crud_operations() -> Result<()> {
             target_coto_id: eq(&coto2.uuid),
             linking_phrase: some(eq("hello")),
             details: none(),
-            order: eq(&1)
+            order: eq(&1),
+            created_at: eq(&mock_time),
+            updated_at: eq(&mock_time),
         })
     );
-    common::assert_approximately_now(link1.created_at());
-    common::assert_approximately_now(link1.updated_at());
 
     // check if it is stored in the db
     assert_eq!(ds.link(&link1.uuid)?.as_ref(), Some(&link1));
@@ -79,6 +80,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto3
     /////////////////////////////////////////////////////////////////////////////
 
+    time::clear_mock_time();
     let (link2, _) = ds.connect(
         (&coto1.uuid, &coto3.uuid),
         Some("bye"),

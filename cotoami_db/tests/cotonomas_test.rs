@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::prelude::*;
+use cotoami_db::{prelude::*, time};
 use googletest::prelude::*;
 
 pub mod common;
@@ -19,20 +19,20 @@ fn crud_operations() -> Result<()> {
     // When: post_cotonoma
     /////////////////////////////////////////////////////////////////////////////
 
+    let mock_time = time::mock_time();
     let ((cotonoma, coto), changelog) =
         ds.post_cotonoma(&CotonomaInput::new("test"), &root_cotonoma, &operator)?;
 
-    // check the inserted cotonoma/coto
     assert_that!(
         cotonoma,
         pat!(Cotonoma {
             node_id: eq(&node.uuid),
             name: eq("test"),
             coto_id: eq(&coto.uuid),
+            created_at: eq(&mock_time),
+            updated_at: eq(&mock_time),
         })
     );
-    common::assert_approximately_now(cotonoma.created_at());
-    common::assert_approximately_now(cotonoma.updated_at());
     assert_eq!(cotonoma.created_at, cotonoma.updated_at);
 
     assert_that!(

@@ -1,7 +1,6 @@
 //! Cotoami database based on [SQLite](https://sqlite.org/) and [Diesel](https://diesel.rs/)
 
 use base64::Engine;
-use chrono::{offset::Utc, NaiveDateTime};
 use rand::Rng;
 use serde::{Deserialize, Deserializer, Serializer};
 
@@ -9,6 +8,7 @@ pub mod db;
 mod exif;
 pub mod models;
 mod schema;
+pub mod time;
 
 pub mod prelude {
     pub use crate::{
@@ -21,10 +21,8 @@ pub mod prelude {
         models::prelude::*,
     };
 }
-pub use crate::prelude::*;
 
-/// Returns the current datetime in UTC.
-fn current_datetime() -> NaiveDateTime { Utc::now().naive_utc() }
+pub use crate::{prelude::*, time::current_datetime};
 
 /// Generate a secret string of the given length which is 32 by default.
 pub fn generate_secret(length: Option<usize>) -> String {

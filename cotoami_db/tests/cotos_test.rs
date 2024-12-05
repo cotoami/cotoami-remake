@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cotoami_db::prelude::*;
+use cotoami_db::{prelude::*, time};
 use googletest::prelude::*;
 
 pub mod common;
@@ -19,6 +19,7 @@ fn crud_operations() -> Result<()> {
     // When: post_coto
     /////////////////////////////////////////////////////////////////////////////
 
+    let mock_time = time::mock_time();
     let (coto, changelog) = ds.post_coto(&CotoInput::new("hello"), &root_cotonoma, &operator)?;
 
     // check the inserted coto
@@ -32,12 +33,11 @@ fn crud_operations() -> Result<()> {
             summary: none(),
             is_cotonoma: eq(&false),
             repost_of_id: none(),
-            reposted_in_ids: none()
+            reposted_in_ids: none(),
+            created_at: eq(&mock_time),
+            updated_at: eq(&mock_time),
         })
     );
-    common::assert_approximately_now(coto.created_at());
-    common::assert_approximately_now(coto.updated_at());
-    assert_eq!(coto.created_at, coto.updated_at);
 
     // check if it is stored in the db
     assert!(ds.contains_coto(&coto.uuid)?);
@@ -76,6 +76,7 @@ fn crud_operations() -> Result<()> {
     // When: edit_coto (1: change content, add summary)
     /////////////////////////////////////////////////////////////////////////////
 
+    let mock_time = time::mock_time();
     let diff = CotoContentDiff::default()
         .content("bar")
         .summary(Some("foo"));
@@ -93,9 +94,9 @@ fn crud_operations() -> Result<()> {
             is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
+            updated_at: eq(&mock_time),
         })
     );
-    common::assert_approximately_now(edited_coto.updated_at());
 
     // check if it is stored in the db
     assert_that!(ds.coto(&coto.uuid)?, some(eq(&edited_coto)));
