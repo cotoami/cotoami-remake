@@ -19,6 +19,7 @@ import cotoami.libs.tauri
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.models._
+import cotoami.updates._
 import cotoami.subparts._
 
 object Main {
@@ -229,7 +230,7 @@ object Main {
       case Msg.FocusCoto(id, moveTo) =>
         update(Msg.OpenOrClosePane(PaneFlow.PaneName, true), model) match {
           case (model, cmds1) =>
-            model.focusCoto(id, moveTo) match {
+            Focus.coto(id, moveTo, model) match {
               case (model, cmds2) => (model, cmds1 ++ cmds2)
             }
         }
@@ -342,20 +343,18 @@ object Main {
 
   def applyUrlChange(url: URL, model: Model): (Model, Cmd[Msg]) =
     url.pathname + url.search + url.hash match {
-      case Route.index(_) =>
-        model.focusNode(None)
+      case Route.index(_) => Focus.node(None, model)
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id))
-          model.focusNode(Some(id))
+          Focus.node(Some(id), model)
         else
           (model, Browser.pushUrl(Route.index.url(())))
 
-      case Route.cotonoma(id) =>
-        model.focusCotonoma(None, id)
+      case Route.cotonoma(id) => Focus.cotonoma(None, id, model)
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        model.focusCotonoma(Some(nodeId), cotonomaId)
+        Focus.cotonoma(Some(nodeId), cotonomaId, model)
 
       case _ =>
         (model, Browser.pushUrl(Route.index.url(())))
