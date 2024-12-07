@@ -19,6 +19,7 @@ import cotoami.libs.tauri
 import cotoami.backend._
 import cotoami.repositories._
 import cotoami.models._
+import cotoami.updates
 import cotoami.updates._
 import cotoami.subparts._
 
@@ -174,15 +175,16 @@ object Main {
         )
 
       case Msg.SetTheme(theme) =>
-        model.updateUiState(_.copy(theme = theme)).pipe { case (model, cmd) =>
-          (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
+        updates.uiState(_.copy(theme = theme), model).pipe {
+          case (model, cmd) =>
+            (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
         }
 
       case Msg.OpenOrClosePane(name, open) =>
-        model.updateUiState(_.openOrClosePane(name, open))
+        updates.uiState(_.openOrClosePane(name, open), model)
 
       case Msg.ResizePane(name, newSize) =>
-        model.updateUiState(_.resizePane(name, newSize))
+        updates.uiState(_.resizePane(name, newSize), model)
 
       case Msg.FocusNode(id) =>
         (model, Browser.pushUrl(Route.node.url(id)))
@@ -264,13 +266,13 @@ object Main {
       }
 
       case Msg.OpenGeomap =>
-        model.updateUiState(_.openGeomap)
+        updates.uiState(_.openGeomap, model)
 
       case Msg.CloseMap =>
-        model.updateUiState(_.closeMap)
+        updates.uiState(_.closeMap, model)
 
       case Msg.FocusGeolocation(location) =>
-        model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
+        updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
           (model.modify(_.geomap).using(_.focus(location)), cmds)
         }
 
@@ -280,7 +282,7 @@ object Main {
       case Msg.DisplayGeolocationInFocus =>
         model.domain.geolocationInFocus match {
           case Some(location) =>
-            model.updateUiState(_.openGeomap).pipe { case (model, cmds) =>
+            updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
               (
                 model.modify(_.geomap).using(_.moveTo(location)),
                 cmds

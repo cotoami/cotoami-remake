@@ -136,14 +136,14 @@ object Modal {
       case Msg.ConfirmMsg(modalMsg) =>
         stack.get[Confirm].map { case Confirm(modal) =>
           ModalConfirm.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(Confirm(modal)), cmds)
+            (updateModal(Confirm(modal), model), cmds)
           }
         }
 
       case Msg.WelcomeMsg(modalMsg) =>
         stack.get[Welcome].map { case Welcome(modal) =>
           ModalWelcome.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(Welcome(modal)), cmds)
+            (updateModal(Welcome(modal), model), cmds)
           }
         }
 
@@ -152,8 +152,7 @@ object Modal {
           ModalIncorporate.update(modalMsg, modal)
             .pipe { case (modal, nodes, cmds) =>
               (
-                model
-                  .updateModal(Incorporate(modal))
+                updateModal(Incorporate(modal), model)
                   .modify(_.domain.nodes).setTo(nodes),
                 cmds
               )
@@ -163,21 +162,21 @@ object Modal {
       case Msg.ParentSyncMsg(modalMsg) =>
         stack.get[ParentSync].map { case ParentSync(modal) =>
           ModalParentSync.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(ParentSync(modal)), cmds)
+            (updateModal(ParentSync(modal), model), cmds)
           }
         }
 
       case Msg.OperateAsMsg(modalMsg) =>
         stack.get[OperateAs].map { case OperateAs(modal) =>
           ModalOperateAs.update(modalMsg, modal, model.domain).pipe {
-            case (modal, cmds) => (model.updateModal(OperateAs(modal)), cmds)
+            case (modal, cmds) => (updateModal(OperateAs(modal), model), cmds)
           }
         }
 
       case Msg.NodeProfileMsg(modalMsg) =>
         stack.get[NodeProfile].map { case NodeProfile(modal) =>
           ModalNodeProfile.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(NodeProfile(modal)), cmds)
+            (updateModal(NodeProfile(modal), model), cmds)
           }
         }
 
@@ -186,8 +185,7 @@ object Modal {
           ModalNodeIcon.update(modalMsg, modal).pipe {
             case (modal, nodes, cmds) =>
               (
-                model
-                  .updateModal(NodeIcon(modal))
+                updateModal(NodeIcon(modal), model)
                   .modify(_.domain.nodes).setTo(nodes),
                 cmds
               )
@@ -197,7 +195,7 @@ object Modal {
       case Msg.ClientsMsg(modalMsg) =>
         stack.get[Clients].map { case Clients(modal) =>
           ModalClients.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (model.updateModal(Clients(modal)), cmds)
+            (updateModal(Clients(modal), model), cmds)
           }
         }
 
@@ -206,8 +204,7 @@ object Modal {
           ModalNewClient.update(modalMsg, modal).pipe {
             case (modal, nodes, cmds) =>
               (
-                model
-                  .updateModal(NewClient(modal))
+                updateModal(NewClient(modal), model)
                   .modify(_.domain.nodes).setTo(nodes),
                 cmds
               )
@@ -219,8 +216,7 @@ object Modal {
           ModalRepost.update(modalMsg, modal).pipe {
             case (modal, cotonomas, cmds) =>
               (
-                model
-                  .updateModal(Repost(modal))
+                updateModal(Repost(modal), model)
                   .modify(_.domain.cotonomas).setTo(cotonomas),
                 cmds
               )
@@ -228,6 +224,11 @@ object Modal {
         }
     }).getOrElse((model, Cmd.none))
   }
+
+  private def updateModal[M <: Modal: ClassTag](
+      newState: M,
+      model: AppModel
+  ): AppModel = model.copy(modalStack = model.modalStack.update(newState))
 
   def apply(
       model: AppModel

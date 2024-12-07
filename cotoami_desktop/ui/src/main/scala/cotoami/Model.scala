@@ -1,6 +1,5 @@
 package cotoami
 
-import scala.reflect.ClassTag
 import scala.scalajs.js
 import org.scalajs.dom.URL
 import com.softwaremill.quicklens._
@@ -67,16 +66,6 @@ case class Model(
       waitingPosts = WaitingPosts(),
       traversals = SectionTraversals.Model()
     )
-
-  def updateUiState(update: UiState => UiState): (Model, Cmd.One[Msg]) =
-    uiState
-      .map(update(_) match {
-        case state => (copy(uiState = Some(state)), state.save)
-      })
-      .getOrElse((this, Cmd.none))
-
-  def updateModal[M <: Modal: ClassTag](newState: M): Model =
-    copy(modalStack = modalStack.update(newState))
 
   override def focusedLocation: Option[Geolocation] = geomap.focusedLocation
 
