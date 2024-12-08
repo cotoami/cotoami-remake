@@ -98,7 +98,7 @@ object Main {
       case Msg.BackendChange(log) => model.importChangelog(log)
 
       case Msg.BackendEvent(event) =>
-        (model.handleLocalNodeEvent(event), Cmd.none)
+        (updates.LocalNodeEvent.handle(event, model), Cmd.none)
 
       case Msg.ToggleLogView =>
         (model.copy(logViewToggle = !model.logViewToggle), Cmd.none)
