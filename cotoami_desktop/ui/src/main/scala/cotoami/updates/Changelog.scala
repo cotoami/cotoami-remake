@@ -1,0 +1,150 @@
+package cotoami.updates
+
+import scala.util.chaining._
+import com.softwaremill.quicklens._
+
+import fui.{Browser, Cmd}
+import cotoami.utils.facade.Nullable
+import cotoami.{Model, Msg}
+import cotoami.models.Id
+import cotoami.backend.{
+  ChangeJson,
+  ChangelogEntryJson,
+  CotoBackend,
+  CotoJson,
+  CotonomaBackend,
+  CotonomaJson,
+  LinkBackend,
+  NodeBackend
+}
+
+object Changelog {
+
+  def `import`(log: ChangelogEntryJson, model: Model): (Model, Cmd[Msg]) = {
+    val expectedNumber = model.domain.lastChangeNumber + 1
+    if (log.serial_number == expectedNumber)
+      applyChange(log.change, model)
+        .modify(_._1.domain.lastChangeNumber).setTo(log.serial_number)
+    else
+      (
+        model.info(
+          s"Unexpected change number (expected: ${expectedNumber})",
+          Some(log.serial_number.toString())
+        ),
+        Browser.send(Msg.ReloadDomain)
+      )
+  }
+
+  private def applyChange(
+      change: ChangeJson,
+      model: Model
+  ): (Model, Cmd[Msg]) = {
+    // Handle changes in order of assumed their frequency:
+    // CreateCoto
+    for (cotoJson <- change.CreateCoto.toOption) {
+      return postCoto(cotoJson, model)
+    }
+
+    // CreateCotonoma
+    for (cotonomaJson <- change.CreateCotonoma.toOption) {
+      return postCotonoma(cotonomaJson, model)
+    }
+
+    // CreateLink
+    for (linkJson <- change.CreateLink.toOption) {
+      val link = LinkBackend.toModel(linkJson)
+      return (model.modify(_.domain.links).using(_.put(link)), Cmd.none)
+    }
+
+    // DeleteCoto
+    for (deleteCotoJson <- change.DeleteCoto.toOption) {
+      return (
+        model.copy(domain =
+          model.domain.deleteCoto(Id(deleteCotoJson.coto_id))
+        ),
+        Cmd.none
+      )
+    }
+
+    // UpsertNode
+    for (nodeJson <- change.UpsertNode.toOption) {
+      val node = NodeBackend.toModel(nodeJson)
+      return (model.modify(_.domain.nodes).using(_.put(node)), Cmd.none)
+    }
+
+    // CreateNode
+    for (createNodeJson <- change.CreateNode.toOption) {
+      return model.modify(_.domain.nodes).using(
+        _.put(NodeBackend.toModel(createNodeJson.node))
+      ).pipe { model =>
+        Nullable.toOption(createNodeJson.root)
+          .map(postCotonoma(_, model))
+          .getOrElse((model, Cmd.none))
+      }
+    }
+
+    // SetNodeIcon
+    for (setNodeIconJson <- change.SetNodeIcon.toOption) {
+      return (
+        model
+          .modify(_.domain.nodes).using(
+            _.setIcon(Id(setNodeIconJson.node_id), setNodeIconJson.icon)
+          )
+          .modify(_.geomap).using(_.refreshMarkers),
+        Cmd.none
+      )
+    }
+
+    (model, Cmd.none)
+  }
+
+  private def postCoto(
+      cotoJson: CotoJson,
+      model: Model
+  ): (Model, Cmd.One[Msg]) = {
+    val domain = model.domain
+    val coto = CotoBackend.toModel(cotoJson, true)
+    val cotos = domain.cotos.put(coto)
+    val (cotonomas, fetchCotonoma) =
+      coto.postedInId.map(domain.cotonomas.updated(_))
+        .getOrElse((domain.cotonomas, Cmd.none))
+    val timeline =
+      (domain.nodes.focused, domain.cotonomas.focused) match {
+        case (None, None) => model.timeline.post(coto.id) // all posts
+        case (Some(node), None) =>
+          if (coto.nodeId == node.id)
+            model.timeline.post(coto.id) // posts in the focused node
+          else
+            model.timeline
+        case (_, Some(cotonom)) =>
+          if (coto.postedInId == Some(cotonom.id))
+            model.timeline.post(coto.id) // posts in the focused cotonoma
+          else
+            model.timeline
+      }
+    val geomap =
+      if (coto.geolocated)
+        model.geomap.addOrRemoveMarkers
+      else
+        model.geomap
+    (
+      model
+        .modify(_.domain.cotos).setTo(cotos)
+        .modify(_.domain.cotonomas).setTo(cotonomas)
+        .modify(_.timeline).setTo(timeline)
+        .modify(_.geomap).setTo(geomap),
+      fetchCotonoma
+    )
+  }
+
+  private def postCotonoma(
+      jsonPair: (CotonomaJson, CotoJson),
+      model: Model
+  ): (Model, Cmd.One[Msg]) = {
+    val cotonoma = CotonomaBackend.toModel(jsonPair._1)
+    val coto = CotoBackend.toModel(jsonPair._2)
+    model
+      .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
+      .pipe(postCoto(jsonPair._2, _))
+  }
+}
