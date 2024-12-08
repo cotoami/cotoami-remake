@@ -79,7 +79,7 @@ object Main {
 
     implicit val context: Context = model
     msg match {
-      case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
+      case Msg.UrlChanged(url) => applyUrlChange(url, updates.url(url, model))
 
       case Msg.AddLogEntry(level, message, details) =>
         (

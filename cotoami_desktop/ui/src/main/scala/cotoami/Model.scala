@@ -57,12 +57,5 @@ case class Model(
   def error(message: String, error: Option[ErrorJson]): Model =
     copy(log = log.error(message, error.map(js.JSON.stringify(_))))
 
-  def changeUrl(url: URL): Model =
-    copy(
-      url = url,
-      waitingPosts = WaitingPosts(),
-      traversals = SectionTraversals.Model()
-    )
-
   override def focusedLocation: Option[Geolocation] = geomap.focusedLocation
 }
