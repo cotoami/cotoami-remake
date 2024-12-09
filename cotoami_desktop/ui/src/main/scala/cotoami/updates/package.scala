@@ -1,19 +1,10 @@
 package cotoami
 
-import org.scalajs.dom.URL
-
 import fui.Cmd
 import cotoami.Model
-import cotoami.models.{UiState, WaitingPosts}
-import cotoami.subparts.SectionTraversals
+import cotoami.models.UiState
 
 package object updates {
-  def url(url: URL, model: Model): Model =
-    model.copy(
-      url = url,
-      waitingPosts = WaitingPosts(),
-      traversals = SectionTraversals.Model()
-    )
 
   def uiState(update: UiState => UiState, model: Model): (Model, Cmd.One[Msg]) =
     model.uiState
