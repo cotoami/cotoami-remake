@@ -77,9 +77,11 @@ case class Domain(
     // Delete the reposts first if they exist
     cotos.repostsOf(id).foreach(repost => deleteCoto(repost.id))
     // then, delete the specified coto (which could be a cotonoma)
+    // and the links to/from the coto.
     copy(
       cotos = cotos.delete(id),
-      cotonomas = cotonomas.deleteByCotoId(id)
+      cotonomas = cotonomas.deleteByCotoId(id),
+      links = links.onCotoDelete(id)
     )
   }
 
