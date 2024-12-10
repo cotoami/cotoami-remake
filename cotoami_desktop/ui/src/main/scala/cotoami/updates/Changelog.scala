@@ -42,7 +42,7 @@ object Changelog {
     // Handle changes in order of assumed their frequency:
     // CreateCoto
     for (cotoJson <- change.CreateCoto.toOption) {
-      return postCoto(cotoJson, model)
+      return createCoto(cotoJson, model)
     }
 
     // CreateCotonoma
@@ -98,16 +98,22 @@ object Changelog {
     (model, Cmd.none)
   }
 
-  private def postCoto(
+  private def createCoto(
       cotoJson: CotoJson,
       model: Model
   ): (Model, Cmd.One[Msg]) = {
     val domain = model.domain
+
+    // Register the coto
     val coto = CotoBackend.toModel(cotoJson, true)
     val cotos = domain.cotos.put(coto)
+
+    // Update the target cotonoma
     val (cotonomas, fetchCotonoma) =
       coto.postedInId.map(domain.cotonomas.updated(_))
         .getOrElse((domain.cotonomas, Cmd.none))
+
+    // Post the coto to the timeline
     val timeline =
       (domain.nodes.focused, domain.cotonomas.focused) match {
         case (None, None) => model.timeline.post(coto.id) // all posts
@@ -122,6 +128,8 @@ object Changelog {
           else
             model.timeline
       }
+
+    // Refresh geomap markers
     val geomap =
       if (coto.geolocated)
         model.geomap.addOrRemoveMarkers
@@ -145,6 +153,6 @@ object Changelog {
     val coto = CotoBackend.toModel(jsonPair._2)
     model
       .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
-      .pipe(postCoto(jsonPair._2, _))
+      .pipe(createCoto(jsonPair._2, _))
   }
 }
