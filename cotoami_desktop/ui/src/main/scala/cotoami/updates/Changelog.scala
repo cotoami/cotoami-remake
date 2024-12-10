@@ -48,7 +48,7 @@ object Changelog {
 
     // CreateCotonoma
     for (cotonomaJson <- change.CreateCotonoma.toOption) {
-      return postCotonoma(cotonomaJson, model)
+      return createCotonoma(cotonomaJson, model)
     }
 
     // CreateLink
@@ -79,7 +79,7 @@ object Changelog {
         _.put(NodeBackend.toModel(createNodeJson.node))
       ).pipe { model =>
         Nullable.toOption(createNodeJson.root)
-          .map(postCotonoma(_, model))
+          .map(createCotonoma(_, model))
           .getOrElse((model, Cmd.none))
       }
     }
@@ -148,7 +148,7 @@ object Changelog {
     )
   }
 
-  private def postCotonoma(
+  private def createCotonoma(
       jsonPair: (CotonomaJson, CotoJson),
       model: Model
   ): (Model, Cmd.One[Msg]) = {
