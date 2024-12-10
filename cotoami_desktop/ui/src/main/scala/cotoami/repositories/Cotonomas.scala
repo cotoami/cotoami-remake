@@ -5,12 +5,7 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.{Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Page, PaginatedIds}
-import cotoami.backend.{
-  CotoGraph,
-  CotonomaBackend,
-  CotonomaDetails,
-  CotosRelatedData
-}
+import cotoami.backend.{CotoGraph, CotonomaDetails, CotosRelatedData}
 
 case class Cotonomas(
     map: Map[Id[Cotonoma], Cotonoma] = Map.empty,
@@ -127,16 +122,6 @@ case class Cotonomas(
           case _ => subIds
         }
       )
-
-  def updated(id: Id[Cotonoma]): (Cotonomas, Cmd.One[AppMsg]) =
-    (
-      this.modify(_.recentIds).using(_.prependId(id)),
-      if (!contains(id))
-        CotonomaBackend.fetch(id)
-          .map(Domain.Msg.CotonomaFetched(_).into)
-      else
-        Cmd.none
-    )
 
   def posted(coto: Coto): Seq[Cotonoma] =
     coto.postedInIds.map(get).flatten

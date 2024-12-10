@@ -6,7 +6,8 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.utils.facade.Nullable
 import cotoami.{Model, Msg}
-import cotoami.models.Id
+import cotoami.models.{Cotonoma, Id}
+import cotoami.repositories.{Cotonomas, Domain}
 import cotoami.backend.{
   ChangeJson,
   ChangelogEntryJson,
@@ -110,7 +111,7 @@ object Changelog {
 
     // Update the target cotonoma
     val (cotonomas, fetchCotonoma) =
-      coto.postedInId.map(domain.cotonomas.updated(_))
+      coto.postedInId.map(touchCotonoma(_, domain.cotonomas))
         .getOrElse((domain.cotonomas, Cmd.none))
 
     // Post the coto to the timeline
@@ -155,4 +156,17 @@ object Changelog {
       .modify(_.domain.cotonomas).using(_.post(cotonoma, coto))
       .pipe(createCoto(jsonPair._2, _))
   }
+
+  private def touchCotonoma(
+      id: Id[Cotonoma],
+      cotonomas: Cotonomas
+  ): (Cotonomas, Cmd.One[Msg]) =
+    (
+      cotonomas.modify(_.recentIds).using(_.prependId(id)),
+      if (!cotonomas.contains(id))
+        CotonomaBackend.fetch(id)
+          .map(Domain.Msg.CotonomaFetched(_).into)
+      else
+        Cmd.none
+    )
 }
