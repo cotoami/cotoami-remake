@@ -109,9 +109,11 @@ object Changelog {
     val coto = CotoBackend.toModel(cotoJson, true)
     val cotos = domain.cotos.put(coto)
 
-    // Update the target cotonoma
+    // Update the target cotonoma or fetch it if not registered yet
     val (cotonomas, fetchCotonoma) =
-      coto.postedInId.map(touchCotonoma(_, domain.cotonomas))
+      coto.postedInId.map(
+        touchCotonoma(_, coto.createdAtUtcIso, domain.cotonomas)
+      )
         .getOrElse((domain.cotonomas, Cmd.none))
 
     // Post the coto to the timeline
@@ -159,10 +161,13 @@ object Changelog {
 
   private def touchCotonoma(
       id: Id[Cotonoma],
+      updatedAtUtcIso: String,
       cotonomas: Cotonomas
   ): (Cotonomas, Cmd.One[Msg]) =
     (
-      cotonomas.modify(_.recentIds).using(_.prependId(id)),
+      cotonomas
+        .update(id)(_.copy(updatedAtUtcIso = updatedAtUtcIso))
+        .modify(_.recentIds).using(_.prependId(id)),
       if (!cotonomas.contains(id))
         CotonomaBackend.fetch(id)
           .map(Domain.Msg.CotonomaFetched(_).into)
