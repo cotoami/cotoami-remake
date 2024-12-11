@@ -281,8 +281,7 @@ object SectionTimeline {
 
   private def sectionPost(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val originalCoto = context.domain.cotos.getOriginal(coto)
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -293,7 +292,7 @@ object SectionTimeline {
       key := coto.id.uuid
     )(
       repostHeader(coto),
-      originalCoto.map(coto =>
+      context.domain.cotos.getOriginal(coto).map(coto =>
         Fragment(
           ViewCoto.ulParents(
             context.domain.parentsOf(coto.id),
@@ -304,7 +303,6 @@ object SectionTimeline {
         )
       )
     )
-  }
 
   private def articleCoto(coto: Coto)(implicit
       context: Context,
