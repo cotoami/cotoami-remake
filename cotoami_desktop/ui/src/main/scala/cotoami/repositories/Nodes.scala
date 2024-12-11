@@ -125,7 +125,10 @@ case class Nodes(
     isOperating(nodeId) || asChildOf(nodeId).isDefined
 
   def canEdit(coto: Coto): Boolean =
+    // Posted by myself?
     isOperating(coto.postedById) && (
+      // Can I access the node where the coto was posted?
+      // (the operating node or one of active parent nodes)
       isOperating(coto.nodeId) || asChildOf(coto.nodeId).isDefined
     )
 
