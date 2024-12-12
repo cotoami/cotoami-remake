@@ -342,6 +342,25 @@ object SectionTimeline {
         },
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
           reposter(coto, domain.nodes)
+        },
+        Option.when(context.domain.nodes.canEdit(coto)) {
+          toolButton(
+            classes = "delete-repost",
+            tip = "Delete this repost",
+            tipPlacement = "right",
+            symbol = "close",
+            onClick = e => {
+              e.stopPropagation()
+              dispatch(
+                Modal.Msg.OpenModal(
+                  Modal.Confirm(
+                    "Are you sure you want to delete the repost?",
+                    Domain.Msg.DeleteCoto(coto.id)
+                  )
+                )
+              )
+            }
+          )
         }
       )
     }
