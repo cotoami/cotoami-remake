@@ -17,7 +17,7 @@ fn repost() -> Result<()> {
     let ((cotonoma2, _), _) =
         ds.post_cotonoma(&CotonomaInput::new("Package manager"), &root, &opr)?;
 
-    // When
+    // When: repost a coto
     let ((repost1, original), changelog) = ds.repost(&coto.uuid, &cotonoma1, &opr)?;
 
     assert_that!(
@@ -108,7 +108,7 @@ fn repost() -> Result<()> {
         })
     );
 
-    // When: delete a repost
+    // When: delete one of the two reposts
     let ChangelogEntry {
         change: Change::DeleteCoto { deleted_at, .. },
         ..
@@ -117,13 +117,13 @@ fn repost() -> Result<()> {
         panic!("Unexpected changelog returned from delete_coto.");
     };
 
+    // Then: expect the `reposted_in_ids` to be updated
     assert_eq!(ds.coto(&repost2.uuid)?, None);
     assert_that!(
         ds.coto(&coto.uuid)?,
         some(pat!(Coto {
             content: some(eq("Cargo")),
             repost_of_id: none(),
-            // cotonoma2 should be removed from reposted_in_ids
             reposted_in_ids: some(pat!(Ids(elements_are![eq(&cotonoma1.uuid)]))),
             updated_at: eq(&deleted_at)
         }))
@@ -132,8 +132,24 @@ fn repost() -> Result<()> {
     // When: delete the original coto
     let _ = ds.delete_coto(&coto.uuid, &opr)?;
 
+    // Then: expect cascading delete
     assert_eq!(ds.coto(&coto.uuid)?, None);
     assert_eq!(ds.coto(&repost1.uuid)?, None);
+
+    // When: delete the only repost
+    let (coto, _) = ds.post_coto(&CotoInput::new("Hello"), &root, &opr)?;
+    let ((repost, _), _) = ds.repost(&coto.uuid, &cotonoma1, &opr)?;
+    let _ = ds.delete_coto(&repost.uuid, &opr)?;
+
+    // Then: expect `reposted_in_ids` should be updated to be null
+    assert_eq!(ds.coto(&repost.uuid)?, None);
+    assert_that!(
+        ds.coto(&coto.uuid)?,
+        some(pat!(Coto {
+            content: some(eq("Hello")),
+            reposted_in_ids: none(),
+        }))
+    );
 
     Ok(())
 }

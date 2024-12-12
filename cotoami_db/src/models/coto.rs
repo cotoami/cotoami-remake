@@ -522,7 +522,11 @@ impl<'a> UpdateCoto<'a> {
         if let Some(ref reposted_in_ids) = original.reposted_in_ids {
             let mut reposted_in_ids = reposted_in_ids.clone();
             reposted_in_ids.remove(cotonoma_id);
-            self.reposted_in_ids = Some(Some(reposted_in_ids))
+            if reposted_in_ids.is_empty() {
+                self.reposted_in_ids = Some(None);
+            } else {
+                self.reposted_in_ids = Some(Some(reposted_in_ids));
+            }
         }
     }
 }

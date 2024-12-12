@@ -180,6 +180,8 @@ impl<T> Ids<T> {
 
     pub fn contains(&self, id: &Id<T>) -> bool { self.0.contains(id) }
 
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
+
     pub fn add(&mut self, id: Id<T>) {
         if !self.contains(&id) {
             self.0.push(id);
@@ -209,12 +211,16 @@ impl<T: Debug> ToSql<Text, Sqlite> for Ids<T> {
 impl<T> FromSql<Text, Sqlite> for Ids<T> {
     fn from_sql(bytes: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
         let raw_value = <String as FromSql<Text, Sqlite>>::from_sql(bytes)?;
-        let str_ids = raw_value.split(',');
-        let mut ids: Vec<Id<T>> = Vec::new();
-        for str_id in str_ids {
-            ids.push(str_id.to_string().parse()?);
+        if raw_value.is_empty() {
+            Ok(Self(Vec::new()))
+        } else {
+            let str_ids = raw_value.split(',');
+            let mut ids: Vec<Id<T>> = Vec::new();
+            for str_id in str_ids {
+                ids.push(str_id.to_string().parse()?);
+            }
+            Ok(Self(ids))
         }
-        Ok(Self(ids))
     }
 }
 
