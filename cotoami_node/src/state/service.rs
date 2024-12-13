@@ -62,13 +62,13 @@ impl NodeState {
             Command::RecentCotonomas { node, pagination } => {
                 format.serialize(self.recent_cotonomas(node, pagination).await)
             }
+            Command::CotonomasByPrefix { prefix, nodes } => {
+                format.serialize(self.cotonomas_by_prefix(prefix, nodes).await)
+            }
             Command::Cotonoma { id } => format.serialize(self.cotonoma(id).await),
             Command::CotonomaDetails { id } => format.serialize(self.cotonoma_details(id).await),
             Command::CotonomaByName { name, node } => {
                 format.serialize(self.cotonoma_by_name(name, node).await)
-            }
-            Command::CotonomasByPrefix { prefix, nodes } => {
-                format.serialize(self.cotonomas_by_prefix(prefix, nodes).await)
             }
             Command::SubCotonomas { id, pagination } => {
                 format.serialize(self.sub_cotonomas(id, pagination).await)

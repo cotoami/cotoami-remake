@@ -19,12 +19,41 @@ const DEFAULT_RECENT_PAGE_SIZE: i64 = 100;
 const DEFAULT_COTONOMAS_BY_PREFIX_LIMIT: i64 = 10;
 
 impl NodeState {
-    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<(Cotonoma, Coto), ServiceError> {
-        self.get(move |ds| ds.try_get_cotonoma(&id)).await
+    pub async fn recent_cotonomas(
+        &self,
+        node: Option<Id<Node>>,
+        pagination: Pagination,
+    ) -> Result<Page<Cotonoma>, ServiceError> {
+        if let Err(errors) = pagination.validate() {
+            return errors.into_result();
+        }
+        self.get(move |ds| {
+            ds.recent_cotonomas(
+                node.as_ref(),
+                pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
+                pagination.page,
+            )
+        })
+        .await
     }
 
     pub async fn all_node_roots(&self) -> Result<Vec<(Cotonoma, Coto)>, ServiceError> {
         self.get(move |ds| ds.all_node_roots()).await
+    }
+
+    pub async fn cotonomas_by_prefix(
+        &self,
+        prefix: String,
+        nodes: Option<Vec<Id<Node>>>,
+    ) -> Result<Vec<Cotonoma>, ServiceError> {
+        self.get(move |ds| {
+            ds.cotonomas_by_prefix(&prefix, nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
+        })
+        .await
+    }
+
+    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<(Cotonoma, Coto), ServiceError> {
+        self.get(move |ds| ds.try_get_cotonoma(&id)).await
     }
 
     pub async fn cotonoma_details(
@@ -52,17 +81,6 @@ impl NodeState {
         .await
     }
 
-    pub async fn cotonomas_by_prefix(
-        &self,
-        prefix: String,
-        nodes: Option<Vec<Id<Node>>>,
-    ) -> Result<Vec<Cotonoma>, ServiceError> {
-        self.get(move |ds| {
-            ds.cotonomas_by_prefix(&prefix, nodes, DEFAULT_COTONOMAS_BY_PREFIX_LIMIT)
-        })
-        .await
-    }
-
     pub async fn sub_cotonomas(
         &self,
         id: Id<Cotonoma>,
@@ -75,24 +93,6 @@ impl NodeState {
             ds.sub_cotonomas(
                 &id,
                 pagination.page_size.unwrap_or(DEFAULT_SUB_PAGE_SIZE),
-                pagination.page,
-            )
-        })
-        .await
-    }
-
-    pub async fn recent_cotonomas(
-        &self,
-        node: Option<Id<Node>>,
-        pagination: Pagination,
-    ) -> Result<Page<Cotonoma>, ServiceError> {
-        if let Err(errors) = pagination.validate() {
-            return errors.into_result();
-        }
-        self.get(move |ds| {
-            ds.recent_cotonomas(
-                node.as_ref(),
-                pagination.page_size.unwrap_or(DEFAULT_RECENT_PAGE_SIZE),
                 pagination.page,
             )
         })

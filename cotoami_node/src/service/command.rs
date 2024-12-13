@@ -52,6 +52,12 @@ pub enum Command {
         pagination: Pagination,
     },
 
+    /// Request a [Vec<Cotonoma>] in `target_nodes` whose name start with the given `prefix`.
+    CotonomasByPrefix {
+        prefix: String,
+        nodes: Option<Vec<Id<Node>>>,
+    },
+
     /// Request a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)` of the given cotonoma ID.
     Cotonoma { id: Id<Cotonoma> },
 
@@ -60,12 +66,6 @@ pub enum Command {
 
     /// Request a [Cotonoma] of the given name in the given node.
     CotonomaByName { name: String, node: Id<Node> },
-
-    /// Request a [Vec<Cotonoma>] in `target_nodes` whose name start with the given `prefix`.
-    CotonomasByPrefix {
-        prefix: String,
-        nodes: Option<Vec<Id<Node>>>,
-    },
 
     /// Request a [Page<Cotonoma>] that contains sub cotonomas of the given cotonoma.
     SubCotonomas {

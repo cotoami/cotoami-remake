@@ -139,14 +139,6 @@ impl HttpClient {
                     self.get(API_PATH_COTONOMAS).query(&pagination)
                 }
             }
-            Command::Cotonoma { id } => self.get(&format!("{API_PATH_COTONOMAS}/{id}")),
-            Command::CotonomaDetails { id } => {
-                self.get(&format!("{API_PATH_COTONOMAS}/{id}/details"))
-            }
-            Command::CotonomaByName { name, node } => {
-                let name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
-                self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{name}"))
-            }
             Command::CotonomasByPrefix { prefix, nodes } => {
                 let prefix = utf8_percent_encode(&prefix, NON_ALPHANUMERIC).to_string();
                 let nodes = if let Some(nodes) = nodes {
@@ -156,6 +148,14 @@ impl HttpClient {
                 };
                 self.get(&format!("{API_PATH_COTONOMAS}/prefix/{prefix}"))
                     .query(&nodes)
+            }
+            Command::Cotonoma { id } => self.get(&format!("{API_PATH_COTONOMAS}/{id}")),
+            Command::CotonomaDetails { id } => {
+                self.get(&format!("{API_PATH_COTONOMAS}/{id}/details"))
+            }
+            Command::CotonomaByName { name, node } => {
+                let name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
+                self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{name}"))
             }
             Command::SubCotonomas { id, pagination } => self
                 .get(&format!("{API_PATH_COTONOMAS}/{id}/subs"))
