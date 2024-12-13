@@ -10,7 +10,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoGraph, CotosPage, GeolocatedCotos, Pagination},
+        models::{CotoDetails, CotoGraph, CotosPage, GeolocatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -20,13 +20,14 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
-        .route("/:coto_id", delete(delete_coto))
         .route("/geolocated", get(geolocated_cotos))
         .route(
             "/geo/:sw_lng/:sw_lat/:ne_lng/:ne_lat",
             get(cotos_in_geo_bounds),
         )
         .route("/search/:query", get(search_cotos))
+        .route("/:coto_id/details", get(coto_details))
+        .route("/:coto_id", delete(delete_coto))
         .route("/:coto_id/graph", get(graph))
 }
 
@@ -43,22 +44,6 @@ async fn recent_cotos(
         .recent_cotos(None, None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// DELETE /api/data/cotos/:coto_id
-/////////////////////////////////////////////////////////////////////////////
-
-async fn delete_coto(
-    State(state): State<NodeState>,
-    Extension(operator): Extension<Operator>,
-    TypedHeader(accept): TypedHeader<Accept>,
-    Path(coto_id): Path<Id<Coto>>,
-) -> Result<Content<Id<Coto>>, ServiceError> {
-    state
-        .delete_coto(coto_id, Arc::new(operator))
-        .await
-        .map(|coto_id| Content(coto_id, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -107,6 +92,37 @@ async fn search_cotos(
         .search_cotos(query, None, None, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotos/:coto_id/details
+/////////////////////////////////////////////////////////////////////////////
+
+async fn coto_details(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+) -> Result<Content<CotoDetails>, ServiceError> {
+    state
+        .coto_details(coto_id)
+        .await
+        .map(|details| Content(details, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// DELETE /api/data/cotos/:coto_id
+/////////////////////////////////////////////////////////////////////////////
+
+async fn delete_coto(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+) -> Result<Content<Id<Coto>>, ServiceError> {
+    state
+        .delete_coto(coto_id, Arc::new(operator))
+        .await
+        .map(|coto_id| Content(coto_id, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

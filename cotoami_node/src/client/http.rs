@@ -215,6 +215,7 @@ impl HttpClient {
                         .query(&pagination)
                 }
             }
+            Command::CotoDetails { id } => self.get(&format!("{API_PATH_COTOS}/{id}/details")),
             Command::GraphFromCoto { coto } => self.get(&format!("{API_PATH_COTOS}/{coto}/graph")),
             Command::GraphFromCotonoma { cotonoma } => {
                 self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma}/graph"))

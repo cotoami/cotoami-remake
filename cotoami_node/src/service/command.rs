@@ -100,6 +100,9 @@ pub enum Command {
         pagination: Pagination,
     },
 
+    /// Request a [CotoDetails] of the given ID.
+    CotoDetails { id: Id<Coto> },
+
     /// Request a [CotoGraph] by traversing from the given coto.
     GraphFromCoto { coto: Id<Coto> },
 
