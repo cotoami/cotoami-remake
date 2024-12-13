@@ -227,6 +227,13 @@ impl Changes {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+pub struct CotoDetails {
+    pub coto: Coto,
+    pub related_data: CotosRelatedData,
+    pub outgoing_links: Vec<Link>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotonomaDetails {
     pub cotonoma: Cotonoma,
     pub coto: Coto,
