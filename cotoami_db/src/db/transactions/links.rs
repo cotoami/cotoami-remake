@@ -15,7 +15,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(link_ops::get(link_id))
     }
 
-    pub fn links_by_source_coto_ids(&mut self, coto_ids: &Vec<Id<Coto>>) -> Result<Vec<Link>> {
+    pub fn links_by_source_coto_ids(&mut self, coto_ids: &[Id<Coto>]) -> Result<Vec<Link>> {
         self.read_transaction(link_ops::get_by_source_coto_ids(coto_ids))
     }
 

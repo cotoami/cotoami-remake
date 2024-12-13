@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{slice, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
@@ -8,7 +8,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{CotosPage, GeolocatedCotos, Pagination},
+        models::{CotoDetails, CotosPage, CotosRelatedData, GeolocatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -20,6 +20,16 @@ const GEOLOCATED_COTOS_MAX_SIZE: i64 = 30;
 impl NodeState {
     pub async fn coto(&self, id: Id<Coto>) -> Result<Coto, ServiceError> {
         self.get(move |ds| ds.try_get_coto(&id)).await
+    }
+
+    pub async fn coto_details(&self, id: Id<Coto>) -> Result<CotoDetails, ServiceError> {
+        self.get(move |ds| {
+            let coto = ds.try_get_coto(&id)?;
+            let related_data = CotosRelatedData::fetch(ds, slice::from_ref(&coto))?;
+            let outgoing_links = ds.links_by_source_coto_ids(&[coto.uuid])?;
+            Ok(CotoDetails::new(coto, related_data, outgoing_links))
+        })
+        .await
     }
 
     pub async fn recent_cotos(

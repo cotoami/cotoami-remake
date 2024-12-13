@@ -31,7 +31,7 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Link>) -> impl Operation<Conn, O
 }
 
 pub(crate) fn get_by_source_coto_ids<Conn: AsReadableConn>(
-    coto_ids: &Vec<Id<Coto>>,
+    coto_ids: &[Id<Coto>],
 ) -> impl Operation<Conn, Vec<Link>> + '_ {
     read_op(move |conn| {
         links::table
