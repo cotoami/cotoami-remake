@@ -223,15 +223,8 @@ impl Changes {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Coto / Cotonoma
+// Cotonoma
 /////////////////////////////////////////////////////////////////////////////
-
-#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
-pub struct CotoDetails {
-    pub coto: Coto,
-    pub related_data: CotosRelatedData,
-    pub outgoing_links: Vec<Link>,
-}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct CotonomaDetails {
@@ -239,6 +232,17 @@ pub struct CotonomaDetails {
     pub coto: Coto,
     pub supers: Vec<Cotonoma>,
     pub subs: Page<Cotonoma>,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Coto
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, new)]
+pub struct CotoDetails {
+    pub coto: Coto,
+    pub related_data: CotosRelatedData,
+    pub outgoing_links: Vec<Link>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
