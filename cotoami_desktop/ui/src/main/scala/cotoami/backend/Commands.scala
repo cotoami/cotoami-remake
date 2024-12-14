@@ -108,6 +108,14 @@ object Commands {
       )
     )
 
+  def CotonomasByPrefix(prefix: String, nodes: Option[js.Array[Id[Node]]]) =
+    jso(CotonomasByPrefix =
+      jso(
+        prefix = prefix,
+        nodes = nodes.map(_.map(_.uuid)).getOrElse((null))
+      )
+    )
+
   def Cotonoma(id: Id[Cotonoma]) =
     jso(Cotonoma = jso(id = id.uuid))
 
@@ -116,14 +124,6 @@ object Commands {
 
   def CotonomaByName(name: String, node: Id[Node]) =
     jso(CotonomaByName = jso(name = name, node = node.uuid))
-
-  def CotonomasByPrefix(prefix: String, nodes: Option[js.Array[Id[Node]]]) =
-    jso(CotonomasByPrefix =
-      jso(
-        prefix = prefix,
-        nodes = nodes.map(_.map(_.uuid)).getOrElse((null))
-      )
-    )
 
   def SubCotonomas(id: Id[Cotonoma], pageIndex: Double) =
     jso(SubCotonomas = jso(id = id.uuid, pagination = jso(page = pageIndex)))
@@ -180,6 +180,9 @@ object Commands {
         pagination = jso(page = pageIndex)
       )
     )
+
+  def CotoDetails(id: Id[Coto]) =
+    jso(CotoDetails = jso(id = id.uuid))
 
   def GraphFromCoto(coto: Id[Coto]) =
     jso(GraphFromCoto = jso(coto = coto.uuid))
