@@ -74,24 +74,26 @@ object Focus {
       moveTo: Boolean,
       model: Model
   ): (Model, Cmd.One[Msg]) = {
-    model.modify(_.domain.cotos).using(_.focus(cotoId)).pipe { model =>
-      model.domain.cotos.focused match {
-        case Some(focusedCoto) =>
-          (
-            focusedCoto.geolocation match {
-              case Some(location) =>
-                model.modify(_.geomap).using(
-                  if (moveTo)
-                    _.focus(location).moveTo(location)
-                  else
-                    _.focus(location)
-                )
-              case None => model
-            },
-            model.domain.lazyFetchGraphFrom(cotoId)
-          )
-        case None => (model, Cmd.none)
+    model
+      .modify(_.domain.cotos).using(_.focus(cotoId))
+      .pipe { model =>
+        model.domain.cotos.focused match {
+          case Some(focusedCoto) =>
+            (
+              focusedCoto.geolocation match {
+                case Some(location) =>
+                  model.modify(_.geomap).using(
+                    if (moveTo)
+                      _.focus(location).moveTo(location)
+                    else
+                      _.focus(location)
+                  )
+                case None => model
+              },
+              model.domain.lazyFetchGraphFrom(cotoId)
+            )
+          case None => (model, Cmd.none)
+        }
       }
-    }
   }
 }
