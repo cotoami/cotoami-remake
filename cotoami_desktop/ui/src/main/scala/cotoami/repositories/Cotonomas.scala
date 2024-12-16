@@ -2,8 +2,6 @@ package cotoami.repositories
 
 import com.softwaremill.quicklens._
 
-import fui._
-import cotoami.{Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Page, PaginatedIds}
 import cotoami.backend.{CotoGraph, CotonomaDetails, CotosRelatedData}
 
@@ -76,16 +74,7 @@ case class Cotonomas(
       None
 
   def focus(id: Option[Id[Cotonoma]]): Cotonomas =
-    if (id.map(contains(_)).getOrElse(true))
-      unfocus.copy(focusedId = id)
-    else
-      this
-
-  def focusAndFetch(id: Id[Cotonoma]): (Cotonomas, Cmd.One[AppMsg]) =
-    (
-      unfocus.copy(focusedId = Some(id)),
-      CotonomaDetails.fetch(id).map(AppMsg.CotonomaDetailsFetched)
-    )
+    unfocus.copy(focusedId = id)
 
   def unfocus: Cotonomas =
     copy(focusedId = None, superIds = Seq.empty, subIds = PaginatedIds())

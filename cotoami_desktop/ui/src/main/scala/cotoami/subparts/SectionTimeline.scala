@@ -38,7 +38,7 @@ object SectionTimeline {
       loading: Boolean = false,
       imeActive: Boolean = false
   ) {
-    def init: Model =
+    def clear: Model =
       copy(
         cotoIds = PaginatedIds(),
         query = "",

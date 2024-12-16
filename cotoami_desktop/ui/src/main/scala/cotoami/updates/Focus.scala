@@ -7,6 +7,7 @@ import fui.Cmd
 import cotoami.{Model, Msg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repositories.Links
+import cotoami.backend.CotonomaDetails
 import cotoami.subparts.SectionGeomap
 
 object Focus {
@@ -15,7 +16,8 @@ object Focus {
     model
       .modify(_.domain).using(_.unfocus())
       .modify(_.domain.nodes).using(_.focus(nodeId))
-      .modify(_.timeline).using(_.init).pipe { model =>
+      .modify(_.timeline).using(_.clear)
+      .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           model.navCotonomas.fetchRecent()(model)
         val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
@@ -41,14 +43,13 @@ object Focus {
         // or no recent cotonomas has been loaded yet
         // (which means the page being reloaded)
         model.domain.cotonomas.recentIds.isEmpty
-    val (cotonomas, fetchCotonomaDetails) =
-      model.domain.cotonomas.focusAndFetch(cotonomaId)
     model
       .modify(_.domain.nodes).using(_.focus(nodeId))
-      .modify(_.domain.cotonomas).setTo(cotonomas)
+      .modify(_.domain.cotonomas).using(_.focus(Some(cotonomaId)))
       .modify(_.domain.cotos).using(_.destroyAndCreate())
       .modify(_.domain.links).setTo(Links())
-      .modify(_.timeline).using(_.init).pipe { model =>
+      .modify(_.timeline).using(_.clear)
+      .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           if (shouldFetchCotonomas)
             model.navCotonomas.fetchRecent()(model)
@@ -56,9 +57,10 @@ object Focus {
             (model.navCotonomas, Cmd.none)
         val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
         (
-          model.copy(timeline = timeline),
+          model.copy(navCotonomas = navCotonomas, timeline = timeline),
           Cmd.Batch(
-            fetchCotonomaDetails,
+            CotonomaDetails.fetch(cotonomaId)
+              .map(Msg.FocusedCotonomaDetailsFetched),
             fetchRecentCotonomas,
             fetchTimeline,
             model.domain.fetchGraph

@@ -44,7 +44,7 @@ object Msg {
   case class FocusNode(id: Id[Node]) extends Msg
   case object UnfocusNode extends Msg
   case class FocusCotonoma(cotonoma: Cotonoma) extends Msg
-  case class CotonomaDetailsFetched(
+  case class FocusedCotonomaDetailsFetched(
       result: Either[ErrorJson, CotonomaDetails]
   ) extends Msg
   case object UnfocusCotonoma extends Msg
