@@ -161,27 +161,28 @@ object SectionGeomap {
         )
 
       case Msg.CotosInFocusFetched(Right(cotos)) => {
-        val domain = context.domain.importFrom(cotos)
-        (domain.geolocationInFocus match {
-          case Some(location) => (model.moveTo(location), Cmd.none)
-          case None           => model.fetchCotosInCurrentBounds
-        }) pipe { case (model, cmd) =>
-          default.copy(
-            _1 = model
-              .modify(_.fetchingCotosInFocus).setTo(false)
-              // Force to refresh when the cotonoma has been changed
-              // (ex. marker's `in-focus` state could be changed)
-              .refreshMarkers,
-            _2 = context.domain.importFrom(cotos),
-            _3 = cmd
-          )
+        context.domain.importFrom(cotos).pipe { domain =>
+          (domain.geolocationInFocus match {
+            case Some(location) => (model.moveTo(location), Cmd.none)
+            case None           => model.fetchCotosInCurrentBounds
+          }) pipe { case (model, cmd) =>
+            default.copy(
+              _1 = model
+                .modify(_.fetchingCotosInFocus).setTo(false)
+                // Force to refresh when the focus has been changed
+                // (ex. marker's `in-focus` state could be changed)
+                .refreshMarkers,
+              _2 = domain,
+              _3 = cmd
+            )
+          }
         }
       }
 
       case Msg.CotosInFocusFetched(Left(e)) =>
         default.copy(
           _1 = model.copy(fetchingCotosInFocus = false),
-          _3 = cotoami.error("Couldn't fetch geolocated cotos.", e)
+          _3 = cotoami.error("Couldn't fetch geolocated cotos in the focus.", e)
         )
 
       case Msg.CotosInBoundsFetched(Right(cotos)) =>
