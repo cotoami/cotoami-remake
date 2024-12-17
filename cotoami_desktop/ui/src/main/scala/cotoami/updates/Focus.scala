@@ -3,7 +3,7 @@ package cotoami.updates
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Model, Msg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repositories.Links
@@ -27,7 +27,7 @@ object Focus {
             fetchRecentCotonomas,
             fetchTimeline,
             model.domain.fetchGraph,
-            SectionGeomap.fetchInitialCotos(model)
+            Browser.send(SectionGeomap.Msg.FocusChanged.into)
           )
         )
       }

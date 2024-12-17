@@ -30,7 +30,7 @@ object SectionGeomap {
       focusedLocation: Option[Geolocation] = None,
 
       // Coto fetching
-      initialCotosFetched: Boolean = false,
+      fetchingCotosInFocus: Boolean = false,
       nextBoundsToFetch: Option[GeoBounds] = None,
       fetchingCotosInBounds: Boolean = false,
 
@@ -75,7 +75,7 @@ object SectionGeomap {
       copy(_refreshMarkers = _refreshMarkers + 1)
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
-      if (initialCotosFetched && !fetchingCotosInBounds)
+      if (!fetchingCotosInFocus && !fetchingCotosInBounds)
         (
           copy(fetchingCotosInBounds = true),
           GeolocatedCotos.inGeoBounds(bounds)
@@ -106,7 +106,8 @@ object SectionGeomap {
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
-    case class InitialCotosFetched(
+    case object FocusChanged extends Msg
+    case class CotosInFocusFetched(
         result: Either[ErrorJson, GeolocatedCotos]
     ) extends Msg
     case class CotosInBoundsFetched(
@@ -150,7 +151,16 @@ object SectionGeomap {
         )
       }
 
-      case Msg.InitialCotosFetched(Right(cotos)) => {
+      case Msg.FocusChanged =>
+        default.copy(
+          _1 = model.copy(fetchingCotosInFocus = true),
+          _3 = GeolocatedCotos.fetch(
+            context.domain.nodes.focusedId,
+            context.domain.cotonomas.focusedId
+          ).map(Msg.CotosInFocusFetched(_).into)
+        )
+
+      case Msg.CotosInFocusFetched(Right(cotos)) => {
         val domain = context.domain.importFrom(cotos)
         (domain.geolocationInFocus match {
           case Some(location) => (model.moveTo(location), Cmd.none)
@@ -158,7 +168,7 @@ object SectionGeomap {
         }) pipe { case (model, cmd) =>
           default.copy(
             _1 = model
-              .modify(_.initialCotosFetched).setTo(true)
+              .modify(_.fetchingCotosInFocus).setTo(false)
               // Force to refresh when the cotonoma has been changed
               // (ex. marker's `in-focus` state could be changed)
               .refreshMarkers,
@@ -168,9 +178,9 @@ object SectionGeomap {
         }
       }
 
-      case Msg.InitialCotosFetched(Left(e)) =>
+      case Msg.CotosInFocusFetched(Left(e)) =>
         default.copy(
-          _1 = model.copy(initialCotosFetched = true),
+          _1 = model.copy(fetchingCotosInFocus = false),
           _3 = cotoami.error("Couldn't fetch geolocated cotos.", e)
         )
 
@@ -223,12 +233,6 @@ object SectionGeomap {
         }
     }
   }
-
-  def fetchInitialCotos(context: Context): Cmd.One[AppMsg] =
-    GeolocatedCotos.fetch(
-      context.domain.nodes.focusedId,
-      context.domain.cotonomas.focusedId
-    ).map(Msg.InitialCotosFetched(_).into)
 
   private def toMarkerDefs(
       markers: Seq[Geolocation.MarkerOfCotos]

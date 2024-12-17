@@ -215,7 +215,7 @@ object Main {
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
         model.modify(_.domain).using(_.setCotonomaDetails(details)).pipe {
-          model => (model, SectionGeomap.fetchInitialCotos(model))
+          model => (model, Browser.send(SectionGeomap.Msg.FocusChanged.into))
         }
 
       case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
