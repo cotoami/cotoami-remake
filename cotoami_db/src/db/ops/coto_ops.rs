@@ -145,15 +145,31 @@ pub(crate) fn in_geo_bounds<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn insert<'a>(new_coto: &'a NewCoto<'a>) -> impl Operation<WritableConn, Coto> + 'a {
+pub(crate) fn insert<'a>(
+    new_coto: &'a NewCoto<'a>,
+) -> impl Operation<WritableConn, (Coto, Option<Coto>)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto: Coto = diesel::insert_into(cotos::table)
             .values(new_coto)
             .get_result(ctx.conn().deref_mut())?;
+
         if let Some(ref posted_in_id) = coto.posted_in_id {
+            // Update the cotonoma's timestamp
             cotonoma_ops::update_timestamp(posted_in_id, coto.created_at).run(ctx)?;
+
+            // Update the orginal coto if this is a repost
+            if let Some(ref repost_of_id) = coto.repost_of_id {
+                let original = reposted(
+                    &try_get(repost_of_id).run(ctx)??,
+                    posted_in_id,
+                    coto.created_at,
+                )
+                .run(ctx)?;
+                return Ok((coto, Some(original)));
+            }
         }
-        Ok(coto)
+
+        Ok((coto, None))
     })
 }
 
@@ -169,21 +185,11 @@ pub(crate) fn repost<'a>(
         let (dest, _) = cotonoma_ops::try_get(dest).run(ctx)??;
         let reposted_at = reposted_at.unwrap_or(crate::current_datetime());
 
-        // Check duplication
-        if original.posted_in(&dest.uuid) {
-            bail!(DatabaseError::DuplicateRepost)
-        }
-
-        // Update the original coto
-        let mut update_original = original.to_update();
-        update_original.repost_in(dest.uuid, &original);
-        update_original.updated_at = reposted_at;
-        let original = update(&update_original).run(ctx)?;
-
         // Insert a repost
-        let mut new_repost = NewCoto::new_repost(&original, &dest, reposted_by);
+        let mut new_repost = NewCoto::new_repost(&original.uuid, &dest, reposted_by);
         new_repost.set_timestamp(reposted_at);
-        let repost = insert(&new_repost).run(ctx)?;
+        let (repost, original) = insert(&new_repost).run(ctx)?;
+        let original = original.unwrap_or_else(|| unreachable!());
 
         Ok((repost, original))
     })
@@ -210,6 +216,26 @@ pub(crate) fn edit<'a>(
         update_coto.edit_content(diff, image_max_size)?;
         update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
         update(&update_coto).run(ctx)
+    })
+}
+
+fn reposted<'a>(
+    original: &'a Coto,
+    dest: &'a Id<Cotonoma>,
+    reposted_at: NaiveDateTime,
+) -> impl Operation<WritableConn, Coto> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        if original.repost_of_id.is_some() {
+            bail!("A coto to be reposted must not be a repost.")
+        }
+        if original.posted_in(dest) {
+            bail!(DatabaseError::DuplicateRepost)
+        }
+
+        let mut update_original = original.to_update();
+        update_original.repost_in(*dest, &original);
+        update_original.updated_at = reposted_at;
+        update(&update_original).run(ctx)
     })
 }
 

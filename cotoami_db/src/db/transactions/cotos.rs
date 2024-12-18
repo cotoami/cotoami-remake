@@ -110,7 +110,7 @@ impl<'a> DatabaseSession<'a> {
     fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let inserted_coto = coto_ops::insert(new_coto).run(ctx)?;
+            let (inserted_coto, _) = coto_ops::insert(new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok((inserted_coto, changelog))

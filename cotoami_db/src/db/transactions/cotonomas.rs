@@ -183,7 +183,7 @@ impl<'a> DatabaseSession<'a> {
 
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let coto = coto_ops::insert(&coto.to_import()).run(ctx)?;
+            let (coto, _) = coto_ops::insert(&coto.to_import()).run(ctx)?;
             let cotonoma = cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             let change = Change::CreateCotonoma(cotonoma.clone(), coto.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
