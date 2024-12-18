@@ -217,14 +217,6 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             } => {
                 coto_ops::delete(coto_id, Some(*deleted_at)).run(ctx)?;
             }
-            Change::Repost {
-                coto_id,
-                dest,
-                reposted_by,
-                reposted_at,
-            } => {
-                coto_ops::repost(coto_id, dest, reposted_by, Some(*reposted_at)).run(ctx)?;
-            }
             Change::CreateCotonoma(cotonoma, coto) => {
                 coto_ops::insert(&coto.to_import()).run(ctx)?;
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;

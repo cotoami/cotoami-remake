@@ -176,12 +176,7 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let (repost, original) =
                 coto_ops::repost(id, &dest.uuid, &reposted_by, None).run(ctx)?;
-            let change = Change::Repost {
-                coto_id: *id,
-                dest: dest.uuid,
-                reposted_by,
-                reposted_at: repost.created_at,
-            };
+            let change = Change::CreateCoto(repost.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
             Ok(((repost, original), changelog))
         })

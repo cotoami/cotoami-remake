@@ -38,12 +38,10 @@ fn repost() -> Result<()> {
         changelog,
         pat!(ChangelogEntry {
             origin_node_id: eq(&node.uuid),
-            change: pat!(Change::Repost {
-                coto_id: eq(&coto.uuid),
-                dest: eq(&cotonoma1.uuid),
-                reposted_by: eq(&node.uuid),
-                reposted_at: eq(&repost1.created_at)
-            })
+            change: pat!(Change::CreateCoto(eq(&Coto {
+                rowid: 0,
+                ..repost1
+            })))
         })
     );
 
@@ -85,12 +83,10 @@ fn repost() -> Result<()> {
         changelog,
         pat!(ChangelogEntry {
             origin_node_id: eq(&node.uuid),
-            change: pat!(Change::Repost {
-                coto_id: eq(&repost1.uuid),
-                dest: eq(&cotonoma2.uuid),
-                reposted_by: eq(&node.uuid),
-                reposted_at: eq(&repost2.created_at)
-            })
+            change: pat!(Change::CreateCoto(eq(&Coto {
+                rowid: 0,
+                ..repost2
+            })))
         })
     );
 
