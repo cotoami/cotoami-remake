@@ -95,7 +95,7 @@ object Main {
           Cmd.none
         )
 
-      case Msg.BackendChange(log) => updates.Changelog.`import`(log, model)
+      case Msg.BackendChange(log) => updates.Changelog.apply(log, model)
 
       case Msg.BackendEvent(event) =>
         (updates.LocalNodeEvent.handle(event, model), Cmd.none)

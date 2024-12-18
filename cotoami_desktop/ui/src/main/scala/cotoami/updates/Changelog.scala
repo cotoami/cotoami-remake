@@ -21,7 +21,7 @@ import cotoami.backend.{
 
 object Changelog {
 
-  def `import`(log: ChangelogEntryJson, model: Model): (Model, Cmd[Msg]) = {
+  def apply(log: ChangelogEntryJson, model: Model): (Model, Cmd[Msg]) = {
     val expectedNumber = model.domain.lastChangeNumber + 1
     if (log.serial_number == expectedNumber)
       applyChange(log.change, model)
