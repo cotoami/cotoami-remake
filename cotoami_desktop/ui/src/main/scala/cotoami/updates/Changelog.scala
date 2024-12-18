@@ -6,8 +6,8 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.utils.facade.Nullable
 import cotoami.{Model, Msg}
-import cotoami.models.{Cotonoma, Id}
-import cotoami.repositories.{Cotonomas, Domain}
+import cotoami.models._
+import cotoami.repositories._
 import cotoami.backend.{
   ChangeJson,
   ChangelogEntryJson,
@@ -59,11 +59,12 @@ object Changelog {
 
     // DeleteCoto
     for (deleteCotoJson <- change.DeleteCoto.toOption) {
+      val cotoId: Id[Coto] = Id(deleteCotoJson.coto_id)
       return (
-        model.copy(domain =
-          model.domain.deleteCoto(Id(deleteCotoJson.coto_id))
-        ),
-        Cmd.none
+        model.copy(domain = model.domain.deleteCoto(cotoId)),
+        model.domain.cotos.get(cotoId).flatMap(_.repostOfId)
+          .map(Domain.fetchCotoDetails)
+          .getOrElse(Cmd.none)
       )
     }
 
