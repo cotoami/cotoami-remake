@@ -7,27 +7,8 @@ import com.softwaremill.quicklens._
 
 import fui._
 import cotoami.{Into, Msg => AppMsg}
-import cotoami.models.{
-  CenterOrBounds,
-  Coto,
-  Cotonoma,
-  Geolocation,
-  Id,
-  Link,
-  Node,
-  Page
-}
-import cotoami.backend.{
-  CotoBackend,
-  CotoGraph,
-  CotonomaBackend,
-  CotonomaDetails,
-  CotosPage,
-  ErrorJson,
-  GeolocatedCotos,
-  InitialDataset,
-  NodeDetails
-}
+import cotoami.models._
+import cotoami.backend._
 
 case class Domain(
     lastChangeNumber: Double = 0,
@@ -244,6 +225,12 @@ case class Domain(
       .modify(_.cotonomas).using(_.setCotonomaDetails(details))
       .modify(_.cotos).using(_.put(details.coto))
 
+  def importFrom(details: CotoDetails): Domain =
+    this
+      .modify(_.cotos).using(_.put(details.coto))
+      .modify(_.cotonomas).using(_.importFrom(details.relatedData))
+      .modify(_.links).using(_.putAll(details.outgoingLinks))
+
   def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
     this
       .modify(_.cotonomas).using(_.put(cotonomaPair._1))
@@ -339,6 +326,8 @@ object Domain {
         extends Msg
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
         extends Msg
+    case class CotoDetailsFetched(result: Either[ErrorJson, CotoDetails])
+        extends Msg
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
@@ -370,6 +359,12 @@ object Domain {
 
       case Msg.CotonomaFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch a cotonoma.", e))
+
+      case Msg.CotoDetailsFetched(Right(details)) =>
+        (model.importFrom(details), Cmd.none)
+
+      case Msg.CotoDetailsFetched(Left(e)) =>
+        (model, cotoami.error("Couldn't fetch coto details.", e))
 
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
