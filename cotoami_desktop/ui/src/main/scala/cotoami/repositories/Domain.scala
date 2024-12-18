@@ -403,6 +403,9 @@ object Domain {
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
     NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).into)
 
+  def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
+    CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)
+
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).into)
 
