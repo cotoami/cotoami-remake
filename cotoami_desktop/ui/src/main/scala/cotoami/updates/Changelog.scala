@@ -102,7 +102,7 @@ object Changelog {
   private def createCoto(
       cotoJson: CotoJson,
       model: Model
-  ): (Model, Cmd.One[Msg]) = {
+  ): (Model, Cmd.Batch[Msg]) = {
     val domain = model.domain
 
     // Register the coto
@@ -144,14 +144,18 @@ object Changelog {
         .modify(_.domain.cotonomas).setTo(cotonomas)
         .modify(_.timeline).setTo(timeline)
         .modify(_.geomap).setTo(geomap),
-      fetchCotonoma
+      Cmd.Batch(
+        fetchCotonoma,
+        // Fetch the updated original if this is a repost
+        coto.repostOfId.map(Domain.fetchCotoDetails).getOrElse(Cmd.none)
+      )
     )
   }
 
   private def createCotonoma(
       jsonPair: (CotonomaJson, CotoJson),
       model: Model
-  ): (Model, Cmd.One[Msg]) = {
+  ): (Model, Cmd.Batch[Msg]) = {
     val cotonoma = CotonomaBackend.toModel(jsonPair._1)
     val coto = CotoBackend.toModel(jsonPair._2)
     model
