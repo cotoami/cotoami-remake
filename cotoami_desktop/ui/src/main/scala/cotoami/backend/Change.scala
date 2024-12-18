@@ -24,7 +24,6 @@ trait ChangeJson extends js.Object {
   val CreateCoto: js.UndefOr[CotoJson] = js.native
   val EditCoto: js.UndefOr[EditCotoJson] = js.native
   val DeleteCoto: js.UndefOr[DeleteCotoJson] = js.native
-  val Repost: js.UndefOr[RepostJson] = js.native
   val CreateCotonoma: js.UndefOr[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val RenameCotonoma: js.UndefOr[RenameCotonomaJson] = js.native
   val CreateLink: js.UndefOr[LinkJson] = js.native
@@ -70,14 +69,6 @@ trait EditCotoJson extends js.Object {
 trait DeleteCotoJson extends js.Object {
   val coto_id: String = js.native
   val deleted_at: String = js.native
-}
-
-@js.native
-trait RepostJson extends js.Object {
-  val coto_id: String = js.native
-  val dest: String = js.native
-  val reposted_by: String = js.native
-  val reposted_at: String = js.native
 }
 
 @js.native
