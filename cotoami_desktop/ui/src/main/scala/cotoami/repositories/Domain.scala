@@ -71,19 +71,8 @@ case class Domain(
   // Cotonomas
   /////////////////////////////////////////////////////////////////////////////
 
-  def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
-    nodes.current.flatMap(_.rootCotonomaId)
-
   def currentNodeRoot: Option[(Cotonoma, Coto)] =
-    currentNodeRootCotonomaId.flatMap(cotonomaPair)
-
-  def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
-    Some(id) == currentNodeRootCotonomaId
-
-  def isNodeRoot(cotonoma: Cotonoma): Boolean =
-    nodes.get(cotonoma.nodeId)
-      .map(_.rootCotonomaId == Some(cotonoma.id))
-      .getOrElse(false)
+    nodes.currentNodeRootCotonomaId.flatMap(cotonomaPair)
 
   def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
     nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonomaPair))
@@ -104,11 +93,11 @@ case class Domain(
     )
 
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
-    cotonomas.recent.filter(c => Some(c.id) != currentNodeRootCotonomaId)
+    cotonomas.recent.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
   }
 
   val superCotonomasWithoutRoot: Seq[Cotonoma] = {
-    cotonomas.supers.filter(c => Some(c.id) != currentNodeRootCotonomaId)
+    cotonomas.supers.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
   }
 
   /////////////////////////////////////////////////////////////////////////////

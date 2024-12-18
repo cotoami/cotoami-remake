@@ -72,7 +72,7 @@ object ViewCoto {
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
-          !context.domain.isCurrentNodeRoot(id) &&
+          !context.domain.nodes.isCurrentNodeRoot(id) &&
             !context.domain.cotonomas.isFocusing(id)
         )
         .map(context.domain.cotonomas.get)

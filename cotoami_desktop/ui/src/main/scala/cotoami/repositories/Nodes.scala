@@ -6,6 +6,7 @@ import com.softwaremill.quicklens._
 import cotoami.models.{
   ChildNode,
   Coto,
+  Cotonoma,
   DatabaseRole,
   Id,
   Node,
@@ -120,6 +121,17 @@ case class Nodes(
       case Some(ParentStatus.Connected(child)) => child
       case _                                   => None
     }
+
+  def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
+    current.flatMap(_.rootCotonomaId)
+
+  def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
+    Some(id) == currentNodeRootCotonomaId
+
+  def isNodeRoot(cotonoma: Cotonoma): Boolean =
+    get(cotonoma.nodeId)
+      .map(_.rootCotonomaId == Some(cotonoma.id))
+      .getOrElse(false)
 
   def canPostTo(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) || asChildOf(nodeId).isDefined

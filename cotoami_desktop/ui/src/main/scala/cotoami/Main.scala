@@ -203,7 +203,7 @@ object Main {
           case None => Route.cotonoma.url(cotonoma.id)
           // Maintain node focus
           case Some(_) =>
-            if (model.domain.isNodeRoot(cotonoma))
+            if (model.domain.nodes.isNodeRoot(cotonoma))
               // Don't allow to focus a root cotonoma while maintaining node focus,
               // which should be converted into node focus.
               Route.node.url(cotonoma.nodeId)
