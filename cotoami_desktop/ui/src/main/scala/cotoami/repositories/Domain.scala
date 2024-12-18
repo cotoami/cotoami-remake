@@ -71,26 +71,26 @@ case class Domain(
   // Cotonomas
   /////////////////////////////////////////////////////////////////////////////
 
-  def currentNodeRoot: Option[(Cotonoma, Coto)] =
-    nodes.currentNodeRootCotonomaId.flatMap(cotonomaPair)
-
-  def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
-    nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonomaPair))
-
   def currentCotonomaId: Option[Id[Cotonoma]] =
     cotonomas.focusedId.orElse(
       nodes.current.flatMap(_.rootCotonomaId)
     )
 
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
-  // return `None` if the cotonoma data of that ID has not been fetched.
+  // return `None` if the cotonoma object has not been loaded.
   def currentCotonoma: Option[Cotonoma] =
     currentCotonomaId.flatMap(cotonomas.get)
 
-  def cotonomaPair(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
+  def cotonoma(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
     cotonomas.get(id).flatMap(cotonoma =>
       cotos.get(cotonoma.cotoId).map(cotonoma -> _)
     )
+
+  def currentNodeRoot: Option[(Cotonoma, Coto)] =
+    nodes.currentNodeRootCotonomaId.flatMap(cotonoma)
+
+  def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
+    nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonoma))
 
   val recentCotonomasWithoutRoot: Seq[Cotonoma] = {
     cotonomas.recent.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
