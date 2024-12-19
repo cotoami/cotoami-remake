@@ -267,7 +267,8 @@ object ModalRepost {
       case dest: ExistingCotonoma =>
         div(className := "existing-cotonoma")(
           nodes.get(dest.cotonoma.nodeId).map(imgNode(_)),
-          span(className := "cotonoma-name")(dest.cotonoma.name)
+          span(className := "cotonoma-name")(dest.cotonoma.name),
+          spanRootCotonomaMark(dest.cotonoma, nodes)
         )
 
       case dest: NewCotonoma =>
@@ -302,12 +303,18 @@ object ModalRepost {
             li()(
               context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
               span(className := "cotonoma-name")(cotonoma.name),
-              Option.when(context.domain.nodes.isNodeRoot(cotonoma)) {
-                span(className := "root-mark")("(root)")
-              }
+              spanRootCotonomaMark(cotonoma, context.domain.nodes)
             )
           ): _*
         )
       )
     )
+
+  private def spanRootCotonomaMark(
+      cotonoma: Cotonoma,
+      nodes: Nodes
+  ): ReactElement =
+    Option.when(nodes.isNodeRoot(cotonoma)) {
+      span(className := "root-mark")("(root)")
+    }
 }
