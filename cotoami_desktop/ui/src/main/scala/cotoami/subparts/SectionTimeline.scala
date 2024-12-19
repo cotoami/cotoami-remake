@@ -116,6 +116,7 @@ object SectionTimeline {
     case object ImeCompositionEnd extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
+    case class PostAnimationEnd(cotoId: Id[Coto]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -164,6 +165,11 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
+
+      case Msg.PostAnimationEnd(cotoId) =>
+        default.copy(_2 =
+          context.domain.modify(_.cotos).using(_.clearJustPosted(cotoId))
+        )
     }
   }
 
@@ -289,7 +295,8 @@ object SectionTimeline {
           ("just-posted", coto.justPosted)
         )
       ),
-      key := coto.id.uuid
+      key := coto.id.uuid,
+      onAnimationEnd := (_ => dispatch(Msg.PostAnimationEnd(coto.id).into))
     )(
       repostHeader(coto),
       context.domain.cotos.getOriginal(coto).map(coto =>
