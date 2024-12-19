@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom
 
@@ -34,28 +35,22 @@ import cotoami.components.{
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object SectionFlowInput {
-  final val StorageKeyPrefix = "FormCoto."
+  final val StorageKey = "FlowInput"
 
-  def init(id: String, autoSave: Boolean): (Model, Cmd.One[Msg]) =
-    Model(id, autoSave = autoSave) match {
-      case model => (model, model.restore)
-    }
+  def init: (Model, Cmd.One[Msg]) =
+    Model().pipe(model => (model, model.restore))
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      id: String,
       form: Form = CotoForm(),
       folded: Boolean = true,
       imeActive: Boolean = false,
-      autoSave: Boolean = false,
       inPreview: Boolean = false,
       posting: Boolean = false
   ) {
-    def editorId: String = s"${id}-editor"
-
     def hasContents: Boolean =
       form match {
         case form: CotoForm =>
@@ -80,27 +75,25 @@ object SectionFlowInput {
         inPreview = false
       )
 
-    def storageKey: String = StorageKeyPrefix + id
-
     def save: Cmd.One[Msg] =
-      (autoSave, form) match {
-        case (true, form: CotoForm) =>
+      form match {
+        case form: CotoForm =>
           Cmd(IO {
-            dom.window.localStorage.setItem(storageKey, form.textContent)
+            dom.window.localStorage.setItem(StorageKey, form.textContent)
             None
           })
         case _ => Cmd.none
       }
 
     def restore: Cmd.One[Msg] =
-      (autoSave, form) match {
-        case (true, form: CotoForm) =>
+      form match {
+        case form: CotoForm =>
           restoreTextContent.map(Msg.TextContentRestored)
         case _ => Cmd.none
       }
 
     private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
-      Some(Option(dom.window.localStorage.getItem(storageKey)))
+      Some(Option(dom.window.localStorage.getItem(StorageKey)))
     })
   }
 
@@ -693,7 +686,6 @@ object SectionFlowInput {
         else
           SplitPane.Primary.Props(className = Some("coto-editor"))(
             textarea(
-              id := model.editorId,
               placeholder := "Write your Coto in Markdown",
               value := form.textContent,
               onFocus := (_ => dispatch(Msg.SetFolded(false))),

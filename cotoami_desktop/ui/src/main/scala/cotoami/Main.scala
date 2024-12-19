@@ -57,7 +57,7 @@ object Main {
   }
 
   def init(url: URL): (Model, Cmd[Msg]) = {
-    val (flowInput, flowInputCmd) = SectionFlowInput.init("flowInput", true)
+    val (flowInput, flowInputCmd) = SectionFlowInput.init
     (
       Model(url = url, flowInput = flowInput),
       Cmd.Batch(
