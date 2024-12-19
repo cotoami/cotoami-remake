@@ -301,7 +301,10 @@ object ModalRepost {
           model.alreadyPostedIn.reverse.map(cotonoma =>
             li()(
               context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
-              span(className := "cotonoma-name")(cotonoma.name)
+              span(className := "cotonoma-name")(cotonoma.name),
+              Option.when(context.domain.nodes.isNodeRoot(cotonoma)) {
+                span(className := "root-mark")("(root)")
+              }
             )
           ): _*
         )
