@@ -197,14 +197,12 @@ object SectionTimeline {
       pageIndex: Double,
       fetchNumber: Int
   ): Cmd.One[AppMsg] =
-    query.map(query =>
-      if (query.isBlank())
-        CotosPage.fetchRecent(nodeId, cotonomaId, pageIndex)
-      else
+    (query match {
+      case Some(query) if !query.isBlank() =>
         CotosPage.search(query, nodeId, cotonomaId, pageIndex)
-    ).getOrElse(
-      CotosPage.fetchRecent(nodeId, cotonomaId, pageIndex)
-    ).map(Msg.Fetched(fetchNumber, _).into)
+      case _ =>
+        CotosPage.fetchRecent(nodeId, cotonomaId, pageIndex)
+    }).map(Msg.Fetched(fetchNumber, _).into)
 
   def apply(
       model: Model,
