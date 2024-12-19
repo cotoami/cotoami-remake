@@ -85,4 +85,7 @@ case class Cotos(
 
   lazy val geolocated: Seq[(Coto, Geolocation)] =
     map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
+
+  def clearJustPosted(id: Id[Coto]): Cotos =
+    this.modify(_.map.index(id)).using(_.copy(justPosted = false))
 }
