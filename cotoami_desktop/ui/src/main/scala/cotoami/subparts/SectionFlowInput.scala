@@ -33,7 +33,7 @@ import cotoami.components.{
 }
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
-object FormCoto {
+object SectionFlowInput {
   final val StorageKeyPrefix = "FormCoto."
 
   def init(id: String, autoSave: Boolean): (Model, Cmd.One[Msg]) =

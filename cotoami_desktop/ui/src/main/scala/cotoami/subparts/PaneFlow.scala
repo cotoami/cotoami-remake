@@ -34,7 +34,7 @@ object PaneFlow {
       ) match {
         case (Some(operatingNode), Some(cotonoma), true) =>
           Some(
-            FormCoto(
+            SectionFlowInput(
               model.flowInput,
               operatingNode,
               cotonoma,

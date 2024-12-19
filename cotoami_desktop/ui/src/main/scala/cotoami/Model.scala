@@ -45,7 +45,7 @@ case class Model(
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
-    flowInput: FormCoto.Model,
+    flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
     geomap: SectionGeomap.Model = SectionGeomap.Model()

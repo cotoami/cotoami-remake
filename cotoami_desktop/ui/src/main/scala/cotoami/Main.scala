@@ -57,7 +57,7 @@ object Main {
   }
 
   def init(url: URL): (Model, Cmd[Msg]) = {
-    val (flowInput, flowInputCmd) = FormCoto.init("flowInput", true)
+    val (flowInput, flowInputCmd) = SectionFlowInput.init("flowInput", true)
     (
       Model(url = url, flowInput = flowInput),
       Cmd.Batch(
@@ -304,12 +304,13 @@ object Main {
       }
 
       case Msg.FlowInputMsg(submsg) => {
-        val (flowInput, geomap, waitingPosts, log, subcmd) = FormCoto.update(
-          submsg,
-          model.flowInput,
-          model.geomap,
-          model.waitingPosts
-        )(model)
+        val (flowInput, geomap, waitingPosts, log, subcmd) =
+          SectionFlowInput.update(
+            submsg,
+            model.flowInput,
+            model.geomap,
+            model.waitingPosts
+          )(model)
         (
           model.copy(
             flowInput = flowInput,
