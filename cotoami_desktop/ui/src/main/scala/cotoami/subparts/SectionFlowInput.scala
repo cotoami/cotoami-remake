@@ -590,7 +590,7 @@ object SectionFlowInput {
     section(
       className := optionalClasses(
         Seq(
-          ("form-coto", true),
+          ("flow-input", true),
           ("folded", model.folded)
         )
       )
