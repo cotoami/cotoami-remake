@@ -47,9 +47,8 @@ object SectionTimeline {
       )
 
     def cotos(domain: Domain): Seq[Coto] = {
-      val cotos = cotoIds.order.map(domain.cotos.get).flatten
-      val rootCotoId = domain.currentNodeRoot.map(_._2.id)
-      cotos.filter(c => Some(c.id) != rootCotoId)
+      val rootCotoId = domain.currentNodeRootCotonoma.map(_.cotoId)
+      cotoIds.order.filter(Some(_) != rootCotoId).map(domain.cotos.get).flatten
     }
 
     def appendPage(cotos: CotosPage, fetchNumber: Int): Model =

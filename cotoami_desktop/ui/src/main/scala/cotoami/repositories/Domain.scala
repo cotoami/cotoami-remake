@@ -89,6 +89,9 @@ case class Domain(
   def currentNodeRoot: Option[(Cotonoma, Coto)] =
     nodes.currentNodeRootCotonomaId.flatMap(cotonoma)
 
+  def currentNodeRootCotonoma: Option[Cotonoma] =
+    nodes.currentNodeRootCotonomaId.flatMap(cotonomas.get)
+
   def rootOf(nodeId: Id[Node]): Option[(Cotonoma, Coto)] =
     nodes.get(nodeId).flatMap(_.rootCotonomaId.flatMap(cotonoma))
 
