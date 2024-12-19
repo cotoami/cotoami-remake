@@ -12,8 +12,8 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 
 import fui._
-import cotoami.Context
-import cotoami.utils.{Log, Validation}
+import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.{
   Coto,
   Cotonoma,
@@ -37,7 +37,7 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 object SectionFlowInput {
   final val StorageKey = "FlowInput"
 
-  def init: (Model, Cmd.One[Msg]) =
+  def init: (Model, Cmd.One[AppMsg]) =
     Model().pipe(model => (model, model.restore))
 
   /////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ object SectionFlowInput {
         inPreview = false
       )
 
-    def save: Cmd.One[Msg] =
+    def save: Cmd.One[AppMsg] =
       form match {
         case form: CotoForm =>
           Cmd(IO {
@@ -85,10 +85,10 @@ object SectionFlowInput {
         case _ => Cmd.none
       }
 
-    def restore: Cmd.One[Msg] =
+    def restore: Cmd.One[AppMsg] =
       form match {
         case form: CotoForm =>
-          restoreTextContent.map(Msg.TextContentRestored)
+          restoreTextContent.map(Msg.TextContentRestored(_).into)
         case _ => Cmd.none
       }
 
@@ -150,7 +150,7 @@ object SectionFlowInput {
   ) extends Form {
     def name: String = nameInput.trim
 
-    def validate(nodeId: Id[Node]): (CotonomaForm, Cmd.One[Msg]) = {
+    def validate(nodeId: Id[Node]): (CotonomaForm, Cmd.One[AppMsg]) = {
       val (validation, cmd) =
         if (name.isEmpty())
           (Validation.Result.notYetValidated, Cmd.none)
@@ -162,7 +162,7 @@ object SectionFlowInput {
                 // wait for backend validation to be done.
                 Validation.Result.notYetValidated,
                 CotonomaBackend.fetchByName(name, nodeId)
-                  .map(Msg.CotonomaByName(name, _))
+                  .map(Msg.CotonomaByName(name, _).into)
               )
             case errors => (Validation.Result(errors), Cmd.none)
           }
@@ -174,7 +174,9 @@ object SectionFlowInput {
   // update
   /////////////////////////////////////////////////////////////////////////////
 
-  sealed trait Msg
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.FlowInputMsg(this)
+  }
 
   object Msg {
     case object SetCotoForm extends Msg
@@ -221,15 +223,15 @@ object SectionFlowInput {
       waitingPosts: WaitingPosts
   )(implicit
       context: Context
-  ): (Model, Geomap, WaitingPosts, Log, Cmd[Msg]) = {
-    val default = (model, geomap, waitingPosts, context.log, Cmd.none)
+  ): (Model, Geomap, WaitingPosts, Cmd[AppMsg]) = {
+    val default = (model, geomap, waitingPosts, Cmd.none)
     (msg, model.form, context.domain.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
         model.copy(form = CotoForm()) match {
           case model =>
             default.copy(
               _1 = model,
-              _5 = model.restore
+              _4 = model.restore
             )
         }
 
@@ -256,7 +258,7 @@ object SectionFlowInput {
               )
             else
               model.copy(folded = false),
-          _4 = context.log.info("Coto draft restored")
+          _4 = cotoami.info("Coto draft restored")
         )
 
       case (Msg.TextContentInput(content), form: CotoForm, _) =>
@@ -264,7 +266,7 @@ object SectionFlowInput {
           case model =>
             default.copy(
               _1 = model,
-              _5 = model.save
+              _4 = model.save
             )
         }
 
@@ -272,33 +274,34 @@ object SectionFlowInput {
             Msg.CotonomaNameInput(name),
             form: CotonomaForm,
             Some(cotonoma)
-          ) => {
-        val (newForm, cmds) =
-          form.copy(nameInput = name).validate(cotonoma.nodeId)
-        default.copy(
-          _1 = model.copy(form = newForm),
-          _5 =
-            if (!model.imeActive)
-              cmds
-            else
-              Cmd.none
-        )
-      }
+          ) =>
+        form.copy(nameInput = name).validate(cotonoma.nodeId).pipe {
+          case (newForm, cmds) =>
+            default.copy(
+              _1 = model.copy(form = newForm),
+              _4 =
+                if (!model.imeActive)
+                  cmds
+                else
+                  Cmd.none
+            )
+        }
 
       case (Msg.FileInput(file), form: CotoForm, _) =>
         default.copy(
           _1 = model.copy(form =
             form.copy(mediaContent = Some(file), mediaLocation = None)
           ),
-          _5 = Cmd.Batch(
+          _4 = Cmd.Batch(
             Geolocation.fromExif(file).map {
-              case Right(location) => Msg.ExifLocationDetected(Right(location))
-              case Left(t)         => Msg.ExifLocationDetected(Left(t.toString))
+              case Right(location) =>
+                Msg.ExifLocationDetected(Right(location)).into
+              case Left(t) => Msg.ExifLocationDetected(Left(t.toString)).into
             },
             DateTimeRange.fromExif(file).map {
               case Right(timeRange) =>
-                Msg.ExifDateTimeDetected(Right(timeRange))
-              case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString))
+                Msg.ExifDateTimeDetected(Right(timeRange)).into
+              case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString)).into
             }
           )
         )
@@ -315,10 +318,7 @@ object SectionFlowInput {
 
       case (Msg.ExifLocationDetected(Left(error)), _, _) =>
         default.copy(
-          _4 = context.log.error(
-            "EXIF location detection error.",
-            Some(error)
-          )
+          _4 = cotoami.error("EXIF location detection error.", Some(error))
         )
 
       case (Msg.ExifDateTimeDetected(Right(dateTime)), form: CotoForm, _) => {
@@ -332,7 +332,7 @@ object SectionFlowInput {
 
       case (Msg.ExifDateTimeDetected(Left(error)), _, _) =>
         default.copy(
-          _4 = context.log.error("EXIF DateTime detection error.", Some(error))
+          _4 = cotoami.error("EXIF DateTime detection error.", Some(error))
         )
 
       case (Msg.DeleteMediaContent, form: CotoForm, _) =>
@@ -377,7 +377,7 @@ object SectionFlowInput {
                 val (newForm, cmds) = form.validate(cotonoma.nodeId)
                 default.copy(
                   _1 = model.copy(form = newForm),
-                  _5 = cmds
+                  _4 = cmds
                 )
               }
               case _ => default
@@ -409,12 +409,7 @@ object SectionFlowInput {
             case form => default.copy(_1 = model.copy(form = form))
           }
         else
-          default.copy(_4 =
-            context.log.error(
-              "CotonomaByName error.",
-              Some(js.JSON.stringify(error))
-            )
-          )
+          default.copy(_4 = cotoami.error("CotonomaByName error.", error))
 
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
@@ -429,13 +424,13 @@ object SectionFlowInput {
               case Some(blob) =>
                 default.copy(
                   _1 = model,
-                  _5 = Browser.encodeAsBase64(blob, true).map {
+                  _4 = Browser.encodeAsBase64(blob, true).map {
                     case Right(base64) =>
-                      Msg.MediaContentEncoded(Right((base64, blob.`type`)))
+                      Msg.MediaContentEncoded(Right((base64, blob.`type`))).into
                     case Left(e) =>
                       Msg.MediaContentEncoded(
                         Left("Media content encoding error.")
-                      )
+                      ).into
                   }
                 )
               case None => {
@@ -452,7 +447,7 @@ object SectionFlowInput {
               _1 = model,
               _2 = geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
-              _5 = postCotonoma(
+              _4 = postCotonoma(
                 postId,
                 form,
                 geomap.focusedLocation,
@@ -477,7 +472,7 @@ object SectionFlowInput {
                 mediaContent,
                 cotonoma
               ),
-              _5 = Cmd.Batch(
+              _4 = Cmd.Batch(
                 postCoto(
                   postId,
                   form,
@@ -503,7 +498,7 @@ object SectionFlowInput {
       case (Msg.MediaContentEncoded(Left(e)), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
-          _4 = context.log.error(e, None)
+          _4 = cotoami.error(e, None)
         )
 
       case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
@@ -513,22 +508,20 @@ object SectionFlowInput {
         )
 
       case (Msg.CotoPosted(postId, Left(e)), _, _) => {
-        val error = js.JSON.stringify(e)
         default.copy(
           _1 = model.copy(posting = false),
           _3 = waitingPosts.setError(
             postId,
-            s"Couldn't post this coto: ${error}"
+            s"Couldn't post this coto: ${js.JSON.stringify(e)}"
           ),
-          _4 = context.log.error("Couldn't post a coto.", Some(error))
+          _4 = cotoami.error("Couldn't post a coto.", e)
         )
       }
 
       case (Msg.CotonomaPosted(postId, Right((cotonoma, _))), _, _) =>
         default.copy(
           _1 = model.copy(posting = false),
-          _3 = waitingPosts.remove(postId),
-          _4 = context.log.info("Cotonoma posted.", Some(cotonoma.name))
+          _3 = waitingPosts.remove(postId)
         )
 
       case (Msg.CotonomaPosted(postId, Left(e)), _, _) => {
@@ -539,7 +532,7 @@ object SectionFlowInput {
             postId,
             s"Couldn't post this cotonoma: ${error}"
           ),
-          _4 = context.log.error("Couldn't post a cotonoma.", Some(error))
+          _4 = cotoami.error("Couldn't post a cotonoma.", Some(error))
         )
       }
 
@@ -554,7 +547,7 @@ object SectionFlowInput {
       location: Option[Geolocation],
       timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
-  ): Cmd.One[Msg] =
+  ): Cmd.One[AppMsg] =
     CotoBackend.post(
       form.content,
       form.summary,
@@ -563,7 +556,7 @@ object SectionFlowInput {
       timeRange,
       postTo
     )
-      .map(Msg.CotoPosted(postId, _))
+      .map(Msg.CotoPosted(postId, _).into)
 
   private def postCotonoma(
       postId: String,
@@ -571,9 +564,9 @@ object SectionFlowInput {
       location: Option[Geolocation],
       timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
-  ): Cmd.One[Msg] =
+  ): Cmd.One[AppMsg] =
     CotonomaBackend.post(form.name, location, timeRange, postTo)
-      .map(Msg.CotonomaPosted(postId, _))
+      .map(Msg.CotonomaPosted(postId, _).into)
 
   /////////////////////////////////////////////////////////////////////////////
   // view

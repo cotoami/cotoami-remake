@@ -67,7 +67,7 @@ object Main {
           _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened))
             .getOrElse(Modal.open(Modal.Welcome()))
         ),
-        flowInputCmd.map(Msg.FlowInputMsg)
+        flowInputCmd
       )
     )
   }
@@ -304,7 +304,7 @@ object Main {
       }
 
       case Msg.FlowInputMsg(submsg) => {
-        val (flowInput, geomap, waitingPosts, log, subcmd) =
+        val (flowInput, geomap, waitingPosts, cmds) =
           SectionFlowInput.update(
             submsg,
             model.flowInput,
@@ -315,10 +315,9 @@ object Main {
           model.copy(
             flowInput = flowInput,
             geomap = geomap,
-            waitingPosts = waitingPosts,
-            log = log
+            waitingPosts = waitingPosts
           ),
-          subcmd.map(Msg.FlowInputMsg)
+          cmds
         )
       }
 
