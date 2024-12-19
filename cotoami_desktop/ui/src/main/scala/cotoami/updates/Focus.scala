@@ -20,7 +20,7 @@ object Focus {
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           model.navCotonomas.fetchRecent()(model)
-        val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
+        val (timeline, fetchTimeline) = model.timeline.fetchFirst(model.domain)
         (
           model.copy(navCotonomas = navCotonomas, timeline = timeline),
           Cmd.Batch(
@@ -55,7 +55,7 @@ object Focus {
             model.navCotonomas.fetchRecent()(model)
           else
             (model.navCotonomas, Cmd.none)
-        val (timeline, fetchTimeline) = model.timeline.fetchFirst()(model)
+        val (timeline, fetchTimeline) = model.timeline.fetchFirst(model.domain)
         (
           model.copy(navCotonomas = navCotonomas, timeline = timeline),
           Cmd.Batch(

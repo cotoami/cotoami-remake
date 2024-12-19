@@ -71,6 +71,11 @@ case class Domain(
   // Cotonomas
   /////////////////////////////////////////////////////////////////////////////
 
+  def cotonoma(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
+    cotonomas.get(id).flatMap(cotonoma =>
+      cotos.get(cotonoma.cotoId).map(cotonoma -> _)
+    )
+
   def currentCotonomaId: Option[Id[Cotonoma]] =
     cotonomas.focusedId.orElse(
       nodes.current.flatMap(_.rootCotonomaId)
@@ -80,11 +85,6 @@ case class Domain(
   // return `None` if the cotonoma object has not been loaded.
   def currentCotonoma: Option[Cotonoma] =
     currentCotonomaId.flatMap(cotonomas.get)
-
-  def cotonoma(id: Id[Cotonoma]): Option[(Cotonoma, Coto)] =
-    cotonomas.get(id).flatMap(cotonoma =>
-      cotos.get(cotonoma.cotoId).map(cotonoma -> _)
-    )
 
   def currentNodeRoot: Option[(Cotonoma, Coto)] =
     nodes.currentNodeRootCotonomaId.flatMap(cotonoma)

@@ -73,32 +73,30 @@ object SectionTimeline {
             cotoIds
         )
 
-    def fetchFirst()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
-        fetch(None, 0, fetchNumber + 1)
+        fetchInFocus(domain, None, 0, fetchNumber + 1)
       )
 
-    def fetchMore()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
+    def fetchMore(domain: Domain): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
         cotoIds.nextPageIndex.map(i =>
           (
             copy(loading = true),
-            fetch(Some(query), i, fetchNumber + 1)
+            fetchInFocus(domain, Some(query), i, fetchNumber + 1)
           )
         ).getOrElse((this, Cmd.none)) // no more
 
-    def inputQuery(
-        query: String
-    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+    def inputQuery(query: String, domain: Domain): (Model, Cmd[AppMsg]) =
       if (imeActive)
         (copy(query = query), Cmd.none)
       else
         (
           copy(query = query, loading = true),
-          fetch(Some(query), 0, fetchNumber + 1)
+          fetchInFocus(domain, Some(query), 0, fetchNumber + 1)
         )
   }
 
@@ -125,7 +123,7 @@ object SectionTimeline {
     val default = (model, context.domain, Cmd.none)
     msg match {
       case Msg.FetchMore =>
-        model.fetchMore().pipe { case (model, cmd) =>
+        model.fetchMore(context.domain).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -145,12 +143,12 @@ object SectionTimeline {
         )
 
       case Msg.ClearQuery =>
-        model.inputQuery("").pipe { case (model, cmd) =>
+        model.inputQuery("", context.domain).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.QueryInput(query) =>
-        model.inputQuery(query).pipe { case (model, cmd) =>
+        model.inputQuery(query, context.domain).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -160,7 +158,12 @@ object SectionTimeline {
       case Msg.ImeCompositionEnd =>
         default.copy(
           _1 = model.copy(imeActive = false),
-          _3 = fetch(Some(model.query), 0, model.fetchNumber + 1)
+          _3 = fetchInFocus(
+            context.domain,
+            Some(model.query),
+            0,
+            model.fetchNumber + 1
+          )
         )
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
@@ -173,14 +176,15 @@ object SectionTimeline {
     }
   }
 
-  private def fetch(
+  private def fetchInFocus(
+      domain: Domain,
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
-  )(implicit context: Context): Cmd.One[AppMsg] =
+  ): Cmd.One[AppMsg] =
     fetch(
-      context.domain.nodes.focusedId,
-      context.domain.cotonomas.focusedId,
+      domain.nodes.focusedId,
+      domain.cotonomas.focusedId,
       query,
       pageIndex,
       fetchNumber
