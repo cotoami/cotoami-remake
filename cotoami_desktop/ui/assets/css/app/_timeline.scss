@@ -68,7 +68,7 @@ section.timeline {
   .post {
     border-bottom: 1px solid var(--pane-border-color);
 
-    &.posted {
+    &.just-posted {
       @keyframes slide-in-top {
         0% {
           transform: translateY(-50px);

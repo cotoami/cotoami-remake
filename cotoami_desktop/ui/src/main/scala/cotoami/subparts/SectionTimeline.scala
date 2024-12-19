@@ -286,7 +286,7 @@ object SectionTimeline {
       className := optionalClasses(
         Seq(
           ("post", true),
-          ("posted", coto.posted)
+          ("just-posted", coto.justPosted)
         )
       ),
       key := coto.id.uuid
