@@ -176,7 +176,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             Change::CreateNode { node, root } => {
                 node_ops::upsert(node).run(ctx)?;
                 if let Some((cotonoma, coto)) = root {
-                    coto_ops::insert(&coto.to_import()).run(ctx)?;
+                    coto_ops::insert(&coto.to_import()?).run(ctx)?;
                     cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
                 }
             }
@@ -200,8 +200,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 node_ops::set_root_cotonoma(node_id, cotonoma_id).run(ctx)?;
             }
             Change::CreateCoto(coto) => {
-                let new_coto = coto.to_import();
-                coto_ops::insert(&new_coto).run(ctx)?;
+                coto_ops::insert(&coto.to_import()?).run(ctx)?;
             }
             Change::EditCoto {
                 coto_id,
@@ -218,7 +217,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 coto_ops::delete(coto_id, Some(*deleted_at)).run(ctx)?;
             }
             Change::CreateCotonoma(cotonoma, coto) => {
-                coto_ops::insert(&coto.to_import()).run(ctx)?;
+                coto_ops::insert(&coto.to_import()?).run(ctx)?;
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             }
             Change::RenameCotonoma {

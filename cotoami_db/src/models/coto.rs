@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, convert::AsRef, fmt::Display};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
 use diesel::prelude::*;
@@ -130,8 +130,14 @@ impl Coto {
 
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
-    pub(crate) fn to_import(&self) -> NewCoto {
-        NewCoto {
+    pub(crate) fn to_import(&self) -> Result<NewCoto> {
+        // Since it can't import reposts before the original and
+        // `reposted_in_ids` will be updated when inserting a repost,
+        // `reposted_in_ids` must be None for import.
+        if self.reposted_in_ids.is_some() {
+            bail!("Coto::reposted_in_ids must be None for import.");
+        }
+        Ok(NewCoto {
             uuid: self.uuid,
             node_id: &self.node_id,
             posted_in_id: self.posted_in_id.as_ref(),
@@ -149,10 +155,10 @@ impl Coto {
             datetime_start: self.datetime_start,
             datetime_end: self.datetime_end,
             repost_of_id: self.repost_of_id.as_ref(),
-            reposted_in_ids: self.reposted_in_ids.as_ref(),
+            reposted_in_ids: None,
             created_at: self.created_at,
             updated_at: self.updated_at,
-        }
+        })
     }
 }
 

@@ -104,7 +104,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn import_coto(&self, coto: &Coto) -> Result<(Coto, ChangelogEntry)> {
-        self.create_coto(&coto.to_import())
+        self.create_coto(&coto.to_import()?)
     }
 
     fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {

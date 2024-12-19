@@ -334,7 +334,6 @@ struct CotoJson {
     cotonoma: Option<CotonomaJson>,
 
     repost_id: Option<Id<Coto>>,
-    reposted_in_ids: Vec<Id<Cotonoma>>,
 
     inserted_at: i64, // epoch milliseconds
     updated_at: i64,  // epoch milliseconds
@@ -342,11 +341,6 @@ struct CotoJson {
 
 impl CotoJson {
     fn into_coto(self, node_id: Id<Node>) -> Result<Coto> {
-        let reposted_in_ids = if self.reposted_in_ids.is_empty() {
-            None
-        } else {
-            Some(Ids(self.reposted_in_ids))
-        };
         Ok(Coto {
             uuid: self.id,
             rowid: 0,
@@ -363,7 +357,7 @@ impl CotoJson {
             datetime_start: None,
             datetime_end: None,
             repost_of_id: self.repost_id,
-            reposted_in_ids,
+            reposted_in_ids: None, // will be restored during inserts
             created_at: from_timestamp_millis(self.inserted_at)?,
             updated_at: from_timestamp_millis(self.updated_at)?,
         })
