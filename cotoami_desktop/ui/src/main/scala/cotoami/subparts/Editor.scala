@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import org.scalajs.dom
+import com.softwaremill.quicklens._
 
 import fui.Cmd
 import cotoami.utils.Validation
@@ -54,7 +55,8 @@ object Editor {
   object CotonomaForm {
     case class Model(
         nameInput: String = "",
-        validation: Validation.Result = Validation.Result.notYetValidated
+        validation: Validation.Result = Validation.Result.notYetValidated,
+        error: Option[String] = None
     ) extends Form {
       def name: String = nameInput.trim
 
@@ -86,5 +88,29 @@ object Editor {
           result: Either[ErrorJson, Cotonoma]
       ) extends Msg
     }
+
+    def update(msg: Msg, model: Model): Model =
+      msg match {
+        case Msg.CotonomaByName(name, Right(cotonoma)) =>
+          if (cotonoma.name == model.name)
+            model.modify(_.validation).setTo(
+              Validation.Error(
+                "cotonoma-already-exists",
+                s"The cotonoma \"${cotonoma.name}\" already exists in this node.",
+                Map("name" -> cotonoma.name, "id" -> cotonoma.id.uuid)
+              ).toResult
+            )
+          else
+            model
+
+        case Msg.CotonomaByName(name, Left(error)) =>
+          if (name == model.name && error.code == "not-found")
+            model.copy(validation = Validation.Result.validated)
+          else
+            model.copy(error =
+              Some(s"Validation system error: ${error.default_message}")
+            )
+
+      }
   }
 }
