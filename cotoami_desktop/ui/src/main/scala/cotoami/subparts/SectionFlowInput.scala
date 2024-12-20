@@ -32,6 +32,7 @@ import cotoami.components.{
   ScrollArea,
   SplitPane
 }
+import cotoami.subparts.Editor._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object SectionFlowInput {
@@ -45,31 +46,20 @@ object SectionFlowInput {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      form: Form = CotoForm(),
+      form: Form = CotoForm.Model(),
       folded: Boolean = true,
-      imeActive: Boolean = false,
       inPreview: Boolean = false,
       posting: Boolean = false
   ) {
-    def hasContents: Boolean =
-      form match {
-        case form: CotoForm =>
-          !form.textContent.isBlank || form.mediaContent.isDefined
-        case CotonomaForm(name, _) => !name.isBlank
-      }
+    def hasContents: Boolean = form.hasContents
 
-    def readyToPost: Boolean =
-      hasContents && !posting && (form match {
-        case form: CotoForm =>
-          form.validate.validated || form.mediaContent.isDefined
-        case CotonomaForm(_, validation) => validation.validated
-      })
+    def readyToPost: Boolean = !posting && form.readyToPost
 
     def clear: Model =
       copy(
         form = form match {
-          case form: CotoForm     => CotoForm()
-          case form: CotonomaForm => CotonomaForm()
+          case form: CotoForm.Model     => CotoForm.Model()
+          case form: CotonomaForm.Model => CotonomaForm.Model()
         },
         folded = true,
         inPreview = false
@@ -77,7 +67,7 @@ object SectionFlowInput {
 
     def save: Cmd.One[AppMsg] =
       form match {
-        case form: CotoForm =>
+        case form: CotoForm.Model =>
           Cmd(IO {
             dom.window.localStorage.setItem(StorageKey, form.textContent)
             None
@@ -87,7 +77,7 @@ object SectionFlowInput {
 
     def restore: Cmd.One[AppMsg] =
       form match {
-        case form: CotoForm =>
+        case form: CotoForm.Model =>
           restoreTextContent.map(Msg.TextContentRestored(_).into)
         case _ => Cmd.none
       }
@@ -95,79 +85,6 @@ object SectionFlowInput {
     private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
       Some(Option(dom.window.localStorage.getItem(StorageKey)))
     })
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Form
-  /////////////////////////////////////////////////////////////////////////////
-
-  sealed trait Form
-
-  case class CotoForm(
-      textContent: String = "",
-      mediaContent: Option[dom.Blob] = None,
-      mediaLocation: Option[Geolocation] = None,
-      mediaDateTime: Option[DateTimeRange] = None,
-      dateTimeRange: Option[DateTimeRange] = None
-  ) extends Form {
-    def summary: Option[String] =
-      if (hasSummary)
-        Some(firstLine.stripPrefix(CotoForm.SummaryPrefix).trim)
-      else
-        None
-
-    def content: String =
-      if (hasSummary)
-        textContent.stripPrefix(firstLine).trim
-      else
-        textContent.trim
-
-    def validate: Validation.Result =
-      if (textContent.isBlank)
-        Validation.Result.notYetValidated
-      else {
-        val errors =
-          summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
-            Coto.validateContent(content)
-        Validation.Result(errors)
-      }
-
-    private def hasSummary: Boolean =
-      textContent.startsWith(CotoForm.SummaryPrefix)
-
-    private def firstLine = textContent.linesIterator.next()
-  }
-
-  object CotoForm {
-    // A top-level heading as the first line will be used as a summary.
-    // cf. https://spec.commonmark.org/0.31.2/#atx-headings
-    val SummaryPrefix = "# "
-  }
-
-  case class CotonomaForm(
-      nameInput: String = "",
-      validation: Validation.Result = Validation.Result.notYetValidated
-  ) extends Form {
-    def name: String = nameInput.trim
-
-    def validate(nodeId: Id[Node]): (CotonomaForm, Cmd.One[AppMsg]) = {
-      val (validation, cmd) =
-        if (name.isEmpty())
-          (Validation.Result.notYetValidated, Cmd.none)
-        else
-          Cotonoma.validateName(name) match {
-            case Seq() =>
-              (
-                // Now that the local validation has passed,
-                // wait for backend validation to be done.
-                Validation.Result.notYetValidated,
-                CotonomaBackend.fetchByName(name, nodeId)
-                  .map(Msg.CotonomaByName(name, _).into)
-              )
-            case errors => (Validation.Result(errors), Cmd.none)
-          }
-      (copy(validation = validation), cmd)
-    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -182,30 +99,13 @@ object SectionFlowInput {
     case object SetCotoForm extends Msg
     case object SetCotonomaForm extends Msg
     case class TextContentRestored(content: Option[String]) extends Msg
-    case class TextContentInput(content: String) extends Msg
-    case class CotonomaNameInput(name: String) extends Msg
-    case class FileInput(file: dom.Blob) extends Msg
-    case class ExifLocationDetected(result: Either[String, Option[Geolocation]])
-        extends Msg
-    case class ExifDateTimeDetected(
-        result: Either[String, Option[DateTimeRange]]
-    ) extends Msg
-    case object DeleteMediaContent extends Msg
-    case object DeleteDateTimeRange extends Msg
-    case object UseMediaDateTime extends Msg
-    case object DeleteGeolocation extends Msg
-    case object UseMediaGeolocation extends Msg
-    case object ImeCompositionStart extends Msg
-    case object ImeCompositionEnd extends Msg
-    case class CotonomaByName(
-        name: String,
-        result: Either[ErrorJson, Cotonoma]
-    ) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
     case object TogglePreview extends Msg
     case object Post extends Msg
-    case class PostCoto(form: CotoForm, mediaContent: Option[(String, String)])
-        extends Msg
+    case class PostCoto(
+        form: CotoForm.Model,
+        mediaContent: Option[(String, String)]
+    ) extends Msg
     case class MediaContentEncoded(result: Either[String, (String, String)])
         extends Msg
     case class CotoPosted(postId: String, result: Either[ErrorJson, Coto])
@@ -227,7 +127,7 @@ object SectionFlowInput {
     val default = (model, geomap, waitingPosts, Cmd.none)
     (msg, model.form, context.domain.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
-        model.copy(form = CotoForm()) match {
+        model.copy(form = CotoForm.Model()) match {
           case model =>
             default.copy(
               _1 = model,
@@ -235,9 +135,9 @@ object SectionFlowInput {
             )
         }
 
-      case (Msg.SetCotonomaForm, cotoForm: CotoForm, _) =>
+      case (Msg.SetCotonomaForm, cotoForm: CotoForm.Model, _) =>
         default.copy(
-          _1 = model.copy(form = CotonomaForm()),
+          _1 = model.copy(form = CotonomaForm.Model()),
           _2 =
             // If the focused location has been set by EXIF info,
             // Swithcing to CotonomaForm will abandon the focused location
@@ -248,7 +148,7 @@ object SectionFlowInput {
               geomap
         )
 
-      case (Msg.TextContentRestored(Some(content)), form: CotoForm, _) =>
+      case (Msg.TextContentRestored(Some(content)), form: CotoForm.Model, _) =>
         default.copy(
           _1 =
             if (form.textContent.isBlank)
@@ -261,163 +161,13 @@ object SectionFlowInput {
           _4 = cotoami.info("Coto draft restored")
         )
 
-      case (Msg.TextContentInput(content), form: CotoForm, _) =>
-        model.copy(form = form.copy(textContent = content)) match {
-          case model =>
-            default.copy(
-              _1 = model,
-              _4 = model.save
-            )
-        }
-
-      case (
-            Msg.CotonomaNameInput(name),
-            form: CotonomaForm,
-            Some(cotonoma)
-          ) =>
-        form.copy(nameInput = name).validate(cotonoma.nodeId).pipe {
-          case (newForm, cmds) =>
-            default.copy(
-              _1 = model.copy(form = newForm),
-              _4 =
-                if (!model.imeActive)
-                  cmds
-                else
-                  Cmd.none
-            )
-        }
-
-      case (Msg.FileInput(file), form: CotoForm, _) =>
-        default.copy(
-          _1 = model.copy(form =
-            form.copy(mediaContent = Some(file), mediaLocation = None)
-          ),
-          _4 = Cmd.Batch(
-            Geolocation.fromExif(file).map {
-              case Right(location) =>
-                Msg.ExifLocationDetected(Right(location)).into
-              case Left(t) => Msg.ExifLocationDetected(Left(t.toString)).into
-            },
-            DateTimeRange.fromExif(file).map {
-              case Right(timeRange) =>
-                Msg.ExifDateTimeDetected(Right(timeRange)).into
-              case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString)).into
-            }
-          )
-        )
-
-      case (
-            Msg.ExifLocationDetected(Right(location)),
-            form: CotoForm,
-            _
-          ) =>
-        default.copy(
-          _1 = model.copy(form = form.copy(mediaLocation = location)),
-          _2 = location.map(geomap.focus).getOrElse(geomap.unfocus)
-        )
-
-      case (Msg.ExifLocationDetected(Left(error)), _, _) =>
-        default.copy(
-          _4 = cotoami.error("EXIF location detection error.", Some(error))
-        )
-
-      case (Msg.ExifDateTimeDetected(Right(dateTime)), form: CotoForm, _) => {
-        println(s"dateTime: ${dateTime.map(_.startUtcIso)}")
-        default.copy(
-          _1 = model.copy(form =
-            form.copy(dateTimeRange = dateTime, mediaDateTime = dateTime)
-          )
-        )
-      }
-
-      case (Msg.ExifDateTimeDetected(Left(error)), _, _) =>
-        default.copy(
-          _4 = cotoami.error("EXIF DateTime detection error.", Some(error))
-        )
-
-      case (Msg.DeleteMediaContent, form: CotoForm, _) =>
-        default.copy(
-          _1 = model.copy(form =
-            form.copy(
-              mediaContent = None,
-              mediaLocation = None,
-              mediaDateTime = None
-            )
-          ),
-          _2 = geomap.unfocus
-        )
-
-      case (Msg.DeleteDateTimeRange, form: CotoForm, _) =>
-        default.copy(
-          _1 = model.copy(form = form.copy(dateTimeRange = None))
-        )
-
-      case (Msg.UseMediaDateTime, form: CotoForm, _) =>
-        default.copy(
-          _1 = model.copy(form = form.copy(dateTimeRange = form.mediaDateTime))
-        )
-
-      case (Msg.DeleteGeolocation, _, _) =>
-        default.copy(_2 = geomap.copy(focusedLocation = None))
-
-      case (Msg.UseMediaGeolocation, form: CotoForm, _) =>
-        default.copy(_2 = form.mediaLocation match {
-          case Some(location) => geomap.focus(location)
-          case None           => geomap
-        })
-
-      case (Msg.ImeCompositionStart, _, _) =>
-        default.copy(_1 = model.copy(imeActive = true))
-
-      case (Msg.ImeCompositionEnd, form, currentCotonoma) =>
-        model.copy(imeActive = false) match {
-          case model => {
-            (form, currentCotonoma) match {
-              case (form: CotonomaForm, Some(cotonoma)) => {
-                val (newForm, cmds) = form.validate(cotonoma.nodeId)
-                default.copy(
-                  _1 = model.copy(form = newForm),
-                  _4 = cmds
-                )
-              }
-              case _ => default
-            }
-          }
-        }
-
-      case (
-            Msg.CotonomaByName(name, Right(cotonoma)),
-            form: CotonomaForm,
-            _
-          ) =>
-        if (cotonoma.name == form.name)
-          form.modify(_.validation).setTo(
-            Validation.Error(
-              "cotonoma-already-exists",
-              s"The cotonoma \"${cotonoma.name}\" already exists in this node.",
-              Map("name" -> cotonoma.name, "id" -> cotonoma.id.uuid)
-            ).toResult
-          ) match {
-            case form => default.copy(_1 = model.copy(form = form))
-          }
-        else
-          default
-
-      case (Msg.CotonomaByName(name, Left(error)), form: CotonomaForm, _) =>
-        if (name == form.name && error.code == "not-found")
-          form.copy(validation = Validation.Result.validated) match {
-            case form => default.copy(_1 = model.copy(form = form))
-          }
-        else
-          default.copy(_4 = cotoami.error("CotonomaByName error.", error))
-
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
 
       case (Msg.TogglePreview, _, _) =>
         default.copy(_1 = model.modify(_.inPreview).using(!_))
 
-      case (Msg.Post, form: CotoForm, Some(cotonoma)) =>
+      case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) =>
         model.copy(posting = true) match {
           case model =>
             form.mediaContent match {
@@ -439,7 +189,7 @@ object SectionFlowInput {
             }
         }
 
-      case (Msg.Post, form: CotonomaForm, Some(cotonoma)) => {
+      case (Msg.Post, form: CotonomaForm.Model, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
         model.copy(posting = true).clear match {
           case model =>
@@ -487,7 +237,11 @@ object SectionFlowInput {
         }
       }
 
-      case (Msg.MediaContentEncoded(Right(mediaContent)), form: CotoForm, _) =>
+      case (
+            Msg.MediaContentEncoded(Right(mediaContent)),
+            form: CotoForm.Model,
+            _
+          ) =>
         update(
           Msg.PostCoto(form, Some(mediaContent)),
           model,
@@ -542,7 +296,7 @@ object SectionFlowInput {
 
   private def postCoto(
       postId: String,
-      form: CotoForm,
+      form: CotoForm.Model,
       mediaContent: Option[(String, String)],
       location: Option[Geolocation],
       timeRange: Option[DateTimeRange],
@@ -560,7 +314,7 @@ object SectionFlowInput {
 
   private def postCotonoma(
       postId: String,
-      form: CotonomaForm,
+      form: CotonomaForm.Model,
       location: Option[Geolocation],
       timeRange: Option[DateTimeRange],
       postTo: Id[Cotonoma]
@@ -590,7 +344,7 @@ object SectionFlowInput {
     )(
       headerTools(model),
       model.form match {
-        case form: CotoForm =>
+        case form: CotoForm.Model =>
           Fragment(
             form.mediaContent.map(blob => {
               SplitPane(
@@ -625,12 +379,12 @@ object SectionFlowInput {
             )
           )
 
-        case form: CotonomaForm =>
+        case form: CotonomaForm.Model =>
           formCotonoma(form, model, operatingNode, currentCotonoma, geomap)
       }
     )
 
-  private def sectionMediaPreview(mediaContent: dom.Blob, form: CotoForm)(
+  private def sectionMediaPreview(mediaContent: dom.Blob, form: CotoForm.Model)(
       implicit dispatch: Msg => Unit
   ): ReactElement = {
     val url = dom.URL.createObjectURL(mediaContent)
@@ -651,7 +405,7 @@ object SectionFlowInput {
   }
 
   private def formCoto(
-      form: CotoForm,
+      form: CotoForm.Model,
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
@@ -737,7 +491,7 @@ object SectionFlowInput {
     )
 
   private def formCotonoma(
-      form: CotonomaForm,
+      form: CotonomaForm.Model,
       model: Model,
       operatingNode: Node,
       currentCotonoma: Cotonoma,
@@ -879,7 +633,7 @@ object SectionFlowInput {
       section(className := "coto-type-switch")(
         button(
           className := "new-coto default",
-          disabled := model.form.isInstanceOf[CotoForm],
+          disabled := model.form.isInstanceOf[CotoForm.Model],
           onClick := (_ => dispatch(Msg.SetCotoForm))
         )(
           span(className := "label")(
@@ -889,7 +643,7 @@ object SectionFlowInput {
         ),
         button(
           className := "new-cotonoma default",
-          disabled := model.form.isInstanceOf[CotonomaForm],
+          disabled := model.form.isInstanceOf[CotonomaForm.Model],
           onClick := (_ => dispatch(Msg.SetCotonomaForm))
         )(
           span(className := "label")(

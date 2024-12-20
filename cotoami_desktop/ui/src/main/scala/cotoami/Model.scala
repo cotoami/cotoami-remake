@@ -16,7 +16,7 @@ trait Context {
   def log: Log
   def uiState: Option[UiState]
   def domain: Domain
-  def focusedLocation: Option[Geolocation]
+  def geomap: SectionGeomap.Model
 }
 
 case class Model(
@@ -56,8 +56,6 @@ case class Model(
     copy(log = log.info(message, details))
   def error(message: String, error: Option[ErrorJson]): Model =
     copy(log = log.error(message, error.map(js.JSON.stringify(_))))
-
-  override def focusedLocation: Option[Geolocation] = geomap.focusedLocation
 
   def changeUrl(url: URL): Model =
     copy(

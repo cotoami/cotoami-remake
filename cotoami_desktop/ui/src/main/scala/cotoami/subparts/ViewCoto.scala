@@ -302,7 +302,7 @@ object ViewCoto {
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
     coto.geolocation.map { location =>
-      val focused = Some(location) == context.focusedLocation
+      val focused = context.geomap.isFocusing(location)
       button(
         className := optionalClasses(
           Seq(

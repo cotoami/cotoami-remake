@@ -68,6 +68,11 @@ object SectionGeomap {
 
     def unfocus: Model = copy(focusedLocation = None)
 
+    def focused: Option[Geolocation] = focusedLocation
+
+    def isFocusing(location: Geolocation): Boolean =
+      Some(location) == focusedLocation
+
     def addOrRemoveMarkers: Model =
       copy(_addOrRemoveMarkers = _addOrRemoveMarkers + 1)
 
