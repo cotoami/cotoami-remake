@@ -150,16 +150,24 @@ object SectionFlowInput {
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
         val (form, geomap, subcmd) = CotoForm.update(submsg, cotoForm)
-        model.copy(form = form).pipe { model =>
-          default.copy(
-            _1 = model,
-            _2 = geomap,
-            _4 = submsg match {
-              case CotoForm.Msg.TextContentInput(_) => model.save
-              case _ => subcmd.map(Msg.CotoFormMsg).map(_.into)
-            }
+        model
+          .modify(_.form).setTo(form)
+          .modify(_.folded).using(folded =>
+            if (submsg.isInstanceOf[CotoForm.Msg.TextContentInput])
+              false
+            else
+              folded
           )
-        }
+          .pipe { model =>
+            default.copy(
+              _1 = model,
+              _2 = geomap,
+              _4 = submsg match {
+                case CotoForm.Msg.TextContentInput(_) => model.save
+                case _ => subcmd.map(Msg.CotoFormMsg).map(_.into)
+              }
+            )
+          }
       }
 
       case (
@@ -168,10 +176,20 @@ object SectionFlowInput {
             _
           ) => {
         val (form, subcmd) = CotonomaForm.update(submsg, cotonomaForm)
-        default.copy(
-          _1 = model.copy(form = form),
-          _4 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
-        )
+        model
+          .modify(_.form).setTo(form)
+          .modify(_.folded).using(folded =>
+            if (submsg.isInstanceOf[CotonomaForm.Msg.CotonomaNameInput])
+              false
+            else
+              folded
+          )
+          .pipe { model =>
+            default.copy(
+              _1 = model,
+              _4 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+            )
+          }
       }
 
       case (Msg.TextContentRestored(Some(content)), form: CotoForm.Model, _) =>
