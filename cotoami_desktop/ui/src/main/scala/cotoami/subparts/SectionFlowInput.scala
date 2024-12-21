@@ -98,6 +98,7 @@ object SectionFlowInput {
   object Msg {
     case object SetCotoForm extends Msg
     case object SetCotonomaForm extends Msg
+    case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class TextContentRestored(content: Option[String]) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
     case object TogglePreview extends Msg
@@ -147,6 +148,15 @@ object SectionFlowInput {
             else
               geomap
         )
+
+      case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
+        val (form, geomap, subcmd) = CotoForm.update(submsg, cotoForm)
+        default.copy(
+          _1 = model.copy(form = form),
+          _2 = geomap,
+          _4 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+        )
+      }
 
       case (Msg.TextContentRestored(Some(content)), form: CotoForm.Model, _) =>
         default.copy(
@@ -398,7 +408,8 @@ object SectionFlowInput {
           symbol = "close",
           tip = "Delete",
           classes = "delete",
-          onClick = _ => dispatch(Msg.DeleteMediaContent)
+          onClick =
+            _ => dispatch(Msg.CotoFormMsg(CotoForm.Msg.DeleteMediaContent))
         )
       )
     )
@@ -418,41 +429,14 @@ object SectionFlowInput {
       initialPrimarySize = editorHeight,
       resizable = !model.folded,
       onPrimarySizeChanged = Some(onEditorHeightChanged),
-      primary =
-        if (model.inPreview)
-          SplitPane.Primary.Props(className = Some("coto-preview"))(
-            ScrollArea()(
-              section(className := "coto-preview")(
-                form.summary.map(section(className := "summary")(_)),
-                div(className := "content")(
-                  ViewCoto.sectionTextContent(Some(form.content))
-                )
-              )
-            )
-          )
-        else
-          SplitPane.Primary.Props(className = Some("coto-editor"))(
-            textarea(
-              placeholder := "Write your Coto in Markdown",
-              value := form.textContent,
-              onFocus := (_ => dispatch(Msg.SetFolded(false))),
-              onChange := (e => dispatch(Msg.TextContentInput(e.target.value))),
-              onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-              onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
-              onKeyDown := (e =>
-                if (model.readyToPost && detectCtrlEnter(e)) {
-                  dispatch(Msg.Post)
-                }
-              )
-            ),
-            div(className := "input-image")(
-              InputFile(
-                accept = js.Dictionary("image/*" -> js.Array[String]()),
-                message = "Drop an image file here, or click to select one",
-                onSelect = file => dispatch(Msg.FileInput(file))
-              )
-            )
-          ),
+      primary = SplitPane.Primary.Props()(
+        CotoForm(
+          model = form,
+          preview = model.inPreview,
+          onFocus = () => dispatch(Msg.SetFolded(false)),
+          onCtrlEnter = () => dispatch(Msg.Post)
+        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      ),
       secondary = SplitPane.Secondary.Props()(
         ulAttributes(
           form.dateTimeRange,

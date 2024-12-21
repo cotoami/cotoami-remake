@@ -53,7 +53,7 @@ object Msg {
 
   // Domain
   case object ReloadDomain extends Msg
-  case class DomainMsg(subMsg: Domain.Msg) extends Msg
+  case class DomainMsg(submsg: Domain.Msg) extends Msg
 
   // Map
   case object OpenGeomap extends Msg
@@ -63,11 +63,11 @@ object Msg {
   case object DisplayGeolocationInFocus extends Msg
 
   // Subparts
-  case class ModalMsg(subMsg: Modal.Msg) extends Msg
-  case class NavCotonomasMsg(subMsg: NavCotonomas.Msg) extends Msg
-  case class FlowInputMsg(subMsg: SectionFlowInput.Msg) extends Msg
-  case class SectionTimelineMsg(subMsg: SectionTimeline.Msg) extends Msg
-  case class SectionPinnedCotosMsg(subMsg: SectionPinnedCotos.Msg) extends Msg
-  case class SectionTraversalsMsg(subMsg: SectionTraversals.Msg) extends Msg
-  case class SectionGeomapMsg(subMsg: SectionGeomap.Msg) extends Msg
+  case class ModalMsg(submsg: Modal.Msg) extends Msg
+  case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
+  case class FlowInputMsg(submsg: SectionFlowInput.Msg) extends Msg
+  case class SectionTimelineMsg(submsg: SectionTimeline.Msg) extends Msg
+  case class SectionPinnedCotosMsg(submsg: SectionPinnedCotos.Msg) extends Msg
+  case class SectionTraversalsMsg(submsg: SectionTraversals.Msg) extends Msg
+  case class SectionGeomapMsg(submsg: SectionGeomap.Msg) extends Msg
 }
