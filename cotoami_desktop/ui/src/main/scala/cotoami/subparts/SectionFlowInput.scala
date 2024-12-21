@@ -178,8 +178,7 @@ object SectionFlowInput {
                 folded = content.isBlank
               )
             else
-              model.copy(folded = false),
-          _4 = cotoami.info("Coto draft restored")
+              model.copy(folded = false)
         )
 
       case (Msg.SetFolded(folded), _, _) =>
