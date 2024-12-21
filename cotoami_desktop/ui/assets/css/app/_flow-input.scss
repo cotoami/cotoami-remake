@@ -137,6 +137,7 @@ section.flow-input {
     div.input-image {
       padding: 5px;
       background-color: var(--input-background-color);
+      cursor: pointer;
 
       section.input-file {
         height: 40px;
