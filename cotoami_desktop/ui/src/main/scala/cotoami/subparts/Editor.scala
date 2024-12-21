@@ -1,8 +1,12 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.scalajs.js
 import org.scalajs.dom
 import com.softwaremill.quicklens._
+
+import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
 import cotoami.Context
@@ -158,6 +162,41 @@ object Editor {
           })
       }
     }
+
+    def apply(
+        model: CotoForm.Model,
+        preview: Boolean,
+        onFocus: () => Unit,
+        onCtrlEnter: () => Unit
+    )(implicit dispatch: Msg => Unit): ReactElement =
+      if (preview)
+        section(className := "coto-preview")(
+          model.summary.map(section(className := "summary")(_)),
+          div(className := "content")(
+            ViewCoto.sectionTextContent(Some(model.content))
+          )
+        )
+      else
+        section(className := "coto-editor")(
+          textarea(
+            placeholder := "Write your Coto in Markdown",
+            value := model.textContent,
+            slinky.web.html.onFocus := onFocus,
+            onChange := (e => dispatch(Msg.TextContentInput(e.target.value))),
+            onKeyDown := (e =>
+              if (model.readyToPost && detectCtrlEnter(e)) {
+                onCtrlEnter()
+              }
+            )
+          ),
+          div(className := "input-image")(
+            InputFile(
+              accept = js.Dictionary("image/*" -> js.Array[String]()),
+              message = "Drop an image file here, or click to select one",
+              onSelect = file => dispatch(Msg.FileInput(file))
+            )
+          )
+        )
   }
 
   object CotonomaForm {
