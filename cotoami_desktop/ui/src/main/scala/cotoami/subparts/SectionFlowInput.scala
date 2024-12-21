@@ -150,11 +150,16 @@ object SectionFlowInput {
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
         val (form, geomap, subcmd) = CotoForm.update(submsg, cotoForm)
-        default.copy(
-          _1 = model.copy(form = form),
-          _2 = geomap,
-          _4 = subcmd.map(Msg.CotoFormMsg).map(_.into)
-        )
+        model.copy(form = form).pipe { model =>
+          default.copy(
+            _1 = model,
+            _2 = geomap,
+            _4 = submsg match {
+              case CotoForm.Msg.TextContentInput(_) => model.save
+              case _ => subcmd.map(Msg.CotoFormMsg).map(_.into)
+            }
+          )
+        }
       }
 
       case (
