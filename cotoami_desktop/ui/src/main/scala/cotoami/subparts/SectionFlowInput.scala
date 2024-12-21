@@ -6,7 +6,6 @@ import org.scalajs.dom
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
-import slinky.web.SyntheticMouseEvent
 
 import cats.effect.IO
 import com.softwaremill.quicklens._
@@ -29,7 +28,6 @@ import cotoami.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
-  ScrollArea,
   SplitPane
 }
 import cotoami.subparts.Editor._
@@ -99,6 +97,7 @@ object SectionFlowInput {
     case object SetCotoForm extends Msg
     case object SetCotonomaForm extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class TextContentRestored(content: Option[String]) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
     case object TogglePreview extends Msg
@@ -155,6 +154,18 @@ object SectionFlowInput {
           _1 = model.copy(form = form),
           _2 = geomap,
           _4 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+        )
+      }
+
+      case (
+            Msg.CotonomaFormMsg(submsg),
+            cotonomaForm: CotonomaForm.Model,
+            _
+          ) => {
+        val (form, subcmd) = CotonomaForm.update(submsg, cotonomaForm)
+        default.copy(
+          _1 = model.copy(form = form),
+          _4 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
 
@@ -300,7 +311,7 @@ object SectionFlowInput {
         )
       }
 
-      case (_, _, _) => default
+      case _ => default
     }
   }
 
@@ -438,12 +449,12 @@ object SectionFlowInput {
         )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
-        ulAttributes(
+        Editor.ulAttributes(
           form.dateTimeRange,
           form.mediaDateTime,
           geomap.focusedLocation,
           form.mediaLocation
-        ),
+        )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
         div(className := "post")(
           Validation.sectionValidationError(form.validate),
           section(className := "post")(
@@ -482,24 +493,16 @@ object SectionFlowInput {
       geomap: Geomap
   )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     Fragment(
-      input(
-        `type` := "text",
-        name := "cotonomaName",
-        placeholder := "New cotonoma name",
-        value := form.nameInput,
-        Validation.ariaInvalid(form.validation),
-        onFocus := (_ => dispatch(Msg.SetFolded(false))),
-        onBlur := (_ => dispatch(Msg.SetFolded(!model.hasContents))),
-        onChange := (e => dispatch(Msg.CotonomaNameInput(e.target.value))),
-        onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
-        onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
-        onKeyDown := (e =>
-          if (model.readyToPost && detectCtrlEnter(e)) {
-            dispatch(Msg.Post)
-          }
-        )
+      CotonomaForm(
+        model = form,
+        onFocus = () => dispatch(Msg.SetFolded(false)),
+        onBlur = () => dispatch(Msg.SetFolded(!model.hasContents)),
+        onCtrlEnter = () => dispatch(Msg.Post)
+      )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+      ulAttributes(None, None, geomap.focusedLocation, None)(
+        context,
+        submsg => dispatch(Msg.CotoFormMsg(submsg))
       ),
-      ulAttributes(None, None, geomap.focusedLocation, None),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),
         section(className := "post")(
@@ -508,105 +511,6 @@ object SectionFlowInput {
             buttonPost(model, currentCotonoma)
           )
         )
-      )
-    )
-
-  private def ulAttributes(
-      dateTimeRange: Option[DateTimeRange],
-      mediaDateTime: Option[DateTimeRange],
-      location: Option[Geolocation],
-      mediaLocation: Option[Geolocation]
-  )(implicit context: Context, dispatch: Msg => Unit): Option[ReactElement] =
-    Seq(
-      liAttributeDateTimeRange(dateTimeRange, mediaDateTime),
-      liAttributeGeolocation(location, mediaLocation)
-    ).flatten match {
-      case Seq() => None
-      case attributes =>
-        Some(ul(className := "attributes")(attributes: _*))
-    }
-
-  private def liAttributeDateTimeRange(
-      dateTimeRange: Option[DateTimeRange],
-      mediaDateTime: Option[DateTimeRange]
-  )(implicit context: Context, dispatch: Msg => Unit): Option[ReactElement] =
-    Option.when(dateTimeRange.isDefined || mediaDateTime.isDefined) {
-      li(className := "attribute time-range")(
-        div(className := "attribute-name")(
-          materialSymbol("calendar_month"),
-          "Date"
-        ),
-        div(className := "attribute-value")(
-          dateTimeRange.map(range => context.time.formatDateTime(range.start))
-        ),
-        Option.when(mediaDateTime.isDefined && dateTimeRange != mediaDateTime) {
-          divUseMediaMetadata(
-            "Use the image timestamp",
-            _ => dispatch(Msg.UseMediaDateTime)
-          )
-        },
-        Option.when(dateTimeRange.isDefined) {
-          divAttributeDelete(_ => dispatch(Msg.DeleteDateTimeRange))
-        }
-      )
-    }
-
-  private def liAttributeGeolocation(
-      location: Option[Geolocation],
-      mediaLocation: Option[Geolocation]
-  )(implicit dispatch: Msg => Unit): Option[ReactElement] =
-    Option.when(location.isDefined || mediaLocation.isDefined) {
-      li(className := "attribute geolocation")(
-        div(className := "attribute-name")(
-          materialSymbol("location_on"),
-          "Location"
-        ),
-        div(className := "attribute-value")(
-          location.map(location =>
-            Fragment(
-              div(className := "longitude")(
-                span(className := "label")("longitude:"),
-                span(className := "value longitude")(location.longitude)
-              ),
-              div(className := "latitude")(
-                span(className := "label")("latitude:"),
-                span(className := "value latitude")(location.latitude)
-              )
-            )
-          )
-        ),
-        Option.when(mediaLocation.isDefined && location != mediaLocation) {
-          divUseMediaMetadata(
-            "Use the image location",
-            _ => dispatch(Msg.UseMediaGeolocation)
-          )
-        },
-        Option.when(location.isDefined) {
-          divAttributeDelete(_ => dispatch(Msg.DeleteGeolocation))
-        }
-      )
-    }
-
-  private def divUseMediaMetadata(
-      label: String,
-      onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
-    div(className := "use-media-metadata")(
-      button(
-        className := "default",
-        slinky.web.html.onClick := onClick
-      )(label)
-    )
-
-  private def divAttributeDelete(
-      onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
-    div(className := "attribute-delete")(
-      toolButton(
-        symbol = "close",
-        tip = "Delete",
-        classes = "delete",
-        onClick = onClick
       )
     )
 

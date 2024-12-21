@@ -5,14 +5,16 @@ import scala.scalajs.js
 import org.scalajs.dom
 import com.softwaremill.quicklens._
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
+import slinky.web.SyntheticMouseEvent
 
 import fui.Cmd
 import cotoami.Context
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
+import cotoami.components.{materialSymbol, toolButton}
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object Editor {
@@ -295,6 +297,8 @@ object Editor {
               ),
               Cmd.none
             )
+
+        case _ => (model, Cmd.none)
       }
 
     def apply(
@@ -321,4 +325,109 @@ object Editor {
         )
       )
   }
+
+  private def liAttributeDateTimeRange(
+      dateTimeRange: Option[DateTimeRange],
+      mediaDateTime: Option[DateTimeRange]
+  )(implicit
+      context: Context,
+      dispatch: CotoForm.Msg => Unit
+  ): Option[ReactElement] =
+    Option.when(dateTimeRange.isDefined || mediaDateTime.isDefined) {
+      li(className := "attribute time-range")(
+        div(className := "attribute-name")(
+          materialSymbol("calendar_month"),
+          "Date"
+        ),
+        div(className := "attribute-value")(
+          dateTimeRange.map(range => context.time.formatDateTime(range.start))
+        ),
+        Option.when(mediaDateTime.isDefined && dateTimeRange != mediaDateTime) {
+          divUseMediaMetadata(
+            "Use the image timestamp",
+            _ => dispatch(CotoForm.Msg.UseMediaDateTime)
+          )
+        },
+        Option.when(dateTimeRange.isDefined) {
+          divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteDateTimeRange))
+        }
+      )
+    }
+
+  def ulAttributes(
+      dateTimeRange: Option[DateTimeRange],
+      mediaDateTime: Option[DateTimeRange],
+      location: Option[Geolocation],
+      mediaLocation: Option[Geolocation]
+  )(implicit
+      context: Context,
+      dispatch: CotoForm.Msg => Unit
+  ): Option[ReactElement] =
+    Seq(
+      liAttributeDateTimeRange(dateTimeRange, mediaDateTime),
+      liAttributeGeolocation(location, mediaLocation)
+    ).flatten match {
+      case Seq() => None
+      case attributes =>
+        Some(ul(className := "attributes")(attributes: _*))
+    }
+
+  private def liAttributeGeolocation(
+      location: Option[Geolocation],
+      mediaLocation: Option[Geolocation]
+  )(implicit dispatch: CotoForm.Msg => Unit): Option[ReactElement] =
+    Option.when(location.isDefined || mediaLocation.isDefined) {
+      li(className := "attribute geolocation")(
+        div(className := "attribute-name")(
+          materialSymbol("location_on"),
+          "Location"
+        ),
+        div(className := "attribute-value")(
+          location.map(location =>
+            Fragment(
+              div(className := "longitude")(
+                span(className := "label")("longitude:"),
+                span(className := "value longitude")(location.longitude)
+              ),
+              div(className := "latitude")(
+                span(className := "label")("latitude:"),
+                span(className := "value latitude")(location.latitude)
+              )
+            )
+          )
+        ),
+        Option.when(mediaLocation.isDefined && location != mediaLocation) {
+          divUseMediaMetadata(
+            "Use the image location",
+            _ => dispatch(CotoForm.Msg.UseMediaGeolocation)
+          )
+        },
+        Option.when(location.isDefined) {
+          divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteGeolocation))
+        }
+      )
+    }
+
+  private def divUseMediaMetadata(
+      label: String,
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    div(className := "use-media-metadata")(
+      button(
+        className := "default",
+        slinky.web.html.onClick := onClick
+      )(label)
+    )
+
+  private def divAttributeDelete(
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    div(className := "attribute-delete")(
+      toolButton(
+        symbol = "close",
+        tip = "Delete",
+        classes = "delete",
+        onClick = onClick
+      )
+    )
 }
