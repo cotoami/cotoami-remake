@@ -296,5 +296,29 @@ object Editor {
               Cmd.none
             )
       }
+
+    def apply(
+        model: Model,
+        onFocus: () => Unit,
+        onBlur: () => Unit,
+        onCtrlEnter: () => Unit
+    )(implicit dispatch: Msg => Unit): ReactElement =
+      input(
+        `type` := "text",
+        name := "cotonomaName",
+        placeholder := "New cotonoma name",
+        value := model.nameInput,
+        Validation.ariaInvalid(model.validation),
+        slinky.web.html.onFocus := onFocus,
+        slinky.web.html.onBlur := onBlur,
+        onChange := (e => dispatch(Msg.CotonomaNameInput(e.target.value))),
+        onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
+        onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
+        onKeyDown := (e =>
+          if (model.readyToPost && detectCtrlEnter(e)) {
+            onCtrlEnter()
+          }
+        )
+      )
   }
 }
