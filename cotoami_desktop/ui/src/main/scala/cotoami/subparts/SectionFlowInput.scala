@@ -440,7 +440,9 @@ object SectionFlowInput {
       initialPrimarySize = editorHeight,
       resizable = !model.folded,
       onPrimarySizeChanged = Some(onEditorHeightChanged),
-      primary = SplitPane.Primary.Props()(
+      primary = SplitPane.Primary.Props(className =
+        if (model.inPreview) Some("coto-preview") else Some("coto-editor")
+      )(
         CotoForm(
           model = form,
           preview = model.inPreview,
