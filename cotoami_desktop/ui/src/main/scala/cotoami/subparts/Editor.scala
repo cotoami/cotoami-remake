@@ -201,6 +201,33 @@ object Editor {
             )
           )
         )
+
+    def sectionMediaPreview(
+        model: Model
+    )(implicit dispatch: Msg => Unit): Option[ReactElement] =
+      model.mediaContent match {
+        case Some(mediaContent) => {
+          val url = dom.URL.createObjectURL(mediaContent)
+          Some(
+            section(className := "media-preview")(
+              div(className := "media-content")(
+                img(
+                  src := url,
+                  onLoad := (_ => dom.URL.revokeObjectURL(url))
+                ),
+                toolButton(
+                  symbol = "close",
+                  tip = "Delete",
+                  classes = "delete",
+                  onClick = _ => dispatch(Msg.DeleteMediaContent)
+                )
+              )
+            )
+          )
+        }
+
+        case None => None
+      }
   }
 
   object CotonomaForm {

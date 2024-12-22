@@ -24,12 +24,7 @@ import cotoami.models.{
   WaitingPosts
 }
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.components.{
-  materialSymbol,
-  optionalClasses,
-  toolButton,
-  SplitPane
-}
+import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.Editor._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -388,14 +383,16 @@ object SectionFlowInput {
       headerTools(model),
       model.form match {
         case form: CotoForm.Model =>
-          Fragment(
-            form.mediaContent.map(blob => {
+          CotoForm.sectionMediaPreview(form)(submsg =>
+            dispatch(Msg.CotoFormMsg(submsg))
+          ) match {
+            case Some(mediaPreview) =>
               SplitPane(
                 vertical = false,
                 initialPrimarySize = 300,
                 className = Some("coto-form-with-media"),
                 primary = SplitPane.Primary.Props()(
-                  sectionMediaPreview(blob, form)
+                  mediaPreview
                 ),
                 secondary = SplitPane.Secondary.Props()(
                   formCoto(
@@ -408,8 +405,9 @@ object SectionFlowInput {
                     onEditorHeightChanged
                   )
                 )
-              ): ReactElement
-            }).getOrElse(
+              )
+
+            case None =>
               formCoto(
                 form,
                 model,
@@ -419,34 +417,12 @@ object SectionFlowInput {
                 editorHeight,
                 onEditorHeightChanged
               )
-            )
-          )
+          }
 
         case form: CotonomaForm.Model =>
           formCotonoma(form, model, operatingNode, currentCotonoma, geomap)
       }
     )
-
-  private def sectionMediaPreview(mediaContent: dom.Blob, form: CotoForm.Model)(
-      implicit dispatch: Msg => Unit
-  ): ReactElement = {
-    val url = dom.URL.createObjectURL(mediaContent)
-    section(className := "media-preview")(
-      div(className := "media-content")(
-        img(
-          src := url,
-          onLoad := (_ => dom.URL.revokeObjectURL(url))
-        ),
-        toolButton(
-          symbol = "close",
-          tip = "Delete",
-          classes = "delete",
-          onClick =
-            _ => dispatch(Msg.CotoFormMsg(CotoForm.Msg.DeleteMediaContent))
-        )
-      )
-    )
-  }
 
   private def formCoto(
       form: CotoForm.Model,
