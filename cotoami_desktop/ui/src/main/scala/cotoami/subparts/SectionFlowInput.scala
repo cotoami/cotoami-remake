@@ -382,7 +382,17 @@ object SectionFlowInput {
     )(
       headerTools(model),
       model.form match {
-        case form: CotoForm.Model =>
+        case form: CotoForm.Model => {
+          val divForm = formCoto(
+            form,
+            model,
+            operatingNode,
+            currentCotonoma,
+            geomap,
+            editorHeight,
+            onEditorHeightChanged
+          )
+
           CotoForm.sectionMediaPreview(form)(submsg =>
             dispatch(Msg.CotoFormMsg(submsg))
           ) match {
@@ -391,33 +401,13 @@ object SectionFlowInput {
                 vertical = false,
                 initialPrimarySize = 300,
                 className = Some("coto-form-with-media"),
-                primary = SplitPane.Primary.Props()(
-                  mediaPreview
-                ),
-                secondary = SplitPane.Secondary.Props()(
-                  formCoto(
-                    form,
-                    model,
-                    operatingNode,
-                    currentCotonoma,
-                    geomap,
-                    editorHeight,
-                    onEditorHeightChanged
-                  )
-                )
+                primary = SplitPane.Primary.Props()(mediaPreview),
+                secondary = SplitPane.Secondary.Props()(divForm)
               )
 
-            case None =>
-              formCoto(
-                form,
-                model,
-                operatingNode,
-                currentCotonoma,
-                geomap,
-                editorHeight,
-                onEditorHeightChanged
-              )
+            case None => divForm
           }
+        }
 
         case form: CotonomaForm.Model =>
           formCotonoma(form, model, operatingNode, currentCotonoma, geomap)
