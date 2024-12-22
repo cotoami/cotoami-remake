@@ -14,7 +14,7 @@ import cotoami.Context
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
-import cotoami.components.{materialSymbol, toolButton}
+import cotoami.components.{materialSymbol, toolButton, ScrollArea}
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object Editor {
@@ -172,10 +172,12 @@ object Editor {
         onCtrlEnter: () => Unit
     )(implicit dispatch: Msg => Unit): ReactElement =
       if (preview)
-        section(className := "coto-preview")(
-          model.summary.map(section(className := "summary")(_)),
-          div(className := "content")(
-            ViewCoto.sectionTextContent(Some(model.content))
+        ScrollArea()(
+          section(className := "coto-preview")(
+            model.summary.map(section(className := "summary")(_)),
+            div(className := "content")(
+              ViewCoto.sectionTextContent(Some(model.content))
+            )
           )
         )
       else
