@@ -118,22 +118,13 @@ section.flow-input {
     }
   }
 
-  div.coto-preview {
-    background-color: var(--card-background-color);
-
-    // SimpleBar div
-    >div {
+  div.coto-form {
+    section.coto-editor {
       height: 100%;
     }
 
     section.coto-preview {
-      padding: 16px;
-
-      section.summary {
-        margin-bottom: 16px;
-        color: var(--muted-color);
-        font-weight: 700;
-      }
+      height: 100%;
     }
   }
 

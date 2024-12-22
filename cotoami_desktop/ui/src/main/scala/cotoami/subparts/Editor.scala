@@ -172,8 +172,8 @@ object Editor {
         onCtrlEnter: () => Unit
     )(implicit dispatch: Msg => Unit): ReactElement =
       if (preview)
-        ScrollArea()(
-          section(className := "coto-preview")(
+        section(className := "coto-preview")(
+          ScrollArea()(
             model.summary.map(section(className := "summary")(_)),
             div(className := "content")(
               ViewCoto.sectionTextContent(Some(model.content))
