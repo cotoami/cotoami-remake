@@ -227,12 +227,7 @@ pub(crate) fn subs<Conn: AsReadableConn>(
 ) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
         let cotonoma_cotos: Page<Coto> =
-            super::paginate(ctx.conn().readable(), page_size, page_index, || {
-                cotos::table
-                    .filter(cotos::is_cotonoma.eq(true))
-                    .filter(cotos::posted_in_id.eq(id))
-                    .order(cotos::updated_at.desc())
-            })?;
+            coto_ops::recent(None, Some(id), true, page_size, page_index).run(ctx)?;
 
         // Collect the coto IDs of the sub cotonomas.
         //

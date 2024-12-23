@@ -87,16 +87,20 @@ pub(crate) fn get_by_ids<Conn: AsReadableConn>(
 pub(crate) fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
+    only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Page<Coto>> + 'a {
     read_op(move |conn| {
         super::paginate(conn, page_size, page_index, || {
-            let all_cotos = cotos::table.into_boxed();
+            let mut query = cotos::table.into_boxed();
+            if only_cotonomas {
+                query = query.filter(cotos::is_cotonoma.eq(true));
+            }
             match (node_id, posted_in_id) {
-                (Some(node_id), None) => all_cotos.filter(cotos::node_id.eq(node_id)),
-                (_, Some(posted_in_id)) => all_cotos.filter(cotos::posted_in_id.eq(posted_in_id)),
-                _ => all_cotos,
+                (Some(node_id), None) => query.filter(cotos::node_id.eq(node_id)),
+                (_, Some(posted_in_id)) => query.filter(cotos::posted_in_id.eq(posted_in_id)),
+                _ => query,
             }
             .order(cotos::created_at.desc())
         })
