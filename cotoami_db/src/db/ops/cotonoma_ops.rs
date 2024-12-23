@@ -226,11 +226,18 @@ pub(crate) fn subs<Conn: AsReadableConn>(
     page_index: i64,
 ) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
+        // Recently updated cotonoma cotos including reposts.
+        // Since `subs` have to include reposts, currently there's no way to sort them
+        // by `cotonomas::updated_at`. Reposts can't be joined to cotonomas.
         let cotonoma_cotos: Page<Coto> =
-            coto_ops::recent(None, Some(id), true, page_size, page_index).run(ctx)?;
+            super::paginate(ctx.conn().readable(), page_size, page_index, || {
+                cotos::table
+                    .filter(cotos::is_cotonoma.eq(true))
+                    .filter(cotos::posted_in_id.eq(id))
+                    .order(cotos::updated_at.desc())
+            })?;
 
         // Collect the coto IDs of the sub cotonomas.
-        //
         // There are two kinds of sub cotonoma: "originally posted" and "reposted".
         // The coto ID of a reposted cotonoma should be taken from `repost_of_id`.
         let coto_ids: Vec<Id<Coto>> = cotonoma_cotos
