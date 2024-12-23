@@ -19,12 +19,10 @@ object SectionGeomap {
       // Center/Zoom
       center: Option[Geolocation] = None,
       zoom: Option[Double] = None,
-      _applyCenterZoom: Int = 0,
 
       // Bounds
       currentBounds: Option[GeoBounds] = None,
       bounds: Option[GeoBounds] = None,
-      _fitBounds: Int = 0,
 
       // Focus
       focusedLocation: Option[Geolocation] = None,
@@ -34,19 +32,17 @@ object SectionGeomap {
       nextBoundsToFetch: Option[GeoBounds] = None,
       fetchingCotosInBounds: Boolean = false,
 
-      // Marker operations
-      _addOrRemoveMarkers: Int = 0,
-      _refreshMarkers: Int = 0
+      // ActionTriggers
+      triggers: ActionTriggers = ActionTriggers()
   ) {
     def applyCenterZoom: Model =
-      copy(_applyCenterZoom = _applyCenterZoom + 1)
+      this.modify(_.triggers.applyCenterZoom).using(_ + 1)
 
     def moveTo(location: Geolocation): Model =
       copy(
         center = Some(location),
-        zoom = Some(13),
-        _applyCenterZoom = _applyCenterZoom + 1
-      )
+        zoom = Some(13)
+      ).applyCenterZoom
 
     def moveTo(centerOrBounds: CenterOrBounds): Model =
       centerOrBounds match {
@@ -55,7 +51,7 @@ object SectionGeomap {
       }
 
     def fitBounds: Model =
-      copy(_fitBounds = _fitBounds + 1)
+      this.modify(_.triggers.fitBounds).using(_ + 1)
 
     def fitBounds(bounds: GeoBounds): Model =
       copy(bounds = Some(bounds)).fitBounds
@@ -74,10 +70,10 @@ object SectionGeomap {
       Some(location) == focusedLocation
 
     def addOrRemoveMarkers: Model =
-      copy(_addOrRemoveMarkers = _addOrRemoveMarkers + 1)
+      this.modify(_.triggers.addOrRemoveMarkers).using(_ + 1)
 
     def refreshMarkers: Model =
-      copy(_refreshMarkers = _refreshMarkers + 1)
+      this.modify(_.triggers.refreshMarkers).using(_ + 1)
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
       if (!fetchingCotosInFocus && !fetchingCotosInBounds)
@@ -100,6 +96,13 @@ object SectionGeomap {
         case None                => (this, Cmd.none)
       }
   }
+
+  case class ActionTriggers(
+      applyCenterZoom: Int = 0,
+      fitBounds: Int = 0,
+      addOrRemoveMarkers: Int = 0,
+      refreshMarkers: Int = 0
+  )
 
   sealed trait Msg extends Into[AppMsg] {
     def into = AppMsg.SectionGeomapMsg(this)
@@ -366,10 +369,10 @@ object SectionGeomap {
       markerDefs = toMarkerDefs(context.domain.locationMarkers),
       focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
-      applyCenterZoom = model._applyCenterZoom,
-      addOrRemoveMarkers = model._addOrRemoveMarkers,
-      refreshMarkers = model._refreshMarkers,
-      fitBounds = model._fitBounds,
+      applyCenterZoom = model.triggers.applyCenterZoom,
+      addOrRemoveMarkers = model.triggers.addOrRemoveMarkers,
+      refreshMarkers = model.triggers.refreshMarkers,
+      fitBounds = model.triggers.fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.Init(bounds))
