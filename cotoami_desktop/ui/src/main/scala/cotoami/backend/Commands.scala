@@ -131,12 +131,14 @@ object Commands {
   def RecentCotos(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       pageIndex: Double
   ) =
     jso(RecentCotos =
       jso(
         node = nodeId.map(_.uuid).getOrElse(null),
         cotonoma = cotonomaId.map(_.uuid).getOrElse(null),
+        only_cotonomas = onlyCotonomas,
         pagination = jso(page = pageIndex)
       )
     )

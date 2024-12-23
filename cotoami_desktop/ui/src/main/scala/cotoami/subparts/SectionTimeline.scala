@@ -75,7 +75,7 @@ object SectionTimeline {
     def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
-        fetchInFocus(domain, None, 0, fetchNumber + 1)
+        fetchInFocus(domain, false, None, 0, fetchNumber + 1)
       )
 
     def fetchMore(domain: Domain): (Model, Cmd.One[AppMsg]) =
@@ -85,7 +85,7 @@ object SectionTimeline {
         cotoIds.nextPageIndex.map(i =>
           (
             copy(loading = true),
-            fetchInFocus(domain, Some(query), i, fetchNumber + 1)
+            fetchInFocus(domain, false, Some(query), i, fetchNumber + 1)
           )
         ).getOrElse((this, Cmd.none)) // no more
 
@@ -95,7 +95,7 @@ object SectionTimeline {
       else
         (
           copy(query = query, loading = true),
-          fetchInFocus(domain, Some(query), 0, fetchNumber + 1)
+          fetchInFocus(domain, false, Some(query), 0, fetchNumber + 1)
         )
   }
 
@@ -159,6 +159,7 @@ object SectionTimeline {
           _1 = model.copy(imeActive = false),
           _3 = fetchInFocus(
             context.domain,
+            false,
             Some(model.query),
             0,
             model.fetchNumber + 1
@@ -177,6 +178,7 @@ object SectionTimeline {
 
   private def fetchInFocus(
       domain: Domain,
+      onlyCotonomas: Boolean,
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
@@ -184,6 +186,7 @@ object SectionTimeline {
     fetch(
       domain.nodes.focusedId,
       domain.cotonomas.focusedId,
+      onlyCotonomas,
       query,
       pageIndex,
       fetchNumber
@@ -192,15 +195,17 @@ object SectionTimeline {
   private def fetch(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
   ): Cmd.One[AppMsg] =
     (query match {
       case Some(query) if !query.isBlank() =>
+        // TODO: support onlyCotonomas
         CotosPage.search(query, nodeId, cotonomaId, pageIndex)
       case _ =>
-        CotosPage.fetchRecent(nodeId, cotonomaId, pageIndex)
+        CotosPage.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
     }).map(Msg.Fetched(fetchNumber, _).into)
 
   def apply(

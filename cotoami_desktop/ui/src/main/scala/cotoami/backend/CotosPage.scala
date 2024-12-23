@@ -17,9 +17,10 @@ object CotosPage {
   def fetchRecent(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, CotosPage]] =
-    CotosPageJson.fetchRecent(nodeId, cotonomaId, pageIndex)
+    CotosPageJson.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
       .map(_.map(CotosPage(_)))
 
   def search(
@@ -43,9 +44,12 @@ object CotosPageJson {
   def fetchRecent(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, CotosPageJson]] =
-    Commands.send(Commands.RecentCotos(nodeId, cotonomaId, pageIndex))
+    Commands.send(
+      Commands.RecentCotos(nodeId, cotonomaId, onlyCotonomas, pageIndex)
+    )
 
   def search(
       query: String,
