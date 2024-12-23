@@ -84,7 +84,7 @@ pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn recent<'a, Conn: AsReadableConn>(
+pub(crate) fn recently_inserted<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     posted_in_id: Option<&'a Id<Cotonoma>>,
     only_cotonomas: bool,

@@ -38,7 +38,7 @@ impl<'a> DatabaseSession<'a> {
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Coto>> {
-        self.read_transaction(coto_ops::recent(
+        self.read_transaction(coto_ops::recently_inserted(
             node_id,
             posted_in_id,
             only_cotonomas,
