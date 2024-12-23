@@ -24,7 +24,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(coto_ops::contains(id))
     }
 
-    pub fn cotos(&mut self, ids: Vec<Id<Coto>>) -> Result<Vec<Coto>> {
+    pub fn cotos(&mut self, ids: &[Id<Coto>]) -> Result<Vec<Coto>> {
         self.read_transaction(coto_ops::get_by_ids(ids))
     }
 

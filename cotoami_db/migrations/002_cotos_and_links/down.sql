@@ -16,6 +16,8 @@ DROP TABLE cotos;
 --
 -- cotonomas
 --
+DROP TRIGGER cotonomas_cotos_sync;
+
 DROP INDEX cotonomas_node_id;
 DROP INDEX cotonomas_coto_id;
 DROP INDEX cotonomas_name;

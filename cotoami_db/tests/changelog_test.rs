@@ -122,6 +122,7 @@ fn import_changes() -> Result<()> {
     );
 
     // check if the change is applied in db2
+    let (_, node1_root_coto) = ds1.local_node_root()?.unwrap();
     assert_that!(
         ds2.all_cotos()?,
         elements_are![eq(&node1_root_coto), eq(&db1_coto)]

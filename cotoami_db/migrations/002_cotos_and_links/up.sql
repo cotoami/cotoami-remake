@@ -100,10 +100,6 @@ CREATE TABLE cotonomas (
   name TEXT NOT NULL,
 
   created_at DATETIME NOT NULL, -- UTC
-
-  -- There's difference between cotos.updated_at and cotonomas.updated_at.
-  -- cotonomas.updated_at will be updated only on cotonoma-related update 
-  -- such as posting and renaming.
   updated_at DATETIME NOT NULL, -- UTC
 
   UNIQUE(node_id, name),
@@ -114,6 +110,14 @@ CREATE TABLE cotonomas (
 CREATE INDEX cotonomas_node_id ON cotonomas(node_id);
 CREATE INDEX cotonomas_coto_id ON cotonomas(coto_id);
 CREATE INDEX cotonomas_name ON cotonomas(name);
+
+-- cotos.updated_at should be synced with corresponding cotonomas.updated_at
+-- when cotonomas are updated.
+CREATE TRIGGER cotonomas_cotos_sync AFTER UPDATE ON cotonomas BEGIN
+  UPDATE cotos 
+    SET updated_at = new.updated_at
+    WHERE uuid = new.coto_id;
+END;
 
 
 --

@@ -68,12 +68,12 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Coto>> {
     })
 }
 
-pub(crate) fn get_by_ids<Conn: AsReadableConn>(
-    ids: Vec<Id<Coto>>,
-) -> impl Operation<Conn, Vec<Coto>> {
+pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
+    ids: &'a [Id<Coto>],
+) -> impl Operation<Conn, Vec<Coto>> + 'a {
     read_op(move |conn| {
         let mut map: HashMap<Id<Coto>, Coto> = cotos::table
-            .filter(cotos::uuid.eq_any(&ids))
+            .filter(cotos::uuid.eq_any(ids))
             .load::<Coto>(conn)?
             .into_iter()
             .map(|c| (c.uuid, c))

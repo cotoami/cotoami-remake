@@ -226,9 +226,7 @@ pub(crate) fn subs<Conn: AsReadableConn>(
     page_index: i64,
 ) -> impl Operation<Conn, Page<Cotonoma>> + '_ {
     composite_op::<Conn, _, _>(move |ctx| {
-        // Recently updated cotonoma cotos including reposts.
-        // Since `subs` have to include reposts, currently there's no way to sort them
-        // by `cotonomas::updated_at`. Reposts can't be joined to cotonomas.
+        // Recently updated cotonoma-cotos including reposts.
         let cotonoma_cotos: Page<Coto> =
             super::paginate(ctx.conn().readable(), page_size, page_index, || {
                 cotos::table
@@ -348,6 +346,7 @@ pub(crate) fn update_timestamp(
             .set(cotonomas::updated_at.eq(updated_at))
             .execute(conn.deref_mut())
             .map_err(anyhow::Error::from)
+        // NOTE: cotos::updated_at will also be updated by the trigger `cotonomas_cotos_sync`.
     })
 }
 
