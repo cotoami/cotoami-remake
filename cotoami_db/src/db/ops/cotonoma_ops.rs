@@ -198,7 +198,7 @@ pub(crate) fn all<Conn: AsReadableConn>() -> impl Operation<Conn, Vec<Cotonoma>>
     })
 }
 
-pub(crate) fn recent<Conn: AsReadableConn>(
+pub(crate) fn recently_updated<Conn: AsReadableConn>(
     node_id: Option<&Id<Node>>,
     page_size: i64,
     page_index: i64,

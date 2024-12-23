@@ -94,7 +94,9 @@ impl<'a> DatabaseSession<'a> {
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Cotonoma>> {
-        self.read_transaction(cotonoma_ops::recent(node_id, page_size, page_index))
+        self.read_transaction(cotonoma_ops::recently_updated(
+            node_id, page_size, page_index,
+        ))
     }
 
     pub fn super_cotonomas(&mut self, coto: &Coto) -> Result<Vec<Cotonoma>> {
