@@ -23,6 +23,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos).post(post_coto))
+        .route("/cotonomas", get(recent_cotonoma_cotos))
         .route("/repost", post(repost))
         .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
@@ -42,7 +43,26 @@ async fn recent_cotos(
         return errors.into_result();
     }
     state
-        .recent_cotos(None, Some(cotonoma_id), pagination)
+        .recent_cotos(None, Some(cotonoma_id), false, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotonomas/:cotonoma_id/cotos/cotonomas
+/////////////////////////////////////////////////////////////////////////////
+
+async fn recent_cotonoma_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<CotosPage>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return errors.into_result();
+    }
+    state
+        .recent_cotos(None, Some(cotonoma_id), true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

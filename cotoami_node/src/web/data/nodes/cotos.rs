@@ -17,6 +17,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotos))
+        .route("/cotonomas", get(recent_cotonoma_cotos))
         .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
 }
@@ -32,7 +33,23 @@ async fn recent_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<CotosPage>, ServiceError> {
     state
-        .recent_cotos(Some(node_id), None, pagination)
+        .recent_cotos(Some(node_id), None, false, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/:node_id/cotos/cotonomas
+/////////////////////////////////////////////////////////////////////////////
+
+async fn recent_cotonoma_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<CotosPage>, ServiceError> {
+    state
+        .recent_cotos(Some(node_id), None, true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

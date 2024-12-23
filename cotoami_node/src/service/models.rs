@@ -292,7 +292,7 @@ impl CotosRelatedData {
     pub(crate) fn fetch(ds: &mut DatabaseSession<'_>, cotos: &[Coto]) -> Result<Self> {
         let original_ids: Vec<Id<Coto>> =
             cotos.iter().filter_map(|coto| coto.repost_of_id).collect();
-        let originals = ds.cotos(original_ids)?;
+        let originals = ds.cotos(&original_ids)?;
         let posted_in = ds.cotonomas_of(cotos.iter().chain(originals.iter()))?;
         let as_cotonomas = ds.as_cotonomas(cotos.iter())?;
         Ok(Self::new(posted_in, as_cotonomas, originals))

@@ -163,16 +163,21 @@ impl HttpClient {
             Command::RecentCotos {
                 node,
                 cotonoma,
+                only_cotonomas,
                 pagination,
             } => {
+                let path_suffix = if only_cotonomas { "/cotonomas" } else { "" };
                 if let Some(cotonoma_id) = cotonoma {
-                    self.get(&format!("{API_PATH_COTONOMAS}/{cotonoma_id}/cotos"))
-                        .query(&pagination)
+                    self.get(&format!(
+                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{path_suffix}"
+                    ))
+                    .query(&pagination)
                 } else if let Some(node_id) = node {
-                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos"))
+                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos{path_suffix}"))
                         .query(&pagination)
                 } else {
-                    self.get(API_PATH_COTOS).query(&pagination)
+                    self.get(&format!("{API_PATH_COTOS}{path_suffix}"))
+                        .query(&pagination)
                 }
             }
             Command::GeolocatedCotos { node, cotonoma } => {
