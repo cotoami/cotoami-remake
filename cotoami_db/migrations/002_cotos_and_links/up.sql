@@ -100,6 +100,10 @@ CREATE TABLE cotonomas (
   name TEXT NOT NULL,
 
   created_at DATETIME NOT NULL, -- UTC
+
+  -- There's difference between cotos.updated_at and cotonomas.updated_at.
+  -- cotonomas.updated_at will be updated only on cotonoma-related update 
+  -- such as posting and renaming.
   updated_at DATETIME NOT NULL, -- UTC
 
   UNIQUE(node_id, name),
