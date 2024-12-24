@@ -182,6 +182,11 @@ object Editor {
         )
       else
         section(className := "coto-editor")(
+          input(
+            className := "summary",
+            `type` := "text",
+            placeholder := "Summary (optional)"
+          ),
           textarea(
             placeholder := "Write your Coto in Markdown",
             value := model.textContent,
@@ -337,8 +342,8 @@ object Editor {
         onCtrlEnter: () => Unit
     )(implicit dispatch: Msg => Unit): ReactElement =
       input(
+        className := "cotonoma-name",
         `type` := "text",
-        name := "cotonomaName",
         placeholder := "New cotonoma name",
         value := model.nameInput,
         Validation.ariaInvalid(model.validation),

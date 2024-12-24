@@ -2,6 +2,18 @@ section.coto-editor {
   display: flex;
   flex-direction: column;
 
+  input.summary {
+    border-radius: 0;
+    border-style: none;
+    border-bottom: var(--border-width) solid var(--form-element-border-color);
+    box-shadow: none;
+
+    &:is(:active, :focus) {
+      border-bottom: var(--border-width) solid var(--form-element-border-color);
+      box-shadow: none;
+    }
+  }
+
   textarea {
     flex: 1;
 
@@ -10,7 +22,7 @@ section.coto-editor {
     border-style: none;
     height: 100%;
     resize: none;
-    box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
   }
 
   div.input-image {
@@ -32,6 +44,12 @@ section.coto-editor {
       }
     }
   }
+}
+
+input.cotonoma-name {
+  border-radius: 0;
+  border-style: none;
+  box-shadow: none;
 }
 
 section.coto-preview {

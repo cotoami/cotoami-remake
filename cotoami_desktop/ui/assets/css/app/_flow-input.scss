@@ -128,6 +128,10 @@ section.flow-input {
     }
   }
 
+  div.cotonoma-form {
+    border-bottom: 1px solid var(--pane-border-color);
+  }
+
   section.geolocation {
     text-align: center;
     font-size: 0.9rem;
@@ -236,6 +240,10 @@ section.flow-input {
 
     div.coto-form {
       height: 2.5rem !important;
+
+      input.summary {
+        display: none;
+      }
 
       textarea {
         overflow: hidden;

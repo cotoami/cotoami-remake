@@ -489,12 +489,14 @@ object SectionFlowInput {
       geomap: Geomap
   )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     Fragment(
-      CotonomaForm(
-        model = form,
-        onFocus = () => dispatch(Msg.SetFolded(false)),
-        onBlur = () => dispatch(Msg.SetFolded(!model.hasContents)),
-        onCtrlEnter = () => dispatch(Msg.Post)
-      )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+      div(className := "cotonoma-form")(
+        CotonomaForm(
+          model = form,
+          onFocus = () => dispatch(Msg.SetFolded(false)),
+          onBlur = () => dispatch(Msg.SetFolded(!model.hasContents)),
+          onCtrlEnter = () => dispatch(Msg.Post)
+        )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
+      ),
       ulAttributes(None, None, geomap.focusedLocation, None)(
         context,
         submsg => dispatch(Msg.CotoFormMsg(submsg))
