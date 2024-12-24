@@ -188,7 +188,7 @@ object Editor {
             placeholder := "Summary (optional)"
           ),
           textarea(
-            placeholder := "Write your Coto in Markdown",
+            placeholder := "Write your coto in Markdown",
             value := model.textContent,
             slinky.web.html.onFocus := onFocus,
             onChange := (e => dispatch(Msg.TextContentInput(e.target.value))),
