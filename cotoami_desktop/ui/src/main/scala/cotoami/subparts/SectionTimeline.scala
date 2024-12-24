@@ -76,7 +76,7 @@ object SectionTimeline {
     def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
-        fetchInFocus(domain, onlyCotonomas, None, 0, fetchNumber + 1)
+        fetchInFocus(domain, onlyCotonomas, Some(query), 0, fetchNumber + 1)
       )
 
     def fetchMore(domain: Domain): (Model, Cmd.One[AppMsg]) =
@@ -94,10 +94,7 @@ object SectionTimeline {
       if (imeActive)
         (copy(query = query), Cmd.none)
       else
-        (
-          copy(query = query, loading = true),
-          fetchInFocus(domain, onlyCotonomas, Some(query), 0, fetchNumber + 1)
-        )
+        copy(query = query).fetchFirst(domain)
   }
 
   sealed trait Msg extends Into[AppMsg] {
@@ -170,7 +167,7 @@ object SectionTimeline {
           _1 = model.copy(imeActive = false),
           _3 = fetchInFocus(
             context.domain,
-            false,
+            model.onlyCotonomas,
             Some(model.query),
             0,
             model.fetchNumber + 1
