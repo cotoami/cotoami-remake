@@ -295,6 +295,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
     query: &'a str,
     filter_by_node_id: Option<&'a Id<Node>>,
     filter_by_posted_in_id: Option<&'a Id<Cotonoma>>,
+    only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Page<Coto>> + 'a {
@@ -305,6 +306,7 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                 query,
                 filter_by_node_id,
                 filter_by_posted_in_id,
+                only_cotonomas,
                 page_size,
                 page_index,
             )
@@ -347,6 +349,9 @@ pub(crate) fn full_text_search<'a, Conn: AsReadableConn>(
                 if let Some(id) = filter_by_posted_in_id {
                     query = query.filter(posted_in_id.eq(id));
                 }
+                if only_cotonomas {
+                    query = query.filter(is_cotonoma.eq(true));
+                }
                 query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
             })
         }
@@ -358,6 +363,7 @@ fn search_trigram_index(
     query: &str,
     filter_by_node_id: Option<&Id<Node>>,
     filter_by_posted_in_id: Option<&Id<Cotonoma>>,
+    only_cotonomas: bool,
     page_size: i64,
     page_index: i64,
 ) -> Result<Page<Coto>> {
@@ -411,6 +417,9 @@ fn search_trigram_index(
         }
         if let Some(id) = filter_by_posted_in_id {
             query = query.filter(posted_in_id.eq(id));
+        }
+        if only_cotonomas {
+            query = query.filter(is_cotonoma.eq(true));
         }
         query.order((is_cotonoma.desc(), rank.asc(), created_at.desc()))
     })

@@ -69,7 +69,7 @@ fn search_cotos() -> Result<()> {
 
 fn assert_search(ds: &mut DatabaseSession<'_>, query: &str, expect: Vec<&Coto>) -> Result<()> {
     assert_that!(
-        ds.search_cotos(query, None, None, 10, 0)?
+        ds.search_cotos(query, None, None, false, 10, 0)?
             .rows
             .iter()
             .collect::<Vec<_>>(),

@@ -70,6 +70,7 @@ impl<'a> DatabaseSession<'a> {
         query: &str,
         node_id: Option<&Id<Node>>,
         posted_in_id: Option<&Id<Cotonoma>>,
+        only_cotonomas: bool,
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Coto>> {
@@ -77,6 +78,7 @@ impl<'a> DatabaseSession<'a> {
             query,
             node_id,
             posted_in_id,
+            only_cotonomas,
             page_size,
             page_index,
         ))
