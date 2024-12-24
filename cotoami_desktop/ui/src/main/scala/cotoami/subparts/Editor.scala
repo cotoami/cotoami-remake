@@ -24,12 +24,9 @@ object Editor {
   }
 
   object CotoForm {
-    // A top-level heading as the first line will be used as a summary.
-    // cf. https://spec.commonmark.org/0.31.2/#atx-headings
-    val SummaryPrefix = "# "
-
     case class Model(
-        textContent: String = "",
+        summaryInput: String = "",
+        contentInput: String = "",
         mediaContent: Option[dom.Blob] = None,
         mediaLocation: Option[Geolocation] = None,
         mediaDateTime: Option[DateTimeRange] = None,
@@ -37,22 +34,15 @@ object Editor {
         error: Option[String] = None
     ) extends Form {
       def hasContents: Boolean =
-        !textContent.isBlank || mediaContent.isDefined
+        !summaryInput.isBlank || !contentInput.isBlank || mediaContent.isDefined
 
       def summary: Option[String] =
-        if (hasSummary)
-          Some(firstLine.stripPrefix(SummaryPrefix).trim)
-        else
-          None
+        Option.when(!summaryInput.isBlank())(summaryInput.trim)
 
-      def content: String =
-        if (hasSummary)
-          textContent.stripPrefix(firstLine).trim
-        else
-          textContent.trim
+      def content: String = contentInput.trim
 
       def validate: Validation.Result =
-        if (textContent.isBlank)
+        if (summaryInput.isBlank && contentInput.isBlank)
           Validation.Result.notYetValidated
         else {
           val errors =
@@ -63,17 +53,13 @@ object Editor {
 
       def readyToPost: Boolean =
         hasContents && (validate.validated || mediaContent.isDefined)
-
-      private def hasSummary: Boolean =
-        textContent.startsWith(CotoForm.SummaryPrefix)
-
-      private def firstLine = textContent.linesIterator.next()
     }
 
     sealed trait Msg
 
     object Msg {
-      case class TextContentInput(content: String) extends Msg
+      case class SummaryInput(summary: String) extends Msg
+      case class ContentInput(content: String) extends Msg
       case class FileInput(file: dom.Blob) extends Msg
       case class ExifLocationDetected(
           result: Either[String, Option[Geolocation]]
@@ -93,8 +79,11 @@ object Editor {
     ): (Model, Geomap, Cmd[Msg]) = {
       val default = (model, context.geomap, Cmd.none)
       msg match {
-        case Msg.TextContentInput(content) =>
-          default.copy(_1 = model.copy(textContent = content))
+        case Msg.SummaryInput(summary) =>
+          default.copy(_1 = model.copy(summaryInput = summary))
+
+        case Msg.ContentInput(content) =>
+          default.copy(_1 = model.copy(contentInput = content))
 
         case Msg.FileInput(file) =>
           default.copy(
@@ -185,13 +174,20 @@ object Editor {
           input(
             className := "summary",
             `type` := "text",
-            placeholder := "Summary (optional)"
+            placeholder := "Summary (optional)",
+            value := model.summaryInput,
+            onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
+            onKeyDown := (e =>
+              if (model.readyToPost && detectCtrlEnter(e)) {
+                onCtrlEnter()
+              }
+            )
           ),
           textarea(
             placeholder := "Write your coto in Markdown",
-            value := model.textContent,
+            value := model.contentInput,
             slinky.web.html.onFocus := onFocus,
-            onChange := (e => dispatch(Msg.TextContentInput(e.target.value))),
+            onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
             onKeyDown := (e =>
               if (model.readyToPost && detectCtrlEnter(e)) {
                 onCtrlEnter()

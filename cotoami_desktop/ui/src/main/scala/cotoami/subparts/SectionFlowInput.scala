@@ -62,7 +62,7 @@ object SectionFlowInput {
       form match {
         case form: CotoForm.Model =>
           Cmd(IO {
-            dom.window.localStorage.setItem(StorageKey, form.textContent)
+            dom.window.localStorage.setItem(StorageKey, form.contentInput)
             None
           })
         case _ => Cmd.none
@@ -71,7 +71,7 @@ object SectionFlowInput {
     def restore: Cmd.One[AppMsg] =
       form match {
         case form: CotoForm.Model =>
-          restoreTextContent.map(Msg.TextContentRestored(_).into)
+          restoreTextContent.map(Msg.ContentRestored(_).into)
         case _ => Cmd.none
       }
 
@@ -93,7 +93,7 @@ object SectionFlowInput {
     case object SetCotonomaForm extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
-    case class TextContentRestored(content: Option[String]) extends Msg
+    case class ContentRestored(content: Option[String]) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
     case object TogglePreview extends Msg
     case object Post extends Msg
@@ -156,7 +156,7 @@ object SectionFlowInput {
         model
           .modify(_.form).setTo(form)
           .modify(_.folded).using(folded =>
-            if (submsg.isInstanceOf[CotoForm.Msg.TextContentInput])
+            if (submsg.isInstanceOf[CotoForm.Msg.ContentInput])
               false
             else
               folded
@@ -166,7 +166,7 @@ object SectionFlowInput {
               _1 = model,
               _2 = geomap,
               _4 = submsg match {
-                case CotoForm.Msg.TextContentInput(_) => model.save
+                case CotoForm.Msg.ContentInput(_) => model.save
                 case _ => subcmd.map(Msg.CotoFormMsg).map(_.into)
               }
             )
@@ -195,12 +195,12 @@ object SectionFlowInput {
           }
       }
 
-      case (Msg.TextContentRestored(Some(content)), form: CotoForm.Model, _) =>
+      case (Msg.ContentRestored(Some(content)), form: CotoForm.Model, _) =>
         default.copy(
           _1 =
-            if (form.textContent.isBlank)
+            if (form.contentInput.isBlank)
               model.copy(
-                form = form.copy(textContent = content),
+                form = form.copy(contentInput = content),
                 folded = content.isBlank
               )
             else
