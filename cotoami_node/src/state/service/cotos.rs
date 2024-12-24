@@ -72,6 +72,7 @@ impl NodeState {
         query: String,
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
+        only_cotonomas: bool,
         pagination: Pagination,
     ) -> Result<CotosPage, ServiceError> {
         if let Err(errors) = pagination.validate() {
@@ -82,6 +83,7 @@ impl NodeState {
                 &query,
                 node.as_ref(),
                 cotonoma.as_ref(),
+                only_cotonomas,
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
             )?;

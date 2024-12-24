@@ -20,6 +20,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/cotonomas", get(recent_cotonoma_cotos))
         .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
+        .route("/search/cotonomas/:query", get(search_cotonoma_cotos))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -80,7 +81,23 @@ async fn search_cotos(
     Query(pagination): Query<Pagination>,
 ) -> Result<Content<CotosPage>, ServiceError> {
     state
-        .search_cotos(query, Some(node_id), None, pagination)
+        .search_cotos(query, Some(node_id), None, false, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/:node_id/cotos/cotonomas/search/:query
+/////////////////////////////////////////////////////////////////////////////
+
+async fn search_cotonoma_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path((node_id, query)): Path<(Id<Node>, String)>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<CotosPage>, ServiceError> {
+    state
+        .search_cotos(query, Some(node_id), None, true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

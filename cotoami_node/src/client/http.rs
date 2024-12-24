@@ -166,17 +166,17 @@ impl HttpClient {
                 only_cotonomas,
                 pagination,
             } => {
-                let path_suffix = if only_cotonomas { "/cotonomas" } else { "" };
+                let only_cotonomas = if only_cotonomas { "/cotonomas" } else { "" };
                 if let Some(cotonoma_id) = cotonoma {
                     self.get(&format!(
-                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{path_suffix}"
+                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{only_cotonomas}"
                     ))
                     .query(&pagination)
                 } else if let Some(node_id) = node {
-                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos{path_suffix}"))
+                    self.get(&format!("{API_PATH_NODES}/{node_id}/cotos{only_cotonomas}"))
                         .query(&pagination)
                 } else {
-                    self.get(&format!("{API_PATH_COTOS}{path_suffix}"))
+                    self.get(&format!("{API_PATH_COTOS}{only_cotonomas}"))
                         .query(&pagination)
                 }
             }
@@ -202,22 +202,26 @@ impl HttpClient {
                 query,
                 node,
                 cotonoma,
+                only_cotonomas,
                 pagination,
             } => {
+                let only_cotonomas = if only_cotonomas { "/cotonomas" } else { "" };
                 let encoded_query = utf8_percent_encode(&query, NON_ALPHANUMERIC).to_string();
                 if let Some(cotonoma_id) = cotonoma {
                     self.get(&format!(
-                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos/search/{encoded_query}"
+                        "{API_PATH_COTONOMAS}/{cotonoma_id}/cotos{only_cotonomas}/search/{encoded_query}"
                     ))
                     .query(&pagination)
                 } else if let Some(node_id) = node {
                     self.get(&format!(
-                        "{API_PATH_NODES}/{node_id}/cotos/search/{encoded_query}"
+                        "{API_PATH_NODES}/{node_id}/cotos{only_cotonomas}/search/{encoded_query}"
                     ))
                     .query(&pagination)
                 } else {
-                    self.get(&format!("{API_PATH_COTOS}/search/{encoded_query}"))
-                        .query(&pagination)
+                    self.get(&format!(
+                        "{API_PATH_COTOS}{only_cotonomas}/search/{encoded_query}"
+                    ))
+                    .query(&pagination)
                 }
             }
             Command::CotoDetails { id } => self.get(&format!("{API_PATH_COTOS}/{id}/details")),

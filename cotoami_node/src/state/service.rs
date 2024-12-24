@@ -93,8 +93,12 @@ impl NodeState {
                 query,
                 node,
                 cotonoma,
+                only_cotonomas,
                 pagination,
-            } => format.serialize(self.search_cotos(query, node, cotonoma, pagination).await),
+            } => format.serialize(
+                self.search_cotos(query, node, cotonoma, only_cotonomas, pagination)
+                    .await,
+            ),
             Command::CotoDetails { id } => format.serialize(self.coto_details(id).await),
             Command::GraphFromCoto { coto } => format.serialize(self.graph_from_coto(coto).await),
             Command::GraphFromCotonoma { cotonoma } => {

@@ -27,6 +27,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/repost", post(repost))
         .route("/geolocated", get(geolocated_cotos))
         .route("/search/:query", get(search_cotos))
+        .route("/search/cotonomas/:query", get(search_cotonoma_cotos))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -130,7 +131,26 @@ async fn search_cotos(
         return errors.into_result();
     }
     state
-        .search_cotos(query, None, Some(cotonoma_id), pagination)
+        .search_cotos(query, None, Some(cotonoma_id), false, pagination)
+        .await
+        .map(|cotos| Content(cotos, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotonomas/:cotonoma_id/cotos/cotonomas/search/:query
+/////////////////////////////////////////////////////////////////////////////
+
+async fn search_cotonoma_cotos(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Content<CotosPage>, ServiceError> {
+    if let Err(errors) = pagination.validate() {
+        return errors.into_result();
+    }
+    state
+        .search_cotos(query, None, Some(cotonoma_id), true, pagination)
         .await
         .map(|cotos| Content(cotos, accept))
 }

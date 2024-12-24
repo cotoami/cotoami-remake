@@ -98,6 +98,7 @@ pub enum Command {
         query: String,
         node: Option<Id<Node>>,
         cotonoma: Option<Id<Cotonoma>>,
+        only_cotonomas: bool,
         pagination: Pagination,
     },
 
