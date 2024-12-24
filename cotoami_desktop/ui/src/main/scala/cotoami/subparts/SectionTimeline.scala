@@ -202,8 +202,7 @@ object SectionTimeline {
   ): Cmd.One[AppMsg] =
     (query match {
       case Some(query) if !query.isBlank() =>
-        // TODO: support onlyCotonomas
-        CotosPage.search(query, nodeId, cotonomaId, pageIndex)
+        CotosPage.search(query, nodeId, cotonomaId, onlyCotonomas, pageIndex)
       case _ =>
         CotosPage.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
     }).map(Msg.Fetched(fetchNumber, _).into)

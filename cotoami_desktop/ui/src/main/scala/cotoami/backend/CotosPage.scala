@@ -27,9 +27,10 @@ object CotosPage {
       query: String,
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, CotosPage]] =
-    CotosPageJson.search(query, nodeId, cotonomaId, pageIndex)
+    CotosPageJson.search(query, nodeId, cotonomaId, onlyCotonomas, pageIndex)
       .map(_.map(CotosPage(_)))
 }
 
@@ -55,7 +56,10 @@ object CotosPageJson {
       query: String,
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, CotosPageJson]] =
-    Commands.send(Commands.SearchCotos(query, nodeId, cotonomaId, pageIndex))
+    Commands.send(
+      Commands.SearchCotos(query, nodeId, cotonomaId, onlyCotonomas, pageIndex)
+    )
 }

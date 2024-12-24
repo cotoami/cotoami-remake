@@ -172,6 +172,7 @@ object Commands {
       query: String,
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
+      onlyCotonomas: Boolean,
       pageIndex: Double
   ) =
     jso(SearchCotos =
@@ -179,6 +180,7 @@ object Commands {
         query = query,
         node = nodeId.map(_.uuid).getOrElse(null),
         cotonoma = cotonomaId.map(_.uuid).getOrElse(null),
+        only_cotonomas = onlyCotonomas,
         pagination = jso(page = pageIndex)
       )
     )
