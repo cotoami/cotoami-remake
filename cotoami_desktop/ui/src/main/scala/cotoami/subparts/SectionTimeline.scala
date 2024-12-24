@@ -30,9 +30,10 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
+      onlyCotonomas: Boolean = false,
+      query: String = "",
       // to avoid rendering old results unintentionally
       fetchNumber: Int = 0,
-      query: String = "",
       // to restore the scroll position when back to timeline
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
       loading: Boolean = false,
@@ -75,7 +76,7 @@ object SectionTimeline {
     def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
-        fetchInFocus(domain, false, None, 0, fetchNumber + 1)
+        fetchInFocus(domain, onlyCotonomas, None, 0, fetchNumber + 1)
       )
 
     def fetchMore(domain: Domain): (Model, Cmd.One[AppMsg]) =
@@ -85,7 +86,7 @@ object SectionTimeline {
         cotoIds.nextPageIndex.map(i =>
           (
             copy(loading = true),
-            fetchInFocus(domain, false, Some(query), i, fetchNumber + 1)
+            fetchInFocus(domain, onlyCotonomas, Some(query), i, fetchNumber + 1)
           )
         ).getOrElse((this, Cmd.none)) // no more
 
@@ -95,7 +96,7 @@ object SectionTimeline {
       else
         (
           copy(query = query, loading = true),
-          fetchInFocus(domain, false, Some(query), 0, fetchNumber + 1)
+          fetchInFocus(domain, onlyCotonomas, Some(query), 0, fetchNumber + 1)
         )
   }
 
@@ -104,6 +105,7 @@ object SectionTimeline {
   }
 
   object Msg {
+    case class SetOnlyCotonomas(onlyCotonomas: Boolean) extends Msg
     case object FetchMore extends Msg
     case class Fetched(number: Int, result: Either[ErrorJson, CotosPage])
         extends Msg
@@ -121,6 +123,15 @@ object SectionTimeline {
   ): (Model, Domain, Cmd[AppMsg]) = {
     val default = (model, context.domain, Cmd.none)
     msg match {
+      case Msg.SetOnlyCotonomas(onlyCotonomas) =>
+        model
+          .modify(_.cotoIds).setTo(PaginatedIds())
+          .modify(_.onlyCotonomas).setTo(onlyCotonomas)
+          .fetchFirst(context.domain)
+          .pipe { case (model, cmd) =>
+            default.copy(_1 = model, _3 = cmd)
+          }
+
       case Msg.FetchMore =>
         model.fetchMore(context.domain).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)

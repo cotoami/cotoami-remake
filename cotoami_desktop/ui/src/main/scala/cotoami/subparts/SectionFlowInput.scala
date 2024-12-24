@@ -126,7 +126,12 @@ object SectionFlowInput {
           case model =>
             default.copy(
               _1 = model,
-              _4 = model.restore
+              _4 = Cmd.Batch(
+                model.restore,
+                Browser.send(
+                  SectionTimeline.Msg.SetOnlyCotonomas(false).into
+                )
+              )
             )
         }
 
@@ -140,7 +145,10 @@ object SectionFlowInput {
             if (geomap.focusedLocation == cotoForm.mediaLocation)
               geomap.copy(focusedLocation = None)
             else
-              geomap
+              geomap,
+          _4 = Browser.send(
+            SectionTimeline.Msg.SetOnlyCotonomas(true).into
+          )
         )
 
       case (Msg.CotoFormMsg(submsg), cotoForm: CotoForm.Model, _) => {
