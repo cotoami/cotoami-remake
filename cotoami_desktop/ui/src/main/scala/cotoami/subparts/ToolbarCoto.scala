@@ -28,7 +28,11 @@ object ToolbarCoto {
           symbol = "edit",
           tip = "Edit",
           tipPlacement = "left",
-          classes = "edit-coto"
+          classes = "edit-coto",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.CotoEditor(coto)))
+          }
         )
       },
       Option.when(context.domain.nodes.canEditLinksIn(coto.nodeId)) {

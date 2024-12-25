@@ -55,6 +55,11 @@ object Modal {
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Modal
 
+  case class CotoEditor(model: ModalCotoEditor.Model) extends Modal
+  object CotoEditor {
+    def apply(coto: Coto): CotoEditor = CotoEditor(ModalCotoEditor.Model(coto))
+  }
+
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Modal
@@ -106,6 +111,7 @@ object Modal {
 
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
+    case class CotoEditorMsg(msg: ModalCotoEditor.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
@@ -144,6 +150,13 @@ object Modal {
         stack.get[Welcome].map { case Welcome(modal) =>
           ModalWelcome.update(modalMsg, modal).pipe { case (modal, cmds) =>
             (updateModal(Welcome(modal), model), cmds)
+          }
+        }
+
+      case Msg.CotoEditorMsg(modalMsg) =>
+        stack.get[CotoEditor].map { case CotoEditor(modal) =>
+          ModalCotoEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(CotoEditor(modal), model), cmds)
           }
         }
 
@@ -230,34 +243,6 @@ object Modal {
       model: AppModel
   ): AppModel = model.copy(modalStack = model.modalStack.update(newState))
 
-  def apply(
-      model: AppModel
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    model.modalStack.top.flatMap {
-      case Confirm(modal) => Some(ModalConfirm(modal))
-
-      case Welcome(modal) =>
-        model.systemInfo.map(info =>
-          ModalWelcome(modal, info.recent_databases.toSeq)
-        )
-
-      case Incorporate(modal) => Some(ModalIncorporate(modal))
-
-      case ParentSync(modal) => Some(ModalParentSync(modal, model.parentSync))
-
-      case OperateAs(modal) => Some(ModalOperateAs(modal))
-
-      case NodeProfile(modal) => Some(ModalNodeProfile(modal))
-
-      case NodeIcon(modal) => Some(ModalNodeIcon(modal))
-
-      case Clients(modal) => Some(ModalClients(modal))
-
-      case NewClient(modal) => Some(ModalNewClient(modal))
-
-      case Repost(modal) => Some(ModalRepost(modal))
-    }
-
   def view[M <: Modal](
       dialogClasses: String,
       closeButton: Option[(Class[M], Into[AppMsg] => Unit)] = None,
@@ -283,4 +268,34 @@ object Modal {
         div(className := s"modal-body ${bodyClasses}")(body: _*)
       )
     )
+
+  def apply(
+      model: AppModel
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    model.modalStack.top.flatMap {
+      case Confirm(modal) => Some(ModalConfirm(modal))
+
+      case Welcome(modal) =>
+        model.systemInfo.map(info =>
+          ModalWelcome(modal, info.recent_databases.toSeq)
+        )
+
+      case CotoEditor(modal) => Some(ModalCotoEditor(modal))
+
+      case Incorporate(modal) => Some(ModalIncorporate(modal))
+
+      case ParentSync(modal) => Some(ModalParentSync(modal, model.parentSync))
+
+      case OperateAs(modal) => Some(ModalOperateAs(modal))
+
+      case NodeProfile(modal) => Some(ModalNodeProfile(modal))
+
+      case NodeIcon(modal) => Some(ModalNodeIcon(modal))
+
+      case Clients(modal) => Some(ModalClients(modal))
+
+      case NewClient(modal) => Some(ModalNewClient(modal))
+
+      case Repost(modal) => Some(ModalRepost(modal))
+    }
 }
