@@ -308,7 +308,6 @@ object Main {
           SectionFlowInput.update(
             submsg,
             model.flowInput,
-            model.geomap,
             model.waitingPosts
           )(model)
         (

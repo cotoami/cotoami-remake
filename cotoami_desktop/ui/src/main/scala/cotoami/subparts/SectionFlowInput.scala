@@ -114,12 +114,11 @@ object SectionFlowInput {
   def update(
       msg: Msg,
       model: Model,
-      geomap: Geomap,
       waitingPosts: WaitingPosts
   )(implicit
       context: Context
   ): (Model, Geomap, WaitingPosts, Cmd[AppMsg]) = {
-    val default = (model, geomap, waitingPosts, Cmd.none)
+    val default = (model, context.geomap, waitingPosts, Cmd.none)
     (msg, model.form, context.domain.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
         model.copy(form = CotoForm.Model()) match {
@@ -142,10 +141,10 @@ object SectionFlowInput {
             // If the focused location has been set by EXIF info,
             // Swithcing to CotonomaForm will abandon the focused location
             // as well as the media content.
-            if (geomap.focusedLocation == cotoForm.mediaLocation)
-              geomap.copy(focusedLocation = None)
+            if (context.geomap.focusedLocation == cotoForm.mediaLocation)
+              context.geomap.copy(focusedLocation = None)
             else
-              geomap,
+              context.geomap,
           _4 = Browser.send(
             SectionTimeline.Msg.SetOnlyCotonomas(true).into
           )
@@ -230,7 +229,7 @@ object SectionFlowInput {
                   }
                 )
               case None => {
-                update(Msg.PostCoto(form, None), model, geomap, waitingPosts)
+                update(Msg.PostCoto(form, None), model, waitingPosts)
               }
             }
         }
@@ -241,12 +240,12 @@ object SectionFlowInput {
           case model =>
             default.copy(
               _1 = model,
-              _2 = geomap.copy(focusedLocation = None),
+              _2 = context.geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
               _4 = postCotonoma(
                 postId,
                 form,
-                geomap.focusedLocation,
+                context.geomap.focusedLocation,
                 None,
                 cotonoma.id
               )
@@ -260,7 +259,7 @@ object SectionFlowInput {
           case model =>
             default.copy(
               _1 = model,
-              _2 = geomap.copy(focusedLocation = None),
+              _2 = context.geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCoto(
                 postId,
                 form.content,
@@ -273,7 +272,7 @@ object SectionFlowInput {
                   postId,
                   form,
                   mediaContent,
-                  geomap.focusedLocation,
+                  context.geomap.focusedLocation,
                   form.dateTimeRange,
                   cotonoma.id
                 ),
@@ -291,7 +290,6 @@ object SectionFlowInput {
         update(
           Msg.PostCoto(form, Some(mediaContent)),
           model,
-          geomap,
           waitingPosts
         )
 
