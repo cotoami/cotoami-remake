@@ -154,54 +154,53 @@ object Editor {
       }
     }
 
-    def apply(
+    def sectionEditor(
         model: CotoForm.Model,
-        preview: Boolean,
         onFocus: () => Unit,
         onCtrlEnter: () => Unit
     )(implicit dispatch: Msg => Unit): ReactElement =
-      if (preview)
-        section(className := "coto-preview")(
-          ScrollArea()(
-            model.summary.map(section(className := "summary")(_)),
-            div(className := "content")(
-              ViewCoto.sectionTextContent(Some(model.content))
-            )
+      section(className := "coto-editor")(
+        input(
+          className := "summary",
+          `type` := "text",
+          placeholder := "Summary (optional)",
+          value := model.summaryInput,
+          onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
+          onKeyDown := (e =>
+            if (model.readyToPost && detectCtrlEnter(e)) {
+              onCtrlEnter()
+            }
+          )
+        ),
+        textarea(
+          placeholder := "Write your coto in Markdown",
+          value := model.contentInput,
+          slinky.web.html.onFocus := onFocus,
+          onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
+          onKeyDown := (e =>
+            if (model.readyToPost && detectCtrlEnter(e)) {
+              onCtrlEnter()
+            }
+          )
+        ),
+        div(className := "input-image")(
+          InputFile(
+            accept = js.Dictionary("image/*" -> js.Array[String]()),
+            message = "Drop an image file here, or click to select one",
+            onSelect = file => dispatch(Msg.FileInput(file))
           )
         )
-      else
-        section(className := "coto-editor")(
-          input(
-            className := "summary",
-            `type` := "text",
-            placeholder := "Summary (optional)",
-            value := model.summaryInput,
-            onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
-            onKeyDown := (e =>
-              if (model.readyToPost && detectCtrlEnter(e)) {
-                onCtrlEnter()
-              }
-            )
-          ),
-          textarea(
-            placeholder := "Write your coto in Markdown",
-            value := model.contentInput,
-            slinky.web.html.onFocus := onFocus,
-            onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
-            onKeyDown := (e =>
-              if (model.readyToPost && detectCtrlEnter(e)) {
-                onCtrlEnter()
-              }
-            )
-          ),
-          div(className := "input-image")(
-            InputFile(
-              accept = js.Dictionary("image/*" -> js.Array[String]()),
-              message = "Drop an image file here, or click to select one",
-              onSelect = file => dispatch(Msg.FileInput(file))
-            )
+      )
+
+    def sectionPreview(model: CotoForm.Model): ReactElement =
+      section(className := "coto-preview")(
+        ScrollArea()(
+          model.summary.map(section(className := "summary")(_)),
+          div(className := "content")(
+            ViewCoto.sectionTextContent(Some(model.content))
           )
         )
+      )
 
     def sectionMediaPreview(
         model: Model
@@ -331,7 +330,7 @@ object Editor {
         case _ => (model, Cmd.none)
       }
 
-    def apply(
+    def inputCotonomaName(
         model: Model,
         onFocus: () => Unit,
         onBlur: () => Unit,

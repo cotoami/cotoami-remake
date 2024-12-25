@@ -50,11 +50,13 @@ object ModalCotoEditor {
     )(
       "Coto"
     )(
-      CotoForm(
-        model = model.form,
-        preview = model.inPreview,
-        onFocus = () => (),
-        onCtrlEnter = () => ()
-      )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      if (model.inPreview)
+        CotoForm.sectionPreview(model.form)
+      else
+        CotoForm.sectionEditor(
+          model = model.form,
+          onFocus = () => (),
+          onCtrlEnter = () => ()
+        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
 }

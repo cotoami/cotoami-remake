@@ -435,12 +435,14 @@ object SectionFlowInput {
       resizable = !model.folded,
       onPrimarySizeChanged = Some(onEditorHeightChanged),
       primary = SplitPane.Primary.Props(className = Some("coto-form"))(
-        CotoForm(
-          model = form,
-          preview = model.inPreview,
-          onFocus = () => dispatch(Msg.SetFolded(false)),
-          onCtrlEnter = () => dispatch(Msg.Post)
-        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        if (model.inPreview)
+          CotoForm.sectionPreview(form)
+        else
+          CotoForm.sectionEditor(
+            model = form,
+            onFocus = () => dispatch(Msg.SetFolded(false)),
+            onCtrlEnter = () => dispatch(Msg.Post)
+          )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
         Editor.ulAttributes(
@@ -488,7 +490,7 @@ object SectionFlowInput {
   )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     Fragment(
       div(className := "cotonoma-form")(
-        CotonomaForm(
+        CotonomaForm.inputCotonomaName(
           model = form,
           onFocus = () => dispatch(Msg.SetFolded(false)),
           onBlur = () => dispatch(Msg.SetFolded(!model.hasContents)),
