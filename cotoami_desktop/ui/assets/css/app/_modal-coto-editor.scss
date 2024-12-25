@@ -1,5 +1,17 @@
 dialog.coto-editor {
   article {
-    width: 600px;
+    width: var(--max-article-width);
+
+    div.modal-body {
+      height: 70vh;
+    }
+  }
+
+  section.coto-editor {
+    height: 100%;
+  }
+
+  section.coto-preview {
+    height: 100%;
   }
 }
