@@ -155,8 +155,13 @@ object Modal {
 
       case Msg.CotoEditorMsg(modalMsg) =>
         stack.get[CotoEditor].map { case CotoEditor(modal) =>
-          ModalCotoEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(CotoEditor(modal), model), cmds)
+          ModalCotoEditor.update(modalMsg, modal).pipe {
+            case (modal, geomap, cmds) =>
+              (
+                updateModal(CotoEditor(modal), model)
+                  .modify(_.geomap).setTo(geomap),
+                cmds
+              )
           }
         }
 

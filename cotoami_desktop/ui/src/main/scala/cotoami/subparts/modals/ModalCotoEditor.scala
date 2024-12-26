@@ -5,10 +5,11 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
 import cotoami.subparts.Modal
 import cotoami.subparts.Editor._
+import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModalCotoEditor {
 
@@ -39,8 +40,21 @@ object ModalCotoEditor {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Geomap, Cmd[AppMsg]) = {
+    val default = (model, context.geomap, Cmd.none)
+    msg match {
+      case Msg.CotoFormMsg(submsg) => {
+        val (form, geomap, subcmd) = CotoForm.update(submsg, model.form)
+        default.copy(
+          _1 = model.copy(form = form),
+          _2 = geomap,
+          _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+        )
+      }
+    }
+  }
 
   def apply(model: Model)(implicit
       dispatch: Into[AppMsg] => Unit
