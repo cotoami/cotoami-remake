@@ -9,7 +9,8 @@ dialog.coto-editor {
       flex-direction: column;
 
       section.media-preview {
-        flex: 1;
+        max-height: 30vh;
+        padding-bottom: 8px;
       }
 
       div.form {
