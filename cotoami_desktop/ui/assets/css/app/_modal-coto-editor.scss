@@ -4,14 +4,25 @@ dialog.coto-editor {
 
     div.modal-body {
       height: 70vh;
+
+      display: flex;
+      flex-direction: column;
+
+      section.media-preview {
+        flex: 1;
+      }
+
+      div.form {
+        flex: 1;
+
+        section.coto-editor {
+          height: 100%;
+        }
+
+        section.coto-preview {
+          height: 100%;
+        }
+      }
     }
-  }
-
-  section.coto-editor {
-    height: 100%;
-  }
-
-  section.coto-preview {
-    height: 100%;
   }
 }

@@ -46,12 +46,6 @@ section.coto-editor {
   }
 }
 
-input.cotonoma-name {
-  border-radius: 0;
-  border-style: none;
-  box-shadow: none;
-}
-
 section.coto-preview {
   padding: 16px;
 
@@ -67,6 +61,54 @@ section.coto-preview {
     color: var(--muted-color);
     font-weight: 700;
   }
+}
+
+section.media-preview {
+  display: flex;
+  flex-direction: column;
+
+  div.media-content {
+    flex: 1;
+    position: relative;
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 1px; // keep it from overlapping with section.coto-type-switch
+    min-height: 0; // let this item shrink below the content size
+
+    img {
+      width: auto;
+      height: auto;
+      max-height: 100%;
+    }
+
+    button.delete {
+      position: absolute;
+      top: 0;
+      right: 0;
+
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 20px;
+      background-color: rgba(0, 0, 0, .4);
+    }
+  }
+
+  section.geolocation {
+    height: 30px;
+    padding-top: 4px;
+  }
+}
+
+input.cotonoma-name {
+  border-radius: 0;
+  border-style: none;
+  box-shadow: none;
 }
 
 ul.attributes {

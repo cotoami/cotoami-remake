@@ -2,6 +2,7 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Into, Msg => AppMsg}
@@ -24,7 +25,8 @@ object ModalCotoEditor {
         coto.id,
         CotoForm.Model(
           summaryInput = coto.summary.getOrElse(""),
-          contentInput = coto.content.getOrElse("")
+          contentInput = coto.content.getOrElse(""),
+          mediaContent = coto.mediaContent.map(_._1)
         )
       )
   }
@@ -50,13 +52,18 @@ object ModalCotoEditor {
     )(
       "Coto"
     )(
-      if (model.inPreview)
-        CotoForm.sectionPreview(model.form)
-      else
-        CotoForm.sectionEditor(
-          model = model.form,
-          onFocus = () => (),
-          onCtrlEnter = () => ()
-        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      CotoForm.sectionMediaPreview(model.form)(submsg =>
+        dispatch(Msg.CotoFormMsg(submsg))
+      ),
+      div(className := "form")(
+        if (model.inPreview)
+          CotoForm.sectionPreview(model.form)
+        else
+          CotoForm.sectionEditor(
+            model = model.form,
+            onFocus = () => (),
+            onCtrlEnter = () => ()
+          )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      )
     )
 }
