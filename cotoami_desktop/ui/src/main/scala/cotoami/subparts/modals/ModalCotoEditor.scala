@@ -27,7 +27,8 @@ object ModalCotoEditor {
         CotoForm.Model(
           summaryInput = coto.summary.getOrElse(""),
           contentInput = coto.content.getOrElse(""),
-          mediaContent = coto.mediaContent.map(_._1)
+          mediaContent = coto.mediaContent.map(_._1),
+          dateTimeRange = coto.dateTimeRange
         )
       )
   }
@@ -57,6 +58,7 @@ object ModalCotoEditor {
   }
 
   def apply(model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
@@ -78,6 +80,12 @@ object ModalCotoEditor {
             onFocus = () => (),
             onCtrlEnter = () => ()
           )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
-      )
+      ),
+      ulAttributes(
+        model.form.dateTimeRange,
+        None,
+        context.geomap.focusedLocation,
+        None
+      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
 }
