@@ -4,10 +4,10 @@ import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
-import cotoami.subparts.Modal
+import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.Editor._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -21,15 +21,22 @@ object ModalCotoEditor {
   )
 
   object Model {
-    def apply(coto: Coto): Model =
-      Model(
-        coto.id,
-        CotoForm.Model(
-          summaryInput = coto.summary.getOrElse(""),
-          contentInput = coto.content.getOrElse(""),
-          mediaContent = coto.mediaContent.map(_._1),
-          dateTimeRange = coto.dateTimeRange
-        )
+    def apply(coto: Coto): (Model, Cmd[AppMsg]) =
+      (
+        Model(
+          coto.id,
+          CotoForm.Model(
+            summaryInput = coto.summary.getOrElse(""),
+            contentInput = coto.content.getOrElse(""),
+            mediaContent = coto.mediaContent.map(_._1),
+            dateTimeRange = coto.dateTimeRange
+          )
+        ),
+        coto.geolocation
+          .map(location =>
+            Browser.send(SectionGeomap.Msg.FocusLocation(location).into)
+          )
+          .getOrElse(Cmd.none)
       )
   }
 

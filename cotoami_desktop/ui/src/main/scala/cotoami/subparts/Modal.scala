@@ -57,7 +57,10 @@ object Modal {
 
   case class CotoEditor(model: ModalCotoEditor.Model) extends Modal
   object CotoEditor {
-    def apply(coto: Coto): CotoEditor = CotoEditor(ModalCotoEditor.Model(coto))
+    def apply(coto: Coto): (CotoEditor, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalCotoEditor.Model(coto)
+      (CotoEditor(model), cmd)
+    }
   }
 
   case class Incorporate(

@@ -31,7 +31,11 @@ object ToolbarCoto {
           classes = "edit-coto",
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.CotoEditor(coto)))
+            dispatch(
+              (Modal.Msg.OpenModal.apply _).tupled(
+                Modal.CotoEditor(coto)
+              )
+            )
           }
         )
       },
