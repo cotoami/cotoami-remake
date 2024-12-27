@@ -114,7 +114,7 @@ object SectionGeomap {
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
-    case object FocusChanged extends Msg
+    case object DatabaseFocusChanged extends Msg
     case class CotosInFocusFetched(
         result: Either[ErrorJson, GeolocatedCotos]
     ) extends Msg
@@ -159,7 +159,7 @@ object SectionGeomap {
         )
       }
 
-      case Msg.FocusChanged =>
+      case Msg.DatabaseFocusChanged =>
         default.copy(
           _1 = model.copy(fetchingCotosInFocus = true),
           _3 = GeolocatedCotos.fetch(

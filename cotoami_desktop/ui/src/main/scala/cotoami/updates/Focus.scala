@@ -27,7 +27,7 @@ object Focus {
             fetchRecentCotonomas,
             fetchTimeline,
             model.domain.fetchGraph,
-            Browser.send(SectionGeomap.Msg.FocusChanged.into)
+            Browser.send(SectionGeomap.Msg.DatabaseFocusChanged.into)
           )
         )
       }
