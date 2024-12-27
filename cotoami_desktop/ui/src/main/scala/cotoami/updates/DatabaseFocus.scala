@@ -10,7 +10,7 @@ import cotoami.repositories.Links
 import cotoami.backend.CotonomaDetails
 import cotoami.subparts.SectionGeomap
 
-object Focus {
+object DatabaseFocus {
 
   def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd[Msg]) =
     model

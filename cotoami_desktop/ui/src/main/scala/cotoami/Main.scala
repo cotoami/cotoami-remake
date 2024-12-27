@@ -232,7 +232,7 @@ object Main {
       case Msg.FocusCoto(id, moveTo) =>
         update(Msg.OpenOrClosePane(PaneFlow.PaneName, true), model) match {
           case (model, cmds1) =>
-            Focus.coto(id, moveTo, model) match {
+            DatabaseFocus.coto(id, moveTo, model) match {
               case (model, cmds2) => (model, cmds1 ++ cmds2)
             }
         }
@@ -344,18 +344,18 @@ object Main {
 
   def applyUrlChange(url: URL, model: Model): (Model, Cmd[Msg]) =
     url.pathname + url.search + url.hash match {
-      case Route.index(_) => Focus.node(None, model)
+      case Route.index(_) => DatabaseFocus.node(None, model)
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id))
-          Focus.node(Some(id), model)
+          DatabaseFocus.node(Some(id), model)
         else
           (model, Browser.pushUrl(Route.index.url(())))
 
-      case Route.cotonoma(id) => Focus.cotonoma(None, id, model)
+      case Route.cotonoma(id) => DatabaseFocus.cotonoma(None, id, model)
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        Focus.cotonoma(Some(nodeId), cotonomaId, model)
+        DatabaseFocus.cotonoma(Some(nodeId), cotonomaId, model)
 
       case _ =>
         (model, Browser.pushUrl(Route.index.url(())))
