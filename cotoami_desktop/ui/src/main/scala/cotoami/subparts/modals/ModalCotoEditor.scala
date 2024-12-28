@@ -17,8 +17,11 @@ object ModalCotoEditor {
       cotoId: Id[Coto],
       form: CotoForm.Model = CotoForm.Model(),
       inPreview: Boolean = false,
+      saving: Boolean = false,
       error: Option[String] = None
-  )
+  ) {
+    def readyToSave: Boolean = !saving && form.readyToPost
+  }
 
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) =
@@ -93,6 +96,13 @@ object ModalCotoEditor {
         None,
         context.geomap.focusedLocation,
         None
-      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      div(className := "buttons")(
+        button(
+          `type` := "submit",
+          disabled := !model.readyToSave,
+          aria - "busy" := model.saving.toString()
+        )("Save")
+      )
     )
 }
