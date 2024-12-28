@@ -1,6 +1,8 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import com.softwaremill.quicklens._
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -49,6 +51,7 @@ object ModalCotoEditor {
 
   object Msg {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case object TogglePreview extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -64,6 +67,9 @@ object ModalCotoEditor {
           _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
+
+      case Msg.TogglePreview =>
+        default.copy(_1 = model.modify(_.inPreview).using(!_))
     }
   }
 
@@ -99,6 +105,17 @@ object ModalCotoEditor {
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
       div(className := "buttons")(
         button(
+          className := "preview contrast outline",
+          disabled := !model.form.validate.validated,
+          onClick := (_ => dispatch(Msg.TogglePreview))
+        )(
+          if (model.inPreview)
+            "Edit"
+          else
+            "Preview"
+        ),
+        button(
+          className := "save",
           `type` := "submit",
           disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString()
