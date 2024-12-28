@@ -37,11 +37,7 @@ object ModalCotoEditor {
             dateTimeRange = coto.dateTimeRange
           )
         ),
-        coto.geolocation
-          .map(location =>
-            Browser.send(SectionGeomap.Msg.FocusLocation(location).into)
-          )
-          .getOrElse(Cmd.none)
+        Browser.send(SectionGeomap.Msg.FocusLocation(coto.geolocation).into)
       )
   }
 

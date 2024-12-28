@@ -110,7 +110,7 @@ object SectionGeomap {
 
   object Msg {
     case class Init(bounds: GeoBounds) extends Msg
-    case class FocusLocation(location: Geolocation) extends Msg
+    case class FocusLocation(location: Option[Geolocation]) extends Msg
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
@@ -143,7 +143,7 @@ object SectionGeomap {
         }
 
       case Msg.FocusLocation(location) =>
-        default.copy(_1 = model.copy(focusedLocation = Some(location)))
+        default.copy(_1 = model.copy(focusedLocation = location))
 
       case Msg.ZoomChanged(zoom) =>
         default.copy(_1 = model.copy(zoom = Some(zoom)))
@@ -379,7 +379,7 @@ object SectionGeomap {
       }),
       onClick = Some(e => {
         val location = Geolocation.fromMapLibre(e.lngLat)
-        dispatch(Msg.FocusLocation(location))
+        dispatch(Msg.FocusLocation(Some(location)))
       }),
       onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
       onCenterMoved = Some(center => {
