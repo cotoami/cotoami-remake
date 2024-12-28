@@ -79,8 +79,7 @@ section.media-preview {
     min-height: 0; // let this item shrink below the content size
 
     img {
-      width: auto;
-      height: auto;
+      object-fit: contain;
       max-height: 100%;
     }
 
