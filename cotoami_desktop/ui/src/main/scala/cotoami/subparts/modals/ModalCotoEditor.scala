@@ -102,7 +102,7 @@ object ModalCotoEditor {
           `type` := "submit",
           disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString()
-        )("Save")
+        )("Save", span(className := "shortcut-help")("(Ctrl + Enter)"))
       )
     )
 }
