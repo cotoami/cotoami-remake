@@ -114,8 +114,10 @@ object Editor {
         case Msg.ExifLocationDetected(Right(location)) =>
           default.copy(
             _1 = model.copy(mediaLocation = location),
-            _2 = location.map(context.geomap.focus)
-              .getOrElse(context.geomap.unfocus)
+            _2 = (location, context.geomap.focusedLocation) match {
+              case (Some(location), None) => context.geomap.focus(location)
+              case _                      => context.geomap
+            }
           )
 
         case Msg.ExifLocationDetected(Left(error)) =>
@@ -126,8 +128,8 @@ object Editor {
         case Msg.ExifDateTimeDetected(Right(dateTime)) =>
           default.copy(
             _1 = model.copy(
-              dateTimeRange = dateTime,
-              mediaDateTime = dateTime
+              mediaDateTime = dateTime,
+              dateTimeRange = model.dateTimeRange.orElse(dateTime)
             )
           )
 
