@@ -98,9 +98,9 @@ object ModalCotoEditor {
       },
       ulAttributes(
         model.form.dateTimeRange,
-        None,
+        model.form.mediaDateTime,
         context.geomap.focusedLocation,
-        None
+        model.form.mediaLocation
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
       div(className := "buttons")(
         CotoForm.buttonPreview(model = model.form)(submsg =>
