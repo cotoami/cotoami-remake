@@ -10,7 +10,10 @@ dialog.coto-editor {
       flex-direction: column;
 
       section.media-preview {
-        max-height: 30vh;
+        // wrapped in SplitPane
+        width: 100%;
+        height: 100%;
+
         padding-bottom: 8px;
       }
 
@@ -23,6 +26,19 @@ dialog.coto-editor {
         }
 
         section.coto-preview {
+          height: 100%;
+        }
+      }
+
+      .form-with-media {
+        flex: 1;
+
+        .separator-inner {
+          border-style: none !important;
+        }
+
+        div.form {
+          flex: none;
           height: 100%;
         }
       }

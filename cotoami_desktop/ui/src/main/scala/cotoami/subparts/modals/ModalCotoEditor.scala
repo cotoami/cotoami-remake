@@ -8,7 +8,7 @@ import slinky.web.html._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
-import cotoami.components.optionalClasses
+import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.Editor._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -80,10 +80,22 @@ object ModalCotoEditor {
     )(
       "Coto"
     )(
-      CotoForm.sectionMediaPreview(model.form)(submsg =>
-        dispatch(Msg.CotoFormMsg(submsg))
-      ),
-      divForm(model),
+      divForm(model).pipe { divForm =>
+        CotoForm.sectionMediaPreview(model.form)(submsg =>
+          dispatch(Msg.CotoFormMsg(submsg))
+        ) match {
+          case Some(mediaPreview) =>
+            SplitPane(
+              vertical = false,
+              initialPrimarySize = 300,
+              className = Some("form-with-media"),
+              primary = SplitPane.Primary.Props()(mediaPreview),
+              secondary = SplitPane.Secondary.Props()(divForm)
+            )
+
+          case None => divForm
+        }
+      },
       ulAttributes(
         model.form.dateTimeRange,
         None,
