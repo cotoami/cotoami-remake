@@ -16,6 +16,7 @@ dialog.coto-editor {
 
       div.form {
         flex: 1;
+        min-height: 0; // let this item shrink below the content size
 
         section.coto-editor {
           height: 100%;
