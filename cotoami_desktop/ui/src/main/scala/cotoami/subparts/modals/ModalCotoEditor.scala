@@ -1,7 +1,6 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import com.softwaremill.quicklens._
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -19,7 +18,6 @@ object ModalCotoEditor {
   case class Model(
       cotoId: Id[Coto],
       form: CotoForm.Model = CotoForm.Model(),
-      inPreview: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
   ) {
@@ -48,7 +46,6 @@ object ModalCotoEditor {
 
   object Msg {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
-    case object TogglePreview extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -64,9 +61,6 @@ object ModalCotoEditor {
           _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
-
-      case Msg.TogglePreview =>
-        default.copy(_1 = model.modify(_.inPreview).using(!_))
     }
   }
 
@@ -90,14 +84,10 @@ object ModalCotoEditor {
         dispatch(Msg.CotoFormMsg(submsg))
       ),
       div(className := "form")(
-        if (model.inPreview)
-          CotoForm.sectionPreview(model.form)
-        else
-          CotoForm.sectionEditor(
-            model = model.form,
-            onFocus = () => (),
-            onCtrlEnter = () => ()
-          )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        CotoForm.sectionEditorOrPreview(
+          model = model.form,
+          onCtrlEnter = () => ()
+        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       ulAttributes(
         model.form.dateTimeRange,
@@ -106,15 +96,8 @@ object ModalCotoEditor {
         None
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
       div(className := "buttons")(
-        button(
-          className := "preview contrast outline",
-          disabled := !model.form.validate.validated,
-          onClick := (_ => dispatch(Msg.TogglePreview))
-        )(
-          if (model.inPreview)
-            "Edit"
-          else
-            "Preview"
+        CotoForm.buttonPreview(model = model.form)(submsg =>
+          dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
           className := "save",

@@ -41,7 +41,6 @@ object SectionFlowInput {
   case class Model(
       form: Form = CotoForm.Model(),
       folded: Boolean = true,
-      inPreview: Boolean = false,
       posting: Boolean = false
   ) {
     def hasContents: Boolean = form.hasContents
@@ -54,8 +53,7 @@ object SectionFlowInput {
           case form: CotoForm.Model     => CotoForm.Model()
           case form: CotonomaForm.Model => CotonomaForm.Model()
         },
-        folded = true,
-        inPreview = false
+        folded = true
       )
 
     def save: Cmd.One[AppMsg] =
@@ -95,7 +93,6 @@ object SectionFlowInput {
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class ContentRestored(content: Option[String]) extends Msg
     case class SetFolded(folded: Boolean) extends Msg
-    case object TogglePreview extends Msg
     case object Post extends Msg
     case class PostCoto(
         form: CotoForm.Model,
@@ -208,9 +205,6 @@ object SectionFlowInput {
 
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
-
-      case (Msg.TogglePreview, _, _) =>
-        default.copy(_1 = model.modify(_.inPreview).using(!_))
 
       case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) =>
         model.copy(posting = true) match {
@@ -435,14 +429,11 @@ object SectionFlowInput {
       resizable = !model.folded,
       onPrimarySizeChanged = Some(onEditorHeightChanged),
       primary = SplitPane.Primary.Props(className = Some("coto-form"))(
-        if (model.inPreview)
-          CotoForm.sectionPreview(form)
-        else
-          CotoForm.sectionEditor(
-            model = form,
-            onFocus = () => dispatch(Msg.SetFolded(false)),
-            onCtrlEnter = () => dispatch(Msg.Post)
-          )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+        CotoForm.sectionEditorOrPreview(
+          model = form,
+          onCtrlEnter = () => dispatch(Msg.Post),
+          onFocus = Some(() => dispatch(Msg.SetFolded(false)))
+        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
         Editor.ulAttributes(
@@ -464,15 +455,8 @@ object SectionFlowInput {
             ),
             addressPoster(operatingNode),
             div(className := "buttons")(
-              button(
-                className := "preview contrast outline",
-                disabled := !form.validate.validated,
-                onClick := (_ => dispatch(Msg.TogglePreview))
-              )(
-                if (model.inPreview)
-                  "Edit"
-                else
-                  "Preview"
+              CotoForm.buttonPreview(model = form)(submsg =>
+                dispatch(Msg.CotoFormMsg(submsg))
               ),
               buttonPost(model, currentCotonoma)
             )

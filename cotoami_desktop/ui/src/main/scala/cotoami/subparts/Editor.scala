@@ -25,6 +25,7 @@ object Editor {
 
   object CotoForm {
     case class Model(
+        inPreview: Boolean = false,
         summaryInput: String = "",
         contentInput: String = "",
         mediaContent: Option[dom.Blob] = None,
@@ -58,6 +59,7 @@ object Editor {
     sealed trait Msg
 
     object Msg {
+      case object TogglePreview extends Msg
       case class SummaryInput(summary: String) extends Msg
       case class ContentInput(content: String) extends Msg
       case class FileInput(file: dom.Blob) extends Msg
@@ -79,6 +81,9 @@ object Editor {
     ): (Model, Geomap, Cmd[Msg]) = {
       val default = (model, context.geomap, Cmd.none)
       msg match {
+        case Msg.TogglePreview =>
+          default.copy(_1 = model.modify(_.inPreview).using(!_))
+
         case Msg.SummaryInput(summary) =>
           default.copy(_1 = model.copy(summaryInput = summary))
 
@@ -154,10 +159,24 @@ object Editor {
       }
     }
 
+    def sectionEditorOrPreview(
+        model: CotoForm.Model,
+        onCtrlEnter: () => Unit,
+        onFocus: Option[() => Unit] = None
+    )(implicit dispatch: Msg => Unit): ReactElement =
+      if (model.inPreview)
+        sectionPreview(model)
+      else
+        CotoForm.sectionEditor(
+          model = model,
+          onFocus = onFocus,
+          onCtrlEnter = onCtrlEnter
+        )(dispatch)
+
     def sectionEditor(
         model: CotoForm.Model,
-        onFocus: () => Unit,
-        onCtrlEnter: () => Unit
+        onCtrlEnter: () => Unit,
+        onFocus: Option[() => Unit] = None
     )(implicit dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor")(
         input(
@@ -200,6 +219,20 @@ object Editor {
             ViewCoto.sectionTextContent(Some(model.content))
           )
         )
+      )
+
+    def buttonPreview(
+        model: CotoForm.Model
+    )(implicit dispatch: Msg => Unit): ReactElement =
+      button(
+        className := "preview contrast outline",
+        disabled := !model.validate.validated,
+        onClick := (_ => dispatch(Msg.TogglePreview))
+      )(
+        if (model.inPreview)
+          "Edit"
+        else
+          "Preview"
       )
 
     def sectionMediaPreview(
