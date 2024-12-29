@@ -36,4 +36,8 @@ dialog.coto-editor {
       }
     }
   }
+
+  &.with-media-content div.modal-body {
+    height: 80vh;
+  }
 }

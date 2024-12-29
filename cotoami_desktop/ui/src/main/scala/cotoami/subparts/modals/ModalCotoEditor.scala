@@ -9,6 +9,7 @@ import slinky.web.html._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
+import cotoami.components.optionalClasses
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.Editor._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -74,7 +75,12 @@ object ModalCotoEditor {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      dialogClasses = "coto-editor",
+      dialogClasses = optionalClasses(
+        Seq(
+          ("coto-editor", true),
+          ("with-media-content", model.form.mediaContent.isDefined)
+        )
+      ),
       closeButton = Some((classOf[Modal.CotoEditor], dispatch)),
       error = model.error
     )(
