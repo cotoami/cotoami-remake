@@ -52,6 +52,22 @@ object Editor {
           Validation.Result(errors)
         }
 
+      def scanMediaMetadata: Cmd[Msg] =
+        mediaContent.map(blob =>
+          Cmd.Batch(
+            Geolocation.fromExif(blob).map {
+              case Right(location) =>
+                Msg.ExifLocationDetected(Right(location))
+              case Left(t) => Msg.ExifLocationDetected(Left(t.toString))
+            },
+            DateTimeRange.fromExif(blob).map {
+              case Right(timeRange) =>
+                Msg.ExifDateTimeDetected(Right(timeRange))
+              case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString))
+            }
+          )
+        ).getOrElse(Cmd.none)
+
       def readyToPost: Boolean =
         hasContents && (validate.validated || mediaContent.isDefined)
     }
@@ -91,20 +107,8 @@ object Editor {
           default.copy(_1 = model.copy(contentInput = content))
 
         case Msg.FileInput(file) =>
-          default.copy(
-            _1 = model.copy(mediaContent = Some(file), mediaLocation = None),
-            _3 = Cmd.Batch(
-              Geolocation.fromExif(file).map {
-                case Right(location) =>
-                  Msg.ExifLocationDetected(Right(location))
-                case Left(t) => Msg.ExifLocationDetected(Left(t.toString))
-              },
-              DateTimeRange.fromExif(file).map {
-                case Right(timeRange) =>
-                  Msg.ExifDateTimeDetected(Right(timeRange))
-                case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString))
-              }
-            )
+          model.copy(mediaContent = Some(file), mediaLocation = None).pipe(
+            model => default.copy(_1 = model, _3 = model.scanMediaMetadata)
           )
 
         case Msg.ExifLocationDetected(Right(location)) =>
