@@ -83,12 +83,7 @@ object ModalCotoEditor {
       CotoForm.sectionMediaPreview(model.form)(submsg =>
         dispatch(Msg.CotoFormMsg(submsg))
       ),
-      div(className := "form")(
-        CotoForm.sectionEditorOrPreview(
-          model = model.form,
-          onCtrlEnter = () => ()
-        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
-      ),
+      divForm(model),
       ulAttributes(
         model.form.dateTimeRange,
         None,
@@ -106,5 +101,15 @@ object ModalCotoEditor {
           aria - "busy" := model.saving.toString()
         )("Save", span(className := "shortcut-help")("(Ctrl + Enter)"))
       )
+    )
+
+  private def divForm(model: Model)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    div(className := "form")(
+      CotoForm.sectionEditorOrPreview(
+        model = model.form,
+        onCtrlEnter = () => ()
+      )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
 }
