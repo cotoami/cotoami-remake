@@ -52,7 +52,7 @@ object Editor {
           Validation.Result(errors)
         }
 
-      def scanMediaMetadata: Cmd[Msg] =
+      def scanMediaMetadata: Cmd.Batch[Msg] =
         mediaContent.map(blob =>
           Cmd.Batch(
             Geolocation.fromExif(blob).map {
@@ -66,7 +66,7 @@ object Editor {
               case Left(t) => Msg.ExifDateTimeDetected(Left(t.toString))
             }
           )
-        ).getOrElse(Cmd.none)
+        ).getOrElse(Cmd.Batch())
 
       def readyToPost: Boolean =
         hasContents && (validate.validated || mediaContent.isDefined)

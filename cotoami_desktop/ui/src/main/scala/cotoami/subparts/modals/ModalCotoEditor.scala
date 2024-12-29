@@ -26,18 +26,22 @@ object ModalCotoEditor {
 
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) =
-      (
-        Model(
-          coto.id,
-          CotoForm.Model(
-            summaryInput = coto.summary.getOrElse(""),
-            contentInput = coto.content.getOrElse(""),
-            mediaContent = coto.mediaContent.map(_._1),
-            dateTimeRange = coto.dateTimeRange
-          )
-        ),
-        Browser.send(SectionGeomap.Msg.FocusLocation(coto.geolocation).into)
-      )
+      Model(
+        coto.id,
+        CotoForm.Model(
+          summaryInput = coto.summary.getOrElse(""),
+          contentInput = coto.content.getOrElse(""),
+          mediaContent = coto.mediaContent.map(_._1),
+          dateTimeRange = coto.dateTimeRange
+        )
+      ).pipe { model =>
+        (
+          model,
+          Browser.send(
+            SectionGeomap.Msg.FocusLocation(coto.geolocation).into
+          ) +: model.form.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
+        )
+      }
   }
 
   sealed trait Msg extends Into[AppMsg] {
