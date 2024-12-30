@@ -31,8 +31,7 @@ object Editor {
         mediaContent: Option[dom.Blob] = None,
         mediaLocation: Option[Geolocation] = None,
         mediaDateTime: Option[DateTimeRange] = None,
-        dateTimeRange: Option[DateTimeRange] = None,
-        error: Option[String] = None
+        dateTimeRange: Option[DateTimeRange] = None
     ) extends Form {
       def hasContents: Boolean =
         !summaryInput.isBlank || !contentInput.isBlank || mediaContent.isDefined
@@ -120,10 +119,10 @@ object Editor {
             }
           )
 
-        case Msg.ExifLocationDetected(Left(error)) =>
-          default.copy(
-            _1 = model.copy(error = Some(s"Location detection error: ${error}"))
-          )
+        case Msg.ExifLocationDetected(Left(error)) => {
+          println(s"Location detection error: ${error}")
+          default
+        }
 
         case Msg.ExifDateTimeDetected(Right(dateTime)) =>
           default.copy(
@@ -133,10 +132,10 @@ object Editor {
             )
           )
 
-        case Msg.ExifDateTimeDetected(Left(error)) =>
-          default.copy(_1 =
-            model.copy(error = Some(s"DateTime detection error: ${error}"))
-          )
+        case Msg.ExifDateTimeDetected(Left(error)) => {
+          println(s"DateTime detection error: ${error}")
+          default
+        }
 
         case Msg.DeleteMediaContent =>
           default.copy(
