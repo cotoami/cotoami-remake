@@ -247,6 +247,8 @@ impl NodeState {
         match result {
             ChangeResult::Changed(change) => Ok(change),
             ChangeResult::ToForward { cotonoma, input } => {
+                // Forward the change to the remote node only if the node is direct parent
+                // (which means the change won't be forwarded to the grandparents or farther).
                 if let Some(mut parent_service) = self.parent_services().get(&cotonoma.node_id) {
                     forward(&mut *parent_service, input, &cotonoma)
                         .await
