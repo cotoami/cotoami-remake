@@ -192,7 +192,10 @@ impl NodeState {
         .map_err(ServiceError::from)
     }
 
-    pub(crate) async fn change<Change, Apply>(self, apply: Apply) -> Result<Change, ServiceError>
+    pub(crate) async fn change_local<Change, Apply>(
+        self,
+        apply: Apply,
+    ) -> Result<Change, ServiceError>
     where
         Change: Send + 'static,
         Apply:

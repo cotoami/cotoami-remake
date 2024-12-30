@@ -25,7 +25,7 @@ impl NodeState {
         icon: bytes::Bytes,
         operator: Arc<Operator>,
     ) -> Result<Node, ServiceError> {
-        self.change(move |ds| ds.set_local_node_icon(icon.as_ref(), operator.as_ref()))
+        self.change_local(move |ds| ds.set_local_node_icon(icon.as_ref(), operator.as_ref()))
             .await
     }
 
