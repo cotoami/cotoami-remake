@@ -106,6 +106,7 @@ object ModalCotoEditor {
         context.geomap.focusedLocation,
         model.form.mediaLocation
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      CotoForm.sectionValidationError(model.form),
       div(className := "buttons")(
         CotoForm.buttonPreview(model = model.form)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
