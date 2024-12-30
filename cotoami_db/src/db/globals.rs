@@ -62,6 +62,13 @@ impl Globals {
         Ok(self.try_read_local_node()?.clone())
     }
 
+    pub fn is_local_node(&self, id: &Id<Node>) -> bool {
+        match self.local_node() {
+            Some(local_node) => *id == local_node.node_id,
+            None => false,
+        }
+    }
+
     pub fn local_node_as_operator(&self) -> Result<Operator> {
         Ok(Operator::Owner(self.try_get_local_node_id()?))
     }

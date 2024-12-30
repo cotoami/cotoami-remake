@@ -1,6 +1,6 @@
 use std::{slice, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use cotoami_db::prelude::*;
 use futures::future::FutureExt;
 use validator::Validate;
@@ -115,11 +115,15 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
-        self.change_in_cotonoma(
+        let (cotonoma, _) = self.cotonoma(post_to).await?;
+        self.change(
             input,
-            post_to,
-            move |ds, input, cotonoma| ds.post_coto(&input, cotonoma, operator.as_ref()),
-            |parent, input, cotonoma| parent.post_coto(input, cotonoma.uuid).boxed(),
+            cotonoma.node_id,
+            {
+                let cotonoma = cotonoma.clone();
+                move |ds, input| ds.post_coto(&input, &cotonoma, operator.as_ref())
+            },
+            |parent, input| parent.post_coto(input, cotonoma.uuid).boxed(),
         )
         .await
     }
@@ -130,17 +134,14 @@ impl NodeState {
         operator: Arc<Operator>,
     ) -> Result<Id<Coto>, ServiceError> {
         let coto = self.coto(id).await?;
-        let cotonoma_id = coto
-            .posted_in_id
-            .ok_or(anyhow!("A root cotonoma can't be deleted."))?;
-        self.change_in_cotonoma(
+        self.change(
             id,
-            cotonoma_id,
-            move |ds, id, _| {
-                let changelog = ds.delete_coto(&id, operator.as_ref())?;
-                Ok((id, changelog))
+            coto.node_id,
+            move |ds, coto_id| {
+                let changelog = ds.delete_coto(&coto_id, operator.as_ref())?;
+                Ok((coto_id, changelog))
             },
-            |parent, id, _| parent.delete_coto(id).boxed(),
+            |parent, coto_id| parent.delete_coto(coto_id).boxed(),
         )
         .await
     }
@@ -151,11 +152,15 @@ impl NodeState {
         dest: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<(Coto, Coto), ServiceError> {
-        self.change_in_cotonoma(
+        let (cotonoma, _) = self.cotonoma(dest).await?;
+        self.change(
             id,
-            dest,
-            move |ds, id, cotonoma| ds.repost(&id, cotonoma, operator.as_ref()),
-            |parent, id, cotonoma| parent.repost(id, cotonoma.uuid),
+            cotonoma.node_id,
+            {
+                let cotonoma = cotonoma.clone();
+                move |ds, coto_id| ds.repost(&coto_id, &cotonoma, operator.as_ref())
+            },
+            |parent, coto_id| parent.repost(coto_id, cotonoma.uuid),
         )
         .await
     }

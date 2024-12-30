@@ -5,14 +5,10 @@ use std::sync::Arc;
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use futures::future::{BoxFuture, FutureExt};
-use serde_json::json;
 use tokio::task::spawn_blocking;
 
 use crate::{
-    service::{
-        error::{IntoServiceResult, RequestError},
-        NodeServiceFuture, *,
-    },
+    service::{NodeServiceFuture, *},
     state::NodeState,
 };
 
@@ -212,36 +208,34 @@ impl NodeState {
         .await?
     }
 
-    pub(crate) async fn change_in_cotonoma<Input, Change, Apply, Forward>(
+    pub(crate) async fn change<Input, Change, Apply, Forward>(
         self,
         input: Input,
-        cotonoma: Id<Cotonoma>,
+        target_node_id: Id<Node>,
         apply: Apply,
         forward: Forward,
     ) -> Result<Change, ServiceError>
     where
         Input: Send + 'static,
         Change: Send + 'static,
-        Apply: FnOnce(&mut DatabaseSession<'_>, Input, &Cotonoma) -> Result<(Change, ChangelogEntry)>
+        Apply: FnOnce(&mut DatabaseSession<'_>, Input) -> Result<(Change, ChangelogEntry)>
             + Send
             + 'static,
         Forward: for<'a> FnOnce(
             &'a mut dyn NodeService,
             Input,
-            &Cotonoma,
         ) -> BoxFuture<'a, Result<Change, anyhow::Error>>,
     {
         let result = spawn_blocking({
             let this = self.clone();
             move || {
                 let mut ds = this.db().new_session()?;
-                let (cotonoma, _) = ds.try_get_cotonoma(&cotonoma)?;
-                if this.db().globals().is_local(&cotonoma) {
-                    let (change, log) = apply(&mut ds, input, &cotonoma)?;
+                if this.db().globals().is_local_node(&target_node_id) {
+                    let (change, log) = apply(&mut ds, input)?;
                     this.pubsub().publish_change(log);
                     Ok::<_, anyhow::Error>(ChangeResult::Changed(change))
                 } else {
-                    Ok::<_, anyhow::Error>(ChangeResult::ToForward { cotonoma, input })
+                    Ok::<_, anyhow::Error>(ChangeResult::ToForward { input })
                 }
             }
         })
@@ -249,15 +243,15 @@ impl NodeState {
 
         match result {
             ChangeResult::Changed(change) => Ok(change),
-            ChangeResult::ToForward { cotonoma, input } => {
+            ChangeResult::ToForward { input } => {
                 // Forward the change to the remote node only if the node is direct parent
                 // (which means the change won't be forwarded to the grandparents or farther).
-                if let Some(mut parent_service) = self.parent_services().get(&cotonoma.node_id) {
-                    forward(&mut *parent_service, input, &cotonoma)
+                if let Some(mut parent_service) = self.parent_services().get(&target_node_id) {
+                    forward(&mut *parent_service, input)
                         .await
                         .map_err(ServiceError::from)
                 } else {
-                    read_only_cotonoma_error(&cotonoma.name).into_result()
+                    Err(ServiceError::Permission)
                 }
             }
         }
@@ -266,12 +260,7 @@ impl NodeState {
 
 enum ChangeResult<Input, Change> {
     Changed(Change),
-    ToForward { cotonoma: Cotonoma, input: Input },
-}
-
-fn read_only_cotonoma_error(cotonoma_name: &str) -> RequestError {
-    RequestError::new("read-only-cotonoma", "The cotonoma is read-only for you.")
-        .with_param("cotonoma-name", json!(cotonoma_name))
+    ToForward { input: Input },
 }
 
 /////////////////////////////////////////////////////////////////////////////
