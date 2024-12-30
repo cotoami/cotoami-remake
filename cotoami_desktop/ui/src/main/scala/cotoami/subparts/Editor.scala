@@ -266,6 +266,9 @@ object Editor {
 
         case None => None
       }
+
+    def sectionValidationError(model: Model): ReactElement =
+      Validation.sectionValidationError(model.validate)
   }
 
   object CotonomaForm {

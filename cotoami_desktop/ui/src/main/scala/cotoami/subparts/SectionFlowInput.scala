@@ -443,7 +443,7 @@ object SectionFlowInput {
           form.mediaLocation
         )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
         div(className := "post")(
-          Validation.sectionValidationError(form.validate),
+          CotoForm.sectionValidationError(form),
           section(className := "post")(
             div(className := "fold-button")(
               button(
