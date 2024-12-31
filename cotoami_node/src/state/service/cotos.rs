@@ -139,7 +139,7 @@ impl NodeState {
             coto.node_id,
             diff,
             move |ds, diff| ds.edit_coto(&id, diff, operator.as_ref()),
-            |parent, diff| unimplemented!(),
+            |parent, diff| parent.edit_coto(id, diff).boxed(),
         )
         .await
     }

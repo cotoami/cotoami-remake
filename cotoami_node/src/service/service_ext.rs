@@ -48,6 +48,12 @@ pub trait NodeServiceExt: NodeService {
         response.content::<(Cotonoma, Coto)>()
     }
 
+    async fn edit_coto(&self, id: Id<Coto>, diff: CotoContentDiff<'static>) -> Result<Coto> {
+        let request = Command::EditCoto { id, diff }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Coto>()
+    }
+
     async fn delete_coto(&self, id: Id<Coto>) -> Result<Id<Coto>> {
         let request = Command::DeleteCoto { id }.into_request();
         let response = self.call(request).await?;
