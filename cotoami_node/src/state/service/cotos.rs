@@ -128,6 +128,25 @@ impl NodeState {
         .await
     }
 
+    pub async fn edit_coto(
+        self,
+        id: Id<Coto>,
+        diff: CotoContentDiff<'static>,
+        operator: Arc<Operator>,
+    ) -> Result<Coto, ServiceError> {
+        if let Err(errors) = diff.validate() {
+            return errors.into_result();
+        }
+        let coto = self.coto(id).await?;
+        self.change(
+            diff,
+            coto.node_id,
+            move |ds, diff| ds.edit_coto(&id, diff, operator.as_ref()),
+            |parent, diff| unimplemented!(),
+        )
+        .await
+    }
+
     pub async fn delete_coto(
         self,
         id: Id<Coto>,
