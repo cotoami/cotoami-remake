@@ -209,8 +209,8 @@ object Commands {
           summary = summary.getOrElse(null),
           media_content =
             mediaContent.map(js.Tuple2.fromScalaTuple2).getOrElse(null),
-          geolocation = geolocation(location),
-          datetime_range = dateTimeRange(timeRange)
+          geolocation = location.map(geolocationJson).getOrElse(null),
+          datetime_range = timeRange.map(dateTimeRangeJson).getOrElse(null)
         ),
         post_to = postTo.uuid
       )
@@ -226,10 +226,45 @@ object Commands {
       jso(
         input = jso(
           name = name,
-          geolocation = geolocation(location),
-          datetime_range = dateTimeRange(timeRange)
+          geolocation = location.map(geolocationJson).getOrElse(null),
+          datetime_range = timeRange.map(dateTimeRangeJson).getOrElse(null)
         ),
         post_to = postTo.uuid
+      )
+    )
+
+  def EditCoto(
+      id: Id[Coto],
+      content: Option[String],
+      summary: Option[Option[js.Any]],
+      mediaContent: Option[Option[(String, String)]],
+      location: Option[Option[Geolocation]],
+      timeRange: Option[Option[DateTimeRange]]
+  ) =
+    jso(EditCoto =
+      jso(
+        id = id.uuid,
+        diff = jso(
+          content = content match {
+            case Some(content) => fieldDiffJson(Some(Some(content)))
+            case None          => fieldDiffJson(None)
+          },
+          summary = fieldDiffJson(summary),
+          media_content =
+            fieldDiffJson(mediaContent.map(_.map(js.Tuple2.fromScalaTuple2))),
+          geolocation = fieldDiffJson(location match {
+            case Some(Some(location)) =>
+              Some(Some(geolocationJson(location)))
+            case Some(None) => Some(None)
+            case None       => None
+          }),
+          datetime_range = fieldDiffJson(timeRange match {
+            case Some(Some(timeRange)) =>
+              Some(Some(dateTimeRangeJson(timeRange)))
+            case Some(None) => Some(None)
+            case None       => None
+          })
+        )
       )
     )
 
@@ -239,13 +274,16 @@ object Commands {
   def Repost(id: Id[Coto], dest: Id[Cotonoma]) =
     jso(Repost = jso(id = id.uuid, dest = dest.uuid))
 
-  private def geolocation(location: Option[Geolocation]) =
-    location.map(location =>
-      jso(longitude = location.longitude, latitude = location.latitude)
-    ).getOrElse(null)
+  private def geolocationJson(location: Geolocation) =
+    jso(longitude = location.longitude, latitude = location.latitude)
 
-  private def dateTimeRange(range: Option[DateTimeRange]) =
-    range.map(range =>
-      jso(start = range.startUtcIso, end = range.endUtcIso.getOrElse(null))
-    ).getOrElse(null)
+  private def dateTimeRangeJson(range: DateTimeRange) =
+    jso(start = range.startUtcIso, end = range.endUtcIso.getOrElse(null))
+
+  private def fieldDiffJson(value: Option[Option[js.Any]]): js.Any =
+    value match {
+      case Some(Some(value)) => jso(Change = value)
+      case Some(None)        => "Delete"
+      case None              => "None"
+    }
 }
