@@ -619,6 +619,7 @@ fn process_media_content<'a>(
 mod tests {
     use anyhow::Result;
     use googletest::prelude::*;
+    use indoc::indoc;
 
     use super::*;
 
@@ -638,6 +639,26 @@ mod tests {
             })
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn diff_json() -> Result<()> {
+        let diff = CotoContentDiff::default().content("hello").summary(None);
+        let json_string = serde_json::to_string_pretty(&diff).unwrap();
+        assert_eq!(
+            json_string,
+            indoc! {r#"
+            {
+              "content": {
+                "Change": "hello"
+              },
+              "summary": "Delete",
+              "media_content": "None",
+              "geolocation": "None",
+              "datetime_range": "None"
+            }"#}
+        );
         Ok(())
     }
 }
