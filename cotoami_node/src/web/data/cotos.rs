@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
-    extract::{Path, Query, State},
-    routing::{delete, get},
+    extract::{Json, Path, Query, State},
+    http::StatusCode,
+    routing::{get, put},
     Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
@@ -29,7 +30,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/search/:query", get(search_cotos))
         .route("/search/cotonomas/:query", get(search_cotonoma_cotos))
         .route("/:coto_id/details", get(coto_details))
-        .route("/:coto_id", delete(delete_coto))
+        .route("/:coto_id", put(edit_coto).delete(delete_coto))
         .route("/:coto_id/graph", get(graph))
 }
 
@@ -140,6 +141,23 @@ async fn coto_details(
         .coto_details(coto_id)
         .await
         .map(|details| Content(details, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/cotos/:coto_id
+/////////////////////////////////////////////////////////////////////////////
+
+async fn edit_coto(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+    Json(diff): Json<CotoContentDiff<'static>>,
+) -> Result<(StatusCode, Content<Coto>), ServiceError> {
+    state
+        .edit_coto(coto_id, diff, Arc::new(operator))
+        .await
+        .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
 }
 
 /////////////////////////////////////////////////////////////////////////////

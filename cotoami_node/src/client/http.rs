@@ -235,6 +235,9 @@ impl HttpClient {
             Command::PostCotonoma { input, post_to } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{post_to}/subs"))
                 .json(&input),
+            Command::EditCoto { id, diff } => {
+                self.put(&format!("{API_PATH_COTOS}/{id}")).json(&diff)
+            }
             Command::DeleteCoto { id } => self.delete(&format!("{API_PATH_COTOS}/{id}")),
             Command::Repost { id, dest } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{dest}/cotos/repost"))

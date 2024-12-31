@@ -124,6 +124,12 @@ pub enum Command {
         post_to: Id<Cotonoma>,
     },
 
+    /// Request to edit the specified coto and return the updated [Coto] if suceeded.
+    EditCoto {
+        id: Id<Coto>,
+        diff: CotoContentDiff<'static>,
+    },
+
     /// Request to delete a coto and return the [Id<Coto>] if suceeded.
     DeleteCoto { id: Id<Coto> },
 
