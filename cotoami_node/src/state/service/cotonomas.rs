@@ -110,13 +110,10 @@ impl NodeState {
         }
         let (cotonoma, _) = self.cotonoma(post_to).await?;
         self.change(
-            input,
             cotonoma.node_id,
-            {
-                let cotonoma = cotonoma.clone();
-                move |ds, input| ds.post_cotonoma(&input, &cotonoma, operator.as_ref())
-            },
-            |parent, input| parent.post_cotonoma(input, cotonoma.uuid).boxed(),
+            (input, cotonoma),
+            move |ds, (input, cotonoma)| ds.post_cotonoma(&input, &cotonoma, operator.as_ref()),
+            |parent, (input, cotonoma)| parent.post_cotonoma(input, cotonoma.uuid).boxed(),
         )
         .await
     }

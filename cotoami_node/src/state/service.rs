@@ -210,8 +210,8 @@ impl NodeState {
 
     pub(crate) async fn change<Input, Change, Apply, Forward>(
         self,
-        input: Input,
         target_node_id: Id<Node>,
+        input: Input,
         apply: Apply,
         forward: Forward,
     ) -> Result<Change, ServiceError>

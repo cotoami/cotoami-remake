@@ -117,13 +117,10 @@ impl NodeState {
         }
         let (cotonoma, _) = self.cotonoma(post_to).await?;
         self.change(
-            input,
             cotonoma.node_id,
-            {
-                let cotonoma = cotonoma.clone();
-                move |ds, input| ds.post_coto(&input, &cotonoma, operator.as_ref())
-            },
-            |parent, input| parent.post_coto(input, cotonoma.uuid).boxed(),
+            (input, cotonoma),
+            move |ds, (input, cotonoma)| ds.post_coto(&input, &cotonoma, operator.as_ref()),
+            |parent, (input, cotonoma)| parent.post_coto(input, cotonoma.uuid).boxed(),
         )
         .await
     }
@@ -139,8 +136,8 @@ impl NodeState {
         }
         let coto = self.coto(id).await?;
         self.change(
-            diff,
             coto.node_id,
+            diff,
             move |ds, diff| ds.edit_coto(&id, diff, operator.as_ref()),
             |parent, diff| unimplemented!(),
         )
@@ -154,8 +151,8 @@ impl NodeState {
     ) -> Result<Id<Coto>, ServiceError> {
         let coto = self.coto(id).await?;
         self.change(
-            id,
             coto.node_id,
+            id,
             move |ds, coto_id| {
                 let changelog = ds.delete_coto(&coto_id, operator.as_ref())?;
                 Ok((coto_id, changelog))
@@ -173,13 +170,10 @@ impl NodeState {
     ) -> Result<(Coto, Coto), ServiceError> {
         let (cotonoma, _) = self.cotonoma(dest).await?;
         self.change(
-            id,
             cotonoma.node_id,
-            {
-                let cotonoma = cotonoma.clone();
-                move |ds, coto_id| ds.repost(&coto_id, &cotonoma, operator.as_ref())
-            },
-            |parent, coto_id| parent.repost(coto_id, cotonoma.uuid),
+            (id, cotonoma),
+            move |ds, (id, cotonoma)| ds.repost(&id, &cotonoma, operator.as_ref()),
+            |parent, (id, cotonoma)| parent.repost(id, cotonoma.uuid),
         )
         .await
     }
