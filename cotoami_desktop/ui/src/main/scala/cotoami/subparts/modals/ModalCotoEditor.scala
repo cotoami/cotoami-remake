@@ -40,7 +40,7 @@ object ModalCotoEditor {
         CotoForm.Model(
           summaryInput = coto.summary.getOrElse(""),
           contentInput = coto.content.getOrElse(""),
-          mediaContent = coto.mediaContent.map(_._1),
+          mediaBlob = coto.mediaContent.map(_._1),
           dateTimeRange = coto.dateTimeRange
         )
       ).pipe { model =>
@@ -92,7 +92,7 @@ object ModalCotoEditor {
       dialogClasses = optionalClasses(
         Seq(
           ("coto-editor", true),
-          ("with-media-content", model.form.mediaContent.isDefined)
+          ("with-media-content", model.form.mediaBlob.isDefined)
         )
       ),
       closeButton = Some((classOf[Modal.CotoEditor], dispatch)),

@@ -28,15 +28,15 @@ object Editor {
         summaryInput: String = "",
         contentInput: String = "",
         inPreview: Boolean = false,
-        mediaContent: Option[dom.Blob] = None,
+        mediaBlob: Option[dom.Blob] = None,
         encodingMedia: Boolean = false,
-        mediaContentBase64: Option[(String, String)] = None,
+        mediaBase64: Option[(String, String)] = None,
         mediaLocation: Option[Geolocation] = None,
         mediaDateTime: Option[DateTimeRange] = None,
         dateTimeRange: Option[DateTimeRange] = None
     ) extends Form {
       def hasContents: Boolean =
-        !summaryInput.isBlank || !contentInput.isBlank || mediaContentBase64.isDefined
+        !summaryInput.isBlank || !contentInput.isBlank || mediaBase64.isDefined
 
       def summary: Option[String] =
         Option.when(!summaryInput.isBlank())(summaryInput.trim)
@@ -54,7 +54,7 @@ object Editor {
         }
 
       def scanMediaMetadata: Cmd.Batch[Msg] =
-        mediaContent.map(blob =>
+        mediaBlob.map(blob =>
           Cmd.Batch(
             Geolocation.fromExif(blob).map {
               case Right(location) =>
@@ -113,7 +113,7 @@ object Editor {
 
         case Msg.FileInput(file) =>
           model.copy(
-            mediaContent = Some(file),
+            mediaBlob = Some(file),
             mediaLocation = None,
             encodingMedia = true
           ).pipe(model =>
@@ -158,11 +158,11 @@ object Editor {
           default
         }
 
-        case Msg.MediaContentEncoded(Right(mediaContent)) =>
+        case Msg.MediaContentEncoded(Right(mediaBase64)) =>
           default.copy(
             _1 = model.copy(
               encodingMedia = false,
-              mediaContentBase64 = Some(mediaContent)
+              mediaBase64 = Some(mediaBase64)
             )
           )
 
@@ -174,9 +174,9 @@ object Editor {
         case Msg.DeleteMediaContent =>
           default.copy(
             _1 = model.copy(
-              mediaContent = None,
+              mediaBlob = None,
               encodingMedia = false,
-              mediaContentBase64 = None,
+              mediaBase64 = None,
               mediaLocation = None,
               mediaDateTime = None
             ),
@@ -279,29 +279,23 @@ object Editor {
     def sectionMediaPreview(
         model: Model
     )(implicit dispatch: Msg => Unit): Option[ReactElement] =
-      model.mediaContent match {
-        case Some(mediaContent) => {
-          val url = dom.URL.createObjectURL(mediaContent)
-          Some(
-            section(className := "media-preview")(
-              div(className := "media-content")(
-                img(
-                  src := url,
-                  onLoad := (_ => dom.URL.revokeObjectURL(url))
-                ),
-                toolButton(
-                  symbol = "close",
-                  tip = "Delete",
-                  classes = "delete",
-                  disabled = model.encodingMedia,
-                  onClick = _ => dispatch(Msg.DeleteMediaContent)
-                )
-              )
+      model.mediaBlob.map { blob =>
+        val url = dom.URL.createObjectURL(blob)
+        section(className := "media-preview")(
+          div(className := "media-content")(
+            img(
+              src := url,
+              onLoad := (_ => dom.URL.revokeObjectURL(url))
+            ),
+            toolButton(
+              symbol = "close",
+              tip = "Delete",
+              classes = "delete",
+              disabled = model.encodingMedia,
+              onClick = _ => dispatch(Msg.DeleteMediaContent)
             )
           )
-        }
-
-        case None => None
+        )
       }
 
     def sectionValidationError(model: Model): ReactElement =

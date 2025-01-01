@@ -214,14 +214,14 @@ object SectionFlowInput {
               postId,
               form.content,
               form.summary,
-              form.mediaContentBase64,
+              form.mediaBase64,
               cotonoma
             ),
             _4 = Cmd.Batch(
               postCoto(
                 postId,
                 form,
-                form.mediaContentBase64,
+                form.mediaBase64,
                 context.geomap.focusedLocation,
                 form.dateTimeRange,
                 cotonoma.id
