@@ -40,7 +40,7 @@ object ModalCotoEditor {
         CotoForm.Model(
           summaryInput = coto.summary.getOrElse(""),
           contentInput = coto.content.getOrElse(""),
-          mediaBlob = coto.mediaContent.map(_._1),
+          mediaBlob = coto.mediaBlob.map(_._1),
           dateTimeRange = coto.dateTimeRange
         )
       ).pipe { model =>

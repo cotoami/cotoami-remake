@@ -38,7 +38,7 @@ case class Coto(
     postedById: Id[Node],
     content: Option[String],
     summary: Option[String],
-    mediaContent: Option[(dom.Blob, String)],
+    mediaBlob: Option[(dom.Blob, String)],
     geolocation: Option[Geolocation],
     dateTimeRange: Option[DateTimeRange],
     isCotonoma: Boolean,
@@ -59,8 +59,8 @@ case class Coto(
       case _ => false
     }
 
-  lazy val mediaUrl: Option[(String, String)] = mediaContent.map {
-    case (content, mimeType) => (dom.URL.createObjectURL(content), mimeType)
+  lazy val mediaUrl: Option[(String, String)] = mediaBlob.map {
+    case (blob, mimeType) => (dom.URL.createObjectURL(blob), mimeType)
   }
 
   def revokeMediaUrl(): Unit = mediaUrl.foreach { case (url, _) =>

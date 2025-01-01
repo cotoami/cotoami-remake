@@ -66,7 +66,7 @@ object CotoBackend {
       postedById = Id(json.posted_by_id),
       content = Nullable.toOption(json.content),
       summary = Nullable.toOption(json.summary),
-      mediaContent = (
+      mediaBlob = (
         Nullable.toOption(json.media_content),
         Nullable.toOption(json.media_type)
       ) match {
