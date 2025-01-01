@@ -69,6 +69,21 @@ object Editor {
           )
         ).getOrElse(Cmd.Batch())
 
+      def encodeMedia: (Model, Cmd.One[Msg]) =
+        mediaBlob.map { blob =>
+          (
+            copy(encodingMedia = true),
+            Browser.encodeAsBase64(blob, true).map {
+              case Right(base64) =>
+                Msg.MediaContentEncoded(Right((base64, blob.`type`)))
+              case Left(e) =>
+                Msg.MediaContentEncoded(
+                  Left("Media content encoding error.")
+                )
+            }
+          )
+        }.getOrElse((this, Cmd.none))
+
       def readyToPost: Boolean =
         // The validation is not necessarily required
         // if `mediaContent` has some value (media-only coto).
@@ -112,24 +127,16 @@ object Editor {
           default.copy(_1 = model.copy(contentInput = content))
 
         case Msg.FileInput(file) =>
-          model.copy(
-            mediaBlob = Some(file),
-            mediaLocation = None,
-            encodingMedia = true
-          ).pipe(model =>
-            default.copy(
-              _1 = model,
-              _3 = model.scanMediaMetadata :+
-                Browser.encodeAsBase64(file, true).map {
-                  case Right(base64) =>
-                    Msg.MediaContentEncoded(Right((base64, file.`type`)))
-                  case Left(e) =>
-                    Msg.MediaContentEncoded(
-                      Left("Media content encoding error.")
-                    )
-                }
-            )
-          )
+          model
+            .modify(_.mediaBlob).setTo(Some(file))
+            .modify(_.mediaLocation).setTo(None)
+            .encodeMedia
+            .pipe { case (model, encodeMedia) =>
+              default.copy(
+                _1 = model,
+                _3 = model.scanMediaMetadata :+ encodeMedia
+              )
+            }
 
         case Msg.ExifLocationDetected(Right(location)) =>
           default.copy(

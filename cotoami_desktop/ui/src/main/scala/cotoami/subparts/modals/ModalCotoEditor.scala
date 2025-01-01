@@ -35,20 +35,19 @@ object ModalCotoEditor {
 
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) =
-      Model(
-        coto,
-        CotoForm.Model(
-          summaryInput = coto.summary.getOrElse(""),
-          contentInput = coto.content.getOrElse(""),
-          mediaBlob = coto.mediaBlob.map(_._1),
-          dateTimeRange = coto.dateTimeRange
-        )
-      ).pipe { model =>
+      CotoForm.Model(
+        summaryInput = coto.summary.getOrElse(""),
+        contentInput = coto.content.getOrElse(""),
+        // It's not necessary to encode the mediaBlob because
+        // only newly uploaded media data will be uploaded.
+        mediaBlob = coto.mediaBlob.map(_._1),
+        dateTimeRange = coto.dateTimeRange
+      ).pipe { form =>
         (
-          model,
+          Model(coto, form),
           Browser.send(
             SectionGeomap.Msg.FocusLocation(coto.geolocation).into
-          ) +: model.form.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
+          ) +: form.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
         )
       }
   }
