@@ -68,7 +68,9 @@ object Editor {
         ).getOrElse(Cmd.Batch())
 
       def readyToPost: Boolean =
-        hasContents && (validate.validated || mediaContent.isDefined)
+        // The validation is not necessarily required
+        // if `mediaContent` has some value (media-only coto).
+        hasContents && !validate.failed
     }
 
     sealed trait Msg
