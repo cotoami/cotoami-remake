@@ -7,7 +7,7 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id}
+import cotoami.models.Coto
 import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.Editor._
@@ -16,18 +16,27 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 object ModalCotoEditor {
 
   case class Model(
-      cotoId: Id[Coto],
+      original: Coto,
       form: CotoForm.Model = CotoForm.Model(),
+      mediaContentChanged: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
   ) {
-    def readyToSave: Boolean = !saving && form.readyToPost
+    def edited(geomap: Geomap): Boolean =
+      form.summary != original.summary ||
+        Some(form.content) != original.content ||
+        mediaContentChanged ||
+        geomap.focusedLocation != original.geolocation ||
+        form.dateTimeRange != original.dateTimeRange
+
+    def readyToSave(geomap: Geomap): Boolean =
+      edited(geomap) && !saving && form.readyToPost
   }
 
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) =
       Model(
-        coto.id,
+        coto,
         CotoForm.Model(
           summaryInput = coto.summary.getOrElse(""),
           contentInput = coto.content.getOrElse(""),
@@ -60,7 +69,14 @@ object ModalCotoEditor {
       case Msg.CotoFormMsg(submsg) => {
         val (form, geomap, subcmd) = CotoForm.update(submsg, model.form)
         default.copy(
-          _1 = model.copy(form = form),
+          _1 = model.copy(
+            form = form,
+            mediaContentChanged = submsg match {
+              case CotoForm.Msg.FileInput(_)       => true
+              case CotoForm.Msg.DeleteMediaContent => true
+              case _                               => model.mediaContentChanged
+            }
+          ),
           _2 = geomap,
           _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
@@ -114,7 +130,7 @@ object ModalCotoEditor {
         button(
           className := "save",
           `type` := "submit",
-          disabled := !model.readyToSave,
+          disabled := !model.readyToSave(context.geomap),
           aria - "busy" := model.saving.toString()
         )("Save", span(className := "shortcut-help")("(Ctrl + Enter)"))
       )
