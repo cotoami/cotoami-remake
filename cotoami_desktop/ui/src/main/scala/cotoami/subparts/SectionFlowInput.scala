@@ -98,8 +98,6 @@ object SectionFlowInput {
         form: CotoForm.Model,
         mediaContent: Option[(String, String)]
     ) extends Msg
-    case class MediaContentEncoded(result: Either[String, (String, String)])
-        extends Msg
     case class CotoPosted(postId: String, result: Either[ErrorJson, Coto])
         extends Msg
     case class CotonomaPosted(
@@ -206,27 +204,33 @@ object SectionFlowInput {
       case (Msg.SetFolded(folded), _, _) =>
         default.copy(_1 = model.copy(folded = folded))
 
-      case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) =>
-        model.copy(posting = true) match {
-          case model =>
-            form.mediaContent match {
-              case Some(blob) =>
-                default.copy(
-                  _1 = model,
-                  _4 = Browser.encodeAsBase64(blob, true).map {
-                    case Right(base64) =>
-                      Msg.MediaContentEncoded(Right((base64, blob.`type`))).into
-                    case Left(e) =>
-                      Msg.MediaContentEncoded(
-                        Left("Media content encoding error.")
-                      ).into
-                  }
-                )
-              case None => {
-                update(Msg.PostCoto(form, None), model, waitingPosts)
-              }
-            }
+      case (Msg.Post, form: CotoForm.Model, Some(cotonoma)) => {
+        val postId = WaitingPost.newPostId()
+        model.copy(posting = true).clear.pipe { model =>
+          default.copy(
+            _1 = model,
+            _2 = context.geomap.copy(focusedLocation = None),
+            _3 = waitingPosts.addCoto(
+              postId,
+              form.content,
+              form.summary,
+              form.mediaContentBase64,
+              cotonoma
+            ),
+            _4 = Cmd.Batch(
+              postCoto(
+                postId,
+                form,
+                form.mediaContentBase64,
+                context.geomap.focusedLocation,
+                form.dateTimeRange,
+                cotonoma.id
+              ),
+              model.save
+            )
+          )
         }
+      }
 
       case (Msg.Post, form: CotonomaForm.Model, Some(cotonoma)) => {
         val postId = WaitingPost.newPostId()
@@ -246,52 +250,6 @@ object SectionFlowInput {
             )
         }
       }
-
-      case (Msg.PostCoto(form, mediaContent), _, Some(cotonoma)) => {
-        val postId = WaitingPost.newPostId()
-        model.clear match {
-          case model =>
-            default.copy(
-              _1 = model,
-              _2 = context.geomap.copy(focusedLocation = None),
-              _3 = waitingPosts.addCoto(
-                postId,
-                form.content,
-                form.summary,
-                mediaContent,
-                cotonoma
-              ),
-              _4 = Cmd.Batch(
-                postCoto(
-                  postId,
-                  form,
-                  mediaContent,
-                  context.geomap.focusedLocation,
-                  form.dateTimeRange,
-                  cotonoma.id
-                ),
-                model.save
-              )
-            )
-        }
-      }
-
-      case (
-            Msg.MediaContentEncoded(Right(mediaContent)),
-            form: CotoForm.Model,
-            _
-          ) =>
-        update(
-          Msg.PostCoto(form, Some(mediaContent)),
-          model,
-          waitingPosts
-        )
-
-      case (Msg.MediaContentEncoded(Left(e)), _, _) =>
-        default.copy(
-          _1 = model.copy(posting = false),
-          _4 = cotoami.error(e, None)
-        )
 
       case (Msg.CotoPosted(postId, Right(coto)), _, _) =>
         default.copy(

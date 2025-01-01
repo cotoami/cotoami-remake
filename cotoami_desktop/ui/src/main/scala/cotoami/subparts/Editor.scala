@@ -9,7 +9,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.Context
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
@@ -25,16 +25,18 @@ object Editor {
 
   object CotoForm {
     case class Model(
-        inPreview: Boolean = false,
         summaryInput: String = "",
         contentInput: String = "",
+        inPreview: Boolean = false,
         mediaContent: Option[dom.Blob] = None,
+        encodingMedia: Boolean = false,
+        mediaContentBase64: Option[(String, String)] = None,
         mediaLocation: Option[Geolocation] = None,
         mediaDateTime: Option[DateTimeRange] = None,
         dateTimeRange: Option[DateTimeRange] = None
     ) extends Form {
       def hasContents: Boolean =
-        !summaryInput.isBlank || !contentInput.isBlank || mediaContent.isDefined
+        !summaryInput.isBlank || !contentInput.isBlank || mediaContentBase64.isDefined
 
       def summary: Option[String] =
         Option.when(!summaryInput.isBlank())(summaryInput.trim)
@@ -86,6 +88,8 @@ object Editor {
       case class ExifDateTimeDetected(
           result: Either[String, Option[DateTimeRange]]
       ) extends Msg
+      case class MediaContentEncoded(result: Either[String, (String, String)])
+          extends Msg
       case object DeleteMediaContent extends Msg
       case object DeleteDateTimeRange extends Msg
       case object DeleteGeolocation extends Msg
@@ -108,8 +112,23 @@ object Editor {
           default.copy(_1 = model.copy(contentInput = content))
 
         case Msg.FileInput(file) =>
-          model.copy(mediaContent = Some(file), mediaLocation = None).pipe(
-            model => default.copy(_1 = model, _3 = model.scanMediaMetadata)
+          model.copy(
+            mediaContent = Some(file),
+            mediaLocation = None,
+            encodingMedia = true
+          ).pipe(model =>
+            default.copy(
+              _1 = model,
+              _3 = model.scanMediaMetadata :+
+                Browser.encodeAsBase64(file, true).map {
+                  case Right(base64) =>
+                    Msg.MediaContentEncoded(Right((base64, file.`type`)))
+                  case Left(e) =>
+                    Msg.MediaContentEncoded(
+                      Left("Media content encoding error.")
+                    )
+                }
+            )
           )
 
         case Msg.ExifLocationDetected(Right(location)) =>
@@ -139,10 +158,25 @@ object Editor {
           default
         }
 
+        case Msg.MediaContentEncoded(Right(mediaContent)) =>
+          default.copy(
+            _1 = model.copy(
+              encodingMedia = false,
+              mediaContentBase64 = Some(mediaContent)
+            )
+          )
+
+        case Msg.MediaContentEncoded(Left(e)) => {
+          println(e)
+          update(Msg.DeleteMediaContent, model)
+        }
+
         case Msg.DeleteMediaContent =>
           default.copy(
             _1 = model.copy(
               mediaContent = None,
+              encodingMedia = false,
+              mediaContentBase64 = None,
               mediaLocation = None,
               mediaDateTime = None
             ),
@@ -259,6 +293,7 @@ object Editor {
                   symbol = "close",
                   tip = "Delete",
                   classes = "delete",
+                  disabled = model.encodingMedia,
                   onClick = _ => dispatch(Msg.DeleteMediaContent)
                 )
               )
