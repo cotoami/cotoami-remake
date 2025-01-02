@@ -47,6 +47,25 @@ object CotoJson {
       )
     )
 
+  def edit(
+      id: Id[Coto],
+      content: Option[String],
+      summary: Option[Option[js.Any]],
+      mediaContent: Option[Option[(String, String)]],
+      location: Option[Option[Geolocation]],
+      timeRange: Option[Option[DateTimeRange]]
+  ): Cmd.One[Either[ErrorJson, CotoJson]] =
+    Commands.send(
+      Commands.EditCoto(
+        id,
+        content,
+        summary,
+        mediaContent,
+        location,
+        timeRange
+      )
+    )
+
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.DeleteCoto(id))
 
@@ -103,6 +122,17 @@ object CotoBackend {
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, Coto]] =
     CotoJson.post(content, summary, mediaContent, location, timeRange, postTo)
+      .map(_.map(CotoBackend.toModel(_)))
+
+  def edit(
+      id: Id[Coto],
+      content: Option[String],
+      summary: Option[Option[js.Any]],
+      mediaContent: Option[Option[(String, String)]],
+      location: Option[Option[Geolocation]],
+      timeRange: Option[Option[DateTimeRange]]
+  ): Cmd.One[Either[ErrorJson, Coto]] =
+    CotoJson.edit(id, content, summary, mediaContent, location, timeRange)
       .map(_.map(CotoBackend.toModel(_)))
 
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, Id[Coto]]] =
