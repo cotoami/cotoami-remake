@@ -8,7 +8,7 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Geolocation}
+import cotoami.models.{Coto, DateTimeRange, Geolocation}
 import cotoami.backend.ErrorJson
 import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
@@ -29,7 +29,7 @@ object ModalCotoEditor {
         diffContent.isDefined ||
         diffMediaContent.isDefined ||
         diffGeolocation(geomap).isDefined ||
-        form.dateTimeRange != original.dateTimeRange
+        diffDateTimeRange.isDefined
 
     def diffSummary: Option[Option[String]] =
       Option.when(form.summary != original.summary) {
@@ -49,6 +49,11 @@ object ModalCotoEditor {
     def diffGeolocation(geomap: Geomap): Option[Option[Geolocation]] =
       Option.when(geomap.focusedLocation != original.geolocation) {
         geomap.focusedLocation
+      }
+
+    def diffDateTimeRange: Option[Option[DateTimeRange]] =
+      Option.when(form.dateTimeRange != original.dateTimeRange) {
+        form.dateTimeRange
       }
 
     def readyToSave(geomap: Geomap): Boolean =
