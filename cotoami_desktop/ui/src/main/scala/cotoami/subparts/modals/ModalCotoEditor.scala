@@ -1,7 +1,6 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import scala.scalajs.js
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -59,15 +58,18 @@ object ModalCotoEditor {
     def readyToSave(geomap: Geomap): Boolean =
       edited(geomap) && !saving && form.readyToPost
 
-    def save(geomap: Geomap): Cmd.One[AppMsg] =
-      CotoBackend.edit(
-        original.id,
-        diffContent,
-        diffSummary,
-        diffMediaContent,
-        diffGeolocation(geomap),
-        diffDateTimeRange
-      ).map(Msg.Saved(_).into)
+    def save(geomap: Geomap): (Model, Cmd.One[AppMsg]) =
+      (
+        copy(saving = true),
+        CotoBackend.edit(
+          original.id,
+          diffContent,
+          diffSummary,
+          diffMediaContent,
+          diffGeolocation(geomap),
+          diffDateTimeRange
+        ).map(Msg.Saved(_).into)
+      )
   }
 
   object Model {
@@ -119,6 +121,22 @@ object ModalCotoEditor {
           _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
+
+      case Msg.Save =>
+        model.save(context.geomap).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
+
+      case Msg.Saved(Right(coto)) =>
+        default.copy(
+          _1 = model.copy(saving = false),
+          _3 = Modal.close(classOf[Modal.CotoEditor])
+        )
+
+      case Msg.Saved(Left(e)) =>
+        default.copy(
+          _1 = model.copy(saving = false, error = Some(e.default_message))
+        )
     }
   }
 
@@ -169,7 +187,8 @@ object ModalCotoEditor {
           className := "save",
           `type` := "submit",
           disabled := !model.readyToSave(context.geomap),
-          aria - "busy" := model.saving.toString()
+          aria - "busy" := model.saving.toString(),
+          onClick := (_ => dispatch(Msg.Save))
         )("Save", span(className := "shortcut-help")("(Ctrl + Enter)"))
       )
     )
