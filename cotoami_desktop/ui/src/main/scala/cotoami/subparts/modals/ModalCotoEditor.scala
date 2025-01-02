@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import scala.scalajs.js
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
@@ -24,11 +25,16 @@ object ModalCotoEditor {
       error: Option[String] = None
   ) {
     def edited(geomap: Geomap): Boolean =
-      form.summary != original.summary ||
+      diffSummary.isDefined ||
         diffContent.isDefined ||
         mediaContentChanged ||
         geomap.focusedLocation != original.geolocation ||
         form.dateTimeRange != original.dateTimeRange
+
+    def diffSummary: Option[Option[String]] =
+      Option.when(form.summary != original.summary) {
+        form.summary
+      }
 
     def diffContent: Option[String] =
       Option.when(Some(form.content) != original.content) {

@@ -236,7 +236,7 @@ object Commands {
   def EditCoto(
       id: Id[Coto],
       content: Option[String],
-      summary: Option[Option[js.Any]],
+      summary: Option[Option[String]],
       mediaContent: Option[Option[(String, String)]],
       location: Option[Option[Geolocation]],
       timeRange: Option[Option[DateTimeRange]]
@@ -249,7 +249,8 @@ object Commands {
             case Some(content) => fieldDiffJson(Some(Some(content)))
             case None          => fieldDiffJson(None)
           },
-          summary = fieldDiffJson(summary),
+          summary =
+            fieldDiffJson(summary.map(_.map(s => s))), // String => js.Any
           media_content =
             fieldDiffJson(mediaContent.map(_.map(js.Tuple2.fromScalaTuple2))),
           geolocation = fieldDiffJson(location match {

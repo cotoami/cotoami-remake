@@ -50,7 +50,7 @@ object CotoJson {
   def edit(
       id: Id[Coto],
       content: Option[String],
-      summary: Option[Option[js.Any]],
+      summary: Option[Option[String]],
       mediaContent: Option[Option[(String, String)]],
       location: Option[Option[Geolocation]],
       timeRange: Option[Option[DateTimeRange]]
@@ -127,7 +127,7 @@ object CotoBackend {
   def edit(
       id: Id[Coto],
       content: Option[String],
-      summary: Option[Option[js.Any]],
+      summary: Option[Option[String]],
       mediaContent: Option[Option[(String, String)]],
       location: Option[Option[Geolocation]],
       timeRange: Option[Option[DateTimeRange]]
