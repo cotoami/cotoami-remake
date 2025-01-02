@@ -13,16 +13,7 @@ import com.softwaremill.quicklens._
 import fui._
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{
-  Coto,
-  Cotonoma,
-  DateTimeRange,
-  Geolocation,
-  Id,
-  Node,
-  WaitingPost,
-  WaitingPosts
-}
+import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.Editor._
@@ -218,14 +209,7 @@ object SectionFlowInput {
               cotonoma
             ),
             _4 = Cmd.Batch(
-              postCoto(
-                postId,
-                form,
-                form.mediaBase64,
-                context.geomap.focusedLocation,
-                form.dateTimeRange,
-                cotonoma.id
-              ),
+              postCoto(postId, form, context.geomap, cotonoma.id),
               model.save
             )
           )
@@ -240,13 +224,7 @@ object SectionFlowInput {
               _1 = model,
               _2 = context.geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
-              _4 = postCotonoma(
-                postId,
-                form,
-                context.geomap.focusedLocation,
-                None,
-                cotonoma.id
-              )
+              _4 = postCotonoma(postId, form, context.geomap, cotonoma.id)
             )
         }
       }
@@ -293,17 +271,15 @@ object SectionFlowInput {
   private def postCoto(
       postId: String,
       form: CotoForm.Model,
-      mediaContent: Option[(String, String)],
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
+      geomap: Geomap,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
     CotoBackend.post(
       form.content,
       form.summary,
-      mediaContent,
-      location,
-      timeRange,
+      form.mediaBase64,
+      geomap.focusedLocation,
+      form.dateTimeRange,
       postTo
     )
       .map(Msg.CotoPosted(postId, _).into)
@@ -311,11 +287,10 @@ object SectionFlowInput {
   private def postCotonoma(
       postId: String,
       form: CotonomaForm.Model,
-      location: Option[Geolocation],
-      timeRange: Option[DateTimeRange],
+      geomap: Geomap,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
-    CotonomaBackend.post(form.name, location, timeRange, postTo)
+    CotonomaBackend.post(form.name, geomap.focusedLocation, None, postTo)
       .map(Msg.CotonomaPosted(postId, _).into)
 
   /////////////////////////////////////////////////////////////////////////////

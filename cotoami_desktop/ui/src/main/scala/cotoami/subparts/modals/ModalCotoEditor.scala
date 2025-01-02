@@ -8,6 +8,7 @@ import slinky.web.html._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
+import cotoami.backend.ErrorJson
 import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.Editor._
@@ -24,10 +25,15 @@ object ModalCotoEditor {
   ) {
     def edited(geomap: Geomap): Boolean =
       form.summary != original.summary ||
-        Some(form.content) != original.content ||
+        diffContent.isDefined ||
         mediaContentChanged ||
         geomap.focusedLocation != original.geolocation ||
         form.dateTimeRange != original.dateTimeRange
+
+    def diffContent: Option[String] =
+      Option.when(Some(form.content) != original.content) {
+        form.content
+      }
 
     def readyToSave(geomap: Geomap): Boolean =
       edited(geomap) && !saving && form.readyToPost
@@ -58,6 +64,8 @@ object ModalCotoEditor {
 
   object Msg {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case object Save extends Msg
+    case class Saved(result: Either[ErrorJson, Coto]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
