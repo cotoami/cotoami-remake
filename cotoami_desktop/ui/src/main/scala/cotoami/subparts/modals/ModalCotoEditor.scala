@@ -199,7 +199,7 @@ object ModalCotoEditor {
     div(className := "form")(
       CotoForm.sectionEditorOrPreview(
         model = model.form,
-        onCtrlEnter = () => ()
+        onCtrlEnter = () => dispatch(Msg.Save)
       )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
 }

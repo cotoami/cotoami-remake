@@ -60,8 +60,7 @@ trait SetRootCotonomaJson extends js.Object {
 @js.native
 trait EditCotoJson extends js.Object {
   val coto_id: String = js.native
-  val content: String = js.native
-  val summary: Nullable[String] = js.native
+  val diff: js.Object = js.native
   val updated_at: String = js.native
 }
 

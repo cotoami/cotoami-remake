@@ -57,6 +57,11 @@ object Changelog {
       return (model.modify(_.domain.links).using(_.put(link)), Cmd.none)
     }
 
+    // EditCoto
+    for (editCotoJson <- change.EditCoto.toOption) {
+      return (model, Domain.fetchCotoDetails(Id(editCotoJson.coto_id)))
+    }
+
     // DeleteCoto
     for (deleteCotoJson <- change.DeleteCoto.toOption) {
       val cotoId: Id[Coto] = Id(deleteCotoJson.coto_id)
