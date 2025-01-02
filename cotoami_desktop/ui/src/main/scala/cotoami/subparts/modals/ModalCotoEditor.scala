@@ -27,7 +27,7 @@ object ModalCotoEditor {
     def edited(geomap: Geomap): Boolean =
       diffSummary.isDefined ||
         diffContent.isDefined ||
-        mediaContentChanged ||
+        diffMediaContent.isDefined ||
         geomap.focusedLocation != original.geolocation ||
         form.dateTimeRange != original.dateTimeRange
 
@@ -39,6 +39,11 @@ object ModalCotoEditor {
     def diffContent: Option[String] =
       Option.when(Some(form.content) != original.content) {
         form.content
+      }
+
+    def diffMediaContent: Option[Option[(String, String)]] =
+      Option.when(mediaContentChanged) {
+        form.mediaBase64
       }
 
     def readyToSave(geomap: Geomap): Boolean =
