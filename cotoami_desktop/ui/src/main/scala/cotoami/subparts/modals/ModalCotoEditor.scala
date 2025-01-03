@@ -77,9 +77,12 @@ object ModalCotoEditor {
       CotoForm.Model(
         summaryInput = coto.summary.getOrElse(""),
         contentInput = coto.content.getOrElse(""),
-        // It's not necessary to encode the mediaBlob because
-        // only newly uploaded media data will be uploaded.
         mediaBlob = coto.mediaBlob.map(_._1),
+        // The content of `mediaBase64` will be used only if `mediaContentChanged` is true,
+        // so let's set dummy data here to avoid the cost of base64-encoding `mediaBlob`
+        // and just to denote that the coto has some media content
+        // (cf. `CotoForm.Model.hasContents`).
+        mediaBase64 = coto.mediaBlob.map { case (_, t) => ("", t) },
         dateTimeRange = coto.dateTimeRange
       ).pipe { form =>
         (
