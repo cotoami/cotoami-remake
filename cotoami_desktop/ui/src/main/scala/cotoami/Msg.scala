@@ -49,6 +49,9 @@ object Msg {
   ) extends Msg
   case object UnfocusCotonoma extends Msg
   case class FocusCoto(id: Id[Coto], moveTo: Boolean = true) extends Msg
+  case class FocusedCotoDetailsFetched(
+      result: Either[ErrorJson, CotoDetails]
+  ) extends Msg
   case object UnfocusCoto extends Msg
 
   // Domain

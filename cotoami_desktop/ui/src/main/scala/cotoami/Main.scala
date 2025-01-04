@@ -246,6 +246,23 @@ object Main {
         }
       }
 
+      case Msg.FocusedCotoDetailsFetched(Right(details)) =>
+        model.modify(_.domain).using(_.importFrom(details)).pipe { model =>
+          DatabaseFocus.coto(details.coto.id, true, model).pipe {
+            case (model, focus) =>
+              (
+                model,
+                Cmd.Batch(
+                  Browser.send(Msg.OpenOrClosePane(PaneFlow.PaneName, true)),
+                  focus
+                )
+              )
+          }
+        }
+
+      case Msg.FocusedCotoDetailsFetched(Left(e)) =>
+        (model.error("Couldn't fetch coto details.", Some(e)), Cmd.none)
+
       case Msg.UnfocusCoto => {
         val newUrl = new URL(model.url.toString())
         newUrl.hash = ""
