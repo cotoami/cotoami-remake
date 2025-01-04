@@ -12,7 +12,7 @@ import cotoami.subparts.SectionGeomap
 
 object DatabaseFocus {
 
-  def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd[Msg]) =
+  def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd.Batch[Msg]) =
     model
       .modify(_.domain).using(_.unfocus())
       .modify(_.domain.nodes).using(_.focus(nodeId))
@@ -36,7 +36,7 @@ object DatabaseFocus {
       nodeId: Option[Id[Node]],
       cotonomaId: Id[Cotonoma],
       model: Model
-  ): (Model, Cmd[Msg]) = {
+  ): (Model, Cmd.Batch[Msg]) = {
     val shouldFetchCotonomas =
       // the focused node is changed
       nodeId != model.domain.nodes.focusedId ||
