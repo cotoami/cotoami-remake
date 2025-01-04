@@ -1,15 +1,21 @@
 section.coto-details {
   >header {
+    position: relative;
     padding-top: 8px;
     padding-left: 4px;
 
-    button.back {
+    button.tool {
       height: 24px;
       line-height: 24px;
 
       span.material-symbols {
         font-size: 22px;
       }
+    }
+
+    button.close {
+      position: absolute;
+      right: 20px;
     }
   }
 

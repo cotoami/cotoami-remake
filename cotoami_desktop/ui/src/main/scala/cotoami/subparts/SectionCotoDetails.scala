@@ -1,5 +1,7 @@
 package cotoami.subparts
 
+import org.scalajs.dom
+
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -16,10 +18,17 @@ object SectionCotoDetails {
     section(className := "coto-details header-and-body")(
       header(
         toolButton(
-          symbol = "arrow_back",
-          tip = "Back to list",
-          tipPlacement = "right",
           classes = "back",
+          symbol = "arrow_back",
+          tip = "Back",
+          tipPlacement = "right",
+          onClick = _ => dom.window.history.back()
+        ),
+        toolButton(
+          classes = "close",
+          symbol = "close",
+          tip = "Close",
+          tipPlacement = "left",
           onClick = _ => dispatch(AppMsg.UnfocusCoto)
         )
       ),
