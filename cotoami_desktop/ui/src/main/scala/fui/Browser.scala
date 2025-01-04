@@ -34,11 +34,16 @@ object Browser {
 
   /** Change the URL, but do not trigger a page load. This will add a new entry
     * to the browser history.
+    *
+    * @param notify
+    *   whether or not to notify the url change via `onUrlChange`
     */
-  def pushUrl[Msg](url: String): Cmd.One[Msg] =
+  def pushUrl[Msg](url: String, notify: Boolean = true): Cmd.One[Msg] =
     Cmd(IO {
       dom.window.history.pushState((), "", url)
-      listenersOnPushUrl.foreach(_(new URL(dom.window.location.href)))
+      if (notify) {
+        listenersOnPushUrl.foreach(_(new URL(dom.window.location.href)))
+      }
       None
     })
 
