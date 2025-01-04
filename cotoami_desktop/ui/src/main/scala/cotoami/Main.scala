@@ -373,24 +373,38 @@ object Main {
     }
   }
 
-  def applyUrlChange(url: URL, model: Model): (Model, Cmd[Msg]) =
+  def applyUrlChange(url: URL, model: Model): (Model, Cmd[Msg]) = {
+    val focusCoto =
+      if (url.hash.isBlank())
+        Cmd.none
+      else {
+        CotoDetails.fetch(Id(url.hash.stripPrefix("#")))
+          .map(Msg.FocusedCotoDetailsFetched(_))
+      }
     url.pathname + url.search + url.hash match {
-      case Route.index(_) => DatabaseFocus.node(None, model)
+      case Route.index(_) =>
+        DatabaseFocus.node(None, model)
+          .modify(_._2).using(_ :+ focusCoto)
 
       case Route.node(id) =>
         if (model.domain.nodes.contains(id))
           DatabaseFocus.node(Some(id), model)
+            .modify(_._2).using(_ :+ focusCoto)
         else
           (model, Browser.pushUrl(Route.index.url(())))
 
-      case Route.cotonoma(id) => DatabaseFocus.cotonoma(None, id, model)
+      case Route.cotonoma(id) =>
+        DatabaseFocus.cotonoma(None, id, model)
+          .modify(_._2).using(_ :+ focusCoto)
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
         DatabaseFocus.cotonoma(Some(nodeId), cotonomaId, model)
+          .modify(_._2).using(_ :+ focusCoto)
 
       case _ =>
         (model, Browser.pushUrl(Route.index.url(())))
     }
+  }
 
   private def connectToServers(): Cmd.One[Msg] =
     tauri.invokeCommand("connect_to_servers").map(
