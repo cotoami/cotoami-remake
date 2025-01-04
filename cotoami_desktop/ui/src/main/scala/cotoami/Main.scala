@@ -238,10 +238,7 @@ object Main {
               model,
               Cmd.Batch(
                 Browser.send(Msg.OpenOrClosePane(PaneFlow.PaneName, true)),
-                Browser.pushUrl(
-                  newUrl.toString(),
-                  false // do not fire UrlChanged
-                ),
+                Browser.pushUrl(newUrl.toString(), notify = false),
                 focus
               )
             )
@@ -249,9 +246,12 @@ object Main {
         }
       }
 
-      case Msg.UnfocusCoto =>
+      case Msg.UnfocusCoto => {
+        val newUrl = new URL(model.url.toString())
+        newUrl.hash = ""
         (
           model
+            .modify(_.url).setTo(newUrl)
             .modify(_.domain.cotos).using(_.unfocus)
             .modify(_.geomap.focusedLocation).setTo(None)
             .pipe { model =>
@@ -261,8 +261,9 @@ object Main {
                 case None => model
               }
             },
-          Cmd.none
+          Browser.pushUrl(newUrl.toString(), notify = false)
         )
+      }
 
       case Msg.ReloadDomain => {
         (
