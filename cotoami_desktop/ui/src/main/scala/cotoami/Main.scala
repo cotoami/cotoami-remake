@@ -190,15 +190,15 @@ object Main {
         (model, Browser.pushUrl(Route.node.url(id)))
 
       case Msg.UnfocusNode => {
-        val url = model.domain.cotonomas.focused match {
+        val newUrl = model.domain.cotonomas.focused match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
         }
-        (model, Browser.pushUrl(url))
+        (model, Browser.pushUrl(newUrl))
       }
 
       case Msg.FocusCotonoma(cotonoma) => {
-        val url = model.domain.nodes.focused match {
+        val newUrl = model.domain.nodes.focused match {
           // Maintain node unfocus
           case None => Route.cotonoma.url(cotonoma.id)
           // Maintain node focus
@@ -210,7 +210,7 @@ object Main {
             else
               Route.cotonomaInNode.url((cotonoma.nodeId, cotonoma.id))
         }
-        (model, Browser.pushUrl(url))
+        (model, Browser.pushUrl(newUrl))
       }
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
@@ -222,26 +222,39 @@ object Main {
         (model.error("Couldn't fetch cotonoma details.", Some(e)), Cmd.none)
 
       case Msg.UnfocusCotonoma => {
-        val url = model.domain.nodes.focused match {
+        val newUrl = model.domain.nodes.focused match {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
         }
-        (model, Browser.pushUrl(url))
+        (model, Browser.pushUrl(newUrl))
       }
 
-      case Msg.FocusCoto(id, moveTo) =>
-        update(Msg.OpenOrClosePane(PaneFlow.PaneName, true), model) match {
-          case (model, cmds1) =>
-            DatabaseFocus.coto(id, moveTo, model) match {
-              case (model, cmds2) => (model, cmds1 ++ cmds2)
-            }
+      case Msg.FocusCoto(id, moveTo) => {
+        val newUrl = new URL(model.url.toString())
+        newUrl.hash = s"#${id.uuid}"
+        model.copy(url = newUrl).pipe { model =>
+          DatabaseFocus.coto(id, moveTo, model).pipe { case (model, focus) =>
+            (
+              model,
+              Cmd.Batch(
+                Browser.send(Msg.OpenOrClosePane(PaneFlow.PaneName, true)),
+                Browser.pushUrl(
+                  newUrl.toString(),
+                  false // do not fire UrlChanged
+                ),
+                focus
+              )
+            )
+          }
         }
+      }
 
       case Msg.UnfocusCoto =>
         (
           model
             .modify(_.domain.cotos).using(_.unfocus)
-            .modify(_.geomap.focusedLocation).setTo(None).pipe { model =>
+            .modify(_.geomap.focusedLocation).setTo(None)
+            .pipe { model =>
               model.domain.geolocationInFocus match {
                 case Some(location) =>
                   model.modify(_.geomap).using(_.moveTo(location))
