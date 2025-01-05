@@ -126,7 +126,8 @@ object SectionCotoDetails {
           ),
           div(className := "body")(
             ViewCoto.divContent(coto)
-          )
+          ),
+          ViewCoto.articleFooter(coto)
         ),
         ViewCoto.divLinksTraversal(coto, "bottom")
       )
