@@ -50,7 +50,7 @@ case class Coto(
 ) extends Entity[Coto]
     with CotoContent {
 
-  // If two coto objects have the same ID and update timestamp,
+  // If two coto objects have the same ID and update-timestamp,
   // they can be regarded as the same coto.
   override def equals(that: Any): Boolean =
     that match {

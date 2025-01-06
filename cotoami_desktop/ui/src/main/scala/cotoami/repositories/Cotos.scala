@@ -43,11 +43,7 @@ case class Cotos(
   def delete(id: Id[Coto]): Cotos =
     copy(
       map = map - id,
-      focusedId =
-        if (focusedId == Some(id))
-          None
-        else
-          focusedId
+      focusedId = if (isFocusing(id)) None else focusedId
     )
 
   def clear(): Cotos = {
