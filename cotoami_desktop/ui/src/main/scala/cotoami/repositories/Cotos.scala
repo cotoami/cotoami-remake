@@ -40,14 +40,16 @@ case class Cotos(
 
   def putAll(cotos: Iterable[Coto]): Cotos = cotos.foldLeft(this)(_ put _)
 
-  def delete(id: Id[Coto]): Cotos =
+  def delete(id: Id[Coto]): Cotos = {
+    get(id).foreach(_.revokeMediaUrl()) // Side-effect!
     copy(
       map = map - id,
       focusedId = if (isFocusing(id)) None else focusedId
     )
+  }
 
   def clear(): Cotos = {
-    this.map.values.foreach(_.revokeMediaUrl()) // Side-effect!
+    map.values.foreach(_.revokeMediaUrl()) // Side-effect!
     Cotos()
   }
 
