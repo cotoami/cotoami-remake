@@ -153,9 +153,7 @@ where
             Some(e @ DatabaseError::EntityNotFound { .. }) => {
                 return ServiceError::NotFound(Some(e.to_string()));
             }
-            Some(DatabaseError::AuthenticationFailed) => {
-                return Self::request("authentication-failed", "Authentication failed.");
-            }
+            Some(DatabaseError::AuthenticationFailed) => return ServiceError::Unauthorized,
             Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
             Some(DatabaseError::NodeRoleConflict) => {
                 return Self::request("invalid-node-role", "Couldn't attach the role to the node.");

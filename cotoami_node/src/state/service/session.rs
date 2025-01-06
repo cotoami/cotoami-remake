@@ -30,6 +30,9 @@ impl NodeState {
             match (client_role, &db_role) {
                 (NodeRole::Parent, Some(DatabaseRole::Parent(_))) => (),
                 (NodeRole::Child, Some(DatabaseRole::Child(_))) => (),
+                (_, None) => {
+                    return Err(ServiceError::Unauthorized);
+                }
                 _ => {
                     return Err(ServiceError::request(
                         "invalid-requested-role",

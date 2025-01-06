@@ -23,6 +23,9 @@ impl Error {
     fn from_service_error(e: ServiceError) -> Self {
         match e {
             ServiceError::Request(e) => e.into(),
+            ServiceError::Unauthorized => {
+                Error::new("authentication-failed", "Authentication failed.")
+            }
             ServiceError::Permission => Error::new("permission-error", "Permission error."),
             ServiceError::NotFound(msg) => Error::new(
                 "not-found",
