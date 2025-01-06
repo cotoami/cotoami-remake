@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.scalajs.LinkingInfo
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -118,6 +119,10 @@ object SectionTimeline {
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Domain, Cmd[AppMsg]) = {
+    if (LinkingInfo.developmentMode) {
+      println(s"SectionTimeline.update: ${msg.getClass()}")
+    }
+
     val default = (model, context.domain, Cmd.none)
     msg match {
       case Msg.SetOnlyCotonomas(onlyCotonomas) =>
