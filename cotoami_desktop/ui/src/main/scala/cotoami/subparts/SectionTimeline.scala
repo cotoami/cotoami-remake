@@ -319,7 +319,11 @@ object SectionTimeline {
         )
       ),
       key := coto.id.uuid,
-      onAnimationEnd := (_ => dispatch(Msg.PostAnimationEnd(coto.id).into))
+      onAnimationEnd := (e => {
+        if (e.animationName == "just-posted") {
+          dispatch(Msg.PostAnimationEnd(coto.id).into)
+        }
+      })
     )(
       repostHeader(coto),
       context.domain.cotos.getOriginal(coto).map(coto =>

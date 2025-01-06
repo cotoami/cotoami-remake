@@ -69,7 +69,7 @@ section.timeline {
     border-bottom: 1px solid var(--pane-border-color);
 
     &.just-posted {
-      @keyframes slide-in-top {
+      @keyframes just-posted {
         0% {
           transform: translateY(-50px);
         }
@@ -79,7 +79,7 @@ section.timeline {
         }
       }
 
-      animation: slide-in-top 0.3s linear;
+      animation: just-posted 0.3s linear;
     }
 
     .repost-header {
