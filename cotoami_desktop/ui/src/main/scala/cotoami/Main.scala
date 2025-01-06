@@ -261,7 +261,7 @@ object Main {
         }
 
       case Msg.FocusedCotoDetailsFetched(Left(e)) =>
-        (model.error("Couldn't fetch coto details.", Some(e)), Cmd.none)
+        update(Msg.UnfocusCoto, model)
 
       case Msg.UnfocusCoto => {
         val newUrl = new URL(model.url.toString())
