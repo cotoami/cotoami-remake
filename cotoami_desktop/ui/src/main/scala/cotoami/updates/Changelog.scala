@@ -112,7 +112,7 @@ object Changelog {
     val domain = model.domain
 
     // Register the coto
-    val coto = CotoBackend.toModel(cotoJson, true)
+    val coto = CotoBackend.toModel(cotoJson)
     val cotos = domain.cotos.put(coto)
 
     // Update the target cotonoma or fetch it if not registered yet

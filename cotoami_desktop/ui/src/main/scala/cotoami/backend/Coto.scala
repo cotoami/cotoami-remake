@@ -77,7 +77,7 @@ object CotoJson {
 }
 
 object CotoBackend {
-  def toModel(json: CotoJson, justPosted: Boolean = false): Coto =
+  def toModel(json: CotoJson): Coto =
     Coto(
       id = Id(json.uuid),
       nodeId = Id(json.node_id),
@@ -109,8 +109,7 @@ object CotoBackend {
       repostedInIds = Nullable.toOption(json.reposted_in_ids)
         .map(_.map(Id[Cotonoma](_)).toSeq),
       createdAtUtcIso = json.created_at,
-      updatedAtUtcIso = json.updated_at,
-      justPosted = justPosted
+      updatedAtUtcIso = json.updated_at
     )
 
   def post(

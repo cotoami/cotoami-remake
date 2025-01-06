@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.collection.immutable.HashSet
 import scala.scalajs.LinkingInfo
 
 import slinky.core.facade.{Fragment, ReactElement}
@@ -32,6 +33,7 @@ object SectionTimeline {
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
       onlyCotonomas: Boolean = false,
+      justPosted: HashSet[Id[Coto]] = HashSet.empty,
       query: String = "",
       // to avoid rendering old results unintentionally
       fetchNumber: Int = 0,
@@ -73,6 +75,10 @@ object SectionTimeline {
           else
             cotoIds
         )
+        .modify(_.justPosted).using(_ + cotoId)
+
+    def removeFromJustPosted(cotoId: Id[Coto]): Model =
+      this.modify(_.justPosted).using(_ - cotoId)
 
     def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
       (
@@ -183,9 +189,7 @@ object SectionTimeline {
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
 
       case Msg.PostAnimationEnd(cotoId) =>
-        default.copy(_2 =
-          context.domain.modify(_.cotos).using(_.clearJustPosted(cotoId))
-        )
+        default.copy(_1 = model.removeFromJustPosted(cotoId))
     }
   }
 
@@ -278,7 +282,7 @@ object SectionTimeline {
           )
         )(
           (waitingPosts.posts.map(sectionWaitingPost(_)) ++
-            cotos.map(sectionPost) :+
+            cotos.map(sectionPost(_, model)) :+
             div(
               className := "more",
               aria - "busy" := model.loading.toString()
@@ -304,13 +308,14 @@ object SectionTimeline {
     )
 
   private def sectionPost(
-      coto: Coto
+      coto: Coto,
+      model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
           ("post", true),
-          ("just-posted", coto.justPosted)
+          ("just-posted", model.justPosted.contains(coto.id))
         )
       ),
       key := coto.id.uuid,
