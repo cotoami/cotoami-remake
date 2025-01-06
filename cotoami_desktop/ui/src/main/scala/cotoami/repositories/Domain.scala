@@ -46,8 +46,11 @@ case class Domain(
     copy(
       nodes = nodes.focus(None),
       cotonomas = Cotonomas(),
-      cotos = cotos.destroyAndCreate(),
-      links = Links()
+      cotos = cotos.clear(),
+      links = Links(),
+      graphLoading = HashSet.empty,
+      graphLoaded = HashSet.empty,
+      cotosBeingDeleted = HashSet.empty
     )
 
   /////////////////////////////////////////////////////////////////////////////

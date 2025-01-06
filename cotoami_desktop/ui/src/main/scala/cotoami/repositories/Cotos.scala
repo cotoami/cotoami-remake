@@ -50,7 +50,7 @@ case class Cotos(
           focusedId
     )
 
-  def destroyAndCreate(): Cotos = {
+  def clear(): Cotos = {
     this.map.values.foreach(_.revokeMediaUrl()) // Side-effect!
     Cotos()
   }

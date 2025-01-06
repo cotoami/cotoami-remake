@@ -37,7 +37,7 @@ object DatabaseFocus {
       cotonomaId: Id[Cotonoma],
       model: Model
   ): (Model, Cmd.Batch[Msg]) = {
-    val shouldFetchCotonomas =
+    val shouldRecentFetchCotonomas =
       // the focused node is changed
       nodeId != model.domain.nodes.focusedId ||
         // or no recent cotonomas has been loaded yet
@@ -46,12 +46,12 @@ object DatabaseFocus {
     model
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.domain.cotonomas).using(_.focus(Some(cotonomaId)))
-      .modify(_.domain.cotos).using(_.destroyAndCreate())
+      .modify(_.domain.cotos).using(_.clear())
       .modify(_.domain.links).setTo(Links())
       .modify(_.timeline).using(_.clear)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
-          if (shouldFetchCotonomas)
+          if (shouldRecentFetchCotonomas)
             model.navCotonomas.fetchRecent()(model)
           else
             (model.navCotonomas, Cmd.none)
