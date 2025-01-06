@@ -14,7 +14,7 @@ object DatabaseFocus {
 
   def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd.Batch[Msg]) =
     model
-      .modify(_.domain).using(_.unfocus())
+      .modify(_.domain).using(_.unfocus)
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.timeline).using(_.clear)
       .pipe { model =>
@@ -44,6 +44,7 @@ object DatabaseFocus {
         // (which means the page being reloaded)
         model.domain.cotonomas.recentIds.isEmpty
     model
+      .modify(_.domain).using(_.resetState)
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.domain.cotonomas).using(_.focus(Some(cotonomaId)))
       .modify(_.domain.cotos).using(_.clear())

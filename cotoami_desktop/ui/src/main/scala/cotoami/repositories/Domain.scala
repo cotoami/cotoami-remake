@@ -22,6 +22,13 @@ case class Domain(
     graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
     cotosBeingDeleted: HashSet[Id[Coto]] = HashSet.empty
 ) {
+  def resetState: Domain =
+    copy(
+      graphLoading = HashSet.empty,
+      graphLoaded = HashSet.empty,
+      cotosBeingDeleted = HashSet.empty
+    )
+
   /////////////////////////////////////////////////////////////////////////////
   // Focus
   /////////////////////////////////////////////////////////////////////////////
@@ -42,15 +49,12 @@ case class Domain(
       cotos.get(cotonoma.cotoId).map(cotonoma -> _)
     )
 
-  def unfocus(): Domain =
-    copy(
+  def unfocus: Domain =
+    resetState.copy(
       nodes = nodes.focus(None),
       cotonomas = Cotonomas(),
       cotos = cotos.clear(),
-      links = Links(),
-      graphLoading = HashSet.empty,
-      graphLoaded = HashSet.empty,
-      cotosBeingDeleted = HashSet.empty
+      links = Links()
     )
 
   /////////////////////////////////////////////////////////////////////////////
