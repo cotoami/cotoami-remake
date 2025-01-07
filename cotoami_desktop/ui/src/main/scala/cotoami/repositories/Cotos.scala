@@ -19,6 +19,8 @@ case class Cotos(
 
   def contains(id: Id[Coto]): Boolean = map.contains(id)
 
+  def isCotonoma(id: Id[Coto]): Option[Boolean] = get(id).map(_.isCotonoma)
+
   def repostsOf(id: Id[Coto]): Seq[Coto] =
     map.values.filter(_.repostOfId == Some(id)).toSeq
 

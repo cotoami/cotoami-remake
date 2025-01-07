@@ -286,7 +286,7 @@ case class Domain(
   def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
     if (
       !alreadyLoadedGraphFrom(cotoId) &&
-      cotos.get(cotoId).map(_.isCotonoma).getOrElse(false)
+      cotos.isCotonoma(cotoId).getOrElse(false)
     )
       Domain.fetchGraphFromCoto(cotoId)
     else
