@@ -38,7 +38,7 @@ case class Links(
       _.exists(get(_).map(_.sourceCotoId == from).getOrElse(false))
     ).getOrElse(false)
 
-  def linksFrom(id: Id[Coto]): TreeSet[Link] =
+  def from(id: Id[Coto]): TreeSet[Link] =
     mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
 
   def anyLinksFrom(id: Id[Coto]): Boolean =
@@ -49,7 +49,7 @@ case class Links(
       .getOrElse(Seq.empty)
 
   def onCotoDelete(id: Id[Coto]): Links = {
-    val linkIdsToDelete = (linksFrom(id).toSeq ++ linksTo(id)).map(_.id)
+    val linkIdsToDelete = (from(id).toSeq ++ linksTo(id)).map(_.id)
     copy(
       map = map -- linkIdsToDelete,
       mapBySourceCotoId = mapBySourceCotoId - id,

@@ -119,7 +119,7 @@ case class Domain(
       .getOrElse(Seq.empty)
 
   def childrenOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
-    links.linksFrom(cotoId).toSeq
+    links.from(cotoId).toSeq
       .map(link => cotos.get(link.targetCotoId).map(child => (link, child)))
       .flatten
 
