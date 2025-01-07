@@ -275,6 +275,9 @@ object Commands {
   def Repost(id: Id[Coto], dest: Id[Cotonoma]) =
     jso(Repost = jso(id = id.uuid, dest = dest.uuid))
 
+  def RenameCotonoma(id: Id[Cotonoma], name: String) =
+    jso(RenameCotonoma = jso(id = id.uuid, name = name))
+
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)
 

@@ -60,6 +60,12 @@ object CotonomaJson {
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.PostCotonoma(name, location, timeRange, postTo))
+
+  def rename(
+      id: Id[Cotonoma],
+      name: String
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+    Commands.send(Commands.RenameCotonoma(id, name))
 }
 
 object CotonomaBackend {
@@ -111,5 +117,12 @@ object CotonomaBackend {
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.post(name, location, timeRange, postTo)
+      .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
+
+  def rename(
+      id: Id[Cotonoma],
+      name: String
+  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+    CotonomaJson.rename(id, name)
       .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
 }
