@@ -128,6 +128,8 @@ impl Coto {
                 .unwrap_or(false)
     }
 
+    pub fn is_repost(&self) -> bool { self.repost_of_id.is_some() }
+
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub(crate) fn to_import(&self) -> Result<NewCoto> {

@@ -7,6 +7,7 @@ use anyhow::Result;
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use derive_new::new;
+use itertools::Itertools;
 use validator::Validate;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -255,8 +256,25 @@ pub struct CotosPage {
 impl CotosPage {
     pub(crate) fn new(page: Page<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
         let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
-        let coto_ids: Vec<Id<Coto>> = page.rows.iter().map(|coto| coto.uuid).collect();
+
+        // Collect the links from the cotos
+        // (as for reposts, collect the links from the original coto)
+        let coto_ids: Vec<Id<Coto>> = page
+            .rows
+            .iter()
+            .map(|coto| {
+                if coto.is_repost() {
+                    None
+                } else {
+                    Some(coto.uuid)
+                }
+            })
+            .flatten()
+            .chain(related_data.originals.iter().map(|coto| coto.uuid))
+            .unique()
+            .collect();
         let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
+
         Ok(CotosPage {
             page,
             related_data,
