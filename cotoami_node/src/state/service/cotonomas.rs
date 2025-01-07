@@ -108,12 +108,28 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
-        let (cotonoma, _) = self.cotonoma(post_to).await?;
+        let (post_to, _) = self.cotonoma(post_to).await?;
+        self.change(
+            post_to.node_id,
+            (input, post_to),
+            move |ds, (input, post_to)| ds.post_cotonoma(&input, &post_to, operator.as_ref()),
+            |parent, (input, post_to)| parent.post_cotonoma(input, post_to.uuid).boxed(),
+        )
+        .await
+    }
+
+    pub async fn rename_cotonoma(
+        self,
+        id: Id<Cotonoma>,
+        name: String,
+        operator: Arc<Operator>,
+    ) -> Result<(Cotonoma, Coto), ServiceError> {
+        let (cotonoma, _) = self.cotonoma(id).await?;
         self.change(
             cotonoma.node_id,
-            (input, cotonoma),
-            move |ds, (input, cotonoma)| ds.post_cotonoma(&input, &cotonoma, operator.as_ref()),
-            |parent, (input, cotonoma)| parent.post_cotonoma(input, cotonoma.uuid).boxed(),
+            (id, name),
+            move |ds, (id, name)| ds.rename_cotonoma(&id, &name, operator.as_ref()),
+            |parent, (id, name)| unimplemented!(),
         )
         .await
     }
