@@ -132,12 +132,12 @@ div.app>header {
       }
 
       button.toggle-geomap {
-        span.material-symbols {
-          opacity: 0.5;
-        }
+        &.opened {
+          opacity: 1;
 
-        &.opened span.material-symbols {
-          opacity: 1.0;
+          &:hover {
+            opacity: 1;
+          }
         }
       }
     }
