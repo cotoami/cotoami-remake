@@ -192,4 +192,27 @@ impl<'a> DatabaseSession<'a> {
             Ok(((cotonoma, coto), changelog))
         })
     }
+
+    pub fn rename_cotonoma(
+        &self,
+        id: &Id<Cotonoma>,
+        name: &str,
+        operator: &Operator,
+    ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let (cotonoma, coto) = cotonoma_ops::try_get(id).run(ctx)??;
+            self.globals.ensure_local(&cotonoma)?;
+            operator.can_rename_cotonoma(&coto)?;
+
+            let (cotonoma, coto) = cotonoma_ops::rename(id, name, None).run(ctx)?;
+            let change = Change::RenameCotonoma {
+                cotonoma_id: *id,
+                name: name.into(),
+                updated_at: cotonoma.updated_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok(((cotonoma, coto), changelog))
+        })
+    }
 }

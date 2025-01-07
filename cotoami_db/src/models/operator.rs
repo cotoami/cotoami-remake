@@ -47,7 +47,7 @@ impl Operator {
     }
 
     pub fn can_delete_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
-        if self.node_id() == coto.posted_by_id || self.has_owner_permission() {
+        if self.can_update_coto(coto).is_ok() || self.has_owner_permission() {
             Ok(())
         } else {
             Err(DatabaseError::PermissionDenied)
@@ -55,7 +55,7 @@ impl Operator {
     }
 
     pub fn can_rename_cotonoma(&self, cotonoma_coto: &Coto) -> Result<(), DatabaseError> {
-        if self.can_update_coto(cotonoma_coto).is_ok() || self.node_id() == cotonoma_coto.node_id {
+        if self.can_update_coto(cotonoma_coto).is_ok() || self.has_owner_permission() {
             Ok(())
         } else {
             Err(DatabaseError::PermissionDenied)
