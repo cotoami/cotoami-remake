@@ -154,6 +154,9 @@ case class Domain(
   def alreadyLoadedGraphFrom(cotoId: Id[Coto]): Boolean =
     graphLoaded.contains(cotoId)
 
+  def anyTargetMissingLinksFrom(id: Id[Coto]): Boolean =
+    links.from(id).find(link => !cotos.contains(link.targetCotoId)).isDefined
+
   /////////////////////////////////////////////////////////////////////////////
   // Geolocation
   /////////////////////////////////////////////////////////////////////////////
@@ -286,7 +289,10 @@ case class Domain(
   def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
     if (
       !alreadyLoadedGraphFrom(cotoId) &&
-      cotos.isCotonoma(cotoId).getOrElse(false)
+      (
+        cotos.isCotonoma(cotoId).getOrElse(false) ||
+          anyTargetMissingLinksFrom(cotoId)
+      )
     )
       Domain.fetchGraphFromCoto(cotoId)
     else
