@@ -18,7 +18,7 @@ object ModalCotoEditor {
 
   case class Model(
       original: Coto,
-      form: CotoForm.Model = CotoForm.Model(),
+      form: CotoForm.Model,
       mediaContentChanged: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
