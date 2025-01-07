@@ -345,7 +345,7 @@ object SectionTimeline {
     val domain = context.domain
     article(
       className := optionalClasses(ViewCoto.commonArticleClasses(coto)),
-      onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+      onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
     )(
       ToolbarCoto(coto),
       header()(

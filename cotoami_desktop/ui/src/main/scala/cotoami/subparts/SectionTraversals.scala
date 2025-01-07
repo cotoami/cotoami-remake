@@ -256,7 +256,7 @@ object SectionTraversals {
               ("has-children", !subCotos.isEmpty)
             )
         ),
-        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),
         div(className := "body")(
@@ -299,7 +299,7 @@ object SectionTraversals {
               ("traversed", traversed)
             )
         ),
-        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),
         header()(

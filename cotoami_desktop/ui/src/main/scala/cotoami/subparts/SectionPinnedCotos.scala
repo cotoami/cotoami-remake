@@ -247,7 +247,7 @@ object SectionPinnedCotos {
               ("has-children", context.domain.links.anyFrom(coto.id))
             )
         ),
-        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),
         div(className := "body")(
@@ -354,7 +354,7 @@ object SectionPinnedCotos {
           ViewCoto.commonArticleClasses(coto) ++
             Seq(("sub-coto", true))
         ),
-        onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),
         header()(

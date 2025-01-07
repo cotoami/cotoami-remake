@@ -109,7 +109,7 @@ object SectionCotoDetails {
             ViewCoto.commonArticleClasses(coto) ++
               Seq(("sub-coto", true))
           ),
-          onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+          onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
         )(
           ToolbarCoto(coto),
           header()(
