@@ -2,7 +2,6 @@ use std::{slice, sync::Arc};
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
-use futures::future::FutureExt;
 use validator::Validate;
 
 use crate::{
@@ -120,7 +119,7 @@ impl NodeState {
             cotonoma.node_id,
             (input, cotonoma),
             move |ds, (input, cotonoma)| ds.post_coto(&input, &cotonoma, operator.as_ref()),
-            |parent, (input, cotonoma)| parent.post_coto(input, cotonoma.uuid).boxed(),
+            |parent, (input, cotonoma)| parent.post_coto(input, cotonoma.uuid),
         )
         .await
     }
@@ -139,7 +138,7 @@ impl NodeState {
             coto.node_id,
             diff,
             move |ds, diff| ds.edit_coto(&id, diff, operator.as_ref()),
-            |parent, diff| parent.edit_coto(id, diff).boxed(),
+            |parent, diff| parent.edit_coto(id, diff),
         )
         .await
     }
@@ -157,7 +156,7 @@ impl NodeState {
                 let changelog = ds.delete_coto(&coto_id, operator.as_ref())?;
                 Ok((coto_id, changelog))
             },
-            |parent, coto_id| parent.delete_coto(coto_id).boxed(),
+            |parent, coto_id| parent.delete_coto(coto_id),
         )
         .await
     }

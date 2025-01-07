@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
-use futures::future::FutureExt;
 use validator::Validate;
 
 use crate::{
@@ -113,7 +112,7 @@ impl NodeState {
             post_to.node_id,
             (input, post_to),
             move |ds, (input, post_to)| ds.post_cotonoma(&input, &post_to, operator.as_ref()),
-            |parent, (input, post_to)| parent.post_cotonoma(input, post_to.uuid).boxed(),
+            |parent, (input, post_to)| parent.post_cotonoma(input, post_to.uuid),
         )
         .await
     }
@@ -129,7 +128,7 @@ impl NodeState {
             cotonoma.node_id,
             (id, name),
             move |ds, (id, name)| ds.rename_cotonoma(&id, &name, operator.as_ref()),
-            |parent, (id, name)| unimplemented!(),
+            |parent, (id, name)| parent.rename_cotonoma(id, name),
         )
         .await
     }

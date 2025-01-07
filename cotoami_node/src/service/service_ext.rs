@@ -65,6 +65,12 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<(Coto, Coto)>()
     }
+
+    async fn rename_cotonoma(&self, id: Id<Cotonoma>, name: String) -> Result<(Cotonoma, Coto)> {
+        let request = Command::RenameCotonoma { id, name }.into_request();
+        let response = self.call(request).await?;
+        response.content::<(Cotonoma, Coto)>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}
