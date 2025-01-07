@@ -88,6 +88,41 @@ fn crud_operations() -> Result<()> {
     assert_eq!(cotonoma.updated_at, coto2.created_at);
 
     /////////////////////////////////////////////////////////////////////////////
+    // When: rename the cotonoma
+    /////////////////////////////////////////////////////////////////////////////
+
+    let mock_time = time::mock_time();
+    let ((cotonoma, coto), changelog) = ds.rename_cotonoma(&cotonoma.uuid, "test2", &operator)?;
+
+    assert_that!(
+        cotonoma,
+        pat!(Cotonoma {
+            name: eq("test2"),
+            updated_at: eq(&mock_time),
+        })
+    );
+    assert_that!(
+        coto,
+        pat!(Coto {
+            summary: some(eq("test2")),
+            updated_at: eq(&mock_time),
+        })
+    );
+    assert_that!(
+        changelog,
+        pat!(ChangelogEntry {
+            serial_number: eq(&4),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&4),
+            change: pat!(Change::RenameCotonoma {
+                cotonoma_id: eq(&cotonoma.uuid),
+                name: eq("test2"),
+                updated_at: eq(&mock_time)
+            }),
+        })
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
     // When: delete the cotonoma
     /////////////////////////////////////////////////////////////////////////////
 
