@@ -36,7 +36,7 @@ object ModalCotoEditor {
       }
 
     def diffContent: Option[String] =
-      Option.when(Some(form.content) != original.content) {
+      Option.when(form.content != original.content.getOrElse("")) {
         form.content
       }
 
@@ -75,6 +75,7 @@ object ModalCotoEditor {
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) =
       CotoForm.Model(
+        isCotonoma = coto.isCotonoma,
         summaryInput = coto.summary.getOrElse(""),
         contentInput = coto.content.getOrElse(""),
         mediaBlob = coto.mediaBlob.map(_._1),
@@ -157,7 +158,10 @@ object ModalCotoEditor {
       closeButton = Some((classOf[Modal.CotoEditor], dispatch)),
       error = model.error
     )(
-      "Coto"
+      if (model.original.isCotonoma)
+        "Cotonoma"
+      else
+        "Coto"
     )(
       divForm(model).pipe { divForm =>
         CotoForm.sectionMediaPreview(model.form)(submsg =>

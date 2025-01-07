@@ -88,11 +88,17 @@ object Coto {
     ).flatten
   }
 
-  def validateContent(content: String): Seq[Validation.Error] = {
+  def validateContent(
+      content: String,
+      isCotonoma: Boolean
+  ): Seq[Validation.Error] = {
     val fieldName = "content"
-    Vector(
-      Validation.nonBlank(fieldName, content)
-    ).flatten
+    if (isCotonoma)
+      Seq.empty // the content of cotonoma can be blank
+    else
+      Vector(
+        Validation.nonBlank(fieldName, content)
+      ).flatten
   }
 
   def centerOrBoundsOf(cotos: Seq[Coto]): Option[CenterOrBounds] =

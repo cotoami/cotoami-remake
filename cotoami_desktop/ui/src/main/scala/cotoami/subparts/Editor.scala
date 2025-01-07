@@ -25,6 +25,7 @@ object Editor {
 
   object CotoForm {
     case class Model(
+        isCotonoma: Boolean = false,
         summaryInput: String = "",
         contentInput: String = "",
         inPreview: Boolean = false,
@@ -49,7 +50,7 @@ object Editor {
         else {
           val errors =
             summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
-              Coto.validateContent(content)
+              Coto.validateContent(content, isCotonoma)
           Validation.Result(errors)
         }
 
@@ -227,20 +228,24 @@ object Editor {
         onFocus: Option[() => Unit] = None
     )(implicit dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor")(
-        input(
-          className := "summary",
-          `type` := "text",
-          placeholder := "Summary (optional)",
-          value := model.summaryInput,
-          onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
-          onKeyDown := (e =>
-            if (model.readyToPost && detectCtrlEnter(e)) {
-              onCtrlEnter()
-            }
+        Option.when(!model.isCotonoma) {
+          input(
+            className := "summary",
+            `type` := "text",
+            placeholder := "Summary (optional)",
+            value := model.summaryInput,
+            onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
+            onKeyDown := (e =>
+              if (model.readyToPost && detectCtrlEnter(e)) {
+                onCtrlEnter()
+              }
+            )
           )
-        ),
+        },
         textarea(
-          placeholder := "Write your coto in Markdown",
+          placeholder := (if (model.isCotonoma)
+                            "Write a cotonoma description in Markdown"
+                          else "Write your coto in Markdown"),
           value := model.contentInput,
           slinky.web.html.onFocus := onFocus,
           onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
@@ -262,7 +267,9 @@ object Editor {
     def sectionPreview(model: CotoForm.Model): ReactElement =
       section(className := "coto-preview")(
         ScrollArea()(
-          model.summary.map(section(className := "summary")(_)),
+          Option.when(!model.isCotonoma) {
+            model.summary.map(section(className := "summary")(_))
+          },
           div(className := "content")(
             ViewCoto.sectionTextContent(Some(model.content))
           )
