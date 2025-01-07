@@ -136,4 +136,8 @@ pub enum Command {
     /// Request to repost a coto to the dest cotonoma and
     /// return the pair of the repost and the original coto: `(Coto, Coto)`.
     Repost { id: Id<Coto>, dest: Id<Cotonoma> },
+
+    /// Request to rename the specified [Cotonoma] to the given `name`.
+    /// The return type is a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)`.
+    RenameCotonoma { id: Id<Cotonoma>, name: String },
 }

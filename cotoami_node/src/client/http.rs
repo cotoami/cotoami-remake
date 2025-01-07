@@ -242,6 +242,9 @@ impl HttpClient {
             Command::Repost { id, dest } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{dest}/cotos/repost"))
                 .json(&id),
+            Command::RenameCotonoma { id, name } => self
+                .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
+                .json(&name),
         };
 
         // Set the "Accept" header from Request::accept()

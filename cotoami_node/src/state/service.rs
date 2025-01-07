@@ -111,6 +111,9 @@ impl NodeState {
             }
             Command::DeleteCoto { id } => format.serialize(self.delete_coto(id, opr?).await),
             Command::Repost { id, dest } => format.serialize(self.repost(id, dest, opr?).await),
+            Command::RenameCotonoma { id, name } => {
+                format.serialize(self.rename_cotonoma(id, name, opr?).await)
+            }
         }
     }
 }

@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use axum::{
-    extract::{Path, Query, State},
-    routing::get,
-    Router, TypedHeader,
+    extract::{Json, Path, Query, State},
+    routing::{get, put},
+    Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
 
@@ -25,6 +27,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/:cotonoma_id", get(cotonoma))
         .route("/:cotonoma_id/details", get(cotonoma_details))
         .route("/:cotonoma_id/graph", get(graph))
+        .route("/:cotonoma_id/rename", put(rename_cotonoma))
         .nest("/:cotonoma_id/subs", subs::routes())
         .nest("/:cotonoma_id/cotos", cotos::routes())
 }
@@ -93,6 +96,23 @@ async fn cotonoma_details(
         .cotonoma_details(cotonoma_id)
         .await
         .map(|details| Content(details, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/cotonomas/:cotonoma_id/rename
+/////////////////////////////////////////////////////////////////////////////
+
+async fn rename_cotonoma(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(cotonoma_id): Path<Id<Cotonoma>>,
+    Json(name): Json<String>,
+) -> Result<Content<(Cotonoma, Coto)>, ServiceError> {
+    state
+        .rename_cotonoma(cotonoma_id, name, Arc::new(operator))
+        .await
+        .map(|cotonoma| Content(cotonoma, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
