@@ -265,7 +265,7 @@ object ViewCoto {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
-    Option.when(context.domain.links.anyLinksFrom(coto.id)) {
+    Option.when(context.domain.links.anyFrom(coto.id)) {
       div(className := "links")(
         toolButton(
           symbol = "arrow_forward",

@@ -41,7 +41,7 @@ case class Links(
   def from(id: Id[Coto]): TreeSet[Link] =
     mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
 
-  def anyLinksFrom(id: Id[Coto]): Boolean =
+  def anyFrom(id: Id[Coto]): Boolean =
     mapBySourceCotoId.get(id).map(!_.isEmpty).getOrElse(false)
 
   def linksTo(id: Id[Coto]): Seq[Link] =

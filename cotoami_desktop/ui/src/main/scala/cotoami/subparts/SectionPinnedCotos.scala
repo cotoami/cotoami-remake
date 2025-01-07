@@ -244,7 +244,7 @@ object SectionPinnedCotos {
           ViewCoto.commonArticleClasses(coto) ++
             Seq(
               ("pinned-coto", true),
-              ("has-children", context.domain.links.anyLinksFrom(coto.id))
+              ("has-children", context.domain.links.anyFrom(coto.id))
             )
         ),
         onClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))

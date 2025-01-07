@@ -321,7 +321,7 @@ object SectionTraversals {
           },
           // Traverse button
           Option.when(
-            !traversed && context.domain.links.anyLinksFrom(coto.id)
+            !traversed && context.domain.links.anyFrom(coto.id)
           ) {
             val stepMsg = Msg.Step(
               traversal._2,
