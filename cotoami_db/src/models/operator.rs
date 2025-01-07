@@ -54,6 +54,14 @@ impl Operator {
         }
     }
 
+    pub fn can_rename_cotonoma(&self, cotonoma_coto: &Coto) -> Result<(), DatabaseError> {
+        if self.can_update_coto(cotonoma_coto).is_ok() || self.node_id() == cotonoma_coto.node_id {
+            Ok(())
+        } else {
+            Err(DatabaseError::PermissionDenied)
+        }
+    }
+
     pub fn can_edit_links(&self) -> Result<(), DatabaseError> {
         if self.has_owner_permission() {
             return Ok(());
