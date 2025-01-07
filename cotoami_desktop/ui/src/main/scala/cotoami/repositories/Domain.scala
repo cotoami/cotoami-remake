@@ -127,7 +127,7 @@ case class Domain(
       cotoId: Id[Coto],
       excludeCurrentCotonoma: Boolean = true
   ): Seq[(Coto, Link)] =
-    links.linksTo(cotoId)
+    links.to(cotoId)
       .map(link =>
         cotos.get(link.sourceCotoId).flatMap(parent =>
           if (

@@ -44,12 +44,12 @@ case class Links(
   def anyFrom(id: Id[Coto]): Boolean =
     mapBySourceCotoId.get(id).map(!_.isEmpty).getOrElse(false)
 
-  def linksTo(id: Id[Coto]): Seq[Link] =
+  def to(id: Id[Coto]): Seq[Link] =
     mapByTargetCotoId.get(id).map(_.map(get).flatten.toSeq)
       .getOrElse(Seq.empty)
 
   def onCotoDelete(id: Id[Coto]): Links = {
-    val linkIdsToDelete = (from(id).toSeq ++ linksTo(id)).map(_.id)
+    val linkIdsToDelete = (from(id).toSeq ++ to(id)).map(_.id)
     copy(
       map = map -- linkIdsToDelete,
       mapBySourceCotoId = mapBySourceCotoId - id,
