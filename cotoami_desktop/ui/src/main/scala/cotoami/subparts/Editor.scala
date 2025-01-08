@@ -318,6 +318,7 @@ object Editor {
 
   object CotonomaForm {
     case class Model(
+        originalName: Option[String] = None,
         nameInput: String = "",
         imeActive: Boolean = false,
         validation: Validation.Result = Validation.Result.notYetValidated,
@@ -327,11 +328,14 @@ object Editor {
 
       def name: String = nameInput.trim
 
+      def edited: Boolean = originalName match {
+        case Some(original) => name != original
+        case None           => !name.isEmpty()
+      }
+
       def validate(nodeId: Id[Node]): (Model, Cmd.One[Msg]) = {
         val (validation, cmd) =
-          if (name.isEmpty())
-            (Validation.Result.notYetValidated, Cmd.none)
-          else
+          if (edited)
             Cotonoma.validateName(name) match {
               case Seq() =>
                 (
@@ -343,11 +347,21 @@ object Editor {
                 )
               case errors => (Validation.Result(errors), Cmd.none)
             }
+          else
+            (Validation.Result.notYetValidated, Cmd.none)
+
         (copy(validation = validation), cmd)
       }
 
       def readyToPost: Boolean =
         hasContents && validation.validated
+    }
+
+    object Model {
+      def apply(originalName: String): Model = Model(
+        originalName = Some(originalName),
+        nameInput = originalName
+      )
     }
 
     sealed trait Msg

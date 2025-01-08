@@ -7,6 +7,7 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.{Coto, DateTimeRange, Geolocation}
 import cotoami.backend.{CotoBackend, ErrorJson}
 import cotoami.components.{optionalClasses, SplitPane}
@@ -89,7 +90,7 @@ object ModalCotoEditor {
       )
 
       val cotonomaForm = CotonomaForm.Model(
-        nameInput = coto.nameAsCotonoma.getOrElse("")
+        coto.nameAsCotonoma.getOrElse("")
       )
 
       (
@@ -186,7 +187,8 @@ object ModalCotoEditor {
             onFocus = None,
             onBlur = None,
             onCtrlEnter = () => ()
-          )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
+          )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+          Validation.sectionValidationError(model.cotonomaForm.validation)
         )
       },
       divCotoForm(model).pipe { divForm =>
