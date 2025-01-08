@@ -36,7 +36,7 @@ object SectionFlowInput {
   ) {
     def hasContents: Boolean = form.hasContents
 
-    def readyToPost: Boolean = !posting && form.readyToPost
+    def readyToPost: Boolean = !posting && form.hasValidContents
 
     def clear: Model =
       copy(

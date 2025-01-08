@@ -20,7 +20,7 @@ import cotoami.subparts.SectionGeomap.{Model => Geomap}
 object Editor {
   sealed trait Form {
     def hasContents: Boolean
-    def readyToPost: Boolean
+    def hasValidContents: Boolean
   }
 
   object CotoForm {
@@ -85,7 +85,7 @@ object Editor {
           )
         }.getOrElse((this, Cmd.none))
 
-      def readyToPost: Boolean =
+      def hasValidContents: Boolean =
         // The validation is not necessarily required
         // if `mediaContent` has some value (media-only coto).
         hasContents && !validate.failed
@@ -236,7 +236,7 @@ object Editor {
             value := model.summaryInput,
             onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
             onKeyDown := (e =>
-              if (model.readyToPost && detectCtrlEnter(e)) {
+              if (model.hasValidContents && detectCtrlEnter(e)) {
                 onCtrlEnter()
               }
             )
@@ -250,7 +250,7 @@ object Editor {
           slinky.web.html.onFocus := onFocus,
           onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
           onKeyDown := (e =>
-            if (model.readyToPost && detectCtrlEnter(e)) {
+            if (model.hasValidContents && detectCtrlEnter(e)) {
               onCtrlEnter()
             }
           )
@@ -353,8 +353,8 @@ object Editor {
         (copy(validation = validation), cmd)
       }
 
-      def readyToPost: Boolean =
-        hasContents && validation.validated
+      def hasValidContents: Boolean =
+        hasContents && (Some(name) == originalName || validation.validated)
     }
 
     object Model {
@@ -448,7 +448,7 @@ object Editor {
         onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
         onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
         onKeyDown := (e =>
-          if (model.readyToPost && detectCtrlEnter(e)) {
+          if (model.hasValidContents && detectCtrlEnter(e)) {
             onCtrlEnter()
           }
         )

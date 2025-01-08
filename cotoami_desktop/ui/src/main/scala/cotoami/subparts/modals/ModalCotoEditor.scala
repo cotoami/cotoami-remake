@@ -63,8 +63,8 @@ object ModalCotoEditor {
       }
 
     def readyToSave(geomap: Geomap): Boolean =
-      edited(geomap) && !saving && cotoForm.readyToPost &&
-        (!original.isCotonoma || cotonomaForm.readyToPost)
+      edited(geomap) && !saving && cotoForm.hasValidContents &&
+        (!original.isCotonoma || cotonomaForm.hasValidContents)
 
     def save(geomap: Geomap, cotonomas: Cotonomas): (Model, Cmd.One[AppMsg]) =
       (
