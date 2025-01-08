@@ -407,10 +407,10 @@ object SectionFlowInput {
   )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
     Fragment(
       div(className := "cotonoma-form")(
-        CotonomaForm.inputCotonomaName(
+        CotonomaForm.inputName(
           model = form,
-          onFocus = () => dispatch(Msg.SetFolded(false)),
-          onBlur = () => dispatch(Msg.SetFolded(!model.hasContents)),
+          onFocus = Some(() => dispatch(Msg.SetFolded(false))),
+          onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = () => dispatch(Msg.Post)
         )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),

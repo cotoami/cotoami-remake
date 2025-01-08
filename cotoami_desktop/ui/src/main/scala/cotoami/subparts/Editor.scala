@@ -416,10 +416,10 @@ object Editor {
         case _ => (model, Cmd.none)
       }
 
-    def inputCotonomaName(
+    def inputName(
         model: Model,
-        onFocus: () => Unit,
-        onBlur: () => Unit,
+        onFocus: Option[() => Unit],
+        onBlur: Option[() => Unit],
         onCtrlEnter: () => Unit
     )(implicit dispatch: Msg => Unit): ReactElement =
       input(
