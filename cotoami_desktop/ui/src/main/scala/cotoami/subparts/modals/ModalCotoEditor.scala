@@ -9,7 +9,8 @@ import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, DateTimeRange, Geolocation}
-import cotoami.backend.{CotoBackend, ErrorJson}
+import cotoami.repositories.Cotonomas
+import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.Editor._
@@ -65,13 +66,16 @@ object ModalCotoEditor {
       edited(geomap) && !saving && cotoForm.readyToPost &&
         (!original.isCotonoma || cotonomaForm.readyToPost)
 
-    def save(geomap: Geomap): (Model, Cmd.One[AppMsg]) =
+    def save(geomap: Geomap, cotonomas: Cotonomas): (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
-        saveCotoForm(geomap)
+        if (original.isCotonoma)
+          saveCotonoma(cotonomas, geomap)
+        else
+          saveCoto(geomap)
       )
 
-    private def saveCotoForm(geomap: Geomap): Cmd.One[AppMsg] =
+    private def saveCoto(geomap: Geomap): Cmd.One[AppMsg] =
       if (cotoFormEdited(geomap))
         CotoBackend.edit(
           original.id,
@@ -82,7 +86,18 @@ object ModalCotoEditor {
           diffDateTimeRange
         ).map(Msg.Saved(_).into)
       else
-        Cmd.none
+        Browser.send(Msg.Saved(Right(original)).into)
+
+    private def saveCotonoma(
+        cotonomas: Cotonomas,
+        geomap: Geomap
+    ): Cmd.One[AppMsg] =
+      (cotonomaForm.edited, cotonomas.asCotonoma(original)) match {
+        case (true, Some(cotonoma)) =>
+          CotonomaBackend.rename(cotonoma.id, cotonomaForm.name)
+            .flatMap(_ => saveCoto(geomap))
+        case _ => saveCoto(geomap)
+      }
   }
 
   object Model {
@@ -155,11 +170,12 @@ object ModalCotoEditor {
       }
 
       case Msg.Save =>
-        model.save(context.geomap).pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = cmd)
+        model.save(context.geomap, context.domain.cotonomas).pipe {
+          case (model, cmd) =>
+            default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.Saved(Right(coto)) =>
+      case Msg.Saved(Right(_)) =>
         default.copy(
           _1 = model.copy(saving = false),
           _3 = Modal.close(classOf[Modal.CotoEditor])
