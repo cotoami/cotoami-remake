@@ -30,7 +30,8 @@ object ModalCotoEditor {
         diffContent.isDefined ||
         diffMediaContent.isDefined ||
         diffGeolocation(geomap).isDefined ||
-        diffDateTimeRange.isDefined
+        diffDateTimeRange.isDefined ||
+        (original.isCotonoma && cotonomaForm.edited)
 
     def diffSummary: Option[Option[String]] =
       Option.when(cotoForm.summary != original.summary) {
