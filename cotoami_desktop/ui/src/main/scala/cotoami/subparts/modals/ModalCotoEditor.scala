@@ -179,6 +179,16 @@ object ModalCotoEditor {
       else
         "Coto"
     )(
+      Option.when(model.original.isCotonoma) {
+        div(className := "cotonoma-form")(
+          CotonomaForm.inputName(
+            model = model.cotonomaForm,
+            onFocus = None,
+            onBlur = None,
+            onCtrlEnter = () => ()
+          )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
+        )
+      },
       divCotoForm(model).pipe { divForm =>
         CotoForm.sectionMediaPreview(model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
