@@ -19,6 +19,7 @@ object ModalCotoEditor {
   case class Model(
       original: Coto,
       cotoForm: CotoForm.Model,
+      cotonomaForm: CotonomaForm.Model,
       mediaContentChanged: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
@@ -73,8 +74,8 @@ object ModalCotoEditor {
   }
 
   object Model {
-    def apply(coto: Coto): (Model, Cmd[AppMsg]) =
-      CotoForm.Model(
+    def apply(coto: Coto): (Model, Cmd[AppMsg]) = {
+      val cotoForm = CotoForm.Model(
         isCotonoma = coto.isCotonoma,
         summaryInput = coto.summary.getOrElse(""),
         contentInput = coto.content.getOrElse(""),
@@ -85,14 +86,20 @@ object ModalCotoEditor {
         // (cf. `CotoForm.Model.hasContents`).
         mediaBase64 = coto.mediaBlob.map { case (_, t) => ("", t) },
         dateTimeRange = coto.dateTimeRange
-      ).pipe { form =>
-        (
-          Model(coto, form),
-          Browser.send(
-            SectionGeomap.Msg.FocusLocation(coto.geolocation).into
-          ) +: form.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
-        )
-      }
+      )
+
+      val cotonomaForm = CotonomaForm.Model(
+        nameInput = coto.nameAsCotonoma.getOrElse("")
+      )
+
+      (
+        Model(coto, cotoForm, cotonomaForm),
+        Browser.send(
+          SectionGeomap.Msg.FocusLocation(coto.geolocation).into
+        ) +: cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
+      )
+    }
+
   }
 
   sealed trait Msg extends Into[AppMsg] {
@@ -101,6 +108,7 @@ object ModalCotoEditor {
 
   object Msg {
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case object Save extends Msg
     case class Saved(result: Either[ErrorJson, Coto]) extends Msg
   }
@@ -123,6 +131,14 @@ object ModalCotoEditor {
           ),
           _2 = geomap,
           _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+        )
+      }
+
+      case Msg.CotonomaFormMsg(submsg) => {
+        val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
+        default.copy(
+          _1 = model.copy(cotonomaForm = form),
+          _3 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
 
