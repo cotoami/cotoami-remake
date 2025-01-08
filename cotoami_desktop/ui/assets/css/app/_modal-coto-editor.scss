@@ -17,7 +17,7 @@ dialog.coto-editor {
         padding-bottom: 8px;
       }
 
-      div.form {
+      div.coto-form {
         flex: 1;
         min-height: 0; // let this item shrink below the content size
 
@@ -37,7 +37,7 @@ dialog.coto-editor {
           border-style: none !important;
         }
 
-        div.form {
+        div.coto-form {
           flex: none;
           height: 100%;
         }

@@ -179,7 +179,7 @@ object ModalCotoEditor {
       else
         "Coto"
     )(
-      divForm(model).pipe { divForm =>
+      divCotoForm(model).pipe { divForm =>
         CotoForm.sectionMediaPreview(model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
         ) match {
@@ -216,10 +216,10 @@ object ModalCotoEditor {
       )
     )
 
-  private def divForm(model: Model)(implicit
+  private def divCotoForm(model: Model)(implicit
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    div(className := "form")(
+    div(className := "coto-form")(
       CotoForm.sectionEditorOrPreview(
         model = model.cotoForm,
         onCtrlEnter = () => dispatch(Msg.Save)
