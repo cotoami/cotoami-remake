@@ -73,6 +73,21 @@ object Changelog {
       )
     }
 
+    // RenameCotonoma
+    for (json <- change.RenameCotonoma.toOption) {
+      val cotonomaId: Id[Cotonoma] = Id(json.cotonoma_id)
+      return touchCotonoma(
+        cotonomaId,
+        json.updated_at,
+        model.domain.cotonomas
+      ).pipe { case (cotonomas, cmd) =>
+        (
+          model.modify(_.domain.cotonomas).setTo(cotonomas),
+          Cmd.Batch(cmd, Domain.fetchCotonoma(cotonomaId))
+        )
+      }
+    }
+
     // UpsertNode
     for (nodeJson <- change.UpsertNode.toOption) {
       val node = NodeBackend.toModel(nodeJson)
