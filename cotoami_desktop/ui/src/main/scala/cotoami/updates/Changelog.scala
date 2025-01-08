@@ -179,8 +179,7 @@ object Changelog {
         .update(id)(_.copy(updatedAtUtcIso = updatedAtUtcIso))
         .modify(_.recentIds).using(_.prependId(id)),
       if (!cotonomas.contains(id))
-        CotonomaBackend.fetch(id)
-          .map(Domain.Msg.CotonomaFetched(_).into)
+        Domain.fetchCotonoma(id)
       else
         Cmd.none
     )
