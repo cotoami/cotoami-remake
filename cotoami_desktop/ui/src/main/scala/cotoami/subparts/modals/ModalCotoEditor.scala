@@ -18,7 +18,7 @@ object ModalCotoEditor {
 
   case class Model(
       original: Coto,
-      form: CotoForm.Model,
+      cotoForm: CotoForm.Model,
       mediaContentChanged: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
@@ -31,18 +31,18 @@ object ModalCotoEditor {
         diffDateTimeRange.isDefined
 
     def diffSummary: Option[Option[String]] =
-      Option.when(form.summary != original.summary) {
-        form.summary
+      Option.when(cotoForm.summary != original.summary) {
+        cotoForm.summary
       }
 
     def diffContent: Option[String] =
-      Option.when(form.content != original.content.getOrElse("")) {
-        form.content
+      Option.when(cotoForm.content != original.content.getOrElse("")) {
+        cotoForm.content
       }
 
     def diffMediaContent: Option[Option[(String, String)]] =
       Option.when(mediaContentChanged) {
-        form.mediaBase64
+        cotoForm.mediaBase64
       }
 
     def diffGeolocation(geomap: Geomap): Option[Option[Geolocation]] =
@@ -51,12 +51,12 @@ object ModalCotoEditor {
       }
 
     def diffDateTimeRange: Option[Option[DateTimeRange]] =
-      Option.when(form.dateTimeRange != original.dateTimeRange) {
-        form.dateTimeRange
+      Option.when(cotoForm.dateTimeRange != original.dateTimeRange) {
+        cotoForm.dateTimeRange
       }
 
     def readyToSave(geomap: Geomap): Boolean =
-      edited(geomap) && !saving && form.readyToPost
+      edited(geomap) && !saving && cotoForm.readyToPost
 
     def save(geomap: Geomap): (Model, Cmd.One[AppMsg]) =
       (
@@ -111,10 +111,10 @@ object ModalCotoEditor {
     val default = (model, context.geomap, Cmd.none)
     msg match {
       case Msg.CotoFormMsg(submsg) => {
-        val (form, geomap, subcmd) = CotoForm.update(submsg, model.form)
+        val (form, geomap, subcmd) = CotoForm.update(submsg, model.cotoForm)
         default.copy(
           _1 = model.copy(
-            form = form,
+            cotoForm = form,
             mediaContentChanged = submsg match {
               case CotoForm.Msg.FileInput(_)       => true
               case CotoForm.Msg.DeleteMediaContent => true
@@ -152,7 +152,7 @@ object ModalCotoEditor {
       dialogClasses = optionalClasses(
         Seq(
           ("coto-editor", true),
-          ("with-media-content", model.form.mediaBlob.isDefined)
+          ("with-media-content", model.cotoForm.mediaBlob.isDefined)
         )
       ),
       closeButton = Some((classOf[Modal.CotoEditor], dispatch)),
@@ -164,7 +164,7 @@ object ModalCotoEditor {
         "Coto"
     )(
       divForm(model).pipe { divForm =>
-        CotoForm.sectionMediaPreview(model.form)(submsg =>
+        CotoForm.sectionMediaPreview(model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
         ) match {
           case Some(mediaPreview) =>
@@ -180,14 +180,14 @@ object ModalCotoEditor {
         }
       },
       ulAttributes(
-        model.form.dateTimeRange,
-        model.form.mediaDateTime,
+        model.cotoForm.dateTimeRange,
+        model.cotoForm.mediaDateTime,
         context.geomap.focusedLocation,
-        model.form.mediaLocation
+        model.cotoForm.mediaLocation
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
-      CotoForm.sectionValidationError(model.form),
+      CotoForm.sectionValidationError(model.cotoForm),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model = model.form)(submsg =>
+        CotoForm.buttonPreview(model = model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
@@ -205,7 +205,7 @@ object ModalCotoEditor {
   ): ReactElement =
     div(className := "form")(
       CotoForm.sectionEditorOrPreview(
-        model = model.form,
+        model = model.cotoForm,
         onCtrlEnter = () => dispatch(Msg.Save)
       )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
