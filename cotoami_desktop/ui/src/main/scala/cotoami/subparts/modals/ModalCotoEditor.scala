@@ -26,12 +26,15 @@ object ModalCotoEditor {
       error: Option[String] = None
   ) {
     def edited(geomap: Geomap): Boolean =
+      cotoFormEdited(geomap) ||
+        (original.isCotonoma && cotonomaForm.edited)
+
+    def cotoFormEdited(geomap: Geomap): Boolean =
       diffSummary.isDefined ||
         diffContent.isDefined ||
         diffMediaContent.isDefined ||
         diffGeolocation(geomap).isDefined ||
-        diffDateTimeRange.isDefined ||
-        (original.isCotonoma && cotonomaForm.edited)
+        diffDateTimeRange.isDefined
 
     def diffSummary: Option[Option[String]] =
       Option.when(cotoForm.summary != original.summary) {
@@ -59,11 +62,17 @@ object ModalCotoEditor {
       }
 
     def readyToSave(geomap: Geomap): Boolean =
-      edited(geomap) && !saving && cotoForm.readyToPost
+      edited(geomap) && !saving && cotoForm.readyToPost &&
+        (!original.isCotonoma || cotonomaForm.readyToPost)
 
     def save(geomap: Geomap): (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
+        saveCotoForm(geomap)
+      )
+
+    private def saveCotoForm(geomap: Geomap): Cmd.One[AppMsg] =
+      if (cotoFormEdited(geomap))
         CotoBackend.edit(
           original.id,
           diffContent,
@@ -72,7 +81,8 @@ object ModalCotoEditor {
           diffGeolocation(geomap),
           diffDateTimeRange
         ).map(Msg.Saved(_).into)
-      )
+      else
+        Cmd.none
   }
 
   object Model {
