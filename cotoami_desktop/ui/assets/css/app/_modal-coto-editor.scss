@@ -9,14 +9,6 @@ dialog.coto-editor {
       display: flex;
       flex-direction: column;
 
-      section.media-preview {
-        // wrapped in SplitPane
-        width: 100%;
-        height: 100%;
-
-        padding-bottom: 8px;
-      }
-
       div.coto-form {
         flex: 1;
         min-height: 0; // let this item shrink below the content size
@@ -30,8 +22,16 @@ dialog.coto-editor {
         }
       }
 
-      .form-with-media {
+      div.split-pane.media-and-coto-form {
         flex: 1;
+
+        section.media-preview {
+          // wrapped in SplitPane
+          width: 100%;
+          height: 100%;
+
+          padding-bottom: 8px;
+        }
 
         .separator-inner {
           border-style: none !important;

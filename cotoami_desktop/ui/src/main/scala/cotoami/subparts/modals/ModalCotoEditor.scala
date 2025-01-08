@@ -187,7 +187,7 @@ object ModalCotoEditor {
             SplitPane(
               vertical = false,
               initialPrimarySize = 300,
-              className = Some("form-with-media"),
+              className = Some("media-and-coto-form"),
               primary = SplitPane.Primary.Props()(mediaPreview),
               secondary = SplitPane.Secondary.Props()(divForm)
             )
