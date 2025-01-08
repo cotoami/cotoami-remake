@@ -42,29 +42,29 @@ object Changelog {
   ): (Model, Cmd[Msg]) = {
     // Handle changes in order of assumed their frequency:
     // CreateCoto
-    for (cotoJson <- change.CreateCoto.toOption) {
-      return createCoto(cotoJson, model)
+    for (json <- change.CreateCoto.toOption) {
+      return createCoto(json, model)
     }
 
     // CreateCotonoma
-    for (cotonomaJson <- change.CreateCotonoma.toOption) {
-      return createCotonoma(cotonomaJson, model)
+    for (json <- change.CreateCotonoma.toOption) {
+      return createCotonoma(json, model)
     }
 
     // CreateLink
-    for (linkJson <- change.CreateLink.toOption) {
-      val link = LinkBackend.toModel(linkJson)
+    for (json <- change.CreateLink.toOption) {
+      val link = LinkBackend.toModel(json)
       return (model.modify(_.domain.links).using(_.put(link)), Cmd.none)
     }
 
     // EditCoto
-    for (editCotoJson <- change.EditCoto.toOption) {
-      return (model, Domain.fetchCotoDetails(Id(editCotoJson.coto_id)))
+    for (json <- change.EditCoto.toOption) {
+      return (model, Domain.fetchCotoDetails(Id(json.coto_id)))
     }
 
     // DeleteCoto
-    for (deleteCotoJson <- change.DeleteCoto.toOption) {
-      val cotoId: Id[Coto] = Id(deleteCotoJson.coto_id)
+    for (json <- change.DeleteCoto.toOption) {
+      val cotoId: Id[Coto] = Id(json.coto_id)
       return (
         model.copy(domain = model.domain.deleteCoto(cotoId)),
         model.domain.cotos.get(cotoId).flatMap(_.repostOfId)
@@ -89,28 +89,28 @@ object Changelog {
     }
 
     // UpsertNode
-    for (nodeJson <- change.UpsertNode.toOption) {
-      val node = NodeBackend.toModel(nodeJson)
+    for (json <- change.UpsertNode.toOption) {
+      val node = NodeBackend.toModel(json)
       return (model.modify(_.domain.nodes).using(_.put(node)), Cmd.none)
     }
 
     // CreateNode
-    for (createNodeJson <- change.CreateNode.toOption) {
+    for (json <- change.CreateNode.toOption) {
       return model.modify(_.domain.nodes).using(
-        _.put(NodeBackend.toModel(createNodeJson.node))
+        _.put(NodeBackend.toModel(json.node))
       ).pipe { model =>
-        Nullable.toOption(createNodeJson.root)
+        Nullable.toOption(json.root)
           .map(createCotonoma(_, model))
           .getOrElse((model, Cmd.none))
       }
     }
 
     // SetNodeIcon
-    for (setNodeIconJson <- change.SetNodeIcon.toOption) {
+    for (json <- change.SetNodeIcon.toOption) {
       return (
         model
           .modify(_.domain.nodes).using(
-            _.setIcon(Id(setNodeIconJson.node_id), setNodeIconJson.icon)
+            _.setIcon(Id(json.node_id), json.icon)
           )
           .modify(_.geomap).using(_.refreshMarkers),
         Cmd.none
