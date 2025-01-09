@@ -15,7 +15,7 @@ object ToolbarCoto {
       coto: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "coto-toolbar")(
-      Option.when(context.domain.canEditLinks) {
+      Option.when(context.domain.canPin(coto.id)) {
         toolButton(
           symbol = "push_pin",
           tip = "Pin",
