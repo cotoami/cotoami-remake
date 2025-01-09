@@ -215,6 +215,12 @@ case class Domain(
       case None           => false
     }
 
+  def canRepost(cotoId: Id[Coto]): Boolean =
+    // You can't repost the current node root.
+    !Seq(
+      currentNodeRoot.map(_._2.id)
+    ).flatten.contains(cotoId)
+
   def canPin(cotoId: Id[Coto]): Boolean =
     canEditLinks &&
       // You can't pin the current cotonoma and the current node root.

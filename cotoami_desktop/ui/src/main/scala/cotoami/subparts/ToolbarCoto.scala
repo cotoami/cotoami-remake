@@ -47,19 +47,21 @@ object ToolbarCoto {
           classes = "add-sub-coto"
         )
       },
-      toolButton(
-        symbol = "repeat",
-        tip = "Repost",
-        tipPlacement = "left",
-        classes = "repost-coto",
-        onClick = e => {
-          e.stopPropagation()
-          Modal.Repost(coto, context.domain) match {
-            case Some(modal) => dispatch(Modal.Msg.OpenModal(modal))
-            case None        => () // should be unreachable
+      Option.when(context.domain.canRepost(coto.id)) {
+        toolButton(
+          symbol = "repeat",
+          tip = "Repost",
+          tipPlacement = "left",
+          classes = "repost-coto",
+          onClick = e => {
+            e.stopPropagation()
+            Modal.Repost(coto, context.domain) match {
+              case Some(modal) => dispatch(Modal.Msg.OpenModal(modal))
+              case None        => () // should be unreachable
+            }
           }
-        }
-      ),
+        )
+      },
       Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(
           symbol = "drive_folder_upload",
