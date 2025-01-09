@@ -75,7 +75,6 @@ object SectionPinnedCotos {
       currentCotonoma: Cotonoma
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
-
     section(className := "pinned-cotos header-and-body")(
       header()(
         section(className := "title")(
@@ -209,9 +208,14 @@ object SectionPinnedCotos {
         props.pinnedCotos
       )
 
-      div(className := "pinned-cotos-with-toc", ref := rootRef)(
-        olPinnedCotos(props.pinnedCotos, false)(props.context, props.dispatch),
-        divToc(props.pinnedCotos, tocRef)(props.context, props.dispatch)
+      section(className := "document-view")(
+        div(className := "pinned-cotos-with-toc", ref := rootRef)(
+          olPinnedCotos(props.pinnedCotos, false)(
+            props.context,
+            props.dispatch
+          ),
+          divToc(props.pinnedCotos, tocRef)(props.context, props.dispatch)
+        )
       )
     }
 

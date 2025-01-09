@@ -63,7 +63,7 @@ section.pinned-cotos {
   }
 
   ol.pinned-cotos {
-    padding-top: 15px;
+    padding-top: 20px;
 
     li.pin {
       background-color: var(--card-background-color);
@@ -122,7 +122,7 @@ section.pinned-cotos {
     }
   }
 
-  .document-view {
+  div.document-view {
     --toc-width: 200px;
     container-type: inline-size;
     padding-left: 16px;
