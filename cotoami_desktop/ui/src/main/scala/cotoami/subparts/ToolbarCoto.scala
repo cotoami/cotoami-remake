@@ -42,9 +42,9 @@ object ToolbarCoto {
       Option.when(context.domain.nodes.canEditLinksIn(coto.nodeId)) {
         toolButton(
           symbol = "add",
-          tip = "Write a sub-coto",
+          tip = "Write a linked coto",
           tipPlacement = "left",
-          classes = "add-sub-coto"
+          classes = "add-linked-coto"
         )
       },
       Option.when(context.domain.canRepost(coto.id)) {

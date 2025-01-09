@@ -79,11 +79,11 @@ section.coto-details {
       }
     }
 
-    div.add-sub-coto {
+    div.insert-linked-coto {
       padding: 5px 0;
       text-align: center;
 
-      button.add-sub-coto {
+      button.insert-linked-coto {
         opacity: 0.3;
 
         span.material-symbols {
@@ -91,7 +91,7 @@ section.coto-details {
         }
       }
 
-      &:hover button.add-sub-coto {
+      &:hover button.insert-linked-coto {
         opacity: 1;
       }
     }

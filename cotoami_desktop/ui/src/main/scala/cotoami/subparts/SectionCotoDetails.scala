@@ -48,12 +48,12 @@ object SectionCotoDetails {
     )
 
   private def divAddSubCoto: ReactElement =
-    div(className := "add-sub-coto")(
+    div(className := "insert-linked-coto")(
       toolButton(
         symbol = "add_circle",
-        tip = "Add coto",
+        tip = "Write a linked coto",
         tipPlacement = "bottom",
-        classes = "add-sub-coto"
+        classes = "insert-linked-coto"
       )
     )
 
