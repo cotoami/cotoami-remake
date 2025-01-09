@@ -165,6 +165,12 @@ object ViewCoto {
       }).getOrElse(sectionTextContent(cotoContent.content))
     )
 
+  def sectionCotonomaContent(cotoContent: CotoContent): ReactElement =
+    section(className := "coto-content cotonoma-content")(
+      cotoContent.mediaUrl.map(sectionMediaContent),
+      sectionTextContent(cotoContent.content)
+    )
+
   @react object CollapsibleContent {
     case class Props(
         summary: String,
