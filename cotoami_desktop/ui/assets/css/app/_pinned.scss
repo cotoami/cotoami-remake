@@ -1,7 +1,14 @@
 section.pinned-cotos {
   >header {
+    position: relative;
     display: flex;
     flex-direction: row;
+
+    section.coto-toolbar {
+      top: 10px;
+      left: 20px;
+      right: auto;
+    }
 
     section.title {
       flex: 1;
@@ -59,6 +66,12 @@ section.pinned-cotos {
       &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
         scroll-behavior: smooth;
       }
+    }
+  }
+
+  &:hover {
+    >header section.coto-toolbar {
+      display: inline-block;
     }
   }
 
@@ -129,6 +142,7 @@ section.pinned-cotos {
     padding-right: 16px;
 
     div.cotonoma-content {
+      margin-top: 8px;
       margin-bottom: 1rem;
 
       section.cotonoma-content {

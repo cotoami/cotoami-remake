@@ -21,30 +21,6 @@ article.coto {
     }
   }
 
-  section.coto-toolbar {
-    position: absolute;
-    top: -16px;
-    right: 10px;
-    z-index: 10;
-
-    border: 1px solid var(--pane-border-color);
-    border-radius: var(--border-radius);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
-    background-color: var(--card-background-color);
-
-    display: none;
-
-    button.tool {
-      margin-left: 3px;
-      margin-right: 3px;
-      padding: 0 5px;
-
-      span.material-symbols {
-        font-size: 20px;
-      }
-    }
-  }
-
   &:hover {
     background-color: var(--hover-background-color);
 
@@ -194,6 +170,30 @@ article.coto {
       font-size: 0.8rem;
       opacity: .5;
       cursor: auto;
+    }
+  }
+}
+
+section.coto-toolbar {
+  position: absolute;
+  top: -16px;
+  right: 10px;
+  z-index: 10;
+
+  border: 1px solid var(--pane-border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+  background-color: var(--card-background-color);
+
+  display: none;
+
+  button.tool {
+    margin-left: 3px;
+    margin-right: 3px;
+    padding: 0 5px;
+
+    span.material-symbols {
+      font-size: 20px;
     }
   }
 }

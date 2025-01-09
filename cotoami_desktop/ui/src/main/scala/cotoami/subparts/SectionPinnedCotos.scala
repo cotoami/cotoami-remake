@@ -78,6 +78,7 @@ object SectionPinnedCotos {
     val inColumns = uiState.isPinnedInColumns(cotonoma.id)
     section(className := "pinned-cotos header-and-body")(
       header()(
+        ToolbarCoto(cotonomaCoto),
         section(className := "title")(
           span(className := "current-cotonoma-name")(
             context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
@@ -213,7 +214,7 @@ object SectionPinnedCotos {
 
       section(className := "document-view")(
         Option.when(
-          props.cotonomaCoto.content.isDefined ||
+          props.cotonomaCoto.content.map(!_.isBlank()).getOrElse(false) ||
             props.cotonomaCoto.mediaUrl.isDefined
         ) {
           div(
