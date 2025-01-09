@@ -84,6 +84,9 @@ case class Nodes(
   def setIcon(id: Id[Node], icon: String): Nodes =
     this.modify(_.map.index(id)).using(_.setIcon(icon))
 
+  def rename(id: Id[Node], name: String): Nodes =
+    this.modify(_.map.index(id)).using(_.rename(name))
+
   def addServer(server: Server): Nodes =
     this.modify(_.servers).using(_.put(server)).pipe { nodes =>
       server.role.map {

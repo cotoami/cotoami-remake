@@ -105,6 +105,20 @@ object Changelog {
       }
     }
 
+    // RenameNode
+    for (json <- change.RenameNode.toOption) {
+      val nodeId: Id[Node] = Id(json.node_id)
+      return (
+        model
+          .modify(_.domain.nodes).using(_.rename(nodeId, json.name))
+          .modify(_.geomap).using(_.refreshMarkers),
+        model.domain.nodes.get(nodeId)
+          .flatMap(_.rootCotonomaId)
+          .map(Domain.fetchCotonoma)
+          .getOrElse(Cmd.none)
+      )
+    }
+
     // SetNodeIcon
     for (json <- change.SetNodeIcon.toOption) {
       return (

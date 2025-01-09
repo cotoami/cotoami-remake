@@ -23,6 +23,8 @@ case class Node(
       case _          => false
     }
 
+  lazy val iconUrl: String = dom.URL.createObjectURL(icon)
+
   def setIcon(icon: String): Node = {
     revokeIconUrl()
     copy(
@@ -31,7 +33,13 @@ case class Node(
     )
   }
 
-  lazy val iconUrl: String = dom.URL.createObjectURL(icon)
+  def rename(name: String): Node = {
+    revokeIconUrl()
+    copy(
+      name = name,
+      version = version + 1
+    )
+  }
 
   def revokeIconUrl(): Unit = dom.URL.revokeObjectURL(iconUrl)
 
