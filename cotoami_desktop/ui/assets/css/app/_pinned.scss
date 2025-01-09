@@ -1,8 +1,12 @@
 section.pinned-cotos {
   >header {
+    --padding-horizontal: 100px;
+
     position: relative;
     display: flex;
     flex-direction: row;
+
+    padding-left: var(--padding-horizontal); // to center the title 
 
     section.coto-toolbar {
       top: 10px;
@@ -33,7 +37,8 @@ section.pinned-cotos {
     }
 
     section.view-switch {
-      padding-right: 18px;
+      width: var(--padding-horizontal);
+      padding-right: 20px;
 
       button {
         position: relative;
