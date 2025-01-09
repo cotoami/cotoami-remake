@@ -64,11 +64,9 @@ object SectionPinnedCotos {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    (context.domain.pinnedCotos, model.domain.currentCotonoma) match {
-      case (pinnedCotos, Some(cotonoma)) if !pinnedCotos.isEmpty =>
-        Some(sectionPinnedCotos(pinnedCotos, uiState, cotonoma))
-      case _ => None
-    }
+    model.domain.currentCotonoma.map(
+      sectionPinnedCotos(context.domain.pinnedCotos, uiState, _)
+    )
   }
 
   def sectionPinnedCotos(
@@ -79,30 +77,38 @@ object SectionPinnedCotos {
     val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
 
     section(className := "pinned-cotos header-and-body")(
-      header(className := "tools")(
-        toolButton(
-          symbol = "view_column",
-          tip = "Columns",
-          classes = optionalClasses(
-            Seq(
-              ("view-columns", true),
-              ("selected", inColumns)
-            )
-          ),
-          disabled = inColumns,
-          onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, true))
+      header()(
+        section(className := "title")(
+          span(className := "current-cotonoma-name")(
+            context.domain.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
+            currentCotonoma.name
+          )
         ),
-        toolButton(
-          symbol = "view_agenda",
-          tip = "Document",
-          classes = optionalClasses(
-            Seq(
-              ("view-document", true),
-              ("selected", !inColumns)
-            )
+        section(className := "view-switch")(
+          toolButton(
+            symbol = "view_agenda",
+            tip = "Document",
+            classes = optionalClasses(
+              Seq(
+                ("view-document", true),
+                ("selected", !inColumns)
+              )
+            ),
+            disabled = !inColumns,
+            onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, false))
           ),
-          disabled = !inColumns,
-          onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, false))
+          toolButton(
+            symbol = "view_column",
+            tip = "Columns",
+            classes = optionalClasses(
+              Seq(
+                ("view-columns", true),
+                ("selected", inColumns)
+              )
+            ),
+            disabled = inColumns,
+            onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, true))
+          )
         )
       ),
       div(

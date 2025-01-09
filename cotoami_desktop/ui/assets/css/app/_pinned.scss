@@ -1,9 +1,49 @@
 section.pinned-cotos {
-  >header.tools button {
-    &.selected {
-      cursor: initial;
-      opacity: 1;
-      border-bottom: 1px solid var(--focused-border-color);
+  >header {
+    display: flex;
+    flex-direction: row;
+
+    section.title {
+      flex: 1;
+
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: end;
+
+      span.current-cotonoma-name {
+        font-size: 1.1rem;
+        font-weight: 650;
+
+        img.node-icon {
+          width: 20px;
+          height: 20px;
+          border-radius: 4px;
+          margin-right: 8px;
+          margin-bottom: 2px;
+        }
+      }
+    }
+
+    section.view-switch {
+      padding-right: 18px;
+
+      button {
+        position: relative;
+        display: inline-block;
+        padding: 4px 10px;
+        z-index: 10;
+
+        span.material-symbols {
+          font-size: 20px;
+        }
+
+        &.selected {
+          cursor: initial;
+          opacity: 1;
+          border-bottom: 1px solid var(--focused-border-color);
+        }
+      }
     }
   }
 
