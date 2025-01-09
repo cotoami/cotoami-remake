@@ -5,6 +5,7 @@ use diesel::sqlite::SqliteConnection;
 
 use crate::{
     db::{
+        error::DatabaseError,
         op::*,
         ops::{changelog_ops, coto_ops, cotonoma_ops, node_ops, Page},
         DatabaseSession,
@@ -19,6 +20,12 @@ impl<'a> DatabaseSession<'a> {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn try_get_local_node_root(&mut self) -> Result<(Cotonoma, Coto)> {
+        self.local_node_root()?
+            .ok_or(DatabaseError::RootCotonomaNotFound)
+            .map_err(anyhow::Error::from)
     }
 
     pub fn all_node_roots(&mut self) -> Result<Vec<(Cotonoma, Coto)>> {
@@ -194,25 +201,31 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn rename_cotonoma(
-        &self,
+        &mut self,
         id: &Id<Cotonoma>,
         name: &str,
         operator: &Operator,
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
-        let local_node_id = self.globals.try_get_local_node_id()?;
-        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let (cotonoma, coto) = cotonoma_ops::try_get(id).run(ctx)??;
-            self.globals.ensure_local(&cotonoma)?;
-            operator.can_rename_cotonoma(&coto)?;
+        if self.globals.is_root_cotonoma(id) {
+            let (_, changelog) = self.rename_local_node(name, operator)?;
+            let cotonoma_pair = self.try_get_local_node_root()?;
+            Ok((cotonoma_pair, changelog))
+        } else {
+            let local_node_id = self.globals.try_get_local_node_id()?;
+            self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+                let (cotonoma, coto) = cotonoma_ops::try_get(id).run(ctx)??;
+                self.globals.ensure_local(&cotonoma)?;
+                operator.can_rename_cotonoma(&coto)?;
 
-            let (cotonoma, coto) = cotonoma_ops::rename(id, name, None).run(ctx)?;
-            let change = Change::RenameCotonoma {
-                cotonoma_id: *id,
-                name: name.into(),
-                updated_at: cotonoma.updated_at,
-            };
-            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-            Ok(((cotonoma, coto), changelog))
-        })
+                let (cotonoma, coto) = cotonoma_ops::rename(id, name, None).run(ctx)?;
+                let change = Change::RenameCotonoma {
+                    cotonoma_id: *id,
+                    name: name.into(),
+                    updated_at: cotonoma.updated_at,
+                };
+                let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+                Ok(((cotonoma, coto), changelog))
+            })
+        }
     }
 }

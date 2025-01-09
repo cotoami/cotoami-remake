@@ -109,6 +109,10 @@ impl Globals {
 
     pub fn root_cotonoma_id(&self) -> Option<Id<Cotonoma>> { *self.root_cotonoma_id.read() }
 
+    pub fn is_root_cotonoma(&self, id: &Id<Cotonoma>) -> bool {
+        Some(*id) == self.root_cotonoma_id()
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     // parent_nodes
     /////////////////////////////////////////////////////////////////////////////

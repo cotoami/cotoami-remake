@@ -17,6 +17,9 @@ pub enum DatabaseError {
     #[error("Local node has not yet been created")]
     LocalNodeNotYetInitialized,
 
+    #[error("Root cotonoma has not yet been created")]
+    RootCotonomaNotFound,
+
     #[error("Not found: {kind} ({by}: {value})")]
     EntityNotFound {
         kind: EntityKind,
