@@ -127,7 +127,7 @@ object ViewCoto {
   )(implicit context: Context): ReactElement =
     div(className := "content")(
       context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
-        section(className := "cotonoma-content")(
+        section(className := "cotonoma-label")(
           span(className := "cotonoma")(
             context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             cotonoma.name
