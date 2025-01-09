@@ -64,7 +64,7 @@ object SectionPinnedCotos {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    model.domain.currentCotonoma.map(
+    model.domain.currentCotonomaPair.map(
       sectionPinnedCotos(context.domain.pinnedCotos, uiState, _)
     )
   }
@@ -72,15 +72,16 @@ object SectionPinnedCotos {
   def sectionPinnedCotos(
       pinnedCotos: Seq[(Link, Coto)],
       uiState: UiState,
-      currentCotonoma: Cotonoma
+      currentCotonoma: (Cotonoma, Coto)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val inColumns = uiState.isPinnedInColumns(currentCotonoma.id)
+    val (cotonoma, cotonomaCoto) = currentCotonoma
+    val inColumns = uiState.isPinnedInColumns(cotonoma.id)
     section(className := "pinned-cotos header-and-body")(
       header()(
         section(className := "title")(
           span(className := "current-cotonoma-name")(
-            context.domain.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
-            currentCotonoma.name
+            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            cotonoma.name
           )
         ),
         section(className := "view-switch")(
@@ -94,7 +95,7 @@ object SectionPinnedCotos {
               )
             ),
             disabled = !inColumns,
-            onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, false))
+            onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, false))
           ),
           toolButton(
             symbol = "view_column",
@@ -106,7 +107,7 @@ object SectionPinnedCotos {
               )
             ),
             disabled = inColumns,
-            onClick = _ => dispatch(Msg.SwitchView(currentCotonoma.id, true))
+            onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, true))
           )
         )
       ),
