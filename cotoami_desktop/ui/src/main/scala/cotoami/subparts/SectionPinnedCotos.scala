@@ -126,6 +126,7 @@ object SectionPinnedCotos {
             olPinnedCotos(pinnedCotos, inColumns)
           else
             DocumentView(
+              cotonomaCoto = cotonomaCoto,
               pinnedCotos = pinnedCotos,
               viewportId = PinnedCotosBodyId,
               context = context,
@@ -138,6 +139,7 @@ object SectionPinnedCotos {
 
   @react object DocumentView {
     case class Props(
+        cotonomaCoto: Coto,
         pinnedCotos: Seq[(Link, Coto)],
         viewportId: String,
         context: Context,
@@ -210,6 +212,14 @@ object SectionPinnedCotos {
       )
 
       section(className := "document-view")(
+        Option.when(
+          props.cotonomaCoto.content.isDefined ||
+            props.cotonomaCoto.mediaUrl.isDefined
+        ) {
+          div(className := "cotonoma-content")(
+            ViewCoto.sectionCotonomaContent(props.cotonomaCoto)
+          )
+        },
         div(className := "pinned-cotos-with-toc", ref := rootRef)(
           olPinnedCotos(props.pinnedCotos, false)(
             props.context,
