@@ -124,11 +124,7 @@ article.coto {
   }
 
   div.content {
-    section.text-content {
-      padding: 0 var(--block-spacing-horizontal);
-    }
-
-    section.cotonoma-content {
+    section.cotonoma-label {
       padding: 0 var(--block-spacing-horizontal);
       font-weight: 700;
 
@@ -143,6 +139,10 @@ article.coto {
         vertical-align: text-bottom;
         margin-right: 6px;
       }
+    }
+
+    section.text-content {
+      padding: 0 var(--block-spacing-horizontal);
     }
 
     section.media-content {

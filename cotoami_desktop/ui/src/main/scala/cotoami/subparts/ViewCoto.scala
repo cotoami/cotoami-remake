@@ -11,7 +11,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.libs.{rehypePlugins, remarkPlugins}
-import cotoami.models.{Coto, CotoContent, Id, Link, WaitingPost}
+import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Link, WaitingPost}
 import cotoami.repositories.Nodes
 import cotoami.components.{
   materialSymbol,
@@ -99,21 +99,26 @@ object ViewCoto {
       collapsibleContentOpened: Boolean = false
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "content")(
-      context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
-        section(className := "cotonoma-content")(
-          a(
-            className := "cotonoma",
-            title := cotonoma.name,
-            onClick := ((e) => {
-              e.preventDefault()
-              dispatch(AppMsg.FocusCotonoma(cotonoma))
-            })
-          )(
-            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
-            cotonoma.name
-          )
-        )
-      ).getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
+      context.domain.cotonomas.asCotonoma(coto)
+        .map(sectionCotonomaLabel)
+        .getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
+    )
+
+  def sectionCotonomaLabel(
+      cotonoma: Cotonoma
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "cotonoma-label")(
+      a(
+        className := "cotonoma",
+        title := cotonoma.name,
+        onClick := ((e) => {
+          e.preventDefault()
+          dispatch(AppMsg.FocusCotonoma(cotonoma))
+        })
+      )(
+        context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+        cotonoma.name
+      )
     )
 
   def divContentPreview(
