@@ -216,7 +216,12 @@ object SectionPinnedCotos {
           props.cotonomaCoto.content.isDefined ||
             props.cotonomaCoto.mediaUrl.isDefined
         ) {
-          div(className := "cotonoma-content")(
+          div(
+            className := "cotonoma-content",
+            onDoubleClick := (_ =>
+              props.dispatch(AppMsg.FocusCoto(props.cotonomaCoto.id))
+            )
+          )(
             ViewCoto.sectionCotonomaContent(props.cotonomaCoto)
           )
         },
