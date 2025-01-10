@@ -49,7 +49,7 @@ object Editor {
           Validation.Result.notYetValidated
         else {
           val errors =
-            summary.map(Coto.validateSummary(_)).getOrElse(Seq.empty) ++
+            summary.map(Coto.validateSummary).getOrElse(Seq.empty) ++
               Coto.validateContent(content, isCotonoma)
           Validation.Result(errors)
         }
@@ -86,8 +86,7 @@ object Editor {
         }.getOrElse((this, Cmd.none))
 
       def hasValidContents: Boolean =
-        // The validation is not necessarily required
-        // if `mediaContent` has some value (media-only coto).
+        // validate.validated is not necessarily required for a media-only coto.
         hasContents && !validate.failed
     }
 
