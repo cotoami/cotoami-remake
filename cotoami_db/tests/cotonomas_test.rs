@@ -57,9 +57,7 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog,
         pat!(ChangelogEntry {
-            serial_number: eq(&2),
             origin_node_id: eq(&node.uuid),
-            origin_serial_number: eq(&2),
             change: pat!(Change::CreateCotonoma(
                 eq(&cotonoma),
                 eq(&Coto { rowid: 0, ..coto })
@@ -111,9 +109,7 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog,
         pat!(ChangelogEntry {
-            serial_number: eq(&4),
             origin_node_id: eq(&node.uuid),
-            origin_serial_number: eq(&4),
             change: pat!(Change::RenameCotonoma {
                 cotonoma_id: eq(&cotonoma.uuid),
                 name: eq("test2"),
@@ -153,6 +149,41 @@ fn crud_operations() -> Result<()> {
     );
     assert_that!(ds.coto(&coto.uuid), ok(none()));
     assert_that!(ds.cotonoma(&cotonoma.uuid), ok(none()));
+
+    /////////////////////////////////////////////////////////////////////////////
+    // When: rename the root cotonoma
+    /////////////////////////////////////////////////////////////////////////////
+
+    let mock_time = time::mock_time();
+    let ((cotonoma, coto), changelog) =
+        ds.rename_cotonoma(&root_cotonoma.uuid, "Our Node", &operator)?;
+
+    assert_that!(
+        cotonoma,
+        pat!(Cotonoma {
+            name: eq("Our Node"),
+            updated_at: eq(&mock_time),
+        })
+    );
+    assert_that!(
+        coto,
+        pat!(Coto {
+            summary: some(eq("Our Node")),
+            updated_at: eq(&mock_time),
+        })
+    );
+    assert_that!(
+        changelog,
+        pat!(ChangelogEntry {
+            origin_node_id: eq(&node.uuid),
+            change: pat!(Change::RenameNode {
+                node_id: eq(&node.uuid),
+                name: eq("Our Node"),
+                updated_at: eq(&mock_time)
+            }),
+        })
+    );
+    assert_that!(ds.local_node()?.name, eq("Our Node"));
 
     Ok(())
 }
