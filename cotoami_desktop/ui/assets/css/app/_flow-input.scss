@@ -7,6 +7,32 @@ section.flow-input {
     position: relative;
     height: 40px;
 
+    display: flex;
+    flex-direction: row;
+
+    section.posting-to {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+
+      padding-top: 4px;
+      padding-left: 10px;
+      padding-right: 10px;
+
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      img.node-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        margin-right: 8px;
+      }
+    }
+
     section.coto-type-switch {
       margin-top: 8px;
       height: 33px;
@@ -165,12 +191,6 @@ section.flow-input {
         }
 
         button.post {
-          span.target-cotonoma {
-            font-weight: 600;
-            opacity: .5;
-            text-decoration: underline;
-          }
-
           span.shortcut-help {
             margin-left: 4px;
             opacity: .7;

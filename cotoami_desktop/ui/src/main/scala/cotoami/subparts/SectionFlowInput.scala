@@ -313,7 +313,7 @@ object SectionFlowInput {
         )
       )
     )(
-      header(model),
+      header(model, currentCotonoma),
       model.form match {
         case form: CotoForm.Model => {
           val divForm = formCoto(
@@ -347,10 +347,15 @@ object SectionFlowInput {
       }
     )
 
-  private def header(model: Model)(implicit
+  private def header(model: Model, currentCotonoma: Cotonoma)(implicit
+      context: Context,
       dispatch: Msg => Unit
   ): ReactElement =
     slinky.web.html.header()(
+      section(className := "posting-to")(
+        context.domain.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
+        currentCotonoma.name
+      ),
       section(className := "coto-type-switch")(
         button(
           className := "new-coto default",
@@ -472,10 +477,7 @@ object SectionFlowInput {
       aria - "busy" := model.posting.toString(),
       onClick := (_ => dispatch(Msg.Post))
     )(
-      "Post to ",
-      span(className := "target-cotonoma")(
-        currentCotonoma.abbreviateName(15)
-      ),
+      "Post",
       span(className := "shortcut-help")("(Ctrl + Enter)")
     )
 }
