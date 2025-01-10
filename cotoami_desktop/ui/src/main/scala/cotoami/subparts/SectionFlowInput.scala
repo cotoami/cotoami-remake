@@ -313,7 +313,7 @@ object SectionFlowInput {
         )
       )
     )(
-      headerTools(model),
+      header(model),
       model.form match {
         case form: CotoForm.Model => {
           val divForm = formCoto(
@@ -345,6 +345,34 @@ object SectionFlowInput {
         case form: CotonomaForm.Model =>
           formCotonoma(form, model, operatingNode, currentCotonoma, geomap)
       }
+    )
+
+  private def header(model: Model)(implicit
+      dispatch: Msg => Unit
+  ): ReactElement =
+    slinky.web.html.header()(
+      section(className := "coto-type-switch")(
+        button(
+          className := "new-coto default",
+          disabled := model.form.isInstanceOf[CotoForm.Model],
+          onClick := (_ => dispatch(Msg.SetCotoForm))
+        )(
+          span(className := "label")(
+            materialSymbol("chat"),
+            "Coto"
+          )
+        ),
+        button(
+          className := "new-cotonoma default",
+          disabled := model.form.isInstanceOf[CotonomaForm.Model],
+          onClick := (_ => dispatch(Msg.SetCotonomaForm))
+        )(
+          span(className := "label")(
+            materialSymbol("folder"),
+            "Cotonoma"
+          )
+        )
+      )
     )
 
   private def formCoto(
@@ -424,34 +452,6 @@ object SectionFlowInput {
           addressPoster(operatingNode),
           div(className := "buttons")(
             buttonPost(model, currentCotonoma)
-          )
-        )
-      )
-    )
-
-  private def headerTools(model: Model)(implicit
-      dispatch: Msg => Unit
-  ): ReactElement =
-    header(className := "tools")(
-      section(className := "coto-type-switch")(
-        button(
-          className := "new-coto default",
-          disabled := model.form.isInstanceOf[CotoForm.Model],
-          onClick := (_ => dispatch(Msg.SetCotoForm))
-        )(
-          span(className := "label")(
-            materialSymbol("chat"),
-            "Coto"
-          )
-        ),
-        button(
-          className := "new-cotonoma default",
-          disabled := model.form.isInstanceOf[CotonomaForm.Model],
-          onClick := (_ => dispatch(Msg.SetCotonomaForm))
-        )(
-          span(className := "label")(
-            materialSymbol("folder"),
-            "Cotonoma"
           )
         )
       )
