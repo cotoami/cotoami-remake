@@ -67,6 +67,14 @@ dialog.node-profile {
         min-height: 42px;
         max-height: 200px;
         overflow-y: auto;
+
+        section.media-content {
+          margin-bottom: 8px;
+        }
+
+        section.text-content * {
+          font-size: 0.9rem;
+        }
       }
 
       section.client-nodes-count {
