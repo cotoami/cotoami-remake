@@ -74,7 +74,10 @@ object SectionCotoDetails {
         ViewCoto.addressAuthor(coto, domain.nodes)
       ),
       div(className := "body")(
-        ViewCoto.divContent(coto, true)
+        ViewCoto.divContent(coto, true),
+        Option.when(coto.isCotonoma) {
+          ViewCoto.sectionCotonomaContent(coto)
+        }
       ),
       ViewCoto.articleFooter(coto)
     )

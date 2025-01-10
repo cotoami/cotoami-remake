@@ -35,6 +35,20 @@ section.coto-details {
         padding-right: 0;
       }
     }
+
+    section.cotonoma-content {
+      margin-top: 1rem;
+
+      section.media-content {
+        margin-bottom: 8px;
+        padding: 0 var(--block-spacing-horizontal);
+        text-align: center;
+      }
+
+      section.text-content {
+        padding: 0 var(--block-spacing-horizontal);
+      }
+    }
   }
 
   article.main-coto {
