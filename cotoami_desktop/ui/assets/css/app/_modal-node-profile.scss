@@ -62,19 +62,9 @@ dialog.node-profile {
 
       section.node-description {
         border: 1px solid var(--pane-border-color);
-        padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
-
         min-height: 42px;
         max-height: 200px;
         overflow-y: auto;
-
-        section.media-content {
-          margin-bottom: 8px;
-        }
-
-        section.text-content * {
-          font-size: 0.9rem;
-        }
       }
 
       section.client-nodes-count {

@@ -22,9 +22,7 @@ dialog.incorporate {
         margin-top: var(--spacing);
         margin-bottom: var(--spacing);
         border: 1px solid var(--pane-border-color);
-        padding: var(--spacing);
         background-color: var(--card-background-color);
-
         max-height: 200px;
         overflow-y: auto;
       }

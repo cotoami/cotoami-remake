@@ -174,4 +174,16 @@ div.app {
       margin-right: 6px;
     }
   }
+
+  section.node-description {
+    padding: var(--spacing);
+
+    section.media-content {
+      margin-bottom: 8px;
+    }
+
+    section.text-content * {
+      font-size: 0.9rem;
+    }
+  }
 }
