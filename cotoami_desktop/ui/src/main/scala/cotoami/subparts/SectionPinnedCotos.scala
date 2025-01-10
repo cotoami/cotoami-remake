@@ -214,19 +214,7 @@ object SectionPinnedCotos {
       )
 
       section(className := "document-view", ref := rootRef)(
-        Option.when(
-          props.cotonomaCoto.content.map(!_.isBlank()).getOrElse(false) ||
-            props.cotonomaCoto.mediaUrl.isDefined
-        ) {
-          div(
-            className := "cotonoma-content",
-            onDoubleClick := (_ =>
-              props.dispatch(AppMsg.FocusCoto(props.cotonomaCoto.id))
-            )
-          )(
-            ViewCoto.sectionCotonomaContent(props.cotonomaCoto)
-          )
-        },
+        ViewCoto.sectionCotonomaContent(props.cotonomaCoto),
         div(className := "pinned-cotos-with-toc")(
           olPinnedCotos(props.pinnedCotos, false)(
             props.context,

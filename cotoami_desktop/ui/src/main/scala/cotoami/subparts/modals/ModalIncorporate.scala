@@ -263,7 +263,8 @@ object ModalIncorporate {
           )
         ),
         nodeSession.serverRoot.map { case (_, coto) =>
-          ViewCoto.sectionNodeDescription(coto)
+          ViewCoto.sectionCotonomaContent(coto)
+            .map(section(className := "node-description")(_))
         }
       ),
 

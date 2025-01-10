@@ -146,21 +146,18 @@ section.pinned-cotos {
     padding-left: 16px;
     padding-right: 16px;
 
-    div.cotonoma-content {
+    section.cotonoma-content {
+      max-width: var(--max-article-width);
       margin-top: 8px;
       margin-bottom: 1rem;
+      margin-right: auto;
+      margin-left: auto;
+      padding: 1rem;
+      background-color: var(--card-background-color);
 
-      section.cotonoma-content {
-        max-width: var(--max-article-width);
-        margin-right: auto;
-        margin-left: auto;
-        padding: 1rem;
-        background-color: var(--card-background-color);
-
-        section.media-content {
-          margin-bottom: 8px;
-          text-align: center;
-        }
+      section.media-content {
+        margin-bottom: 8px;
+        text-align: center;
       }
     }
 

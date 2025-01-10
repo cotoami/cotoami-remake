@@ -174,8 +174,8 @@ object ModalNodeProfile {
       labelFor = Some("node-profile-description")
     )(
       div(className := "input-with-tools")(
-        ViewCoto.sectionNodeDescription(rootCoto).getOrElse(
-          section(className := "node-description")()
+        section(className := "node-description")(
+          ViewCoto.sectionCotonomaContent(rootCoto)
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(

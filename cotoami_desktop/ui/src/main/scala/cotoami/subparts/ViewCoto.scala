@@ -165,11 +165,16 @@ object ViewCoto {
       }).getOrElse(sectionTextContent(cotoContent.content))
     )
 
-  def sectionCotonomaContent(cotoContent: CotoContent): ReactElement =
-    section(className := "coto-content cotonoma-content")(
-      cotoContent.mediaUrl.map(sectionMediaContent),
-      sectionTextContent(cotoContent.content)
-    )
+  def sectionCotonomaContent(cotoContent: CotoContent): Option[ReactElement] =
+    Option.when(
+      cotoContent.content.map(!_.isBlank()).getOrElse(false) ||
+        cotoContent.mediaUrl.isDefined
+    ) {
+      section(className := "coto-content cotonoma-content")(
+        cotoContent.mediaUrl.map(sectionMediaContent),
+        sectionTextContent(cotoContent.content)
+      )
+    }
 
   @react object CollapsibleContent {
     case class Props(
@@ -240,17 +245,6 @@ object ViewCoto {
       }
     )
   }
-
-  def sectionNodeDescription(nodeRoot: CotoContent): Option[ReactElement] =
-    Option.when(
-      nodeRoot.content.map(!_.isBlank()).getOrElse(false) ||
-        nodeRoot.mediaUrl.isDefined
-    ) {
-      section(className := "node-description")(
-        nodeRoot.mediaUrl.map(sectionMediaContent),
-        sectionTextContent(nodeRoot.content)
-      )
-    }
 
   def ulParents(
       parents: Seq[(Coto, Link)],
