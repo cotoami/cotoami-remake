@@ -341,16 +341,23 @@ struct CotoJson {
 
 impl CotoJson {
     fn into_coto(self, node_id: Id<Node>) -> Result<Coto> {
+        let (summary, content) = if self.as_cotonoma {
+            // The original version uses the `content` field as a cotonoma name
+            // while the new version uses the `summary` field.
+            (self.content, None)
+        } else {
+            (self.summary, self.content)
+        };
         Ok(Coto {
             uuid: self.id,
             rowid: 0,
             node_id,
             posted_in_id: self.posted_in_id,
             posted_by_id: node_id,
-            content: self.content,
+            content,
             media_content: None,
             media_type: None,
-            summary: self.summary,
+            summary,
             is_cotonoma: self.as_cotonoma,
             longitude: None,
             latitude: None,
