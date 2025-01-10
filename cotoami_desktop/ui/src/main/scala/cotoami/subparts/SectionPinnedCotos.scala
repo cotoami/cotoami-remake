@@ -145,7 +145,9 @@ object SectionPinnedCotos {
         viewportId: String,
         context: Context,
         dispatch: Into[AppMsg] => Unit
-    )
+    ) {
+      val version: String = pinnedCotos.map(_._1.id.uuid).mkString
+    }
 
     final val ActiveTocEntryClass = "active"
 
@@ -200,19 +202,18 @@ object SectionPinnedCotos {
               root = viewport
             }
           )
-          rootRef.current.querySelectorAll("li.pin").foreach(
-            intersectionObserver.observe(_)
-          )
+          rootRef.current.querySelectorAll("li.pin")
+            .foreach(intersectionObserver.observe)
 
           () => {
             resizeObserver.disconnect()
             intersectionObserver.disconnect()
           }
         },
-        props.pinnedCotos
+        Seq(props.version)
       )
 
-      section(className := "document-view")(
+      section(className := "document-view", ref := rootRef)(
         Option.when(
           props.cotonomaCoto.content.map(!_.isBlank()).getOrElse(false) ||
             props.cotonomaCoto.mediaUrl.isDefined
@@ -226,7 +227,7 @@ object SectionPinnedCotos {
             ViewCoto.sectionCotonomaContent(props.cotonomaCoto)
           )
         },
-        div(className := "pinned-cotos-with-toc", ref := rootRef)(
+        div(className := "pinned-cotos-with-toc")(
           olPinnedCotos(props.pinnedCotos, false)(
             props.context,
             props.dispatch
