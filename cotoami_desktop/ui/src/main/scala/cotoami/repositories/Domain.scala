@@ -222,8 +222,8 @@ case class Domain(
     ).flatten.contains(cotoId)
 
   def canPin(cotoId: Id[Coto]): Boolean =
-    canEditLinks &&
-      // You can't pin the current cotonoma and the current node root.
+    canEditLinks && !pinned(cotoId) &&
+      // You can't pin the current cotonoma (obviously) and the current node root.
       !Seq(
         currentCotonomaPair.map(_._2.id),
         currentNodeRoot.map(_._2.id)
