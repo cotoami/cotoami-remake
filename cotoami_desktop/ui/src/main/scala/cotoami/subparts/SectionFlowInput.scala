@@ -352,7 +352,12 @@ object SectionFlowInput {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     slinky.web.html.header()(
-      section(className := "posting-to")(
+      section(
+        className := "posting-to",
+        onDoubleClick := (_ =>
+          dispatch(AppMsg.FocusCoto(currentCotonoma.cotoId))
+        )
+      )(
         context.domain.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
         currentCotonoma.name
       ),
