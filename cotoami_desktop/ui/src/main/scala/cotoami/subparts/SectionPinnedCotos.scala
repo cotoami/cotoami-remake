@@ -88,7 +88,10 @@ object SectionPinnedCotos {
       header()(
         ToolbarCoto(cotonomaCoto),
         section(className := "title")(
-          span(className := "current-cotonoma-name")(
+          span(
+            className := "current-cotonoma-name",
+            onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
+          )(
             context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             cotonoma.name
           )
