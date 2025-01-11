@@ -15,6 +15,10 @@ import cotoami.components.{optionalClasses, MapLibre}
 
 object SectionGeomap {
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Model
+  /////////////////////////////////////////////////////////////////////////////
+
   case class Model(
       // Center/Zoom
       center: Option[Geolocation] = None,
@@ -103,6 +107,10 @@ object SectionGeomap {
       addOrRemoveMarkers: Int = 0,
       refreshMarkers: Int = 0
   )
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Update
+  /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
     def into = AppMsg.SectionGeomapMsg(this)
@@ -243,6 +251,52 @@ object SectionGeomap {
     }
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // View
+  /////////////////////////////////////////////////////////////////////////////
+
+  def apply(
+      model: Model
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    MapLibre(
+      id = "main-geomap",
+      center = model.center.getOrElse(Geolocation.default).toMapLibre,
+      zoom = model.zoom.getOrElse(8),
+      detectZoomClass = Some(zoom =>
+        if (zoom <= 7)
+          Some("hide-labels")
+        else
+          None
+      ),
+      focusedLocation = model.focusedLocation.map(_.toMapLibre),
+      markerDefs = toMarkerDefs(context.domain.locationMarkers),
+      focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
+      bounds = model.bounds.map(_.toMapLibre),
+      applyCenterZoom = model.triggers.applyCenterZoom,
+      addOrRemoveMarkers = model.triggers.addOrRemoveMarkers,
+      refreshMarkers = model.triggers.refreshMarkers,
+      fitBounds = model.triggers.fitBounds,
+      onInit = Some(lngLatBounds => {
+        val bounds = GeoBounds.fromMapLibre(lngLatBounds)
+        dispatch(Msg.Init(bounds))
+      }),
+      onClick = Some(e => {
+        val location = Geolocation.fromMapLibre(e.lngLat)
+        dispatch(Msg.FocusLocation(Some(location)))
+      }),
+      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
+      onCenterMoved = Some(center => {
+        val location = Geolocation.fromMapLibre(center)
+        dispatch(Msg.CenterMoved(location))
+      }),
+      onBoundsChanged = Some(lngLatBounds => {
+        val bounds = GeoBounds.fromMapLibre(lngLatBounds)
+        dispatch(Msg.BoundsChanged(bounds))
+      }),
+      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id)))
+    )
+  }
+
   private def toMarkerDefs(
       markers: Seq[Geolocation.MarkerOfCotos]
   ): Seq[MapLibre.MarkerDef] =
@@ -350,47 +404,5 @@ object SectionGeomap {
     }
 
     marker
-  }
-
-  def apply(
-      model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    MapLibre(
-      id = "main-geomap",
-      center = model.center.getOrElse(Geolocation.default).toMapLibre,
-      zoom = model.zoom.getOrElse(8),
-      detectZoomClass = Some(zoom =>
-        if (zoom <= 7)
-          Some("hide-labels")
-        else
-          None
-      ),
-      focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = toMarkerDefs(context.domain.locationMarkers),
-      focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
-      bounds = model.bounds.map(_.toMapLibre),
-      applyCenterZoom = model.triggers.applyCenterZoom,
-      addOrRemoveMarkers = model.triggers.addOrRemoveMarkers,
-      refreshMarkers = model.triggers.refreshMarkers,
-      fitBounds = model.triggers.fitBounds,
-      onInit = Some(lngLatBounds => {
-        val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.Init(bounds))
-      }),
-      onClick = Some(e => {
-        val location = Geolocation.fromMapLibre(e.lngLat)
-        dispatch(Msg.FocusLocation(Some(location)))
-      }),
-      onZoomChanged = Some(zoom => dispatch(Msg.ZoomChanged(zoom))),
-      onCenterMoved = Some(center => {
-        val location = Geolocation.fromMapLibre(center)
-        dispatch(Msg.CenterMoved(location))
-      }),
-      onBoundsChanged = Some(lngLatBounds => {
-        val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.BoundsChanged(bounds))
-      }),
-      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id)))
-    )
   }
 }
