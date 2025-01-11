@@ -26,10 +26,7 @@ fn crud_operations() -> Result<()> {
 
     let mock_time = time::mock_time();
     let (link1, changelog) = ds.connect(
-        (&coto1.uuid, &coto2.uuid),
-        Some("hello"),
-        None,
-        None,
+        &LinkInput::new(coto1.uuid, coto2.uuid).linking_phrase("hello"),
         Some(&root_cotonoma),
         &operator,
     )?;
@@ -82,10 +79,9 @@ fn crud_operations() -> Result<()> {
 
     time::clear_mock_time();
     let (link2, _) = ds.connect(
-        (&coto1.uuid, &coto3.uuid),
-        Some("bye"),
-        Some("some details"),
-        None,
+        &LinkInput::new(coto1.uuid, coto3.uuid)
+            .linking_phrase("bye")
+            .details("some details"),
         Some(&root_cotonoma),
         &operator,
     )?;
@@ -121,10 +117,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (link3, _) = ds.connect(
-        (&coto1.uuid, &coto4.uuid),
-        None,
-        None,
-        Some(1),
+        &LinkInput::new(coto1.uuid, coto4.uuid).order(1),
         Some(&root_cotonoma),
         &operator,
     )?;

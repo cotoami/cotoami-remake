@@ -36,10 +36,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn connect<'b>(
         &self,
-        link: (&'b Id<Coto>, &'b Id<Coto>),
-        linking_phrase: Option<&str>,
-        details: Option<&str>,
-        order: Option<i32>,
+        input: &LinkInput,
         created_in: Option<&Cotonoma>,
         operator: &Operator,
     ) -> Result<(Link, ChangelogEntry)> {
@@ -55,10 +52,7 @@ impl<'a> DatabaseSession<'a> {
             &local_node_id,
             created_in.map(|c| &c.uuid),
             &created_by_id,
-            link,
-            linking_phrase,
-            details,
-            order,
+            input,
         )?;
         self.create_link(new_link)
     }
@@ -124,7 +118,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // Local root cotonoma
-        let Some((_, local_root_coto)) = self.local_node_root()? else {
+        let Some((local_root_cotonoma, local_root_coto)) = self.local_node_root()? else {
             return Ok(None);
         };
 
@@ -137,13 +131,10 @@ impl<'a> DatabaseSession<'a> {
                 return Ok(None);
             };
 
-        // Create a link between the two.
+        // Create a link between the two
         let (link, change) = self.connect(
-            (&local_root_coto.uuid, &parent_root_coto.uuid),
-            None,
-            None,
-            None,
-            None,
+            &LinkInput::new(local_root_coto.uuid, parent_root_coto.uuid),
+            Some(&local_root_cotonoma),
             &self.globals.local_node_as_operator()?,
         )?;
         Ok(Some((link, parent_root_cotonoma, change)))

@@ -20,18 +20,8 @@ fn graph() -> Result<()> {
     let connect = {
         let ds = db.new_session()?;
         let opr = opr.clone();
-        move |source_coto_id: &Id<Coto>,
-              target_coto_id: &Id<Coto>,
-              linking_phrase: Option<&str>|
-              -> Result<()> {
-            let _ = ds.connect(
-                (source_coto_id, target_coto_id),
-                linking_phrase,
-                None,
-                None,
-                None,
-                &opr,
-            )?;
+        move |input: &LinkInput| -> Result<()> {
+            let _ = ds.connect(input, None, &opr)?;
             Ok(())
         }
     };
@@ -41,7 +31,7 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root, &opr)?;
-    connect(&root_coto.uuid, &coto1.uuid, Some("foo"))?;
+    connect(&LinkInput::new(root_coto.uuid, coto1.uuid).linking_phrase("foo"))?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -58,10 +48,10 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root, &opr)?;
-    connect(&coto1.uuid, &coto2.uuid, None)?;
+    connect(&LinkInput::new(coto1.uuid, coto2.uuid))?;
 
     let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("cotonoma1"), &root, &opr)?;
-    connect(&coto1.uuid, &cotonoma1.coto_id, None)?;
+    connect(&LinkInput::new(coto1.uuid, cotonoma1.coto_id))?;
 
     let graph = ds.graph(root_coto.clone(), true)?;
     let graph_by_cte = ds.graph_by_cte(root_coto.clone(), true)?;
@@ -88,8 +78,8 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root, &opr)?;
-    connect(&coto2.uuid, &coto3.uuid, None)?;
-    connect(&coto3.uuid, &coto1.uuid, None)?;
+    connect(&LinkInput::new(coto2.uuid, coto3.uuid))?;
+    connect(&LinkInput::new(coto3.uuid, coto1.uuid))?;
 
     let expected_dot = indoc! {r#"
         digraph {
@@ -113,7 +103,7 @@ fn graph() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root, &opr)?;
-    connect(&cotonoma1.coto_id, &coto4.uuid, None)?;
+    connect(&LinkInput::new(cotonoma1.coto_id, coto4.uuid))?;
 
     // until_cotonoma = true
     let expected_dot = indoc! {r#"

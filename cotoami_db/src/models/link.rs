@@ -134,10 +134,7 @@ impl<'a> NewLink<'a> {
         node_id: &'a Id<Node>,
         created_in_id: Option<&'a Id<Cotonoma>>,
         created_by_id: &'a Id<Node>,
-        link: (&'a Id<Coto>, &'a Id<Coto>),
-        linking_phrase: Option<&'a str>,
-        details: Option<&'a str>,
-        order: Option<i32>,
+        input: &'a LinkInput<'a>,
     ) -> Result<Self> {
         let now = crate::current_datetime();
         let new_link = Self {
@@ -145,11 +142,11 @@ impl<'a> NewLink<'a> {
             node_id,
             created_in_id,
             created_by_id,
-            source_coto_id: link.0,
-            target_coto_id: link.1,
-            linking_phrase,
-            details,
-            order,
+            source_coto_id: &input.source_coto_id,
+            target_coto_id: &input.target_coto_id,
+            linking_phrase: input.linking_phrase.as_deref(),
+            details: input.details.as_deref(),
+            order: input.order,
             created_at: now,
             updated_at: now,
         };
