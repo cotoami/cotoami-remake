@@ -44,7 +44,7 @@ object PaneFlow {
                 EditorDefaultHeight
               ),
               (newSize) => dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
-            )(context, subMsg => dispatch(AppMsg.FlowInputMsg(subMsg)))
+            )(context, dispatch)
           )
         case _ => None
       },

@@ -304,7 +304,7 @@ object SectionFlowInput {
       geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(
       className := optionalClasses(
         Seq(
@@ -349,7 +349,7 @@ object SectionFlowInput {
 
   private def header(model: Model, currentCotonoma: Cotonoma)(implicit
       context: Context,
-      dispatch: Msg => Unit
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     slinky.web.html.header()(
       section(className := "posting-to")(
@@ -388,7 +388,7 @@ object SectionFlowInput {
       geomap: Geomap,
       editorHeight: Int,
       onEditorHeightChanged: Int => Unit
-  )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     SplitPane(
       vertical = false,
       initialPrimarySize = editorHeight,
@@ -437,7 +437,7 @@ object SectionFlowInput {
       operatingNode: Node,
       currentCotonoma: Cotonoma,
       geomap: Geomap
-  )(implicit context: Context, dispatch: Msg => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       div(className := "cotonoma-form")(
         CotonomaForm.inputName(
@@ -470,7 +470,7 @@ object SectionFlowInput {
   private def buttonPost(
       model: Model,
       currentCotonoma: Cotonoma
-  )(implicit dispatch: Msg => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "post",
       disabled := !model.readyToPost,
