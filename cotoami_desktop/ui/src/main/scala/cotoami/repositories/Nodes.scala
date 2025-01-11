@@ -150,6 +150,8 @@ case class Nodes(
   def canEditLinksIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
       asChildOf(nodeId).map(_.canEditLinks).getOrElse(false)
+
+  def canPromote(coto: Coto): Boolean = canEdit(coto) && !coto.isCotonoma
 }
 
 object Nodes {

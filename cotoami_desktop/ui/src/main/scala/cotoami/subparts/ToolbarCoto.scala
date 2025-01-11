@@ -62,7 +62,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
+      Option.when(context.domain.nodes.canPromote(coto)) {
         toolButton(
           symbol = "drive_folder_upload",
           tip = "Promote to a cotonoma",
