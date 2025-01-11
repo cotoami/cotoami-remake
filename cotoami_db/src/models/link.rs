@@ -161,6 +161,54 @@ impl<'a> NewLink<'a> {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// LinkInput
+/////////////////////////////////////////////////////////////////////////////
+
+/// Input values to create a new link as a serializable struct with a builder interface.
+#[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct LinkInput<'a> {
+    pub source_coto_id: Id<Coto>,
+    pub target_coto_id: Id<Coto>,
+
+    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
+    pub linking_phrase: Option<Cow<'a, str>>,
+
+    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    pub details: Option<Cow<'a, str>>,
+
+    /// If order is None, the next order number will be assigned automatically.
+    #[validate(range(min = 1))]
+    pub order: Option<i32>,
+}
+
+impl<'a> LinkInput<'a> {
+    pub fn new(source_coto_id: Id<Coto>, target_coto_id: Id<Coto>) -> Self {
+        Self {
+            source_coto_id,
+            target_coto_id,
+            linking_phrase: None,
+            details: None,
+            order: None,
+        }
+    }
+
+    pub fn linking_phrase(mut self, linking_phrase: &'a str) -> Self {
+        self.linking_phrase = Some(Cow::from(linking_phrase));
+        self
+    }
+
+    pub fn details(mut self, details: &'a str) -> Self {
+        self.details = Some(Cow::from(details));
+        self
+    }
+
+    pub fn order(mut self, order: i32) -> Self {
+        self.order = Some(order);
+        self
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // UpdateLink
 /////////////////////////////////////////////////////////////////////////////
 

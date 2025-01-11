@@ -355,7 +355,7 @@ impl<'a> NewCoto<'a> {
 // CotoInput
 /////////////////////////////////////////////////////////////////////////////
 
-/// Coto input values as a serializable struct with a builder interface.
+/// Input values to create a new coto as a serializable struct with a builder interface.
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct CotoInput<'a> {
     #[validate(length(max = "Coto::CONTENT_MAX_LENGTH"))]
