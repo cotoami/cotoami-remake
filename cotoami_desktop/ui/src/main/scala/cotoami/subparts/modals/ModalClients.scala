@@ -16,6 +16,10 @@ import cotoami.subparts.{sectionClientNodesCount, spanNode, Modal}
 
 object ModalClients {
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Model
+  /////////////////////////////////////////////////////////////////////////////
+
   case class Model(
       clientNodes: PaginatedItems[ClientNode] = PaginatedItems(),
       togglingDisabled: Set[Id[Node]] = Set.empty,
@@ -46,6 +50,10 @@ object ModalClients {
         fetchClients(0)
       )
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Update
+  /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
     def into = Modal.Msg.ClientsMsg(this).pipe(AppMsg.ModalMsg)
@@ -94,6 +102,10 @@ object ModalClients {
   def fetchClients(pageIndex: Double): Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(pageIndex)
       .map(Msg.ClientsFetched(_).into)
+
+  /////////////////////////////////////////////////////////////////////////////
+  // View
+  /////////////////////////////////////////////////////////////////////////////
 
   def apply(model: Model)(implicit
       context: Context,
