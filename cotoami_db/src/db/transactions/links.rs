@@ -22,38 +22,21 @@ impl<'a> DatabaseSession<'a> {
     pub fn recent_links(
         &mut self,
         node_id: Option<&Id<Node>>,
-        created_in_id: Option<&Id<Cotonoma>>,
         page_size: i64,
         page_index: i64,
     ) -> Result<Page<Link>> {
-        self.read_transaction(link_ops::recent(
-            node_id,
-            created_in_id,
-            page_size,
-            page_index,
-        ))
+        self.read_transaction(link_ops::recent(node_id, page_size, page_index))
     }
 
     pub fn connect<'b>(
         &self,
         input: &LinkInput,
-        created_in: Option<&Cotonoma>,
         operator: &Operator,
     ) -> Result<(Link, ChangelogEntry)> {
         operator.can_edit_links()?;
-
-        if let Some(cotonoma) = created_in {
-            self.globals.ensure_local(cotonoma)?;
-        }
-
         let local_node_id = self.globals.try_get_local_node_id()?;
         let created_by_id = operator.node_id();
-        let new_link = NewLink::new(
-            &local_node_id,
-            created_in.map(|c| &c.uuid),
-            &created_by_id,
-            input,
-        )?;
+        let new_link = NewLink::new(&local_node_id, &created_by_id, input)?;
         self.create_link(new_link)
     }
 
@@ -118,7 +101,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // Local root cotonoma
-        let Some((local_root_cotonoma, local_root_coto)) = self.local_node_root()? else {
+        let Some((_, local_root_coto)) = self.local_node_root()? else {
             return Ok(None);
         };
 
@@ -134,7 +117,6 @@ impl<'a> DatabaseSession<'a> {
         // Create a link between the two
         let (link, change) = self.connect(
             &LinkInput::new(local_root_coto.uuid, parent_root_coto.uuid),
-            Some(&local_root_cotonoma),
             &self.globals.local_node_as_operator()?,
         )?;
         Ok(Some((link, parent_root_cotonoma, change)))

@@ -472,7 +472,6 @@ impl ConnectionJson {
         Ok(Link {
             uuid: Id::generate(),
             node_id,
-            created_in_id: self.created_in,
             created_by_id: node_id,
             source_coto_id,
             target_coto_id: self.end,

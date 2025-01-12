@@ -220,7 +220,6 @@ diesel::table! {
     links (uuid) {
         uuid -> Text,
         node_id -> Text,
-        created_in_id -> Nullable<Text>,
         created_by_id -> Text,
         source_coto_id -> Text,
         target_coto_id -> Text,

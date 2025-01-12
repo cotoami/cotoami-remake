@@ -21,7 +21,7 @@ fn graph() -> Result<()> {
         let ds = db.new_session()?;
         let opr = opr.clone();
         move |input: &LinkInput| -> Result<()> {
-            let _ = ds.connect(input, None, &opr)?;
+            let _ = ds.connect(input, &opr)?;
             Ok(())
         }
     };

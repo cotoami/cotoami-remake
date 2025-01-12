@@ -130,13 +130,6 @@ CREATE TABLE links (
   -- UUID of the node in which this link was created.
   node_id TEXT NOT NULL,
 
-  -- UUID of the cotonoma in which this link was created,
-  -- or NULL if it does not belong to a cotonoma.
-  --
-  -- This column is used to fetch links in a cotonoma, intended as a complement to a graph traversal.
-  -- cf. https://github.com/cotoami/cotoami/blob/develop/lib/cotoami/services/coto_graph_service.ex#L55-L59
-  created_in_id TEXT,
-
   -- UUID of the node whose owner has created this link.
   created_by_id TEXT NOT NULL,
 

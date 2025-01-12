@@ -11,7 +11,6 @@ use validator::Validate;
 use crate::{
     models::{
         coto::Coto,
-        cotonoma::Cotonoma,
         node::{BelongsToNode, Node},
         FieldDiff, Id,
     },
@@ -33,10 +32,6 @@ pub struct Link {
 
     /// UUID of the node in which this link was created.
     pub node_id: Id<Node>,
-
-    /// UUID of the cotonoma in which this link was created,
-    /// or `None` if it does not belong to a cotonoma.
-    pub created_in_id: Option<Id<Cotonoma>>,
 
     /// UUID of the node whose owner has created this link.
     pub created_by_id: Id<Node>,
@@ -72,7 +67,6 @@ impl Link {
         NewLink {
             uuid: self.uuid,
             node_id: &self.node_id,
-            created_in_id: self.created_in_id.as_ref(),
             created_by_id: &self.created_by_id,
             source_coto_id: &self.source_coto_id,
             target_coto_id: &self.target_coto_id,
@@ -115,7 +109,6 @@ impl BelongsToNode for Link {
 pub(crate) struct NewLink<'a> {
     uuid: Id<Link>,
     node_id: &'a Id<Node>,
-    created_in_id: Option<&'a Id<Cotonoma>>,
     created_by_id: &'a Id<Node>,
     source_coto_id: &'a Id<Coto>,
     target_coto_id: &'a Id<Coto>,
@@ -132,7 +125,6 @@ pub(crate) struct NewLink<'a> {
 impl<'a> NewLink<'a> {
     pub fn new(
         node_id: &'a Id<Node>,
-        created_in_id: Option<&'a Id<Cotonoma>>,
         created_by_id: &'a Id<Node>,
         input: &'a LinkInput<'a>,
     ) -> Result<Self> {
@@ -140,7 +132,6 @@ impl<'a> NewLink<'a> {
         let new_link = Self {
             uuid: Id::generate(),
             node_id,
-            created_in_id,
             created_by_id,
             source_coto_id: &input.source_coto_id,
             target_coto_id: &input.target_coto_id,

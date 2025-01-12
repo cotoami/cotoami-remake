@@ -12,7 +12,6 @@ use crate::{
     db::{error::*, op::*},
     models::{
         coto::Coto,
-        cotonoma::Cotonoma,
         link::{Link, LinkContentDiff, NewLink, UpdateLink},
         node::Node,
         Id,
@@ -49,7 +48,6 @@ pub(crate) fn try_get<Conn: AsReadableConn>(
 
 pub(crate) fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
-    created_in_id: Option<&'a Id<Cotonoma>>,
     page_size: i64,
     page_index: i64,
 ) -> impl Operation<Conn, Page<Link>> + 'a {
@@ -58,9 +56,6 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
             let mut query = links::table.into_boxed();
             if let Some(id) = node_id {
                 query = query.filter(links::node_id.eq(id));
-            }
-            if let Some(id) = created_in_id {
-                query = query.filter(links::created_in_id.eq(id));
             }
             query.order(links::created_at.desc())
         })

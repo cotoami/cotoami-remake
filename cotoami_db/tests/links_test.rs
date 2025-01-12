@@ -27,7 +27,6 @@ fn crud_operations() -> Result<()> {
     let mock_time = time::mock_time();
     let (link1, changelog) = ds.connect(
         &LinkInput::new(coto1.uuid, coto2.uuid).linking_phrase("hello"),
-        Some(&root_cotonoma),
         &operator,
     )?;
 
@@ -36,7 +35,6 @@ fn crud_operations() -> Result<()> {
         link1,
         pat!(Link {
             node_id: eq(&node.uuid),
-            created_in_id: some(eq(&root_cotonoma.uuid)),
             created_by_id: eq(&node.uuid),
             source_coto_id: eq(&coto1.uuid),
             target_coto_id: eq(&coto2.uuid),
@@ -53,7 +51,7 @@ fn crud_operations() -> Result<()> {
 
     // check if `recent_links` contains it
     assert_that!(
-        ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
+        ds.recent_links(None, 5, 0)?,
         pat!(Page {
             size: eq(&5),
             index: eq(&0),
@@ -82,7 +80,6 @@ fn crud_operations() -> Result<()> {
         &LinkInput::new(coto1.uuid, coto3.uuid)
             .linking_phrase("bye")
             .details("some details"),
-        Some(&root_cotonoma),
         &operator,
     )?;
 
@@ -103,7 +100,7 @@ fn crud_operations() -> Result<()> {
 
     // check if `recent_links` contains it
     assert_that!(
-        ds.recent_links(None, Some(&root_cotonoma.uuid), 5, 0)?,
+        ds.recent_links(None, 5, 0)?,
         pat!(Page {
             size: eq(&5),
             index: eq(&0),
@@ -116,11 +113,7 @@ fn crud_operations() -> Result<()> {
     // When: create a link from coto1 to coto4 with order number 1
     /////////////////////////////////////////////////////////////////////////////
 
-    let (link3, _) = ds.connect(
-        &LinkInput::new(coto1.uuid, coto4.uuid).order(1),
-        Some(&root_cotonoma),
-        &operator,
-    )?;
+    let (link3, _) = ds.connect(&LinkInput::new(coto1.uuid, coto4.uuid).order(1), &operator)?;
 
     // check if the order of the links has been updated
     assert_eq!(ds.link(&link3.uuid)?.unwrap().order, 1);
