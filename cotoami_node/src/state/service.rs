@@ -16,6 +16,7 @@ mod changes;
 mod cotonomas;
 mod cotos;
 mod graph;
+mod links;
 mod nodes;
 mod session;
 
