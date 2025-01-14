@@ -71,6 +71,12 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<(Cotonoma, Coto)>()
     }
+
+    async fn connect(&self, input: LinkInput<'static>, create_in: Id<Node>) -> Result<Link> {
+        let request = Command::Connect { input, create_in }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Link>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}

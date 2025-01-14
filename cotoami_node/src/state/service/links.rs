@@ -3,6 +3,7 @@ use std::sync::Arc;
 use cotoami_db::prelude::*;
 use validator::Validate;
 
+use super::NodeServiceExt;
 use crate::{
     service::{error::IntoServiceResult, ServiceError},
     state::NodeState,
@@ -22,7 +23,7 @@ impl NodeState {
             create_in,
             input,
             move |ds, input| ds.connect(&input, operator.as_ref()),
-            |parent, input| unimplemented!(),
+            |parent, input| parent.connect(input, create_in),
         )
         .await
     }
