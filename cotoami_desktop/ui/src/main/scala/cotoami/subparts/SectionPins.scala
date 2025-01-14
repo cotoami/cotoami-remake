@@ -20,6 +20,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Link, UiState}
 import cotoami.repositories.Domain
+import cotoami.backend.ErrorJson
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionPins {
@@ -47,6 +48,7 @@ object SectionPins {
     case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
         extends Msg
     case class ScrollToPin(pin: Link) extends Msg
+    case class Pinned(result: Either[ErrorJson, Link]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -74,6 +76,14 @@ object SectionPins {
             }
           )
         )
+
+      case Msg.Pinned(Right(link)) =>
+        default.copy(_1 =
+          model.modify(_.justPinned).using(_ + link.targetCotoId)
+        )
+
+      case Msg.Pinned(Left(e)) =>
+        default.copy(_3 = cotoami.error("Couldn't pin a coto.", e))
     }
   }
 
