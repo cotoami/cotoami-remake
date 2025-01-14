@@ -115,6 +115,9 @@ impl NodeState {
             Command::RenameCotonoma { id, name } => {
                 format.serialize(self.rename_cotonoma(id, name, opr?).await)
             }
+            Command::Connect { input, create_in } => {
+                format.serialize(self.connect(input, create_in, opr?).await)
+            }
         }
     }
 }

@@ -111,7 +111,8 @@ pub enum Command {
     /// Request a [CotoGraph] by traversing from the given cotonoma.
     GraphFromCotonoma { cotonoma: Id<Cotonoma> },
 
-    /// Request to create a new [Coto] in the given cotonoma (`post_to`).
+    /// Request to create a new [Coto] in the given cotonoma (`post_to`),
+    /// and return the [Coto] if suceeded.
     PostCoto {
         input: CotoInput<'static>,
         post_to: Id<Cotonoma>,
@@ -140,4 +141,11 @@ pub enum Command {
     /// Request to rename the specified [Cotonoma] to the given `name`.
     /// The return type is a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)`.
     RenameCotonoma { id: Id<Cotonoma>, name: String },
+
+    /// Request to create a new [Link] in the given node (`create_in`),
+    /// and return the [Link] if suceeded.
+    Connect {
+        input: LinkInput<'static>,
+        create_in: Id<Node>,
+    },
 }

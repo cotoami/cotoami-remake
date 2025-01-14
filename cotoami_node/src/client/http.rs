@@ -245,6 +245,9 @@ impl HttpClient {
             Command::RenameCotonoma { id, name } => self
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
+            Command::Connect { input, create_in } => self
+                .post(&format!("{API_PATH_NODES}/{create_in}/links"))
+                .json(&input),
         };
 
         // Set the "Accept" header from Request::accept()
