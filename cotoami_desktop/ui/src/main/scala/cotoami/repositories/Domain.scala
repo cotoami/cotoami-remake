@@ -148,6 +148,9 @@ case class Domain(
       )
       .flatten
 
+  def isPin(link: Link): Boolean =
+    currentCotonoma.map(link.sourceCotoId == _.cotoId).getOrElse(false)
+
   def pinned(cotoId: Id[Coto]): Boolean =
     currentCotonoma.map(cotonoma =>
       links.linked(cotonoma.cotoId, cotoId)
