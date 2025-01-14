@@ -91,12 +91,13 @@ object SectionPins {
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
     context.domain.currentCotonomaPair.map(
-      sectionPins(context.domain.pins, uiState, _)
+      sectionPins(context.domain.pins, model, uiState, _)
     )
   }
 
   def sectionPins(
       pins: Seq[(Link, Coto)],
+      model: Model,
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
@@ -153,12 +154,13 @@ object SectionPins {
       )(
         ScrollArea()(
           if (inColumns)
-            olPins(pins, inColumns)
+            olPins(pins, inColumns, model.justPinned)
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,
               pins = pins,
               viewportId = PinsBodyId,
+              justPinned = model.justPinned,
               context = context,
               dispatch = dispatch
             )
@@ -172,6 +174,7 @@ object SectionPins {
         cotonomaCoto: Coto,
         pins: Seq[(Link, Coto)],
         viewportId: String,
+        justPinned: HashSet[Id[Coto]],
         context: Context,
         dispatch: Into[AppMsg] => Unit
     ) {
@@ -252,7 +255,7 @@ object SectionPins {
           )(_)
         ),
         div(className := "pins-with-toc")(
-          olPins(props.pins, false)(
+          olPins(props.pins, false, props.justPinned)(
             props.context,
             props.dispatch
           ),
@@ -267,10 +270,13 @@ object SectionPins {
 
   private def olPins(
       pins: Seq[(Link, Coto)],
-      inColumns: Boolean
+      inColumns: Boolean,
+      justPinned: HashSet[Id[Coto]]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     ol(className := "pins")(
-      pins.map { case (pin, coto) => liPin(pin, coto, inColumns) }: _*
+      pins.map { case (pin, coto) =>
+        liPin(pin, coto, inColumns, justPinned.contains(coto.id))
+      }: _*
     )
 
   def elementIdOfPin(pin: Link): String = s"pin-${pin.id.uuid}"
@@ -278,11 +284,17 @@ object SectionPins {
   private def liPin(
       pin: Link,
       coto: Coto,
-      inColumn: Boolean
+      inColumn: Boolean,
+      justPinned: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     li(
       key := pin.id.uuid,
-      className := "pin",
+      className := optionalClasses(
+        Seq(
+          ("pin", true),
+          ("just-pinned", justPinned)
+        )
+      ),
       id := elementIdOfPin(pin)
     )(
       ViewCoto.ulParents(

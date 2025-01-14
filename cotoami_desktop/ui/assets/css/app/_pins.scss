@@ -84,6 +84,20 @@ section.pins {
 
     li.pin {
       background-color: var(--card-background-color);
+
+      &.just-pinned {
+        @keyframes just-pinned {
+          0% {
+            opacity: 0;
+          }
+
+          100% {
+            opacity: 1;
+          }
+        }
+
+        animation: just-pinned 0.3s linear;
+      }
     }
 
     article.pinned-coto {
