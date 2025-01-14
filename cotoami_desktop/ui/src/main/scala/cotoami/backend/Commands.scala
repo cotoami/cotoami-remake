@@ -278,6 +278,30 @@ object Commands {
   def RenameCotonoma(id: Id[Cotonoma], name: String) =
     jso(RenameCotonoma = jso(id = id.uuid, name = name))
 
+  def Connect(
+      sourceId: Id[Coto],
+      targetId: Id[Coto],
+      linkingPhrase: Option[String],
+      details: Option[String],
+      order: Option[Int],
+      createIn: Id[Node]
+  ) = jso(Connect =
+    jso(
+      input = jso(
+        source_coto_id = sourceId.uuid,
+        target_coto_id = targetId.uuid,
+        linking_phrase = linkingPhrase.getOrElse(null),
+        details = details.getOrElse(null),
+        // getOrElse can't be used to convert `order` because Int is non-nullable.
+        order = order match {
+          case Some(order) => order
+          case None        => null
+        }
+      ),
+      create_in = createIn.uuid
+    )
+  )
+
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)
 
