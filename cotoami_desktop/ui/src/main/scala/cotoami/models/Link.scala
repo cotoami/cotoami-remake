@@ -6,7 +6,6 @@ import java.time.Instant
 case class Link(
     id: Id[Link],
     nodeId: Id[Node],
-    createdInId: Option[Id[Cotonoma]],
     createdById: Id[Node],
     sourceCotoId: Id[Coto],
     targetCotoId: Id[Coto],

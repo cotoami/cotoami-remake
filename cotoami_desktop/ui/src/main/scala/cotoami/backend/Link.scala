@@ -10,7 +10,6 @@ import cotoami.models.{Coto, Id, Link, Node}
 trait LinkJson extends js.Object {
   val uuid: String = js.native
   val node_id: String = js.native
-  val created_in_id: Nullable[String] = js.native
   val created_by_id: String = js.native
   val source_coto_id: String = js.native
   val target_coto_id: String = js.native
@@ -47,7 +46,6 @@ object LinkBackend {
     Link(
       id = Id(json.uuid),
       nodeId = Id(json.node_id),
-      createdInId = Nullable.toOption(json.created_in_id).map(Id(_)),
       createdById = Id(json.created_by_id),
       sourceCotoId = Id(json.source_coto_id),
       targetCotoId = Id(json.target_coto_id),
