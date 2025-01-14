@@ -51,14 +51,14 @@ object PaneStock {
             )
           ),
           secondary = SplitPane.Secondary.Props()(
-            sectionLinkedCotos(model, uiState)(model, dispatch)
+            sectionLinks(model, uiState)(model, dispatch)
           )
         )
       else
-        sectionLinkedCotos(model, uiState)(model, dispatch)
+        sectionLinks(model, uiState)(model, dispatch)
     )
 
-  def sectionLinkedCotos(
+  def sectionLinks(
       model: Model,
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
@@ -70,7 +70,7 @@ object PaneStock {
     section(
       className := optionalClasses(
         Seq(
-          ("linked-cotos", true),
+          ("links", true),
           ("with-traversals-opened", sectionTraversals.isDefined)
         )
       )
