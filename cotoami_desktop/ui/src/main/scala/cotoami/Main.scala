@@ -357,9 +357,8 @@ object Main {
         (model.copy(timeline = timeline, domain = domain), cmd)
       }
 
-      case Msg.SectionPinnedCotosMsg(submsg) => {
-        val (pins, uiState, cmd) =
-          SectionPinnedCotos.update(submsg, model.pins)
+      case Msg.SectionPinsMsg(submsg) => {
+        val (pins, uiState, cmd) = SectionPins.update(submsg, model.pins)
         (model.copy(pins = pins, uiState = uiState), cmd)
       }
 

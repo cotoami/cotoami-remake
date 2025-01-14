@@ -21,7 +21,7 @@ import cotoami.models.{Coto, Cotonoma, Id, Link, UiState}
 import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
-object SectionPinnedCotos {
+object SectionPins {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -36,7 +36,7 @@ object SectionPinnedCotos {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.SectionPinnedCotosMsg(this)
+    def into = AppMsg.SectionPinsMsg(this)
   }
 
   object Msg {

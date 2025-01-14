@@ -70,7 +70,7 @@ object Msg {
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
   case class FlowInputMsg(submsg: SectionFlowInput.Msg) extends Msg
   case class SectionTimelineMsg(submsg: SectionTimeline.Msg) extends Msg
-  case class SectionPinnedCotosMsg(submsg: SectionPinnedCotos.Msg) extends Msg
+  case class SectionPinsMsg(submsg: SectionPins.Msg) extends Msg
   case class SectionTraversalsMsg(submsg: SectionTraversals.Msg) extends Msg
   case class SectionGeomapMsg(submsg: SectionGeomap.Msg) extends Msg
 }
