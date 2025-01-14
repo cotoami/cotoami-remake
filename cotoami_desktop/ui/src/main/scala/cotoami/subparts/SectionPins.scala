@@ -42,7 +42,7 @@ object SectionPins {
   object Msg {
     case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
         extends Msg
-    case class ScrollToPinnedCoto(pin: Link) extends Msg
+    case class ScrollToPin(pin: Link) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -52,16 +52,16 @@ object SectionPins {
     msg match {
       case Msg.SwitchView(cotonoma, inColumns) =>
         context.uiState
-          .map(_.setPinnedInColumns(cotonoma, inColumns).pipe { state =>
+          .map(_.setPinsInColumns(cotonoma, inColumns).pipe { state =>
             default.copy(_2 = Some(state), _3 = state.save)
           })
           .getOrElse(default)
 
-      case Msg.ScrollToPinnedCoto(pin) =>
+      case Msg.ScrollToPin(pin) =>
         default.copy(
           _3 = Cmd(
             IO {
-              dom.document.getElementById(elementIdOfPinnedCoto(pin)) match {
+              dom.document.getElementById(elementIdOfPin(pin)) match {
                 case element: HTMLElement =>
                   element.scrollIntoView(true)
                 case _ => ()
@@ -77,7 +77,7 @@ object SectionPins {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  final val PinnedCotosBodyId = "pinned-cotos-body"
+  final val PinsBodyId = "pins-body"
 
   def apply(
       model: Model,
@@ -87,18 +87,18 @@ object SectionPins {
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
     context.domain.currentCotonomaPair.map(
-      sectionPinnedCotos(context.domain.pinnedCotos, uiState, _)
+      sectionPins(context.domain.pins, uiState, _)
     )
   }
 
-  def sectionPinnedCotos(
-      pinnedCotos: Seq[(Link, Coto)],
+  def sectionPins(
+      pins: Seq[(Link, Coto)],
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (cotonoma, cotonomaCoto) = currentCotonoma
-    val inColumns = uiState.isPinnedInColumns(cotonoma.id)
-    section(className := "pinned-cotos header-and-body")(
+    val inColumns = uiState.arePinsInColumns(cotonoma.id)
+    section(className := "pins header-and-body")(
       header()(
         ToolbarCoto(cotonomaCoto),
         section(className := "title")(
@@ -145,16 +145,16 @@ object SectionPins {
             ("column-view", inColumns)
           )
         ),
-        id := PinnedCotosBodyId
+        id := PinsBodyId
       )(
         ScrollArea()(
           if (inColumns)
-            olPinnedCotos(pinnedCotos, inColumns)
+            olPins(pins, inColumns)
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,
-              pinnedCotos = pinnedCotos,
-              viewportId = PinnedCotosBodyId,
+              pins = pins,
+              viewportId = PinsBodyId,
               context = context,
               dispatch = dispatch
             )
@@ -166,12 +166,12 @@ object SectionPins {
   @react object DocumentView {
     case class Props(
         cotonomaCoto: Coto,
-        pinnedCotos: Seq[(Link, Coto)],
+        pins: Seq[(Link, Coto)],
         viewportId: String,
         context: Context,
         dispatch: Into[AppMsg] => Unit
     ) {
-      val version: String = pinnedCotos.map(_._1.id.uuid).mkString
+      val version: String = pins.map(_._1.id.uuid).mkString
     }
 
     final val ActiveTocEntryClass = "active"
@@ -247,12 +247,12 @@ object SectionPins {
             )
           )(_)
         ),
-        div(className := "pinned-cotos-with-toc")(
-          olPinnedCotos(props.pinnedCotos, false)(
+        div(className := "pins-with-toc")(
+          olPins(props.pins, false)(
             props.context,
             props.dispatch
           ),
-          divToc(props.pinnedCotos, tocRef)(props.context, props.dispatch)
+          divToc(props.pins, tocRef)(props.context, props.dispatch)
         )
       )
     }
@@ -261,19 +261,17 @@ object SectionPins {
       s"${viewportHeight - 16}px"
   }
 
-  private def olPinnedCotos(
-      pinnedCotos: Seq[(Link, Coto)],
+  private def olPins(
+      pins: Seq[(Link, Coto)],
       inColumns: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    ol(className := "pinned-cotos")(
-      pinnedCotos.map { case (pin, coto) =>
-        liPinnedCoto(pin, coto, inColumns)
-      }: _*
+    ol(className := "pins")(
+      pins.map { case (pin, coto) => liPin(pin, coto, inColumns) }: _*
     )
 
-  def elementIdOfPinnedCoto(pin: Link): String = s"pin-${pin.id.uuid}"
+  def elementIdOfPin(pin: Link): String = s"pin-${pin.id.uuid}"
 
-  private def liPinnedCoto(
+  private def liPin(
       pin: Link,
       coto: Coto,
       inColumn: Boolean
@@ -281,7 +279,7 @@ object SectionPins {
     li(
       key := pin.id.uuid,
       className := "pin",
-      id := elementIdOfPinnedCoto(pin)
+      id := elementIdOfPin(pin)
     )(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
@@ -316,16 +314,16 @@ object SectionPins {
   }
 
   private def elementIdOfTocEntry(pin: Link): String =
-    s"toc-${elementIdOfPinnedCoto(pin)}"
+    s"toc-${elementIdOfPin(pin)}"
 
   private def divToc(
-      pinnedCotos: Seq[(Link, Coto)],
+      pins: Seq[(Link, Coto)],
       tocRef: ReactRef[dom.HTMLDivElement]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
         ol(className := "toc")(
-          pinnedCotos.map { case (pin, coto) =>
+          pins.map { case (pin, coto) =>
             li(
               key := pin.id.uuid,
               className := "toc-entry",
@@ -333,7 +331,7 @@ object SectionPins {
             )(
               button(
                 className := "default",
-                onClick := (_ => dispatch(Msg.ScrollToPinnedCoto(pin)))
+                onClick := (_ => dispatch(Msg.ScrollToPin(pin)))
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(

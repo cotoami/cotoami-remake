@@ -117,7 +117,7 @@ case class Domain(
   // Links
   /////////////////////////////////////////////////////////////////////////////
 
-  lazy val pinnedCotos: Seq[(Link, Coto)] =
+  lazy val pins: Seq[(Link, Coto)] =
     currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
       .getOrElse(Seq.empty)
 

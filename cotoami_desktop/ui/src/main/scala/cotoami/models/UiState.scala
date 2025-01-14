@@ -22,7 +22,7 @@ case class UiState(
       PaneStock.PaneName -> false // fold PaneStock by default
     ),
     paneSizes: Map[String, Int] = Map(),
-    pinnedInColumns: HashSet[String] = HashSet.empty,
+    pinsInColumns: HashSet[String] = HashSet.empty,
     geomapOpened: Boolean = false
 ) {
   def isDarkMode: Boolean = theme == UiState.DarkMode
@@ -42,19 +42,16 @@ case class UiState(
   def resizePane(name: String, newSize: Int): UiState =
     copy(paneSizes = paneSizes + (name -> newSize))
 
-  def setPinnedInColumns(
-      cotonoma: Id[Cotonoma],
-      pinnedInColumns: Boolean
-  ): UiState =
-    this.modify(_.pinnedInColumns).using(
-      if (pinnedInColumns)
+  def setPinsInColumns(cotonoma: Id[Cotonoma], inColumns: Boolean): UiState =
+    this.modify(_.pinsInColumns).using(
+      if (inColumns)
         _ + cotonoma.uuid
       else
         _ - cotonoma.uuid
     )
 
-  def isPinnedInColumns(cotonoma: Id[Cotonoma]): Boolean =
-    pinnedInColumns.contains(cotonoma.uuid)
+  def arePinsInColumns(cotonoma: Id[Cotonoma]): Boolean =
+    pinsInColumns.contains(cotonoma.uuid)
 
   def openGeomap: UiState =
     copy(geomapOpened = true).openOrClosePane(PaneStock.PaneName, true)

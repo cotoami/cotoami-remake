@@ -1,4 +1,4 @@
-section.pinned-cotos {
+section.pins {
   >header {
     --padding-horizontal: 100px;
 
@@ -61,7 +61,6 @@ section.pinned-cotos {
 
   >div.body {
     padding-top: 10px;
-    // background-color: var(--pinned-background-color);
 
     // SimpleBar div
     >div {
@@ -80,7 +79,7 @@ section.pinned-cotos {
     }
   }
 
-  ol.pinned-cotos {
+  ol.pins {
     padding-top: 20px;
 
     li.pin {
@@ -161,7 +160,7 @@ section.pinned-cotos {
       }
     }
 
-    div.pinned-cotos-with-toc {
+    div.pins-with-toc {
       max-width: var(--max-article-width);
       margin-right: auto;
       margin-left: auto;
@@ -217,13 +216,13 @@ section.pinned-cotos {
     // This warning will be fixed by the release of:
     // https://github.com/microsoft/vscode-css-languageservice/issues/381
     @container (min-width: 50rem) {
-      div.pinned-cotos-with-toc {
+      div.pins-with-toc {
         display: flex;
         flex-direction: row;
 
         max-width: calc(var(--max-article-width) + var(--toc-width));
 
-        ol.pinned-cotos {
+        ol.pins {
           flex: 1;
         }
 
@@ -249,8 +248,8 @@ section.pinned-cotos {
 
     // Disable card-background-color in document-view
     article.coto,
-    ol.pinned-cotos ol.sub-cotos>div.links,
-    ol.pinned-cotos ol.sub-cotos>div.links-not-yet-loaded,
+    ol.pins ol.sub-cotos>div.links,
+    ol.pins ol.sub-cotos>div.links-not-yet-loaded,
     ul.parents {
       background-color: var(--background-color);
     }
@@ -272,7 +271,7 @@ section.pinned-cotos {
       }
     }
 
-    ol.pinned-cotos {
+    ol.pins {
       display: flex;
       flex-direction: row;
 
