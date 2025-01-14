@@ -21,7 +21,11 @@ object ToolbarCoto {
           tip = "Pin",
           tipPlacement = "left",
           classes = "pin-coto",
-          disabled = context.domain.beingPinned(coto.id)
+          disabled = context.domain.beingPinned(coto.id),
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Domain.Msg.Pin(coto.id))
+          }
         )
       },
       Option.when(context.domain.nodes.canEdit(coto)) {
