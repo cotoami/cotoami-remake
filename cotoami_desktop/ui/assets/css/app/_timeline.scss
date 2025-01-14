@@ -71,11 +71,13 @@ section.timeline {
     &.just-posted {
       @keyframes just-posted {
         0% {
-          transform: translateY(-50px);
+          transform: translateY(-100px);
+          opacity: 0;
         }
 
         100% {
           transform: translateY(0);
+          opacity: 1;
         }
       }
 
