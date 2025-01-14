@@ -48,8 +48,6 @@ object SectionPins {
     case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
         extends Msg
     case class ScrollToPin(pin: Link) extends Msg
-    case class Pin(cotoId: Id[Coto]) extends Msg
-    case class Pinned(result: Either[ErrorJson, Link]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -77,29 +75,6 @@ object SectionPins {
             }
           )
         )
-
-      case Msg.Pin(cotoId) =>
-        context.domain.currentCotonoma.map(cotonoma =>
-          default.copy(
-            _3 = LinkBackend.connect(
-              cotonoma.cotoId,
-              cotoId,
-              None,
-              None,
-              None,
-              cotonoma.nodeId
-            )
-              .map(Msg.Pinned(_).into)
-          )
-        ).getOrElse(default)
-
-      case Msg.Pinned(Right(link)) =>
-        default.copy(_1 =
-          model.modify(_.justPinned).using(_ + link.targetCotoId)
-        )
-
-      case Msg.Pinned(Left(e)) =>
-        default.copy(_3 = cotoami.error("Couldn't pin a coto.", e))
     }
   }
 

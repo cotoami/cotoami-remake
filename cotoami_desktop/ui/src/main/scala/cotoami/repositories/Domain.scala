@@ -20,13 +20,15 @@ case class Domain(
     // processing state
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
     graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
-    deleting: HashSet[Id[Coto]] = HashSet.empty
+    deleting: HashSet[Id[Coto]] = HashSet.empty,
+    pinning: HashSet[Id[Coto]] = HashSet.empty
 ) {
   def resetState: Domain =
     copy(
       graphLoading = HashSet.empty,
       graphLoaded = HashSet.empty,
-      deleting = HashSet.empty
+      deleting = HashSet.empty,
+      pinning = HashSet.empty
     )
 
   /////////////////////////////////////////////////////////////////////////////
@@ -354,7 +356,11 @@ object Domain {
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
     case class DeleteCoto(id: Id[Coto]) extends Msg
-    case class CotoDeleted(result: Either[ErrorJson, Id[Coto]]) extends Msg
+    case class CotoDeleted(id: Id[Coto], result: Either[ErrorJson, Id[Coto]])
+        extends Msg
+    case class Pin(cotoId: Id[Coto]) extends Msg
+    case class Pinned(cotoId: Id[Coto], result: Either[ErrorJson, Link])
+        extends Msg
   }
 
   def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
@@ -408,18 +414,48 @@ object Domain {
       case Msg.DeleteCoto(id) =>
         (
           model.modify(_.deleting).using(_ + id),
-          CotoBackend.delete(id).map(Msg.CotoDeleted(_).into)
+          CotoBackend.delete(id).map(Msg.CotoDeleted(id, _).into)
         )
 
-      // Coto-deleted events are handled by Model.importChangelog
-      case Msg.CotoDeleted(Right(cotoId)) =>
+      case Msg.CotoDeleted(id, Right(_)) =>
         (
-          model.modify(_.deleting).using(_ - cotoId),
+          model.modify(_.deleting).using(_ - id),
           Cmd.none
         )
 
-      case Msg.CotoDeleted(Left(e)) =>
-        (model, cotoami.error("Couldn't delete a coto.", e))
+      case Msg.CotoDeleted(id, Left(e)) =>
+        (
+          model.modify(_.deleting).using(_ - id),
+          cotoami.error("Couldn't delete a coto.", e)
+        )
+
+      case Msg.Pin(cotoId) =>
+        model.currentCotonoma.map(cotonoma =>
+          (
+            model.modify(_.pinning).using(_ + cotoId),
+            LinkBackend.connect(
+              cotonoma.cotoId,
+              cotoId,
+              None,
+              None,
+              None,
+              cotonoma.nodeId
+            )
+              .map(Msg.Pinned(cotoId, _).into)
+          )
+        ).getOrElse((model, Cmd.none))
+
+      case Msg.Pinned(cotoId, Right(_)) =>
+        (
+          model.modify(_.pinning).using(_ - cotoId),
+          Cmd.none
+        )
+
+      case Msg.Pinned(cotoId, Left(e)) =>
+        (
+          model.modify(_.pinning).using(_ - cotoId),
+          cotoami.error("Couldn't pin a coto.", e)
+        )
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
