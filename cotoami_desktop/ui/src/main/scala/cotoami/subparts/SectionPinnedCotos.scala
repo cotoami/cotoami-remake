@@ -1,5 +1,8 @@
 package cotoami.subparts
 
+import scala.util.chaining._
+import scala.collection.immutable.HashSet
+
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
@@ -13,12 +16,20 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Context, Into, Model, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Link, UiState}
 import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionPinnedCotos {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Model
+  /////////////////////////////////////////////////////////////////////////////
+
+  case class Model(
+      justPinned: HashSet[Id[Coto]] = HashSet.empty
+  )
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -34,19 +45,21 @@ object SectionPinnedCotos {
     case class ScrollToPinnedCoto(pin: Link) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Option[UiState], Cmd[AppMsg]) = {
+    val default = (model, context.uiState, Cmd.none)
     msg match {
       case Msg.SwitchView(cotonoma, inColumns) =>
-        model.uiState
-          .map(_.setPinnedInColumns(cotonoma, inColumns) match {
-            case state => (model.copy(uiState = Some(state)), state.save)
+        context.uiState
+          .map(_.setPinnedInColumns(cotonoma, inColumns).pipe { state =>
+            default.copy(_2 = Some(state), _3 = state.save)
           })
-          .getOrElse((model, Cmd.none))
+          .getOrElse(default)
 
       case Msg.ScrollToPinnedCoto(pin) =>
-        (
-          model,
-          Cmd(
+        default.copy(
+          _3 = Cmd(
             IO {
               dom.document.getElementById(elementIdOfPinnedCoto(pin)) match {
                 case element: HTMLElement =>
@@ -58,6 +71,7 @@ object SectionPinnedCotos {
           )
         )
     }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -72,7 +86,7 @@ object SectionPinnedCotos {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    model.domain.currentCotonomaPair.map(
+    context.domain.currentCotonomaPair.map(
       sectionPinnedCotos(context.domain.pinnedCotos, uiState, _)
     )
   }

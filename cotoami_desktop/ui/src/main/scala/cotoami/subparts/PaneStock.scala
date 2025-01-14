@@ -64,7 +64,7 @@ object PaneStock {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val sectionTraversals = SectionTraversals(model.traversals)
     val contents = Fragment(
-      SectionPinnedCotos(model, uiState),
+      SectionPinnedCotos(model.pins, uiState),
       sectionTraversals
     )
     section(

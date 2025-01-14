@@ -47,6 +47,7 @@ case class Model(
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
+    pins: SectionPinnedCotos.Model = SectionPinnedCotos.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
     geomap: SectionGeomap.Model = SectionGeomap.Model()
 ) extends Context {

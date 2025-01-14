@@ -352,13 +352,16 @@ object Main {
       }
 
       case Msg.SectionTimelineMsg(submsg) => {
-        val (timeline, domain, cmds) =
+        val (timeline, domain, cmd) =
           SectionTimeline.update(submsg, model.timeline)
-        (model.copy(timeline = timeline, domain = domain), cmds)
+        (model.copy(timeline = timeline, domain = domain), cmd)
       }
 
-      case Msg.SectionPinnedCotosMsg(submsg) =>
-        SectionPinnedCotos.update(submsg, model)
+      case Msg.SectionPinnedCotosMsg(submsg) => {
+        val (pins, uiState, cmd) =
+          SectionPinnedCotos.update(submsg, model.pins)
+        (model.copy(pins = pins, uiState = uiState), cmd)
+      }
 
       case Msg.SectionTraversalsMsg(submsg) => {
         val (traversals, cmd) =
