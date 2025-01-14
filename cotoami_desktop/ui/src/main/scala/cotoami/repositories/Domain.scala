@@ -73,8 +73,9 @@ case class Domain(
       .modify(_.links).using(_.onCotoDelete(id))
   }
 
-  def beingDeleted(cotoId: Id[Coto]): Boolean =
-    deleting.contains(cotoId)
+  def beingDeleted(cotoId: Id[Coto]): Boolean = deleting.contains(cotoId)
+
+  def beingPinned(cotoId: Id[Coto]): Boolean = pinning.contains(cotoId)
 
   /////////////////////////////////////////////////////////////////////////////
   // Cotonomas

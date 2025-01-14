@@ -20,7 +20,8 @@ object ToolbarCoto {
           symbol = "push_pin",
           tip = "Pin",
           tipPlacement = "left",
-          classes = "pin-coto"
+          classes = "pin-coto",
+          disabled = context.domain.beingPinned(coto.id)
         )
       },
       Option.when(context.domain.nodes.canEdit(coto)) {
