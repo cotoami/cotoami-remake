@@ -47,6 +47,7 @@ object SectionPins {
     case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
         extends Msg
     case class ScrollToPin(pin: Link) extends Msg
+    case class PinAnimationEnd(cotoId: Id[Coto]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -74,6 +75,9 @@ object SectionPins {
             }
           )
         )
+
+      case Msg.PinAnimationEnd(cotoId) =>
+        default.copy(_1 = model.removeFromJustPinned(cotoId))
     }
   }
 
@@ -295,7 +299,12 @@ object SectionPins {
           ("just-pinned", justPinned)
         )
       ),
-      id := elementIdOfPin(pin)
+      id := elementIdOfPin(pin),
+      onAnimationEnd := (e => {
+        if (e.animationName == "just-pinned") {
+          dispatch(Msg.PinAnimationEnd(coto.id).into)
+        }
+      })
     )(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
