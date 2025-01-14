@@ -8,6 +8,7 @@ import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
 import cats.effect.IO
+import com.softwaremill.quicklens._
 
 import slinky.core._
 import slinky.core.annotations.react
@@ -29,7 +30,10 @@ object SectionPins {
 
   case class Model(
       justPinned: HashSet[Id[Coto]] = HashSet.empty
-  )
+  ) {
+    def removeFromJustPinned(cotoId: Id[Coto]): Model =
+      this.modify(_.justPinned).using(_ - cotoId)
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
