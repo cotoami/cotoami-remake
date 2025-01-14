@@ -20,13 +20,13 @@ case class Domain(
     // processing state
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
     graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
-    cotosBeingDeleted: HashSet[Id[Coto]] = HashSet.empty
+    deleting: HashSet[Id[Coto]] = HashSet.empty
 ) {
   def resetState: Domain =
     copy(
       graphLoading = HashSet.empty,
       graphLoaded = HashSet.empty,
-      cotosBeingDeleted = HashSet.empty
+      deleting = HashSet.empty
     )
 
   /////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ case class Domain(
   }
 
   def beingDeleted(cotoId: Id[Coto]): Boolean =
-    cotosBeingDeleted.contains(cotoId)
+    deleting.contains(cotoId)
 
   /////////////////////////////////////////////////////////////////////////////
   // Cotonomas
@@ -407,14 +407,14 @@ object Domain {
 
       case Msg.DeleteCoto(id) =>
         (
-          model.modify(_.cotosBeingDeleted).using(_ + id),
+          model.modify(_.deleting).using(_ + id),
           CotoBackend.delete(id).map(Msg.CotoDeleted(_).into)
         )
 
       // Coto-deleted events are handled by Model.importChangelog
       case Msg.CotoDeleted(Right(cotoId)) =>
         (
-          model.modify(_.cotosBeingDeleted).using(_ - cotoId),
+          model.modify(_.deleting).using(_ - cotoId),
           Cmd.none
         )
 
