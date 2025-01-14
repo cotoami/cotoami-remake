@@ -2,8 +2,9 @@ package cotoami.backend
 
 import scala.scalajs.js
 
+import fui.Cmd
 import cotoami.utils.facade.Nullable
-import cotoami.models.{Id, Link}
+import cotoami.models.{Coto, Id, Link, Node}
 
 @js.native
 trait LinkJson extends js.Object {
@@ -18,6 +19,27 @@ trait LinkJson extends js.Object {
   val order: Int = js.native
   val created_at: String = js.native
   val updated_at: String = js.native
+}
+
+object LinkJson {
+  def connect(
+      sourceId: Id[Coto],
+      targetId: Id[Coto],
+      linkingPhrase: Option[String],
+      details: Option[String],
+      order: Option[Int],
+      createIn: Id[Node]
+  ): Cmd.One[Either[ErrorJson, LinkJson]] =
+    Commands.send(
+      Commands.Connect(
+        sourceId,
+        targetId,
+        linkingPhrase,
+        details,
+        order,
+        createIn
+      )
+    )
 }
 
 object LinkBackend {
@@ -35,4 +57,22 @@ object LinkBackend {
       createdAtUtcIso = json.created_at,
       updatedAtUtcIso = json.updated_at
     )
+
+  def connect(
+      sourceId: Id[Coto],
+      targetId: Id[Coto],
+      linkingPhrase: Option[String],
+      details: Option[String],
+      order: Option[Int],
+      createIn: Id[Node]
+  ): Cmd.One[Either[ErrorJson, Link]] =
+    LinkJson.connect(
+      sourceId,
+      targetId,
+      linkingPhrase,
+      details,
+      order,
+      createIn
+    )
+      .map(_.map(LinkBackend.toModel(_)))
 }
