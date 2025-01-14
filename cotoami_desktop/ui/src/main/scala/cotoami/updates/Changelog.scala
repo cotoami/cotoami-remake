@@ -54,7 +54,17 @@ object Changelog {
     // CreateLink
     for (json <- change.CreateLink.toOption) {
       val link = LinkBackend.toModel(json)
-      return (model.modify(_.domain.links).using(_.put(link)), Cmd.none)
+      return (
+        model
+          .modify(_.domain.links).using(_.put(link))
+          .modify(_.pins.justPinned).using(justPinned =>
+            if (model.domain.isPin(link))
+              justPinned + link.targetCotoId
+            else
+              justPinned
+          ),
+        Cmd.none
+      )
     }
 
     // EditCoto

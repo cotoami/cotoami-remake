@@ -20,7 +20,6 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Link, UiState}
 import cotoami.repositories.Domain
-import cotoami.backend.{ErrorJson, LinkBackend}
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionPins {
