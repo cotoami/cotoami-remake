@@ -30,6 +30,24 @@ pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Cotonoma>) -> impl Operatio
 
 pub(crate) fn get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
+) -> impl Operation<Conn, Option<Cotonoma>> + '_ {
+    read_op(move |conn| {
+        cotonomas::table
+            .find(id)
+            .first(conn)
+            .optional()
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn try_get<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+) -> impl Operation<Conn, Result<Cotonoma, DatabaseError>> + '_ {
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "uuid", *id)))
+}
+
+pub(crate) fn pair<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Option<(Cotonoma, Coto)>> + '_ {
     read_op(move |conn| {
         cotonomas::table
@@ -42,10 +60,10 @@ pub(crate) fn get<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn try_get<Conn: AsReadableConn>(
+pub(crate) fn try_get_pair<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "uuid", *id)))
+    pair(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "uuid", *id)))
 }
 
 pub(crate) fn get_by_coto_id<Conn: AsReadableConn>(
@@ -318,7 +336,7 @@ pub(crate) fn rename<'a>(
 ) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let updated_at = updated_at.unwrap_or(crate::current_datetime());
-        let (cotonoma, coto) = try_get(id).run(ctx)??;
+        let (cotonoma, coto) = try_get_pair(id).run(ctx)??;
 
         // Update coto
         let mut coto = coto.to_update();

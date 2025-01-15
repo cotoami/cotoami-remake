@@ -115,7 +115,7 @@ impl<'a> DatabaseSession<'a> {
         let parent_node = self.try_get_node(parent_id)?;
         let (parent_root_cotonoma, parent_root_coto) =
             if let Some(parent_root_id) = parent_node.root_cotonoma_id {
-                self.try_get_cotonoma(&parent_root_id)?
+                self.try_get_cotonoma_pair(&parent_root_id)?
             } else {
                 return Ok(None);
             };

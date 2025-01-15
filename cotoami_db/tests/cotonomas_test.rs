@@ -50,7 +50,7 @@ fn crud_operations() -> Result<()> {
     assert_eq!(cotonoma.created_at, coto.created_at);
 
     // check if the number of posts of the root cotonoma has been incremented
-    let (root_cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
+    let root_cotonoma = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
     assert_eq!(root_cotonoma.updated_at, coto.created_at);
 
     // check the content of the ChangelogEntry
@@ -82,7 +82,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the number of posts of the cotonoma has been incremented
-    let (cotonoma, _) = ds.try_get_cotonoma(&cotonoma.uuid)?;
+    let cotonoma = ds.try_get_cotonoma(&cotonoma.uuid)?;
     assert_eq!(cotonoma.updated_at, coto2.created_at);
 
     /////////////////////////////////////////////////////////////////////////////

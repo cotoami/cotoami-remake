@@ -186,7 +186,7 @@ pub(crate) fn repost<'a>(
     composite_op::<WritableConn, _, _>(move |ctx| {
         let coto = try_get(id).run(ctx)??;
         let original = get_original(coto).run(ctx)?;
-        let (dest, _) = cotonoma_ops::try_get(dest).run(ctx)??;
+        let dest = cotonoma_ops::try_get(dest).run(ctx)??;
         let reposted_at = reposted_at.unwrap_or(crate::current_datetime());
 
         // Insert a repost

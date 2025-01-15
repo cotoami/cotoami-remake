@@ -114,7 +114,7 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
-        let (cotonoma, _) = self.cotonoma(post_to).await?;
+        let cotonoma = self.cotonoma(post_to).await?;
         self.change(
             cotonoma.node_id,
             input,
@@ -167,7 +167,7 @@ impl NodeState {
         dest: Id<Cotonoma>,
         operator: Arc<Operator>,
     ) -> Result<(Coto, Coto), ServiceError> {
-        let (cotonoma, _) = self.cotonoma(dest).await?;
+        let cotonoma = self.cotonoma(dest).await?;
         self.change(
             cotonoma.node_id,
             (id, cotonoma),

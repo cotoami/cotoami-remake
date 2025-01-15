@@ -114,7 +114,7 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // The target cotonoma must belong to the local node.
             if let Some(posted_in_id) = new_coto.posted_in_id() {
-                let (posted_in, _) = cotonoma_ops::try_get(posted_in_id).run(ctx)??;
+                let posted_in = cotonoma_ops::try_get(posted_in_id).run(ctx)??;
                 self.globals.ensure_local(&posted_in)?;
             }
 

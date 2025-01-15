@@ -78,7 +78,7 @@ async fn cotonoma(
     Path(cotonoma_id): Path<Id<Cotonoma>>,
 ) -> Result<Content<(Cotonoma, Coto)>, ServiceError> {
     state
-        .cotonoma(cotonoma_id)
+        .cotonoma_pair(cotonoma_id)
         .await
         .map(|cotonoma| Content(cotonoma, accept))
 }

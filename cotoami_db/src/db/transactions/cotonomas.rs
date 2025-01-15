@@ -16,7 +16,7 @@ use crate::{
 impl<'a> DatabaseSession<'a> {
     pub fn local_node_root(&mut self) -> Result<Option<(Cotonoma, Coto)>> {
         if let Some(id) = self.globals.root_cotonoma_id() {
-            self.cotonoma(&id)
+            self.cotonoma_pair(&id)
         } else {
             Ok(None)
         }
@@ -35,12 +35,21 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
+    pub fn cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Option<Cotonoma>> {
         self.read_transaction(cotonoma_ops::get(id))
     }
 
-    pub fn try_get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
+    pub fn try_get_cotonoma(&mut self, id: &Id<Cotonoma>) -> Result<Cotonoma> {
         self.read_transaction(cotonoma_ops::try_get(id))?
+            .map_err(anyhow::Error::from)
+    }
+
+    pub fn cotonoma_pair(&mut self, id: &Id<Cotonoma>) -> Result<Option<(Cotonoma, Coto)>> {
+        self.read_transaction(cotonoma_ops::pair(id))
+    }
+
+    pub fn try_get_cotonoma_pair(&mut self, id: &Id<Cotonoma>) -> Result<(Cotonoma, Coto)> {
+        self.read_transaction(cotonoma_ops::try_get_pair(id))?
             .map_err(anyhow::Error::from)
     }
 
@@ -213,7 +222,7 @@ impl<'a> DatabaseSession<'a> {
         } else {
             let local_node_id = self.globals.try_get_local_node_id()?;
             self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-                let (cotonoma, coto) = cotonoma_ops::try_get(id).run(ctx)??;
+                let (cotonoma, coto) = cotonoma_ops::try_get_pair(id).run(ctx)??;
                 self.globals.ensure_local(&cotonoma)?;
                 operator.can_rename_cotonoma(&coto)?;
 

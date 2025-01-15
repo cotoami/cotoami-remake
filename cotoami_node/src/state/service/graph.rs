@@ -29,7 +29,7 @@ impl NodeState {
         cotonoma_id: Id<Cotonoma>,
     ) -> Result<CotoGraph, ServiceError> {
         self.get(move |ds| {
-            let (root_cotonoma, root_coto) = ds.try_get_cotonoma(&cotonoma_id)?;
+            let (root_cotonoma, root_coto) = ds.try_get_cotonoma_pair(&cotonoma_id)?;
             graph(ds, root_coto, Some(root_cotonoma))
         })
         .await

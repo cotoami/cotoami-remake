@@ -86,7 +86,7 @@ fn import_changes() -> Result<()> {
             ..node1.clone()
         })
     );
-    let (cotonoma, coto) = ds2.cotonoma(&node1_root_cotonoma.uuid)?.unwrap();
+    let (cotonoma, coto) = ds2.cotonoma_pair(&node1_root_cotonoma.uuid)?.unwrap();
     assert_that!(cotonoma, eq(&node1_root_cotonoma));
     assert_that!(coto, eq(&node1_root_coto));
 

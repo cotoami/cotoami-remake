@@ -56,7 +56,7 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if the timestamp of the cotonoma has been updated
-    let (cotonoma, _) = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
+    let cotonoma = ds.try_get_cotonoma(&root_cotonoma.uuid)?;
     assert_that!(cotonoma.updated_at, eq(coto.created_at));
 
     // check the super cotonomas

@@ -51,8 +51,12 @@ impl NodeState {
         .await
     }
 
-    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<(Cotonoma, Coto), ServiceError> {
+    pub async fn cotonoma(&self, id: Id<Cotonoma>) -> Result<Cotonoma, ServiceError> {
         self.get(move |ds| ds.try_get_cotonoma(&id)).await
+    }
+
+    pub async fn cotonoma_pair(&self, id: Id<Cotonoma>) -> Result<(Cotonoma, Coto), ServiceError> {
+        self.get(move |ds| ds.try_get_cotonoma_pair(&id)).await
     }
 
     pub async fn cotonoma_details(
@@ -60,7 +64,7 @@ impl NodeState {
         id: Id<Cotonoma>,
     ) -> Result<CotonomaDetails, ServiceError> {
         self.get(move |ds| {
-            let (cotonoma, coto) = ds.try_get_cotonoma(&id)?;
+            let (cotonoma, coto) = ds.try_get_cotonoma_pair(&id)?;
             let supers = ds.super_cotonomas(&coto)?;
             let subs = ds.sub_cotonomas(&cotonoma.uuid, DEFAULT_SUB_PAGE_SIZE, 0)?;
             Ok(CotonomaDetails::new(cotonoma, coto, supers, subs))
@@ -107,7 +111,7 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
-        let (post_to, _) = self.cotonoma(post_to).await?;
+        let post_to = self.cotonoma(post_to).await?;
         self.change(
             post_to.node_id,
             (input, post_to),
@@ -123,7 +127,7 @@ impl NodeState {
         name: String,
         operator: Arc<Operator>,
     ) -> Result<(Cotonoma, Coto), ServiceError> {
-        let (cotonoma, _) = self.cotonoma(id).await?;
+        let cotonoma = self.cotonoma(id).await?;
         self.change(
             cotonoma.node_id,
             (id, name),

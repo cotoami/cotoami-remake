@@ -138,7 +138,7 @@ pub(crate) fn set_root_cotonoma<'a>(
     cotonoma_id: &'a Id<Cotonoma>,
 ) -> impl Operation<WritableConn, Node> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let (cotonoma, _) = cotonoma_ops::try_get(cotonoma_id).run(ctx)??;
+        let cotonoma = cotonoma_ops::try_get(cotonoma_id).run(ctx)??;
         let node = try_get(id).run(ctx)??;
         let mut update_node = node.to_update();
         update_node.name = Some(&cotonoma.name);
