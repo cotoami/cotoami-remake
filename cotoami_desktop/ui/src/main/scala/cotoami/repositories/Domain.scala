@@ -261,7 +261,7 @@ case class Domain(
       .modify(_.cotonomas).using(_.put(cotonomaPair._1))
       .modify(_.cotos).using(_.put(cotonomaPair._2))
 
-  def importFrom(cotos: CotosPage): Domain =
+  def importFrom(cotos: PaginatedCotos): Domain =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))

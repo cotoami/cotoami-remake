@@ -20,7 +20,7 @@ import cotoami.models.{
   WaitingPosts
 }
 import cotoami.repositories._
-import cotoami.backend.{CotosPage, ErrorJson}
+import cotoami.backend.{ErrorJson, PaginatedCotos}
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -59,7 +59,7 @@ object SectionTimeline {
       cotoIds.order.filter(Some(_) != rootCotoId).map(domain.cotos.get).flatten
     }
 
-    def appendPage(cotos: CotosPage, fetchNumber: Int): Model =
+    def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
         .modify(_.fetchNumber).setTo(fetchNumber)
@@ -119,7 +119,7 @@ object SectionTimeline {
   object Msg {
     case class SetOnlyCotonomas(onlyCotonomas: Boolean) extends Msg
     case object FetchMore extends Msg
-    case class Fetched(number: Int, result: Either[ErrorJson, CotosPage])
+    case class Fetched(number: Int, result: Either[ErrorJson, PaginatedCotos])
         extends Msg
     case object ClearQuery extends Msg
     case class QueryInput(query: String) extends Msg
@@ -227,9 +227,15 @@ object SectionTimeline {
   ): Cmd.One[AppMsg] =
     (query match {
       case Some(query) if !query.isBlank() =>
-        CotosPage.search(query, nodeId, cotonomaId, onlyCotonomas, pageIndex)
+        PaginatedCotos.search(
+          query,
+          nodeId,
+          cotonomaId,
+          onlyCotonomas,
+          pageIndex
+        )
       case _ =>
-        CotosPage.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
+        PaginatedCotos.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
     }).map(Msg.Fetched(fetchNumber, _).into)
 
   /////////////////////////////////////////////////////////////////////////////

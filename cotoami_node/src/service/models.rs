@@ -247,13 +247,13 @@ pub struct CotoDetails {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct CotosPage {
+pub struct PaginatedCotos {
     pub page: Page<Coto>,
     pub related_data: CotosRelatedData,
     pub outgoing_links: Vec<Link>,
 }
 
-impl CotosPage {
+impl PaginatedCotos {
     pub(crate) fn new(page: Page<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
         let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
 
@@ -275,7 +275,7 @@ impl CotosPage {
             .collect();
         let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
 
-        Ok(CotosPage {
+        Ok(PaginatedCotos {
             page,
             related_data,
             outgoing_links,

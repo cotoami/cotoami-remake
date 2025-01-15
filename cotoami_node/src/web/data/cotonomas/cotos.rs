@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{CotosPage, GeolocatedCotos, Pagination},
+        models::{GeolocatedCotos, PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -39,7 +39,7 @@ async fn recent_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }
@@ -58,7 +58,7 @@ async fn recent_cotonoma_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(cotonoma_id): Path<Id<Cotonoma>>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }
@@ -126,7 +126,7 @@ async fn search_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }
@@ -145,7 +145,7 @@ async fn search_cotonoma_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path((cotonoma_id, query)): Path<(Id<Cotonoma>, String)>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     if let Err(errors) = pagination.validate() {
         return errors.into_result();
     }

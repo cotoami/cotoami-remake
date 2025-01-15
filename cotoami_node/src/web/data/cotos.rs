@@ -11,7 +11,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoDetails, CotoGraph, CotosPage, GeolocatedCotos, Pagination},
+        models::{CotoDetails, CotoGraph, GeolocatedCotos, PaginatedCotos, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -42,7 +42,7 @@ async fn recent_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
         .recent_cotos(None, None, false, pagination)
         .await
@@ -57,7 +57,7 @@ async fn recent_cotonoma_cotos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
         .recent_cotos(None, None, true, pagination)
         .await
@@ -105,7 +105,7 @@ async fn search_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(query): Path<String>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
         .search_cotos(query, None, None, false, pagination)
         .await
@@ -121,7 +121,7 @@ async fn search_cotonoma_cotos(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(query): Path<String>,
     Query(pagination): Query<Pagination>,
-) -> Result<Content<CotosPage>, ServiceError> {
+) -> Result<Content<PaginatedCotos>, ServiceError> {
     state
         .search_cotos(query, None, None, true, pagination)
         .await

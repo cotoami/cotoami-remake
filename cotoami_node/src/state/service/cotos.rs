@@ -7,7 +7,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{CotoDetails, CotosPage, CotosRelatedData, GeolocatedCotos, Pagination},
+        models::{CotoDetails, CotosRelatedData, GeolocatedCotos, PaginatedCotos, Pagination},
         NodeServiceExt, ServiceError,
     },
     state::NodeState,
@@ -23,7 +23,7 @@ impl NodeState {
         cotonoma: Option<Id<Cotonoma>>,
         only_cotonomas: bool,
         pagination: Pagination,
-    ) -> Result<CotosPage, ServiceError> {
+    ) -> Result<PaginatedCotos, ServiceError> {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }
@@ -35,7 +35,7 @@ impl NodeState {
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
             )?;
-            CotosPage::new(page, ds)
+            PaginatedCotos::new(page, ds)
         })
         .await
     }
@@ -73,7 +73,7 @@ impl NodeState {
         cotonoma: Option<Id<Cotonoma>>,
         only_cotonomas: bool,
         pagination: Pagination,
-    ) -> Result<CotosPage, ServiceError> {
+    ) -> Result<PaginatedCotos, ServiceError> {
         if let Err(errors) = pagination.validate() {
             return errors.into_result();
         }
@@ -86,7 +86,7 @@ impl NodeState {
                 pagination.page_size.unwrap_or(DEFAULT_PAGE_SIZE),
                 pagination.page,
             )?;
-            CotosPage::new(page, ds)
+            PaginatedCotos::new(page, ds)
         })
         .await
     }

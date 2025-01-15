@@ -55,7 +55,7 @@ case class Cotos(
     Cotos()
   }
 
-  def importFrom(cotos: CotosPage): Cotos =
+  def importFrom(cotos: PaginatedCotos): Cotos =
     this
       .putAll(cotos.page.items)
       .putAll(cotos.relatedData.originals)

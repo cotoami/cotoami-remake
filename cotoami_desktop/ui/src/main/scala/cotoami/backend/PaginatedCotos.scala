@@ -5,7 +5,7 @@ import fui.Cmd
 
 import cotoami.models.{Coto, Cotonoma, Id, Link, Node, Page}
 
-case class CotosPage(json: CotosPageJson) {
+case class PaginatedCotos(json: PaginatedCotosJson) {
   def page: Page[Coto] =
     PageBackend.toModel(json.page, CotoBackend.toModel)
   def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
@@ -13,15 +13,15 @@ case class CotosPage(json: CotosPageJson) {
     json.outgoing_links.map(LinkBackend.toModel(_))
 }
 
-object CotosPage {
+object PaginatedCotos {
   def fetchRecent(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       onlyCotonomas: Boolean,
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, CotosPage]] =
-    CotosPageJson.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
-      .map(_.map(CotosPage(_)))
+  ): Cmd.One[Either[ErrorJson, PaginatedCotos]] =
+    PaginatedCotosJson.fetchRecent(nodeId, cotonomaId, onlyCotonomas, pageIndex)
+      .map(_.map(PaginatedCotos(_)))
 
   def search(
       query: String,
@@ -29,25 +29,31 @@ object CotosPage {
       cotonomaId: Option[Id[Cotonoma]],
       onlyCotonomas: Boolean,
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, CotosPage]] =
-    CotosPageJson.search(query, nodeId, cotonomaId, onlyCotonomas, pageIndex)
-      .map(_.map(CotosPage(_)))
+  ): Cmd.One[Either[ErrorJson, PaginatedCotos]] =
+    PaginatedCotosJson.search(
+      query,
+      nodeId,
+      cotonomaId,
+      onlyCotonomas,
+      pageIndex
+    )
+      .map(_.map(PaginatedCotos(_)))
 }
 
 @js.native
-trait CotosPageJson extends js.Object {
+trait PaginatedCotosJson extends js.Object {
   val page: PageJson[CotoJson] = js.native
   val related_data: CotosRelatedDataJson = js.native
   val outgoing_links: js.Array[LinkJson] = js.native
 }
 
-object CotosPageJson {
+object PaginatedCotosJson {
   def fetchRecent(
       nodeId: Option[Id[Node]],
       cotonomaId: Option[Id[Cotonoma]],
       onlyCotonomas: Boolean,
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, CotosPageJson]] =
+  ): Cmd.One[Either[ErrorJson, PaginatedCotosJson]] =
     Commands.send(
       Commands.RecentCotos(nodeId, cotonomaId, onlyCotonomas, pageIndex)
     )
@@ -58,7 +64,7 @@ object CotosPageJson {
       cotonomaId: Option[Id[Cotonoma]],
       onlyCotonomas: Boolean,
       pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, CotosPageJson]] =
+  ): Cmd.One[Either[ErrorJson, PaginatedCotosJson]] =
     Commands.send(
       Commands.SearchCotos(query, nodeId, cotonomaId, onlyCotonomas, pageIndex)
     )
