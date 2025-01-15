@@ -4,7 +4,7 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, link_ops, Page},
+        ops::{changelog_ops, coto_ops, link_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -44,9 +44,15 @@ impl<'a> DatabaseSession<'a> {
         self.create_link(link.to_import())
     }
 
+    /// Inserting a [NewLink] as a change originated in this node.
+    /// Because of that, it checks if the change should be made here or not.
     fn create_link(&self, new_link: NewLink) -> Result<(Link, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            // The source coto of the link must belong to the local node.
+            let source_coto = coto_ops::try_get(new_link.source_coto_id()).run(ctx)??;
+            self.globals.ensure_local(&source_coto)?;
+
             let inserted_link = link_ops::insert(new_link).run(ctx)?;
             let change = Change::CreateLink(inserted_link.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
