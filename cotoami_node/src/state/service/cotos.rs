@@ -117,9 +117,9 @@ impl NodeState {
         let (cotonoma, _) = self.cotonoma(post_to).await?;
         self.change(
             cotonoma.node_id,
-            (input, cotonoma),
-            move |ds, (input, cotonoma)| ds.post_coto(&input, &cotonoma, operator.as_ref()),
-            |parent, (input, cotonoma)| parent.post_coto(input, cotonoma.uuid),
+            input,
+            move |ds, input| ds.post_coto(&input, &post_to, operator.as_ref()),
+            |parent, input| parent.post_coto(input, post_to),
         )
         .await
     }

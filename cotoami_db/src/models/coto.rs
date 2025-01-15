@@ -349,6 +349,8 @@ impl<'a> NewCoto<'a> {
         self.created_at = timestamp;
         self.updated_at = timestamp;
     }
+
+    pub fn posted_in_id(&self) -> Option<&'a Id<Cotonoma>> { self.posted_in_id }
 }
 
 /////////////////////////////////////////////////////////////////////////////

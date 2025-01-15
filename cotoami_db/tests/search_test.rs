@@ -13,14 +13,18 @@ fn search_cotos() -> Result<()> {
     let (root, _) = ds.local_node_root()?.unwrap();
 
     // when
-    let (coto1, _) = ds.post_coto(&CotoInput::new("Hello, world!"), &root, &opr)?;
+    let (coto1, _) = ds.post_coto(&CotoInput::new("Hello, world!"), &root.uuid, &opr)?;
     let (coto2, _) = ds.post_coto(
         &CotoInput::new("It's a small world.").summary("summary"),
-        &root,
+        &root.uuid,
         &opr,
     )?;
-    let (coto3, _) = ds.post_coto(&CotoInput::new("柿くへば鐘が鳴るなり法隆寺"), &root, &opr)?;
-    let (coto4, _) = ds.post_coto(&CotoInput::new("旅行(行きたい)"), &root, &opr)?;
+    let (coto3, _) = ds.post_coto(
+        &CotoInput::new("柿くへば鐘が鳴るなり法隆寺"),
+        &root.uuid,
+        &opr,
+    )?;
+    let (coto4, _) = ds.post_coto(&CotoInput::new("旅行(行きたい)"), &root.uuid, &opr)?;
 
     // then
     assert_search(&mut ds, "hello", vec![&coto1])?;

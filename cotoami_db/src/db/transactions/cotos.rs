@@ -4,7 +4,7 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, coto_ops, Page},
+        ops::{changelog_ops, coto_ops, cotonoma_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -85,21 +85,17 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /// Posts a coto in the specified cotonoma.
-    ///
-    /// The target cotonoma (`posted_in`) has to belong to the local node,
-    /// otherwise a change should be made via [Self::import_change()].
     pub fn post_coto(
         &self,
         input: &CotoInput,
-        posted_in: &Cotonoma,
+        post_to: &Id<Cotonoma>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
-        self.globals.ensure_local(posted_in)?;
         let local_node = self.globals.try_read_local_node()?;
         let posted_by_id = operator.node_id();
         let new_coto = NewCoto::new(
             &local_node.node_id,
-            &posted_in.uuid,
+            post_to,
             &posted_by_id,
             input,
             local_node.image_max_size.map(|size| size as u32),
@@ -111,9 +107,17 @@ impl<'a> DatabaseSession<'a> {
         self.create_coto(&coto.to_import()?)
     }
 
+    /// Inserting a [NewCoto] as a change originated in this node.
+    /// Changes originated in remote nodes should be imported via [Self::import_change()].
     fn create_coto(&self, new_coto: &NewCoto) -> Result<(Coto, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            // The target cotonoma must belong to the local node.
+            if let Some(posted_in_id) = new_coto.posted_in_id() {
+                let (posted_in, _) = cotonoma_ops::try_get(posted_in_id).run(ctx)??;
+                self.globals.ensure_local(&posted_in)?;
+            }
+
             let (inserted_coto, _) = coto_ops::insert(new_coto).run(ctx)?;
             let change = Change::CreateCoto(inserted_coto.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;

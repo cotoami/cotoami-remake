@@ -45,7 +45,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /// Inserting a [NewLink] as a change originated in this node.
-    /// Because of that, it checks if the change should be made here or not.
+    /// Changes originated in remote nodes should be imported via [Self::import_change()].
     fn create_link(&self, new_link: NewLink) -> Result<(Link, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {

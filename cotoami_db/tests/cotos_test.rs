@@ -20,7 +20,8 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let mock_time = time::mock_time();
-    let (coto, changelog) = ds.post_coto(&CotoInput::new("hello"), &root_cotonoma, &operator)?;
+    let (coto, changelog) =
+        ds.post_coto(&CotoInput::new("hello"), &root_cotonoma.uuid, &operator)?;
 
     // check the inserted coto
     assert_that!(

@@ -69,7 +69,7 @@ fn crud_operations() -> Result<()> {
     // When: post a coto in the cotonoma
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto2, _) = ds.post_coto(&CotoInput::new("hello"), &cotonoma, &operator)?;
+    let (coto2, _) = ds.post_coto(&CotoInput::new("hello"), &cotonoma.uuid, &operator)?;
 
     assert_that!(
         coto2,

@@ -30,7 +30,7 @@ fn graph() -> Result<()> {
     // When: add a child
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root, &opr)?;
+    let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root.uuid, &opr)?;
     connect(&LinkInput::new(root_coto.uuid, coto1.uuid).linking_phrase("foo"))?;
 
     let expected_dot = indoc! {r#"
@@ -47,7 +47,7 @@ fn graph() -> Result<()> {
     // When: add grandchildren
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root, &opr)?;
+    let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root.uuid, &opr)?;
     connect(&LinkInput::new(coto1.uuid, coto2.uuid))?;
 
     let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("cotonoma1"), &root, &opr)?;
@@ -77,7 +77,7 @@ fn graph() -> Result<()> {
     // When: add a loop
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root, &opr)?;
+    let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root.uuid, &opr)?;
     connect(&LinkInput::new(coto2.uuid, coto3.uuid))?;
     connect(&LinkInput::new(coto3.uuid, coto1.uuid))?;
 
@@ -102,7 +102,7 @@ fn graph() -> Result<()> {
     // When: until cotonoma
     /////////////////////////////////////////////////////////////////////////////
 
-    let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root, &opr)?;
+    let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root.uuid, &opr)?;
     connect(&LinkInput::new(cotonoma1.coto_id, coto4.uuid))?;
 
     // until_cotonoma = true

@@ -12,7 +12,7 @@ fn repost() -> Result<()> {
     let opr = db.globals().local_node_as_operator()?;
     let (root, _) = ds.local_node_root()?.unwrap();
 
-    let (coto, _) = ds.post_coto(&CotoInput::new("Cargo"), &root, &opr)?;
+    let (coto, _) = ds.post_coto(&CotoInput::new("Cargo"), &root.uuid, &opr)?;
     let ((cotonoma1, _), _) = ds.post_cotonoma(&CotonomaInput::new("Rust"), &root, &opr)?;
     let ((cotonoma2, _), _) =
         ds.post_cotonoma(&CotonomaInput::new("Package manager"), &root, &opr)?;
@@ -133,7 +133,7 @@ fn repost() -> Result<()> {
     assert_eq!(ds.coto(&repost1.uuid)?, None);
 
     // When: delete the only repost
-    let (coto, _) = ds.post_coto(&CotoInput::new("Hello"), &root, &opr)?;
+    let (coto, _) = ds.post_coto(&CotoInput::new("Hello"), &root.uuid, &opr)?;
     let ((repost, _), _) = ds.repost(&coto.uuid, &cotonoma1, &opr)?;
     let _ = ds.delete_coto(&repost.uuid, &opr)?;
 
