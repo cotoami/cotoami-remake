@@ -122,27 +122,24 @@ case class Nodes(
       case _                                   => None
     }
 
+  def reachable(nodeId: Id[Node]): Boolean =
+    isOperating(nodeId) || parentConnection(nodeId).isDefined
+
   def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
     current.flatMap(_.rootCotonomaId)
 
-  def isCurrentNodeRoot(id: Id[Cotonoma]): Boolean =
-    Some(id) == currentNodeRootCotonomaId
+  def isCurrentNodeRoot(cotonomaId: Id[Cotonoma]): Boolean =
+    Some(cotonomaId) == currentNodeRootCotonomaId
 
   def isNodeRoot(cotonoma: Cotonoma): Boolean =
     get(cotonoma.nodeId)
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
-  def canPostTo(nodeId: Id[Node]): Boolean =
-    isOperating(nodeId) || parentConnection(nodeId).isDefined
+  def canPostTo(nodeId: Id[Node]): Boolean = reachable(nodeId)
 
   def canEdit(coto: Coto): Boolean =
-    // Posted by myself?
-    isOperating(coto.postedById) && (
-      // Can I access the node to which the coto was posted?
-      // (the operating node or one of active parent nodes)
-      isOperating(coto.nodeId) || parentConnection(coto.nodeId).isDefined
-    )
+    isOperating(coto.postedById) && reachable(coto.nodeId)
 
   def canEditLinksIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
