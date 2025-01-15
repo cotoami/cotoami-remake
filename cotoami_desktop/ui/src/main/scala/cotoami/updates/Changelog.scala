@@ -63,7 +63,7 @@ object Changelog {
             else
               justPinned
           ),
-        Cmd.none
+        Domain.fetchGraphFromCoto(link.targetCotoId)
       )
     }
 
