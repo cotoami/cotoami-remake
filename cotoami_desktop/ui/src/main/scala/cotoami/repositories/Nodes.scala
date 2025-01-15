@@ -100,25 +100,24 @@ case class Nodes(
 
   def isParent(nodeId: Id[Node]): Boolean = parentIds.contains(nodeId)
 
-  def parentStatus(parentId: Id[Node]): Option[ParentStatus] =
-    if (parentIds.contains(parentId))
-      servers.get(parentId).map(server =>
-        server.notConnected.map {
-          case NotConnected.Disabled => ParentStatus.Disabled
-          case NotConnected.Connecting(details) =>
-            ParentStatus.Connecting(details)
-          case NotConnected.InitFailed(details) =>
-            ParentStatus.InitFailed(details)
-          case NotConnected.Disconnected(details) =>
-            ParentStatus.Disconnected(details)
-        }.getOrElse(
-          ParentStatus.Connected(server.clientAsChild)
-        )
-      )
-    else
-      None
+  def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
+    if (!parentIds.contains(parentId)) return None
 
-  // TODO: memoization
+    servers.get(parentId).map(server =>
+      server.notConnected.map {
+        case NotConnected.Disabled => ParentStatus.Disabled
+        case NotConnected.Connecting(details) =>
+          ParentStatus.Connecting(details)
+        case NotConnected.InitFailed(details) =>
+          ParentStatus.InitFailed(details)
+        case NotConnected.Disconnected(details) =>
+          ParentStatus.Disconnected(details)
+      }.getOrElse(
+        ParentStatus.Connected(server.clientAsChild)
+      )
+    )
+  }
+
   def asChildOf(parentId: Id[Node]): Option[ChildNode] =
     parentStatus(parentId) match {
       case Some(ParentStatus.Connected(child)) => child
