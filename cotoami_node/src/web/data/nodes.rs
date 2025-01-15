@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Json, Path, State},
-    routing::{get, post, put},
+    extract::{Path, State},
+    routing::{get, put},
     Extension, Router, TypedHeader,
 };
 use cotoami_db::prelude::*;
@@ -25,7 +25,6 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/local", get(local_node))
         .route("/local/icon", put(put_local_node_icon))
         .route("/:node_id/details", get(node_details))
-        .route("/:node_id/links", post(connect))
         .nest("/:node_id/cotonomas", cotonomas::routes())
         .nest("/:node_id/cotos", cotos::routes())
         .nest("/servers", servers::routes())
@@ -47,23 +46,6 @@ async fn node_details(
         .node_details(node_id)
         .await
         .map(|details| Content(details, accept))
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// POST /api/data/nodes/:node_id/links
-/////////////////////////////////////////////////////////////////////////////
-
-async fn connect(
-    State(state): State<NodeState>,
-    Extension(operator): Extension<Operator>,
-    TypedHeader(accept): TypedHeader<Accept>,
-    Path(node_id): Path<Id<Node>>,
-    Json(input): Json<LinkInput<'static>>,
-) -> Result<Content<Link>, ServiceError> {
-    state
-        .connect(input, node_id, Arc::new(operator))
-        .await
-        .map(|link| Content(link, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

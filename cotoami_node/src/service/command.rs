@@ -142,10 +142,6 @@ pub enum Command {
     /// The return type is a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)`.
     RenameCotonoma { id: Id<Cotonoma>, name: String },
 
-    /// Request to create a new [Link] in the given node (`create_in`),
-    /// and return the [Link] if suceeded.
-    Connect {
-        input: LinkInput<'static>,
-        create_in: Id<Node>,
-    },
+    /// Request to create a new [Link] and return the [Link] if suceeded.
+    Connect(LinkInput<'static>),
 }

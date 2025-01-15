@@ -13,17 +13,17 @@ impl NodeState {
     pub async fn connect(
         self,
         input: LinkInput<'static>,
-        create_in: Id<Node>,
         operator: Arc<Operator>,
     ) -> Result<Link, ServiceError> {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
+        let source_coto = self.coto(input.source_coto_id).await?;
         self.change(
-            create_in,
+            source_coto.node_id,
             input,
             move |ds, input| ds.connect(&input, operator.as_ref()),
-            |parent, input| parent.connect(input, create_in),
+            |parent, input| parent.connect(input),
         )
         .await
     }

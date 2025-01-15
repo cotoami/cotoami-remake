@@ -18,6 +18,7 @@ use crate::{
 mod changes;
 mod cotonomas;
 mod cotos;
+mod links;
 mod nodes;
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -27,6 +28,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
         .nest("/cotonomas", cotonomas::routes())
+        .nest("/links", links::routes())
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }

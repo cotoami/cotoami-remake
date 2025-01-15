@@ -442,8 +442,7 @@ object Domain {
               cotoId,
               None,
               None,
-              None,
-              cotonoma.nodeId
+              None
             )
               .map(Msg.Pinned(cotoId, _).into)
           )

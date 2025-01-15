@@ -245,9 +245,7 @@ impl HttpClient {
             Command::RenameCotonoma { id, name } => self
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
-            Command::Connect { input, create_in } => self
-                .post(&format!("{API_PATH_NODES}/{create_in}/links"))
-                .json(&input),
+            Command::Connect(input) => self.post(API_PATH_LINKS).json(&input),
         };
 
         // Set the "Accept" header from Request::accept()
@@ -310,6 +308,7 @@ const API_PATH_SERVERS: &str = concatcp!(API_PATH_NODES, "/servers");
 const API_PATH_CLIENTS: &str = concatcp!(API_PATH_NODES, "/clients");
 const API_PATH_COTONOMAS: &str = concatcp!(API_PATH_DATA, "/cotonomas");
 const API_PATH_COTOS: &str = concatcp!(API_PATH_DATA, "/cotos");
+const API_PATH_LINKS: &str = concatcp!(API_PATH_DATA, "/links");
 
 fn detect_response_body_format(response: &reqwest::Response) -> SerializeFormat {
     // The format will be MessagePack only if the Content-Type header explicitly specifies it,

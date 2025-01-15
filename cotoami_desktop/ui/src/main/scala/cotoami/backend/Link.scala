@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 import fui.Cmd
 import cotoami.utils.facade.Nullable
-import cotoami.models.{Coto, Id, Link, Node}
+import cotoami.models.{Coto, Id, Link}
 
 @js.native
 trait LinkJson extends js.Object {
@@ -26,8 +26,7 @@ object LinkJson {
       targetId: Id[Coto],
       linkingPhrase: Option[String],
       details: Option[String],
-      order: Option[Int],
-      createIn: Id[Node]
+      order: Option[Int]
   ): Cmd.One[Either[ErrorJson, LinkJson]] =
     Commands.send(
       Commands.Connect(
@@ -35,8 +34,7 @@ object LinkJson {
         targetId,
         linkingPhrase,
         details,
-        order,
-        createIn
+        order
       )
     )
 }
@@ -61,16 +59,14 @@ object LinkBackend {
       targetId: Id[Coto],
       linkingPhrase: Option[String],
       details: Option[String],
-      order: Option[Int],
-      createIn: Id[Node]
+      order: Option[Int]
   ): Cmd.One[Either[ErrorJson, Link]] =
     LinkJson.connect(
       sourceId,
       targetId,
       linkingPhrase,
       details,
-      order,
-      createIn
+      order
     )
       .map(_.map(LinkBackend.toModel(_)))
 }

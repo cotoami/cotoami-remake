@@ -283,22 +283,18 @@ object Commands {
       targetId: Id[Coto],
       linkingPhrase: Option[String],
       details: Option[String],
-      order: Option[Int],
-      createIn: Id[Node]
+      order: Option[Int]
   ) = jso(Connect =
     jso(
-      input = jso(
-        source_coto_id = sourceId.uuid,
-        target_coto_id = targetId.uuid,
-        linking_phrase = linkingPhrase.getOrElse(null),
-        details = details.getOrElse(null),
-        // getOrElse can't be used to convert `order` because Int is non-nullable.
-        order = order match {
-          case Some(order) => order
-          case None        => null
-        }
-      ),
-      create_in = createIn.uuid
+      source_coto_id = sourceId.uuid,
+      target_coto_id = targetId.uuid,
+      linking_phrase = linkingPhrase.getOrElse(null),
+      details = details.getOrElse(null),
+      // getOrElse can't be used to convert `order` because Int is non-nullable.
+      order = order match {
+        case Some(order) => order
+        case None        => null
+      }
     )
   )
 

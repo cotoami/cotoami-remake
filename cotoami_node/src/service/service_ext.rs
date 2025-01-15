@@ -72,8 +72,8 @@ pub trait NodeServiceExt: NodeService {
         response.content::<(Cotonoma, Coto)>()
     }
 
-    async fn connect(&self, input: LinkInput<'static>, create_in: Id<Node>) -> Result<Link> {
-        let request = Command::Connect { input, create_in }.into_request();
+    async fn connect(&self, input: LinkInput<'static>) -> Result<Link> {
+        let request = Command::Connect(input).into_request();
         let response = self.call(request).await?;
         response.content::<Link>()
     }
