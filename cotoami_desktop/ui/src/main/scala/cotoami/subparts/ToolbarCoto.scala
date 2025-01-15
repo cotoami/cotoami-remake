@@ -17,6 +17,8 @@ object ToolbarCoto {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
+    if (coto.isRepost) return None
+
     val buttons = Seq(
       Option.when(context.domain.canPin(coto.id)) {
         toolButton(

@@ -68,12 +68,13 @@ case class Coto(
 
   def geolocated: Boolean = geolocation.isDefined
 
+  def isRepost: Boolean = repostOfId.isDefined
+
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val updatedAt: Instant = parseUtcIso(updatedAtUtcIso)
 
   lazy val postedInIds: Seq[Id[Cotonoma]] =
-    Seq(postedInId).flatten ++
-      repostedInIds.getOrElse(Seq.empty)
+    Seq(postedInId).flatten ++ repostedInIds.getOrElse(Seq.empty)
 }
 
 object Coto {
