@@ -51,18 +51,19 @@ object ViewCoto {
         )
       },
       Option.when(!context.domain.nodes.isOperating(coto.nodeId)) {
-        if (context.domain.nodes.parentConnection(coto.nodeId).isDefined)
-          div(
-            className := "connection connected",
-            title := "Remote (connected)"
-          )(materialSymbol("link"))
-        else
-          div(
-            className := "connection disconnected",
-            title := "Remote (disconnected)"
-          )(
-            materialSymbol("link_off")
-          )
+        val connected = context.domain.nodes.reachable(coto.nodeId)
+        div(
+          className := optionalClasses(
+            Seq(
+              ("remote-node-icon", true),
+              ("connected", connected)
+            )
+          ),
+          title := (if (connected) "Remote (connected)"
+                    else "Remote (disconnected)")
+        )(
+          context.domain.nodes.get(coto.nodeId).map(imgNode(_))
+        )
       }
     )
 

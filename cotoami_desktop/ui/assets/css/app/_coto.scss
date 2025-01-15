@@ -88,13 +88,28 @@ article.coto {
       }
     }
 
-    div.pinned,
-    div.connection {
+    div.pinned {
       margin-left: 10px;
       padding-top: 1px;
 
       span.material-symbols {
         opacity: 0.5;
+      }
+    }
+
+    div.remote-node-icon {
+      margin-left: 10px;
+      padding-top: 1px;
+
+      img.node-icon {
+        opacity: 0.3;
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+      }
+
+      &.connected img.node-icon {
+        opacity: 1;
       }
     }
   }
