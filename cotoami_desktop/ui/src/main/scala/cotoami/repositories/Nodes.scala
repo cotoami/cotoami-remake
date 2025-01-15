@@ -118,7 +118,7 @@ case class Nodes(
     )
   }
 
-  def asChildOf(parentId: Id[Node]): Option[ChildNode] =
+  def parentConnection(parentId: Id[Node]): Option[ChildNode] =
     parentStatus(parentId) match {
       case Some(ParentStatus.Connected(child)) => child
       case _                                   => None
@@ -136,19 +136,19 @@ case class Nodes(
       .getOrElse(false)
 
   def canPostTo(nodeId: Id[Node]): Boolean =
-    isOperating(nodeId) || asChildOf(nodeId).isDefined
+    isOperating(nodeId) || parentConnection(nodeId).isDefined
 
   def canEdit(coto: Coto): Boolean =
     // Posted by myself?
     isOperating(coto.postedById) && (
-      // Can I access the node where the coto was posted?
+      // Can I access the node to which the coto was posted?
       // (the operating node or one of active parent nodes)
-      isOperating(coto.nodeId) || asChildOf(coto.nodeId).isDefined
+      isOperating(coto.nodeId) || parentConnection(coto.nodeId).isDefined
     )
 
   def canEditLinksIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
-      asChildOf(nodeId).map(_.canEditLinks).getOrElse(false)
+      parentConnection(nodeId).map(_.canEditLinks).getOrElse(false)
 
   def canPromote(coto: Coto): Boolean = canEdit(coto) && !coto.isCotonoma
 }

@@ -51,7 +51,7 @@ object ViewCoto {
         )
       },
       Option.when(!context.domain.nodes.isOperating(coto.nodeId)) {
-        if (context.domain.nodes.asChildOf(coto.nodeId).isDefined)
+        if (context.domain.nodes.parentConnection(coto.nodeId).isDefined)
           div(
             className := "connection connected",
             title := "Remote (connected)"

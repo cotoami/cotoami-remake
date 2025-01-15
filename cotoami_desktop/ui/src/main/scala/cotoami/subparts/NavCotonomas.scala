@@ -245,7 +245,7 @@ object NavCotonomas {
         ),
         Option.when(
           !domain.nodes.operatingRemote &&
-            domain.nodes.asChildOf(node.id)
+            domain.nodes.parentConnection(node.id)
               .map(_.asOwner).getOrElse(false)
         ) {
           toolButton(
