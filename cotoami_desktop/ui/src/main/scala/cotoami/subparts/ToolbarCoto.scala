@@ -13,8 +13,11 @@ object ToolbarCoto {
 
   def apply(
       coto: Coto
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "coto-toolbar")(
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] = {
+    val buttons = Seq(
       Option.when(context.domain.canPin(coto.id)) {
         toolButton(
           symbol = "push_pin",
@@ -94,5 +97,10 @@ object ToolbarCoto {
           }
         )
       }
-    )
+    ).flatten
+
+    Option.when(!buttons.isEmpty) {
+      section(className := "coto-toolbar")(buttons: _*)
+    }
+  }
 }
