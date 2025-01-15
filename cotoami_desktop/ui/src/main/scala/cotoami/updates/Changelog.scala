@@ -76,7 +76,8 @@ object Changelog {
     for (json <- change.DeleteCoto.toOption) {
       val cotoId: Id[Coto] = Id(json.coto_id)
       return (
-        model.copy(domain = model.domain.deleteCoto(cotoId)),
+        model.modify(_.domain).using(_.deleteCoto(cotoId)),
+        // Update the original coto if it's a repost
         model.domain.cotos.get(cotoId).flatMap(_.repostOfId)
           .map(Domain.fetchCotoDetails)
           .getOrElse(Cmd.none)
