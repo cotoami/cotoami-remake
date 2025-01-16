@@ -1,8 +1,9 @@
 use axum::{
     extract::{Query, State},
     routing::get,
-    Router, TypedHeader,
+    Router,
 };
+use axum_extra::TypedHeader;
 use validator::Validate;
 
 use crate::{
