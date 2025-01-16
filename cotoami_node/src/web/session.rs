@@ -6,9 +6,12 @@ use axum::{
     http::StatusCode,
     middleware,
     routing::{delete, put},
-    Extension, Form, Json, Router, TypedHeader,
+    Extension, Form, Json, Router,
 };
-use axum_extra::extract::cookie::{Cookie, CookieJar, Expiration, SameSite};
+use axum_extra::{
+    extract::cookie::{Cookie, CookieJar, Expiration, SameSite},
+    TypedHeader,
+};
 use cotoami_db::prelude::*;
 use time::OffsetDateTime;
 use tokio::task::spawn_blocking;

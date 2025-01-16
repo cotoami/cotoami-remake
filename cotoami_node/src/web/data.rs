@@ -5,8 +5,9 @@ use axum::{
     extract::{Extension, State},
     middleware,
     routing::get,
-    Router, TypedHeader,
+    Router,
 };
+use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{
