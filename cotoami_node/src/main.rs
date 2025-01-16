@@ -15,8 +15,7 @@ async fn main() -> Result<()> {
     let server_config = ServerConfig::load_from_env()?;
     info!("ServerConfig loaded: {:?}", server_config);
 
-    let (handle, _shutdown_trigger) =
-        cotoami_node::launch_server(server_config, node_state).await?;
+    let handle = cotoami_node::launch_server(server_config, node_state).await?;
     handle.await??;
 
     Ok(())
