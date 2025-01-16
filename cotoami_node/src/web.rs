@@ -4,10 +4,10 @@ use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
 
 use anyhow::Result;
 use axum::{
-    extract::OriginalUri,
+    extract::{OriginalUri, Request},
     http::{
         header::{self, HeaderName, HeaderValue},
-        Request, StatusCode, Uri,
+        StatusCode, Uri,
     },
     middleware,
     middleware::Next,
@@ -233,14 +233,14 @@ pub(crate) const SESSION_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-session-token");
 
 /// A middleware function to load the session by a token stored in a cookie or header value
-async fn require_session<B>(
+async fn require_session(
     Extension(state): Extension<NodeState>,
     // CookieJar extractor will never reject a request
     // https://docs.rs/axum-extra/0.7.5/src/axum_extra/extract/cookie/mod.rs.html#96
     // https://docs.rs/axum/latest/axum/extract/index.html#optional-extractors
     jar: CookieJar,
-    mut request: Request<B>,
-    next: Next<B>,
+    mut request: Request,
+    next: Next,
 ) -> Result<Response, ServiceError> {
     let cookie_value = jar.get(SESSION_COOKIE_NAME).map(Cookie::value);
     let header_value = request
@@ -286,11 +286,11 @@ pub(crate) const OPERATE_AS_OWNER_HEADER_NAME: HeaderName =
 /// A middleware function to identify the operator from a session.
 ///
 /// This middleware has to be placed after the [require_session] middleware.
-async fn require_operator<B>(
+async fn require_operator(
     Extension(state): Extension<NodeState>,
     Extension(session): Extension<ClientSession>,
-    mut request: Request<B>,
-    next: Next<B>,
+    mut request: Request,
+    next: Next,
 ) -> Result<Response, ServiceError> {
     if let ClientSession::Operator(operator) = session {
         let operator = if request.headers().contains_key(OPERATE_AS_OWNER_HEADER_NAME) {
