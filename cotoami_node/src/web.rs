@@ -15,7 +15,10 @@ use axum::{
     routing::get,
     Extension, Json, Router,
 };
-use axum_extra::extract::cookie::{Cookie, CookieJar};
+use axum_extra::{
+    extract::cookie::{Cookie, CookieJar},
+    headers,
+};
 use bytes::Bytes;
 use cotoami_db::prelude::ClientSession;
 use dotenvy::dotenv;

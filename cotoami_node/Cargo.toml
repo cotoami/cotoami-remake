@@ -11,7 +11,7 @@ anyhow.workspace = true
 async-stream = "0.3.5" 
 async-trait = "0.1.80" 
 axum = {version = "0.7", features = ["tokio", "ws"]} 
-axum-extra = {version = "0.10.0", features = ["cookie"]} 
+axum-extra = {version = "0.10.0", features = ["cookie", "typed-header"]} 
 axum-macros = "0.5.0" 
 bytes.workspace = true 
 chrono.workspace = true 
