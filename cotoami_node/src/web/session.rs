@@ -47,13 +47,13 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
         )
         .unwrap_or_else(|_| unreachable!()),
     );
-    Cookie::build(super::SESSION_COOKIE_NAME, session.token.clone())
+    Cookie::build((super::SESSION_COOKIE_NAME, session.token.clone()))
         .secure(true)
         .http_only(true)
         .path("/")
         .same_site(SameSite::Lax)
         .expires(expiration)
-        .finish()
+        .into()
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ async fn delete_session(
             }
         }
         info!("Deleted a client session: {:?}", client_session);
-        Ok(jar.remove(Cookie::named(super::SESSION_COOKIE_NAME)))
+        Ok(jar.remove(Cookie::from(super::SESSION_COOKIE_NAME)))
     })
     .await?
 }
