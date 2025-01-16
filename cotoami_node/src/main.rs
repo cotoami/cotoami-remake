@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cotoami_node::prelude::*;
+use tokio::signal;
 use tracing::info;
 
 #[tokio::main]
@@ -15,8 +16,11 @@ async fn main() -> Result<()> {
     let server_config = ServerConfig::load_from_env()?;
     info!("ServerConfig loaded: {:?}", server_config);
 
-    let handle = cotoami_node::launch_server(server_config, node_state).await?;
-    handle.await??;
+    let (handle, shutdown_trigger) = cotoami_node::launch_server(server_config, node_state).await?;
 
-    Ok(())
+    tokio::spawn(async {
+        signal::ctrl_c().await.unwrap();
+        shutdown_trigger.send(()).unwrap();
+    });
+    handle.await?
 }

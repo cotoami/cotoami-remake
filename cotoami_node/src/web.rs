@@ -1,6 +1,6 @@
 //! Web API for Node operations based on [NodeState].
 
-use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
+use std::{future::IntoFuture, net::SocketAddr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use axum::{
@@ -26,8 +26,10 @@ use futures::TryFutureExt;
 use mime::Mime;
 use tokio::{
     net::TcpListener,
+    sync::{oneshot, oneshot::Sender},
     task::{spawn_blocking, JoinHandle},
 };
+use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 use tracing::{debug, error};
 use validator::Validate;
 
@@ -44,16 +46,24 @@ pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
 pub async fn launch_server(
     config: ServerConfig,
     node_state: NodeState,
-) -> Result<JoinHandle<Result<()>>> {
+) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
+    // Server config
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
-    let listener = TcpListener::bind(addr).await.unwrap();
+
+    // Create an API application
     let api =
         router(Arc::new(config), node_state).into_make_service_with_connect_info::<SocketAddr>();
-    let serve = axum::serve(listener, api);
 
-    Ok(tokio::spawn(
-        serve.into_future().map_err(anyhow::Error::from),
-    ))
+    // Run the server with graceful shutdown
+    let listener = TcpListener::bind(addr).await.unwrap();
+    let (shutdown_trigger, rx) = oneshot::channel::<()>();
+    let serve = axum::serve(listener, api)
+        .with_graceful_shutdown(async {
+            rx.await.ok();
+        })
+        .into_future()
+        .map_err(anyhow::Error::from);
+    Ok((tokio::spawn(serve), shutdown_trigger))
 }
 
 #[derive(Debug, serde::Deserialize, Validate)]
@@ -105,6 +115,8 @@ pub(super) fn router(config: Arc<ServerConfig>, node_state: NodeState) -> Router
         // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
         .layer(Extension(config))
         .layer(Extension(node_state.clone()))
+        .layer(TraceLayer::new_for_http())
+        .layer(TimeoutLayer::new(Duration::from_secs(10)))
         .with_state(node_state)
 }
 
