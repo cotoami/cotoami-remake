@@ -38,6 +38,7 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/data
 /////////////////////////////////////////////////////////////////////////////
 
+#[axum_macros::debug_handler]
 async fn initial_dataset(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
