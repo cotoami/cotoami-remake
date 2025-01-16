@@ -8,11 +8,7 @@ use futures::{Sink, StreamExt};
 use tokio::sync::mpsc;
 use tokio_tungstenite::{
     connect_async,
-    tungstenite::{
-        client::IntoClientRequest,
-        handshake::client::Request,
-        http::{HeaderName, HeaderValue},
-    },
+    tungstenite::{client::IntoClientRequest, handshake::client::Request},
 };
 use tokio_util::sync::PollSender;
 use tracing::info;
@@ -111,26 +107,14 @@ impl HttpClient {
     pub fn ws_request(&self) -> Result<Request> {
         let ws_url = Url::parse(&self.ws_url_prefix())?.join("/api/ws")?;
         let mut request = ws_url.into_client_request()?;
-        {
-            // FIXME: incompatible `http` versions between reqwest and tungstenite
-            // make me write this silly conversion.
-            // Waiting for the following issue to be fixed:
-            // https://github.com/seanmonstar/reqwest/issues/2039
-            let headers = request.headers_mut();
-            for (name, value) in self.all_headers().into_iter() {
-                let value = HeaderValue::from_bytes(value.as_bytes())?;
-                if let Some(name) = name {
-                    let name = HeaderName::from_bytes(name.as_ref())?;
-                    headers.append(name, value);
-                } else {
-                    // Just ignore the `None` case
-                }
-            }
-        }
+        request.headers_mut().extend(self.read_headers().clone());
         Ok(request)
     }
 
     fn ws_url_prefix(&self) -> String {
+        // Convert the protocol scheme:
+        //   http:// -> ws://
+        //   https:// -> wss://
         if self.url_prefix().scheme().starts_with("http") {
             self.url_prefix().as_str().replacen("http", "ws", 1)
         } else {
