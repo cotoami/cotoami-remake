@@ -5,8 +5,9 @@ use axum::{
     extract::{Extension, State},
     middleware,
     routing::get,
-    Router, TypedHeader,
+    Router,
 };
+use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{
@@ -37,6 +38,7 @@ pub(super) fn routes() -> Router<NodeState> {
 // GET /api/data
 /////////////////////////////////////////////////////////////////////////////
 
+#[axum_macros::debug_handler]
 async fn initial_dataset(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,

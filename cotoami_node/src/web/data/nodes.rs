@@ -3,8 +3,9 @@ use std::sync::Arc;
 use axum::{
     extract::{Path, State},
     routing::{get, put},
-    Extension, Router, TypedHeader,
+    Extension, Router,
 };
+use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{

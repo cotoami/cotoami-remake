@@ -2,15 +2,16 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use axum::{
-    headers::{HeaderMapExt, Host, Origin},
+    extract::Request,
     http::{
         header::{HeaderMap, HeaderName, HeaderValue},
-        Method, Request, StatusCode,
+        Method, StatusCode,
     },
     middleware::Next,
     response::{IntoResponse, Response},
     Extension,
 };
+use axum_extra::headers::{HeaderMapExt, Host, Origin};
 use tracing::info;
 
 use crate::web::ServerConfig;
@@ -21,10 +22,10 @@ const UNPROTECTED_METHODS: &[Method] = &[Method::HEAD, Method::GET, Method::OPTI
 #[allow(clippy::declare_interior_mutable_const)]
 pub(crate) const CUSTOM_HEADER: HeaderName = HeaderName::from_static("x-requested-with");
 
-pub(super) async fn protect_from_forgery<B>(
+pub(super) async fn protect_from_forgery(
     Extension(config): Extension<Arc<ServerConfig>>,
-    request: Request<B>,
-    next: Next<B>,
+    request: Request,
+    next: Next,
 ) -> Response {
     if UNPROTECTED_METHODS.contains(request.method()) || is_csrf_safe(&request, &config) {
         next.run(request).await

@@ -1,8 +1,9 @@
 use axum::{
     extract::{Extension, Path, State},
     routing::put,
-    Router, TypedHeader,
+    Router,
 };
+use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 

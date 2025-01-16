@@ -9,7 +9,7 @@ use anyhow::Result;
 use const_format::concatcp;
 use cotoami_db::models::Bytes;
 use futures::future::FutureExt;
-use parking_lot::RwLock;
+use parking_lot::{RwLock, RwLockReadGuard};
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use reqwest::{
     header,
@@ -37,13 +37,11 @@ pub struct HttpClient {
 
 impl HttpClient {
     pub fn new(url_prefix: &str) -> Result<Self> {
-        let client = Client::builder()
-            .default_headers(Self::default_headers())
-            .build()?;
+        let client = Client::builder().build()?;
         Ok(Self {
             client,
             url_prefix: Url::parse(url_prefix)?,
-            headers: Arc::new(RwLock::new(HeaderMap::new())),
+            headers: Arc::new(RwLock::new(Self::default_headers())),
         })
     }
 
@@ -62,12 +60,7 @@ impl HttpClient {
         self.headers.write().insert(name, value);
     }
 
-    pub(crate) fn all_headers(&self) -> HeaderMap {
-        let mut headers = HeaderMap::new();
-        headers.extend(Self::default_headers());
-        headers.extend(self.headers.read().clone());
-        headers
-    }
+    pub(crate) fn read_headers(&self) -> RwLockReadGuard<HeaderMap> { self.headers.read() }
 
     fn url(&self, path: &str) -> Url {
         self.url_prefix

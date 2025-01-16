@@ -1,14 +1,13 @@
 //! Web API for Node operations based on [NodeState].
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{future::IntoFuture, net::SocketAddr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use axum::{
-    extract::OriginalUri,
-    headers,
+    extract::{OriginalUri, Request},
     http::{
         header::{self, HeaderName, HeaderValue},
-        Request, StatusCode, Uri,
+        StatusCode, Uri,
     },
     middleware,
     middleware::Next,
@@ -16,16 +15,21 @@ use axum::{
     routing::get,
     Extension, Json, Router,
 };
-use axum_extra::extract::cookie::{Cookie, CookieJar};
+use axum_extra::{
+    extract::cookie::{Cookie, CookieJar},
+    headers,
+};
 use bytes::Bytes;
 use cotoami_db::prelude::ClientSession;
 use dotenvy::dotenv;
 use futures::TryFutureExt;
 use mime::Mime;
 use tokio::{
+    net::TcpListener,
     sync::{oneshot, oneshot::Sender},
     task::{spawn_blocking, JoinHandle},
 };
+use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 use tracing::{debug, error};
 use validator::Validate;
 
@@ -43,21 +47,23 @@ pub async fn launch_server(
     config: ServerConfig,
     node_state: NodeState,
 ) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    // Build a Web API server
+    // Server config
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
-    let web_api = router(Arc::new(config), node_state);
-    let server = axum::Server::bind(&addr)
-        .serve(web_api.into_make_service_with_connect_info::<SocketAddr>());
 
-    // Prepare a way to gracefully shutdown a server
-    // https://hyper.rs/guides/0.14/server/graceful-shutdown/
-    let (tx, rx) = oneshot::channel::<()>();
-    let server = server.with_graceful_shutdown(async {
-        rx.await.ok();
-    });
+    // Create an API application
+    let api =
+        router(Arc::new(config), node_state).into_make_service_with_connect_info::<SocketAddr>();
 
-    // Launch the server
-    Ok((tokio::spawn(server.map_err(anyhow::Error::from)), tx))
+    // Run the server with graceful shutdown
+    let listener = TcpListener::bind(addr).await.unwrap();
+    let (shutdown_trigger, rx) = oneshot::channel::<()>();
+    let serve = axum::serve(listener, api)
+        .with_graceful_shutdown(async {
+            rx.await.ok();
+        })
+        .into_future()
+        .map_err(anyhow::Error::from);
+    Ok((tokio::spawn(serve), shutdown_trigger))
 }
 
 #[derive(Debug, serde::Deserialize, Validate)]
@@ -109,6 +115,8 @@ pub(super) fn router(config: Arc<ServerConfig>, node_state: NodeState) -> Router
         // https://docs.rs/axum/latest/axum/middleware/index.html#applying-multiple-middleware
         .layer(Extension(config))
         .layer(Extension(node_state.clone()))
+        .layer(TraceLayer::new_for_http())
+        .layer(TimeoutLayer::new(Duration::from_secs(10)))
         .with_state(node_state)
 }
 
@@ -237,14 +245,14 @@ pub(crate) const SESSION_HEADER_NAME: HeaderName =
     HeaderName::from_static("x-cotoami-session-token");
 
 /// A middleware function to load the session by a token stored in a cookie or header value
-async fn require_session<B>(
+async fn require_session(
     Extension(state): Extension<NodeState>,
     // CookieJar extractor will never reject a request
     // https://docs.rs/axum-extra/0.7.5/src/axum_extra/extract/cookie/mod.rs.html#96
     // https://docs.rs/axum/latest/axum/extract/index.html#optional-extractors
     jar: CookieJar,
-    mut request: Request<B>,
-    next: Next<B>,
+    mut request: Request,
+    next: Next,
 ) -> Result<Response, ServiceError> {
     let cookie_value = jar.get(SESSION_COOKIE_NAME).map(Cookie::value);
     let header_value = request
@@ -290,11 +298,11 @@ pub(crate) const OPERATE_AS_OWNER_HEADER_NAME: HeaderName =
 /// A middleware function to identify the operator from a session.
 ///
 /// This middleware has to be placed after the [require_session] middleware.
-async fn require_operator<B>(
+async fn require_operator(
     Extension(state): Extension<NodeState>,
     Extension(session): Extension<ClientSession>,
-    mut request: Request<B>,
-    next: Next<B>,
+    mut request: Request,
+    next: Next,
 ) -> Result<Response, ServiceError> {
     if let ClientSession::Operator(operator) = session {
         let operator = if request.headers().contains_key(OPERATE_AS_OWNER_HEADER_NAME) {

@@ -10,9 +10,9 @@ version.workspace = true
 anyhow.workspace = true 
 async-stream = "0.3.5" 
 async-trait = "0.1.80" 
-axum = {version = "0.6", features = ["headers", "ws"]} 
-axum-extra = {version = "0.7.5", features = ["cookie"]} 
-axum-macros = "0.3.7" 
+axum = {version = "0.7", features = ["tokio", "ws"]} 
+axum-extra = {version = "0.9.6", features = ["cookie", "typed-header"]} 
+axum-macros = "0.5.0" 
 bytes.workspace = true 
 chrono.workspace = true 
 const_format = "0.2.32" 
@@ -30,17 +30,18 @@ itertools.workspace = true
 mime = "0.3.17" 
 parking_lot.workspace = true 
 percent-encoding = "2.3.1" 
-reqwest = {version = "0.11", features = ["json"]} 
-reqwest-eventsource = "0.4.0" 
+reqwest = {version = "0.12", features = ["json"]} 
+reqwest-eventsource = "0.6.0" 
 rmp-serde.workspace = true 
 serde.workspace = true 
 serde_json.workspace = true 
 smallvec = "1.11.0" 
 thiserror.workspace = true 
-time = "0.3.25" 
+time = "0.3.37" 
 tokio = {version = "1.0", features = ["full"]} 
-tokio-tungstenite = {version = "0.21.0", features = ["rustls-tls-webpki-roots"]} 
+tokio-tungstenite = {version = "0.24", features = ["rustls-tls-webpki-roots", "url"]} 
 tokio-util = "0.7.10" 
+tower-http = {version = "0.6.0", features = ["timeout", "trace"]} 
 tracing-subscriber = "0.3" 
 tracing.workspace = true 
 url.workspace = true 
