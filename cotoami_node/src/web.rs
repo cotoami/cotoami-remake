@@ -1,11 +1,10 @@
 //! Web API for Node operations based on [NodeState].
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{future::IntoFuture, net::SocketAddr, sync::Arc};
 
 use anyhow::Result;
 use axum::{
     extract::OriginalUri,
-    headers,
     http::{
         header::{self, HeaderName, HeaderValue},
         Request, StatusCode, Uri,
@@ -23,7 +22,7 @@ use dotenvy::dotenv;
 use futures::TryFutureExt;
 use mime::Mime;
 use tokio::{
-    sync::{oneshot, oneshot::Sender},
+    net::TcpListener,
     task::{spawn_blocking, JoinHandle},
 };
 use tracing::{debug, error};
@@ -42,22 +41,16 @@ pub(crate) use self::csrf::CUSTOM_HEADER as CSRF_CUSTOM_HEADER;
 pub async fn launch_server(
     config: ServerConfig,
     node_state: NodeState,
-) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    // Build a Web API server
+) -> Result<JoinHandle<Result<()>>> {
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
-    let web_api = router(Arc::new(config), node_state);
-    let server = axum::Server::bind(&addr)
-        .serve(web_api.into_make_service_with_connect_info::<SocketAddr>());
+    let listener = TcpListener::bind(addr).await.unwrap();
+    let api =
+        router(Arc::new(config), node_state).into_make_service_with_connect_info::<SocketAddr>();
+    let serve = axum::serve(listener, api);
 
-    // Prepare a way to gracefully shutdown a server
-    // https://hyper.rs/guides/0.14/server/graceful-shutdown/
-    let (tx, rx) = oneshot::channel::<()>();
-    let server = server.with_graceful_shutdown(async {
-        rx.await.ok();
-    });
-
-    // Launch the server
-    Ok((tokio::spawn(server.map_err(anyhow::Error::from)), tx))
+    Ok(tokio::spawn(
+        serve.into_future().map_err(anyhow::Error::from),
+    ))
 }
 
 #[derive(Debug, serde::Deserialize, Validate)]
