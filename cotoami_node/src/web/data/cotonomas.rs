@@ -4,8 +4,9 @@ use anyhow::Result;
 use axum::{
     extract::{Json, Path, Query, State},
     routing::{get, put},
-    Extension, Router, TypedHeader,
+    Extension, Router,
 };
+use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{
