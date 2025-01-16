@@ -2,8 +2,9 @@ use anyhow::Result;
 use axum::{
     extract::{Path, Query, State},
     routing::get,
-    Router, TypedHeader,
+    Router,
 };
+use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 use validator::Validate;
 
