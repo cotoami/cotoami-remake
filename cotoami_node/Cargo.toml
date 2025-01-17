@@ -26,6 +26,7 @@ envy = "0.4" # seems unmaintained
 eventsource-stream = "0.2.3" 
 futures-util.workspace = true 
 futures.workspace = true 
+googletest.workspace = true 
 itertools.workspace = true 
 mime = "0.3.17" 
 parking_lot.workspace = true 
@@ -46,4 +47,7 @@ tracing-subscriber = "0.3"
 tracing.workspace = true 
 url.workspace = true 
 uuid.workspace = true 
-validator.workspace = true
+validator.workspace = true 
+
+[dev-dependencies]
+tempfile = "3"
