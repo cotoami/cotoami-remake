@@ -152,6 +152,8 @@ pub struct ParentServices(
 );
 
 impl ParentServices {
+    pub fn count(&self) -> usize { self.0.read().len() }
+
     pub fn get(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         self.0
             .read()

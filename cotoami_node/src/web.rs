@@ -99,6 +99,17 @@ impl ServerConfig {
     fn default_url_host() -> String { "localhost".into() }
 }
 
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            port: Self::default_port(),
+            url_scheme: Self::default_url_scheme(),
+            url_host: Self::default_url_host(),
+            url_port: Some(Self::default_port()),
+        }
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Router
 /////////////////////////////////////////////////////////////////////////////
