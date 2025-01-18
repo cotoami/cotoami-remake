@@ -9,6 +9,8 @@ use tempfile::tempdir;
 use test_log::test;
 use tokio::sync::oneshot::Sender;
 
+/// Test a [NodeService] by sending [Command]s.
+/// Various service backends are defined in each test function below.
 async fn test_node_service<S, C>(
     service: &S,
     ds: &mut DatabaseSession<'_>,
@@ -41,10 +43,7 @@ where
     Ok(())
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// Local node as a service
-/////////////////////////////////////////////////////////////////////////////
-
+/// Service backend: local node
 #[test(tokio::test)]
 async fn local_node() -> Result<()> {
     let config = new_node_config()?;
@@ -55,10 +54,7 @@ async fn local_node() -> Result<()> {
     test_node_service(&state, &mut ds, changes).await
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// WebSocket server as a service
-/////////////////////////////////////////////////////////////////////////////
-
+/// Service backend: WebSocket server
 #[test(tokio::test)]
 async fn websocket_server() -> Result<()> {
     // Client node
@@ -91,10 +87,7 @@ async fn websocket_server() -> Result<()> {
     Ok(())
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// HTTP server as a service
-/////////////////////////////////////////////////////////////////////////////
-
+/// Service backend: HTTP server
 #[test(tokio::test)]
 async fn http_server() -> Result<()> {
     // Client node
