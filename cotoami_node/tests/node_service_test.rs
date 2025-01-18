@@ -43,9 +43,8 @@ where
     Ok(())
 }
 
-/// Service backend: local node
 #[test(tokio::test)]
-async fn local_node() -> Result<()> {
+async fn service_based_on_local_node() -> Result<()> {
     let config = new_node_config()?;
     let state = NodeState::new(config).await?;
     let mut ds = state.db().new_session()?;
@@ -54,9 +53,8 @@ async fn local_node() -> Result<()> {
     test_node_service(&state, &mut ds, changes).await
 }
 
-/// Service backend: WebSocket server
 #[test(tokio::test)]
-async fn websocket_server() -> Result<()> {
+async fn service_based_on_websocket_server() -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;
     let client_id = client_state.try_get_local_node_id()?;
@@ -98,9 +96,8 @@ async fn websocket_server() -> Result<()> {
     Ok(())
 }
 
-/// Service backend: HTTP server
 #[test(tokio::test)]
-async fn http_server() -> Result<()> {
+async fn service_based_on_http_server() -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;
     let client_id = client_state.try_get_local_node_id()?;
