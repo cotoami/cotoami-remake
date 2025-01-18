@@ -65,12 +65,12 @@ async fn websocket_server() -> Result<()> {
     let client_state = new_client_node_state().await?;
 
     // Server node
-    let (server_state, _shutdown) =
-        launch_server_node(client_state.try_get_local_node_id()?, true).await?;
+    let (server_state, shutdown) =
+        launch_server_node(client_state.try_get_local_node_id()?, 5103, true).await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server
-    let server = connect_to_server(&client_state, NodeRole::Child).await?;
+    let server = connect_to_server(&client_state, "http://localhost:5103", NodeRole::Child).await?;
     assert_that!(server.server.node_id, eq(server_id));
 
     // Test the server service via the client node
@@ -85,6 +85,44 @@ async fn websocket_server() -> Result<()> {
         .remote_changes()
         .subscribe(Some(server_state.try_get_local_node_id()?));
     let _ = test_node_service(parent_service.as_ref(), &mut server_ds, remote_changes).await?;
+
+    shutdown.send(()).ok();
+
+    Ok(())
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// HTTP server as a service
+/////////////////////////////////////////////////////////////////////////////
+
+#[test(tokio::test)]
+async fn http_server() -> Result<()> {
+    // Client node
+    let client_state = new_client_node_state().await?;
+
+    // Server node
+    let (server_state, shutdown) =
+        launch_server_node(client_state.try_get_local_node_id()?, 5104, false).await?;
+    let server_id = server_state.try_get_local_node_id()?;
+
+    // Connect the client to the server
+    let server = connect_to_server(&client_state, "http://localhost:5104", NodeRole::Child).await?;
+    assert_that!(server.server.node_id, eq(server_id));
+
+    // Test the server service via the client node
+    let parent_service = get_parent_service(&client_state, &server_id).await?;
+    assert_that!(
+        parent_service.description(),
+        eq("HTTP server-as-parent: http://localhost:5104/")
+    );
+    let mut server_ds = server_state.db().new_session()?;
+    let remote_changes = client_state
+        .pubsub()
+        .remote_changes()
+        .subscribe(Some(server_state.try_get_local_node_id()?));
+    let _ = test_node_service(parent_service.as_ref(), &mut server_ds, remote_changes).await?;
+
+    shutdown.send(()).ok();
 
     Ok(())
 }
@@ -109,6 +147,7 @@ async fn new_client_node_state() -> Result<NodeState> {
 
 async fn launch_server_node(
     owner_remote_node_id: Id<Node>,
+    port: u16,
     enable_websocket: bool,
 ) -> Result<(NodeState, Sender<()>)> {
     let mut node_config = new_node_config()?;
@@ -117,15 +156,21 @@ async fn launch_server_node(
     let server_state = NodeState::new(node_config).await?;
 
     let mut server_config = ServerConfig::default();
+    server_config.port = port;
+    server_config.url_port = Some(port);
     server_config.enable_websocket = enable_websocket;
     let (_, shutdown) = cotoami_node::launch_server(server_config, server_state.clone()).await?;
 
     Ok((server_state, shutdown))
 }
 
-async fn connect_to_server(client_state: &NodeState, role: NodeRole) -> Result<Server> {
+async fn connect_to_server(
+    client_state: &NodeState,
+    url_prefix: impl Into<String>,
+    role: NodeRole,
+) -> Result<Server> {
     let mut request = Command::AddServer(LogIntoServer {
-        url_prefix: Some("http://localhost:5103".into()),
+        url_prefix: Some(url_prefix.into()),
         password: Some("server-password".into()),
         new_password: None,
         client_role: Some(role),
