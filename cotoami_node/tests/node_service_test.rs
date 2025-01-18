@@ -66,7 +66,7 @@ async fn websocket_server() -> Result<()> {
 
     // Server node
     let (server_state, _shutdown) =
-        launch_server_node(client_state.try_get_local_node_id()?).await?;
+        launch_server_node(client_state.try_get_local_node_id()?, true).await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server
@@ -107,13 +107,19 @@ async fn new_client_node_state() -> Result<NodeState> {
     NodeState::new(node_config).await
 }
 
-async fn launch_server_node(owner_remote_node_id: Id<Node>) -> Result<(NodeState, Sender<()>)> {
+async fn launch_server_node(
+    owner_remote_node_id: Id<Node>,
+    enable_websocket: bool,
+) -> Result<(NodeState, Sender<()>)> {
     let mut node_config = new_node_config()?;
     node_config.owner_remote_node_id = Some(owner_remote_node_id);
     node_config.owner_remote_node_password = Some("server-password".into());
     let server_state = NodeState::new(node_config).await?;
-    let (_, shutdown) =
-        cotoami_node::launch_server(ServerConfig::default(), server_state.clone()).await?;
+
+    let mut server_config = ServerConfig::default();
+    server_config.enable_websocket = enable_websocket;
+    let (_, shutdown) = cotoami_node::launch_server(server_config, server_state.clone()).await?;
+
     Ok((server_state, shutdown))
 }
 
