@@ -59,10 +59,10 @@ async fn local_node() -> Result<()> {
 async fn websocket_server() -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;
+    let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
-    let (server_state, shutdown) =
-        launch_server_node(client_state.try_get_local_node_id()?, 5103, true).await?;
+    let (server_state, shutdown) = launch_server_node(5103, true, Some(client_id)).await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server
@@ -79,8 +79,42 @@ async fn websocket_server() -> Result<()> {
     let remote_changes = client_state
         .pubsub()
         .remote_changes()
-        .subscribe(Some(server_state.try_get_local_node_id()?));
+        .subscribe(Some(server_id));
     let _ = test_node_service(parent_service.as_ref(), &mut server_ds, remote_changes).await?;
+
+    shutdown.send(()).ok();
+
+    Ok(())
+}
+
+/// Service backend: WebSocket client
+#[test(tokio::test)]
+async fn websocket_client() -> Result<()> {
+    // Client node
+    let client_state = new_client_node_state().await?;
+    let client_id = client_state.try_get_local_node_id()?;
+
+    // Server node
+    let (server_state, shutdown) = launch_server_node(5104, true, None).await?;
+    let server_id = server_state.try_get_local_node_id()?;
+
+    // Connect the client to the server
+    let server =
+        connect_to_server(&client_state, "http://localhost:5104", NodeRole::Parent).await?;
+    assert_that!(server.server.node_id, eq(server_id));
+
+    // Test the server service via the client node
+    let parent_service = get_parent_service(&client_state, &client_id).await?;
+    assert_that!(
+        parent_service.description(),
+        eq("WebSocket server-as-parent: ws://localhost:5104/api/ws")
+    );
+    let mut client_ds = client_state.db().new_session()?;
+    let remote_changes = server_state
+        .pubsub()
+        .remote_changes()
+        .subscribe(Some(client_id));
+    let _ = test_node_service(parent_service.as_ref(), &mut client_ds, remote_changes).await?;
 
     shutdown.send(()).ok();
 
@@ -92,27 +126,27 @@ async fn websocket_server() -> Result<()> {
 async fn http_server() -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;
+    let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
-    let (server_state, shutdown) =
-        launch_server_node(client_state.try_get_local_node_id()?, 5104, false).await?;
+    let (server_state, shutdown) = launch_server_node(5105, false, Some(client_id)).await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server
-    let server = connect_to_server(&client_state, "http://localhost:5104", NodeRole::Child).await?;
+    let server = connect_to_server(&client_state, "http://localhost:5105", NodeRole::Child).await?;
     assert_that!(server.server.node_id, eq(server_id));
 
     // Test the server service via the client node
     let parent_service = get_parent_service(&client_state, &server_id).await?;
     assert_that!(
         parent_service.description(),
-        eq("HTTP server-as-parent: http://localhost:5104/")
+        eq("HTTP server-as-parent: http://localhost:5105/")
     );
     let mut server_ds = server_state.db().new_session()?;
     let remote_changes = client_state
         .pubsub()
         .remote_changes()
-        .subscribe(Some(server_state.try_get_local_node_id()?));
+        .subscribe(Some(server_id));
     let _ = test_node_service(parent_service.as_ref(), &mut server_ds, remote_changes).await?;
 
     shutdown.send(()).ok();
@@ -139,13 +173,15 @@ async fn new_client_node_state() -> Result<NodeState> {
 }
 
 async fn launch_server_node(
-    owner_remote_node_id: Id<Node>,
     port: u16,
     enable_websocket: bool,
+    owner_remote_node_id: Option<Id<Node>>,
 ) -> Result<(NodeState, Sender<()>)> {
     let mut node_config = new_node_config()?;
-    node_config.owner_remote_node_id = Some(owner_remote_node_id);
-    node_config.owner_remote_node_password = Some("server-password".into());
+    if let Some(owner_remote_node_id) = owner_remote_node_id {
+        node_config.owner_remote_node_id = Some(owner_remote_node_id);
+        node_config.owner_remote_node_password = Some("server-password".into());
+    }
     let server_state = NodeState::new(node_config).await?;
 
     let mut server_config = ServerConfig::default();
