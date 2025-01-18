@@ -76,6 +76,16 @@ pub struct AddClient {
 }
 
 impl AddClient {
+    pub fn new(id: Id<Node>, password: impl Into<String>, role: NodeRole) -> Self {
+        Self {
+            id: Some(id),
+            password: Some(password.into()),
+            client_role: Some(role),
+            as_owner: None,
+            can_edit_links: None,
+        }
+    }
+
     pub fn client_role(&self) -> NodeRole { self.client_role.unwrap_or(NodeRole::Child) }
 
     pub fn as_owner(&self) -> bool { self.as_owner.unwrap_or(false) }

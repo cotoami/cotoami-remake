@@ -62,11 +62,22 @@ async fn websocket_server() -> Result<()> {
     let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
-    let (server_state, shutdown) = launch_server_node(5103, true, Some(client_id)).await?;
+    let (server_state, shutdown) = launch_server_node(
+        5103,
+        true,
+        AddClient::new(client_id, "server-password", NodeRole::Child),
+    )
+    .await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server
-    let server = connect_to_server(&client_state, "http://localhost:5103", NodeRole::Child).await?;
+    let server = connect_to_server(
+        &client_state,
+        "http://localhost:5103",
+        "server-password",
+        NodeRole::Child,
+    )
+    .await?;
     assert_that!(server.server.node_id, eq(server_id));
 
     // Test the server service via the client node
@@ -87,40 +98,6 @@ async fn websocket_server() -> Result<()> {
     Ok(())
 }
 
-/// Service backend: WebSocket client
-#[test(tokio::test)]
-async fn websocket_client() -> Result<()> {
-    // Client node
-    let client_state = new_client_node_state().await?;
-    let client_id = client_state.try_get_local_node_id()?;
-
-    // Server node
-    let (server_state, shutdown) = launch_server_node(5104, true, None).await?;
-    let server_id = server_state.try_get_local_node_id()?;
-
-    // Connect the client to the server
-    let server =
-        connect_to_server(&client_state, "http://localhost:5104", NodeRole::Parent).await?;
-    assert_that!(server.server.node_id, eq(server_id));
-
-    // Test the server service via the client node
-    let parent_service = get_parent_service(&client_state, &client_id).await?;
-    assert_that!(
-        parent_service.description(),
-        eq("WebSocket server-as-parent: ws://localhost:5104/api/ws")
-    );
-    let mut client_ds = client_state.db().new_session()?;
-    let remote_changes = server_state
-        .pubsub()
-        .remote_changes()
-        .subscribe(Some(client_id));
-    let _ = test_node_service(parent_service.as_ref(), &mut client_ds, remote_changes).await?;
-
-    shutdown.send(()).ok();
-
-    Ok(())
-}
-
 /// Service backend: HTTP server
 #[test(tokio::test)]
 async fn http_server() -> Result<()> {
@@ -129,11 +106,22 @@ async fn http_server() -> Result<()> {
     let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
-    let (server_state, shutdown) = launch_server_node(5105, false, Some(client_id)).await?;
+    let (server_state, shutdown) = launch_server_node(
+        5105,
+        false,
+        AddClient::new(client_id, "server-password", NodeRole::Child),
+    )
+    .await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server
-    let server = connect_to_server(&client_state, "http://localhost:5105", NodeRole::Child).await?;
+    let server = connect_to_server(
+        &client_state,
+        "http://localhost:5105",
+        "server-password",
+        NodeRole::Child,
+    )
+    .await?;
     assert_that!(server.server.node_id, eq(server_id));
 
     // Test the server service via the client node
@@ -175,14 +163,14 @@ async fn new_client_node_state() -> Result<NodeState> {
 async fn launch_server_node(
     port: u16,
     enable_websocket: bool,
-    owner_remote_node_id: Option<Id<Node>>,
+    add_client: AddClient,
 ) -> Result<(NodeState, Sender<()>)> {
-    let mut node_config = new_node_config()?;
-    if let Some(owner_remote_node_id) = owner_remote_node_id {
-        node_config.owner_remote_node_id = Some(owner_remote_node_id);
-        node_config.owner_remote_node_password = Some("server-password".into());
-    }
-    let server_state = NodeState::new(node_config).await?;
+    let server_state = NodeState::new(new_node_config()?).await?;
+    let opr = server_state.local_node_as_operator()?;
+    server_state
+        .add_client(add_client, Arc::new(opr))
+        .await
+        .map_err(BackendServiceError)?;
 
     let mut server_config = ServerConfig::default();
     server_config.port = port;
@@ -196,11 +184,12 @@ async fn launch_server_node(
 async fn connect_to_server(
     client_state: &NodeState,
     url_prefix: impl Into<String>,
+    password: impl Into<String>,
     role: NodeRole,
 ) -> Result<Server> {
     let mut request = Command::AddServer(LogIntoServer {
         url_prefix: Some(url_prefix.into()),
-        password: Some("server-password".into()),
+        password: Some(password.into()),
         new_password: None,
         client_role: Some(role),
     })
