@@ -13,7 +13,7 @@
 //!     * via Server-Sent Events/HTTP request (reversal of client/server)
 //!     * via WebSocket
 
-use std::{future::Future, sync::Arc};
+use std::{borrow::Cow, future::Future, sync::Arc};
 
 use anyhow::{bail, Context, Result};
 use cotoami_db::prelude::*;
@@ -77,7 +77,7 @@ pub trait NodeService:
     + Sync
     + DynClone
 {
-    fn description(&self) -> &str;
+    fn description(&self) -> Cow<str>;
 }
 
 pub trait RemoteNodeService: NodeService {

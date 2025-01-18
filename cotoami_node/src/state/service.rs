@@ -1,6 +1,6 @@
 //! [NodeService] implementation based on [NodeState].
 
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
@@ -139,7 +139,7 @@ impl Service<Request> for NodeState {
 }
 
 impl NodeService for NodeState {
-    fn description(&self) -> &str { "local-node" }
+    fn description(&self) -> Cow<str> { Cow::from("local-node") }
 }
 
 /////////////////////////////////////////////////////////////////////////////

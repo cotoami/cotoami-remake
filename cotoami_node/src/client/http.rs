@@ -3,7 +3,7 @@
 //! This client is stateful and belongs to a single server ([HttpClient::url_prefix()]),
 //! so you need to prepare separate clients for each parent that requires plain HTTP access.
 
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use anyhow::Result;
 use const_format::concatcp;
@@ -326,7 +326,12 @@ impl Service<Request> for HttpClient {
 }
 
 impl NodeService for HttpClient {
-    fn description(&self) -> &str { self.url_prefix().as_str() }
+    fn description(&self) -> Cow<str> {
+        Cow::from(format!(
+            "HTTP server-as-parent: {}",
+            self.url_prefix().as_str()
+        ))
+    }
 }
 
 impl RemoteNodeService for HttpClient {
