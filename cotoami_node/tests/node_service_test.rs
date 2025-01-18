@@ -111,7 +111,10 @@ async fn test_service_based_on_remote_node(
         if enable_websocket {
             "WebSocket"
         } else {
-            "HTTP"
+            match client_role {
+                NodeRole::Child => "HTTP",
+                NodeRole::Parent => "SSE",
+            }
         },
         match client_role {
             NodeRole::Child => "server",
