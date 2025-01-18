@@ -217,14 +217,14 @@ async fn connect_to_server(
 }
 
 async fn get_parent_service(
-    client_state: &NodeState,
+    node_state: &NodeState,
     parent_id: &Id<Node>,
 ) -> Result<Box<dyn NodeService>> {
-    let mut parent_service = client_state.parent_services().get(parent_id);
+    let mut parent_service = node_state.parent_services().get(parent_id);
     let start = Instant::now();
     while parent_service.is_none() && start.elapsed().as_secs() < 10 {
         tokio::task::yield_now().await;
-        parent_service = client_state.parent_services().get(parent_id);
+        parent_service = node_state.parent_services().get(parent_id);
     }
     parent_service.ok_or(anyhow!("Could not get the parent service: {parent_id}"))
 }
