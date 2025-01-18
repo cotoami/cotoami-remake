@@ -6,7 +6,6 @@ use std::{ops::DerefMut, sync::Arc};
 use anyhow::Result;
 use cotoami_db::{Id, Node, Operator};
 use parking_lot::RwLock;
-use tokio::task::spawn_blocking;
 use tracing::info;
 
 use crate::{
@@ -29,16 +28,9 @@ struct ClientState {
 
 impl ClientState {
     async fn new(server_id: Id<Node>, node_state: NodeState) -> Result<Self> {
-        let server_as_operator = spawn_blocking({
-            let db = node_state.db().clone();
-            move || db.new_session()?.as_operator(server_id)
-        })
-        .await??
-        .map(Arc::new);
-
         Ok(Self {
             server_id,
-            server_as_operator,
+            server_as_operator: node_state.as_operator(server_id).await?.map(Arc::new),
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
             abortables: Abortables::default(),

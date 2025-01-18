@@ -20,4 +20,9 @@ impl NodeState {
         })
         .await?
     }
+
+    pub(crate) async fn as_operator(&self, node_id: Id<Node>) -> Result<Option<Operator>> {
+        let db = self.db().clone();
+        spawn_blocking(move || db.new_session()?.as_operator(node_id)).await?
+    }
 }
