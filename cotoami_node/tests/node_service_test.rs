@@ -55,101 +55,33 @@ async fn service_based_on_local_node() -> Result<()> {
 
 #[test(tokio::test)]
 async fn service_based_on_websocket_server() -> Result<()> {
-    // Client node
-    let client_state = new_client_node_state().await?;
-    let client_id = client_state.try_get_local_node_id()?;
-
-    // Server node
-    let (server_state, shutdown) = launch_server_node(
-        5103,
-        true,
-        AddClient::new(client_id, "server-password", NodeRole::Child),
-    )
-    .await?;
-    let server_id = server_state.try_get_local_node_id()?;
-
-    // Connect the client to the server
-    let server = connect_to_server(
-        &client_state,
-        "http://localhost:5103",
-        "server-password",
-        NodeRole::Child,
-    )
-    .await?;
-    assert_that!(server.server.node_id, eq(server_id));
-
-    // Test the server service via the client node
-    let parent_service = get_parent_service(&client_state, &server_id).await?;
-    assert_that!(
-        parent_service.description(),
-        eq("WebSocket server-as-parent: ws://localhost:5103/api/ws")
-    );
-    let mut server_ds = server_state.db().new_session()?;
-    let remote_changes = client_state
-        .pubsub()
-        .remote_changes()
-        .subscribe(Some(server_id));
-    let _ = test_node_service(parent_service.as_ref(), &mut server_ds, remote_changes).await?;
-
-    shutdown.send(()).ok();
-
-    Ok(())
+    test_service_based_on_remote_node(5103, true, NodeRole::Child).await
 }
 
 #[test(tokio::test)]
 async fn service_based_on_websocket_client() -> Result<()> {
-    // Client node
-    let client_state = new_client_node_state().await?;
-    let client_id = client_state.try_get_local_node_id()?;
-
-    // Server node
-    let (server_state, shutdown) = launch_server_node(
-        5104,
-        true,
-        AddClient::new(client_id, "server-password", NodeRole::Parent),
-    )
-    .await?;
-    let server_id = server_state.try_get_local_node_id()?;
-
-    // Connect the client to the server
-    let server = connect_to_server(
-        &client_state,
-        "http://localhost:5104",
-        "server-password",
-        NodeRole::Parent,
-    )
-    .await?;
-    assert_that!(server.server.node_id, eq(server_id));
-
-    // Test the server service via the client node
-    let parent_service = get_parent_service(&server_state, &client_id).await?;
-    assert_that!(
-        parent_service.description(),
-        eq(&format!("WebSocket client-as-parent: {}", client_id))
-    );
-    let mut client_ds = client_state.db().new_session()?;
-    let remote_changes = server_state
-        .pubsub()
-        .remote_changes()
-        .subscribe(Some(client_id));
-    let _ = test_node_service(parent_service.as_ref(), &mut client_ds, remote_changes).await?;
-
-    shutdown.send(()).ok();
-
-    Ok(())
+    test_service_based_on_remote_node(5104, true, NodeRole::Parent).await
 }
 
 #[test(tokio::test)]
 async fn service_based_on_http_server() -> Result<()> {
+    test_service_based_on_remote_node(5105, false, NodeRole::Child).await
+}
+
+async fn test_service_based_on_remote_node(
+    server_port: u16,
+    enable_websocket: bool,
+    client_role: NodeRole,
+) -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;
     let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
     let (server_state, shutdown) = launch_server_node(
-        5105,
-        false,
-        AddClient::new(client_id, "server-password", NodeRole::Child),
+        server_port,
+        enable_websocket,
+        AddClient::new(client_id, "server-password", client_role),
     )
     .await?;
     let server_id = server_state.try_get_local_node_id()?;
@@ -157,25 +89,65 @@ async fn service_based_on_http_server() -> Result<()> {
     // Connect the client to the server
     let server = connect_to_server(
         &client_state,
-        "http://localhost:5105",
+        format!("http://localhost:{server_port}"),
         "server-password",
-        NodeRole::Child,
+        client_role,
     )
     .await?;
     assert_that!(server.server.node_id, eq(server_id));
 
-    // Test the server service via the client node
-    let parent_service = get_parent_service(&client_state, &server_id).await?;
+    // Parent service
+    let parent_service = match client_role {
+        NodeRole::Child => get_parent_service(&client_state, &server_id).await?,
+        NodeRole::Parent => get_parent_service(&server_state, &client_id).await?,
+    };
+    let expected_service_description = format!(
+        "{} {}-as-parent: {}",
+        if enable_websocket {
+            "WebSocket"
+        } else {
+            "HTTP"
+        },
+        match client_role {
+            NodeRole::Child => "server",
+            NodeRole::Parent => "client",
+        },
+        match client_role {
+            NodeRole::Child =>
+                if enable_websocket {
+                    format!("ws://localhost:{}/api/ws", server_port)
+                } else {
+                    format!("http://localhost:{}/", server_port)
+                },
+            NodeRole::Parent => client_id.to_string(),
+        },
+    );
+    println!("expected_service_description: {expected_service_description}");
     assert_that!(
         parent_service.description(),
-        eq("HTTP server-as-parent: http://localhost:5105/")
+        eq(&expected_service_description)
     );
-    let mut server_ds = server_state.db().new_session()?;
-    let remote_changes = client_state
-        .pubsub()
-        .remote_changes()
-        .subscribe(Some(server_id));
-    let _ = test_node_service(parent_service.as_ref(), &mut server_ds, remote_changes).await?;
+
+    // Parent DatabaseSession
+    let mut parent_ds = match client_role {
+        NodeRole::Child => server_state.db().new_session()?,
+        NodeRole::Parent => client_state.db().new_session()?,
+    };
+
+    // Remote changes
+    let remote_changes = match client_role {
+        NodeRole::Child => client_state
+            .pubsub()
+            .remote_changes()
+            .subscribe(Some(server_id)),
+        NodeRole::Parent => server_state
+            .pubsub()
+            .remote_changes()
+            .subscribe(Some(client_id)),
+    };
+
+    // Test the parent service
+    let _ = test_node_service(parent_service.as_ref(), &mut parent_ds, remote_changes).await?;
 
     shutdown.send(()).ok();
 
