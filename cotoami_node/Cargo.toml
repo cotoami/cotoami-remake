@@ -8,7 +8,7 @@ version.workspace = true
 
 [dependencies]
 anyhow.workspace = true 
-async-stream = "0.3.5" 
+async-stream = "0.3.6" 
 async-trait = "0.1.80" 
 axum = {version = "0.7", features = ["tokio", "ws"]} 
 axum-extra = {version = "0.9.6", features = ["cookie", "typed-header"]} 

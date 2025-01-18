@@ -15,7 +15,7 @@ use tracing::debug;
 use crate::{
     event::remote::NodeSentEvent,
     service::{PubsubService, ServiceError},
-    state::{EventPubsub, NodeState},
+    state::NodeState,
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -32,20 +32,8 @@ async fn stream_events(
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
-    let events = match session {
+    let events = match &session {
         ClientSession::ParentNode(parent) => {
-            // How to know when Sse connection is closed?
-            // https://github.com/tokio-rs/axum/discussions/1060
-            struct StreamLocal(Id<Node>, EventPubsub);
-            impl Drop for StreamLocal {
-                fn drop(&mut self) {
-                    let Self(parent_id, events) = self;
-                    debug!("SSE client-as-parent stream closed: {}", parent_id);
-                    events.parent_disconnected(*parent_id);
-                }
-            }
-            let _local = StreamLocal(parent.node_id, state.pubsub().events().clone());
-
             // Create a SSE client-as-parent service
             let parent_service = PubsubService::new(
                 format!("SSE client-as-parent: {}", parent.node_id),
@@ -82,6 +70,13 @@ async fn stream_events(
             }
         }
     };
+
+    // Put a StreamLocal variable in the event stream to detect client-disconnection.
+    let events = async_stream::stream! {
+        let _local = StreamLocal(session.clone(), state.clone());
+        for await event in events { yield event; }
+    };
+
     Sse::new(events).keep_alive(KeepAlive::default())
 }
 
@@ -100,6 +95,22 @@ fn error_event<E: ToString>(e: E) -> SseEvent {
     SseEvent::default()
         .event(NodeSentEvent::NAME_ERROR)
         .data(e.to_string())
+}
+
+// How to know when Sse connection is closed?
+// https://github.com/tokio-rs/axum/discussions/1060
+struct StreamLocal(ClientSession, NodeState);
+impl Drop for StreamLocal {
+    fn drop(&mut self) {
+        let Self(session, state) = self;
+        match session {
+            ClientSession::Operator(_) => (),
+            ClientSession::ParentNode(parent) => {
+                debug!("SSE client-as-parent stream closed: {}", parent.node_id);
+                state.pubsub().events().parent_disconnected(parent.node_id);
+            }
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
