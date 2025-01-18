@@ -82,6 +82,9 @@ pub struct ServerConfig {
 
     // COTOAMI_SERVER_URL_PORT
     pub url_port: Option<u16>,
+
+    // COTOAMI_SERVER_ENABLE_WEBSOCKET
+    pub enable_websocket: bool,
 }
 
 impl ServerConfig {
@@ -97,6 +100,7 @@ impl ServerConfig {
     fn default_port() -> u16 { 5103 }
     fn default_url_scheme() -> String { "http".into() }
     fn default_url_host() -> String { "localhost".into() }
+    fn default_enable_websocket() -> bool { true }
 }
 
 impl Default for ServerConfig {
@@ -106,6 +110,7 @@ impl Default for ServerConfig {
             url_scheme: Self::default_url_scheme(),
             url_host: Self::default_url_host(),
             url_port: Some(Self::default_port()),
+            enable_websocket: Self::default_enable_websocket(),
         }
     }
 }
@@ -116,7 +121,7 @@ impl Default for ServerConfig {
 
 pub(super) fn router(config: Arc<ServerConfig>, node_state: NodeState) -> Router {
     Router::new()
-        .nest("/api", routes())
+        .nest("/api", routes(config.enable_websocket))
         .fallback(fallback)
         .layer(middleware::from_fn(csrf::protect_from_forgery))
         // NOTE: the axum doc recommends to use [tower::ServiceBuilder] to apply multiple
@@ -131,13 +136,18 @@ pub(super) fn router(config: Arc<ServerConfig>, node_state: NodeState) -> Router
         .with_state(node_state)
 }
 
-fn routes() -> Router<NodeState> {
-    Router::new()
+fn routes(enable_websocket: bool) -> Router<NodeState> {
+    let routes = Router::new()
         .route("/", get(|| async { "Cotoami Node API" }))
-        .nest("/ws", ws::routes())
         .nest("/session", session::routes())
         .nest("/events", events::routes())
-        .nest("/data", data::routes())
+        .nest("/data", data::routes());
+
+    if enable_websocket {
+        routes.nest("/ws", ws::routes())
+    } else {
+        routes
+    }
 }
 
 async fn fallback(uri: Uri) -> impl IntoResponse {
