@@ -68,6 +68,11 @@ async fn service_based_on_http_server() -> Result<()> {
     test_service_based_on_remote_node(5105, false, NodeRole::Child).await
 }
 
+#[test(tokio::test)]
+async fn service_based_on_http_client() -> Result<()> {
+    test_service_based_on_remote_node(5106, false, NodeRole::Parent).await
+}
+
 async fn test_service_based_on_remote_node(
     server_port: u16,
     enable_websocket: bool,
