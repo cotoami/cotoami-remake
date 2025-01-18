@@ -76,7 +76,7 @@ impl<'a> DatabaseSession<'a> {
 
     pub fn as_operator(&mut self, node_id: Id<Node>) -> Result<Option<Operator>> {
         if node_id == self.globals.try_get_local_node_id()? {
-            return Ok(Some(Operator::Owner(node_id)));
+            return Ok(Some(Operator::LocalNode(node_id)));
         }
         if let Some(child) = self.read_transaction(child_ops::get(&node_id))? {
             return Ok(Some(Operator::ChildNode(child)));

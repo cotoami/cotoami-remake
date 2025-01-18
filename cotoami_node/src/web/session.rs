@@ -68,7 +68,7 @@ async fn delete_session(
     spawn_blocking(move || {
         let db = state.db().new_session()?;
         match &client_session {
-            ClientSession::Operator(Operator::Owner(_)) => {
+            ClientSession::Operator(Operator::LocalNode(_)) => {
                 db.clear_owner_session()?;
             }
             ClientSession::Operator(Operator::ChildNode(child)) => {

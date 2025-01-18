@@ -11,21 +11,21 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Owner(Id<Node>),
+    LocalNode(Id<Node>),
     ChildNode(ChildNode),
 }
 
 impl Operator {
     pub fn node_id(&self) -> Id<Node> {
         match self {
-            Operator::Owner(node_id) => *node_id,
+            Operator::LocalNode(node_id) => *node_id,
             Operator::ChildNode(child_node) => child_node.node_id,
         }
     }
 
     pub fn has_owner_permission(&self) -> bool {
         match self {
-            Operator::Owner(_) => true,
+            Operator::LocalNode(_) => true,
             Operator::ChildNode(child_node) => child_node.as_owner,
         }
     }

@@ -70,7 +70,7 @@ impl Globals {
     }
 
     pub fn local_node_as_operator(&self) -> Result<Operator> {
-        Ok(Operator::Owner(self.try_get_local_node_id()?))
+        Ok(Operator::LocalNode(self.try_get_local_node_id()?))
     }
 
     pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
