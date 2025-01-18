@@ -74,6 +74,10 @@ async fn websocket_server() -> Result<()> {
 
     // Test the server service via the client node
     let parent_service = get_parent_service(&client_state, &server_id).await?;
+    assert_that!(
+        parent_service.description(),
+        eq("WebSocket server-as-parent: ws://localhost:5103/api/ws")
+    );
     let mut server_ds = server_state.db().new_session()?;
     let remote_changes = client_state
         .pubsub()

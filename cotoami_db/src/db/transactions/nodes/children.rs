@@ -30,7 +30,9 @@ impl<'a> DatabaseSession<'a> {
         id: &Id<Node>,
         as_owner: bool,
         can_edit_links: bool,
+        operator: &Operator,
     ) -> Result<ChildNode> {
+        operator.requires_to_be_owner()?;
         self.write_transaction(child_ops::edit(id, as_owner, can_edit_links))
     }
 }
