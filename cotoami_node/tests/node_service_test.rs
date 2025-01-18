@@ -97,6 +97,49 @@ async fn service_based_on_websocket_server() -> Result<()> {
 }
 
 #[test(tokio::test)]
+async fn service_based_on_websocket_client() -> Result<()> {
+    // Client node
+    let client_state = new_client_node_state().await?;
+    let client_id = client_state.try_get_local_node_id()?;
+
+    // Server node
+    let (server_state, shutdown) = launch_server_node(
+        5104,
+        true,
+        AddClient::new(client_id, "server-password", NodeRole::Parent),
+    )
+    .await?;
+    let server_id = server_state.try_get_local_node_id()?;
+
+    // Connect the client to the server
+    let server = connect_to_server(
+        &client_state,
+        "http://localhost:5104",
+        "server-password",
+        NodeRole::Parent,
+    )
+    .await?;
+    assert_that!(server.server.node_id, eq(server_id));
+
+    // Test the server service via the client node
+    let parent_service = get_parent_service(&server_state, &client_id).await?;
+    assert_that!(
+        parent_service.description(),
+        eq(&format!("WebSocket client-as-parent: {}", client_id))
+    );
+    let mut client_ds = client_state.db().new_session()?;
+    let remote_changes = server_state
+        .pubsub()
+        .remote_changes()
+        .subscribe(Some(client_id));
+    let _ = test_node_service(parent_service.as_ref(), &mut client_ds, remote_changes).await?;
+
+    shutdown.send(()).ok();
+
+    Ok(())
+}
+
+#[test(tokio::test)]
 async fn service_based_on_http_server() -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;
