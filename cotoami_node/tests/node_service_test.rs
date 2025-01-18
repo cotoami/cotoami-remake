@@ -6,6 +6,7 @@ use cotoami_node::prelude::*;
 use futures::Stream;
 use googletest::prelude::*;
 use tempfile::tempdir;
+use test_log::test;
 use tokio::sync::oneshot::Sender;
 
 async fn test_node_service<S, C>(
@@ -44,7 +45,7 @@ where
 // Local node as a service
 /////////////////////////////////////////////////////////////////////////////
 
-#[tokio::test]
+#[test(tokio::test)]
 async fn local_node() -> Result<()> {
     let config = new_node_config()?;
     let state = NodeState::new(config).await?;
@@ -58,7 +59,7 @@ async fn local_node() -> Result<()> {
 // WebSocket server as a service
 /////////////////////////////////////////////////////////////////////////////
 
-#[tokio::test]
+#[test(tokio::test)]
 async fn websocket_server() -> Result<()> {
     // Client node
     let client_state = new_client_node_state().await?;

@@ -51,3 +51,4 @@ validator.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
+test-log = "0.2.16"
