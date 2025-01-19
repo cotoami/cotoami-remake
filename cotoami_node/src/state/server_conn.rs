@@ -15,14 +15,16 @@ use crate::{
     state::NodeState,
 };
 
-#[derive(Clone)]
+#[derive(derive_more::Debug, Clone)]
 pub struct ServerConnection {
     server: ServerNode,
+    #[debug(skip)]
     node_state: NodeState,
     local_as_child: Arc<RwLock<Option<ChildNode>>>,
     conn_state: Arc<RwLock<ConnectionState>>,
 }
 
+#[derive(Debug)]
 enum ConnectionState {
     Disconnected(Option<String>),
     Disabled,

@@ -18,11 +18,14 @@ mod ws;
 
 pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 
+#[derive(derive_more::Debug)]
 struct ClientState {
     server_id: Id<Node>,
     server_as_operator: Option<Arc<Operator>>,
     conn_state: RwLock<ConnectionState>,
+    #[debug(skip)]
     node_state: NodeState,
+    #[debug(skip)]
     abortables: Abortables,
 }
 
@@ -69,6 +72,7 @@ impl ClientState {
     }
 }
 
+#[derive(Debug)]
 enum ConnectionState {
     // Newly connecting or reconnecting due to an error.
     Connecting(Option<anyhow::Error>),

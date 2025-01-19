@@ -95,7 +95,7 @@ impl NodeState {
             let is_last_chunk = changes.is_last_chunk();
             let last_number_of_chunk = changes.last_serial_number_of_chunk();
             let last_serial_number = changes.last_serial_number;
-            let total = last_serial_number - import_from;
+            let total = last_serial_number - import_from + 1; // ex. last: 10, from: 5, total: 6 (5-10)
             debug!(
                 "Fetched a chunk of changes: {}-{} (is_last: {}, max: {})",
                 from, last_number_of_chunk, is_last_chunk, last_serial_number
@@ -105,7 +105,7 @@ impl NodeState {
             self.pubsub()
                 .publish_event(LocalNodeEvent::ParentSyncProgress {
                     node_id: parent_node.node_id,
-                    progress: from - import_from,
+                    progress: from - import_from, // ex. next: 15, from: 10, progress: 5 (10-14)
                     total,
                 });
 
@@ -116,7 +116,7 @@ impl NodeState {
             self.pubsub()
                 .publish_event(LocalNodeEvent::ParentSyncProgress {
                     node_id: parent_node.node_id,
-                    progress: last_number_of_chunk - import_from,
+                    progress: last_number_of_chunk - import_from + 1, // ex. last: 10, from: 5, progress: 6 (5-10)
                     total,
                 });
 

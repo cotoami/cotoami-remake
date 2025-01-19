@@ -17,7 +17,7 @@ use parking_lot::Mutex;
 use smallvec::SmallVec;
 use tracing::error;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Publisher<Message, Topic> {
     state: Arc<Mutex<PublisherState<Message, Topic>>>,
 }
@@ -145,6 +145,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct PublisherState<Message, Topic> {
     pub next_subscriber_id: usize,
     pub subscribers: HashMap<usize, Arc<Mutex<SubscriberState<Message>>>>,
@@ -210,6 +211,7 @@ impl<Message, Topic> Stream for Subscriber<Message, Topic> {
     }
 }
 
+#[derive(Debug)]
 pub struct SubscriberState<Message> {
     pub id: usize,
     pub message_queue: VecDeque<Message>,

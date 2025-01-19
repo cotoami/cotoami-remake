@@ -25,7 +25,7 @@ use crate::{
 /////////////////////////////////////////////////////////////////////////////
 
 /// An [SseClient] handles events streamed from an [EventSource].
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SseClient {
     state: Arc<ClientState>,
     http_client: HttpClient,

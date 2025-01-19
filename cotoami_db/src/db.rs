@@ -26,6 +26,7 @@ pub mod sqlite;
 pub mod transactions;
 
 /// A Cotoami database instance based on SQLite
+#[derive(derive_more::Debug)]
 pub struct Database {
     /// The root directory of this database
     root_dir: PathBuf,
@@ -41,6 +42,7 @@ pub struct Database {
     ///
     /// To avoid handling possible SQLITE_BUSY on concurrent writes,
     /// it keeps hold of a single read-write connection in the process.
+    #[debug(skip)]
     rw_conn: Mutex<WritableConn>,
 
     /// Globally shared information

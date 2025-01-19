@@ -28,7 +28,7 @@ use crate::service::{
 ///
 /// You do **not** have to wrap the `HttpClient` in an [`Arc`] to **reuse** it,
 /// because it already uses an [`Arc`] internally.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct HttpClient {
     client: Client,
     url_prefix: Url,

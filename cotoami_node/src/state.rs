@@ -176,7 +176,7 @@ impl ParentServices {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ServerConnections(
     #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, ServerConnection>>>,
 );
@@ -217,6 +217,7 @@ impl ServerConnections {
     }
 }
 
+#[derive(Debug)]
 pub struct ClientConnection {
     client: ActiveClient,
     disconnect: Sender<()>,

@@ -64,20 +64,72 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
             not_connected: none() // It means "connected".
         }))
     );
-    assert!(client_state.server_conns().contains(&server_id));
+    assert_that!(
+        client_state.server_conns().get(&server_id),
+        some(pat!(ServerConnection {
+            not_connected(): none()
+        }))
+    );
+
+    assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ParentSyncStart {
+            node_id: eq(&server_id),
+        }))
+    );
+    assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ParentSyncProgress {
+            node_id: eq(&server_id),
+            progress: eq(&0),
+            total: eq(&2)
+        }))
+    );
+    assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ParentSyncProgress {
+            node_id: eq(&server_id),
+            progress: eq(&2),
+            total: eq(&2)
+        }))
+    );
+    assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ParentSyncEnd {
+            node_id: eq(&server_id),
+            range: some(eq(&(1, 2))),
+            error: none()
+        }))
+    );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: manual disconnection by server-side
+    // When: manual disconnection from server-side
     /////////////////////////////////////////////////////////////////////////////
 
     server_state.client_conns().disconnect(&client_id);
 
-    assert_that!(server_state.client_conns().active_clients().len(), eq(0));
+    // Server-side
     assert_that!(
-        server_events.next().await,
+        timeout(Duration::from_secs(5), server_events.next()).await?,
         some(pat!(LocalNodeEvent::ClientDisconnected {
             node_id: eq(&client_id),
             error: none()
+        }))
+    );
+    assert_that!(server_state.client_conns().active_clients().len(), eq(0));
+
+    // Client-side
+    assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ServerStateChanged {
+            node_id: eq(&server_id),
+            not_connected: some(pat!(NotConnected::Disconnected(none())))
+        }))
+    );
+    assert_that!(
+        client_state.server_conns().get(&server_id),
+        some(pat!(ServerConnection {
+            not_connected(): some(pat!(NotConnected::Disconnected(none())))
         }))
     );
 

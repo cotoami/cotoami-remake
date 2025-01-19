@@ -24,7 +24,7 @@ use crate::{
     state::NodeState,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct WebSocketClient {
     state: Arc<ClientState>,
     ws_request: Request,

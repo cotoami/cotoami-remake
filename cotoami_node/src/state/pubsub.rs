@@ -10,7 +10,7 @@ use crate::{
 // Pubsub aggregation
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Pubsub {
     changes: ChangePubsub,
     remote_changes: RemoteChangePubsub,
