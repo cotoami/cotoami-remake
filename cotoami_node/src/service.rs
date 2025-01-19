@@ -84,7 +84,7 @@ pub trait RemoteNodeService: NodeService {
     fn set_session_token(&mut self, token: &str) -> Result<()>;
 }
 
-pub(crate) type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::Error>>;
+pub type NodeServiceFuture = BoxFuture<'static, Result<Response, anyhow::Error>>;
 
 /////////////////////////////////////////////////////////////////////////////
 // Request
