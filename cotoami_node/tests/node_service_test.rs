@@ -1,3 +1,5 @@
+use std::{borrow::Cow, sync::Arc};
+
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
@@ -13,7 +15,7 @@ async fn test_node_service<S, C>(
     service: &S,
     backend_ds: &mut DatabaseSession<'_>,
     changes: C,
-    child_node_id: Id<Node>,
+    operator_node_id: Id<Node>,
 ) -> Result<()>
 where
     S: NodeService + ?Sized,
@@ -55,7 +57,7 @@ where
         pat!(Coto {
             node_id: eq(&service_node.uuid),
             posted_in_id: some(eq(&root_cotonoma_id)),
-            posted_by_id: eq(&child_node_id),
+            posted_by_id: eq(&operator_node_id),
             content: some(eq("Hello, Cotoami!")),
             summary: none(),
             is_cotonoma: eq(&false),
@@ -71,10 +73,13 @@ where
 async fn service_based_on_local_node() -> Result<()> {
     let config = common::new_node_config("test")?;
     let state = NodeState::new(config).await?;
+    let operator_node_id = state.try_get_local_node_id()?;
+
+    let service = OwnerOperatingService(state.clone());
     let mut ds = state.db().new_session()?;
     let changes = state.pubsub().changes().subscribe(None::<()>);
 
-    test_node_service(&state, &mut ds, changes, state.try_get_local_node_id()?).await
+    test_node_service(&service, &mut ds, changes, operator_node_id).await
 }
 
 #[test(tokio::test)]
@@ -197,4 +202,23 @@ async fn test_service_based_on_remote_node(
     shutdown.send(()).ok();
 
     Ok(())
+}
+
+#[derive(Clone)]
+struct OwnerOperatingService(NodeState);
+
+impl Service<Request> for OwnerOperatingService {
+    type Response = Response;
+    type Error = anyhow::Error;
+    type Future = NodeServiceFuture;
+
+    fn call(&self, mut request: Request) -> Self::Future {
+        let owner = self.0.local_node_as_operator().unwrap();
+        request.set_from(Arc::new(owner));
+        self.0.call(request)
+    }
+}
+
+impl NodeService for OwnerOperatingService {
+    fn description(&self) -> Cow<str> { self.0.description() }
 }
