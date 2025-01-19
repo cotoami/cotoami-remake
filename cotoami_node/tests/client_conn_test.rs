@@ -1,11 +1,11 @@
-use std::time::Instant;
+use std::time::Duration;
 
-use anyhow::{anyhow, Result};
-use cotoami_db::prelude::*;
+use anyhow::Result;
 use cotoami_node::prelude::*;
 use futures::stream::StreamExt;
 use googletest::prelude::*;
 use test_log::test;
+use tokio::time::timeout;
 
 pub mod common;
 
@@ -13,6 +13,7 @@ async fn test_client_connection_management(server_port: u16, enable_websocket: b
     // Client node
     let client_state = common::new_client_node_state("client").await?;
     let client_id = client_state.try_get_local_node_id()?;
+    let mut client_events = client_state.pubsub().events().subscribe(None::<()>);
 
     // Server node
     let (server_state, shutdown) = common::launch_server_node(
@@ -36,18 +37,29 @@ async fn test_client_connection_management(server_port: u16, enable_websocket: b
     assert_that!(server.server.node_id, eq(server_id));
 
     // Assert: the client connection has been registered.
-    let active_client = get_active_client(&server_state, &client_id).await?;
     assert_that!(
-        active_client,
-        pat!(ActiveClient {
+        timeout(Duration::from_secs(5), server_events.next()).await?,
+        some(pat!(LocalNodeEvent::ClientConnected(pat!(ActiveClient {
             node_id: eq(&client_id),
             remote_addr: eq("127.0.0.1")
-        })
+        }))))
+    );
+    assert_that!(
+        server_state.client_conns().active_client(&client_id),
+        some(pat!(ActiveClient {
+            node_id: eq(&client_id),
+            remote_addr: eq("127.0.0.1")
+        }))
     );
     assert_that!(server_state.client_conns().active_clients().len(), eq(1));
+
+    // Assert: the server connection has been registered.
     assert_that!(
-        server_events.next().await,
-        some(eq(&LocalNodeEvent::ClientConnected(active_client)))
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ServerStateChanged {
+            node_id: eq(&server_id),
+            not_connected: none()
+        }))
     );
     assert!(client_state.server_conns().contains(&server_id));
 
@@ -75,14 +87,4 @@ async fn client_connection_on_websocket_server() -> Result<()> {
 #[test(tokio::test)]
 async fn client_connection_on_http_server() -> Result<()> {
     test_client_connection_management(5104, false).await
-}
-
-async fn get_active_client(node_state: &NodeState, client_id: &Id<Node>) -> Result<ActiveClient> {
-    let mut client = node_state.client_conns().active_client(client_id);
-    let start = Instant::now();
-    while client.is_none() && start.elapsed().as_secs() < 10 {
-        tokio::task::yield_now().await;
-        client = node_state.client_conns().active_client(client_id);
-    }
-    client.ok_or(anyhow!("Could not get the active client: {client_id}"))
 }
