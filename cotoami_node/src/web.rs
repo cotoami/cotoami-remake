@@ -84,6 +84,7 @@ pub struct ServerConfig {
     pub url_port: Option<u16>,
 
     // COTOAMI_SERVER_ENABLE_WEBSOCKET
+    #[serde(default = "ServerConfig::default_enable_websocket")]
     pub enable_websocket: bool,
 }
 
