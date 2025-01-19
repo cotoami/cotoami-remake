@@ -54,40 +54,45 @@ async fn handle_socket(
     state: NodeState,
     session: ClientSession,
 ) {
-    // Publish connect and disconnect
     let client_id = session.client_node_id();
-    let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
-    state.put_client_conn(ClientConnection::new(
-        client_id,
-        remote_addr.ip().to_string(),
-        disconnect,
-    ));
-    let on_disconnect = listener_on_disconnect(client_id, state.clone());
-    futures::pin_mut!(on_disconnect);
-
     let (sink, stream) = socket.split();
 
-    // Adapt axum's sink/stream to handle tungstenite messages
+    // Adapt axum's sink/stream to handle tungstenite messages.
     // cf. https://github.com/davidpdrsn/axum-tungstenite
     let sink = Box::pin(sink.with(|m: ts::Message| async {
         from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
     }));
     let stream = stream.map(|r| r.map(into_tungstenite));
 
+    // Container of tasks to maintain this client-server connection.
     let communication_tasks = Abortables::default();
+
+    // A task receiving a disconnect message.
+    let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
     tokio::spawn({
-        // Close the communication when a disconnect message has been received.
+        // Abort all the communication tasks on a disconnect message.
         let tasks = communication_tasks.clone();
         async move {
             match disconnect_receiver.await {
                 Ok(_) => {
                     debug!("Disconnecting a client {client_id} ...");
-                    tasks.abort_all()
+                    tasks.abort_all();
                 }
                 Err(_) => (), // the sender dropped
             }
         }
     });
+
+    // Event handler on disconnect
+    let on_disconnect = listener_on_disconnect(client_id, state.clone());
+    futures::pin_mut!(on_disconnect);
+
+    // Register a ClientConnection.
+    state.put_client_conn(ClientConnection::new(
+        client_id,
+        remote_addr.ip().to_string(),
+        disconnect,
+    ));
 
     match session {
         ClientSession::Operator(opr) => {
