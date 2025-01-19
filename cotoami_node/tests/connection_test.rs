@@ -9,7 +9,7 @@ use tokio::time::timeout;
 
 pub mod common;
 
-async fn test_client_connection_management(server_port: u16, enable_websocket: bool) -> Result<()> {
+async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Result<()> {
     // Client node
     let client_state = common::new_client_node_state("client").await?;
     let client_id = client_state.try_get_local_node_id()?;
@@ -80,11 +80,13 @@ async fn test_client_connection_management(server_port: u16, enable_websocket: b
 }
 
 #[test(tokio::test)]
-async fn client_connection_on_websocket_server() -> Result<()> {
-    test_client_connection_management(5103, true).await
+async fn connecting_to_websocket_server() -> Result<()> {
+    // A comment line to avoid https://github.com/rust-lang/rust/issues/116347
+    test_connecting_nodes(5103, true).await
 }
 
 #[test(tokio::test)]
-async fn client_connection_on_http_server() -> Result<()> {
-    test_client_connection_management(5104, false).await
+async fn connecting_to_http_server() -> Result<()> {
+    // A comment line to avoid https://github.com/rust-lang/rust/issues/116347
+    test_connecting_nodes(5104, false).await
 }
