@@ -3,7 +3,7 @@ use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error, info};
 
-use crate::{service::NodeService, state::NodeState};
+use crate::{event::local::LocalNodeEvent, service::NodeService, state::NodeState};
 
 impl NodeState {
     pub(crate) fn register_parent_service(
@@ -14,6 +14,8 @@ impl NodeState {
         debug!("Parent service being registered: {parent_id}");
         self.parent_services()
             .put(parent_id, dyn_clone::clone_box(&*service));
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ParentRegistered { node_id: parent_id });
 
         // A task syncing with the parent
         self.spawn_task({

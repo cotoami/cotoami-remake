@@ -9,6 +9,14 @@ pub enum LocalNodeEvent {
         not_connected: Option<NotConnected>,
         client_as_child: Option<ChildNode>,
     },
+    ClientConnected(ActiveClient),
+    ClientDisconnected {
+        node_id: Id<Node>,
+        error: Option<String>,
+    },
+    ParentRegistered {
+        node_id: Id<Node>,
+    },
     ParentSyncStart {
         node_id: Id<Node>,
         parent_description: String,
@@ -25,10 +33,5 @@ pub enum LocalNodeEvent {
     },
     ParentDisconnected {
         node_id: Id<Node>,
-    },
-    ClientConnected(ActiveClient),
-    ClientDisconnected {
-        node_id: Id<Node>,
-        error: Option<String>,
     },
 }

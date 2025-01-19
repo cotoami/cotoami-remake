@@ -73,6 +73,12 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
 
     assert_that!(
         timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ParentRegistered {
+            node_id: eq(&server_id),
+        }))
+    );
+    assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
         some(pat!(LocalNodeEvent::ParentSyncStart {
             node_id: eq(&server_id),
         }))
