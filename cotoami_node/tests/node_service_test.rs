@@ -3,7 +3,7 @@ use std::{borrow::Cow, sync::Arc};
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
-use futures::Stream;
+use futures::{stream::StreamExt, Stream};
 use googletest::prelude::*;
 use test_log::test;
 
@@ -23,6 +23,7 @@ where
 {
     let service_node = backend_ds.local_node()?;
     let root_cotonoma_id = service_node.root_cotonoma_id.unwrap();
+    futures::pin_mut!(changes);
 
     /////////////////////////////////////////////////////////////////////////////
     // Command: LocalNode
@@ -64,6 +65,16 @@ where
             repost_of_id: none(),
             reposted_in_ids: none(),
         })
+    );
+    assert_that!(
+        changes.next().await,
+        some(pat!(ChangelogEntry {
+            origin_node_id: eq(&service_node.uuid),
+            change: pat!(Change::CreateCoto(eq(&Coto {
+                rowid: 0,
+                ..posted_coto
+            })))
+        }))
     );
 
     Ok(())
