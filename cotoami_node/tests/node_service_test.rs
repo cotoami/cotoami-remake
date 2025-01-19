@@ -39,7 +39,8 @@ where
         eq(&Node {
             rowid: 0, // skip_deserializing
             ..service_node.clone()
-        })
+        }),
+        "Unexpected response of LocalNode command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -64,7 +65,8 @@ where
             is_cotonoma: eq(&false),
             repost_of_id: none(),
             reposted_in_ids: none(),
-        })
+        }),
+        "Unexpected response of PostCoto command"
     );
     assert_that!(
         changes.next().await,
@@ -74,7 +76,8 @@ where
                 rowid: 0,
                 ..posted_coto
             })))
-        }))
+        })),
+        "Unexpected changelogEntry on PostCoto command"
     );
 
     Ok(())
