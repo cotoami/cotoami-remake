@@ -1,7 +1,6 @@
-use std::{sync::Arc, time::Instant};
+use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
-use cotoami_db::prelude::*;
+use anyhow::Result;
 use cotoami_node::prelude::*;
 use tempfile::tempdir;
 use tokio::sync::oneshot::Sender;
@@ -58,17 +57,4 @@ pub async fn connect_to_server(
     request.set_from(Arc::new(client_state.local_node_as_operator()?));
     let response = client_state.call(request).await?;
     response.content::<Server>()
-}
-
-pub async fn get_parent_service(
-    node_state: &NodeState,
-    parent_id: &Id<Node>,
-) -> Result<Box<dyn NodeService>> {
-    let mut parent_service = node_state.parent_services().get(parent_id);
-    let start = Instant::now();
-    while parent_service.is_none() && start.elapsed().as_secs() < 10 {
-        tokio::task::yield_now().await;
-        parent_service = node_state.parent_services().get(parent_id);
-    }
-    parent_service.ok_or(anyhow!("Could not get the parent service: {parent_id}"))
 }

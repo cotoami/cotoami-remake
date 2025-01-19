@@ -1,6 +1,6 @@
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, sync::Arc, time::Instant};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
 use futures::{stream::StreamExt, Stream};
@@ -147,8 +147,8 @@ async fn test_service_based_on_remote_node(
 
     // Parent service
     let parent_service = match client_role {
-        NodeRole::Child => common::get_parent_service(&client_state, &server_id).await?,
-        NodeRole::Parent => common::get_parent_service(&server_state, &client_id).await?,
+        NodeRole::Child => get_parent_service(&client_state, &server_id).await?,
+        NodeRole::Parent => get_parent_service(&server_state, &client_id).await?,
     };
     let expected_service_description = format!(
         "{} {}-as-parent: {}",
@@ -216,6 +216,19 @@ async fn test_service_based_on_remote_node(
     shutdown.send(()).ok();
 
     Ok(())
+}
+
+async fn get_parent_service(
+    node_state: &NodeState,
+    parent_id: &Id<Node>,
+) -> Result<Box<dyn NodeService>> {
+    let mut parent_service = node_state.parent_services().get(parent_id);
+    let start = Instant::now();
+    while parent_service.is_none() && start.elapsed().as_secs() < 10 {
+        tokio::task::yield_now().await;
+        parent_service = node_state.parent_services().get(parent_id);
+    }
+    parent_service.ok_or(anyhow!("Could not get the parent service: {parent_id}"))
 }
 
 #[derive(Clone)]
