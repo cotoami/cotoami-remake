@@ -2,7 +2,7 @@ use cotoami_db::prelude::*;
 
 use crate::service::models::{ActiveClient, NotConnected};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum LocalNodeEvent {
     ServerStateChanged {
         node_id: Id<Node>,

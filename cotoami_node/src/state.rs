@@ -255,6 +255,10 @@ impl ClientConnections {
         }
     }
 
+    pub fn active_client(&self, client_id: &Id<Node>) -> Option<ActiveClient> {
+        self.0.read().get(client_id).map(|conn| conn.client.clone())
+    }
+
     pub fn active_clients(&self) -> Vec<ActiveClient> {
         self.0
             .read()

@@ -189,7 +189,7 @@ pub struct UpdateServer {
 // Client
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, new)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, new)]
 pub struct ActiveClient {
     pub node_id: Id<Node>,
     pub remote_addr: String,
