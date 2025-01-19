@@ -26,7 +26,10 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
     let server_id = server_state.try_get_local_node_id()?;
     let mut server_events = server_state.pubsub().events().subscribe(None::<()>);
 
-    // Connect the client to the server
+    /////////////////////////////////////////////////////////////////////////////
+    // When: a connection has been established
+    /////////////////////////////////////////////////////////////////////////////
+
     let server = common::connect_to_server(
         &client_state,
         format!("http://localhost:{server_port}"),
@@ -36,7 +39,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
     .await?;
     assert_that!(server.server.node_id, eq(server_id));
 
-    // Assert: the client connection has been registered.
+    // Server-side
     assert_that!(
         timeout(Duration::from_secs(5), server_events.next()).await?,
         some(pat!(LocalNodeEvent::ClientConnected(pat!(ActiveClient {
@@ -53,18 +56,22 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
     );
     assert_that!(server_state.client_conns().active_clients().len(), eq(1));
 
-    // Assert: the server connection has been registered.
+    // Client-side
     assert_that!(
         timeout(Duration::from_secs(5), client_events.next()).await?,
         some(pat!(LocalNodeEvent::ServerStateChanged {
             node_id: eq(&server_id),
-            not_connected: none()
+            not_connected: none() // It means "connected".
         }))
     );
     assert!(client_state.server_conns().contains(&server_id));
 
-    // Assert: manual disconnection works.
+    /////////////////////////////////////////////////////////////////////////////
+    // When: manual disconnection by server-side
+    /////////////////////////////////////////////////////////////////////////////
+
     server_state.client_conns().disconnect(&client_id);
+
     assert_that!(server_state.client_conns().active_clients().len(), eq(0));
     assert_that!(
         server_events.next().await,
