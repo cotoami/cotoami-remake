@@ -11,14 +11,16 @@ pub mod common;
 /// Various service backends are defined in each test function below.
 async fn test_node_service<S, C>(
     service: &S,
-    ds: &mut DatabaseSession<'_>,
+    backend_ds: &mut DatabaseSession<'_>,
     changes: C,
+    child_node_id: Id<Node>,
 ) -> Result<()>
 where
     S: NodeService + ?Sized,
     C: Stream<Item = ChangelogEntry>,
 {
-    let service_node = ds.local_node()?;
+    let service_node = backend_ds.local_node()?;
+    let root_cotonoma_id = service_node.root_cotonoma_id.unwrap();
 
     /////////////////////////////////////////////////////////////////////////////
     // Command: LocalNode
@@ -27,14 +29,38 @@ where
     let request = Command::LocalNode.into_request();
     let request_id = *request.id();
     let response = service.call(request).await?;
-    assert_that!(response.id(), eq(&request_id));
 
-    let node = response.content::<Node>()?;
+    assert_that!(response.id(), eq(&request_id));
     assert_that!(
-        node,
+        response.content::<Node>()?,
         eq(&Node {
             rowid: 0, // skip_deserializing
             ..service_node.clone()
+        })
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: PostCoto
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::PostCoto {
+        input: CotoInput::new("Hello, Cotoami!"),
+        post_to: root_cotonoma_id,
+    }
+    .into_request();
+    let posted_coto = service.call(request).await?.content::<Coto>()?;
+
+    assert_that!(
+        posted_coto,
+        pat!(Coto {
+            node_id: eq(&service_node.uuid),
+            posted_in_id: some(eq(&root_cotonoma_id)),
+            posted_by_id: eq(&child_node_id),
+            content: some(eq("Hello, Cotoami!")),
+            summary: none(),
+            is_cotonoma: eq(&false),
+            repost_of_id: none(),
+            reposted_in_ids: none(),
         })
     );
 
@@ -48,7 +74,7 @@ async fn service_based_on_local_node() -> Result<()> {
     let mut ds = state.db().new_session()?;
     let changes = state.pubsub().changes().subscribe(None::<()>);
 
-    test_node_service(&state, &mut ds, changes).await
+    test_node_service(&state, &mut ds, changes, state.try_get_local_node_id()?).await
 }
 
 #[test(tokio::test)]
@@ -153,8 +179,20 @@ async fn test_service_based_on_remote_node(
             .subscribe(Some(client_id)),
     };
 
+    // Child node ID
+    let child_node_id = match client_role {
+        NodeRole::Child => client_id,
+        NodeRole::Parent => server_id,
+    };
+
     // Test the parent service
-    let _ = test_node_service(parent_service.as_ref(), &mut parent_ds, remote_changes).await?;
+    let _ = test_node_service(
+        parent_service.as_ref(),
+        &mut parent_ds,
+        remote_changes,
+        child_node_id,
+    )
+    .await?;
 
     shutdown.send(()).ok();
 
