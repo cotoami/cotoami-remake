@@ -71,7 +71,7 @@ async fn stream_events(
         }
     };
 
-    // Put a StreamLocal variable in the event stream to detect client-disconnection.
+    // Put a StreamLocal in the event stream to detect client-disconnection.
     let events = async_stream::stream! {
         let _local = StreamLocal(session.clone(), state.clone());
         for await event in events { yield event; }
