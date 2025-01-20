@@ -13,7 +13,16 @@ object Commands {
       "node_command",
       js.Dynamic.literal(command = command)
     ).map((e: Either[ErrorJson, String]) =>
-      e.map(js.JSON.parse(_).asInstanceOf[T])
+      e.map(json => {
+        try {
+          js.JSON.parse(json).asInstanceOf[T]
+        } catch {
+          case e: Throwable =>
+            throw new RuntimeException(
+              s"[invalid-response] command: ${js.JSON.stringify(command)}, response: ${json}"
+            )
+        }
+      })
     )
 
   val LocalNode = jso(LocalNode = null)
