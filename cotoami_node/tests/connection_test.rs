@@ -133,6 +133,12 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         }))
     );
     assert_that!(
+        timeout(Duration::from_secs(5), client_events.next()).await?,
+        some(pat!(LocalNodeEvent::ParentDisconnected {
+            node_id: eq(&server_id),
+        }))
+    );
+    assert_that!(
         client_state.server_conns().get(&server_id),
         some(pat!(ServerConnection {
             not_connected(): some(pat!(NotConnected::Disconnected(none())))
