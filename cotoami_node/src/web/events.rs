@@ -46,7 +46,7 @@ async fn stream_events(
 
             // Stream `request` events
             requests
-                .map(|request| event(NodeSentEvent::NAME_REQUEST, request))
+                .map(|request| sse_event(NodeSentEvent::NAME_REQUEST, request))
                 .boxed()
         }
         ClientSession::Operator(opr) => {
@@ -55,7 +55,7 @@ async fn stream_events(
                 .pubsub()
                 .changes()
                 .subscribe(None::<()>)
-                .map(|change| event(NodeSentEvent::NAME_CHANGE, change));
+                .map(|change| sse_event(NodeSentEvent::NAME_CHANGE, change));
 
             if opr.has_owner_permission() {
                 // Stream of local events
@@ -63,7 +63,7 @@ async fn stream_events(
                     .pubsub()
                     .events()
                     .subscribe(None::<()>)
-                    .map(|local_event| event(NodeSentEvent::NAME_REMOTE_LOCAL, local_event));
+                    .map(|local_event| sse_event(NodeSentEvent::NAME_REMOTE_LOCAL, local_event));
                 futures::stream::select(changes, local_events).boxed()
             } else {
                 changes.boxed()
@@ -82,18 +82,18 @@ async fn stream_events(
     Sse::new(events).keep_alive(KeepAlive::default())
 }
 
-fn event<T, D>(event_type: T, data: D) -> Result<SseEvent, Infallible>
+fn sse_event<T, D>(event_type: T, data: D) -> Result<SseEvent, Infallible>
 where
     T: AsRef<str>,
     D: serde::Serialize,
 {
     match SseEvent::default().event(event_type).json_data(data) {
         Ok(event) => Ok(event),
-        Err(e) => Ok(error_event(e)),
+        Err(e) => Ok(error_sse_event(e)),
     }
 }
 
-fn error_event<E: ToString>(e: E) -> SseEvent {
+fn error_sse_event<E: ToString>(e: E) -> SseEvent {
     SseEvent::default()
         .event(NodeSentEvent::NAME_ERROR)
         .data(e.to_string())
