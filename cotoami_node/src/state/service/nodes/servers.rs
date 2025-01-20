@@ -44,7 +44,7 @@ impl NodeState {
                         server,
                         roles.remove(&node_id),
                         conn.not_connected(),
-                        conn.local_as_child(),
+                        conn.client_as_child(),
                     )
                 })
                 .collect();
@@ -141,7 +141,7 @@ impl NodeState {
             server,
             Some(server_role),
             server_conn.not_connected(),
-            server_conn.local_as_child(),
+            server_conn.client_as_child(),
         );
         Ok(server)
     }

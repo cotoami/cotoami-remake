@@ -149,6 +149,10 @@ impl ServerConnection {
         }
     }
 
+    pub fn client_as_child(&self) -> Option<ChildNode> {
+        self.conn_state.read().client_as_child().cloned()
+    }
+
     pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
 
     fn to_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
