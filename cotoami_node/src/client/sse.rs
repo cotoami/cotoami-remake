@@ -34,11 +34,11 @@ pub struct SseClient {
 impl SseClient {
     pub async fn new(
         server_id: Id<Node>,
-        client_as_child: Option<ChildNode>,
+        as_child: Option<ChildNode>,
         http_client: HttpClient,
         node_state: NodeState,
     ) -> Result<Self> {
-        let state = ClientState::new(server_id, client_as_child, node_state).await?;
+        let state = ClientState::new(server_id, as_child, node_state).await?;
         Ok(Self {
             state: Arc::new(state),
             http_client,

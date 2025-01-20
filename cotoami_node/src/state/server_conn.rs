@@ -166,6 +166,14 @@ enum ConnectionState {
     Sse(SseClient),
 }
 impl ConnectionState {
+    fn client_as_child(&self) -> Option<&ChildNode> {
+        match self {
+            Self::WebSocket(client) => client.as_child(),
+            Self::Sse(client) => client.as_child(),
+            _ => None,
+        }
+    }
+
     fn not_connected(&self) -> Option<NotConnected> {
         match self {
             Self::Disconnected(reason) => Some(NotConnected::Disconnected(reason.clone())),

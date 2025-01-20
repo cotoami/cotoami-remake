@@ -22,7 +22,7 @@ pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 struct ClientState {
     server_id: Id<Node>,
     server_as_operator: Option<Arc<Operator>>,
-    client_as_child: Option<ChildNode>,
+    as_child: Option<ChildNode>,
     conn_state: RwLock<ConnectionState>,
     #[debug(skip)]
     node_state: NodeState,
@@ -33,20 +33,20 @@ struct ClientState {
 impl ClientState {
     async fn new(
         server_id: Id<Node>,
-        client_as_child: Option<ChildNode>,
+        as_child: Option<ChildNode>,
         node_state: NodeState,
     ) -> Result<Self> {
         Ok(Self {
             server_id,
             server_as_operator: node_state.as_operator(server_id).await?.map(Arc::new),
-            client_as_child,
+            as_child,
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
             abortables: Abortables::default(),
         })
     }
 
-    pub fn as_child(&self) -> Option<&ChildNode> { self.client_as_child.as_ref() }
+    pub fn as_child(&self) -> Option<&ChildNode> { self.as_child.as_ref() }
 
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
 
@@ -58,7 +58,7 @@ impl ClientState {
                     .server_disconnected(self.server_id, not_connected);
             } else {
                 self.node_state
-                    .server_connected(self.server_id, self.client_as_child.clone());
+                    .server_connected(self.server_id, self.as_child.clone());
             }
             true
         } else {
