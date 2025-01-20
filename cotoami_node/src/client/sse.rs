@@ -126,26 +126,20 @@ impl SseClient {
                         break;
                     }
                 }
-                Err(e) => {
-                    if event_source.ready_state() == ReadyState::Closed {
-                        debug!(
-                            "Event source {} closed because of a stream error: {:?}",
-                            self.url_prefix(),
-                            &e
-                        );
-                        self.state
-                            .change_conn_state(ConnectionState::communication_failed(e.into()));
-                        break;
-                    } else {
-                        debug!(
-                            "Reconnecting to {} after an error: {:?}",
-                            self.url_prefix(),
-                            &e
-                        );
+                Err(e) => match event_source.ready_state() {
+                    ReadyState::Connecting => {
+                        debug!("Reconnecting to {} after: {:?}", self.url_prefix(), &e);
                         self.state
                             .change_conn_state(ConnectionState::Connecting(Some(e.into())));
                     }
-                }
+                    ReadyState::Open => unreachable!(),
+                    ReadyState::Closed => {
+                        debug!("Event source {} closed due to: {:?}", self.url_prefix(), &e);
+                        self.state
+                            .change_conn_state(ConnectionState::communication_failed(e.into()));
+                        break;
+                    }
+                },
             }
         }
         self.state
