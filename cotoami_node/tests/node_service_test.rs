@@ -1,11 +1,12 @@
-use std::{borrow::Cow, sync::Arc, time::Instant};
+use std::{borrow::Cow, sync::Arc, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
 use futures::{stream::StreamExt, Stream};
 use googletest::prelude::*;
 use test_log::test;
+use tokio::time::timeout;
 
 pub mod common;
 
@@ -146,10 +147,11 @@ async fn test_service_based_on_remote_node(
     assert_that!(server.server.node_id, eq(server_id));
 
     // Parent service
-    let parent_service = match client_role {
-        NodeRole::Child => get_parent_service(&client_state, &server_id).await?,
-        NodeRole::Parent => get_parent_service(&server_state, &client_id).await?,
+    let get_parent_service = match client_role {
+        NodeRole::Child => wait_and_get_parent_service(&client_state, &server_id),
+        NodeRole::Parent => wait_and_get_parent_service(&server_state, &client_id),
     };
+    let parent_service = timeout(Duration::from_secs(5), get_parent_service).await?;
     let expected_service_description = format!(
         "{} {}-as-parent: {}",
         if enable_websocket {
@@ -218,17 +220,21 @@ async fn test_service_based_on_remote_node(
     Ok(())
 }
 
-async fn get_parent_service(
+async fn wait_and_get_parent_service(
     child_state: &NodeState,
     parent_id: &Id<Node>,
-) -> Result<Box<dyn NodeService>> {
-    let mut parent_service = child_state.parent_services().get(parent_id);
-    let start = Instant::now();
-    while parent_service.is_none() && start.elapsed().as_secs() < 10 {
-        tokio::task::yield_now().await;
-        parent_service = child_state.parent_services().get(parent_id);
+) -> Box<dyn NodeService> {
+    let mut events = child_state.pubsub().events().subscribe(None::<()>);
+    loop {
+        match events.next().await {
+            Some(LocalNodeEvent::ParentRegistered { node_id }) if node_id == *parent_id => break,
+            _ => tokio::task::yield_now().await,
+        }
     }
-    parent_service.ok_or(anyhow!("Could not get the parent service: {parent_id}"))
+    child_state
+        .parent_services()
+        .get(parent_id)
+        .expect("Couldn't get a parent service.")
 }
 
 #[derive(Clone)]
