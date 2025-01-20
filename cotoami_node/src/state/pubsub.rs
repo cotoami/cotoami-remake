@@ -1,10 +1,6 @@
 use cotoami_db::prelude::*;
 
-use crate::{
-    event::local::LocalNodeEvent,
-    pubsub::Publisher,
-    service::{models::NotConnected, pubsub::ResponsePubsub},
-};
+use crate::{event::local::LocalNodeEvent, pubsub::Publisher, service::pubsub::ResponsePubsub};
 
 /////////////////////////////////////////////////////////////////////////////
 // Pubsub aggregation
@@ -61,25 +57,6 @@ impl EventPubsub {
             },
             None,
         );
-    }
-
-    pub fn server_disconnected(
-        &self,
-        node_id: Id<Node>,
-        not_connected: NotConnected,
-        is_parent: bool,
-    ) {
-        self.publish(
-            LocalNodeEvent::ServerStateChanged {
-                node_id,
-                not_connected: Some(not_connected),
-                client_as_child: None,
-            },
-            None,
-        );
-        if is_parent {
-            self.parent_disconnected(node_id);
-        }
     }
 
     pub fn parent_disconnected(&self, node_id: Id<Node>) {

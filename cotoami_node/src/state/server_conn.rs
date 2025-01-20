@@ -166,11 +166,8 @@ impl ServerConnection {
         // Publish the state only if changed.
         if old_not_connected != new_not_connected {
             if let Some(not_connected) = new_not_connected {
-                self.node_state.pubsub().events().server_disconnected(
-                    self.server.node_id,
-                    not_connected,
-                    self.to_parent(),
-                );
+                self.node_state
+                    .server_disconnected(self.server.node_id, not_connected);
             } else {
                 self.node_state
                     .pubsub()

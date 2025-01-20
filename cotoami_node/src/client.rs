@@ -45,16 +45,10 @@ impl ClientState {
     fn change_conn_state(&self, state: ConnectionState) -> bool {
         if state.changed_from(&self.conn_state.read()) {
             let _ = std::mem::replace(self.conn_state.write().deref_mut(), state);
-
-            // Publish a "disconnected" event.
             if let Some(not_connected) = self.not_connected() {
-                self.node_state.pubsub().events().server_disconnected(
-                    self.server_id,
-                    not_connected,
-                    self.is_server_parent(),
-                );
+                self.node_state
+                    .server_disconnected(self.server_id, not_connected);
             }
-
             true
         } else {
             false
