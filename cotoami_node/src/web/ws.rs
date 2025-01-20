@@ -128,7 +128,7 @@ fn listener_on_disconnect(
     futures::sink::unfold((), move |(), error: Option<EventLoopError>| {
         let state = state.clone();
         async move {
-            state.remove_client_conn(&client_id, error.map(|e| e.to_string()));
+            state.remove_client_conn(client_id, error.map(|e| e.to_string()));
             Ok(())
         }
     })

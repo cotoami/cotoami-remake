@@ -73,6 +73,8 @@ async fn stream_events(
 
     // Put a StreamLocal in the event stream to detect client-disconnection.
     let events = async_stream::stream! {
+        // How to know when Sse connection is closed?
+        // https://github.com/tokio-rs/axum/discussions/1060
         let _local = StreamLocal(session.clone(), state.clone());
         for await event in events { yield event; }
     };
@@ -97,19 +99,11 @@ fn error_event<E: ToString>(e: E) -> SseEvent {
         .data(e.to_string())
 }
 
-// How to know when Sse connection is closed?
-// https://github.com/tokio-rs/axum/discussions/1060
 struct StreamLocal(ClientSession, NodeState);
 impl Drop for StreamLocal {
     fn drop(&mut self) {
         let Self(session, state) = self;
-        match session {
-            ClientSession::Operator(_) => (),
-            ClientSession::ParentNode(parent) => {
-                debug!("SSE client-as-parent stream closed: {}", parent.node_id);
-                state.pubsub().events().parent_disconnected(parent.node_id);
-            }
-        }
+        state.remove_client_conn(session.client_node_id(), None);
     }
 }
 

@@ -95,13 +95,9 @@ impl NodeState {
         self.client_conns().put(client_conn);
     }
 
-    pub fn remove_client_conn(&self, client_id: &Id<Node>, disconnection_error: Option<String>) {
+    pub fn remove_client_conn(&self, client_id: Id<Node>, disconnection_error: Option<String>) {
         self.client_conns().remove(&client_id);
-        self.pubsub()
-            .publish_event(LocalNodeEvent::ClientDisconnected {
-                node_id: *client_id,
-                error: disconnection_error,
-            });
+        self.client_disconnected(client_id, disconnection_error);
     }
 
     pub fn active_clients(&self) -> Vec<ActiveClient> { self.client_conns().active_clients() }
