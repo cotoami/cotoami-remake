@@ -11,7 +11,7 @@ pub mod common;
 
 /// Test a [NodeService] by sending [Command]s.
 /// Various service backends are defined in each test function below.
-async fn test_node_service<S, C>(
+async fn test_service<S, C>(
     service: &S,
     backend_ds: &mut DatabaseSession<'_>,
     changes: C,
@@ -93,7 +93,7 @@ async fn service_based_on_local_node() -> Result<()> {
     let mut ds = state.db().new_session()?;
     let changes = state.pubsub().changes().subscribe(None::<()>);
 
-    test_node_service(&service, &mut ds, changes, operator_node_id).await
+    test_service(&service, &mut ds, changes, operator_node_id).await
 }
 
 #[test(tokio::test)]
@@ -205,7 +205,7 @@ async fn test_service_based_on_remote_node(
     };
 
     // Test the parent service
-    let _ = test_node_service(
+    let _ = test_service(
         parent_service.as_ref(),
         &mut parent_ds,
         remote_changes,
