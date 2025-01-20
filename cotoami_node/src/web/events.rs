@@ -1,7 +1,7 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, net::SocketAddr};
 
 use axum::{
-    extract::{Extension, State},
+    extract::{ConnectInfo, Extension, State},
     http::StatusCode,
     middleware,
     response::sse::{Event as SseEvent, KeepAlive, Sse},
@@ -10,12 +10,13 @@ use axum::{
 };
 use cotoami_db::prelude::*;
 use futures::{stream::Stream, StreamExt};
+use tokio::sync::oneshot;
 use tracing::debug;
 
 use crate::{
     event::remote::NodeSentEvent,
     service::{PubsubService, ServiceError},
-    state::NodeState,
+    state::{ClientConnection, NodeState},
 };
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -29,9 +30,13 @@ pub(super) fn routes() -> Router<NodeState> {
 /////////////////////////////////////////////////////////////////////////////
 
 async fn stream_events(
+    ConnectInfo(remote_addr): ConnectInfo<SocketAddr>,
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> Sse<impl Stream<Item = Result<SseEvent, Infallible>>> {
+    let client_id = session.client_node_id();
+
+    // Create a event stream
     let events = match &session {
         ClientSession::ParentNode(parent) => {
             // Create a SSE client-as-parent service
@@ -71,13 +76,38 @@ async fn stream_events(
         }
     };
 
-    // Put a StreamLocal in the event stream to detect client-disconnection.
-    let events = async_stream::stream! {
-        // How to know when Sse connection is closed?
-        // https://github.com/tokio-rs/axum/discussions/1060
-        let _local = StreamLocal(session.clone(), state.clone());
-        for await event in events { yield event; }
+    // Put a StreamLocal in the event stream to detect disconnection
+    let events = {
+        let state = state.clone();
+        async_stream::stream! {
+            // How to know when Sse connection is closed?
+            // https://github.com/tokio-rs/axum/discussions/1060
+            let _local = StreamLocal(session, state);
+            for await event in events { yield event; }
+        }
     };
+
+    // Make the event stream manually abortable
+    let (events, abort_events) = futures::stream::abortable(events);
+    let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
+    tokio::spawn({
+        async move {
+            match disconnect_receiver.await {
+                Ok(_) => {
+                    debug!("Disconnecting a SSE client {client_id} ...",);
+                    abort_events.abort();
+                }
+                Err(_) => (), // the sender dropped
+            }
+        }
+    });
+
+    // Register a ClientConnection
+    state.put_client_conn(ClientConnection::new(
+        client_id,
+        remote_addr.ip().to_string(),
+        disconnect,
+    ));
 
     Sse::new(events).keep_alive(KeepAlive::default())
 }
