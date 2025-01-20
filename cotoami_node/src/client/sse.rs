@@ -65,15 +65,7 @@ impl SseClient {
         // Open a connection
         let mut event_source = self.new_event_source();
         match event_source.next().await {
-            Some(Ok(ESItem::Open)) => {
-                info!("Event source opened: {}", self.url_prefix());
-                self.state.change_conn_state(ConnectionState::Connected);
-                if self.state.is_server_parent() {
-                    let parent_service = Box::new(self.http_client.clone());
-                    self.node_state()
-                        .register_parent_service(self.state.server_id, parent_service);
-                }
-            }
+            Some(Ok(ESItem::Open)) => self.on_connection_open(),
             Some(Ok(ESItem::Message(event))) => unreachable!("Unexpected ESItem: {event:?}"),
             Some(Err(e)) => bail!(e),
             None => bail!("Event source already closed."),
@@ -112,11 +104,11 @@ impl SseClient {
     async fn event_loop(mut self, mut event_source: EventSource) {
         while let Some(item) = event_source.next().await {
             match item {
-                Ok(ESItem::Open) => unreachable!("Event source should have been opened."),
+                Ok(ESItem::Open) => self.on_connection_open(),
                 Ok(ESItem::Message(event)) => {
                     if let ControlFlow::Break(e) = self.handle_node_sent_event(event.into()).await {
                         debug!(
-                            "Event source {} closed because of an event handling error: {}",
+                            "Event source {} closed due to an event handling error: {}",
                             self.url_prefix(),
                             &e
                         );
@@ -158,6 +150,16 @@ impl SseClient {
                 // responsibility for maintaining the connection.
                 error!("Error sending a change to child servers: {e}");
             }
+        }
+    }
+
+    fn on_connection_open(&self) {
+        info!("Event source opened: {}", self.url_prefix());
+        self.state.change_conn_state(ConnectionState::Connected);
+        if self.state.is_server_parent() {
+            let parent_service = Box::new(self.http_client.clone());
+            self.node_state()
+                .register_parent_service(self.state.server_id, parent_service);
         }
     }
 
