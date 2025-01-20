@@ -47,17 +47,4 @@ pub(crate) type RemoteChangePubsub = Publisher<ChangelogEntry, Id<Node>>;
 
 pub type EventPubsub = Publisher<LocalNodeEvent, ()>;
 
-impl EventPubsub {
-    pub fn server_connected(&self, node_id: Id<Node>, client_as_child: Option<ChildNode>) {
-        self.publish(
-            LocalNodeEvent::ServerStateChanged {
-                node_id,
-                not_connected: None,
-                client_as_child,
-            },
-            None,
-        );
-    }
-}
-
 pub type RemoteEventPubsub = Publisher<LocalNodeEvent, Id<Node>>;

@@ -26,6 +26,15 @@ impl NodeState {
         spawn_blocking(move || db.new_session()?.as_operator(node_id)).await?
     }
 
+    pub(crate) fn server_connected(&self, node_id: Id<Node>, client_as_child: Option<ChildNode>) {
+        self.pubsub()
+            .publish_event(LocalNodeEvent::ServerStateChanged {
+                node_id,
+                not_connected: None,
+                client_as_child,
+            });
+    }
+
     pub(crate) fn server_disconnected(&self, node_id: Id<Node>, not_connected: NotConnected) {
         self.pubsub()
             .publish_event(LocalNodeEvent::ServerStateChanged {

@@ -170,8 +170,6 @@ impl ServerConnection {
                     .server_disconnected(self.server.node_id, not_connected);
             } else {
                 self.node_state
-                    .pubsub()
-                    .events()
                     .server_connected(self.server.node_id, self.local_as_child());
             }
         }
