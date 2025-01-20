@@ -166,11 +166,11 @@ impl ParentServices {
             .ok_or(anyhow!("Parent disconnected: {parent_id}"))
     }
 
-    pub fn put(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
+    fn put(&self, parent_id: Id<Node>, service: Box<dyn NodeService>) {
         self.0.write().insert(parent_id, service);
     }
 
-    pub fn remove(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
+    fn remove(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         debug!("Parent service being removed: {parent_id}");
         self.0.write().remove(parent_id)
     }
