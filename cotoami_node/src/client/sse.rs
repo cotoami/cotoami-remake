@@ -45,6 +45,8 @@ impl SseClient {
         })
     }
 
+    pub fn as_child(&self) -> Option<&ChildNode> { self.state.as_child() }
+
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 
     fn url_prefix(&self) -> &str { self.http_client.url_prefix().as_str() }

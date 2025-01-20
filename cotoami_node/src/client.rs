@@ -46,6 +46,8 @@ impl ClientState {
         })
     }
 
+    pub fn as_child(&self) -> Option<&ChildNode> { self.client_as_child.as_ref() }
+
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
 
     fn change_conn_state(&self, state: ConnectionState) -> bool {
