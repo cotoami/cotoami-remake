@@ -57,14 +57,32 @@ impl SseClient {
         EventSource::new(self.http_client.get("/api/events")).unwrap_or_else(|_| unreachable!())
     }
 
-    pub fn connect(&mut self) {
+    pub async fn connect(&mut self) -> Result<()> {
         if self.state.has_running_tasks() {
-            return;
+            return Ok(());
         }
+
+        // Open a connection
+        let mut event_source = self.new_event_source();
+        match event_source.next().await {
+            Some(Ok(ESItem::Open)) => {
+                info!("Event source opened: {}", self.url_prefix());
+                self.state.change_conn_state(ConnectionState::Connected);
+                if self.state.is_server_parent() {
+                    let parent_service = Box::new(self.http_client.clone());
+                    self.node_state()
+                        .register_parent_service(self.state.server_id, parent_service);
+                }
+            }
+            Some(Ok(ESItem::Message(event))) => unreachable!("Unexpected ESItem: {event:?}"),
+            Some(Err(e)) => bail!(e),
+            None => bail!("Event source already closed."),
+        }
+
+        // Run communication tasks
         tokio::spawn({
             let this = self.clone();
             async move {
-                let event_source = this.new_event_source();
                 let mut tasks = JoinSet::new();
 
                 // A task: event_loop
@@ -85,6 +103,8 @@ impl SseClient {
                 }
             }
         });
+
+        Ok(())
     }
 
     pub fn disconnect(&mut self) { self.state.disconnect(); }
@@ -92,15 +112,7 @@ impl SseClient {
     async fn event_loop(mut self, mut event_source: EventSource) {
         while let Some(item) = event_source.next().await {
             match item {
-                Ok(ESItem::Open) => {
-                    info!("Event source opened: {}", self.url_prefix());
-                    self.state.change_conn_state(ConnectionState::Connected);
-                    if self.state.is_server_parent() {
-                        let parent_service = Box::new(self.http_client.clone());
-                        self.node_state()
-                            .register_parent_service(self.state.server_id, parent_service);
-                    }
-                }
+                Ok(ESItem::Open) => unreachable!("Event source should have been opened."),
                 Ok(ESItem::Message(event)) => {
                     if let ControlFlow::Break(e) = self.handle_node_sent_event(event.into()).await {
                         debug!(

@@ -134,7 +134,7 @@ impl ServerConnection {
                     self.node_state.clone(),
                 )
                 .await?;
-                sse_client.connect();
+                sse_client.connect().await?;
                 self.set_conn_state(ConnectionState::Sse(sse_client));
             }
         }
