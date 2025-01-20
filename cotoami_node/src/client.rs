@@ -71,15 +71,9 @@ impl ClientState {
     fn has_running_tasks(&self) -> bool { !self.abortables.is_empty() }
 
     fn disconnect(&self) -> bool {
-        match self.not_connected() {
-            Some(NotConnected::Disconnected(_)) => false,
-            _ => {
-                info!("Disconnecting from: {}", self.server_id);
-                self.abortables.abort_all();
-                self.change_conn_state(ConnectionState::Disconnected(None));
-                true
-            }
-        }
+        info!("Disconnecting from: {}", self.server_id);
+        self.abortables.abort_all();
+        self.change_conn_state(ConnectionState::Disconnected(None))
     }
 }
 
