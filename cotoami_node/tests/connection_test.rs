@@ -58,11 +58,20 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
 
     // Client-side
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
-        some(pat!(LocalNodeEvent::ServerStateChanged {
-            node_id: eq(&server_id),
-            not_connected: none() // It means "connected".
-        }))
+        // The first two events are in no particular order.
+        vec![
+            timeout(Duration::from_secs(5), client_events.next()).await?,
+            timeout(Duration::from_secs(5), client_events.next()).await?,
+        ],
+        unordered_elements_are![
+            some(pat!(LocalNodeEvent::ServerStateChanged {
+                node_id: eq(&server_id),
+                not_connected: none() // It means "connected".
+            })),
+            some(pat!(LocalNodeEvent::ParentRegistered {
+                node_id: eq(&server_id),
+            }))
+        ]
     );
     assert_that!(
         client_state.server_conns().get(&server_id),
@@ -71,12 +80,6 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         }))
     );
 
-    assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
-        some(pat!(LocalNodeEvent::ParentRegistered {
-            node_id: eq(&server_id),
-        }))
-    );
     assert_that!(
         timeout(Duration::from_secs(5), client_events.next()).await?,
         some(pat!(LocalNodeEvent::ParentSyncStart {
