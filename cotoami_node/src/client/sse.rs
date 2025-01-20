@@ -4,7 +4,7 @@ use std::{ops::ControlFlow, sync::Arc};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
-use cotoami_db::{ChangelogEntry, Id, Node};
+use cotoami_db::{ChangelogEntry, ChildNode, Id, Node};
 use futures::{sink::Sink, StreamExt};
 use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;
@@ -34,10 +34,11 @@ pub struct SseClient {
 impl SseClient {
     pub async fn new(
         server_id: Id<Node>,
+        client_as_child: Option<ChildNode>,
         http_client: HttpClient,
         node_state: NodeState,
     ) -> Result<Self> {
-        let state = ClientState::new(server_id, node_state).await?;
+        let state = ClientState::new(server_id, client_as_child, node_state).await?;
         Ok(Self {
             state: Arc::new(state),
             http_client,
@@ -99,7 +100,7 @@ impl SseClient {
         Ok(())
     }
 
-    pub fn disconnect(&mut self) { self.state.disconnect(); }
+    pub fn disconnect(&mut self) -> bool { self.state.disconnect() }
 
     async fn event_loop(mut self, mut event_source: EventSource) {
         while let Some(item) = event_source.next().await {

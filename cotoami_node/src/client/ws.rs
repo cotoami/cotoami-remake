@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use anyhow::{bail, Result};
-use cotoami_db::{Id, Node};
+use cotoami_db::{ChildNode, Id, Node};
 use futures::{Sink, StreamExt};
 use tokio::sync::mpsc;
 use tokio_tungstenite::{
@@ -33,10 +33,11 @@ pub struct WebSocketClient {
 impl WebSocketClient {
     pub async fn new(
         server_id: Id<Node>,
+        client_as_child: Option<ChildNode>,
         http_client: &HttpClient,
         node_state: NodeState,
     ) -> Result<Self> {
-        let state = ClientState::new(server_id, node_state).await?;
+        let state = ClientState::new(server_id, client_as_child, node_state).await?;
         Ok(Self {
             state: Arc::new(state),
             ws_request: http_client.ws_request()?,
@@ -100,7 +101,7 @@ impl WebSocketClient {
         Ok(())
     }
 
-    pub fn disconnect(&mut self) { self.state.disconnect(); }
+    pub fn disconnect(&mut self) -> bool { self.state.disconnect() }
 }
 
 impl HttpClient {

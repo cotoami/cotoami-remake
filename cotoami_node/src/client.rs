@@ -4,7 +4,7 @@ use core::mem::discriminant;
 use std::{ops::DerefMut, sync::Arc};
 
 use anyhow::Result;
-use cotoami_db::{Id, Node, Operator};
+use cotoami_db::{ChildNode, Id, Node, Operator};
 use parking_lot::RwLock;
 use tracing::info;
 
@@ -22,6 +22,7 @@ pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 struct ClientState {
     server_id: Id<Node>,
     server_as_operator: Option<Arc<Operator>>,
+    client_as_child: Option<ChildNode>,
     conn_state: RwLock<ConnectionState>,
     #[debug(skip)]
     node_state: NodeState,
@@ -30,10 +31,15 @@ struct ClientState {
 }
 
 impl ClientState {
-    async fn new(server_id: Id<Node>, node_state: NodeState) -> Result<Self> {
+    async fn new(
+        server_id: Id<Node>,
+        client_as_child: Option<ChildNode>,
+        node_state: NodeState,
+    ) -> Result<Self> {
         Ok(Self {
             server_id,
             server_as_operator: node_state.as_operator(server_id).await?.map(Arc::new),
+            client_as_child,
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
             abortables: Abortables::default(),
@@ -48,6 +54,9 @@ impl ClientState {
             if let Some(not_connected) = self.not_connected() {
                 self.node_state
                     .server_disconnected(self.server_id, not_connected);
+            } else {
+                self.node_state
+                    .server_connected(self.server_id, self.client_as_child.clone());
             }
             true
         } else {
@@ -59,10 +68,16 @@ impl ClientState {
 
     fn has_running_tasks(&self) -> bool { !self.abortables.is_empty() }
 
-    fn disconnect(&self) {
-        info!("Disconnecting from: {}", self.server_id);
-        self.abortables.abort_all();
-        self.change_conn_state(ConnectionState::Disconnected(None));
+    fn disconnect(&self) -> bool {
+        match self.not_connected() {
+            Some(NotConnected::Disconnected(_)) => false,
+            _ => {
+                info!("Disconnecting from: {}", self.server_id);
+                self.abortables.abort_all();
+                self.change_conn_state(ConnectionState::Disconnected(None));
+                true
+            }
+        }
     }
 }
 

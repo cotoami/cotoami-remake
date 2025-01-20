@@ -20,18 +20,7 @@ pub struct ServerConnection {
     server: ServerNode,
     #[debug(skip)]
     node_state: NodeState,
-    local_as_child: Arc<RwLock<Option<ChildNode>>>,
     conn_state: Arc<RwLock<ConnectionState>>,
-}
-
-#[derive(Debug)]
-enum ConnectionState {
-    Disconnected(Option<String>),
-    Disabled,
-    Initializing(AbortHandle),
-    InitFailed(Arc<anyhow::Error>),
-    WebSocket(WebSocketClient),
-    Sse(SseClient),
 }
 
 impl ServerConnection {
@@ -44,7 +33,6 @@ impl ServerConnection {
         Self {
             server,
             node_state,
-            local_as_child: Default::default(),
             conn_state: Arc::new(RwLock::new(conn_state)),
         }
     }
@@ -117,12 +105,14 @@ impl ServerConnection {
             return Ok(());
         }
 
-        *self.local_as_child.write() = local_as_child;
-
         // Try to connect via WebSocket first
-        let mut ws_client =
-            WebSocketClient::new(self.server.node_id, &http_client, self.node_state.clone())
-                .await?;
+        let mut ws_client = WebSocketClient::new(
+            self.server.node_id,
+            local_as_child.clone(),
+            &http_client,
+            self.node_state.clone(),
+        )
+        .await?;
         match ws_client.connect().await {
             Ok(_) => self.set_conn_state(ConnectionState::WebSocket(ws_client)),
             Err(e) => {
@@ -130,6 +120,7 @@ impl ServerConnection {
                 info!("Falling back to SSE due to: {e:?}");
                 let mut sse_client = SseClient::new(
                     self.server.node_id,
+                    local_as_child,
                     http_client.clone(),
                     self.node_state.clone(),
                 )
@@ -142,60 +133,59 @@ impl ServerConnection {
     }
 
     pub fn disable(&self) {
-        self.disconnect(None);
+        let disconnected = self.conn_state.write().disconnect();
         self.set_conn_state(ConnectionState::Disabled);
+        if disconnected {
+            self.node_state
+                .server_disconnected(self.server.node_id, self.not_connected().unwrap());
+        }
     }
 
     pub fn disconnect(&self, reason: Option<&str>) {
-        self.conn_state.write().disconnect();
-        *self.local_as_child.write() = None;
-        self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
+        if self.conn_state.write().disconnect() {
+            self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
+            self.node_state
+                .server_disconnected(self.server.node_id, self.not_connected().unwrap());
+        }
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
 
-    pub fn local_as_child(&self) -> Option<ChildNode> { self.local_as_child.read().clone() }
-
     fn to_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
 
-    fn set_conn_state(&self, state: ConnectionState) {
-        let old_not_connected = self.not_connected();
-        *self.conn_state.write() = state;
-        let new_not_connected = self.not_connected();
-
-        // Publish the state only if changed.
-        if old_not_connected != new_not_connected {
-            if let Some(not_connected) = new_not_connected {
-                self.node_state
-                    .server_disconnected(self.server.node_id, not_connected);
-            } else {
-                self.node_state
-                    .server_connected(self.server.node_id, self.local_as_child());
-            }
-        }
-    }
+    fn set_conn_state(&self, state: ConnectionState) { *self.conn_state.write() = state; }
 }
 
+#[derive(Debug)]
+enum ConnectionState {
+    Disconnected(Option<String>),
+    Disabled,
+    Initializing(AbortHandle),
+    InitFailed(Arc<anyhow::Error>),
+    WebSocket(WebSocketClient),
+    Sse(SseClient),
+}
 impl ConnectionState {
     fn not_connected(&self) -> Option<NotConnected> {
         match self {
-            ConnectionState::Disconnected(reason) => {
-                Some(NotConnected::Disconnected(reason.clone()))
-            }
-            ConnectionState::Initializing(_) => Some(NotConnected::Connecting(None)),
-            ConnectionState::Disabled => Some(NotConnected::Disabled),
-            ConnectionState::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
-            ConnectionState::WebSocket(client) => client.not_connected(),
-            ConnectionState::Sse(client) => client.not_connected(),
+            Self::Disconnected(reason) => Some(NotConnected::Disconnected(reason.clone())),
+            Self::Initializing(_) => Some(NotConnected::Connecting(None)),
+            Self::Disabled => Some(NotConnected::Disabled),
+            Self::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
+            Self::WebSocket(client) => client.not_connected(),
+            Self::Sse(client) => client.not_connected(),
         }
     }
 
-    fn disconnect(&mut self) {
+    fn disconnect(&mut self) -> bool {
         match self {
-            ConnectionState::Initializing(task) => task.abort(),
-            ConnectionState::WebSocket(client) => client.disconnect(),
-            ConnectionState::Sse(client) => client.disconnect(),
-            _ => (),
+            Self::Initializing(task) => {
+                task.abort();
+                true
+            }
+            Self::WebSocket(client) => client.disconnect(),
+            Self::Sse(client) => client.disconnect(),
+            _ => false,
         }
     }
 }
