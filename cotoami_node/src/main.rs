@@ -20,6 +20,7 @@ async fn main() -> Result<()> {
 
     tokio::spawn(async {
         signal::ctrl_c().await.unwrap();
+        info!("Shutting down gracefully...");
         shutdown_trigger.send(()).unwrap();
     });
     handle.await?
