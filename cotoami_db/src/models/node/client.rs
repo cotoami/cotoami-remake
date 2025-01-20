@@ -15,7 +15,15 @@ use crate::{models::Id, schema::client_nodes};
 
 /// A row in `client_nodes` table
 #[derive(
-    derive_more::Debug, Clone, PartialEq, Eq, Identifiable, Queryable, Selectable, serde::Serialize,
+    derive_more::Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Identifiable,
+    Queryable,
+    Selectable,
+    serde::Serialize,
+    serde::Deserialize,
 )]
 #[diesel(primary_key(node_id))]
 pub struct ClientNode {
@@ -27,12 +35,12 @@ pub struct ClientNode {
 
     /// Password for authentication
     #[debug(skip)]
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub password_hash: String,
 
     /// Login session token
     #[debug(skip)]
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub session_token: Option<String>,
 
     /// Expiration date of login session

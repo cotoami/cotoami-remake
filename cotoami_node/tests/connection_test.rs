@@ -20,7 +20,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         "server",
         server_port,
         enable_websocket,
-        AddClient::new(client_id, "server-password", NodeRole::Child),
+        AddClient::new(client_id, NodeRole::Child, Some("server-password")),
     )
     .await?;
     let server_id = server_state.try_get_local_node_id()?;

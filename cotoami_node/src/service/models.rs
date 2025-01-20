@@ -76,10 +76,10 @@ pub struct AddClient {
 }
 
 impl AddClient {
-    pub fn new(id: Id<Node>, password: impl Into<String>, role: NodeRole) -> Self {
+    pub fn new(id: Id<Node>, role: NodeRole, password: Option<impl Into<String>>) -> Self {
         Self {
             id: Some(id),
-            password: Some(password.into()),
+            password: password.map(Into::into),
             client_role: Some(role),
             as_owner: None,
             can_edit_links: None,
@@ -93,7 +93,7 @@ impl AddClient {
     pub fn can_edit_links(&self) -> bool { self.can_edit_links.unwrap_or(false) }
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ClientAdded {
     /// Generated password
     pub password: String,

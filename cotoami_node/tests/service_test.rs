@@ -44,6 +44,35 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: AddClient
+    /////////////////////////////////////////////////////////////////////////////
+
+    let new_client_id = Id::generate();
+    let request = Command::AddClient(AddClient::new(new_client_id, NodeRole::Child, None::<&str>))
+        .into_request();
+    let client_added = service.call(request).await?.content::<ClientAdded>()?;
+
+    assert_that!(
+        client_added,
+        pat!(ClientAdded {
+            password: anything(), // auto-generated
+            client: pat!(ClientNode {
+                node_id: eq(&new_client_id),
+                password_hash: eq(""), // should not be exposed
+                session_token: none(), // should not be exposed
+                disabled: eq(&false)
+            }),
+            // some fields will be set after the first login
+            node: pat!(Node {
+                name: eq(""),
+                icon: eq(&Bytes::default()),
+                version: eq(&0)
+            })
+        }),
+        "Unexpected response of AddClient command"
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: PostCoto
     /////////////////////////////////////////////////////////////////////////////
 
@@ -126,13 +155,10 @@ async fn test_service_based_on_remote_node(
     let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
-    let (server_state, shutdown) = common::launch_server_node(
-        "server",
-        server_port,
-        enable_websocket,
-        AddClient::new(client_id, "server-password", client_role),
-    )
-    .await?;
+    let mut add_client = AddClient::new(client_id, client_role, Some("server-password"));
+    add_client.as_owner = Some(true);
+    let (server_state, shutdown) =
+        common::launch_server_node("server", server_port, enable_websocket, add_client).await?;
     let server_id = server_state.try_get_local_node_id()?;
 
     // Connect the client to the server

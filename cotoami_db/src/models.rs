@@ -234,7 +234,7 @@ impl<T> FromSql<Text, Sqlite> for Ids<T> {
 /// the return values of [ser::Serializer::is_human_readable] and
 /// [de::Deserializer::is_human_readable]. Therefore, it is also suited to
 /// be in a data structure sent via network.
-#[derive(Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow)]
+#[derive(Debug, Clone, PartialEq, Eq, AsExpression, FromSqlRow, Default)]
 #[diesel(sql_type = Binary)]
 pub struct Bytes(bytes::Bytes);
 
