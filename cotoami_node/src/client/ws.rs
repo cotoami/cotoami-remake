@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use anyhow::{bail, Result};
-use cotoami_db::{ChildNode, Id, Node};
+use cotoami_db::ChildNode;
 use futures::{Sink, StreamExt};
 use tokio::sync::mpsc;
 use tokio_tungstenite::{
@@ -21,7 +21,6 @@ use crate::{
         EventLoopError,
     },
     service::models::NotConnected,
-    state::NodeState,
 };
 
 #[derive(Debug, Clone)]
@@ -31,13 +30,7 @@ pub struct WebSocketClient {
 }
 
 impl WebSocketClient {
-    pub async fn new(
-        server_id: Id<Node>,
-        as_child: Option<ChildNode>,
-        http_client: &HttpClient,
-        node_state: NodeState,
-    ) -> Result<Self> {
-        let state = ClientState::new(server_id, as_child, node_state).await?;
+    pub async fn new(state: ClientState, http_client: &HttpClient) -> Result<Self> {
         Ok(Self {
             state: Arc::new(state),
             ws_request: http_client.ws_request()?,

@@ -18,7 +18,7 @@ mod ws;
 pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 
 #[derive(derive_more::Debug)]
-struct ClientState {
+pub(crate) struct ClientState {
     server_id: Id<Node>,
     server_as_operator: Option<Arc<Operator>>,
     as_child: Option<ChildNode>,
@@ -30,7 +30,7 @@ struct ClientState {
 }
 
 impl ClientState {
-    async fn new(
+    pub(crate) async fn new(
         server_id: Id<Node>,
         as_child: Option<ChildNode>,
         node_state: NodeState,

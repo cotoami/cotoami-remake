@@ -7,7 +7,7 @@ use tokio::task::AbortHandle;
 use tracing::{debug, info};
 
 use crate::{
-    client::{HttpClient, SseClient, WebSocketClient},
+    client::{ClientState, HttpClient, SseClient, WebSocketClient},
     service::{
         models::{CreateClientNodeSession, NodeRole, NotConnected},
         RemoteNodeServiceExt,
@@ -107,10 +107,8 @@ impl ServerConnection {
 
         // Try to connect via WebSocket first
         let mut ws_client = WebSocketClient::new(
-            self.server.node_id,
-            local_as_child.clone(),
+            self.new_client_state(local_as_child.clone()).await?,
             &http_client,
-            self.node_state.clone(),
         )
         .await?;
         match ws_client.connect().await {
@@ -118,18 +116,18 @@ impl ServerConnection {
             Err(e) => {
                 // Fallback to SSE
                 info!("Falling back to SSE due to: {e:?}");
-                let mut sse_client = SseClient::new(
-                    self.server.node_id,
-                    local_as_child,
-                    http_client.clone(),
-                    self.node_state.clone(),
-                )
-                .await?;
+                let mut sse_client =
+                    SseClient::new(self.new_client_state(local_as_child).await?, http_client)
+                        .await?;
                 sse_client.connect().await?;
                 self.set_conn_state(ConnectionState::Sse(sse_client), false);
             }
         }
         Ok(())
+    }
+
+    async fn new_client_state(&self, as_child: Option<ChildNode>) -> Result<ClientState> {
+        ClientState::new(self.server.node_id, as_child, self.node_state.clone()).await
     }
 
     pub fn disable(&self) {
