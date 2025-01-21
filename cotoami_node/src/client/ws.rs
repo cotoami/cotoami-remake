@@ -46,17 +46,17 @@ impl WebSocketClient {
             bail!("Already connected");
         }
 
-        let (sender, mut receiver) = mpsc::channel::<Option<EventLoopError>>(1);
-        self.do_connect(PollSender::new(sender)).await?;
+        let (tx_on_disconnect, mut rx_on_disconnect) = mpsc::channel::<Option<EventLoopError>>(1);
+        self.do_connect(PollSender::new(tx_on_disconnect)).await?;
 
         // Listen to disconnect events
         tokio::spawn({
             let this = self.clone();
             async move {
-                while let Some(err) = receiver.recv().await {
-                    info!("on_disconnect: {err:?}");
+                while let Some(e) = rx_on_disconnect.recv().await {
+                    info!("on_disconnect: {e:?}");
                     this.state
-                        .change_conn_state(ConnectionState::Disconnected(err));
+                        .change_conn_state(ConnectionState::Disconnected(e));
                     // TODO: reconnect
                 }
             }
