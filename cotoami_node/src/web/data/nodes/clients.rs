@@ -84,11 +84,12 @@ async fn add_client(
 async fn edit_client(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,
     Form(form): Form<EditClient>,
-) -> Result<StatusCode, ServiceError> {
+) -> Result<Content<ClientNode>, ServiceError> {
     state
         .edit_client(node_id, form, Arc::new(operator))
         .await
-        .map(|_| StatusCode::OK)
+        .map(|client| Content(client, accept))
 }

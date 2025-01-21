@@ -73,6 +73,28 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: EditClient
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::EditClient {
+        id: new_client_id,
+        values: EditClient {
+            disabled: Some(true),
+        },
+    }
+    .into_request();
+    let updated_client = service.call(request).await?.content::<ClientNode>()?;
+
+    assert_that!(
+        updated_client,
+        pat!(ClientNode {
+            node_id: eq(&new_client_id),
+            disabled: eq(&true)
+        }),
+        "Unexpected response of EditClient command"
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: PostCoto
     /////////////////////////////////////////////////////////////////////////////
 
