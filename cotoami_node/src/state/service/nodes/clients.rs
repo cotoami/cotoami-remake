@@ -23,7 +23,7 @@ impl NodeState {
         id: Id<Node>,
         operator: Arc<Operator>,
     ) -> Result<ClientNode, ServiceError> {
-        self.get(move |ds| ds.try_get_client_nodes(&id, &operator))
+        self.get(move |ds| ds.try_get_client_node(&id, &operator))
             .await
     }
 
@@ -122,9 +122,8 @@ impl NodeState {
         if disabled {
             self.client_conns().disconnect(&node_id);
         }
-        let client = spawn_blocking({
+        spawn_blocking({
             let db = self.db().clone();
-            let operator = operator.clone();
             move || {
                 let role = db
                     .new_session()?
@@ -135,7 +134,7 @@ impl NodeState {
                 Ok(client)
             }
         })
-        .await??;
-        Ok(client)
+        .await?
+        .map_err(ServiceError::from)
     }
 }

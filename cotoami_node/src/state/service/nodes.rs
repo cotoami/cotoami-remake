@@ -8,6 +8,7 @@ use crate::{
     state::NodeState,
 };
 
+mod children;
 mod clients;
 mod servers;
 

@@ -205,9 +205,9 @@ pub struct UpdateClient {
 /////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct UpdateChild {
-    pub as_owner: Option<bool>,
-    pub can_edit_links: Option<bool>,
+pub struct EditChild {
+    pub as_owner: bool,
+    pub can_edit_links: bool,
 }
 
 /////////////////////////////////////////////////////////////////////////////

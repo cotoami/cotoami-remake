@@ -31,7 +31,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(client_ops::recent_pairs(page_size, page_index))
     }
 
-    pub fn try_get_client_nodes(
+    pub fn try_get_client_node(
         &mut self,
         id: &Id<Node>,
         operator: &Operator,
