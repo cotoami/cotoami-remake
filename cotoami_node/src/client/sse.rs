@@ -112,7 +112,7 @@ impl SseClient {
                         event_source.close();
                         self.state
                             .change_conn_state(ConnectionState::event_handling_failed(e));
-                        break;
+                        return;
                     }
                 }
                 Err(e) => match event_source.ready_state() {
@@ -126,7 +126,7 @@ impl SseClient {
                         debug!("Event source {} closed due to: {:?}", self.url_prefix(), &e);
                         self.state
                             .change_conn_state(ConnectionState::communication_failed(e.into()));
-                        break;
+                        return;
                     }
                 },
             }
