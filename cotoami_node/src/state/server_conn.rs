@@ -48,7 +48,7 @@ impl ServerConnection {
 
         debug!("Server connection initializing: {}", self.server.node_id);
         let task = tokio::spawn(self.clone().try_connect());
-        self.set_conn_state(ConnectionState::Initializing(task.abort_handle()));
+        self.set_conn_state(ConnectionState::Initializing(task.abort_handle()), true);
 
         match task.await {
             Ok(Ok(())) => {
@@ -56,7 +56,7 @@ impl ServerConnection {
             }
             Ok(Err(e)) => {
                 debug!("Failed to initialize a server connection: {:?}", e);
-                self.set_conn_state(ConnectionState::InitFailed(Arc::new(e)));
+                self.set_conn_state(ConnectionState::InitFailed(Arc::new(e)), true);
             }
             Err(e) => {
                 debug!("Initializing task has been aborted: {:?}", e);
@@ -114,7 +114,7 @@ impl ServerConnection {
         )
         .await?;
         match ws_client.connect().await {
-            Ok(_) => self.set_conn_state(ConnectionState::WebSocket(ws_client)),
+            Ok(_) => self.set_conn_state(ConnectionState::WebSocket(ws_client), false),
             Err(e) => {
                 // Fallback to SSE
                 info!("Falling back to SSE due to: {e:?}");
@@ -126,27 +126,23 @@ impl ServerConnection {
                 )
                 .await?;
                 sse_client.connect().await?;
-                self.set_conn_state(ConnectionState::Sse(sse_client));
+                self.set_conn_state(ConnectionState::Sse(sse_client), false);
             }
         }
         Ok(())
     }
 
     pub fn disable(&self) {
-        let disconnected = self.conn_state.write().disconnect();
-        self.set_conn_state(ConnectionState::Disabled);
-        if disconnected {
-            self.node_state
-                .server_disconnected(self.server.node_id, self.not_connected().unwrap());
-        }
+        self.conn_state.write().disconnect();
+        self.set_conn_state(ConnectionState::Disabled, true);
     }
 
     pub fn disconnect(&self, reason: Option<&str>) {
-        if self.conn_state.write().disconnect() {
-            self.set_conn_state(ConnectionState::Disconnected(reason.map(String::from)));
-            self.node_state
-                .server_disconnected(self.server.node_id, self.not_connected().unwrap());
-        }
+        self.conn_state.write().disconnect();
+        self.set_conn_state(
+            ConnectionState::Disconnected(reason.map(String::from)),
+            true,
+        );
     }
 
     pub async fn reboot(&self) {
@@ -162,7 +158,18 @@ impl ServerConnection {
 
     fn to_parent(&self) -> bool { self.node_state.is_parent(&self.server.node_id) }
 
-    fn set_conn_state(&self, state: ConnectionState) { *self.conn_state.write() = state; }
+    fn set_conn_state(&self, state: ConnectionState, notify_change: bool) {
+        let before = self.not_connected();
+        *self.conn_state.write() = state;
+        if notify_change {
+            self.node_state.server_state_changed(
+                self.server.node_id,
+                before,
+                self.not_connected(),
+                self.client_as_child(),
+            );
+        }
+    }
 }
 
 #[derive(Debug)]

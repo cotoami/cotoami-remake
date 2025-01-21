@@ -3,7 +3,36 @@ use cotoami_db::prelude::*;
 use crate::{event::local::LocalNodeEvent, service::models::NotConnected, state::NodeState};
 
 impl NodeState {
-    pub(crate) fn server_connected(&self, node_id: Id<Node>, client_as_child: Option<ChildNode>) {
+    pub(crate) fn server_state_changed(
+        &self,
+        node_id: Id<Node>,
+        before: Option<NotConnected>,
+        after: Option<NotConnected>,
+        client_as_child: Option<ChildNode>,
+    ) -> bool {
+        match (before, after) {
+            (Some(_), None) => {
+                self.server_connected(node_id, client_as_child);
+                true
+            }
+            (None, Some(not_connected)) => {
+                self.server_disconnected(node_id, not_connected);
+                true
+            }
+            (Some(before), Some(after)) if before != after => {
+                self.pubsub()
+                    .publish_event(LocalNodeEvent::ServerStateChanged {
+                        node_id,
+                        not_connected: Some(after),
+                        client_as_child,
+                    });
+                true
+            }
+            _ => false, // state unchanged
+        }
+    }
+
+    fn server_connected(&self, node_id: Id<Node>, client_as_child: Option<ChildNode>) {
         self.pubsub()
             .publish_event(LocalNodeEvent::ServerStateChanged {
                 node_id,
@@ -12,7 +41,7 @@ impl NodeState {
             });
     }
 
-    pub(crate) fn server_disconnected(&self, node_id: Id<Node>, not_connected: NotConnected) {
+    fn server_disconnected(&self, node_id: Id<Node>, not_connected: NotConnected) {
         self.pubsub()
             .publish_event(LocalNodeEvent::ServerStateChanged {
                 node_id,

@@ -1,7 +1,6 @@
 //! Network client implementations.
 
-use core::mem::discriminant;
-use std::{ops::DerefMut, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::{ChildNode, Id, Node, Operator};
@@ -51,19 +50,14 @@ impl ClientState {
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
 
     fn change_conn_state(&self, state: ConnectionState) -> bool {
-        if state.changed_from(&self.conn_state.read()) {
-            let _ = std::mem::replace(self.conn_state.write().deref_mut(), state);
-            if let Some(not_connected) = self.not_connected() {
-                self.node_state
-                    .server_disconnected(self.server_id, not_connected);
-            } else {
-                self.node_state
-                    .server_connected(self.server_id, self.as_child.clone());
-            }
-            true
-        } else {
-            false
-        }
+        let before = self.not_connected();
+        *self.conn_state.write() = state;
+        self.node_state.server_state_changed(
+            self.server_id,
+            before,
+            self.not_connected(),
+            self.as_child.clone(),
+        )
     }
 
     fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
@@ -107,9 +101,5 @@ impl ConnectionState {
                 err.as_ref().map(ToString::to_string),
             )),
         }
-    }
-
-    pub fn changed_from(&self, another: &ConnectionState) -> bool {
-        discriminant(self) != discriminant(another)
     }
 }
