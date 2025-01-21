@@ -80,7 +80,7 @@ object ModalClients {
       case Msg.SetDisabled(id, disable) =>
         (
           model.modify(_.togglingDisabled).using(_ + id),
-          ClientNodeBackend.update(id, Some(disable))
+          ClientNodeBackend.edit(id, Some(disable))
             .map(Msg.ClientUpdated(id, _).into)
         )
 

@@ -13,7 +13,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClient, ClientAdded, Pagination, UpdateClient},
+        models::{AddClient, ClientAdded, EditClient, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -23,7 +23,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_clients).post(add_client))
-        .route("/:node_id", get(client).put(update_client_node))
+        .route("/:node_id", get(client).put(edit_client))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -81,14 +81,14 @@ async fn add_client(
 // PUT /api/data/nodes/clients/:node_id
 /////////////////////////////////////////////////////////////////////////////
 
-async fn update_client_node(
+async fn edit_client(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
-    Form(form): Form<UpdateClient>,
+    Form(form): Form<EditClient>,
 ) -> Result<StatusCode, ServiceError> {
     state
-        .update_client(node_id, form, Arc::new(operator))
+        .edit_client(node_id, form, Arc::new(operator))
         .await
         .map(|_| StatusCode::OK)
 }

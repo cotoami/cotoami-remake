@@ -43,8 +43,8 @@ pub enum Command {
     /// Request to add a new client node and return [ClientAdded] if succeeded.
     AddClient(AddClient),
 
-    /// Request to update a client node and return the updated [ClientNode].
-    UpdateClient { id: Id<Node>, values: UpdateClient },
+    /// Request to edit a client node and return the updated [ClientNode].
+    EditClient { id: Id<Node>, values: EditClient },
 
     /// Request a [Page<Cotonoma>] that contains recently updated cotonomas.
     RecentCotonomas {

@@ -9,7 +9,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClient, ClientAdded, NodeRole, Pagination, UpdateClient},
+        models::{AddClient, ClientAdded, EditClient, NodeRole, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -94,10 +94,10 @@ impl NodeState {
         .await?
     }
 
-    pub async fn update_client(
+    pub async fn edit_client(
         &self,
         node_id: Id<Node>,
-        values: UpdateClient,
+        values: EditClient,
         operator: Arc<Operator>,
     ) -> Result<ClientNode, ServiceError> {
         if let Err(errors) = values.validate() {

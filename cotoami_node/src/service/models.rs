@@ -196,7 +196,7 @@ pub struct ActiveClient {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct UpdateClient {
+pub struct EditClient {
     pub disabled: Option<bool>,
 }
 

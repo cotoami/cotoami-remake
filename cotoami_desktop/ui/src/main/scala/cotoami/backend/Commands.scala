@@ -96,11 +96,11 @@ object Commands {
       )
     )
 
-  def UpdateClient(
+  def EditClient(
       id: Id[Node],
       disabled: Option[Boolean]
   ) =
-    jso(UpdateClient =
+    jso(EditClient =
       jso(
         id = id.uuid,
         values = jso(
