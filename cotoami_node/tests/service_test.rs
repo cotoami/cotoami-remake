@@ -13,7 +13,7 @@ pub mod common;
 /// Various service backends are defined in each test function below.
 async fn test_service<S, C>(
     service: &S,
-    backend_ds: &mut DatabaseSession<'_>,
+    backend_state: NodeState,
     changes: C,
     operator_node_id: Id<Node>,
 ) -> Result<()>
@@ -21,8 +21,9 @@ where
     S: NodeService + ?Sized,
     C: Stream<Item = ChangelogEntry>,
 {
-    let service_node = backend_ds.local_node()?;
-    let root_cotonoma_id = service_node.root_cotonoma_id.unwrap();
+    let mut backend_ds = backend_state.db().new_session()?;
+    let backend_node = backend_ds.local_node()?;
+    let root_cotonoma_id = backend_node.root_cotonoma_id.unwrap();
     futures::pin_mut!(changes);
 
     /////////////////////////////////////////////////////////////////////////////
@@ -38,7 +39,7 @@ where
         response.content::<Node>()?,
         eq(&Node {
             rowid: 0, // skip_deserializing
-            ..service_node.clone()
+            ..backend_node.clone()
         }),
         "Unexpected response of LocalNode command"
     );
@@ -108,7 +109,7 @@ where
     assert_that!(
         posted_coto,
         pat!(Coto {
-            node_id: eq(&service_node.uuid),
+            node_id: eq(&backend_node.uuid),
             posted_in_id: some(eq(&root_cotonoma_id)),
             posted_by_id: eq(&operator_node_id),
             content: some(eq("Hello, Cotoami!")),
@@ -122,7 +123,7 @@ where
     assert_that!(
         changes.next().await,
         some(pat!(ChangelogEntry {
-            origin_node_id: eq(&service_node.uuid),
+            origin_node_id: eq(&backend_node.uuid),
             change: pat!(Change::CreateCoto(eq(&Coto {
                 rowid: 0,
                 ..posted_coto
@@ -141,10 +142,9 @@ async fn service_based_on_local_node() -> Result<()> {
     let operator_node_id = state.try_get_local_node_id()?;
 
     let service = OwnerOperatingService(state.clone());
-    let mut ds = state.db().new_session()?;
     let changes = state.pubsub().changes().subscribe(None::<()>);
 
-    test_service(&service, &mut ds, changes, operator_node_id).await
+    test_service(&service, state, changes, operator_node_id).await
 }
 
 #[test(tokio::test)]
@@ -248,12 +248,6 @@ async fn test_service_based_on_remote_node(
         eq(&expected_service_description)
     );
 
-    // Parent DatabaseSession
-    let mut parent_ds = match client_role {
-        NodeRole::Child => server_state.db().new_session()?,
-        NodeRole::Parent => client_state.db().new_session()?,
-    };
-
     // Remote changes
     let remote_changes = match client_role {
         NodeRole::Child => client_state
@@ -275,7 +269,10 @@ async fn test_service_based_on_remote_node(
     // Test the parent service
     let _ = test_service(
         parent_service.as_ref(),
-        &mut parent_ds,
+        match client_role {
+            NodeRole::Child => server_state,
+            NodeRole::Parent => client_state,
+        },
         remote_changes,
         child_node_id,
     )
