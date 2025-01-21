@@ -1,12 +1,12 @@
 //! Server-Sent Events client of Node API Service.
 
-use std::{ops::ControlFlow, sync::Arc};
+use std::{ops::ControlFlow, sync::Arc, time::Duration};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
 use cotoami_db::{ChangelogEntry, ChildNode};
 use futures::{sink::Sink, StreamExt};
-use reqwest_eventsource::{Event as ESItem, EventSource, ReadyState};
+use reqwest_eventsource::{retry::ExponentialBackoff, Event as ESItem, EventSource, ReadyState};
 use tokio::task::JoinSet;
 use tracing::{debug, error, info};
 
@@ -32,6 +32,13 @@ pub struct SseClient {
 }
 
 impl SseClient {
+    const RETRY_POLICY: ExponentialBackoff = ExponentialBackoff::new(
+        Duration::from_millis(300),    // first delay
+        2.,                            // factor
+        Some(Duration::from_secs(10)), // max delay
+        None,                          // infinite retries
+    );
+
     pub async fn new(state: ClientState, http_client: HttpClient) -> Result<Self> {
         Ok(Self {
             state: Arc::new(state),
@@ -51,7 +58,10 @@ impl SseClient {
         // To inherit request headers (ex. session token) from the `http_client`,
         // an event source has to be constructed via [EventSource::new] with a
         // [RequestBuilder] constructed by the `http_client`.
-        EventSource::new(self.http_client.get("/api/events")).unwrap_or_else(|_| unreachable!())
+        let mut es = EventSource::new(self.http_client.get("/api/events"))
+            .unwrap_or_else(|_| unreachable!());
+        es.set_retry_policy(Box::new(Self::RETRY_POLICY));
+        es
     }
 
     pub async fn connect(&mut self) -> Result<()> {
