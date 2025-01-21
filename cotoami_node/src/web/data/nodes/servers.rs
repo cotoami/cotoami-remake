@@ -79,11 +79,12 @@ async fn add_server(
 async fn edit_server(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,
     Form(form): Form<EditServer>,
-) -> Result<StatusCode, ServiceError> {
+) -> Result<Content<ServerNode>, ServiceError> {
     state
         .edit_server(node_id, form, Arc::new(operator))
         .await
-        .map(|_| StatusCode::OK)
+        .map(|server| Content(server, accept))
 }
