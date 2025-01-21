@@ -45,8 +45,8 @@ impl NodeState {
                     .map(|(session, _)| session),
             ),
             Command::AddServer(input) => format.serialize(self.add_server(input, opr?).await),
-            Command::UpdateServer { id, values } => {
-                format.serialize(self.update_server(id, values, opr?).await)
+            Command::EditServer { id, values } => {
+                format.serialize(self.edit_server(id, values, opr?).await)
             }
             Command::RecentClients { pagination } => {
                 format.serialize(self.recent_clients(pagination, opr?).await)

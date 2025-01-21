@@ -31,8 +31,8 @@ pub enum Command {
     /// Request to add a new [Server].
     AddServer(LogIntoServer),
 
-    /// Request to update a server node and return the updated [ServerNode].
-    UpdateServer { id: Id<Node>, values: UpdateServer },
+    /// Request to edit a server node and return the updated [ServerNode].
+    EditServer { id: Id<Node>, values: EditServer },
 
     /// Request a [Page<ClientNode>] that contains recently registered clients.
     RecentClients { pagination: Pagination },

@@ -115,7 +115,7 @@ impl HttpClient {
                 self.get(&format!("{API_PATH_SERVERS}/try")).query(&input)
             }
             Command::AddServer(input) => self.post(API_PATH_SERVERS).form(&input),
-            Command::UpdateServer { id, values } => {
+            Command::EditServer { id, values } => {
                 self.put(&format!("{API_PATH_SERVERS}/{id}")).form(&values)
             }
             Command::RecentClients { pagination } => self.get(API_PATH_CLIENTS).query(&pagination),

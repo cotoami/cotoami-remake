@@ -50,12 +50,12 @@ trait ServerNodeJson extends js.Object {
 }
 
 object ServerNodeJson {
-  def update(
+  def edit(
       id: Id[Node],
       disabled: Option[Boolean],
       url: Option[String]
   ): Cmd.One[Either[ErrorJson, ServerNodeJson]] =
-    Commands.send(Commands.UpdateServer(id, disabled, url))
+    Commands.send(Commands.EditServer(id, disabled, url))
 }
 
 object ServerNodeBackend {
@@ -67,13 +67,12 @@ object ServerNodeBackend {
       disabled = json.disabled
     )
 
-  def update(
+  def edit(
       id: Id[Node],
       disabled: Option[Boolean],
       url: Option[String]
   ): Cmd.One[Either[ErrorJson, ServerNode]] =
-    ServerNodeJson.update(id, disabled, url)
-      .map(_.map(toModel(_)))
+    ServerNodeJson.edit(id, disabled, url).map(_.map(toModel(_)))
 }
 
 @js.native

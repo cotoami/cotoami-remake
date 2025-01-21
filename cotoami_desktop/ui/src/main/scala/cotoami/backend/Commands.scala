@@ -59,12 +59,12 @@ object Commands {
       )
     )
 
-  def UpdateServer(
+  def EditServer(
       id: Id[Node],
       disabled: Option[Boolean],
       url_prefix: Option[String]
   ) =
-    jso(UpdateServer =
+    jso(EditServer =
       jso(
         id = id.uuid,
         values = jso(

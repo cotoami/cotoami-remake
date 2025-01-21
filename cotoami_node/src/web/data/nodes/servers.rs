@@ -12,7 +12,7 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{ClientNodeSession, LogIntoServer, Server, UpdateServer},
+        models::{ClientNodeSession, EditServer, LogIntoServer, Server},
         ServiceError,
     },
     state::NodeState,
@@ -23,7 +23,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(all_servers).post(add_server))
         .route("/try", get(log_into_server))
-        .route("/:node_id", put(update_server_node))
+        .route("/:node_id", put(edit_server))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -76,14 +76,14 @@ async fn add_server(
 // PUT /api/data/nodes/servers/:node_id
 /////////////////////////////////////////////////////////////////////////////
 
-async fn update_server_node(
+async fn edit_server(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     Path(node_id): Path<Id<Node>>,
-    Form(form): Form<UpdateServer>,
+    Form(form): Form<EditServer>,
 ) -> Result<StatusCode, ServiceError> {
     state
-        .update_server(node_id, form, Arc::new(operator))
+        .edit_server(node_id, form, Arc::new(operator))
         .await
         .map(|_| StatusCode::OK)
 }
