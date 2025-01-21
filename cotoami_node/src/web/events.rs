@@ -91,10 +91,12 @@ async fn stream_events(
     let (events, abort_events) = futures::stream::abortable(events);
     let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
     tokio::spawn({
+        let state = state.clone();
         async move {
             match disconnect_receiver.await {
                 Ok(_) => {
                     debug!("Disconnecting a SSE client {client_id} ...",);
+                    state.clear_client_node_session(client_id).await.unwrap();
                     abort_events.abort();
                 }
                 Err(_) => (), // the sender dropped

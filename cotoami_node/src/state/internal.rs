@@ -26,4 +26,9 @@ impl NodeState {
         let db = self.db().clone();
         spawn_blocking(move || db.new_session()?.as_operator(node_id)).await?
     }
+
+    pub(crate) async fn clear_client_node_session(&self, id: Id<Node>) -> Result<ClientNode> {
+        let db = self.db().clone();
+        spawn_blocking(move || db.new_session()?.clear_client_node_session(&id)).await?
+    }
 }
