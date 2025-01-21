@@ -149,6 +149,11 @@ impl ServerConnection {
         }
     }
 
+    pub async fn reboot(&self) {
+        self.disconnect(None);
+        self.connect().await;
+    }
+
     pub fn client_as_child(&self) -> Option<ChildNode> {
         self.conn_state.read().client_as_child().cloned()
     }

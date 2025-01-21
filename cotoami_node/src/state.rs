@@ -89,13 +89,17 @@ impl NodeState {
 
     pub fn client_conns(&self) -> &ClientConnections { &self.inner.client_conns }
 
-    pub fn put_client_conn(&self, client_conn: ClientConnection) {
+    pub(crate) fn put_client_conn(&self, client_conn: ClientConnection) {
         self.pubsub()
             .publish_event(LocalNodeEvent::ClientConnected(client_conn.client.clone()));
         self.client_conns().put(client_conn);
     }
 
-    pub fn remove_client_conn(&self, client_id: Id<Node>, disconnection_error: Option<String>) {
+    pub(crate) fn remove_client_conn(
+        &self,
+        client_id: Id<Node>,
+        disconnection_error: Option<String>,
+    ) {
         self.client_conns().remove(&client_id);
         self.client_disconnected(client_id, disconnection_error);
     }
@@ -192,7 +196,7 @@ impl ServerConnections {
         )))
     }
 
-    pub fn put(&self, server_id: Id<Node>, server_conn: ServerConnection) {
+    pub(crate) fn put(&self, server_id: Id<Node>, server_conn: ServerConnection) {
         self.0.write().insert(server_id, server_conn);
     }
 
@@ -238,11 +242,11 @@ pub struct ClientConnections(
 );
 
 impl ClientConnections {
-    pub fn put(&self, client_conn: ClientConnection) {
+    pub(crate) fn put(&self, client_conn: ClientConnection) {
         self.0.write().insert(client_conn.client_id(), client_conn);
     }
 
-    pub fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
+    pub(crate) fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
         self.0.write().remove(client_id)
     }
 

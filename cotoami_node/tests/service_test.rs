@@ -171,6 +171,26 @@ async fn test_service_based_on_remote_node(
     .await?;
     assert_that!(server.server.node_id, eq(server_id));
 
+    // Update the server to be an owner
+    if let NodeRole::Parent = client_role {
+        client_state
+            .edit_child(
+                server_id,
+                EditChild {
+                    as_owner: true,
+                    can_edit_links: true,
+                },
+                Arc::new(client_state.local_node_as_operator()?),
+            )
+            .await
+            .map_err(BackendServiceError)?;
+        client_state
+            .server_conns()
+            .try_get(&server_id)?
+            .reboot()
+            .await;
+    }
+
     // Parent service
     let parent_service = match client_role {
         NodeRole::Child => try_get_parent_service(&client_state, &server_id).await?,
