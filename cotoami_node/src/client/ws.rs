@@ -144,20 +144,22 @@ impl WebSocketClient {
     }
 
     async fn reconnecting_delay(&self) -> Result<()> {
-        if let Some(ref mut reconnecting) = *self.reconnecting.lock() {
-            if let Some(delay) = reconnecting.next_delay() {
-                debug!(
-                    "{}. Waiting {delay:?} to reconnect...",
-                    reconnecting.last_number()
-                );
-                tokio::time::sleep(delay).await;
-            } else {
-                self.reconnecting.lock().take();
-                bail!(
-                    "Failed to reconnect after {} retries.",
-                    reconnecting.last_number()
-                );
-            }
+        if self.reconnecting.lock().is_none() {
+            return Ok(()); // Not reconnecting
+        }
+
+        let (next_delay, number) = {
+            let mut lock = self.reconnecting.lock();
+            let state = lock.as_mut().unwrap();
+            (state.next_delay(), state.last_number())
+        };
+
+        if let Some(delay) = next_delay {
+            debug!("({}) waiting {delay:?} to reconnect...", number);
+            tokio::time::sleep(delay).await;
+        } else {
+            self.reconnecting.lock().take();
+            bail!("Failed to reconnect after {} retries.", number);
         }
         Ok(())
     }
