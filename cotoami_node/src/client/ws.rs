@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::ChildNode;
 use futures::{Sink, StreamExt};
 use parking_lot::Mutex;
@@ -67,6 +67,8 @@ impl WebSocketClient {
                         bail!("Abort reconnecting due to: {e:?}");
                     }
                 }
+            } else {
+                return Err(anyhow!(e));
             }
         }
 
