@@ -1,5 +1,4 @@
 use cotoami_db::prelude::*;
-use tracing::debug;
 
 use crate::{event::local::LocalNodeEvent, service::models::NotConnected, state::NodeState};
 
@@ -11,7 +10,6 @@ impl NodeState {
         after: Option<NotConnected>,
         client_as_child: Option<ChildNode>,
     ) -> bool {
-        debug!("server_state_changed: {before:?} => {after:?}");
         match (before, after) {
             (Some(_), None) => {
                 self.server_connected(node_id, client_as_child);

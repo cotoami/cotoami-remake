@@ -5,7 +5,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use cotoami_db::{ChildNode, Id, Node, Operator};
 use parking_lot::RwLock;
-use tracing::info;
 
 use crate::{
     event::remote::EventLoopError, service::models::NotConnected, state::NodeState, Abortables,
@@ -63,10 +62,9 @@ impl ClientState {
 
     fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
 
-    fn has_running_tasks(&self) -> bool { !self.abortables.is_empty() }
+    fn has_running_tasks(&self) -> bool { self.abortables.has_running_tasks() }
 
     fn disconnect(&self) -> bool {
-        info!("Disconnecting from: {}", self.server_id);
         self.abortables.abort_all();
         self.change_conn_state(ConnectionState::Disconnected(None))
     }

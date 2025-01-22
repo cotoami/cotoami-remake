@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 use tokio::{sync::mpsc, task::JoinSet};
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_util::sync::PollSender;
-use tracing::{debug, info};
+use tracing::debug;
 
 use crate::{
     event::remote::{EventLoopError, NodeSentEvent},
@@ -216,28 +216,42 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
     H: Fn(NodeSentEvent) -> F,
     F: Future<Output = ControlFlow<anyhow::Error>>,
 {
-    while let Some(Ok(msg)) = msg_stream.next().await {
-        match msg {
-            Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
-                Ok(event) => {
-                    if let ControlFlow::Break(e) = handler(event).await {
-                        error.lock().replace(EventLoopError::EventHandlingFailed(e));
+    loop {
+        match msg_stream.next().await {
+            Some(Ok(msg)) => match msg {
+                Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
+                    Ok(event) => {
+                        if let ControlFlow::Break(e) = handler(event).await {
+                            error.lock().replace(EventLoopError::EventHandlingFailed(e));
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        debug!("The peer ({peer_id}) sent an invalid binary message: {e}");
+                        error
+                            .lock()
+                            .replace(EventLoopError::EventHandlingFailed(e.into()));
                         break;
                     }
-                }
-                Err(e) => {
-                    info!("The peer ({peer_id}) sent an invalid binary message: {e}");
-                    error
-                        .lock()
-                        .replace(EventLoopError::EventHandlingFailed(e.into()));
+                },
+                Message::Close(c) => {
+                    debug!("The peer ({peer_id}) sent close with: {c:?}");
                     break;
                 }
+                the_others => debug!("Message ignored: {:?}", the_others),
             },
-            Message::Close(c) => {
-                info!("The peer ({peer_id}) sent close with: {c:?}");
+            Some(Err(e)) => {
+                let anyhow_error = e.into();
+                debug!("Message stream error: {anyhow_error:?}");
+                error
+                    .lock()
+                    .replace(EventLoopError::CommunicationFailed(anyhow_error));
                 break;
             }
-            the_others => debug!("Message ignored: {:?}", the_others),
+            None => {
+                debug!("Message stream end");
+                break;
+            }
         }
     }
 }

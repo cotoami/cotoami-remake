@@ -50,17 +50,15 @@ impl WebSocketClient {
             bail!("Already connected");
         }
 
-        self.reconnecting_delay().await?;
-
         let (tx_on_disconnect, rx_on_disconnect) = mpsc::channel::<Option<EventLoopError>>(1);
-        self.handle_disconnection(rx_on_disconnect);
+        self.run_disconnection_handler(rx_on_disconnect);
 
         if let Err(e) = self.do_connect(PollSender::new(tx_on_disconnect)).await {
             if self.reconnecting.lock().is_some() {
                 match e {
                     tungstenite::error::Error::Io(e) => {
                         debug!("Continue reconnecting after: {e:?}");
-                        Box::pin(self.connect()).await?;
+                        self.run_reconnecting_task();
                     }
                     _ => {
                         self.reconnecting.lock().take();
@@ -75,32 +73,19 @@ impl WebSocketClient {
         Ok(())
     }
 
-    async fn reconnecting_delay(&self) -> Result<()> {
-        if let Some(ref mut reconnecting) = *self.reconnecting.lock() {
-            if let Some(delay) = reconnecting.next_delay() {
-                debug!(
-                    "{}. Waiting {delay:?} to reconnect...",
-                    reconnecting.last_number()
-                );
-                tokio::time::sleep(delay).await;
-            } else {
-                self.reconnecting.lock().take();
-                bail!(
-                    "Failed to reconnect after {} retries.",
-                    reconnecting.last_number()
-                );
-            }
-        }
-        Ok(())
-    }
-
     async fn do_connect<S>(&mut self, on_disconnect: S) -> Result<(), tungstenite::error::Error>
     where
         S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
     {
         let (ws_stream, _) = connect_async(self.ws_request.clone()).await?;
-        info!("WebSocket connection opened: {}", self.ws_request.uri());
         self.state.change_conn_state(ConnectionState::Connected);
+
+        if self.reconnecting.lock().is_some() {
+            info!("WebSocket reconnected: {}", self.ws_request.uri());
+            self.reconnecting.lock().take();
+        } else {
+            info!("WebSocket connection opened: {}", self.ws_request.uri());
+        }
 
         let (sink, stream) = ws_stream.split();
         if let Some(opr) = self.state.server_as_operator.as_ref() {
@@ -126,22 +111,61 @@ impl WebSocketClient {
         Ok(())
     }
 
-    fn handle_disconnection(&self, mut receiver: Receiver<Option<EventLoopError>>) {
+    fn run_disconnection_handler(&self, mut receiver: Receiver<Option<EventLoopError>>) {
         tokio::spawn({
-            let mut this = self.clone();
+            let this = self.clone();
             async move {
-                while let Some(e) = receiver.recv().await {
-                    info!("Disconnected: {e:?}");
-                    this.state
-                        .change_conn_state(ConnectionState::Disconnected(e));
-                    this.reconnecting.lock().replace(RetryState::default());
-                    this.connect().await.unwrap();
+                if let Some(e) = receiver.recv().await {
+                    info!("Event loop aborted: {e:?}");
+                    this.state.abortables.abort_all();
+                    if let Some(EventLoopError::CommunicationFailed(e)) = e {
+                        debug!("Start reconnecting...");
+                        this.reconnecting.lock().replace(RetryState::default());
+                        this.state
+                            .change_conn_state(ConnectionState::Connecting(Some(e)));
+                        this.run_reconnecting_task();
+                    } else {
+                        this.state
+                            .change_conn_state(ConnectionState::Disconnected(e));
+                    }
                 }
             }
         });
     }
 
-    pub fn disconnect(&mut self) -> bool { self.state.disconnect() }
+    fn run_reconnecting_task(&self) {
+        tokio::spawn({
+            let mut this = self.clone();
+            async move {
+                this.reconnecting_delay().await.unwrap();
+                this.connect().await.unwrap();
+            }
+        });
+    }
+
+    async fn reconnecting_delay(&self) -> Result<()> {
+        if let Some(ref mut reconnecting) = *self.reconnecting.lock() {
+            if let Some(delay) = reconnecting.next_delay() {
+                debug!(
+                    "{}. Waiting {delay:?} to reconnect...",
+                    reconnecting.last_number()
+                );
+                tokio::time::sleep(delay).await;
+            } else {
+                self.reconnecting.lock().take();
+                bail!(
+                    "Failed to reconnect after {} retries.",
+                    reconnecting.last_number()
+                );
+            }
+        }
+        Ok(())
+    }
+
+    pub fn disconnect(&mut self) -> bool {
+        self.reconnecting.lock().take(); // cancel reconnecting
+        self.state.disconnect()
+    }
 }
 
 impl HttpClient {
