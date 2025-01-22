@@ -61,8 +61,11 @@ impl WebSocketClient {
                         self.run_reconnecting_task();
                     }
                     _ => {
+                        debug!("Abort reconnecting due to: {e:?}");
                         self.reconnecting.lock().take();
-                        bail!("Abort reconnecting due to: {e:?}");
+                        self.state
+                            .change_conn_state(ConnectionState::communication_failed(e.into()));
+                        bail!("Abort reconnecting");
                     }
                 }
             } else {
@@ -137,8 +140,12 @@ impl WebSocketClient {
         tokio::spawn({
             let mut this = self.clone();
             async move {
-                this.reconnecting_delay().await.unwrap();
-                this.connect().await.unwrap();
+                if let Err(e) = this.reconnecting_delay().await {
+                    this.state
+                        .change_conn_state(ConnectionState::communication_failed(e));
+                } else {
+                    this.connect().await.ok();
+                }
             }
         });
     }
