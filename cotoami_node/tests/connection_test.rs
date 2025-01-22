@@ -1,13 +1,12 @@
-use std::time::Duration;
-
 use anyhow::Result;
 use cotoami_node::prelude::*;
 use futures::stream::StreamExt;
 use googletest::prelude::*;
 use test_log::test;
-use tokio::time::timeout;
 
 pub mod common;
+
+use self::common::wait_get;
 
 async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Result<()> {
     // Client node
@@ -41,7 +40,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
 
     // Server-side
     assert_that!(
-        timeout(Duration::from_secs(5), server_events.next()).await?,
+        wait_get(server_events.next(), "ClientConnected event").await,
         some(pat!(LocalNodeEvent::ClientConnected(pat!(ActiveClient {
             node_id: eq(&client_id),
             remote_addr: eq("127.0.0.1")
@@ -60,8 +59,8 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
     assert_that!(
         // The first two events are in no particular order.
         vec![
-            timeout(Duration::from_secs(5), client_events.next()).await?,
-            timeout(Duration::from_secs(5), client_events.next()).await?,
+            wait_get(client_events.next(), "First event at client").await,
+            wait_get(client_events.next(), "Second event at client").await,
         ],
         unordered_elements_are![
             some(pat!(LocalNodeEvent::ServerStateChanged {
@@ -81,13 +80,13 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
     );
 
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
+        wait_get(client_events.next(), "ParentSyncStart event").await,
         some(pat!(LocalNodeEvent::ParentSyncStart {
             node_id: eq(&server_id),
         }))
     );
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
+        wait_get(client_events.next(), "First ParentSyncProgress event").await,
         some(pat!(LocalNodeEvent::ParentSyncProgress {
             node_id: eq(&server_id),
             progress: eq(&0),
@@ -95,7 +94,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         }))
     );
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
+        wait_get(client_events.next(), "Second ParentSyncProgress event").await,
         some(pat!(LocalNodeEvent::ParentSyncProgress {
             node_id: eq(&server_id),
             progress: eq(&2),
@@ -103,7 +102,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         }))
     );
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
+        wait_get(client_events.next(), "ParentSyncEnd event").await,
         some(pat!(LocalNodeEvent::ParentSyncEnd {
             node_id: eq(&server_id),
             range: some(eq(&(1, 2))),
@@ -119,7 +118,7 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
 
     // Server-side
     assert_that!(
-        timeout(Duration::from_secs(5), server_events.next()).await?,
+        wait_get(server_events.next(), "ClientDisconnected event").await,
         some(pat!(LocalNodeEvent::ClientDisconnected {
             node_id: eq(&client_id),
             error: none()
@@ -129,14 +128,14 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
 
     // Client-side
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
+        wait_get(client_events.next(), "ServerStateChanged event").await,
         some(pat!(LocalNodeEvent::ServerStateChanged {
             node_id: eq(&server_id),
             not_connected: some(anything()) // TODO: should be `Disconnected` after cancelling auto-reconnect.
         }))
     );
     assert_that!(
-        timeout(Duration::from_secs(5), client_events.next()).await?,
+        wait_get(client_events.next(), "ParentDisconnected event").await,
         some(pat!(LocalNodeEvent::ParentDisconnected {
             node_id: eq(&server_id),
         }))

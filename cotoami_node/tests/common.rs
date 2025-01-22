@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::{future::Future, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use cotoami_node::prelude::*;
 use tempfile::tempdir;
-use tokio::sync::oneshot::Sender;
+use tokio::{sync::oneshot::Sender, time::timeout};
 
 pub fn new_node_config(name: impl Into<String>) -> Result<NodeConfig> {
     let db_dir = tempdir()?;
@@ -57,4 +57,14 @@ pub async fn connect_to_server(
     request.set_from(Arc::new(client_state.local_node_as_operator()?));
     let response = client_state.call(request).await?;
     response.content::<Server>()
+}
+
+pub async fn wait_get<F, T>(future: F, description: &str) -> T
+where
+    F: Future<Output = T>,
+{
+    match timeout(Duration::from_secs(5), future).await {
+        Ok(t) => t,
+        Err(e) => panic!("Couldn't get {description} due to {e:?}"),
+    }
 }
