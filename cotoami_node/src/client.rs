@@ -12,6 +12,7 @@ use crate::{
 };
 
 mod http;
+mod retry;
 mod sse;
 mod ws;
 

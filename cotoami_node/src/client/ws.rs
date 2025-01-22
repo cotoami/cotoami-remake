@@ -5,17 +5,18 @@ use std::sync::Arc;
 use anyhow::{bail, Result};
 use cotoami_db::ChildNode;
 use futures::{Sink, StreamExt};
-use tokio::sync::mpsc;
+use parking_lot::Mutex;
+use tokio::sync::{mpsc, mpsc::Receiver};
 use tokio_tungstenite::{
-    connect_async,
+    connect_async, tungstenite,
     tungstenite::{client::IntoClientRequest, handshake::client::Request},
 };
 use tokio_util::sync::PollSender;
-use tracing::info;
+use tracing::{debug, info};
 use url::Url;
 
 use crate::{
-    client::{ClientState, ConnectionState, HttpClient},
+    client::{retry::RetryState, ClientState, ConnectionState, HttpClient},
     event::remote::{
         tungstenite::{communicate_with_operator, communicate_with_parent},
         EventLoopError,
@@ -23,10 +24,12 @@ use crate::{
     service::models::NotConnected,
 };
 
-#[derive(Debug, Clone)]
+#[derive(derive_more::Debug, Clone)]
 pub struct WebSocketClient {
     state: Arc<ClientState>,
     ws_request: Request,
+    #[debug(skip)]
+    reconnecting: Arc<Mutex<Option<RetryState>>>,
 }
 
 impl WebSocketClient {
@@ -34,6 +37,7 @@ impl WebSocketClient {
         Ok(Self {
             state: Arc::new(state),
             ws_request: http_client.ws_request()?,
+            reconnecting: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -46,25 +50,49 @@ impl WebSocketClient {
             bail!("Already connected");
         }
 
-        let (tx_on_disconnect, mut rx_on_disconnect) = mpsc::channel::<Option<EventLoopError>>(1);
-        self.do_connect(PollSender::new(tx_on_disconnect)).await?;
+        self.reconnecting_delay().await?;
 
-        // Listen to disconnect events
-        tokio::spawn({
-            let this = self.clone();
-            async move {
-                while let Some(e) = rx_on_disconnect.recv().await {
-                    info!("on_disconnect: {e:?}");
-                    this.state
-                        .change_conn_state(ConnectionState::Disconnected(e));
-                    // TODO: reconnect
+        let (tx_on_disconnect, rx_on_disconnect) = mpsc::channel::<Option<EventLoopError>>(1);
+        self.handle_disconnection(rx_on_disconnect);
+
+        if let Err(e) = self.do_connect(PollSender::new(tx_on_disconnect)).await {
+            if self.reconnecting.lock().is_some() {
+                match e {
+                    tungstenite::error::Error::Io(e) => {
+                        debug!("Continue reconnecting after: {e:?}");
+                        Box::pin(self.connect()).await?;
+                    }
+                    _ => {
+                        self.reconnecting.lock().take();
+                        bail!("Abort reconnecting due to: {e:?}");
+                    }
                 }
             }
-        });
+        }
+
         Ok(())
     }
 
-    async fn do_connect<S>(&mut self, on_disconnect: S) -> Result<()>
+    async fn reconnecting_delay(&self) -> Result<()> {
+        if let Some(ref mut reconnecting) = *self.reconnecting.lock() {
+            if let Some(delay) = reconnecting.next_delay() {
+                debug!(
+                    "{}. Waiting {delay:?} to reconnect...",
+                    reconnecting.last_number()
+                );
+                tokio::time::sleep(delay).await;
+            } else {
+                self.reconnecting.lock().take();
+                bail!(
+                    "Failed to reconnect after {} retries.",
+                    reconnecting.last_number()
+                );
+            }
+        }
+        Ok(())
+    }
+
+    async fn do_connect<S>(&mut self, on_disconnect: S) -> Result<(), tungstenite::error::Error>
     where
         S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
     {
@@ -94,6 +122,21 @@ impl WebSocketClient {
             ));
         }
         Ok(())
+    }
+
+    fn handle_disconnection(&self, mut receiver: Receiver<Option<EventLoopError>>) {
+        tokio::spawn({
+            let mut this = self.clone();
+            async move {
+                while let Some(e) = receiver.recv().await {
+                    info!("Disconnected: {e:?}");
+                    this.state
+                        .change_conn_state(ConnectionState::Disconnected(e));
+                    this.reconnecting.lock().replace(RetryState::default());
+                    this.connect().await.unwrap();
+                }
+            }
+        });
     }
 
     pub fn disconnect(&mut self) -> bool { self.state.disconnect() }
