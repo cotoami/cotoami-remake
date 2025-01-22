@@ -31,12 +31,13 @@ impl ExponentialBackoff {
 
 impl RetryPolicy for ExponentialBackoff {
     fn next_delay(&self, last_retry: Option<(usize, Duration)>) -> Option<Duration> {
-        if let Some((retry_num, last_duration)) = last_retry {
+        if let Some((last_number, last_duration)) = last_retry {
             if let Some(max_retries) = self.max_retries {
-                if retry_num >= max_retries {
+                if last_number >= max_retries {
                     return None;
                 }
             }
+
             let duration = last_duration.mul_f64(self.factor);
             if let Some(max_duration) = self.max_duration {
                 Some(duration.min(max_duration))
