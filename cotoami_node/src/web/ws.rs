@@ -70,12 +70,13 @@ async fn handle_socket(
     // A task receiving a manual disconnect message.
     let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
     tokio::spawn({
-        // Abort all the communication tasks on a disconnect message.
+        let state = state.clone();
         let tasks = communication_tasks.clone();
         async move {
             match rx_disconnect.await {
                 Ok(_) => {
                     debug!("Disconnecting a client {client_id} ...");
+                    state.clear_client_node_session(client_id).await.unwrap();
                     tasks.abort_all();
                 }
                 Err(_) => (), // the sender dropped
