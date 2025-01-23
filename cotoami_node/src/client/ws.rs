@@ -50,10 +50,10 @@ impl WebSocketClient {
             bail!("Already connected");
         }
 
-        let (tx_on_abort, rx_on_abort) = mpsc::channel::<Option<EventLoopError>>(1);
-        self.run_handler_on_abort(rx_on_abort);
+        let (tx_abort, rx_abort) = mpsc::channel::<Option<EventLoopError>>(1);
+        self.run_handler_on_abort(rx_abort);
 
-        if let Err(e) = self.do_connect(PollSender::new(tx_on_abort)).await {
+        if let Err(e) = self.do_connect(PollSender::new(tx_abort)).await {
             if self.reconnecting.lock().is_some() {
                 match e {
                     tungstenite::error::Error::Io(e) => {
