@@ -67,13 +67,13 @@ async fn handle_socket(
     // Container of tasks to maintain this client-server connection.
     let communication_tasks = Abortables::default();
 
-    // A task receiving a disconnect message.
-    let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
+    // A task receiving a manual disconnect message.
+    let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
     tokio::spawn({
         // Abort all the communication tasks on a disconnect message.
         let tasks = communication_tasks.clone();
         async move {
-            match disconnect_receiver.await {
+            match rx_disconnect.await {
                 Ok(_) => {
                     debug!("Disconnecting a client {client_id} ...");
                     tasks.abort_all();
@@ -83,15 +83,15 @@ async fn handle_socket(
         }
     });
 
-    // Event handler on disconnect
-    let on_disconnect = listener_on_disconnect(client_id, state.clone());
-    futures::pin_mut!(on_disconnect);
+    // Event handler on abort
+    let on_abort = handler_on_abort(client_id, state.clone());
+    futures::pin_mut!(on_abort);
 
     // Register a ClientConnection.
     state.put_client_conn(ClientConnection::new(
         client_id,
         remote_addr.ip().to_string(),
-        disconnect,
+        tx_disconnect,
     ));
 
     match session {
@@ -101,7 +101,7 @@ async fn handle_socket(
                 Arc::new(opr),
                 sink,
                 stream,
-                on_disconnect,
+                on_abort,
                 communication_tasks,
             )
             .await;
@@ -113,7 +113,7 @@ async fn handle_socket(
                 format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,
                 stream,
-                on_disconnect,
+                on_abort,
                 communication_tasks,
             )
             .await;
@@ -121,7 +121,7 @@ async fn handle_socket(
     }
 }
 
-fn listener_on_disconnect(
+fn handler_on_abort(
     client_id: Id<Node>,
     state: NodeState,
 ) -> impl Sink<Option<EventLoopError>, Error = futures::never::Never> + 'static {
