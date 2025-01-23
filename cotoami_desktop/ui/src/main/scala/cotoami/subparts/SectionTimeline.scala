@@ -46,10 +46,13 @@ object SectionTimeline {
       loading: Boolean = false,
       imeActive: Boolean = false
   ) {
-    def clear: Model =
+    def onFocusChange: Model =
       copy(
         cotoIds = PaginatedIds(),
+        onlyCotonomas = false,
+        justPosted = HashSet.empty,
         query = "",
+        fetchNumber = 0,
         loading = false,
         imeActive = false
       )
