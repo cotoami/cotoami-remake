@@ -50,10 +50,10 @@ impl WebSocketClient {
             bail!("Already connected");
         }
 
-        let (tx_on_disconnect, rx_on_disconnect) = mpsc::channel::<Option<EventLoopError>>(1);
-        self.run_disconnection_handler(rx_on_disconnect);
+        let (tx_on_abort, rx_on_abort) = mpsc::channel::<Option<EventLoopError>>(1);
+        self.run_handler_on_abort(rx_on_abort);
 
-        if let Err(e) = self.do_connect(PollSender::new(tx_on_disconnect)).await {
+        if let Err(e) = self.do_connect(PollSender::new(tx_on_abort)).await {
             if self.reconnecting.lock().is_some() {
                 match e {
                     tungstenite::error::Error::Io(e) => {
@@ -76,7 +76,7 @@ impl WebSocketClient {
         Ok(())
     }
 
-    async fn do_connect<S>(&mut self, on_disconnect: S) -> Result<(), tungstenite::error::Error>
+    async fn do_connect<S>(&mut self, on_abort: S) -> Result<(), tungstenite::error::Error>
     where
         S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
     {
@@ -97,7 +97,7 @@ impl WebSocketClient {
                 opr.clone(),
                 sink,
                 stream,
-                on_disconnect,
+                on_abort,
                 self.state.abortables.clone(),
             ));
         } else {
@@ -107,14 +107,14 @@ impl WebSocketClient {
                 format!("WebSocket server-as-parent: {}", self.ws_request.uri()),
                 sink,
                 stream,
-                on_disconnect,
+                on_abort,
                 self.state.abortables.clone(),
             ));
         }
         Ok(())
     }
 
-    fn run_disconnection_handler(&self, mut receiver: Receiver<Option<EventLoopError>>) {
+    fn run_handler_on_abort(&self, mut receiver: Receiver<Option<EventLoopError>>) {
         tokio::spawn({
             let this = self.clone();
             async move {

@@ -17,26 +17,20 @@ use crate::{
 };
 
 /// Spawn and join tasks to handle a WebSocket connection to a parent node.
-pub(crate) async fn communicate_with_parent<
-    MsgSink,
-    MsgSinkErr,
-    MsgStream,
-    MsgStreamErr,
-    OnDisconnect,
->(
+pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgStreamErr, OnAbort>(
     node_state: NodeState,
     parent_id: Id<Node>,
     description: String,
     mut msg_sink: MsgSink,
     msg_stream: MsgStream,
-    mut on_disconnect: OnDisconnect,
+    mut on_abort: OnAbort,
     abortables: Abortables,
 ) where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
     MsgSinkErr: Into<anyhow::Error>,
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
     MsgStreamErr: Into<anyhow::Error> + Send + 'static,
-    OnDisconnect: Sink<Option<EventLoopError>> + Unpin,
+    OnAbort: Sink<Option<EventLoopError>> + Unpin,
 {
     let mut tasks = JoinSet::new();
     let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
@@ -78,7 +72,7 @@ pub(crate) async fn communicate_with_parent<
     // If any one of the tasks exit, abort the other.
     if tasks.join_next().await.is_some() {
         tasks.shutdown().await;
-        on_disconnect
+        on_abort
             .send(Arc::try_unwrap(task_error).unwrap().into_inner())
             .await
             .ok();
@@ -91,20 +85,20 @@ pub(crate) async fn communicate_with_operator<
     MsgSinkErr,
     MsgStream,
     MsgStreamErr,
-    OnDisconnect,
+    OnAbort,
 >(
     node_state: NodeState,
     opr: Arc<Operator>,
     mut msg_sink: MsgSink,
     msg_stream: MsgStream,
-    mut on_disconnect: OnDisconnect,
+    mut on_abort: OnAbort,
     abortables: Abortables,
 ) where
     MsgSink: Sink<Message, Error = MsgSinkErr> + Unpin + Send + 'static,
     MsgSinkErr: Into<anyhow::Error>,
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
     MsgStreamErr: Into<anyhow::Error> + Send + 'static,
-    OnDisconnect: Sink<Option<EventLoopError>> + Unpin,
+    OnAbort: Sink<Option<EventLoopError>> + Unpin,
 {
     let node_id = opr.node_id();
 
@@ -178,7 +172,7 @@ pub(crate) async fn communicate_with_operator<
     // If any one of the tasks exit, abort the others.
     if tasks.join_next().await.is_some() {
         tasks.shutdown().await;
-        on_disconnect
+        on_abort
             .send(Arc::try_unwrap(task_error).unwrap().into_inner())
             .await
             .ok();
