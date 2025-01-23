@@ -7,7 +7,7 @@ use cotoami_db::{ChildNode, Id, Node, Operator};
 use parking_lot::RwLock;
 
 use crate::{
-    event::remote::EventLoopError, service::models::NotConnected, state::NodeState, Abortables,
+    event::remote::CommunicationError, service::models::NotConnected, state::NodeState, Abortables,
 };
 
 mod http;
@@ -78,16 +78,16 @@ enum ConnectionState {
     Connected,
 
     // Disconnected, which may be a result of an error.
-    Disconnected(Option<EventLoopError>),
+    Disconnected(Option<CommunicationError>),
 }
 
 impl ConnectionState {
-    pub fn communication_failed(e: anyhow::Error) -> Self {
-        ConnectionState::Disconnected(Some(EventLoopError::CommunicationFailed(e)))
+    pub fn connection_error(e: anyhow::Error) -> Self {
+        ConnectionState::Disconnected(Some(CommunicationError::Connection(e)))
     }
 
     pub fn event_handling_failed(e: anyhow::Error) -> Self {
-        ConnectionState::Disconnected(Some(EventLoopError::EventHandlingFailed(e)))
+        ConnectionState::Disconnected(Some(CommunicationError::EventHandling(e)))
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> {

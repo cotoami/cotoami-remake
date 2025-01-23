@@ -19,7 +19,7 @@ use tracing::debug;
 use crate::{
     event::remote::{
         tungstenite::{communicate_with_operator, communicate_with_parent},
-        EventLoopError,
+        CommunicationError,
     },
     state::{ClientConnection, NodeState},
     Abortables,
@@ -125,8 +125,8 @@ async fn handle_socket(
 fn handler_on_abort(
     client_id: Id<Node>,
     state: NodeState,
-) -> impl Sink<Option<EventLoopError>, Error = futures::never::Never> + 'static {
-    futures::sink::unfold((), move |(), error: Option<EventLoopError>| {
+) -> impl Sink<Option<CommunicationError>, Error = futures::never::Never> + 'static {
+    futures::sink::unfold((), move |(), error: Option<CommunicationError>| {
         let state = state.clone();
         async move {
             state.remove_client_conn(client_id, error.map(|e| e.to_string()));

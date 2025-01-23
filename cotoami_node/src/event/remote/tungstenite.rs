@@ -10,7 +10,7 @@ use tokio_util::sync::PollSender;
 use tracing::debug;
 
 use crate::{
-    event::remote::{EventLoopError, NodeSentEvent},
+    event::remote::{CommunicationError, NodeSentEvent},
     service::PubsubService,
     state::NodeState,
     Abortables,
@@ -30,10 +30,10 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
     MsgSinkErr: Into<anyhow::Error>,
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
     MsgStreamErr: Into<anyhow::Error> + Send + 'static,
-    OnAbort: Sink<Option<EventLoopError>> + Unpin,
+    OnAbort: Sink<Option<CommunicationError>> + Unpin,
 {
     let mut tasks = JoinSet::new();
-    let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
+    let task_error = Arc::new(Mutex::new(None::<CommunicationError>));
 
     // Create a parent service.
     let parent_service = PubsubService::new(description, node_state.pubsub().responses().clone());
@@ -48,7 +48,7 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
                 if let Err(e) = send_event(&mut msg_sink, event).await {
                     task_error
                         .lock()
-                        .replace(EventLoopError::CommunicationFailed(e.into()));
+                        .replace(CommunicationError::Connection(e.into()));
                     break;
                 }
             }
@@ -98,13 +98,13 @@ pub(crate) async fn communicate_with_operator<
     MsgSinkErr: Into<anyhow::Error>,
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin + Send + 'static,
     MsgStreamErr: Into<anyhow::Error> + Send + 'static,
-    OnAbort: Sink<Option<EventLoopError>> + Unpin,
+    OnAbort: Sink<Option<CommunicationError>> + Unpin,
 {
     let node_id = opr.node_id();
 
     let (sender, mut receiver) = mpsc::channel::<NodeSentEvent>(SEND_BUFFER_SIZE);
     let mut tasks = JoinSet::new();
-    let task_error = Arc::new(Mutex::new(None::<EventLoopError>));
+    let task_error = Arc::new(Mutex::new(None::<CommunicationError>));
 
     // A task sending events received from the other tasks
     abortables.add(tasks.spawn({
@@ -114,7 +114,7 @@ pub(crate) async fn communicate_with_operator<
                 if let Err(e) = send_event(&mut msg_sink, event).await {
                     task_error
                         .lock()
-                        .replace(EventLoopError::CommunicationFailed(e.into()));
+                        .replace(CommunicationError::Connection(e.into()));
                     break;
                 }
             }
@@ -202,7 +202,7 @@ where
 async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
     mut msg_stream: MsgStream,
     peer_id: Id<Node>,
-    error: Arc<Mutex<Option<EventLoopError>>>,
+    error: Arc<Mutex<Option<CommunicationError>>>,
     handler: H,
 ) where
     MsgStream: Stream<Item = Result<Message, MsgStreamErr>> + Unpin,
@@ -216,7 +216,7 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                 Message::Binary(vec) => match rmp_serde::from_slice::<NodeSentEvent>(&vec) {
                     Ok(event) => {
                         if let ControlFlow::Break(e) = handler(event).await {
-                            error.lock().replace(EventLoopError::EventHandlingFailed(e));
+                            error.lock().replace(CommunicationError::EventHandling(e));
                             break;
                         }
                     }
@@ -224,7 +224,7 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                         debug!("The peer ({peer_id}) sent an invalid binary message: {e}");
                         error
                             .lock()
-                            .replace(EventLoopError::EventHandlingFailed(e.into()));
+                            .replace(CommunicationError::EventHandling(e.into()));
                         break;
                     }
                 },
@@ -239,7 +239,7 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                 debug!("Message stream error: {anyhow_error:?}");
                 error
                     .lock()
-                    .replace(EventLoopError::CommunicationFailed(anyhow_error));
+                    .replace(CommunicationError::Connection(anyhow_error));
                 break;
             }
             None => {

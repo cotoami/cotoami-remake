@@ -135,7 +135,7 @@ impl SseClient {
                     ReadyState::Closed => {
                         debug!("Event source {} closed due to: {:?}", self.url_prefix(), &e);
                         self.state
-                            .change_conn_state(ConnectionState::communication_failed(e.into()));
+                            .change_conn_state(ConnectionState::connection_error(e.into()));
                         return;
                     }
                 },

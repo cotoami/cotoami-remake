@@ -31,12 +31,12 @@ impl NodeSentEvent {
 }
 
 #[derive(Debug, derive_more::Display)]
-pub(crate) enum EventLoopError {
-    #[display("Communication failed: {}", _0)]
-    CommunicationFailed(anyhow::Error),
+pub(crate) enum CommunicationError {
+    #[display("Connection error: {}", _0)]
+    Connection(anyhow::Error),
 
     #[display("Event handling failed: {}", _0)]
-    EventHandlingFailed(anyhow::Error),
+    EventHandling(anyhow::Error),
 }
 
 /// Handle events sent from an entity authenticated as an operator

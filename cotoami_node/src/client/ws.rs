@@ -19,7 +19,7 @@ use crate::{
     client::{retry::RetryState, ClientState, ConnectionState, HttpClient},
     event::remote::{
         tungstenite::{communicate_with_operator, communicate_with_parent},
-        EventLoopError,
+        CommunicationError,
     },
     service::models::NotConnected,
 };
@@ -50,7 +50,7 @@ impl WebSocketClient {
             bail!("Already connected");
         }
 
-        let (tx_abort, rx_abort) = mpsc::channel::<Option<EventLoopError>>(1);
+        let (tx_abort, rx_abort) = mpsc::channel::<Option<CommunicationError>>(1);
         self.run_handler_on_abort(rx_abort);
 
         if let Err(e) = self.do_connect(PollSender::new(tx_abort)).await {
@@ -64,7 +64,7 @@ impl WebSocketClient {
                         debug!("Abort reconnecting due to: {e:?}");
                         self.reconnecting.lock().take();
                         self.state
-                            .change_conn_state(ConnectionState::communication_failed(e.into()));
+                            .change_conn_state(ConnectionState::connection_error(e.into()));
                         bail!("Abort reconnecting");
                     }
                 }
@@ -78,7 +78,7 @@ impl WebSocketClient {
 
     async fn do_connect<S>(&mut self, on_abort: S) -> Result<(), tungstenite::error::Error>
     where
-        S: Sink<Option<EventLoopError>> + Unpin + Clone + Send + 'static,
+        S: Sink<Option<CommunicationError>> + Unpin + Clone + Send + 'static,
     {
         let (ws_stream, _) = connect_async(self.ws_request.clone()).await?;
         self.state.change_conn_state(ConnectionState::Connected);
@@ -114,14 +114,14 @@ impl WebSocketClient {
         Ok(())
     }
 
-    fn run_handler_on_abort(&self, mut receiver: Receiver<Option<EventLoopError>>) {
+    fn run_handler_on_abort(&self, mut receiver: Receiver<Option<CommunicationError>>) {
         tokio::spawn({
             let this = self.clone();
             async move {
                 if let Some(e) = receiver.recv().await {
                     info!("Event loop aborted: {e:?}");
                     this.state.abortables.abort_all();
-                    if let Some(EventLoopError::CommunicationFailed(e)) = e {
+                    if let Some(CommunicationError::Connection(e)) = e {
                         debug!("Start reconnecting...");
                         this.reconnecting.lock().replace(RetryState::default());
                         this.state
@@ -142,7 +142,7 @@ impl WebSocketClient {
             async move {
                 if let Err(e) = this.reconnecting_delay().await {
                     this.state
-                        .change_conn_state(ConnectionState::communication_failed(e));
+                        .change_conn_state(ConnectionState::connection_error(e));
                 } else {
                     this.connect().await.ok();
                 }
