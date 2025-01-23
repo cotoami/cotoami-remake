@@ -17,6 +17,7 @@ object DatabaseFocus {
       .modify(_.domain).using(_.unfocus)
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.timeline).using(_.onFocusChange)
+      .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           model.navCotonomas.fetchRecent()(model)
@@ -50,6 +51,7 @@ object DatabaseFocus {
       .modify(_.domain.cotos).using(_.clear())
       .modify(_.domain.links).setTo(Links())
       .modify(_.timeline).using(_.onFocusChange)
+      .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           if (shouldRecentFetchCotonomas)

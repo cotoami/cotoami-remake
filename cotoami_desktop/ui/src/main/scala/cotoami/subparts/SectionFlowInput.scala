@@ -64,6 +64,17 @@ object SectionFlowInput {
         case _ => Cmd.none
       }
 
+    def onFocusChange: Model =
+      copy(posting = false).pipe { model =>
+        if (form.hasContents)
+          model
+        else
+          model.copy(
+            form = CotoForm.Model(),
+            folded = true
+          )
+      }
+
     private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
       Some(Option(dom.window.localStorage.getItem(StorageKey)))
     })
