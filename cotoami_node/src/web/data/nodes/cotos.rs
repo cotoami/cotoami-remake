@@ -20,8 +20,8 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/", get(recent_cotos))
         .route("/cotonomas", get(recent_cotonoma_cotos))
         .route("/geolocated", get(geolocated_cotos))
-        .route("/search/:query", get(search_cotos))
-        .route("/search/cotonomas/:query", get(search_cotonoma_cotos))
+        .route("/search/{query}", get(search_cotos))
+        .route("/search/cotonomas/{query}", get(search_cotonoma_cotos))
 }
 
 /////////////////////////////////////////////////////////////////////////////

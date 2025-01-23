@@ -298,14 +298,14 @@ dependencies = [
 
 [[package]]
 name = "axum"
-version = "0.7.9"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edca88bc138befd0323b20752846e6587272d3b03b0343c8ea28a6f819e6e71f"
+checksum = "6d6fd624c75e18b3b4c6b9caf42b1afe24437daaee904069137d8bab077be8b8"
 dependencies = [
- "async-trait",
  "axum-core",
  "base64 0.22.1",
  "bytes",
+ "form_urlencoded",
  "futures-util",
  "http 1.1.0",
  "http-body",
@@ -335,11 +335,10 @@ dependencies = [
 
 [[package]]
 name = "axum-core"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09f2bd6146b97ae3359fa0cc6d6b376d9539582c7b4220f041a33ec24c226199"
+checksum = "df1362f362fd16024ae199c1970ce98f9661bf5ef94b9808fee734bc3698b733"
 dependencies = [
- "async-trait",
  "bytes",
  "futures-util",
  "http 1.1.0",
@@ -356,22 +355,20 @@ dependencies = [
 
 [[package]]
 name = "axum-extra"
-version = "0.9.6"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c794b30c904f0a1c2fb7740f7df7f7972dfaa14ef6f57cb6178dc63e5dca2f04"
+checksum = "460fc6f625a1f7705c6cf62d0d070794e94668988b1c38111baeec177c715f7b"
 dependencies = [
  "axum",
  "axum-core",
  "bytes",
  "cookie",
- "fastrand",
  "futures-util",
  "headers",
  "http 1.1.0",
  "http-body",
  "http-body-util",
  "mime",
- "multer",
  "pin-project-lite",
  "serde",
  "tower",
@@ -635,7 +632,7 @@ dependencies = [
  "cairo-sys-rs",
  "glib",
  "libc",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -944,7 +941,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.60",
  "tracing",
  "url",
  "uuid",
@@ -974,7 +971,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-log",
- "thiserror",
+ "thiserror 1.0.60",
  "tokio",
  "toml 0.8.14",
  "tracing",
@@ -1016,7 +1013,7 @@ dependencies = [
  "smallvec",
  "tempfile",
  "test-log",
- "thiserror",
+ "thiserror 1.0.60",
  "time",
  "tokio",
  "tokio-tungstenite",
@@ -1876,7 +1873,7 @@ dependencies = [
  "glib",
  "libc",
  "once_cell",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -1909,7 +1906,7 @@ dependencies = [
  "libc",
  "once_cell",
  "smallvec",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -2342,7 +2339,7 @@ checksum = "057026cca95bace94e5181aabd63bb7ea24b9fdb903e07a26222a47e605728fd"
 dependencies = [
  "image 0.24.9",
  "sha3",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -2569,7 +2566,7 @@ dependencies = [
  "combine",
  "jni-sys",
  "log",
- "thiserror",
+ "thiserror 1.0.60",
  "walkdir",
 ]
 
@@ -2614,7 +2611,7 @@ checksum = "ec9ad60d674508f3ca8f380a928cfe7b096bc729c4e2dbfe3852bc45da3ab30b"
 dependencies = [
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -2799,9 +2796,9 @@ checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
 
 [[package]]
 name = "matchit"
-version = "0.7.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
+checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
 name = "maybe-rayon"
@@ -2883,23 +2880,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "multer"
-version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83e87776546dc87511aa5ee218730c92b666d7264ab6ed41f9d215af9cd5224b"
-dependencies = [
- "bytes",
- "encoding_rs",
- "futures-util",
- "http 1.1.0",
- "httparse",
- "memchr",
- "mime",
- "spin",
- "version_check",
-]
-
-[[package]]
 name = "mutate_once"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2933,7 +2913,7 @@ dependencies = [
  "jni-sys",
  "ndk-sys",
  "num_enum",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -3754,7 +3734,7 @@ dependencies = [
  "rand_chacha 0.3.1",
  "simd_helpers",
  "system-deps 6.2.2",
- "thiserror",
+ "thiserror 1.0.60",
  "v_frame",
  "wasm-bindgen",
 ]
@@ -3826,7 +3806,7 @@ checksum = "bd283d9651eeda4b2a83a43c1c91b266c40fd76ecd39a50a8c630ae69dc72891"
 dependencies = [
  "getrandom 0.2.15",
  "libredox",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -3940,7 +3920,7 @@ dependencies = [
  "nom",
  "pin-project-lite",
  "reqwest",
- "thiserror",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
@@ -4768,7 +4748,7 @@ dependencies = [
  "tauri-runtime-wry",
  "tauri-utils",
  "tempfile",
- "thiserror",
+ "thiserror 1.0.60",
  "tokio",
  "url",
  "uuid",
@@ -4816,7 +4796,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "tauri-utils",
- "thiserror",
+ "thiserror 1.0.60",
  "time",
  "uuid",
  "walkdir",
@@ -4865,7 +4845,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tauri-utils",
- "thiserror",
+ "thiserror 1.0.60",
  "url",
  "uuid",
  "webview2-com",
@@ -4916,7 +4896,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "thiserror",
+ "thiserror 1.0.60",
  "url",
  "walkdir",
  "windows-version",
@@ -4989,7 +4969,16 @@ version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "579e9083ca58dd9dcf91a9923bb9054071b9ebbd800b342194c9feb0ee89fc18"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.60",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d452f284b73e6d76dd36758a0c8684b1d5be31f92b89d07fd5822175732206fc"
+dependencies = [
+ "thiserror-impl 2.0.11",
 ]
 
 [[package]]
@@ -4997,6 +4986,17 @@ name = "thiserror-impl"
 version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2470041c06ec3ac1ab38d0356a6119054dedaea53e12fbefc0de730a1c08524"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26afc1baea8a989337eeb52b6e72a039780ce45c3edfcc9c5b9d112feeb173c2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5125,9 +5125,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
-version = "0.24.0"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc5f74e248dc973e0dbb7b74c7e0d6fcc301c694ff50049504004ef4d0cdcd9"
+checksum = "be4bf6fecd69fcdede0ec680aaf474cdab988f9de6bc73d3758f0160e3b7025a"
 dependencies = [
  "futures-util",
  "log",
@@ -5346,9 +5346,9 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tungstenite"
-version = "0.24.0"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18e5b8366ee7a95b16d32197d0b2604b43a0be89dc5fac9f8e96ccafbaedda8a"
+checksum = "413083a99c579593656008130e29255e54dcaae495be556cc26888f211648c24"
 dependencies = [
  "byteorder",
  "bytes",
@@ -5360,7 +5360,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "sha1",
- "thiserror",
+ "thiserror 2.0.11",
  "url",
  "utf-8",
 ]
@@ -5766,7 +5766,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "thiserror",
+ "thiserror 1.0.60",
  "windows 0.39.0",
  "windows-bindgen",
  "windows-metadata",
@@ -6208,7 +6208,7 @@ dependencies = [
  "sha2",
  "soup2",
  "tao",
- "thiserror",
+ "thiserror 1.0.60",
  "url",
  "webkit2gtk",
  "webkit2gtk-sys",

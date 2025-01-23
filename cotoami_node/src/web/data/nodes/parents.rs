@@ -14,7 +14,7 @@ use crate::{
 };
 
 pub(super) fn routes() -> Router<NodeState> {
-    Router::new().route("/:node_id/fork", put(fork_from_parent))
+    Router::new().route("/{node_id}/fork", put(fork_from_parent))
 }
 
 /////////////////////////////////////////////////////////////////////////////

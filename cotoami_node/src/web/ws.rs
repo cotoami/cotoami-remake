@@ -135,22 +135,33 @@ fn handler_on_abort(
     })
 }
 
+// Convert WebSocket messages between [axum::extract::ws::Message] and
+// [tungstenite::protocol::Message] to use [event::remote::tungstenite] which is
+// used from both client and server.
+//
+// cf. Axum's WebSocket Message is copied from tungstenite.
+//     https://docs.rs/axum/0.8.1/src/axum/extract/ws.rs.html#685
+
 /// Convert an axum's [Message] into a tungstenite's [ts::Message].
 ///
 /// This code comes from:
 /// <https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L591>
 fn into_tungstenite(msg: Message) -> ts::Message {
     match msg {
-        Message::Text(text) => ts::Message::Text(text),
+        Message::Text(text) => ts::Message::Text(to_ts_utf8_bytes(text)),
         Message::Binary(binary) => ts::Message::Binary(binary),
         Message::Ping(ping) => ts::Message::Ping(ping),
         Message::Pong(pong) => ts::Message::Pong(pong),
         Message::Close(Some(close)) => ts::Message::Close(Some(ts::protocol::CloseFrame {
             code: ts::protocol::frame::coding::CloseCode::from(close.code),
-            reason: close.reason,
+            reason: to_ts_utf8_bytes(close.reason),
         })),
         Message::Close(None) => ts::Message::Close(None),
     }
+}
+
+fn to_ts_utf8_bytes(bytes: axum::extract::ws::Utf8Bytes) -> ts::protocol::frame::Utf8Bytes {
+    ts::protocol::frame::Utf8Bytes::from(bytes.as_str())
 }
 
 /// Convert a tungstenite's [ts::Message] into an axum's [Message].
@@ -159,17 +170,21 @@ fn into_tungstenite(msg: Message) -> ts::Message {
 /// <https://github.com/tokio-rs/axum/blob/axum-v0.7.2/axum/src/extract/ws.rs#L605>
 fn from_tungstenite(message: ts::Message) -> Option<Message> {
     match message {
-        ts::Message::Text(text) => Some(Message::Text(text)),
+        ts::Message::Text(text) => Some(Message::Text(to_axum_utf8_bytes(text))),
         ts::Message::Binary(binary) => Some(Message::Binary(binary)),
         ts::Message::Ping(ping) => Some(Message::Ping(ping)),
         ts::Message::Pong(pong) => Some(Message::Pong(pong)),
         ts::Message::Close(Some(close)) => Some(Message::Close(Some(CloseFrame {
             code: close.code.into(),
-            reason: close.reason,
+            reason: to_axum_utf8_bytes(close.reason),
         }))),
         ts::Message::Close(None) => Some(Message::Close(None)),
         // we can ignore `Frame` frames as recommended by the tungstenite maintainers
         // https://github.com/snapview/tungstenite-rs/issues/268
         ts::Message::Frame(_) => None,
     }
+}
+
+fn to_axum_utf8_bytes(bytes: ts::protocol::frame::Utf8Bytes) -> axum::extract::ws::Utf8Bytes {
+    axum::extract::ws::Utf8Bytes::from(bytes.as_str())
 }

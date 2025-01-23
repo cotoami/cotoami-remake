@@ -24,13 +24,13 @@ mod subs;
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
-        .route("/prefix/:prefix", get(cotonomas_by_prefix))
-        .route("/:cotonoma_id", get(cotonoma))
-        .route("/:cotonoma_id/details", get(cotonoma_details))
-        .route("/:cotonoma_id/graph", get(graph))
-        .route("/:cotonoma_id/rename", put(rename_cotonoma))
-        .nest("/:cotonoma_id/subs", subs::routes())
-        .nest("/:cotonoma_id/cotos", cotos::routes())
+        .route("/prefix/{prefix}", get(cotonomas_by_prefix))
+        .route("/{cotonoma_id}", get(cotonoma))
+        .route("/{cotonoma_id}/details", get(cotonoma_details))
+        .route("/{cotonoma_id}/graph", get(graph))
+        .route("/{cotonoma_id}/rename", put(rename_cotonoma))
+        .nest("/{cotonoma_id}/subs", subs::routes())
+        .nest("/{cotonoma_id}/cotos", cotos::routes())
 }
 
 /////////////////////////////////////////////////////////////////////////////

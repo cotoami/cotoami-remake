@@ -17,7 +17,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_cotonomas))
-        .route("/:name", get(cotonoma_by_name))
+        .route("/{name}", get(cotonoma_by_name))
 }
 
 /////////////////////////////////////////////////////////////////////////////

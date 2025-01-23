@@ -23,7 +23,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(all_servers).post(add_server))
         .route("/try", get(log_into_server))
-        .route("/:node_id", put(edit_server))
+        .route("/{node_id}", put(edit_server))
 }
 
 /////////////////////////////////////////////////////////////////////////////

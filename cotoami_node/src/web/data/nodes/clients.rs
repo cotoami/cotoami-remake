@@ -23,7 +23,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_clients).post(add_client))
-        .route("/:node_id", get(client).put(edit_client))
+        .route("/{node_id}", get(client).put(edit_client))
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -25,14 +25,14 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/cotonomas", get(recent_cotonoma_cotos))
         .route("/geolocated", get(geolocated_cotos))
         .route(
-            "/geo/:sw_lng/:sw_lat/:ne_lng/:ne_lat",
+            "/geo/{sw_lng}/{sw_lat}/{ne_lng}/{ne_lat}",
             get(cotos_in_geo_bounds),
         )
-        .route("/search/:query", get(search_cotos))
-        .route("/search/cotonomas/:query", get(search_cotonoma_cotos))
-        .route("/:coto_id/details", get(coto_details))
-        .route("/:coto_id", put(edit_coto).delete(delete_coto))
-        .route("/:coto_id/graph", get(graph))
+        .route("/search/{query}", get(search_cotos))
+        .route("/search/cotonomas/{query}", get(search_cotonoma_cotos))
+        .route("/{coto_id}/details", get(coto_details))
+        .route("/{coto_id}", put(edit_coto).delete(delete_coto))
+        .route("/{coto_id}/graph", get(graph))
 }
 
 /////////////////////////////////////////////////////////////////////////////
