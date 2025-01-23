@@ -89,11 +89,11 @@ async fn stream_events(
 
     // Make the event stream manually abortable
     let (events, abort_events) = futures::stream::abortable(events);
-    let (disconnect, disconnect_receiver) = oneshot::channel::<()>();
+    let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
     tokio::spawn({
         let state = state.clone();
         async move {
-            match disconnect_receiver.await {
+            match rx_disconnect.await {
                 Ok(_) => {
                     debug!("Disconnecting a SSE client {client_id} ...",);
                     state.clear_client_node_session(client_id).await.unwrap();
@@ -108,7 +108,7 @@ async fn stream_events(
     state.put_client_conn(ClientConnection::new(
         client_id,
         remote_addr.ip().to_string(),
-        disconnect,
+        tx_disconnect,
     ));
 
     Sse::new(events).keep_alive(KeepAlive::default())
