@@ -131,8 +131,9 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         wait_get(client_events.next(), "ServerStateChanged event").await,
         some(pat!(LocalNodeEvent::ServerStateChanged {
             node_id: eq(&server_id),
-            not_connected: some(anything()) // TODO: should be `Disconnected` after cancelling auto-reconnect.
-        }))
+            not_connected: some(pat!(NotConnected::Connecting(some(anything()))))
+        })),
+        "Client should try to reconnect after manual disconnection."
     );
     assert_that!(
         wait_get(client_events.next(), "ParentDisconnected event").await,
