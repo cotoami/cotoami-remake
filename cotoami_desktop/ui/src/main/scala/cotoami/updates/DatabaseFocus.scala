@@ -44,7 +44,7 @@ object DatabaseFocus {
         // (which means the page being reloaded)
         model.domain.cotonomas.recentIds.isEmpty
     model
-      .modify(_.domain).using(_.resetState)
+      .modify(_.domain).using(_.onFocusChange)
       .modify(_.domain.nodes).using(_.focus(nodeId))
       .modify(_.domain.cotonomas).using(_.focus(Some(cotonomaId)))
       .modify(_.domain.cotos).using(_.clear())

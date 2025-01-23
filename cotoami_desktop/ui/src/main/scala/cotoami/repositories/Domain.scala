@@ -23,7 +23,7 @@ case class Domain(
     deleting: HashSet[Id[Coto]] = HashSet.empty,
     pinning: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def resetState: Domain =
+  def onFocusChange: Domain =
     copy(
       graphLoading = HashSet.empty,
       graphLoaded = HashSet.empty,
@@ -52,7 +52,7 @@ case class Domain(
     )
 
   def unfocus: Domain =
-    resetState.copy(
+    onFocusChange.copy(
       nodes = nodes.focus(None),
       cotonomas = Cotonomas(),
       cotos = cotos.clear(),
