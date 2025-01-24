@@ -3,7 +3,7 @@ package cotoami.subparts.modals
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Link
 import cotoami.subparts.Modal
 
@@ -31,12 +31,15 @@ object ModalLinkEditor {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "link-editor",
       closeButton = Some((classOf[Modal.LinkEditor], dispatch))
     )(
-      "Link"
+      if (context.domain.isPin(model.original))
+        "Pin"
+      else
+        "Link"
     )(
       "Edit a link here."
     )
