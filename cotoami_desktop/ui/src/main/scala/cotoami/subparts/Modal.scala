@@ -16,6 +16,10 @@ sealed trait Modal
 
 object Modal {
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Stack of modals
+  /////////////////////////////////////////////////////////////////////////////
+
   case class Stack(modals: Seq[Modal] = Seq.empty) {
     def open[M <: Modal: ClassTag](modal: M): Stack =
       close(modal.getClass()).modify(_.modals).using(modal +: _)
@@ -45,6 +49,10 @@ object Modal {
     def close[M <: Modal](modalType: Class[M]): Stack =
       this.modify(_.modals).using(_.filterNot(modalType.isInstance(_)))
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Modal models
+  /////////////////////////////////////////////////////////////////////////////
 
   case class Confirm(model: ModalConfirm.Model) extends Modal
   object Confirm {
@@ -108,6 +116,10 @@ object Modal {
     def apply(coto: Coto, domain: Domain): Option[Repost] =
       ModalRepost.Model(coto, domain).map(Repost(_))
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Update
+  /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
     def into = AppMsg.ModalMsg(this)
@@ -263,6 +275,10 @@ object Modal {
       newState: M,
       model: AppModel
   ): AppModel = model.copy(modalStack = model.modalStack.update(newState))
+
+  /////////////////////////////////////////////////////////////////////////////
+  // View
+  /////////////////////////////////////////////////////////////////////////////
 
   def view[M <: Modal](
       dialogClasses: String,
