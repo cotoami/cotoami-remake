@@ -1,11 +1,13 @@
 package cotoami.subparts.modals
 
+import slinky.web.html._
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.Link
-import cotoami.subparts.Modal
+import cotoami.models.{Coto, Link}
+import cotoami.components.ScrollArea
+import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalLinkEditor {
 
@@ -41,6 +43,22 @@ object ModalLinkEditor {
       else
         "Link"
     )(
-      "Edit a link here."
+      section(className := "source-coto")(
+        context.domain.cotos.get(model.original.sourceCotoId).map(articleCoto)
+      ),
+      section(className := "link")(
+      ),
+      section(className := "target-coto")(
+        context.domain.cotos.get(model.original.targetCotoId).map(articleCoto)
+      )
+    )
+
+  private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
+    article(className := "coto embedded")(
+      div(className := "body")(
+        ScrollArea()(
+          ViewCoto.divContentPreview(coto)
+        )
+      )
     )
 }
