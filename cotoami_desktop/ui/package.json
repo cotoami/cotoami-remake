@@ -10,25 +10,25 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.5",
+    "exifr": "^7.1.3",
+    "maplibre-gl": "^4.5.1",
+    "pmtiles": "^3.0.7",
     "react": "16.14.0",
     "react-dom": "16.14.0",
-    "react-markdown": "^9.0.1",
-    "react-proxy": "1.1.8",
     "react-dropzone": "14.2.3",
     "react-easy-crop": "5.0.7",
+    "react-markdown": "^9.0.1",
+    "react-proxy": "1.1.8",
+    "react-select": "^5.8.2",
     "rehype-external-links": "^3.0.0",
     "remark": "^15.0.1",
     "remark-breaks": "^4.0.0",
     "simplebar-react": "^3.2.4",
-    "strip-markdown": "^6.0.0",
-    "maplibre-gl": "^4.5.1",
-    "pmtiles": "^3.0.7",
-    "exifr": "^7.1.3",
-    "react-select": "^5.8.2"
+    "strip-markdown": "^6.0.0"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "sass": "^1.70.0",
-    "vite": "^5.0.12"
+    "vite": "^6.0.11"
   }
 }
