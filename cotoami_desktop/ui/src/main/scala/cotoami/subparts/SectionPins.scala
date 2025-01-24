@@ -323,10 +323,10 @@ object SectionPins {
         ToolbarCoto(coto),
         div(className := "body")(
           toolButton(
+            classes = "edit-pin",
             symbol = "push_pin",
-            tip = "Unpin",
-            tipPlacement = "right",
-            classes = "unpin"
+            tip = "Edit pin",
+            tipPlacement = "right"
           ),
           ViewCoto.divContent(coto)
         ),

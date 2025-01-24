@@ -111,12 +111,16 @@ section.pins {
       div.body {
         position: relative;
 
-        // position the unpin button at the vertical middle of the left end.
-        button.unpin {
+        // position the edit-pin button at the vertical middle of the left end.
+        button.edit-pin {
           position: absolute;
           top: 0;
           left: 3px;
           bottom: 0;
+
+          span.material-symbols {
+            font-size: 18px;
+          }
         }
       }
     }
