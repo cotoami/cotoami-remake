@@ -29,6 +29,18 @@ article.coto {
     }
   }
 
+  &.embedded {
+    background-color: var(--embedded-cotobackground-color);
+
+    &:hover {
+      background-color: var(--embedded-cotobackground-color);
+    }
+
+    >header {
+      background-color: transparent;
+    }
+  }
+
   &.being-deleted {
     opacity: 0.3;
 

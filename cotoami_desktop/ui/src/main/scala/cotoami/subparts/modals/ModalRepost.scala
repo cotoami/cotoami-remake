@@ -281,7 +281,7 @@ object ModalRepost {
   }
 
   private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
-    article(className := "coto")(
+    article(className := "coto embedded")(
       header()(
         ViewCoto.addressAuthor(coto, context.domain.nodes)
       ),
