@@ -17,7 +17,7 @@ import cotoami.backend.{CotonomaBackend, ErrorJson}
 import cotoami.components.{materialSymbol, toolButton, ScrollArea}
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
-object Editor {
+object EditorCoto {
   sealed trait Form {
     def hasContents: Boolean
     def hasValidContents: Boolean

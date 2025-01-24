@@ -13,7 +13,7 @@ import cotoami.repositories.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
-import cotoami.subparts.Editor._
+import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModalCotoEditor {

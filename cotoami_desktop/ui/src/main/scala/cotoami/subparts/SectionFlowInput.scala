@@ -16,7 +16,7 @@ import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
-import cotoami.subparts.Editor._
+import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object SectionFlowInput {
@@ -418,7 +418,7 @@ object SectionFlowInput {
         )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
-        Editor.ulAttributes(
+        EditorCoto.ulAttributes(
           form.dateTimeRange,
           form.mediaDateTime,
           geomap.focusedLocation,
