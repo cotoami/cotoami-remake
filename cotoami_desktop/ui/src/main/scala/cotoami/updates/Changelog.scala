@@ -18,6 +18,7 @@ import cotoami.backend.{
   LinkBackend,
   NodeBackend
 }
+import cotoami.subparts.SectionPins
 
 object Changelog {
 
@@ -63,7 +64,10 @@ object Changelog {
             else
               justPinned
           ),
-        Domain.fetchGraphFromCoto(link.targetCotoId)
+        Cmd.Batch(
+          Domain.fetchGraphFromCoto(link.targetCotoId),
+          Browser.send(SectionPins.Msg.ScrollToPin(link).into)
+        )
       )
     }
 
