@@ -8,7 +8,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Node}
+import cotoami.models.{Coto, Id, Link, Node}
 import cotoami.repositories.Domain
 import cotoami.subparts.modals._
 
@@ -63,6 +63,11 @@ object Modal {
     }
   }
 
+  case class LinkEditor(model: ModalLinkEditor.Model) extends Modal
+  object LinkEditor {
+    def apply(link: Link): LinkEditor = LinkEditor(ModalLinkEditor.Model(link))
+  }
+
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Modal
@@ -115,6 +120,7 @@ object Modal {
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class CotoEditorMsg(msg: ModalCotoEditor.Msg) extends Msg
+    case class LinkEditorMsg(msg: ModalLinkEditor.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
@@ -165,6 +171,13 @@ object Modal {
                   .modify(_.geomap).setTo(geomap),
                 cmds
               )
+          }
+        }
+
+      case Msg.LinkEditorMsg(modalMsg) =>
+        stack.get[LinkEditor].map { case LinkEditor(modal) =>
+          ModalLinkEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(LinkEditor(modal), model), cmds)
           }
         }
 
@@ -289,6 +302,8 @@ object Modal {
         )
 
       case CotoEditor(modal) => Some(ModalCotoEditor(modal))
+
+      case LinkEditor(modal) => Some(ModalLinkEditor(modal))
 
       case Incorporate(modal) => Some(ModalIncorporate(modal))
 

@@ -326,7 +326,11 @@ object SectionPins {
             classes = "edit-pin",
             symbol = "push_pin",
             tip = "Edit pin",
-            tipPlacement = "right"
+            tipPlacement = "right",
+            onClick = e => {
+              e.stopPropagation()
+              dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
+            }
           ),
           ViewCoto.divContent(coto)
         ),
