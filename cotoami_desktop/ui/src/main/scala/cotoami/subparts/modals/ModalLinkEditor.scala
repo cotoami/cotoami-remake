@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Link}
-import cotoami.components.ScrollArea
+import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalLinkEditor {
@@ -47,6 +47,16 @@ object ModalLinkEditor {
         context.domain.cotos.get(model.original.sourceCotoId).map(articleCoto)
       ),
       section(className := "link")(
+        div(className := "link-icon")(
+          materialSymbol("arrow_downward")
+        ),
+        div(className := "linking-phrase")(
+          input(
+            className := "linking-phrase",
+            `type` := "text",
+            placeholder := "Linking phrase (optional)"
+          )
+        )
       ),
       section(className := "target-coto")(
         context.domain.cotos.get(model.original.targetCotoId).map(articleCoto)

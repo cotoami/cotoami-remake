@@ -6,4 +6,28 @@ dialog.link-editor {
   article.coto {
     padding: 1rem 1rem;
   }
+
+  section.link {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    padding: 10px 0;
+
+    div.link-icon {
+      span.material-symbols {
+        font-size: 24px;
+      }
+    }
+
+    div.linking-phrase {
+      margin-left: 8px;
+      width: 80%;
+
+      input {
+        width: 100%;
+      }
+    }
+  }
 }
