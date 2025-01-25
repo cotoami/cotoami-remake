@@ -320,18 +320,18 @@ object SectionPins {
         ),
         onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
+        toolButton(
+          classes = "edit-pin",
+          symbol = "push_pin",
+          tip = "Edit pin",
+          tipPlacement = "right",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
+          }
+        ),
         ToolbarCoto(coto),
         div(className := "body")(
-          toolButton(
-            classes = "edit-pin",
-            symbol = "push_pin",
-            tip = "Edit pin",
-            tipPlacement = "right",
-            onClick = e => {
-              e.stopPropagation()
-              dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
-            }
-          ),
           ViewCoto.divContent(coto)
         ),
         footer()(

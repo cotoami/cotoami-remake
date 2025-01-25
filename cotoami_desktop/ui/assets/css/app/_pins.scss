@@ -108,20 +108,18 @@ section.pins {
         display: none;
       }
 
+      button.edit-pin {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+
+        span.material-symbols {
+          font-size: 20px;
+        }
+      }
+
       div.body {
         position: relative;
-
-        // position the edit-pin button at the vertical middle of the left end.
-        button.edit-pin {
-          position: absolute;
-          top: 0;
-          left: 3px;
-          bottom: 0;
-
-          span.material-symbols {
-            font-size: 18px;
-          }
-        }
       }
     }
 
