@@ -30,4 +30,16 @@ dialog.link-editor {
       }
     }
   }
+
+  div.buttons {
+    button.disconnect {
+      span {
+        vertical-align: top;
+      }
+
+      span.material-symbols {
+        margin-right: 4px;
+      }
+    }
+  }
 }

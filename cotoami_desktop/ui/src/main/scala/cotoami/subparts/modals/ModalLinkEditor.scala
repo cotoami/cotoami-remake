@@ -60,6 +60,18 @@ object ModalLinkEditor {
       ),
       section(className := "target-coto")(
         context.domain.cotos.get(model.original.targetCotoId).map(articleCoto)
+      ),
+      div(className := "buttons")(
+        button(
+          className := "disconnect contrast outline"
+        )(
+          materialSymbol("content_cut"),
+          span(className := "label")("Disconnect")
+        ),
+        button(
+          className := "save",
+          `type` := "submit"
+        )("Save")
       )
     )
 
