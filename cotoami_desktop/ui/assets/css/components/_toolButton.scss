@@ -1,7 +1,7 @@
 button.tool {
   opacity: 0.5;
 
-  &:hover {
+  &:not([disabled]):hover {
     opacity: 1.0;
   }
 }
