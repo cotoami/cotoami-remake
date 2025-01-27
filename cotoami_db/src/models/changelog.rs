@@ -86,8 +86,8 @@ pub(crate) struct NewChangelogEntry<'a> {
 
 /// A serializable form of an atomic change in a Cotoami database
 ///
-/// The variants are defined in terms of data change that can be shared with other nodes,
-/// so they do not necessarily match the operations in the user-facing API.
+/// The default data layout should be designed so that adding a new field to
+/// one of variants won't break compatibility to the old version.
 #[derive(
     Debug, Clone, PartialEq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
@@ -136,7 +136,9 @@ pub enum Change {
         diff: LinkContentDiff<'static>,
         updated_at: NaiveDateTime,
     } = 12,
-    DeleteLink(Id<Link>) = 13,
+    DeleteLink {
+        link_id: Id<Link>,
+    } = 13,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -250,7 +252,9 @@ mod tests {
 
     #[test]
     fn message_pack_serialization() -> Result<()> {
-        let change = Change::DeleteLink(Id::from_str("00000000-0000-0000-0000-000000000001")?);
+        let change = Change::DeleteLink {
+            link_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
+        };
         let msgpack_bytes = rmp_serde::to_vec(&change)?;
         let deserialized: Change = rmp_serde::from_slice(&msgpack_bytes)?;
         assert_eq!(deserialized, change);

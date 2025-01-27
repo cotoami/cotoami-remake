@@ -237,8 +237,8 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             } => {
                 link_ops::edit(link_id, diff, Some(*updated_at)).run(ctx)?;
             }
-            Change::DeleteLink(id) => {
-                link_ops::delete(id).run(ctx)?;
+            Change::DeleteLink { link_id } => {
+                link_ops::delete(link_id).run(ctx)?;
             }
             Change::ChangeOwnerNode {
                 from,

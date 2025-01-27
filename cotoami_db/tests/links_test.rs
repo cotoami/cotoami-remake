@@ -172,7 +172,9 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&10),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&10),
-            change: pat!(Change::DeleteLink(eq(&link1.uuid)))
+            change: pat!(Change::DeleteLink {
+                link_id: eq(&link1.uuid)
+            })
         })
     );
 

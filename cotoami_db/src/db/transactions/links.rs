@@ -94,7 +94,7 @@ impl<'a> DatabaseSession<'a> {
             let link = link_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&link)?;
             if link_ops::delete(id).run(ctx)? {
-                let change = Change::DeleteLink(*id);
+                let change = Change::DeleteLink { link_id: *id };
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
