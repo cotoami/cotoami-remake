@@ -1,11 +1,14 @@
 package cotoami.subparts.modals
 
+import scala.util.chaining._
+
 import slinky.web.html._
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Link}
+import cotoami.models.{Coto, Id, Link}
+import cotoami.backend.ErrorJson
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, ViewCoto}
 
@@ -29,9 +32,28 @@ object ModalLinkEditor {
   // Update
   /////////////////////////////////////////////////////////////////////////////
 
-  sealed trait Msg
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.LinkEditorMsg(this).pipe(AppMsg.ModalMsg)
+  }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = (model, Cmd.none)
+  object Msg {
+    case class Disconnected(result: Either[ErrorJson, Id[Link]]) extends Msg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+    msg match {
+      case Msg.Disconnected(Right(_)) =>
+        (
+          model.copy(disconnecting = false),
+          Modal.close(classOf[Modal.LinkEditor])
+        )
+
+      case Msg.Disconnected(Left(e)) =>
+        (
+          model.copy(disconnecting = false),
+          cotoami.error("Couldn't delete a link.", e)
+        )
+    }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
