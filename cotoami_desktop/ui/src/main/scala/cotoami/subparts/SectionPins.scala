@@ -122,7 +122,7 @@ object SectionPins {
         section(className := "view-switch")(
           toolButton(
             symbol = "view_agenda",
-            tip = "Document",
+            tip = Some("Document"),
             classes = optionalClasses(
               Seq(
                 ("view-document", true),
@@ -134,7 +134,7 @@ object SectionPins {
           ),
           toolButton(
             symbol = "view_column",
-            tip = "Columns",
+            tip = Some("Columns"),
             classes = optionalClasses(
               Seq(
                 ("view-columns", true),
@@ -291,6 +291,7 @@ object SectionPins {
       inColumn: Boolean,
       justPinned: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val canEditPin = context.domain.nodes.canEdit(pin)
     li(
       key := pin.id.uuid,
       className := optionalClasses(
@@ -323,8 +324,9 @@ object SectionPins {
         toolButton(
           classes = "edit-pin",
           symbol = "push_pin",
-          tip = "Edit pin",
+          tip = Option.when(canEditPin)("Edit pin"),
           tipPlacement = "right",
+          disabled = !canEditPin,
           onClick = e => {
             e.stopPropagation()
             dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
@@ -392,7 +394,7 @@ object SectionPins {
           } else {
             toolButton(
               symbol = "more_horiz",
-              tip = "Load links",
+              tip = Some("Load links"),
               tipPlacement = "bottom",
               classes = "fetch-links",
               onClick = _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id))
@@ -435,7 +437,7 @@ object SectionPins {
         header()(
           toolButton(
             symbol = "subdirectory_arrow_right",
-            tip = "Unlink",
+            tip = Some("Unlink"),
             tipPlacement = "right",
             classes = "unlink"
           )

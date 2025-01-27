@@ -122,7 +122,7 @@ object ModalClients {
       header()(
         toolButton(
           symbol = "add",
-          tip = "Add client",
+          tip = Some("Add client"),
           tipPlacement = "right",
           classes = "add",
           onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.NewClient()))
@@ -209,7 +209,7 @@ object ModalClients {
       td(className := "settings")(
         toolButton(
           symbol = "settings",
-          tip = "Settings",
+          tip = Some("Settings"),
           tipPlacement = "bottom",
           onClick = _ => ()
         )

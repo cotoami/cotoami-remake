@@ -275,7 +275,7 @@ object ViewCoto {
       div(className := "links")(
         toolButton(
           symbol = "arrow_forward",
-          tip = "Traverse",
+          tip = Some("Traverse"),
           tipPlacement = tipPlacement,
           classes = "open-traversal",
           onClick = e => {

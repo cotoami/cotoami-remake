@@ -317,7 +317,7 @@ object SectionTraversals {
         header()(
           toolButton(
             symbol = "subdirectory_arrow_right",
-            tip = "Unlink",
+            tip = Some("Unlink"),
             tipPlacement = "right",
             classes = "unlink"
           )
@@ -343,7 +343,7 @@ object SectionTraversals {
             div(className := "traverse")(
               toolButton(
                 symbol = "arrow_downward",
-                tip = "Traverse",
+                tip = Some("Traverse"),
                 tipPlacement = "left",
                 classes = "traverse",
                 onClick = e => {

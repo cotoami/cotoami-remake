@@ -302,7 +302,7 @@ object EditorCoto {
             ),
             toolButton(
               symbol = "close",
-              tip = "Delete",
+              tip = Some("Delete"),
               classes = "delete",
               disabled = model.encodingMedia,
               onClick = _ => dispatch(Msg.DeleteMediaContent)
@@ -553,7 +553,7 @@ object EditorCoto {
     div(className := "attribute-delete")(
       toolButton(
         symbol = "close",
-        tip = "Delete",
+        tip = Some("Delete"),
         classes = "delete",
         onClick = onClick
       )

@@ -272,7 +272,7 @@ object SectionTimeline {
       header(className := "tools")(
         toolButton(
           symbol = "filter_list",
-          tip = "Filter",
+          tip = Some("Filter"),
           classes = "filter"
         ),
         div(className := "search")(
@@ -401,7 +401,7 @@ object SectionTimeline {
         Option.when(context.domain.nodes.canEdit(coto)) {
           toolButton(
             classes = "delete-repost",
-            tip = "Delete this repost",
+            tip = Some("Delete this repost"),
             tipPlacement = "right",
             symbol = "close",
             onClick = e => {

@@ -234,7 +234,7 @@ object NavCotonomas {
         }),
         toolButton(
           symbol = "settings",
-          tip = "Node settings",
+          tip = Some("Node settings"),
           classes = "settings",
           onClick = _ =>
             dispatch(
@@ -250,7 +250,7 @@ object NavCotonomas {
         ) {
           toolButton(
             symbol = "switch_account",
-            tip = "Operate as",
+            tip = Some("Operate as"),
             classes = "operate",
             onClick = _ =>
               dispatch(

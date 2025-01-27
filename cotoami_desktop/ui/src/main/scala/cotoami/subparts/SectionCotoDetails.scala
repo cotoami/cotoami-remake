@@ -20,14 +20,14 @@ object SectionCotoDetails {
         toolButton(
           classes = "back",
           symbol = "arrow_back",
-          tip = "Back",
+          tip = Some("Back"),
           tipPlacement = "right",
           onClick = _ => dom.window.history.back()
         ),
         toolButton(
           classes = "close",
           symbol = "close",
-          tip = "Close",
+          tip = Some("Close"),
           tipPlacement = "left",
           onClick = _ => dispatch(AppMsg.UnfocusCoto)
         )
@@ -51,7 +51,7 @@ object SectionCotoDetails {
     div(className := "insert-linked-coto")(
       toolButton(
         symbol = "add_circle",
-        tip = "Write a linked coto",
+        tip = Some("Write a linked coto"),
         tipPlacement = "bottom",
         classes = "insert-linked-coto"
       )
@@ -118,7 +118,7 @@ object SectionCotoDetails {
           header()(
             toolButton(
               symbol = "subdirectory_arrow_right",
-              tip = "Unlink",
+              tip = Some("Unlink"),
               tipPlacement = "right",
               classes = "unlink"
             ),

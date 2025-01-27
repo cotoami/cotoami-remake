@@ -215,7 +215,7 @@ object ModalNodeProfile {
   ): ReactElement =
     toolButton(
       symbol = "edit",
-      tip = "Edit",
+      tip = Some("Edit"),
       classes = "edit",
       onClick = onClick
     )

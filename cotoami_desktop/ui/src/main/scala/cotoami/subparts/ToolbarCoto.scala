@@ -23,7 +23,7 @@ object ToolbarCoto {
       Option.when(context.domain.canPin(coto.id)) {
         toolButton(
           symbol = "push_pin",
-          tip = "Pin",
+          tip = Some("Pin"),
           tipPlacement = "left",
           classes = "pin-coto",
           disabled = context.domain.beingPinned(coto.id),
@@ -36,7 +36,7 @@ object ToolbarCoto {
       Option.when(context.domain.nodes.canEdit(coto)) {
         toolButton(
           symbol = "edit",
-          tip = "Edit",
+          tip = Some("Edit"),
           tipPlacement = "left",
           classes = "edit-coto",
           onClick = e => {
@@ -52,7 +52,7 @@ object ToolbarCoto {
       Option.when(context.domain.nodes.canCreateLinksIn(coto.nodeId)) {
         toolButton(
           symbol = "add",
-          tip = "Write a linked coto",
+          tip = Some("Write a linked coto"),
           tipPlacement = "left",
           classes = "add-linked-coto"
         )
@@ -60,7 +60,7 @@ object ToolbarCoto {
       Option.when(context.domain.canRepost(coto.id)) {
         toolButton(
           symbol = "repeat",
-          tip = "Repost",
+          tip = Some("Repost"),
           tipPlacement = "left",
           classes = "repost-coto",
           onClick = e => {
@@ -75,7 +75,7 @@ object ToolbarCoto {
       Option.when(context.domain.nodes.canPromote(coto)) {
         toolButton(
           symbol = "drive_folder_upload",
-          tip = "Promote to a cotonoma",
+          tip = Some("Promote to a cotonoma"),
           tipPlacement = "left",
           classes = "promote-to-cotonoma"
         )
@@ -83,7 +83,7 @@ object ToolbarCoto {
       Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(
           symbol = "delete",
-          tip = "Delete",
+          tip = Some("Delete"),
           tipPlacement = "left",
           classes = "delete-coto",
           onClick = e => {

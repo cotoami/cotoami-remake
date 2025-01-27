@@ -52,7 +52,7 @@ object NavNodes {
       div(className := "separator")(),
       toolButton(
         symbol = "add",
-        tip = "Add node",
+        tip = Some("Add node"),
         tipPlacement = "right",
         classes = "add",
         onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.Incorporate()))
