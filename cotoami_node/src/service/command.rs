@@ -144,4 +144,7 @@ pub enum Command {
 
     /// Request to create a new [Link] and return the [Link] if suceeded.
     Connect(LinkInput<'static>),
+
+    /// Request to delete a link and return the [Id<Link>] if suceeded.
+    Disconnect { id: Id<Link> },
 }

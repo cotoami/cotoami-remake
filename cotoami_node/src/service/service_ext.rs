@@ -77,6 +77,12 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<Link>()
     }
+
+    async fn disconnect(&self, id: Id<Link>) -> Result<Id<Link>> {
+        let request = Command::Disconnect { id }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Id<Link>>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}

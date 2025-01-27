@@ -45,7 +45,7 @@ impl NodeState {
                 let changelog = ds.disconnect(&link_id, operator.as_ref())?;
                 Ok((link_id, changelog))
             },
-            |parent, link_id| unimplemented!(),
+            |parent, link_id| parent.disconnect(link_id),
         )
         .await
     }

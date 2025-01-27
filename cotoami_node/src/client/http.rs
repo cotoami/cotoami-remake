@@ -239,6 +239,7 @@ impl HttpClient {
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
             Command::Connect(input) => self.post(API_PATH_LINKS).json(&input),
+            Command::Disconnect { id } => self.delete(&format!("{API_PATH_LINKS}/{id}")),
         };
 
         // Set the "Accept" header from Request::accept()
