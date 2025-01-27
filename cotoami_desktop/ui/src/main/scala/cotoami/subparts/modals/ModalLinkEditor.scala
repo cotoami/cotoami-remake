@@ -16,8 +16,14 @@ object ModalLinkEditor {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      original: Link
-  )
+      original: Link,
+      disconnecting: Boolean = false,
+      saving: Boolean = false
+  ) {
+    def readyToDisconnect: Boolean = !disconnecting && !saving
+
+    def readyToSave: Boolean = !disconnecting && !saving
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -63,14 +69,17 @@ object ModalLinkEditor {
       ),
       div(className := "buttons")(
         button(
-          className := "disconnect contrast outline"
+          className := "disconnect contrast outline",
+          disabled := !model.readyToDisconnect,
+          aria - "busy" := model.disconnecting.toString()
         )(
           materialSymbol("content_cut"),
           span(className := "label")("Disconnect")
         ),
         button(
           className := "save",
-          `type` := "submit"
+          disabled := !model.readyToSave,
+          aria - "busy" := model.saving.toString()
         )("Save")
       )
     )
