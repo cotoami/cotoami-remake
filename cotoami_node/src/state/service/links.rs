@@ -10,6 +10,10 @@ use crate::{
 };
 
 impl NodeState {
+    pub async fn link(&self, id: Id<Link>) -> Result<Link, ServiceError> {
+        self.get(move |ds| ds.try_get_link(&id)).await
+    }
+
     pub async fn connect(
         self,
         input: LinkInput<'static>,
@@ -24,6 +28,24 @@ impl NodeState {
             input,
             move |ds, input| ds.connect(&input, operator.as_ref()),
             |parent, input| parent.connect(input),
+        )
+        .await
+    }
+
+    pub async fn disconnect(
+        self,
+        id: Id<Link>,
+        operator: Arc<Operator>,
+    ) -> Result<Id<Link>, ServiceError> {
+        let link = self.link(id).await?;
+        self.change(
+            link.node_id,
+            id,
+            move |ds, link_id| {
+                let changelog = ds.disconnect(&link_id, operator.as_ref())?;
+                Ok((link_id, changelog))
+            },
+            |parent, link_id| unimplemented!(),
         )
         .await
     }
