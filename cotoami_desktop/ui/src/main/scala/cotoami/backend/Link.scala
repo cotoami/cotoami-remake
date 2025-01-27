@@ -37,6 +37,9 @@ object LinkJson {
         order
       )
     )
+
+  def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, String]] =
+    Commands.send(Commands.Disconnect(id))
 }
 
 object LinkBackend {
@@ -69,4 +72,7 @@ object LinkBackend {
       order
     )
       .map(_.map(LinkBackend.toModel(_)))
+
+  def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, Id[Link]]] =
+    LinkJson.disconnect(id).map(_.map(Id(_)))
 }

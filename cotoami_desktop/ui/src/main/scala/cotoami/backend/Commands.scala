@@ -27,11 +27,9 @@ object Commands {
 
   val LocalNode = jso(LocalNode = null)
 
-  def SetLocalNodeIcon(icon: String) =
-    jso(SetLocalNodeIcon = jso(icon = icon))
+  def SetLocalNodeIcon(icon: String) = jso(SetLocalNodeIcon = jso(icon = icon))
 
-  def NodeDetails(id: Id[Node]) =
-    jso(NodeDetails = jso(id = id.uuid))
+  def NodeDetails(id: Id[Node]) = jso(NodeDetails = jso(id = id.uuid))
 
   def TryLogIntoServer(
       url_prefix: String,
@@ -84,8 +82,7 @@ object Commands {
       )
     )
 
-  def ClientNode(id: Id[Node]) =
-    jso(ClientNode = jso(id = id.uuid))
+  def ClientNode(id: Id[Node]) = jso(ClientNode = jso(id = id.uuid))
 
   def AddClient(nodeId: Id[Node], canEditLinks: Boolean, asOowner: Boolean) =
     jso(AddClient =
@@ -125,8 +122,7 @@ object Commands {
       )
     )
 
-  def Cotonoma(id: Id[Cotonoma]) =
-    jso(Cotonoma = jso(id = id.uuid))
+  def Cotonoma(id: Id[Cotonoma]) = jso(Cotonoma = jso(id = id.uuid))
 
   def CotonomaDetails(id: Id[Cotonoma]) =
     jso(CotonomaDetails = jso(id = id.uuid))
@@ -194,11 +190,9 @@ object Commands {
       )
     )
 
-  def CotoDetails(id: Id[Coto]) =
-    jso(CotoDetails = jso(id = id.uuid))
+  def CotoDetails(id: Id[Coto]) = jso(CotoDetails = jso(id = id.uuid))
 
-  def GraphFromCoto(coto: Id[Coto]) =
-    jso(GraphFromCoto = jso(coto = coto.uuid))
+  def GraphFromCoto(coto: Id[Coto]) = jso(GraphFromCoto = jso(coto = coto.uuid))
 
   def GraphFromCotonoma(cotonoma: Id[Cotonoma]) =
     jso(GraphFromCotonoma = jso(cotonoma = cotonoma.uuid))
@@ -278,8 +272,7 @@ object Commands {
       )
     )
 
-  def DeleteCoto(id: Id[Coto]) =
-    jso(DeleteCoto = jso(id = id.uuid))
+  def DeleteCoto(id: Id[Coto]) = jso(DeleteCoto = jso(id = id.uuid))
 
   def Repost(id: Id[Coto], dest: Id[Cotonoma]) =
     jso(Repost = jso(id = id.uuid, dest = dest.uuid))
@@ -306,6 +299,8 @@ object Commands {
       }
     )
   )
+
+  def Disconnect(id: Id[Link]) = jso(Disconnect = jso(id = id.uuid))
 
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)
