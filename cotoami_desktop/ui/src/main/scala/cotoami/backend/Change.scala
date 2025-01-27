@@ -28,7 +28,7 @@ trait ChangeJson extends js.Object {
   val RenameCotonoma: js.UndefOr[RenameCotonomaJson] = js.native
   val CreateLink: js.UndefOr[LinkJson] = js.native
   val EditLink: js.UndefOr[EditLinkJson] = js.native
-  val DeleteLink: js.UndefOr[String] = js.native
+  val DeleteLink: js.UndefOr[DeleteLinkJson] = js.native
   val ChangeOwnerNode: js.UndefOr[ChangeOwnerNodeJson] = js.native
 }
 
@@ -83,6 +83,11 @@ trait EditLinkJson extends js.Object {
   val linking_phrase: Nullable[String] = js.native
   val details: Nullable[String] = js.native
   val updated_at: String = js.native
+}
+
+@js.native
+trait DeleteLinkJson extends js.Object {
+  val link_id: String = js.native
 }
 
 @js.native
