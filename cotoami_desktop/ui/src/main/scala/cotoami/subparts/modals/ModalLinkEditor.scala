@@ -8,7 +8,7 @@ import slinky.core.facade.ReactElement
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link}
-import cotoami.backend.ErrorJson
+import cotoami.backend.{ErrorJson, LinkBackend}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, ViewCoto}
 
@@ -37,11 +37,15 @@ object ModalLinkEditor {
   }
 
   object Msg {
+    case class Disconnect(id: Id[Link]) extends Msg
     case class Disconnected(result: Either[ErrorJson, Id[Link]]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.Disconnect(id) =>
+        (model, LinkBackend.disconnect(id).map(Msg.Disconnected(_).into))
+
       case Msg.Disconnected(Right(_)) =>
         (
           model.copy(disconnecting = false),
@@ -93,7 +97,17 @@ object ModalLinkEditor {
         button(
           className := "disconnect contrast outline",
           disabled := !model.readyToDisconnect,
-          aria - "busy" := model.disconnecting.toString()
+          aria - "busy" := model.disconnecting.toString(),
+          onClick := (_ =>
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  "Are you sure you want to delete this link?",
+                  Msg.Disconnect(model.original.id)
+                )
+              )
+            )
+          )
         )(
           materialSymbol("content_cut"),
           span(className := "label")("Disconnect")
