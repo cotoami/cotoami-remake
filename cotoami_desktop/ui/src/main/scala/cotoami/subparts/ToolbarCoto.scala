@@ -49,7 +49,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.domain.nodes.canEditLinksIn(coto.nodeId)) {
+      Option.when(context.domain.nodes.canCreateLinksIn(coto.nodeId)) {
         toolButton(
           symbol = "add",
           tip = "Write a linked coto",

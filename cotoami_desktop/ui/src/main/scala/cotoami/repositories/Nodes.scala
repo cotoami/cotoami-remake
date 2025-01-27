@@ -152,7 +152,7 @@ case class Nodes(
     (isOperating(link.createdById) || isOwnerOf(link.nodeId)) &&
       reachable(link.nodeId)
 
-  def canEditLinksIn(nodeId: Id[Node]): Boolean =
+  def canCreateLinksIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
       parentConnection(nodeId).map(_.canEditLinks).getOrElse(false)
 
