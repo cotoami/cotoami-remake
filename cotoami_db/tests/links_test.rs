@@ -160,7 +160,7 @@ fn crud_operations() -> Result<()> {
     // When: delete link1
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog = ds.delete_link(&link1.uuid, &operator)?;
+    let changelog = ds.disconnect(&link1.uuid, &operator)?;
 
     // check if it is deleted from the db
     assert_eq!(ds.link(&link1.uuid)?, None);

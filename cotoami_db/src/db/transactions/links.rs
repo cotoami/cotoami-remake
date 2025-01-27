@@ -82,7 +82,7 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn delete_link(&self, id: &Id<Link>, operator: &Operator) -> Result<ChangelogEntry> {
+    pub fn disconnect(&self, id: &Id<Link>, operator: &Operator) -> Result<ChangelogEntry> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
