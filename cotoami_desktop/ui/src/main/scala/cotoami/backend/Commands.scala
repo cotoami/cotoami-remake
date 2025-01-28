@@ -300,6 +300,24 @@ object Commands {
     )
   )
 
+  def EditLink(
+      id: Id[Link],
+      linkingPhrase: Option[Option[String]],
+      details: Option[Option[String]]
+  ) =
+    jso(EditCoto =
+      jso(
+        id = id.uuid,
+        diff = jso(
+          linking_phrase = fieldDiffJson(
+            linkingPhrase.map(_.map(s => s)) // String => js.Any
+          ),
+          details =
+            fieldDiffJson(details.map(_.map(s => s))) // String => js.Any
+        )
+      )
+    )
+
   def Disconnect(id: Id[Link]) = jso(Disconnect = jso(id = id.uuid))
 
   private def geolocationJson(location: Geolocation) =

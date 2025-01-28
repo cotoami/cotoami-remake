@@ -38,6 +38,13 @@ object LinkJson {
       )
     )
 
+  def edit(
+      id: Id[Link],
+      linkingPhrase: Option[Option[String]],
+      details: Option[Option[String]]
+  ): Cmd.One[Either[ErrorJson, LinkJson]] =
+    Commands.send(Commands.EditLink(id, linkingPhrase, details))
+
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.Disconnect(id))
 }
@@ -56,6 +63,14 @@ object LinkBackend {
       createdAtUtcIso = json.created_at,
       updatedAtUtcIso = json.updated_at
     )
+
+  def edit(
+      id: Id[Link],
+      linkingPhrase: Option[Option[String]],
+      details: Option[Option[String]]
+  ): Cmd.One[Either[ErrorJson, Link]] =
+    LinkJson.edit(id, linkingPhrase, details)
+      .map(_.map(LinkBackend.toModel(_)))
 
   def connect(
       sourceId: Id[Coto],
