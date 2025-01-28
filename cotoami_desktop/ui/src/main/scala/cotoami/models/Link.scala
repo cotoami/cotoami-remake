@@ -3,6 +3,8 @@ package cotoami.models
 import scala.math.Ordering
 import java.time.Instant
 
+import cotoami.utils.Validation
+
 case class Link(
     id: Id[Link],
     nodeId: Id[Node],
@@ -22,4 +24,14 @@ case class Link(
 object Link {
   implicit val ordering: Ordering[Link] =
     Ordering.fromLessThan[Link](_.order < _.order)
+
+  final val LinkingPhraseMaxLength = 200
+
+  def validateLinkingPhrase(linkingPhrase: String): Seq[Validation.Error] = {
+    val fieldName = "linking phrase"
+    Vector(
+      Validation.nonBlank(fieldName, linkingPhrase),
+      Validation.length(fieldName, linkingPhrase, 1, LinkingPhraseMaxLength)
+    ).flatten
+  }
 }

@@ -7,6 +7,7 @@ import slinky.core.facade.ReactElement
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Link}
 import cotoami.backend.{ErrorJson, LinkBackend}
 import cotoami.components.{materialSymbol, ScrollArea}
@@ -24,9 +25,20 @@ object ModalLinkEditor {
       disconnecting: Boolean = false,
       saving: Boolean = false
   ) {
+    def linkingPhrase: String = linkingPhraseInput.trim
+
+    def validate: Validation.Result =
+      if (linkingPhraseInput.isBlank)
+        Validation.Result.notYetValidated
+      else {
+        Validation.Result(
+          Link.validateLinkingPhrase(linkingPhrase)
+        )
+      }
+
     def readyToDisconnect: Boolean = !disconnecting && !saving
 
-    def readyToSave: Boolean = !disconnecting && !saving
+    def readyToSave: Boolean = !disconnecting && !saving && !validate.failed
   }
 
   object Model {
@@ -98,8 +110,10 @@ object ModalLinkEditor {
             `type` := "text",
             placeholder := "Linking phrase (optional)",
             value := model.linkingPhraseInput,
+            Validation.ariaInvalid(model.validate),
             onChange := (e => dispatch(Msg.LinkingPhraseInput(e.target.value)))
-          )
+          ),
+          Validation.sectionValidationError(model.validate)
         )
       ),
       section(className := "target-coto")(
