@@ -21,6 +21,11 @@ trait LinkJson extends js.Object {
 }
 
 object LinkJson {
+  def fetch(
+      id: Id[Link]
+  ): Cmd.One[Either[ErrorJson, LinkJson]] =
+    Commands.send(Commands.Link(id))
+
   def connect(
       sourceId: Id[Coto],
       targetId: Id[Coto],
@@ -64,13 +69,18 @@ object LinkBackend {
       updatedAtUtcIso = json.updated_at
     )
 
+  def fetch(
+      id: Id[Link]
+  ): Cmd.One[Either[ErrorJson, Link]] =
+    LinkJson.fetch(id).map(_.map(LinkBackend.toModel))
+
   def edit(
       id: Id[Link],
       linkingPhrase: Option[Option[String]],
       details: Option[Option[String]]
   ): Cmd.One[Either[ErrorJson, Link]] =
     LinkJson.edit(id, linkingPhrase, details)
-      .map(_.map(LinkBackend.toModel(_)))
+      .map(_.map(LinkBackend.toModel))
 
   def connect(
       sourceId: Id[Coto],
@@ -86,7 +96,7 @@ object LinkBackend {
       details,
       order
     )
-      .map(_.map(LinkBackend.toModel(_)))
+      .map(_.map(LinkBackend.toModel))
 
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, Id[Link]]] =
     LinkJson.disconnect(id).map(_.map(Id(_)))

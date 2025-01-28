@@ -280,6 +280,8 @@ object Commands {
   def RenameCotonoma(id: Id[Cotonoma], name: String) =
     jso(RenameCotonoma = jso(id = id.uuid, name = name))
 
+  def Link(id: Id[Link]) = jso(Link = jso(id = id.uuid))
+
   def Connect(
       sourceId: Id[Coto],
       targetId: Id[Coto],

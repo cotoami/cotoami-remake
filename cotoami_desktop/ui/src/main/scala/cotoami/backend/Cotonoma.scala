@@ -87,28 +87,28 @@ object CotonomaBackend {
       name: String,
       nodeId: Id[Node]
   ): Cmd.One[Either[ErrorJson, Cotonoma]] =
-    CotonomaJson.fetchByName(name, nodeId).map(_.map(toModel(_)))
+    CotonomaJson.fetchByName(name, nodeId).map(_.map(toModel))
 
   def fetchRecent(
       nodeId: Option[Id[Node]],
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchRecent(nodeId, pageIndex)
-      .map(_.map(PageBackend.toModel(_, toModel(_))))
+      .map(_.map(PageBackend.toModel(_, toModel)))
 
   def fetchSubs(
       id: Id[Cotonoma],
       pageIndex: Double
   ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
     CotonomaJson.fetchSubs(id, pageIndex)
-      .map(_.map(PageBackend.toModel(_, toModel(_))))
+      .map(_.map(PageBackend.toModel(_, toModel)))
 
   def fetchByPrefix(
       prefix: String,
       nodes: Option[js.Array[Id[Node]]]
   ): Cmd.One[Either[ErrorJson, js.Array[Cotonoma]]] =
     CotonomaJson.fetchByPrefix(prefix, nodes)
-      .map(_.map(_.map(toModel(_))))
+      .map(_.map(_.map(toModel)))
 
   def post(
       name: String,
