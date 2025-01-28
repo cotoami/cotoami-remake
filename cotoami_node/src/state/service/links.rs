@@ -32,6 +32,25 @@ impl NodeState {
         .await
     }
 
+    pub async fn edit_link(
+        self,
+        id: Id<Link>,
+        diff: LinkContentDiff<'static>,
+        operator: Arc<Operator>,
+    ) -> Result<Link, ServiceError> {
+        if let Err(errors) = diff.validate() {
+            return errors.into_result();
+        }
+        let link = self.link(id).await?;
+        self.change(
+            link.node_id,
+            diff,
+            move |ds, diff| ds.edit_link(&id, diff, operator.as_ref()),
+            |parent, diff| unimplemented!(),
+        )
+        .await
+    }
+
     pub async fn disconnect(
         self,
         id: Id<Link>,
