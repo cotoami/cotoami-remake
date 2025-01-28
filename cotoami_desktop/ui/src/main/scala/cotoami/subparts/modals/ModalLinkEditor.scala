@@ -54,6 +54,13 @@ object ModalLinkEditor {
       )
 
     def readyToSave: Boolean = !disconnecting && !saving && !validate.failed
+
+    def save: (Model, Cmd.One[AppMsg]) =
+      (
+        copy(saving = true),
+        LinkBackend.edit(original.id, diffLinkingPhrase, None)
+          .map(Msg.Saved(_).into)
+      )
   }
 
   object Model {
@@ -73,6 +80,7 @@ object ModalLinkEditor {
     case class LinkingPhraseInput(linkingPhrase: String) extends Msg
     case class Disconnect(id: Id[Link]) extends Msg
     case class Disconnected(result: Either[ErrorJson, Id[Link]]) extends Msg
+    case object Save extends Msg
     case class Saved(result: Either[ErrorJson, Link]) extends Msg
   }
 
@@ -94,6 +102,8 @@ object ModalLinkEditor {
           model.copy(disconnecting = false, error = Some(e.default_message)),
           cotoami.error("Couldn't delete a link.", e)
         )
+
+      case Msg.Save => model.save
 
       case Msg.Saved(Right(_)) =>
         (
@@ -169,7 +179,8 @@ object ModalLinkEditor {
         button(
           className := "save",
           disabled := !model.readyToSave,
-          aria - "busy" := model.saving.toString()
+          aria - "busy" := model.saving.toString(),
+          onClick := (_ => dispatch(Msg.Save))
         )("Save")
       )
     )

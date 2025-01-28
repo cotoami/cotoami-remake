@@ -305,7 +305,7 @@ object Commands {
       linkingPhrase: Option[Option[String]],
       details: Option[Option[String]]
   ) =
-    jso(EditCoto =
+    jso(EditLink =
       jso(
         id = id.uuid,
         diff = jso(

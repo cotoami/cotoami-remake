@@ -179,8 +179,7 @@ object ModalCotoEditor {
 
       case Msg.Save =>
         model.save(context.geomap, context.domain.cotonomas).pipe {
-          case (model, cmd) =>
-            default.copy(_1 = model, _3 = cmd)
+          case (model, cmd) => default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.Saved(Right(_)) =>
@@ -259,7 +258,6 @@ object ModalCotoEditor {
         ),
         button(
           className := "save",
-          `type` := "submit",
           disabled := !model.readyToSave(context.geomap),
           aria - "busy" := model.saving.toString(),
           onClick := (_ => dispatch(Msg.Save))
