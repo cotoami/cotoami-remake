@@ -46,7 +46,7 @@ impl NodeState {
             link.node_id,
             diff,
             move |ds, diff| ds.edit_link(&id, diff, operator.as_ref()),
-            |parent, diff| unimplemented!(),
+            |parent, diff| parent.edit_link(id, diff),
         )
         .await
     }

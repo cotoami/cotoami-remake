@@ -23,7 +23,7 @@ where
 {
     let mut backend_ds = backend_state.db().new_session()?;
     let backend_node = backend_ds.local_node()?;
-    let root_cotonoma_id = backend_node.root_cotonoma_id.unwrap();
+    let (backend_root_cotonoma, backend_root_coto) = backend_ds.try_get_local_node_root()?;
     futures::pin_mut!(changes);
 
     /////////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ where
 
     let request = Command::PostCoto {
         input: CotoInput::new("Hello, Cotoami!"),
-        post_to: root_cotonoma_id,
+        post_to: backend_root_cotonoma.uuid,
     }
     .into_request();
     let posted_coto = service.call(request).await?.content::<Coto>()?;
@@ -119,7 +119,7 @@ where
         posted_coto,
         pat!(Coto {
             node_id: eq(&backend_node.uuid),
-            posted_in_id: some(eq(&root_cotonoma_id)),
+            posted_in_id: some(eq(&backend_root_cotonoma.uuid)),
             posted_by_id: eq(&operator_node_id),
             content: some(eq("Hello, Cotoami!")),
             summary: none(),
@@ -139,6 +139,52 @@ where
             })))
         })),
         "Unexpected changelogEntry on PostCoto command"
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: Connect
+    /////////////////////////////////////////////////////////////////////////////
+
+    let link_input =
+        LinkInput::new(backend_root_coto.uuid, posted_coto.uuid).linking_phrase("The first link");
+    let request = Command::Connect(link_input).into_request();
+    let created_link = service.call(request).await?.content::<Link>()?;
+
+    assert_that!(
+        created_link,
+        pat!(Link {
+            node_id: eq(&backend_node.uuid),
+            created_by_id: eq(&operator_node_id),
+            source_coto_id: eq(&backend_root_coto.uuid),
+            target_coto_id: eq(&posted_coto.uuid),
+            linking_phrase: some(eq("The first link")),
+            details: none(),
+            order: eq(&1),
+        }),
+        "Unexpected response of Connect command"
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: EditLink
+    /////////////////////////////////////////////////////////////////////////////
+
+    let diff = LinkContentDiff::default()
+        .linking_phrase(Some("Updated phrase"))
+        .details(Some("Added details"));
+    let request = Command::EditLink {
+        id: created_link.uuid,
+        diff,
+    }
+    .into_request();
+    let updated_link = service.call(request).await?.content::<Link>()?;
+
+    assert_that!(
+        updated_link,
+        pat!(Link {
+            linking_phrase: some(eq("Updated phrase")),
+            details: some(eq("Added details")),
+        }),
+        "Unexpected response of EditLink command"
     );
 
     Ok(())

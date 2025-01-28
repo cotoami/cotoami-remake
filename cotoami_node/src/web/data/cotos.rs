@@ -3,7 +3,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use axum::{
     extract::{Json, Path, Query, State},
-    http::StatusCode,
     routing::{get, put},
     Extension, Router,
 };
@@ -154,11 +153,11 @@ async fn edit_coto(
     TypedHeader(accept): TypedHeader<Accept>,
     Path(coto_id): Path<Id<Coto>>,
     Json(diff): Json<CotoContentDiff<'static>>,
-) -> Result<(StatusCode, Content<Coto>), ServiceError> {
+) -> Result<Content<Coto>, ServiceError> {
     state
         .edit_coto(coto_id, diff, Arc::new(operator))
         .await
-        .map(|coto| (StatusCode::CREATED, Content(coto, accept)))
+        .map(|coto| Content(coto, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

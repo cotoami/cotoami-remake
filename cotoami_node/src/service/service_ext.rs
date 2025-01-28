@@ -78,6 +78,12 @@ pub trait NodeServiceExt: NodeService {
         response.content::<Link>()
     }
 
+    async fn edit_link(&self, id: Id<Link>, diff: LinkContentDiff<'static>) -> Result<Link> {
+        let request = Command::EditLink { id, diff }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Link>()
+    }
+
     async fn disconnect(&self, id: Id<Link>) -> Result<Id<Link>> {
         let request = Command::Disconnect { id }.into_request();
         let response = self.call(request).await?;

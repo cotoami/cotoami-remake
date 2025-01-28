@@ -239,6 +239,9 @@ impl HttpClient {
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
             Command::Connect(input) => self.post(API_PATH_LINKS).json(&input),
+            Command::EditLink { id, diff } => {
+                self.put(&format!("{API_PATH_LINKS}/{id}")).json(&diff)
+            }
             Command::Disconnect { id } => self.delete(&format!("{API_PATH_LINKS}/{id}")),
         };
 

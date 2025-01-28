@@ -145,6 +145,12 @@ pub enum Command {
     /// Request to create a new [Link] and return the [Link] if suceeded.
     Connect(LinkInput<'static>),
 
+    /// Request to edit the specified link and return the updated [Link] if suceeded.
+    EditLink {
+        id: Id<Link>,
+        diff: LinkContentDiff<'static>,
+    },
+
     /// Request to delete a link and return the [Id<Link>] if suceeded.
     Disconnect { id: Id<Link> },
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use axum::{
     extract::{Json, Path, State},
-    routing::{delete, post},
+    routing::{post, put},
     Extension, Router,
 };
 use axum_extra::TypedHeader;
@@ -18,7 +18,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", post(connect))
-        .route("/{link_id}", delete(disconnect))
+        .route("/{link_id}", put(edit_link).delete(disconnect))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -33,6 +33,23 @@ async fn connect(
 ) -> Result<Content<Link>, ServiceError> {
     state
         .connect(input, Arc::new(operator))
+        .await
+        .map(|link| Content(link, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/links/{link_id}
+/////////////////////////////////////////////////////////////////////////////
+
+async fn edit_link(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(link_id): Path<Id<Link>>,
+    Json(diff): Json<LinkContentDiff<'static>>,
+) -> Result<Content<Link>, ServiceError> {
+    state
+        .edit_link(link_id, diff, Arc::new(operator))
         .await
         .map(|link| Content(link, accept))
 }
