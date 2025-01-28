@@ -97,6 +97,11 @@ object Changelog {
       )
     }
 
+    // EditLink
+    for (json <- change.EditLink.toOption) {
+      return (model, Domain.fetchLink(Id(json.link_id)))
+    }
+
     // RenameCotonoma
     for (json <- change.RenameCotonoma.toOption) {
       val cotonomaId: Id[Cotonoma] = Id(json.cotonoma_id)

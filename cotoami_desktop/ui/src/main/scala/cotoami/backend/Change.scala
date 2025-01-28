@@ -80,8 +80,7 @@ trait RenameCotonomaJson extends js.Object {
 @js.native
 trait EditLinkJson extends js.Object {
   val link_id: String = js.native
-  val linking_phrase: Nullable[String] = js.native
-  val details: Nullable[String] = js.native
+  val diff: js.Object = js.native
   val updated_at: String = js.native
 }
 

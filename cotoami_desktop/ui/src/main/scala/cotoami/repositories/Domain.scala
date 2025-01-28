@@ -356,6 +356,7 @@ object Domain {
         extends Msg
     case class CotoDetailsFetched(result: Either[ErrorJson, CotoDetails])
         extends Msg
+    case class LinkFetched(result: Either[ErrorJson, Link]) extends Msg
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
@@ -397,6 +398,12 @@ object Domain {
 
       case Msg.CotoDetailsFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch coto details.", e))
+
+      case Msg.LinkFetched(Right(link)) =>
+        (model.modify(_.links).using(_.put(link)), Cmd.none)
+
+      case Msg.LinkFetched(Left(e)) =>
+        (model, cotoami.error("Couldn't fetch a link.", e))
 
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
@@ -469,6 +476,9 @@ object Domain {
 
   def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
     CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)
+
+  def fetchLink(id: Id[Link]): Cmd.One[AppMsg] =
+    LinkBackend.fetch(id).map(Domain.Msg.LinkFetched(_).into)
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).into)
