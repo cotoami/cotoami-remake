@@ -25,18 +25,32 @@ object ModalLinkEditor {
       disconnecting: Boolean = false,
       saving: Boolean = false
   ) {
-    def linkingPhrase: String = linkingPhraseInput.trim
+    def linkingPhrase: Option[String] =
+      Option.when(!linkingPhraseInput.isBlank())(linkingPhraseInput.trim)
 
     def validate: Validation.Result =
       if (linkingPhraseInput.isBlank)
         Validation.Result.notYetValidated
       else {
         Validation.Result(
-          Link.validateLinkingPhrase(linkingPhrase)
+          linkingPhrase
+            .map(Link.validateLinkingPhrase)
+            .getOrElse(Seq.empty)
         )
       }
 
+    def diffLinkingPhrase: Option[Option[String]] =
+      Option.when(linkingPhrase != original.linkingPhrase) {
+        linkingPhrase
+      }
+
     def readyToDisconnect: Boolean = !disconnecting && !saving
+
+    def disconnect: (Model, Cmd.One[AppMsg]) =
+      (
+        copy(disconnecting = true),
+        LinkBackend.disconnect(original.id).map(Msg.Disconnected(_).into)
+      )
 
     def readyToSave: Boolean = !disconnecting && !saving && !validate.failed
   }
@@ -65,8 +79,7 @@ object ModalLinkEditor {
       case Msg.LinkingPhraseInput(linkingPhrase) =>
         (model.copy(linkingPhraseInput = linkingPhrase), Cmd.none)
 
-      case Msg.Disconnect(id) =>
-        (model, LinkBackend.disconnect(id).map(Msg.Disconnected(_).into))
+      case Msg.Disconnect(id) => model.disconnect
 
       case Msg.Disconnected(Right(_)) =>
         (
