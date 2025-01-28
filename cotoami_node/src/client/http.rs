@@ -238,6 +238,7 @@ impl HttpClient {
             Command::RenameCotonoma { id, name } => self
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
+            Command::Link { id } => self.get(&format!("{API_PATH_LINKS}/{id}")),
             Command::Connect(input) => self.post(API_PATH_LINKS).json(&input),
             Command::EditLink { id, diff } => {
                 self.put(&format!("{API_PATH_LINKS}/{id}")).json(&diff)
