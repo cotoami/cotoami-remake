@@ -23,7 +23,8 @@ object ModalLinkEditor {
       original: Link,
       linkingPhraseInput: String,
       disconnecting: Boolean = false,
-      saving: Boolean = false
+      saving: Boolean = false,
+      error: Option[String] = None
   ) {
     def linkingPhrase: Option[String] =
       Option.when(!linkingPhraseInput.isBlank())(linkingPhraseInput.trim)
@@ -72,6 +73,7 @@ object ModalLinkEditor {
     case class LinkingPhraseInput(linkingPhrase: String) extends Msg
     case class Disconnect(id: Id[Link]) extends Msg
     case class Disconnected(result: Either[ErrorJson, Id[Link]]) extends Msg
+    case class Saved(result: Either[ErrorJson, Link]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
@@ -89,8 +91,20 @@ object ModalLinkEditor {
 
       case Msg.Disconnected(Left(e)) =>
         (
-          model.copy(disconnecting = false),
+          model.copy(disconnecting = false, error = Some(e.default_message)),
           cotoami.error("Couldn't delete a link.", e)
+        )
+
+      case Msg.Saved(Right(_)) =>
+        (
+          model.copy(saving = false),
+          Modal.close(classOf[Modal.LinkEditor])
+        )
+
+      case Msg.Saved(Left(e)) =>
+        (
+          model.copy(saving = false, error = Some(e.default_message)),
+          cotoami.error("Couldn't save a link.", e)
         )
     }
 
@@ -103,7 +117,8 @@ object ModalLinkEditor {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "link-editor",
-      closeButton = Some((classOf[Modal.LinkEditor], dispatch))
+      closeButton = Some((classOf[Modal.LinkEditor], dispatch)),
+      error = model.error
     )(
       if (context.domain.isPin(model.original))
         "Pin"
