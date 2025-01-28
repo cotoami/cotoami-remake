@@ -8,6 +8,15 @@ package object models {
 
   trait Entity[T] {
     def id: Id[T]
+
+    override def hashCode(): Int = id.hashCode()
+
+    // This default implementation should be overridden in subclasses
+    override def equals(that: Any): Boolean =
+      that match {
+        case that: Entity[_] => id == that.id
+        case _               => false
+      }
   }
 
   type CenterOrBounds = Either[Geolocation, GeoBounds]

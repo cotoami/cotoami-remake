@@ -19,6 +19,15 @@ case class Link(
 ) extends Entity[Link] {
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val updatedAt: Instant = parseUtcIso(updatedAtUtcIso)
+
+  // If two link objects have the same ID and update-timestamp,
+  // they can be regarded as the same link.
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Link =>
+        (id, updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
+      case _ => false
+    }
 }
 
 object Link {

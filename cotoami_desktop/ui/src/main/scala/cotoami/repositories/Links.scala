@@ -16,6 +16,7 @@ case class Links(
 
   def put(link: Link): Links = {
     this
+      .delete(link.id)
       .modify(_.map).using(_ + (link.id -> link))
       .modify(_.mapBySourceCotoId).using(map => {
         val outgoingLinks =
