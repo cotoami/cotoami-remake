@@ -9,11 +9,11 @@ import cotoami.models.{Coto, Cotonoma, Id, Link}
 case class CotoGraph(json: CotoGraphJson) {
   def rootCotoId: Id[Coto] = Id(json.root_coto_id)
   def rootCotonoma: Option[Cotonoma] =
-    Nullable.toOption(json.root_cotonoma).map(CotonomaBackend.toModel(_))
-  def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel(_))
+    Nullable.toOption(json.root_cotonoma).map(CotonomaBackend.toModel)
+  def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel)
   def cotosRelatedData: CotosRelatedData =
     CotosRelatedData(json.cotos_related_data)
-  def links: js.Array[Link] = json.links.map(LinkBackend.toModel(_))
+  def links: js.Array[Link] = json.links.map(LinkBackend.toModel)
 }
 
 object CotoGraph {

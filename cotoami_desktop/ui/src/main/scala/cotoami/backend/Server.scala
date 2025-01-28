@@ -27,9 +27,9 @@ object ServerBackend {
   def toModel(json: ServerJson): Server =
     Server(
       ServerNodeBackend.toModel(json.server),
-      Nullable.toOption(json.role).map(DatabaseRoleBackend.toModel(_)),
-      Nullable.toOption(json.not_connected).map(NotConnectedBackend.toModel(_)),
-      Nullable.toOption(json.client_as_child).map(ChildNodeBackend.toModel(_))
+      Nullable.toOption(json.role).map(DatabaseRoleBackend.toModel),
+      Nullable.toOption(json.not_connected).map(NotConnectedBackend.toModel),
+      Nullable.toOption(json.client_as_child).map(ChildNodeBackend.toModel)
     )
 
   def addServer(
@@ -38,7 +38,7 @@ object ServerBackend {
       clientRole: Option[String] = None
   ): Cmd.One[Either[ErrorJson, Server]] =
     ServerJson.addServer(url, password, clientRole)
-      .map(_.map(toModel(_)))
+      .map(_.map(toModel))
 }
 
 @js.native
@@ -72,7 +72,7 @@ object ServerNodeBackend {
       disabled: Option[Boolean],
       url: Option[String]
   ): Cmd.One[Either[ErrorJson, ServerNode]] =
-    ServerNodeJson.edit(id, disabled, url).map(_.map(toModel(_)))
+    ServerNodeJson.edit(id, disabled, url).map(_.map(toModel))
 }
 
 @js.native

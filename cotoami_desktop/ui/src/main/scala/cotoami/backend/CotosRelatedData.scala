@@ -6,11 +6,11 @@ import cotoami.models.{Coto, Cotonoma}
 
 case class CotosRelatedData(json: CotosRelatedDataJson) {
   def postedIn: js.Array[Cotonoma] =
-    json.posted_in.map(CotonomaBackend.toModel(_))
+    json.posted_in.map(CotonomaBackend.toModel)
   def asCotonomas: js.Array[Cotonoma] =
-    json.as_cotonomas.map(CotonomaBackend.toModel(_))
+    json.as_cotonomas.map(CotonomaBackend.toModel)
   def originals: js.Array[Coto] =
-    json.originals.map(CotoBackend.toModel(_))
+    json.originals.map(CotoBackend.toModel)
 }
 
 @js.native

@@ -9,7 +9,7 @@ case class CotoDetails(json: CotoDetailsJson) {
   def coto: Coto = CotoBackend.toModel(json.coto)
   def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
   def outgoingLinks: js.Array[Link] =
-    json.outgoing_links.map(LinkBackend.toModel(_))
+    json.outgoing_links.map(LinkBackend.toModel)
 }
 
 object CotoDetails {

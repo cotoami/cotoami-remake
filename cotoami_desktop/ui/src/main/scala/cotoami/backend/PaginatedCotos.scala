@@ -10,7 +10,7 @@ case class PaginatedCotos(json: PaginatedCotosJson) {
     PageBackend.toModel(json.page, CotoBackend.toModel)
   def relatedData: CotosRelatedData = CotosRelatedData(json.related_data)
   def outgoingLinks: js.Array[Link] =
-    json.outgoing_links.map(LinkBackend.toModel(_))
+    json.outgoing_links.map(LinkBackend.toModel)
 }
 
 object PaginatedCotos {

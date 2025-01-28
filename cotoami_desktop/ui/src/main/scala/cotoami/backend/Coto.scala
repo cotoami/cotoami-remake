@@ -121,7 +121,7 @@ object CotoBackend {
       postTo: Id[Cotonoma]
   ): Cmd.One[Either[ErrorJson, Coto]] =
     CotoJson.post(content, summary, mediaContent, location, timeRange, postTo)
-      .map(_.map(CotoBackend.toModel(_)))
+      .map(_.map(CotoBackend.toModel))
 
   def edit(
       id: Id[Coto],
@@ -132,7 +132,7 @@ object CotoBackend {
       timeRange: Option[Option[DateTimeRange]]
   ): Cmd.One[Either[ErrorJson, Coto]] =
     CotoJson.edit(id, content, summary, mediaContent, location, timeRange)
-      .map(_.map(CotoBackend.toModel(_)))
+      .map(_.map(CotoBackend.toModel))
 
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, Id[Coto]]] =
     CotoJson.delete(id).map(_.map(Id(_)))

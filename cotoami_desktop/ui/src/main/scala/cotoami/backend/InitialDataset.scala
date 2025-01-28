@@ -11,7 +11,7 @@ case class InitialDataset(json: InitialDatasetJson) {
 
   lazy val nodes: Map[Id[Node], Node] =
     json.nodes
-      .map(NodeBackend.toModel(_))
+      .map(NodeBackend.toModel)
       .map(node => node.id -> node)
       .toMap
 
@@ -23,10 +23,10 @@ case class InitialDataset(json: InitialDatasetJson) {
     json.parent_node_ids.map(Id[Node](_))
 
   lazy val servers: js.Array[Server] =
-    json.servers.map(ServerBackend.toModel(_))
+    json.servers.map(ServerBackend.toModel)
 
   lazy val activeClients: js.Array[ActiveClient] =
-    json.active_clients.map(ActiveClientBackend.toModel(_))
+    json.active_clients.map(ActiveClientBackend.toModel)
 }
 
 object InitialDataset {

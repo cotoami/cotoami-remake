@@ -58,7 +58,7 @@ object ClientNodeBackend {
       pageSize: Option[Double] = None
   ): Cmd.One[Either[ErrorJson, Page[ClientNode]]] =
     ClientNodeJson.fetchRecent(pageIndex, pageSize)
-      .map(_.map(PageBackend.toModel(_, toModel(_))))
+      .map(_.map(PageBackend.toModel(_, toModel)))
 
   def add(
       nodeId: Id[Node],
@@ -72,8 +72,7 @@ object ClientNodeBackend {
       id: Id[Node],
       disabled: Option[Boolean]
   ): Cmd.One[Either[ErrorJson, ClientNode]] =
-    ClientNodeJson.edit(id, disabled)
-      .map(_.map(toModel(_)))
+    ClientNodeJson.edit(id, disabled).map(_.map(toModel))
 }
 
 @js.native

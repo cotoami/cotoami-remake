@@ -11,7 +11,7 @@ case class CotonomaDetails(json: CotonomaDetailsJson) {
   def supers: js.Array[Cotonoma] =
     json.supers.map(CotonomaBackend.toModel(_))
   def subs: Page[Cotonoma] =
-    PageBackend.toModel(json.subs, CotonomaBackend.toModel(_))
+    PageBackend.toModel(json.subs, CotonomaBackend.toModel)
 }
 
 object CotonomaDetails {

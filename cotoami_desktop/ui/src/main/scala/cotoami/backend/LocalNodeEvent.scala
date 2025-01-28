@@ -67,7 +67,7 @@ object ParentSyncEndBackend {
   def toModel(json: ParentSyncEndJson): ParentSyncEnd =
     ParentSyncEnd(
       nodeId = Id(json.node_id),
-      range = Nullable.toOption(json.range).map(js.Tuple2.toScalaTuple2(_)),
+      range = Nullable.toOption(json.range).map(js.Tuple2.toScalaTuple2),
       error = Nullable.toOption(json.error)
     )
 }

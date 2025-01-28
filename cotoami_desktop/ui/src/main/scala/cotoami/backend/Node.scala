@@ -33,5 +33,5 @@ object NodeBackend {
     )
 
   def setLocalNodeIcon(icon: String): Cmd.One[Either[ErrorJson, Node]] =
-    NodeJson.setLocalNodeIcon(icon).map(_.map(toModel(_)))
+    NodeJson.setLocalNodeIcon(icon).map(_.map(toModel))
 }
