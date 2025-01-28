@@ -321,16 +321,44 @@ object SectionPins {
         ),
         onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
-        toolButton(
-          classes = "edit-pin",
-          symbol = "push_pin",
-          tip = Option.when(canEditPin)("Edit pin"),
-          tipPlacement = "right",
-          disabled = !canEditPin,
-          onClick = e => {
-            e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
-          }
+        div(
+          className := optionalClasses(
+            Seq(
+              ("pin-container", true),
+              ("with-linking-phrase", pin.linkingPhrase.isDefined)
+            )
+          )
+        )(
+          div(
+            className := optionalClasses(
+              Seq(
+                ("pin", true),
+                ("editable", canEditPin)
+              )
+            )
+          )(
+            toolButton(
+              classes = "edit-pin",
+              symbol = "push_pin",
+              tip = Option.when(canEditPin)("Edit pin"),
+              tipPlacement = "right",
+              disabled = !canEditPin,
+              onClick = e => {
+                e.stopPropagation()
+                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
+              }
+            ),
+            pin.linkingPhrase.map(phrase =>
+              section(
+                className := "linking-phrase",
+                onClick := (e => {
+                  e.stopPropagation()
+                  if (canEditPin)
+                    dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
+                })
+              )(phrase)
+            )
+          )
         ),
         ToolbarCoto(coto),
         div(className := "body")(
