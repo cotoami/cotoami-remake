@@ -20,12 +20,18 @@ object ModalLinkEditor {
 
   case class Model(
       original: Link,
+      linkingPhraseInput: String,
       disconnecting: Boolean = false,
       saving: Boolean = false
   ) {
     def readyToDisconnect: Boolean = !disconnecting && !saving
 
     def readyToSave: Boolean = !disconnecting && !saving
+  }
+
+  object Model {
+    def apply(original: Link): Model =
+      Model(original, original.linkingPhrase.getOrElse(""))
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -37,12 +43,16 @@ object ModalLinkEditor {
   }
 
   object Msg {
+    case class LinkingPhraseInput(linkingPhrase: String) extends Msg
     case class Disconnect(id: Id[Link]) extends Msg
     case class Disconnected(result: Either[ErrorJson, Id[Link]]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.LinkingPhraseInput(linkingPhrase) =>
+        (model.copy(linkingPhraseInput = linkingPhrase), Cmd.none)
+
       case Msg.Disconnect(id) =>
         (model, LinkBackend.disconnect(id).map(Msg.Disconnected(_).into))
 
@@ -86,7 +96,9 @@ object ModalLinkEditor {
           input(
             className := "linking-phrase",
             `type` := "text",
-            placeholder := "Linking phrase (optional)"
+            placeholder := "Linking phrase (optional)",
+            value := model.linkingPhraseInput,
+            onChange := (e => dispatch(Msg.LinkingPhraseInput(e.target.value)))
           )
         )
       ),
