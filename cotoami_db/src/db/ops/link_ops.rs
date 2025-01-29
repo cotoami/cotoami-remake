@@ -104,12 +104,12 @@ fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn,
         // Has the given `order` number already been used?
         if orders_onwards.first() == Some(&order) {
             // calculate new orders
-            let mut new_orders: Vec<i32> = vec![order + 1];
+            let mut new_orders: Vec<i32> = vec![order + 1]; // shift the first order +1
             for old_order in orders_onwards[1..].iter() {
                 if new_orders.contains(old_order) {
-                    new_orders.push(old_order + 1);
+                    new_orders.push(old_order + 1); // shift it +1 accordingly
                 } else {
-                    // no change needed due to missing numbers in the orders
+                    // no change needed due to missing numbers in the current orders
                     new_orders.push(*old_order);
                 }
             }
