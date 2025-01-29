@@ -98,6 +98,13 @@ section.pins {
 
         animation: just-pinned 1s linear;
       }
+
+      &.with-linking-phrase {
+        ul.parents {
+          // make space to display the pin with a linking phrase
+          padding-bottom: 20px;
+        }
+      }
     }
 
     article.pinned-coto {

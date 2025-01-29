@@ -297,7 +297,8 @@ object SectionPins {
       className := optionalClasses(
         Seq(
           ("pin", true),
-          ("just-pinned", justPinned)
+          ("just-pinned", justPinned),
+          ("with-linking-phrase", pin.linkingPhrase.isDefined)
         )
       ),
       id := elementIdOfPin(pin),
