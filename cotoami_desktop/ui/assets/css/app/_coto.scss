@@ -277,17 +277,43 @@ div.links {
 }
 
 ol.sub-cotos {
+  margin-top: 4px;
+
   article.sub-coto {
     >header {
-      position: relative;
+      div.subcoto-link-container {
+        button.edit-link {
+          margin-top: 3px;
+        }
 
-      button.unlink {
-        position: absolute;
-        top: 0;
-        left: 0;
+        &.with-linking-phrase div.subcoto-link {
+          display: inline-flex;
+          flex-direction: row;
+          align-items: center;
 
-        margin-top: 3px;
-        margin-left: 3px;
+          margin-left: -4px;
+
+          border: 1px solid var(--pane-border-color);
+          border-radius: 4px;
+
+          max-width: 100%;
+
+          padding-left: 4px;
+          padding-right: 8px;
+
+          background-color: var(--card-background-color);
+
+          &.editable {
+            cursor: pointer;
+          }
+
+          section.linking-phrase {
+            margin-left: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
       }
     }
   }

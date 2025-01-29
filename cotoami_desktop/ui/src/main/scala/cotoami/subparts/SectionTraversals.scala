@@ -315,12 +315,7 @@ object SectionTraversals {
       )(
         ToolbarCoto(coto),
         header()(
-          toolButton(
-            symbol = "subdirectory_arrow_right",
-            tip = Some("Unlink"),
-            tipPlacement = "right",
-            classes = "unlink"
-          )
+          subcotoLink(link)
         ),
         div(className := "body")(
           // Coto content

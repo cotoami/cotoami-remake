@@ -80,7 +80,15 @@ section.coto-details {
 
       article.sub-coto {
         >header {
+          position: relative;
           padding: 0 var(--block-spacing-horizontal);
+
+          div.subcoto-link-container {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            right: 10px;
+          }
 
           div.attributes {
             padding-top: 20px; // also as padding-top of the header

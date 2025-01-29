@@ -7,9 +7,9 @@ import slinky.web.SyntheticKeyboardEvent
 
 import cotoami.{Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Node, ParentStatus}
+import cotoami.models.{Link, Node, ParentStatus}
 import cotoami.repositories.Nodes
-import cotoami.components.materialSymbol
+import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 package object subparts {
 
@@ -199,6 +199,51 @@ package object subparts {
       },
       code(className := "nodes")(clientCount),
       "nodes"
+    )
+  }
+
+  def subcotoLink(
+      link: Link
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val canEditLink = context.domain.nodes.canEdit(link)
+    div(
+      className := optionalClasses(
+        Seq(
+          ("subcoto-link-container", true),
+          ("with-linking-phrase", link.linkingPhrase.isDefined)
+        )
+      )
+    )(
+      div(
+        className := optionalClasses(
+          Seq(
+            ("subcoto-link", true),
+            ("editable", canEditLink)
+          )
+        )
+      )(
+        toolButton(
+          classes = "edit-link",
+          symbol = "subdirectory_arrow_right",
+          tip = Option.when(canEditLink)("Edit link"),
+          tipPlacement = "right",
+          disabled = !canEditLink,
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+          }
+        ),
+        link.linkingPhrase.map(phrase =>
+          section(
+            className := "linking-phrase",
+            onClick := (e => {
+              e.stopPropagation()
+              if (canEditLink)
+                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+            })
+          )(phrase)
+        )
+      )
     )
   }
 }

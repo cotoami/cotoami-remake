@@ -116,12 +116,7 @@ object SectionCotoDetails {
         )(
           ToolbarCoto(coto),
           header()(
-            toolButton(
-              symbol = "subdirectory_arrow_right",
-              tip = Some("Unlink"),
-              tipPlacement = "right",
-              classes = "unlink"
-            ),
+            subcotoLink(link),
             ViewCoto.divAttributes(coto),
             Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
               ViewCoto.addressAuthor(coto, domain.nodes)
