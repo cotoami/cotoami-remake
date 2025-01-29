@@ -277,7 +277,8 @@ div.links {
 }
 
 ol.sub-cotos {
-  margin-top: 4px;
+  padding-top: 4px;
+  background-color: var(--card-background-color);
 
   article.sub-coto {
     >header {
