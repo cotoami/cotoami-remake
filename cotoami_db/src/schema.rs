@@ -243,6 +243,7 @@ diesel::table! {
         origin_serial_number -> BigInt,
         type_number -> SmallInt,
         change -> Binary,
+        import_error -> Nullable<Text>,
         inserted_at -> Timestamp,
     }
 }

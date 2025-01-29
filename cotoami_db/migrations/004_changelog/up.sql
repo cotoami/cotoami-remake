@@ -21,19 +21,22 @@ CREATE TABLE changelog (
   -- from previously deleted rows. - https://www.sqlite.org/autoinc.html
   serial_number INTEGER NOT NULL PRIMARY KEY,
   
-  -- UUID of the node in which this change has been originally created
+  -- UUID of the node in which this change has been originally created.
   origin_node_id TEXT NOT NULL,
 
-  -- Serial number among changes created in the origin node
+  -- Serial number among changes created in the origin node.
   origin_serial_number INTEGER NOT NULL,
 
-  -- Number to distinguish between different change types (Change::type_number())
+  -- Number to distinguish between different change types (Change::type_number()).
   type_number INTEGER NOT NULL,
 
-  -- Change (cotoami_db::models::changelog::Change) value in MessagePack form
+  -- Change (cotoami_db::models::changelog::Change) value in MessagePack form.
   change BLOB NOT NULL,
 
-  -- Registration date in this database
+  -- Error occurred during importing this change to the local node.
+  import_error TEXT,
+
+  -- Registration date in this database.
   inserted_at DATETIME NOT NULL, -- UTC
 
   UNIQUE(origin_node_id, origin_serial_number)

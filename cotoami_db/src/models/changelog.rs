@@ -33,25 +33,30 @@ use crate::schema::changelog;
 #[diesel(table_name = changelog, primary_key(serial_number))]
 #[must_use]
 pub struct ChangelogEntry {
-    /// Serial number of a changelog entry based on SQLite ROWID
+    /// Serial number of a changelog entry based on SQLite ROWID.
     pub serial_number: i64,
 
-    /// UUID of the node in which this change has been originally created
+    /// UUID of the node in which this change has been originally created.
     pub origin_node_id: Id<Node>,
 
-    /// Serial number among changes created in the origin node
+    /// Serial number among changes created in the origin node.
     pub origin_serial_number: i64,
 
-    /// Number to distinguish between different change types
+    /// Number to distinguish between different change types.
     ///
     /// The source type is `u8` (Change::type_number()), but we had to pick `i16` instead
     /// because there is no sqlite type to represent `u8`.
     pub type_number: i16,
 
-    /// The content of this change
+    /// The content of this change.
     pub change: Change,
 
-    /// Registration date in this database
+    /// Error occurred during importing this change to the local node.
+    /// This field is not meant to be sent to other nodes.
+    #[serde(skip_serializing, skip_deserializing)]
+    pub import_error: Option<String>,
+
+    /// Registration date in this database.
     pub inserted_at: NaiveDateTime,
 }
 
@@ -64,6 +69,7 @@ impl ChangelogEntry {
             origin_serial_number: self.origin_serial_number,
             type_number: self.type_number,
             change: &self.change,
+            import_error: None,
             inserted_at: crate::current_datetime(),
         }
     }
@@ -77,7 +83,12 @@ pub(crate) struct NewChangelogEntry<'a> {
     origin_serial_number: i64,
     type_number: i16,
     change: &'a Change,
+    import_error: Option<String>,
     inserted_at: NaiveDateTime,
+}
+
+impl<'a> NewChangelogEntry<'a> {
+    pub fn set_import_error(&mut self, error: String) { self.import_error = Some(error); }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,6 +174,7 @@ impl Change {
             origin_serial_number: serial_number,
             type_number: self.type_number() as i16,
             change: self,
+            import_error: None,
             inserted_at: crate::current_datetime(),
         }
     }
@@ -225,6 +237,7 @@ mod tests {
             origin_serial_number: 1,
             type_number: change.type_number() as i16,
             change,
+            import_error: None,
             inserted_at: NaiveDateTime::parse_from_str("2023-01-02 03:04:05", "%Y-%m-%d %H:%M:%S")?,
         };
 
