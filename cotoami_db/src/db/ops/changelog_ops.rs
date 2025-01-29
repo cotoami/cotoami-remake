@@ -154,7 +154,8 @@ pub(crate) fn import_change<'a>(
             // Record the applied change log.
             let mut log_to_import = log.to_import();
             if let Err(e) = apply_result {
-                log_to_import.set_import_error(format!("{e:?}"));
+                // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
+                log_to_import.set_import_error(format!("{e:#?}"));
             }
             let log_entry = insert(&log_to_import).run(ctx)?;
             Some(log_entry)

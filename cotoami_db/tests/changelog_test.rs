@@ -72,7 +72,8 @@ fn import_changes() -> Result<()> {
             serial_number: eq(&3),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change1.origin_serial_number),
-            change: eq(&db1_change1.change)
+            change: eq(&db1_change1.change),
+            import_error: none(),
         })
     );
 
@@ -117,7 +118,8 @@ fn import_changes() -> Result<()> {
             serial_number: eq(&4),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change2.origin_serial_number),
-            change: eq(&db1_change2.change)
+            change: eq(&db1_change2.change),
+            import_error: none(),
         })
     );
 
@@ -149,7 +151,8 @@ fn import_changes() -> Result<()> {
             serial_number: eq(&5),
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change3.origin_serial_number),
-            change: eq(&db1_change3.change)
+            change: eq(&db1_change3.change),
+            import_error: none(),
         })
     );
 
@@ -181,6 +184,7 @@ fn import_changes() -> Result<()> {
             origin_node_id: eq(&node1.uuid),
             origin_serial_number: eq(&db1_change4.origin_serial_number),
             change: eq(&db1_change4.change),
+            import_error: none(),
         })
     );
 
@@ -252,6 +256,47 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         // the change should not be applied,
         // but still the number should be incremented.
         1
+    );
+
+    Ok(())
+}
+
+#[test]
+fn import_error() -> Result<()> {
+    let (_dir1, db, _) = common::setup_db("Local")?;
+    let (_dir2, _, parent_node) = common::setup_db("Parent")?;
+
+    let ds = db.new_session()?;
+    let opr = db.globals().local_node_as_operator()?;
+    ds.import_node(&parent_node)?;
+    ds.register_server_node_as_parent(&parent_node.uuid, "https://parent", &opr)?;
+
+    let log = ChangelogEntry {
+        serial_number: 1,
+        origin_node_id: parent_node.uuid,
+        origin_serial_number: 1,
+        type_number: 1,
+        change: Change::RenameNode {
+            node_id: Id::generate(), // no such node
+            name: "hello".into(),
+            updated_at: Utc::now().naive_utc(),
+        },
+        import_error: None,
+        inserted_at: Utc::now().naive_utc(),
+    };
+
+    let inserted_log = ds.import_change(&log, &parent_node.uuid)?;
+    assert_that!(
+        inserted_log,
+        some(pat!(ChangelogEntry {
+            serial_number: eq(&3),
+            origin_node_id: eq(&parent_node.uuid),
+            origin_serial_number: eq(&1),
+            change: pat!(Change::RenameNode {
+                node_id: anything()
+            }),
+            import_error: some(eq("NotFound"))
+        }))
     );
 
     Ok(())
