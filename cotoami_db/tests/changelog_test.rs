@@ -271,6 +271,7 @@ fn import_error() -> Result<()> {
     ds.import_node(&parent_node)?;
     ds.register_server_node_as_parent(&parent_node.uuid, "https://parent", &opr)?;
 
+    // A change to cause an import error
     let log = ChangelogEntry {
         serial_number: 1,
         origin_node_id: parent_node.uuid,
