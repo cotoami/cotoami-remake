@@ -281,41 +281,43 @@ ol.sub-cotos {
 
   article.sub-coto {
     >header {
-      div.subcoto-link-container {
-        button.edit-link {
-          margin-top: 3px;
-        }
-
-        &.with-linking-phrase div.subcoto-link {
-          display: inline-flex;
-          flex-direction: row;
-          align-items: center;
-
-          margin-left: -4px;
-
-          border: 1px solid var(--pane-border-color);
-          border-radius: 4px;
-
-          max-width: 100%;
-
-          padding-left: 4px;
-          padding-right: 8px;
-
-          background-color: var(--card-background-color);
-
-          &.editable {
-            cursor: pointer;
-          }
-
-          section.linking-phrase {
-            margin-left: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-        }
+      button.edit-link {
+        margin-top: 3px;
       }
     }
+  }
+}
+
+div.link-container.with-linking-phrase {
+  >div.link {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+
+    border: 1px solid var(--pane-border-color);
+    border-radius: 4px;
+
+    max-width: 100%;
+
+    padding-left: 4px;
+    padding-right: 8px;
+
+    background-color: var(--card-background-color);
+
+    &.editable {
+      cursor: pointer;
+    }
+
+    section.linking-phrase {
+      margin-left: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  >div.subcoto-link {
+    margin-left: -4px;
   }
 }
 

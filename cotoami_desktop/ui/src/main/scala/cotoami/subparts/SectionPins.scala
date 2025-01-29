@@ -325,7 +325,7 @@ object SectionPins {
         div(
           className := optionalClasses(
             Seq(
-              ("pin-container", true),
+              ("link-container", true),
               ("with-linking-phrase", pin.linkingPhrase.isDefined)
             )
           )
@@ -334,6 +334,7 @@ object SectionPins {
             className := optionalClasses(
               Seq(
                 ("pin", true),
+                ("link", true),
                 ("editable", canEditPin)
               )
             )

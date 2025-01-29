@@ -209,7 +209,7 @@ package object subparts {
     div(
       className := optionalClasses(
         Seq(
-          ("subcoto-link-container", true),
+          ("link-container", true),
           ("with-linking-phrase", link.linkingPhrase.isDefined)
         )
       )
@@ -218,6 +218,7 @@ package object subparts {
         className := optionalClasses(
           Seq(
             ("subcoto-link", true),
+            ("link", true),
             ("editable", canEditLink)
           )
         )
