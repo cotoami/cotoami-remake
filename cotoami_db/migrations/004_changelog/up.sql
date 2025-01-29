@@ -24,7 +24,7 @@ CREATE TABLE changelog (
   -- UUID of the node in which this change has been originally created.
   origin_node_id TEXT NOT NULL,
 
-  -- Serial number among changes created in the origin node.
+  -- Serial number in the origin node.
   origin_serial_number INTEGER NOT NULL,
 
   -- Number to distinguish between different change types (Change::type_number()).
@@ -39,5 +39,6 @@ CREATE TABLE changelog (
   -- Registration date in this database.
   inserted_at DATETIME NOT NULL, -- UTC
 
+  -- Prevent importing duplicate changes.
   UNIQUE(origin_node_id, origin_serial_number)
 );

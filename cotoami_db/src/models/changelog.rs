@@ -39,7 +39,7 @@ pub struct ChangelogEntry {
     /// UUID of the node in which this change has been originally created.
     pub origin_node_id: Id<Node>,
 
-    /// Serial number among changes created in the origin node.
+    /// Serial number in the origin node.
     pub origin_serial_number: i64,
 
     /// Number to distinguish between different change types.
