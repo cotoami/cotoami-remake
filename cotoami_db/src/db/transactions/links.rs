@@ -74,9 +74,8 @@ impl<'a> DatabaseSession<'a> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let link = link_ops::try_get(id).run(ctx)??;
-            self.globals.ensure_local(&link)?;
             let link = link_ops::edit(id, &diff, None).run(ctx)?;
+            self.globals.ensure_local(&link)?;
             let change = Change::EditLink {
                 link_id: *id,
                 diff,
@@ -100,6 +99,26 @@ impl<'a> DatabaseSession<'a> {
             } else {
                 Err(DatabaseError::not_found(EntityKind::Link, "uuid", *id))?
             }
+        })
+    }
+
+    pub fn change_link_order(
+        &mut self,
+        id: &Id<Link>,
+        new_order: i32,
+        operator: &Operator,
+    ) -> Result<(Link, ChangelogEntry)> {
+        operator.can_edit_links()?;
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            let link = link_ops::change_order(id, new_order).run(ctx)?;
+            self.globals.ensure_local(&link)?;
+            let change = Change::ChangeLinkOrder {
+                link_id: *id,
+                new_order,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            Ok((link, changelog))
         })
     }
 
