@@ -67,7 +67,8 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&6),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&6),
-            change: pat!(Change::CreateLink(eq(&link1)))
+            change: pat!(Change::CreateLink(eq(&link1))),
+            import_error: none()
         })
     );
 
@@ -121,6 +122,29 @@ fn crud_operations() -> Result<()> {
     assert_eq!(ds.link(&link2.uuid)?.unwrap().order, 3);
 
     /////////////////////////////////////////////////////////////////////////////
+    // When: move link2 to the head
+    /////////////////////////////////////////////////////////////////////////////
+
+    let (_, changelog) = ds.change_link_order(&link2.uuid, 1, &operator)?;
+
+    assert_that!(
+        changelog,
+        pat!(ChangelogEntry {
+            serial_number: eq(&9),
+            origin_node_id: eq(&node.uuid),
+            origin_serial_number: eq(&9),
+            change: pat!(Change::ChangeLinkOrder {
+                link_id: eq(&link2.uuid),
+                new_order: eq(&1)
+            }),
+            import_error: none()
+        })
+    );
+    assert_eq!(ds.link(&link2.uuid)?.unwrap().order, 1);
+    assert_eq!(ds.link(&link3.uuid)?.unwrap().order, 2);
+    assert_eq!(ds.link(&link1.uuid)?.unwrap().order, 3);
+
+    /////////////////////////////////////////////////////////////////////////////
     // When: edit link1
     /////////////////////////////////////////////////////////////////////////////
 
@@ -142,9 +166,9 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog,
         pat!(ChangelogEntry {
-            serial_number: eq(&9),
+            serial_number: eq(&10),
             origin_node_id: eq(&node.uuid),
-            origin_serial_number: eq(&9),
+            origin_serial_number: eq(&10),
             change: pat!(Change::EditLink {
                 link_id: eq(&link1.uuid),
                 diff: pat!(LinkContentDiff {
@@ -152,7 +176,8 @@ fn crud_operations() -> Result<()> {
                     details: pat!(FieldDiff::Change(eq("hello details"))),
                 }),
                 updated_at: eq(&edited_link1.updated_at),
-            })
+            }),
+            import_error: none()
         })
     );
 
@@ -169,12 +194,13 @@ fn crud_operations() -> Result<()> {
     assert_that!(
         changelog,
         pat!(ChangelogEntry {
-            serial_number: eq(&10),
+            serial_number: eq(&11),
             origin_node_id: eq(&node.uuid),
-            origin_serial_number: eq(&10),
+            origin_serial_number: eq(&11),
             change: pat!(Change::DeleteLink {
                 link_id: eq(&link1.uuid)
-            })
+            }),
+            import_error: none()
         })
     );
 
