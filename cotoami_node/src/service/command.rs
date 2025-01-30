@@ -145,6 +145,9 @@ pub enum Command {
     /// Request a [Link] of the given ID.
     Link { id: Id<Link> },
 
+    /// Request outgoing [Vec<Link>] from the specified coto.
+    OutgoingLinks { coto: Id<Coto> },
+
     /// Request to create a new [Link] and return the [Link] if suceeded.
     Connect(LinkInput<'static>),
 

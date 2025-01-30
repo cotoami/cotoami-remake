@@ -116,6 +116,7 @@ impl NodeState {
                 format.serialize(self.rename_cotonoma(id, name, opr?).await)
             }
             Command::Link { id } => format.serialize(self.link(id).await),
+            Command::OutgoingLinks { coto } => format.serialize(self.outgoing_links(coto).await),
             Command::Connect(input) => format.serialize(self.connect(input, opr?).await),
             Command::EditLink { id, diff } => {
                 format.serialize(self.edit_link(id, diff, opr?).await)

@@ -31,6 +31,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/search/cotonomas/{query}", get(search_cotonoma_cotos))
         .route("/{coto_id}/details", get(coto_details))
         .route("/{coto_id}", put(edit_coto).delete(delete_coto))
+        .route("/{coto_id}/links", get(outgoing_links))
         .route("/{coto_id}/graph", get(graph))
 }
 
@@ -174,6 +175,21 @@ async fn delete_coto(
         .delete_coto(coto_id, Arc::new(operator))
         .await
         .map(|coto_id| Content(coto_id, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotos/{coto_id}/links
+/////////////////////////////////////////////////////////////////////////////
+
+async fn outgoing_links(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+) -> Result<Content<Vec<Link>>, ServiceError> {
+    state
+        .outgoing_links(coto_id)
+        .await
+        .map(|links| Content(links, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

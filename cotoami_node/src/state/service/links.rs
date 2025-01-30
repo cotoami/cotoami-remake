@@ -14,8 +14,8 @@ impl NodeState {
         self.get(move |ds| ds.try_get_link(&id)).await
     }
 
-    pub async fn outgoing_links(&self, coto_ids: Vec<Id<Coto>>) -> Result<Vec<Link>, ServiceError> {
-        self.get(move |ds| ds.outgoing_links(&coto_ids)).await
+    pub async fn outgoing_links(&self, coto_id: Id<Coto>) -> Result<Vec<Link>, ServiceError> {
+        self.get(move |ds| ds.outgoing_links(&[coto_id])).await
     }
 
     pub async fn connect(
