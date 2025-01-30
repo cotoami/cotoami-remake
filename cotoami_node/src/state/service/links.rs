@@ -66,7 +66,7 @@ impl NodeState {
             link.node_id,
             new_order,
             move |ds, new_order| ds.change_link_order(&id, new_order, operator.as_ref()),
-            |parent, new_order| unimplemented!(),
+            |parent, new_order| parent.change_link_order(id, new_order),
         )
         .await
     }

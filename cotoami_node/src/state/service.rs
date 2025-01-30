@@ -121,6 +121,9 @@ impl NodeState {
                 format.serialize(self.edit_link(id, diff, opr?).await)
             }
             Command::Disconnect { id } => format.serialize(self.disconnect(id, opr?).await),
+            Command::ChangeLinkOrder { id, new_order } => {
+                format.serialize(self.change_link_order(id, new_order, opr?).await)
+            }
         }
     }
 }

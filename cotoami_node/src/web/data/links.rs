@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use axum::{
     extract::{Json, Path, State},
-    routing::{get, post},
+    routing::{get, post, put},
     Extension, Router,
 };
 use axum_extra::TypedHeader;
@@ -19,6 +19,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", post(connect))
         .route("/{link_id}", get(link).put(edit_link).delete(disconnect))
+        .route("/{link_id}/order", put(change_order))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -80,4 +81,21 @@ async fn disconnect(
         .disconnect(link_id, Arc::new(operator))
         .await
         .map(|link_id| Content(link_id, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/links/{link_id}/order
+/////////////////////////////////////////////////////////////////////////////
+
+async fn change_order(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(link_id): Path<Id<Link>>,
+    Json(new_order): Json<i32>,
+) -> Result<Content<Link>, ServiceError> {
+    state
+        .change_link_order(link_id, new_order, Arc::new(operator))
+        .await
+        .map(|link| Content(link, accept))
 }

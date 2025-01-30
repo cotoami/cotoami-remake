@@ -89,6 +89,12 @@ pub trait NodeServiceExt: NodeService {
         let response = self.call(request).await?;
         response.content::<Id<Link>>()
     }
+
+    async fn change_link_order(&self, id: Id<Link>, new_order: i32) -> Result<Link> {
+        let request = Command::ChangeLinkOrder { id, new_order }.into_request();
+        let response = self.call(request).await?;
+        response.content::<Link>()
+    }
 }
 
 impl<T> NodeServiceExt for T where T: NodeService + ?Sized {}

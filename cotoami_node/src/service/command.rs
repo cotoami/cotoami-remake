@@ -156,4 +156,8 @@ pub enum Command {
 
     /// Request to delete a link and return the [Id<Link>] if suceeded.
     Disconnect { id: Id<Link> },
+
+    /// Request to change the order of the specified link to `new_order` and
+    /// return the updated [Link] if suceeded.
+    ChangeLinkOrder { id: Id<Link>, new_order: i32 },
 }

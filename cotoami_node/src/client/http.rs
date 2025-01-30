@@ -244,6 +244,9 @@ impl HttpClient {
                 self.put(&format!("{API_PATH_LINKS}/{id}")).json(&diff)
             }
             Command::Disconnect { id } => self.delete(&format!("{API_PATH_LINKS}/{id}")),
+            Command::ChangeLinkOrder { id, new_order } => self
+                .put(&format!("{API_PATH_LINKS}/{id}/order"))
+                .json(&new_order),
         };
 
         // Set the "Accept" header from Request::accept()
