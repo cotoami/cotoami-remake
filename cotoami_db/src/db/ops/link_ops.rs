@@ -65,8 +65,7 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
 pub(crate) fn insert(mut new_link: NewLink<'_>) -> impl Operation<WritableConn, Link> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         if let Some(order) = new_link.order {
-            let affected = make_room_for(new_link.source_coto_id(), order).run(ctx)?;
-            debug!("{affected} links moved over to make room for number: {order}");
+            make_room_for(new_link.source_coto_id(), order).run(ctx)?;
         } else {
             let last_number = last_order_number(new_link.source_coto_id())
                 .run(ctx)?
@@ -88,6 +87,21 @@ fn last_order_number<Conn: AsReadableConn>(
             .select(max(links::order))
             .filter(links::source_coto_id.eq(coto_id))
             .first(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
+pub(crate) fn change_order(
+    id: &Id<Link>,
+    new_order: i32,
+) -> impl Operation<WritableConn, Link> + '_ {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let link = try_get(id).run(ctx)??;
+        make_room_for(&link.source_coto_id, new_order).run(ctx)?;
+        diesel::update(links::table)
+            .filter(links::uuid.eq(link.uuid))
+            .set(links::order.eq(new_order))
+            .get_result(ctx.conn().deref_mut())
             .map_err(anyhow::Error::from)
     })
 }
@@ -127,6 +141,7 @@ fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn,
                     updated += 1;
                 }
             }
+            debug!("{updated} links moved over to make room for: {order}");
             Ok(updated)
         } else {
             Ok(0)
