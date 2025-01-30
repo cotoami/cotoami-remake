@@ -21,7 +21,7 @@ fn crud_operations() -> Result<()> {
     let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root_cotonoma.uuid, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: create a link from coto1 to coto2
+    // When: create link1: coto1 => coto2
     /////////////////////////////////////////////////////////////////////////////
 
     let mock_time = time::mock_time();
@@ -72,7 +72,7 @@ fn crud_operations() -> Result<()> {
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: create a link from coto1 to coto3
+    // When: create link2: coto1 => coto3
     /////////////////////////////////////////////////////////////////////////////
 
     time::clear_mock_time();
@@ -110,7 +110,7 @@ fn crud_operations() -> Result<()> {
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: create a link from coto1 to coto4 with order number 1
+    // When: create link3: coto1 =(order number 1)=> coto4
     /////////////////////////////////////////////////////////////////////////////
 
     let (link3, _) = ds.connect(&LinkInput::new(coto1.uuid, coto4.uuid).order(1), &operator)?;
