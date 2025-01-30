@@ -51,6 +51,22 @@ impl NodeState {
         .await
     }
 
+    pub async fn change_link_order(
+        self,
+        id: Id<Link>,
+        new_order: i32,
+        operator: Arc<Operator>,
+    ) -> Result<Link, ServiceError> {
+        let link = self.link(id).await?;
+        self.change(
+            link.node_id,
+            new_order,
+            move |ds, new_order| ds.change_link_order(&id, new_order, operator.as_ref()),
+            |parent, new_order| unimplemented!(),
+        )
+        .await
+    }
+
     pub async fn disconnect(
         self,
         id: Id<Link>,
