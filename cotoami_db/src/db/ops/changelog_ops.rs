@@ -247,6 +247,9 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             Change::DeleteLink { link_id } => {
                 link_ops::delete(link_id).run(ctx)?;
             }
+            Change::ChangeLinkOrder { link_id, new_order } => {
+                link_ops::change_order(link_id, *new_order).run(ctx)?;
+            }
             Change::ChangeOwnerNode {
                 from,
                 to,

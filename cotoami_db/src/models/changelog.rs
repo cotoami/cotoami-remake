@@ -150,6 +150,10 @@ pub enum Change {
     DeleteLink {
         link_id: Id<Link>,
     } = 13,
+    ChangeLinkOrder {
+        link_id: Id<Link>,
+        new_order: i32,
+    } = 14,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -160,7 +164,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 14,
+    } = 15,
 }
 
 impl Change {
