@@ -293,7 +293,7 @@ impl PaginatedCotos {
             .chain(related_data.originals.iter().map(|coto| coto.uuid))
             .unique()
             .collect();
-        let outgoing_links = ds.links_by_source_coto_ids(&coto_ids)?;
+        let outgoing_links = ds.outgoing_links(&coto_ids)?;
 
         Ok(PaginatedCotos {
             page,

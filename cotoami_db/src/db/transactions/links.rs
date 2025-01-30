@@ -20,7 +20,7 @@ impl<'a> DatabaseSession<'a> {
             .map_err(anyhow::Error::from)
     }
 
-    pub fn links_by_source_coto_ids(&mut self, coto_ids: &[Id<Coto>]) -> Result<Vec<Link>> {
+    pub fn outgoing_links(&mut self, coto_ids: &[Id<Coto>]) -> Result<Vec<Link>> {
         self.read_transaction(link_ops::get_by_source_coto_ids(coto_ids))
     }
 

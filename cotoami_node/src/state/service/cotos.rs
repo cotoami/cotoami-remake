@@ -99,7 +99,7 @@ impl NodeState {
         self.get(move |ds| {
             let coto = ds.try_get_coto(&id)?;
             let related_data = CotosRelatedData::fetch(ds, slice::from_ref(&coto))?;
-            let outgoing_links = ds.links_by_source_coto_ids(&[coto.uuid])?;
+            let outgoing_links = ds.outgoing_links(&[coto.uuid])?;
             Ok(CotoDetails::new(coto, related_data, outgoing_links))
         })
         .await
