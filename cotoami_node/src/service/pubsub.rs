@@ -3,8 +3,11 @@
 //! This client sends requests to [PubsubService::requests] and receives
 //! responses from [PubsubService::responses], so it is protocol agnostic.
 
+use std::time::Duration;
+
 use anyhow::{bail, Result};
 use futures::StreamExt;
+use tokio::time::timeout;
 use uuid::Uuid;
 
 use crate::{pubsub::Publisher, service::*};
@@ -14,6 +17,7 @@ pub struct PubsubService {
     description: String,
     requests: RequestPubsub,
     responses: ResponsePubsub,
+    timeout: Duration,
 }
 
 impl PubsubService {
@@ -22,23 +26,21 @@ impl PubsubService {
             description: description.into(),
             requests: RequestPubsub::default(),
             responses,
+            timeout: Duration::from_secs(10), // Default timeout
         }
     }
+
+    pub fn set_timeout(&mut self, timeout: Duration) { self.timeout = timeout; }
 
     pub fn requests(&self) -> &RequestPubsub { &self.requests }
 
     async fn handle_request(self, request: Request) -> Result<Response> {
         let mut stream = self.responses.subscribe_onetime(Some(request.id));
         self.requests.publish(request, None);
-        // TODO: should be set timeout for the response
-        // https://github.com/hyperium/hyper/issues/2132
-        // https://docs.rs/tower/latest/tower/struct.ServiceBuilder.html
-        //     - check timeout and map_err
-        // https://docs.rs/tower/latest/tower/timeout/error/struct.Elapsed.html
-        if let Some(response) = stream.next().await {
-            Ok(response)
-        } else {
-            bail!("Missing response.");
+        match timeout(self.timeout, stream.next()).await {
+            Ok(Some(response)) => Ok(response),
+            Ok(None) => bail!("Missing response"),
+            Err(_) => bail!("Request timeout"),
         }
     }
 }
