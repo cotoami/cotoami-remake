@@ -125,10 +125,10 @@ pub(crate) async fn handle_event_from_parent(
     match event {
         NodeSentEvent::Change(change) => {
             if let Some(parent_service) = state.parent_services().get(&parent_id) {
-                let r = state
+                if let Err(e) = state
                     .handle_parent_change(parent_id, change, parent_service)
-                    .await;
-                if let Err(e) = r {
+                    .await
+                {
                     // `sync_with_parent` could be run in parallel, in such cases,
                     // `DatabaseError::UnexpectedChangeNumber` will be returned.
                     if let Some(DatabaseError::UnexpectedChangeNumber { .. }) =
