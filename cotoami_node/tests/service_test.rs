@@ -23,6 +23,7 @@ where
 {
     let mut backend_ds = backend_state.db().new_session()?;
     let backend_node = backend_ds.local_node()?;
+    let backend_owner = backend_state.local_node_as_operator()?;
     let (backend_root_cotonoma, backend_root_coto) = backend_ds.try_get_local_node_root()?;
     futures::pin_mut!(changes);
 
@@ -162,6 +163,40 @@ where
             order: eq(&1),
         }),
         "Unexpected response of Connect command"
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: OutgoingLinks
+    /////////////////////////////////////////////////////////////////////////////
+
+    let (coto2, _) = backend_ds.post_coto(
+        &CotoInput::new("coto2"),
+        &backend_root_cotonoma.uuid,
+        &backend_owner,
+    )?;
+    let (link2, _) = backend_ds.connect(
+        &LinkInput::new(backend_root_coto.uuid, coto2.uuid).linking_phrase("The second link"),
+        &backend_owner,
+    )?;
+
+    let request = Command::OutgoingLinks {
+        coto: backend_root_coto.uuid,
+    }
+    .into_request();
+    let links = service.call(request).await?.content::<Vec<Link>>()?;
+
+    assert_that!(
+        links,
+        elements_are![
+            pat!(Link {
+                linking_phrase: some(eq("The first link")),
+                order: eq(&1),
+            }),
+            pat!(Link {
+                linking_phrase: some(eq("The second link")),
+                order: eq(&2),
+            })
+        ]
     );
 
     /////////////////////////////////////////////////////////////////////////////
