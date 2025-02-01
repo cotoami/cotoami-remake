@@ -1,6 +1,6 @@
 use std::{ops::ControlFlow, sync::Arc};
 
-use cotoami_db::{ChangelogEntry, DatabaseError, Id, Node, Operator};
+use cotoami_db::{ChangelogEntry, Id, Node, Operator};
 use futures::{Sink, SinkExt};
 use tracing::{debug, error, info};
 
@@ -129,16 +129,8 @@ pub(crate) async fn handle_event_from_parent(
                     .handle_parent_change(parent_id, change, parent_service)
                     .await
                 {
-                    // `sync_with_parent` could be run in parallel, in such cases,
-                    // `DatabaseError::UnexpectedChangeNumber` will be returned.
-                    if let Some(DatabaseError::UnexpectedChangeNumber { .. }) =
-                        e.downcast_ref::<DatabaseError>()
-                    {
-                        info!("Already running sync_with_parent: {e}");
-                    } else {
-                        error!("Error applying a change from the parent ({parent_id}): {e}");
-                        return ControlFlow::Break(e);
-                    }
+                    error!("Error applying a change from the parent ({parent_id}): {e}");
+                    return ControlFlow::Break(e);
                 }
             }
         }

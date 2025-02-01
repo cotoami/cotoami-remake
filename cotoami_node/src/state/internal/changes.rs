@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 use crate::{
     event::local::LocalNodeEvent,
@@ -157,10 +157,10 @@ impl NodeState {
         change: ChangelogEntry,
         parent_service: Box<dyn NodeService>,
     ) -> Result<()> {
-        info!(
+        let parent_desc = parent_service.description();
+        debug!(
             "Received a change {} from {}",
-            change.serial_number,
-            parent_service.description()
+            change.serial_number, parent_desc
         );
 
         // Import the change to the local database
@@ -180,21 +180,19 @@ impl NodeState {
 
         // Handle the import result
         match import_result {
-            Err(anyhow_err) => {
+            Err(e) => {
                 if let Some(DatabaseError::UnexpectedChangeNumber {
                     expected, actual, ..
-                }) = anyhow_err.downcast_ref::<DatabaseError>()
+                }) = e.downcast_ref::<DatabaseError>()
                 {
                     info!(
                         "Out of sync with {} (received: {}, expected {})",
-                        parent_service.description(),
-                        actual,
-                        expected,
+                        parent_desc, actual, expected,
                     );
-                    self.sync_with_parent(parent_node_id, parent_service)
-                        .await?;
+                    // Run `sync_with_parent` in another tokio task to avoid blocking the event loop.
+                    self.run_sync_with_parent(parent_node_id, parent_service);
                 } else {
-                    return Err(anyhow_err);
+                    return Err(e);
                 }
             }
             Ok(Some(imported_change)) => {
@@ -203,5 +201,24 @@ impl NodeState {
             Ok(None) => (),
         }
         Ok(())
+    }
+
+    fn run_sync_with_parent(&self, parent_node_id: Id<Node>, parent_service: Box<dyn NodeService>) {
+        tokio::spawn({
+            let this = self.clone();
+            async move {
+                if let Err(e) = this.sync_with_parent(parent_node_id, parent_service).await {
+                    // `sync_with_parent` could be run in parallel, in such cases,
+                    // `DatabaseError::UnexpectedChangeNumber` will be returned.
+                    if let Some(DatabaseError::UnexpectedChangeNumber { .. }) =
+                        e.downcast_ref::<DatabaseError>()
+                    {
+                        info!("Multiple sync_with_parent tasks running in parallel?: {e}");
+                    } else {
+                        error!("Error sync with the parent ({parent_node_id}): {e}");
+                    }
+                }
+            }
+        });
     }
 }
