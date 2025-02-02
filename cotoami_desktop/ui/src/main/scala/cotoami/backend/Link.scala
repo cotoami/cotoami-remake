@@ -57,6 +57,12 @@ object LinkJson {
       cotoId: Id[Coto]
   ): Cmd.One[Either[ErrorJson, js.Array[LinkJson]]] =
     Commands.send(Commands.OutgoingLinks(cotoId))
+
+  def changeOrder(
+      id: Id[Link],
+      newOrder: Int
+  ): Cmd.One[Either[ErrorJson, LinkJson]] =
+    Commands.send(Commands.ChangeLinkOrder(id, newOrder))
 }
 
 object LinkBackend {
@@ -84,8 +90,7 @@ object LinkBackend {
       linkingPhrase: Option[Option[String]],
       details: Option[Option[String]]
   ): Cmd.One[Either[ErrorJson, Link]] =
-    LinkJson.edit(id, linkingPhrase, details)
-      .map(_.map(toModel))
+    LinkJson.edit(id, linkingPhrase, details).map(_.map(toModel))
 
   def connect(
       sourceId: Id[Coto],
@@ -100,8 +105,7 @@ object LinkBackend {
       linkingPhrase,
       details,
       order
-    )
-      .map(_.map(LinkBackend.toModel))
+    ).map(_.map(toModel))
 
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, Id[Link]]] =
     LinkJson.disconnect(id).map(_.map(Id(_)))
@@ -109,6 +113,11 @@ object LinkBackend {
   def outgoingLinks(
       cotoId: Id[Coto]
   ): Cmd.One[Either[ErrorJson, js.Array[Link]]] =
-    LinkJson.outgoingLinks(cotoId)
-      .map(_.map(_.map(toModel)))
+    LinkJson.outgoingLinks(cotoId).map(_.map(_.map(toModel)))
+
+  def changeOrder(
+      id: Id[Link],
+      newOrder: Int
+  ): Cmd.One[Either[ErrorJson, Link]] =
+    LinkJson.changeOrder(id, newOrder).map(_.map(toModel))
 }

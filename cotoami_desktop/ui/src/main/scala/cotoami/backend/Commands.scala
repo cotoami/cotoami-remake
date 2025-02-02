@@ -325,6 +325,9 @@ object Commands {
 
   def Disconnect(id: Id[Link]) = jso(Disconnect = jso(id = id.uuid))
 
+  def ChangeLinkOrder(id: Id[Link], newOrder: Int) =
+    jso(ChangeLinkOrder = jso(id = id.uuid, new_order = newOrder))
+
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)
 
