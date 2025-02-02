@@ -282,6 +282,9 @@ object Commands {
 
   def Link(id: Id[Link]) = jso(Link = jso(id = id.uuid))
 
+  def OutgoingLinks(cotoId: Id[Coto]) =
+    jso(OutgoingLinks = jso(coto = cotoId.uuid))
+
   def Connect(
       sourceId: Id[Coto],
       targetId: Id[Coto],

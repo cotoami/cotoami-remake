@@ -52,6 +52,11 @@ object LinkJson {
 
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.Disconnect(id))
+
+  def outgoingLinks(
+      cotoId: Id[Coto]
+  ): Cmd.One[Either[ErrorJson, js.Array[LinkJson]]] =
+    Commands.send(Commands.OutgoingLinks(cotoId))
 }
 
 object LinkBackend {
@@ -72,7 +77,7 @@ object LinkBackend {
   def fetch(
       id: Id[Link]
   ): Cmd.One[Either[ErrorJson, Link]] =
-    LinkJson.fetch(id).map(_.map(LinkBackend.toModel))
+    LinkJson.fetch(id).map(_.map(toModel))
 
   def edit(
       id: Id[Link],
@@ -80,7 +85,7 @@ object LinkBackend {
       details: Option[Option[String]]
   ): Cmd.One[Either[ErrorJson, Link]] =
     LinkJson.edit(id, linkingPhrase, details)
-      .map(_.map(LinkBackend.toModel))
+      .map(_.map(toModel))
 
   def connect(
       sourceId: Id[Coto],
@@ -100,4 +105,10 @@ object LinkBackend {
 
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, Id[Link]]] =
     LinkJson.disconnect(id).map(_.map(Id(_)))
+
+  def outgoingLinks(
+      cotoId: Id[Coto]
+  ): Cmd.One[Either[ErrorJson, js.Array[Link]]] =
+    LinkJson.outgoingLinks(cotoId)
+      .map(_.map(_.map(toModel)))
 }
