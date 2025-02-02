@@ -257,6 +257,27 @@ where
         "Unexpected response of EditLink command"
     );
 
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: Disconnect
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::Disconnect {
+        id: created_link.uuid,
+    }
+    .into_request();
+    let deleted_link_id = service.call(request).await?.content::<Id<Link>>()?;
+
+    assert_that!(deleted_link_id, eq(created_link.uuid));
+
+    let links = backend_ds.outgoing_links(&[backend_root_coto.uuid])?;
+    assert_that!(
+        links,
+        unordered_elements_are![pat!(Link {
+            linking_phrase: some(eq("The second link")),
+            order: eq(&1),
+        })]
+    );
+
     Ok(())
 }
 
