@@ -187,13 +187,48 @@ where
 
     assert_that!(
         links,
-        elements_are![
+        unordered_elements_are![
             pat!(Link {
                 linking_phrase: some(eq("The first link")),
                 order: eq(&1),
             }),
             pat!(Link {
                 linking_phrase: some(eq("The second link")),
+                order: eq(&2),
+            })
+        ]
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: ChangeLinkOrder
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::ChangeLinkOrder {
+        id: link2.uuid,
+        new_order: 1,
+    }
+    .into_request();
+    let updated_link = service.call(request).await?.content::<Link>()?;
+
+    assert_that!(
+        updated_link,
+        pat!(Link {
+            uuid: eq(&link2.uuid),
+            order: eq(&1),
+        }),
+        "Unexpected response of ChangeLinkOrder command"
+    );
+
+    let links = backend_ds.outgoing_links(&[backend_root_coto.uuid])?;
+    assert_that!(
+        links,
+        unordered_elements_are![
+            pat!(Link {
+                linking_phrase: some(eq("The second link")),
+                order: eq(&1),
+            }),
+            pat!(Link {
+                linking_phrase: some(eq("The first link")),
                 order: eq(&2),
             })
         ]
