@@ -300,6 +300,7 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (link, coto, order) = pin
     val canEditPin = context.domain.nodes.canEdit(link)
+    val subCotos = context.domain.childrenOf(coto.id)
     li(
       key := link.id.uuid,
       className := optionalClasses(
@@ -379,7 +380,9 @@ object SectionPins {
           ViewCoto.divAttributes(coto)
         )
       ),
-      olSubCotos(coto, inColumn)
+      Option.when(!subCotos.isEmpty) {
+        olSubCotos(coto, subCotos, inColumn)
+      }
     )
   }
 
@@ -419,9 +422,9 @@ object SectionPins {
 
   private def olSubCotos(
       coto: Coto,
+      subCotos: Siblings,
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
       if (coto.isCotonoma && !context.domain.alreadyLoadedGraphFrom(coto.id))
         div(className := "links-not-yet-loaded")(
