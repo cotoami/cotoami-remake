@@ -65,7 +65,7 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
 pub(crate) fn insert(mut new_link: NewLink<'_>) -> impl Operation<WritableConn, Link> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         if let Some(order) = new_link.order {
-            make_room_for(new_link.source_coto_id(), order).run(ctx)?;
+            ensure_space_at(new_link.source_coto_id(), order).run(ctx)?;
         } else {
             let last_number = last_order_number(new_link.source_coto_id())
                 .run(ctx)?
@@ -97,7 +97,7 @@ pub(crate) fn change_order(
 ) -> impl Operation<WritableConn, Link> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let link = try_get(id).run(ctx)??;
-        make_room_for(&link.source_coto_id, new_order).run(ctx)?;
+        ensure_space_at(&link.source_coto_id, new_order).run(ctx)?;
         diesel::update(links::table)
             .filter(links::uuid.eq(link.uuid))
             .set(links::order.eq(new_order))
@@ -106,7 +106,9 @@ pub(crate) fn change_order(
     })
 }
 
-fn make_room_for(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn, usize> + '_ {
+/// Ensure the given order is available by conditionally shifting links to the right
+/// starting from the order.
+fn ensure_space_at(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn, usize> + '_ {
     write_op(move |conn| {
         let orders_onwards: Vec<i32> = links::table
             .select(links::order)
