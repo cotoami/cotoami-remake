@@ -314,6 +314,7 @@ object SectionTraversals {
         onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),
+        ToolbarReorder(link, order),
         header()(
           subcotoLink(link)
         ),

@@ -81,7 +81,11 @@ section.stock {
     }
 
     article.coto {
-      padding-bottom: 5px;
+      padding-bottom: 12px;
+
+      section.reorder-toolbar {
+        bottom: -24px;
+      }
 
       >header {
         padding-right: 10px;

@@ -371,6 +371,7 @@ object SectionPins {
           )
         ),
         ToolbarCoto(coto),
+        ToolbarReorder(link, order),
         div(className := "body")(
           ViewCoto.divContent(coto)
         ),
@@ -473,6 +474,7 @@ object SectionPins {
         onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
       )(
         ToolbarCoto(coto),
+        ToolbarReorder(link, order),
         header()(
           subcotoLink(link)
         ),
