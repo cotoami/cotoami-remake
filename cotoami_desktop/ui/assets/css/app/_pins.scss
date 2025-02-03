@@ -334,6 +334,10 @@ section.pins {
         padding-top: 16px;
         padding-bottom: 3rem;
       }
+
+      article.pinned-coto section.reorder-toolbar button.tool {
+        transform: rotate(-90deg);
+      }
     }
   }
 }
