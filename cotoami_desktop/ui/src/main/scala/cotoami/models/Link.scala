@@ -44,3 +44,25 @@ object Link {
     ).flatten
   }
 }
+
+case class Siblings(sorted: Seq[(Link, Coto)]) {
+  def length = sorted.length
+
+  val minOrder = sorted.headOption.map(_._1.order).getOrElse(0)
+  val maxOrder = sorted.lastOption.map(_._1.order).getOrElse(0)
+
+  // Returns each sibling with the previous and next ones.
+  def window
+      : Iterable[(Option[(Link, Coto)], (Link, Coto), Option[(Link, Coto)])] =
+    sorted.zipWithIndex.map { case (sibling, index) =>
+      (
+        sorted.lift(index - 1),
+        sibling,
+        sorted.lift(index + 1)
+      )
+    }
+}
+
+object Siblings {
+  def empty: Siblings = Siblings(Seq.empty)
+}

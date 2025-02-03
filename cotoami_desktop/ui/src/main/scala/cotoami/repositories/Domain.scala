@@ -120,14 +120,15 @@ case class Domain(
   // Links
   /////////////////////////////////////////////////////////////////////////////
 
-  lazy val pins: Seq[(Link, Coto)] =
+  lazy val pins: Siblings =
     currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
-      .getOrElse(Seq.empty)
+      .getOrElse(Siblings.empty)
 
-  def childrenOf(cotoId: Id[Coto]): Seq[(Link, Coto)] =
+  def childrenOf(cotoId: Id[Coto]): Siblings =
     links.from(cotoId).toSeq
       .map(link => cotos.get(link.targetCotoId).map(child => (link, child)))
       .flatten
+      .pipe(Siblings(_))
 
   def parentsOf(
       cotoId: Id[Coto],
