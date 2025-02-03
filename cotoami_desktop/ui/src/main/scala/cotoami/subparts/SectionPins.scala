@@ -18,7 +18,15 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Link, UiState}
+import cotoami.models.{
+  Coto,
+  Cotonoma,
+  Id,
+  Link,
+  OrderContext,
+  Siblings,
+  UiState
+}
 import cotoami.repositories.Domain
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
@@ -100,7 +108,7 @@ object SectionPins {
   }
 
   def sectionPins(
-      pins: Seq[(Link, Coto)],
+      pins: Siblings,
       model: Model,
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
@@ -176,13 +184,13 @@ object SectionPins {
   @react object DocumentView {
     case class Props(
         cotonomaCoto: Coto,
-        pins: Seq[(Link, Coto)],
+        pins: Siblings,
         viewportId: String,
         justPinned: HashSet[Id[Coto]],
         context: Context,
         dispatch: Into[AppMsg] => Unit
     ) {
-      val version: String = pins.map(_._1.id.uuid).mkString
+      val version: String = pins.links.map(_.id.uuid).mkString
     }
 
     final val ActiveTocEntryClass = "active"
@@ -273,35 +281,35 @@ object SectionPins {
   }
 
   private def olPins(
-      pins: Seq[(Link, Coto)],
+      pins: Siblings,
       inColumns: Boolean,
       justPinned: HashSet[Id[Coto]]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     ol(className := "pins")(
-      pins.map { case (pin, coto) =>
-        liPin(pin, coto, inColumns, justPinned.contains(coto.id))
-      }: _*
+      pins.eachWithOrderContext.map(pin =>
+        liPin(pin, inColumns, justPinned.contains(pin._2.id))
+      ).toSeq: _*
     )
 
   def elementIdOfPin(pin: Link): String = s"pin-${pin.id.uuid}"
 
   private def liPin(
-      pin: Link,
-      coto: Coto,
+      pin: (Link, Coto, OrderContext),
       inColumn: Boolean,
       justPinned: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val canEditPin = context.domain.nodes.canEdit(pin)
+    val (link, coto, order) = pin
+    val canEditPin = context.domain.nodes.canEdit(link)
     li(
-      key := pin.id.uuid,
+      key := link.id.uuid,
       className := optionalClasses(
         Seq(
           ("pin", true),
           ("just-pinned", justPinned),
-          ("with-linking-phrase", pin.linkingPhrase.isDefined)
+          ("with-linking-phrase", link.linkingPhrase.isDefined)
         )
       ),
-      id := elementIdOfPin(pin),
+      id := elementIdOfPin(link),
       onAnimationEnd := (e => {
         if (e.animationName == "just-pinned") {
           dispatch(Msg.PinAnimationEnd(coto.id).into)
@@ -309,7 +317,7 @@ object SectionPins {
       })
     )(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != pin.id),
+        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       article(
@@ -326,7 +334,7 @@ object SectionPins {
           className := optionalClasses(
             Seq(
               ("link-container", true),
-              ("with-linking-phrase", pin.linkingPhrase.isDefined)
+              ("with-linking-phrase", link.linkingPhrase.isDefined)
             )
           )
         )(
@@ -347,16 +355,16 @@ object SectionPins {
               disabled = !canEditPin,
               onClick = e => {
                 e.stopPropagation()
-                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
+                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
               }
             ),
-            pin.linkingPhrase.map(phrase =>
+            link.linkingPhrase.map(phrase =>
               section(
                 className := "linking-phrase",
                 onClick := (e => {
                   e.stopPropagation()
                   if (canEditPin)
-                    dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(pin)))
+                    dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
                 })
               )(phrase)
             )
@@ -378,21 +386,21 @@ object SectionPins {
     s"toc-${elementIdOfPin(pin)}"
 
   private def divToc(
-      pins: Seq[(Link, Coto)],
+      pins: Siblings,
       tocRef: ReactRef[dom.HTMLDivElement]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
         ol(className := "toc")(
-          pins.map { case (pin, coto) =>
+          pins.eachWithOrderContext.map { case (link, coto, order) =>
             li(
-              key := pin.id.uuid,
+              key := link.id.uuid,
               className := "toc-entry",
-              id := elementIdOfTocEntry(pin)
+              id := elementIdOfTocEntry(link)
             )(
               button(
                 className := "default",
-                onClick := (_ => dispatch(Msg.ScrollToPin(pin)))
+                onClick := (_ => dispatch(Msg.ScrollToPin(link)))
               )(
                 if (coto.isCotonoma)
                   span(className := "cotonoma")(
@@ -403,7 +411,7 @@ object SectionPins {
                   coto.abbreviate
               )
             )
-          }: _*
+          }.toSeq: _*
         )
       )
     )
@@ -432,8 +440,8 @@ object SectionPins {
           }
         )
       else
-        subCotos.map { case (link, subCoto) =>
-          liSubCoto(link, subCoto)
+        subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
+          liSubCoto(link, subCoto, order)
         }
     ) match {
       case olSubCotos =>
@@ -449,7 +457,8 @@ object SectionPins {
 
   private def liSubCoto(
       link: Link,
-      coto: Coto
+      coto: Coto,
+      order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(

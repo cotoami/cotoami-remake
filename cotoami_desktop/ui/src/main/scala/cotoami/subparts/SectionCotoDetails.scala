@@ -7,7 +7,7 @@ import slinky.web.html._
 
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
-import cotoami.models.{Coto, Link}
+import cotoami.models.{Coto, Link, OrderContext}
 import cotoami.components.{optionalClasses, toolButton, ScrollArea}
 
 object SectionCotoDetails {
@@ -89,15 +89,16 @@ object SectionCotoDetails {
   ): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
     ol(className := "sub-cotos")(
-      subCotos.map { case (link, subCoto) =>
-        liSubCoto(link, subCoto)
-      }: _*
+      subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
+        liSubCoto(link, subCoto, order)
+      }.toSeq: _*
     )
   }
 
   private def liSubCoto(
       link: Link,
-      coto: Coto
+      coto: Coto,
+      order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
     li(key := link.id.uuid, className := "sub")(

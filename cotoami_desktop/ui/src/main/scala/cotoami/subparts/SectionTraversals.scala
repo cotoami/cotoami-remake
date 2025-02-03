@@ -14,7 +14,7 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Link}
+import cotoami.models.{Coto, Id, Link, OrderContext}
 import cotoami.repositories.Links
 import cotoami.components.{
   materialSymbol,
@@ -279,7 +279,7 @@ object SectionTraversals {
         )
       ),
       ol(className := "sub-cotos")(
-        subCotos.map(liSubCoto(_, stepIndex, traversal))
+        subCotos.eachWithOrderContext.map(liSubCoto(_, stepIndex, traversal))
       )
     )
   }
@@ -292,11 +292,11 @@ object SectionTraversals {
       stepIndex.map(step => s"-step-${step}").getOrElse("-start")
 
   private def liSubCoto(
-      subCoto: (Link, Coto),
+      subCoto: (Link, Coto, OrderContext),
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (link, coto) = subCoto
+    val (link, coto, order) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(key := link.id.uuid, className := "sub")(
       ViewCoto.ulParents(

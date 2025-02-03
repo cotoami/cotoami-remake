@@ -48,11 +48,15 @@ object Link {
 case class Siblings(sorted: Seq[(Link, Coto)]) {
   def length = sorted.length
 
+  def isEmpty: Boolean = sorted.isEmpty
+
   val minOrder = sorted.headOption.map(_._1.order).getOrElse(0)
   val maxOrder = sorted.lastOption.map(_._1.order).getOrElse(0)
 
+  def links: Iterable[Link] = sorted.map(_._1)
+
   // Returns each sibling with the previous and next ones.
-  def window
+  def eachWithNeighbors
       : Iterable[(Option[(Link, Coto)], (Link, Coto), Option[(Link, Coto)])] =
     sorted.zipWithIndex.map { case (sibling, index) =>
       (
@@ -61,8 +65,34 @@ case class Siblings(sorted: Seq[(Link, Coto)]) {
         sorted.lift(index + 1)
       )
     }
+
+  def eachWithOrderContext: Iterable[(Link, Coto, OrderContext)] =
+    eachWithNeighbors.map { case (previous, (link, coto), next) =>
+      (
+        link,
+        coto,
+        OrderContext(
+          min = minOrder,
+          max = maxOrder,
+          current = link.order,
+          previous = previous.map(_._1.order),
+          next = next.map(_._1.order)
+        )
+      )
+    }
 }
 
 object Siblings {
   def empty: Siblings = Siblings(Seq.empty)
+}
+
+case class OrderContext(
+    min: Int,
+    max: Int,
+    current: Int,
+    previous: Option[Int],
+    next: Option[Int]
+) {
+  def isFirst: Boolean = current == min
+  def isLast: Boolean = current == max
 }

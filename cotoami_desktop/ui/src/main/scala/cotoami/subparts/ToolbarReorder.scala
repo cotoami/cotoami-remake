@@ -4,17 +4,14 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.Link
+import cotoami.models.{Link, OrderContext}
 import cotoami.components.toolButton
 
 object ToolbarReorder {
 
   def apply(
       link: Link,
-      minOrder: Int,
-      maxOrder: Int,
-      previousOrder: Option[Int],
-      nextOrder: Option[Int]
+      order: OrderContext
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -25,7 +22,7 @@ object ToolbarReorder {
         symbol = "skip_previous",
         tip = Some("To top"),
         tipPlacement = "right",
-        disabled = link.order == minOrder,
+        disabled = order.isFirst,
         onClick = e => {
           e.stopPropagation()
         }
@@ -35,7 +32,7 @@ object ToolbarReorder {
         symbol = "play_arrow",
         tip = Some("Up"),
         tipPlacement = "right",
-        disabled = link.order == minOrder,
+        disabled = order.isFirst,
         onClick = e => {
           e.stopPropagation()
         }
@@ -45,7 +42,7 @@ object ToolbarReorder {
         symbol = "play_arrow",
         tip = Some("Down"),
         tipPlacement = "right",
-        disabled = link.order == maxOrder,
+        disabled = order.isLast,
         onClick = e => {
           e.stopPropagation()
         }
@@ -55,7 +52,7 @@ object ToolbarReorder {
         symbol = "skip_next",
         tip = Some("To bottom"),
         tipPlacement = "right",
-        disabled = link.order == maxOrder,
+        disabled = order.isLast,
         onClick = e => {
           e.stopPropagation()
         }
