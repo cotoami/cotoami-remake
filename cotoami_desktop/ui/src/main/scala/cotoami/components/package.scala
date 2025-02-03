@@ -15,7 +15,7 @@ package object components {
 
   def toolButton(
       symbol: String,
-      tip: Option[String],
+      tip: Option[String] = None,
       tipPlacement: String = "bottom",
       classes: String = "",
       disabled: Boolean = false,

@@ -116,6 +116,7 @@ object SectionCotoDetails {
           onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
         )(
           ToolbarCoto(coto),
+          ToolbarReorder(link, order),
           header()(
             subcotoLink(link),
             ViewCoto.divAttributes(coto),

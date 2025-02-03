@@ -19,9 +19,7 @@ object ToolbarReorder {
     section(className := "reorder-toolbar")(
       toolButton(
         classes = "move-to-top",
-        symbol = "skip_previous",
-        tip = Some("To top"),
-        tipPlacement = "right",
+        symbol = "vertical_align_top",
         disabled = order.isFirst,
         onClick = e => {
           e.stopPropagation()
@@ -29,9 +27,7 @@ object ToolbarReorder {
       ),
       toolButton(
         classes = "move-up",
-        symbol = "play_arrow",
-        tip = Some("Up"),
-        tipPlacement = "right",
+        symbol = "arrow_upward",
         disabled = order.isFirst,
         onClick = e => {
           e.stopPropagation()
@@ -39,9 +35,7 @@ object ToolbarReorder {
       ),
       toolButton(
         classes = "move-down",
-        symbol = "play_arrow",
-        tip = Some("Down"),
-        tipPlacement = "right",
+        symbol = "arrow_downward",
         disabled = order.isLast,
         onClick = e => {
           e.stopPropagation()
@@ -49,9 +43,7 @@ object ToolbarReorder {
       ),
       toolButton(
         classes = "move-to-bottom",
-        symbol = "skip_next",
-        tip = Some("To bottom"),
-        tipPlacement = "right",
+        symbol = "vertical_align_bottom",
         disabled = order.isLast,
         onClick = e => {
           e.stopPropagation()
