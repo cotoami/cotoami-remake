@@ -57,6 +57,19 @@ object ModalWelcome {
       else
         Cmd.none
 
+    def validateDatabaseFolder: Cmd.One[AppMsg] =
+      if (!databaseFolder.isBlank)
+        tauri
+          .invokeCommand(
+            "validate_database_folder",
+            js.Dynamic.literal(
+              folder = databaseFolder
+            )
+          )
+          .map(Msg.DatabaseFolderValidation(_).into)
+      else
+        Cmd.none
+
     def readyToCreate: Boolean =
       !processing &&
         validateDatabaseName.validated &&
@@ -167,13 +180,10 @@ object ModalWelcome {
             .map(Msg.DatabaseFolderSelected(_).into)
         )
 
-      case Msg.DatabaseFolderSelected(Right(path)) => {
-        model.copy(databaseFolder =
-          path.getOrElse(model.databaseFolder)
-        ) match {
-          case model => (model, validateDatabaseFolder(model))
-        }
-      }
+      case Msg.DatabaseFolderSelected(Right(path)) =>
+        model.copy(databaseFolder = path.getOrElse(model.databaseFolder)).pipe(
+          model => (model, model.validateDatabaseFolder)
+        )
 
       case Msg.DatabaseFolderSelected(Left(e)) =>
         (
@@ -225,19 +235,6 @@ object ModalWelcome {
           cotoami.error(e.default_message, e)
         )
     }
-
-  private def validateDatabaseFolder(model: Model): Cmd.One[AppMsg] =
-    if (!model.databaseFolder.isBlank)
-      tauri
-        .invokeCommand(
-          "validate_database_folder",
-          js.Dynamic.literal(
-            folder = model.databaseFolder
-          )
-        )
-        .map(Msg.DatabaseFolderValidation(_).into)
-    else
-      Cmd.none
 
   /////////////////////////////////////////////////////////////////////////////
   // View
