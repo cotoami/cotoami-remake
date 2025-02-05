@@ -43,6 +43,20 @@ object ModalWelcome {
       else
         Validation.Result(Node.validateName(databaseName))
 
+    def validateNewFolder: Cmd.One[AppMsg] =
+      if (!baseFolder.isBlank && !folderName.isBlank)
+        tauri
+          .invokeCommand(
+            "validate_new_database_folder",
+            js.Dynamic.literal(
+              baseFolder = baseFolder,
+              folderName = folderName
+            )
+          )
+          .map(Msg.NewFolderValidation(_).into)
+      else
+        Cmd.none
+
     def readyToCreate: Boolean =
       !processing &&
         validateDatabaseName.validated &&
@@ -99,9 +113,9 @@ object ModalWelcome {
         )
 
       case Msg.BaseFolderSelected(Right(path)) => {
-        model.copy(baseFolder = path.getOrElse(model.baseFolder)) match {
-          case model => (model, validateNewFolder(model))
-        }
+        model.copy(baseFolder = path.getOrElse(model.baseFolder)).pipe(model =>
+          (model, model.validateNewFolder)
+        )
       }
 
       case Msg.BaseFolderSelected(Left(e)) =>
@@ -114,9 +128,7 @@ object ModalWelcome {
         model.copy(
           folderName = value,
           folderNameValidation = Validation.Result.notYetValidated
-        ) match {
-          case model => (model, validateNewFolder(model))
-        }
+        ).pipe(model => (model, model.validateNewFolder))
 
       case Msg.NewFolderValidation(Right(_)) =>
         (
@@ -213,20 +225,6 @@ object ModalWelcome {
           cotoami.error(e.default_message, e)
         )
     }
-
-  private def validateNewFolder(model: Model): Cmd.One[AppMsg] =
-    if (!model.baseFolder.isBlank && !model.folderName.isBlank)
-      tauri
-        .invokeCommand(
-          "validate_new_database_folder",
-          js.Dynamic.literal(
-            baseFolder = model.baseFolder,
-            folderName = model.folderName
-          )
-        )
-        .map(Msg.NewFolderValidation(_).into)
-    else
-      Cmd.none
 
   private def validateDatabaseFolder(model: Model): Cmd.One[AppMsg] =
     if (!model.databaseFolder.isBlank)
