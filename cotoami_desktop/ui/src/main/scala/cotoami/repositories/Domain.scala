@@ -21,14 +21,16 @@ case class Domain(
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
     graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
     deleting: HashSet[Id[Coto]] = HashSet.empty,
-    pinning: HashSet[Id[Coto]] = HashSet.empty
+    pinning: HashSet[Id[Coto]] = HashSet.empty,
+    reordering: HashSet[Id[Coto]] = HashSet.empty
 ) {
   def onFocusChange: Domain =
     copy(
       graphLoading = HashSet.empty,
       graphLoaded = HashSet.empty,
       deleting = HashSet.empty,
-      pinning = HashSet.empty
+      pinning = HashSet.empty,
+      reordering = HashSet.empty
     )
 
   /////////////////////////////////////////////////////////////////////////////
@@ -367,6 +369,8 @@ object Domain {
     case class Pin(cotoId: Id[Coto]) extends Msg
     case class Pinned(cotoId: Id[Coto], result: Either[ErrorJson, Link])
         extends Msg
+    case class OrderChanged(cotoId: Id[Coto], result: Either[ErrorJson, Link])
+        extends Msg
   }
 
   def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
@@ -467,6 +471,18 @@ object Domain {
           model.modify(_.pinning).using(_ - cotoId),
           cotoami.error("Couldn't pin a coto.", e)
         )
+
+      case Msg.OrderChanged(cotoId, Right(_)) =>
+        (
+          model.modify(_.reordering).using(_ - cotoId),
+          Cmd.none
+        )
+
+      case Msg.OrderChanged(cotoId, Left(e)) =>
+        (
+          model.modify(_.reordering).using(_ - cotoId),
+          cotoami.error("Couldn't change the link order.", e)
+        )
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
@@ -486,4 +502,8 @@ object Domain {
 
   def fetchGraphFromCotonoma(cotonoma: Id[Cotonoma]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCotonoma(cotonoma).map(Msg.CotoGraphFetched(_).into)
+
+  def changeOrder(link: Link, newOrder: Int): Cmd.One[AppMsg] =
+    LinkBackend.changeOrder(link.id, newOrder)
+      .map(Msg.OrderChanged(link.sourceCotoId, _).into)
 }
