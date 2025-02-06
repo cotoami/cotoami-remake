@@ -308,7 +308,6 @@ object SectionPins {
     val canEditPin = context.domain.nodes.canEdit(link)
     val subCotos = context.domain.childrenOf(coto.id)
     li(
-      key := link.id.uuid,
       className := optionalClasses(
         Seq(
           ("pin", true),
@@ -399,7 +398,6 @@ object SectionPins {
           pins.eachWithOrderContext.map { case (link, coto, order) =>
             Flipped(key = link.id.uuid, flipId = link.id.uuid)(
               li(
-                key := link.id.uuid,
                 className := "toc-entry",
                 id := elementIdOfTocEntry(link)
               )(
@@ -472,7 +470,7 @@ object SectionPins {
       coto: Coto,
       order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    li(key := link.id.uuid, className := "sub")(
+    li(className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
         SectionTraversals.Msg.OpenTraversal(_).into
