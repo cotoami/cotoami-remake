@@ -7,10 +7,12 @@ import cotoami.models.{Coto, Id, Link}
 
 case class Links(
     map: Map[Id[Link], Link] = Map.empty,
-    // It breaks SSoT to hold link data duplicated from `map`,
-    // but it's needed to keep them sorted in TreeSet.
-    mapBySourceCotoId: Map[Id[Coto], TreeSet[Link]] = Map.empty,
-    mapByTargetCotoId: Map[Id[Coto], HashSet[Id[Link]]] = Map.empty
+
+    // Hold each outgoing links in TreeSet so that they are ordered by Link.order
+    outgoingLinks: Map[Id[Coto], TreeSet[Link]] = Map.empty,
+
+    // Link IDs indexed by target coto ID
+    incomingLinkIds: Map[Id[Coto], HashSet[Id[Link]]] = Map.empty
 ) {
   def get(id: Id[Link]): Option[Link] = map.get(id)
 
@@ -18,17 +20,17 @@ case class Links(
     this
       .delete(link.id)
       .modify(_.map).using(_ + (link.id -> link))
-      .modify(_.mapBySourceCotoId).using(map => {
-        val outgoingLinks =
+      .modify(_.outgoingLinks).using(map => {
+        val links =
           map.get(link.sourceCotoId).map(_ + link)
             .getOrElse(TreeSet(link))
-        map + (link.sourceCotoId -> outgoingLinks)
+        map + (link.sourceCotoId -> links)
       })
-      .modify(_.mapByTargetCotoId).using(map => {
-        val incomingLinks =
+      .modify(_.incomingLinkIds).using(map => {
+        val linkIds =
           map.get(link.targetCotoId).map(_ + link.id)
             .getOrElse(HashSet(link.id))
-        map + (link.targetCotoId -> incomingLinks)
+        map + (link.targetCotoId -> linkIds)
       })
   }
 
@@ -37,29 +39,29 @@ case class Links(
   def delete(id: Id[Link]): Links = {
     this
       .modify(_.map).using(_ - id)
-      .modify(_.mapBySourceCotoId).using(
+      .modify(_.outgoingLinks).using(
         _.map { case (cotoId, links) => (cotoId, links.filterNot(_.id == id)) }
           .filterNot(_._2.isEmpty)
       )
-      .modify(_.mapByTargetCotoId).using(
+      .modify(_.incomingLinkIds).using(
         _.map { case (cotoId, linkIds) => (cotoId, linkIds - id) }
           .filterNot(_._2.isEmpty)
       )
   }
 
   def linked(from: Id[Coto], to: Id[Coto]): Boolean =
-    mapByTargetCotoId.get(to).map(
+    incomingLinkIds.get(to).map(
       _.exists(get(_).map(_.sourceCotoId == from).getOrElse(false))
     ).getOrElse(false)
 
   def from(id: Id[Coto]): TreeSet[Link] =
-    mapBySourceCotoId.get(id).getOrElse(TreeSet.empty)
+    outgoingLinks.get(id).getOrElse(TreeSet.empty)
 
   def anyFrom(id: Id[Coto]): Boolean =
-    mapBySourceCotoId.get(id).map(!_.isEmpty).getOrElse(false)
+    outgoingLinks.get(id).map(!_.isEmpty).getOrElse(false)
 
   def to(id: Id[Coto]): Seq[Link] =
-    mapByTargetCotoId.get(id).map(_.map(get).flatten.toSeq)
+    incomingLinkIds.get(id).map(_.map(get).flatten.toSeq)
       .getOrElse(Seq.empty)
 
   def onCotoDelete(id: Id[Coto]): Links = {
