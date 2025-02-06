@@ -35,6 +35,23 @@ case class Links(
 
   def putAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ put _)
 
+  def replaceOutgoingLinks(cotoId: Id[Coto], links: Iterable[Link]): Links =
+    this
+      .modify(_.map).using(map =>
+        links.foldLeft(map)((map, link) => map + (link.id -> link))
+      )
+      .modify(_.outgoingLinks).using(map =>
+        (map - cotoId) + (cotoId -> TreeSet.from(links))
+      )
+      .modify(_.incomingLinkIds).using(map =>
+        links.foldLeft(map)((map, link) =>
+          map + (link.targetCotoId ->
+            map.get(link.targetCotoId)
+              .map(_ + link.id)
+              .getOrElse(HashSet(link.id)))
+        )
+      )
+
   def delete(id: Id[Link]): Links =
     this
       .modify(_.map).using(_ - id)

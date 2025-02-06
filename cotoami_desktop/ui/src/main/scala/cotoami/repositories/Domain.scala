@@ -500,7 +500,7 @@ object Domain {
 
       case Msg.OutgoingLinksFetched(cotoId, Right(links)) =>
         (
-          model.modify(_.links).using(_.putAll(links)),
+          model.modify(_.links).using(_.replaceOutgoingLinks(cotoId, links)),
           Cmd.none
         )
 
