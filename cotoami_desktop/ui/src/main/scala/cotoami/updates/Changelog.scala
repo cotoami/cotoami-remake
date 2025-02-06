@@ -80,6 +80,17 @@ object Changelog {
       )
     }
 
+    // ChangeLinkOrder
+    for (json <- change.ChangeLinkOrder.toOption) {
+      val linkId: Id[Link] = Id(json.link_id)
+      return (
+        model,
+        model.domain.links.get(linkId)
+          .map(link => Domain.fetchOutgoingLinks(link.sourceCotoId))
+          .getOrElse(Cmd.none)
+      )
+    }
+
     // EditCoto
     for (json <- change.EditCoto.toOption) {
       return (model, Domain.fetchCotoDetails(Id(json.coto_id)))

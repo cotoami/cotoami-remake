@@ -29,6 +29,7 @@ trait ChangeJson extends js.Object {
   val CreateLink: js.UndefOr[LinkJson] = js.native
   val EditLink: js.UndefOr[EditLinkJson] = js.native
   val DeleteLink: js.UndefOr[DeleteLinkJson] = js.native
+  val ChangeLinkOrder: js.UndefOr[ChangeLinkOrderJson] = js.native
   val ChangeOwnerNode: js.UndefOr[ChangeOwnerNodeJson] = js.native
 }
 
@@ -87,6 +88,12 @@ trait EditLinkJson extends js.Object {
 @js.native
 trait DeleteLinkJson extends js.Object {
   val link_id: String = js.native
+}
+
+@js.native
+trait ChangeLinkOrderJson extends js.Object {
+  val link_id: String = js.native
+  val new_order: Int = js.native
 }
 
 @js.native
