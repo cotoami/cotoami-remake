@@ -16,27 +16,26 @@ case class Links(
 ) {
   def get(id: Id[Link]): Option[Link] = map.get(id)
 
-  def put(link: Link): Links = {
+  def put(link: Link): Links =
     this
-      .delete(link.id)
       .modify(_.map).using(_ + (link.id -> link))
       .modify(_.outgoingLinks).using(map => {
-        val links =
-          map.get(link.sourceCotoId).map(_ + link)
-            .getOrElse(TreeSet(link))
-        map + (link.sourceCotoId -> links)
+        map + (link.sourceCotoId ->
+          map.get(link.sourceCotoId)
+            .map(_.filterNot(_.id == link.id)) // remove old version
+            .map(_ + link)
+            .getOrElse(TreeSet(link)))
       })
       .modify(_.incomingLinkIds).using(map => {
-        val linkIds =
-          map.get(link.targetCotoId).map(_ + link.id)
-            .getOrElse(HashSet(link.id))
-        map + (link.targetCotoId -> linkIds)
+        map + (link.targetCotoId ->
+          map.get(link.targetCotoId)
+            .map(_ + link.id)
+            .getOrElse(HashSet(link.id)))
       })
-  }
 
   def putAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ put _)
 
-  def delete(id: Id[Link]): Links = {
+  def delete(id: Id[Link]): Links =
     this
       .modify(_.map).using(_ - id)
       .modify(_.outgoingLinks).using(
@@ -47,7 +46,6 @@ case class Links(
         _.map { case (cotoId, linkIds) => (cotoId, linkIds - id) }
           .filterNot(_._2.isEmpty)
       )
-  }
 
   def linked(from: Id[Coto], to: Id[Coto]): Boolean =
     incomingLinkIds.get(to).map(
