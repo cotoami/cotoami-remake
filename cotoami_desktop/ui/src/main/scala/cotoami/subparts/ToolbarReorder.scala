@@ -15,12 +15,13 @@ object ToolbarReorder {
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val reordering = context.domain.reordering.contains(link.sourceCotoId)
     section(className := "reorder-toolbar")(
       toolButton(
         classes = "move-to-top",
         symbol = "vertical_align_top",
-        disabled = order.isFirst,
+        disabled = order.isFirst || reordering,
         onClick = e => {
           e.stopPropagation()
         }
@@ -28,7 +29,7 @@ object ToolbarReorder {
       toolButton(
         classes = "move-up",
         symbol = "arrow_upward",
-        disabled = order.isFirst,
+        disabled = order.isFirst || reordering,
         onClick = e => {
           e.stopPropagation()
         }
@@ -36,7 +37,7 @@ object ToolbarReorder {
       toolButton(
         classes = "move-down",
         symbol = "arrow_downward",
-        disabled = order.isLast,
+        disabled = order.isLast || reordering,
         onClick = e => {
           e.stopPropagation()
         }
@@ -44,10 +45,11 @@ object ToolbarReorder {
       toolButton(
         classes = "move-to-bottom",
         symbol = "vertical_align_bottom",
-        disabled = order.isLast,
+        disabled = order.isLast || reordering,
         onClick = e => {
           e.stopPropagation()
         }
       )
     )
+  }
 }
