@@ -8,9 +8,7 @@ import cotoami.models.{Coto, Id, Link}
 case class Links(
     map: Map[Id[Link], Link] = Map.empty,
     outgoingLinks: OutgoingLinks = OutgoingLinks(),
-
-    // Link IDs indexed by target coto ID
-    incomingLinkIds: Map[Id[Coto], HashSet[Id[Link]]] = Map.empty
+    incomingLinkIds: IncomingLinkIds = IncomingLinkIds()
 ) {
   def get(id: Id[Link]): Option[Link] = map.get(id)
 
@@ -18,12 +16,7 @@ case class Links(
     this
       .modify(_.map).using(_ + (link.id -> link))
       .modify(_.outgoingLinks).using(_.put(link))
-      .modify(_.incomingLinkIds).using(map => {
-        map + (link.targetCotoId ->
-          map.get(link.targetCotoId)
-            .map(_ + link.id)
-            .getOrElse(HashSet(link.id)))
-      })
+      .modify(_.incomingLinkIds).using(_.put(link))
 
   def putAll(links: Iterable[Link]): Links = links.foldLeft(this)(_ put _)
 
@@ -33,23 +26,13 @@ case class Links(
         links.foldLeft(map)((map, link) => map + (link.id -> link))
       )
       .modify(_.outgoingLinks).using(_.replace(cotoId, links))
-      .modify(_.incomingLinkIds).using(map =>
-        links.foldLeft(map)((map, link) =>
-          map + (link.targetCotoId ->
-            map.get(link.targetCotoId)
-              .map(_ + link.id)
-              .getOrElse(HashSet(link.id)))
-        )
-      )
+      .modify(_.incomingLinkIds).using(_.putAll(links))
 
   def delete(id: Id[Link]): Links =
     this
       .modify(_.map).using(_ - id)
       .modify(_.outgoingLinks).using(_.delete(id))
-      .modify(_.incomingLinkIds).using(
-        _.map { case (cotoId, linkIds) => (cotoId, linkIds - id) }
-          .filterNot(_._2.isEmpty)
-      )
+      .modify(_.incomingLinkIds).using(_.delete(id))
 
   def linked(from: Id[Coto], to: Id[Coto]): Boolean =
     incomingLinkIds.get(to).map(
@@ -94,5 +77,26 @@ case class OutgoingLinks(map: Map[Id[Coto], TreeSet[Link]] = Map.empty)
     copy(map = map.map { case (cotoId, links) =>
       (cotoId, links.filterNot(_.id == id))
     }
+      .filterNot(_._2.isEmpty))
+}
+
+// Link IDs indexed by target coto ID
+case class IncomingLinkIds(map: Map[Id[Coto], HashSet[Id[Link]]] = Map.empty)
+    extends AnyVal {
+  def get(id: Id[Coto]): Option[HashSet[Id[Link]]] = map.get(id)
+
+  def put(link: Link): IncomingLinkIds =
+    copy(map =
+      map + (link.targetCotoId ->
+        map.get(link.targetCotoId)
+          .map(_ + link.id)
+          .getOrElse(HashSet(link.id)))
+    )
+
+  def putAll(links: Iterable[Link]): IncomingLinkIds =
+    links.foldLeft(this)(_ put _)
+
+  def delete(id: Id[Link]): IncomingLinkIds =
+    copy(map = map.map { case (cotoId, linkIds) => (cotoId, linkIds - id) }
       .filterNot(_._2.isEmpty))
 }
