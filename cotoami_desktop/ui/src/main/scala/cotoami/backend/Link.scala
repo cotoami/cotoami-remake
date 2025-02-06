@@ -53,7 +53,7 @@ object LinkJson {
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.Disconnect(id))
 
-  def outgoingLinks(
+  def fetchOutgoingLinks(
       cotoId: Id[Coto]
   ): Cmd.One[Either[ErrorJson, js.Array[LinkJson]]] =
     Commands.send(Commands.OutgoingLinks(cotoId))
@@ -110,10 +110,10 @@ object LinkBackend {
   def disconnect(id: Id[Link]): Cmd.One[Either[ErrorJson, Id[Link]]] =
     LinkJson.disconnect(id).map(_.map(Id(_)))
 
-  def outgoingLinks(
+  def fetchOutgoingLinks(
       cotoId: Id[Coto]
   ): Cmd.One[Either[ErrorJson, js.Array[Link]]] =
-    LinkJson.outgoingLinks(cotoId).map(_.map(_.map(toModel)))
+    LinkJson.fetchOutgoingLinks(cotoId).map(_.map(_.map(toModel)))
 
   def changeOrder(
       id: Id[Link],

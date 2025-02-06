@@ -2,6 +2,7 @@ package cotoami.repositories
 
 import scala.util.chaining._
 import scala.collection.immutable.HashSet
+import scala.scalajs.js
 
 import com.softwaremill.quicklens._
 
@@ -371,6 +372,10 @@ object Domain {
         extends Msg
     case class OrderChanged(cotoId: Id[Coto], result: Either[ErrorJson, Link])
         extends Msg
+    case class OutgoingLinksFetched(
+        cotoId: Id[Coto],
+        result: Either[ErrorJson, js.Array[Link]]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
@@ -483,6 +488,15 @@ object Domain {
           model.modify(_.reordering).using(_ - cotoId),
           cotoami.error("Couldn't change the link order.", e)
         )
+
+      case Msg.OutgoingLinksFetched(cotoId, Right(links)) =>
+        (
+          model.modify(_.links).using(_.putAll(links)),
+          Cmd.none
+        )
+
+      case Msg.OutgoingLinksFetched(cotoId, Left(e)) =>
+        (model, cotoami.error("Couldn't fetch outgoing links.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
@@ -506,4 +520,8 @@ object Domain {
   def changeOrder(link: Link, newOrder: Int): Cmd.One[AppMsg] =
     LinkBackend.changeOrder(link.id, newOrder)
       .map(Msg.OrderChanged(link.sourceCotoId, _).into)
+
+  def fetchOutgoingLinks(cotoId: Id[Coto]): Cmd.One[AppMsg] =
+    LinkBackend.fetchOutgoingLinks(cotoId)
+      .map(Msg.OutgoingLinksFetched(cotoId, _).into)
 }
