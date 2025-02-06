@@ -28,7 +28,13 @@ import cotoami.models.{
   UiState
 }
 import cotoami.repositories.Domain
-import cotoami.components.{optionalClasses, toolButton, ScrollArea}
+import cotoami.components.{
+  optionalClasses,
+  toolButton,
+  Flipped,
+  Flipper,
+  ScrollArea
+}
 
 object SectionPins {
 
@@ -189,9 +195,7 @@ object SectionPins {
         justPinned: HashSet[Id[Coto]],
         context: Context,
         dispatch: Into[AppMsg] => Unit
-    ) {
-      val version: String = pins.links.map(_.id.uuid).mkString
-    }
+    )
 
     final val ActiveTocEntryClass = "active"
 
@@ -254,7 +258,7 @@ object SectionPins {
             intersectionObserver.disconnect()
           }
         },
-        Seq(props.version)
+        Seq(props.pins.fingerprint)
       )
 
       section(className := "document-view", ref := rootRef)(
@@ -285,9 +289,11 @@ object SectionPins {
       inColumns: Boolean,
       justPinned: HashSet[Id[Coto]]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    ol(className := "pins")(
+    Flipper(element = "ol", className = "pins", flipKey = pins.fingerprint)(
       pins.eachWithOrderContext.map(pin =>
-        liPin(pin, inColumns, justPinned.contains(pin._2.id))
+        Flipped(key = pin._1.id.uuid, flipId = pin._1.id.uuid)(
+          liPin(pin, inColumns, justPinned.contains(pin._2.id))
+        ): ReactElement
       ).toSeq: _*
     )
 
@@ -306,16 +312,10 @@ object SectionPins {
       className := optionalClasses(
         Seq(
           ("pin", true),
-          ("just-pinned", justPinned),
           ("with-linking-phrase", link.linkingPhrase.isDefined)
         )
       ),
-      id := elementIdOfPin(link),
-      onAnimationEnd := (e => {
-        if (e.animationName == "just-pinned") {
-          dispatch(Msg.PinAnimationEnd(coto.id).into)
-        }
-      })
+      id := elementIdOfPin(link)
     )(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
@@ -395,26 +395,28 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
-        ol(className := "toc")(
+        Flipper(element = "ol", className = "toc", flipKey = pins.fingerprint)(
           pins.eachWithOrderContext.map { case (link, coto, order) =>
-            li(
-              key := link.id.uuid,
-              className := "toc-entry",
-              id := elementIdOfTocEntry(link)
-            )(
-              button(
-                className := "default",
-                onClick := (_ => dispatch(Msg.ScrollToPin(link)))
+            Flipped(key = link.id.uuid, flipId = link.id.uuid)(
+              li(
+                key := link.id.uuid,
+                className := "toc-entry",
+                id := elementIdOfTocEntry(link)
               )(
-                if (coto.isCotonoma)
-                  span(className := "cotonoma")(
-                    context.domain.nodes.get(coto.nodeId).map(imgNode(_)),
-                    coto.nameAsCotonoma
-                  )
-                else
-                  coto.abbreviate
+                button(
+                  className := "default",
+                  onClick := (_ => dispatch(Msg.ScrollToPin(link)))
+                )(
+                  if (coto.isCotonoma)
+                    span(className := "cotonoma")(
+                      context.domain.nodes.get(coto.nodeId).map(imgNode(_)),
+                      coto.nameAsCotonoma
+                    )
+                  else
+                    coto.abbreviate
+                )
               )
-            )
+            ): ReactElement
           }.toSeq: _*
         )
       )
@@ -425,7 +427,11 @@ object SectionPins {
       subCotos: Siblings,
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    ol(className := "sub-cotos")(
+    Flipper(
+      element = "ol",
+      className = "sub-cotos",
+      flipKey = subCotos.fingerprint
+    )(
       if (coto.isCotonoma && !context.domain.alreadyLoadedGraphFrom(coto.id))
         div(className := "links-not-yet-loaded")(
           if (context.domain.graphLoading.contains(coto.id)) {
@@ -445,7 +451,9 @@ object SectionPins {
         )
       else
         subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
-          liSubCoto(link, subCoto, order)
+          Flipped(key = link.id.uuid, flipId = link.id.uuid)(
+            liSubCoto(link, subCoto, order)
+          )
         }
     ) match {
       case olSubCotos =>

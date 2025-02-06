@@ -80,6 +80,8 @@ case class Siblings(sorted: Seq[(Link, Coto)]) {
         )
       )
     }
+
+  def fingerprint: String = links.map(_.id.uuid).mkString
 }
 
 object Siblings {

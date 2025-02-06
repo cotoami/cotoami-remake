@@ -1064,6 +1064,13 @@ find-root@^1.1.0:
   resolved "https://registry.yarnpkg.com/find-root/-/find-root-1.1.0.tgz#abcfc8ba76f708c42a97b3d685b7e9450bfb9ce4"
   integrity sha512-NKfW6bec6GfKc0SGx1e07QZY9PE99u0Bft/0rzSD5k3sO/vwkVUpDUKVm5Gpp5Ue3YfShPFTX2070tDs5kB9Ng==
 
+flip-toolkit@7.2.4:
+  version "7.2.4"
+  resolved "https://registry.yarnpkg.com/flip-toolkit/-/flip-toolkit-7.2.4.tgz#405e1e43972b3a3caac5bb8c1a58aa80dd27294f"
+  integrity sha512-NT81ikyHPk72riMe1U01x698YIMSypMF5mQBhRklWVgf2xgWH3EPfrrVRAkz/+TSCq0rLPsr/uKIYkwHrowKZQ==
+  dependencies:
+    rematrix "0.2.2"
+
 fsevents@~2.3.2, fsevents@~2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
@@ -1842,6 +1849,14 @@ react-easy-crop@5.0.7:
     normalize-wheel "^1.0.1"
     tslib "^2.0.1"
 
+react-flip-toolkit@^7.2.4:
+  version "7.2.4"
+  resolved "https://registry.yarnpkg.com/react-flip-toolkit/-/react-flip-toolkit-7.2.4.tgz#4eb10f89cc1081209446a4b04c10416403865fbd"
+  integrity sha512-+aZBZwzHBDfJzMRLjAAOKiBkrk8PV0YFVE0k1x85+UsykApLwg8a0LlQ5H80uFltFZmGtrQ7EE1krhiZ1jI5ig==
+  dependencies:
+    flip-toolkit "7.2.4"
+    prop-types "^15.8.1"
+
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
@@ -1975,6 +1990,11 @@ remark@^15.0.1:
     remark-parse "^11.0.0"
     remark-stringify "^11.0.0"
     unified "^11.0.0"
+
+rematrix@0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/rematrix/-/rematrix-0.2.2.tgz#c96a050260782db9908904885991256e23beda5d"
+  integrity sha512-agFFS3RzrLXJl5LY5xg/xYyXvUuVAnkhgKO7RaO9J1Ssth6yvbO+PIiV67V59MB5NCdAK2flvGvNT4mdKVniFA==
 
 resolve-from@^4.0.0:
   version "4.0.0"
