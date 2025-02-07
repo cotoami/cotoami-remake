@@ -20,6 +20,8 @@ import cotoami.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
+  Flipped,
+  Flipper,
   ScrollArea
 }
 
@@ -278,8 +280,16 @@ object SectionTraversals {
           ViewCoto.divAttributes(coto)
         )
       ),
-      ol(className := "sub-cotos")(
-        subCotos.eachWithOrderContext.map(liSubCoto(_, stepIndex, traversal))
+      Flipper(
+        element = "ol",
+        className = "sub-cotos",
+        flipKey = subCotos.fingerprint
+      )(
+        subCotos.eachWithOrderContext.map(sub =>
+          Flipped(key = sub._1.id.uuid, flipId = sub._1.id.uuid)(
+            liSubCoto(sub, stepIndex, traversal)
+          ): ReactElement
+        )
       )
     )
   }
@@ -298,7 +308,7 @@ object SectionTraversals {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (link, coto, order) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
-    li(key := link.id.uuid, className := "sub")(
+    li(className := "sub")(
       ViewCoto.ulParents(
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
         Msg.OpenTraversal(_)
