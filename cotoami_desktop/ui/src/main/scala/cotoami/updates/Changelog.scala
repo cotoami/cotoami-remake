@@ -56,14 +56,7 @@ object Changelog {
     for (json <- change.CreateLink.toOption) {
       val link = LinkBackend.toModel(json)
       return (
-        model
-          .modify(_.domain.links).using(_.put(link))
-          .modify(_.pins.justPinned).using(justPinned =>
-            if (model.domain.isPin(link))
-              justPinned + link.targetCotoId
-            else
-              justPinned
-          ),
+        model.modify(_.domain.links).using(_.put(link)),
         Cmd.Batch(
           Domain.fetchGraphFromCoto(link.targetCotoId),
           Browser.send(SectionPins.Msg.ScrollToPin(link).into)

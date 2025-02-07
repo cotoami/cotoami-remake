@@ -1,14 +1,12 @@
 package cotoami.subparts
 
 import scala.util.chaining._
-import scala.collection.immutable.HashSet
 
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.HTMLElement
 
 import cats.effect.IO
-import com.softwaremill.quicklens._
 
 import slinky.core._
 import slinky.core.annotations.react
@@ -42,12 +40,7 @@ object SectionPins {
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
-  case class Model(
-      justPinned: HashSet[Id[Coto]] = HashSet.empty
-  ) {
-    def removeFromJustPinned(cotoId: Id[Coto]): Model =
-      this.modify(_.justPinned).using(_ - cotoId)
-  }
+  case class Model()
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -61,7 +54,6 @@ object SectionPins {
     case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
         extends Msg
     case class ScrollToPin(pin: Link) extends Msg
-    case class PinAnimationEnd(cotoId: Id[Coto]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -89,9 +81,6 @@ object SectionPins {
             }
           )
         )
-
-      case Msg.PinAnimationEnd(cotoId) =>
-        default.copy(_1 = model.removeFromJustPinned(cotoId))
     }
   }
 
@@ -172,13 +161,12 @@ object SectionPins {
       )(
         ScrollArea()(
           if (inColumns)
-            olPins(pins, inColumns, model.justPinned)
+            olPins(pins, inColumns)
           else
             DocumentView(
               cotonomaCoto = cotonomaCoto,
               pins = pins,
               viewportId = PinsBodyId,
-              justPinned = model.justPinned,
               context = context,
               dispatch = dispatch
             )
@@ -192,7 +180,6 @@ object SectionPins {
         cotonomaCoto: Coto,
         pins: Siblings,
         viewportId: String,
-        justPinned: HashSet[Id[Coto]],
         context: Context,
         dispatch: Into[AppMsg] => Unit
     )
@@ -271,7 +258,7 @@ object SectionPins {
           )(_)
         ),
         div(className := "pins-with-toc")(
-          olPins(props.pins, false, props.justPinned)(
+          olPins(props.pins, false)(
             props.context,
             props.dispatch
           ),
@@ -286,13 +273,12 @@ object SectionPins {
 
   private def olPins(
       pins: Siblings,
-      inColumns: Boolean,
-      justPinned: HashSet[Id[Coto]]
+      inColumns: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Flipper(element = "ol", className = "pins", flipKey = pins.fingerprint)(
       pins.eachWithOrderContext.map(pin =>
         Flipped(key = pin._1.id.uuid, flipId = pin._1.id.uuid)(
-          liPin(pin, inColumns, justPinned.contains(pin._2.id))
+          liPin(pin, inColumns)
         ): ReactElement
       ).toSeq: _*
     )
@@ -301,8 +287,7 @@ object SectionPins {
 
   private def liPin(
       pin: (Link, Coto, OrderContext),
-      inColumn: Boolean,
-      justPinned: Boolean
+      inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (link, coto, order) = pin
     val canEditPin = context.domain.nodes.canEdit(link)
