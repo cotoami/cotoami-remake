@@ -1,7 +1,6 @@
 package cotoami.subparts
 
 import scala.util.chaining._
-import scala.collection.immutable.HashSet
 import scala.scalajs.LinkingInfo
 
 import slinky.core.facade.{Fragment, ReactElement}
@@ -25,6 +24,8 @@ import cotoami.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
+  Flipped,
+  Flipper,
   ScrollArea
 }
 
@@ -37,7 +38,6 @@ object SectionTimeline {
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
       onlyCotonomas: Boolean = false,
-      justPosted: HashSet[Id[Coto]] = HashSet.empty,
       query: String = "",
       // to avoid rendering old results unintentionally
       fetchNumber: Int = 0,
@@ -50,7 +50,6 @@ object SectionTimeline {
       copy(
         cotoIds = PaginatedIds(),
         onlyCotonomas = false,
-        justPosted = HashSet.empty,
         query = "",
         fetchNumber = 0,
         loading = false,
@@ -82,10 +81,6 @@ object SectionTimeline {
           else
             cotoIds
         )
-        .modify(_.justPosted).using(_ + cotoId)
-
-    def removeFromJustPosted(cotoId: Id[Coto]): Model =
-      this.modify(_.justPosted).using(_ - cotoId)
 
     def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
       (
@@ -130,7 +125,6 @@ object SectionTimeline {
     case object ImeCompositionEnd extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
-    case class PostAnimationEnd(cotoId: Id[Coto]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -198,9 +192,6 @@ object SectionTimeline {
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>
         default.copy(_1 = model.saveScrollPos(cotonomaId, scrollPos))
-
-      case Msg.PostAnimationEnd(cotoId) =>
-        default.copy(_1 = model.removeFromJustPosted(cotoId))
     }
   }
 
@@ -302,12 +293,22 @@ object SectionTimeline {
             )
           )
         )(
-          (waitingPosts.posts.map(sectionWaitingPost(_)) ++
-            cotos.map(sectionPost(_, model)) :+
-            div(
-              className := "more",
-              aria - "busy" := model.loading.toString()
-            )()): _*
+          Flipper(
+            element = "div",
+            className = "posts",
+            flipKey = cotos.length.toString()
+          )(
+            (waitingPosts.posts.map(sectionWaitingPost) ++
+              cotos.map(coto =>
+                Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
+                  sectionPost(coto, model)
+                ): ReactElement
+              ) :+
+              div(
+                className := "more",
+                aria - "busy" := model.loading.toString()
+              )()): _*
+          )
         )
       )
     )
@@ -332,20 +333,7 @@ object SectionTimeline {
       coto: Coto,
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(
-      className := optionalClasses(
-        Seq(
-          ("post", true),
-          ("just-posted", model.justPosted.contains(coto.id))
-        )
-      ),
-      key := coto.id.uuid,
-      onAnimationEnd := (e => {
-        if (e.animationName == "just-posted") {
-          dispatch(Msg.PostAnimationEnd(coto.id).into)
-        }
-      })
-    )(
+    section(className := "post")(
       repostHeader(coto),
       context.domain.cotos.getOriginal(coto).map(coto =>
         Fragment(
