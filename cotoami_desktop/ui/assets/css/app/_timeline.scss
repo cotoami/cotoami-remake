@@ -1,5 +1,5 @@
 section.timeline {
-  header.tools {
+  >header.tools {
     align-items: center;
     padding-right: 5px;
 
@@ -42,7 +42,7 @@ section.timeline {
     }
   }
 
-  .posts {
+  >div.body {
     overflow-x: hidden;
     overflow-y: hidden;
 

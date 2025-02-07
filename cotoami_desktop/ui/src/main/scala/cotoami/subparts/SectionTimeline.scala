@@ -292,7 +292,7 @@ object SectionTimeline {
           }
         )
       ),
-      div(className := "posts body")(
+      div(className := "body")(
         ScrollArea(
           initialScrollTop = model.getScrollPos(currentCotonomaId),
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
