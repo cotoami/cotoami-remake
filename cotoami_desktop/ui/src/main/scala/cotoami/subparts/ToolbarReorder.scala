@@ -58,7 +58,10 @@ object ToolbarReorder {
           e.stopPropagation()
           dispatch(Domain.Msg.ChangeOrder(link, order.max + 1))
         }
-      )
+      ),
+      Option.when(reordering) {
+        span(className := "reordering", aria - "busy" := "true")()
+      }
     )
   }
 }

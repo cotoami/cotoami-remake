@@ -279,6 +279,12 @@ section.reorder-toolbar {
       font-size: 20px;
     }
   }
+
+  span.reordering {
+    margin-left: 8px;
+    margin-right: 8px;
+    vertical-align: text-bottom;
+  }
 }
 
 ul.parents {
