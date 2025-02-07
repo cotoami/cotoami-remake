@@ -54,6 +54,10 @@ object Msg {
   ) extends Msg
   case object UnfocusCoto extends Msg
 
+  // Highlight
+  case class Highlight(id: Id[Coto]) extends Msg
+  case object Unhighlight extends Msg
+
   // Domain
   case object ReloadDomain extends Msg
   case class DomainMsg(submsg: Domain.Msg) extends Msg

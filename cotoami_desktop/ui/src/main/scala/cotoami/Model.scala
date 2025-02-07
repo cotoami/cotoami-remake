@@ -17,6 +17,7 @@ trait Context {
   def uiState: Option[UiState]
   def domain: Domain
   def geomap: SectionGeomap.Model
+  def highlighted(cotoId: Id[Coto]): Boolean
 }
 
 case class Model(
@@ -36,6 +37,9 @@ case class Model(
     // Domain aggregate root
     domain: Domain = Domain(),
 
+    // Highlighted coto by hover
+    highlight: Option[Id[Coto]] = None,
+
     // Coto/Cotonoma inputs waiting to be posted
     waitingPosts: WaitingPosts = WaitingPosts(),
 
@@ -51,6 +55,8 @@ case class Model(
     geomap: SectionGeomap.Model = SectionGeomap.Model()
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
+
+  def highlighted(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
 
   def info(message: String, details: Option[String] = None): Model =
     copy(log = log.info(message, details))
