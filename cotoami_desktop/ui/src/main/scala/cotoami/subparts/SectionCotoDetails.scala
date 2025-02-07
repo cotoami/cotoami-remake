@@ -64,8 +64,7 @@ object SectionCotoDetails {
     val domain = context.domain
     article(
       className := optionalClasses(
-        ViewCoto.commonArticleClasses(coto) ++
-          Seq(("main-coto", true))
+        ViewCoto.articleClasses(coto) ++ Seq(("main-coto", true))
       )
     )(
       ToolbarCoto(coto),
@@ -110,8 +109,7 @@ object SectionCotoDetails {
         ),
         article(
           className := optionalClasses(
-            ViewCoto.commonArticleClasses(coto) ++
-              Seq(("sub-coto", true))
+            ViewCoto.articleClasses(coto) ++ Seq(("sub-coto", true))
           ),
           onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
         )(

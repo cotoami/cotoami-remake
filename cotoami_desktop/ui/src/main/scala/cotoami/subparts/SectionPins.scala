@@ -299,7 +299,7 @@ object SectionPins {
       ),
       article(
         className := optionalClasses(
-          ViewCoto.commonArticleClasses(coto) ++
+          ViewCoto.articleClasses(coto) ++
             Seq(
               ("pinned-coto", true),
               ("has-children", context.domain.links.anyFrom(coto.id))
@@ -454,7 +454,7 @@ object SectionPins {
       ),
       article(
         className := optionalClasses(
-          ViewCoto.commonArticleClasses(coto) ++
+          ViewCoto.articleClasses(coto) ++
             Seq(("sub-coto", true))
         ),
         onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))

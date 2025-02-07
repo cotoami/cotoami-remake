@@ -22,7 +22,7 @@ import cotoami.components.{
 
 object ViewCoto {
 
-  def commonArticleClasses(
+  def articleClasses(
       coto: Coto
   )(implicit context: Context): Seq[(String, Boolean)] =
     Seq(

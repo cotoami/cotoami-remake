@@ -264,7 +264,7 @@ object SectionTraversals {
       },
       article(
         className := optionalClasses(
-          ViewCoto.commonArticleClasses(coto) ++
+          ViewCoto.articleClasses(coto) ++
             Seq(
               ("step-coto", true),
               ("has-children", !subCotos.isEmpty)
@@ -315,7 +315,7 @@ object SectionTraversals {
       ),
       article(
         className := optionalClasses(
-          ViewCoto.commonArticleClasses(coto) ++
+          ViewCoto.articleClasses(coto) ++
             Seq(
               ("sub-coto", true),
               ("traversed", traversed)
