@@ -262,15 +262,13 @@ object SectionTraversals {
           materialSymbol("arrow_downward")
         )
       },
-      article(
-        className := optionalClasses(
-          ViewCoto.articleClasses(coto) ++
-            Seq(
-              ("step-coto", true),
-              ("has-children", !subCotos.isEmpty)
-            )
-        ),
-        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+      ViewCoto.article(
+        coto,
+        dispatch,
+        Seq(
+          ("step-coto", true),
+          ("has-children", !subCotos.isEmpty)
+        )
       )(
         ToolbarCoto(coto),
         div(className := "body")(
@@ -313,15 +311,13 @@ object SectionTraversals {
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
         Msg.OpenTraversal(_)
       ),
-      article(
-        className := optionalClasses(
-          ViewCoto.articleClasses(coto) ++
-            Seq(
-              ("sub-coto", true),
-              ("traversed", traversed)
-            )
-        ),
-        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+      ViewCoto.article(
+        coto,
+        dispatch,
+        Seq(
+          ("sub-coto", true),
+          ("traversed", traversed)
+        )
       )(
         ToolbarCoto(coto),
         ToolbarReorder(link, order),

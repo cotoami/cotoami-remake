@@ -297,15 +297,13 @@ object SectionPins {
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
-      article(
-        className := optionalClasses(
-          ViewCoto.articleClasses(coto) ++
-            Seq(
-              ("pinned-coto", true),
-              ("has-children", context.domain.links.anyFrom(coto.id))
-            )
-        ),
-        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+      ViewCoto.article(
+        coto,
+        dispatch,
+        Seq(
+          ("pinned-coto", true),
+          ("has-children", context.domain.links.anyFrom(coto.id))
+        )
       )(
         div(
           className := optionalClasses(
@@ -452,13 +450,7 @@ object SectionPins {
         context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
-      article(
-        className := optionalClasses(
-          ViewCoto.articleClasses(coto) ++
-            Seq(("sub-coto", true))
-        ),
-        onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
-      )(
+      ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
         ToolbarCoto(coto),
         ToolbarReorder(link, order),
         header()(

@@ -22,13 +22,23 @@ import cotoami.components.{
 
 object ViewCoto {
 
-  def articleClasses(
-      coto: Coto
-  )(implicit context: Context): Seq[(String, Boolean)] =
-    Seq(
-      ("coto", true),
-      ("being-deleted", context.domain.beingDeleted(coto.id))
-    )
+  def article(
+      coto: Coto,
+      dispatch: Into[AppMsg] => Unit,
+      classes: Seq[(String, Boolean)] = Seq.empty
+  )(children: ReactElement*)(implicit context: Context): ReactElement =
+    slinky.web.html.article(
+      className := optionalClasses(
+        Seq(
+          ("coto", true),
+          ("highlighted", context.highlighted(coto.id)),
+          ("being-deleted", context.domain.beingDeleted(coto.id))
+        ) ++ classes
+      ),
+      onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
+      onMouseLeave := (_ => dispatch(AppMsg.Unhighlight)),
+      onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
+    )(children)
 
   def addressAuthor(
       coto: Coto,

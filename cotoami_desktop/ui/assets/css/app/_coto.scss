@@ -22,12 +22,15 @@ article.coto {
   }
 
   &:hover {
-    background-color: var(--hover-background-color);
 
     section.coto-toolbar,
     section.reorder-toolbar {
       display: inline-block;
     }
+  }
+
+  &.highlighted {
+    background-color: var(--hover-background-color) !important;
   }
 
   &.embedded {

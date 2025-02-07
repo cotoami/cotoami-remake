@@ -22,7 +22,6 @@ import cotoami.repositories._
 import cotoami.backend.{ErrorJson, PaginatedCotos}
 import cotoami.components.{
   materialSymbol,
-  optionalClasses,
   toolButton,
   Flipped,
   Flipper,
@@ -352,10 +351,7 @@ object SectionTimeline {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val domain = context.domain
-    article(
-      className := optionalClasses(ViewCoto.articleClasses(coto)),
-      onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
-    )(
+    ViewCoto.article(coto, dispatch)(
       ToolbarCoto(coto),
       header()(
         ViewCoto.divAttributes(coto),

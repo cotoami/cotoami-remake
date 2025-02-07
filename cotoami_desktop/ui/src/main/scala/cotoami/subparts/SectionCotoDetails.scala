@@ -8,7 +8,7 @@ import slinky.web.html._
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
 import cotoami.models.{Coto, Link, OrderContext}
-import cotoami.components.{optionalClasses, toolButton, ScrollArea}
+import cotoami.components.{toolButton, ScrollArea}
 
 object SectionCotoDetails {
 
@@ -62,11 +62,7 @@ object SectionCotoDetails {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val domain = context.domain
-    article(
-      className := optionalClasses(
-        ViewCoto.articleClasses(coto) ++ Seq(("main-coto", true))
-      )
-    )(
+    ViewCoto.article(coto, dispatch, Seq(("main-coto", true)))(
       ToolbarCoto(coto),
       header()(
         ViewCoto.divAttributes(coto),
@@ -107,12 +103,7 @@ object SectionCotoDetails {
           domain.parentsOf(coto.id).filter(_._2.id != link.id),
           AppMsg.FocusCoto(_)
         ),
-        article(
-          className := optionalClasses(
-            ViewCoto.articleClasses(coto) ++ Seq(("sub-coto", true))
-          ),
-          onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
-        )(
+        ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
           ToolbarCoto(coto),
           ToolbarReorder(link, order),
           header()(
