@@ -37,12 +37,6 @@ import cotoami.components.{
 object SectionPins {
 
   /////////////////////////////////////////////////////////////////////////////
-  // Model
-  /////////////////////////////////////////////////////////////////////////////
-
-  case class Model()
-
-  /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
 
@@ -56,21 +50,21 @@ object SectionPins {
     case class ScrollToPin(pin: Link) extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
+  def update(msg: Msg)(implicit
       context: Context
-  ): (Model, Option[UiState], Cmd[AppMsg]) = {
-    val default = (model, context.uiState, Cmd.none)
+  ): (Option[UiState], Cmd[AppMsg]) = {
+    val default = (context.uiState, Cmd.none)
     msg match {
       case Msg.SwitchView(cotonoma, inColumns) =>
         context.uiState
           .map(_.setPinsInColumns(cotonoma, inColumns).pipe { state =>
-            default.copy(_2 = Some(state), _3 = state.save)
+            default.copy(_1 = Some(state), _2 = state.save)
           })
           .getOrElse(default)
 
       case Msg.ScrollToPin(pin) =>
         default.copy(
-          _3 = Cmd(
+          _2 = Cmd(
             IO {
               dom.document.getElementById(elementIdOfPin(pin)) match {
                 case element: HTMLElement =>
@@ -91,20 +85,18 @@ object SectionPins {
   final val PinsBodyId = "pins-body"
 
   def apply(
-      model: Model,
       uiState: UiState
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
     context.domain.currentCotonomaPair.map(
-      sectionPins(context.domain.pins, model, uiState, _)
+      sectionPins(context.domain.pins, uiState, _)
     )
   }
 
   def sectionPins(
       pins: Siblings,
-      model: Model,
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {

@@ -358,8 +358,8 @@ object Main {
       }
 
       case Msg.SectionPinsMsg(submsg) => {
-        val (pins, uiState, cmd) = SectionPins.update(submsg, model.pins)
-        (model.copy(pins = pins, uiState = uiState), cmd)
+        val (uiState, cmd) = SectionPins.update(submsg)
+        (model.copy(uiState = uiState), cmd)
       }
 
       case Msg.SectionTraversalsMsg(submsg) => {
