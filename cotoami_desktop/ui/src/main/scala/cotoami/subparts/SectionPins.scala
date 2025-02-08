@@ -373,8 +373,15 @@ object SectionPins {
           pins.eachWithOrderContext.map { case (link, coto, order) =>
             Flipped(key = link.id.uuid, flipId = link.id.uuid)(
               li(
-                className := "toc-entry",
-                id := elementIdOfTocEntry(link)
+                id := elementIdOfTocEntry(link),
+                className := optionalClasses(
+                  Seq(
+                    ("toc-entry", true),
+                    ("highlighted", context.highlighted(coto.id))
+                  )
+                ),
+                onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
+                onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
               )(
                 button(
                   className := "default",

@@ -222,6 +222,10 @@ section.pins {
               opacity: 1;
             }
 
+            &.highlighted {
+              background-color: var(--hover-background-color);
+            }
+
             button {
               width: 100%;
               margin-bottom: 3px;
@@ -234,10 +238,6 @@ section.pins {
                 border-radius: 4px;
                 vertical-align: text-bottom;
                 margin-right: 5px;
-              }
-
-              &:hover {
-                background-color: var(--hover-background-color);
               }
             }
           }
