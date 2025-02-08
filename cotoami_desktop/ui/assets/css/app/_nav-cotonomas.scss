@@ -187,8 +187,11 @@ nav.cotonomas {
     color: var(--h3-color);
 
     &:hover {
-      background-color: var(--hover-background-color);
       text-decoration: none;
+    }
+
+    &.highlighted {
+      background-color: var(--hover-background-color);
     }
   }
 
