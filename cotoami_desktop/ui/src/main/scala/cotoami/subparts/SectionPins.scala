@@ -354,8 +354,27 @@ object SectionPins {
           ViewCoto.divAttributes(coto)
         )
       ),
-      Option.when(!subCotos.isEmpty) {
-        olSubCotos(coto, subCotos, inColumn)
+      if (coto.isCotonoma && !context.domain.alreadyLoadedGraphFrom(coto.id)) {
+        div(className := "links-not-yet-loaded")(
+          if (context.domain.graphLoading.contains(coto.id)) {
+            div(
+              className := "loading",
+              aria - "busy" := "true"
+            )()
+          } else {
+            toolButton(
+              symbol = "more_horiz",
+              tip = Some("Load links"),
+              tipPlacement = "bottom",
+              classes = "fetch-links",
+              onClick = _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id))
+            )
+          }
+        )
+      } else {
+        Option.when(!subCotos.isEmpty) {
+          olSubCotos(coto, subCotos, inColumn)
+        }
       }
     )
   }
@@ -412,29 +431,11 @@ object SectionPins {
       className = "sub-cotos",
       flipKey = subCotos.fingerprint
     )(
-      if (coto.isCotonoma && !context.domain.alreadyLoadedGraphFrom(coto.id))
-        div(className := "links-not-yet-loaded")(
-          if (context.domain.graphLoading.contains(coto.id)) {
-            div(
-              className := "loading",
-              aria - "busy" := "true"
-            )()
-          } else {
-            toolButton(
-              symbol = "more_horiz",
-              tip = Some("Load links"),
-              tipPlacement = "bottom",
-              classes = "fetch-links",
-              onClick = _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id))
-            )
-          }
+      subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
+        Flipped(key = link.id.uuid, flipId = link.id.uuid)(
+          liSubCoto(link, subCoto, order)
         )
-      else
-        subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
-          Flipped(key = link.id.uuid, flipId = link.id.uuid)(
-            liSubCoto(link, subCoto, order)
-          )
-        }
+      }
     ) match {
       case olSubCotos =>
         if (inColumn) {

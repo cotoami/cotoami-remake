@@ -140,7 +140,6 @@ section.pins {
     }
 
     div.links-not-yet-loaded {
-      padding-top: 6px;
       padding-bottom: 6px;
       background-color: var(--card-background-color);
       text-align: center;
@@ -282,7 +281,7 @@ section.pins {
     // Disable card-background-color in document-view
     article.coto,
     ol.pins ol.sub-cotos>div.links,
-    ol.pins ol.sub-cotos>div.links-not-yet-loaded,
+    ol.pins div.links-not-yet-loaded,
     ul.parents {
       background-color: var(--background-color);
     }
