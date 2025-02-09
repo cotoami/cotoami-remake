@@ -8,7 +8,7 @@ import slinky.web.html._
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
 import cotoami.models.{Coto, Link, OrderContext}
-import cotoami.components.{toolButton, ScrollArea}
+import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 
 object SectionCotoDetails {
 
@@ -83,9 +83,15 @@ object SectionCotoDetails {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val subCotos = context.domain.childrenOf(coto.id)
-    ol(className := "sub-cotos")(
+    Flipper(
+      element = "ol",
+      className = "sub-cotos",
+      flipKey = subCotos.fingerprint
+    )(
       subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
-        liSubCoto(link, subCoto, order)
+        Flipped(key = link.id.uuid, flipId = link.id.uuid)(
+          liSubCoto(link, subCoto, order)
+        ): ReactElement
       }.toSeq: _*
     )
   }
