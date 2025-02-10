@@ -15,12 +15,12 @@ object AppBody {
     div(id := "app-body", className := "body")(
       (model.uiState, model.domain.nodes.operating) match {
         case (Some(uiState), Some(_)) =>
-          Some(nodeContents(model, uiState))
+          Some(defaultLayout(model, uiState))
         case _ => None
       }
     )
 
-  private def nodeContents(
+  private def defaultLayout(
       model: Model,
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
