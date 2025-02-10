@@ -34,7 +34,7 @@ object AppHeader {
         ),
         section(className := "tools")(
           model.uiState.map(divToolButtons),
-          divSearch,
+          divSearch(model.search),
           model.domain.nodes.operating.map(buttonNodeProfile)
         )
       )
@@ -82,13 +82,27 @@ object AppHeader {
     )
   }
 
-  private def divSearch: ReactElement =
+  private def divSearch(
+      search: PaneSearch.Model
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+    import PaneSearch.Msg._
     div(className := "search")(
       input(
         `type` := "search",
-        name := "query"
-      )
+        name := "query",
+        value := search.query,
+        onChange := ((e) => dispatch(QueryInput(e.target.value))),
+        onCompositionStart := (_ => dispatch(ImeCompositionStart)),
+        onCompositionEnd := (_ => dispatch(ImeCompositionEnd))
+      ),
+      Option.when(!search.query.isBlank) {
+        button(
+          className := "clear default",
+          onClick := (_ => dispatch(ClearQuery))
+        )(materialSymbol("close"))
+      }
     )
+  }
 
   private def divToolButtons(
       uiState: UiState
