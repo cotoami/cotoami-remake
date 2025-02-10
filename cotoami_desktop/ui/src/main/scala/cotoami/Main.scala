@@ -339,6 +339,12 @@ object Main {
         )
       }
 
+      case Msg.PaneSearchMsg(submsg) => {
+        val (search, domain, cmd) =
+          PaneSearch.update(submsg, model.search)
+        (model.copy(search = search, domain = domain), cmd)
+      }
+
       case Msg.FlowInputMsg(submsg) => {
         val (flowInput, geomap, waitingPosts, cmds) =
           SectionFlowInput.update(

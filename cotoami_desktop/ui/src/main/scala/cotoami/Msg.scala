@@ -72,6 +72,7 @@ object Msg {
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
+  case class PaneSearchMsg(submsg: PaneSearch.Msg) extends Msg
   case class FlowInputMsg(submsg: SectionFlowInput.Msg) extends Msg
   case class SectionTimelineMsg(submsg: SectionTimeline.Msg) extends Msg
   case class SectionPinsMsg(submsg: SectionPins.Msg) extends Msg

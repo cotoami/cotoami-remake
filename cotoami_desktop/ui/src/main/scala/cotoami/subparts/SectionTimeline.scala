@@ -36,14 +36,20 @@ object SectionTimeline {
 
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
+
+      // Filter criteria for cotos in this timeline
       onlyCotonomas: Boolean = false,
       query: String = "",
-      // to avoid rendering old results unintentionally
+
+      // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
-      // to restore the scroll position when back to timeline
+
+      // To restore the scroll position when back to timeline
       scrollPos: Option[(Id[Cotonoma], Double)] = None,
-      loading: Boolean = false,
-      imeActive: Boolean = false
+
+      // State
+      imeActive: Boolean = false,
+      loading: Boolean = false
   ) {
     def onFocusChange: Model =
       copy(
@@ -115,13 +121,13 @@ object SectionTimeline {
 
   object Msg {
     case class SetOnlyCotonomas(onlyCotonomas: Boolean) extends Msg
+    case class QueryInput(query: String) extends Msg
+    case object ClearQuery extends Msg
+    case object ImeCompositionStart extends Msg
+    case object ImeCompositionEnd extends Msg
     case object FetchMore extends Msg
     case class Fetched(number: Int, result: Either[ErrorJson, PaginatedCotos])
         extends Msg
-    case object ClearQuery extends Msg
-    case class QueryInput(query: String) extends Msg
-    case object ImeCompositionStart extends Msg
-    case object ImeCompositionEnd extends Msg
     case class ScrollAreaUnmounted(cotonomaId: Id[Cotonoma], scrollPos: Double)
         extends Msg
   }
@@ -144,6 +150,27 @@ object SectionTimeline {
             default.copy(_1 = model, _3 = cmd)
           }
 
+      case Msg.QueryInput(query) =>
+        model.inputQuery(query, context.domain).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
+
+      case Msg.ClearQuery =>
+        model.inputQuery("", context.domain).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
+
+      case Msg.ImeCompositionStart =>
+        default.copy(_1 = model.copy(imeActive = true))
+
+      case Msg.ImeCompositionEnd =>
+        model.fetchFirst(context.domain).pipe { case (model, cmd) =>
+          default.copy(
+            _1 = model.copy(imeActive = false),
+            _3 = cmd
+          )
+        }
+
       case Msg.FetchMore =>
         model.fetchMore(context.domain).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
@@ -162,31 +189,6 @@ object SectionTimeline {
         default.copy(
           _1 = model.copy(loading = false),
           _3 = cotoami.error("Couldn't fetch timeline cotos.", e)
-        )
-
-      case Msg.ClearQuery =>
-        model.inputQuery("", context.domain).pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = cmd)
-        }
-
-      case Msg.QueryInput(query) =>
-        model.inputQuery(query, context.domain).pipe { case (model, cmd) =>
-          default.copy(_1 = model, _3 = cmd)
-        }
-
-      case Msg.ImeCompositionStart =>
-        default.copy(_1 = model.copy(imeActive = true))
-
-      case Msg.ImeCompositionEnd =>
-        default.copy(
-          _1 = model.copy(imeActive = false),
-          _3 = fetchInFocus(
-            context.domain,
-            model.onlyCotonomas,
-            Some(model.query),
-            0,
-            model.fetchNumber + 1
-          )
         )
 
       case Msg.ScrollAreaUnmounted(cotonomaId, scrollPos) =>

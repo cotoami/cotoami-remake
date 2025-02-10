@@ -49,6 +49,7 @@ case class Model(
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
+    search: PaneSearch.Model = PaneSearch.Model(),
     flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
     traversals: SectionTraversals.Model = SectionTraversals.Model(),
