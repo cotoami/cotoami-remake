@@ -14,6 +14,7 @@ import slinky.web.SyntheticMouseEvent
 @react object SplitPane {
   case class Props(
       vertical: Boolean, // true: "vertical", false: "horizontal"
+      reverse: Boolean = false,
       initialPrimarySize: Int,
       resizable: Boolean = true,
       className: Option[String] = None,
@@ -126,6 +127,7 @@ import slinky.web.SyntheticMouseEvent
           ("split-pane", true),
           ("vertical", props.vertical),
           ("horizontal", !props.vertical),
+          ("reverse", props.reverse),
           ("being-resized", moving),
           (props.className.getOrElse(""), props.className.nonEmpty)
         )

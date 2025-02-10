@@ -71,6 +71,7 @@ object AppBody {
     Fragment(
       SplitPane(
         vertical = true,
+        reverse = true,
         initialPrimarySize = uiState.paneSizes.getOrElse(
           PaneSearch.PaneName,
           PaneSearch.DefaultWidth
