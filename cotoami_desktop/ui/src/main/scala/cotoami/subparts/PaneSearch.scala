@@ -153,7 +153,11 @@ object PaneSearch {
       ),
       div(className := "body")(
         ScrollArea()(
-          model.cotos(context.domain).map(sectionCoto)
+          (model.cotos(context.domain).map(sectionCoto) :+
+            div(
+              className := "more",
+              aria - "busy" := model.loading.toString()
+            )()): _*
         )
       )
     )
