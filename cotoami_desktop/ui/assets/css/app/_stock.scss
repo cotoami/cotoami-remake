@@ -81,7 +81,7 @@ section.stock {
     }
 
     article.coto {
-      padding-bottom: 12px;
+      padding-bottom: 0;
 
       section.reorder-toolbar {
         bottom: -22px;
@@ -94,6 +94,7 @@ section.stock {
       >footer {
         padding: 0;
         padding-right: 10px;
+        padding-bottom: 8px;
       }
     }
 
