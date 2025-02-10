@@ -393,17 +393,19 @@ object SectionPins {
             Flipped(key = link.id.uuid, flipId = link.id.uuid)(
               li(
                 id := elementIdOfTocEntry(link),
-                className := optionalClasses(
-                  Seq(
-                    ("toc-entry", true),
-                    ("highlighted", context.highlighted(coto.id))
-                  )
-                ),
+                // This className will be modified directly by DocumentView to highlight
+                // entries in the current viewport, so it must not be dynamic with the models.
+                className := "toc-entry",
                 onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
                 onMouseLeave := (_ => dispatch(AppMsg.Unhighlight))
               )(
                 button(
-                  className := "default",
+                  className := optionalClasses(
+                    Seq(
+                      ("default", true),
+                      ("highlighted", context.highlighted(coto.id))
+                    )
+                  ),
                   onClick := (_ => dispatch(Msg.ScrollToPin(link)))
                 )(
                   if (coto.isCotonoma)

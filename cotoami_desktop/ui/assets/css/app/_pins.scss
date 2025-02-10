@@ -221,15 +221,15 @@ section.pins {
               opacity: 1;
             }
 
-            &.highlighted {
-              background-color: var(--hover-background-color);
-            }
-
             button {
               width: 100%;
               margin-bottom: 3px;
               padding: 5px 15px;
               font-size: 0.9rem;
+
+              &.highlighted {
+                background-color: var(--hover-background-color);
+              }
 
               img.node-icon {
                 width: 16px;
