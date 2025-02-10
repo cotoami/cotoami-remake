@@ -77,7 +77,12 @@ import slinky.web.SyntheticMouseEvent
             }
 
             val moved = (cursorPos - separatorPosRef.current).toInt
-            var newSize = primarySizeRef.current + moved
+            var newSize =
+              if (props.reverse)
+                primarySizeRef.current - moved
+              else
+                primarySizeRef.current + moved
+
             separatorPosRef.current = cursorPos
 
             // keep it from resizing beyond the borders of the SplitPane
