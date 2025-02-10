@@ -79,7 +79,9 @@ object AppBody {
         onPrimarySizeChanged = Some((newSize) =>
           dispatch(AppMsg.ResizePane(PaneSearch.PaneName, newSize))
         ),
-        primary = SplitPane.Primary.Props()(PaneSearch(model.search)),
+        primary = SplitPane.Primary.Props()(
+          PaneSearch(model.search)
+        ),
         secondary = SplitPane.Secondary.Props()(
           flowAndStock(model, uiState)
         )
