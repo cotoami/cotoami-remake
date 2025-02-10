@@ -1,6 +1,34 @@
 section.search {
+  >header {
+    padding: 10px;
+    text-align: center;
+
+    span.material-symbols {
+      margin-right: 4px;
+      font-size: 18px;
+      vertical-align: bottom;
+    }
+
+    span.query {
+      vertical-align: text-bottom;
+    }
+  }
 
   >div.body {
+    overflow-x: hidden;
+    overflow-y: hidden;
+
+    // SimpleBar div
+    >div {
+      height: 100%;
+
+      .simplebar-content {
+        // override the default padding to make a space for
+        // the coto toolbar of the first coto.
+        padding-top: 20px !important;
+      }
+    }
+
     .more {
       display: flex;
       justify-content: center;

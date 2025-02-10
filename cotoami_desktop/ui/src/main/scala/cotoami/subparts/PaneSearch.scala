@@ -146,7 +146,7 @@ object PaneSearch {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "search header-and-body")(
       header()(
-        section(className := "title")(
+        span(className := "title")(
           materialSymbol("search"),
           span(className := "query")(model.query)
         )
