@@ -7,10 +7,11 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import fui.Cmd
-import cotoami.{Context, Into, Model, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds}
 import cotoami.repositories.Domain
 import cotoami.backend.{ErrorJson, PaginatedCotos}
+import cotoami.components.{materialSymbol, ScrollArea}
 
 object PaneSearch {
 
@@ -55,6 +56,9 @@ object PaneSearch {
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
         .modify(_.fetchNumber).setTo(fetchNumber)
         .modify(_.loading).setTo(false)
+
+    def cotos(domain: Domain): Seq[Coto] =
+      cotoIds.order.map(domain.cotos.get).flatten
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -137,6 +141,42 @@ object PaneSearch {
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "search")(
+    section(className := "search header-and-body")(
+      header()(
+        section(className := "title")(
+          materialSymbol("search"),
+          span(className := "query")(model.query)
+        )
+      ),
+      div(className := "body")(
+        ScrollArea()(
+          model.cotos(context.domain).map(sectionCoto)
+        )
+      )
     )
+
+  private def sectionCoto(
+      coto: Coto
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val domain = context.domain
+    section(className := "coto")(
+      ViewCoto.ulParents(
+        domain.parentsOf(coto.id),
+        SectionTraversals.Msg.OpenTraversal(_).into
+      ),
+      ViewCoto.article(coto, dispatch)(
+        ToolbarCoto(coto),
+        header()(
+          ViewCoto.divAttributes(coto),
+          Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
+            ViewCoto.addressAuthor(coto, domain.nodes)
+          }
+        ),
+        div(className := "body")(
+          ViewCoto.divContent(coto)
+        ),
+        ViewCoto.articleFooter(coto)
+      )
+    )
+  }
 }
