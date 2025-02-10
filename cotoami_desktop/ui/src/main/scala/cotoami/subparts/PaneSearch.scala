@@ -54,6 +54,17 @@ object PaneSearch {
         fetch(query, 0, fetchNumber + 1)
       )
 
+    def fetchMore: (Model, Cmd.One[AppMsg]) =
+      if (loading)
+        (this, Cmd.none)
+      else
+        cotoIds.nextPageIndex.map(i =>
+          (
+            copy(loading = true),
+            fetch(query, i, fetchNumber + 1)
+          )
+        ).getOrElse((this, Cmd.none)) // no more
+
     def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
@@ -77,6 +88,7 @@ object PaneSearch {
     case object ClearQuery extends Msg
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
+    case object FetchMore extends Msg
     case class Fetched(number: Int, result: Either[ErrorJson, PaginatedCotos])
         extends Msg
   }
@@ -102,6 +114,11 @@ object PaneSearch {
             _1 = model.copy(imeActive = false),
             _3 = cmd
           )
+        }
+
+      case Msg.FetchMore =>
+        model.fetchMore.pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.Fetched(number, Right(cotos)) =>
@@ -152,7 +169,9 @@ object PaneSearch {
         )
       ),
       div(className := "body")(
-        ScrollArea()(
+        ScrollArea(
+          onScrollToBottom = Some(() => dispatch(Msg.FetchMore))
+        )(
           (model.cotos(context.domain).map(sectionCoto) :+
             div(
               className := "more",
