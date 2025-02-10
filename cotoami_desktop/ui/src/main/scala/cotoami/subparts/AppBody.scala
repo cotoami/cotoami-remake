@@ -15,7 +15,10 @@ object AppBody {
     div(id := "app-body", className := "body")(
       (model.uiState, model.domain.nodes.operating) match {
         case (Some(uiState), Some(_)) =>
-          Some(defaultLayout(model, uiState))
+          if (model.search.query.isBlank())
+            Some(defaultLayout(model, uiState))
+          else
+            Some(searchLayout(model, uiState))
         case _ => None
       }
     )
@@ -23,7 +26,7 @@ object AppBody {
   private def defaultLayout(
       model: Model,
       uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       NavNodes(model, uiState),
       SplitPane(
@@ -33,7 +36,7 @@ object AppBody {
           NavCotonomas.DefaultWidth
         ),
         resizable = uiState.paneOpened(NavCotonomas.PaneName),
-        className = Some("node-contents"),
+        className = Some("main-split-pane default-layout"),
         onPrimarySizeChanged = Some((newSize) =>
           dispatch(AppMsg.ResizePane(NavCotonomas.PaneName, newSize))
         ),
@@ -60,7 +63,28 @@ object AppBody {
         )
       )
     )
-  }
+
+  private def searchLayout(
+      model: Model,
+      uiState: UiState
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    Fragment(
+      SplitPane(
+        vertical = true,
+        initialPrimarySize = uiState.paneSizes.getOrElse(
+          PaneSearch.PaneName,
+          PaneSearch.DefaultWidth
+        ),
+        className = Some("main-split-pane search-layout"),
+        onPrimarySizeChanged = Some((newSize) =>
+          dispatch(AppMsg.ResizePane(PaneSearch.PaneName, newSize))
+        ),
+        primary = SplitPane.Primary.Props()(PaneSearch(model.search)),
+        secondary = SplitPane.Secondary.Props()(
+          flowAndStock(model, uiState)
+        )
+      )
+    )
 
   private def flowAndStock(
       model: Model,

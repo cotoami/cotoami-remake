@@ -27,7 +27,7 @@ div.app {
       border-right: 1px solid var(--pane-border-color);
     }
 
-    div.node-contents {
+    div.main-split-pane {
       flex: 1;
       min-width: 0; // let this item shrink below the content size
 
@@ -37,25 +37,26 @@ div.app {
         width: 100%;
         height: 100%;
       }
+    }
 
-      main {
-        display: flex;
-        flex-direction: row;
+    // flow and stock
+    main {
+      display: flex;
+      flex-direction: row;
 
-        .split-pane {
-          width: 100%;
-        }
+      .split-pane {
+        width: 100%;
+      }
 
-        // wrapped in SplitPane
-        section.flow,
-        section.stock {
-          width: 100%;
-          height: 100%;
-        }
+      // wrapped in SplitPane
+      section.flow,
+      section.stock {
+        width: 100%;
+        height: 100%;
+      }
 
-        .occupying {
-          flex: 1 !important;
-        }
+      .occupying {
+        flex: 1 !important;
       }
     }
   }
