@@ -45,79 +45,41 @@ section.timeline {
   >div.body {
     overflow-x: hidden;
     overflow-y: hidden;
-
-    // SimpleBar div
-    >div {
-      height: 100%;
-
-      .simplebar-content {
-        // override the default padding to make a space for
-        // the coto toolbar of the first coto.
-        padding-top: 30px !important;
-      }
-    }
-
-    .more {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 50px;
-    }
   }
 
-  .post {
-    border-bottom: 1px solid var(--pane-border-color);
+  .repost-header {
+    padding: 0 var(--block-spacing-horizontal);
+    padding-top: 5px;
+    color: var(--muted-color);
+    background-color: var(--card-background-color);
 
-    &.just-posted {
-      @keyframes just-posted {
-        0% {
-          transform: translateY(-100px);
-          opacity: 0;
-        }
-
-        100% {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-
-      animation: just-posted 0.3s linear;
+    span.material-symbols {
+      font-size: 1.2rem;
+      vertical-align: middle;
     }
 
-    .repost-header {
-      padding: 0 var(--block-spacing-horizontal);
-      padding-top: 5px;
+    a.reposted-in {
+      margin-left: 4px;
+      font-size: 0.8rem;
       color: var(--muted-color);
-      background-color: var(--card-background-color);
+      text-decoration: underline;
+    }
 
-      span.material-symbols {
-        font-size: 1.2rem;
-        vertical-align: middle;
+    address.reposter {
+      display: inline;
+      margin-left: 16px;
+      color: var(--muted-color);
+      font-size: 0.9rem;
+
+      img.node-icon {
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
       }
+    }
 
-      a.reposted-in {
-        margin-left: 4px;
-        font-size: 0.8rem;
-        color: var(--muted-color);
-        text-decoration: underline;
-      }
-
-      address.reposter {
-        display: inline;
-        margin-left: 16px;
-        color: var(--muted-color);
-        font-size: 0.9rem;
-
-        img.node-icon {
-          width: 15px;
-          height: 15px;
-          border-radius: 3px;
-        }
-      }
-
-      button.delete-repost {
-        margin-left: 4px;
-      }
+    button.delete-repost {
+      margin-left: 4px;
     }
   }
 
@@ -147,27 +109,5 @@ section.timeline {
       width: 24px;
       height: 24px;
     }
-  }
-
-  article.coto {
-    padding: 1rem 0;
-
-    >header {
-      padding: 0 var(--block-spacing-horizontal);
-    }
-
-    div.content {
-      section.media-content {
-        // fit to the left and right border
-        padding-left: 0;
-        padding-right: 0;
-      }
-    }
-  }
-
-  div.links {
-    padding-top: 3px;
-    background-color: var(--card-background-color);
-    text-align: center;
   }
 }

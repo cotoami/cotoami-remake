@@ -168,7 +168,7 @@ object PaneSearch {
           span(className := "query")(model.query)
         )
       ),
-      div(className := "body")(
+      div(className := "coto-flow body")(
         ScrollArea(
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore))
         )(
@@ -185,7 +185,7 @@ object PaneSearch {
       coto: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
-    section(className := "coto")(
+    section(className := "coto flow-entry")(
       ViewCoto.ulParents(
         domain.parentsOf(coto.id),
         SectionTraversals.Msg.OpenTraversal(_).into

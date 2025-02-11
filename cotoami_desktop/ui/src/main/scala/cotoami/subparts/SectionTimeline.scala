@@ -284,7 +284,7 @@ object SectionTimeline {
           }
         )
       ),
-      div(className := "body")(
+      div(className := "coto-flow body")(
         ScrollArea(
           initialScrollTop = model.getScrollPos(currentCotonomaId),
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
@@ -334,7 +334,7 @@ object SectionTimeline {
       coto: Coto,
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "post")(
+    section(className := "post flow-entry")(
       repostHeader(coto),
       context.domain.cotos.getOriginal(coto).map(coto =>
         Fragment(

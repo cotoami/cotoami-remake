@@ -1,0 +1,46 @@
+.coto-flow {
+
+  // SimpleBar div
+  >div {
+    height: 100%;
+
+    .simplebar-content {
+      // override the default padding to make a space for
+      // the coto toolbar of the first coto.
+      padding-top: 30px !important;
+    }
+  }
+
+  .flow-entry {
+    border-bottom: 1px solid var(--pane-border-color);
+
+    article.coto {
+      padding: 1rem 0;
+
+      >header {
+        padding: 0 var(--block-spacing-horizontal);
+      }
+
+      div.content {
+        section.media-content {
+          // fit to the left and right border
+          padding-left: 0;
+          padding-right: 0;
+        }
+      }
+    }
+  }
+
+  .more {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+  }
+
+  div.links {
+    padding-top: 3px;
+    background-color: var(--card-background-color);
+    text-align: center;
+  }
+}
