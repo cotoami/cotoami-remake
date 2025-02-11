@@ -202,7 +202,8 @@ object PaneSearch {
           ViewCoto.divContent(coto)
         ),
         ViewCoto.articleFooter(coto)
-      )
+      ),
+      ViewCoto.divLinksTraversal(coto, "bottom")
     )
   }
 }
