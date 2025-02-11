@@ -38,7 +38,7 @@ object ViewCoto {
       onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
       onMouseLeave := (_ => dispatch(AppMsg.Unhighlight)),
       onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(coto.id)))
-    )(children)
+    )(children: _*)
 
   def addressAuthor(
       coto: Coto,
