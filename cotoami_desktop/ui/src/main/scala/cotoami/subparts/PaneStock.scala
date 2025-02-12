@@ -83,8 +83,8 @@ object PaneStock {
     )(
       if (sectionTraversals.isDefined)
         ScrollArea(
-          className = Some("pins-and-traversals"),
-          scrollableClassName = Some("scrollable-pins-and-traversals"),
+          className = Some("coto-graph"),
+          scrollableClassName = Some("scrollable-coto-graph"),
           scrollableElementId = Some(ScrollableElementId)
         )(contents)
       else

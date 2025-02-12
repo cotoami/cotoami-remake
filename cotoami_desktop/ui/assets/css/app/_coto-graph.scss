@@ -25,8 +25,8 @@ section.coto-graph {
 
   &.with-traversals-opened {
 
-    div.scroll-area.pins-and-traversals {
-      .scrollable-pins-and-traversals {
+    div.scroll-area.coto-graph {
+      .scrollable-coto-graph {
         overflow-x: auto;
         overflow-y: hidden;
 
@@ -42,7 +42,7 @@ section.coto-graph {
       }
 
       // Make auto-scroll smooth (ex. open a new traversal)
-      &:not(.simplebar-dragging) .scrollable-pins-and-traversals {
+      &:not(.simplebar-dragging) .scrollable-coto-graph {
         scroll-behavior: smooth;
       }
     }
