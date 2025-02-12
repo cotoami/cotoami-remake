@@ -38,6 +38,15 @@ div.app {
         width: 100%;
         height: 100%;
       }
+
+      &.search-layout {
+
+        // Prevent search pane from being hidden by other panes
+        >div.separator,
+        section.search * {
+          z-index: 1000;
+        }
+      }
     }
 
     // flow and stock

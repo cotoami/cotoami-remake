@@ -2,6 +2,7 @@ section.search {
   >header {
     padding: 10px;
     text-align: center;
+    background-color: var(--background-color);
 
     span.material-symbols {
       margin-right: 4px;
@@ -18,5 +19,6 @@ section.search {
   >div.body {
     overflow-x: hidden;
     overflow-y: hidden;
+    background-color: var(--background-color);
   }
 }
