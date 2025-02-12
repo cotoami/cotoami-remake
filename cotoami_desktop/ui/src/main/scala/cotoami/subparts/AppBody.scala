@@ -15,7 +15,7 @@ object AppBody {
     div(id := "app-body", className := "body")(
       (model.uiState, model.domain.nodes.operating) match {
         case (Some(uiState), Some(_)) =>
-          if (model.search.query.isBlank())
+          if (model.search.queryInput.isBlank())
             Some(defaultLayout(model, uiState))
           else
             Some(searchLayout(model, uiState))

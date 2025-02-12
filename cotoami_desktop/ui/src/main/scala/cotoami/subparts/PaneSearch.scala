@@ -23,12 +23,13 @@ object PaneSearch {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      query: String = "",
+      queryInput: String = "",
 
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
 
       // Search results
+      executedQuery: Option[String] = None,
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
 
       // State
@@ -37,21 +38,26 @@ object PaneSearch {
   ) {
     def inputQuery(query: String): (Model, Cmd[AppMsg]) =
       if (query.isBlank())
-        (clear.copy(query = query), Cmd.none)
+        (clear.copy(queryInput = query), Cmd.none)
       else {
         if (imeActive)
-          (copy(query = query), Cmd.none)
+          (copy(queryInput = query), Cmd.none)
         else
-          copy(query = query).fetchFirst
+          copy(queryInput = query).fetchFirst
       }
 
     def clear: Model =
-      copy(query = "", cotoIds = PaginatedIds(), loading = false)
+      copy(
+        queryInput = "",
+        executedQuery = None,
+        cotoIds = PaginatedIds(),
+        loading = false
+      )
 
     def fetchFirst: (Model, Cmd.One[AppMsg]) =
       (
         copy(loading = true),
-        fetch(query, 0, fetchNumber + 1)
+        fetch(queryInput, 0, fetchNumber + 1)
       )
 
     def fetchMore: (Model, Cmd.One[AppMsg]) =
@@ -61,13 +67,18 @@ object PaneSearch {
         cotoIds.nextPageIndex.map(i =>
           (
             copy(loading = true),
-            fetch(query, i, fetchNumber + 1)
+            fetch(queryInput, i, fetchNumber + 1)
           )
         ).getOrElse((this, Cmd.none)) // no more
 
-    def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
+    def appendPage(
+        cotos: PaginatedCotos,
+        query: String,
+        fetchNumber: Int
+    ): Model =
       this
         .modify(_.cotoIds).using(_.appendPage(cotos.page))
+        .modify(_.executedQuery).setTo(Some(query))
         .modify(_.fetchNumber).setTo(fetchNumber)
         .modify(_.loading).setTo(false)
 
@@ -89,8 +100,11 @@ object PaneSearch {
     case object ImeCompositionStart extends Msg
     case object ImeCompositionEnd extends Msg
     case object FetchMore extends Msg
-    case class Fetched(number: Int, result: Either[ErrorJson, PaginatedCotos])
-        extends Msg
+    case class Fetched(
+        number: Int,
+        query: String,
+        result: Either[ErrorJson, PaginatedCotos]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -121,19 +135,19 @@ object PaneSearch {
           default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.Fetched(number, Right(cotos)) =>
+      case Msg.Fetched(number, query, Right(cotos)) =>
         if (number > model.fetchNumber)
           default.copy(
-            _1 = model.appendPage(cotos, number),
+            _1 = model.appendPage(cotos, query, number),
             _2 = context.domain.importFrom(cotos)
           )
         else
           default
 
-      case Msg.Fetched(_, Left(e)) =>
+      case Msg.Fetched(_, query, Left(e)) =>
         default.copy(
           _1 = model.copy(loading = false),
-          _3 = cotoami.error("Couldn't search cotos.", e)
+          _3 = cotoami.error(s"Couldn't search cotos by [${query}].", e)
         )
     }
   }
@@ -150,7 +164,7 @@ object PaneSearch {
         None,
         false,
         pageIndex
-      ).map(Msg.Fetched(fetchNumber, _).into)
+      ).map(Msg.Fetched(fetchNumber, query, _).into)
     else
       Cmd.none
 
@@ -165,7 +179,7 @@ object PaneSearch {
       header()(
         span(className := "title")(
           materialSymbol("search"),
-          span(className := "query")(model.query)
+          span(className := "query")(model.executedQuery)
         )
       ),
       div(className := "coto-flow body")(

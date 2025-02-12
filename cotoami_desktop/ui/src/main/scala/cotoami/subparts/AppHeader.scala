@@ -90,12 +90,12 @@ object AppHeader {
       input(
         `type` := "search",
         name := "query",
-        value := search.query,
+        value := search.queryInput,
         onChange := ((e) => dispatch(QueryInput(e.target.value))),
         onCompositionStart := (_ => dispatch(ImeCompositionStart)),
         onCompositionEnd := (_ => dispatch(ImeCompositionEnd))
       ),
-      Option.when(!search.query.isBlank) {
+      Option.when(!search.queryInput.isBlank) {
         button(
           className := "clear default",
           onClick := (_ => dispatch(ClearQuery))
