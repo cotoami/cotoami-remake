@@ -202,6 +202,52 @@ package object subparts {
     )
   }
 
+  def pinLink(
+      link: Link
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val canEditPin = context.domain.nodes.canEdit(link)
+    div(
+      className := optionalClasses(
+        Seq(
+          ("link-container", true),
+          ("with-linking-phrase", link.linkingPhrase.isDefined)
+        )
+      )
+    )(
+      div(
+        className := optionalClasses(
+          Seq(
+            ("pin", true),
+            ("link", true),
+            ("editable", canEditPin)
+          )
+        )
+      )(
+        toolButton(
+          classes = "edit-pin",
+          symbol = "push_pin",
+          tip = Option.when(canEditPin)("Edit pin"),
+          tipPlacement = "right",
+          disabled = !canEditPin,
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+          }
+        ),
+        link.linkingPhrase.map(phrase =>
+          section(
+            className := "linking-phrase",
+            onClick := (e => {
+              e.stopPropagation()
+              if (canEditPin)
+                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+            })
+          )(phrase)
+        )
+      )
+    )
+  }
+
   def subcotoLink(
       link: Link
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {

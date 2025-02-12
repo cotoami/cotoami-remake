@@ -282,7 +282,6 @@ object SectionPins {
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (link, coto, order) = pin
-    val canEditPin = context.domain.nodes.canEdit(link)
     val subCotos = context.domain.childrenOf(coto.id)
     li(
       className := optionalClasses(
@@ -305,46 +304,7 @@ object SectionPins {
           ("has-children", context.domain.links.anyFrom(coto.id))
         )
       )(
-        div(
-          className := optionalClasses(
-            Seq(
-              ("link-container", true),
-              ("with-linking-phrase", link.linkingPhrase.isDefined)
-            )
-          )
-        )(
-          div(
-            className := optionalClasses(
-              Seq(
-                ("pin", true),
-                ("link", true),
-                ("editable", canEditPin)
-              )
-            )
-          )(
-            toolButton(
-              classes = "edit-pin",
-              symbol = "push_pin",
-              tip = Option.when(canEditPin)("Edit pin"),
-              tipPlacement = "right",
-              disabled = !canEditPin,
-              onClick = e => {
-                e.stopPropagation()
-                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
-              }
-            ),
-            link.linkingPhrase.map(phrase =>
-              section(
-                className := "linking-phrase",
-                onClick := (e => {
-                  e.stopPropagation()
-                  if (canEditPin)
-                    dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
-                })
-              )(phrase)
-            )
-          )
-        ),
+        pinLink(link),
         ToolbarCoto(coto),
         ToolbarReorder(link, order),
         div(className := "body")(
