@@ -85,20 +85,6 @@ section.pins {
     li.pin {
       background-color: var(--card-background-color);
 
-      &.just-pinned {
-        @keyframes just-pinned {
-          0% {
-            opacity: 0;
-          }
-
-          100% {
-            opacity: 1;
-          }
-        }
-
-        animation: just-pinned 1s linear;
-      }
-
       &.with-linking-phrase {
         ul.parents {
           // make space to display the pin with a linking phrase
