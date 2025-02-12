@@ -39,11 +39,11 @@ object PaneStock {
             divMap(model, uiState)
           ),
           secondary = SplitPane.Secondary.Props()(
-            sectionLinks(model, uiState)(model, dispatch)
+            sectionCotoGraph(model, uiState)(model, dispatch)
           )
         )
       else
-        sectionLinks(model, uiState)(model, dispatch)
+        sectionCotoGraph(model, uiState)(model, dispatch)
     )
 
   private def divMap(model: Model, uiState: UiState)(implicit
@@ -63,7 +63,7 @@ object PaneStock {
       )
     )
 
-  private def sectionLinks(
+  private def sectionCotoGraph(
       model: Model,
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
@@ -75,7 +75,7 @@ object PaneStock {
     section(
       className := optionalClasses(
         Seq(
-          ("links", true),
+          ("coto-graph", true),
           ("fill", true),
           ("with-traversals-opened", sectionTraversals.isDefined)
         )
