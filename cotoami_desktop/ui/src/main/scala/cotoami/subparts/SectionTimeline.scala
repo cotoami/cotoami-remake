@@ -318,7 +318,7 @@ object SectionTimeline {
       post: WaitingPost
   )(implicit context: Context): ReactElement =
     section(
-      className := "waiting-post",
+      className := "waiting-post flow-entry",
       key := post.postId,
       aria - "busy" := "true"
     )(
