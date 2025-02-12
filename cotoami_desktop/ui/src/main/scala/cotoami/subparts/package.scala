@@ -202,7 +202,7 @@ package object subparts {
     )
   }
 
-  def pinLink(
+  def buttonPinLink(
       link: Link
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val canEditPin = context.domain.nodes.canEdit(link)
@@ -248,7 +248,7 @@ package object subparts {
     )
   }
 
-  def subcotoLink(
+  def buttonSubcotoLink(
       link: Link
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val canEditLink = context.domain.nodes.canEdit(link)

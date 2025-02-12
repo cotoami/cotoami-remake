@@ -113,7 +113,7 @@ object SectionCotoDetails {
           ToolbarCoto(coto),
           ToolbarReorder(link, order),
           header()(
-            subcotoLink(link),
+            buttonSubcotoLink(link),
             ViewCoto.divAttributes(coto),
             Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
               ViewCoto.addressAuthor(coto, domain.nodes)

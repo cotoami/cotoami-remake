@@ -304,7 +304,7 @@ object SectionPins {
           ("has-children", context.domain.links.anyFrom(coto.id))
         )
       )(
-        pinLink(link),
+        buttonPinLink(link),
         ToolbarCoto(coto),
         ToolbarReorder(link, order),
         div(className := "body")(
@@ -424,7 +424,7 @@ object SectionPins {
         ToolbarCoto(coto),
         ToolbarReorder(link, order),
         header()(
-          subcotoLink(link)
+          buttonSubcotoLink(link)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto),

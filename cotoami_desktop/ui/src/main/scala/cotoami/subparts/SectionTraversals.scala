@@ -322,7 +322,7 @@ object SectionTraversals {
         ToolbarCoto(coto),
         ToolbarReorder(link, order),
         header()(
-          subcotoLink(link)
+          buttonSubcotoLink(link)
         ),
         div(className := "body")(
           // Coto content
