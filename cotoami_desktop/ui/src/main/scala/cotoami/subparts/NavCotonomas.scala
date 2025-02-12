@@ -155,7 +155,7 @@ object NavCotonomas {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val domain = context.domain
     val recentCotonomas = context.domain.recentCotonomasWithoutRoot
-    nav(className := "cotonomas header-and-body")(
+    nav(className := "cotonomas header-and-body fill")(
       header()(
         if (domain.cotonomas.focused.isEmpty) {
           div(className := "cotonoma home focused")(

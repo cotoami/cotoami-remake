@@ -24,7 +24,7 @@ object PaneStock {
       model: Model,
       uiState: UiState
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "stock")(
+    section(className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
           vertical = false,
@@ -36,19 +36,7 @@ object PaneStock {
             dispatch(AppMsg.ResizePane(PaneMapName, newSize))
           ),
           primary = SplitPane.Primary.Props()(
-            div(className := "map")(
-              Option.when(uiState.geomapOpened) {
-                SectionGeomap(model.geomap)(model, dispatch)
-              },
-              div(className := "close-map-button")(
-                button(
-                  className := "default close-map",
-                  onClick := (_ => dispatch(AppMsg.CloseMap))
-                )(
-                  materialSymbol("arrow_drop_up")
-                )
-              )
-            )
+            divMap(model, uiState)
           ),
           secondary = SplitPane.Secondary.Props()(
             sectionLinks(model, uiState)(model, dispatch)
@@ -58,7 +46,24 @@ object PaneStock {
         sectionLinks(model, uiState)(model, dispatch)
     )
 
-  def sectionLinks(
+  private def divMap(model: Model, uiState: UiState)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    div(className := "map fill")(
+      Option.when(uiState.geomapOpened) {
+        SectionGeomap(model.geomap)(model, dispatch)
+      },
+      div(className := "close-map-button")(
+        button(
+          className := "default close-map",
+          onClick := (_ => dispatch(AppMsg.CloseMap))
+        )(
+          materialSymbol("arrow_drop_up")
+        )
+      )
+    )
+
+  private def sectionLinks(
       model: Model,
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {

@@ -161,7 +161,7 @@ object PaneSearch {
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "search header-and-body")(
+    section(className := "search header-and-body fill")(
       header()(
         span(className := "title")(
           materialSymbol("search"),

@@ -29,14 +29,6 @@ dialog.coto-editor {
       div.split-pane.media-and-coto-form {
         flex: 1;
 
-        section.media-preview {
-          // wrapped in SplitPane
-          width: 100%;
-          height: 100%;
-
-          padding-bottom: 8px;
-        }
-
         .separator-inner {
           border-style: none !important;
         }

@@ -95,7 +95,7 @@ object AppBody {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val flowOpened = uiState.paneOpened(PaneFlow.PaneName)
     val stockOpened = uiState.paneOpened(PaneStock.PaneName)
-    slinky.web.html.main()(
+    slinky.web.html.main(className := "fill")(
       SplitPane(
         vertical = true,
         initialPrimarySize = uiState.paneSizes.getOrElse(

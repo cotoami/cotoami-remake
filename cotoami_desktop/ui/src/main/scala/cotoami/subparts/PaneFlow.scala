@@ -17,7 +17,7 @@ object PaneFlow {
       model: Model,
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "flow")(
+    section(className := "flow fill")(
       model.domain.cotos.focused.map(SectionCotoDetails(_)(model, dispatch))
         .getOrElse(timeline(model, uiState))
     )

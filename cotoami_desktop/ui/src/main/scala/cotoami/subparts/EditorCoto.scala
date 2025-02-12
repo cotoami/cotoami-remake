@@ -226,7 +226,7 @@ object EditorCoto {
         onCtrlEnter: () => Unit,
         onFocus: Option[() => Unit] = None
     )(implicit dispatch: Msg => Unit): ReactElement =
-      section(className := "coto-editor")(
+      section(className := "coto-editor fill")(
         Option.when(!model.isCotonoma) {
           input(
             className := "summary",
@@ -264,7 +264,7 @@ object EditorCoto {
       )
 
     def sectionPreview(model: CotoForm.Model): ReactElement =
-      section(className := "coto-preview")(
+      section(className := "coto-preview fill")(
         ScrollArea()(
           Option.when(!model.isCotonoma) {
             model.summary.map(section(className := "summary")(_))
@@ -294,7 +294,7 @@ object EditorCoto {
     )(implicit dispatch: Msg => Unit): Option[ReactElement] =
       model.mediaBlob.map { blob =>
         val url = dom.URL.createObjectURL(blob)
-        section(className := "media-preview")(
+        section(className := "media-preview fill")(
           div(className := "media-content")(
             img(
               src := url,

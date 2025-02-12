@@ -31,14 +31,6 @@ div.app {
       flex: 1;
       min-width: 0; // let this item shrink below the content size
 
-      // wrapped in SplitPane
-      nav.cotonomas,
-      section.search,
-      main {
-        width: 100%;
-        height: 100%;
-      }
-
       &.search-layout {
 
         // Prevent search pane from being hidden by other panes
@@ -56,13 +48,6 @@ div.app {
 
       .split-pane {
         width: 100%;
-      }
-
-      // wrapped in SplitPane
-      section.flow,
-      section.stock {
-        width: 100%;
-        height: 100%;
       }
 
       .occupying {
