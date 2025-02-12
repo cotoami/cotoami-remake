@@ -12,6 +12,7 @@ import slinky.core.facade.Hooks._
 
 @react object ScrollArea {
   case class Props(
+      className: Option[String] = None,
       scrollableElementId: Option[String] = None,
       autoHide: Boolean = true,
       initialScrollTop: Option[Double] = None,
@@ -29,6 +30,7 @@ import slinky.core.facade.Hooks._
     def getChildren: Seq[ReactElement] = children
   }
 
+  val DefaultClassName = "scroll-area"
   val DefaultBottomThreshold = 1
 
   val component = FunctionalComponent[Props] { props =>
@@ -87,6 +89,7 @@ import slinky.core.facade.Hooks._
     )
 
     SimpleBar(
+      className = s"${DefaultClassName} ${props.className.getOrElse("")}",
       autoHide = props.autoHide,
       scrollableNodeProps = SimpleBar.ScrollableNodeProps(
         props.scrollableElementId,
@@ -109,6 +112,7 @@ object SimpleBarCSS extends js.Object
   val css = SimpleBarCSS
 
   case class Props(
+      className: String,
       autoHide: Boolean,
       scrollableNodeProps: ScrollableNodeProps,
       children: ReactElement*
