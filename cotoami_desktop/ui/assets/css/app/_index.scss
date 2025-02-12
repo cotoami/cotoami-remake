@@ -3,6 +3,14 @@
 @forward "header";
 @forward "footer";
 
+@forward "coto";
+@forward "coto-details";
+@forward "coto-html";
+@forward "coto-flow";
+@forward "coto-graph";
+
+@forward "link";
+
 @forward "nav-nodes";
 @forward "nav-cotonomas";
 @forward "search";
@@ -11,20 +19,16 @@
 @forward "stock";
 
 @forward "timeline";
-@forward "coto-details";
 
 @forward "pins";
 @forward "traversals";
 @forward "map";
 @forward "geomap";
 
-@forward "coto";
-@forward "coto-html";
-@forward "coto-flow";
-@forward "link";
 @forward "editor";
 @forward "flow-input";
 @forward "view-log";
+
 @forward "modal";
 @forward "modal-confirm";
 @forward "modal-welcome";
