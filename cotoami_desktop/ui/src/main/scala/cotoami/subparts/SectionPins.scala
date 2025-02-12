@@ -102,7 +102,7 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (cotonoma, cotonomaCoto) = currentCotonoma
     val inColumns = uiState.arePinsInColumns(cotonoma.id)
-    section(className := "pins header-and-body")(
+    section(className := "pins header-and-body fill")(
       header()(
         ToolbarCoto(cotonomaCoto),
         section(className := "title")(

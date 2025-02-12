@@ -76,6 +76,7 @@ object PaneStock {
       className := optionalClasses(
         Seq(
           ("links", true),
+          ("fill", true),
           ("with-traversals-opened", sectionTraversals.isDefined)
         )
       )
