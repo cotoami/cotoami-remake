@@ -18,8 +18,6 @@ object PaneStock {
   final val PaneMapName = "PaneMap"
   final val PaneMapDefaultWidth = 400
 
-  final val ScrollableElementId = "scrollable-stock-with-traversals"
-
   def apply(
       model: Model,
       uiState: UiState
@@ -63,6 +61,8 @@ object PaneStock {
       )
     )
 
+  final val CotoGraphScrollableElementId = "scrollable-coto-graph"
+
   private def sectionCotoGraph(
       model: Model,
       uiState: UiState
@@ -85,7 +85,7 @@ object PaneStock {
         ScrollArea(
           className = Some("coto-graph"),
           scrollableClassName = Some("scrollable-coto-graph"),
-          scrollableElementId = Some(ScrollableElementId)
+          scrollableElementId = Some(CotoGraphScrollableElementId)
         )(contents)
       else
         contents

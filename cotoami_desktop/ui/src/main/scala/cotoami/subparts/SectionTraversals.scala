@@ -121,7 +121,7 @@ object SectionTraversals {
               IO {
                 js.timers.setTimeout(10) {
                   dom.document.getElementById(
-                    PaneStock.ScrollableElementId
+                    PaneStock.CotoGraphScrollableElementId
                   ) match {
                     case element: HTMLElement =>
                       element.scrollLeft = element.scrollWidth.toDouble
