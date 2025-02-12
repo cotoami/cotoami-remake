@@ -16,6 +16,7 @@ object DatabaseFocus {
     model
       .modify(_.domain).using(_.unfocus)
       .modify(_.domain.nodes).using(_.focus(nodeId))
+      .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
       .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
@@ -50,6 +51,7 @@ object DatabaseFocus {
       .modify(_.domain.cotonomas).using(_.focus(Some(cotonomaId)))
       .modify(_.domain.cotos).using(_.clear())
       .modify(_.domain.links).setTo(Links())
+      .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
       .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
