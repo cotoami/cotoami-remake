@@ -21,12 +21,14 @@ pub struct PubsubService {
 }
 
 impl PubsubService {
+    const DEFAULT_TIMEOUT: Duration = Duration::from_secs(60);
+
     pub fn new(description: impl Into<String>, responses: ResponsePubsub) -> Self {
         Self {
             description: description.into(),
             requests: RequestPubsub::default(),
             responses,
-            timeout: Duration::from_secs(10), // Default timeout
+            timeout: Self::DEFAULT_TIMEOUT,
         }
     }
 
