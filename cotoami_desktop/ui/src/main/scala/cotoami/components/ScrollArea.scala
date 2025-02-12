@@ -14,6 +14,7 @@ import slinky.core.facade.Hooks._
   case class Props(
       className: Option[String] = None,
       scrollableElementId: Option[String] = None,
+      scrollableClassName: Option[String] = None,
       autoHide: Boolean = true,
       initialScrollTop: Option[Double] = None,
       bottomThreshold: Option[Int] = None,
@@ -93,7 +94,7 @@ import slinky.core.facade.Hooks._
       autoHide = props.autoHide,
       scrollableNodeProps = SimpleBar.ScrollableNodeProps(
         props.scrollableElementId,
-        None,
+        props.scrollableClassName,
         Some(scrollableNodeRef)
       )
     )(props.getChildren: _*)

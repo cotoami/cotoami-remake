@@ -76,7 +76,11 @@ object PaneStock {
       )
     )(
       if (sectionTraversals.isDefined)
-        ScrollArea(scrollableElementId = Some(ScrollableElementId))(contents)
+        ScrollArea(
+          className = Some("pins-and-traversals"),
+          scrollableClassName = Some("scrollable-pins-and-traversals"),
+          scrollableElementId = Some(ScrollableElementId)
+        )(contents)
       else
         contents
     )

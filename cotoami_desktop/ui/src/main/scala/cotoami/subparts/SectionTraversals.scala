@@ -199,7 +199,10 @@ object SectionTraversals {
         )
       ),
       section(className := "body")(
-        ScrollArea()(
+        ScrollArea(
+          className = Some("traversal"),
+          scrollableClassName = Some("scrollable-traversal")
+        )(
           divParents(
             context.domain.parentsOf(traversal._1.start),
             traversal._2

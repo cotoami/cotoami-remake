@@ -1,14 +1,9 @@
 .coto-flow {
 
-  // SimpleBar div
-  >div {
-    height: 100%;
-
-    .simplebar-content {
-      // override the default padding to make a space for
-      // the coto toolbar of the first coto.
-      padding-top: 30px !important;
-    }
+  .simplebar-content {
+    // override the default padding to make a space for
+    // the coto toolbar of the first coto.
+    padding-top: 30px !important;
   }
 
   .flow-entry {

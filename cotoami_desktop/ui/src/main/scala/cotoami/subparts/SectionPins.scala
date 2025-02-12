@@ -151,7 +151,7 @@ object SectionPins {
         ),
         id := PinsBodyId
       )(
-        ScrollArea()(
+        ScrollArea(scrollableClassName = Some("scrollable-pins"))(
           if (inColumns)
             olPins(pins, inColumns)
           else

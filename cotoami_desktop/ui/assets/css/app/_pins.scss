@@ -62,14 +62,9 @@ section.pins {
   >div.body {
     padding-top: 10px;
 
-    // SimpleBar div
-    >div {
-      width: 100%;
-      height: 100%;
-
-      &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
-        scroll-behavior: smooth;
-      }
+    // Make auto-scroll smooth (ex. jump to a pin by clicking on a TOC item)
+    >div.scroll-area:not(.simplebar-dragging) .scrollable-pins {
+      scroll-behavior: smooth;
     }
   }
 
@@ -191,12 +186,6 @@ section.pins {
         position: sticky;
         top: 0;
 
-        // SimpleBar div
-        >div {
-          width: 100%;
-          height: 100%;
-        }
-
         ol.toc {
           width: 100%;
 
@@ -304,12 +293,6 @@ section.pins {
 
       .scrollable-sub-cotos {
         min-height: 0; // let this item shrink below the content size
-
-        // SimpleBar div
-        >div {
-          width: 100%;
-          height: 100%;
-        }
       }
 
       ol.sub-cotos {

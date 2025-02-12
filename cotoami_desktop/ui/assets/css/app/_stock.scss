@@ -106,12 +106,8 @@ section.stock {
 
     &.with-traversals-opened {
 
-      // SimpleBar div
-      >div {
-        width: 100%;
-        height: 100%;
-
-        >.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+      div.scroll-area.pins-and-traversals {
+        .scrollable-pins-and-traversals {
           overflow-x: auto;
           overflow-y: hidden;
 
@@ -126,7 +122,8 @@ section.stock {
           }
         }
 
-        &:not(.simplebar-dragging)>.simplebar-wrapper>.simplebar-mask>.simplebar-offset>.simplebar-content-wrapper {
+        // Make auto-scroll smooth (ex. open a new traversal)
+        &:not(.simplebar-dragging) .scrollable-pins-and-traversals {
           scroll-behavior: smooth;
         }
       }
