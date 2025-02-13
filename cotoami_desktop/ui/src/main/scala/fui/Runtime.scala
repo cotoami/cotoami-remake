@@ -18,6 +18,7 @@ class Runtime[Model, Msg](
   private val init = program.init(new URL(dom.window.location.href))
   private var state = init._1
   private val subs: MutableMap[String, Option[Sub.Unsubscribe]] = MutableMap()
+  private val debounceTimers: MutableMap[String, Int] = MutableMap()
 
   def dispatch(msg: Msg): Unit = apply(program.update(msg, state))
 
@@ -32,6 +33,11 @@ class Runtime[Model, Msg](
 
   private def run(cmd: Cmd[Msg]): Unit =
     cmd match {
+      case cmd @ Cmd.One(_, Some(Cmd.Debounce(key, delay))) => {
+        debounceTimers.get(key).foreach(dom.window.clearTimeout)
+        val timer = dom.window.setTimeout(() => runOne(cmd), delay)
+        debounceTimers.put(key, timer)
+      }
       case cmd: Cmd.One[Msg]          => runOne(cmd)
       case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) runOne(cmd)
       case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)

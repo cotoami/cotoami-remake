@@ -14,7 +14,10 @@ object Cmd {
 
   def apply[Msg](io: IO[Option[Msg]]): One[Msg] = One(io)
 
-  case class One[+Msg](io: IO[Option[Msg]]) extends AnyVal with Cmd[Msg] {
+  case class Debounce(key: String, delay: Double)
+
+  case class One[+Msg](io: IO[Option[Msg]], debounce: Option[Debounce] = None)
+      extends Cmd[Msg] {
     override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] = One(
       io.map(_.map(f))
     )
@@ -30,6 +33,9 @@ object Cmd {
       }
 
     def toBatch: Batch[Msg] = Batch(this)
+
+    def debounce(key: String, delay: Double): One[Msg] =
+      copy(debounce = Some(Debounce(key, delay)))
   }
 
   case class Batch[+Msg](cmds: One[Msg]*) extends Cmd[Msg] {
