@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds}
 import cotoami.repositories.Domain
@@ -24,6 +24,10 @@ object PaneSearch {
 
   case class Model(
       queryInput: String = "",
+      debouncedInput: (String, Into[AppMsg] => Unit) => Unit = Browser.debounce(
+        (input, dispatch) => dispatch(Msg.QueryInput(input)),
+        300
+      ),
 
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,

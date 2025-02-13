@@ -40,6 +40,17 @@ object Browser {
     }
   }
 
+  def debounce[T1, T2](
+      func: (T1, T2) => Unit,
+      delay: Double
+  ): (T1, T2) => Unit = {
+    var timeoutId: Option[Int] = None
+    (t1: T1, t2: T2) => {
+      timeoutId.foreach(dom.window.clearTimeout)
+      timeoutId = Some(dom.window.setTimeout(() => func(t1, t2), delay))
+    }
+  }
+
   /** Change the URL, but do not trigger a page load. This will add a new entry
     * to the browser history.
     *
