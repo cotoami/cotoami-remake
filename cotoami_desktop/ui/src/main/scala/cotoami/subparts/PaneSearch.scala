@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
-import fui.{Browser, Cmd}
+import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds}
 import cotoami.repositories.Domain
@@ -24,15 +24,6 @@ object PaneSearch {
 
   case class Model(
       queryInput: String = "",
-
-      // To clear the uncontrolled input value by incrementing this key
-      queryInputKey: Int = 0,
-
-      // To capture only the end state of consecutive typing
-      debouncedInput: (String, Into[AppMsg] => Unit) => Unit = Browser.debounce(
-        (input, dispatch) => dispatch(Msg.QueryInput(input)),
-        200
-      ),
 
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
@@ -60,13 +51,14 @@ object PaneSearch {
         if (imeActive)
           (copy(queryInput = query), Cmd.none)
         else
-          copy(queryInput = query).fetchFirst
+          copy(queryInput = query)
+            .fetchFirst
+            .modify(_._2).using(_.debounce("PaneSearch.inputQuery", 200))
       }
 
     def clear: Model =
       copy(
         queryInput = "",
-        queryInputKey = queryInputKey + 1,
         fetchNumber = 0,
         executedQuery = None,
         cotoIds = PaginatedIds(),

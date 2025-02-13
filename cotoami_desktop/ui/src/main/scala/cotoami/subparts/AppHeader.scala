@@ -90,8 +90,8 @@ object AppHeader {
       input(
         `type` := "search",
         name := "query",
-        key := search.queryInputKey.toString(),
-        onChange := (e => search.debouncedInput(e.target.value, dispatch)),
+        value := search.queryInput,
+        onChange := (e => dispatch(QueryInput(e.target.value))),
         onCompositionStart := (_ => dispatch(ImeCompositionStart)),
         onCompositionEnd := (_ => dispatch(ImeCompositionEnd))
       ),
