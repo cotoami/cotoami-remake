@@ -39,7 +39,7 @@ object SectionTimeline {
 
       // Filter criteria for cotos in this timeline
       onlyCotonomas: Boolean = false,
-      query: String = "",
+      queryInput: String = "",
 
       // To avoid rendering old results unintentionally
       fetchNumber: Int = 0,
@@ -55,7 +55,7 @@ object SectionTimeline {
       copy(
         cotoIds = PaginatedIds(),
         onlyCotonomas = false,
-        query = "",
+        queryInput = "",
         fetchNumber = 0,
         loading = false,
         imeActive = false
@@ -81,34 +81,53 @@ object SectionTimeline {
     def post(cotoId: Id[Coto]): Model =
       this
         .modify(_.cotoIds).using(cotoIds =>
-          if (query.isEmpty)
+          if (queryInput.isEmpty)
             cotoIds.prependId(cotoId)
           else
             cotoIds
         )
 
     def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
-      (
-        copy(loading = true),
-        fetchInFocus(domain, onlyCotonomas, Some(query), 0, fetchNumber + 1)
-      )
+      fetching.pipe { model =>
+        (
+          model,
+          fetchInFocus(
+            domain,
+            onlyCotonomas,
+            Some(queryInput),
+            0,
+            model.fetchNumber
+          )
+        )
+      }
 
     def fetchMore(domain: Domain): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
         cotoIds.nextPageIndex.map(i =>
-          (
-            copy(loading = true),
-            fetchInFocus(domain, onlyCotonomas, Some(query), i, fetchNumber + 1)
-          )
+          fetching.pipe { model =>
+            (
+              model,
+              fetchInFocus(
+                domain,
+                onlyCotonomas,
+                Some(queryInput),
+                i,
+                model.fetchNumber
+              )
+            )
+          }
         ).getOrElse((this, Cmd.none)) // no more
+
+    private def fetching: Model =
+      copy(fetchNumber = fetchNumber + 1, loading = true)
 
     def inputQuery(query: String, domain: Domain): (Model, Cmd[AppMsg]) =
       if (imeActive)
-        (copy(query = query), Cmd.none)
+        (copy(queryInput = query), Cmd.none)
       else
-        copy(query = query).fetchFirst(domain)
+        copy(queryInput = query).fetchFirst(domain)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -177,7 +196,7 @@ object SectionTimeline {
         }
 
       case Msg.Fetched(number, Right(cotos)) =>
-        if (number > model.fetchNumber)
+        if (number == model.fetchNumber)
           default.copy(
             _1 = model.appendPage(cotos, number),
             _2 = context.domain.importFrom(cotos)
@@ -247,7 +266,7 @@ object SectionTimeline {
     val cotos = model.cotos(context.domain)
     context.domain.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
-        !model.query.isBlank || !cotos.isEmpty || !waitingPosts.isEmpty
+        !model.queryInput.isBlank || !cotos.isEmpty || !waitingPosts.isEmpty
       )(
         sectionTimeline(model, cotos, waitingPosts, cotonomaId)
       )
@@ -271,12 +290,12 @@ object SectionTimeline {
           input(
             `type` := "search",
             name := "query",
-            value := model.query,
+            value := model.queryInput,
             onChange := ((e) => dispatch(Msg.QueryInput(e.target.value))),
             onCompositionStart := (_ => dispatch(Msg.ImeCompositionStart)),
             onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd))
           ),
-          Option.when(!model.query.isBlank) {
+          Option.when(!model.queryInput.isBlank) {
             button(
               className := "clear default",
               onClick := (_ => dispatch(Msg.ClearQuery))
