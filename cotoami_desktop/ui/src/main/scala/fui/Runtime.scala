@@ -26,25 +26,24 @@ class Runtime[Model, Msg](
     state = model
 
     ReactDOM.render(program.view(model, dispatch), container)
-
-    // Run side effects
-    cmd match {
-      case cmd: Cmd.One[Msg]          => run(cmd)
-      case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) run(cmd)
-      case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)
-    }
-
+    run(cmd)
     updateSubs(state)
   }
 
-  private def run(cmd: Cmd.One[Msg]): Unit = {
+  private def run(cmd: Cmd[Msg]): Unit =
+    cmd match {
+      case cmd: Cmd.One[Msg]          => runOne(cmd)
+      case Cmd.Batch(cmds @ _*)       => for (cmd <- cmds) runOne(cmd)
+      case Cmd.Sequence(batches @ _*) => runSequence(batches.toList)
+    }
+
+  private def runOne(cmd: Cmd.One[Msg]): Unit =
     cmd.io.unsafeRunAsync {
       case Right(optionMsg) => optionMsg.map(dispatch)
       case Left(e) => throw e // IO should return Right even when it fails
     }
-  }
 
-  private def runSequence(batches: List[Cmd.Batch[Msg]]): Unit = {
+  private def runSequence(batches: List[Cmd.Batch[Msg]]): Unit =
     batches match {
       case Nil => ()
       case head :: tail => {
@@ -57,7 +56,6 @@ class Runtime[Model, Msg](
         }
       }
     }
-  }
 
   private def updateSubs(model: Model): Unit = {
     val nextSubs = Sub.toMap(program.subscriptions(model))
