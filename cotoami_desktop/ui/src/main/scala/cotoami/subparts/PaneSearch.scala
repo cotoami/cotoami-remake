@@ -47,7 +47,15 @@ object PaneSearch {
   ) {
     def inputQuery(query: String): (Model, Cmd[AppMsg]) =
       if (query.isBlank())
-        (clear.copy(queryInput = query), Cmd.none)
+        (
+          copy(
+            queryInput = query,
+            executedQuery = None,
+            cotoIds = PaginatedIds(),
+            loading = false
+          ),
+          Cmd.none
+        )
       else {
         if (imeActive)
           (copy(queryInput = query), Cmd.none)
