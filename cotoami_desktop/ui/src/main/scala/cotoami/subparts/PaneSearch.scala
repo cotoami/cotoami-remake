@@ -24,9 +24,14 @@ object PaneSearch {
 
   case class Model(
       queryInput: String = "",
+
+      // To clear the uncontrolled input value by incrementing this key
+      queryInputKey: Int = 0,
+
+      // To capture only the end state of consecutive typing
       debouncedInput: (String, Into[AppMsg] => Unit) => Unit = Browser.debounce(
         (input, dispatch) => dispatch(Msg.QueryInput(input)),
-        300
+        200
       ),
 
       // To avoid rendering old results unintentionally
@@ -53,6 +58,7 @@ object PaneSearch {
     def clear: Model =
       copy(
         queryInput = "",
+        queryInputKey = queryInputKey + 1,
         fetchNumber = 0,
         executedQuery = None,
         cotoIds = PaginatedIds(),
