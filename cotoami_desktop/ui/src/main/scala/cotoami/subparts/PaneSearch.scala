@@ -49,27 +49,29 @@ object PaneSearch {
     def clear: Model =
       copy(
         queryInput = "",
+        fetchNumber = 0,
         executedQuery = None,
         cotoIds = PaginatedIds(),
         loading = false
       )
 
     def fetchFirst: (Model, Cmd.One[AppMsg]) =
-      (
-        copy(loading = true),
-        fetch(queryInput, 0, fetchNumber + 1)
-      )
+      fetching.pipe { model =>
+        (model, fetch(queryInput, 0, model.fetchNumber))
+      }
 
     def fetchMore: (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
         cotoIds.nextPageIndex.map(i =>
-          (
-            copy(loading = true),
-            fetch(queryInput, i, fetchNumber + 1)
-          )
+          fetching.pipe { model =>
+            (model, fetch(queryInput, i, model.fetchNumber))
+          }
         ).getOrElse((this, Cmd.none)) // no more
+
+    private def fetching: Model =
+      copy(fetchNumber = fetchNumber + 1, loading = true)
 
     def appendPage(
         cotos: PaginatedCotos,
@@ -136,7 +138,7 @@ object PaneSearch {
         }
 
       case Msg.Fetched(number, query, Right(cotos)) =>
-        if (number > model.fetchNumber)
+        if (number == model.fetchNumber)
           default.copy(
             _1 = model.appendPage(cotos, query, number),
             _2 = context.domain.importFrom(cotos)
