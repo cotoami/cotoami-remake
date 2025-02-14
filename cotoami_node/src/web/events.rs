@@ -87,11 +87,11 @@ async fn stream_events(
         }
     };
 
-    // Register a connection for a non-anonymous client
+    // Register a connection
     let (events, abort_events) = futures::stream::abortable(events);
     match client_id {
         Some(client_id) => register_client_conn(&state, client_id, remote_addr, abort_events),
-        None => (),
+        None => register_anonymous_conn(&state, remote_addr, abort_events),
     }
 
     Sse::new(events).keep_alive(KeepAlive::default())
@@ -122,6 +122,22 @@ fn register_client_conn(
         remote_addr.ip().to_string(),
         tx_disconnect,
     ));
+}
+
+fn register_anonymous_conn(state: &NodeState, remote_addr: SocketAddr, abort_events: AbortHandle) {
+    let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
+    tokio::spawn({
+        async move {
+            match rx_disconnect.await {
+                Ok(_) => {
+                    debug!("Disconnecting an anonymous SSE client {remote_addr} ...",);
+                    abort_events.abort();
+                }
+                Err(_) => (), // the sender dropped
+            }
+        }
+    });
+    state.add_anonymous_conn(remote_addr.ip().to_string(), tx_disconnect);
 }
 
 fn sse_event<T, D>(event_type: T, data: D) -> Result<SseEvent, Infallible>
