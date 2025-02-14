@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
 use tokio::{sync::oneshot::Sender, task::JoinHandle};
 use tracing::{debug, error};
 use validator::Validate;
@@ -280,16 +280,18 @@ impl ClientConnections {
 
 #[derive(Clone, Default)]
 pub struct AnonymousConnections {
-    disconnect_senders: Arc<Mutex<Vec<Sender<()>>>>,
+    disconnect_senders: Arc<RwLock<Vec<Sender<()>>>>,
 }
 
 impl AnonymousConnections {
+    pub fn count(&self) -> usize { self.disconnect_senders.read().len() }
+
     pub(crate) fn add(&self, disconnect: Sender<()>) {
-        self.disconnect_senders.lock().push(disconnect);
+        self.disconnect_senders.write().push(disconnect);
     }
 
     pub(crate) fn disconnect_all(&self) {
-        let mut senders = self.disconnect_senders.lock();
+        let mut senders = self.disconnect_senders.write();
         while let Some(disconnect) = senders.pop() {
             if let Err(e) = disconnect.send(()) {
                 error!("Error disconnecting an anonymous client: {e:?}");
