@@ -40,7 +40,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(Link, ChangelogEntry)> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        let created_by_id = operator.node_id();
+        let created_by_id = operator.try_get_node_id()?;
         let new_link = NewLink::new(&local_node_id, &created_by_id, input)?;
         self.create_link(new_link)
     }

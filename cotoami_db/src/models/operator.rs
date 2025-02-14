@@ -25,6 +25,10 @@ impl Operator {
         }
     }
 
+    pub fn try_get_node_id(&self) -> Result<Id<Node>, DatabaseError> {
+        self.node_id().ok_or(DatabaseError::PermissionDenied)
+    }
+
     pub fn has_owner_permission(&self) -> bool {
         match self {
             Operator::LocalNode(_) => true,
