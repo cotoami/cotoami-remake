@@ -7,7 +7,7 @@ use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{Mutex, RwLock};
 use tokio::{sync::oneshot::Sender, task::JoinHandle};
-use tracing::debug;
+use tracing::{debug, error};
 use validator::Validate;
 
 use crate::{
@@ -237,7 +237,12 @@ impl ClientConnection {
 
     pub fn client_id(&self) -> Id<Node> { self.client.node_id }
 
-    pub fn disconnect(self) { let _ = self.disconnect.send(()); }
+    pub fn disconnect(self) {
+        let client_id = self.client_id();
+        if let Err(e) = self.disconnect.send(()) {
+            error!("Error disconnecting {client_id}: {e:?}");
+        }
+    }
 }
 
 #[derive(Clone, Default)]
@@ -286,7 +291,9 @@ impl AnonymousConnections {
     pub(crate) fn disconnect_all(&self) {
         let mut senders = self.disconnect_senders.lock();
         while let Some(disconnect) = senders.pop() {
-            disconnect.send(());
+            if let Err(e) = disconnect.send(()) {
+                error!("Error disconnecting an anonymous client: {e:?}");
+            }
         }
     }
 }

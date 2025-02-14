@@ -119,7 +119,26 @@ async fn handle_socket(
 
 async fn handle_socket_anonymous(socket: WebSocket, state: NodeState) {
     let (sink, stream) = split_socket(socket);
+
+    // Container of tasks to maintain this client-server connection.
     let communication_tasks = Abortables::default();
+
+    // A task receiving a manual disconnect message.
+    let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
+    tokio::spawn({
+        let tasks = communication_tasks.clone();
+        async move {
+            match rx_disconnect.await {
+                Ok(_) => {
+                    debug!("Disconnecting an anonymous client...");
+                    tasks.abort_all();
+                }
+                Err(_) => (), // the sender dropped
+            }
+        }
+    });
+    state.anonymous_conns().add(tx_disconnect);
+
     communicate_with_operator(
         state,
         Arc::new(Operator::Anonymous),
