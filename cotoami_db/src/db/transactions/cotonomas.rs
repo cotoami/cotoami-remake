@@ -181,7 +181,7 @@ impl<'a> DatabaseSession<'a> {
         self.globals.ensure_local(posted_in)?;
 
         let local_node_id = self.globals.try_get_local_node_id()?;
-        let posted_by_id = operator.node_id();
+        let posted_by_id = operator.try_get_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let (cotonoma, coto) =
                 cotonoma_ops::create(&local_node_id, &posted_in.uuid, &posted_by_id, input)

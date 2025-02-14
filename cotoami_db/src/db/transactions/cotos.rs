@@ -92,7 +92,7 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
         let local_node = self.globals.try_read_local_node()?;
-        let posted_by_id = operator.node_id();
+        let posted_by_id = operator.try_get_node_id()?;
         let new_coto = NewCoto::new(
             &local_node.node_id,
             post_to,
@@ -180,7 +180,7 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<((Coto, Coto), ChangelogEntry)> {
         self.globals.ensure_local(dest)?;
         let local_node_id = self.globals.try_get_local_node_id()?;
-        let reposted_by = operator.node_id();
+        let reposted_by = operator.try_get_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let (repost, original) =
                 coto_ops::repost(id, &dest.uuid, &reposted_by, None).run(ctx)?;

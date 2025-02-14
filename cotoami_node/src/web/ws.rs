@@ -11,7 +11,7 @@ use axum::{
     Extension, Router,
 };
 use cotoami_db::prelude::*;
-use futures::{sink::Sink, SinkExt, StreamExt};
+use futures::{sink::Sink, stream::Stream, FutureExt, SinkExt, StreamExt};
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite as ts;
 use tracing::debug;
@@ -44,25 +44,20 @@ async fn ws_handler(
     State(state): State<NodeState>,
     Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(socket, addr, state, session))
+    ws.on_upgrade(move |socket| match session.client_node_id() {
+        Some(client_id) => handle_socket(socket, addr, state, session, client_id).boxed(),
+        None => handle_socket_anonymous(socket, state).boxed(),
+    })
 }
 
-/// Actual websocket statemachine (one will be spawned per connection)
 async fn handle_socket(
     socket: WebSocket,
     remote_addr: SocketAddr,
     state: NodeState,
     session: ClientSession,
+    client_id: Id<Node>,
 ) {
-    let client_id = session.client_node_id();
-    let (sink, stream) = socket.split();
-
-    // Adapt axum's sink/stream to handle tungstenite messages.
-    // cf. https://github.com/davidpdrsn/axum-tungstenite
-    let sink = Box::pin(sink.with(|m: ts::Message| async {
-        from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
-    }));
-    let stream = stream.map(|r| r.map(into_tungstenite));
+    let (sink, stream) = split_socket(socket);
 
     // Container of tasks to maintain this client-server connection.
     let communication_tasks = Abortables::default();
@@ -120,6 +115,38 @@ async fn handle_socket(
             .await;
         }
     }
+}
+
+async fn handle_socket_anonymous(socket: WebSocket, state: NodeState) {
+    let (sink, stream) = split_socket(socket);
+    let communication_tasks = Abortables::default();
+    communicate_with_operator(
+        state,
+        Arc::new(Operator::Anonymous),
+        sink,
+        stream,
+        futures::sink::drain(),
+        communication_tasks,
+    )
+    .await;
+}
+
+fn split_socket(
+    socket: WebSocket,
+) -> (
+    impl Sink<ts::Message, Error = anyhow::Error>,
+    impl Stream<Item = Result<ts::Message, axum::Error>>,
+) {
+    let (sink, stream) = socket.split();
+
+    // Adapt axum's sink/stream to handle tungstenite messages.
+    // cf. https://github.com/davidpdrsn/axum-tungstenite
+    let sink = Box::pin(sink.with(|m: ts::Message| async {
+        from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
+    }));
+    let stream = stream.map(|r| r.map(into_tungstenite));
+
+    (sink, stream)
 }
 
 fn handler_on_abort(
