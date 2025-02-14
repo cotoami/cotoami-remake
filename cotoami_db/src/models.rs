@@ -474,11 +474,12 @@ pub enum ClientSession {
 }
 
 impl ClientSession {
-    pub fn client_node_id(&self) -> Id<Node> {
+    pub fn client_node_id(&self) -> Option<Id<Node>> {
         match self {
-            Self::Operator(Operator::LocalNode(local_node_id)) => *local_node_id,
-            Self::Operator(Operator::ChildNode(child)) => child.node_id,
-            Self::ParentNode(parent) => parent.node_id,
+            Self::Operator(Operator::LocalNode(local_node_id)) => Some(*local_node_id),
+            Self::Operator(Operator::ChildNode(child)) => Some(child.node_id),
+            Self::Operator(Operator::Anonymous) => None,
+            Self::ParentNode(parent) => Some(parent.node_id),
         }
     }
 }
