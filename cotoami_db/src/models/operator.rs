@@ -41,6 +41,14 @@ impl Operator {
         }
     }
 
+    pub fn can_post(&self) -> Result<(), DatabaseError> {
+        if self.node_id().is_some() {
+            Ok(())
+        } else {
+            Err(DatabaseError::PermissionDenied)
+        }
+    }
+
     pub fn can_update_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
         if self.node_id() == Some(coto.posted_by_id) {
             Ok(())
