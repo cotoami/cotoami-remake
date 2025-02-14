@@ -46,7 +46,7 @@ async fn ws_handler(
 ) -> impl IntoResponse {
     ws.on_upgrade(move |socket| match session.client_node_id() {
         Some(client_id) => handle_socket(socket, addr, state, session, client_id).boxed(),
-        None => handle_socket_anonymous(socket, addr, state, session).boxed(),
+        None => handle_socket_anonymous(socket, state).boxed(),
     })
 }
 
@@ -117,13 +117,18 @@ async fn handle_socket(
     }
 }
 
-async fn handle_socket_anonymous(
-    socket: WebSocket,
-    remote_addr: SocketAddr,
-    state: NodeState,
-    session: ClientSession,
-) {
-    unimplemented!()
+async fn handle_socket_anonymous(socket: WebSocket, state: NodeState) {
+    let (sink, stream) = split_socket(socket);
+    let communication_tasks = Abortables::default();
+    communicate_with_operator(
+        state,
+        Arc::new(Operator::Anonymous),
+        sink,
+        stream,
+        futures::sink::drain(),
+        communication_tasks,
+    )
+    .await;
 }
 
 fn split_socket(
