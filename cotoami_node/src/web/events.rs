@@ -9,7 +9,7 @@ use axum::{
     Router,
 };
 use cotoami_db::prelude::*;
-use futures::{stream::Stream, StreamExt};
+use futures::{future::AbortHandle, stream::Stream, StreamExt};
 use tokio::sync::oneshot;
 use tracing::debug;
 
@@ -87,8 +87,22 @@ async fn stream_events(
         }
     };
 
-    // Make the event stream manually abortable
+    // Register a connection for a non-anonymous client
     let (events, abort_events) = futures::stream::abortable(events);
+    match client_id {
+        Some(client_id) => register_client_conn(&state, client_id, remote_addr, abort_events),
+        None => (),
+    }
+
+    Sse::new(events).keep_alive(KeepAlive::default())
+}
+
+fn register_client_conn(
+    state: &NodeState,
+    client_id: Id<Node>,
+    remote_addr: SocketAddr,
+    abort_events: AbortHandle,
+) {
     let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
     tokio::spawn({
         let state = state.clone();
@@ -103,15 +117,11 @@ async fn stream_events(
             }
         }
     });
-
-    // Register a ClientConnection
     state.put_client_conn(ClientConnection::new(
         client_id,
         remote_addr.ip().to_string(),
         tx_disconnect,
     ));
-
-    Sse::new(events).keep_alive(KeepAlive::default())
 }
 
 fn sse_event<T, D>(event_type: T, data: D) -> Result<SseEvent, Infallible>
@@ -135,7 +145,9 @@ struct StreamLocal(ClientSession, NodeState);
 impl Drop for StreamLocal {
     fn drop(&mut self) {
         let Self(session, state) = self;
-        state.remove_client_conn(session.client_node_id(), None);
+        if let Some(client_id) = session.client_node_id() {
+            state.remove_client_conn(client_id, None);
+        }
     }
 }
 
