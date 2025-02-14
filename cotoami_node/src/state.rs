@@ -110,6 +110,15 @@ impl NodeState {
 
     pub fn anonymous_conns(&self) -> &AnonymousConnections { &self.inner.anonymous_conns }
 
+    pub(crate) fn add_anonymous_conn(
+        &self,
+        remote_addr: impl Into<String>,
+        disconnect: Sender<()>,
+    ) {
+        self.anonymous_conns()
+            .add(AnonymousConnection::new(remote_addr, disconnect))
+    }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn parent_services(&self) -> &ParentServices { &self.inner.parent_services }
@@ -251,11 +260,11 @@ pub struct ClientConnections(
 );
 
 impl ClientConnections {
-    pub(crate) fn put(&self, client_conn: ClientConnection) {
+    fn put(&self, client_conn: ClientConnection) {
         self.0.write().insert(client_conn.client_id(), client_conn);
     }
 
-    pub(crate) fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
+    fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
         self.0.write().remove(client_id)
     }
 
@@ -278,24 +287,45 @@ impl ClientConnections {
     }
 }
 
-#[derive(Clone, Default)]
-pub struct AnonymousConnections {
-    disconnect_senders: Arc<RwLock<Vec<Sender<()>>>>,
+#[derive(Debug)]
+pub struct AnonymousConnection {
+    remote_addr: String,
+    disconnect: Sender<()>,
 }
 
-impl AnonymousConnections {
-    pub fn count(&self) -> usize { self.disconnect_senders.read().len() }
-
-    pub(crate) fn add(&self, disconnect: Sender<()>) {
-        self.disconnect_senders.write().push(disconnect);
+impl AnonymousConnection {
+    pub fn new(remote_addr: impl Into<String>, disconnect: Sender<()>) -> Self {
+        Self {
+            remote_addr: remote_addr.into(),
+            disconnect,
+        }
     }
 
+    pub fn remote_addr(&self) -> &str { &self.remote_addr }
+
+    pub fn disconnect(self) {
+        let Self {
+            remote_addr,
+            disconnect,
+        } = self;
+        if let Err(e) = disconnect.send(()) {
+            error!("Error disconnecting {remote_addr}: {e:?}");
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct AnonymousConnections(Arc<RwLock<Vec<AnonymousConnection>>>);
+
+impl AnonymousConnections {
+    pub fn count(&self) -> usize { self.0.read().len() }
+
+    fn add(&self, conn: AnonymousConnection) { self.0.write().push(conn); }
+
     pub(crate) fn disconnect_all(&self) {
-        let mut senders = self.disconnect_senders.write();
-        while let Some(disconnect) = senders.pop() {
-            if let Err(e) = disconnect.send(()) {
-                error!("Error disconnecting an anonymous client: {e:?}");
-            }
+        let mut conns = self.0.write();
+        while let Some(conn) = conns.pop() {
+            conn.disconnect();
         }
     }
 }

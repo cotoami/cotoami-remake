@@ -46,7 +46,7 @@ async fn ws_handler(
 ) -> impl IntoResponse {
     ws.on_upgrade(move |socket| match session.client_node_id() {
         Some(client_id) => handle_socket(socket, addr, state, session, client_id).boxed(),
-        None => handle_socket_anonymous(socket, state).boxed(),
+        None => handle_socket_anonymous(socket, addr, state).boxed(),
     })
 }
 
@@ -117,7 +117,7 @@ async fn handle_socket(
     }
 }
 
-async fn handle_socket_anonymous(socket: WebSocket, state: NodeState) {
+async fn handle_socket_anonymous(socket: WebSocket, remote_addr: SocketAddr, state: NodeState) {
     let (sink, stream) = split_socket(socket);
 
     // Container of tasks to maintain this client-server connection.
@@ -137,7 +137,7 @@ async fn handle_socket_anonymous(socket: WebSocket, state: NodeState) {
             }
         }
     });
-    state.anonymous_conns().add(tx_disconnect);
+    state.add_anonymous_conn(remote_addr.ip().to_string(), tx_disconnect);
 
     communicate_with_operator(
         state,
