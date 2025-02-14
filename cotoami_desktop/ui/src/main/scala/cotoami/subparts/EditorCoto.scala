@@ -394,7 +394,7 @@ object EditorCoto {
               if (model.imeActive)
                 Cmd.none // validation should not be invoked when IME is active
               else
-                validation
+                validation.debounce("CotonomaForm.validation", 200)
             )
 
         case (Msg.ImeCompositionStart, _) =>

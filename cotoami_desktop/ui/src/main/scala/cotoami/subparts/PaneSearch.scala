@@ -53,7 +53,7 @@ object PaneSearch {
         else
           copy(queryInput = query)
             .fetchFirst
-            .modify(_._2).using(_.debounce("PaneSearch.inputQuery", 200))
+            .modify(_._2).using(_.debounce("PaneSearch.query", 200))
       }
 
     def clear: Model =

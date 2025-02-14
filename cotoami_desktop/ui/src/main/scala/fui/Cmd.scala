@@ -18,12 +18,11 @@ object Cmd {
 
   case class One[+Msg](io: IO[Option[Msg]], debounce: Option[Debounce] = None)
       extends Cmd[Msg] {
-    override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] = One(
-      io.map(_.map(f))
-    )
+    override def map[OtherMsg](f: Msg => OtherMsg): One[OtherMsg] =
+      One(io.map(_.map(f)), debounce)
 
     def flatMap[OtherMsg](f: Msg => One[OtherMsg]): One[OtherMsg] =
-      One(io.flatMap(_.map(f(_).io).getOrElse(IO.none)))
+      One(io.flatMap(_.map(f(_).io).getOrElse(IO.none)), debounce)
 
     override def ++[LubMsg >: Msg](that: Cmd[LubMsg]): Cmd[LubMsg] =
       that match {
