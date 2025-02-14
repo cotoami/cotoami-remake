@@ -58,7 +58,7 @@ pub(crate) async fn communicate_with_parent<MsgSink, MsgSinkErr, MsgStream, MsgS
     // A task receiving events from the parent.
     abortables.add(tasks.spawn(handle_message_stream(
         msg_stream,
-        parent_id,
+        Some(parent_id),
         task_error.clone(),
         {
             let node_state = node_state.clone();
@@ -201,7 +201,7 @@ where
 /// Handle [NodeSentEvent]s in WebSocket messages streamed from a peer with a specified `handler`.
 async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
     mut msg_stream: MsgStream,
-    peer_id: Id<Node>,
+    peer_id: Option<Id<Node>>,
     error: Arc<Mutex<Option<CommunicationError>>>,
     handler: H,
 ) where
@@ -221,7 +221,7 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                         }
                     }
                     Err(e) => {
-                        debug!("The peer ({peer_id}) sent an invalid binary message: {e}");
+                        debug!("The peer ({peer_id:?}) sent an invalid binary message: {e}");
                         error
                             .lock()
                             .replace(CommunicationError::EventHandling(e.into()));
@@ -229,7 +229,7 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                     }
                 },
                 Message::Close(c) => {
-                    debug!("The peer ({peer_id}) sent close with: {c:?}");
+                    debug!("The peer ({peer_id:?}) sent close with: {c:?}");
                     break;
                 }
                 the_others => debug!("Message ignored: {:?}", the_others),
