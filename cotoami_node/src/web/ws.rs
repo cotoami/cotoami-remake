@@ -79,16 +79,16 @@ async fn handle_socket(
         }
     });
 
-    // Event handler on abort
-    let on_abort = handler_on_abort(client_id, state.clone());
-    futures::pin_mut!(on_abort);
-
     // Register a ClientConnection.
     state.put_client_conn(ClientConnection::new(
         client_id,
         remote_addr.ip().to_string(),
         tx_disconnect,
     ));
+
+    // Event handler on abort
+    let on_abort = handler_on_abort(client_id, state.clone());
+    futures::pin_mut!(on_abort);
 
     match session {
         ClientSession::Operator(opr) => {
