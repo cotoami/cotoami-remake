@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use tokio::{sync::oneshot::Sender, task::JoinHandle};
 use tracing::debug;
 use validator::Validate;
@@ -35,6 +35,7 @@ struct State {
     pubsub: Pubsub,
     server_conns: ServerConnections,
     client_conns: ClientConnections,
+    anonymous_conns: AnonymousConnections,
     parent_services: ParentServices,
     abortables: Abortables,
 }
@@ -61,6 +62,7 @@ impl NodeState {
             pubsub: Pubsub::default(),
             server_conns: ServerConnections::default(),
             client_conns: ClientConnections::default(),
+            anonymous_conns: AnonymousConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
         };
@@ -105,6 +107,8 @@ impl NodeState {
     }
 
     pub fn active_clients(&self) -> Vec<ActiveClient> { self.client_conns().active_clients() }
+
+    pub fn anonymous_conns(&self) -> &AnonymousConnections { &self.inner.anonymous_conns }
 
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
@@ -266,5 +270,23 @@ impl ClientConnections {
             .values()
             .map(|conn| conn.client.clone())
             .collect()
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct AnonymousConnections {
+    disconnect_senders: Arc<Mutex<Vec<Sender<()>>>>,
+}
+
+impl AnonymousConnections {
+    pub(crate) fn add(&self, disconnect: Sender<()>) {
+        self.disconnect_senders.lock().push(disconnect);
+    }
+
+    pub(crate) fn disconnect_all(&self) {
+        let mut senders = self.disconnect_senders.lock();
+        while let Some(disconnect) = senders.pop() {
+            disconnect.send(());
+        }
     }
 }
