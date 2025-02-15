@@ -108,7 +108,9 @@ pub trait RemoteNodeServiceExt: RemoteNodeService {
         let request = Command::CreateClientNodeSession(input).into_request();
         let response = self.call(request).await?;
         let client_node_session = response.content::<ClientNodeSession>()?;
-        self.set_session_token(&client_node_session.session.token)?;
+        if let Some(ref session) = client_node_session.session {
+            self.set_session_token(&session.token)?;
+        }
         Ok(client_node_session)
     }
 }
