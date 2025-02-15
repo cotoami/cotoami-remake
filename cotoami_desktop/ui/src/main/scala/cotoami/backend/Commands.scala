@@ -33,26 +33,26 @@ object Commands {
 
   def TryLogIntoServer(
       url_prefix: String,
-      password: String,
+      password: Option[String],
       client_role: Option[String] = None
   ) =
     jso(TryLogIntoServer =
       jso(
         url_prefix = url_prefix,
-        password = password,
+        password = password.getOrElse(null),
         client_role = client_role.getOrElse(null)
       )
     )
 
   def AddServer(
       url_prefix: String,
-      password: String,
+      password: Option[String],
       client_role: Option[String] = None
   ) =
     jso(AddServer =
       jso(
         url_prefix = url_prefix,
-        password = password,
+        password = password.getOrElse(null),
         client_role = client_role.getOrElse(null)
       )
     )

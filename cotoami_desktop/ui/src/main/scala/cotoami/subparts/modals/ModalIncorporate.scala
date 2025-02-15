@@ -28,10 +28,12 @@ object ModalIncorporate {
   case class Model(
       helpIntro: Boolean = false,
 
+      // form
+      nodeUrlInput: String = "",
+      passwordInput: String = "",
+
       // connect
       helpConnect: Boolean = false,
-      nodeUrl: String = "",
-      password: String = "",
       connecting: Boolean = false,
       connectingError: Option[String] = None,
       nodeSession: Option[ClientNodeSession] = None,
@@ -40,6 +42,11 @@ object ModalIncorporate {
       incorporating: Boolean = false,
       incorporatingError: Option[String] = None
   ) {
+    def nodeUrl: String = nodeUrlInput.trim()
+
+    def password: Option[String] =
+      Option.when(!passwordInput.isEmpty())(passwordInput)
+
     def validateNodeUrl: Validation.Result =
       if (nodeUrl.isBlank())
         Validation.Result.notYetValidated
@@ -88,10 +95,10 @@ object ModalIncorporate {
         default.copy(_1 = model.copy(helpConnect = display))
 
       case Msg.NodeUrlInput(url) =>
-        default.copy(_1 = model.copy(nodeUrl = url))
+        default.copy(_1 = model.copy(nodeUrlInput = url))
 
       case Msg.PasswordInput(password) =>
-        default.copy(_1 = model.copy(password = password))
+        default.copy(_1 = model.copy(passwordInput = password))
 
       case Msg.Connect =>
         default.copy(
@@ -221,7 +228,7 @@ object ModalIncorporate {
           inputId = "node-url",
           inputType = "text",
           inputPlaceholder = Some("https://example.com"),
-          inputValue = model.nodeUrl,
+          inputValue = model.nodeUrlInput,
           inputErrors = Some(model.validateNodeUrl),
           onInput = (input => dispatch(Msg.NodeUrlInput(input)))
         ),
@@ -231,7 +238,7 @@ object ModalIncorporate {
           label = "Password",
           inputId = "password",
           inputType = "password",
-          inputValue = model.password,
+          inputValue = model.passwordInput,
           onInput = (input => dispatch(Msg.PasswordInput(input)))
         ),
 

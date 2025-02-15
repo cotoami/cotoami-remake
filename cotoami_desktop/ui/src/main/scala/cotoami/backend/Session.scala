@@ -33,7 +33,7 @@ case class ClientNodeSession(json: ClientNodeSessionJson) {
 object ClientNodeSession {
   def logIntoServer(
       url: String,
-      password: String
+      password: Option[String]
   ): Cmd.One[Either[ErrorJson, ClientNodeSession]] =
     ClientNodeSessionJson.logIntoServer(url, password)
       .map(_.map(ClientNodeSession(_)))
@@ -51,7 +51,7 @@ trait ClientNodeSessionJson extends js.Object {
 object ClientNodeSessionJson {
   def logIntoServer(
       url: String,
-      password: String
+      password: Option[String]
   ): Cmd.One[Either[ErrorJson, ClientNodeSessionJson]] =
     Commands.send(Commands.TryLogIntoServer(url, password))
 }

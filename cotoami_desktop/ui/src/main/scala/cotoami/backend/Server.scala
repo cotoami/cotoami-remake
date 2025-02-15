@@ -17,7 +17,7 @@ trait ServerJson extends js.Object {
 object ServerJson {
   def addServer(
       url: String,
-      password: String,
+      password: Option[String],
       clientRole: Option[String] = None
   ): Cmd.One[Either[ErrorJson, ServerJson]] =
     Commands.send(Commands.AddServer(url, password, clientRole))
@@ -34,7 +34,7 @@ object ServerBackend {
 
   def addServer(
       url: String,
-      password: String,
+      password: Option[String],
       clientRole: Option[String] = None
   ): Cmd.One[Either[ErrorJson, Server]] =
     ServerJson.addServer(url, password, clientRole)
