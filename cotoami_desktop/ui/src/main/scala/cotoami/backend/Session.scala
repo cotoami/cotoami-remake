@@ -19,7 +19,8 @@ trait SessionJson extends js.Object {
 }
 
 case class ClientNodeSession(json: ClientNodeSessionJson) {
-  def session: Session = Session(json.session)
+  def session: Option[Session] =
+    Nullable.toOption(json.session).map(Session)
   def server: Node = NodeBackend.toModel(json.server)
   def serverRoot: Option[(Cotonoma, Coto)] =
     Nullable.toOption(json.server_root).map(pair =>
@@ -40,7 +41,7 @@ object ClientNodeSession {
 
 @js.native
 trait ClientNodeSessionJson extends js.Object {
-  val session: SessionJson = js.native
+  val session: Nullable[SessionJson] = js.native
   val server: NodeJson = js.native
   val server_root: Nullable[js.Tuple2[CotonomaJson, CotoJson]] =
     js.native
