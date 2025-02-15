@@ -21,6 +21,10 @@ impl NodeState {
         self.get(move |ds| ds.local_node()).await
     }
 
+    pub async fn local_node_root(&self) -> Result<Option<(Cotonoma, Coto)>, ServiceError> {
+        self.get(move |ds| ds.local_node_root()).await
+    }
+
     pub async fn set_local_node_icon(
         self,
         icon: bytes::Bytes,

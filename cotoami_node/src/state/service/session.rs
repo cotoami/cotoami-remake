@@ -16,7 +16,21 @@ use crate::{
 impl NodeState {
     pub async fn create_client_node_session(
         &self,
+        mut input: CreateClientNodeSession,
+    ) -> Result<ClientNodeSession, ServiceError> {
+        let (local, local_node) = self.local_node_pair().await?;
+        match (input.password.take(), local.enable_anonymous_read) {
+            (Some(password), _) => self.do_create_session(input, password, local_node).await,
+            (None, true) => self.handle_anonymous(input, local_node).await,
+            (None, false) => return Err(ServiceError::Unauthorized),
+        }
+    }
+
+    async fn do_create_session(
+        &self,
         input: CreateClientNodeSession,
+        password: String,
+        local_node: Node,
     ) -> Result<ClientNodeSession, ServiceError> {
         let db = self.db().clone();
         let change_pubsub = self.pubsub().changes().clone();
@@ -48,7 +62,7 @@ impl NodeState {
             // Authenticate and start session
             let client = ds.start_client_node_session(
                 &input.client.uuid,
-                &input.password,
+                &password,
                 Duration::from_secs(session_seconds),
             )?;
             debug!("Client session started: {}", client.node_id);
@@ -66,11 +80,11 @@ impl NodeState {
             }
 
             Ok(ClientNodeSession {
-                session: Session {
+                session: Some(Session {
                     token: client.session_token.unwrap(),
                     expires_at: client.session_expires_at.unwrap(),
-                },
-                server: ds.local_node()?,
+                }),
+                server: local_node,
                 server_root: match client_role {
                     NodeRole::Parent => None,
                     NodeRole::Child => ds.local_node_root()?,
@@ -83,5 +97,25 @@ impl NodeState {
             })
         })
         .await?
+    }
+
+    async fn handle_anonymous(
+        &self,
+        input: CreateClientNodeSession,
+        local_node: Node,
+    ) -> Result<ClientNodeSession, ServiceError> {
+        if let NodeRole::Parent = input.client_role() {
+            return Err(ServiceError::request(
+                "invalid-requested-role",
+                "Anonymous clients are not allowed to be a parent.",
+            ));
+        }
+
+        Ok(ClientNodeSession {
+            session: None,
+            server: local_node,
+            server_root: self.local_node_root().await?,
+            as_child: None,
+        })
     }
 }

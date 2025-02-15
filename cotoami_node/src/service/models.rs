@@ -35,7 +35,7 @@ pub enum NodeRole {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CreateClientNodeSession {
-    pub password: String,
+    pub password: Option<String>, // None for anonymous access
     pub new_password: Option<String>,
     pub client: Node,
     pub client_role: Option<NodeRole>,
@@ -53,7 +53,7 @@ pub struct Session {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClientNodeSession {
-    pub session: Session,
+    pub session: Option<Session>, // None for a anonymous client
     pub server: Node,
     pub server_root: Option<(Cotonoma, Coto)>,
     pub as_child: Option<ChildNode>,
@@ -142,8 +142,7 @@ pub struct LogIntoServer {
     #[validate(required, url)]
     pub url_prefix: Option<String>,
 
-    #[validate(required)]
-    pub password: Option<String>,
+    pub password: Option<String>, // None for anonymous access
 
     pub new_password: Option<String>,
 
@@ -154,7 +153,7 @@ impl LogIntoServer {
     pub fn into_session_request(self, client: Node) -> Result<CreateClientNodeSession> {
         self.validate()?;
         Ok(CreateClientNodeSession {
-            password: self.password.unwrap_or_else(|| unreachable!()),
+            password: self.password,
             new_password: self.new_password,
             client,
             client_role: self.client_role,
