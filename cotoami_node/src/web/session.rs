@@ -133,14 +133,13 @@ async fn create_owner_session(
 async fn create_client_node_session(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
-    jar: CookieJar,
+    mut jar: CookieJar,
     Json(payload): Json<CreateClientNodeSession>,
 ) -> Result<(StatusCode, CookieJar, Content<ClientNodeSession>), ServiceError> {
     let session = state.create_client_node_session(payload).await?;
-    let cookie = create_cookie(&session.session);
-    Ok((
-        StatusCode::CREATED,
-        jar.add(cookie),
-        Content(session, accept),
-    ))
+    if let Some(ref session) = session.session {
+        let cookie = create_cookie(session);
+        jar = jar.add(cookie);
+    }
+    Ok((StatusCode::CREATED, jar, Content(session, accept)))
 }
