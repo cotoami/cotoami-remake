@@ -46,6 +46,7 @@ diesel::table! {
         owner_session_token -> Nullable<Text>,
         owner_session_expires_at -> Nullable<Timestamp>,
         image_max_size -> Nullable<Integer>,
+        enable_anonymous_read -> Bool,
     }
 }
 diesel::joinable!(local_node -> nodes (node_id));

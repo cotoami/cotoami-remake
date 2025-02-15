@@ -17,25 +17,28 @@ use crate::{models::Id, schema::local_node};
 #[derive(derive_more::Debug, Clone, PartialEq, Eq, Identifiable, Queryable, Selectable)]
 #[diesel(table_name = local_node, primary_key(node_id))]
 pub struct LocalNode {
-    /// UUID of a local node
+    /// UUID of a local node.
     pub node_id: Id<Node>,
 
-    /// SQLite rowid (so-called "integer primary key")
+    /// SQLite rowid (so-called "integer primary key").
     pub rowid: i64,
 
-    /// Password for owner authentication of this local node
+    /// Password for owner authentication of this local node.
     #[debug(skip)]
     pub owner_password_hash: Option<String>,
 
-    /// Node owner's session token
+    /// Node owner's session token.
     #[debug(skip)]
     pub owner_session_token: Option<String>,
 
-    /// Expiration date of node owner's session
+    /// Expiration date of node owner's session.
     pub owner_session_expires_at: Option<NaiveDateTime>,
 
     /// The maximum length of the longer side of images after they are resized (in pixels).
     pub image_max_size: Option<i32>,
+
+    /// TRUE if this node allows anonymous clients to read the cotos and links.
+    pub enable_anonymous_read: bool,
 }
 
 impl LocalNode {
@@ -138,6 +141,9 @@ pub(crate) struct UpdateLocalNode<'a> {
     #[new(default)]
     #[validate(range(min = 1))]
     pub image_max_size: Option<Option<i32>>,
+
+    #[new(default)]
+    pub enable_anonymous_read: Option<bool>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -162,6 +168,7 @@ mod tests {
             owner_session_token: None,
             owner_session_expires_at: None,
             image_max_size: None,
+            enable_anonymous_read: false,
         };
         let mut owner = local_node.as_principal();
 
