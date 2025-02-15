@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
 use tokio::task::AbortHandle;
@@ -70,10 +70,7 @@ impl ServerConnection {
 
         // Attempt to log into the server node
         let master_password = self.node_state.config().try_get_owner_password()?;
-        let password = self
-            .server
-            .password(master_password)?
-            .ok_or(anyhow!("Server password is missing."))?;
+        let password = self.server.password(master_password)?; // None for anonymous access
         let session = http_client
             .create_client_node_session(CreateClientNodeSession {
                 password,
