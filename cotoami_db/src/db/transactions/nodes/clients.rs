@@ -87,7 +87,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {
-        // a client node?
+        // Client node?
         if let Some(client) = self.read_transaction(client_ops::get_by_session_token(token))? {
             if client.as_principal().verify_session(token).is_ok() {
                 match self.database_role_of(&client.node_id)? {
@@ -102,12 +102,17 @@ impl<'a> DatabaseSession<'a> {
             }
         }
 
-        // the owner of local node?
+        // Owner of local node?
         let local_node = self.globals.try_read_local_node()?;
         if local_node.as_principal().verify_session(token).is_ok() {
             return Ok(Some(ClientSession::Operator(Operator::LocalNode(
                 local_node.node_id,
             ))));
+        }
+
+        // Anonymous read enabled?
+        if local_node.enable_anonymous_read {
+            return Ok(Some(ClientSession::Operator(Operator::Anonymous)));
         }
 
         Ok(None) // no session
