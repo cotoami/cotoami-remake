@@ -21,7 +21,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{ClientNodeSession, CreateClientNodeSession, Session},
+        models::{ClientNodeSession, CreateClientNodeSession, SessionToken},
         ServiceError,
     },
     state::NodeState,
@@ -36,10 +36,10 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/client-node", put(create_client_node_session))
 }
 
-fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
+fn create_cookie<'a>(token: &SessionToken) -> Cookie<'a> {
     let expiration = Expiration::DateTime(
         OffsetDateTime::from_unix_timestamp_nanos(
-            session
+            token
                 .expires_at
                 .and_utc()
                 .timestamp_nanos_opt()
@@ -47,7 +47,7 @@ fn create_cookie<'a>(session: &Session) -> Cookie<'a> {
         )
         .unwrap_or_else(|_| unreachable!()),
     );
-    Cookie::build((super::SESSION_COOKIE_NAME, session.token.clone()))
+    Cookie::build((super::SESSION_COOKIE_NAME, token.token.clone()))
         .secure(true)
         .http_only(true)
         .path("/")
@@ -102,7 +102,7 @@ async fn create_owner_session(
     TypedHeader(accept): TypedHeader<Accept>,
     jar: CookieJar,
     Form(form): Form<CreateOwnerSession>,
-) -> Result<(StatusCode, CookieJar, Content<Session>), ServiceError> {
+) -> Result<(StatusCode, CookieJar, Content<SessionToken>), ServiceError> {
     if let Err(errors) = form.validate() {
         return errors.into_result();
     }
@@ -112,16 +112,12 @@ async fn create_owner_session(
             &form.password.unwrap(), // validated to be Some
             Duration::from_secs(state.config().session_seconds()),
         )?;
-        let session = Session {
+        let token = SessionToken {
             token: local_node.owner_session_token.unwrap(),
             expires_at: local_node.owner_session_expires_at.unwrap(),
         };
-        let cookie = create_cookie(&session);
-        Ok((
-            StatusCode::CREATED,
-            jar.add(cookie),
-            Content(session, accept),
-        ))
+        let cookie = create_cookie(&token);
+        Ok((StatusCode::CREATED, jar.add(cookie), Content(token, accept)))
     })
     .await?
 }
@@ -137,8 +133,8 @@ async fn create_client_node_session(
     Json(payload): Json<CreateClientNodeSession>,
 ) -> Result<(StatusCode, CookieJar, Content<ClientNodeSession>), ServiceError> {
     let session = state.create_client_node_session(payload).await?;
-    if let Some(ref session) = session.session {
-        let cookie = create_cookie(session);
+    if let Some(ref token) = session.token {
+        let cookie = create_cookie(token);
         jar = jar.add(cookie);
     }
     Ok((StatusCode::CREATED, jar, Content(session, accept)))

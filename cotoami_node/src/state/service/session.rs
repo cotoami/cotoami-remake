@@ -7,7 +7,7 @@ use tracing::debug;
 
 use crate::{
     service::{
-        models::{ClientNodeSession, CreateClientNodeSession, NodeRole, Session},
+        models::{ClientNodeSession, CreateClientNodeSession, NodeRole, SessionToken},
         ServiceError,
     },
     state::NodeState,
@@ -80,7 +80,7 @@ impl NodeState {
             }
 
             Ok(ClientNodeSession {
-                session: Some(Session {
+                token: Some(SessionToken {
                     token: client.session_token.unwrap(),
                     expires_at: client.session_expires_at.unwrap(),
                 }),
@@ -112,7 +112,7 @@ impl NodeState {
         }
 
         Ok(ClientNodeSession {
-            session: None,
+            token: None,
             server: local_node,
             server_root: self.local_node_root().await?,
             as_child: None,

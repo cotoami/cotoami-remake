@@ -46,14 +46,14 @@ impl CreateClientNodeSession {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Session {
+pub struct SessionToken {
     pub token: String,
     pub expires_at: NaiveDateTime, // UTC
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ClientNodeSession {
-    pub session: Option<Session>, // None for a anonymous client
+    pub token: Option<SessionToken>, // None for a anonymous client
     pub server: Node,
     pub server_root: Option<(Cotonoma, Coto)>,
     pub as_child: Option<ChildNode>,
