@@ -29,6 +29,7 @@ object ModalNodeProfile {
   case class Model(
       nodeId: Id[Node],
       clientCount: Double = 0,
+      enablingAnonymousRead: Boolean = false,
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
@@ -118,7 +119,10 @@ object ModalNodeProfile {
           fieldDescription(coto, model)
         },
         Option.when(model.isOperatingNode()) {
-          fieldClientNodes(model)
+          Fragment(
+            fieldClientNodes(model),
+            fieldAnonymousRead(model)
+          )
         }
       )
     )
@@ -219,6 +223,24 @@ object ModalNodeProfile {
             )
           )
         }
+      )
+    )
+
+  private def fieldAnonymousRead(model: Model)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    labeledField(
+      classes = "anonymous-read",
+      label = "Anonymous read",
+      labelFor = Some("node-profile-anonymous-read")
+    )(
+      input(
+        `type` := "checkbox",
+        role := "switch",
+        checked := context.domain.anonymousReadEnabled,
+        disabled := model.enablingAnonymousRead,
+        onChange := (_ => ())
       )
     )
 
