@@ -121,21 +121,19 @@ pub(crate) async fn communicate_with_operator<
         }
     }));
 
-    // A task publishing change events to a child node
-    if let Operator::ChildNode(_) = *opr {
-        abortables.add(tasks.spawn({
-            let sender = sender.clone();
-            let mut changes = node_state.pubsub().changes().subscribe(None::<()>);
-            async move {
-                while let Some(change) = changes.next().await {
-                    if sender.send(NodeSentEvent::Change(change)).await.is_err() {
-                        // The receiver task has been terminated
-                        break;
-                    }
+    // A task publishing change events to the operator
+    abortables.add(tasks.spawn({
+        let sender = sender.clone();
+        let mut changes = node_state.pubsub().changes().subscribe(None::<()>);
+        async move {
+            while let Some(change) = changes.next().await {
+                if sender.send(NodeSentEvent::Change(change)).await.is_err() {
+                    // The receiver task has been terminated
+                    break;
                 }
             }
-        }));
-    }
+        }
+    }));
 
     // A task publishing local events to the operator who has owner privilege
     if opr.has_owner_permission() {
