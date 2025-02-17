@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Path, State},
+    extract::{Json, Path, State},
     routing::{get, put},
     Extension, Router,
 };
@@ -24,7 +24,8 @@ mod servers;
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/local", get(local_node))
-        .route("/local/icon", put(put_local_node_icon))
+        .route("/local/icon", put(set_local_node_icon))
+        .route("/local/enable-anonymous", put(enable_anonymous_read))
         .route("/{node_id}/details", get(node_details))
         .nest("/{node_id}/cotonomas", cotonomas::routes())
         .nest("/{node_id}/cotos", cotos::routes())
@@ -65,7 +66,7 @@ async fn local_node(
 // PUT /api/data/nodes/local/icon
 /////////////////////////////////////////////////////////////////////////////
 
-async fn put_local_node_icon(
+async fn set_local_node_icon(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
@@ -75,4 +76,20 @@ async fn put_local_node_icon(
         .set_local_node_icon(body, Arc::new(operator))
         .await
         .map(|node| Content(node, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/nodes/local/enable-anonymous
+/////////////////////////////////////////////////////////////////////////////
+
+async fn enable_anonymous_read(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Json(enable): Json<bool>,
+) -> Result<Content<bool>, ServiceError> {
+    state
+        .enable_anonymous_read(enable, Arc::new(operator))
+        .await
+        .map(|enabled| Content(enabled, accept))
 }

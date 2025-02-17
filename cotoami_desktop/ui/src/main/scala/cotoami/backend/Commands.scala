@@ -29,6 +29,9 @@ object Commands {
 
   def SetLocalNodeIcon(icon: String) = jso(SetLocalNodeIcon = jso(icon = icon))
 
+  def EnableAnonymousRead(enable: Boolean) =
+    jso(EnableAnonymousRead = jso(enable = enable))
+
   def NodeDetails(id: Id[Node]) = jso(NodeDetails = jso(id = id.uuid))
 
   def TryLogIntoServer(

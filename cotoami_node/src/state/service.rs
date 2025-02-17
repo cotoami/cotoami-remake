@@ -30,11 +30,14 @@ impl NodeState {
         let opr = request.try_auth().map(Clone::clone);
         match request.command() {
             Command::LocalNode => format.serialize(self.local_node().await),
-            Command::InitialDataset => format.serialize(self.initial_dataset(opr?).await),
-            Command::ChunkOfChanges { from } => format.serialize(self.chunk_of_changes(from).await),
             Command::SetLocalNodeIcon { icon } => {
                 format.serialize(self.set_local_node_icon(icon.into(), opr?).await)
             }
+            Command::EnableAnonymousRead { enable } => {
+                format.serialize(self.enable_anonymous_read(enable, opr?).await)
+            }
+            Command::InitialDataset => format.serialize(self.initial_dataset(opr?).await),
+            Command::ChunkOfChanges { from } => format.serialize(self.chunk_of_changes(from).await),
             Command::NodeDetails { id } => format.serialize(self.node_details(id).await),
             Command::CreateClientNodeSession(input) => {
                 format.serialize(self.create_client_node_session(input).await)

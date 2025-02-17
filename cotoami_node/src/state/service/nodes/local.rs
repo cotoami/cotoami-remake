@@ -28,7 +28,7 @@ impl NodeState {
         self,
         enable: bool,
         operator: Arc<Operator>,
-    ) -> Result<(), ServiceError> {
+    ) -> Result<bool, ServiceError> {
         if !enable {
             self.anonymous_conns().disconnect_all();
         }
@@ -36,7 +36,7 @@ impl NodeState {
         let db = self.db().clone();
         spawn_blocking(move || {
             db.new_session()?.enable_anonymous_read(enable, &operator)?;
-            Ok(())
+            Ok(enable)
         })
         .await?
     }

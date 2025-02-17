@@ -7,17 +7,20 @@ pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,
 
+    /// Request to change the icon of the local node and return a [Node] if succeeded.
+    SetLocalNodeIcon {
+        #[debug(skip)]
+        icon: Bytes,
+    },
+
+    /// Request to enable/disable anonymous read and return the [bool] of enabled if succeeded.
+    EnableAnonymousRead { enable: bool },
+
     /// Request an [InitialDataset].
     InitialDataset,
 
     /// Request a [ChunkOfChanges] from a change number `from`.
     ChunkOfChanges { from: i64 },
-
-    /// Request to change the icon of the local node and and return a [Node] if succeeded.
-    SetLocalNodeIcon {
-        #[debug(skip)]
-        icon: Bytes,
-    },
 
     /// Request a [NodeDetails] of the given ID.
     NodeDetails { id: Id<Node> },

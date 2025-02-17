@@ -100,13 +100,16 @@ impl HttpClient {
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
             Command::LocalNode => self.get(API_PATH_LOCAL),
+            Command::SetLocalNodeIcon { icon } => self
+                .put(&format!("{API_PATH_LOCAL}/icon"))
+                .body(bytes::Bytes::from(icon)),
+            Command::EnableAnonymousRead { enable } => self
+                .put(&format!("{API_PATH_LOCAL}/enable-anonymous"))
+                .json(&enable),
             Command::InitialDataset => self.get(API_PATH_DATA),
             Command::ChunkOfChanges { from } => self
                 .get(API_PATH_CHANGES)
                 .query(&[("from", from.to_string())]),
-            Command::SetLocalNodeIcon { icon } => self
-                .put(&format!("{API_PATH_NODES}/icon"))
-                .body(bytes::Bytes::from(icon)),
             Command::NodeDetails { id } => self.get(&format!("{API_PATH_NODES}/{id}/details")),
             Command::CreateClientNodeSession(input) => {
                 self.put("/api/session/client-node").json(&input)

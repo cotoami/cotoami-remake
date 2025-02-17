@@ -22,8 +22,8 @@ where
     C: Stream<Item = ChangelogEntry>,
 {
     let mut backend_ds = backend_state.db().new_session()?;
-    let backend_node = backend_ds.local_node()?;
     let backend_owner = backend_state.local_node_as_operator()?;
+    let (backend_local, backend_node) = backend_ds.local_node_pair(&backend_owner)?;
     let (backend_root_cotonoma, backend_root_coto) = backend_ds.try_get_local_node_root()?;
     futures::pin_mut!(changes);
 
@@ -44,6 +44,19 @@ where
         }),
         "Unexpected response of LocalNode command"
     );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: EnableAnonymousRead
+    /////////////////////////////////////////////////////////////////////////////
+
+    assert_that!(backend_local.enable_anonymous_read, eq(false));
+
+    let request = Command::EnableAnonymousRead { enable: true }.into_request();
+    let enabled = service.call(request).await?.content::<bool>()?;
+    assert_that!(enabled, eq(true));
+
+    let (backend_local, backend_node) = backend_ds.local_node_pair(&backend_owner)?;
+    assert_that!(backend_local.enable_anonymous_read, eq(true));
 
     /////////////////////////////////////////////////////////////////////////////
     // Command: AddClient
