@@ -68,7 +68,6 @@ object ModalIncorporate {
 
   object Msg {
     case class HelpIntro(display: Boolean) extends Msg
-    case class HelpConnect(display: Boolean) extends Msg
     case class NodeUrlInput(url: String) extends Msg
     case class PasswordInput(password: String) extends Msg
     case object Connect extends Msg
@@ -90,9 +89,6 @@ object ModalIncorporate {
     msg match {
       case Msg.HelpIntro(display) =>
         default.copy(_1 = model.copy(helpIntro = display))
-
-      case Msg.HelpConnect(display) =>
-        default.copy(_1 = model.copy(helpConnect = display))
 
       case Msg.NodeUrlInput(url) =>
         default.copy(_1 = model.copy(nodeUrlInput = url))
@@ -203,18 +199,10 @@ object ModalIncorporate {
 
   private def sectionConnect(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
       model.connectingError.map(e => section(className := "error")(e)),
       form()(
-        sectionHelp(
-          model.helpConnect,
-          () => dispatch(Msg.HelpConnect(false)),
-          context.i18n.help.ModalIncorporate_connect(
-            context.repo.nodes.operatingId.map(_.uuid).getOrElse("")
-          )
-        ),
-
         // Node URL
         labeledInputField(
           classes = "field-node-url",
