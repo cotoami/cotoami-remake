@@ -83,7 +83,7 @@ impl NodeState {
         }
 
         // Clone the password before moving the `input` to `log_into_server`
-        let password = input.password.clone().unwrap_or_else(|| unreachable!());
+        let password = input.password.clone();
 
         // Log into the server to create a session
         // TODO: change the password on adding the node
@@ -104,22 +104,19 @@ impl NodeState {
                 }
 
                 // Register a ServerNode
-                let server_role = if client_session.as_child.is_some() {
-                    NewDatabaseRole::Parent
-                } else {
-                    // TODO: want to make it configurable later
-                    NewDatabaseRole::Child {
-                        as_owner: false,
-                        can_edit_links: false,
-                    }
-                };
-                let (_, server_role) =
-                    ds.register_server_node(&server_id, &url_prefix, server_role, &operator)?;
+                let (mut server, server_role) = ds.register_server_node(
+                    &server_id,
+                    &url_prefix,
+                    client_session.new_server_role(),
+                    &operator,
+                )?;
 
                 // Save the password in the ServerNode for auto-login
-                let master_password = state.config().try_get_owner_password()?;
-                let server =
-                    ds.save_server_password(&server_id, &password, master_password, &operator)?;
+                if let Some(password) = password {
+                    let master_password = state.config().try_get_owner_password()?;
+                    server =
+                        ds.save_server_password(&server_id, &password, master_password, &operator)?;
+                }
 
                 // Results
                 let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());

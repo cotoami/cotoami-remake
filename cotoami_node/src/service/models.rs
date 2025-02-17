@@ -59,6 +59,19 @@ pub struct ClientNodeSession {
     pub as_child: Option<ChildNode>,
 }
 
+impl ClientNodeSession {
+    pub fn new_server_role(&self) -> NewDatabaseRole {
+        match (&self.token, &self.as_child) {
+            (Some(_), Some(_)) => NewDatabaseRole::Parent,
+            (Some(_), None) => NewDatabaseRole::Child {
+                as_owner: false,
+                can_edit_links: false,
+            },
+            (None, _) => NewDatabaseRole::Parent, // anonymous access
+        }
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Client
 /////////////////////////////////////////////////////////////////////////////
