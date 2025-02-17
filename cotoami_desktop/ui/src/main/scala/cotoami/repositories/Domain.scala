@@ -13,12 +13,15 @@ import cotoami.backend._
 
 case class Domain(
     lastChangeNumber: Double = 0,
+    anonymousReadEnabled: Boolean = false,
+
+    // Entities
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
     links: Links = Links(),
 
-    // processing state
+    // Processing state
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
     graphLoaded: HashSet[Id[Coto]] = HashSet.empty,
     deleting: HashSet[Id[Coto]] = HashSet.empty,
@@ -343,9 +346,19 @@ case class Domain(
 
 object Domain {
 
+  /** Create a Domain repository root with an InitialDataset.
+    *
+    * @param dataset
+    *   The initial dataset of this repository.
+    * @param localId
+    *   The local node ID of the database this app has originally opened. This
+    *   ID can be different from `dataset.localNodeId` when the operating node
+    *   is switched to a remote node.
+    */
   def apply(dataset: InitialDataset, localId: Id[Node]): Domain =
     Domain(
       lastChangeNumber = dataset.lastChangeNumber,
+      anonymousReadEnabled = dataset.anonymousReadEnabled,
       nodes = Nodes(dataset, localId)
     )
 

@@ -17,6 +17,8 @@ case class InitialDataset(json: InitialDatasetJson) {
 
   def localNodeId: Id[Node] = Id(json.local_node_id)
 
+  def anonymousReadEnabled: Boolean = json.anonymous_read_enabled
+
   def localNode: Option[Node] = nodes.get(localNodeId)
 
   lazy val parentNodeIds: js.Array[Id[Node]] =
