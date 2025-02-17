@@ -9,7 +9,7 @@ import com.softwaremill.quicklens._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds}
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.backend.{ErrorJson, PaginatedCotos}
 import cotoami.components.{materialSymbol, ScrollArea}
 

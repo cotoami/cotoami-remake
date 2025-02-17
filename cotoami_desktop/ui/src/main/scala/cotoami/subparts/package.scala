@@ -8,7 +8,7 @@ import slinky.web.SyntheticKeyboardEvent
 import cotoami.{Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Link, Node, ParentStatus}
-import cotoami.repositories.Nodes
+import cotoami.repository.Nodes
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 package object subparts {

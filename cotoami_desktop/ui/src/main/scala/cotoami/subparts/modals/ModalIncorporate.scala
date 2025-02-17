@@ -9,7 +9,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
-import cotoami.repositories.Nodes
+import cotoami.repository.Nodes
 import cotoami.subparts.{
   buttonHelp,
   labeledInputField,

@@ -10,7 +10,7 @@ import fui.Cmd
 import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repositories.{Cotonomas, Domain, Nodes}
+import cotoami.repository.{Cotonomas, Domain, Nodes}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}

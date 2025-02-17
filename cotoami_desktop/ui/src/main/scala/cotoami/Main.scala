@@ -17,7 +17,7 @@ import fui._
 import cotoami.utils.facade.Nullable
 import cotoami.libs.tauri
 import cotoami.backend._
-import cotoami.repositories._
+import cotoami.repository._
 import cotoami.models._
 import cotoami.updates
 import cotoami.updates._

@@ -18,7 +18,7 @@ import cotoami.models.{
   WaitingPost,
   WaitingPosts
 }
-import cotoami.repositories._
+import cotoami.repository._
 import cotoami.backend.{ErrorJson, PaginatedCotos}
 import cotoami.components.{
   materialSymbol,

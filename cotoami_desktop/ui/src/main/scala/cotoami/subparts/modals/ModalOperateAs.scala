@@ -7,7 +7,7 @@ import slinky.web.html._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.backend.{ErrorJson, InitialDataset}
 import cotoami.components.materialSymbol
 import cotoami.subparts.{spanNode, Modal}

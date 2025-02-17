@@ -25,7 +25,7 @@ import cotoami.models.{
   Siblings,
   UiState
 }
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.components.{
   optionalClasses,
   toolButton,

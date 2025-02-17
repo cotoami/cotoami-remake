@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Link, OrderContext}
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.components.toolButton
 
 object ToolbarReorder {

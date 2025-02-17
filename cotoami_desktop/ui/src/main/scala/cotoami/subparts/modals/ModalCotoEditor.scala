@@ -9,7 +9,7 @@ import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, DateTimeRange, Geolocation}
-import cotoami.repositories.Cotonomas
+import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}

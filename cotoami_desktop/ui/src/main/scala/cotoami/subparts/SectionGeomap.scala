@@ -9,7 +9,7 @@ import slinky.core.facade.ReactElement
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, GeoBounds, Geolocation, Id}
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.{optionalClasses, MapLibre}
 

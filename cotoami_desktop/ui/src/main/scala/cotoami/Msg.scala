@@ -4,7 +4,7 @@ import org.scalajs.dom.URL
 
 import cotoami.utils.Log
 import cotoami.backend._
-import cotoami.repositories._
+import cotoami.repository._
 import cotoami.models._
 import cotoami.subparts._
 

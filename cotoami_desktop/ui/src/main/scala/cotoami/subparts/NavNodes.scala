@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
-import cotoami.repositories.Nodes
+import cotoami.repository.Nodes
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 object NavNodes {

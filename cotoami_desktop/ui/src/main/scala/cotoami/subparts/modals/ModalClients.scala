@@ -9,7 +9,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}
-import cotoami.repositories.Nodes
+import cotoami.repository.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.{materialSymbol, toolButton}
 import cotoami.subparts.{sectionClientNodesCount, spanNode, Modal}

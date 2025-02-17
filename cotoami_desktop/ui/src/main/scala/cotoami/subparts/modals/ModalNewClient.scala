@@ -10,7 +10,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id, Node}
-import cotoami.repositories.Nodes
+import cotoami.repository.Nodes
 import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}
 import cotoami.components.materialSymbol
 import cotoami.subparts.{labeledField, labeledInputField, Modal}

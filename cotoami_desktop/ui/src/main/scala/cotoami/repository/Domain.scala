@@ -1,4 +1,4 @@
-package cotoami.repositories
+package cotoami.repository
 
 import scala.util.chaining._
 import scala.collection.immutable.HashSet

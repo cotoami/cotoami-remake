@@ -7,7 +7,7 @@ import fui.{Browser, Cmd}
 import cotoami.utils.facade.Nullable
 import cotoami.{Model, Msg}
 import cotoami.models._
-import cotoami.repositories._
+import cotoami.repository._
 import cotoami.backend.{
   ChangeJson,
   ChangelogEntryJson,

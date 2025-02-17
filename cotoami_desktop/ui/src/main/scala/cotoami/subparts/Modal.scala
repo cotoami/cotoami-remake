@@ -9,7 +9,7 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link, Node}
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.subparts.modals._
 
 sealed trait Modal

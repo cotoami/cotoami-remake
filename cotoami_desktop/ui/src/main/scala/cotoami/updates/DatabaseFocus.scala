@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.{Model, Msg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repositories.Links
+import cotoami.repository.Links
 import cotoami.backend.CotonomaDetails
 import cotoami.subparts.SectionGeomap
 

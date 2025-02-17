@@ -1,4 +1,4 @@
-package cotoami.repositories
+package cotoami.repository
 
 import scala.collection.immutable.{HashSet, TreeSet}
 import com.softwaremill.quicklens._

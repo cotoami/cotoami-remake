@@ -1,4 +1,4 @@
-package cotoami.repositories
+package cotoami.repository
 
 import com.softwaremill.quicklens._
 

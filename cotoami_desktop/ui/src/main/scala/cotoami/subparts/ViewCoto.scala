@@ -12,7 +12,7 @@ import slinky.web.html._
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.libs.{rehypePlugins, remarkPlugins}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Link, WaitingPost}
-import cotoami.repositories.Nodes
+import cotoami.repository.Nodes
 import cotoami.components.{
   materialSymbol,
   optionalClasses,

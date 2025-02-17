@@ -8,7 +8,7 @@ import slinky.web.SyntheticMouseEvent
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.toolButton
 import cotoami.subparts.{
@@ -57,6 +57,8 @@ object ModalNodeProfile {
 
   object Msg {
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
+        extends Msg
+    case class AnonymousReadEnabled(result: Either[ErrorJson, Boolean])
         extends Msg
   }
 

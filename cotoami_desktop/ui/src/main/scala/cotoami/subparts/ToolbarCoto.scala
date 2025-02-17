@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
-import cotoami.repositories.Domain
+import cotoami.repository.Domain
 import cotoami.components.toolButton
 import cotoami.subparts.Modal
 
