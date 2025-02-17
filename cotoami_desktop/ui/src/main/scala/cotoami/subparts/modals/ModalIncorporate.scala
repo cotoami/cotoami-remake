@@ -205,13 +205,6 @@ object ModalIncorporate {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
-      h2()(
-        "Connect",
-        buttonHelp(
-          model.helpConnect,
-          () => dispatch(Msg.HelpConnect(true))
-        )
-      ),
       model.connectingError.map(e => section(className := "error")(e)),
       form()(
         sectionHelp(
@@ -224,6 +217,7 @@ object ModalIncorporate {
 
         // Node URL
         labeledInputField(
+          classes = "field-node-url",
           label = "Node URL",
           inputId = "node-url",
           inputType = "text",

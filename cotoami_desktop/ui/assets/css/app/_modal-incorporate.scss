@@ -3,6 +3,12 @@ dialog.incorporate {
     width: 600px;
   }
 
+  section.connect {
+    div.field-node-url {
+      margin-top: 0;
+    }
+  }
+
   section.incorporate {
     margin-bottom: var(--spacing);
 
