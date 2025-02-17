@@ -9,7 +9,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
 import cotoami.repository.Root
-import cotoami.backend.{ClientNodeBackend, ErrorJson}
+import cotoami.backend.{ClientNodeBackend, Commands, ErrorJson}
 import cotoami.components.toolButton
 import cotoami.subparts.{
   imgNode,
@@ -58,6 +58,7 @@ object ModalNodeProfile {
   object Msg {
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
         extends Msg
+    case class EnableAnonymousRead(enable: Boolean) extends Msg
     case class AnonymousReadEnabled(result: Either[ErrorJson, Boolean])
         extends Msg
   }
@@ -72,6 +73,12 @@ object ModalNodeProfile {
 
       case Msg.ClientCountFetched(Left(e)) =>
         default.copy(_3 = cotoami.error("Couldn't fetch client count.", e))
+
+      case Msg.EnableAnonymousRead(enable) =>
+        default.copy(
+          _1 = model.copy(enablingAnonymousRead = true),
+          _3 = enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
+        )
 
       case Msg.AnonymousReadEnabled(Right(enabled)) =>
         default.copy(
@@ -89,6 +96,11 @@ object ModalNodeProfile {
   def fetchClientCount: Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(0, Some(1))
       .map(Msg.ClientCountFetched(_).into)
+
+  def enableAnonymousRead(
+      enable: Boolean
+  ): Cmd.One[Either[ErrorJson, Boolean]] =
+    Commands.send(Commands.EnableAnonymousRead(enable))
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -253,8 +265,24 @@ object ModalNodeProfile {
         role := "switch",
         checked := context.repo.anonymousReadEnabled,
         disabled := model.enablingAnonymousRead,
-        onChange := (_ => ())
-      )
+        onChange := (_ =>
+          if (context.repo.anonymousReadEnabled)
+            dispatch(Msg.EnableAnonymousRead(false)) // disable
+          else
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  "Are you sure you want to allow anonymous read-only access?" ++
+                    " (Anyone who knows this node's URL can view your cotos and links.)",
+                  Msg.EnableAnonymousRead(true) // enable
+                )
+              )
+            )
+        )
+      ),
+      Option.when(model.enablingAnonymousRead) {
+        span(className := "processing", aria - "busy" := "true")()
+      }
     )
 
   private def buttonEdit(
