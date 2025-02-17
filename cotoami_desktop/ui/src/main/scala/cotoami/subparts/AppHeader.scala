@@ -20,7 +20,7 @@ object AppHeader {
         className := "header-content",
         data - "tauri-drag-region" := "default"
       )(
-        model.domain.currentFocus.map(sectionCurrentFocus(_)).getOrElse(
+        model.repo.currentFocus.map(sectionCurrentFocus(_)).getOrElse(
           button(
             className := "app-info default",
             title := "View app info"
@@ -35,7 +35,7 @@ object AppHeader {
         section(className := "tools")(
           model.uiState.map(divToolButtons),
           divSearch(model.search),
-          model.domain.nodes.operating.map(buttonNodeProfile)
+          model.repo.nodes.operating.map(buttonNodeProfile)
         )
       )
     )
@@ -70,7 +70,7 @@ object AppHeader {
           h1(className := "current-cotonoma")(cotonoma.name)
         )
       ),
-      Option.when(context.domain.geolocationInFocus.isDefined)(
+      Option.when(context.repo.geolocationInFocus.isDefined)(
         button(
           className := "geolocation default",
           onClick := (e => {

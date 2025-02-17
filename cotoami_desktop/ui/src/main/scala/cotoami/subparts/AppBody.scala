@@ -13,7 +13,7 @@ object AppBody {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(id := "app-body", className := "body")(
-      (model.uiState, model.domain.nodes.operating) match {
+      (model.uiState, model.repo.nodes.operating) match {
         case (Some(uiState), Some(_)) =>
           if (model.search.queryInput.isBlank())
             Some(defaultLayout(model, uiState))
@@ -54,7 +54,7 @@ object AppBody {
           }
         )(
           paneToggle(NavCotonomas.PaneName),
-          model.domain.nodes.current.map(
+          model.repo.nodes.current.map(
             NavCotonomas(model.navCotonomas, _)
           )
         ),

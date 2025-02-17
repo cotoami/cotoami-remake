@@ -27,7 +27,7 @@ object LocalNodeEvent {
       val clientAsChild =
         Nullable.toOption(change.client_as_child)
           .map(ChildNodeBackend.toModel(_))
-      return model.modify(_.domain.nodes.servers).using(
+      return model.modify(_.repo.nodes.servers).using(
         _.setState(nodeId, notConnected, clientAsChild)
       )
     }
@@ -54,14 +54,14 @@ object LocalNodeEvent {
     // ClientConnected
     for (activeClientJson <- event.ClientConnected.toOption) {
       val activeClient = ActiveClientBackend.toModel(activeClientJson)
-      return model.modify(_.domain.nodes.activeClients).using(
+      return model.modify(_.repo.nodes.activeClients).using(
         _.put(activeClient)
       )
     }
 
     // ClientDisconnected
     for (json <- event.ClientDisconnected.toOption) {
-      return model.modify(_.domain.nodes.activeClients).using(
+      return model.modify(_.repo.nodes.activeClients).using(
         _.remove(Id(json.node_id))
       )
     }

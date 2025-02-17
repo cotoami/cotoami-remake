@@ -9,7 +9,7 @@ import slinky.core.facade.ReactElement
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, GeoBounds, Geolocation, Id}
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.{optionalClasses, MapLibre}
 
@@ -134,11 +134,11 @@ object SectionGeomap {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Cmd[AppMsg]) = {
-    val default = (model, context.domain, Cmd.none)
+  ): (Model, Root, Cmd[AppMsg]) = {
+    val default = (model, context.repo, Cmd.none)
     msg match {
       case Msg.Init(bounds) =>
-        (context.domain.geolocationInFocus match {
+        (context.repo.geolocationInFocus match {
           case Some(location) => (model.moveTo(location), Cmd.none)
           case None           => model.fetchCotosInCurrentBounds
         }) pipe { case (model, cmd) =>
@@ -171,13 +171,13 @@ object SectionGeomap {
         default.copy(
           _1 = model.copy(fetchingCotosInFocus = true),
           _3 = GeolocatedCotos.fetch(
-            context.domain.nodes.focusedId,
-            context.domain.cotonomas.focusedId
+            context.repo.nodes.focusedId,
+            context.repo.cotonomas.focusedId
           ).map(Msg.CotosInFocusFetched(_).into)
         )
 
       case Msg.CotosInFocusFetched(Right(cotos)) => {
-        context.domain.importFrom(cotos).pipe { domain =>
+        context.repo.importFrom(cotos).pipe { domain =>
           (domain.geolocationInFocus match {
             case Some(location) => (model.moveTo(location), Cmd.none)
             case None           => model.fetchCotosInCurrentBounds
@@ -213,7 +213,7 @@ object SectionGeomap {
         }.pipe { case (model, fetchNext) =>
           default.copy(
             _1 = model.addOrRemoveMarkers,
-            _2 = context.domain.importFrom(cotos),
+            _2 = context.repo.importFrom(cotos),
             _3 = fetchNext
           )
         }
@@ -269,8 +269,8 @@ object SectionGeomap {
           None
       ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = toMarkerDefs(context.domain.locationMarkers),
-      focusedMarkerId = context.domain.cotos.focusedId.map(_.uuid),
+      markerDefs = toMarkerDefs(context.repo.locationMarkers),
+      focusedMarkerId = context.repo.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model.triggers.applyCenterZoom,
       addOrRemoveMarkers = model.triggers.addOrRemoveMarkers,

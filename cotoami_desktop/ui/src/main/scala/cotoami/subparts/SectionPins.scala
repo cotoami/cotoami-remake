@@ -25,7 +25,7 @@ import cotoami.models.{
   Siblings,
   UiState
 }
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.components.{
   optionalClasses,
   toolButton,
@@ -90,8 +90,8 @@ object SectionPins {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    context.domain.currentCotonomaPair.map(
-      sectionPins(context.domain.pins, uiState, _)
+    context.repo.currentCotonomaPair.map(
+      sectionPins(context.repo.pins, uiState, _)
     )
   }
 
@@ -110,7 +110,7 @@ object SectionPins {
             className := "current-cotonoma-name",
             onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
           )(
-            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             cotonoma.name
           )
         ),
@@ -282,7 +282,7 @@ object SectionPins {
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val (link, coto, order) = pin
-    val subCotos = context.domain.childrenOf(coto.id)
+    val subCotos = context.repo.childrenOf(coto.id)
     li(
       className := optionalClasses(
         Seq(
@@ -293,7 +293,7 @@ object SectionPins {
       id := elementIdOfPin(link)
     )(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        context.repo.parentsOf(coto.id).filter(_._2.id != link.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       ViewCoto.article(
@@ -301,7 +301,7 @@ object SectionPins {
         dispatch,
         Seq(
           ("pinned-coto", true),
-          ("has-children", context.domain.links.anyFrom(coto.id))
+          ("has-children", context.repo.links.anyFrom(coto.id))
         )
       )(
         buttonPinLink(link),
@@ -314,9 +314,9 @@ object SectionPins {
           ViewCoto.divAttributes(coto)
         )
       ),
-      if (coto.isCotonoma && !context.domain.alreadyLoadedGraphFrom(coto.id)) {
+      if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
         div(className := "links-not-yet-loaded")(
-          if (context.domain.graphLoading.contains(coto.id)) {
+          if (context.repo.graphLoading.contains(coto.id)) {
             div(
               className := "loading",
               aria - "busy" := "true"
@@ -327,7 +327,7 @@ object SectionPins {
               tip = Some("Load links"),
               tipPlacement = "bottom",
               classes = "fetch-links",
-              onClick = _ => dispatch(Domain.Msg.FetchGraphFromCoto(coto.id))
+              onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))
             )
           }
         )
@@ -370,7 +370,7 @@ object SectionPins {
                 )(
                   if (coto.isCotonoma)
                     span(className := "cotonoma")(
-                      context.domain.nodes.get(coto.nodeId).map(imgNode(_)),
+                      context.repo.nodes.get(coto.nodeId).map(imgNode(_)),
                       coto.nameAsCotonoma
                     )
                   else
@@ -417,7 +417,7 @@ object SectionPins {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(className := "sub")(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        context.repo.parentsOf(coto.id).filter(_._2.id != link.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(

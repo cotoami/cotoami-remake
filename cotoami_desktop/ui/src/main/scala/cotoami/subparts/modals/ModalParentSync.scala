@@ -109,7 +109,7 @@ object ModalParentSync {
     )
 
   private def spanNode(id: Id[Node])(implicit context: Context): ReactElement =
-    context.domain.nodes.get(id).map(cotoami.subparts.spanNode)
+    context.repo.nodes.get(id).map(cotoami.subparts.spanNode)
       .getOrElse(
         span(className := "node not-found")(
           s"Node not found: ${id}"

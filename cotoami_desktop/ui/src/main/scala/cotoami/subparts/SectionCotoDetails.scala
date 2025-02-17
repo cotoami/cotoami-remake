@@ -35,7 +35,7 @@ object SectionCotoDetails {
       div(className := "body")(
         ScrollArea()(
           ViewCoto.ulParents(
-            context.domain.parentsOf(coto.id),
+            context.repo.parentsOf(coto.id),
             AppMsg.FocusCoto(_)
           ),
           articleMainCoto(coto),
@@ -60,13 +60,12 @@ object SectionCotoDetails {
   private def articleMainCoto(coto: Coto)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
-    val domain = context.domain
+  ): ReactElement =
     ViewCoto.article(coto, dispatch, Seq(("main-coto", true)))(
       ToolbarCoto(coto),
       header()(
         ViewCoto.divAttributes(coto),
-        ViewCoto.addressAuthor(coto, domain.nodes)
+        ViewCoto.addressAuthor(coto, context.repo.nodes)
       ),
       div(className := "body")(
         ViewCoto.divContent(coto, true),
@@ -76,13 +75,12 @@ object SectionCotoDetails {
       ),
       ViewCoto.articleFooter(coto)
     )
-  }
 
   private def olSubCotos(coto: Coto)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
-    val subCotos = context.domain.childrenOf(coto.id)
+    val subCotos = context.repo.childrenOf(coto.id)
     Flipper(
       element = "ol",
       className = "sub-cotos",
@@ -101,12 +99,12 @@ object SectionCotoDetails {
       coto: Coto,
       order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val domain = context.domain
+    val repo = context.repo
     li(key := link.id.uuid, className := "sub")(
       divAddSubCoto,
       div(className := "sub")(
         ViewCoto.ulParents(
-          domain.parentsOf(coto.id).filter(_._2.id != link.id),
+          repo.parentsOf(coto.id).filter(_._2.id != link.id),
           AppMsg.FocusCoto(_)
         ),
         ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
@@ -115,8 +113,8 @@ object SectionCotoDetails {
           header()(
             buttonSubcotoLink(link),
             ViewCoto.divAttributes(coto),
-            Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
-              ViewCoto.addressAuthor(coto, domain.nodes)
+            Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+              ViewCoto.addressAuthor(coto, repo.nodes)
             }
           ),
           div(className := "body")(

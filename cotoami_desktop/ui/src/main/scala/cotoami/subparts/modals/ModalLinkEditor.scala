@@ -131,13 +131,13 @@ object ModalLinkEditor {
       closeButton = Some((classOf[Modal.LinkEditor], dispatch)),
       error = model.error
     )(
-      if (context.domain.isPin(model.original))
+      if (context.repo.isPin(model.original))
         "Pin"
       else
         "Link"
     )(
       section(className := "source-coto")(
-        context.domain.cotos.get(model.original.sourceCotoId).map(articleCoto)
+        context.repo.cotos.get(model.original.sourceCotoId).map(articleCoto)
       ),
       section(className := "link")(
         div(className := "link-icon")(
@@ -156,7 +156,7 @@ object ModalLinkEditor {
         )
       ),
       section(className := "target-coto")(
-        context.domain.cotos.get(model.original.targetCotoId).map(articleCoto)
+        context.repo.cotos.get(model.original.targetCotoId).map(articleCoto)
       ),
       div(className := "buttons")(
         button(

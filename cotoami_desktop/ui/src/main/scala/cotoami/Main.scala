@@ -141,7 +141,7 @@ object Main {
       case Msg.SetDatabaseInfo(info) => {
         model
           .modify(_.databaseFolder).setTo(Some(info.folder))
-          .modify(_.domain).setTo(Domain(info.initialDataset, info.localNodeId))
+          .modify(_.repo).setTo(Root(info.initialDataset, info.localNodeId))
           .info("Database opened.", Some(info.folder))
           .pipe(model => applyUrlChange(model.url, model))
           .pipe { case (model, cmd) =>
@@ -168,8 +168,8 @@ object Main {
       case Msg.SetRemoteInitialDataset(dataset) =>
         (
           model
-            .modify(_.domain).setTo(
-              Domain(dataset, model.domain.nodes.localId.get)
+            .modify(_.repo).setTo(
+              Root(dataset, model.repo.nodes.localId.get)
             ),
           Browser.pushUrl(Route.index.url(()))
         )
@@ -190,7 +190,7 @@ object Main {
         (model, Browser.pushUrl(Route.node.url(id)))
 
       case Msg.UnfocusNode => {
-        val newUrl = model.domain.cotonomas.focused match {
+        val newUrl = model.repo.cotonomas.focused match {
           case None           => Route.index.url(())
           case Some(cotonoma) => Route.cotonoma.url(cotonoma.id)
         }
@@ -198,12 +198,12 @@ object Main {
       }
 
       case Msg.FocusCotonoma(cotonoma) => {
-        val newUrl = model.domain.nodes.focused match {
+        val newUrl = model.repo.nodes.focused match {
           // Maintain node unfocus
           case None => Route.cotonoma.url(cotonoma.id)
           // Maintain node focus
           case Some(_) =>
-            if (model.domain.nodes.isNodeRoot(cotonoma))
+            if (model.repo.nodes.isNodeRoot(cotonoma))
               // Don't allow to focus a root cotonoma while maintaining node focus,
               // which should be converted into node focus.
               Route.node.url(cotonoma.nodeId)
@@ -214,7 +214,7 @@ object Main {
       }
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
-        model.modify(_.domain).using(_.setCotonomaDetails(details)).pipe {
+        model.modify(_.repo).using(_.setCotonomaDetails(details)).pipe {
           _ -> Browser.send(SectionGeomap.Msg.DatabaseFocusChanged.into)
         }
 
@@ -222,7 +222,7 @@ object Main {
         (model.error("Couldn't fetch cotonoma details.", Some(e)), Cmd.none)
 
       case Msg.UnfocusCotonoma => {
-        val newUrl = model.domain.nodes.focused match {
+        val newUrl = model.repo.nodes.focused match {
           case None       => Route.index.url(())
           case Some(node) => Route.node.url(node.id)
         }
@@ -247,7 +247,7 @@ object Main {
       }
 
       case Msg.FocusedCotoDetailsFetched(Right(details)) =>
-        model.modify(_.domain).using(_.importFrom(details)).pipe { model =>
+        model.modify(_.repo).using(_.importFrom(details)).pipe { model =>
           DatabaseFocus.coto(details.coto.id, true, model).pipe {
             case (model, focus) =>
               (
@@ -269,10 +269,10 @@ object Main {
         (
           model
             .modify(_.url).setTo(newUrl)
-            .modify(_.domain.cotos).using(_.unfocus)
+            .modify(_.repo.cotos).using(_.unfocus)
             .modify(_.geomap.focusedLocation).setTo(None)
             .pipe { model =>
-              model.domain.geolocationInFocus match {
+              model.repo.geolocationInFocus match {
                 case Some(location) =>
                   model.modify(_.geomap).using(_.moveTo(location))
                 case None => model
@@ -289,7 +289,7 @@ object Main {
 
       case Msg.ReloadDomain => {
         (
-          model.copy(domain = Domain()),
+          model.copy(repo = Root()),
           model.databaseFolder.map(
             DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened)
           ).getOrElse(Cmd.none)
@@ -297,8 +297,8 @@ object Main {
       }
 
       case Msg.DomainMsg(submsg) => {
-        val (domain, cmds) = Domain.update(submsg, model.domain)
-        (model.copy(domain = domain), cmds)
+        val (repo, cmds) = Root.update(submsg, model.repo)
+        (model.copy(repo = repo), cmds)
       }
 
       case Msg.OpenGeomap =>
@@ -316,7 +316,7 @@ object Main {
         (model.modify(_.geomap).using(_.unfocus), Cmd.none)
 
       case Msg.DisplayGeolocationInFocus =>
-        model.domain.geolocationInFocus match {
+        model.repo.geolocationInFocus match {
           case Some(location) =>
             updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
               (
@@ -334,15 +334,15 @@ object Main {
           NavCotonomas.update(submsg, model.navCotonomas)
         (
           model.copy(navCotonomas = navCotonomas)
-            .modify(_.domain.cotonomas).setTo(cotonomas),
+            .modify(_.repo.cotonomas).setTo(cotonomas),
           cmds
         )
       }
 
       case Msg.PaneSearchMsg(submsg) => {
-        val (search, domain, cmd) =
+        val (search, repo, cmd) =
           PaneSearch.update(submsg, model.search)
-        (model.copy(search = search, domain = domain), cmd)
+        (model.copy(search = search, repo = repo), cmd)
       }
 
       case Msg.FlowInputMsg(submsg) => {
@@ -363,9 +363,9 @@ object Main {
       }
 
       case Msg.SectionTimelineMsg(submsg) => {
-        val (timeline, domain, cmd) =
+        val (timeline, repo, cmd) =
           SectionTimeline.update(submsg, model.timeline)
-        (model.copy(timeline = timeline, domain = domain), cmd)
+        (model.copy(timeline = timeline, repo = repo), cmd)
       }
 
       case Msg.SectionPinsMsg(submsg) => {
@@ -380,8 +380,9 @@ object Main {
       }
 
       case Msg.SectionGeomapMsg(submsg) => {
-        val (geomap, domain, cmd) = SectionGeomap.update(submsg, model.geomap)
-        (model.copy(geomap = geomap, domain = domain), cmd)
+        val (geomap, repo, cmd) =
+          SectionGeomap.update(submsg, model.geomap)
+        (model.copy(geomap = geomap, repo = repo), cmd)
       }
     }
   }
@@ -400,7 +401,7 @@ object Main {
           .modify(_._2).using(_ :+ focusCoto)
 
       case Route.node(id) =>
-        if (model.domain.nodes.contains(id))
+        if (model.repo.nodes.contains(id))
           DatabaseFocus.node(Some(id), model)
             .modify(_._2).using(_ :+ focusCoto)
         else

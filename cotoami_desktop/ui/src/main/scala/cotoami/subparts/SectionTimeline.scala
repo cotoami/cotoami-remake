@@ -61,9 +61,9 @@ object SectionTimeline {
         imeActive = false
       )
 
-    def cotos(domain: Domain): Seq[Coto] = {
-      val rootCotoId = domain.currentNodeRootCotonoma.map(_.cotoId)
-      cotoIds.order.filter(Some(_) != rootCotoId).map(domain.cotos.get).flatten
+    def cotos(repo: Root): Seq[Coto] = {
+      val rootCotoId = repo.currentNodeRootCotonoma.map(_.cotoId)
+      cotoIds.order.filter(Some(_) != rootCotoId).map(repo.cotos.get).flatten
     }
 
     def appendPage(cotos: PaginatedCotos, fetchNumber: Int): Model =
@@ -87,12 +87,12 @@ object SectionTimeline {
             cotoIds
         )
 
-    def fetchFirst(domain: Domain): (Model, Cmd.One[AppMsg]) =
+    def fetchFirst(repo: Root): (Model, Cmd.One[AppMsg]) =
       fetching.pipe { model =>
         (
           model,
           fetchInFocus(
-            domain,
+            repo,
             onlyCotonomas,
             Some(queryInput),
             0,
@@ -101,7 +101,7 @@ object SectionTimeline {
         )
       }
 
-    def fetchMore(domain: Domain): (Model, Cmd.One[AppMsg]) =
+    def fetchMore(repo: Root): (Model, Cmd.One[AppMsg]) =
       if (loading)
         (this, Cmd.none)
       else
@@ -110,7 +110,7 @@ object SectionTimeline {
             (
               model,
               fetchInFocus(
-                domain,
+                repo,
                 onlyCotonomas,
                 Some(queryInput),
                 i,
@@ -123,11 +123,11 @@ object SectionTimeline {
     private def fetching: Model =
       copy(fetchNumber = fetchNumber + 1, loading = true)
 
-    def inputQuery(query: String, domain: Domain): (Model, Cmd[AppMsg]) =
+    def inputQuery(query: String, repo: Root): (Model, Cmd[AppMsg]) =
       if (imeActive)
         (copy(queryInput = query), Cmd.none)
       else
-        copy(queryInput = query).fetchFirst(domain)
+        copy(queryInput = query).fetchFirst(repo)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -153,29 +153,29 @@ object SectionTimeline {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Cmd[AppMsg]) = {
+  ): (Model, Root, Cmd[AppMsg]) = {
     if (LinkingInfo.developmentMode) {
       println(s"SectionTimeline.update: ${msg.getClass()}")
     }
 
-    val default = (model, context.domain, Cmd.none)
+    val default = (model, context.repo, Cmd.none)
     msg match {
       case Msg.SetOnlyCotonomas(onlyCotonomas) =>
         model
           .modify(_.cotoIds).setTo(PaginatedIds())
           .modify(_.onlyCotonomas).setTo(onlyCotonomas)
-          .fetchFirst(context.domain)
+          .fetchFirst(context.repo)
           .pipe { case (model, cmd) =>
             default.copy(_1 = model, _3 = cmd)
           }
 
       case Msg.QueryInput(query) =>
-        model.inputQuery(query, context.domain).pipe { case (model, cmd) =>
+        model.inputQuery(query, context.repo).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.ClearQuery =>
-        model.inputQuery("", context.domain).pipe { case (model, cmd) =>
+        model.inputQuery("", context.repo).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -183,7 +183,7 @@ object SectionTimeline {
         default.copy(_1 = model.copy(imeActive = true))
 
       case Msg.ImeCompositionEnd =>
-        model.fetchFirst(context.domain).pipe { case (model, cmd) =>
+        model.fetchFirst(context.repo).pipe { case (model, cmd) =>
           default.copy(
             _1 = model.copy(imeActive = false),
             _3 = cmd
@@ -191,7 +191,7 @@ object SectionTimeline {
         }
 
       case Msg.FetchMore =>
-        model.fetchMore(context.domain).pipe { case (model, cmd) =>
+        model.fetchMore(context.repo).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
@@ -199,7 +199,7 @@ object SectionTimeline {
         if (number == model.fetchNumber)
           default.copy(
             _1 = model.appendPage(cotos, number),
-            _2 = context.domain.importFrom(cotos)
+            _2 = context.repo.importFrom(cotos)
           )
         else
           default
@@ -216,15 +216,15 @@ object SectionTimeline {
   }
 
   private def fetchInFocus(
-      domain: Domain,
+      repo: Root,
       onlyCotonomas: Boolean,
       query: Option[String],
       pageIndex: Double,
       fetchNumber: Int
   ): Cmd.One[AppMsg] =
     fetch(
-      domain.nodes.focusedId,
-      domain.cotonomas.focusedId,
+      repo.nodes.focusedId,
+      repo.cotonomas.focusedId,
       onlyCotonomas,
       query,
       pageIndex,
@@ -263,8 +263,8 @@ object SectionTimeline {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
-    val cotos = model.cotos(context.domain)
-    context.domain.currentCotonomaId.flatMap(cotonomaId =>
+    val cotos = model.cotos(context.repo)
+    context.repo.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
         !model.queryInput.isBlank || !cotos.isEmpty || !waitingPosts.isEmpty
       )(
@@ -355,10 +355,10 @@ object SectionTimeline {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "post flow-entry")(
       repostHeader(coto),
-      context.domain.cotos.getOriginal(coto).map(coto =>
+      context.repo.cotos.getOriginal(coto).map(coto =>
         Fragment(
           ViewCoto.ulParents(
-            context.domain.parentsOf(coto.id),
+            context.repo.parentsOf(coto.id),
             AppMsg.FocusCoto(_)
           ),
           articleCoto(coto),
@@ -371,7 +371,7 @@ object SectionTimeline {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
-    val domain = context.domain
+    val domain = context.repo
     ViewCoto.article(coto, dispatch)(
       ToolbarCoto(coto),
       header()(
@@ -392,7 +392,7 @@ object SectionTimeline {
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
     Option.when(coto.repostOfId.isDefined) {
-      val domain = context.domain
+      val domain = context.repo
       section(className := "repost-header")(
         materialSymbol("repeat"),
         // Display the cotonomas to which the coto has been reposted
@@ -403,7 +403,7 @@ object SectionTimeline {
         Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
           reposter(coto, domain.nodes)
         },
-        Option.when(context.domain.nodes.canEdit(coto)) {
+        Option.when(context.repo.nodes.canEdit(coto)) {
           toolButton(
             classes = "delete-repost",
             tip = Some("Delete this repost"),
@@ -415,7 +415,7 @@ object SectionTimeline {
                 Modal.Msg.OpenModal(
                   Modal.Confirm(
                     "Are you sure you want to delete the repost?",
-                    Domain.Msg.DeleteCoto(coto.id)
+                    Root.Msg.DeleteCoto(coto.id)
                   )
                 )
               )

@@ -132,7 +132,7 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            context.domain.lazyFetchGraphFrom(start)
+            context.repo.lazyFetchGraphFrom(start)
           )
         )
 
@@ -159,13 +159,13 @@ object SectionTraversals {
                 None // no finalizer on cancellation
               }
             }),
-            context.domain.lazyFetchGraphFrom(step)
+            context.repo.lazyFetchGraphFrom(step)
           )
         )
 
       case Msg.StepToParent(traversalIndex, parentId) =>
         (
-          model.stepToParent(traversalIndex, parentId, context.domain.links),
+          model.stepToParent(traversalIndex, parentId, context.repo.links),
           Cmd.none
         )
     }
@@ -204,16 +204,16 @@ object SectionTraversals {
           scrollableClassName = Some("scrollable-traversal")
         )(
           divParents(
-            context.domain.parentsOf(traversal._1.start),
+            context.repo.parentsOf(traversal._1.start),
             traversal._2
           ),
           // traversal start
-          context.domain.cotos.get(traversal._1.start).map(
+          context.repo.cotos.get(traversal._1.start).map(
             divTraversalStep(_, None, traversal)
           ),
           // traversal steps
           traversal._1.steps.zipWithIndex.map { case (step, index) =>
-            context.domain.cotos.get(step).map(
+            context.repo.cotos.get(step).map(
               divTraversalStep(_, Some(index), traversal)
             )
           }
@@ -250,7 +250,7 @@ object SectionTraversals {
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val subCotos = context.domain.childrenOf(coto.id)
+    val subCotos = context.repo.childrenOf(coto.id)
     div(
       className := optionalClasses(
         Seq(
@@ -311,7 +311,7 @@ object SectionTraversals {
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(className := "sub")(
       ViewCoto.ulParents(
-        context.domain.parentsOf(coto.id).filter(_._2.id != link.id),
+        context.repo.parentsOf(coto.id).filter(_._2.id != link.id),
         Msg.OpenTraversal(_)
       ),
       ViewCoto.article(
@@ -338,7 +338,7 @@ object SectionTraversals {
           },
           // Traverse button
           Option.when(
-            !traversed && context.domain.links.anyFrom(coto.id)
+            !traversed && context.repo.links.anyFrom(coto.id)
           ) {
             val stepMsg = Msg.Step(
               traversal._2,

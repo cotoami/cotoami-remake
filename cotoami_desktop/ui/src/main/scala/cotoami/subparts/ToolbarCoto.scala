@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.components.toolButton
 import cotoami.subparts.Modal
 
@@ -20,20 +20,20 @@ object ToolbarCoto {
     if (coto.isRepost) return None
 
     val buttons = Seq(
-      Option.when(context.domain.canPin(coto.id)) {
+      Option.when(context.repo.canPin(coto.id)) {
         toolButton(
           symbol = "push_pin",
           tip = Some("Pin"),
           tipPlacement = "left",
           classes = "pin-coto",
-          disabled = context.domain.beingPinned(coto.id),
+          disabled = context.repo.beingPinned(coto.id),
           onClick = e => {
             e.stopPropagation()
-            dispatch(Domain.Msg.Pin(coto.id))
+            dispatch(Root.Msg.Pin(coto.id))
           }
         )
       },
-      Option.when(context.domain.nodes.canEdit(coto)) {
+      Option.when(context.repo.nodes.canEdit(coto)) {
         toolButton(
           symbol = "edit",
           tip = Some("Edit"),
@@ -49,7 +49,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.domain.nodes.canCreateLinksIn(coto.nodeId)) {
+      Option.when(context.repo.nodes.canCreateLinksIn(coto.nodeId)) {
         toolButton(
           symbol = "add",
           tip = Some("Write a linked coto"),
@@ -57,7 +57,7 @@ object ToolbarCoto {
           classes = "add-linked-coto"
         )
       },
-      Option.when(context.domain.canRepost(coto.id)) {
+      Option.when(context.repo.canRepost(coto.id)) {
         toolButton(
           symbol = "repeat",
           tip = Some("Repost"),
@@ -65,14 +65,14 @@ object ToolbarCoto {
           classes = "repost-coto",
           onClick = e => {
             e.stopPropagation()
-            Modal.Repost(coto, context.domain) match {
+            Modal.Repost(coto, context.repo) match {
               case Some(modal) => dispatch(Modal.Msg.OpenModal(modal))
               case None        => () // should be unreachable
             }
           }
         )
       },
-      Option.when(context.domain.nodes.canPromote(coto)) {
+      Option.when(context.repo.nodes.canPromote(coto)) {
         toolButton(
           symbol = "drive_folder_upload",
           tip = Some("Promote to a cotonoma"),
@@ -80,7 +80,7 @@ object ToolbarCoto {
           classes = "promote-to-cotonoma"
         )
       },
-      Option.when(context.domain.nodes.canEdit(coto) && !coto.isCotonoma) {
+      Option.when(context.repo.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(
           symbol = "delete",
           tip = Some("Delete"),
@@ -92,7 +92,7 @@ object ToolbarCoto {
               Modal.Msg.OpenModal(
                 Modal.Confirm(
                   "Are you sure you want to delete the coto?",
-                  Domain.Msg.DeleteCoto(coto.id)
+                  Root.Msg.DeleteCoto(coto.id)
                 )
               )
             )

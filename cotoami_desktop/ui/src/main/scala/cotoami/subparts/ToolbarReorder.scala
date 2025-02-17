@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Link, OrderContext}
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.components.toolButton
 
 object ToolbarReorder {
@@ -17,7 +17,7 @@ object ToolbarReorder {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
-    val reordering = context.domain.reordering.contains(link.sourceCotoId)
+    val reordering = context.repo.reordering.contains(link.sourceCotoId)
     section(className := "reorder-toolbar")(
       toolButton(
         classes = "move-to-top",
@@ -25,7 +25,7 @@ object ToolbarReorder {
         disabled = order.isFirst || reordering,
         onClick = e => {
           e.stopPropagation()
-          dispatch(Domain.Msg.ChangeOrder(link, 1))
+          dispatch(Root.Msg.ChangeOrder(link, 1))
         }
       ),
       toolButton(
@@ -35,7 +35,7 @@ object ToolbarReorder {
         onClick = e => {
           e.stopPropagation()
           order.previous.map(previous =>
-            dispatch(Domain.Msg.ChangeOrder(link, previous))
+            dispatch(Root.Msg.ChangeOrder(link, previous))
           )
         }
       ),
@@ -45,9 +45,7 @@ object ToolbarReorder {
         disabled = order.isLast || reordering,
         onClick = e => {
           e.stopPropagation()
-          order.next.map(next =>
-            dispatch(Domain.Msg.ChangeOrder(link, next + 1))
-          )
+          order.next.map(next => dispatch(Root.Msg.ChangeOrder(link, next + 1)))
         }
       ),
       toolButton(
@@ -56,7 +54,7 @@ object ToolbarReorder {
         disabled = order.isLast || reordering,
         onClick = e => {
           e.stopPropagation()
-          dispatch(Domain.Msg.ChangeOrder(link, order.max + 1))
+          dispatch(Root.Msg.ChangeOrder(link, order.max + 1))
         }
       ),
       Option.when(reordering) {

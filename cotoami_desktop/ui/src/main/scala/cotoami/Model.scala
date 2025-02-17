@@ -15,7 +15,7 @@ trait Context {
   def i18n: I18n
   def log: Log
   def uiState: Option[UiState]
-  def domain: Domain
+  def repo: Root
   def geomap: SectionGeomap.Model
   def highlighted(cotoId: Id[Coto]): Boolean
 }
@@ -34,8 +34,8 @@ case class Model(
     databaseFolder: Option[String] = None, // saved in sessionStorage
     uiState: Option[UiState] = None, // saved in localStorage
 
-    // Domain aggregate root
-    domain: Domain = Domain(),
+    // Repository root
+    repo: Root = Root(),
 
     // Highlighted coto by hover
     highlight: Option[Id[Coto]] = None,

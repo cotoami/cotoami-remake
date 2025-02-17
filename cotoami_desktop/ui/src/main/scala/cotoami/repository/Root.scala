@@ -11,7 +11,7 @@ import cotoami.{Into, Msg => AppMsg}
 import cotoami.models._
 import cotoami.backend._
 
-case class Domain(
+case class Root(
     lastChangeNumber: Double = 0,
     anonymousReadEnabled: Boolean = false,
 
@@ -28,7 +28,7 @@ case class Domain(
     pinning: HashSet[Id[Coto]] = HashSet.empty,
     reordering: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def onFocusChange: Domain =
+  def onFocusChange: Root =
     copy(
       graphLoading = HashSet.empty,
       graphLoaded = HashSet.empty,
@@ -57,7 +57,7 @@ case class Domain(
       cotos.get(cotonoma.cotoId).map(cotonoma -> _)
     )
 
-  def unfocus: Domain =
+  def unfocus: Root =
     onFocusChange.copy(
       nodes = nodes.focus(None),
       cotonomas = Cotonomas(),
@@ -69,7 +69,7 @@ case class Domain(
   // Cotos
   ///////////////////////////////////////////////////////////////////////////
 
-  def deleteCoto(id: Id[Coto]): Domain = {
+  def deleteCoto(id: Id[Coto]): Root = {
     // Delete the reposts first if they exist
     cotos.repostsOf(id).foldLeft(this)(_ deleteCoto _.id)
       // then, delete the specified coto (which could be a cotonoma)
@@ -246,7 +246,7 @@ case class Domain(
   // Import
   /////////////////////////////////////////////////////////////////////////////
 
-  def setCotonomaDetails(details: CotonomaDetails): Domain =
+  def setCotonomaDetails(details: CotonomaDetails): Root =
     this
       .modify(_.nodes).using(nodes =>
         if (nodes.focusedId.map(_ != details.cotonoma.nodeId).getOrElse(false))
@@ -257,29 +257,29 @@ case class Domain(
       .modify(_.cotonomas).using(_.setCotonomaDetails(details))
       .modify(_.cotos).using(_.put(details.coto))
 
-  def importFrom(details: CotoDetails): Domain =
+  def importFrom(details: CotoDetails): Root =
     this
       .modify(_.cotos).using(_.put(details.coto))
       .modify(_.cotonomas).using(_.importFrom(details.relatedData))
       .modify(_.links).using(_.putAll(details.outgoingLinks))
 
-  def importFrom(cotonomaPair: (Cotonoma, Coto)): Domain =
+  def importFrom(cotonomaPair: (Cotonoma, Coto)): Root =
     this
       .modify(_.cotonomas).using(_.put(cotonomaPair._1))
       .modify(_.cotos).using(_.put(cotonomaPair._2))
 
-  def importFrom(cotos: PaginatedCotos): Domain =
+  def importFrom(cotos: PaginatedCotos): Root =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
       .modify(_.links).using(_.putAll(cotos.outgoingLinks))
 
-  def importFrom(cotos: GeolocatedCotos): Domain =
+  def importFrom(cotos: GeolocatedCotos): Root =
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
 
-  def importFrom(graph: CotoGraph): Domain =
+  def importFrom(graph: CotoGraph): Root =
     this
       .modify(_.graphLoaded).using(_ + graph.rootCotoId)
       .modify(_.cotos).using(_.importFrom(graph))
@@ -313,7 +313,7 @@ case class Domain(
 
   def fetchGraph: Cmd.One[AppMsg] =
     currentCotonomaId
-      .map(Domain.fetchGraphFromCotonoma)
+      .map(Root.fetchGraphFromCotonoma)
       .getOrElse(Cmd.none)
 
   def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
@@ -324,7 +324,7 @@ case class Domain(
           anyTargetMissingLinksFrom(cotoId)
       )
     )
-      Domain.fetchGraphFromCoto(cotoId)
+      Root.fetchGraphFromCoto(cotoId)
     else
       Cmd.none
 
@@ -344,9 +344,9 @@ case class Domain(
     }
 }
 
-object Domain {
+object Root {
 
-  /** Create a Domain repository root with an InitialDataset.
+  /** Create a repository root with an InitialDataset.
     *
     * @param dataset
     *   The initial dataset of this repository.
@@ -355,8 +355,8 @@ object Domain {
     *   ID can be different from `dataset.localNodeId` when the operating node
     *   is switched to a remote node.
     */
-  def apply(dataset: InitialDataset, localId: Id[Node]): Domain =
-    Domain(
+  def apply(dataset: InitialDataset, localId: Id[Node]): Root =
+    Root(
       lastChangeNumber = dataset.lastChangeNumber,
       anonymousReadEnabled = dataset.anonymousReadEnabled,
       nodes = Nodes(dataset, localId)
@@ -394,7 +394,7 @@ object Domain {
     ) extends Msg
   }
 
-  def update(msg: Msg, model: Domain): (Domain, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Root): (Root, Cmd[AppMsg]) =
     msg match {
       case Msg.NodeDetailsFetched(Right(details)) =>
         (
@@ -525,13 +525,13 @@ object Domain {
     NodeDetails.fetch(id).map(Msg.NodeDetailsFetched(_).into)
 
   def fetchCotonoma(id: Id[Cotonoma]): Cmd.One[AppMsg] =
-    CotonomaBackend.fetch(id).map(Domain.Msg.CotonomaFetched(_).into)
+    CotonomaBackend.fetch(id).map(Root.Msg.CotonomaFetched(_).into)
 
   def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
     CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)
 
   def fetchLink(id: Id[Link]): Cmd.One[AppMsg] =
-    LinkBackend.fetch(id).map(Domain.Msg.LinkFetched(_).into)
+    LinkBackend.fetch(id).map(Root.Msg.LinkFetched(_).into)
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).into)

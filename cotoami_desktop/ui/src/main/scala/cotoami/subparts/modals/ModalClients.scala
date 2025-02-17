@@ -129,11 +129,11 @@ object ModalClients {
         ),
         sectionClientNodesCount(
           model.clientNodes.totalItems,
-          context.domain.nodes
+          context.repo.nodes
         )
       ),
       div(className := "body")(
-        model.clients(context.domain.nodes) match {
+        model.clients(context.repo.nodes) match {
           case Seq() =>
             div(className := "empty")(
               "No client nodes registered yet."
@@ -199,7 +199,7 @@ object ModalClients {
           disabled := (
             model.togglingDisabled.contains(client.node.id) ||
               // Avoid disabling oneself unintentionally when operating as a parent node
-              Some(client.node.id) == context.domain.nodes.localId
+              Some(client.node.id) == context.repo.nodes.localId
           ),
           onChange := (_ =>
             dispatch(Msg.SetDisabled(client.node.id, !client.client.disabled))

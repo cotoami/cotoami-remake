@@ -77,11 +77,11 @@ object ModalNewClient {
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
-    val default = (model, context.domain.nodes, Cmd.none)
+    val default = (model, context.repo.nodes, Cmd.none)
     msg match {
       case Msg.NodeIdInput(nodeId) =>
         model.copy(nodeId = nodeId)
-          .validateNodeId(context.domain.nodes.operatingId)
+          .validateNodeId(context.repo.nodes.operatingId)
           .pipe { case (model, cmd) =>
             default.copy(_1 = model, _3 = cmd)
           }
@@ -132,7 +132,7 @@ object ModalNewClient {
             registering = false,
             generatedPassword = Some(client.password)
           ),
-          _2 = context.domain.nodes.put(client.node),
+          _2 = context.repo.nodes.put(client.node),
           _3 = ModalClients.fetchClients(0)
         )
 

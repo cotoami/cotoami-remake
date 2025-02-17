@@ -8,7 +8,7 @@ import slinky.web.SyntheticMouseEvent
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.toolButton
 import cotoami.subparts.{
@@ -33,7 +33,7 @@ object ModalNodeProfile {
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
-      context.domain.nodes.isOperating(nodeId)
+      context.repo.nodes.isOperating(nodeId)
   }
 
   object Model {
@@ -41,7 +41,7 @@ object ModalNodeProfile {
       (
         Model(nodeId),
         Cmd.Batch(
-          Domain.fetchNodeDetails(nodeId),
+          Root.fetchNodeDetails(nodeId),
           fetchClientCount
         )
       )
@@ -94,7 +94,7 @@ object ModalNodeProfile {
     )(
       "Node Profile"
     )(
-      context.domain.nodes.get(model.nodeId)
+      context.repo.nodes.get(model.nodeId)
         .map(modalContent(_, model))
         .getOrElse(s"Node ${model.nodeId} not found.")
     )
@@ -103,7 +103,7 @@ object ModalNodeProfile {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
-    val asServer = context.domain.nodes.servers.get(model.nodeId)
+    val asServer = context.repo.nodes.servers.get(model.nodeId)
     Fragment(
       div(className := "sidebar")(
         section(className := "node-icon")(
@@ -117,7 +117,7 @@ object ModalNodeProfile {
         fieldId(node),
         fieldName(node, model),
         asServer.map(fieldServerUrl),
-        context.domain.rootOf(model.nodeId).map { case (_, coto) =>
+        context.repo.rootOf(model.nodeId).map { case (_, coto) =>
           fieldDescription(coto, model)
         },
         Option.when(model.isOperatingNode()) {
@@ -213,7 +213,7 @@ object ModalNodeProfile {
       labelFor = Some("node-profile-client-nodes")
     )(
       div(className := "input-with-tools")(
-        sectionClientNodesCount(model.clientCount, context.domain.nodes),
+        sectionClientNodesCount(model.clientCount, context.repo.nodes),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
             buttonEdit(_ =>
@@ -240,7 +240,7 @@ object ModalNodeProfile {
       input(
         `type` := "checkbox",
         role := "switch",
-        checked := context.domain.anonymousReadEnabled,
+        checked := context.repo.anonymousReadEnabled,
         disabled := model.enablingAnonymousRead,
         onChange := (_ => ())
       )

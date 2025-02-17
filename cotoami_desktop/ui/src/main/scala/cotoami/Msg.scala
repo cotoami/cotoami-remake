@@ -60,7 +60,7 @@ object Msg {
 
   // Domain
   case object ReloadDomain extends Msg
-  case class DomainMsg(submsg: Domain.Msg) extends Msg
+  case class DomainMsg(submsg: Root.Msg) extends Msg
 
   // Map
   case object OpenGeomap extends Msg

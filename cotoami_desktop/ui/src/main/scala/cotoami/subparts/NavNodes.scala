@@ -15,7 +15,7 @@ object NavNodes {
       model: Model,
       uiState: UiState
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val nodes = model.domain.nodes
+    val nodes = model.repo.nodes
     nav(
       className := optionalClasses(
         Seq(

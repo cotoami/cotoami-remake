@@ -33,7 +33,7 @@ object NavCotonomas {
     def fetchRecent()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingRecent = true),
-        context.domain.fetchRecentCotonomas(0)
+        context.repo.fetchRecentCotonomas(0)
           .map(Msg.RecentFetched(_).into)
       )
 
@@ -45,14 +45,14 @@ object NavCotonomas {
       else
         (
           copy(loadingRecent = true),
-          context.domain.fetchMoreRecentCotonomas
+          context.repo.fetchMoreRecentCotonomas
             .map(Msg.RecentFetched(_).into)
         )
 
     def fetchSubs()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
         copy(loadingSubs = true),
-        context.domain.fetchSubCotonomas(0)
+        context.repo.fetchSubCotonomas(0)
           .map(Msg.SubsFetched(_).into)
       )
 
@@ -64,7 +64,7 @@ object NavCotonomas {
       else
         (
           copy(loadingSubs = true),
-          context.domain.fetchMoreSubCotonomas
+          context.repo.fetchMoreSubCotonomas
             .map(Msg.SubsFetched(_).into)
         )
   }
@@ -91,7 +91,7 @@ object NavCotonomas {
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Cotonomas, Cmd[AppMsg]) = {
-    val default = (model, context.domain.cotonomas, Cmd.none)
+    val default = (model, context.repo.cotonomas, Cmd.none)
     msg match {
       case Msg.FetchMoreRecent =>
         model.fetchMoreRecent().pipe { case (model, cmd) =>
@@ -101,7 +101,7 @@ object NavCotonomas {
       case Msg.RecentFetched(Right(page)) =>
         default.copy(
           _1 = model.copy(loadingRecent = false),
-          _2 = context.domain.cotonomas.appendPageOfRecent(page)
+          _2 = context.repo.cotonomas.appendPageOfRecent(page)
         )
 
       case Msg.RecentFetched(Left(e)) =>
@@ -118,7 +118,7 @@ object NavCotonomas {
       case Msg.SubsFetched(Right(page)) =>
         default.copy(
           _1 = model.copy(loadingSubs = false),
-          _2 = context.domain.cotonomas.appendPageOfSubs(page)
+          _2 = context.repo.cotonomas.appendPageOfSubs(page)
         )
 
       case Msg.SubsFetched(Left(e)) =>
@@ -153,11 +153,11 @@ object NavCotonomas {
       model: Model,
       currentNode: Node
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val domain = context.domain
-    val recentCotonomas = context.domain.recentCotonomasWithoutRoot
+    val repo = context.repo
+    val recentCotonomas = context.repo.recentCotonomasWithoutRoot
     nav(className := "cotonomas header-and-body fill")(
       header()(
-        if (domain.cotonomas.focused.isEmpty) {
+        if (repo.cotonomas.focused.isEmpty) {
           div(className := "cotonoma home focused")(
             materialSymbol("home"),
             currentNode.name
@@ -175,13 +175,13 @@ object NavCotonomas {
             currentNode.name
           )
         },
-        domain.nodes.focused.map(sectionNodeTools(_, model))
+        repo.nodes.focused.map(sectionNodeTools(_, model))
       ),
       section(className := "cotonomas body")(
         ScrollArea(
           onScrollToBottom = Some(() => dispatch(Msg.FetchMoreRecent))
         )(
-          domain.cotonomas.focused.map(sectionCurrent(_, model)),
+          repo.cotonomas.focused.map(sectionCurrent(_, model)),
           Option.when(!recentCotonomas.isEmpty)(
             sectionRecent(recentCotonomas)
           ),
@@ -198,8 +198,8 @@ object NavCotonomas {
       node: Node,
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val domain = context.domain
-    val status = domain.nodes.parentStatus(node.id)
+    val repo = context.repo
+    val status = repo.nodes.parentStatus(node.id)
     val statusView = status.flatMap(viewParentStatus(_))
     section(className := "node-tools")(
       statusView.map(view =>
@@ -256,8 +256,8 @@ object NavCotonomas {
             )
         ),
         Option.when(
-          !domain.nodes.operatingRemote &&
-            domain.nodes.parentConnection(node.id)
+          !repo.nodes.operatingRemote &&
+            repo.nodes.parentConnection(node.id)
               .map(_.asOwner).getOrElse(false)
         ) {
           toolButton(
@@ -267,7 +267,7 @@ object NavCotonomas {
             onClick = _ =>
               dispatch(
                 Modal.Msg.OpenModal(
-                  Modal.OperateAs(domain.nodes.operating.get, node)
+                  Modal.OperateAs(repo.nodes.operating.get, node)
                 )
               )
           )
@@ -280,8 +280,8 @@ object NavCotonomas {
       focusedCotonoma: Cotonoma,
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val domain = context.domain
-    val superCotonomas = domain.superCotonomasWithoutRoot
+    val repo = context.repo
+    val superCotonomas = repo.superCotonomasWithoutRoot
     section(className := "current")(
       h2()("Current"),
       ul(
@@ -301,9 +301,9 @@ object NavCotonomas {
         ),
         li(key := "sub")(
           ul(className := "sub-cotonomas")(
-            domain.cotonomas.subs.map(liCotonoma(_)) ++
+            repo.cotonomas.subs.map(liCotonoma(_)) ++
               Option.when(
-                domain.cotonomas.subIds.nextPageIndex.isDefined
+                repo.cotonomas.subIds.nextPageIndex.isDefined
               )(
                 li(key := "more-button")(
                   button(
@@ -339,11 +339,11 @@ object NavCotonomas {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(
       className := optionalClasses(
-        Seq(("focused", context.domain.cotonomas.isFocusing(cotonoma.id)))
+        Seq(("focused", context.repo.cotonomas.isFocusing(cotonoma.id)))
       ),
       key := cotonoma.id.uuid
     )(
-      if (context.domain.cotonomas.isFocusing(cotonoma.id)) {
+      if (context.repo.cotonomas.isFocusing(cotonoma.id)) {
         span(className := "cotonoma")(cotonomaLabel(cotonoma))
       } else {
         a(
@@ -370,7 +370,7 @@ object NavCotonomas {
       cotonoma: Cotonoma
   )(implicit context: Context): ReactElement =
     Fragment(
-      context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+      context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
       cotonoma.name
     )
 }

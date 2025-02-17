@@ -10,7 +10,7 @@ import fui.Cmd
 import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repository.{Cotonomas, Domain, Nodes}
+import cotoami.repository.{Cotonomas, Nodes, Root}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.{imgNode, Modal, ViewCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
@@ -32,23 +32,23 @@ object ModalRepost {
       reposting: Boolean = false,
       error: Option[String] = None
   ) {
-    def targetNodeIds(domain: Domain): js.Array[Id[Node]] =
+    def targetNodeIds(repo: Root): js.Array[Id[Node]] =
       js.Array(
         // You can always repost a coto to the operating node.
-        domain.nodes.operatingId,
+        repo.nodes.operatingId,
         // You can repost a coto to the same node in which the coto has posted
         // only if you have a permission to post to the node.
-        Option.when(domain.nodes.canPostTo(coto.nodeId))(coto.nodeId)
+        Option.when(repo.nodes.canPostTo(coto.nodeId))(coto.nodeId)
       ).flatten.distinct
 
     def readyToRepost: Boolean = dest.isDefined
   }
 
   object Model {
-    def apply(coto: Coto, domain: Domain): Option[Model] =
-      domain.cotos.getOriginal(coto) match {
+    def apply(coto: Coto, repo: Root): Option[Model] =
+      repo.cotos.getOriginal(coto) match {
         case Some(originalCoto) =>
-          Some(Model(coto, originalCoto, domain.cotonomas.posted(originalCoto)))
+          Some(Model(coto, originalCoto, repo.cotonomas.posted(originalCoto)))
         case _ => None
       }
   }
@@ -100,7 +100,7 @@ object ModalRepost {
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Cotonomas, Cmd[AppMsg]) = {
-    val default = (model, context.domain.cotonomas, Cmd.none)
+    val default = (model, context.repo.cotonomas, Cmd.none)
     msg match {
       case Msg.CotonomaQueryInput(query) =>
         if (query.isBlank())
@@ -110,7 +110,7 @@ object ModalRepost {
             _1 = model.copy(query = query),
             _3 = CotonomaBackend.fetchByPrefix(
               query,
-              Some(model.targetNodeIds(context.domain))
+              Some(model.targetNodeIds(context.repo))
             ).map(Msg.CotonomasFetched(query, _).into)
           )
 
@@ -119,7 +119,7 @@ object ModalRepost {
         // add an option to create a new cotonoma with such a name and
         // repost the coto to it.
         val newCotonoma =
-          model.targetNodeIds(context.domain).map(nodeId =>
+          model.targetNodeIds(context.repo).map(nodeId =>
             if (
               !cotonomas.exists(cotonoma =>
                 cotonoma.name == query && cotonoma.nodeId == nodeId
@@ -162,7 +162,7 @@ object ModalRepost {
           case Some(dest: ExistingCotonoma) =>
             default.copy(
               _1 = model.copy(reposting = true),
-              _2 = context.domain.cotonomas.put(dest.cotonoma),
+              _2 = context.repo.cotonomas.put(dest.cotonoma),
               _3 = CotoBackend.repost(model.originalCoto.id, dest.cotonoma.id)
                 .map(Msg.Reposted(_).into)
             )
@@ -170,7 +170,7 @@ object ModalRepost {
           case Some(dest: NewCotonoma) =>
             default.copy(
               _1 = model.copy(reposting = true),
-              _3 = context.domain.nodes.get(Id(dest.targetNodeId))
+              _3 = context.repo.nodes.get(Id(dest.targetNodeId))
                 .flatMap(_.rootCotonomaId)
                 .map(cotonomaId =>
                   CotonomaBackend.post(dest.name, None, None, cotonomaId)
@@ -184,7 +184,7 @@ object ModalRepost {
 
       case Msg.CotonomaCreated(Right((cotonoma, _))) =>
         default.copy(
-          _2 = context.domain.cotonomas.put(cotonoma),
+          _2 = context.repo.cotonomas.put(cotonoma),
           _3 = CotoBackend.repost(model.originalCoto.id, cotonoma.id)
             .map(Msg.Reposted(_).into)
         )
@@ -201,7 +201,7 @@ object ModalRepost {
         default.copy(
           _1 = model.copy(
             originalCoto = original,
-            alreadyPostedIn = context.domain.cotonomas.posted(original),
+            alreadyPostedIn = context.repo.cotonomas.posted(original),
             reposting = false,
             query = "",
             options = Seq.empty,
@@ -244,7 +244,7 @@ object ModalRepost {
           onInputChange =
             Some(input => dispatch(Msg.CotonomaQueryInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
-          formatOptionLabel = Some(divSelectOption(context.domain.nodes, _)),
+          formatOptionLabel = Some(divSelectOption(context.repo.nodes, _)),
           isLoading = model.optionsLoading,
           isClearable = true,
           autoFocus = true,
@@ -295,7 +295,7 @@ object ModalRepost {
   private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
     article(className := "coto embedded")(
       header()(
-        ViewCoto.addressAuthor(coto, context.domain.nodes)
+        ViewCoto.addressAuthor(coto, context.repo.nodes)
       ),
       div(className := "body")(
         ScrollArea()(
@@ -313,9 +313,9 @@ object ModalRepost {
         ul()(
           model.alreadyPostedIn.reverse.map(cotonoma =>
             li()(
-              context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+              context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
               span(className := "cotonoma-name")(cotonoma.name),
-              spanRootCotonomaMark(cotonoma, context.domain.nodes)
+              spanRootCotonomaMark(cotonoma, context.repo.nodes)
             )
           ): _*
         )

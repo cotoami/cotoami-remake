@@ -9,7 +9,7 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link, Node}
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.subparts.modals._
 
 sealed trait Modal
@@ -113,8 +113,8 @@ object Modal {
 
   case class Repost(model: ModalRepost.Model) extends Modal
   object Repost {
-    def apply(coto: Coto, domain: Domain): Option[Repost] =
-      ModalRepost.Model(coto, domain).map(Repost(_))
+    def apply(coto: Coto, repository: Root): Option[Repost] =
+      ModalRepost.Model(coto, repository).map(Repost(_))
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ object Modal {
             .pipe { case (modal, nodes, cmds) =>
               (
                 updateModal(Incorporate(modal), model)
-                  .modify(_.domain.nodes).setTo(nodes),
+                  .modify(_.repo.nodes).setTo(nodes),
                 cmds
               )
             }
@@ -214,8 +214,8 @@ object Modal {
 
       case Msg.OperateAsMsg(modalMsg) =>
         stack.get[OperateAs].map { case OperateAs(modal) =>
-          ModalOperateAs.update(modalMsg, modal, model.domain).pipe {
-            case (modal, cmds) => (updateModal(OperateAs(modal), model), cmds)
+          ModalOperateAs.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(OperateAs(modal), model), cmds)
           }
         }
 
@@ -232,7 +232,7 @@ object Modal {
             case (modal, nodes, cmds) =>
               (
                 updateModal(NodeIcon(modal), model)
-                  .modify(_.domain.nodes).setTo(nodes),
+                  .modify(_.repo.nodes).setTo(nodes),
                 cmds
               )
           }
@@ -251,7 +251,7 @@ object Modal {
             case (modal, nodes, cmds) =>
               (
                 updateModal(NewClient(modal), model)
-                  .modify(_.domain.nodes).setTo(nodes),
+                  .modify(_.repo.nodes).setTo(nodes),
                 cmds
               )
           }
@@ -263,7 +263,7 @@ object Modal {
             case (modal, cotonomas, cmds) =>
               (
                 updateModal(Repost(modal), model)
-                  .modify(_.domain.cotonomas).setTo(cotonomas),
+                  .modify(_.repo.cotonomas).setTo(cotonomas),
                 cmds
               )
           }

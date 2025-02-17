@@ -7,7 +7,6 @@ import slinky.web.html._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
-import cotoami.repository.Domain
 import cotoami.backend.{ErrorJson, InitialDataset}
 import cotoami.components.materialSymbol
 import cotoami.subparts.{spanNode, Modal}
@@ -42,15 +41,16 @@ object ModalOperateAs {
 
   def update(
       msg: Msg,
-      model: Model,
-      domain: Domain
+      model: Model
+  )(implicit
+      context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.Switch =>
         (
           model.copy(switching = true, switchingError = None),
           InitialDataset.switchOperatingNodeTo(
-            Option.when(!domain.nodes.isLocal(model.switchingTo.id))(
+            Option.when(!context.repo.nodes.isLocal(model.switchingTo.id))(
               model.switchingTo.id
             )
           ).map(Msg.Switched(_).into)
@@ -117,7 +117,7 @@ object ModalOperateAs {
   ): ReactElement =
     section(className := elementClasses)(
       spanNode(node),
-      Option.when(context.domain.nodes.isLocal(node.id)) {
+      Option.when(context.repo.nodes.isLocal(node.id)) {
         span(className := "is-local")("(local)")
       }
     )

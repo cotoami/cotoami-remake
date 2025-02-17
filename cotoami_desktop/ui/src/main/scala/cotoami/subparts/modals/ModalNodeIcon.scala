@@ -48,7 +48,7 @@ object ModalNodeIcon {
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
-    val default = (model, context.domain.nodes, Cmd.none)
+    val default = (model, context.repo.nodes, Cmd.none)
     msg match {
       case Msg.ImageInput(image) =>
         default.copy(_1 =
@@ -88,7 +88,7 @@ object ModalNodeIcon {
       case Msg.Saved(Right(node)) =>
         default.copy(
           _1 = model.copy(saving = false),
-          _2 = context.domain.nodes.put(node),
+          _2 = context.repo.nodes.put(node),
           _3 = Modal.close(classOf[Modal.NodeIcon])
         )
 

@@ -386,7 +386,7 @@ object EditorCoto {
     def update(msg: Msg, model: Model)(implicit
         context: Context
     ): (Model, Cmd[Msg]) =
-      (msg, context.domain.currentCotonoma) match {
+      (msg, context.repo.currentCotonoma) match {
         case (Msg.CotonomaNameInput(name), Some(cotonoma)) =>
           model.copy(nameInput = name)
             .validate(cotonoma.nodeId)

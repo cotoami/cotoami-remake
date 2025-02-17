@@ -178,7 +178,7 @@ object ModalCotoEditor {
       }
 
       case Msg.Save =>
-        model.save(context.geomap, context.domain.cotonomas).pipe {
+        model.save(context.geomap, context.repo.cotonomas).pipe {
           case (model, cmd) => default.copy(_1 = model, _3 = cmd)
         }
 

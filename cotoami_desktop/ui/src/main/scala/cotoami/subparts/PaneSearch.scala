@@ -9,7 +9,7 @@ import com.softwaremill.quicklens._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds}
-import cotoami.repository.Domain
+import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, PaginatedCotos}
 import cotoami.components.{materialSymbol, ScrollArea}
 
@@ -94,8 +94,8 @@ object PaneSearch {
         .modify(_.fetchNumber).setTo(fetchNumber)
         .modify(_.loading).setTo(false)
 
-    def cotos(domain: Domain): Seq[Coto] =
-      cotoIds.order.map(domain.cotos.get).flatten
+    def cotos(repo: Root): Seq[Coto] =
+      cotoIds.order.map(repo.cotos.get).flatten
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -121,8 +121,8 @@ object PaneSearch {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Domain, Cmd[AppMsg]) = {
-    val default = (model, context.domain, Cmd.none)
+  ): (Model, Root, Cmd[AppMsg]) = {
+    val default = (model, context.repo, Cmd.none)
     msg match {
       case Msg.QueryInput(query) =>
         model.inputQuery(query).pipe { case (model, cmd) =>
@@ -151,7 +151,7 @@ object PaneSearch {
         if (number == model.fetchNumber)
           default.copy(
             _1 = model.appendPage(cotos, query, number),
-            _2 = context.domain.importFrom(cotos)
+            _2 = context.repo.importFrom(cotos)
           )
         else
           default
@@ -198,7 +198,7 @@ object PaneSearch {
         ScrollArea(
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore))
         )(
-          (model.cotos(context.domain).map(sectionCoto) :+
+          (model.cotos(context.repo).map(sectionCoto) :+
             div(
               className := "more",
               aria - "busy" := model.loading.toString()
@@ -210,18 +210,18 @@ object PaneSearch {
   private def sectionCoto(
       coto: Coto
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val domain = context.domain
+    val repo = context.repo
     section(className := "coto flow-entry")(
       ViewCoto.ulParents(
-        domain.parentsOf(coto.id),
+        repo.parentsOf(coto.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       ViewCoto.article(coto, dispatch)(
         ToolbarCoto(coto),
         header()(
           ViewCoto.divAttributes(coto),
-          Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
-            ViewCoto.addressAuthor(coto, domain.nodes)
+          Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+            ViewCoto.addressAuthor(coto, repo.nodes)
           }
         ),
         div(className := "body")(

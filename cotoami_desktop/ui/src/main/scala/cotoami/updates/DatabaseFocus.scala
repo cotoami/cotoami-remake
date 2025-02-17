@@ -14,21 +14,21 @@ object DatabaseFocus {
 
   def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd.Batch[Msg]) =
     model
-      .modify(_.domain).using(_.unfocus)
-      .modify(_.domain.nodes).using(_.focus(nodeId))
+      .modify(_.repo).using(_.unfocus)
+      .modify(_.repo.nodes).using(_.focus(nodeId))
       .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
       .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           model.navCotonomas.fetchRecent()(model)
-        val (timeline, fetchTimeline) = model.timeline.fetchFirst(model.domain)
+        val (timeline, fetchTimeline) = model.timeline.fetchFirst(model.repo)
         (
           model.copy(navCotonomas = navCotonomas, timeline = timeline),
           Cmd.Batch(
             fetchRecentCotonomas,
             fetchTimeline,
-            model.domain.fetchGraph,
+            model.repo.fetchGraph,
             Browser.send(SectionGeomap.Msg.DatabaseFocusChanged.into)
           )
         )
@@ -41,16 +41,16 @@ object DatabaseFocus {
   ): (Model, Cmd.Batch[Msg]) = {
     val shouldRecentFetchCotonomas =
       // the focused node is changed
-      nodeId != model.domain.nodes.focusedId ||
+      nodeId != model.repo.nodes.focusedId ||
         // or no recent cotonomas has been loaded yet
         // (which means the page being reloaded)
-        model.domain.cotonomas.recentIds.isEmpty
+        model.repo.cotonomas.recentIds.isEmpty
     model
-      .modify(_.domain).using(_.onFocusChange)
-      .modify(_.domain.nodes).using(_.focus(nodeId))
-      .modify(_.domain.cotonomas).using(_.focus(Some(cotonomaId)))
-      .modify(_.domain.cotos).using(_.clear())
-      .modify(_.domain.links).setTo(Links())
+      .modify(_.repo).using(_.onFocusChange)
+      .modify(_.repo.nodes).using(_.focus(nodeId))
+      .modify(_.repo.cotonomas).using(_.focus(Some(cotonomaId)))
+      .modify(_.repo.cotos).using(_.clear())
+      .modify(_.repo.links).setTo(Links())
       .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
       .modify(_.flowInput).using(_.onFocusChange)
@@ -60,7 +60,7 @@ object DatabaseFocus {
             model.navCotonomas.fetchRecent()(model)
           else
             (model.navCotonomas, Cmd.none)
-        val (timeline, fetchTimeline) = model.timeline.fetchFirst(model.domain)
+        val (timeline, fetchTimeline) = model.timeline.fetchFirst(model.repo)
         (
           model.copy(navCotonomas = navCotonomas, timeline = timeline),
           Cmd.Batch(
@@ -68,7 +68,7 @@ object DatabaseFocus {
               .map(Msg.FocusedCotonomaDetailsFetched),
             fetchRecentCotonomas,
             fetchTimeline,
-            model.domain.fetchGraph
+            model.repo.fetchGraph
           )
         )
       }
@@ -80,9 +80,9 @@ object DatabaseFocus {
       model: Model
   ): (Model, Cmd.One[Msg]) = {
     model
-      .modify(_.domain.cotos).using(_.focus(cotoId))
+      .modify(_.repo.cotos).using(_.focus(cotoId))
       .pipe { model =>
-        model.domain.cotos.focused match {
+        model.repo.cotos.focused match {
           case Some(focusedCoto) =>
             (
               focusedCoto.geolocation match {
@@ -95,7 +95,7 @@ object DatabaseFocus {
                   )
                 case None => model
               },
-              model.domain.lazyFetchGraphFrom(cotoId)
+              model.repo.lazyFetchGraphFrom(cotoId)
             )
           case None => (model, Cmd.none)
         }

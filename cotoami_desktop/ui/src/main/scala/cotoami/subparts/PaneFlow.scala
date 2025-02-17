@@ -18,7 +18,7 @@ object PaneFlow {
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "flow fill")(
-      model.domain.cotos.focused.map(SectionCotoDetails(_)(model, dispatch))
+      model.repo.cotos.focused.map(SectionCotoDetails(_)(model, dispatch))
         .getOrElse(timeline(model, uiState))
     )
 
@@ -28,9 +28,9 @@ object PaneFlow {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Fragment(
       (
-        model.domain.nodes.operating,
-        model.domain.currentCotonoma,
-        model.domain.canPost
+        model.repo.nodes.operating,
+        model.repo.currentCotonoma,
+        model.repo.canPost
       ) match {
         case (Some(operatingNode), Some(cotonoma), true) =>
           Some(

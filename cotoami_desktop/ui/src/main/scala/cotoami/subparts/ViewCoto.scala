@@ -32,7 +32,7 @@ object ViewCoto {
         Seq(
           ("coto", true),
           ("highlighted", context.highlighted(coto.id)),
-          ("being-deleted", context.domain.beingDeleted(coto.id))
+          ("being-deleted", context.repo.beingDeleted(coto.id))
         ) ++ classes
       ),
       onMouseEnter := (_ => dispatch(AppMsg.Highlight(coto.id))),
@@ -55,13 +55,13 @@ object ViewCoto {
       ulOtherCotonomas(coto),
       buttonDateTimeRange(coto),
       buttonGeolocation(coto),
-      Option.when(context.domain.pinned(coto.id)) {
+      Option.when(context.repo.pinned(coto.id)) {
         div(className := "pinned", title := "Pinned")(
           materialSymbol("push_pin")
         )
       },
-      Option.when(!context.domain.nodes.isOperating(coto.nodeId)) {
-        val connected = context.domain.nodes.reachable(coto.nodeId)
+      Option.when(!context.repo.nodes.isOperating(coto.nodeId)) {
+        val connected = context.repo.nodes.reachable(coto.nodeId)
         div(
           className := optionalClasses(
             Seq(
@@ -72,7 +72,7 @@ object ViewCoto {
           title := (if (connected) "Remote (connected)"
                     else "Remote (disconnected)")
         )(
-          context.domain.nodes.get(coto.nodeId).map(imgNode(_))
+          context.repo.nodes.get(coto.nodeId).map(imgNode(_))
         )
       }
     )
@@ -83,12 +83,12 @@ object ViewCoto {
     ul(className := "other-cotonomas")(
       coto.postedInIds
         .filter(id =>
-          context.domain.cotonomas.focusedId match {
+          context.repo.cotonomas.focusedId match {
             case Some(focusedId) => id != focusedId
-            case None            => !context.domain.nodes.isCurrentNodeRoot(id)
+            case None            => !context.repo.nodes.isCurrentNodeRoot(id)
           }
         )
-        .map(context.domain.cotonomas.get)
+        .map(context.repo.cotonomas.get)
         .flatten
         .reverse
         .map(cotonoma =>
@@ -110,7 +110,7 @@ object ViewCoto {
       collapsibleContentOpened: Boolean = false
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "content")(
-      context.domain.cotonomas.asCotonoma(coto)
+      context.repo.cotonomas.asCotonoma(coto)
         .map(sectionCotonomaLabel)
         .getOrElse(sectionCotoContent(coto, collapsibleContentOpened))
     )
@@ -127,7 +127,7 @@ object ViewCoto {
           dispatch(AppMsg.FocusCotonoma(cotonoma))
         })
       )(
-        context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+        context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
         cotonoma.name
       )
     )
@@ -137,10 +137,10 @@ object ViewCoto {
       collapsibleContentOpened: Boolean = false
   )(implicit context: Context): ReactElement =
     div(className := "content")(
-      context.domain.cotonomas.asCotonoma(coto).map(cotonoma =>
+      context.repo.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-label")(
           span(className := "cotonoma")(
-            context.domain.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
             cotonoma.name
           )
         )
@@ -154,7 +154,7 @@ object ViewCoto {
       post.nameAsCotonoma.map(name =>
         section(className := "cotonoma-content")(
           span(className := "cotonoma")(
-            context.domain.nodes.get(post.postedIn.nodeId).map(imgNode(_)),
+            context.repo.nodes.get(post.postedIn.nodeId).map(imgNode(_)),
             name
           )
         )
@@ -281,7 +281,7 @@ object ViewCoto {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
-    Option.when(context.domain.links.anyFrom(coto.id)) {
+    Option.when(context.repo.links.anyFrom(coto.id)) {
       div(className := "links")(
         toolButton(
           symbol = "arrow_forward",

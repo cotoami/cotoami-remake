@@ -85,7 +85,7 @@ object ModalIncorporate {
   )(implicit
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) = {
-    val nodes = context.domain.nodes
+    val nodes = context.repo.nodes
     val default = (model, nodes, Cmd.none)
     msg match {
       case Msg.HelpIntro(display) =>
@@ -218,7 +218,7 @@ object ModalIncorporate {
           model.helpConnect,
           () => dispatch(Msg.HelpConnect(false)),
           context.i18n.help.ModalIncorporate_connect(
-            context.domain.nodes.operatingId.map(_.uuid).getOrElse("")
+            context.repo.nodes.operatingId.map(_.uuid).getOrElse("")
           )
         ),
 

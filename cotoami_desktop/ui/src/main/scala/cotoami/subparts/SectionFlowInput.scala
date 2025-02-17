@@ -116,7 +116,7 @@ object SectionFlowInput {
       context: Context
   ): (Model, Geomap, WaitingPosts, Cmd[AppMsg]) = {
     val default = (model, context.geomap, waitingPosts, Cmd.none)
-    (msg, model.form, context.domain.currentCotonoma) match {
+    (msg, model.form, context.repo.currentCotonoma) match {
       case (Msg.SetCotoForm, _, _) =>
         model.copy(form = CotoForm.Model()) match {
           case model =>
@@ -369,7 +369,7 @@ object SectionFlowInput {
           dispatch(AppMsg.FocusCoto(currentCotonoma.cotoId))
         )
       )(
-        context.domain.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
+        context.repo.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
         currentCotonoma.name
       ),
       section(className := "coto-type-switch")(
