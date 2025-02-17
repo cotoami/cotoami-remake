@@ -154,9 +154,18 @@ impl<'a> DatabaseSession<'a> {
     pub fn set_image_max_size(&self, size: Option<i32>, operator: &Operator) -> Result<()> {
         operator.requires_to_be_owner()?;
         self.update_local_node(|local_node| {
-            let mut update_local = local_node.to_update();
-            update_local.image_max_size = Some(size);
-            self.write_transaction(local_ops::update(&update_local))
+            let mut update = local_node.to_update();
+            update.image_max_size = Some(size);
+            self.write_transaction(local_ops::update(&update))
+        })
+    }
+
+    pub fn enable_anonymous_read(&self, enable: bool, operator: &Operator) -> Result<()> {
+        operator.requires_to_be_owner()?;
+        self.update_local_node(|local_node| {
+            let mut update = local_node.to_update();
+            update.enable_anonymous_read = Some(enable);
+            self.write_transaction(local_ops::update(&update))
         })
     }
 
