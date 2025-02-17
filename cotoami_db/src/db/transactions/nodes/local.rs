@@ -146,7 +146,8 @@ impl<'a> DatabaseSession<'a> {
         }
     }
 
-    pub fn set_image_max_size(&self, size: Option<i32>) -> Result<()> {
+    pub fn set_image_max_size(&self, size: Option<i32>, operator: &Operator) -> Result<()> {
+        operator.requires_to_be_owner()?;
         self.update_local_node(|local_node| {
             let mut update_local = local_node.to_update();
             update_local.image_max_size = Some(size);

@@ -65,7 +65,8 @@ impl NodeState {
 
             // Update the LocalNode settings.
             if local_node.image_max_size != config.image_max_size {
-                ds.set_image_max_size(config.image_max_size)?;
+                let opr = db.globals().local_node_as_operator()?;
+                ds.set_image_max_size(config.image_max_size, &opr)?;
                 debug!(
                     "image_max_size has been updated to {:?}",
                     config.image_max_size
