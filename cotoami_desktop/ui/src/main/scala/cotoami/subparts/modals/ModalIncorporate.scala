@@ -268,19 +268,7 @@ object ModalIncorporate {
       // Node preview
       section(className := "node-preview")(
         section(className := "node")(spanNode(nodeSession.server)),
-        nodeSession.asChild.map(child =>
-          section(className := "child-privileges")(
-            "Your privileges to this node: ",
-            span(className := "privileges")(
-              if (child.asOwner)
-                "owner"
-              else if (child.canEditLinks)
-                "post, edit links"
-              else
-                "post"
-            )
-          )
-        ),
+        sectionChildPrivileges(nodeSession),
         nodeSession.serverRoot.map { case (_, coto) =>
           ViewCoto.sectionCotonomaContent(coto)
             .map(section(className := "node-description")(_))
@@ -300,6 +288,26 @@ object ModalIncorporate {
           aria - "busy" := model.incorporating.toString(),
           onClick := (e => dispatch(Msg.Incorporate))
         )("Incorporate")
+      )
+    )
+
+  private def sectionChildPrivileges(
+      nodeSession: ClientNodeSession
+  ): ReactElement =
+    section(className := "child-privileges")(
+      "You: ",
+      span(className := "privileges")(
+        nodeSession.asChild match {
+          case Some(child) => {
+            if (child.asOwner)
+              "are an owner"
+            else if (child.canEditLinks)
+              "can post, edit links"
+            else
+              "can post"
+          }
+          case None => "are an anonymous read-only client"
+        }
       )
     )
 }
