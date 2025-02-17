@@ -276,18 +276,18 @@ object ModalIncorporate {
       nodeSession: ClientNodeSession
   ): ReactElement =
     section(className := "child-privileges")(
-      "You: ",
+      "Your privileges: ",
       span(className := "privileges")(
         nodeSession.asChild match {
           case Some(child) => {
             if (child.asOwner)
-              "are an owner"
+              "an owner"
             else if (child.canEditLinks)
-              "can post, edit links"
+              "post, edit links"
             else
-              "can post"
+              "post"
           }
-          case None => "are an anonymous read-only client"
+          case None => "an anonymous read-only client"
         }
       )
     )
