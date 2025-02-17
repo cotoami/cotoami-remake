@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use cotoami_db::prelude::*;
+use tokio::task::spawn_blocking;
 
 use crate::{service::ServiceError, state::NodeState};
 
@@ -21,5 +22,22 @@ impl NodeState {
     ) -> Result<Node, ServiceError> {
         self.change_local(move |ds| ds.set_local_node_icon(icon.as_ref(), operator.as_ref()))
             .await
+    }
+
+    pub async fn enable_anonymous_read(
+        self,
+        enable: bool,
+        operator: Arc<Operator>,
+    ) -> Result<(), ServiceError> {
+        if !enable {
+            self.anonymous_conns().disconnect_all();
+        }
+
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            db.new_session()?.enable_anonymous_read(enable, &operator)?;
+            Ok(())
+        })
+        .await?
     }
 }
