@@ -274,6 +274,12 @@ impl ClientConnections {
         }
     }
 
+    pub fn disconnect_all(&self) {
+        for client_id in self.0.read().keys() {
+            self.disconnect(client_id);
+        }
+    }
+
     pub fn active_client(&self, client_id: &Id<Node>) -> Option<ActiveClient> {
         self.0.read().get(client_id).map(|conn| conn.client.clone())
     }
