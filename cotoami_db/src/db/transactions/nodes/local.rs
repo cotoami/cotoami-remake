@@ -164,7 +164,7 @@ impl<'a> DatabaseSession<'a> {
         operator.requires_to_be_owner()?;
         self.update_local_node(|local_node| {
             let mut update = local_node.to_update();
-            update.enable_anonymous_read = Some(enable);
+            update.anonymous_read_enabled = Some(enable);
             self.write_transaction(local_ops::update(&update))
         })
     }

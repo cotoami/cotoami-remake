@@ -73,7 +73,7 @@ CREATE TABLE local_node (
   image_max_size INTEGER,
 
   -- TRUE if this node allows anonymous clients to read the cotos and links.
-  enable_anonymous_read INTEGER DEFAULT FALSE NOT NULL,
+  anonymous_read_enabled INTEGER DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 );

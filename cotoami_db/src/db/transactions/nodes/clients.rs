@@ -111,7 +111,7 @@ impl<'a> DatabaseSession<'a> {
         }
 
         // Anonymous read enabled?
-        if local_node.enable_anonymous_read {
+        if local_node.anonymous_read_enabled {
             return Ok(Some(ClientSession::Operator(Operator::Anonymous)));
         }
 

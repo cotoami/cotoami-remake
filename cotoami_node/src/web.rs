@@ -289,7 +289,7 @@ async fn require_session(
             .db()
             .globals()
             .try_read_local_node()?
-            .enable_anonymous_read
+            .anonymous_read_enabled
         {
             "".into() // dummy token as an anonymous client
         } else {

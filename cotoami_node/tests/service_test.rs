@@ -49,14 +49,14 @@ where
     // Command: EnableAnonymousRead
     /////////////////////////////////////////////////////////////////////////////
 
-    assert_that!(backend_local.enable_anonymous_read, eq(false));
+    assert_that!(backend_local.anonymous_read_enabled, eq(false));
 
     let request = Command::EnableAnonymousRead { enable: true }.into_request();
     let enabled = service.call(request).await?.content::<bool>()?;
     assert_that!(enabled, eq(true));
 
     let (backend_local, backend_node) = backend_ds.local_node_pair(&backend_owner)?;
-    assert_that!(backend_local.enable_anonymous_read, eq(true));
+    assert_that!(backend_local.anonymous_read_enabled, eq(true));
 
     /////////////////////////////////////////////////////////////////////////////
     // Command: AddClient

@@ -19,7 +19,7 @@ impl NodeState {
         mut input: CreateClientNodeSession,
     ) -> Result<ClientNodeSession, ServiceError> {
         let (local, local_node) = self.local_node_pair().await?;
-        match (input.password.take(), local.enable_anonymous_read) {
+        match (input.password.take(), local.anonymous_read_enabled) {
             (Some(password), _) => self.do_create_session(input, password, local_node).await,
             (None, true) => self.handle_anonymous(input, local_node).await,
             (None, false) => return Err(ServiceError::Unauthorized),

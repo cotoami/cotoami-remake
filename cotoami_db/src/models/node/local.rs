@@ -38,7 +38,7 @@ pub struct LocalNode {
     pub image_max_size: Option<i32>,
 
     /// TRUE if this node allows anonymous clients to read the cotos and links.
-    pub enable_anonymous_read: bool,
+    pub anonymous_read_enabled: bool,
 }
 
 impl LocalNode {
@@ -143,7 +143,7 @@ pub(crate) struct UpdateLocalNode<'a> {
     pub image_max_size: Option<Option<i32>>,
 
     #[new(default)]
-    pub enable_anonymous_read: Option<bool>,
+    pub anonymous_read_enabled: Option<bool>,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ mod tests {
             owner_session_token: None,
             owner_session_expires_at: None,
             image_max_size: None,
-            enable_anonymous_read: false,
+            anonymous_read_enabled: false,
         };
         let mut owner = local_node.as_principal();
 
