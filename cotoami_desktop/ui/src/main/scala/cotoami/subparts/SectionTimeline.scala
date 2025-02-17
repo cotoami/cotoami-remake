@@ -371,13 +371,13 @@ object SectionTimeline {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
-    val domain = context.repo
+    val repo = context.repo
     ViewCoto.article(coto, dispatch)(
       ToolbarCoto(coto),
       header()(
         ViewCoto.divAttributes(coto),
-        Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
-          ViewCoto.addressAuthor(coto, domain.nodes)
+        Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+          ViewCoto.addressAuthor(coto, repo.nodes)
         }
       ),
       div(className := "body")(
@@ -392,16 +392,16 @@ object SectionTimeline {
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
     Option.when(coto.repostOfId.isDefined) {
-      val domain = context.repo
+      val repo = context.repo
       section(className := "repost-header")(
         materialSymbol("repeat"),
         // Display the cotonomas to which the coto has been reposted
         // when the current location is a node home (no cotonoma is focused).
-        Option.when(domain.cotonomas.focusedId.isEmpty) {
-          repostedIn(coto, domain.cotonomas)
+        Option.when(repo.cotonomas.focusedId.isEmpty) {
+          repostedIn(coto, repo.cotonomas)
         },
-        Option.when(Some(coto.postedById) != domain.nodes.operatingId) {
-          reposter(coto, domain.nodes)
+        Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+          reposter(coto, repo.nodes)
         },
         Option.when(context.repo.nodes.canEdit(coto)) {
           toolButton(

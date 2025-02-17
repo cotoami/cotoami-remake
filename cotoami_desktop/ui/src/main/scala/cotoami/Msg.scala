@@ -58,9 +58,9 @@ object Msg {
   case class Highlight(id: Id[Coto]) extends Msg
   case object Unhighlight extends Msg
 
-  // Domain
-  case object ReloadDomain extends Msg
-  case class DomainMsg(submsg: Root.Msg) extends Msg
+  // Repository
+  case object ReloadRepository extends Msg
+  case class RepositoryMsg(submsg: Root.Msg) extends Msg
 
   // Map
   case object OpenGeomap extends Msg

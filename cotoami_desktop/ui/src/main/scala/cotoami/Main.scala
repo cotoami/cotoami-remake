@@ -287,7 +287,7 @@ object Main {
 
       case Msg.Unhighlight => (model.copy(highlight = None), Cmd.none)
 
-      case Msg.ReloadDomain => {
+      case Msg.ReloadRepository => {
         (
           model.copy(repo = Root()),
           model.databaseFolder.map(
@@ -296,7 +296,7 @@ object Main {
         )
       }
 
-      case Msg.DomainMsg(submsg) => {
+      case Msg.RepositoryMsg(submsg) => {
         val (repo, cmds) = Root.update(submsg, model.repo)
         (model.copy(repo = repo), cmds)
       }

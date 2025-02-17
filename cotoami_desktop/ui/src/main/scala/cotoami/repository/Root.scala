@@ -363,7 +363,7 @@ object Root {
     )
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.DomainMsg(this)
+    def into = AppMsg.RepositoryMsg(this)
   }
 
   object Msg {

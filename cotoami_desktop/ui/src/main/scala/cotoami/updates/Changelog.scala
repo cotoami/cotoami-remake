@@ -33,7 +33,7 @@ object Changelog {
           s"Unexpected change number (expected: ${expectedNumber})",
           Some(log.serial_number.toString())
         ),
-        Browser.send(Msg.ReloadDomain)
+        Browser.send(Msg.ReloadRepository)
       )
   }
 

@@ -177,8 +177,8 @@ object SectionGeomap {
         )
 
       case Msg.CotosInFocusFetched(Right(cotos)) => {
-        context.repo.importFrom(cotos).pipe { domain =>
-          (domain.geolocationInFocus match {
+        context.repo.importFrom(cotos).pipe { repo =>
+          (repo.geolocationInFocus match {
             case Some(location) => (model.moveTo(location), Cmd.none)
             case None           => model.fetchCotosInCurrentBounds
           }) pipe { case (model, cmd) =>
@@ -188,7 +188,7 @@ object SectionGeomap {
                 // Force to refresh when the focus has been changed
                 // (ex. marker's `in-focus` state could be changed)
                 .refreshMarkers,
-              _2 = domain,
+              _2 = repo,
               _3 = cmd
             )
           }

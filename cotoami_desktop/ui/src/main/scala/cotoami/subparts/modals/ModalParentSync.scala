@@ -30,7 +30,7 @@ object ModalParentSync {
           model,
           Cmd.Batch(
             Modal.close(classOf[Modal.ParentSync]),
-            Browser.send(AppMsg.ReloadDomain)
+            Browser.send(AppMsg.ReloadRepository)
           )
         )
     }
