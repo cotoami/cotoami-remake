@@ -62,15 +62,26 @@ object ModalNodeProfile {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Root, Cmd[AppMsg]) = {
+    val default = (model, context.repo, Cmd.none)
     msg match {
       case Msg.ClientCountFetched(Right(page)) =>
-        (model.copy(clientCount = page.totalItems), Cmd.none)
+        default.copy(_1 = model.copy(clientCount = page.totalItems))
 
       case Msg.ClientCountFetched(Left(e)) =>
-        (
-          model,
-          cotoami.error("Couldn't fetch client count.", e)
+        default.copy(_3 = cotoami.error("Couldn't fetch client count.", e))
+
+      case Msg.AnonymousReadEnabled(Right(enabled)) =>
+        default.copy(
+          _1 = model.copy(enablingAnonymousRead = false),
+          _2 = context.repo.copy(anonymousReadEnabled = enabled)
+        )
+
+      case Msg.AnonymousReadEnabled(Left(e)) =>
+        default.copy(_3 =
+          cotoami.error("Couldn't enable/disable anonymous read.", e)
         )
     }
   }
