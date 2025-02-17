@@ -244,7 +244,6 @@ object ModalIncorporate {
       nodeSession: ClientNodeSession
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "incorporate")(
-      h2()("Node"),
       model.incorporatingError.map(e => section(className := "error")(e)),
 
       // Node preview
