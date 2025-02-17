@@ -290,6 +290,8 @@ impl NodeState {
         &self,
         operator: Arc<Operator>,
     ) -> Result<InitialDataset, ServiceError> {
+        let local = self.db().globals().try_read_local_node()?;
+
         // Get the last change number before retrieving database contents to
         // ensure them to be the same or newer version than the number.
         //
@@ -301,10 +303,12 @@ impl NodeState {
         // but it should be no problem as long as each change is idempotent:
         // <last number> -> duplicate changes to be applied -> <newer contents>
         let last_change_number = self.last_change_number().await?.unwrap_or(0);
+
         Ok(InitialDataset {
             last_change_number,
             nodes: self.all_nodes().await?,
-            local_node_id: self.db().globals().try_get_local_node_id()?,
+            local_node_id: local.node_id,
+            anonymous_read_enabled: local.anonymous_read_enabled,
             parent_node_ids: self.db().globals().parent_node_ids(),
             servers: self.all_servers(operator).await?,
             active_clients: self.active_clients(),

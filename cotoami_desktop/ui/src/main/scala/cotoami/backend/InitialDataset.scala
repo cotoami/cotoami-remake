@@ -42,6 +42,7 @@ trait InitialDatasetJson extends js.Object {
   val last_change_number: Double = js.native
   val nodes: js.Array[NodeJson] = js.native
   val local_node_id: String = js.native
+  val anonymous_read_enabled: Boolean = js.native
   val parent_node_ids: js.Array[String] = js.native
   val servers: js.Array[ServerJson] = js.native
   val active_clients: js.Array[ActiveClientJson] = js.native
