@@ -136,7 +136,12 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn replicate(&mut self, parent_node: &Node) -> Result<Option<ChangelogEntry>> {
+    pub fn replicate(
+        &mut self,
+        parent_node: &Node,
+        operator: &Operator,
+    ) -> Result<Option<ChangelogEntry>> {
+        operator.requires_to_be_owner()?;
         if let Some(parent_cotonoma_id) = parent_node.root_cotonoma_id {
             let (_, change) = self
                 .set_root_cotonoma(&parent_cotonoma_id, &self.globals.local_node_as_operator()?)?;
