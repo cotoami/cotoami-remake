@@ -16,11 +16,10 @@ pub use crate::web::launch_server;
 
 pub mod prelude {
     pub use crate::{
-        config::NodeConfig,
+        config::*,
         event::local::LocalNodeEvent,
         service::{command::*, error::*, models::*, service_ext::*, *},
         state::*,
-        web::ServerConfig,
     };
 }
 

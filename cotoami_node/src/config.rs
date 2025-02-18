@@ -5,6 +5,10 @@ use cotoami_db::prelude::*;
 use dotenvy::dotenv;
 use validator::Validate;
 
+/////////////////////////////////////////////////////////////////////////////
+// NodeConfig
+/////////////////////////////////////////////////////////////////////////////
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct NodeConfig {
     /// `COTOAMI_DB_DIR`
@@ -109,4 +113,58 @@ impl NodeConfig {
     }
 
     pub fn session_seconds(&self) -> u64 { self.session_minutes * 60 }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// ServerConfig
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+pub struct ServerConfig {
+    // COTOAMI_SERVER_PORT
+    #[serde(default = "ServerConfig::default_port")]
+    pub port: u16,
+
+    // COTOAMI_SERVER_URL_SCHEME
+    #[serde(default = "ServerConfig::default_url_scheme")]
+    pub url_scheme: String,
+
+    // COTOAMI_SERVER_URL_HOST
+    #[serde(default = "ServerConfig::default_url_host")]
+    pub url_host: String,
+
+    // COTOAMI_SERVER_URL_PORT
+    pub url_port: Option<u16>,
+
+    // COTOAMI_SERVER_ENABLE_WEBSOCKET
+    #[serde(default = "ServerConfig::default_enable_websocket")]
+    pub enable_websocket: bool,
+}
+
+impl ServerConfig {
+    const ENV_PREFXI: &'static str = "COTOAMI_SERVER_";
+
+    pub fn load_from_env() -> Result<Self, envy::Error> {
+        dotenv().ok();
+        envy::prefixed(Self::ENV_PREFXI).from_env::<Self>()
+    }
+
+    // Functions returning a default value as a workaround for the issue:
+    // https://github.com/serde-rs/serde/issues/368
+    fn default_port() -> u16 { 5103 }
+    fn default_url_scheme() -> String { "http".into() }
+    fn default_url_host() -> String { "localhost".into() }
+    fn default_enable_websocket() -> bool { true }
+}
+
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            port: Self::default_port(),
+            url_scheme: Self::default_url_scheme(),
+            url_host: Self::default_url_host(),
+            url_port: Some(Self::default_port()),
+            enable_websocket: Self::default_enable_websocket(),
+        }
+    }
 }
