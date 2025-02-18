@@ -38,7 +38,7 @@ struct State {
     anonymous_conns: AnonymousConnections,
     parent_services: ParentServices,
     abortables: Abortables,
-    local_server: RwLock<Option<Arc<ServerConfig>>>,
+    local_server_config: RwLock<Option<Arc<ServerConfig>>>,
 }
 
 impl NodeState {
@@ -66,7 +66,7 @@ impl NodeState {
             anonymous_conns: AnonymousConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
-            local_server: RwLock::new(None),
+            local_server_config: RwLock::new(None),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -144,12 +144,12 @@ impl NodeState {
         self.inner.abortables.abort_all();
     }
 
-    pub fn set_local_server(&self, config: Arc<ServerConfig>) {
-        self.inner.local_server.write().replace(config);
+    pub fn set_local_server_config(&self, config: Arc<ServerConfig>) {
+        self.inner.local_server_config.write().replace(config);
     }
 
-    pub fn local_server(&self) -> Option<Arc<ServerConfig>> {
-        self.inner.local_server.read().clone()
+    pub fn local_server_config(&self) -> Option<Arc<ServerConfig>> {
+        self.inner.local_server_config.read().clone()
     }
 
     pub fn debug(&self, label: &str) {

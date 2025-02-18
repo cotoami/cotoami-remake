@@ -63,7 +63,7 @@ pub async fn launch_server(
         .map_err(anyhow::Error::from);
 
     // Put the server config to the state
-    node_state.set_local_server(config);
+    node_state.set_local_server_config(config);
 
     Ok((tokio::spawn(serve), shutdown_trigger))
 }

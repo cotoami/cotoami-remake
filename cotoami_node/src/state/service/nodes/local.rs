@@ -4,7 +4,10 @@ use anyhow::Result;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 
-use crate::{service::ServiceError, state::NodeState};
+use crate::{
+    service::{models::LocalServer, ServiceError},
+    state::NodeState,
+};
 
 impl NodeState {
     pub async fn local_node(&self) -> Result<Node, ServiceError> {
@@ -13,6 +16,14 @@ impl NodeState {
 
     pub async fn local_node_root(&self) -> Result<Option<(Cotonoma, Coto)>, ServiceError> {
         self.get(move |ds| ds.local_node_root()).await
+    }
+
+    pub fn local_server(&self) -> Result<LocalServer, ServiceError> {
+        let local = self.db().globals().try_read_local_node()?;
+        Ok(LocalServer {
+            active_config: self.local_server_config(),
+            anonymous_read_enabled: local.anonymous_read_enabled,
+        })
     }
 
     pub async fn set_local_node_icon(
