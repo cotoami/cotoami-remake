@@ -11,7 +11,7 @@ use tracing::{debug, error};
 use validator::Validate;
 
 use crate::{
-    config::NodeConfig,
+    config::{NodeConfig, ServerConfig},
     event::local::LocalNodeEvent,
     service::{models::ActiveClient, NodeService},
     Abortables,
@@ -38,6 +38,7 @@ struct State {
     anonymous_conns: AnonymousConnections,
     parent_services: ParentServices,
     abortables: Abortables,
+    local_server: RwLock<Option<Arc<ServerConfig>>>,
 }
 
 impl NodeState {
@@ -65,6 +66,7 @@ impl NodeState {
             anonymous_conns: AnonymousConnections::default(),
             parent_services: ParentServices::default(),
             abortables: Abortables::default(),
+            local_server: RwLock::new(None),
         };
         let state = Self {
             inner: Arc::new(inner),
@@ -140,6 +142,14 @@ impl NodeState {
     pub fn abort_tasks(&self) {
         self.server_conns().disconnect_all();
         self.inner.abortables.abort_all();
+    }
+
+    pub fn set_local_server(&self, config: Arc<ServerConfig>) {
+        self.inner.local_server.write().replace(config);
+    }
+
+    pub fn local_server(&self) -> Option<Arc<ServerConfig>> {
+        self.inner.local_server.read().clone()
     }
 
     pub fn debug(&self, label: &str) {

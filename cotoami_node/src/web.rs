@@ -45,14 +45,14 @@ pub async fn launch_server(
     config: ServerConfig,
     node_state: NodeState,
 ) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
-    // Server config
-    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
+    let config = Arc::new(config);
 
     // Create an API application
-    let api =
-        router(Arc::new(config), node_state).into_make_service_with_connect_info::<SocketAddr>();
+    let api = router(config.clone(), node_state.clone())
+        .into_make_service_with_connect_info::<SocketAddr>();
 
     // Run the server with graceful shutdown
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     let listener = TcpListener::bind(addr).await.unwrap();
     let (shutdown_trigger, rx) = oneshot::channel::<()>();
     let serve = axum::serve(listener, api)
@@ -61,6 +61,10 @@ pub async fn launch_server(
         })
         .into_future()
         .map_err(anyhow::Error::from);
+
+    // Put the server config to the state
+    node_state.set_local_server(config);
+
     Ok((tokio::spawn(serve), shutdown_trigger))
 }
 
