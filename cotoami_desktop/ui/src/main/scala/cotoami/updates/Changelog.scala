@@ -145,10 +145,7 @@ object Changelog {
         model
           .modify(_.repo.nodes).using(_.rename(nodeId, json.name))
           .modify(_.geomap).using(_.refreshMarkers),
-        model.repo.nodes.get(nodeId)
-          .flatMap(_.rootCotonomaId)
-          .map(Root.fetchCotonoma)
-          .getOrElse(Cmd.none)
+        Root.fetchNodeDetails(nodeId)
       )
     }
 
