@@ -35,6 +35,7 @@ pub struct Pagination {
 pub struct LocalServer {
     pub active_config: Option<Arc<ServerConfig>>,
     pub anonymous_read_enabled: bool,
+    pub anonymous_connections: usize,
 }
 
 /////////////////////////////////////////////////////////////////////////////

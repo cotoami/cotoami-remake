@@ -23,6 +23,7 @@ impl NodeState {
         Ok(LocalServer {
             active_config: self.local_server_config(),
             anonymous_read_enabled: local.anonymous_read_enabled,
+            anonymous_connections: self.anonymous_conns().count(),
         })
     }
 
