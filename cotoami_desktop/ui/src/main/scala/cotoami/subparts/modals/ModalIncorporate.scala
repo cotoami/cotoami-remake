@@ -276,11 +276,11 @@ object ModalIncorporate {
     section(className := "child-privileges")(
       "Your privileges: ",
       span(className := "privileges")(
-        nodeSession.asChild match {
-          case Some(child) => {
-            if (child.asOwner)
+        nodeSession.childPrivileges match {
+          case Some(privileges) => {
+            if (privileges.asOwner)
               "an owner"
-            else if (child.canEditLinks)
+            else if (privileges.canEditLinks)
               "post, edit links"
             else
               "post"

@@ -89,7 +89,7 @@ impl NodeState {
                     NodeRole::Parent => None,
                     NodeRole::Child => ds.local_node_root()?,
                 },
-                as_child: if let Some(DatabaseRole::Child(child)) = db_role {
+                child_privileges: if let Some(DatabaseRole::Child(child)) = db_role {
                     Some(child)
                 } else {
                     None
@@ -115,7 +115,7 @@ impl NodeState {
             token: None,
             server: local_node,
             server_root: self.local_node_root().await?,
-            as_child: None,
+            child_privileges: None,
         })
     }
 }

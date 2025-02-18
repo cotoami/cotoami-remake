@@ -102,7 +102,7 @@ impl OperatingAs {
     ) -> Result<(), Error> {
         // Check the privilege to operate the remote node.
         if let Some(parent_id) = parent_id {
-            match state.local_as_child(&parent_id) {
+            match state.child_privileges(&parent_id) {
                 Some(ChildNode { as_owner: true, .. }) => (),
                 _ => {
                     return Err(Error::new(

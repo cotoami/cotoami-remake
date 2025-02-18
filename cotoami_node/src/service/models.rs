@@ -56,12 +56,12 @@ pub struct ClientNodeSession {
     pub token: Option<SessionToken>, // None for a anonymous client
     pub server: Node,
     pub server_root: Option<(Cotonoma, Coto)>,
-    pub as_child: Option<ChildNode>,
+    pub child_privileges: Option<ChildNode>,
 }
 
 impl ClientNodeSession {
     pub fn new_server_role(&self) -> NewDatabaseRole {
-        match (&self.token, &self.as_child) {
+        match (&self.token, &self.child_privileges) {
             (Some(_), Some(_)) => NewDatabaseRole::Parent,
             (Some(_), None) => NewDatabaseRole::Child {
                 as_owner: false,

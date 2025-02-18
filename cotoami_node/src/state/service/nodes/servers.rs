@@ -44,7 +44,7 @@ impl NodeState {
                         server,
                         roles.remove(&node_id),
                         conn.not_connected(),
-                        conn.client_as_child(),
+                        conn.child_privileges(),
                     )
                 })
                 .collect();
@@ -91,7 +91,7 @@ impl NodeState {
         let server_id = client_session.server.uuid;
 
         // Register the server node
-        let (server, server_node, server_role, local_as_child) = spawn_blocking({
+        let (server, server_node, server_role, child_privileges) = spawn_blocking({
             let state = self.clone();
             let operator = operator.clone();
             let url_prefix = http_client.url_prefix().to_string();
@@ -120,7 +120,7 @@ impl NodeState {
 
                 // Results
                 let node = ds.node(&server_id)?.unwrap_or_else(|| unreachable!());
-                Ok::<_, ServiceError>((server, node, server_role, client_session.as_child))
+                Ok::<_, ServiceError>((server, node, server_role, client_session.child_privileges))
             }
         })
         .await??;
@@ -129,7 +129,7 @@ impl NodeState {
         // Create a ServerConnection
         let server_conn = ServerConnection::new(server.clone(), self.clone());
         server_conn
-            .start_event_loop(http_client.clone(), local_as_child)
+            .start_event_loop(http_client.clone(), child_privileges)
             .await?;
         self.server_conns().put(server_id, server_conn.clone());
 
@@ -138,7 +138,7 @@ impl NodeState {
             server,
             Some(server_role),
             server_conn.not_connected(),
-            server_conn.client_as_child(),
+            server_conn.child_privileges(),
         );
         Ok(server)
     }

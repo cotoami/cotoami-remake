@@ -89,14 +89,15 @@ impl ServerConnection {
             bail!("The remote server ID does not match the stored value.");
         }
 
-        self.start_event_loop(http_client, session.as_child).await
+        self.start_event_loop(http_client, session.child_privileges)
+            .await
     }
 
     /// Starts a event loop using an [HttpClient] that already has a session token.
     pub async fn start_event_loop(
         &self,
         http_client: HttpClient,
-        local_as_child: Option<ChildNode>,
+        child_privileges: Option<ChildNode>,
     ) -> Result<()> {
         if self.server.disabled {
             return Ok(());
@@ -104,7 +105,7 @@ impl ServerConnection {
 
         // Try to connect via WebSocket first
         let mut ws_client = WebSocketClient::new(
-            self.new_client_state(local_as_child.clone()).await?,
+            self.new_client_state(child_privileges.clone()).await?,
             &http_client,
         )
         .await?;
@@ -114,7 +115,7 @@ impl ServerConnection {
                 // Fallback to SSE
                 info!("Falling back to SSE due to: {e:?}");
                 let mut sse_client =
-                    SseClient::new(self.new_client_state(local_as_child).await?, http_client)
+                    SseClient::new(self.new_client_state(child_privileges).await?, http_client)
                         .await?;
                 sse_client.connect().await?;
                 self.set_conn_state(ConnectionState::Sse(sse_client), false);
@@ -145,8 +146,8 @@ impl ServerConnection {
         self.connect().await;
     }
 
-    pub fn client_as_child(&self) -> Option<ChildNode> {
-        self.conn_state.read().client_as_child().cloned()
+    pub fn child_privileges(&self) -> Option<ChildNode> {
+        self.conn_state.read().child_privileges().cloned()
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
@@ -161,7 +162,7 @@ impl ServerConnection {
                 self.server.node_id,
                 before,
                 self.not_connected(),
-                self.client_as_child(),
+                self.child_privileges(),
             );
         }
     }
@@ -177,10 +178,10 @@ enum ConnectionState {
     Sse(SseClient),
 }
 impl ConnectionState {
-    fn client_as_child(&self) -> Option<&ChildNode> {
+    fn child_privileges(&self) -> Option<&ChildNode> {
         match self {
-            Self::WebSocket(client) => client.as_child(),
-            Self::Sse(client) => client.as_child(),
+            Self::WebSocket(client) => client.child_privileges(),
+            Self::Sse(client) => client.child_privileges(),
             _ => None,
         }
     }

@@ -21,7 +21,7 @@ pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 pub(crate) struct ClientState {
     server_id: Id<Node>,
     server_as_operator: Option<Arc<Operator>>,
-    as_child: Option<ChildNode>,
+    child_privileges: Option<ChildNode>,
     conn_state: RwLock<ConnectionState>,
     #[debug(skip)]
     node_state: NodeState,
@@ -32,20 +32,20 @@ pub(crate) struct ClientState {
 impl ClientState {
     pub(crate) async fn new(
         server_id: Id<Node>,
-        as_child: Option<ChildNode>,
+        child_privileges: Option<ChildNode>,
         node_state: NodeState,
     ) -> Result<Self> {
         Ok(Self {
             server_id,
             server_as_operator: node_state.as_operator(server_id).await?.map(Arc::new),
-            as_child,
+            child_privileges,
             conn_state: RwLock::new(ConnectionState::Disconnected(None)),
             node_state,
             abortables: Abortables::default(),
         })
     }
 
-    pub fn as_child(&self) -> Option<&ChildNode> { self.as_child.as_ref() }
+    pub fn child_privileges(&self) -> Option<&ChildNode> { self.child_privileges.as_ref() }
 
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
 
@@ -56,7 +56,7 @@ impl ClientState {
             self.server_id,
             before,
             self.not_connected(),
-            self.as_child.clone(),
+            self.child_privileges.clone(),
         )
     }
 

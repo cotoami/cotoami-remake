@@ -41,7 +41,7 @@ impl WebSocketClient {
         })
     }
 
-    pub fn as_child(&self) -> Option<&ChildNode> { self.state.as_child() }
+    pub fn child_privileges(&self) -> Option<&ChildNode> { self.state.child_privileges() }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 
