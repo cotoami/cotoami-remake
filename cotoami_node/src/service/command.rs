@@ -7,6 +7,9 @@ pub enum Command {
     /// Request the local node as a [Node].
     LocalNode,
 
+    /// Request [LocalServer] info.
+    LocalServer,
+
     /// Request to change the icon of the local node and return a [Node] if succeeded.
     SetLocalNodeIcon {
         #[debug(skip)]

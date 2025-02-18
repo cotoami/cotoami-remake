@@ -18,7 +18,8 @@ impl NodeState {
         self.get(move |ds| ds.local_node_root()).await
     }
 
-    pub fn local_server(&self) -> Result<LocalServer, ServiceError> {
+    pub fn local_server(&self, operator: Arc<Operator>) -> Result<LocalServer, ServiceError> {
+        operator.requires_to_be_owner()?;
         let local = self.db().globals().try_read_local_node()?;
         Ok(LocalServer {
             active_config: self.local_server_config(),

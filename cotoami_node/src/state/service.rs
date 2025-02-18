@@ -30,6 +30,7 @@ impl NodeState {
         let opr = request.try_auth().map(Clone::clone);
         match request.command() {
             Command::LocalNode => format.serialize(self.local_node().await),
+            Command::LocalServer => format.serialize(self.local_server(opr?)),
             Command::SetLocalNodeIcon { icon } => {
                 format.serialize(self.set_local_node_icon(icon.into(), opr?).await)
             }

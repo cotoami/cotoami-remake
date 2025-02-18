@@ -100,6 +100,7 @@ impl HttpClient {
         // Translate the request's body into an HTTP request (RequestBuilder).
         let http_req = match request.command() {
             Command::LocalNode => self.get(API_PATH_LOCAL),
+            Command::LocalServer => self.get(&format!("{API_PATH_LOCAL}/server")),
             Command::SetLocalNodeIcon { icon } => self
                 .put(&format!("{API_PATH_LOCAL}/icon"))
                 .body(bytes::Bytes::from(icon)),
