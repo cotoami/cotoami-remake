@@ -126,16 +126,15 @@ object ModalNodeProfile {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
+    val rootCoto = context.repo.rootOf(model.nodeId).map(_._2)
     val asServer = context.repo.nodes.servers.get(model.nodeId)
     Fragment(
       divSidebar(node, model),
       div(className := "fields")(
         fieldId(node),
-        fieldName(node, model),
+        fieldName(node, rootCoto, model),
         asServer.map(fieldServerUrl),
-        context.repo.rootOf(model.nodeId).map { case (_, coto) =>
-          fieldDescription(coto, model)
-        },
+        rootCoto.map(fieldDescription(_, model)),
         Option.when(model.isOperatingNode()) {
           Fragment(
             fieldClientNodes(model),
@@ -188,8 +187,10 @@ object ModalNodeProfile {
       readOnly = true
     )
 
-  private def fieldName(node: Node, model: Model)(implicit
-      context: Context
+  private def fieldName(node: Node, rootCoto: Option[Coto], model: Model)(
+      implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     labeledField(
       classes = "node-name",
@@ -206,7 +207,7 @@ object ModalNodeProfile {
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
-            buttonEdit(_ => ())
+            rootCoto.map(buttonEditRootCoto)
           )
         }
       )
@@ -232,7 +233,8 @@ object ModalNodeProfile {
     )
 
   private def fieldDescription(rootCoto: Coto, model: Model)(implicit
-      context: Context
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     labeledField(
       classes = "node-description",
@@ -245,7 +247,7 @@ object ModalNodeProfile {
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(
-            buttonEdit(_ => ())
+            buttonEditRootCoto(rootCoto)
           )
         }
       )
@@ -308,6 +310,17 @@ object ModalNodeProfile {
       Option.when(model.enablingAnonymousRead) {
         span(className := "processing", aria - "busy" := "true")()
       }
+    )
+
+  private def buttonEditRootCoto(rootCoto: Coto)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    buttonEdit(_ =>
+      dispatch(
+        (Modal.Msg.OpenModal.apply _).tupled(
+          Modal.CotoEditor(rootCoto)
+        )
+      )
     )
 
   private def buttonEdit(
