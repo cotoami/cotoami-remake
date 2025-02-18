@@ -11,18 +11,18 @@ use tracing::{debug, error};
 use validator::Validate;
 
 use crate::{
+    config::NodeConfig,
     event::local::LocalNodeEvent,
     service::{models::ActiveClient, NodeService},
     Abortables,
 };
 
-mod config;
 mod internal;
 mod pubsub;
 mod server_conn;
 mod service;
 
-pub use self::{config::NodeConfig, pubsub::*, server_conn::*};
+pub use self::{pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {

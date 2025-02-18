@@ -5,6 +5,7 @@ use parking_lot::Mutex;
 use tokio::task::{AbortHandle, JoinHandle};
 
 mod client;
+mod config;
 mod event;
 mod pubsub;
 mod service;
@@ -15,6 +16,7 @@ pub use crate::web::launch_server;
 
 pub mod prelude {
     pub use crate::{
+        config::NodeConfig,
         event::local::LocalNodeEvent,
         service::{command::*, error::*, models::*, service_ext::*, *},
         state::*,
