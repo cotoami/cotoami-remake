@@ -9,6 +9,10 @@ dialog.node-profile {
     flex-direction: row;
 
     div.sidebar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
       width: 120px;
       padding-right: 16px;
 
@@ -29,6 +33,30 @@ dialog.node-profile {
           vertical-align: middle;
           text-align: center;
           background-color: rgba(0, 0, 0, .4);
+        }
+      }
+
+      section.operating-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        div.arrow {
+          margin-top: 10px;
+          margin-bottom: -10px;
+          font-size: 20px;
+        }
+
+        section.privileges {
+          margin-bottom: 16px;
+          font-size: 0.9rem;
+          opacity: 0.8;
+        }
+
+        img {
+          width: 32px;
+          height: 32px;
+          border-radius: 4px;
         }
       }
     }

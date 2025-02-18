@@ -10,7 +10,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
 import cotoami.repository.Root
 import cotoami.backend.{ClientNodeBackend, Commands, ErrorJson}
-import cotoami.components.toolButton
+import cotoami.components.{materialSymbol, toolButton}
 import cotoami.subparts.{
   imgNode,
   labeledField,
@@ -156,7 +156,26 @@ object ModalNodeProfile {
         Option.when(model.isOperatingNode()) {
           buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
         }
-      )
+      ),
+      Option.when(!context.repo.nodes.isOperating(node.id)) {
+        section(className := "operating-node")(
+          div(className := "arrow")(materialSymbol("arrow_upward")),
+          section(className := "privileges")(
+            context.repo.nodes.childPrivilegesTo(node.id) match {
+              case Some(privileges) => {
+                if (privileges.asOwner)
+                  "Owner"
+                else if (privileges.canEditLinks)
+                  "Post, Edit links"
+                else
+                  "Post"
+              }
+              case None => "Read-only"
+            }
+          ),
+          context.repo.nodes.operating.map(imgNode(_))
+        )
+      }
     )
 
   private def fieldId(node: Node): ReactElement =
