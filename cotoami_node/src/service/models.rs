@@ -3,12 +3,16 @@
 //! An instance of a model struct is passed to services via [super::Command] or
 //! serialized into a body of a response ([super::Response::body]).
 
+use std::sync::Arc;
+
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
 use derive_new::new;
 use itertools::Itertools;
 use validator::Validate;
+
+use crate::config::ServerConfig;
 
 /////////////////////////////////////////////////////////////////////////////
 // Pagination
@@ -21,6 +25,16 @@ pub struct Pagination {
 
     #[validate(range(min = 1, max = 1000))]
     pub page_size: Option<i64>,
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// LocalServer
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct LocalServer {
+    pub active_config: Arc<ServerConfig>,
+    pub anonymous_read_enabled: bool,
 }
 
 /////////////////////////////////////////////////////////////////////////////
