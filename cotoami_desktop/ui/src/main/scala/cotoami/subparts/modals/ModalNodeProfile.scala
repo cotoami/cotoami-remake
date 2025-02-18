@@ -128,14 +128,7 @@ object ModalNodeProfile {
   ): ReactElement = {
     val asServer = context.repo.nodes.servers.get(model.nodeId)
     Fragment(
-      div(className := "sidebar")(
-        section(className := "node-icon")(
-          imgNode(node),
-          Option.when(model.isOperatingNode()) {
-            buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
-          }
-        )
-      ),
+      divSidebar(node, model),
       div(className := "fields")(
         fieldId(node),
         fieldName(node, model),
@@ -152,6 +145,19 @@ object ModalNodeProfile {
       )
     )
   }
+
+  private def divSidebar(node: Node, model: Model)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    div(className := "sidebar")(
+      section(className := "node-icon")(
+        imgNode(node),
+        Option.when(model.isOperatingNode()) {
+          buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
+        }
+      )
+    )
 
   private def fieldId(node: Node): ReactElement =
     labeledInputField(
