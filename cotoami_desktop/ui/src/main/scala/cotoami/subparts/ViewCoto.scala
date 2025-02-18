@@ -61,7 +61,7 @@ object ViewCoto {
         )
       },
       Option.when(!context.repo.nodes.isOperating(coto.nodeId)) {
-        val connected = context.repo.nodes.reachable(coto.nodeId)
+        val connected = context.repo.nodes.parentConnected(coto.nodeId)
         div(
           className := optionalClasses(
             Seq(

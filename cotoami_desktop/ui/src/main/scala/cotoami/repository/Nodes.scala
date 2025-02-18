@@ -117,17 +117,17 @@ case class Nodes(
     )
   }
 
-  def parentConnection(parentId: Id[Node]): Option[ChildNode] =
+  def parentConnected(parentId: Id[Node]): Boolean =
+    servers.get(parentId).map(_.notConnected.isEmpty).getOrElse(false)
+
+  def childPrivilegesTo(parentId: Id[Node]): Option[ChildNode] =
     parentStatus(parentId) match {
       case Some(ParentStatus.Connected(child)) => child
       case _                                   => None
     }
 
-  def reachable(nodeId: Id[Node]): Boolean =
-    isOperating(nodeId) || parentConnection(nodeId).isDefined
-
   def isOwnerOf(nodeId: Id[Node]): Boolean =
-    parentConnection(nodeId).map(_.asOwner).getOrElse(false)
+    childPrivilegesTo(nodeId).map(_.asOwner).getOrElse(false)
 
   def currentNodeRootCotonomaId: Option[Id[Cotonoma]] =
     current.flatMap(_.rootCotonomaId)
@@ -140,21 +140,22 @@ case class Nodes(
       .map(_.rootCotonomaId == Some(cotonoma.id))
       .getOrElse(false)
 
-  def canPostTo(nodeId: Id[Node]): Boolean = reachable(nodeId)
+  def canPostTo(nodeId: Id[Node]): Boolean =
+    isOperating(nodeId) || childPrivilegesTo(nodeId).isDefined
 
   // A coto can be edited/deleted only by its creator.
   def canEdit(coto: Coto): Boolean =
-    isOperating(coto.postedById) && reachable(coto.nodeId)
+    canPostTo(coto.nodeId) && isOperating(coto.postedById)
 
   // A link can be edited/deleted by:
   // the creator or an owner of the node in which it was created.
   def canEdit(link: Link): Boolean =
-    (isOperating(link.createdById) || isOwnerOf(link.nodeId)) &&
-      reachable(link.nodeId)
+    canPostTo(link.nodeId) &&
+      (isOperating(link.createdById) || isOwnerOf(link.nodeId))
 
   def canCreateLinksIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
-      parentConnection(nodeId).map(_.canEditLinks).getOrElse(false)
+      childPrivilegesTo(nodeId).map(_.canEditLinks).getOrElse(false)
 
   def canPromote(coto: Coto): Boolean = canEdit(coto) && !coto.isCotonoma
 }
