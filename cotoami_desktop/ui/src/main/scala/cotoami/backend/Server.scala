@@ -11,7 +11,7 @@ trait ServerJson extends js.Object {
   val server: ServerNodeJson = js.native
   val role: Nullable[DatabaseRoleJson] = js.native
   val not_connected: Nullable[NotConnectedJson] = js.native
-  val client_as_child: Nullable[ChildNodeJson] = js.native
+  val child_privileges: Nullable[ChildNodeJson] = js.native
 }
 
 object ServerJson {
@@ -29,7 +29,7 @@ object ServerBackend {
       ServerNodeBackend.toModel(json.server),
       Nullable.toOption(json.role).map(DatabaseRoleBackend.toModel),
       Nullable.toOption(json.not_connected).map(NotConnectedBackend.toModel),
-      Nullable.toOption(json.client_as_child).map(ChildNodeBackend.toModel)
+      Nullable.toOption(json.child_privileges).map(ChildNodeBackend.toModel)
     )
 
   def addServer(

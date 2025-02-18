@@ -7,7 +7,7 @@ case class Server(
     server: ServerNode,
     role: Option[DatabaseRole],
     notConnected: Option[NotConnected],
-    clientAsChild: Option[ChildNode]
+    childPrivileges: Option[ChildNode]
 )
 
 case class ServerNode(

@@ -112,7 +112,7 @@ case class Nodes(
         case NotConnected.Disconnected(details) =>
           ParentStatus.Disconnected(details)
       }.getOrElse(
-        ParentStatus.Connected(server.clientAsChild)
+        ParentStatus.Connected(server.childPrivileges)
       )
     )
   }

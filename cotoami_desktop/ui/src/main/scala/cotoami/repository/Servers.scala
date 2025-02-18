@@ -18,10 +18,13 @@ case class Servers(
   def setState(
       id: Id[Node],
       notConnected: Option[NotConnected],
-      clientAsChild: Option[ChildNode]
+      childPrivileges: Option[ChildNode]
   ): Servers =
     this.modify(_.map.index(id)).using(
-      _.copy(notConnected = notConnected, clientAsChild = clientAsChild)
+      _.copy(
+        notConnected = notConnected,
+        childPrivileges = childPrivileges
+      )
     )
 
   def contains(id: Id[Node]): Boolean = map.contains(id)
