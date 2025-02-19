@@ -18,12 +18,13 @@ use crate::{
     Abortables,
 };
 
+mod client_conn;
 mod internal;
 mod pubsub;
 mod server_conn;
 mod service;
 
-pub use self::{pubsub::*, server_conn::*};
+pub use self::{client_conn::*, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -95,8 +96,9 @@ impl NodeState {
     pub fn client_conns(&self) -> &ClientConnections { &self.inner.client_conns }
 
     pub(crate) fn put_client_conn(&self, client_conn: ClientConnection) {
-        self.pubsub()
-            .publish_event(LocalNodeEvent::ClientConnected(client_conn.client.clone()));
+        self.pubsub().publish_event(LocalNodeEvent::ClientConnected(
+            client_conn.client().clone(),
+        ));
         self.client_conns().put(client_conn);
     }
 
@@ -199,69 +201,6 @@ impl ParentServices {
     fn remove(&self, parent_id: &Id<Node>) -> Option<Box<dyn NodeService>> {
         debug!("Parent service being removed: {parent_id}");
         self.0.write().remove(parent_id)
-    }
-}
-
-#[derive(Debug)]
-pub struct ClientConnection {
-    client: ActiveClient,
-    disconnect: Sender<()>,
-}
-
-impl ClientConnection {
-    pub fn new(node_id: Id<Node>, remote_addr: String, disconnect: Sender<()>) -> Self {
-        ClientConnection {
-            client: ActiveClient::new(node_id, remote_addr),
-            disconnect,
-        }
-    }
-
-    pub fn client_id(&self) -> Id<Node> { self.client.node_id }
-
-    pub fn disconnect(self) {
-        let client_id = self.client_id();
-        if let Err(e) = self.disconnect.send(()) {
-            error!("Error disconnecting {client_id}: {e:?}");
-        }
-    }
-}
-
-#[derive(Clone, Default)]
-pub struct ClientConnections(
-    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, ClientConnection>>>,
-);
-
-impl ClientConnections {
-    fn put(&self, client_conn: ClientConnection) {
-        self.0.write().insert(client_conn.client_id(), client_conn);
-    }
-
-    fn remove(&self, client_id: &Id<Node>) -> Option<ClientConnection> {
-        self.0.write().remove(client_id)
-    }
-
-    pub fn disconnect(&self, client_id: &Id<Node>) {
-        if let Some(conn) = self.remove(client_id) {
-            conn.disconnect();
-        }
-    }
-
-    pub fn disconnect_all(&self) {
-        for (_, conn) in self.0.write().drain() {
-            conn.disconnect();
-        }
-    }
-
-    pub fn active_client(&self, client_id: &Id<Node>) -> Option<ActiveClient> {
-        self.0.read().get(client_id).map(|conn| conn.client.clone())
-    }
-
-    pub fn active_clients(&self) -> Vec<ActiveClient> {
-        self.0
-            .read()
-            .values()
-            .map(|conn| conn.client.clone())
-            .collect()
     }
 }
 
