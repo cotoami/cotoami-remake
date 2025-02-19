@@ -286,8 +286,8 @@ impl ClientConnections {
     }
 
     pub fn disconnect_all(&self) {
-        for client_id in self.0.read().keys() {
-            self.disconnect(client_id);
+        for (_, conn) in self.0.write().drain() {
+            conn.disconnect();
         }
     }
 
@@ -345,13 +345,13 @@ impl AnonymousConnections {
         id
     }
 
-    fn remove(&self, id: &Uuid) -> Option<AnonymousConnection> { self.0.write().remove(id) }
+    pub(crate) fn remove(&self, id: &Uuid) -> Option<AnonymousConnection> {
+        self.0.write().remove(id)
+    }
 
     pub(crate) fn disconnect_all(&self) {
-        for key in self.0.read().keys() {
-            if let Some(conn) = self.remove(key) {
-                conn.disconnect();
-            }
+        for (_, conn) in self.0.write().drain() {
+            conn.disconnect();
         }
     }
 }
