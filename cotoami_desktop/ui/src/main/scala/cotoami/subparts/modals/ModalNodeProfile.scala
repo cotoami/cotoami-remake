@@ -106,6 +106,7 @@ object ModalNodeProfile {
           _1 = model
             .modify(_.enablingAnonymousRead).setTo(false)
             .modify(_.localServer.each.anonymousReadEnabled).setTo(enabled)
+            .modify(_.localServer.each.anonymousConnections).setTo(0)
         )
 
       case Msg.AnonymousReadEnabled(Left(e)) =>
@@ -355,7 +356,7 @@ object ModalNodeProfile {
       Option.when(model.anonymousReadEnabled) {
         model.localServer.map(_.anonymousConnections).map(count =>
           span(className := "anonymous-connections")(
-            s"(Connected: ${count})"
+            s"(Active connections: ${count})"
           )
         )
       }
