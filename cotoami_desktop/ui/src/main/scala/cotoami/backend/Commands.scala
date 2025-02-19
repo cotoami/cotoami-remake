@@ -27,6 +27,8 @@ object Commands {
 
   val LocalNode = jso(LocalNode = null)
 
+  val LocalServer = jso(LocalServer = null)
+
   def SetLocalNodeIcon(icon: String) = jso(SetLocalNodeIcon = jso(icon = icon))
 
   def EnableAnonymousRead(enable: Boolean) =

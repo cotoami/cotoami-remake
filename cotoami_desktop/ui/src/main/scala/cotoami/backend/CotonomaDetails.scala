@@ -1,8 +1,8 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import fui.Cmd
 
+import fui.Cmd
 import cotoami.models.{Coto, Cotonoma, Id, Page}
 
 case class CotonomaDetails(json: CotonomaDetailsJson) {
