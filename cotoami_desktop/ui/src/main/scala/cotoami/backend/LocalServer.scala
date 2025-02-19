@@ -40,6 +40,11 @@ case class ServerConfig(json: ServerConfigJson) {
   def urlHost: String = json.url_host
   def urlPort: Option[Int] = Nullable.toOption(json.url_port)
   def enableWebsocket: Boolean = json.enable_websocket
+
+  def url: String = {
+    val portSuffix = urlPort.map(port => s":${port}").getOrElse("")
+    s"${urlScheme}://${urlHost}${portSuffix}"
+  }
 }
 
 @js.native

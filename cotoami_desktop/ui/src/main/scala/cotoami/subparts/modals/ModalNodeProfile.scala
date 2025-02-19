@@ -10,7 +10,13 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
 import cotoami.repository.{Nodes, Root}
-import cotoami.backend.{ClientNodeBackend, Commands, ErrorJson, LocalServer}
+import cotoami.backend.{
+  ClientNodeBackend,
+  Commands,
+  ErrorJson,
+  LocalServer,
+  ServerConfig
+}
 import cotoami.components.{materialSymbol, toolButton}
 import cotoami.subparts.{
   imgNode,
@@ -151,12 +157,8 @@ object ModalNodeProfile {
         fieldName(node, rootCoto, model),
         asServer.map(fieldServerUrl),
         rootCoto.map(fieldDescription(_, model)),
-        model.localServer.flatMap(_.activeConfig).map(config =>
-          section(className := "local-server")(
-            h2()("Local server"),
-            fieldClientNodes(model),
-            fieldAnonymousRead(model)
-          )
+        model.localServer.flatMap(_.activeConfig).map(
+          sectionLocalServer(_, model)
         )
       )
     )
@@ -268,6 +270,30 @@ object ModalNodeProfile {
           )
         }
       )
+    )
+
+  private def sectionLocalServer(
+      config: ServerConfig,
+      model: Model
+  )(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    section(className := "local-server")(
+      h2()("Local server"),
+      fieldLocalServerUrl(config),
+      fieldClientNodes(model),
+      fieldAnonymousRead(model)
+    )
+
+  private def fieldLocalServerUrl(config: ServerConfig): ReactElement =
+    labeledInputField(
+      classes = "local-server-url",
+      label = "Local server URL",
+      inputId = "node-profile-local-server-url",
+      inputType = "text",
+      inputValue = config.url,
+      readOnly = true
     )
 
   private def fieldClientNodes(model: Model)(implicit
