@@ -151,12 +151,13 @@ object ModalNodeProfile {
         fieldName(node, rootCoto, model),
         asServer.map(fieldServerUrl),
         rootCoto.map(fieldDescription(_, model)),
-        Option.when(model.isOperatingNode()) {
-          Fragment(
+        model.localServer.flatMap(_.activeConfig).map(config =>
+          section(className := "local-server")(
+            h2()("Local server"),
             fieldClientNodes(model),
             fieldAnonymousRead(model)
           )
-        }
+        )
       )
     )
   }

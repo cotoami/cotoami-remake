@@ -87,20 +87,24 @@ dialog.node-profile {
       div.node-id {
         margin-top: 0;
       }
+    }
 
-      section.node-description {
-        border: 1px solid var(--pane-border-color);
-        min-height: 42px;
-        max-height: 200px;
-        overflow-y: auto;
-      }
+    section.node-description {
+      border: 1px solid var(--pane-border-color);
+      min-height: 42px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
 
-      section.client-nodes-count {
-        border: 1px solid var(--pane-border-color);
-        border-radius: var(--border-radius);
-        padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
-        padding-left: 6px;
-      }
+    section.local-server {
+      margin-top: 40px;
+    }
+
+    section.client-nodes-count {
+      border: 1px solid var(--pane-border-color);
+      border-radius: var(--border-radius);
+      padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
+      padding-left: 6px;
     }
   }
 }
