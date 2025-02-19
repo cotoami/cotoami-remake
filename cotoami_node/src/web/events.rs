@@ -12,6 +12,7 @@ use cotoami_db::prelude::*;
 use futures::{future::AbortHandle, stream::Stream, StreamExt};
 use tokio::sync::oneshot;
 use tracing::debug;
+use uuid::Uuid;
 
 use crate::{
     event::remote::NodeSentEvent,
@@ -76,23 +77,26 @@ async fn stream_events(
         }
     };
 
+    // Register a connection
+    let (events, abort_events) = futures::stream::abortable(events);
+    let anonymous_id = if let Some(client_id) = client_id {
+        register_client_conn(&state, client_id, remote_addr, abort_events);
+        None
+    } else {
+        let id = register_anonymous_conn(&state, remote_addr, abort_events);
+        Some(id)
+    };
+
     // Put a StreamLocal in the event stream to detect disconnection
     let events = {
         let state = state.clone();
         async_stream::stream! {
             // How to know when Sse connection is closed?
             // https://github.com/tokio-rs/axum/discussions/1060
-            let _local = StreamLocal(session, state);
+            let _local = StreamLocal(session, anonymous_id, state);
             for await event in events { yield event; }
         }
     };
-
-    // Register a connection
-    let (events, abort_events) = futures::stream::abortable(events);
-    match client_id {
-        Some(client_id) => register_client_conn(&state, client_id, remote_addr, abort_events),
-        None => register_anonymous_conn(&state, remote_addr, abort_events),
-    }
 
     Sse::new(events).keep_alive(KeepAlive::default())
 }
@@ -124,7 +128,11 @@ fn register_client_conn(
     ));
 }
 
-fn register_anonymous_conn(state: &NodeState, remote_addr: SocketAddr, abort_events: AbortHandle) {
+fn register_anonymous_conn(
+    state: &NodeState,
+    remote_addr: SocketAddr,
+    abort_events: AbortHandle,
+) -> Uuid {
     let (tx_disconnect, rx_disconnect) = oneshot::channel::<()>();
     tokio::spawn({
         async move {
@@ -137,7 +145,7 @@ fn register_anonymous_conn(state: &NodeState, remote_addr: SocketAddr, abort_eve
             }
         }
     });
-    state.add_anonymous_conn(remote_addr.ip().to_string(), tx_disconnect);
+    state.add_anonymous_conn(remote_addr.ip().to_string(), tx_disconnect)
 }
 
 fn sse_event<T, D>(event_type: T, data: D) -> Result<SseEvent, Infallible>
@@ -157,12 +165,14 @@ fn error_sse_event<E: ToString>(e: E) -> SseEvent {
         .data(e.to_string())
 }
 
-struct StreamLocal(ClientSession, NodeState);
+struct StreamLocal(ClientSession, Option<Uuid>, NodeState);
 impl Drop for StreamLocal {
     fn drop(&mut self) {
-        let Self(session, state) = self;
-        if let Some(client_id) = session.client_node_id() {
-            state.remove_client_conn(client_id, None);
+        let Self(session, anonymous_id, state) = self;
+        match (session.client_node_id(), anonymous_id) {
+            (Some(client_id), _) => state.remove_client_conn(client_id, None),
+            (_, Some(anonymous_id)) => state.remove_anonymous_conn(anonymous_id),
+            _ => (),
         }
     }
 }
