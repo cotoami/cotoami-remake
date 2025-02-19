@@ -17,7 +17,7 @@ import cotoami.backend.{
   LocalServer,
   ServerConfig
 }
-import cotoami.components.{materialSymbol, toolButton}
+import cotoami.components.{materialSymbol, toolButton, ScrollArea}
 import cotoami.subparts.{
   imgNode,
   labeledField,
@@ -154,12 +154,14 @@ object ModalNodeProfile {
     Fragment(
       divSidebar(node, model),
       div(className := "fields")(
-        fieldId(node),
-        fieldName(node, rootCoto, model),
-        asServer.map(fieldServerUrl),
-        rootCoto.map(fieldDescription(_, model)),
-        model.localServer.flatMap(_.activeConfig).map(
-          sectionLocalServer(_, model)
+        ScrollArea(className = Some("scroll-fields"))(
+          fieldId(node),
+          fieldName(node, rootCoto, model),
+          asServer.map(fieldServerUrl),
+          rootCoto.map(fieldDescription(_, model)),
+          model.localServer.flatMap(_.activeConfig).map(
+            sectionLocalServer(_, model)
+          )
         )
       )
     )

@@ -63,7 +63,14 @@ dialog.node-profile {
 
     div.fields {
       flex: 1;
-      padding-left: 16px;
+      margin-left: 16px;
+      max-height: 60vh;
+
+      div.scroll-fields {
+        padding-right: 16px;
+        padding-bottom: 20px;
+        overflow-x: hidden;
+      }
 
       input[readOnly] {
         background-color: var(--card-background-color);
