@@ -13,7 +13,6 @@ import cotoami.backend._
 
 case class Root(
     lastChangeNumber: Double = 0,
-    anonymousReadEnabled: Boolean = false,
 
     // Entities
     nodes: Nodes = Nodes(),
@@ -358,7 +357,6 @@ object Root {
   def apply(dataset: InitialDataset, localId: Id[Node]): Root =
     Root(
       lastChangeNumber = dataset.lastChangeNumber,
-      anonymousReadEnabled = dataset.anonymousReadEnabled,
       nodes = Nodes(dataset, localId)
     )
 

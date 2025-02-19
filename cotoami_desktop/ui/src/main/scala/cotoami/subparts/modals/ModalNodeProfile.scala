@@ -294,10 +294,9 @@ object ModalNodeProfile {
       )
     )
 
-  private def fieldAnonymousRead(model: Model)(implicit
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  private def fieldAnonymousRead(
+      model: Model
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     labeledField(
       classes = "anonymous-read",
       label = "Anonymous read",
@@ -309,7 +308,7 @@ object ModalNodeProfile {
         checked := model.anonymousReadEnabled,
         disabled := model.enablingAnonymousRead,
         onChange := (_ =>
-          if (context.repo.anonymousReadEnabled)
+          if (model.anonymousReadEnabled)
             dispatch(Msg.EnableAnonymousRead(false)) // disable
           else
             dispatch(
