@@ -351,6 +351,13 @@ object ModalNodeProfile {
       ),
       Option.when(model.enablingAnonymousRead) {
         span(className := "processing", aria - "busy" := "true")()
+      },
+      Option.when(model.anonymousReadEnabled) {
+        model.localServer.map(_.anonymousConnections).map(count =>
+          span(className := "anonymous-connections")(
+            s"(Connected: ${count})"
+          )
+        )
       }
     )
 
