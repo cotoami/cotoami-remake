@@ -9,7 +9,7 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link, Node}
-import cotoami.repository.Root
+import cotoami.repository.{Nodes, Root}
 import cotoami.subparts.modals._
 
 sealed trait Modal
@@ -91,8 +91,8 @@ object Modal {
 
   case class NodeProfile(model: ModalNodeProfile.Model) extends Modal
   object NodeProfile {
-    def apply(nodeId: Id[Node]): (NodeProfile, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalNodeProfile.Model(nodeId)
+    def apply(nodeId: Id[Node], nodes: Nodes): (NodeProfile, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalNodeProfile.Model(nodeId, nodes)
       (NodeProfile(model), cmd)
     }
   }
@@ -221,13 +221,8 @@ object Modal {
 
       case Msg.NodeProfileMsg(modalMsg) =>
         stack.get[NodeProfile].map { case NodeProfile(modal) =>
-          ModalNodeProfile.update(modalMsg, modal).pipe {
-            case (modal, repo, cmds) =>
-              (
-                updateModal(NodeProfile(modal), model)
-                  .copy(repo = repo),
-                cmds
-              )
+          ModalNodeProfile.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(NodeProfile(modal), model), cmds)
           }
         }
 

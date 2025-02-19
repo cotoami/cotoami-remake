@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import com.softwaremill.quicklens._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
@@ -8,8 +9,8 @@ import slinky.web.SyntheticMouseEvent
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
-import cotoami.repository.Root
-import cotoami.backend.{ClientNodeBackend, Commands, ErrorJson}
+import cotoami.repository.{Nodes, Root}
+import cotoami.backend.{ClientNodeBackend, Commands, ErrorJson, LocalServer}
 import cotoami.components.{materialSymbol, toolButton}
 import cotoami.subparts.{
   imgNode,
@@ -29,20 +30,28 @@ object ModalNodeProfile {
   case class Model(
       nodeId: Id[Node],
       clientCount: Double = 0,
+      localServer: Option[LocalServer] = None,
       enablingAnonymousRead: Boolean = false,
       error: Option[String] = None
   ) {
     def isOperatingNode()(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
+
+    def anonymousReadEnabled: Boolean =
+      localServer.map(_.anonymousReadEnabled).getOrElse(false)
   }
 
   object Model {
-    def apply(nodeId: Id[Node]): (Model, Cmd[AppMsg]) =
+    def apply(nodeId: Id[Node], nodes: Nodes): (Model, Cmd[AppMsg]) =
       (
         Model(nodeId),
         Cmd.Batch(
           Root.fetchNodeDetails(nodeId),
-          fetchClientCount
+          fetchClientCount,
+          if (nodes.isOperating(nodeId))
+            LocalServer.fetch.map(Msg.LocalServerFetched(_).into)
+          else
+            Cmd.none
         )
       )
   }
@@ -56,6 +65,8 @@ object ModalNodeProfile {
   }
 
   object Msg {
+    case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
+        extends Msg
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
         extends Msg
     case class EnableAnonymousRead(enable: Boolean) extends Msg
@@ -63,31 +74,36 @@ object ModalNodeProfile {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model)(implicit
-      context: Context
-  ): (Model, Root, Cmd[AppMsg]) = {
-    val default = (model, context.repo, Cmd.none)
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
+    val default = (model, Cmd.none)
     msg match {
+      case Msg.LocalServerFetched(Right(server)) =>
+        default.copy(_1 = model.copy(localServer = Some(server)))
+
+      case Msg.LocalServerFetched(Left(e)) =>
+        default.copy(_2 = cotoami.error("Couldn't fetch the local server.", e))
+
       case Msg.ClientCountFetched(Right(page)) =>
         default.copy(_1 = model.copy(clientCount = page.totalItems))
 
       case Msg.ClientCountFetched(Left(e)) =>
-        default.copy(_3 = cotoami.error("Couldn't fetch client count.", e))
+        default.copy(_2 = cotoami.error("Couldn't fetch client count.", e))
 
       case Msg.EnableAnonymousRead(enable) =>
         default.copy(
           _1 = model.copy(enablingAnonymousRead = true),
-          _3 = enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
+          _2 = enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
         )
 
       case Msg.AnonymousReadEnabled(Right(enabled)) =>
         default.copy(
-          _1 = model.copy(enablingAnonymousRead = false),
-          _2 = context.repo.copy(anonymousReadEnabled = enabled)
+          _1 = model
+            .modify(_.enablingAnonymousRead).setTo(false)
+            .modify(_.localServer.each.anonymousReadEnabled).setTo(enabled)
         )
 
       case Msg.AnonymousReadEnabled(Left(e)) =>
-        default.copy(_3 =
+        default.copy(_2 =
           cotoami.error("Couldn't enable/disable anonymous read.", e)
         )
     }
@@ -290,7 +306,7 @@ object ModalNodeProfile {
       input(
         `type` := "checkbox",
         role := "switch",
-        checked := context.repo.anonymousReadEnabled,
+        checked := model.anonymousReadEnabled,
         disabled := model.enablingAnonymousRead,
         onChange := (_ =>
           if (context.repo.anonymousReadEnabled)

@@ -5,16 +5,21 @@ import scala.scalajs.js
 import fui.Cmd
 import cotoami.utils.facade.Nullable
 
-case class LocalServer(json: LocalServerJson) {
-  def activeConfig: Option[ServerConfig] =
-    Nullable.toOption(json.active_config).map(ServerConfig)
-  def anonymousReadEnabled: Boolean = json.anonymous_read_enabled
-  def anonymousConnections: Int = json.anonymous_connections
+case class LocalServer(
+    activeConfig: Option[ServerConfig],
+    anonymousReadEnabled: Boolean,
+    anonymousConnections: Int
+) {
+  def this(json: LocalServerJson) = this(
+    Nullable.toOption(json.active_config).map(ServerConfig),
+    json.anonymous_read_enabled,
+    json.anonymous_connections
+  )
 }
 
 object LocalServer {
   def fetch: Cmd.One[Either[ErrorJson, LocalServer]] =
-    LocalServerJson.fetch.map(_.map(LocalServer(_)))
+    LocalServerJson.fetch.map(_.map(new LocalServer(_)))
 }
 
 @js.native

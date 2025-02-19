@@ -139,14 +139,14 @@ object AppHeader {
 
   private def buttonNodeProfile(
       node: Node
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "node-profile, default",
       title := "Node profile",
       onClick := (_ =>
         dispatch(
           (Modal.Msg.OpenModal.apply _).tupled(
-            Modal.NodeProfile(node.id)
+            Modal.NodeProfile(node.id, context.repo.nodes)
           )
         )
       )
