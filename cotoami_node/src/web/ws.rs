@@ -15,6 +15,7 @@ use futures::{sink::Sink, stream::Stream, FutureExt, SinkExt, StreamExt};
 use tokio::sync::oneshot;
 use tokio_tungstenite::tungstenite as ts;
 use tracing::debug;
+use uuid::Uuid;
 
 use crate::{
     event::remote::{
@@ -49,6 +50,29 @@ async fn ws_handler(
         None => handle_socket_anonymous(socket, addr, state).boxed(),
     })
 }
+
+/// Split a [WebSocket] into a [Sink] and [Stream] that handle [ts::Message]s.
+fn split_socket(
+    socket: WebSocket,
+) -> (
+    impl Sink<ts::Message, Error = anyhow::Error>,
+    impl Stream<Item = Result<ts::Message, axum::Error>>,
+) {
+    let (sink, stream) = socket.split();
+
+    // Adapt axum's sink/stream to handle tungstenite messages.
+    // cf. https://github.com/davidpdrsn/axum-tungstenite
+    let sink = Box::pin(sink.with(|m: ts::Message| async {
+        from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
+    }));
+    let stream = stream.map(|r| r.map(into_tungstenite));
+
+    (sink, stream)
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Handle authenticated client
+/////////////////////////////////////////////////////////////////////////////
 
 async fn handle_socket(
     socket: WebSocket,
@@ -86,9 +110,9 @@ async fn handle_socket(
         tx_disconnect,
     ));
 
-    // Event handler on abort
-    let on_abort = handler_on_abort(client_id, state.clone());
-    futures::pin_mut!(on_abort);
+    // Event handler on disconnect
+    let on_disconnect = on_client_disconnect(client_id, state.clone());
+    futures::pin_mut!(on_disconnect);
 
     match session {
         ClientSession::Operator(opr) => {
@@ -97,7 +121,7 @@ async fn handle_socket(
                 Arc::new(opr),
                 sink,
                 stream,
-                on_abort,
+                on_disconnect,
                 communication_tasks,
             )
             .await;
@@ -109,13 +133,30 @@ async fn handle_socket(
                 format!("WebSocket client-as-parent: {}", parent.node_id),
                 sink,
                 stream,
-                on_abort,
+                on_disconnect,
                 communication_tasks,
             )
             .await;
         }
     }
 }
+
+fn on_client_disconnect(
+    client_id: Id<Node>,
+    state: NodeState,
+) -> impl Sink<Option<CommunicationError>, Error = futures::never::Never> + 'static {
+    futures::sink::unfold((), move |(), error: Option<CommunicationError>| {
+        let state = state.clone();
+        async move {
+            state.remove_client_conn(client_id, error.map(|e| e.to_string()));
+            Ok(())
+        }
+    })
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Handle anonymous client
+/////////////////////////////////////////////////////////////////////////////
 
 async fn handle_socket_anonymous(socket: WebSocket, remote_addr: SocketAddr, state: NodeState) {
     let (sink, stream) = split_socket(socket);
@@ -137,45 +178,31 @@ async fn handle_socket_anonymous(socket: WebSocket, remote_addr: SocketAddr, sta
             }
         }
     });
-    state.add_anonymous_conn(remote_addr.ip().to_string(), tx_disconnect);
+    let conn_id = state.add_anonymous_conn(remote_addr.ip().to_string(), tx_disconnect);
+
+    // Event handler on disconnect
+    let on_disconnect = on_anonymous_disconnect(conn_id, state.clone());
+    futures::pin_mut!(on_disconnect);
 
     communicate_with_operator(
         state,
         Arc::new(Operator::Anonymous),
         sink,
         stream,
-        futures::sink::drain(),
+        on_disconnect,
         communication_tasks,
     )
     .await;
 }
 
-fn split_socket(
-    socket: WebSocket,
-) -> (
-    impl Sink<ts::Message, Error = anyhow::Error>,
-    impl Stream<Item = Result<ts::Message, axum::Error>>,
-) {
-    let (sink, stream) = socket.split();
-
-    // Adapt axum's sink/stream to handle tungstenite messages.
-    // cf. https://github.com/davidpdrsn/axum-tungstenite
-    let sink = Box::pin(sink.with(|m: ts::Message| async {
-        from_tungstenite(m).ok_or(anyhow::anyhow!("Unexpected message."))
-    }));
-    let stream = stream.map(|r| r.map(into_tungstenite));
-
-    (sink, stream)
-}
-
-fn handler_on_abort(
-    client_id: Id<Node>,
+fn on_anonymous_disconnect(
+    id: Uuid,
     state: NodeState,
 ) -> impl Sink<Option<CommunicationError>, Error = futures::never::Never> + 'static {
-    futures::sink::unfold((), move |(), error: Option<CommunicationError>| {
+    futures::sink::unfold((), move |(), _error: Option<CommunicationError>| {
         let state = state.clone();
         async move {
-            state.remove_client_conn(client_id, error.map(|e| e.to_string()));
+            state.remove_anonymous_conn(&id);
             Ok(())
         }
     })

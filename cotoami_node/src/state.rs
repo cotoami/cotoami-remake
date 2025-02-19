@@ -122,6 +122,8 @@ impl NodeState {
             .add(AnonymousConnection::new(remote_addr, disconnect))
     }
 
+    pub(crate) fn remove_anonymous_conn(&self, id: &Uuid) { self.anonymous_conns().remove(id); }
+
     pub fn is_parent(&self, id: &Id<Node>) -> bool { self.db().globals().is_parent(id) }
 
     pub fn parent_services(&self) -> &ParentServices { &self.inner.parent_services }
@@ -345,9 +347,7 @@ impl AnonymousConnections {
         id
     }
 
-    pub(crate) fn remove(&self, id: &Uuid) -> Option<AnonymousConnection> {
-        self.0.write().remove(id)
-    }
+    fn remove(&self, id: &Uuid) -> Option<AnonymousConnection> { self.0.write().remove(id) }
 
     pub(crate) fn disconnect_all(&self) {
         for (_, conn) in self.0.write().drain() {
