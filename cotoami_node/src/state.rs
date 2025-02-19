@@ -8,6 +8,7 @@ use cotoami_db::prelude::*;
 use parking_lot::RwLock;
 use tokio::{sync::oneshot::Sender, task::JoinHandle};
 use tracing::{debug, error};
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
@@ -116,7 +117,7 @@ impl NodeState {
         &self,
         remote_addr: impl Into<String>,
         disconnect: Sender<()>,
-    ) {
+    ) -> Uuid {
         self.anonymous_conns()
             .add(AnonymousConnection::new(remote_addr, disconnect))
     }
@@ -331,17 +332,26 @@ impl AnonymousConnection {
 }
 
 #[derive(Clone, Default)]
-pub struct AnonymousConnections(Arc<RwLock<Vec<AnonymousConnection>>>);
+pub struct AnonymousConnections(
+    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Uuid, AnonymousConnection>>>,
+);
 
 impl AnonymousConnections {
     pub fn count(&self) -> usize { self.0.read().len() }
 
-    fn add(&self, conn: AnonymousConnection) { self.0.write().push(conn); }
+    fn add(&self, conn: AnonymousConnection) -> Uuid {
+        let id = Uuid::now_v7();
+        self.0.write().insert(id, conn);
+        id
+    }
+
+    fn remove(&self, id: &Uuid) -> Option<AnonymousConnection> { self.0.write().remove(id) }
 
     pub(crate) fn disconnect_all(&self) {
-        let mut conns = self.0.write();
-        while let Some(conn) = conns.pop() {
-            conn.disconnect();
+        for key in self.0.read().keys() {
+            if let Some(conn) = self.remove(key) {
+                conn.disconnect();
+            }
         }
     }
 }
