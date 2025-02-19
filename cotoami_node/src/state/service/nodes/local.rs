@@ -22,7 +22,7 @@ impl NodeState {
         operator.requires_to_be_owner()?;
         let local = self.db().globals().try_read_local_node()?;
         Ok(LocalServer {
-            active_config: self.local_server_config(),
+            active_config: self.local_server_config().map(|arc| arc.as_ref().clone()),
             anonymous_read_enabled: local.anonymous_read_enabled,
             anonymous_connections: self.anonymous_conns().count(),
         })

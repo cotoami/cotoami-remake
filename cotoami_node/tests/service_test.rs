@@ -46,6 +46,25 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: LocalServer
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::LocalServer.into_request();
+    let local_server = service.call(request).await?.content::<LocalServer>()?;
+
+    let active_config = backend_state
+        .local_server_config()
+        .map(|arc| arc.as_ref().clone());
+    assert_that!(
+        local_server,
+        pat!(LocalServer {
+            active_config: eq(&active_config),
+            anonymous_read_enabled: eq(&false),
+            anonymous_connections: eq(&0)
+        })
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: EnableAnonymousRead
     /////////////////////////////////////////////////////////////////////////////
 

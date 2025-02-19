@@ -3,8 +3,6 @@
 //! An instance of a model struct is passed to services via [super::Command] or
 //! serialized into a body of a response ([super::Response::body]).
 
-use std::sync::Arc;
-
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use cotoami_db::prelude::*;
@@ -33,7 +31,7 @@ pub struct Pagination {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct LocalServer {
-    pub active_config: Option<Arc<ServerConfig>>,
+    pub active_config: Option<ServerConfig>,
     pub anonymous_read_enabled: bool,
     pub anonymous_connections: usize,
 }

@@ -9,7 +9,7 @@ use validator::Validate;
 // NodeConfig
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Validate)]
 pub struct NodeConfig {
     /// `COTOAMI_DB_DIR`
     pub db_dir: Option<String>,
@@ -119,7 +119,7 @@ impl NodeConfig {
 // ServerConfig
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Validate)]
 pub struct ServerConfig {
     // COTOAMI_SERVER_PORT
     #[serde(default = "ServerConfig::default_port")]
