@@ -46,8 +46,8 @@ async fn ws_handler(
     Extension(session): Extension<ClientSession>,
 ) -> impl IntoResponse {
     ws.on_upgrade(move |socket| match session.client_node_id() {
-        Some(client_id) => handle_socket(socket, addr, state, session, client_id).boxed(),
-        None => handle_socket_anonymous(socket, addr, state).boxed(),
+        Some(client_id) => handle_authenticated(socket, addr, state, session, client_id).boxed(),
+        None => handle_anonymous(socket, addr, state).boxed(),
     })
 }
 
@@ -74,7 +74,7 @@ fn split_socket(
 // Handle authenticated client
 /////////////////////////////////////////////////////////////////////////////
 
-async fn handle_socket(
+async fn handle_authenticated(
     socket: WebSocket,
     remote_addr: SocketAddr,
     state: NodeState,
@@ -158,7 +158,7 @@ fn on_client_disconnect(
 // Handle anonymous client
 /////////////////////////////////////////////////////////////////////////////
 
-async fn handle_socket_anonymous(socket: WebSocket, remote_addr: SocketAddr, state: NodeState) {
+async fn handle_anonymous(socket: WebSocket, remote_addr: SocketAddr, state: NodeState) {
     let (sink, stream) = split_socket(socket);
 
     // Container of tasks to maintain this client-server connection.
