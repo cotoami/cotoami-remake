@@ -1,6 +1,6 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
 use tokio::task::AbortHandle;
@@ -14,6 +14,55 @@ use crate::{
     },
     state::NodeState,
 };
+
+/////////////////////////////////////////////////////////////////////////////
+// ServerConnections
+/////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Clone, Default)]
+pub struct ServerConnections(
+    #[allow(clippy::type_complexity)] Arc<RwLock<HashMap<Id<Node>, ServerConnection>>>,
+);
+
+impl ServerConnections {
+    pub fn contains(&self, server_id: &Id<Node>) -> bool { self.0.read().contains_key(server_id) }
+
+    pub fn get(&self, server_id: &Id<Node>) -> Option<ServerConnection> {
+        self.0.read().get(server_id).cloned()
+    }
+
+    pub fn try_get(&self, server_id: &Id<Node>) -> Result<ServerConnection> {
+        self.get(server_id).ok_or(anyhow!(DatabaseError::not_found(
+            EntityKind::ServerNode,
+            "node_id",
+            *server_id,
+        )))
+    }
+
+    pub(crate) fn put(&self, server_id: Id<Node>, server_conn: ServerConnection) {
+        self.0.write().insert(server_id, server_conn);
+    }
+
+    #[allow(clippy::await_holding_lock)]
+    pub async fn connect_all(&self) {
+        // Configured the `send_guard` feature of parking_lot to be enabled,
+        // so that the each read lock guard can be held across calls to .await.
+        // https://github.com/Amanieu/parking_lot/issues/197
+        for conn in self.0.read().values() {
+            conn.connect().await;
+        }
+    }
+
+    pub fn disconnect_all(&self) {
+        for conn in self.0.read().values() {
+            conn.disconnect(None);
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// ServerConnection
+/////////////////////////////////////////////////////////////////////////////
 
 #[derive(derive_more::Debug, Clone)]
 pub struct ServerConnection {
@@ -167,6 +216,10 @@ impl ServerConnection {
         }
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// ConnectionState
+/////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug)]
 enum ConnectionState {
