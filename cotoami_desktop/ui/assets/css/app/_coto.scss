@@ -30,7 +30,7 @@ article.coto {
   }
 
   &.selected {
-    border: 2px dotted orange;
+    border: 2px dotted var(--selection-color);
   }
 
   &.highlighted {
