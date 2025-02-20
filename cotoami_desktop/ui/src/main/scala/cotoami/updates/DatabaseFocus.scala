@@ -59,7 +59,9 @@ object DatabaseFocus {
           model.copy(navCotonomas = navCotonomas, timeline = timeline),
           Cmd.Batch(
             CotonomaDetails.fetch(cotonomaId)
-              .map(Msg.FocusedCotonomaDetailsFetched),
+              .map(
+                Msg.FocusedCotonomaDetailsFetched
+              ), // and then SectionGeomap.Msg.DatabaseFocusChanged
             fetchRecentCotonomas,
             fetchTimeline,
             model.repo.fetchGraph
