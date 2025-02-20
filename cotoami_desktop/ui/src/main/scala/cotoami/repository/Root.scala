@@ -27,6 +27,14 @@ case class Root(
     pinning: HashSet[Id[Coto]] = HashSet.empty,
     reordering: HashSet[Id[Coto]] = HashSet.empty
 ) {
+  def onNodeChange: Root =
+    onFocusChange.copy(
+      nodes = nodes.focus(None),
+      cotonomas = Cotonomas(),
+      cotos = cotos.onCotonomaChange(),
+      links = Links()
+    )
+
   def onFocusChange: Root =
     copy(
       graphLoading = HashSet.empty,
@@ -54,14 +62,6 @@ case class Root(
   def focusedCotonoma: Option[(Cotonoma, Coto)] =
     cotonomas.focused.flatMap(cotonoma =>
       cotos.get(cotonoma.cotoId).map(cotonoma -> _)
-    )
-
-  def unfocus: Root =
-    onFocusChange.copy(
-      nodes = nodes.focus(None),
-      cotonomas = Cotonomas(),
-      cotos = cotos.onCotonomaChange(),
-      links = Links()
     )
 
   /////////////////////////////////////////////////////////////////////////////
