@@ -30,7 +30,7 @@ article.coto {
   }
 
   &.selected {
-    background-color: var(--hover-background-color) !important;
+    border: 2px dotted orange;
   }
 
   &.highlighted {
