@@ -7,7 +7,8 @@ import cotoami.backend._
 
 case class Cotos(
     map: Map[Id[Coto], Coto] = Map.empty,
-    focusedId: Option[Id[Coto]] = None
+    focusedId: Option[Id[Coto]] = None,
+    selectedIds: Seq[Id[Coto]] = Seq.empty
 ) {
   def get(id: Id[Coto]): Option[Coto] = map.get(id)
 
@@ -82,6 +83,17 @@ case class Cotos(
     ).getOrElse(this)
 
   def unfocus: Cotos = copy(focusedId = None)
+
+  def selected: Seq[Coto] = selectedIds.flatMap(get)
+
+  def select(id: Id[Coto]): Cotos =
+    if (selectedIds.contains(id))
+      this
+    else
+      this.modify(_.selectedIds).using(_ :+ id)
+
+  def deselect(id: Id[Coto]): Cotos =
+    this.modify(_.selectedIds).using(_.filterNot(_ == id))
 
   lazy val geolocated: Seq[(Coto, Geolocation)] =
     map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
