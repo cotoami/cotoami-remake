@@ -28,6 +28,8 @@ case class Nodes(
     activeClients: ActiveClients = ActiveClients(),
     parentIds: Seq[Id[Node]] = Seq.empty
 ) {
+  def onNodeChange: Nodes = unfocus
+
   def get(id: Id[Node]): Option[Node] = map.get(id)
 
   def contains(id: Id[Node]): Boolean = map.contains(id)
@@ -70,6 +72,8 @@ case class Nodes(
       else
         this
     ).getOrElse(copy(focusedId = None))
+
+  def unfocus: Nodes = copy(focusedId = None)
 
   def isFocusing(id: Id[Node]): Boolean = focusedId == Some(id)
 

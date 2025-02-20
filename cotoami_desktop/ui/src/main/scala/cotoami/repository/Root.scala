@@ -29,7 +29,7 @@ case class Root(
 ) {
   def onNodeChange: Root =
     onFocusChange.copy(
-      nodes = nodes.focus(None),
+      nodes = nodes.onNodeChange,
       cotonomas = Cotonomas(),
       cotos = cotos.onCotonomaChange(),
       links = Links()
