@@ -14,8 +14,7 @@ object DatabaseFocus {
 
   def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd.Batch[Msg]) =
     model
-      .modify(_.repo).using(_.onNodeChange)
-      .modify(_.repo.nodes).using(_.focus(nodeId))
+      .modify(_.repo).using(_.focusNode(nodeId))
       .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
       .modify(_.flowInput).using(_.onFocusChange)

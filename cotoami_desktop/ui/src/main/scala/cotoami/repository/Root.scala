@@ -27,31 +27,22 @@ case class Root(
     pinning: HashSet[Id[Coto]] = HashSet.empty,
     reordering: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def onNodeChange: Root =
-    clearProcessingState.copy(
-      nodes = nodes.onNodeChange,
-      cotonomas = Cotonomas(),
-      cotos = cotos.onCotonomaChange(),
-      links = Links()
-    )
-
   def onCotonomaChange: Root =
     clearProcessingState.copy(
       cotos = cotos.onCotonomaChange()
     )
 
-  private def clearProcessingState: Root =
-    copy(
-      graphLoading = HashSet.empty,
-      graphLoaded = HashSet.empty,
-      deleting = HashSet.empty,
-      pinning = HashSet.empty,
-      reordering = HashSet.empty
-    )
-
   /////////////////////////////////////////////////////////////////////////////
   // Focus
   /////////////////////////////////////////////////////////////////////////////
+
+  def focusNode(nodeId: Option[Id[Node]]): Root =
+    clearProcessingState.copy(
+      nodes = nodes.onNodeChange.focus(nodeId),
+      cotonomas = Cotonomas(),
+      cotos = cotos.onCotonomaChange(),
+      links = Links()
+    )
 
   def currentFocus: Option[(Node, Option[Cotonoma])] =
     (nodes.focused, cotonomas.focused) match {
@@ -67,6 +58,15 @@ case class Root(
   def focusedCotonoma: Option[(Cotonoma, Coto)] =
     cotonomas.focused.flatMap(cotonoma =>
       cotos.get(cotonoma.cotoId).map(cotonoma -> _)
+    )
+
+  private def clearProcessingState: Root =
+    copy(
+      graphLoading = HashSet.empty,
+      graphLoaded = HashSet.empty,
+      deleting = HashSet.empty,
+      pinning = HashSet.empty,
+      reordering = HashSet.empty
     )
 
   /////////////////////////////////////////////////////////////////////////////
