@@ -34,6 +34,17 @@ object SectionFlowInput {
       folded: Boolean = true,
       posting: Boolean = false
   ) {
+    def onCotonomaChange: Model =
+      copy(posting = false).pipe { model =>
+        if (form.hasContents)
+          model
+        else
+          model.copy(
+            form = CotoForm.Model(),
+            folded = true
+          )
+      }
+
     def hasContents: Boolean = form.hasContents
 
     def readyToPost: Boolean = !posting && form.hasValidContents
@@ -62,17 +73,6 @@ object SectionFlowInput {
         case form: CotoForm.Model =>
           restoreTextContent.map(Msg.ContentRestored(_).into)
         case _ => Cmd.none
-      }
-
-    def onFocusChange: Model =
-      copy(posting = false).pipe { model =>
-        if (form.hasContents)
-          model
-        else
-          model.copy(
-            form = CotoForm.Model(),
-            folded = true
-          )
       }
 
     private def restoreTextContent: Cmd.One[Option[String]] = Cmd(IO {
