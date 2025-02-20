@@ -282,6 +282,12 @@ object Main {
         )
       }
 
+      case Msg.Select(cotoId) =>
+        (model.modify(_.repo.cotos).using(_.select(cotoId)), Cmd.none)
+
+      case Msg.Deselect(cotoId) =>
+        (model.modify(_.repo.cotos).using(_.deselect(cotoId)), Cmd.none)
+
       case Msg.Highlight(cotoId) =>
         (model.copy(highlight = Some(cotoId)), Cmd.none)
 

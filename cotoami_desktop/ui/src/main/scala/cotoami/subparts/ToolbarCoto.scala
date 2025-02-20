@@ -105,14 +105,22 @@ object ToolbarCoto {
             classes = "select-check-box",
             symbol = "check_box",
             tip = Some("Deselect"),
-            tipPlacement = "left"
+            tipPlacement = "left",
+            onClick = e => {
+              e.stopPropagation()
+              dispatch(AppMsg.Deselect(coto.id))
+            }
           )
         else
           toolButton(
             classes = "select-check-box",
             symbol = "check_box_outline_blank",
             tip = Some("Select"),
-            tipPlacement = "left"
+            tipPlacement = "left",
+            onClick = e => {
+              e.stopPropagation()
+              dispatch(AppMsg.Select(coto.id))
+            }
           )
       )
     ).flatten
