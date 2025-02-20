@@ -28,14 +28,19 @@ case class Root(
     reordering: HashSet[Id[Coto]] = HashSet.empty
 ) {
   def onNodeChange: Root =
-    onFocusChange.copy(
+    clearProcessingState.copy(
       nodes = nodes.onNodeChange,
       cotonomas = Cotonomas(),
       cotos = cotos.onCotonomaChange(),
       links = Links()
     )
 
-  def onFocusChange: Root =
+  def onCotonomaChange: Root =
+    clearProcessingState.copy(
+      cotos = cotos.onCotonomaChange()
+    )
+
+  private def clearProcessingState: Root =
     copy(
       graphLoading = HashSet.empty,
       graphLoaded = HashSet.empty,
