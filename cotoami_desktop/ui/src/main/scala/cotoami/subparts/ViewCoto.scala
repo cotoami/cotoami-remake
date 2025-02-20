@@ -31,7 +31,8 @@ object ViewCoto {
       className := optionalClasses(
         Seq(
           ("coto", true),
-          ("highlighted", context.highlighted(coto.id)),
+          ("selected", context.repo.cotos.isSelecting(coto.id)),
+          ("highlighted", context.isHighlighting(coto.id)),
           ("being-deleted", context.repo.beingDeleted(coto.id))
         ) ++ classes
       ),

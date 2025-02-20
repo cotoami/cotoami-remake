@@ -29,6 +29,10 @@ article.coto {
     }
   }
 
+  &.selected {
+    background-color: var(--hover-background-color) !important;
+  }
+
   &.highlighted {
     background-color: var(--hover-background-color) !important;
   }

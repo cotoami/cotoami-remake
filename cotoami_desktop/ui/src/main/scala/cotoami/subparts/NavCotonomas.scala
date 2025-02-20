@@ -350,7 +350,7 @@ object NavCotonomas {
           className := optionalClasses(
             Seq(
               ("cotonoma", true),
-              ("highlighted", context.highlighted(cotonoma.cotoId))
+              ("highlighted", context.isHighlighting(cotonoma.cotoId))
             )
           ),
           title := cotonoma.name,

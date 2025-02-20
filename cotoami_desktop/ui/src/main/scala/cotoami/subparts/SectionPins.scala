@@ -363,7 +363,7 @@ object SectionPins {
                   className := optionalClasses(
                     Seq(
                       ("default", true),
-                      ("highlighted", context.highlighted(coto.id))
+                      ("highlighted", context.isHighlighting(coto.id))
                     )
                   ),
                   onClick := (_ => dispatch(Msg.ScrollToPin(link)))

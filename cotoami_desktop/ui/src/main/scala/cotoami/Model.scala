@@ -17,7 +17,7 @@ trait Context {
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
-  def highlighted(cotoId: Id[Coto]): Boolean
+  def isHighlighting(cotoId: Id[Coto]): Boolean
 }
 
 case class Model(
@@ -57,7 +57,7 @@ case class Model(
 ) extends Context {
   def path: String = url.pathname + url.search + url.hash
 
-  def highlighted(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
+  def isHighlighting(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
 
   def info(message: String, details: Option[String] = None): Model =
     copy(log = log.info(message, details))
