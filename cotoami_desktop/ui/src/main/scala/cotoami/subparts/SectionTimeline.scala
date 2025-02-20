@@ -51,7 +51,7 @@ object SectionTimeline {
       imeActive: Boolean = false,
       loading: Boolean = false
   ) {
-    def onFocusChange: Model =
+    def onCotonomaChange: Model =
       copy(
         cotoIds = PaginatedIds(),
         onlyCotonomas = false,
