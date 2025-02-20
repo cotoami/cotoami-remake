@@ -10,6 +10,20 @@ case class Cotos(
     focusedId: Option[Id[Coto]] = None,
     selectedIds: Seq[Id[Coto]] = Seq.empty
 ) {
+  def onCotonomaChange(): Cotos =
+    this
+      .unfocus
+      .modify(_.map).using(
+        _.filter { case (id, coto) =>
+          if (isSelecting(id))
+            true
+          else {
+            coto.revokeMediaUrl()
+            false
+          }
+        }
+      )
+
   def get(id: Id[Coto]): Option[Coto] = map.get(id)
 
   def getOriginal(coto: Coto): Option[Coto] =
@@ -51,11 +65,6 @@ case class Cotos(
     )
   }
 
-  def clear(): Cotos = {
-    map.values.foreach(_.revokeMediaUrl()) // Side-effect!
-    Cotos()
-  }
-
   def importFrom(cotos: PaginatedCotos): Cotos =
     this
       .putAll(cotos.page.items)
@@ -84,10 +93,12 @@ case class Cotos(
 
   def unfocus: Cotos = copy(focusedId = None)
 
+  def isSelecting(id: Id[Coto]): Boolean = selectedIds.contains(id)
+
   def selected: Seq[Coto] = selectedIds.flatMap(get)
 
   def select(id: Id[Coto]): Cotos =
-    if (selectedIds.contains(id))
+    if (isSelecting(id))
       this
     else
       this.modify(_.selectedIds).using(_ :+ id)

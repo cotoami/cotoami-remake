@@ -60,7 +60,7 @@ case class Root(
     onFocusChange.copy(
       nodes = nodes.focus(None),
       cotonomas = Cotonomas(),
-      cotos = cotos.clear(),
+      cotos = cotos.onCotonomaChange(),
       links = Links()
     )
 

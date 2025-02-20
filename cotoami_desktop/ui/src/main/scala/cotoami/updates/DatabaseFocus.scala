@@ -49,7 +49,7 @@ object DatabaseFocus {
       .modify(_.repo).using(_.onFocusChange)
       .modify(_.repo.nodes).using(_.focus(nodeId))
       .modify(_.repo.cotonomas).using(_.focus(Some(cotonomaId)))
-      .modify(_.repo.cotos).using(_.clear())
+      .modify(_.repo.cotos).using(_.onCotonomaChange())
       .modify(_.repo.links).setTo(Links())
       .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
