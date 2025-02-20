@@ -16,9 +16,9 @@ case class Cotos(
       .modify(_.map).using(
         _.filter { case (id, coto) =>
           if (isSelecting(id))
-            true
+            true // retain selected cotos
           else {
-            coto.revokeMediaUrl()
+            coto.revokeMediaUrl() // Side-effect!
             false
           }
         }
