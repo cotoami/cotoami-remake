@@ -6,7 +6,6 @@ import com.softwaremill.quicklens._
 import fui.{Browser, Cmd}
 import cotoami.{Model, Msg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
-import cotoami.repository.Links
 import cotoami.backend.CotonomaDetails
 import cotoami.subparts.SectionGeomap
 
@@ -45,10 +44,7 @@ object DatabaseFocus {
         // (which means the page being reloaded)
         model.repo.cotonomas.recentIds.isEmpty
     model
-      .modify(_.repo).using(_.onCotonomaChange)
-      .modify(_.repo.nodes).using(_.focus(nodeId))
-      .modify(_.repo.cotonomas).using(_.focus(Some(cotonomaId)))
-      .modify(_.repo.links).setTo(Links())
+      .modify(_.repo).using(_.focusCotonoma(nodeId, cotonomaId))
       .modify(_.search).using(_.clear)
       .modify(_.timeline).using(_.onFocusChange)
       .modify(_.flowInput).using(_.onFocusChange)

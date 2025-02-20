@@ -27,11 +27,6 @@ case class Root(
     pinning: HashSet[Id[Coto]] = HashSet.empty,
     reordering: HashSet[Id[Coto]] = HashSet.empty
 ) {
-  def onCotonomaChange: Root =
-    clearProcessingState.copy(
-      cotos = cotos.onCotonomaChange()
-    )
-
   /////////////////////////////////////////////////////////////////////////////
   // Focus
   /////////////////////////////////////////////////////////////////////////////
@@ -40,6 +35,14 @@ case class Root(
     clearProcessingState.copy(
       nodes = nodes.onNodeChange.focus(nodeId),
       cotonomas = Cotonomas(),
+      cotos = cotos.onCotonomaChange(),
+      links = Links()
+    )
+
+  def focusCotonoma(nodeId: Option[Id[Node]], cotonomaId: Id[Cotonoma]): Root =
+    clearProcessingState.copy(
+      nodes = nodes.focus(nodeId),
+      cotonomas = cotonomas.focus(Some(cotonomaId)),
       cotos = cotos.onCotonomaChange(),
       links = Links()
     )
