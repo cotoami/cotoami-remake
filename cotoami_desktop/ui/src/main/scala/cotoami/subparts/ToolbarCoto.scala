@@ -22,10 +22,10 @@ object ToolbarCoto {
     val buttons = Seq(
       Option.when(context.repo.canPin(coto.id)) {
         toolButton(
+          classes = "pin-coto",
           symbol = "push_pin",
           tip = Some("Pin"),
           tipPlacement = "left",
-          classes = "pin-coto",
           disabled = context.repo.beingPinned(coto.id),
           onClick = e => {
             e.stopPropagation()
@@ -35,10 +35,10 @@ object ToolbarCoto {
       },
       Option.when(context.repo.nodes.canEdit(coto)) {
         toolButton(
+          classes = "edit-coto",
           symbol = "edit",
           tip = Some("Edit"),
           tipPlacement = "left",
-          classes = "edit-coto",
           onClick = e => {
             e.stopPropagation()
             dispatch(
@@ -51,18 +51,18 @@ object ToolbarCoto {
       },
       Option.when(context.repo.nodes.canCreateLinksIn(coto.nodeId)) {
         toolButton(
+          classes = "add-linked-coto",
           symbol = "add",
           tip = Some("Write a linked coto"),
-          tipPlacement = "left",
-          classes = "add-linked-coto"
+          tipPlacement = "left"
         )
       },
       Option.when(context.repo.canRepost(coto.id)) {
         toolButton(
+          classes = "repost-coto",
           symbol = "repeat",
           tip = Some("Repost"),
           tipPlacement = "left",
-          classes = "repost-coto",
           onClick = e => {
             e.stopPropagation()
             Modal.Repost(coto, context.repo) match {
@@ -74,18 +74,18 @@ object ToolbarCoto {
       },
       Option.when(context.repo.nodes.canPromote(coto)) {
         toolButton(
+          classes = "promote-to-cotonoma",
           symbol = "drive_folder_upload",
           tip = Some("Promote to a cotonoma"),
-          tipPlacement = "left",
-          classes = "promote-to-cotonoma"
+          tipPlacement = "left"
         )
       },
       Option.when(context.repo.nodes.canEdit(coto) && !coto.isCotonoma) {
         toolButton(
+          classes = "delete-coto",
           symbol = "delete",
           tip = Some("Delete"),
           tipPlacement = "left",
-          classes = "delete-coto",
           onClick = e => {
             e.stopPropagation()
             dispatch(
@@ -98,7 +98,23 @@ object ToolbarCoto {
             )
           }
         )
-      }
+      },
+      Some(
+        if (context.repo.cotos.isSelecting(coto.id))
+          toolButton(
+            classes = "select-check-box",
+            symbol = "check_box",
+            tip = Some("Deselect"),
+            tipPlacement = "left"
+          )
+        else
+          toolButton(
+            classes = "select-check-box",
+            symbol = "check_box_outline_blank",
+            tip = Some("Select"),
+            tipPlacement = "left"
+          )
+      )
     ).flatten
 
     Option.when(!buttons.isEmpty) {
