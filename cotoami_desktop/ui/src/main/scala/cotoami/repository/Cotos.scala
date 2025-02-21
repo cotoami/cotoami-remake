@@ -106,6 +106,8 @@ case class Cotos(
   def deselect(id: Id[Coto]): Cotos =
     this.modify(_.selectedIds).using(_.filterNot(_ == id))
 
+  def clearSelection: Cotos = copy(selectedIds = Seq.empty)
+
   lazy val geolocated: Seq[(Coto, Geolocation)] =
     map.values.flatMap(coto => coto.geolocation.map(coto -> _)).toSeq
 }

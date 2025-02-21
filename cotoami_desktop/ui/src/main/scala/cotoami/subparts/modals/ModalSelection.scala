@@ -21,10 +21,20 @@ object ModalSelection {
     def into = Modal.Msg.SelectionMsg(this).pipe(AppMsg.ModalMsg)
   }
 
+  object Msg {
+    case object Clear extends Msg
+  }
+
   def update(msg: Msg)(implicit
       context: Context
   ): (Cotos, Cmd[AppMsg]) =
-    (context.repo.cotos, Cmd.none)
+    msg match {
+      case Msg.Clear =>
+        (
+          context.repo.cotos.clearSelection,
+          Modal.close(Modal.Selection.getClass())
+        )
+    }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -57,7 +67,8 @@ object ModalSelection {
       div(className := "buttons")(
         button(
           `type` := "button",
-          className := "cancel contrast outline"
+          className := "cancel contrast outline",
+          onClick := (_ => dispatch(Msg.Clear.into))
         )("Clear selection")
       )
     )
@@ -74,10 +85,7 @@ object ModalSelection {
           symbol = "check_box",
           tip = Some("Deselect"),
           tipPlacement = "right",
-          onClick = e => {
-            e.stopPropagation()
-            dispatch(AppMsg.Deselect(coto.id))
-          }
+          onClick = _ => dispatch(AppMsg.Deselect(coto.id))
         )
       ),
       ViewCoto.divContent(coto)
