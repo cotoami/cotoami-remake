@@ -6,8 +6,9 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.models.Coto
 import cotoami.repository.Cotos
-import cotoami.components.{Flipped, Flipper, ScrollArea}
+import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalSelection {
@@ -48,9 +49,7 @@ object ModalSelection {
         )(
           cotos.selected.map(coto =>
             Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
-              article(className := "coto")(
-                ViewCoto.divContent(coto)
-              )
+              articleCoto(coto)
             ): ReactElement
           )
         )
@@ -63,4 +62,24 @@ object ModalSelection {
       )
     )
   }
+
+  private def articleCoto(coto: Coto)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    article(className := "coto")(
+      header()(
+        toolButton(
+          classes = "deselect",
+          symbol = "check_box",
+          tip = Some("Deselect"),
+          tipPlacement = "right",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(AppMsg.Deselect(coto.id))
+          }
+        )
+      ),
+      ViewCoto.divContent(coto)
+    )
 }
