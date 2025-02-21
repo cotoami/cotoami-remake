@@ -1,5 +1,31 @@
 dialog.selection {
   &>article {
     width: 600px;
+    padding-left: 0;
+    padding-right: 0;
+
+    &>header {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    div.scroll-selected-cotos {
+      max-height: 60vh;
+    }
+
+    article.coto {
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--pane-border-color);
+
+      &:hover {
+        background-color: var(--hover-background-color) !important;
+      }
+    }
+
+    div.buttons {
+      padding-left: var(--block-spacing-horizontal);
+      padding-right: var(--block-spacing-horizontal);
+    }
   }
 }

@@ -7,6 +7,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.repository.Cotos
+import cotoami.components.{Flipped, Flipper, ScrollArea}
 import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalSelection {
@@ -31,17 +32,26 @@ object ModalSelection {
   def apply()(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val cotos = context.repo.cotos
     Modal.view(
       dialogClasses = "selection",
       closeButton = Some((classOf[Modal.Selection.type], dispatch))
     )(
       "Selected cotos"
     )(
-      ul(className := "selected-cotos")(
-        context.repo.cotos.selected.map(coto =>
-          li(className := "selected-coto")(
-            ViewCoto.divContent(coto)
+      ScrollArea(className = Some("scroll-selected-cotos"))(
+        Flipper(
+          element = "div",
+          className = "selected-cotos",
+          flipKey = cotos.selectedIds.length.toString()
+        )(
+          cotos.selected.map(coto =>
+            Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
+              article(className := "coto")(
+                ViewCoto.divContent(coto)
+              )
+            ): ReactElement
           )
         )
       ),
@@ -52,4 +62,5 @@ object ModalSelection {
         )("Clear selection")
       )
     )
+  }
 }
