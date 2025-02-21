@@ -2,11 +2,12 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.repository.Cotos
-import cotoami.subparts.Modal
+import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalSelection {
 
@@ -28,13 +29,27 @@ object ModalSelection {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply()(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      dialogClasses = "selected-cotos",
+      dialogClasses = "selection",
       closeButton = Some((classOf[Modal.Selection.type], dispatch))
     )(
       "Selected cotos"
     )(
+      ul(className := "selected-cotos")(
+        context.repo.cotos.selected.map(coto =>
+          li(className := "selected-coto")(
+            ViewCoto.divContent(coto)
+          )
+        )
+      ),
+      div(className := "buttons")(
+        button(
+          `type` := "button",
+          className := "cancel contrast outline"
+        )("Clear selection")
+      )
     )
 }
