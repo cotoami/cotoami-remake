@@ -76,6 +76,8 @@ object Modal {
     def apply(link: Link): LinkEditor = LinkEditor(ModalLinkEditor.Model(link))
   }
 
+  case object Selection extends Modal
+
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Modal
@@ -133,6 +135,7 @@ object Modal {
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class CotoEditorMsg(msg: ModalCotoEditor.Msg) extends Msg
     case class LinkEditorMsg(msg: ModalLinkEditor.Msg) extends Msg
+    case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
@@ -190,6 +193,13 @@ object Modal {
         stack.get[LinkEditor].map { case LinkEditor(modal) =>
           ModalLinkEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
             (updateModal(LinkEditor(modal), model), cmds)
+          }
+        }
+
+      case Msg.SelectionMsg(modalMsg) =>
+        stack.get[Selection.type].map { _ =>
+          ModalSelection.update(modalMsg).pipe { case (cotos, cmds) =>
+            (model.modify(_.repo.cotos).setTo(cotos), cmds)
           }
         }
 
@@ -320,6 +330,8 @@ object Modal {
       case CotoEditor(modal) => Some(ModalCotoEditor(modal))
 
       case LinkEditor(modal) => Some(ModalLinkEditor(modal))
+
+      case Selection => Some(ModalSelection())
 
       case Incorporate(modal) => Some(ModalIncorporate(modal))
 
