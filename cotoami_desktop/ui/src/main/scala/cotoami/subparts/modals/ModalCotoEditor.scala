@@ -214,7 +214,10 @@ object ModalCotoEditor {
       error = model.error
     )(
       if (model.original.isCotonoma)
-        "Cotonoma"
+        if (context.repo.isNodeRoot(model.original.id))
+          "Node Cotonoma"
+        else
+          "Cotonoma"
       else
         "Coto"
     )(
