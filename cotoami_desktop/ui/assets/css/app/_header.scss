@@ -140,6 +140,11 @@ div.app>header {
           }
         }
       }
+
+      button.selected-cotos {
+        color: var(--selection-color);
+        opacity: 1;
+      }
     }
 
     div.search {

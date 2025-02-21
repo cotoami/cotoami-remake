@@ -106,8 +106,18 @@ object AppHeader {
 
   private def divToolButtons(
       uiState: UiState
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(className := "tool-buttons")(
+      Option.when(!context.repo.cotos.selectedIds.isEmpty) {
+        button(
+          className := "selected-cotos default tool",
+          data - "tooltip" := "Selected cotos",
+          data - "placement" := "bottom"
+        )(
+          materialSymbol("check_box"),
+          span(className := "count")(context.repo.cotos.selectedIds.size)
+        )
+      },
       toolButton(
         classes = optionalClasses(
           Seq(
