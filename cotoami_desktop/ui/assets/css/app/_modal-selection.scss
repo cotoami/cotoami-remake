@@ -14,8 +14,12 @@ dialog.selection {
     }
 
     article.coto {
+      padding-top: 4px;
       padding-bottom: 20px;
-      border-bottom: 1px solid var(--pane-border-color);
+
+      &:nth-child(n+2) {
+        border-top: 1px solid var(--pane-border-color);
+      }
 
       &:hover {
         background-color: var(--hover-background-color) !important;
