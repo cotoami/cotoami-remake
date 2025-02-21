@@ -51,9 +51,9 @@ object ModalSelection {
     )(
       s"Selected cotos (${cotos.selectedIds.size})"
     )(
-      ScrollArea(className = Some("scroll-selected-cotos"))(
+      ScrollArea(className = Some("selected-cotos"))(
         Flipper(
-          element = "div",
+          element = "section",
           className = "selected-cotos",
           flipKey = cotos.selectedIds.length.toString()
         )(

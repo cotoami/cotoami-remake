@@ -9,24 +9,27 @@ dialog.selection {
       margin-right: 0;
     }
 
-    div.scroll-selected-cotos {
+    div.selected-cotos {
       max-height: 60vh;
-    }
 
-    article.coto {
-      padding-top: 4px;
-      padding-bottom: 20px;
+      section.selected-cotos {
+        article.coto {
+          max-height: none;
+          padding-top: 4px;
+          padding-bottom: 20px;
 
-      &:nth-child(n+2) {
-        border-top: 1px solid var(--pane-border-color);
-      }
+          &:nth-child(n+2) {
+            border-top: 1px solid var(--pane-border-color);
+          }
 
-      &:hover {
-        background-color: var(--hover-background-color) !important;
-      }
+          &:hover {
+            background-color: var(--hover-background-color) !important;
+          }
 
-      button.deselect {
-        font-size: 23px;
+          button.deselect {
+            font-size: 23px;
+          }
+        }
       }
     }
 
