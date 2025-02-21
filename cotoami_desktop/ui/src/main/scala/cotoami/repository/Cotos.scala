@@ -59,7 +59,7 @@ case class Cotos(
 
   def delete(id: Id[Coto]): Cotos = {
     get(id).foreach(_.revokeMediaUrl()) // Side-effect!
-    copy(
+    deselect(id).copy(
       map = map - id,
       focusedId = if (isFocusing(id)) None else focusedId
     )
