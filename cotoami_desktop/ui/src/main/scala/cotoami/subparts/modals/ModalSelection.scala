@@ -39,7 +39,7 @@ object ModalSelection {
       dialogClasses = "selection",
       closeButton = Some((classOf[Modal.Selection.type], dispatch))
     )(
-      "Selected cotos"
+      s"Selected cotos (${cotos.selectedIds.size})"
     )(
       ScrollArea(className = Some("scroll-selected-cotos"))(
         Flipper(
