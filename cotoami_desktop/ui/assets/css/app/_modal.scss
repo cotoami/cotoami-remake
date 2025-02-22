@@ -2,7 +2,7 @@ dialog {
   article {
     padding-bottom: 10px;
 
-    header {
+    &>header {
       margin-bottom: 0;
       padding: 15px 20px;
 
@@ -10,6 +10,11 @@ dialog {
         margin: 0;
         font-size: 1.2rem;
         font-weight: 800;
+
+        span.material-symbols {
+          margin-right: 4px;
+          vertical-align: middle;
+        }
       }
     }
 

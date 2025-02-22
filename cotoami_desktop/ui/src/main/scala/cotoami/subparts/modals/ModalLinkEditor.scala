@@ -3,7 +3,7 @@ package cotoami.subparts.modals
 import scala.util.chaining._
 
 import slinky.web.html._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -132,9 +132,15 @@ object ModalLinkEditor {
       error = model.error
     )(
       if (context.repo.isPin(model.original))
-        "Pin"
+        Fragment(
+          materialSymbol("push_pin"),
+          "Pin"
+        )
       else
-        "Link"
+        Fragment(
+          materialSymbol("link"),
+          "Link"
+        )
     )(
       section(className := "source-coto")(
         context.repo.cotos.get(model.original.sourceCotoId).map(articleCoto)
