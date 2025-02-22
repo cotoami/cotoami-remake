@@ -289,7 +289,7 @@ object Main {
         model.repo.cotos.deselect(cotoId).pipe { cotos =>
           (
             model.modify(_.repo.cotos).setTo(cotos),
-            if (cotos.selectedIds.isEmpty)
+            if (!cotos.anySelected)
               Modal.close(Modal.Selection.getClass())
             else
               Cmd.none

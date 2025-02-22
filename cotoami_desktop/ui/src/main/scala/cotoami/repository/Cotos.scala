@@ -95,6 +95,8 @@ case class Cotos(
 
   def isSelecting(id: Id[Coto]): Boolean = selectedIds.contains(id)
 
+  def anySelected: Boolean = !selectedIds.isEmpty
+
   def selected: Seq[Coto] = selectedIds.flatMap(get)
 
   def select(id: Id[Coto]): Cotos =
