@@ -35,7 +35,9 @@ object Link {
     Ordering.fromLessThan[Link](_.order < _.order)
 
   final val IconName = "link"
+  final val ConnectIconName = "add_link"
   final val PinIconName = "push_pin"
+
   final val LinkingPhraseMaxLength = 200
 
   def validateLinkingPhrase(linkingPhrase: String): Seq[Validation.Error] = {

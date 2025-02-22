@@ -4,7 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.Coto
+import cotoami.models.{Coto, Link}
 import cotoami.repository.Root
 import cotoami.components.toolButton
 import cotoami.subparts.Modal
@@ -20,6 +20,17 @@ object ToolbarCoto {
     if (coto.isRepost) return None
 
     val buttons = Seq(
+      Option.when(
+        context.repo.cotos.anySelected &&
+          !context.repo.cotos.isSelecting(coto.id)
+      ) {
+        toolButton(
+          classes = "connect",
+          symbol = Link.ConnectIconName,
+          tip = Some("Connect"),
+          tipPlacement = "left"
+        )
+      },
       Option.when(context.repo.canPin(coto.id)) {
         toolButton(
           classes = "pin-coto",

@@ -243,6 +243,11 @@ section.coto-toolbar {
       font-size: 20px;
     }
   }
+
+  button.connect {
+    color: var(--selection-color);
+    opacity: 1;
+  }
 }
 
 section.reorder-toolbar {
