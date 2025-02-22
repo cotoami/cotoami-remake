@@ -60,7 +60,7 @@ object ToolbarCoto {
       Option.when(context.repo.canRepost(coto.id)) {
         toolButton(
           classes = "repost-coto",
-          symbol = "repeat",
+          symbol = Coto.RepostIconName,
           tip = Some("Repost"),
           tipPlacement = "left",
           onClick = e => {

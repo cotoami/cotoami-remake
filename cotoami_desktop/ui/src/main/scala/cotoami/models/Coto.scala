@@ -79,6 +79,7 @@ case class Coto(
 
 object Coto {
   final val IconName = "chat"
+  final val RepostIconName = "repeat"
   final val SummaryMaxLength = 200
   final val stripMarkdown = Remark.remark().use(StripMarkdown)
 

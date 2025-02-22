@@ -232,6 +232,7 @@ object ModalRepost {
       closeButton = Some((classOf[Modal.Repost], dispatch)),
       error = model.error
     )(
+      materialSymbol(Coto.RepostIconName),
       "Repost"
     )(
       section(className := "repost-form")(
@@ -262,7 +263,7 @@ object ModalRepost {
           disabled := !model.readyToRepost,
           aria - "busy" := model.reposting.toString(),
           onClick := (_ => dispatch(Msg.Repost))
-        )(materialSymbol("repeat"))
+        )(materialSymbol(Coto.RepostIconName))
       ),
       articleCoto(model.originalCoto),
       sectionAlreadyPostedIn(model)
