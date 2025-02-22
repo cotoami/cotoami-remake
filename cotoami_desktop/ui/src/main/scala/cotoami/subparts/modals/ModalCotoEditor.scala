@@ -2,16 +2,16 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Coto, DateTimeRange, Geolocation}
+import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.components.{optionalClasses, SplitPane}
+import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -215,11 +215,20 @@ object ModalCotoEditor {
     )(
       if (model.original.isCotonoma)
         if (context.repo.isNodeRoot(model.original.id))
-          "Node Cotonoma"
+          Fragment(
+            materialSymbol(Node.IconName),
+            "Node Cotonoma"
+          )
         else
-          "Cotonoma"
+          Fragment(
+            materialSymbol(Cotonoma.IconName),
+            "Cotonoma"
+          )
       else
-        "Coto"
+        Fragment(
+          materialSymbol(Coto.IconName),
+          "Coto"
+        )
     )(
       Option.when(model.original.isCotonoma) {
         div(className := "cotonoma-form")(

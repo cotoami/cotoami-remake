@@ -30,6 +30,7 @@ case class Cotonoma(
 }
 
 object Cotonoma {
+  final val IconName = "folder"
   final val NameMaxLength = 50
 
   def validateName(name: String): Seq[Validation.Error] = {

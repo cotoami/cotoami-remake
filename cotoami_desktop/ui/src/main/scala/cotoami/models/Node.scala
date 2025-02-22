@@ -47,7 +47,8 @@ case class Node(
 }
 
 object Node {
-  val IconMimeType = "image/png"
+  final val IconName = "database"
+  final val IconMimeType = "image/png"
 
   def decodeBase64Icon(icon: String): dom.Blob =
     Browser.decodeBase64(icon, IconMimeType)

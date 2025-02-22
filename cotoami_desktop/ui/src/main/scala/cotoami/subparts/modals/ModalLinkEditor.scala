@@ -133,12 +133,12 @@ object ModalLinkEditor {
     )(
       if (context.repo.isPin(model.original))
         Fragment(
-          materialSymbol("push_pin"),
+          materialSymbol(Link.PinIconName),
           "Pin"
         )
       else
         Fragment(
-          materialSymbol("link"),
+          materialSymbol(Link.IconName),
           "Link"
         )
     )(

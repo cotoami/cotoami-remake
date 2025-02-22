@@ -379,7 +379,7 @@ object SectionFlowInput {
           onClick := (_ => dispatch(Msg.SetCotoForm))
         )(
           span(className := "label")(
-            materialSymbol("chat"),
+            materialSymbol(Coto.IconName),
             "Coto"
           )
         ),
@@ -389,7 +389,7 @@ object SectionFlowInput {
           onClick := (_ => dispatch(Msg.SetCotonomaForm))
         )(
           span(className := "label")(
-            materialSymbol("folder"),
+            materialSymbol(Cotonoma.IconName),
             "Cotonoma"
           )
         )
