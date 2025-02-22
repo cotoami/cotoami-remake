@@ -1,11 +1,12 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
+import cotoami.components.materialSymbol
 import cotoami.subparts.Modal
 
 object ModalConfirm {
@@ -55,7 +56,10 @@ object ModalConfirm {
       dialogClasses = "confirm",
       closeButton = Some((modalType, dispatch))
     )(
-      "Confirmation"
+      Fragment(
+        materialSymbol("check_circle"),
+        "Confirmation"
+      )
     )(
       section(className := "confirmation-message")(model.message),
       div(className := "buttons")(
