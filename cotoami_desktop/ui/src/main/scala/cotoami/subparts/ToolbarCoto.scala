@@ -28,7 +28,11 @@ object ToolbarCoto {
           classes = "connect",
           symbol = Link.ConnectIconName,
           tip = Some("Connect"),
-          tipPlacement = "left"
+          tipPlacement = "left",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.Connect(coto.id)))
+          }
         )
       },
       Option.when(context.repo.canPin(coto.id)) {
