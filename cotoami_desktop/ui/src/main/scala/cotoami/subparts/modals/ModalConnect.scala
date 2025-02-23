@@ -19,6 +19,7 @@ object ModalConnect {
   case class Model(
       cotoId: Id[Coto],
       toSelection: Boolean = true,
+      clearSelection: Boolean = true,
       error: Option[String] = None
   )
 
@@ -68,7 +69,15 @@ object ModalConnect {
         button(
           `type` := "button",
           className := "connect"
-        )("Connect")
+        )("Connect"),
+        label(className := "clear-selection", htmlFor := "clear-selection")(
+          input(
+            `type` := "checkbox",
+            id := "clear-selection",
+            checked := model.clearSelection
+          ),
+          "Clear selection"
+        )
       )
     )
   }
