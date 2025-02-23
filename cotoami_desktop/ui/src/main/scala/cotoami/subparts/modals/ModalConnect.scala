@@ -57,7 +57,10 @@ object ModalConnect {
         else
           div()()
       ),
-      div(className := "link-direction")(
+      div(className := "link")(
+        span(className := "arrow")(
+          materialSymbol("arrow_downward")
+        )
       ),
       section(className := "target")(
         if (model.toSelection)

@@ -3,6 +3,17 @@ dialog.connect {
     width: 600px;
   }
 
+  div.link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    span.arrow {
+      font-size: 24px;
+    }
+  }
+
   div.buttons {
     display: flex;
     flex-direction: row-reverse;
