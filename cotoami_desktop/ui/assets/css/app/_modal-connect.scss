@@ -1,6 +1,18 @@
 dialog.connect {
   &>article {
     width: 600px;
+
+    div.modal-body {
+      padding-top: 12px;
+    }
+  }
+
+  div.buttons.reverse {
+    margin-top: 0;
+  }
+
+  section.source {
+    margin-top: 12px;
   }
 
   div.link {
@@ -14,7 +26,11 @@ dialog.connect {
     }
   }
 
-  div.buttons {
+  article.coto {
+    margin-top: 0;
+  }
+
+  div.buttons.connect {
     display: flex;
     flex-direction: row-reverse;
     align-items: center;

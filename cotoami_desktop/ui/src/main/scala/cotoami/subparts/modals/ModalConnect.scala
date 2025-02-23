@@ -51,6 +51,12 @@ object ModalConnect {
       materialSymbol(Link.ConnectIconName),
       "Connect"
     )(
+      div(className := "buttons reverse")(
+        button(
+          `type` := "button",
+          className := "reverse contrast outline"
+        )("Reverse")
+      ),
       section(className := "source")(
         if (model.toSelection)
           coto.map(articleCoto)
@@ -68,7 +74,7 @@ object ModalConnect {
         else
           coto.map(articleCoto)
       ),
-      div(className := "buttons")(
+      div(className := "buttons connect")(
         button(
           `type` := "button",
           className := "connect"
