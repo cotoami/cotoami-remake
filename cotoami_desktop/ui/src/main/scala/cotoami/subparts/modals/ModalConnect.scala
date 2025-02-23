@@ -2,12 +2,13 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link}
-import cotoami.components.materialSymbol
-import cotoami.subparts.Modal
+import cotoami.components.{materialSymbol, ScrollArea}
+import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalConnect {
 
@@ -17,6 +18,7 @@ object ModalConnect {
 
   case class Model(
       cotoId: Id[Coto],
+      toSelection: Boolean = true,
       error: Option[String] = None
   )
 
@@ -36,8 +38,10 @@ object ModalConnect {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply(model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val coto = context.repo.cotos.get(model.cotoId)
     Modal.view(
       dialogClasses = "connect",
       closeButton = Some((classOf[Modal.Connect], dispatch)),
@@ -46,5 +50,40 @@ object ModalConnect {
       materialSymbol(Link.ConnectIconName),
       "Connect"
     )(
+      section(className := "source")(
+        if (model.toSelection)
+          coto.map(articleCoto)
+        else
+          div()()
+      ),
+      div(className := "link-direction")(
+      ),
+      section(className := "target")(
+        if (model.toSelection)
+          div()()
+        else
+          coto.map(articleCoto)
+      ),
+      div(className := "buttons")(
+        button(
+          `type` := "button",
+          className := "connect"
+        )("Connect")
+      )
+    )
+  }
+
+  private def articleCoto(coto: Coto)(implicit
+      context: Context
+  ): ReactElement =
+    article(className := "coto embedded")(
+      header()(
+        ViewCoto.addressAuthor(coto, context.repo.nodes)
+      ),
+      div(className := "body")(
+        ScrollArea()(
+          ViewCoto.divContentPreview(coto)
+        )
+      )
     )
 }

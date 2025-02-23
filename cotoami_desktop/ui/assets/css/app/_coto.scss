@@ -38,6 +38,8 @@ article.coto {
   }
 
   &.embedded {
+    margin-top: 1.5rem;
+    padding: 1rem 1rem;
     background-color: var(--embedded-cotobackground-color);
 
     &:hover {
@@ -46,6 +48,10 @@ article.coto {
 
     >header {
       background-color: transparent;
+
+      address.author {
+        margin-bottom: 1rem;
+      }
     }
 
     div.body {
