@@ -95,6 +95,6 @@ object ModalSelection {
           onClick = _ => dispatch(AppMsg.Deselect(coto.id))
         )
       ),
-      ViewCoto.divContent(coto)
+      ViewCoto.divContentPreview(coto)
     )
 }
