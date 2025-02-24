@@ -57,7 +57,6 @@ object Msg {
   // Select
   case class Select(id: Id[Coto]) extends Msg
   case class Deselect(id: Id[Coto]) extends Msg
-  case object SelectionCleared extends Msg
 
   // Highlight
   case class Highlight(id: Id[Coto]) extends Msg
