@@ -6,11 +6,12 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
+import fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link}
 import cotoami.repository.Cotos
 import cotoami.components.{materialSymbol, ScrollArea}
-import cotoami.backend.ErrorJson
+import cotoami.backend.{ErrorJson, LinkBackend}
 import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalConnect {
@@ -25,7 +26,31 @@ object ModalConnect {
       clearSelection: Boolean = true,
       connecting: Boolean = false,
       error: Option[String] = None
-  )
+  ) {
+    def connect(cotos: Cotos): (Model, Cmd.One[AppMsg]) = {
+      val acc: Cmd.One[Either[ErrorJson, Seq[Link]]] = pure(Right(Seq.empty))
+      val cmd = cotos.selectedIds
+        .foldLeft(acc) { (cmd, selectedId) =>
+          cmd.flatMap(_ match {
+            case Right(links) => connectOne(selectedId).map(_.map(links :+ _))
+            case Left(e)      => pure(Left(e))
+          })
+        }
+        .map(Msg.Connected(_).into)
+      (copy(connecting = true), cmd)
+    }
+
+    private def connectOne(
+        selectedId: Id[Coto]
+    ): Cmd.One[Either[ErrorJson, Link]] =
+      LinkBackend.connect(
+        if (toSelection) cotoId else selectedId,
+        if (toSelection) selectedId else cotoId,
+        None,
+        None,
+        None
+      )
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update

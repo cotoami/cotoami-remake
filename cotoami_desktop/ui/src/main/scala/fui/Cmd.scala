@@ -38,6 +38,10 @@ object Cmd {
       copy(debounce = Some(Debounce(key, delay)))
   }
 
+  object One {
+    def pure[Msg](msg: Msg): One[Msg] = One(IO.pure(Some(msg)))
+  }
+
   case class Batch[+Msg](cmds: One[Msg]*) extends Cmd[Msg] {
     def :+[LubMsg >: Msg](one: One[LubMsg]): Batch[LubMsg] =
       Batch.fromSeq(cmds :+ one)
