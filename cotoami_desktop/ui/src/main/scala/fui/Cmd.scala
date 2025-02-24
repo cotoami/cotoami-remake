@@ -3,6 +3,7 @@ package fui
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import cats.effect.IO
+import cats.implicits._
 
 sealed trait Cmd[+Msg] extends Any {
   def map[OtherMsg](f: Msg => OtherMsg): Cmd[OtherMsg]
@@ -52,6 +53,9 @@ object Cmd {
         case Batch(cmds @ _*)       => Batch.fromSeq(this.cmds ++ cmds)
         case Sequence(batches @ _*) => Sequence.fromSeq(this +: batches)
       }
+
+    def sequencedOne: Cmd.One[Seq[Msg]] =
+      Cmd.One(cmds.map(_.io).sequence.map(msgs => Some(msgs.flatten)))
   }
 
   object Batch {
