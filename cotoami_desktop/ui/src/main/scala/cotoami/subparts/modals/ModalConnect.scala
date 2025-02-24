@@ -9,7 +9,7 @@ import fui.Cmd
 import fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link}
-import cotoami.repository.Cotos
+import cotoami.repository.{Cotos, Links, Root}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.backend.{ErrorJson, LinkBackend}
 import cotoami.subparts.{Modal, ViewCoto}
@@ -27,18 +27,29 @@ object ModalConnect {
       connecting: Boolean = false,
       error: Option[String] = None
   ) {
-    def connect(cotos: Cotos): (Model, Cmd.One[AppMsg]) = {
+    def connect(repo: Root): (Model, Cmd.One[AppMsg]) = {
       val acc: Cmd.One[Either[ErrorJson, Seq[Link]]] = pure(Right(Seq.empty))
-      val cmd = cotos.selectedIds
+      val cmd = repo.cotos.selectedIds
         .foldLeft(acc) { (cmd, selectedId) =>
           cmd.flatMap(_ match {
-            case Right(links) => connectOne(selectedId).map(_.map(links :+ _))
-            case Left(e)      => pure(Left(e))
+            case Right(links) => {
+              if (alreadyConnected(selectedId, repo.links))
+                pure(Right(links))
+              else
+                connectOne(selectedId).map(_.map(links :+ _))
+            }
+            case Left(e) => pure(Left(e))
           })
         }
         .map(Msg.Connected(_).into)
       (copy(connecting = true), cmd)
     }
+
+    private def alreadyConnected(selectedId: Id[Coto], links: Links): Boolean =
+      if (toSelection)
+        links.linked(cotoId, selectedId)
+      else
+        links.linked(selectedId, cotoId)
 
     private def connectOne(
         selectedId: Id[Coto]
@@ -79,7 +90,7 @@ object ModalConnect {
         default.copy(_1 = model.modify(_.clearSelection).using(!_))
 
       case Msg.Connect =>
-        model.connect(context.repo.cotos).pipe { case (model, cmd) =>
+        model.connect(context.repo).pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
