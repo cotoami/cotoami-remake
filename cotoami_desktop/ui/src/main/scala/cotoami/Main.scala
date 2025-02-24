@@ -286,15 +286,21 @@ object Main {
         (model.modify(_.repo.cotos).using(_.select(cotoId)), Cmd.none)
 
       case Msg.Deselect(cotoId) =>
-        model.repo.cotos.deselect(cotoId).pipe { cotos =>
-          (
-            model.modify(_.repo.cotos).setTo(cotos),
-            if (!cotos.anySelected)
-              Modal.close(Modal.Selection.getClass())
-            else
-              Cmd.none
-          )
+        model.modify(_.repo.cotos).using(_.deselect(cotoId)).pipe { model =>
+          if (!model.repo.cotos.anySelected)
+            update(Msg.SelectionCleared, model)
+          else
+            (model, Cmd.none)
         }
+
+      case Msg.SelectionCleared =>
+        (
+          model,
+          Cmd.Batch(
+            Modal.close(Modal.Selection.getClass()),
+            Modal.close(classOf[Modal.Connect])
+          )
+        )
 
       case Msg.Highlight(cotoId) =>
         (model.copy(highlight = Some(cotoId)), Cmd.none)

@@ -21,13 +21,12 @@ dialog.connect {
     align-items: center;
     justify-content: center;
 
+    margin-top: 6px;
+    margin-bottom: 4px;
+
     span.arrow {
       font-size: 24px;
     }
-  }
-
-  article.coto {
-    margin-top: 0;
   }
 
   div.buttons.connect {
@@ -37,6 +36,29 @@ dialog.connect {
 
     label.clear-selection {
       margin-right: 20px;
+    }
+  }
+
+  article.coto {
+    margin-top: 0;
+  }
+
+  div.selection {
+    button.selection {
+      display: block;
+      width: 100%;
+      height: 100%;
+
+      border-radius: var(--border-radius);
+
+      padding-top: 10px;
+      padding-bottom: 10px;
+
+      text-align: center;
+      color: var(--selection-color);
+      font-weight: 700;
+
+      background-color: var(--embedded-cotobackground-color);
     }
   }
 }

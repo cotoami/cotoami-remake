@@ -4,7 +4,7 @@ import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
 import cotoami.repository.Cotos
@@ -38,7 +38,7 @@ object ModalSelection {
       case Msg.Clear =>
         (
           context.repo.cotos.clearSelection,
-          Modal.close(Modal.Selection.getClass())
+          Browser.send(AppMsg.SelectionCleared)
         )
     }
 

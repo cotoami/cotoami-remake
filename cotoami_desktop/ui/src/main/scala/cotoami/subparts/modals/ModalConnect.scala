@@ -61,7 +61,7 @@ object ModalConnect {
         if (model.toSelection)
           coto.map(articleCoto)
         else
-          div()()
+          divSelection
       ),
       div(className := "link")(
         span(className := "arrow")(
@@ -70,7 +70,7 @@ object ModalConnect {
       ),
       section(className := "target")(
         if (model.toSelection)
-          div()()
+          divSelection
         else
           coto.map(articleCoto)
       ),
@@ -102,6 +102,19 @@ object ModalConnect {
         ScrollArea()(
           ViewCoto.divContentPreview(coto)
         )
+      )
+    )
+
+  private def divSelection(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    div(className := "selection")(
+      button(
+        className := "selection default",
+        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection)))
+      )(
+        s"Selected cotos (${context.repo.cotos.selectedIds.size})"
       )
     )
 }
