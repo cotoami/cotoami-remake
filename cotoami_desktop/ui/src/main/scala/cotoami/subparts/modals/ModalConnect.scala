@@ -99,9 +99,9 @@ object ModalConnect {
           _1 = model.copy(connecting = false),
           _2 =
             if (model.clearSelection)
-              context.repo.cotos
+              context.repo.cotos.clearSelection
             else
-              context.repo.cotos.clearSelection,
+              context.repo.cotos,
           _3 = Modal.close(classOf[Modal.Connect])
         )
 
