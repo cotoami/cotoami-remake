@@ -159,7 +159,8 @@ object ModalConnect {
           `type` := "button",
           className := "connect",
           disabled := model.connecting,
-          aria - "busy" := model.connecting.toString()
+          aria - "busy" := model.connecting.toString(),
+          onClick := (_ => dispatch(Msg.Connect))
         )("Connect"),
         label(className := "clear-selection", htmlFor := "clear-selection")(
           input(
