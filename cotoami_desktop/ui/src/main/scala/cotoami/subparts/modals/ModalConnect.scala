@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -31,8 +32,18 @@ object ModalConnect {
     def into = Modal.Msg.ConnectMsg(this).pipe(AppMsg.ModalMsg)
   }
 
+  object Msg {
+    case object Reverse extends Msg
+  }
+
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+    msg match {
+      case Msg.Reverse =>
+        (
+          model.modify(_.toSelection).using(!_),
+          Cmd.none
+        )
+    }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -54,7 +65,8 @@ object ModalConnect {
       div(className := "buttons reverse")(
         button(
           `type` := "button",
-          className := "reverse contrast outline"
+          className := "reverse contrast outline",
+          onClick := (_ => dispatch(Msg.Reverse))
         )("Reverse")
       ),
       section(className := "source")(
