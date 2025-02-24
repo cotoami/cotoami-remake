@@ -7,6 +7,10 @@ dialog.selection {
     &>header {
       margin-left: 0;
       margin-right: 0;
+
+      h1 {
+        color: var(--selection-color);
+      }
     }
 
     div.selected-cotos {
