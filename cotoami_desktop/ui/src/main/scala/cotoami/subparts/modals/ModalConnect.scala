@@ -63,6 +63,7 @@ object ModalConnect {
   object Msg {
     case object Reverse extends Msg
     object ClearSelectionToggled extends Msg
+    object Connect extends Msg
     case class Connected(result: Either[ErrorJson, Seq[Link]]) extends Msg
   }
 
@@ -76,6 +77,11 @@ object ModalConnect {
 
       case Msg.ClearSelectionToggled =>
         default.copy(_1 = model.modify(_.clearSelection).using(!_))
+
+      case Msg.Connect =>
+        model.connect(context.repo.cotos).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
 
       case Msg.Connected(Right(links)) =>
         default.copy(
