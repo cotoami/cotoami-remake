@@ -34,6 +34,7 @@ object ModalConnect {
 
   object Msg {
     case object Reverse extends Msg
+    object ClearSelectionToggled extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
@@ -41,6 +42,12 @@ object ModalConnect {
       case Msg.Reverse =>
         (
           model.modify(_.toSelection).using(!_),
+          Cmd.none
+        )
+
+      case Msg.ClearSelectionToggled =>
+        (
+          model.modify(_.clearSelection).using(!_),
           Cmd.none
         )
     }
@@ -95,7 +102,8 @@ object ModalConnect {
           input(
             `type` := "checkbox",
             id := "clear-selection",
-            checked := model.clearSelection
+            checked := model.clearSelection,
+            onChange := (_ => dispatch(Msg.ClearSelectionToggled))
           ),
           "Clear selection"
         )
