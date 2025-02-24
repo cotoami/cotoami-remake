@@ -21,6 +21,7 @@ object ModalConnect {
       cotoId: Id[Coto],
       toSelection: Boolean = true,
       clearSelection: Boolean = true,
+      connecting: Boolean = false,
       error: Option[String] = None
   )
 
@@ -96,13 +97,16 @@ object ModalConnect {
       div(className := "buttons connect")(
         button(
           `type` := "button",
-          className := "connect"
+          className := "connect",
+          disabled := model.connecting,
+          aria - "busy" := model.connecting.toString()
         )("Connect"),
         label(className := "clear-selection", htmlFor := "clear-selection")(
           input(
             `type` := "checkbox",
             id := "clear-selection",
             checked := model.clearSelection,
+            disabled := model.connecting,
             onChange := (_ => dispatch(Msg.ClearSelectionToggled))
           ),
           "Clear selection"
