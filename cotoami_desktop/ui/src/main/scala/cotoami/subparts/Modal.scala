@@ -211,8 +211,13 @@ object Modal {
 
       case Msg.ConnectMsg(modalMsg) =>
         stack.get[Connect].map { case Connect(modal) =>
-          ModalConnect.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(Connect(modal), model), cmds)
+          ModalConnect.update(modalMsg, modal).pipe {
+            case (modal, cotos, cmds) =>
+              (
+                updateModal(Connect(modal), model)
+                  .modify(_.repo.cotos).setTo(cotos),
+                cmds
+              )
           }
         }
 

@@ -8,7 +8,9 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Link}
+import cotoami.repository.Cotos
 import cotoami.components.{materialSymbol, ScrollArea}
+import cotoami.backend.ErrorJson
 import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalConnect {
@@ -36,22 +38,38 @@ object ModalConnect {
   object Msg {
     case object Reverse extends Msg
     object ClearSelectionToggled extends Msg
+    case class Connected(result: Either[ErrorJson, Seq[Link]]) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cotos, Cmd[AppMsg]) = {
+    val default = (model, context.repo.cotos, Cmd.none)
     msg match {
       case Msg.Reverse =>
-        (
-          model.modify(_.toSelection).using(!_),
-          Cmd.none
-        )
+        default.copy(_1 = model.modify(_.toSelection).using(!_))
 
       case Msg.ClearSelectionToggled =>
-        (
-          model.modify(_.clearSelection).using(!_),
-          Cmd.none
+        default.copy(_1 = model.modify(_.clearSelection).using(!_))
+
+      case Msg.Connected(Right(links)) =>
+        default.copy(
+          _1 = model.copy(connecting = false),
+          _2 =
+            if (model.clearSelection)
+              context.repo.cotos
+            else
+              context.repo.cotos.clearSelection,
+          _3 = Modal.close(classOf[Modal.Connect])
+        )
+
+      case Msg.Connected(Left(e)) =>
+        default.copy(
+          _1 = model.copy(connecting = false, error = Some(e.default_message)),
+          _3 = cotoami.error("Couldn't create links.", e)
         )
     }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
