@@ -291,7 +291,7 @@ object Main {
             model,
             if (!model.repo.cotos.anySelected)
               Cmd.Batch(
-                Modal.close(Modal.Selection.getClass()),
+                Modal.close(classOf[Modal.Selection]),
                 Modal.close(classOf[Modal.Connect])
               )
             else

@@ -76,7 +76,11 @@ object Modal {
     def apply(link: Link): LinkEditor = LinkEditor(ModalLinkEditor.Model(link))
   }
 
-  case object Selection extends Modal
+  case class Selection(model: ModalSelection.Model) extends Modal
+  object Selection {
+    def apply(enableClear: Boolean = true): Selection =
+      Selection(ModalSelection.Model(enableClear))
+  }
 
   case class Connect(model: ModalConnect.Model) extends Modal
   object Connect {
@@ -203,9 +207,14 @@ object Modal {
         }
 
       case Msg.SelectionMsg(modalMsg) =>
-        stack.get[Selection.type].map { _ =>
-          ModalSelection.update(modalMsg).pipe { case (cotos, cmds) =>
-            (model.modify(_.repo.cotos).setTo(cotos), cmds)
+        stack.get[Selection].map { case Selection(modal) =>
+          ModalSelection.update(modalMsg, modal).pipe {
+            case (modal, cotos, cmds) =>
+              (
+                updateModal(Selection(modal), model)
+                  .modify(_.repo.cotos).setTo(cotos),
+                cmds
+              )
           }
         }
 
@@ -349,7 +358,7 @@ object Modal {
 
       case LinkEditor(modal) => Some(ModalLinkEditor(modal))
 
-      case Selection => Some(ModalSelection())
+      case Selection(modal) => Some(ModalSelection(modal))
 
       case Connect(modal) => Some(ModalConnect(modal))
 

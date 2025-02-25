@@ -197,7 +197,7 @@ object ModalConnect {
     div(className := "selection")(
       button(
         className := "selection default",
-        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection)))
+        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection(false))))
       )(
         s"Selected cotos (${context.repo.cotos.selectedIds.size})"
       )

@@ -113,7 +113,7 @@ object AppHeader {
           className := "selected-cotos default tool",
           data - "tooltip" := "Selected cotos",
           data - "placement" := "bottom",
-          onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection)))
+          onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection())))
         )(
           materialSymbol("check_box"),
           span(className := "count")(context.repo.cotos.selectedIds.size)

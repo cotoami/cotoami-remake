@@ -20,6 +20,12 @@ import cotoami.subparts.{Modal, ViewCoto}
 object ModalSelection {
 
   /////////////////////////////////////////////////////////////////////////////
+  // Model
+  /////////////////////////////////////////////////////////////////////////////
+
+  case class Model(enableClear: Boolean = true)
+
+  /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
 
@@ -31,15 +37,16 @@ object ModalSelection {
     case object Clear extends Msg
   }
 
-  def update(msg: Msg)(implicit
+  def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Cotos, Cmd[AppMsg]) =
+  ): (Model, Cotos, Cmd[AppMsg]) =
     msg match {
       case Msg.Clear =>
         (
+          model,
           context.repo.cotos.clearSelection,
           Cmd.Batch(
-            Modal.close(Modal.Selection.getClass()),
+            Modal.close(classOf[Modal.Selection]),
             Modal.close(classOf[Modal.Connect])
           )
         )
@@ -49,14 +56,14 @@ object ModalSelection {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply()(implicit
+  def apply(model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val cotos = context.repo.cotos
     Modal.view(
       dialogClasses = "selection",
-      closeButton = Some((classOf[Modal.Selection.type], dispatch))
+      closeButton = Some((classOf[Modal.Selection], dispatch))
     )(
       materialSymbol("check_box"),
       s"Selected cotos (${cotos.selectedIds.size})"
@@ -74,13 +81,15 @@ object ModalSelection {
           )
         )
       ),
-      div(className := "buttons")(
-        button(
-          `type` := "button",
-          className := "cancel contrast outline",
-          onClick := (_ => dispatch(Msg.Clear.into))
-        )("Clear selection")
-      )
+      Option.when(model.enableClear) {
+        div(className := "buttons")(
+          button(
+            `type` := "button",
+            className := "cancel contrast outline",
+            onClick := (_ => dispatch(Msg.Clear.into))
+          )("Clear selection")
+        )
+      }
     )
   }
 
