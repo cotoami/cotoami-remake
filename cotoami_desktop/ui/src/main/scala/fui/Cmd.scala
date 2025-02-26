@@ -40,6 +40,9 @@ object Cmd {
 
   object One {
     def pure[Msg](msg: Msg): One[Msg] = One(IO.pure(Some(msg)))
+
+    def sequenceOf[Msg](cmds: One[Msg]*): Cmd.One[Seq[Msg]] =
+      Cmd.One(cmds.map(_.io).sequence.map(msgs => Some(msgs.flatten)))
   }
 
   case class Batch[+Msg](cmds: One[Msg]*) extends Cmd[Msg] {
@@ -57,9 +60,6 @@ object Cmd {
         case Batch(cmds @ _*)       => Batch.fromSeq(this.cmds ++ cmds)
         case Sequence(batches @ _*) => Sequence.fromSeq(this +: batches)
       }
-
-    def sequencedOne: Cmd.One[Seq[Msg]] =
-      Cmd.One(cmds.map(_.io).sequence.map(msgs => Some(msgs.flatten)))
   }
 
   object Batch {
