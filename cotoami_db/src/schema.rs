@@ -91,7 +91,7 @@ diesel::table! {
         node_id -> Text,
         created_at -> Timestamp,
         as_owner -> Bool,
-        can_edit_links -> Bool,
+        can_edit_itos -> Bool,
     }
 }
 diesel::joinable!(child_nodes -> nodes (node_id));

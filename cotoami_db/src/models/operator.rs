@@ -3,9 +3,9 @@ use anyhow::Result;
 use crate::{
     db::error::*,
     models::{
-        coto::Coto,
-        node::{child::ChildNode, Node},
         Id,
+        coto::Coto,
+        node::{Node, child::ChildNode},
     },
 };
 
@@ -77,13 +77,13 @@ impl Operator {
         }
     }
 
-    pub fn can_edit_links(&self) -> Result<(), DatabaseError> {
+    pub fn can_edit_itos(&self) -> Result<(), DatabaseError> {
         if self.has_owner_permission() {
             return Ok(());
         }
 
         if let Operator::ChildNode(ChildNode {
-            can_edit_links: true,
+            can_edit_itos: true,
             ..
         }) = self
         {

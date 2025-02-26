@@ -1,11 +1,11 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use crate::{
     db::{
+        DatabaseSession,
         error::*,
         op::*,
-        ops::{changelog_ops, coto_ops, ito_ops, Page},
-        DatabaseSession,
+        ops::{Page, changelog_ops, coto_ops, ito_ops},
     },
     models::prelude::*,
 };
@@ -38,7 +38,7 @@ impl<'a> DatabaseSession<'a> {
         input: &ItoInput,
         operator: &Operator,
     ) -> Result<(Ito, ChangelogEntry)> {
-        operator.can_edit_links()?;
+        operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         let created_by_id = operator.try_get_node_id()?;
         let new_ito = NewIto::new(&local_node_id, &created_by_id, input)?;
@@ -71,7 +71,7 @@ impl<'a> DatabaseSession<'a> {
         diff: ItoContentDiff<'static>,
         operator: &Operator,
     ) -> Result<(Ito, ChangelogEntry)> {
-        operator.can_edit_links()?;
+        operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let ito = ito_ops::edit(id, &diff, None).run(ctx)?;
@@ -87,7 +87,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn disconnect(&self, id: &Id<Ito>, operator: &Operator) -> Result<ChangelogEntry> {
-        operator.can_edit_links()?;
+        operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let ito = ito_ops::try_get(id).run(ctx)??;
@@ -108,7 +108,7 @@ impl<'a> DatabaseSession<'a> {
         new_order: i32,
         operator: &Operator,
     ) -> Result<(Ito, ChangelogEntry)> {
-        operator.can_edit_links()?;
+        operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let ito = ito_ops::change_order(id, new_order).run(ctx)?;
