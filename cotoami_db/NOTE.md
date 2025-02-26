@@ -2,7 +2,7 @@
 
 ## Deleted the statistics fields of entities
 
-* I defined some statistics fields of the entities such as `cotos.outgoing_links`, `cotonomas.post` when first defining those entities aiming to reduce redundant exchanges between the frontend and the backend.
+* I defined some statistics fields of the entities such as `cotos.outgoing_itos`, `cotonomas.post` when first defining those entities aiming to reduce redundant exchanges between the frontend and the backend.
 * Back then, I assumed that syncing the statistics fields according to updates in the entities is trivial. 
 * However, it turned out to be not trivial at all when considering the effect of `ON DELETE CASCADE`.
 * In addition to that, I totally forgot the need of syncing frontend models with the backend ones whenever the statistics fields have been updated.

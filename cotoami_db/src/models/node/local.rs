@@ -37,7 +37,7 @@ pub struct LocalNode {
     /// The maximum length of the longer side of images after they are resized (in pixels).
     pub image_max_size: Option<i32>,
 
-    /// TRUE if this node allows anonymous clients to read the cotos and links.
+    /// TRUE if this node allows anonymous clients to read the cotos and itos.
     pub anonymous_read_enabled: bool,
 }
 
