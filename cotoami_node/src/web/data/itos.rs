@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
+    Extension, Router,
     extract::{Json, Path, State},
     routing::{get, post, put},
-    Extension, Router,
 };
 use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
@@ -18,84 +18,84 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", post(connect))
-        .route("/{link_id}", get(link).put(edit_link).delete(disconnect))
-        .route("/{link_id}/order", put(change_order))
+        .route("/{ito_id}", get(ito).put(edit_ito).delete(disconnect))
+        .route("/{ito_id}/order", put(change_order))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// POST /api/data/links
+// POST /api/data/itos
 /////////////////////////////////////////////////////////////////////////////
 
 async fn connect(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Json(input): Json<LinkInput<'static>>,
-) -> Result<Content<Link>, ServiceError> {
+    Json(input): Json<ItoInput<'static>>,
+) -> Result<Content<Ito>, ServiceError> {
     state
         .connect(input, Arc::new(operator))
         .await
-        .map(|link| Content(link, accept))
+        .map(|ito| Content(ito, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/data/links/{link_id}
+// GET /api/data/itos/{ito_id}
 /////////////////////////////////////////////////////////////////////////////
 
-async fn link(
+async fn ito(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(link_id): Path<Id<Link>>,
-) -> Result<Content<Link>, ServiceError> {
-    state.link(link_id).await.map(|link| Content(link, accept))
+    Path(ito_id): Path<Id<Ito>>,
+) -> Result<Content<Ito>, ServiceError> {
+    state.ito(ito_id).await.map(|ito| Content(ito, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PUT /api/data/links/{link_id}
+// PUT /api/data/itos/{ito_id}
 /////////////////////////////////////////////////////////////////////////////
 
-async fn edit_link(
+async fn edit_ito(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(link_id): Path<Id<Link>>,
-    Json(diff): Json<LinkContentDiff<'static>>,
-) -> Result<Content<Link>, ServiceError> {
+    Path(ito_id): Path<Id<Ito>>,
+    Json(diff): Json<ItoContentDiff<'static>>,
+) -> Result<Content<Ito>, ServiceError> {
     state
-        .edit_link(link_id, diff, Arc::new(operator))
+        .edit_ito(ito_id, diff, Arc::new(operator))
         .await
-        .map(|link| Content(link, accept))
+        .map(|ito| Content(ito, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// DELETE /api/data/links/{link_id}
+// DELETE /api/data/itos/{ito_id}
 /////////////////////////////////////////////////////////////////////////////
 
 async fn disconnect(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(link_id): Path<Id<Link>>,
-) -> Result<Content<Id<Link>>, ServiceError> {
+    Path(ito_id): Path<Id<Ito>>,
+) -> Result<Content<Id<Ito>>, ServiceError> {
     state
-        .disconnect(link_id, Arc::new(operator))
+        .disconnect(ito_id, Arc::new(operator))
         .await
-        .map(|link_id| Content(link_id, accept))
+        .map(|ito_id| Content(ito_id, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// PUT /api/data/links/{link_id}/order
+// PUT /api/data/itos/{ito_id}/order
 /////////////////////////////////////////////////////////////////////////////
 
 async fn change_order(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Path(link_id): Path<Id<Link>>,
+    Path(ito_id): Path<Id<Ito>>,
     Json(new_order): Json<i32>,
-) -> Result<Content<Link>, ServiceError> {
+) -> Result<Content<Ito>, ServiceError> {
     state
-        .change_link_order(link_id, new_order, Arc::new(operator))
+        .change_ito_order(ito_id, new_order, Arc::new(operator))
         .await
-        .map(|link| Content(link, accept))
+        .map(|ito| Content(ito, accept))
 }

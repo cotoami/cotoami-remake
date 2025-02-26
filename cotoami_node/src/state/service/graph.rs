@@ -3,8 +3,8 @@ use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoGraph, CotosRelatedData},
         ServiceError,
+        models::{CotoGraph, CotosRelatedData},
     },
     state::NodeState,
 };
@@ -45,12 +45,12 @@ fn graph(
     let graph = ds.graph(root_coto, true)?; // traverse until cotonomas
     let cotos: Vec<Coto> = graph.cotos.into_values().collect();
     let related_data = CotosRelatedData::fetch(ds, &cotos)?;
-    let links: Vec<Link> = graph.links.into_values().flatten().collect();
+    let itos: Vec<Ito> = graph.itos.into_values().flatten().collect();
     Ok::<_, anyhow::Error>(CotoGraph::new(
         root_coto_id,
         root_cotonoma,
         cotos,
         related_data,
-        links,
+        itos,
     ))
 }

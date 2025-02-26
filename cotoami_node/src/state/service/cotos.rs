@@ -6,9 +6,9 @@ use validator::Validate;
 
 use crate::{
     service::{
+        NodeServiceExt, ServiceError,
         error::IntoServiceResult,
         models::{CotoDetails, CotosRelatedData, GeolocatedCotos, PaginatedCotos, Pagination},
-        NodeServiceExt, ServiceError,
     },
     state::NodeState,
 };
@@ -99,8 +99,8 @@ impl NodeState {
         self.get(move |ds| {
             let coto = ds.try_get_coto(&id)?;
             let related_data = CotosRelatedData::fetch(ds, slice::from_ref(&coto))?;
-            let outgoing_links = ds.outgoing_links(&[coto.uuid])?;
-            Ok(CotoDetails::new(coto, related_data, outgoing_links))
+            let outgoing_itos = ds.outgoing_itos(&[coto.uuid])?;
+            Ok(CotoDetails::new(coto, related_data, outgoing_itos))
         })
         .await
     }

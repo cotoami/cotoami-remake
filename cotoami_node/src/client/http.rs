@@ -10,17 +10,17 @@ use const_format::concatcp;
 use cotoami_db::models::Bytes;
 use futures::future::FutureExt;
 use parking_lot::{RwLock, RwLockReadGuard};
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
 use reqwest::{
-    header,
+    Client, RequestBuilder, StatusCode, Url, header,
     header::{HeaderMap, HeaderValue, IntoHeaderName},
-    Client, RequestBuilder, StatusCode, Url,
 };
 use uuid::Uuid;
 
 use crate::service::{
+    NodeServiceFuture,
     error::{InputErrors, RequestError},
-    NodeServiceFuture, *,
+    *,
 };
 
 /// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
@@ -242,15 +242,13 @@ impl HttpClient {
             Command::RenameCotonoma { id, name } => self
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
-            Command::Link { id } => self.get(&format!("{API_PATH_LINKS}/{id}")),
-            Command::OutgoingLinks { coto } => self.get(&format!("{API_PATH_COTOS}/{coto}/links")),
-            Command::Connect(input) => self.post(API_PATH_LINKS).json(&input),
-            Command::EditLink { id, diff } => {
-                self.put(&format!("{API_PATH_LINKS}/{id}")).json(&diff)
-            }
-            Command::Disconnect { id } => self.delete(&format!("{API_PATH_LINKS}/{id}")),
-            Command::ChangeLinkOrder { id, new_order } => self
-                .put(&format!("{API_PATH_LINKS}/{id}/order"))
+            Command::Ito { id } => self.get(&format!("{API_PATH_ITOS}/{id}")),
+            Command::OutgoingItos { coto } => self.get(&format!("{API_PATH_COTOS}/{coto}/itos")),
+            Command::Connect(input) => self.post(API_PATH_ITOS).json(&input),
+            Command::EditIto { id, diff } => self.put(&format!("{API_PATH_ITOS}/{id}")).json(&diff),
+            Command::Disconnect { id } => self.delete(&format!("{API_PATH_ITOS}/{id}")),
+            Command::ChangeItoOrder { id, new_order } => self
+                .put(&format!("{API_PATH_ITOS}/{id}/order"))
                 .json(&new_order),
         };
 
@@ -314,7 +312,7 @@ const API_PATH_SERVERS: &str = concatcp!(API_PATH_NODES, "/servers");
 const API_PATH_CLIENTS: &str = concatcp!(API_PATH_NODES, "/clients");
 const API_PATH_COTONOMAS: &str = concatcp!(API_PATH_DATA, "/cotonomas");
 const API_PATH_COTOS: &str = concatcp!(API_PATH_DATA, "/cotos");
-const API_PATH_LINKS: &str = concatcp!(API_PATH_DATA, "/links");
+const API_PATH_ITOS: &str = concatcp!(API_PATH_DATA, "/itos");
 
 fn detect_response_body_format(response: &reqwest::Response) -> SerializeFormat {
     // The format will be MessagePack only if the Content-Type header explicitly specifies it,

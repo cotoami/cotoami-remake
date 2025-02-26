@@ -1,9 +1,9 @@
 use std::{borrow::Cow, sync::Arc, time::Instant};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
-use futures::{stream::StreamExt, Stream};
+use futures::{Stream, stream::StreamExt};
 use googletest::prelude::*;
 use test_log::test;
 
@@ -178,19 +178,19 @@ where
     // Command: Connect
     /////////////////////////////////////////////////////////////////////////////
 
-    let link_input =
-        LinkInput::new(backend_root_coto.uuid, posted_coto.uuid).linking_phrase("The first link");
-    let request = Command::Connect(link_input).into_request();
-    let created_link = service.call(request).await?.content::<Link>()?;
+    let ito_input =
+        ItoInput::new(backend_root_coto.uuid, posted_coto.uuid).description("The first ito");
+    let request = Command::Connect(ito_input).into_request();
+    let created_ito = service.call(request).await?.content::<Ito>()?;
 
     assert_that!(
-        created_link,
-        pat!(Link {
+        created_ito,
+        pat!(Ito {
             node_id: eq(&backend_node.uuid),
             created_by_id: eq(&operator_node_id),
             source_coto_id: eq(&backend_root_coto.uuid),
             target_coto_id: eq(&posted_coto.uuid),
-            linking_phrase: some(eq("The first link")),
+            description: some(eq("The first ito")),
             details: none(),
             order: eq(&1),
         }),
@@ -198,7 +198,7 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // Command: OutgoingLinks
+    // Command: OutgoingItos
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto2, _) = backend_ds.post_coto(
@@ -206,87 +206,87 @@ where
         &backend_root_cotonoma.uuid,
         &backend_owner,
     )?;
-    let (link2, _) = backend_ds.connect(
-        &LinkInput::new(backend_root_coto.uuid, coto2.uuid).linking_phrase("The second link"),
+    let (ito2, _) = backend_ds.connect(
+        &ItoInput::new(backend_root_coto.uuid, coto2.uuid).description("The second ito"),
         &backend_owner,
     )?;
 
-    let request = Command::OutgoingLinks {
+    let request = Command::OutgoingItos {
         coto: backend_root_coto.uuid,
     }
     .into_request();
-    let links = service.call(request).await?.content::<Vec<Link>>()?;
+    let itos = service.call(request).await?.content::<Vec<Ito>>()?;
 
     assert_that!(
-        links,
+        itos,
         unordered_elements_are![
-            pat!(Link {
-                linking_phrase: some(eq("The first link")),
+            pat!(Ito {
+                description: some(eq("The first ito")),
                 order: eq(&1),
             }),
-            pat!(Link {
-                linking_phrase: some(eq("The second link")),
+            pat!(Ito {
+                description: some(eq("The second ito")),
                 order: eq(&2),
             })
         ]
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // Command: ChangeLinkOrder
+    // Command: ChangeItoOrder
     /////////////////////////////////////////////////////////////////////////////
 
-    let request = Command::ChangeLinkOrder {
-        id: link2.uuid,
+    let request = Command::ChangeItoOrder {
+        id: ito2.uuid,
         new_order: 1,
     }
     .into_request();
-    let updated_link = service.call(request).await?.content::<Link>()?;
+    let updated_ito = service.call(request).await?.content::<Ito>()?;
 
     assert_that!(
-        updated_link,
-        pat!(Link {
-            uuid: eq(&link2.uuid),
+        updated_ito,
+        pat!(Ito {
+            uuid: eq(&ito2.uuid),
             order: eq(&1),
         }),
-        "Unexpected response of ChangeLinkOrder command"
+        "Unexpected response of ChangeItoOrder command"
     );
 
-    let links = backend_ds.outgoing_links(&[backend_root_coto.uuid])?;
+    let itos = backend_ds.outgoing_itos(&[backend_root_coto.uuid])?;
     assert_that!(
-        links,
+        itos,
         unordered_elements_are![
-            pat!(Link {
-                linking_phrase: some(eq("The second link")),
+            pat!(Ito {
+                description: some(eq("The second ito")),
                 order: eq(&1),
             }),
-            pat!(Link {
-                linking_phrase: some(eq("The first link")),
+            pat!(Ito {
+                description: some(eq("The first ito")),
                 order: eq(&2),
             })
         ]
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // Command: EditLink
+    // Command: EditIto
     /////////////////////////////////////////////////////////////////////////////
 
-    let diff = LinkContentDiff::default()
-        .linking_phrase(Some("Updated phrase"))
+    let diff = ItoContentDiff::default()
+        .description(Some("Updated phrase"))
         .details(Some("Added details"));
-    let request = Command::EditLink {
-        id: created_link.uuid,
+    let request = Command::EditIto {
+        id: created_ito.uuid,
         diff,
     }
     .into_request();
-    let updated_link = service.call(request).await?.content::<Link>()?;
+    let updated_ito = service.call(request).await?.content::<Ito>()?;
 
     assert_that!(
-        updated_link,
-        pat!(Link {
-            linking_phrase: some(eq("Updated phrase")),
+        updated_ito,
+        pat!(Ito {
+            description: some(eq("Updated phrase")),
             details: some(eq("Added details")),
         }),
-        "Unexpected response of EditLink command"
+        "Unexpected response of EditIto command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -294,18 +294,18 @@ where
     /////////////////////////////////////////////////////////////////////////////
 
     let request = Command::Disconnect {
-        id: created_link.uuid,
+        id: created_ito.uuid,
     }
     .into_request();
-    let deleted_link_id = service.call(request).await?.content::<Id<Link>>()?;
+    let deleted_ito_id = service.call(request).await?.content::<Id<Ito>>()?;
 
-    assert_that!(deleted_link_id, eq(created_link.uuid));
+    assert_that!(deleted_ito_id, eq(created_ito.uuid));
 
-    let links = backend_ds.outgoing_links(&[backend_root_coto.uuid])?;
+    let itos = backend_ds.outgoing_itos(&[backend_root_coto.uuid])?;
     assert_that!(
-        links,
-        unordered_elements_are![pat!(Link {
-            linking_phrase: some(eq("The second link")),
+        itos,
+        unordered_elements_are![pat!(Ito {
+            description: some(eq("The second ito")),
             order: eq(&1),
         })]
     );
@@ -378,7 +378,7 @@ async fn test_service_based_on_remote_node(
                 server_id,
                 EditChild {
                     as_owner: true,
-                    can_edit_links: true,
+                    can_edit_itos: true,
                 },
                 Arc::new(client_state.local_node_as_operator()?),
             )

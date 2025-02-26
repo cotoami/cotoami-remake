@@ -6,7 +6,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, models::EditChild, ServiceError},
+    service::{ServiceError, error::IntoServiceResult, models::EditChild},
     state::NodeState,
 };
 
@@ -35,7 +35,7 @@ impl NodeState {
                 db.new_session()?.edit_child_node(
                     &node_id,
                     values.as_owner,
-                    values.can_edit_links,
+                    values.can_edit_itos,
                     &operator,
                 )
             }

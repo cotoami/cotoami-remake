@@ -2,17 +2,17 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
+    Extension, Router,
     extract::{Json, Path, Query, State},
     routing::{get, put},
-    Extension, Router,
 };
 use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        models::{CotoDetails, CotoGraph, GeolocatedCotos, PaginatedCotos, Pagination},
         ServiceError,
+        models::{CotoDetails, CotoGraph, GeolocatedCotos, PaginatedCotos, Pagination},
     },
     state::NodeState,
     web::{Accept, Content},
@@ -31,7 +31,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/search/cotonomas/{query}", get(search_cotonoma_cotos))
         .route("/{coto_id}/details", get(coto_details))
         .route("/{coto_id}", put(edit_coto).delete(delete_coto))
-        .route("/{coto_id}/links", get(outgoing_links))
+        .route("/{coto_id}/itos", get(outgoing_itos))
         .route("/{coto_id}/graph", get(graph))
 }
 
@@ -178,18 +178,18 @@ async fn delete_coto(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/data/cotos/{coto_id}/links
+// GET /api/data/cotos/{coto_id}/itos
 /////////////////////////////////////////////////////////////////////////////
 
-async fn outgoing_links(
+async fn outgoing_itos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(coto_id): Path<Id<Coto>>,
-) -> Result<Content<Vec<Link>>, ServiceError> {
+) -> Result<Content<Vec<Ito>>, ServiceError> {
     state
-        .outgoing_links(coto_id)
+        .outgoing_itos(coto_id)
         .await
-        .map(|links| Content(links, accept))
+        .map(|itos| Content(itos, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
