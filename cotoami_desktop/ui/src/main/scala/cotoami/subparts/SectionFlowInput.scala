@@ -36,13 +36,14 @@ object SectionFlowInput {
   ) {
     def onCotonomaChange: Model =
       copy(posting = false).pipe { model =>
-        if (form.hasContents)
-          model
-        else
-          model.copy(
-            form = CotoForm.Model(),
-            folded = true
-          )
+        form match {
+          case form: CotoForm.Model if form.hasContents => model
+          case _ =>
+            model.copy(
+              form = CotoForm.Model(),
+              folded = true
+            )
+        }
       }
 
     def hasContents: Boolean = form.hasContents
