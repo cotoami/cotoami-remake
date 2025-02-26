@@ -25,11 +25,11 @@ DROP INDEX cotonomas_name;
 DROP TABLE cotonomas;
 
 --
--- links
+-- itos
 --
-DROP INDEX links_node_id;
-DROP INDEX links_created_by_id;
-DROP INDEX links_source_coto_id;
-DROP INDEX links_target_coto_id;
+DROP INDEX itos_node_id;
+DROP INDEX itos_created_by_id;
+DROP INDEX itos_source_coto_id;
+DROP INDEX itos_target_coto_id;
 
-DROP TABLE links;
+DROP TABLE itos;

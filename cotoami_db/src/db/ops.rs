@@ -14,7 +14,7 @@ pub(crate) mod changelog_ops;
 pub(crate) mod coto_ops;
 pub(crate) mod cotonoma_ops;
 pub(crate) mod graph_ops;
-pub(crate) mod link_ops;
+pub(crate) mod ito_ops;
 pub(crate) mod node_ops;
 pub(crate) mod node_role_ops;
 

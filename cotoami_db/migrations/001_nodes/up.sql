@@ -72,7 +72,7 @@ CREATE TABLE local_node (
   -- NULL means no resizing will be applied to incoming coto images.
   image_max_size INTEGER,
 
-  -- TRUE if this node allows anonymous clients to read the cotos and links.
+  -- TRUE if this node allows anonymous clients to read the cotos and itos.
   anonymous_read_enabled INTEGER DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT

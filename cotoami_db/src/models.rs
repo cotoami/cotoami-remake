@@ -42,7 +42,7 @@ pub mod changelog;
 pub mod coto;
 pub mod cotonoma;
 pub mod graph;
-pub mod link;
+pub mod ito;
 pub mod node;
 pub mod operator;
 
@@ -52,7 +52,7 @@ pub(crate) mod prelude {
         coto::*,
         cotonoma::*,
         graph::*,
-        link::*,
+        ito::*,
         node::{child::*, client::*, local::*, parent::*, roles::*, server::*, *},
         operator::*,
         Bytes, ClientSession, FieldDiff, Geolocation, Id, Ids,

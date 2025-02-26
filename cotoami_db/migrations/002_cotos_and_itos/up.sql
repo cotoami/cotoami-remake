@@ -121,31 +121,31 @@ END;
 
 
 --
--- A link is a directed edge connecting two cotos.
+-- An ito is a directed edge connecting two cotos.
 --
-CREATE TABLE links (
-  -- Universally unique link ID.
+CREATE TABLE itos (
+  -- Universally unique ito ID.
   uuid TEXT NOT NULL PRIMARY KEY,
 
-  -- UUID of the node in which this link was created.
+  -- UUID of the node in which this ito was created.
   node_id TEXT NOT NULL,
 
-  -- UUID of the node whose owner has created this link.
+  -- UUID of the node whose owner has created this ito.
   created_by_id TEXT NOT NULL,
 
-  -- UUID of the coto at the source of this link.
+  -- UUID of the coto at the source of this ito.
   source_coto_id TEXT NOT NULL,
 
-  -- UUID of the coto at the target of this link.
+  -- UUID of the coto at the target of this ito.
   target_coto_id TEXT NOT NULL,
 
-  -- Linkng phrase to express the relationship between the two cotos.
-  linking_phrase TEXT,
+  -- Description of this ito.
+  description TEXT,
 
-  -- Content attached to this link.
+  -- Content attached to this ito.
   details TEXT,
 
-  -- Order of this link among the ones from the same coto.
+  -- Order of this ito among the ones from the same coto.
   "order" INTEGER NOT NULL,
 
   created_at DATETIME NOT NULL, -- UTC
@@ -159,7 +159,7 @@ CREATE TABLE links (
   FOREIGN KEY(target_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE
 ) WITHOUT ROWID;
 
-CREATE INDEX links_node_id ON links(node_id);
-CREATE INDEX links_created_by_id ON links(created_by_id);
-CREATE INDEX links_source_coto_id ON links(source_coto_id);
-CREATE INDEX links_target_coto_id ON links(target_coto_id);
+CREATE INDEX itos_node_id ON itos(node_id);
+CREATE INDEX itos_created_by_id ON itos(created_by_id);
+CREATE INDEX itos_source_coto_id ON itos(source_coto_id);
+CREATE INDEX itos_target_coto_id ON itos(target_coto_id);

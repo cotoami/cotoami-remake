@@ -50,9 +50,9 @@ fn test_traversal(ds: &mut DatabaseSession<'_>, root: &Coto, args: &Args) -> Res
     let start = Instant::now();
     let graph = ds.graph(root, until_cotonoma)?;
     println!(
-        "Graph: {} cotos, {} links (elapsed: {:?})",
+        "Graph: {} cotos, {} itos (elapsed: {:?})",
         graph.count_cotos(),
-        graph.count_links(),
+        graph.count_itos(),
         start.elapsed()
     );
     Ok(())
@@ -66,9 +66,9 @@ fn test_traversal_by_cte(ds: &mut DatabaseSession<'_>, root: &Coto, args: &Args)
     let start = Instant::now();
     let graph = ds.graph_by_cte(root, until_cotonoma)?;
     println!(
-        "Graph: {} cotos, {} links (elapsed: {:?})",
+        "Graph: {} cotos, {} itos (elapsed: {:?})",
         graph.count_cotos(),
-        graph.count_links(),
+        graph.count_itos(),
         start.elapsed()
     );
     Ok(())

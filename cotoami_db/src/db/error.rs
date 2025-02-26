@@ -91,6 +91,6 @@ pub enum EntityKind {
     Coto,
     #[display("cotonoma")]
     Cotonoma,
-    #[display("link")]
-    Link,
+    #[display("ito")]
+    Ito,
 }

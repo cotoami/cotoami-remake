@@ -4,128 +4,128 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, coto_ops, link_ops, Page},
+        ops::{changelog_ops, coto_ops, ito_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
 };
 
 impl<'a> DatabaseSession<'a> {
-    pub fn link(&mut self, link_id: &Id<Link>) -> Result<Option<Link>> {
-        self.read_transaction(link_ops::get(link_id))
+    pub fn ito(&mut self, id: &Id<Ito>) -> Result<Option<Ito>> {
+        self.read_transaction(ito_ops::get(id))
     }
 
-    pub fn try_get_link(&mut self, id: &Id<Link>) -> Result<Link> {
-        self.read_transaction(link_ops::try_get(id))?
+    pub fn try_get_ito(&mut self, id: &Id<Ito>) -> Result<Ito> {
+        self.read_transaction(ito_ops::try_get(id))?
             .map_err(anyhow::Error::from)
     }
 
-    pub fn outgoing_links(&mut self, coto_ids: &[Id<Coto>]) -> Result<Vec<Link>> {
-        self.read_transaction(link_ops::get_by_source_coto_ids(coto_ids))
+    pub fn outgoing_itos(&mut self, coto_ids: &[Id<Coto>]) -> Result<Vec<Ito>> {
+        self.read_transaction(ito_ops::get_by_source_coto_ids(coto_ids))
     }
 
-    pub fn recent_links(
+    pub fn recent_itos(
         &mut self,
         node_id: Option<&Id<Node>>,
         page_size: i64,
         page_index: i64,
-    ) -> Result<Page<Link>> {
-        self.read_transaction(link_ops::recent(node_id, page_size, page_index))
+    ) -> Result<Page<Ito>> {
+        self.read_transaction(ito_ops::recent(node_id, page_size, page_index))
     }
 
     pub fn connect<'b>(
         &self,
-        input: &LinkInput,
+        input: &ItoInput,
         operator: &Operator,
-    ) -> Result<(Link, ChangelogEntry)> {
+    ) -> Result<(Ito, ChangelogEntry)> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         let created_by_id = operator.try_get_node_id()?;
-        let new_link = NewLink::new(&local_node_id, &created_by_id, input)?;
-        self.create_link(new_link)
+        let new_ito = NewIto::new(&local_node_id, &created_by_id, input)?;
+        self.create_ito(new_ito)
     }
 
-    pub fn import_link(&self, link: &Link) -> Result<(Link, ChangelogEntry)> {
-        self.create_link(link.to_import())
+    pub fn import_ito(&self, ito: &Ito) -> Result<(Ito, ChangelogEntry)> {
+        self.create_ito(ito.to_import())
     }
 
-    /// Inserting a [NewLink] as a change originated in this node.
+    /// Inserting a [NewIto] as a change originated in this node.
     /// Changes originated in remote nodes should be imported via [Self::import_change()].
-    fn create_link(&self, new_link: NewLink) -> Result<(Link, ChangelogEntry)> {
+    fn create_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            // The source coto of the link must belong to the local node.
-            let source_coto = coto_ops::try_get(new_link.source_coto_id()).run(ctx)??;
+            // The source coto of the ito must belong to the local node.
+            let source_coto = coto_ops::try_get(new_ito.source_coto_id()).run(ctx)??;
             self.globals.ensure_local(&source_coto)?;
 
-            let inserted_link = link_ops::insert(new_link).run(ctx)?;
-            let change = Change::CreateLink(inserted_link.clone());
+            let inserted_ito = ito_ops::insert(new_ito).run(ctx)?;
+            let change = Change::CreateIto(inserted_ito.clone());
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-            Ok((inserted_link, changelog))
+            Ok((inserted_ito, changelog))
         })
     }
 
-    pub fn edit_link(
+    pub fn edit_ito(
         &mut self,
-        id: &Id<Link>,
-        diff: LinkContentDiff<'static>,
+        id: &Id<Ito>,
+        diff: ItoContentDiff<'static>,
         operator: &Operator,
-    ) -> Result<(Link, ChangelogEntry)> {
+    ) -> Result<(Ito, ChangelogEntry)> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let link = link_ops::edit(id, &diff, None).run(ctx)?;
-            self.globals.ensure_local(&link)?;
-            let change = Change::EditLink {
-                link_id: *id,
+            let ito = ito_ops::edit(id, &diff, None).run(ctx)?;
+            self.globals.ensure_local(&ito)?;
+            let change = Change::EditIto {
+                ito_id: *id,
                 diff,
-                updated_at: link.updated_at,
+                updated_at: ito.updated_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-            Ok((link, changelog))
+            Ok((ito, changelog))
         })
     }
 
-    pub fn disconnect(&self, id: &Id<Link>, operator: &Operator) -> Result<ChangelogEntry> {
+    pub fn disconnect(&self, id: &Id<Ito>, operator: &Operator) -> Result<ChangelogEntry> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let link = link_ops::try_get(id).run(ctx)??;
-            self.globals.ensure_local(&link)?;
-            if link_ops::delete(id).run(ctx)? {
-                let change = Change::DeleteLink { link_id: *id };
+            let ito = ito_ops::try_get(id).run(ctx)??;
+            self.globals.ensure_local(&ito)?;
+            if ito_ops::delete(id).run(ctx)? {
+                let change = Change::DeleteIto { ito_id: *id };
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
-                Err(DatabaseError::not_found(EntityKind::Link, "uuid", *id))?
+                Err(DatabaseError::not_found(EntityKind::Ito, "uuid", *id))?
             }
         })
     }
 
-    pub fn change_link_order(
+    pub fn change_ito_order(
         &mut self,
-        id: &Id<Link>,
+        id: &Id<Ito>,
         new_order: i32,
         operator: &Operator,
-    ) -> Result<(Link, ChangelogEntry)> {
+    ) -> Result<(Ito, ChangelogEntry)> {
         operator.can_edit_links()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let link = link_ops::change_order(id, new_order).run(ctx)?;
-            self.globals.ensure_local(&link)?;
-            let change = Change::ChangeLinkOrder {
-                link_id: *id,
+            let ito = ito_ops::change_order(id, new_order).run(ctx)?;
+            self.globals.ensure_local(&ito)?;
+            let change = Change::ChangeItoOrder {
+                ito_id: *id,
                 new_order,
             };
             let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
-            Ok((link, changelog))
+            Ok((ito, changelog))
         })
     }
 
     pub fn pin_parent_root(
         &mut self,
         parent_id: &Id<Node>,
-    ) -> Result<Option<(Link, Cotonoma, ChangelogEntry)>> {
+    ) -> Result<Option<(Ito, Cotonoma, ChangelogEntry)>> {
         if !self.globals.is_parent(parent_id) {
             bail!("The specified node is not a parent: {parent_id}");
         }
@@ -144,11 +144,11 @@ impl<'a> DatabaseSession<'a> {
                 return Ok(None);
             };
 
-        // Create a link between the two
-        let (link, change) = self.connect(
-            &LinkInput::new(local_root_coto.uuid, parent_root_coto.uuid),
+        // Create a ito between the two
+        let (ito, change) = self.connect(
+            &ItoInput::new(local_root_coto.uuid, parent_root_coto.uuid),
             &self.globals.local_node_as_operator()?,
         )?;
-        Ok(Some((link, parent_root_cotonoma, change)))
+        Ok(Some((ito, parent_root_cotonoma, change)))
     }
 }

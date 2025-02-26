@@ -6,7 +6,7 @@ use anyhow::{bail, ensure};
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
 
-use super::{coto_ops, cotonoma_ops, graph_ops, link_ops, node_ops, node_role_ops::parent_ops};
+use super::{coto_ops, cotonoma_ops, graph_ops, ito_ops, node_ops, node_role_ops::parent_ops};
 use crate::{
     db::{error::*, op::*},
     models::{
@@ -234,21 +234,21 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             } => {
                 cotonoma_ops::rename(cotonoma_id, name, Some(*updated_at)).run(ctx)?;
             }
-            Change::CreateLink(link) => {
-                link_ops::insert(link.to_import()).run(ctx)?;
+            Change::CreateIto(ito) => {
+                ito_ops::insert(ito.to_import()).run(ctx)?;
             }
-            Change::EditLink {
-                link_id,
+            Change::EditIto {
+                ito_id,
                 diff,
                 updated_at,
             } => {
-                link_ops::edit(link_id, diff, Some(*updated_at)).run(ctx)?;
+                ito_ops::edit(ito_id, diff, Some(*updated_at)).run(ctx)?;
             }
-            Change::DeleteLink { link_id } => {
-                link_ops::delete(link_id).run(ctx)?;
+            Change::DeleteIto { ito_id } => {
+                ito_ops::delete(ito_id).run(ctx)?;
             }
-            Change::ChangeLinkOrder { link_id, new_order } => {
-                link_ops::change_order(link_id, *new_order).run(ctx)?;
+            Change::ChangeItoOrder { ito_id, new_order } => {
+                ito_ops::change_order(ito_id, *new_order).run(ctx)?;
             }
             Change::ChangeOwnerNode {
                 from,
