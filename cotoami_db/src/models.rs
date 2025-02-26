@@ -510,7 +510,7 @@ fn process_image<'a>(
     // Apply Exif orientation to the image
     if let Some(orientation) = orientation {
         debug!("Applying Exif orientation {orientation:?} ...");
-        image.apply_orientation(orientation);
+        image.transform(orientation);
     }
 
     // Resize the image if it is larger than the max_size

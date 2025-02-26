@@ -172,7 +172,7 @@ impl Change {
         &'a self,
         local_node_id: &'a Id<Node>,
         serial_number: i64,
-    ) -> NewChangelogEntry {
+    ) -> NewChangelogEntry<'a> {
         NewChangelogEntry {
             origin_node_id: local_node_id,
             origin_serial_number: serial_number,
