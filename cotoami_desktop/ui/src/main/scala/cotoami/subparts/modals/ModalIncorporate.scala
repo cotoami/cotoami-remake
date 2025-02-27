@@ -16,7 +16,7 @@ import cotoami.subparts.{
   sectionHelp,
   spanNode,
   Modal,
-  ViewCoto
+  PartsCoto
 }
 
 object ModalIncorporate {
@@ -249,7 +249,7 @@ object ModalIncorporate {
         section(className := "node")(spanNode(nodeSession.server)),
         sectionChildPrivileges(nodeSession),
         nodeSession.serverRoot.map { case (_, coto) =>
-          ViewCoto.sectionCotonomaContent(coto)
+          PartsCoto.sectionCotonomaContent(coto)
             .map(section(className := "node-description")(_))
         }
       ),

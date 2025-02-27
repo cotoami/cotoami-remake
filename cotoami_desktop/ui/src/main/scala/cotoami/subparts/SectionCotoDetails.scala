@@ -34,7 +34,7 @@ object SectionCotoDetails {
       ),
       div(className := "body")(
         ScrollArea()(
-          ViewCoto.ulParents(
+          PartsCoto.ulParents(
             context.repo.parentsOf(coto.id),
             AppMsg.FocusCoto(_)
           ),
@@ -61,19 +61,19 @@ object SectionCotoDetails {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    ViewCoto.article(coto, dispatch, Seq(("main-coto", true)))(
+    PartsCoto.article(coto, dispatch, Seq(("main-coto", true)))(
       ToolbarCoto(coto),
       header()(
-        ViewCoto.divAttributes(coto),
-        ViewCoto.addressAuthor(coto, context.repo.nodes)
+        PartsCoto.divAttributes(coto),
+        PartsCoto.addressAuthor(coto, context.repo.nodes)
       ),
       div(className := "body")(
-        ViewCoto.divContent(coto, true),
+        PartsCoto.divContent(coto, true),
         Option.when(coto.isCotonoma) {
-          ViewCoto.sectionCotonomaContent(coto)
+          PartsCoto.sectionCotonomaContent(coto)
         }
       ),
-      ViewCoto.articleFooter(coto)
+      PartsCoto.articleFooter(coto)
     )
 
   private def olSubCotos(coto: Coto)(implicit
@@ -103,26 +103,26 @@ object SectionCotoDetails {
     li(key := ito.id.uuid, className := "sub")(
       divAddSubCoto,
       div(className := "sub")(
-        ViewCoto.ulParents(
+        PartsCoto.ulParents(
           repo.parentsOf(coto.id).filter(_._2.id != ito.id),
           AppMsg.FocusCoto(_)
         ),
-        ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
+        PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
           ToolbarCoto(coto),
           ToolbarReorder(ito, order),
           header()(
             ViewIto.buttonSubcotoIto(ito),
-            ViewCoto.divAttributes(coto),
+            PartsCoto.divAttributes(coto),
             Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
-              ViewCoto.addressAuthor(coto, repo.nodes)
+              PartsCoto.addressAuthor(coto, repo.nodes)
             }
           ),
           div(className := "body")(
-            ViewCoto.divContent(coto)
+            PartsCoto.divContent(coto)
           ),
-          ViewCoto.articleFooter(coto)
+          PartsCoto.articleFooter(coto)
         ),
-        ViewCoto.divItosTraversal(coto, "bottom")
+        PartsCoto.divItosTraversal(coto, "bottom")
       )
     )
   }

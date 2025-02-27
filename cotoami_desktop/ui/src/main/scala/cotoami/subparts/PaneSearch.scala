@@ -212,24 +212,24 @@ object PaneSearch {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     section(className := "coto flow-entry")(
-      ViewCoto.ulParents(
+      PartsCoto.ulParents(
         repo.parentsOf(coto.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
-      ViewCoto.article(coto, dispatch)(
+      PartsCoto.article(coto, dispatch)(
         ToolbarCoto(coto),
         header()(
-          ViewCoto.divAttributes(coto),
+          PartsCoto.divAttributes(coto),
           Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
-            ViewCoto.addressAuthor(coto, repo.nodes)
+            PartsCoto.addressAuthor(coto, repo.nodes)
           }
         ),
         div(className := "body")(
-          ViewCoto.divContent(coto)
+          PartsCoto.divContent(coto)
         ),
-        ViewCoto.articleFooter(coto)
+        PartsCoto.articleFooter(coto)
       ),
-      ViewCoto.divItosTraversal(coto, "bottom")
+      PartsCoto.divItosTraversal(coto, "bottom")
     )
   }
 }

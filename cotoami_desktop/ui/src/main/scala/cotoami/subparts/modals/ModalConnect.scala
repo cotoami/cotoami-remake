@@ -12,7 +12,7 @@ import cotoami.models.{Coto, Id, Ito}
 import cotoami.repository.{Cotos, Itos, Root}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.backend.{ErrorJson, ItoBackend}
-import cotoami.subparts.{Modal, ViewCoto}
+import cotoami.subparts.{Modal, PartsCoto}
 
 object ModalConnect {
 
@@ -181,11 +181,11 @@ object ModalConnect {
   ): ReactElement =
     article(className := "coto embedded")(
       header()(
-        ViewCoto.addressAuthor(coto, context.repo.nodes)
+        PartsCoto.addressAuthor(coto, context.repo.nodes)
       ),
       div(className := "body")(
         ScrollArea()(
-          ViewCoto.divContentPreview(coto)
+          PartsCoto.divContentPreview(coto)
         )
       )
     )

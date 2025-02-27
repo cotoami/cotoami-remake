@@ -15,7 +15,7 @@ import cotoami.components.{
   Flipper,
   ScrollArea
 }
-import cotoami.subparts.{Modal, ViewCoto}
+import cotoami.subparts.{Modal, PartsCoto}
 
 object ModalSelection {
 
@@ -107,6 +107,6 @@ object ModalSelection {
           onClick = _ => dispatch(AppMsg.Deselect(coto.id))
         )
       ),
-      ViewCoto.divContentPreview(coto)
+      PartsCoto.divContentPreview(coto)
     )
 }

@@ -265,7 +265,7 @@ object SectionTraversals {
           materialSymbol("arrow_downward")
         )
       },
-      ViewCoto.article(
+      PartsCoto.article(
         coto,
         dispatch,
         Seq(
@@ -275,10 +275,10 @@ object SectionTraversals {
       )(
         ToolbarCoto(coto),
         div(className := "body")(
-          ViewCoto.divContent(coto)
+          PartsCoto.divContent(coto)
         ),
         footer()(
-          ViewCoto.divAttributes(coto)
+          PartsCoto.divAttributes(coto)
         )
       ),
       Flipper(
@@ -310,11 +310,11 @@ object SectionTraversals {
     val (ito, coto, order) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(className := "sub")(
-      ViewCoto.ulParents(
+      PartsCoto.ulParents(
         context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
         Msg.OpenTraversal(_)
       ),
-      ViewCoto.article(
+      PartsCoto.article(
         coto,
         dispatch,
         Seq(
@@ -334,7 +334,7 @@ object SectionTraversals {
               section(className := "abbreviated-content")(coto.abbreviate)
             )
           } else {
-            ViewCoto.divContent(coto)
+            PartsCoto.divContent(coto)
           },
           // Traverse button
           Option.when(
@@ -360,7 +360,7 @@ object SectionTraversals {
           }
         ),
         footer()(
-          ViewCoto.divAttributes(coto)
+          PartsCoto.divAttributes(coto)
         )
       )
     )

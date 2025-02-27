@@ -233,7 +233,7 @@ object SectionPins {
       )
 
       section(className := "document-view", ref := rootRef)(
-        ViewCoto.sectionCotonomaContent(props.cotonomaCoto).map(
+        PartsCoto.sectionCotonomaContent(props.cotonomaCoto).map(
           div(
             className := "cotonoma-content",
             onDoubleClick := (_ =>
@@ -284,11 +284,11 @@ object SectionPins {
       ),
       id := elementIdOfPin(ito)
     )(
-      ViewCoto.ulParents(
+      PartsCoto.ulParents(
         context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
-      ViewCoto.article(
+      PartsCoto.article(
         coto,
         dispatch,
         Seq(
@@ -300,10 +300,10 @@ object SectionPins {
         ToolbarCoto(coto),
         ToolbarReorder(ito, order),
         div(className := "body")(
-          ViewCoto.divContent(coto)
+          PartsCoto.divContent(coto)
         ),
         footer()(
-          ViewCoto.divAttributes(coto)
+          PartsCoto.divAttributes(coto)
         )
       ),
       if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
@@ -408,22 +408,22 @@ object SectionPins {
       order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(className := "sub")(
-      ViewCoto.ulParents(
+      PartsCoto.ulParents(
         context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
-      ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
+      PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
         ToolbarCoto(coto),
         ToolbarReorder(ito, order),
         header()(
           ViewIto.buttonSubcotoIto(ito)
         ),
         div(className := "body")(
-          ViewCoto.divContent(coto),
-          ViewCoto.divItosTraversal(coto, "left")
+          PartsCoto.divContent(coto),
+          PartsCoto.divItosTraversal(coto, "left")
         ),
         footer()(
-          ViewCoto.divAttributes(coto)
+          PartsCoto.divAttributes(coto)
         )
       )
     )

@@ -344,7 +344,7 @@ object SectionTimeline {
       article(className := "coto")(
         post.error.map(section(className := "error")(_)),
         div(className := "body")(
-          ViewCoto.divWaitingPostContent(post)
+          PartsCoto.divWaitingPostContent(post)
         )
       )
     )
@@ -357,12 +357,12 @@ object SectionTimeline {
       repostHeader(coto),
       context.repo.cotos.getOriginal(coto).map(coto =>
         Fragment(
-          ViewCoto.ulParents(
+          PartsCoto.ulParents(
             context.repo.parentsOf(coto.id),
             AppMsg.FocusCoto(_)
           ),
           articleCoto(coto),
-          ViewCoto.divItosTraversal(coto, "bottom")
+          PartsCoto.divItosTraversal(coto, "bottom")
         )
       )
     )
@@ -372,18 +372,18 @@ object SectionTimeline {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val repo = context.repo
-    ViewCoto.article(coto, dispatch)(
+    PartsCoto.article(coto, dispatch)(
       ToolbarCoto(coto),
       header()(
-        ViewCoto.divAttributes(coto),
+        PartsCoto.divAttributes(coto),
         Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
-          ViewCoto.addressAuthor(coto, repo.nodes)
+          PartsCoto.addressAuthor(coto, repo.nodes)
         }
       ),
       div(className := "body")(
-        ViewCoto.divContent(coto)
+        PartsCoto.divContent(coto)
       ),
-      ViewCoto.articleFooter(coto)
+      PartsCoto.articleFooter(coto)
     )
   }
 

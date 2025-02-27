@@ -24,7 +24,7 @@ import cotoami.subparts.{
   labeledInputField,
   sectionClientNodesCount,
   Modal,
-  ViewCoto
+  PartsCoto
 }
 
 object ModalNodeProfile {
@@ -266,7 +266,7 @@ object ModalNodeProfile {
     )(
       div(className := "input-with-tools")(
         section(className := "node-description")(
-          ViewCoto.sectionCotonomaContent(rootCoto)
+          PartsCoto.sectionCotonomaContent(rootCoto)
         ),
         Option.when(model.isOperatingNode()) {
           div(className := "tools")(

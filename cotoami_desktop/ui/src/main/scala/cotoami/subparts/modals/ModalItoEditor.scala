@@ -11,7 +11,7 @@ import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}
 import cotoami.backend.{ErrorJson, ItoBackend}
 import cotoami.components.{materialSymbol, ScrollArea}
-import cotoami.subparts.{Modal, ViewCoto}
+import cotoami.subparts.{Modal, PartsCoto}
 
 object ModalItoEditor {
 
@@ -196,7 +196,7 @@ object ModalItoEditor {
     article(className := "coto embedded")(
       div(className := "body")(
         ScrollArea()(
-          ViewCoto.divContentPreview(coto)
+          PartsCoto.divContentPreview(coto)
         )
       )
     )

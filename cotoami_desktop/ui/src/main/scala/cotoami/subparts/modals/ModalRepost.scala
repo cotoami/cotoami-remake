@@ -12,7 +12,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repository.{Cotonomas, Nodes, Root}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.subparts.{imgNode, Modal, ViewCoto}
+import cotoami.subparts.{imgNode, Modal, PartsCoto}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
 object ModalRepost {
@@ -296,11 +296,11 @@ object ModalRepost {
   private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
     article(className := "coto embedded")(
       header()(
-        ViewCoto.addressAuthor(coto, context.repo.nodes)
+        PartsCoto.addressAuthor(coto, context.repo.nodes)
       ),
       div(className := "body")(
         ScrollArea()(
-          ViewCoto.divContentPreview(coto)
+          PartsCoto.divContentPreview(coto)
         )
       )
     )

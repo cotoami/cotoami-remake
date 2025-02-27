@@ -20,7 +20,7 @@ import cotoami.components.{
   Markdown
 }
 
-object ViewCoto {
+object PartsCoto {
 
   def article(
       coto: Coto,

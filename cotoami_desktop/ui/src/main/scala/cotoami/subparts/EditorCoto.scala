@@ -274,7 +274,7 @@ object EditorCoto {
             model.summary.map(section(className := "summary")(_))
           },
           div(className := "content")(
-            ViewCoto.sectionTextContent(Some(model.content))
+            PartsCoto.sectionTextContent(Some(model.content))
           )
         )
       )
