@@ -35,7 +35,7 @@ object Ito {
     Ordering.fromLessThan[Ito](_.order < _.order)
 
   final val IconName = "north_east"
-  final val ConnectIconName = "place_item"
+  final val ConnectIconName = "add_link"
   final val PinIconName = "push_pin"
 
   final val DescriptionMaxLength = 200
