@@ -13,7 +13,7 @@ use diesel::{
 use super::{
     coto::{Coto, CotoContentDiff},
     cotonoma::Cotonoma,
-    link::{Link, LinkContentDiff},
+    ito::{Ito, ItoContentDiff},
     node::Node,
     Bytes, Id,
 };
@@ -141,17 +141,17 @@ pub enum Change {
         name: String,
         updated_at: NaiveDateTime,
     } = 10,
-    CreateLink(Link) = 11,
-    EditLink {
-        link_id: Id<Link>,
-        diff: LinkContentDiff<'static>,
+    CreateIto(Ito) = 11,
+    EditIto {
+        ito_id: Id<Ito>,
+        diff: ItoContentDiff<'static>,
         updated_at: NaiveDateTime,
     } = 12,
-    DeleteLink {
-        link_id: Id<Link>,
+    DeleteIto {
+        ito_id: Id<Ito>,
     } = 13,
-    ChangeLinkOrder {
-        link_id: Id<Link>,
+    ChangeItoOrder {
+        ito_id: Id<Ito>,
         new_order: i32,
     } = 14,
     ChangeOwnerNode {
@@ -172,7 +172,7 @@ impl Change {
         &'a self,
         local_node_id: &'a Id<Node>,
         serial_number: i64,
-    ) -> NewChangelogEntry {
+    ) -> NewChangelogEntry<'a> {
         NewChangelogEntry {
             origin_node_id: local_node_id,
             origin_serial_number: serial_number,
@@ -269,8 +269,8 @@ mod tests {
 
     #[test]
     fn message_pack_serialization() -> Result<()> {
-        let change = Change::DeleteLink {
-            link_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
+        let change = Change::DeleteIto {
+            ito_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
         };
         let msgpack_bytes = rmp_serde::to_vec(&change)?;
         let deserialized: Change = rmp_serde::from_slice(&msgpack_bytes)?;

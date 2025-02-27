@@ -13,7 +13,7 @@ pub mod changes;
 pub mod cotonomas;
 pub mod cotos;
 pub mod graph;
-pub mod links;
+pub mod itos;
 pub mod nodes;
 
 pub struct DatabaseSession<'a> {

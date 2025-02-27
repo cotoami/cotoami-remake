@@ -5,51 +5,51 @@ import java.time.Instant
 
 import cotoami.utils.Validation
 
-case class Link(
-    id: Id[Link],
+case class Ito(
+    id: Id[Ito],
     nodeId: Id[Node],
     createdById: Id[Node],
     sourceCotoId: Id[Coto],
     targetCotoId: Id[Coto],
-    linkingPhrase: Option[String],
+    description: Option[String],
     details: Option[String],
     order: Int,
     createdAtUtcIso: String,
     updatedAtUtcIso: String
-) extends Entity[Link] {
+) extends Entity[Ito] {
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val updatedAt: Instant = parseUtcIso(updatedAtUtcIso)
 
-  // If two link objects have the same ID and update-timestamp,
-  // they can be regarded as the same link.
+  // If two ito objects have the same ID and update-timestamp,
+  // they can be regarded as the same ito.
   override def equals(that: Any): Boolean =
     that match {
-      case that: Link =>
+      case that: Ito =>
         (id, updatedAtUtcIso) == (that.id, that.updatedAtUtcIso)
       case _ => false
     }
 }
 
-object Link {
-  implicit val ordering: Ordering[Link] =
-    Ordering.fromLessThan[Link](_.order < _.order)
+object Ito {
+  implicit val ordering: Ordering[Ito] =
+    Ordering.fromLessThan[Ito](_.order < _.order)
 
-  final val IconName = "link"
-  final val ConnectIconName = "add_link"
+  final val IconName = "north_east"
+  final val ConnectIconName = "place_item"
   final val PinIconName = "push_pin"
 
-  final val LinkingPhraseMaxLength = 200
+  final val DescriptionMaxLength = 200
 
-  def validateLinkingPhrase(linkingPhrase: String): Seq[Validation.Error] = {
-    val fieldName = "linking phrase"
+  def validateDescription(description: String): Seq[Validation.Error] = {
+    val fieldName = "description"
     Vector(
-      Validation.nonBlank(fieldName, linkingPhrase),
-      Validation.length(fieldName, linkingPhrase, 1, LinkingPhraseMaxLength)
+      Validation.nonBlank(fieldName, description),
+      Validation.length(fieldName, description, 1, DescriptionMaxLength)
     ).flatten
   }
 }
 
-case class Siblings(sorted: Seq[(Link, Coto)]) {
+case class Siblings(sorted: Seq[(Ito, Coto)]) {
   def length = sorted.length
 
   def isEmpty: Boolean = sorted.isEmpty
@@ -57,11 +57,11 @@ case class Siblings(sorted: Seq[(Link, Coto)]) {
   val minOrder = sorted.headOption.map(_._1.order).getOrElse(0)
   val maxOrder = sorted.lastOption.map(_._1.order).getOrElse(0)
 
-  def links: Iterable[Link] = sorted.map(_._1)
+  def itos: Iterable[Ito] = sorted.map(_._1)
 
   // Returns each sibling with the previous and next ones.
   def eachWithNeighbors
-      : Iterable[(Option[(Link, Coto)], (Link, Coto), Option[(Link, Coto)])] =
+      : Iterable[(Option[(Ito, Coto)], (Ito, Coto), Option[(Ito, Coto)])] =
     sorted.zipWithIndex.map { case (sibling, index) =>
       (
         sorted.lift(index - 1),
@@ -70,22 +70,22 @@ case class Siblings(sorted: Seq[(Link, Coto)]) {
       )
     }
 
-  def eachWithOrderContext: Iterable[(Link, Coto, OrderContext)] =
-    eachWithNeighbors.map { case (previous, (link, coto), next) =>
+  def eachWithOrderContext: Iterable[(Ito, Coto, OrderContext)] =
+    eachWithNeighbors.map { case (previous, (ito, coto), next) =>
       (
-        link,
+        ito,
         coto,
         OrderContext(
           min = minOrder,
           max = maxOrder,
-          current = link.order,
+          current = ito.order,
           previous = previous.map(_._1.order),
           next = next.map(_._1.order)
         )
       )
     }
 
-  def fingerprint: String = links.map(_.id.uuid).mkString
+  def fingerprint: String = itos.map(_.id.uuid).mkString
 }
 
 object Siblings {

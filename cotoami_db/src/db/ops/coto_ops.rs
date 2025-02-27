@@ -2,12 +2,12 @@
 
 use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{cotonoma_ops, Page};
+use super::{Page, cotonoma_ops};
 use crate::{
     db::{
         error::*,
@@ -15,10 +15,10 @@ use crate::{
         ops::{detect_cjk_chars, escape_like_pattern},
     },
     models::{
+        Geolocation, Id,
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},
         cotonoma::Cotonoma,
         node::Node,
-        Geolocation, Id,
     },
     schema::cotos,
 };
@@ -252,7 +252,7 @@ pub(crate) fn delete(
 
         // There are some related entities to be deleted by FOREIGN KEY ON DELETE CASCADE:
         // 1. The reposts of the coto.
-        // 2. The links connected to the coto.
+        // 2. The itos connected to the coto.
         // 3. If it is a cotonoma, the corresponding cotonoma row will be deleted.
         let deleted: Option<Coto> = diesel::delete(cotos::table.find(id))
             .get_result(ctx.conn().deref_mut())

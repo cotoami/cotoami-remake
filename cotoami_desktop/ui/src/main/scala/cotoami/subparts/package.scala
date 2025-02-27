@@ -7,7 +7,7 @@ import slinky.web.SyntheticKeyboardEvent
 
 import cotoami.{Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Link, Node, ParentStatus}
+import cotoami.models.{Ito, Node, ParentStatus}
 import cotoami.repository.Nodes
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
@@ -202,15 +202,15 @@ package object subparts {
     )
   }
 
-  def buttonPinLink(
-      link: Link
+  def buttonPin(
+      ito: Ito
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val canEditPin = context.repo.nodes.canEdit(link)
+    val canEditPin = context.repo.nodes.canEdit(ito)
     div(
       className := optionalClasses(
         Seq(
-          ("link-container", true),
-          ("with-linking-phrase", link.linkingPhrase.isDefined)
+          ("ito-container", true),
+          ("with-description", ito.description.isDefined)
         )
       )
     )(
@@ -218,7 +218,7 @@ package object subparts {
         className := optionalClasses(
           Seq(
             ("pin", true),
-            ("link", true),
+            ("ito", true),
             ("editable", canEditPin)
           )
         )
@@ -231,16 +231,16 @@ package object subparts {
           disabled = !canEditPin,
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+            dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
           }
         ),
-        link.linkingPhrase.map(phrase =>
+        ito.description.map(phrase =>
           section(
-            className := "linking-phrase",
+            className := "description",
             onClick := (e => {
               e.stopPropagation()
               if (canEditPin)
-                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+                dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
             })
           )(phrase)
         )
@@ -248,45 +248,45 @@ package object subparts {
     )
   }
 
-  def buttonSubcotoLink(
-      link: Link
+  def buttonSubcotoIto(
+      ito: Ito
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val canEditLink = context.repo.nodes.canEdit(link)
+    val canEditIto = context.repo.nodes.canEdit(ito)
     div(
       className := optionalClasses(
         Seq(
-          ("link-container", true),
-          ("with-linking-phrase", link.linkingPhrase.isDefined)
+          ("ito-container", true),
+          ("with-description", ito.description.isDefined)
         )
       )
     )(
       div(
         className := optionalClasses(
           Seq(
-            ("subcoto-link", true),
-            ("link", true),
-            ("editable", canEditLink)
+            ("subcoto-ito", true),
+            ("ito", true),
+            ("editable", canEditIto)
           )
         )
       )(
         toolButton(
-          classes = "edit-link",
+          classes = "edit-ito",
           symbol = "subdirectory_arrow_right",
-          tip = Option.when(canEditLink)("Edit link"),
+          tip = Option.when(canEditIto)("Edit ito"),
           tipPlacement = "right",
-          disabled = !canEditLink,
+          disabled = !canEditIto,
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+            dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
           }
         ),
-        link.linkingPhrase.map(phrase =>
+        ito.description.map(phrase =>
           section(
-            className := "linking-phrase",
+            className := "description",
             onClick := (e => {
               e.stopPropagation()
-              if (canEditLink)
-                dispatch(Modal.Msg.OpenModal(Modal.LinkEditor(link)))
+              if (canEditIto)
+                dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
             })
           )(phrase)
         )

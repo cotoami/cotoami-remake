@@ -16,15 +16,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{
-  Coto,
-  Cotonoma,
-  Id,
-  Link,
-  OrderContext,
-  Siblings,
-  UiState
-}
+import cotoami.models.{Coto, Cotonoma, Id, Ito, OrderContext, Siblings, UiState}
 import cotoami.repository.Root
 import cotoami.components.{
   optionalClasses,
@@ -47,7 +39,7 @@ object SectionPins {
   object Msg {
     case class SwitchView(cotonoma: Id[Cotonoma], inColumns: Boolean)
         extends Msg
-    case class ScrollToPin(pin: Link) extends Msg
+    case class ScrollToPin(pin: Ito) extends Msg
   }
 
   def update(msg: Msg)(implicit
@@ -275,25 +267,25 @@ object SectionPins {
       ).toSeq: _*
     )
 
-  def elementIdOfPin(pin: Link): String = s"pin-${pin.id.uuid}"
+  def elementIdOfPin(pin: Ito): String = s"pin-${pin.id.uuid}"
 
   private def liPin(
-      pin: (Link, Coto, OrderContext),
+      pin: (Ito, Coto, OrderContext),
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (link, coto, order) = pin
+    val (ito, coto, order) = pin
     val subCotos = context.repo.childrenOf(coto.id)
     li(
       className := optionalClasses(
         Seq(
           ("pin", true),
-          ("with-linking-phrase", link.linkingPhrase.isDefined)
+          ("with-description", ito.description.isDefined)
         )
       ),
-      id := elementIdOfPin(link)
+      id := elementIdOfPin(ito)
     )(
       ViewCoto.ulParents(
-        context.repo.parentsOf(coto.id).filter(_._2.id != link.id),
+        context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       ViewCoto.article(
@@ -301,12 +293,12 @@ object SectionPins {
         dispatch,
         Seq(
           ("pinned-coto", true),
-          ("has-children", context.repo.links.anyFrom(coto.id))
+          ("has-children", context.repo.itos.anyFrom(coto.id))
         )
       )(
-        buttonPinLink(link),
+        buttonPin(ito),
         ToolbarCoto(coto),
-        ToolbarReorder(link, order),
+        ToolbarReorder(ito, order),
         div(className := "body")(
           ViewCoto.divContent(coto)
         ),
@@ -315,7 +307,7 @@ object SectionPins {
         )
       ),
       if (coto.isCotonoma && !context.repo.alreadyLoadedGraphFrom(coto.id)) {
-        div(className := "links-not-yet-loaded")(
+        div(className := "itos-not-yet-loaded")(
           if (context.repo.graphLoading.contains(coto.id)) {
             div(
               className := "loading",
@@ -324,9 +316,9 @@ object SectionPins {
           } else {
             toolButton(
               symbol = "more_horiz",
-              tip = Some("Load links"),
+              tip = Some("Load itos"),
               tipPlacement = "bottom",
-              classes = "fetch-links",
+              classes = "fetch-itos",
               onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))
             )
           }
@@ -339,7 +331,7 @@ object SectionPins {
     )
   }
 
-  private def elementIdOfTocEntry(pin: Link): String =
+  private def elementIdOfTocEntry(pin: Ito): String =
     s"toc-${elementIdOfPin(pin)}"
 
   private def divToc(
@@ -349,10 +341,10 @@ object SectionPins {
     div(className := "toc", ref := tocRef)(
       ScrollArea()(
         Flipper(element = "ol", className = "toc", flipKey = pins.fingerprint)(
-          pins.eachWithOrderContext.map { case (link, coto, order) =>
-            Flipped(key = link.id.uuid, flipId = link.id.uuid)(
+          pins.eachWithOrderContext.map { case (ito, coto, order) =>
+            Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
               li(
-                id := elementIdOfTocEntry(link),
+                id := elementIdOfTocEntry(ito),
                 // This className will be modified directly by DocumentView to highlight
                 // entries in the current viewport, so it must not be dynamic with the models.
                 className := "toc-entry",
@@ -366,7 +358,7 @@ object SectionPins {
                       ("highlighted", context.isHighlighting(coto.id))
                     )
                   ),
-                  onClick := (_ => dispatch(Msg.ScrollToPin(link)))
+                  onClick := (_ => dispatch(Msg.ScrollToPin(ito)))
                 )(
                   if (coto.isCotonoma)
                     span(className := "cotonoma")(
@@ -393,9 +385,9 @@ object SectionPins {
       className = "sub-cotos",
       flipKey = subCotos.fingerprint
     )(
-      subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
-        Flipped(key = link.id.uuid, flipId = link.id.uuid)(
-          liSubCoto(link, subCoto, order)
+      subCotos.eachWithOrderContext.map { case (ito, subCoto, order) =>
+        Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+          liSubCoto(ito, subCoto, order)
         )
       }
     ) match {
@@ -411,24 +403,24 @@ object SectionPins {
   }
 
   private def liSubCoto(
-      link: Link,
+      ito: Ito,
       coto: Coto,
       order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(className := "sub")(
       ViewCoto.ulParents(
-        context.repo.parentsOf(coto.id).filter(_._2.id != link.id),
+        context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
         SectionTraversals.Msg.OpenTraversal(_).into
       ),
       ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
         ToolbarCoto(coto),
-        ToolbarReorder(link, order),
+        ToolbarReorder(ito, order),
         header()(
-          buttonSubcotoLink(link)
+          buttonSubcotoIto(ito)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto),
-          ViewCoto.divLinksTraversal(coto, "left")
+          ViewCoto.divItosTraversal(coto, "left")
         ),
         footer()(
           ViewCoto.divAttributes(coto)

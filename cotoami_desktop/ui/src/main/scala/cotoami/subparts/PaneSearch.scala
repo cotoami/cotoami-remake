@@ -229,7 +229,7 @@ object PaneSearch {
         ),
         ViewCoto.articleFooter(coto)
       ),
-      ViewCoto.divLinksTraversal(coto, "bottom")
+      ViewCoto.divItosTraversal(coto, "bottom")
     )
   }
 }

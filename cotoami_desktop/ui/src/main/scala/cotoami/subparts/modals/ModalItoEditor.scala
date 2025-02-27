@@ -8,39 +8,39 @@ import slinky.core.facade.{Fragment, ReactElement}
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Coto, Id, Link}
-import cotoami.backend.{ErrorJson, LinkBackend}
+import cotoami.models.{Coto, Id, Ito}
+import cotoami.backend.{ErrorJson, ItoBackend}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, ViewCoto}
 
-object ModalLinkEditor {
+object ModalItoEditor {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      original: Link,
-      linkingPhraseInput: String,
+      original: Ito,
+      descriptionInput: String,
       disconnecting: Boolean = false,
       saving: Boolean = false,
       error: Option[String] = None
   ) {
-    def linkingPhrase: Option[String] =
-      Option.when(!linkingPhraseInput.isBlank())(linkingPhraseInput.trim)
+    def description: Option[String] =
+      Option.when(!descriptionInput.isBlank())(descriptionInput.trim)
 
-    def diffLinkingPhrase: Option[Option[String]] =
-      Option.when(linkingPhrase != original.linkingPhrase) {
-        linkingPhrase
+    def diffDescription: Option[Option[String]] =
+      Option.when(description != original.description) {
+        description
       }
 
-    def edited: Boolean = diffLinkingPhrase.isDefined
+    def edited: Boolean = diffDescription.isDefined
 
     def validate: Validation.Result =
       if (edited) {
         Validation.Result(
-          linkingPhrase
-            .map(Link.validateLinkingPhrase)
+          description
+            .map(Ito.validateDescription)
             .getOrElse(Seq.empty)
         )
       } else
@@ -51,7 +51,7 @@ object ModalLinkEditor {
     def disconnect: (Model, Cmd.One[AppMsg]) =
       (
         copy(disconnecting = true),
-        LinkBackend.disconnect(original.id).map(Msg.Disconnected(_).into)
+        ItoBackend.disconnect(original.id).map(Msg.Disconnected(_).into)
       )
 
     def readyToSave: Boolean = validate.validated && !disconnecting && !saving
@@ -59,14 +59,14 @@ object ModalLinkEditor {
     def save: (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
-        LinkBackend.edit(original.id, diffLinkingPhrase, None)
+        ItoBackend.edit(original.id, diffDescription, None)
           .map(Msg.Saved(_).into)
       )
   }
 
   object Model {
-    def apply(original: Link): Model =
-      Model(original, original.linkingPhrase.getOrElse(""))
+    def apply(original: Ito): Model =
+      Model(original, original.description.getOrElse(""))
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -74,34 +74,34 @@ object ModalLinkEditor {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.LinkEditorMsg(this).pipe(AppMsg.ModalMsg)
+    def into = Modal.Msg.ItoEditorMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
-    case class LinkingPhraseInput(linkingPhrase: String) extends Msg
-    case class Disconnect(id: Id[Link]) extends Msg
-    case class Disconnected(result: Either[ErrorJson, Id[Link]]) extends Msg
+    case class DescriptionInput(description: String) extends Msg
+    case class Disconnect(id: Id[Ito]) extends Msg
+    case class Disconnected(result: Either[ErrorJson, Id[Ito]]) extends Msg
     case object Save extends Msg
-    case class Saved(result: Either[ErrorJson, Link]) extends Msg
+    case class Saved(result: Either[ErrorJson, Ito]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.LinkingPhraseInput(linkingPhrase) =>
-        (model.copy(linkingPhraseInput = linkingPhrase), Cmd.none)
+      case Msg.DescriptionInput(description) =>
+        (model.copy(descriptionInput = description), Cmd.none)
 
       case Msg.Disconnect(id) => model.disconnect
 
       case Msg.Disconnected(Right(_)) =>
         (
           model.copy(disconnecting = false),
-          Modal.close(classOf[Modal.LinkEditor])
+          Modal.close(classOf[Modal.ItoEditor])
         )
 
       case Msg.Disconnected(Left(e)) =>
         (
           model.copy(disconnecting = false, error = Some(e.default_message)),
-          cotoami.error("Couldn't delete a link.", e)
+          cotoami.error("Couldn't delete an ito.", e)
         )
 
       case Msg.Save => model.save
@@ -109,13 +109,13 @@ object ModalLinkEditor {
       case Msg.Saved(Right(_)) =>
         (
           model.copy(saving = false),
-          Modal.close(classOf[Modal.LinkEditor])
+          Modal.close(classOf[Modal.ItoEditor])
         )
 
       case Msg.Saved(Left(e)) =>
         (
           model.copy(saving = false, error = Some(e.default_message)),
-          cotoami.error("Couldn't save a link.", e)
+          cotoami.error("Couldn't save an ito.", e)
         )
     }
 
@@ -127,36 +127,36 @@ object ModalLinkEditor {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
-      dialogClasses = "link-editor",
-      closeButton = Some((classOf[Modal.LinkEditor], dispatch)),
+      dialogClasses = "ito-editor",
+      closeButton = Some((classOf[Modal.ItoEditor], dispatch)),
       error = model.error
     )(
       if (context.repo.isPin(model.original))
         Fragment(
-          materialSymbol(Link.PinIconName),
+          materialSymbol(Ito.PinIconName),
           "Pin"
         )
       else
         Fragment(
-          materialSymbol(Link.IconName),
-          "Link"
+          materialSymbol(Ito.IconName),
+          "Ito"
         )
     )(
       section(className := "source-coto")(
         context.repo.cotos.get(model.original.sourceCotoId).map(articleCoto)
       ),
-      section(className := "link")(
-        div(className := "link-icon")(
+      section(className := "ito")(
+        div(className := "ito-icon")(
           materialSymbol("arrow_downward")
         ),
-        div(className := "linking-phrase")(
+        div(className := "description")(
           input(
-            className := "linking-phrase",
+            className := "description",
             `type` := "text",
-            placeholder := "Linking phrase (optional)",
-            value := model.linkingPhraseInput,
+            placeholder := "Description (optional)",
+            value := model.descriptionInput,
             Validation.ariaInvalid(model.validate),
-            onChange := (e => dispatch(Msg.LinkingPhraseInput(e.target.value)))
+            onChange := (e => dispatch(Msg.DescriptionInput(e.target.value)))
           ),
           Validation.sectionValidationError(model.validate)
         )
@@ -173,7 +173,7 @@ object ModalLinkEditor {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  "Are you sure you want to delete this link?",
+                  "Are you sure you want to delete this ito?",
                   Msg.Disconnect(model.original.id)
                 )
               )

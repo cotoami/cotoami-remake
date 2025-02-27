@@ -2,16 +2,16 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
+    Router,
     extract::{Extension, State},
     middleware,
     routing::get,
-    Router,
 };
 use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{
-    service::{models::InitialDataset, ServiceError},
+    service::{ServiceError, models::InitialDataset},
     state::NodeState,
     web::{Accept, Content},
 };
@@ -19,7 +19,7 @@ use crate::{
 mod changes;
 mod cotonomas;
 mod cotos;
-mod links;
+mod itos;
 mod nodes;
 
 pub(super) fn routes() -> Router<NodeState> {
@@ -29,7 +29,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .nest("/nodes", nodes::routes())
         .nest("/cotos", cotos::routes())
         .nest("/cotonomas", cotonomas::routes())
-        .nest("/links", links::routes())
+        .nest("/itos", itos::routes())
         .layer(middleware::from_fn(super::require_operator))
         .layer(middleware::from_fn(super::require_session))
 }

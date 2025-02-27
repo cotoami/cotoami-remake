@@ -21,24 +21,24 @@ fn crud_operations() -> Result<()> {
     let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root_cotonoma.uuid, &operator)?;
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: create link1: coto1 => coto2
+    // When: create ito1: coto1 => coto2
     /////////////////////////////////////////////////////////////////////////////
 
     let mock_time = time::mock_time();
-    let (link1, changelog) = ds.connect(
-        &LinkInput::new(coto1.uuid, coto2.uuid).linking_phrase("hello"),
+    let (ito1, changelog) = ds.connect(
+        &ItoInput::new(coto1.uuid, coto2.uuid).description("hello"),
         &operator,
     )?;
 
-    // check the created link
+    // check the created ito
     assert_that!(
-        link1,
-        pat!(Link {
+        ito1,
+        pat!(Ito {
             node_id: eq(&node.uuid),
             created_by_id: eq(&node.uuid),
             source_coto_id: eq(&coto1.uuid),
             target_coto_id: eq(&coto2.uuid),
-            linking_phrase: some(eq("hello")),
+            description: some(eq("hello")),
             details: none(),
             order: eq(&1),
             created_at: eq(&mock_time),
@@ -47,16 +47,16 @@ fn crud_operations() -> Result<()> {
     );
 
     // check if it is stored in the db
-    assert_eq!(ds.link(&link1.uuid)?.as_ref(), Some(&link1));
+    assert_eq!(ds.ito(&ito1.uuid)?.as_ref(), Some(&ito1));
 
-    // check if `recent_links` contains it
+    // check if `recent_itos` contains it
     assert_that!(
-        ds.recent_links(None, 5, 0)?,
+        ds.recent_itos(None, 5, 0)?,
         pat!(Page {
             size: eq(&5),
             index: eq(&0),
             total_rows: eq(&1),
-            rows: elements_are![eq(&link1)]
+            rows: elements_are![eq(&ito1)]
         })
     );
 
@@ -67,65 +67,65 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&6),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&6),
-            change: pat!(Change::CreateLink(eq(&link1))),
+            change: pat!(Change::CreateIto(eq(&ito1))),
             import_error: none()
         })
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: create link2: coto1 => coto3
+    // When: create ito2: coto1 => coto3
     /////////////////////////////////////////////////////////////////////////////
 
     time::clear_mock_time();
-    let (link2, _) = ds.connect(
-        &LinkInput::new(coto1.uuid, coto3.uuid)
-            .linking_phrase("bye")
+    let (ito2, _) = ds.connect(
+        &ItoInput::new(coto1.uuid, coto3.uuid)
+            .description("bye")
             .details("some details"),
         &operator,
     )?;
 
-    // check the created link
+    // check the created ito
     assert_that!(
-        link2,
-        pat!(Link {
+        ito2,
+        pat!(Ito {
             source_coto_id: eq(&coto1.uuid),
             target_coto_id: eq(&coto3.uuid),
-            linking_phrase: some(eq("bye")),
+            description: some(eq("bye")),
             details: some(eq("some details")),
             order: eq(&2)
         })
     );
 
     // check if it is stored in the db
-    assert_that!(ds.link(&link2.uuid)?, some(eq(&link2)));
+    assert_that!(ds.ito(&ito2.uuid)?, some(eq(&ito2)));
 
-    // check if `recent_links` contains it
+    // check if `recent_itos` contains it
     assert_that!(
-        ds.recent_links(None, 5, 0)?,
+        ds.recent_itos(None, 5, 0)?,
         pat!(Page {
             size: eq(&5),
             index: eq(&0),
             total_rows: eq(&2),
-            rows: elements_are![eq(&link2), eq(&link1)]
+            rows: elements_are![eq(&ito2), eq(&ito1)]
         })
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: create link3: coto1 =(order number 1)=> coto4
+    // When: create ito3: coto1 =(order number 1)=> coto4
     /////////////////////////////////////////////////////////////////////////////
 
-    let (link3, _) = ds.connect(&LinkInput::new(coto1.uuid, coto4.uuid).order(1), &operator)?;
+    let (ito3, _) = ds.connect(&ItoInput::new(coto1.uuid, coto4.uuid).order(1), &operator)?;
 
-    // check if the order of the links has been updated
-    assert_eq!(ds.link(&link3.uuid)?.unwrap().order, 1);
-    assert_eq!(ds.link(&link1.uuid)?.unwrap().order, 2);
-    assert_eq!(ds.link(&link2.uuid)?.unwrap().order, 3);
+    // check if the order of the itos has been updated
+    assert_eq!(ds.ito(&ito3.uuid)?.unwrap().order, 1);
+    assert_eq!(ds.ito(&ito1.uuid)?.unwrap().order, 2);
+    assert_eq!(ds.ito(&ito2.uuid)?.unwrap().order, 3);
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: move link2 to the head
+    // When: move ito2 to the head
     /////////////////////////////////////////////////////////////////////////////
 
-    let (_, changelog) = ds.change_link_order(&link2.uuid, 1, &operator)?;
+    let (_, changelog) = ds.change_ito_order(&ito2.uuid, 1, &operator)?;
 
     assert_that!(
         changelog,
@@ -133,31 +133,31 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&9),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&9),
-            change: pat!(Change::ChangeLinkOrder {
-                link_id: eq(&link2.uuid),
+            change: pat!(Change::ChangeItoOrder {
+                ito_id: eq(&ito2.uuid),
                 new_order: eq(&1)
             }),
             import_error: none()
         })
     );
-    assert_eq!(ds.link(&link2.uuid)?.unwrap().order, 1);
-    assert_eq!(ds.link(&link3.uuid)?.unwrap().order, 2);
-    assert_eq!(ds.link(&link1.uuid)?.unwrap().order, 3);
+    assert_eq!(ds.ito(&ito2.uuid)?.unwrap().order, 1);
+    assert_eq!(ds.ito(&ito3.uuid)?.unwrap().order, 2);
+    assert_eq!(ds.ito(&ito1.uuid)?.unwrap().order, 3);
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: edit link1
+    // When: edit ito1
     /////////////////////////////////////////////////////////////////////////////
 
-    let diff = LinkContentDiff::default()
-        .linking_phrase(Some("hello"))
+    let diff = ItoContentDiff::default()
+        .description(Some("hello"))
         .details(Some("hello details"));
-    let (edited_link1, changelog) = ds.edit_link(&link1.uuid, diff, &operator)?;
+    let (edited_ito1, changelog) = ds.edit_ito(&ito1.uuid, diff, &operator)?;
 
-    // check the edited link
+    // check the edited ito
     assert_that!(
-        edited_link1,
-        pat!(Link {
-            linking_phrase: some(eq("hello")),
+        edited_ito1,
+        pat!(Ito {
+            description: some(eq("hello")),
             details: some(eq("hello details"))
         })
     );
@@ -169,26 +169,26 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&10),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&10),
-            change: pat!(Change::EditLink {
-                link_id: eq(&link1.uuid),
-                diff: pat!(LinkContentDiff {
-                    linking_phrase: pat!(FieldDiff::Change(eq("hello"))),
+            change: pat!(Change::EditIto {
+                ito_id: eq(&ito1.uuid),
+                diff: pat!(ItoContentDiff {
+                    description: pat!(FieldDiff::Change(eq("hello"))),
                     details: pat!(FieldDiff::Change(eq("hello details"))),
                 }),
-                updated_at: eq(&edited_link1.updated_at),
+                updated_at: eq(&edited_ito1.updated_at),
             }),
             import_error: none()
         })
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // When: delete link1
+    // When: delete ito1
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog = ds.disconnect(&link1.uuid, &operator)?;
+    let changelog = ds.disconnect(&ito1.uuid, &operator)?;
 
     // check if it is deleted from the db
-    assert_eq!(ds.link(&link1.uuid)?, None);
+    assert_eq!(ds.ito(&ito1.uuid)?, None);
 
     // check the content of the ChangelogEntry
     assert_that!(
@@ -197,8 +197,8 @@ fn crud_operations() -> Result<()> {
             serial_number: eq(&11),
             origin_node_id: eq(&node.uuid),
             origin_serial_number: eq(&11),
-            change: pat!(Change::DeleteLink {
-                link_id: eq(&link1.uuid)
+            change: pat!(Change::DeleteIto {
+                ito_id: eq(&ito1.uuid)
             }),
             import_error: none()
         })

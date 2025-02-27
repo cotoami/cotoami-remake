@@ -2,9 +2,9 @@ use anyhow::Result;
 
 use crate::{
     db::{
+        DatabaseSession,
         op::*,
         ops::{changelog_ops, graph_ops, node_role_ops},
-        DatabaseSession,
     },
     models::prelude::*,
 };
@@ -16,7 +16,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /// In Cotoami, `fork` means disconnecting from a parent node and taking the ownership of
-    /// entities (cotos/cotonomas/links) owned by the parent until then. It also means that
+    /// entities (cotos/cotonomas/itos) owned by the parent until then. It also means that
     /// update requests to those entities won't be relayed to the parent anymore, instead
     /// the local node will handle them.
     ///

@@ -4,9 +4,9 @@ use std::collections::HashMap;
 
 use petgraph::prelude::{Graph as Petgraph, NodeIndex};
 
-use super::{coto::Coto, link::Link, Id};
+use super::{coto::Coto, ito::Ito, Id};
 
-/// A graph is a set of cotos that are connected with links
+/// A graph is a set of cotos that are connected with itos
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Graph {
     /// Root coto ID
@@ -15,8 +15,8 @@ pub struct Graph {
     /// All the cotos in this graph, each of which is mapped by its ID
     pub cotos: HashMap<Id<Coto>, Coto>,
 
-    /// All the links in this graph, each of which is mapped by the ID of the source coto
-    pub links: HashMap<Id<Coto>, Vec<Link>>,
+    /// All the itos in this graph, each of which is mapped by the ID of the source coto
+    pub itos: HashMap<Id<Coto>, Vec<Ito>>,
 }
 
 impl Graph {
@@ -25,7 +25,7 @@ impl Graph {
         let mut graph = Self {
             root_id: root.uuid,
             cotos: HashMap::new(),
-            links: HashMap::new(),
+            itos: HashMap::new(),
         };
         graph.add_coto(root);
         graph
@@ -45,38 +45,33 @@ impl Graph {
 
     pub fn count_cotos(&self) -> usize { self.cotos.len() }
 
-    pub fn add_link(&mut self, link: Link) {
-        self.links
-            .entry(link.source_coto_id)
-            .or_default()
-            .push(link);
+    pub fn add_ito(&mut self, ito: Ito) {
+        self.itos.entry(ito.source_coto_id).or_default().push(ito);
     }
 
-    pub fn count_links(&self) -> usize {
-        self.links
-            .values()
-            .fold(0, |count, links| count + links.len())
+    pub fn count_itos(&self) -> usize {
+        self.itos.values().fold(0, |count, itos| count + itos.len())
     }
 
-    pub(crate) fn sort_links(&mut self) {
-        for links in self.links.values_mut() {
-            links.sort_by_key(|link| link.order);
+    pub(crate) fn sort_itos(&mut self) {
+        for itos in self.itos.values_mut() {
+            itos.sort_by_key(|ito| ito.order);
         }
     }
 
-    pub fn assert_links_sorted(&self) {
-        for links in self.links.values() {
-            let order: Vec<usize> = links.iter().map(|link| link.order as usize).collect();
-            let expected: Vec<usize> = (1..=links.len()).collect();
+    pub fn assert_itos_sorted(&self) {
+        for itos in self.itos.values() {
+            let order: Vec<usize> = itos.iter().map(|ito| ito.order as usize).collect();
+            let expected: Vec<usize> = (1..=itos.len()).collect();
             assert_eq!(order, expected);
         }
     }
 
     /// Converts this graph into a petgraph's [petgraph::graph::Graph].
     ///
-    /// You can use the `sort` flag to get cotos and links in a predictable order.
-    pub fn into_petgraph(self, sort: bool) -> Petgraph<Coto, Link> {
-        let mut petgraph = Petgraph::<Coto, Link>::new();
+    /// You can use the `sort` flag to get cotos and itos in a predictable order.
+    pub fn into_petgraph(self, sort: bool) -> Petgraph<Coto, Ito> {
+        let mut petgraph = Petgraph::<Coto, Ito>::new();
 
         // Cotos
         let mut cotos: Vec<Coto> = self.cotos.into_values().collect();
@@ -93,15 +88,15 @@ impl Graph {
             node_indices.insert(coto_id, node_index);
         }
 
-        // Links
-        let mut links: Vec<Link> = self.links.into_values().flatten().collect();
+        // Itos
+        let mut itos: Vec<Ito> = self.itos.into_values().flatten().collect();
         if sort {
-            links.sort_by_key(|link| link.created_at);
+            itos.sort_by_key(|ito| ito.created_at);
         }
-        for link in links.into_iter() {
-            let source_index = node_indices.get(&link.source_coto_id).unwrap();
-            let target_index = node_indices.get(&link.target_coto_id).unwrap();
-            petgraph.add_edge(*source_index, *target_index, link);
+        for ito in itos.into_iter() {
+            let source_index = node_indices.get(&ito.source_coto_id).unwrap();
+            let target_index = node_indices.get(&ito.target_coto_id).unwrap();
+            petgraph.add_edge(*source_index, *target_index, ito);
         }
         petgraph
     }

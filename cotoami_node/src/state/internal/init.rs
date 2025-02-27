@@ -88,7 +88,7 @@ impl NodeState {
                     password: Some(password.to_owned()),
                     client_role: Some(NodeRole::Child),
                     as_owner: Some(true),
-                    can_edit_links: Some(true),
+                    can_edit_itos: Some(true),
                 };
                 let opr = self.local_node_as_operator()?;
                 match self.add_client(add_client, Arc::new(opr)).await {

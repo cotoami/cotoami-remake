@@ -148,25 +148,25 @@ pub enum Command {
     /// The return type is a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)`.
     RenameCotonoma { id: Id<Cotonoma>, name: String },
 
-    /// Request a [Link] of the given ID.
-    Link { id: Id<Link> },
+    /// Request a [Ito] of the given ID.
+    Ito { id: Id<Ito> },
 
-    /// Request outgoing [Vec<Link>] from the specified coto.
-    OutgoingLinks { coto: Id<Coto> },
+    /// Request outgoing [Vec<Ito>] from the specified coto.
+    OutgoingItos { coto: Id<Coto> },
 
-    /// Request to create a new [Link] and return the [Link] if suceeded.
-    Connect(LinkInput<'static>),
+    /// Request to create a new [Ito] and return the [Ito] if suceeded.
+    Connect(ItoInput<'static>),
 
-    /// Request to edit the specified link and return the updated [Link] if suceeded.
-    EditLink {
-        id: Id<Link>,
-        diff: LinkContentDiff<'static>,
+    /// Request to edit the specified ito and return the updated [Ito] if suceeded.
+    EditIto {
+        id: Id<Ito>,
+        diff: ItoContentDiff<'static>,
     },
 
-    /// Request to delete a link and return the [Id<Link>] if suceeded.
-    Disconnect { id: Id<Link> },
+    /// Request to delete an ito and return the [Id<Ito>] if suceeded.
+    Disconnect { id: Id<Ito> },
 
-    /// Request to change the order of the specified link to `new_order` and
-    /// return the updated [Link] if suceeded.
-    ChangeLinkOrder { id: Id<Link>, new_order: i32 },
+    /// Request to change the order of the specified ito to `new_order` and
+    /// return the updated [Ito] if suceeded.
+    ChangeItoOrder { id: Id<Ito>, new_order: i32 },
 }

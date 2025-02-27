@@ -269,8 +269,8 @@ fn import_connections(
             );
             continue;
         }
-        let link = conn_json.into_link(context.local_node_id, context.root_cotonoma.coto_id)?;
-        let _ = ds.import_link(&link)?;
+        let ito = conn_json.into_ito(context.local_node_id, context.root_cotonoma.coto_id)?;
+        let _ = ds.import_ito(&ito)?;
         context.on_connection_imported();
     }
     Ok(())
@@ -433,7 +433,7 @@ struct ConnectionJson {
     /// The `start` node could be a coto or an amishi.
     ///
     /// If the `start` is an amishi, this connection is one of the "root connections" of the
-    /// entire amishi's graph and which will be translated as a link from root cotonoma
+    /// entire amishi's graph and which will be translated as an ito from root cotonoma
     /// during import.
     start: Uuid,
     end: Id<Coto>,
@@ -463,19 +463,19 @@ impl ConnectionJson {
         }
     }
 
-    fn into_link(self, node_id: Id<Node>, root_coto_id: Id<Coto>) -> Result<Link> {
+    fn into_ito(self, node_id: Id<Node>, root_coto_id: Id<Coto>) -> Result<Ito> {
         let source_coto_id = if let Some(start_coto_id) = self.start_as_coto() {
             start_coto_id
         } else {
             root_coto_id
         };
-        Ok(Link {
+        Ok(Ito {
             uuid: Id::generate(),
             node_id,
             created_by_id: node_id,
             source_coto_id,
             target_coto_id: self.end,
-            linking_phrase: self.linking_phrase,
+            description: self.linking_phrase,
             details: None,
             order: self.order,
             created_at: from_timestamp_millis(self.created_at)?,
@@ -620,18 +620,18 @@ mod tests {
             }
         "#};
         let conn: ConnectionJson = serde_json::from_str(json)?;
-        let link = conn.into_link(node_id, root_coto_id)?;
+        let ito = conn.into_ito(node_id, root_coto_id)?;
 
         assert_eq!(
-            link.source_coto_id,
+            ito.source_coto_id,
             Id::from_str("f05c0f03-8bb0-430e-a4d2-714c2922e0cd")?
         );
         assert_eq!(
-            link.target_coto_id,
+            ito.target_coto_id,
             Id::from_str("72972fe8-695c-4086-86ff-29a12c8a98a4")?
         );
-        assert_eq!(link.order, 1);
-        assert_eq!(link.linking_phrase, None);
+        assert_eq!(ito.order, 1);
+        assert_eq!(ito.description, None);
 
         Ok(())
     }
@@ -650,10 +650,10 @@ mod tests {
             }
         "#};
         let conn: ConnectionJson = serde_json::from_str(json)?;
-        let link = conn.into_link(node_id, root_coto_id)?;
+        let ito = conn.into_ito(node_id, root_coto_id)?;
 
         assert_eq!(
-            link.source_coto_id,
+            ito.source_coto_id,
             Id::from_str("00000000-0000-0000-0000-000000000002")?,
             "The source coto should be the root coto."
         );

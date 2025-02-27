@@ -78,7 +78,7 @@ impl ClientNodeSession {
             (Some(_), Some(_)) => NewDatabaseRole::Parent,
             (Some(_), None) => NewDatabaseRole::Child {
                 as_owner: false,
-                can_edit_links: false,
+                can_edit_itos: false,
             },
             (None, _) => NewDatabaseRole::Parent, // anonymous access
         }
@@ -98,7 +98,7 @@ pub struct AddClient {
 
     // Client as a child
     pub as_owner: Option<bool>,
-    pub can_edit_links: Option<bool>,
+    pub can_edit_itos: Option<bool>,
 }
 
 impl AddClient {
@@ -108,7 +108,7 @@ impl AddClient {
             password: password.map(Into::into),
             client_role: Some(role),
             as_owner: None,
-            can_edit_links: None,
+            can_edit_itos: None,
         }
     }
 
@@ -116,7 +116,7 @@ impl AddClient {
 
     pub fn as_owner(&self) -> bool { self.as_owner.unwrap_or(false) }
 
-    pub fn can_edit_links(&self) -> bool { self.can_edit_links.unwrap_or(false) }
+    pub fn can_edit_itos(&self) -> bool { self.can_edit_itos.unwrap_or(false) }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -232,7 +232,7 @@ pub struct EditClient {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct EditChild {
     pub as_owner: bool,
-    pub can_edit_links: bool,
+    pub can_edit_itos: bool,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -288,22 +288,22 @@ pub struct CotonomaDetails {
 pub struct CotoDetails {
     pub coto: Coto,
     pub related_data: CotosRelatedData,
-    pub outgoing_links: Vec<Link>,
+    pub outgoing_itos: Vec<Ito>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct PaginatedCotos {
     pub page: Page<Coto>,
     pub related_data: CotosRelatedData,
-    pub outgoing_links: Vec<Link>,
+    pub outgoing_itos: Vec<Ito>,
 }
 
 impl PaginatedCotos {
     pub(crate) fn new(page: Page<Coto>, ds: &mut DatabaseSession<'_>) -> Result<Self> {
         let related_data = CotosRelatedData::fetch(ds, &page.rows)?;
 
-        // Collect the links from the cotos
-        // (as for reposts, collect the links from the original coto)
+        // Collect the itos from the cotos
+        // (as for reposts, collect the itos from the original coto)
         let coto_ids: Vec<Id<Coto>> = page
             .rows
             .iter()
@@ -318,12 +318,12 @@ impl PaginatedCotos {
             .chain(related_data.originals.iter().map(|coto| coto.uuid))
             .unique()
             .collect();
-        let outgoing_links = ds.outgoing_links(&coto_ids)?;
+        let outgoing_itos = ds.outgoing_itos(&coto_ids)?;
 
         Ok(PaginatedCotos {
             page,
             related_data,
-            outgoing_links,
+            outgoing_itos,
         })
     }
 }
@@ -368,5 +368,5 @@ pub struct CotoGraph {
     pub root_cotonoma: Option<Cotonoma>,
     pub cotos: Vec<Coto>,
     pub cotos_related_data: CotosRelatedData,
-    pub links: Vec<Link>,
+    pub itos: Vec<Ito>,
 }

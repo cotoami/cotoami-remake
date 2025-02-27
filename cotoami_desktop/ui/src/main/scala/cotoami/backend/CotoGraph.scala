@@ -4,7 +4,7 @@ import scala.scalajs.js
 import fui.Cmd
 
 import cotoami.utils.facade.Nullable
-import cotoami.models.{Coto, Cotonoma, Id, Link}
+import cotoami.models.{Coto, Cotonoma, Id, Ito}
 
 case class CotoGraph(json: CotoGraphJson) {
   def rootCotoId: Id[Coto] = Id(json.root_coto_id)
@@ -13,7 +13,7 @@ case class CotoGraph(json: CotoGraphJson) {
   def cotos: js.Array[Coto] = json.cotos.map(CotoBackend.toModel)
   def cotosRelatedData: CotosRelatedData =
     CotosRelatedData(json.cotos_related_data)
-  def links: js.Array[Link] = json.links.map(LinkBackend.toModel)
+  def itos: js.Array[Ito] = json.itos.map(ItoBackend.toModel)
 }
 
 object CotoGraph {
@@ -32,7 +32,7 @@ trait CotoGraphJson extends js.Object {
   val root_cotonoma: Nullable[CotonomaJson] = js.native
   val cotos: js.Array[CotoJson] = js.native
   val cotos_related_data: CotosRelatedDataJson = js.native
-  val links: js.Array[LinkJson] = js.native
+  val itos: js.Array[ItoJson] = js.native
 }
 
 object CotoGraphJson {

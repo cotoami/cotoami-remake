@@ -1,4 +1,4 @@
-//! A link is a directed edge connecting two [Coto]s.
+//! An [Ito] is a directed edge connecting two [Coto]s.
 
 use std::{borrow::Cow, fmt::Display};
 
@@ -14,63 +14,63 @@ use crate::{
         node::{BelongsToNode, Node},
         FieldDiff, Id,
     },
-    schema::links,
+    schema::itos,
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// Link
+// Ito
 /////////////////////////////////////////////////////////////////////////////
 
-/// A row in `links` table
+/// A row in `itos` table
 #[derive(
     Debug, Clone, PartialEq, Eq, Identifiable, Queryable, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(primary_key(uuid))]
-pub struct Link {
-    /// Universally unique link ID.
-    pub uuid: Id<Link>,
+pub struct Ito {
+    /// Universally unique ito ID.
+    pub uuid: Id<Ito>,
 
-    /// UUID of the node in which this link was created.
+    /// UUID of the node in which this ito was created.
     pub node_id: Id<Node>,
 
-    /// UUID of the node whose owner has created this link.
+    /// UUID of the node whose owner has created this ito.
     pub created_by_id: Id<Node>,
 
-    /// UUID of the coto at the source of this link.
+    /// UUID of the coto at the source of this ito.
     pub source_coto_id: Id<Coto>,
 
-    /// UUID of the coto at the target of this link.
+    /// UUID of the coto at the target of this ito.
     pub target_coto_id: Id<Coto>,
 
-    /// Linkng phrase to express the relationship between the two cotos.
-    pub linking_phrase: Option<String>,
+    /// Description of this ito.
+    pub description: Option<String>,
 
-    /// Content attached to this link.
+    /// Content attached to this ito.
     pub details: Option<String>,
 
-    /// Order of this link among the ones from the same coto.
+    /// Order of this ito among the ones from the same coto.
     pub order: i32,
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
 
-impl Link {
-    pub const LINKING_PHRASE_MAX_LENGTH: u64 = 200;
+impl Ito {
+    pub const DESCRIPTION_MAX_LENGTH: u64 = 200;
     pub const DETAILS_MAX_LENGTH: u64 = 1_000_000;
 
     pub fn created_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.created_at) }
 
     pub fn updated_at(&self) -> DateTime<Local> { Local.from_utc_datetime(&self.updated_at) }
 
-    pub(crate) fn to_import(&self) -> NewLink {
-        NewLink {
+    pub(crate) fn to_import(&self) -> NewIto {
+        NewIto {
             uuid: self.uuid,
             node_id: &self.node_id,
             created_by_id: &self.created_by_id,
             source_coto_id: &self.source_coto_id,
             target_coto_id: &self.target_coto_id,
-            linking_phrase: self.linking_phrase.as_deref(),
+            description: self.description.as_deref(),
             details: self.details.as_deref(),
             order: Some(self.order),
             created_at: self.created_at,
@@ -79,42 +79,42 @@ impl Link {
     }
 }
 
-impl Display for Link {
+impl Display for Ito {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let linking_phrase = self.linking_phrase.as_deref().unwrap_or_default();
+        let description = self.description.as_deref().unwrap_or_default();
         match self.details.as_deref() {
             Some(details) => write!(
                 f,
-                "{linking_phrase} ({})",
+                "{description} ({})",
                 crate::abbreviate_str(details, 5, "…")
                     .as_deref()
                     .unwrap_or(details)
             ),
-            None => write!(f, "{linking_phrase}"),
+            None => write!(f, "{description}"),
         }
     }
 }
 
-impl BelongsToNode for Link {
+impl BelongsToNode for Ito {
     fn node_id(&self) -> &Id<Node> { &self.node_id }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// NewLink
+// NewIto
 /////////////////////////////////////////////////////////////////////////////
 
-/// An `Insertable` link data
+/// An `Insertable` ito data
 #[derive(Insertable, Validate)]
-#[diesel(table_name = links)]
-pub(crate) struct NewLink<'a> {
-    uuid: Id<Link>,
+#[diesel(table_name = itos)]
+pub(crate) struct NewIto<'a> {
+    uuid: Id<Ito>,
     node_id: &'a Id<Node>,
     created_by_id: &'a Id<Node>,
     source_coto_id: &'a Id<Coto>,
     target_coto_id: &'a Id<Coto>,
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    linking_phrase: Option<&'a str>,
-    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    #[validate(length(max = "Ito::DESCRIPTION_MAX_LENGTH"))]
+    description: Option<&'a str>,
+    #[validate(length(max = "Ito::DETAILS_MAX_LENGTH"))]
     details: Option<&'a str>,
     #[validate(range(min = 1))]
     pub order: Option<i32>,
@@ -122,46 +122,46 @@ pub(crate) struct NewLink<'a> {
     updated_at: NaiveDateTime,
 }
 
-impl<'a> NewLink<'a> {
+impl<'a> NewIto<'a> {
     pub fn new(
         node_id: &'a Id<Node>,
         created_by_id: &'a Id<Node>,
-        input: &'a LinkInput<'a>,
+        input: &'a ItoInput<'a>,
     ) -> Result<Self> {
         let now = crate::current_datetime();
-        let new_link = Self {
+        let new_ito = Self {
             uuid: Id::generate(),
             node_id,
             created_by_id,
             source_coto_id: &input.source_coto_id,
             target_coto_id: &input.target_coto_id,
-            linking_phrase: input.linking_phrase.as_deref(),
+            description: input.description.as_deref(),
             details: input.details.as_deref(),
             order: input.order,
             created_at: now,
             updated_at: now,
         };
-        new_link.validate()?;
-        Ok(new_link)
+        new_ito.validate()?;
+        Ok(new_ito)
     }
 
     pub fn source_coto_id(&self) -> &'a Id<Coto> { self.source_coto_id }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// LinkInput
+// ItoInput
 /////////////////////////////////////////////////////////////////////////////
 
-/// Input values to create a new link as a serializable struct with a builder interface.
+/// Input values to create a new ito as a serializable struct with a builder interface.
 #[derive(derive_more::Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
-pub struct LinkInput<'a> {
+pub struct ItoInput<'a> {
     pub source_coto_id: Id<Coto>,
     pub target_coto_id: Id<Coto>,
 
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    pub linking_phrase: Option<Cow<'a, str>>,
+    #[validate(length(max = "Ito::DESCRIPTION_MAX_LENGTH"))]
+    pub description: Option<Cow<'a, str>>,
 
-    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    #[validate(length(max = "Ito::DETAILS_MAX_LENGTH"))]
     pub details: Option<Cow<'a, str>>,
 
     /// If order is None, the next order number will be assigned automatically.
@@ -169,19 +169,19 @@ pub struct LinkInput<'a> {
     pub order: Option<i32>,
 }
 
-impl<'a> LinkInput<'a> {
+impl<'a> ItoInput<'a> {
     pub fn new(source_coto_id: Id<Coto>, target_coto_id: Id<Coto>) -> Self {
         Self {
             source_coto_id,
             target_coto_id,
-            linking_phrase: None,
+            description: None,
             details: None,
             order: None,
         }
     }
 
-    pub fn linking_phrase(mut self, linking_phrase: &'a str) -> Self {
-        self.linking_phrase = Some(Cow::from(linking_phrase));
+    pub fn description(mut self, description: &'a str) -> Self {
+        self.description = Some(Cow::from(description));
         self
     }
 
@@ -197,31 +197,31 @@ impl<'a> LinkInput<'a> {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// UpdateLink
+// UpdateIto
 /////////////////////////////////////////////////////////////////////////////
 
-/// A changeset of [Link] for update.
+/// A changeset of [Ito] for update.
 #[derive(Debug, Identifiable, AsChangeset, Validate, new)]
-#[diesel(table_name = links, primary_key(uuid))]
-pub(crate) struct UpdateLink<'a> {
-    uuid: &'a Id<Link>,
+#[diesel(table_name = itos, primary_key(uuid))]
+pub(crate) struct UpdateIto<'a> {
+    uuid: &'a Id<Ito>,
 
     #[new(default)]
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    pub linking_phrase: Option<Option<&'a str>>,
+    #[validate(length(max = "Ito::DESCRIPTION_MAX_LENGTH"))]
+    pub description: Option<Option<&'a str>>,
 
     #[new(default)]
-    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    #[validate(length(max = "Ito::DETAILS_MAX_LENGTH"))]
     pub details: Option<Option<&'a str>>,
 
     #[new(value = "crate::current_datetime()")]
     pub updated_at: NaiveDateTime,
 }
 
-impl<'a> UpdateLink<'a> {
-    pub fn edit_content(&mut self, diff: &'a LinkContentDiff<'a>) {
-        self.linking_phrase = diff
-            .linking_phrase
+impl<'a> UpdateIto<'a> {
+    pub fn edit_content(&mut self, diff: &'a ItoContentDiff<'a>) {
+        self.description = diff
+            .description
             .as_ref()
             .map_to_double_option(AsRef::as_ref);
 
@@ -230,24 +230,24 @@ impl<'a> UpdateLink<'a> {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// LinkContentDiff
+// ItoContentDiff
 /////////////////////////////////////////////////////////////////////////////
 
-/// Serializable version of [UpdateLink] as part of public API for link editing.
+/// Serializable version of [UpdateIto] as part of public API for ito editing.
 #[derive(
     derive_more::Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, Default, Validate,
 )]
-pub struct LinkContentDiff<'a> {
-    #[validate(length(max = "Link::LINKING_PHRASE_MAX_LENGTH"))]
-    pub linking_phrase: FieldDiff<Cow<'a, str>>,
+pub struct ItoContentDiff<'a> {
+    #[validate(length(max = "Ito::DESCRIPTION_MAX_LENGTH"))]
+    pub description: FieldDiff<Cow<'a, str>>,
 
-    #[validate(length(max = "Link::DETAILS_MAX_LENGTH"))]
+    #[validate(length(max = "Ito::DETAILS_MAX_LENGTH"))]
     pub details: FieldDiff<Cow<'a, str>>,
 }
 
-impl<'a> LinkContentDiff<'a> {
-    pub fn linking_phrase(mut self, phrase: Option<&'a str>) -> Self {
-        self.linking_phrase = phrase.into();
+impl<'a> ItoContentDiff<'a> {
+    pub fn description(mut self, phrase: Option<&'a str>) -> Self {
+        self.description = phrase.into();
         self
     }
 

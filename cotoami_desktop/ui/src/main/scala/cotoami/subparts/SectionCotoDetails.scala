@@ -7,7 +7,7 @@ import slinky.web.html._
 
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
-import cotoami.models.{Coto, Link, OrderContext}
+import cotoami.models.{Coto, Ito, OrderContext}
 import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 
 object SectionCotoDetails {
@@ -48,12 +48,12 @@ object SectionCotoDetails {
     )
 
   private def divAddSubCoto: ReactElement =
-    div(className := "insert-linked-coto")(
+    div(className := "insert-sub-coto")(
       toolButton(
         symbol = "add_circle",
-        tip = Some("Write a linked coto"),
+        tip = Some("Write a sub-coto"),
         tipPlacement = "bottom",
-        classes = "insert-linked-coto"
+        classes = "insert-sub-coto"
       )
     )
 
@@ -86,32 +86,32 @@ object SectionCotoDetails {
       className = "sub-cotos",
       flipKey = subCotos.fingerprint
     )(
-      subCotos.eachWithOrderContext.map { case (link, subCoto, order) =>
-        Flipped(key = link.id.uuid, flipId = link.id.uuid)(
-          liSubCoto(link, subCoto, order)
+      subCotos.eachWithOrderContext.map { case (ito, subCoto, order) =>
+        Flipped(key = ito.id.uuid, flipId = ito.id.uuid)(
+          liSubCoto(ito, subCoto, order)
         ): ReactElement
       }.toSeq: _*
     )
   }
 
   private def liSubCoto(
-      link: Link,
+      ito: Ito,
       coto: Coto,
       order: OrderContext
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
-    li(key := link.id.uuid, className := "sub")(
+    li(key := ito.id.uuid, className := "sub")(
       divAddSubCoto,
       div(className := "sub")(
         ViewCoto.ulParents(
-          repo.parentsOf(coto.id).filter(_._2.id != link.id),
+          repo.parentsOf(coto.id).filter(_._2.id != ito.id),
           AppMsg.FocusCoto(_)
         ),
         ViewCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
           ToolbarCoto(coto),
-          ToolbarReorder(link, order),
+          ToolbarReorder(ito, order),
           header()(
-            buttonSubcotoLink(link),
+            buttonSubcotoIto(ito),
             ViewCoto.divAttributes(coto),
             Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
               ViewCoto.addressAuthor(coto, repo.nodes)
@@ -122,7 +122,7 @@ object SectionCotoDetails {
           ),
           ViewCoto.articleFooter(coto)
         ),
-        ViewCoto.divLinksTraversal(coto, "bottom")
+        ViewCoto.divItosTraversal(coto, "bottom")
       )
     )
   }

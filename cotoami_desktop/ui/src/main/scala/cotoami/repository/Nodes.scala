@@ -9,7 +9,7 @@ import cotoami.models.{
   Cotonoma,
   DatabaseRole,
   Id,
-  Link,
+  Ito,
   Node,
   NotConnected,
   ParentStatus,
@@ -151,15 +151,15 @@ case class Nodes(
   def canEdit(coto: Coto): Boolean =
     canPostTo(coto.nodeId) && isOperating(coto.postedById)
 
-  // A link can be edited/deleted by:
+  // An ito can be edited/deleted by:
   // the creator or an owner of the node in which it was created.
-  def canEdit(link: Link): Boolean =
-    canPostTo(link.nodeId) &&
-      (isOperating(link.createdById) || isOwnerOf(link.nodeId))
+  def canEdit(ito: Ito): Boolean =
+    canPostTo(ito.nodeId) &&
+      (isOperating(ito.createdById) || isOwnerOf(ito.nodeId))
 
-  def canCreateLinksIn(nodeId: Id[Node]): Boolean =
+  def canCreateItosIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
-      childPrivilegesTo(nodeId).map(_.canEditLinks).getOrElse(false)
+      childPrivilegesTo(nodeId).map(_.canEditItos).getOrElse(false)
 
   def canPromote(coto: Coto): Boolean = canEdit(coto) && !coto.isCotonoma
 }

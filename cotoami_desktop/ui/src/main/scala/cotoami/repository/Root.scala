@@ -18,7 +18,7 @@ case class Root(
     nodes: Nodes = Nodes(),
     cotonomas: Cotonomas = Cotonomas(),
     cotos: Cotos = Cotos(),
-    links: Links = Links(),
+    itos: Itos = Itos(),
 
     // Processing state
     graphLoading: HashSet[Id[Coto]] = HashSet.empty,
@@ -36,7 +36,7 @@ case class Root(
       nodes = nodes.onNodeChange.focus(nodeId),
       cotonomas = Cotonomas(),
       cotos = cotos.onCotonomaChange(),
-      links = Links()
+      itos = Itos()
     )
 
   def focusCotonoma(nodeId: Option[Id[Node]], cotonomaId: Id[Cotonoma]): Root =
@@ -44,7 +44,7 @@ case class Root(
       nodes = nodes.focus(nodeId),
       cotonomas = cotonomas.focus(Some(cotonomaId)),
       cotos = cotos.onCotonomaChange(),
-      links = Links()
+      itos = Itos()
     )
 
   def currentFocus: Option[(Node, Option[Cotonoma])] =
@@ -83,10 +83,10 @@ case class Root(
     // Delete the reposts first if they exist
     cotos.repostsOf(id).foldLeft(this)(_ deleteCoto _.id)
       // then, delete the specified coto (which could be a cotonoma)
-      // and the links to/from the coto.
+      // and the itos to/from the coto.
       .modify(_.cotos).using(_.delete(id))
       .modify(_.cotonomas).using(_.deleteByCotoId(id))
-      .modify(_.links).using(_.onCotoDelete(id))
+      .modify(_.itos).using(_.onCotoDelete(id))
   }
 
   def beingDeleted(cotoId: Id[Coto]): Boolean = deleting.contains(cotoId)
@@ -133,7 +133,7 @@ case class Root(
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Links
+  // Itos
   /////////////////////////////////////////////////////////////////////////////
 
   lazy val pins: Siblings =
@@ -141,18 +141,18 @@ case class Root(
       .getOrElse(Siblings.empty)
 
   def childrenOf(cotoId: Id[Coto]): Siblings =
-    links.from(cotoId).toSeq
-      .map(link => cotos.get(link.targetCotoId).map(child => (link, child)))
+    itos.from(cotoId).toSeq
+      .map(ito => cotos.get(ito.targetCotoId).map(child => (ito, child)))
       .flatten
       .pipe(Siblings(_))
 
   def parentsOf(
       cotoId: Id[Coto],
       excludeCurrentCotonoma: Boolean = true
-  ): Seq[(Coto, Link)] =
-    links.to(cotoId)
-      .map(link =>
-        cotos.get(link.sourceCotoId).flatMap(parent =>
+  ): Seq[(Coto, Ito)] =
+    itos.to(cotoId)
+      .map(ito =>
+        cotos.get(ito.sourceCotoId).flatMap(parent =>
           if (
             excludeCurrentCotonoma &&
             currentCotonoma.map(_.cotoId == parent.id)
@@ -160,17 +160,17 @@ case class Root(
           )
             None
           else
-            Some((parent, link))
+            Some((parent, ito))
         )
       )
       .flatten
 
-  def isPin(link: Link): Boolean =
-    currentCotonoma.map(link.sourceCotoId == _.cotoId).getOrElse(false)
+  def isPin(ito: Ito): Boolean =
+    currentCotonoma.map(ito.sourceCotoId == _.cotoId).getOrElse(false)
 
   def pinned(cotoId: Id[Coto]): Boolean =
     currentCotonoma.map(cotonoma =>
-      links.linked(cotonoma.cotoId, cotoId)
+      itos.connected(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
   /////////////////////////////////////////////////////////////////////////////
@@ -180,8 +180,8 @@ case class Root(
   def alreadyLoadedGraphFrom(cotoId: Id[Coto]): Boolean =
     graphLoaded.contains(cotoId)
 
-  def anyTargetMissingLinksFrom(id: Id[Coto]): Boolean =
-    links.from(id).find(link => !cotos.contains(link.targetCotoId)).isDefined
+  def anyTargetMissingItosFrom(id: Id[Coto]): Boolean =
+    itos.from(id).find(ito => !cotos.contains(ito.targetCotoId)).isDefined
 
   /////////////////////////////////////////////////////////////////////////////
   // Geolocation
@@ -232,9 +232,9 @@ case class Root(
       case None           => false
     }
 
-  def canCreateLinks: Boolean =
+  def canCreateItos: Boolean =
     currentCotonoma match {
-      case Some(cotonoma) => nodes.canCreateLinksIn(cotonoma.nodeId)
+      case Some(cotonoma) => nodes.canCreateItosIn(cotonoma.nodeId)
       case None           => false
     }
 
@@ -245,7 +245,7 @@ case class Root(
     ).flatten.contains(cotoId)
 
   def canPin(cotoId: Id[Coto]): Boolean =
-    canCreateLinks && !pinned(cotoId) &&
+    canCreateItos && !pinned(cotoId) &&
       // You can't pin the current cotonoma (obviously) and the current node root.
       !Seq(
         currentCotonomaPair.map(_._2.id),
@@ -271,7 +271,7 @@ case class Root(
     this
       .modify(_.cotos).using(_.put(details.coto))
       .modify(_.cotonomas).using(_.importFrom(details.relatedData))
-      .modify(_.links).using(_.putAll(details.outgoingLinks))
+      .modify(_.itos).using(_.putAll(details.outgoingItos))
 
   def importFrom(cotonomaPair: (Cotonoma, Coto)): Root =
     this
@@ -282,7 +282,7 @@ case class Root(
     this
       .modify(_.cotos).using(_.importFrom(cotos))
       .modify(_.cotonomas).using(_.importFrom(cotos.relatedData))
-      .modify(_.links).using(_.putAll(cotos.outgoingLinks))
+      .modify(_.itos).using(_.putAll(cotos.outgoingItos))
 
   def importFrom(cotos: GeolocatedCotos): Root =
     this
@@ -294,7 +294,7 @@ case class Root(
       .modify(_.graphLoaded).using(_ + graph.rootCotoId)
       .modify(_.cotos).using(_.importFrom(graph))
       .modify(_.cotonomas).using(_.importFrom(graph))
-      .modify(_.links).using(_.putAll(graph.links))
+      .modify(_.itos).using(_.putAll(graph.itos))
 
   /////////////////////////////////////////////////////////////////////////////
   // Commands
@@ -331,7 +331,7 @@ case class Root(
       !alreadyLoadedGraphFrom(cotoId) &&
       (
         cotos.isCotonoma(cotoId).getOrElse(false) ||
-          anyTargetMissingLinksFrom(cotoId)
+          anyTargetMissingItosFrom(cotoId)
       )
     )
       Root.fetchGraphFromCoto(cotoId)
@@ -382,7 +382,7 @@ object Root {
         extends Msg
     case class CotoDetailsFetched(result: Either[ErrorJson, CotoDetails])
         extends Msg
-    case class LinkFetched(result: Either[ErrorJson, Link]) extends Msg
+    case class ItoFetched(result: Either[ErrorJson, Ito]) extends Msg
     case class FetchGraphFromCoto(cotoId: Id[Coto]) extends Msg
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
@@ -390,16 +390,16 @@ object Root {
     case class CotoDeleted(id: Id[Coto], result: Either[ErrorJson, Id[Coto]])
         extends Msg
     case class Pin(cotoId: Id[Coto]) extends Msg
-    case class Pinned(cotoId: Id[Coto], result: Either[ErrorJson, Link])
+    case class Pinned(cotoId: Id[Coto], result: Either[ErrorJson, Ito])
         extends Msg
-    case class ChangeOrder(link: Link, newOrder: Int) extends Msg
+    case class ChangeOrder(ito: Ito, newOrder: Int) extends Msg
     case class OrderChanged(
         sourceCotoId: Id[Coto],
-        result: Either[ErrorJson, Link]
+        result: Either[ErrorJson, Ito]
     ) extends Msg
-    case class OutgoingLinksFetched(
+    case class OutgoingItosFetched(
         cotoId: Id[Coto],
-        result: Either[ErrorJson, js.Array[Link]]
+        result: Either[ErrorJson, js.Array[Ito]]
     ) extends Msg
   }
 
@@ -434,11 +434,11 @@ object Root {
       case Msg.CotoDetailsFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch coto details.", e))
 
-      case Msg.LinkFetched(Right(link)) =>
-        (model.modify(_.links).using(_.put(link)), Cmd.none)
+      case Msg.ItoFetched(Right(ito)) =>
+        (model.modify(_.itos).using(_.put(ito)), Cmd.none)
 
-      case Msg.LinkFetched(Left(e)) =>
-        (model, cotoami.error("Couldn't fetch a link.", e))
+      case Msg.ItoFetched(Left(e)) =>
+        (model, cotoami.error("Couldn't fetch an ito.", e))
 
       case Msg.FetchGraphFromCoto(cotoId) =>
         (
@@ -479,7 +479,7 @@ object Root {
         model.currentCotonoma.map(cotonoma =>
           (
             model.modify(_.pinning).using(_ + cotoId),
-            LinkBackend.connect(
+            ItoBackend.connect(
               cotonoma.cotoId,
               cotoId,
               None,
@@ -502,10 +502,10 @@ object Root {
           cotoami.error("Couldn't pin a coto.", e)
         )
 
-      case Msg.ChangeOrder(link, newOrder) =>
+      case Msg.ChangeOrder(ito, newOrder) =>
         (
-          model.modify(_.reordering).using(_ + link.sourceCotoId),
-          changeOrder(link, newOrder)
+          model.modify(_.reordering).using(_ + ito.sourceCotoId),
+          changeOrder(ito, newOrder)
         )
 
       case Msg.OrderChanged(sourceCotoId, Right(_)) =>
@@ -517,17 +517,17 @@ object Root {
       case Msg.OrderChanged(sourceCotoId, Left(e)) =>
         (
           model.modify(_.reordering).using(_ - sourceCotoId),
-          cotoami.error("Couldn't change the link order.", e)
+          cotoami.error("Couldn't change the ito order.", e)
         )
 
-      case Msg.OutgoingLinksFetched(cotoId, Right(links)) =>
+      case Msg.OutgoingItosFetched(cotoId, Right(itos)) =>
         (
-          model.modify(_.links).using(_.replaceOutgoingLinks(cotoId, links)),
+          model.modify(_.itos).using(_.replaceOutgoingItos(cotoId, itos)),
           Cmd.none
         )
 
-      case Msg.OutgoingLinksFetched(cotoId, Left(e)) =>
-        (model, cotoami.error("Couldn't fetch outgoing links.", e))
+      case Msg.OutgoingItosFetched(cotoId, Left(e)) =>
+        (model, cotoami.error("Couldn't fetch outgoing itos.", e))
     }
 
   def fetchNodeDetails(id: Id[Node]): Cmd.One[AppMsg] =
@@ -539,8 +539,8 @@ object Root {
   def fetchCotoDetails(id: Id[Coto]): Cmd.One[AppMsg] =
     CotoDetails.fetch(id).map(Msg.CotoDetailsFetched(_).into)
 
-  def fetchLink(id: Id[Link]): Cmd.One[AppMsg] =
-    LinkBackend.fetch(id).map(Root.Msg.LinkFetched(_).into)
+  def fetchIto(id: Id[Ito]): Cmd.One[AppMsg] =
+    ItoBackend.fetch(id).map(Root.Msg.ItoFetched(_).into)
 
   def fetchGraphFromCoto(coto: Id[Coto]): Cmd.One[AppMsg] =
     CotoGraph.fetchFromCoto(coto).map(Msg.CotoGraphFetched(_).into)
@@ -551,11 +551,11 @@ object Root {
   def deleteCoto(id: Id[Coto]): Cmd.One[AppMsg] =
     CotoBackend.delete(id).map(Msg.CotoDeleted(id, _).into)
 
-  def changeOrder(link: Link, newOrder: Int): Cmd.One[AppMsg] =
-    LinkBackend.changeOrder(link.id, newOrder)
-      .map(Msg.OrderChanged(link.sourceCotoId, _).into)
+  def changeOrder(ito: Ito, newOrder: Int): Cmd.One[AppMsg] =
+    ItoBackend.changeOrder(ito.id, newOrder)
+      .map(Msg.OrderChanged(ito.sourceCotoId, _).into)
 
-  def fetchOutgoingLinks(cotoId: Id[Coto]): Cmd.One[AppMsg] =
-    LinkBackend.fetchOutgoingLinks(cotoId)
-      .map(Msg.OutgoingLinksFetched(cotoId, _).into)
+  def fetchOutgoingItos(cotoId: Id[Coto]): Cmd.One[AppMsg] =
+    ItoBackend.fetchOutgoingItos(cotoId)
+      .map(Msg.OutgoingItosFetched(cotoId, _).into)
 }

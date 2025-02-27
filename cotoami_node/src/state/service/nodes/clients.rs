@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::debug;
@@ -8,9 +8,9 @@ use validator::Validate;
 
 use crate::{
     service::{
+        ServiceError,
         error::IntoServiceResult,
         models::{AddClient, ClientAdded, EditClient, NodeRole, Pagination},
-        ServiceError,
     },
     state::NodeState,
 };
@@ -63,7 +63,7 @@ impl NodeState {
             NodeRole::Parent => NewDatabaseRole::Parent,
             NodeRole::Child => NewDatabaseRole::Child {
                 as_owner: input.as_owner(),
-                can_edit_links: input.can_edit_links(),
+                can_edit_itos: input.can_edit_itos(),
             },
         };
         let password = if let Some(password) = input.password {

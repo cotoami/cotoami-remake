@@ -4,21 +4,21 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Link, OrderContext}
+import cotoami.models.{Ito, OrderContext}
 import cotoami.repository.Root
 import cotoami.components.toolButton
 
 object ToolbarReorder {
 
   def apply(
-      link: Link,
+      ito: Ito,
       order: OrderContext
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
-    Option.when(context.repo.nodes.canCreateLinksIn(link.nodeId)) {
-      val reordering = context.repo.reordering.contains(link.sourceCotoId)
+    Option.when(context.repo.nodes.canCreateItosIn(ito.nodeId)) {
+      val reordering = context.repo.reordering.contains(ito.sourceCotoId)
       section(className := "reorder-toolbar")(
         toolButton(
           classes = "move-to-top",
@@ -26,7 +26,7 @@ object ToolbarReorder {
           disabled = order.isFirst || reordering,
           onClick = e => {
             e.stopPropagation()
-            dispatch(Root.Msg.ChangeOrder(link, 1))
+            dispatch(Root.Msg.ChangeOrder(ito, 1))
           }
         ),
         toolButton(
@@ -36,7 +36,7 @@ object ToolbarReorder {
           onClick = e => {
             e.stopPropagation()
             order.previous.map(previous =>
-              dispatch(Root.Msg.ChangeOrder(link, previous))
+              dispatch(Root.Msg.ChangeOrder(ito, previous))
             )
           }
         ),
@@ -47,7 +47,7 @@ object ToolbarReorder {
           onClick = e => {
             e.stopPropagation()
             order.next.map(next =>
-              dispatch(Root.Msg.ChangeOrder(link, next + 1))
+              dispatch(Root.Msg.ChangeOrder(ito, next + 1))
             )
           }
         ),
@@ -57,7 +57,7 @@ object ToolbarReorder {
           disabled = order.isLast || reordering,
           onClick = e => {
             e.stopPropagation()
-            dispatch(Root.Msg.ChangeOrder(link, order.max + 1))
+            dispatch(Root.Msg.ChangeOrder(ito, order.max + 1))
           }
         ),
         Option.when(reordering) {

@@ -4,7 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Link}
+import cotoami.models.{Coto, Ito}
 import cotoami.repository.Root
 import cotoami.components.toolButton
 import cotoami.subparts.Modal
@@ -26,7 +26,7 @@ object ToolbarCoto {
       ) {
         toolButton(
           classes = "connect",
-          symbol = Link.ConnectIconName,
+          symbol = Ito.ConnectIconName,
           tip = Some("Connect"),
           tipPlacement = "left",
           onClick = e => {
@@ -64,11 +64,11 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.repo.nodes.canCreateLinksIn(coto.nodeId)) {
+      Option.when(context.repo.nodes.canCreateItosIn(coto.nodeId)) {
         toolButton(
-          classes = "add-linked-coto",
+          classes = "add-sub-coto",
           symbol = "add",
-          tip = Some("Write a linked coto"),
+          tip = Some("Write a sub-coto"),
           tipPlacement = "left"
         )
       },

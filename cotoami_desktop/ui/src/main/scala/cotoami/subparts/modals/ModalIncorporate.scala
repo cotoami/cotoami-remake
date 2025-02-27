@@ -280,8 +280,8 @@ object ModalIncorporate {
           case Some(privileges) => {
             if (privileges.asOwner)
               "an owner"
-            else if (privileges.canEditLinks)
-              "post, edit links"
+            else if (privileges.canEditItos)
+              "post, edit itos"
             else
               "post"
           }

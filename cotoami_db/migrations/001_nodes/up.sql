@@ -5,7 +5,7 @@
 -- logging into a server node.
 -- 
 -- `nodes` table should contain all nodes that appears in the attributes of entities
--- (cotos/cotonomas/links) in this database.
+-- (cotos/cotonomas/itos) in this database.
 --
 CREATE TABLE nodes (
   -- Universally unique node ID.
@@ -72,7 +72,7 @@ CREATE TABLE local_node (
   -- NULL means no resizing will be applied to incoming coto images.
   image_max_size INTEGER,
 
-  -- TRUE if this node allows anonymous clients to read the cotos and links.
+  -- TRUE if this node allows anonymous clients to read the cotos and itos.
   anonymous_read_enabled INTEGER DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
@@ -172,9 +172,9 @@ CREATE TABLE child_nodes (
   -- 0 (false) and 1 (true).
   as_owner INTEGER DEFAULT FALSE NOT NULL,
 
-  -- Permission to edit links in this database.
+  -- Permission to edit itos in this database.
   -- 0 (false) and 1 (true).
-  can_edit_links INTEGER DEFAULT FALSE NOT NULL,
+  can_edit_itos INTEGER DEFAULT FALSE NOT NULL,
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;

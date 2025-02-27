@@ -34,8 +34,8 @@ pub struct ChildNode {
     /// TRUE if this node has the same permission as the owner.
     pub as_owner: bool,
 
-    /// Permission to edit links in this database.
-    pub can_edit_links: bool,
+    /// Permission to edit itos in this database.
+    pub can_edit_itos: bool,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -49,16 +49,16 @@ pub(crate) struct NewChildNode<'a> {
     node_id: &'a Id<Node>,
     created_at: NaiveDateTime,
     as_owner: bool,
-    can_edit_links: bool,
+    can_edit_itos: bool,
 }
 
 impl<'a> NewChildNode<'a> {
-    pub fn new(node_id: &'a Id<Node>, as_owner: bool, can_edit_links: bool) -> Result<Self> {
+    pub fn new(node_id: &'a Id<Node>, as_owner: bool, can_edit_itos: bool) -> Result<Self> {
         Ok(Self {
             node_id,
             created_at: crate::current_datetime(),
             as_owner,
-            can_edit_links,
+            can_edit_itos,
         })
     }
 }
@@ -78,5 +78,5 @@ pub(crate) struct UpdateChildNode<'a> {
     pub as_owner: Option<bool>,
 
     #[new(default)]
-    pub can_edit_links: Option<bool>,
+    pub can_edit_itos: Option<bool>,
 }

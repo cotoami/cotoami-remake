@@ -18,7 +18,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     cotos_fts_trigram,
     cotos_fts_trigram_vocab,
     cotonomas,
-    links,
+    itos,
     changelog
 );
 
@@ -91,7 +91,7 @@ diesel::table! {
         node_id -> Text,
         created_at -> Timestamp,
         as_owner -> Bool,
-        can_edit_links -> Bool,
+        can_edit_itos -> Bool,
     }
 }
 diesel::joinable!(child_nodes -> nodes (node_id));
@@ -214,24 +214,24 @@ diesel::joinable!(cotonomas -> nodes (node_id));
 diesel::joinable!(cotonomas -> cotos (coto_id));
 
 /////////////////////////////////////////////////////////////////////////////
-// Link (related structs are in `models::link`)
+// Ito (related structs are in `models::ito`)
 /////////////////////////////////////////////////////////////////////////////
 
 diesel::table! {
-    links (uuid) {
+    itos (uuid) {
         uuid -> Text,
         node_id -> Text,
         created_by_id -> Text,
         source_coto_id -> Text,
         target_coto_id -> Text,
-        linking_phrase -> Nullable<Text>,
+        description -> Nullable<Text>,
         details -> Nullable<Text>,
         order -> Integer,
         created_at -> Timestamp,
         updated_at -> Timestamp,
     }
 }
-diesel::joinable!(links -> nodes (node_id));
+diesel::joinable!(itos -> nodes (node_id));
 
 /////////////////////////////////////////////////////////////////////////////
 // Changelog (related structs are in `models::changelog`)

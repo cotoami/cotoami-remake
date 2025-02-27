@@ -5,7 +5,7 @@ use image::{imageops, DynamicImage};
 use tracing::debug;
 
 pub(crate) trait DynamicImageExifExt {
-    fn apply_orientation(&mut self, orientation: Orientation);
+    fn transform(&mut self, orientation: Orientation);
 
     fn flipv_in_place(&mut self);
 
@@ -15,7 +15,7 @@ pub(crate) trait DynamicImageExifExt {
 }
 
 impl DynamicImageExifExt for DynamicImage {
-    fn apply_orientation(&mut self, orientation: Orientation) {
+    fn transform(&mut self, orientation: Orientation) {
         let image = self;
         match orientation {
             Orientation::NoTransforms => (),

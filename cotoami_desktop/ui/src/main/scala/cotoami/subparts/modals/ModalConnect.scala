@@ -8,10 +8,10 @@ import slinky.web.html._
 import fui.Cmd
 import fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Link}
-import cotoami.repository.{Cotos, Links, Root}
+import cotoami.models.{Coto, Id, Ito}
+import cotoami.repository.{Cotos, Itos, Root}
 import cotoami.components.{materialSymbol, ScrollArea}
-import cotoami.backend.{ErrorJson, LinkBackend}
+import cotoami.backend.{ErrorJson, ItoBackend}
 import cotoami.subparts.{Modal, ViewCoto}
 
 object ModalConnect {
@@ -28,15 +28,15 @@ object ModalConnect {
       error: Option[String] = None
   ) {
     def connect(repo: Root): (Model, Cmd.One[AppMsg]) = {
-      val acc: Cmd.One[Either[ErrorJson, Seq[Link]]] = pure(Right(Seq.empty))
+      val acc: Cmd.One[Either[ErrorJson, Seq[Ito]]] = pure(Right(Seq.empty))
       val cmd = repo.cotos.selectedIds
         .foldLeft(acc) { (cmd, selectedId) =>
           cmd.flatMap(_ match {
-            case Right(links) => {
-              if (alreadyConnected(selectedId, repo.links))
-                pure(Right(links))
+            case Right(itos) => {
+              if (alreadyConnected(selectedId, repo.itos))
+                pure(Right(itos))
               else
-                connectOne(selectedId).map(_.map(links :+ _))
+                connectOne(selectedId).map(_.map(itos :+ _))
             }
             case Left(e) => pure(Left(e))
           })
@@ -45,16 +45,16 @@ object ModalConnect {
       (copy(connecting = true), cmd)
     }
 
-    private def alreadyConnected(selectedId: Id[Coto], links: Links): Boolean =
+    private def alreadyConnected(selectedId: Id[Coto], itos: Itos): Boolean =
       if (toSelection)
-        links.linked(cotoId, selectedId)
+        itos.connected(cotoId, selectedId)
       else
-        links.linked(selectedId, cotoId)
+        itos.connected(selectedId, cotoId)
 
     private def connectOne(
         selectedId: Id[Coto]
-    ): Cmd.One[Either[ErrorJson, Link]] =
-      LinkBackend.connect(
+    ): Cmd.One[Either[ErrorJson, Ito]] =
+      ItoBackend.connect(
         if (toSelection) cotoId else selectedId,
         if (toSelection) selectedId else cotoId,
         None,
@@ -75,7 +75,7 @@ object ModalConnect {
     case object Reverse extends Msg
     object ClearSelectionToggled extends Msg
     object Connect extends Msg
-    case class Connected(result: Either[ErrorJson, Seq[Link]]) extends Msg
+    case class Connected(result: Either[ErrorJson, Seq[Ito]]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -94,7 +94,7 @@ object ModalConnect {
           default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.Connected(Right(links)) =>
+      case Msg.Connected(Right(itos)) =>
         default.copy(
           _1 = model.copy(connecting = false),
           _2 =
@@ -108,7 +108,7 @@ object ModalConnect {
       case Msg.Connected(Left(e)) =>
         default.copy(
           _1 = model.copy(connecting = false, error = Some(e.default_message)),
-          _3 = cotoami.error("Couldn't create links.", e)
+          _3 = cotoami.error("Couldn't create itos.", e)
         )
     }
   }
@@ -127,7 +127,7 @@ object ModalConnect {
       closeButton = Some((classOf[Modal.Connect], dispatch)),
       error = model.error
     )(
-      materialSymbol(Link.ConnectIconName),
+      materialSymbol(Ito.ConnectIconName),
       "Connect"
     )(
       div(className := "buttons reverse")(
@@ -143,7 +143,7 @@ object ModalConnect {
         else
           divSelection
       ),
-      div(className := "link")(
+      div(className := "ito")(
         span(className := "arrow")(
           materialSymbol("arrow_downward")
         )

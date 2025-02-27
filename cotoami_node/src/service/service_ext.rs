@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use cotoami_db::prelude::*;
 
 use crate::service::{
-    models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession, InitialDataset},
     Command, NodeService, RemoteNodeService,
+    models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession, InitialDataset},
 };
 
 /// An extension trait for [NodeService] that provides shortcut functions for
@@ -72,28 +72,28 @@ pub trait NodeServiceExt: NodeService {
         response.content::<(Cotonoma, Coto)>()
     }
 
-    async fn connect(&self, input: LinkInput<'static>) -> Result<Link> {
+    async fn connect(&self, input: ItoInput<'static>) -> Result<Ito> {
         let request = Command::Connect(input).into_request();
         let response = self.call(request).await?;
-        response.content::<Link>()
+        response.content::<Ito>()
     }
 
-    async fn edit_link(&self, id: Id<Link>, diff: LinkContentDiff<'static>) -> Result<Link> {
-        let request = Command::EditLink { id, diff }.into_request();
+    async fn edit_ito(&self, id: Id<Ito>, diff: ItoContentDiff<'static>) -> Result<Ito> {
+        let request = Command::EditIto { id, diff }.into_request();
         let response = self.call(request).await?;
-        response.content::<Link>()
+        response.content::<Ito>()
     }
 
-    async fn disconnect(&self, id: Id<Link>) -> Result<Id<Link>> {
+    async fn disconnect(&self, id: Id<Ito>) -> Result<Id<Ito>> {
         let request = Command::Disconnect { id }.into_request();
         let response = self.call(request).await?;
-        response.content::<Id<Link>>()
+        response.content::<Id<Ito>>()
     }
 
-    async fn change_link_order(&self, id: Id<Link>, new_order: i32) -> Result<Link> {
-        let request = Command::ChangeLinkOrder { id, new_order }.into_request();
+    async fn change_ito_order(&self, id: Id<Ito>, new_order: i32) -> Result<Ito> {
+        let request = Command::ChangeItoOrder { id, new_order }.into_request();
         let response = self.call(request).await?;
-        response.content::<Link>()
+        response.content::<Ito>()
     }
 }
 

@@ -7,15 +7,15 @@ use anyhow::bail;
 use crate::{
     db::{error::*, op::*},
     models::{
+        Id,
         node::{
+            Node,
             child::NewChildNode,
             client::{ClientNode, NewClientNode},
             parent::{NewParentNode, ParentNode},
             roles::{DatabaseRole, NetworkRole},
             server::{NewServerNode, ServerNode},
-            Node,
         },
-        Id,
     },
 };
 
@@ -139,10 +139,7 @@ pub(crate) fn database_roles_of<Conn: AsReadableConn>(
 
 pub enum NewDatabaseRole {
     Parent,
-    Child {
-        as_owner: bool,
-        can_edit_links: bool,
-    },
+    Child { as_owner: bool, can_edit_itos: bool },
 }
 
 pub(crate) fn set_database_role(
@@ -161,9 +158,9 @@ pub(crate) fn set_database_role(
             }
             NewDatabaseRole::Child {
                 as_owner,
-                can_edit_links,
+                can_edit_itos,
             } => {
-                let new_role = NewChildNode::new(node_id, as_owner, can_edit_links)?;
+                let new_role = NewChildNode::new(node_id, as_owner, can_edit_itos)?;
                 let role = child_ops::insert(&new_role).run(ctx)?;
                 Ok(DatabaseRole::Child(role))
             }

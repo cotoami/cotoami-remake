@@ -14,8 +14,8 @@ import java.time.Instant
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Link, OrderContext}
-import cotoami.repository.Links
+import cotoami.models.{Coto, Id, Ito, OrderContext}
+import cotoami.repository.Itos
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -47,10 +47,10 @@ object SectionTraversals {
     def stepToParent(
         traversalIndex: Int,
         parentId: Id[Coto],
-        links: Links
+        itos: Itos
     ): Model =
       this.modify(_.traversals.index(traversalIndex)).using(
-        _.stepToParent(parentId, links)
+        _.stepToParent(parentId, itos)
       )
 
     def closeTraversal(traversalIndex: Int): Model =
@@ -66,14 +66,14 @@ object SectionTraversals {
     def step(stepIndex: Int, step: Id[Coto]): Traversal =
       this.modify(_.steps).using(_.take(stepIndex) :+ step)
 
-    def stepToParent(parentId: Id[Coto], links: Links): Traversal = {
+    def stepToParent(parentId: Id[Coto], itos: Itos): Traversal = {
       val oldStart = start
       this
         .modify(_.start).setTo(parentId)
         .modify(_.steps).using(steps =>
-          // if oldStart has no outgoing links, there's no need to prepend it
+          // if oldStart has no outgoing itos, there's no need to prepend it
           // to the steps because the new start box will contain it as a sub coto.
-          if (links.from(oldStart).isEmpty) {
+          if (itos.from(oldStart).isEmpty) {
             steps
           } else {
             oldStart +: steps
@@ -165,7 +165,7 @@ object SectionTraversals {
 
       case Msg.StepToParent(traversalIndex, parentId) =>
         (
-          model.stepToParent(traversalIndex, parentId, context.repo.links),
+          model.stepToParent(traversalIndex, parentId, context.repo.itos),
           Cmd.none
         )
     }
@@ -222,14 +222,14 @@ object SectionTraversals {
     )
 
   private def divParents(
-      parents: Seq[(Coto, Link)],
+      parents: Seq[(Coto, Ito)],
       traversalIndex: Int
   )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       div(className := "parents")(
         ul(className := "traverse-to-parents")(
-          parents.map { case (parent, link) =>
-            li(key := link.id.uuid)(
+          parents.map { case (parent, ito) =>
+            li(key := ito.id.uuid)(
               button(
                 className := "parent default",
                 onClick := (_ =>
@@ -303,15 +303,15 @@ object SectionTraversals {
       stepIndex.map(step => s"-step-${step}").getOrElse("-start")
 
   private def liSubCoto(
-      subCoto: (Link, Coto, OrderContext),
+      subCoto: (Ito, Coto, OrderContext),
       stepIndex: Option[Int],
       traversal: (Traversal, Int)
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val (link, coto, order) = subCoto
+    val (ito, coto, order) = subCoto
     val traversed = traversal._1.traversed(stepIndex, coto.id)
     li(className := "sub")(
       ViewCoto.ulParents(
-        context.repo.parentsOf(coto.id).filter(_._2.id != link.id),
+        context.repo.parentsOf(coto.id).filter(_._2.id != ito.id),
         Msg.OpenTraversal(_)
       ),
       ViewCoto.article(
@@ -323,9 +323,9 @@ object SectionTraversals {
         )
       )(
         ToolbarCoto(coto),
-        ToolbarReorder(link, order),
+        ToolbarReorder(ito, order),
         header()(
-          buttonSubcotoLink(link)
+          buttonSubcotoIto(ito)
         ),
         div(className := "body")(
           // Coto content
@@ -338,7 +338,7 @@ object SectionTraversals {
           },
           // Traverse button
           Option.when(
-            !traversed && context.repo.links.anyFrom(coto.id)
+            !traversed && context.repo.itos.anyFrom(coto.id)
           ) {
             val stepMsg = Msg.Step(
               traversal._2,

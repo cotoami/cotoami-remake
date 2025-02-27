@@ -16,7 +16,7 @@ mod changes;
 mod cotonomas;
 mod cotos;
 mod graph;
-mod links;
+mod itos;
 mod nodes;
 mod session;
 
@@ -119,15 +119,13 @@ impl NodeState {
             Command::RenameCotonoma { id, name } => {
                 format.serialize(self.rename_cotonoma(id, name, opr?).await)
             }
-            Command::Link { id } => format.serialize(self.link(id).await),
-            Command::OutgoingLinks { coto } => format.serialize(self.outgoing_links(coto).await),
+            Command::Ito { id } => format.serialize(self.ito(id).await),
+            Command::OutgoingItos { coto } => format.serialize(self.outgoing_itos(coto).await),
             Command::Connect(input) => format.serialize(self.connect(input, opr?).await),
-            Command::EditLink { id, diff } => {
-                format.serialize(self.edit_link(id, diff, opr?).await)
-            }
+            Command::EditIto { id, diff } => format.serialize(self.edit_ito(id, diff, opr?).await),
             Command::Disconnect { id } => format.serialize(self.disconnect(id, opr?).await),
-            Command::ChangeLinkOrder { id, new_order } => {
-                format.serialize(self.change_link_order(id, new_order, opr?).await)
+            Command::ChangeItoOrder { id, new_order } => {
+                format.serialize(self.change_ito_order(id, new_order, opr?).await)
             }
         }
     }
