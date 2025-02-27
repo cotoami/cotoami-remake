@@ -296,7 +296,7 @@ object SectionPins {
           ("has-children", context.repo.itos.anyFrom(coto.id))
         )
       )(
-        buttonPin(ito),
+        ViewIto.buttonPin(ito),
         ToolbarCoto(coto),
         ToolbarReorder(ito, order),
         div(className := "body")(
@@ -416,7 +416,7 @@ object SectionPins {
         ToolbarCoto(coto),
         ToolbarReorder(ito, order),
         header()(
-          buttonSubcotoIto(ito)
+          ViewIto.buttonSubcotoIto(ito)
         ),
         div(className := "body")(
           ViewCoto.divContent(coto),

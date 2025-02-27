@@ -111,7 +111,7 @@ object SectionCotoDetails {
           ToolbarCoto(coto),
           ToolbarReorder(ito, order),
           header()(
-            buttonSubcotoIto(ito),
+            ViewIto.buttonSubcotoIto(ito),
             ViewCoto.divAttributes(coto),
             Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
               ViewCoto.addressAuthor(coto, repo.nodes)
