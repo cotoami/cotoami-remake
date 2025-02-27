@@ -145,22 +145,7 @@ object ModalItoEditor {
       section(className := "source-coto")(
         context.repo.cotos.get(model.original.sourceCotoId).map(articleCoto)
       ),
-      section(className := "ito")(
-        div(className := "ito-icon")(
-          materialSymbol("arrow_downward")
-        ),
-        div(className := "description")(
-          input(
-            className := "description",
-            `type` := "text",
-            placeholder := "Description (optional)",
-            value := model.descriptionInput,
-            Validation.ariaInvalid(model.validate),
-            onChange := (e => dispatch(Msg.DescriptionInput(e.target.value)))
-          ),
-          Validation.sectionValidationError(model.validate)
-        )
-      ),
+      sectionIto(model),
       section(className := "target-coto")(
         context.repo.cotos.get(model.original.targetCotoId).map(articleCoto)
       ),
@@ -189,6 +174,26 @@ object ModalItoEditor {
           aria - "busy" := model.saving.toString(),
           onClick := (_ => dispatch(Msg.Save))
         )("Save")
+      )
+    )
+
+  private def sectionIto(
+      model: Model
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "ito")(
+      div(className := "ito-icon")(
+        materialSymbol("arrow_downward")
+      ),
+      div(className := "description")(
+        input(
+          className := "description",
+          `type` := "text",
+          placeholder := "Description (optional)",
+          value := model.descriptionInput,
+          Validation.ariaInvalid(model.validate),
+          onChange := (e => dispatch(Msg.DescriptionInput(e.target.value)))
+        ),
+        Validation.sectionValidationError(model.validate)
       )
     )
 

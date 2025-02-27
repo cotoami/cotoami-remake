@@ -1,3 +1,27 @@
+section.ito {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  padding: 10px 0;
+
+  div.ito-icon {
+    span.material-symbols {
+      font-size: 24px;
+    }
+  }
+
+  div.description {
+    margin-left: 8px;
+    width: 80%;
+
+    input {
+      width: 100%;
+    }
+  }
+}
+
 div.ito-container.with-description {
   >div.ito {
     display: inline-flex;

@@ -15,20 +15,6 @@ dialog.connect {
     margin-top: 12px;
   }
 
-  div.ito {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-
-    margin-top: 6px;
-    margin-bottom: 4px;
-
-    span.arrow {
-      font-size: 24px;
-    }
-  }
-
   div.buttons.connect {
     display: flex;
     flex-direction: row-reverse;

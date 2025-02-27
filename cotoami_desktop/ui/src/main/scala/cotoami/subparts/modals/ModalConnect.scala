@@ -143,11 +143,7 @@ object ModalConnect {
         else
           divSelection
       ),
-      div(className := "ito")(
-        span(className := "arrow")(
-          materialSymbol("arrow_downward")
-        )
-      ),
+      sectionIto,
       section(className := "target")(
         if (model.toSelection)
           divSelection
@@ -175,6 +171,13 @@ object ModalConnect {
       )
     )
   }
+
+  private def sectionIto: ReactElement =
+    section(className := "ito")(
+      div(className := "ito-icon")(
+        materialSymbol("arrow_downward")
+      )
+    )
 
   private def articleCoto(coto: Coto)(implicit
       context: Context
