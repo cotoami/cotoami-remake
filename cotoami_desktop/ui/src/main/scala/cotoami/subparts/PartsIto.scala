@@ -7,7 +7,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Ito
 import cotoami.components.{optionalClasses, toolButton}
 
-object ViewIto {
+object PartsIto {
 
   def buttonPin(
       ito: Ito

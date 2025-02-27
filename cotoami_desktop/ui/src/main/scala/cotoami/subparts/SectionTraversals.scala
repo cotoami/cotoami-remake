@@ -325,7 +325,7 @@ object SectionTraversals {
         ToolbarCoto(coto),
         ToolbarReorder(ito, order),
         header()(
-          ViewIto.buttonSubcotoIto(ito)
+          PartsIto.buttonSubcotoIto(ito)
         ),
         div(className := "body")(
           // Coto content
