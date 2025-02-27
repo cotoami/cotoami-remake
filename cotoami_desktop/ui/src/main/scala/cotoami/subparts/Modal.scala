@@ -8,7 +8,7 @@ import com.softwaremill.quicklens._
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Link, Node}
+import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.{Nodes, Root}
 import cotoami.subparts.modals._
 
@@ -71,9 +71,9 @@ object Modal {
     }
   }
 
-  case class LinkEditor(model: ModalLinkEditor.Model) extends Modal
-  object LinkEditor {
-    def apply(link: Link): LinkEditor = LinkEditor(ModalLinkEditor.Model(link))
+  case class ItoEditor(model: ModalItoEditor.Model) extends Modal
+  object ItoEditor {
+    def apply(ito: Ito): ItoEditor = ItoEditor(ModalItoEditor.Model(ito))
   }
 
   case class Selection(model: ModalSelection.Model) extends Modal
@@ -143,7 +143,7 @@ object Modal {
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class CotoEditorMsg(msg: ModalCotoEditor.Msg) extends Msg
-    case class LinkEditorMsg(msg: ModalLinkEditor.Msg) extends Msg
+    case class ItoEditorMsg(msg: ModalItoEditor.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class ConnectMsg(msg: ModalConnect.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
@@ -199,10 +199,10 @@ object Modal {
           }
         }
 
-      case Msg.LinkEditorMsg(modalMsg) =>
-        stack.get[LinkEditor].map { case LinkEditor(modal) =>
-          ModalLinkEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(LinkEditor(modal), model), cmds)
+      case Msg.ItoEditorMsg(modalMsg) =>
+        stack.get[ItoEditor].map { case ItoEditor(modal) =>
+          ModalItoEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(ItoEditor(modal), model), cmds)
           }
         }
 
@@ -356,7 +356,7 @@ object Modal {
 
       case CotoEditor(modal) => Some(ModalCotoEditor(modal))
 
-      case LinkEditor(modal) => Some(ModalLinkEditor(modal))
+      case ItoEditor(modal) => Some(ModalItoEditor(modal))
 
       case Selection(modal) => Some(ModalSelection(modal))
 

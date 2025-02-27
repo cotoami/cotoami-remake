@@ -1,5 +1,5 @@
-div.link-container.with-linking-phrase {
-  >div.link {
+div.ito-container.with-description {
+  >div.ito {
     display: inline-flex;
     flex-direction: row;
     align-items: center;
@@ -18,7 +18,7 @@ div.link-container.with-linking-phrase {
       cursor: pointer;
     }
 
-    section.linking-phrase {
+    section.description {
       margin-left: 4px;
       white-space: nowrap;
       overflow: hidden;
@@ -26,7 +26,7 @@ div.link-container.with-linking-phrase {
     }
   }
 
-  >div.subcoto-link {
+  >div.subcoto-ito {
     margin-left: -4px;
   }
 }

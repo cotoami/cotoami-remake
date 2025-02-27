@@ -24,7 +24,7 @@ object ModalNewClient {
   case class Model(
       nodeId: String = "",
       nodeIdValidation: Validation.Result = Validation.Result.notYetValidated,
-      canEditLinks: Boolean = false,
+      canEditItos: Boolean = false,
       asOwner: Boolean = false,
       error: Option[String] = None,
       registering: Boolean = false,
@@ -68,7 +68,7 @@ object ModalNewClient {
         nodeId: String,
         result: Either[ErrorJson, ClientNode]
     ) extends Msg
-    object CanEditLinksToggled extends Msg
+    object CanEditItosToggled extends Msg
     object AsOwnerToggled extends Msg
     object Register extends Msg
     case class Registered(result: Either[ErrorJson, ClientAdded]) extends Msg
@@ -110,8 +110,8 @@ object ModalNewClient {
             cotoami.error("Couldn't fetch the client node.", error)
           )
 
-      case Msg.CanEditLinksToggled =>
-        default.copy(_1 = model.modify(_.canEditLinks).using(!_))
+      case Msg.CanEditItosToggled =>
+        default.copy(_1 = model.modify(_.canEditItos).using(!_))
 
       case Msg.AsOwnerToggled =>
         default.copy(_1 = model.modify(_.asOwner).using(!_))
@@ -121,7 +121,7 @@ object ModalNewClient {
           _1 = model.copy(registering = true),
           _3 = ClientNodeBackend.add(
             Id(model.nodeId),
-            model.canEditLinks,
+            model.canEditItos,
             model.asOwner
           ).map(Msg.Registered(_).into)
         )
@@ -184,15 +184,15 @@ object ModalNewClient {
           label = "Privileges",
           labelFor = None
         )(
-          label(htmlFor := "can-edit-links")(
+          label(htmlFor := "can-edit-itos")(
             input(
               `type` := "checkbox",
-              id := "can-edit-links",
-              checked := model.canEditLinks,
+              id := "can-edit-itos",
+              checked := model.canEditItos,
               disabled := model.registered,
-              onChange := (_ => dispatch(Msg.CanEditLinksToggled))
+              onChange := (_ => dispatch(Msg.CanEditItosToggled))
             ),
-            "Permit to create links"
+            "Permit to create itos"
           ),
           label(htmlFor := "as-owner")(
             input(

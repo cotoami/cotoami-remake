@@ -80,9 +80,9 @@ section.pins {
     li.pin {
       background-color: var(--card-background-color);
 
-      &.with-linking-phrase {
+      &.with-description {
         ul.parents {
-          // make space to display the pin with a linking phrase
+          // make space to display the pin with a description
           padding-bottom: 20px;
         }
       }
@@ -92,13 +92,13 @@ section.pins {
       position: relative;
       padding-top: 20px;
 
-      >div.link-container {
+      >div.ito-container {
         position: absolute;
         top: 3px;
         left: 5px;
         z-index: 10;
 
-        &.with-linking-phrase {
+        &.with-description {
           top: -20px;
           left: 0;
           right: 0;
@@ -120,7 +120,7 @@ section.pins {
       }
     }
 
-    div.links-not-yet-loaded {
+    div.itos-not-yet-loaded {
       padding-bottom: 6px;
       background-color: var(--card-background-color);
       text-align: center;
@@ -144,7 +144,7 @@ section.pins {
         flex: 1;
       }
 
-      div.links {
+      div.itos {
         flex: 0 0 30px;
         padding-right: 10px;
       }
@@ -256,8 +256,8 @@ section.pins {
 
     // Disable card-background-color in document-view
     article.coto,
-    ol.pins ol.sub-cotos>div.links,
-    ol.pins div.links-not-yet-loaded,
+    ol.pins ol.sub-cotos>div.itos,
+    ol.pins div.itos-not-yet-loaded,
     ul.parents {
       background-color: var(--background-color);
     }

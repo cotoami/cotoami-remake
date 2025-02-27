@@ -75,7 +75,7 @@ section.coto-details {
           position: relative;
           padding: 0 var(--block-spacing-horizontal);
 
-          div.link-container {
+          div.ito-container {
             position: absolute;
             top: -10px;
             left: 10px;
@@ -88,18 +88,18 @@ section.coto-details {
         }
       }
 
-      div.links {
+      div.itos {
         padding-top: 3px;
         background-color: var(--card-background-color);
         text-align: center;
       }
     }
 
-    div.insert-linked-coto {
+    div.insert-sub-coto {
       padding: 5px 0;
       text-align: center;
 
-      button.insert-linked-coto {
+      button.insert-sub-coto {
         opacity: 0.3;
 
         span.material-symbols {
@@ -107,7 +107,7 @@ section.coto-details {
         }
       }
 
-      &:hover button.insert-linked-coto {
+      &:hover button.insert-sub-coto {
         opacity: 1;
       }
     }

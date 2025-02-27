@@ -362,7 +362,7 @@ object SectionTimeline {
             AppMsg.FocusCoto(_)
           ),
           articleCoto(coto),
-          ViewCoto.divLinksTraversal(coto, "bottom")
+          ViewCoto.divItosTraversal(coto, "bottom")
         )
       )
     )

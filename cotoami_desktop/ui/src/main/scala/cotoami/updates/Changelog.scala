@@ -15,7 +15,7 @@ import cotoami.backend.{
   CotoJson,
   CotonomaBackend,
   CotonomaJson,
-  LinkBackend,
+  ItoBackend,
   NodeBackend
 }
 import cotoami.subparts.SectionPins
@@ -52,34 +52,34 @@ object Changelog {
       return createCotonoma(json, model)
     }
 
-    // CreateLink
-    for (json <- change.CreateLink.toOption) {
-      val link = LinkBackend.toModel(json)
+    // CreateIto
+    for (json <- change.CreateIto.toOption) {
+      val ito = ItoBackend.toModel(json)
       return (
-        model.modify(_.repo.links).using(_.put(link)),
+        model.modify(_.repo.itos).using(_.put(ito)),
         Cmd.Batch(
-          Root.fetchGraphFromCoto(link.targetCotoId),
-          Browser.send(SectionPins.Msg.ScrollToPin(link).into)
+          Root.fetchGraphFromCoto(ito.targetCotoId),
+          Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
         )
       )
     }
 
-    // DeleteLink
-    for (json <- change.DeleteLink.toOption) {
-      val linkId: Id[Link] = Id(json.link_id)
+    // DeleteIto
+    for (json <- change.DeleteIto.toOption) {
+      val itoId: Id[Ito] = Id(json.ito_id)
       return (
-        model.modify(_.repo.links).using(_.delete(linkId)),
+        model.modify(_.repo.itos).using(_.delete(itoId)),
         Cmd.none
       )
     }
 
-    // ChangeLinkOrder
-    for (json <- change.ChangeLinkOrder.toOption) {
-      val linkId: Id[Link] = Id(json.link_id)
+    // ChangeItoOrder
+    for (json <- change.ChangeItoOrder.toOption) {
+      val itoId: Id[Ito] = Id(json.ito_id)
       return (
         model,
-        model.repo.links.get(linkId)
-          .map(link => Root.fetchOutgoingLinks(link.sourceCotoId))
+        model.repo.itos.get(itoId)
+          .map(ito => Root.fetchOutgoingItos(ito.sourceCotoId))
           .getOrElse(Cmd.none)
       )
     }
@@ -101,9 +101,9 @@ object Changelog {
       )
     }
 
-    // EditLink
-    for (json <- change.EditLink.toOption) {
-      return (model, Root.fetchLink(Id(json.link_id)))
+    // EditIto
+    for (json <- change.EditIto.toOption) {
+      return (model, Root.fetchIto(Id(json.ito_id)))
     }
 
     // RenameCotonoma

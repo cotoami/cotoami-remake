@@ -34,7 +34,7 @@ case class ChildNode(
     nodeId: Id[Node],
     createdAtUtcIso: String,
     asOwner: Boolean,
-    canEditLinks: Boolean
+    canEditItos: Boolean
 ) {
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
 }

@@ -49,7 +49,7 @@ trait ChildNodeJson extends js.Object {
   val node_id: String = js.native
   val created_at: String = js.native
   val as_owner: Boolean = js.native
-  val can_edit_links: Boolean = js.native
+  val can_edit_itos: Boolean = js.native
 }
 
 object ChildNodeBackend {
@@ -58,6 +58,6 @@ object ChildNodeBackend {
       nodeId = Id(json.node_id),
       createdAtUtcIso = json.created_at,
       asOwner = json.as_owner,
-      canEditLinks = json.can_edit_links
+      canEditItos = json.can_edit_itos
     )
 }

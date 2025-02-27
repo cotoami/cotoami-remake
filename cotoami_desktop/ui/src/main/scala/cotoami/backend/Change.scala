@@ -26,10 +26,10 @@ trait ChangeJson extends js.Object {
   val DeleteCoto: js.UndefOr[DeleteCotoJson] = js.native
   val CreateCotonoma: js.UndefOr[js.Tuple2[CotonomaJson, CotoJson]] = js.native
   val RenameCotonoma: js.UndefOr[RenameCotonomaJson] = js.native
-  val CreateLink: js.UndefOr[LinkJson] = js.native
-  val EditLink: js.UndefOr[EditLinkJson] = js.native
-  val DeleteLink: js.UndefOr[DeleteLinkJson] = js.native
-  val ChangeLinkOrder: js.UndefOr[ChangeLinkOrderJson] = js.native
+  val CreateIto: js.UndefOr[ItoJson] = js.native
+  val EditIto: js.UndefOr[EditItoJson] = js.native
+  val DeleteIto: js.UndefOr[DeleteItoJson] = js.native
+  val ChangeItoOrder: js.UndefOr[ChangeItoOrderJson] = js.native
   val ChangeOwnerNode: js.UndefOr[ChangeOwnerNodeJson] = js.native
 }
 
@@ -79,20 +79,20 @@ trait RenameCotonomaJson extends js.Object {
 }
 
 @js.native
-trait EditLinkJson extends js.Object {
-  val link_id: String = js.native
+trait EditItoJson extends js.Object {
+  val ito_id: String = js.native
   val diff: js.Object = js.native
   val updated_at: String = js.native
 }
 
 @js.native
-trait DeleteLinkJson extends js.Object {
-  val link_id: String = js.native
+trait DeleteItoJson extends js.Object {
+  val ito_id: String = js.native
 }
 
 @js.native
-trait ChangeLinkOrderJson extends js.Object {
-  val link_id: String = js.native
+trait ChangeItoOrderJson extends js.Object {
+  val ito_id: String = js.native
   val new_order: Int = js.native
 }
 

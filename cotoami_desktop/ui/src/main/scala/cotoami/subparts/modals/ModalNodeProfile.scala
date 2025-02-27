@@ -187,8 +187,8 @@ object ModalNodeProfile {
               case Some(privileges) => {
                 if (privileges.asOwner)
                   "Owner"
-                else if (privileges.canEditLinks)
-                  "Post, Edit links"
+                else if (privileges.canEditItos)
+                  "Post, Edit itos"
                 else
                   "Post"
               }
@@ -346,7 +346,7 @@ object ModalNodeProfile {
               Modal.Msg.OpenModal(
                 Modal.Confirm(
                   "Are you sure you want to allow anonymous read-only access?" ++
-                    " (Anyone who knows this node's URL can view your cotos and links.)",
+                    " (Anyone who knows this node's URL can view your cotos and itos.)",
                   Msg.EnableAnonymousRead(true) // enable
                 )
               )

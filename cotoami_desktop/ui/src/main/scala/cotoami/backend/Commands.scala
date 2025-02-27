@@ -89,12 +89,12 @@ object Commands {
 
   def ClientNode(id: Id[Node]) = jso(ClientNode = jso(id = id.uuid))
 
-  def AddClient(nodeId: Id[Node], canEditLinks: Boolean, asOowner: Boolean) =
+  def AddClient(nodeId: Id[Node], canEditItos: Boolean, asOowner: Boolean) =
     jso(AddClient =
       jso(
         id = nodeId.uuid,
         as_owner = asOowner,
-        can_edit_links = canEditLinks
+        can_edit_itos = canEditItos
       )
     )
 
@@ -285,22 +285,22 @@ object Commands {
   def RenameCotonoma(id: Id[Cotonoma], name: String) =
     jso(RenameCotonoma = jso(id = id.uuid, name = name))
 
-  def Link(id: Id[Link]) = jso(Link = jso(id = id.uuid))
+  def Ito(id: Id[Ito]) = jso(Ito = jso(id = id.uuid))
 
-  def OutgoingLinks(cotoId: Id[Coto]) =
-    jso(OutgoingLinks = jso(coto = cotoId.uuid))
+  def OutgoingItos(cotoId: Id[Coto]) =
+    jso(OutgoingItos = jso(coto = cotoId.uuid))
 
   def Connect(
       sourceId: Id[Coto],
       targetId: Id[Coto],
-      linkingPhrase: Option[String],
+      description: Option[String],
       details: Option[String],
       order: Option[Int]
   ) = jso(Connect =
     jso(
       source_coto_id = sourceId.uuid,
       target_coto_id = targetId.uuid,
-      linking_phrase = linkingPhrase.getOrElse(null),
+      description = description.getOrElse(null),
       details = details.getOrElse(null),
       // getOrElse can't be used to convert `order` because Int is non-nullable.
       order = order match {
@@ -310,17 +310,17 @@ object Commands {
     )
   )
 
-  def EditLink(
-      id: Id[Link],
-      linkingPhrase: Option[Option[String]],
+  def EditIto(
+      id: Id[Ito],
+      description: Option[Option[String]],
       details: Option[Option[String]]
   ) =
-    jso(EditLink =
+    jso(EditIto =
       jso(
         id = id.uuid,
         diff = jso(
-          linking_phrase = fieldDiffJson(
-            linkingPhrase.map(_.map(s => s)) // String => js.Any
+          description = fieldDiffJson(
+            description.map(_.map(s => s)) // String => js.Any
           ),
           details =
             fieldDiffJson(details.map(_.map(s => s))) // String => js.Any
@@ -328,10 +328,10 @@ object Commands {
       )
     )
 
-  def Disconnect(id: Id[Link]) = jso(Disconnect = jso(id = id.uuid))
+  def Disconnect(id: Id[Ito]) = jso(Disconnect = jso(id = id.uuid))
 
-  def ChangeLinkOrder(id: Id[Link], newOrder: Int) =
-    jso(ChangeLinkOrder = jso(id = id.uuid, new_order = newOrder))
+  def ChangeItoOrder(id: Id[Ito], newOrder: Int) =
+    jso(ChangeItoOrder = jso(id = id.uuid, new_order = newOrder))
 
   private def geolocationJson(location: Geolocation) =
     jso(longitude = location.longitude, latitude = location.latitude)

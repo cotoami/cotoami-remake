@@ -11,7 +11,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.libs.{rehypePlugins, remarkPlugins}
-import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Link, WaitingPost}
+import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
 import cotoami.repository.Nodes
 import cotoami.components.{
   materialSymbol,
@@ -259,13 +259,13 @@ object ViewCoto {
   }
 
   def ulParents(
-      parents: Seq[(Coto, Link)],
+      parents: Seq[(Coto, Ito)],
       onClickTagger: Id[Coto] => Into[AppMsg]
   )(implicit dispatch: Into[AppMsg] => Unit): Option[ReactElement] =
     Option.when(!parents.isEmpty) {
       ul(className := "parents")(
-        parents.map { case (parent, link) =>
-          li(key := link.id.uuid)(
+        parents.map { case (parent, ito) =>
+          li(key := ito.id.uuid)(
             button(
               className := "parent default",
               onClick := (_ => dispatch(onClickTagger(parent.id)))
@@ -275,15 +275,15 @@ object ViewCoto {
       )
     }
 
-  def divLinksTraversal(
+  def divItosTraversal(
       coto: Coto,
       tipPlacement: String
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
-    Option.when(context.repo.links.anyFrom(coto.id)) {
-      div(className := "links")(
+    Option.when(context.repo.itos.anyFrom(coto.id)) {
+      div(className := "itos")(
         toolButton(
           symbol = "arrow_forward",
           tip = Some("Traverse"),
