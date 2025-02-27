@@ -4,6 +4,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.Ito
 import cotoami.components.{optionalClasses, toolButton}
 
@@ -100,4 +101,21 @@ object PartsIto {
       )
     )
   }
+
+  def inputDescription(
+      description: String,
+      validation: Validation.Result,
+      onChange: String => Unit
+  ): ReactElement =
+    div(className := "description")(
+      input(
+        className := "description",
+        `type` := "text",
+        placeholder := "Description (optional)",
+        value := description,
+        Validation.ariaInvalid(validation),
+        slinky.web.html.onChange := (e => onChange(e.target.value))
+      ),
+      Validation.sectionValidationError(validation)
+    )
 }

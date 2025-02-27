@@ -11,7 +11,7 @@ import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}
 import cotoami.backend.{ErrorJson, ItoBackend}
 import cotoami.components.{materialSymbol, ScrollArea}
-import cotoami.subparts.{Modal, PartsCoto}
+import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 
 object ModalItoEditor {
 
@@ -184,16 +184,10 @@ object ModalItoEditor {
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
       ),
-      div(className := "description")(
-        input(
-          className := "description",
-          `type` := "text",
-          placeholder := "Description (optional)",
-          value := model.descriptionInput,
-          Validation.ariaInvalid(model.validate),
-          onChange := (e => dispatch(Msg.DescriptionInput(e.target.value)))
-        ),
-        Validation.sectionValidationError(model.validate)
+      PartsIto.inputDescription(
+        model.descriptionInput,
+        model.validate,
+        value => dispatch(Msg.DescriptionInput(value))
       )
     )
 
