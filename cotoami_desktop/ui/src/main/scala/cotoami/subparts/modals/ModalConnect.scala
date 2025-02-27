@@ -193,13 +193,20 @@ object ModalConnect {
   private def divSelection(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val count = context.repo.cotos.selectedIds.size
     div(className := "selection")(
-      button(
-        className := "selection default",
-        onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.Selection(false))))
-      )(
-        s"Selected cotos (${context.repo.cotos.selectedIds.size})"
-      )
+      if (count == 1)
+        context.repo.cotos.selected.headOption.map(articleCoto)
+      else
+        button(
+          className := "selection default",
+          onClick := (_ =>
+            dispatch(Modal.Msg.OpenModal(Modal.Selection(false)))
+          )
+        )(
+          s"Selected cotos (${count})"
+        )
     )
+  }
 }

@@ -40,6 +40,10 @@ dialog.connect {
   }
 
   div.selection {
+    article.coto {
+      border: 2px dotted var(--selection-color);
+    }
+
     button.selection {
       display: block;
       width: 100%;
