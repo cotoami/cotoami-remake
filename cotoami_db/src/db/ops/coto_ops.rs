@@ -59,18 +59,16 @@ pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Co
     })
 }
 
-pub(crate) fn is_repost<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, bool> + '_ {
+pub(crate) fn any_reposts_in<'a, Conn: AsReadableConn>(
+    ids: &'a [Id<Coto>],
+) -> impl Operation<Conn, bool> + 'a {
     read_op(move |conn| {
-        let repost_of_id: Option<Option<String>> = cotos::table
-            .select(cotos::repost_of_id)
-            .filter(cotos::uuid.eq(id))
-            .first(conn)
-            .optional()?;
-        match repost_of_id {
-            Some(Some(_)) => Ok(true),
-            Some(None) => Ok(false),
-            None => bail!(DatabaseError::not_found(EntityKind::Coto, *id)),
-        }
+        let count: i64 = cotos::table
+            .select(diesel::dsl::count_star())
+            .filter(cotos::uuid.eq_any(ids))
+            .filter(cotos::repost_of_id.is_not_null())
+            .first(conn)?;
+        Ok(count > 0)
     })
 }
 
