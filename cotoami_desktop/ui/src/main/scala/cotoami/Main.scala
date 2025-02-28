@@ -73,10 +73,6 @@ object Main {
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[Msg]) = {
-    if (LinkingInfo.developmentMode) {
-      println(s"Main.update: ${msg.getClass()}")
-    }
-
     implicit val context: Context = model
     msg match {
       case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
