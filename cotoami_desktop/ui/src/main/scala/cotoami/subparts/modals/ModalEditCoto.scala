@@ -206,7 +206,7 @@ object ModalEditCoto {
     Modal.view(
       dialogClasses = optionalClasses(
         Seq(
-          ("coto-editor", true),
+          ("edit-coto", true),
           ("with-media-content", model.cotoForm.mediaBlob.isDefined)
         )
       ),
