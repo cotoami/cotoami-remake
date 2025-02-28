@@ -71,9 +71,9 @@ object Modal {
     }
   }
 
-  case class ItoEditor(model: ModalItoEditor.Model) extends Modal
-  object ItoEditor {
-    def apply(ito: Ito): ItoEditor = ItoEditor(ModalItoEditor.Model(ito))
+  case class EditIto(model: ModalEditIto.Model) extends Modal
+  object EditIto {
+    def apply(ito: Ito): EditIto = EditIto(ModalEditIto.Model(ito))
   }
 
   case class Selection(model: ModalSelection.Model) extends Modal
@@ -143,7 +143,7 @@ object Modal {
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
-    case class ItoEditorMsg(msg: ModalItoEditor.Msg) extends Msg
+    case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class ConnectMsg(msg: ModalConnect.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
@@ -199,10 +199,10 @@ object Modal {
           }
         }
 
-      case Msg.ItoEditorMsg(modalMsg) =>
-        stack.get[ItoEditor].map { case ItoEditor(modal) =>
-          ModalItoEditor.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(ItoEditor(modal), model), cmds)
+      case Msg.EditItoMsg(modalMsg) =>
+        stack.get[EditIto].map { case EditIto(modal) =>
+          ModalEditIto.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(EditIto(modal), model), cmds)
           }
         }
 
@@ -356,7 +356,7 @@ object Modal {
 
       case EditCoto(modal) => Some(ModalEditCoto(modal))
 
-      case ItoEditor(modal) => Some(ModalItoEditor(modal))
+      case EditIto(modal) => Some(ModalEditIto(modal))
 
       case Selection(modal) => Some(ModalSelection(modal))
 

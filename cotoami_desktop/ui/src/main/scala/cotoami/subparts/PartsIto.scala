@@ -39,7 +39,7 @@ object PartsIto {
           disabled = !canEditPin,
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
+            dispatch(Modal.Msg.OpenModal(Modal.EditIto(ito)))
           }
         ),
         ito.description.map(phrase =>
@@ -48,7 +48,7 @@ object PartsIto {
             onClick := (e => {
               e.stopPropagation()
               if (canEditPin)
-                dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
+                dispatch(Modal.Msg.OpenModal(Modal.EditIto(ito)))
             })
           )(phrase)
         )
@@ -85,7 +85,7 @@ object PartsIto {
           disabled = !canEditIto,
           onClick = e => {
             e.stopPropagation()
-            dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
+            dispatch(Modal.Msg.OpenModal(Modal.EditIto(ito)))
           }
         ),
         ito.description.map(phrase =>
@@ -94,7 +94,7 @@ object PartsIto {
             onClick := (e => {
               e.stopPropagation()
               if (canEditIto)
-                dispatch(Modal.Msg.OpenModal(Modal.ItoEditor(ito)))
+                dispatch(Modal.Msg.OpenModal(Modal.EditIto(ito)))
             })
           )(phrase)
         )

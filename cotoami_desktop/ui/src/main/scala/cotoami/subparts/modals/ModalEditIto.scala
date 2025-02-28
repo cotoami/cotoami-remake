@@ -13,7 +13,7 @@ import cotoami.backend.{ErrorJson, ItoBackend}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 
-object ModalItoEditor {
+object ModalEditIto {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -74,7 +74,7 @@ object ModalItoEditor {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.ItoEditorMsg(this).pipe(AppMsg.ModalMsg)
+    def into = Modal.Msg.EditItoMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -95,7 +95,7 @@ object ModalItoEditor {
       case Msg.Disconnected(Right(_)) =>
         (
           model.copy(disconnecting = false),
-          Modal.close(classOf[Modal.ItoEditor])
+          Modal.close(classOf[Modal.EditIto])
         )
 
       case Msg.Disconnected(Left(e)) =>
@@ -109,7 +109,7 @@ object ModalItoEditor {
       case Msg.Saved(Right(_)) =>
         (
           model.copy(saving = false),
-          Modal.close(classOf[Modal.ItoEditor])
+          Modal.close(classOf[Modal.EditIto])
         )
 
       case Msg.Saved(Left(e)) =>
@@ -128,7 +128,7 @@ object ModalItoEditor {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
       dialogClasses = "ito-editor",
-      closeButton = Some((classOf[Modal.ItoEditor], dispatch)),
+      closeButton = Some((classOf[Modal.EditIto], dispatch)),
       error = model.error
     )(
       if (context.repo.isPin(model.original))
