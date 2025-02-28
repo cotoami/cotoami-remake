@@ -127,7 +127,7 @@ object ModalEditIto {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     Modal.view(
-      dialogClasses = "ito-editor",
+      dialogClasses = "edit-ito",
       closeButton = Some((classOf[Modal.EditIto], dispatch)),
       error = model.error
     )(
