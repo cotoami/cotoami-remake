@@ -58,7 +58,7 @@ object ToolbarCoto {
             e.stopPropagation()
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.CotoEditor(coto)
+                Modal.EditCoto(coto)
               )
             )
           }

@@ -63,11 +63,11 @@ object Modal {
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Modal
 
-  case class CotoEditor(model: ModalCotoEditor.Model) extends Modal
-  object CotoEditor {
-    def apply(coto: Coto): (CotoEditor, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalCotoEditor.Model(coto)
-      (CotoEditor(model), cmd)
+  case class EditCoto(model: ModalEditCoto.Model) extends Modal
+  object EditCoto {
+    def apply(coto: Coto): (EditCoto, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalEditCoto.Model(coto)
+      (EditCoto(model), cmd)
     }
   }
 
@@ -142,7 +142,7 @@ object Modal {
 
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
-    case class CotoEditorMsg(msg: ModalCotoEditor.Msg) extends Msg
+    case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
     case class ItoEditorMsg(msg: ModalItoEditor.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class ConnectMsg(msg: ModalConnect.Msg) extends Msg
@@ -187,12 +187,12 @@ object Modal {
           }
         }
 
-      case Msg.CotoEditorMsg(modalMsg) =>
-        stack.get[CotoEditor].map { case CotoEditor(modal) =>
-          ModalCotoEditor.update(modalMsg, modal).pipe {
+      case Msg.EditCotoMsg(modalMsg) =>
+        stack.get[EditCoto].map { case EditCoto(modal) =>
+          ModalEditCoto.update(modalMsg, modal).pipe {
             case (modal, geomap, cmds) =>
               (
-                updateModal(CotoEditor(modal), model)
+                updateModal(EditCoto(modal), model)
                   .modify(_.geomap).setTo(geomap),
                 cmds
               )
@@ -354,7 +354,7 @@ object Modal {
           ModalWelcome(modal, info.recent_databases.toSeq)
         )
 
-      case CotoEditor(modal) => Some(ModalCotoEditor(modal))
+      case EditCoto(modal) => Some(ModalEditCoto(modal))
 
       case ItoEditor(modal) => Some(ModalItoEditor(modal))
 

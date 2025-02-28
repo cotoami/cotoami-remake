@@ -371,7 +371,7 @@ object ModalNodeProfile {
     buttonEdit(_ =>
       dispatch(
         (Modal.Msg.OpenModal.apply _).tupled(
-          Modal.CotoEditor(rootCoto)
+          Modal.EditCoto(rootCoto)
         )
       )
     )

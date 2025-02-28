@@ -16,7 +16,7 @@ import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
-object ModalCotoEditor {
+object ModalEditCoto {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -138,7 +138,7 @@ object ModalCotoEditor {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.CotoEditorMsg(this).pipe(AppMsg.ModalMsg)
+    def into = Modal.Msg.EditCotoMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -185,7 +185,7 @@ object ModalCotoEditor {
       case Msg.Saved(Right(_)) =>
         default.copy(
           _1 = model.copy(saving = false),
-          _3 = Modal.close(classOf[Modal.CotoEditor])
+          _3 = Modal.close(classOf[Modal.EditCoto])
         )
 
       case Msg.Saved(Left(e)) =>
@@ -210,7 +210,7 @@ object ModalCotoEditor {
           ("with-media-content", model.cotoForm.mediaBlob.isDefined)
         )
       ),
-      closeButton = Some((classOf[Modal.CotoEditor], dispatch)),
+      closeButton = Some((classOf[Modal.EditCoto], dispatch)),
       error = model.error
     )(
       if (model.original.isCotonoma)
