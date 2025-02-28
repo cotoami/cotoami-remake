@@ -49,6 +49,9 @@ pub enum DatabaseError {
 
     #[error("Duplicate repost")]
     DuplicateRepost,
+
+    #[error("Reposts cannot be connected")]
+    RepostsCannotBeConnected,
 }
 
 impl DatabaseError {

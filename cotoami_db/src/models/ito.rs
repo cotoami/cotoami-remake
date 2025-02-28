@@ -146,6 +146,8 @@ impl<'a> NewIto<'a> {
     }
 
     pub fn source_coto_id(&self) -> &'a Id<Coto> { self.source_coto_id }
+
+    pub fn target_coto_id(&self) -> &'a Id<Coto> { self.target_coto_id }
 }
 
 /////////////////////////////////////////////////////////////////////////////

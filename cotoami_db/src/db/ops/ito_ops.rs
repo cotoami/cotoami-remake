@@ -2,6 +2,7 @@
 
 use std::ops::DerefMut;
 
+use anyhow::bail;
 use chrono::NaiveDateTime;
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
@@ -9,7 +10,7 @@ use validator::Validate;
 
 use super::Page;
 use crate::{
-    db::{error::*, op::*},
+    db::{error::*, op::*, ops::coto_ops},
     models::{coto::Coto, ito::*, node::Node, Id},
     schema::itos,
 };
@@ -59,6 +60,14 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
 
 pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, Ito> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
+        // Ensure both of cotos are not reposts
+        if coto_ops::any_reposts_in(&[*new_ito.source_coto_id(), *new_ito.target_coto_id()])
+            .run(ctx)?
+        {
+            bail!(DatabaseError::RepostsCannotBeConnected);
+        }
+
+        // Deal with the order
         if let Some(order) = new_ito.order {
             ensure_space_at(new_ito.source_coto_id(), order).run(ctx)?;
         } else {
@@ -67,6 +76,7 @@ pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, It
                 .unwrap_or(0);
             new_ito.order = Some(last_number + 1);
         }
+
         diesel::insert_into(itos::table)
             .values(new_ito)
             .get_result(ctx.conn().deref_mut())
