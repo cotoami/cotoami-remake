@@ -12,7 +12,7 @@ fn crud_operations() -> Result<()> {
 
     let (_root_dir, db, node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
-    let operator = db.globals().local_node_as_operator()?;
+    let opr = db.globals().local_node_as_operator()?;
     let (root_cotonoma, _) = ds.local_node_root()?.unwrap();
 
     /////////////////////////////////////////////////////////////////////////////
@@ -20,8 +20,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let mock_time = time::mock_time();
-    let (coto, changelog) =
-        ds.post_coto(&CotoInput::new("hello"), &root_cotonoma.uuid, &operator)?;
+    let (coto, changelog) = ds.post_coto(&CotoInput::new("hello"), &root_cotonoma.uuid, &opr)?;
 
     // check the inserted coto
     assert_that!(
@@ -81,7 +80,7 @@ fn crud_operations() -> Result<()> {
     let diff = CotoContentDiff::default()
         .content("bar")
         .summary(Some("foo"));
-    let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &operator)?;
+    let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &opr)?;
 
     // check the edited coto
     assert_that!(
@@ -136,7 +135,7 @@ fn crud_operations() -> Result<()> {
             geolocation: eq(&FieldDiff::None),
         })
     );
-    let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &operator)?;
+    let (edited_coto, changelog) = ds.edit_coto(&coto.uuid, diff, &opr)?;
 
     // check the edited coto
     assert_that!(
@@ -180,7 +179,7 @@ fn crud_operations() -> Result<()> {
     // When: delete_coto
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog = ds.delete_coto(&coto.uuid, &operator)?;
+    let changelog = ds.delete_coto(&coto.uuid, &opr)?;
 
     // check if it is deleted from the db
     assert!(!ds.contains_coto(&coto.uuid)?);
