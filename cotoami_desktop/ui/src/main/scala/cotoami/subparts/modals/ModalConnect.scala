@@ -8,11 +8,12 @@ import slinky.web.html._
 import fui.Cmd
 import fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}
 import cotoami.repository.{Cotos, Itos, Root}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.backend.{ErrorJson, ItoBackend}
-import cotoami.subparts.{Modal, PartsCoto}
+import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 
 object ModalConnect {
 
@@ -23,10 +24,22 @@ object ModalConnect {
   case class Model(
       cotoId: Id[Coto],
       toSelection: Boolean = true,
+      descriptionInput: String = "",
       clearSelection: Boolean = true,
       connecting: Boolean = false,
       error: Option[String] = None
   ) {
+    def description: Option[String] =
+      Option.when(!descriptionInput.isBlank())(descriptionInput.trim)
+
+    val validate: Validation.Result =
+      description
+        .map(Ito.validateDescription)
+        .map(Validation.Result(_))
+        .getOrElse(Validation.Result.notYetValidated)
+
+    def readyToConnect: Boolean = !validate.failed && !connecting
+
     def connect(repo: Root): (Model, Cmd.One[AppMsg]) = {
       val acc: Cmd.One[Either[ErrorJson, Seq[Ito]]] = pure(Right(Seq.empty))
       val cmd = repo.cotos.selectedIds
@@ -57,7 +70,7 @@ object ModalConnect {
       ItoBackend.connect(
         if (toSelection) cotoId else selectedId,
         if (toSelection) selectedId else cotoId,
-        None,
+        description,
         None,
         None
       )
@@ -73,6 +86,7 @@ object ModalConnect {
 
   object Msg {
     case object Reverse extends Msg
+    case class DescriptionInput(description: String) extends Msg
     object ClearSelectionToggled extends Msg
     object Connect extends Msg
     case class Connected(result: Either[ErrorJson, Seq[Ito]]) extends Msg
@@ -85,6 +99,9 @@ object ModalConnect {
     msg match {
       case Msg.Reverse =>
         default.copy(_1 = model.modify(_.toSelection).using(!_))
+
+      case Msg.DescriptionInput(description) =>
+        default.copy(_1 = model.copy(descriptionInput = description))
 
       case Msg.ClearSelectionToggled =>
         default.copy(_1 = model.modify(_.clearSelection).using(!_))
@@ -143,7 +160,7 @@ object ModalConnect {
         else
           divSelection
       ),
-      sectionIto,
+      sectionIto(model),
       section(className := "target")(
         if (model.toSelection)
           divSelection
@@ -154,7 +171,7 @@ object ModalConnect {
         button(
           `type` := "button",
           className := "connect",
-          disabled := model.connecting,
+          disabled := !model.readyToConnect,
           aria - "busy" := model.connecting.toString(),
           onClick := (_ => dispatch(Msg.Connect))
         )("Connect"),
@@ -172,11 +189,20 @@ object ModalConnect {
     )
   }
 
-  private def sectionIto: ReactElement =
+  private def sectionIto(
+      model: Model
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")
-      )
+      ),
+      Option.when(context.repo.cotos.selectedIds.size == 1) {
+        PartsIto.inputDescription(
+          model.descriptionInput,
+          model.validate,
+          value => dispatch(Msg.DescriptionInput(value))
+        )
+      }
     )
 
   private def articleCoto(coto: Coto)(implicit

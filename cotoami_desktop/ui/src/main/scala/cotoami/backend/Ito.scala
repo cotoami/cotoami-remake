@@ -21,9 +21,7 @@ trait ItoJson extends js.Object {
 }
 
 object ItoJson {
-  def fetch(
-      id: Id[Ito]
-  ): Cmd.One[Either[ErrorJson, ItoJson]] =
+  def fetch(id: Id[Ito]): Cmd.One[Either[ErrorJson, ItoJson]] =
     Commands.send(Commands.Ito(id))
 
   def connect(
