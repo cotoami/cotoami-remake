@@ -43,7 +43,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<Cotonoma, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "uuid", *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
 pub(crate) fn pair<Conn: AsReadableConn>(
@@ -63,7 +63,7 @@ pub(crate) fn pair<Conn: AsReadableConn>(
 pub(crate) fn try_get_pair<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
-    pair(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "uuid", *id)))
+    pair(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
 pub(crate) fn get_by_coto_id<Conn: AsReadableConn>(
@@ -83,13 +83,8 @@ pub(crate) fn get_by_coto_id<Conn: AsReadableConn>(
 pub(crate) fn try_get_by_coto_id<Conn: AsReadableConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + '_ {
-    get_by_coto_id(id).map(move |opt| {
-        opt.ok_or(DatabaseError::not_found(
-            EntityKind::Cotonoma,
-            "coto_id",
-            *id,
-        ))
-    })
+    get_by_coto_id(id)
+        .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, *id)))
 }
 
 pub(crate) fn get_by_name<'a, Conn: AsReadableConn>(
@@ -113,7 +108,7 @@ pub(crate) fn try_get_by_name<'a, Conn: AsReadableConn>(
     node_id: &'a Id<Node>,
 ) -> impl Operation<Conn, Result<(Cotonoma, Coto), DatabaseError>> + 'a {
     get_by_name(name, node_id)
-        .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, "name", name)))
+        .map(move |opt| opt.ok_or(DatabaseError::not_found(EntityKind::Cotonoma, name)))
 }
 
 pub(crate) fn search_by_prefix<Conn: AsReadableConn>(

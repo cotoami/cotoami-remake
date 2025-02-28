@@ -36,7 +36,7 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, O
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Coto>,
 ) -> impl Operation<Conn, Result<Coto, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, "uuid", *id)))
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Coto, *id)))
 }
 
 pub(crate) fn get_original<Conn: AsReadableConn>(coto: Coto) -> impl Operation<Conn, Coto> {
@@ -69,7 +69,7 @@ pub(crate) fn is_repost<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<C
         match repost_of_id {
             Some(Some(_)) => Ok(true),
             Some(None) => Ok(false),
-            None => bail!(DatabaseError::not_found(EntityKind::Coto, "uuid", *id)),
+            None => bail!(DatabaseError::not_found(EntityKind::Coto, *id)),
         }
     })
 }

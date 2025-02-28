@@ -7,15 +7,15 @@ use anyhow::bail;
 use crate::{
     db::{error::*, op::*},
     models::{
-        Id,
         node::{
-            Node,
             child::NewChildNode,
             client::{ClientNode, NewClientNode},
             parent::{NewParentNode, ParentNode},
             roles::{DatabaseRole, NetworkRole},
             server::{NewServerNode, ServerNode},
+            Node,
         },
+        Id,
     },
 };
 
@@ -95,11 +95,7 @@ pub(crate) fn set_network_disabled(
                 let client = client_ops::set_disabled(node_id, disabled).run(ctx)?;
                 Ok(NetworkRole::Client(client))
             }
-            None => bail!(DatabaseError::not_found(
-                EntityKind::NetworkRole,
-                "node_id",
-                *node_id
-            )),
+            None => bail!(DatabaseError::not_found(EntityKind::NetworkRole, *node_id)),
         }
     })
 }

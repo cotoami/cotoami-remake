@@ -34,13 +34,7 @@ pub(crate) fn get<Conn: AsReadableConn>(
 pub(crate) fn try_get<Conn: AsReadableConn>(
     id: &Id<Node>,
 ) -> impl Operation<Conn, Result<ServerNode, DatabaseError>> + '_ {
-    get(id).map(|opt| {
-        opt.ok_or(DatabaseError::not_found(
-            EntityKind::ServerNode,
-            "node_id",
-            *id,
-        ))
-    })
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::ServerNode, *id)))
 }
 
 /// Returns all [ServerNode]/[Node] pairs in arbitrary order.

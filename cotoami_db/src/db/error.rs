@@ -20,12 +20,8 @@ pub enum DatabaseError {
     #[error("Root cotonoma has not yet been created")]
     RootCotonomaNotFound,
 
-    #[error("Not found: {kind} ({by}: {value})")]
-    EntityNotFound {
-        kind: EntityKind,
-        by: String,
-        value: String,
-    },
+    #[error("Not found: {kind} (by: {by})")]
+    EntityNotFound { kind: EntityKind, by: String },
 
     #[error("Authentication failed")]
     AuthenticationFailed,
@@ -56,11 +52,10 @@ pub enum DatabaseError {
 }
 
 impl DatabaseError {
-    pub fn not_found(kind: EntityKind, by: impl Into<String>, value: impl Into<String>) -> Self {
+    pub fn not_found(kind: EntityKind, by: impl Into<String>) -> Self {
         DatabaseError::EntityNotFound {
             kind,
             by: by.into(),
-            value: value.into(),
         }
     }
 }

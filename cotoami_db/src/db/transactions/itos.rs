@@ -1,11 +1,11 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 use crate::{
     db::{
-        DatabaseSession,
         error::*,
         op::*,
-        ops::{Page, changelog_ops, coto_ops, ito_ops},
+        ops::{changelog_ops, coto_ops, ito_ops, Page},
+        DatabaseSession,
     },
     models::prelude::*,
 };
@@ -97,7 +97,7 @@ impl<'a> DatabaseSession<'a> {
                 let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
                 Ok(changelog)
             } else {
-                Err(DatabaseError::not_found(EntityKind::Ito, "uuid", *id))?
+                Err(DatabaseError::not_found(EntityKind::Ito, *id))?
             }
         })
     }

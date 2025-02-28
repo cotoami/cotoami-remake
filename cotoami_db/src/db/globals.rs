@@ -141,12 +141,7 @@ impl Globals {
         &self,
         id: &Id<Node>,
     ) -> Result<MappedRwLockWriteGuard<ParentNode>> {
-        RwLockWriteGuard::try_map(self.parent_nodes.write(), |x| x.get_mut(id)).map_err(|_| {
-            anyhow!(DatabaseError::not_found(
-                EntityKind::ParentNode,
-                "node_id",
-                *id
-            ))
-        })
+        RwLockWriteGuard::try_map(self.parent_nodes.write(), |x| x.get_mut(id))
+            .map_err(|_| anyhow!(DatabaseError::not_found(EntityKind::ParentNode, *id)))
     }
 }
