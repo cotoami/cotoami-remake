@@ -2,12 +2,12 @@
 
 use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{Page, cotonoma_ops};
+use super::{cotonoma_ops, Page};
 use crate::{
     db::{
         error::*,
@@ -15,10 +15,10 @@ use crate::{
         ops::{detect_cjk_chars, escape_like_pattern},
     },
     models::{
-        Geolocation, Id,
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},
         cotonoma::Cotonoma,
         node::Node,
+        Geolocation, Id,
     },
     schema::cotos,
 };
@@ -56,6 +56,21 @@ pub(crate) fn contains<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Co
             .filter(cotos::uuid.eq(id))
             .first(conn)?;
         Ok(count > 0)
+    })
+}
+
+pub(crate) fn is_repost<Conn: AsReadableConn>(id: &Id<Coto>) -> impl Operation<Conn, bool> + '_ {
+    read_op(move |conn| {
+        let repost_of_id: Option<Option<String>> = cotos::table
+            .select(cotos::repost_of_id)
+            .filter(cotos::uuid.eq(id))
+            .first(conn)
+            .optional()?;
+        match repost_of_id {
+            Some(Some(_)) => Ok(true),
+            Some(None) => Ok(false),
+            None => bail!(DatabaseError::not_found(EntityKind::Coto, "uuid", *id)),
+        }
     })
 }
 
