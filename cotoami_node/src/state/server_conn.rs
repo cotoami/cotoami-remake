@@ -241,7 +241,6 @@ impl ServerConnections {
     pub fn try_get(&self, server_id: &Id<Node>) -> Result<ServerConnection> {
         self.get(server_id).ok_or(anyhow!(DatabaseError::not_found(
             EntityKind::ServerNode,
-            "node_id",
             *server_id,
         )))
     }
