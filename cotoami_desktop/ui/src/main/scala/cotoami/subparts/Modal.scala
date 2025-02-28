@@ -87,6 +87,12 @@ object Modal {
     def apply(cotoId: Id[Coto]): Connect = Connect(ModalConnect.Model(cotoId))
   }
 
+  case class Subcoto(model: ModalSubcoto.Model) extends Modal
+  object Subcoto {
+    def apply(sourceCotoId: Id[Coto]): Subcoto =
+      Subcoto(ModalSubcoto.Model(sourceCotoId))
+  }
+
   case class Incorporate(
       model: ModalIncorporate.Model = ModalIncorporate.Model()
   ) extends Modal
@@ -146,6 +152,7 @@ object Modal {
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class ConnectMsg(msg: ModalConnect.Msg) extends Msg
+    case class SubcotoMsg(msg: ModalSubcoto.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
     case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
@@ -227,6 +234,13 @@ object Modal {
                   .modify(_.repo.cotos).setTo(cotos),
                 cmds
               )
+          }
+        }
+
+      case Msg.SubcotoMsg(modalMsg) =>
+        stack.get[Subcoto].map { case Subcoto(modal) =>
+          ModalSubcoto.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(Subcoto(modal), model), cmds)
           }
         }
 
@@ -361,6 +375,8 @@ object Modal {
       case Selection(modal) => Some(ModalSelection(modal))
 
       case Connect(modal) => Some(ModalConnect(modal))
+
+      case Subcoto(modal) => Some(ModalSubcoto(modal))
 
       case Incorporate(modal) => Some(ModalIncorporate(modal))
 

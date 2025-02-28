@@ -69,7 +69,11 @@ object ToolbarCoto {
           classes = "add-sub-coto",
           symbol = "add",
           tip = Some("Write a sub-coto"),
-          tipPlacement = "left"
+          tipPlacement = "left",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.Subcoto(coto.id)))
+          }
         )
       },
       Option.when(context.repo.canRepost(coto.id)) {
