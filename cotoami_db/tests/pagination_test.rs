@@ -9,7 +9,7 @@ fn pagination() -> Result<()> {
     // setup
     let (_root_dir, db, _node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
-    let operator = db.globals().local_node_as_operator()?;
+    let opr = db.globals().local_node_as_operator()?;
     let (root_cotonoma, _) = ds.local_node_root()?.unwrap();
 
     // when
@@ -28,7 +28,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 0);
 
     // when
-    let _ = ds.post_coto(&CotoInput::new("1"), &root_cotonoma.uuid, &operator)?;
+    let _ = ds.post_coto(&CotoInput::new("1"), &root_cotonoma.uuid, &opr)?;
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), false, 2, 0)?;
 
     // then
@@ -46,7 +46,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    let _ = ds.post_coto(&CotoInput::new("2"), &root_cotonoma.uuid, &operator)?;
+    let _ = ds.post_coto(&CotoInput::new("2"), &root_cotonoma.uuid, &opr)?;
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), false, 2, 0)?;
 
     // then
@@ -69,7 +69,7 @@ fn pagination() -> Result<()> {
     assert_eq!(paginated.total_pages(), 1);
 
     // when
-    let _ = ds.post_coto(&CotoInput::new("3"), &root_cotonoma.uuid, &operator)?;
+    let _ = ds.post_coto(&CotoInput::new("3"), &root_cotonoma.uuid, &opr)?;
     let paginated = ds.recent_cotos(None, Some(&root_cotonoma.uuid), false, 2, 0)?;
 
     // then
