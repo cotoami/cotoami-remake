@@ -12,13 +12,13 @@ fn crud_operations() -> Result<()> {
 
     let (_root_dir, db, node) = common::setup_db("My Node")?;
     let mut ds = db.new_session()?;
-    let operator = db.globals().local_node_as_operator()?;
+    let opr = db.globals().local_node_as_operator()?;
     let (root_cotonoma, _) = ds.local_node_root()?.unwrap();
 
-    let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root_cotonoma.uuid, &operator)?;
-    let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root_cotonoma.uuid, &operator)?;
-    let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root_cotonoma.uuid, &operator)?;
-    let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root_cotonoma.uuid, &operator)?;
+    let (coto1, _) = ds.post_coto(&CotoInput::new("coto1"), &root_cotonoma.uuid, &opr)?;
+    let (coto2, _) = ds.post_coto(&CotoInput::new("coto2"), &root_cotonoma.uuid, &opr)?;
+    let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root_cotonoma.uuid, &opr)?;
+    let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root_cotonoma.uuid, &opr)?;
 
     /////////////////////////////////////////////////////////////////////////////
     // When: create ito1: coto1 => coto2
@@ -27,7 +27,7 @@ fn crud_operations() -> Result<()> {
     let mock_time = time::mock_time();
     let (ito1, changelog) = ds.connect(
         &ItoInput::new(coto1.uuid, coto2.uuid).description("hello"),
-        &operator,
+        &opr,
     )?;
 
     // check the created ito
@@ -81,7 +81,7 @@ fn crud_operations() -> Result<()> {
         &ItoInput::new(coto1.uuid, coto3.uuid)
             .description("bye")
             .details("some details"),
-        &operator,
+        &opr,
     )?;
 
     // check the created ito
@@ -114,7 +114,7 @@ fn crud_operations() -> Result<()> {
     // When: create ito3: coto1 =(order number 1)=> coto4
     /////////////////////////////////////////////////////////////////////////////
 
-    let (ito3, _) = ds.connect(&ItoInput::new(coto1.uuid, coto4.uuid).order(1), &operator)?;
+    let (ito3, _) = ds.connect(&ItoInput::new(coto1.uuid, coto4.uuid).order(1), &opr)?;
 
     // check if the order of the itos has been updated
     assert_eq!(ds.ito(&ito3.uuid)?.unwrap().order, 1);
@@ -125,7 +125,7 @@ fn crud_operations() -> Result<()> {
     // When: move ito2 to the head
     /////////////////////////////////////////////////////////////////////////////
 
-    let (_, changelog) = ds.change_ito_order(&ito2.uuid, 1, &operator)?;
+    let (_, changelog) = ds.change_ito_order(&ito2.uuid, 1, &opr)?;
 
     assert_that!(
         changelog,
@@ -151,7 +151,7 @@ fn crud_operations() -> Result<()> {
     let diff = ItoContentDiff::default()
         .description(Some("hello"))
         .details(Some("hello details"));
-    let (edited_ito1, changelog) = ds.edit_ito(&ito1.uuid, diff, &operator)?;
+    let (edited_ito1, changelog) = ds.edit_ito(&ito1.uuid, diff, &opr)?;
 
     // check the edited ito
     assert_that!(
@@ -185,7 +185,7 @@ fn crud_operations() -> Result<()> {
     // When: delete ito1
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog = ds.disconnect(&ito1.uuid, &operator)?;
+    let changelog = ds.disconnect(&ito1.uuid, &opr)?;
 
     // check if it is deleted from the db
     assert_eq!(ds.ito(&ito1.uuid)?, None);
