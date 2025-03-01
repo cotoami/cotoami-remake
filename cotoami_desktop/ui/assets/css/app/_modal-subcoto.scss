@@ -1,6 +1,9 @@
 dialog.subcoto {
-  article {
+  &>article {
     width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2));
+  }
+
+  article {
     max-width: none;
   }
 }
