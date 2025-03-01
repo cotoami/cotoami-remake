@@ -7,7 +7,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id}
-import cotoami.components.ScrollArea
+import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, PartsCoto}
 
 object ModalSubcoto {
@@ -50,6 +50,11 @@ object ModalSubcoto {
     )(
       section(className := "source")(
         sourceCoto.map(articleCoto)
+      ),
+      section(className := "ito")(
+        div(className := "ito-icon")(
+          materialSymbol("arrow_downward")
+        )
       )
     )
   }
