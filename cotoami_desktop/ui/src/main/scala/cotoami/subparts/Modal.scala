@@ -239,8 +239,13 @@ object Modal {
 
       case Msg.SubcotoMsg(modalMsg) =>
         stack.get[Subcoto].map { case Subcoto(modal) =>
-          ModalSubcoto.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(Subcoto(modal), model), cmds)
+          ModalSubcoto.update(modalMsg, modal).pipe {
+            case (modal, geomap, cmds) =>
+              (
+                updateModal(Subcoto(modal), model)
+                  .modify(_.geomap).setTo(geomap),
+                cmds
+              )
           }
         }
 

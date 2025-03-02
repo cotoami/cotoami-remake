@@ -6,9 +6,11 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id}
+import cotoami.utils.Validation
+import cotoami.models.{Coto, Id, Ito}
 import cotoami.components.{materialSymbol, ScrollArea}
-import cotoami.subparts.{Modal, PartsCoto}
+import cotoami.subparts.{Modal, PartsCoto, PartsIto}
+import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModalSubcoto {
 
@@ -18,8 +20,18 @@ object ModalSubcoto {
 
   case class Model(
       sourceCotoId: Id[Coto],
+      descriptionInput: String = "",
       error: Option[String] = None
-  )
+  ) {
+    def description: Option[String] =
+      Option.when(!descriptionInput.isBlank())(descriptionInput.trim)
+
+    val validateDescription: Validation.Result =
+      description
+        .map(Ito.validateDescription)
+        .map(Validation.Result(_))
+        .getOrElse(Validation.Result.notYetValidated)
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -29,8 +41,19 @@ object ModalSubcoto {
     def into = Modal.Msg.SubcotoMsg(this).pipe(AppMsg.ModalMsg)
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+  object Msg {
+    case class DescriptionInput(description: String) extends Msg
+  }
+
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Geomap, Cmd[AppMsg]) = {
+    val default = (model, context.geomap, Cmd.none)
+    msg match {
+      case Msg.DescriptionInput(description) =>
+        default.copy(_1 = model.copy(descriptionInput = description))
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -51,11 +74,7 @@ object ModalSubcoto {
       section(className := "source")(
         sourceCoto.map(articleCoto)
       ),
-      section(className := "ito")(
-        div(className := "ito-icon")(
-          materialSymbol("arrow_downward")
-        )
-      )
+      sectionIto(model)
     )
   }
 
@@ -70,6 +89,20 @@ object ModalSubcoto {
         ScrollArea()(
           PartsCoto.divContentPreview(coto)
         )
+      )
+    )
+
+  private def sectionIto(
+      model: Model
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "ito")(
+      div(className := "ito-icon")(
+        materialSymbol("arrow_downward")
+      ),
+      PartsIto.inputDescription(
+        model.descriptionInput,
+        model.validateDescription,
+        value => dispatch(Msg.DescriptionInput(value))
       )
     )
 }
