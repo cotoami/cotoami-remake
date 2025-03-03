@@ -90,6 +90,13 @@ div.app {
     }
   }
 
+  button span.shortcut-help {
+    margin-left: 4px;
+    opacity: .7;
+    font-size: 0.8rem;
+    vertical-align: text-top;
+  }
+
   button.help {
     margin-left: 8px;
     vertical-align: middle;
