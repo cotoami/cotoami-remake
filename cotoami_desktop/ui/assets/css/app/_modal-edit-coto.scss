@@ -17,31 +17,31 @@ dialog.edit-coto {
         flex: 1;
         min-height: 0; // let this item shrink below the content size
 
-        section.coto-editor {
-          height: 100%;
-        }
+        display: flex;
+        flex-direction: column;
 
+        section.coto-editor,
         section.coto-preview {
-          height: 100%;
-        }
-      }
-
-      div.split-pane.media-and-coto-form {
-        flex: 1;
-
-        .separator-inner {
-          border-style: none !important;
+          flex: 1;
         }
 
-        div.coto-form {
-          flex: none;
-          height: 100%;
-        }
-      }
+        div.split-pane {
+          flex: 1;
 
-      section.validation-error {
-        padding-top: 4px;
-        padding-left: 8px;
+          .separator-inner {
+            border-style: none !important;
+          }
+
+          .split-pane-secondary {
+            display: flex;
+            flex-direction: column;
+          }
+        }
+
+        section.validation-error {
+          padding-top: 4px;
+          padding-left: 8px;
+        }
       }
 
       div.buttons {

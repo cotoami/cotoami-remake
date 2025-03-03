@@ -11,7 +11,7 @@ import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
+import cotoami.components.{materialSymbol, optionalClasses}
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -241,14 +241,10 @@ object ModalEditCoto {
           Validation.sectionValidationError(model.cotonomaForm.validation)
         )
       },
-      divCotoForm(model),
-      ulAttributes(
-        model.cotoForm.dateTimeRange,
-        model.cotoForm.mediaDateTime,
-        context.geomap.focusedLocation,
-        model.cotoForm.mediaLocation
+      CotoForm(
+        model = model.cotoForm,
+        onCtrlEnter = () => dispatch(Msg.Save)
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
-      CotoForm.sectionValidationError(model.cotoForm),
       div(className := "buttons")(
         CotoForm.buttonPreview(model = model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
@@ -261,31 +257,4 @@ object ModalEditCoto {
         )("Save", span(className := "shortcut-help")("(Ctrl + Enter)"))
       )
     )
-
-  private def divCotoForm(model: Model)(implicit
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement = {
-    val divForm =
-      div(className := "coto-form")(
-        CotoForm.sectionEditorOrPreview(
-          model = model.cotoForm,
-          onCtrlEnter = () => dispatch(Msg.Save)
-        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
-      )
-
-    CotoForm.sectionMediaPreview(model.cotoForm)(submsg =>
-      dispatch(Msg.CotoFormMsg(submsg))
-    ) match {
-      case Some(mediaPreview) =>
-        SplitPane(
-          vertical = false,
-          initialPrimarySize = 300,
-          className = Some("media-and-coto-form"),
-          primary = SplitPane.Primary.Props()(mediaPreview),
-          secondary = SplitPane.Secondary.Props()(divForm)
-        )
-
-      case None => divForm
-    }
-  }
 }

@@ -14,7 +14,7 @@ import cotoami.Context
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
-import cotoami.components.{materialSymbol, toolButton, ScrollArea}
+import cotoami.components.{materialSymbol, toolButton, ScrollArea, SplitPane}
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object EditorCoto {
@@ -209,6 +209,40 @@ object EditorCoto {
             case None           => context.geomap
           })
       }
+    }
+
+    def apply(
+        model: CotoForm.Model,
+        onCtrlEnter: () => Unit,
+        onFocus: Option[() => Unit] = None,
+        vertical: Boolean = false
+    )(implicit
+        context: Context,
+        dispatch: Msg => Unit
+    ): ReactElement = {
+      val editor = Fragment(
+        sectionEditorOrPreview(model, onCtrlEnter, onFocus)(dispatch),
+        ulAttributes(
+          model.dateTimeRange,
+          model.mediaDateTime,
+          context.geomap.focusedLocation,
+          model.mediaLocation
+        ),
+        sectionValidationError(model)
+      )
+      div(className := "coto-form")(
+        sectionMediaPreview(model)(dispatch) match {
+          case Some(mediaPreview) =>
+            SplitPane(
+              vertical = vertical,
+              initialPrimarySize = 300,
+              primary = SplitPane.Primary.Props()(mediaPreview),
+              secondary = SplitPane.Secondary.Props()(editor)
+            )
+
+          case None => editor
+        }
+      )
     }
 
     def sectionEditorOrPreview(
