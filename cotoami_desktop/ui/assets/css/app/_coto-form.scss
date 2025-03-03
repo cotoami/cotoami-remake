@@ -1,0 +1,30 @@
+div.coto-form {
+  flex: 1;
+  min-height: 0; // let this item shrink below the content size
+
+  display: flex;
+  flex-direction: column;
+
+  section.coto-editor,
+  section.coto-preview {
+    flex: 1;
+  }
+
+  div.split-pane {
+    flex: 1;
+
+    .separator-inner {
+      border-style: none !important;
+    }
+
+    .split-pane-secondary {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  section.validation-error {
+    padding-top: 4px;
+    padding-left: 8px;
+  }
+}
