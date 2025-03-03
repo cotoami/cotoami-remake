@@ -241,22 +241,7 @@ object ModalEditCoto {
           Validation.sectionValidationError(model.cotonomaForm.validation)
         )
       },
-      divCotoForm(model).pipe { divForm =>
-        CotoForm.sectionMediaPreview(model.cotoForm)(submsg =>
-          dispatch(Msg.CotoFormMsg(submsg))
-        ) match {
-          case Some(mediaPreview) =>
-            SplitPane(
-              vertical = false,
-              initialPrimarySize = 300,
-              className = Some("media-and-coto-form"),
-              primary = SplitPane.Primary.Props()(mediaPreview),
-              secondary = SplitPane.Secondary.Props()(divForm)
-            )
-
-          case None => divForm
-        }
-      },
+      divCotoForm(model),
       ulAttributes(
         model.cotoForm.dateTimeRange,
         model.cotoForm.mediaDateTime,
@@ -279,11 +264,28 @@ object ModalEditCoto {
 
   private def divCotoForm(model: Model)(implicit
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
-    div(className := "coto-form")(
-      CotoForm.sectionEditorOrPreview(
-        model = model.cotoForm,
-        onCtrlEnter = () => dispatch(Msg.Save)
-      )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
-    )
+  ): ReactElement = {
+    val divForm =
+      div(className := "coto-form")(
+        CotoForm.sectionEditorOrPreview(
+          model = model.cotoForm,
+          onCtrlEnter = () => dispatch(Msg.Save)
+        )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      )
+
+    CotoForm.sectionMediaPreview(model.cotoForm)(submsg =>
+      dispatch(Msg.CotoFormMsg(submsg))
+    ) match {
+      case Some(mediaPreview) =>
+        SplitPane(
+          vertical = false,
+          initialPrimarySize = 300,
+          className = Some("media-and-coto-form"),
+          primary = SplitPane.Primary.Props()(mediaPreview),
+          secondary = SplitPane.Secondary.Props()(divForm)
+        )
+
+      case None => divForm
+    }
+  }
 }
