@@ -10,6 +10,7 @@ import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}
 import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto}
+import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object ModalSubcoto {
@@ -21,6 +22,7 @@ object ModalSubcoto {
   case class Model(
       sourceCotoId: Id[Coto],
       descriptionInput: String = "",
+      cotoForm: CotoForm.Model = CotoForm.Model(),
       error: Option[String] = None
   ) {
     def description: Option[String] =
@@ -43,6 +45,7 @@ object ModalSubcoto {
 
   object Msg {
     case class DescriptionInput(description: String) extends Msg
+    case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -52,6 +55,15 @@ object ModalSubcoto {
     msg match {
       case Msg.DescriptionInput(description) =>
         default.copy(_1 = model.copy(descriptionInput = description))
+
+      case Msg.CotoFormMsg(submsg) => {
+        val (form, geomap, subcmd) = CotoForm.update(submsg, model.cotoForm)
+        default.copy(
+          _1 = model.copy(cotoForm = form),
+          _2 = geomap,
+          _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+        )
+      }
     }
   }
 
@@ -104,5 +116,15 @@ object ModalSubcoto {
         model.validateDescription,
         value => dispatch(Msg.DescriptionInput(value))
       )
+    )
+
+  private def divCotoForm(model: Model)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    div(className := "coto-form")(
+      CotoForm.sectionEditorOrPreview(
+        model = model.cotoForm,
+        onCtrlEnter = () => ()
+      )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
 }
