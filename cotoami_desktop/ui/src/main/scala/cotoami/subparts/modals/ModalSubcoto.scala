@@ -86,7 +86,12 @@ object ModalSubcoto {
       section(className := "source")(
         sourceCoto.map(articleCoto)
       ),
-      sectionIto(model)
+      sectionIto(model),
+      CotoForm(
+        model = model.cotoForm,
+        vertical = true,
+        onCtrlEnter = () => ()
+      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
   }
 
@@ -116,15 +121,5 @@ object ModalSubcoto {
         model.validateDescription,
         value => dispatch(Msg.DescriptionInput(value))
       )
-    )
-
-  private def divCotoForm(model: Model)(implicit
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
-    div(className := "coto-form")(
-      CotoForm.sectionEditorOrPreview(
-        model = model.cotoForm,
-        onCtrlEnter = () => ()
-      )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
     )
 }

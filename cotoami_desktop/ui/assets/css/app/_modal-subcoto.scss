@@ -1,6 +1,23 @@
 dialog.subcoto {
   &>article {
     width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2));
+
+    div.modal-body {
+      height: 70vh;
+
+      display: flex;
+      flex-direction: column;
+
+      div.coto-form {
+        flex: 1;
+      }
+    }
+  }
+
+  section.source {
+    article.coto div.body div.scroll-area {
+      max-height: 150px;
+    }
   }
 
   article {
