@@ -11,7 +11,8 @@ div.coto-form {
   }
 
   div.split-pane {
-    flex: 1;
+    width: 100%;
+    height: 100%;
 
     .separator-inner {
       border-style: none !important;
@@ -26,5 +27,172 @@ div.coto-form {
   section.validation-error {
     padding-top: 4px;
     padding-left: 8px;
+  }
+}
+
+section.coto-editor {
+  display: flex;
+  flex-direction: column;
+
+  input.summary {
+    border-radius: 0;
+    border-style: none;
+    border-bottom: var(--border-width) solid var(--form-element-border-color);
+    box-shadow: none;
+
+    &:is(:active, :focus) {
+      border-bottom: var(--border-width) solid var(--form-element-border-color);
+      box-shadow: none;
+    }
+  }
+
+  textarea {
+    flex: 1;
+
+    margin: 0;
+    border-radius: 0;
+    border-style: none;
+    height: 100%;
+    resize: none;
+    box-shadow: none;
+  }
+
+  div.input-image {
+    padding: 5px;
+    background-color: var(--input-background-color);
+    cursor: pointer;
+
+    section.input-file {
+      height: 40px;
+      background-color: var(--background-color);
+
+      &.drag-active {
+        height: 80px;
+      }
+
+      p {
+        font-size: 0.9rem;
+        text-align: center;
+      }
+    }
+  }
+}
+
+section.coto-preview {
+  padding: 16px;
+  background-color: var(--card-background-color);
+
+  section.summary {
+    margin-bottom: 16px;
+    color: var(--muted-color);
+    font-weight: 700;
+  }
+}
+
+section.media-preview {
+  display: flex;
+  flex-direction: column;
+
+  div.media-content {
+    flex: 1;
+    position: relative;
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 1px; // keep it from overlapping with section.coto-type-switch
+
+    // let this item shrink below the content size
+    min-height: 0;
+    min-width: 0;
+
+    img {
+      object-fit: contain;
+      max-height: 100%;
+    }
+
+    button.delete {
+      position: absolute;
+      top: 0;
+      right: 0;
+
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 20px;
+      background-color: rgba(0, 0, 0, .1);
+    }
+  }
+}
+
+input.cotonoma-name {
+  border-radius: 0;
+  border-style: none;
+  box-shadow: none;
+}
+
+ul.attributes {
+  font-size: 0.9rem;
+
+  li.attribute {
+    margin: 8px 0;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    div.attribute-name {
+      width: 100px;
+      padding-left: 10px;
+
+      display: inline-flex;
+      justify-content: start;
+      align-items: center;
+
+      font-weight: 700;
+
+      span.material-symbols {
+        margin-right: 3px;
+      }
+    }
+
+    div.attribute-value {
+      flex: 1;
+      font-size: 0.8rem;
+
+      span.value {
+        margin-left: 6px;
+        opacity: 0.6;
+      }
+    }
+
+    div.use-media-metadata {
+      padding-right: 10px;
+
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+
+      button {
+        border: 1px solid var(--pane-border-color);
+        border-radius: var(--border-radius);
+        padding: 4px 12px;
+      }
+    }
+
+    div.attribute-delete {
+      width: 40px;
+
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+
+      button.delete {
+        font-size: 20px;
+      }
+    }
   }
 }
