@@ -7,37 +7,6 @@ dialog.repost {
     display: flex;
     flex-direction: row;
 
-    .cotonoma-select {
-      flex: 1;
-      color: var(--color-in-white-background);
-
-      // Reset the pico style
-      input {
-        height: auto;
-
-        &:is(:active, :focus) {
-          box-shadow: none;
-        }
-      }
-
-      img.node-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
-        vertical-align: top;
-        margin-right: 5px;
-      }
-
-      span.cotonoma-name {
-        font-weight: 600;
-      }
-
-      span.description {
-        margin-right: 10px;
-        opacity: 0.7;
-      }
-    }
-
     button.repost {
       height: 39px;
       margin-left: 4px;

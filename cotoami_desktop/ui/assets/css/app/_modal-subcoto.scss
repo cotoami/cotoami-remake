@@ -20,7 +20,39 @@ dialog.subcoto {
     }
   }
 
+  section.post {
+    margin-top: var(--spacing);
+
+    display: flex;
+    flex-direction: row;
+
+    div.space {
+      flex: 1;
+    }
+
+    .cotonoma-select {
+      width: 300px;
+    }
+
+    button.post {
+      height: 39px;
+      margin-left: 10px;
+      padding-top: 6px;
+
+      span.shortcut-help {
+        margin-left: 4px;
+        opacity: .7;
+        font-size: 0.8rem;
+        vertical-align: text-top;
+      }
+    }
+  }
+
   article {
     max-width: none;
+  }
+
+  &.with-media-content>article {
+    width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2) + 200px);
   }
 }

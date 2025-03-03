@@ -8,7 +8,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}
-import cotoami.components.{materialSymbol, ScrollArea}
+import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -77,7 +77,12 @@ object ModalSubcoto {
   ): ReactElement = {
     val sourceCoto = context.repo.cotos.get(model.sourceCotoId)
     Modal.view(
-      dialogClasses = "subcoto",
+      dialogClasses = optionalClasses(
+        Seq(
+          ("subcoto", true),
+          ("with-media-content", model.cotoForm.mediaBlob.isDefined)
+        )
+      ),
       closeButton = Some((classOf[Modal.Subcoto], dispatch)),
       error = model.error
     )(
@@ -91,7 +96,19 @@ object ModalSubcoto {
         model = model.cotoForm,
         vertical = true,
         onCtrlEnter = () => ()
-      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg)))
+      )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+      section(className := "post")(
+        div(className := "space")(),
+        Select(
+          className = "cotonoma-select",
+          options = Seq.empty,
+          placeholder = Some("Post to...")
+        ),
+        button(
+          className := "post",
+          `type` := "button"
+        )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
+      )
     )
   }
 
