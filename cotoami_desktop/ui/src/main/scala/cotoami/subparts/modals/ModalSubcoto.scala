@@ -7,7 +7,8 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Coto, Id, Ito}
+import cotoami.models.{Coto, Cotonoma, Id, Ito}
+import cotoami.repository.Root
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 import cotoami.subparts.EditorCoto._
@@ -21,6 +22,7 @@ object ModalSubcoto {
 
   case class Model(
       sourceCotoId: Id[Coto],
+      sourceCotonomas: Seq[Cotonoma],
       descriptionInput: String = "",
       cotoForm: CotoForm.Model = CotoForm.Model(),
       error: Option[String] = None
@@ -33,6 +35,16 @@ object ModalSubcoto {
         .map(Ito.validateDescription)
         .map(Validation.Result(_))
         .getOrElse(Validation.Result.notYetValidated)
+  }
+
+  object Model {
+    def apply(sourceCotoId: Id[Coto], repo: Root): Model =
+      Model(
+        sourceCotoId = sourceCotoId,
+        sourceCotonomas = repo.cotos.get(sourceCotoId)
+          .map(_.postedInIds.map(repo.cotonomas.get).flatten)
+          .getOrElse(Seq.empty)
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
