@@ -39,3 +39,8 @@ section.text-content {
     margin-bottom: calc(var(--typography-spacing-vertical) * 0.25);
   }
 }
+
+// override pico's style
+dialog article section.text-content p:last-of-type {
+  margin-bottom: var(--typography-spacing-vertical);
+}
