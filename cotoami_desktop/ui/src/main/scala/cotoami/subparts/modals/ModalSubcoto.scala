@@ -22,7 +22,8 @@ object ModalSubcoto {
 
   case class Model(
       sourceCotoId: Id[Coto],
-      targetCotonomas: Seq[Cotonoma],
+      targetCotonomas: Seq[TargetCotonoma],
+      postTo: Option[TargetCotonoma],
       descriptionInput: String = "",
       cotoForm: CotoForm.Model = CotoForm.Model(),
       error: Option[String] = None
@@ -35,6 +36,15 @@ object ModalSubcoto {
         .map(Ito.validateDescription)
         .map(Validation.Result(_))
         .getOrElse(Validation.Result.notYetValidated)
+  }
+
+  class TargetCotonoma(
+      val cotonoma: Cotonoma,
+      val disabled: Boolean = false
+  ) extends Select.SelectOption {
+    val value: String = cotonoma.id.uuid
+    val label: String = cotonoma.name
+    val isDisabled: Boolean = disabled
   }
 
   object Model {
@@ -50,9 +60,14 @@ object ModalSubcoto {
               sourceCotonomaIds :+ current
           case None => sourceCotonomaIds
         }
+      val targetCotonomas =
+        targetCotonomaIds.map(repo.cotonomas.get).flatten.map(cotonoma =>
+          new TargetCotonoma(cotonoma, !repo.nodes.canPostTo(cotonoma.nodeId))
+        )
       Model(
         sourceCotoId = sourceCotoId,
-        targetCotonomas = targetCotonomaIds.map(repo.cotonomas.get).flatten
+        targetCotonomas = targetCotonomas,
+        postTo = targetCotonomas.headOption
       )
     }
   }
@@ -123,8 +138,9 @@ object ModalSubcoto {
         div(className := "space")(),
         Select(
           className = "cotonoma-select",
-          options = Seq.empty,
-          placeholder = Some("Post to...")
+          placeholder = Some("Post to..."),
+          options = model.targetCotonomas,
+          value = model.postTo.getOrElse(null)
         ),
         button(
           className := "post",
