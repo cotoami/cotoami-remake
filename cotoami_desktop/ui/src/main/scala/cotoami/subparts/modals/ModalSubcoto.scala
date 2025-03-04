@@ -139,28 +139,7 @@ object ModalSubcoto {
         vertical = true,
         onCtrlEnter = () => ()
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
-      section(className := "post")(
-        div(className := "space")(),
-        Select(
-          className = "cotonoma-select",
-          placeholder = Some("Post to..."),
-          menuPlacement = "top",
-          options = model.targetCotonomas,
-          formatOptionLabel = Some(divSelectOption(_, context.repo)),
-          value = model.postTo.getOrElse(null),
-          onChange = Some(option => {
-            dispatch(
-              Msg.TargetCotonomaSelected(
-                Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
-              )
-            )
-          })
-        ),
-        button(
-          className := "post",
-          `type` := "button"
-        )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
-      )
+      sectionPost(model)
     )
   }
 
@@ -190,6 +169,32 @@ object ModalSubcoto {
         model.validateDescription,
         value => dispatch(Msg.DescriptionInput(value))
       )
+    )
+
+  private def sectionPost(
+      model: Model
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    section(className := "post")(
+      div(className := "space")(),
+      Select(
+        className = "cotonoma-select",
+        placeholder = Some("Post to..."),
+        menuPlacement = "top",
+        options = model.targetCotonomas,
+        formatOptionLabel = Some(divSelectOption(_, context.repo)),
+        value = model.postTo.getOrElse(null),
+        onChange = Some(option => {
+          dispatch(
+            Msg.TargetCotonomaSelected(
+              Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
+            )
+          )
+        })
+      ),
+      button(
+        className := "post",
+        `type` := "button"
+      )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
     )
 
   private def divSelectOption(
