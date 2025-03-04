@@ -7,6 +7,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
+import cotoami.utils.facade.Nullable
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
@@ -83,6 +84,7 @@ object ModalSubcoto {
   object Msg {
     case class DescriptionInput(description: String) extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case class TargetCotonomaSelected(dest: Option[TargetCotonoma]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -101,6 +103,9 @@ object ModalSubcoto {
           _3 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
+
+      case Msg.TargetCotonomaSelected(target) =>
+        default.copy(_1 = model.copy(postTo = target))
     }
   }
 
@@ -142,7 +147,14 @@ object ModalSubcoto {
           menuPlacement = "top",
           options = model.targetCotonomas,
           formatOptionLabel = Some(divSelectOption(_, context.repo)),
-          value = model.postTo.getOrElse(null)
+          value = model.postTo.getOrElse(null),
+          onChange = Some(option => {
+            dispatch(
+              Msg.TargetCotonomaSelected(
+                Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
+              )
+            )
+          })
         ),
         button(
           className := "post",
