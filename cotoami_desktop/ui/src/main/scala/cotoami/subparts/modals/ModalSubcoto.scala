@@ -5,11 +5,13 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui.Cmd
+import fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.utils.facade.Nullable
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
+import cotoami.backend.{CotoBackend, ErrorJson, ItoBackend}
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
 import cotoami.subparts.{imgNode, Modal, PartsCoto, PartsIto}
 import cotoami.subparts.EditorCoto._
@@ -40,7 +42,34 @@ object ModalSubcoto {
         .getOrElse(Validation.Result.notYetValidated)
 
     def readyToPost: Boolean =
-      !posting && cotoForm.hasValidContents && !validateDescription.failed
+      !posting && postTo.isDefined && cotoForm.hasValidContents && !validateDescription.failed
+
+    def postAndConnect(geomap: Geomap): (Model, Cmd.One[AppMsg]) =
+      (
+        copy(posting = true),
+        post(geomap).flatMap(_ match {
+          case Right(coto) => connect(coto)
+          case Left(e)     => pure(Left(e))
+        }).map(Msg.SubcotoPosted(_).into)
+      )
+
+    private def post(geomap: Geomap): Cmd.One[Either[ErrorJson, Coto]] =
+      postTo.map(target =>
+        CotoBackend.post(
+          cotoForm.content,
+          cotoForm.summary,
+          cotoForm.mediaBase64,
+          geomap.focusedLocation,
+          cotoForm.dateTimeRange,
+          target.cotonoma.id
+        )
+      ).getOrElse(Cmd.none)
+
+    private def connect(
+        targetCoto: Coto
+    ): Cmd.One[Either[ErrorJson, (Ito, Coto)]] =
+      ItoBackend.connect(sourceCotoId, targetCoto.id, description, None, None)
+        .map(_.map(_ -> targetCoto))
   }
 
   class TargetCotonoma(
@@ -89,6 +118,7 @@ object ModalSubcoto {
     case class DescriptionInput(description: String) extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class TargetCotonomaSelected(dest: Option[TargetCotonoma]) extends Msg
+    case class SubcotoPosted(result: Either[ErrorJson, (Ito, Coto)]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
