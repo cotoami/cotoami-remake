@@ -27,6 +27,7 @@ object ModalSubcoto {
       postTo: Option[TargetCotonoma],
       descriptionInput: String = "",
       cotoForm: CotoForm.Model = CotoForm.Model(),
+      posting: Boolean = false,
       error: Option[String] = None
   ) {
     def description: Option[String] =
@@ -193,7 +194,8 @@ object ModalSubcoto {
       ),
       button(
         className := "post",
-        `type` := "button"
+        `type` := "button",
+        aria - "busy" := model.posting.toString()
       )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
     )
 
