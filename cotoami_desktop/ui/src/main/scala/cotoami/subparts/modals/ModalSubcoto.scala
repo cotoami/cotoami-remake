@@ -139,6 +139,7 @@ object ModalSubcoto {
         Select(
           className = "cotonoma-select",
           placeholder = Some("Post to..."),
+          menuPlacement = "top",
           options = model.targetCotonomas,
           value = model.postTo.getOrElse(null)
         ),

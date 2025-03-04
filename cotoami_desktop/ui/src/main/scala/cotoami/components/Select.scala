@@ -22,6 +22,7 @@ import cotoami.utils.facade.Nullable
       noOptionsMessage: Option[NoOptionsMessageArg => ReactElement] = None,
       isClearable: Boolean = false,
       autoFocus: Boolean = false,
+      menuPlacement: String = "auto", // "auto" / "bottom" / "top"
       onChange: Option[Nullable[SelectOption] => Unit] = None
   )
 
