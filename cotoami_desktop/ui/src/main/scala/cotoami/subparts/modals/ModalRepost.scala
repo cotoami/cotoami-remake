@@ -245,7 +245,7 @@ object ModalRepost {
           onInputChange =
             Some(input => dispatch(Msg.CotonomaQueryInput(input))),
           noOptionsMessage = Some(_ => NoOptionsMessage),
-          formatOptionLabel = Some(divSelectOption(context.repo.nodes, _)),
+          formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
           isLoading = model.optionsLoading,
           isClearable = true,
           autoFocus = true,
@@ -272,8 +272,8 @@ object ModalRepost {
   private val NoOptionsMessage = div()("Type cotonoma name...")
 
   private def divSelectOption(
-      nodes: Nodes,
-      option: Select.SelectOption
+      option: Select.SelectOption,
+      nodes: Nodes
   ): ReactElement = {
     val dest = option.asInstanceOf[Destination]
     dest match {

@@ -401,7 +401,7 @@ object SectionTimeline {
         Option.when(context.repo.nodes.canEdit(coto)) {
           toolButton(
             classes = "delete-repost",
-            tip = Some("Delete this repost"),
+            tip = Some("Undo repost"),
             tipPlacement = "right",
             symbol = "close",
             onClick = e => {
@@ -409,7 +409,7 @@ object SectionTimeline {
               dispatch(
                 Modal.Msg.OpenModal(
                   Modal.Confirm(
-                    "Are you sure you want to delete the repost?",
+                    "Are you sure you want to undo the repost?",
                     Root.Msg.DeleteCoto(coto.id)
                   )
                 )

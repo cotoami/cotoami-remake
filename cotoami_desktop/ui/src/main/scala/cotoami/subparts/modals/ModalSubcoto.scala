@@ -8,9 +8,9 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
-import cotoami.repository.Root
+import cotoami.repository.{Nodes, Root}
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
-import cotoami.subparts.{Modal, PartsCoto, PartsIto}
+import cotoami.subparts.{imgNode, Modal, PartsCoto, PartsIto}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -141,6 +141,7 @@ object ModalSubcoto {
           placeholder = Some("Post to..."),
           menuPlacement = "top",
           options = model.targetCotonomas,
+          formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
           value = model.postTo.getOrElse(null)
         ),
         button(
@@ -178,4 +179,15 @@ object ModalSubcoto {
         value => dispatch(Msg.DescriptionInput(value))
       )
     )
+
+  private def divSelectOption(
+      option: Select.SelectOption,
+      nodes: Nodes
+  ): ReactElement = {
+    val target = option.asInstanceOf[TargetCotonoma]
+    div(className := "target-cotonoma")(
+      nodes.get(target.cotonoma.nodeId).map(imgNode(_)),
+      span(className := "cotonoma-name")(target.cotonoma.name)
+    )
+  }
 }
