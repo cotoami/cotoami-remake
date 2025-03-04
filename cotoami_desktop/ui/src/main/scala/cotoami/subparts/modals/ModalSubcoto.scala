@@ -50,7 +50,7 @@ object ModalSubcoto {
         post(geomap).flatMap(_ match {
           case Right(coto) => connect(coto)
           case Left(e)     => pure(Left(e))
-        }).map(Msg.SubcotoPosted(_).into)
+        }).map(Msg.Posted(_).into)
       )
 
     private def post(geomap: Geomap): Cmd.One[Either[ErrorJson, Coto]] =
@@ -118,7 +118,8 @@ object ModalSubcoto {
     case class DescriptionInput(description: String) extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
     case class TargetCotonomaSelected(dest: Option[TargetCotonoma]) extends Msg
-    case class SubcotoPosted(result: Either[ErrorJson, (Ito, Coto)]) extends Msg
+    object Post extends Msg
+    case class Posted(result: Either[ErrorJson, (Ito, Coto)]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -140,6 +141,22 @@ object ModalSubcoto {
 
       case Msg.TargetCotonomaSelected(target) =>
         default.copy(_1 = model.copy(postTo = target))
+
+      case Msg.Post =>
+        model.postAndConnect(context.geomap).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
+
+      case Msg.Posted(Right(_)) =>
+        default.copy(
+          _1 = model.copy(posting = false),
+          _3 = Modal.close(classOf[Modal.Subcoto])
+        )
+
+      case Msg.Posted(Left(e)) =>
+        default.copy(
+          _1 = model.copy(posting = false, error = Some(e.default_message))
+        )
     }
   }
 
@@ -235,7 +252,8 @@ object ModalSubcoto {
         className := "post",
         `type` := "button",
         disabled := !model.readyToPost,
-        aria - "busy" := model.posting.toString()
+        aria - "busy" := model.posting.toString(),
+        onClick := (_ => dispatch(Msg.Post))
       )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
     )
 
