@@ -22,7 +22,7 @@ object ModalSubcoto {
 
   case class Model(
       sourceCotoId: Id[Coto],
-      sourceCotonomas: Seq[Cotonoma],
+      targetCotonomas: Seq[Cotonoma],
       descriptionInput: String = "",
       cotoForm: CotoForm.Model = CotoForm.Model(),
       error: Option[String] = None
@@ -38,13 +38,23 @@ object ModalSubcoto {
   }
 
   object Model {
-    def apply(sourceCotoId: Id[Coto], repo: Root): Model =
+    def apply(sourceCotoId: Id[Coto], repo: Root): Model = {
+      val sourceCotonomaIds =
+        repo.cotos.get(sourceCotoId).map(_.postedInIds).getOrElse(Seq.empty)
+      val targetCotonomaIds =
+        repo.currentCotonomaId match {
+          case Some(current) =>
+            if (sourceCotonomaIds.contains(current))
+              current +: sourceCotonomaIds.filterNot(_ == current)
+            else
+              sourceCotonomaIds :+ current
+          case None => sourceCotonomaIds
+        }
       Model(
         sourceCotoId = sourceCotoId,
-        sourceCotonomas = repo.cotos.get(sourceCotoId)
-          .map(_.postedInIds.map(repo.cotonomas.get).flatten)
-          .getOrElse(Seq.empty)
+        targetCotonomas = targetCotonomaIds.map(repo.cotonomas.get).flatten
       )
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
