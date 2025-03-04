@@ -83,21 +83,30 @@ object ModalSubcoto {
 
   object Model {
     def apply(sourceCotoId: Id[Coto], repo: Root): Model = {
-      val sourceCotonomaIds =
+      val postedInIds =
         repo.cotos.get(sourceCotoId).map(_.postedInIds).getOrElse(Seq.empty)
+
       val targetCotonomaIds =
-        repo.currentCotonomaId match {
-          case Some(current) =>
-            if (sourceCotonomaIds.contains(current))
-              current +: sourceCotonomaIds.filterNot(_ == current)
-            else
-              sourceCotonomaIds :+ current
-          case None => sourceCotonomaIds
+        repo.cotonomas.getByCotoId(sourceCotoId) match {
+          case Some(sourceCotonoma) =>
+            ((sourceCotonoma.id +: postedInIds) ++ repo.currentCotonomaId).distinct
+
+          case None =>
+            repo.currentCotonomaId match {
+              case Some(current) =>
+                if (postedInIds.contains(current))
+                  current +: postedInIds.filterNot(_ == current)
+                else
+                  postedInIds :+ current
+              case None => postedInIds
+            }
         }
+
       val targetCotonomas =
         targetCotonomaIds.map(repo.cotonomas.get).flatten.map(cotonoma =>
           new TargetCotonoma(cotonoma, !repo.nodes.canPostTo(cotonoma.nodeId))
         )
+
       Model(
         sourceCotoId = sourceCotoId,
         targetCotonomas = targetCotonomas,
