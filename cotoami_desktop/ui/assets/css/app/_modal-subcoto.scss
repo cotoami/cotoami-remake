@@ -31,7 +31,12 @@ dialog.subcoto {
     }
 
     .cotonoma-select {
-      width: 300px;
+      flex: 2;
+
+      span.current-mark {
+        margin-left: 4px;
+        opacity: 0.5;
+      }
     }
 
     button.post {

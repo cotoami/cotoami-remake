@@ -8,7 +8,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
-import cotoami.repository.{Nodes, Root}
+import cotoami.repository.Root
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
 import cotoami.subparts.{imgNode, Modal, PartsCoto, PartsIto}
 import cotoami.subparts.EditorCoto._
@@ -141,7 +141,7 @@ object ModalSubcoto {
           placeholder = Some("Post to..."),
           menuPlacement = "top",
           options = model.targetCotonomas,
-          formatOptionLabel = Some(divSelectOption(_, context.repo.nodes)),
+          formatOptionLabel = Some(divSelectOption(_, context.repo)),
           value = model.postTo.getOrElse(null)
         ),
         button(
@@ -182,12 +182,15 @@ object ModalSubcoto {
 
   private def divSelectOption(
       option: Select.SelectOption,
-      nodes: Nodes
+      repo: Root
   ): ReactElement = {
     val target = option.asInstanceOf[TargetCotonoma]
     div(className := "target-cotonoma")(
-      nodes.get(target.cotonoma.nodeId).map(imgNode(_)),
-      span(className := "cotonoma-name")(target.cotonoma.name)
+      repo.nodes.get(target.cotonoma.nodeId).map(imgNode(_)),
+      span(className := "cotonoma-name")(target.cotonoma.name),
+      Option.when(Some(target.cotonoma.id) == repo.currentCotonomaId) {
+        span(className := "current-mark")("(current)")
+      }
     )
   }
 }
