@@ -176,21 +176,27 @@ object ModalSubcoto {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "post")(
-      div(className := "space")(),
-      Select(
-        className = "cotonoma-select",
-        placeholder = Some("Post to..."),
-        menuPlacement = "top",
-        options = model.targetCotonomas,
-        formatOptionLabel = Some(divSelectOption(_, context.repo)),
-        value = model.postTo.getOrElse(null),
-        onChange = Some(option => {
-          dispatch(
-            Msg.TargetCotonomaSelected(
-              Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
+      div(className := "post-to")(
+        div(className := "label")("Post to:"),
+        Select(
+          className = "cotonoma-select",
+          placeholder = Some("Post to..."),
+          menuPlacement = "top",
+          options = model.targetCotonomas,
+          formatOptionLabel = Some(divSelectOption(_, context.repo)),
+          value = model.postTo.getOrElse(null),
+          onChange = Some(option => {
+            dispatch(
+              Msg.TargetCotonomaSelected(
+                Nullable.toOption(option).map(_.asInstanceOf[TargetCotonoma])
+              )
             )
-          )
-        })
+          })
+        ),
+        div(className := "space")()
+      ),
+      CotoForm.buttonPreview(model = model.cotoForm)(submsg =>
+        dispatch(Msg.CotoFormMsg(submsg))
       ),
       button(
         className := "post",

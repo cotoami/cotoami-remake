@@ -7,6 +7,10 @@ dialog.repost {
     display: flex;
     flex-direction: row;
 
+    .cotonoma-select {
+      flex: 1;
+    }
+
     button.repost {
       height: 39px;
       margin-left: 4px;

@@ -25,24 +25,36 @@ dialog.subcoto {
 
     display: flex;
     flex-direction: row;
+    align-items: center;
 
-    div.space {
+    div.post-to {
       flex: 1;
-    }
 
-    .cotonoma-select {
-      flex: 2;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
 
-      span.current-mark {
-        margin-left: 4px;
-        opacity: 0.5;
+      .label {
+        font-weight: 700;
+        padding-right: 8px;
+      }
+
+      .cotonoma-select {
+        width: 350px;
+
+        span.current-mark {
+          margin-left: 4px;
+          opacity: 0.5;
+        }
+      }
+
+      div.space {
+        flex: 1;
       }
     }
 
-    button.post {
-      height: 39px;
-      margin-left: 10px;
-      padding-top: 6px;
+    button.preview {
+      margin-right: 10px;
     }
   }
 
