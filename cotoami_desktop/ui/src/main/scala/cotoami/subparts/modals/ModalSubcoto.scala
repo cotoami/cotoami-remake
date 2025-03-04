@@ -38,6 +38,9 @@ object ModalSubcoto {
         .map(Ito.validateDescription)
         .map(Validation.Result(_))
         .getOrElse(Validation.Result.notYetValidated)
+
+    def readyToPost: Boolean =
+      !posting && cotoForm.hasValidContents && !validateDescription.failed
   }
 
   class TargetCotonoma(
@@ -201,6 +204,7 @@ object ModalSubcoto {
       button(
         className := "post",
         `type` := "button",
+        disabled := !model.readyToPost,
         aria - "busy" := model.posting.toString()
       )("Post", span(className := "shortcut-help")("(Ctrl + Enter)"))
     )
