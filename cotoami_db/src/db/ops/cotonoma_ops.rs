@@ -304,32 +304,6 @@ pub(crate) fn create<'a>(
     })
 }
 
-pub(crate) fn promote<'a>(
-    coto_id: &'a Id<Coto>,
-    promoted_at: Option<NaiveDateTime>,
-) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
-    composite_op::<WritableConn, _, _>(move |ctx| {
-        let promoted_at = promoted_at.unwrap_or(crate::current_datetime());
-
-        // Update the coto
-        let coto = coto_ops::try_get(coto_id).run(ctx)??;
-        let mut update_coto = coto.to_promote()?;
-        update_coto.updated_at = promoted_at;
-        let coto = coto_ops::update(&update_coto).run(ctx)?;
-
-        // Insert a cotonoma
-        let new_cotonoma = NewCotonoma::new(
-            &coto.node_id,
-            &coto.uuid,
-            coto.name_as_cotonoma().unwrap(),
-            promoted_at,
-        )?;
-        let inserted_cotonoma = insert(&new_cotonoma).run(ctx)?;
-
-        Ok((inserted_cotonoma, coto))
-    })
-}
-
 pub(crate) fn insert<'a>(
     new_cotonoma: &'a NewCotonoma<'a>,
 ) -> impl Operation<WritableConn, Cotonoma> + 'a {

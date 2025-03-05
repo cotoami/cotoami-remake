@@ -15,7 +15,7 @@ use crate::{
     },
     models::{
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},
-        cotonoma::Cotonoma,
+        cotonoma::{Cotonoma, NewCotonoma},
         node::Node,
         Geolocation, Id,
     },
@@ -233,6 +233,32 @@ pub(crate) fn edit<'a>(
         update_coto.edit_content(diff, image_max_size)?;
         update_coto.updated_at = updated_at.unwrap_or(crate::current_datetime());
         update(&update_coto).run(ctx)
+    })
+}
+
+pub(crate) fn promote<'a>(
+    id: &'a Id<Coto>,
+    promoted_at: Option<NaiveDateTime>,
+) -> impl Operation<WritableConn, (Cotonoma, Coto)> + 'a {
+    composite_op::<WritableConn, _, _>(move |ctx| {
+        let promoted_at = promoted_at.unwrap_or(crate::current_datetime());
+
+        // Update the coto
+        let coto = try_get(id).run(ctx)??;
+        let mut update_coto = coto.to_promote()?;
+        update_coto.updated_at = promoted_at;
+        let coto = update(&update_coto).run(ctx)?;
+
+        // Insert a cotonoma
+        let new_cotonoma = NewCotonoma::new(
+            &coto.node_id,
+            &coto.uuid,
+            coto.name_as_cotonoma().unwrap(),
+            promoted_at,
+        )?;
+        let inserted_cotonoma = cotonoma_ops::insert(&new_cotonoma).run(ctx)?;
+
+        Ok((inserted_cotonoma, coto))
     })
 }
 

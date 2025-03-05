@@ -159,6 +159,32 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
+    pub fn promote(
+        &self,
+        coto_id: &Id<Coto>,
+        operator: &Operator,
+    ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
+        let local_node_id = self.globals.try_get_local_node_id()?;
+        self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            // Permission check
+            let coto = coto_ops::try_get(coto_id).run(ctx)??;
+            self.globals.ensure_local(&coto)?;
+            operator.can_update_coto(&coto)?;
+
+            // Do promote
+            let (cotonoma, coto) = coto_ops::promote(coto_id, None).run(ctx)?;
+
+            // Log change
+            let change = Change::Promote {
+                coto_id: *coto_id,
+                promoted_at: cotonoma.created_at,
+            };
+            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+
+            Ok(((cotonoma, coto), changelog))
+        })
+    }
+
     pub fn delete_coto(&self, id: &Id<Coto>, operator: &Operator) -> Result<ChangelogEntry> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
