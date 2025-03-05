@@ -132,6 +132,37 @@ impl Coto {
 
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
+    pub(crate) fn to_promote(&self) -> Result<UpdateCoto> {
+        let name_max_length = Cotonoma::NAME_MAX_LENGTH as usize;
+
+        let mut update = self.to_update();
+        update.is_cotonoma = Some(true);
+
+        match (&self.summary, &self.content) {
+            (Some(summary), _) => match summary.char_indices().nth(name_max_length) {
+                Some((exceed_index, _)) => {
+                    update.summary = Some(Some(&summary[..exceed_index]));
+                    Ok(update)
+                }
+                None => Ok(update),
+            },
+            (None, Some(content)) => match content.char_indices().nth(name_max_length) {
+                Some((exceed_index, _)) => {
+                    update.summary = Some(Some(&content[..exceed_index]));
+                    Ok(update)
+                }
+                None => {
+                    // if the content fits within the cotonoma name length,
+                    // move it to the summary.
+                    update.summary = Some(Some(content));
+                    update.content = Some(None);
+                    Ok(update)
+                }
+            },
+            (None, None) => bail!("An empty coto can't be promoted."),
+        }
+    }
+
     pub(crate) fn to_import(&self) -> Result<NewCoto> {
         // Since it can't import reposts before the original and
         // `reposted_in_ids` will be updated when inserting a repost,
