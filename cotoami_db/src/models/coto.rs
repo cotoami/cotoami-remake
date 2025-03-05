@@ -133,8 +133,11 @@ impl Coto {
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub(crate) fn to_promote(&self) -> Result<UpdateCoto> {
-        let name_max_length = Cotonoma::NAME_MAX_LENGTH as usize;
+        if self.is_cotonoma {
+            bail!("The coto is already a cotonoma.");
+        }
 
+        let name_max_length = Cotonoma::NAME_MAX_LENGTH as usize;
         let mut update = self.to_update();
         update.is_cotonoma = Some(true);
 
