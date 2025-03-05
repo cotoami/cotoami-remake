@@ -13,8 +13,7 @@ section.map {
     width: 30px;
     height: 30px;
 
-    // ensure to place this button in front of everything
-    z-index: 100;
+    z-index: 10;
 
     span.material-symbols {
       font-size: 26px;

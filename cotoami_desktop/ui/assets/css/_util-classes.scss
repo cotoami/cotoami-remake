@@ -85,8 +85,7 @@ button.default {
     top: 0;
     right: 0;
 
-    // ensure to place this toggle in front of everything
-    z-index: 100;
+    z-index: 10;
 
     button {
       position: absolute;
