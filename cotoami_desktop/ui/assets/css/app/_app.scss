@@ -37,7 +37,7 @@ div.app {
         // Prevent search pane from being hidden by other panes
         >div.separator,
         section.search * {
-          z-index: 1000;
+          z-index: 200;
         }
       }
     }
