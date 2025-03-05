@@ -7,9 +7,8 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::cotonoma_ops;
 use crate::{
-    db::{error::*, op::*},
+    db::{error::*, op::*, ops::cotonoma_ops},
     models::{
         coto::Coto,
         cotonoma::Cotonoma,

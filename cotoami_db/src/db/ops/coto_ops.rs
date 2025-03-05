@@ -7,12 +7,11 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{cotonoma_ops, Page};
 use crate::{
     db::{
         error::*,
         op::*,
-        ops::{detect_cjk_chars, escape_like_pattern},
+        ops::{cotonoma_ops, detect_cjk_chars, escape_like_pattern, Page},
     },
     models::{
         coto::{Coto, CotoContentDiff, NewCoto, UpdateCoto},

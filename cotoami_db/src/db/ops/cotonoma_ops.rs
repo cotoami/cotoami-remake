@@ -6,9 +6,12 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
 
-use super::{coto_ops, Page};
 use crate::{
-    db::{error::*, op::*, ops::escape_like_pattern},
+    db::{
+        error::*,
+        op::*,
+        ops::{coto_ops, escape_like_pattern, Page},
+    },
     models::{
         coto::{Coto, NewCoto},
         cotonoma::{Cotonoma, CotonomaInput, NewCotonoma, UpdateCotonoma},
