@@ -133,9 +133,12 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<(Coto, ChangelogEntry)> {
         let local_node = self.globals.try_read_local_node()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
+            // Permission check
             let coto = coto_ops::try_get(id).run(ctx)??;
             self.globals.ensure_local(&coto)?;
             operator.can_update_coto(&coto)?;
+
+            // Do edit
             let coto = coto_ops::edit(
                 id,
                 &diff,
@@ -143,12 +146,15 @@ impl<'a> DatabaseSession<'a> {
                 None,
             )
             .run(ctx)?;
+
+            // Log change
             let change = Change::EditCoto {
                 coto_id: *id,
                 diff,
                 updated_at: coto.updated_at,
             };
             let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
+
             Ok((coto, changelog))
         })
     }
