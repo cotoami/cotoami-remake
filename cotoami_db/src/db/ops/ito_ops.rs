@@ -60,6 +60,8 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
 
 pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, Ito> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
+        new_ito.validate()?;
+
         // Ensure both of cotos are not reposts
         if coto_ops::any_reposts_in(&[*new_ito.source_coto_id(), *new_ito.target_coto_id()])
             .run(ctx)?

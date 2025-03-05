@@ -55,6 +55,7 @@ pub(crate) fn root_cotonoma_ids<Conn: AsReadableConn>() -> impl Operation<Conn, 
 
 pub(crate) fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableConn, Node> + 'a {
     write_op(move |conn| {
+        new_node.validate()?;
         diesel::insert_into(nodes::table)
             .values(new_node)
             .get_result(conn.deref_mut())

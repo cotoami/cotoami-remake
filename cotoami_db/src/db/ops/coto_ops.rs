@@ -165,6 +165,7 @@ pub(crate) fn insert<'a>(
     new_coto: &'a NewCoto<'a>,
 ) -> impl Operation<WritableConn, (Coto, Option<Coto>)> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
+        new_coto.validate()?;
         let coto: Coto = diesel::insert_into(cotos::table)
             .values(new_coto)
             .get_result(ctx.conn().deref_mut())?;

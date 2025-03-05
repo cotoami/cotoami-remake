@@ -53,6 +53,7 @@ pub(super) fn insert<'a>(
     new_server: &'a NewServerNode<'a>,
 ) -> impl Operation<WritableConn, ServerNode> + 'a {
     write_op(move |conn| {
+        new_server.validate()?;
         diesel::insert_into(server_nodes::table)
             .values(new_server)
             .get_result(conn.deref_mut())
