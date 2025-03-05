@@ -227,6 +227,12 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 coto_ops::insert(&coto.to_import()?).run(ctx)?;
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             }
+            Change::Promote {
+                coto_id,
+                promoted_at,
+            } => {
+                cotonoma_ops::promote(coto_id, Some(*promoted_at)).run(ctx)?;
+            }
             Change::RenameCotonoma {
                 cotonoma_id,
                 name,

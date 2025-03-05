@@ -136,24 +136,28 @@ pub enum Change {
         deleted_at: NaiveDateTime,
     } = 8,
     CreateCotonoma(Cotonoma, Coto) = 9,
+    Promote {
+        coto_id: Id<Coto>,
+        promoted_at: NaiveDateTime,
+    } = 10,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 10,
-    CreateIto(Ito) = 11,
+    } = 11,
+    CreateIto(Ito) = 12,
     EditIto {
         ito_id: Id<Ito>,
         diff: ItoContentDiff<'static>,
         updated_at: NaiveDateTime,
-    } = 12,
+    } = 13,
     DeleteIto {
         ito_id: Id<Ito>,
-    } = 13,
+    } = 14,
     ChangeItoOrder {
         ito_id: Id<Ito>,
         new_order: i32,
-    } = 14,
+    } = 15,
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -164,7 +168,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 15,
+    } = 16,
 }
 
 impl Change {
