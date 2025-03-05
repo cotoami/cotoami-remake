@@ -31,7 +31,7 @@ impl<'a> DatabaseSession<'a> {
     pub fn all_node_roots(&mut self) -> Result<Vec<(Cotonoma, Coto)>> {
         self.read_transaction(|ctx: &mut Context<'_, SqliteConnection>| {
             let cotonoma_ids = node_ops::root_cotonoma_ids().run(ctx)?;
-            cotonoma_ops::get_pairs_by_ids(cotonoma_ids).run(ctx)
+            cotonoma_ops::get_pairs_by_ids(&cotonoma_ids).run(ctx)
         })
     }
 
@@ -123,7 +123,7 @@ impl<'a> DatabaseSession<'a> {
         if let Some(Ids(ref ids)) = coto.reposted_in_ids {
             cotonoma_ids.extend_from_slice(ids);
         }
-        self.read_transaction(cotonoma_ops::get_by_ids(&cotonoma_ids[..]))
+        self.read_transaction(cotonoma_ops::get_by_ids(&cotonoma_ids))
     }
 
     pub fn sub_cotonomas(
@@ -153,7 +153,7 @@ impl<'a> DatabaseSession<'a> {
             })
             .collect();
         let cotonoma_ids: Vec<Id<Cotonoma>> = cotonoma_ids.into_iter().collect();
-        self.read_transaction(cotonoma_ops::get_by_ids(&cotonoma_ids[..]))
+        self.read_transaction(cotonoma_ops::get_by_ids(&cotonoma_ids))
     }
 
     pub fn as_cotonomas<'b, I>(&mut self, cotos: I) -> Result<Vec<Cotonoma>>

@@ -201,7 +201,7 @@ fn decrypt_password(
 
     // Decrypt the password.
     let cipher = Aes256Gcm::new(key);
-    let nonce = GenericArray::from_slice(&encrypted_password.nonce[..]);
+    let nonce = GenericArray::from_slice(&encrypted_password.nonce);
     let plaintext = cipher.decrypt(nonce, encrypted_password.ciphertext.as_ref())?;
     Ok(String::from_utf8(plaintext)?)
 }
