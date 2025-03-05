@@ -3,8 +3,8 @@ use async_trait::async_trait;
 use cotoami_db::prelude::*;
 
 use crate::service::{
-    Command, NodeService, RemoteNodeService,
     models::{ChunkOfChanges, ClientNodeSession, CreateClientNodeSession, InitialDataset},
+    Command, NodeService, RemoteNodeService,
 };
 
 /// An extension trait for [NodeService] that provides shortcut functions for
@@ -52,6 +52,12 @@ pub trait NodeServiceExt: NodeService {
         let request = Command::EditCoto { id, diff }.into_request();
         let response = self.call(request).await?;
         response.content::<Coto>()
+    }
+
+    async fn promote(&self, id: Id<Coto>) -> Result<(Cotonoma, Coto)> {
+        let request = Command::Promote { id }.into_request();
+        let response = self.call(request).await?;
+        response.content::<(Cotonoma, Coto)>()
     }
 
     async fn delete_coto(&self, id: Id<Coto>) -> Result<Id<Coto>> {

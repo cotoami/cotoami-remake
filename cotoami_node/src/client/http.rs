@@ -10,17 +10,17 @@ use const_format::concatcp;
 use cotoami_db::models::Bytes;
 use futures::future::FutureExt;
 use parking_lot::{RwLock, RwLockReadGuard};
-use percent_encoding::{NON_ALPHANUMERIC, utf8_percent_encode};
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use reqwest::{
-    Client, RequestBuilder, StatusCode, Url, header,
+    header,
     header::{HeaderMap, HeaderValue, IntoHeaderName},
+    Client, RequestBuilder, StatusCode, Url,
 };
 use uuid::Uuid;
 
 use crate::service::{
-    NodeServiceFuture,
     error::{InputErrors, RequestError},
-    *,
+    NodeServiceFuture, *,
 };
 
 /// [HttpClient] provides the featuers of the [RemoteNodeService] trait by
@@ -235,6 +235,7 @@ impl HttpClient {
             Command::EditCoto { id, diff } => {
                 self.put(&format!("{API_PATH_COTOS}/{id}")).json(&diff)
             }
+            Command::Promote { id } => self.put(&format!("{API_PATH_COTOS}/{id}/promote")),
             Command::DeleteCoto { id } => self.delete(&format!("{API_PATH_COTOS}/{id}")),
             Command::Repost { id, dest } => self
                 .post(&format!("{API_PATH_COTONOMAS}/{dest}/cotos/repost"))

@@ -2,17 +2,17 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
-    Extension, Router,
     extract::{Json, Path, Query, State},
     routing::{get, put},
+    Extension, Router,
 };
 use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
 
 use crate::{
     service::{
-        ServiceError,
         models::{CotoDetails, CotoGraph, GeolocatedCotos, PaginatedCotos, Pagination},
+        ServiceError,
     },
     state::NodeState,
     web::{Accept, Content},
@@ -31,6 +31,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/search/cotonomas/{query}", get(search_cotonoma_cotos))
         .route("/{coto_id}/details", get(coto_details))
         .route("/{coto_id}", put(edit_coto).delete(delete_coto))
+        .route("/{coto_id}/promote", put(promote))
         .route("/{coto_id}/itos", get(outgoing_itos))
         .route("/{coto_id}/graph", get(graph))
 }
@@ -159,6 +160,22 @@ async fn edit_coto(
         .edit_coto(coto_id, diff, Arc::new(operator))
         .await
         .map(|coto| Content(coto, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/cotos/{coto_id}/promote
+/////////////////////////////////////////////////////////////////////////////
+
+async fn promote(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+) -> Result<Content<(Cotonoma, Coto)>, ServiceError> {
+    state
+        .promote(coto_id, Arc::new(operator))
+        .await
+        .map(|cotonoma| Content(cotonoma, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

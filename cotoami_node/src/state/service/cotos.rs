@@ -6,9 +6,9 @@ use validator::Validate;
 
 use crate::{
     service::{
-        NodeServiceExt, ServiceError,
         error::IntoServiceResult,
         models::{CotoDetails, CotosRelatedData, GeolocatedCotos, PaginatedCotos, Pagination},
+        NodeServiceExt, ServiceError,
     },
     state::NodeState,
 };
@@ -139,6 +139,21 @@ impl NodeState {
             diff,
             move |ds, diff| ds.edit_coto(&id, diff, operator.as_ref()),
             |parent, diff| parent.edit_coto(id, diff),
+        )
+        .await
+    }
+
+    pub async fn promote(
+        self,
+        id: Id<Coto>,
+        operator: Arc<Operator>,
+    ) -> Result<(Cotonoma, Coto), ServiceError> {
+        let coto = self.coto(id).await?;
+        self.change(
+            coto.node_id,
+            id,
+            move |ds, id| ds.promote(&id, operator.as_ref()),
+            |parent, id| parent.promote(id),
         )
         .await
     }

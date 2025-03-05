@@ -121,21 +121,6 @@ impl NodeState {
         .await
     }
 
-    pub async fn promote(
-        self,
-        coto_id: Id<Coto>,
-        operator: Arc<Operator>,
-    ) -> Result<(Cotonoma, Coto), ServiceError> {
-        let coto = self.coto(coto_id).await?;
-        self.change(
-            coto.node_id,
-            coto_id,
-            move |ds, coto_id| ds.promote(&coto_id, operator.as_ref()),
-            |parent, coto_id| unimplemented!(),
-        )
-        .await
-    }
-
     pub async fn rename_cotonoma(
         self,
         id: Id<Cotonoma>,

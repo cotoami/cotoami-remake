@@ -137,6 +137,10 @@ pub enum Command {
         diff: CotoContentDiff<'static>,
     },
 
+    /// Request to promote the specified coto into a cotonoma.
+    /// The return type is a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)`.
+    Promote { id: Id<Coto> },
+
     /// Request to delete a coto and return the [Id<Coto>] if suceeded.
     DeleteCoto { id: Id<Coto> },
 
