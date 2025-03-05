@@ -155,12 +155,12 @@ pub(crate) fn search_by_prefix<Conn: AsReadableConn>(
     })
 }
 
-pub(crate) fn get_by_ids<Conn: AsReadableConn>(
-    ids: Vec<Id<Cotonoma>>,
-) -> impl Operation<Conn, Vec<Cotonoma>> {
+pub(crate) fn get_by_ids<'a, Conn: AsReadableConn>(
+    ids: &'a [Id<Cotonoma>],
+) -> impl Operation<Conn, Vec<Cotonoma>> + 'a {
     read_op(move |conn| {
         let mut map: HashMap<Id<Cotonoma>, Cotonoma> = cotonomas::table
-            .filter(cotonomas::uuid.eq_any(&ids))
+            .filter(cotonomas::uuid.eq_any(ids))
             .load::<Cotonoma>(conn)?
             .into_iter()
             .map(|c| (c.uuid, c))

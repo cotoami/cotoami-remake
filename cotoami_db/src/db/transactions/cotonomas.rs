@@ -83,7 +83,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(cotonoma_ops::contains(id))
     }
 
-    pub fn cotonomas(&mut self, ids: Vec<Id<Cotonoma>>) -> Result<Vec<Cotonoma>> {
+    pub fn cotonomas(&mut self, ids: &[Id<Cotonoma>]) -> Result<Vec<Cotonoma>> {
         self.read_transaction(cotonoma_ops::get_by_ids(ids))
     }
 
@@ -123,7 +123,7 @@ impl<'a> DatabaseSession<'a> {
         if let Some(Ids(ref ids)) = coto.reposted_in_ids {
             cotonoma_ids.extend_from_slice(ids);
         }
-        self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids))
+        self.read_transaction(cotonoma_ops::get_by_ids(&cotonoma_ids[..]))
     }
 
     pub fn sub_cotonomas(
@@ -152,7 +152,8 @@ impl<'a> DatabaseSession<'a> {
                 ids
             })
             .collect();
-        self.read_transaction(cotonoma_ops::get_by_ids(cotonoma_ids.into_iter().collect()))
+        let cotonoma_ids: Vec<Id<Cotonoma>> = cotonoma_ids.into_iter().collect();
+        self.read_transaction(cotonoma_ops::get_by_ids(&cotonoma_ids[..]))
     }
 
     pub fn as_cotonomas<'b, I>(&mut self, cotos: I) -> Result<Vec<Cotonoma>>
