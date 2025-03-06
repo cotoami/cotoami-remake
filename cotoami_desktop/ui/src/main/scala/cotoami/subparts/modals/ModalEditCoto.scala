@@ -217,7 +217,7 @@ object ModalEditCoto {
         if (context.repo.isNodeRoot(model.original.id))
           Fragment(
             materialSymbol(Node.IconName),
-            "Node Cotonoma"
+            "Node Root"
           )
         else
           Fragment(
