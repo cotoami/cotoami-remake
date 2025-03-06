@@ -42,12 +42,6 @@ pub struct ChangelogEntry {
     /// Serial number in the origin node.
     pub origin_serial_number: i64,
 
-    /// Number to distinguish between different change types.
-    ///
-    /// The source type is `u8` (Change::type_number()), but we had to pick `i16` instead
-    /// because there is no sqlite type to represent `u8`.
-    pub type_number: i16,
-
     /// The content of this change.
     pub change: Change,
 
@@ -67,7 +61,6 @@ impl ChangelogEntry {
         NewChangelogEntry {
             origin_node_id: &self.origin_node_id,
             origin_serial_number: self.origin_serial_number,
-            type_number: self.type_number,
             change: &self.change,
             import_error: None,
             inserted_at: crate::current_datetime(),
@@ -81,7 +74,6 @@ impl ChangelogEntry {
 pub(crate) struct NewChangelogEntry<'a> {
     origin_node_id: &'a Id<Node>,
     origin_serial_number: i64,
-    type_number: i16,
     change: &'a Change,
     import_error: Option<String>,
     inserted_at: NaiveDateTime,
@@ -103,61 +95,60 @@ impl<'a> NewChangelogEntry<'a> {
     Debug, Clone, PartialEq, AsExpression, FromSqlRow, serde::Serialize, serde::Deserialize,
 )]
 #[diesel(sql_type = Binary)]
-#[repr(u8)]
 pub enum Change {
-    None = 0,
+    None,
     CreateNode {
         node: Node,
         root: Option<(Cotonoma, Coto)>,
-    } = 1,
-    UpsertNode(Node) = 2,
+    },
+    UpsertNode(Node),
     RenameNode {
         node_id: Id<Node>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 3,
+    },
     SetNodeIcon {
         node_id: Id<Node>,
         icon: Bytes,
-    } = 4,
+    },
     SetRootCotonoma {
         node_id: Id<Node>,
         cotonoma_id: Id<Cotonoma>,
-    } = 5,
-    CreateCoto(Coto) = 6,
+    },
+    CreateCoto(Coto),
     EditCoto {
         coto_id: Id<Coto>,
         diff: CotoContentDiff<'static>,
         updated_at: NaiveDateTime,
-    } = 7,
+    },
     Promote {
         coto_id: Id<Coto>,
         promoted_at: NaiveDateTime,
-    } = 10,
+    },
     // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
-    } = 8,
-    CreateCotonoma(Cotonoma, Coto) = 9,
+    },
+    CreateCotonoma(Cotonoma, Coto),
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,
         updated_at: NaiveDateTime,
-    } = 11,
-    CreateIto(Ito) = 12,
+    },
+    CreateIto(Ito),
     EditIto {
         ito_id: Id<Ito>,
         diff: ItoContentDiff<'static>,
         updated_at: NaiveDateTime,
-    } = 13,
+    },
     DeleteIto {
         ito_id: Id<Ito>,
-    } = 14,
+    },
     ChangeItoOrder {
         ito_id: Id<Ito>,
         new_order: i32,
-    } = 15,
+    },
     ChangeOwnerNode {
         from: Id<Node>,
         to: Id<Node>,
@@ -168,7 +159,7 @@ pub enum Change {
         // unknown to the `to` node, new changes in the `to` node will possibly cause conflicts
         // with the unknown changes.
         last_change_number: i64,
-    } = 16,
+    },
 }
 
 impl Change {
@@ -180,26 +171,10 @@ impl Change {
         NewChangelogEntry {
             origin_node_id: local_node_id,
             origin_serial_number: serial_number,
-            type_number: self.type_number() as i16,
             change: self,
             import_error: None,
             inserted_at: crate::current_datetime(),
         }
-    }
-
-    pub fn type_number(&self) -> u8 {
-        // There seems to be no "safe" way to get a discriminant value of an enum with fields
-        // other than the nightly-only experimental `core::intrinsics::discriminant_value`.
-        //
-        // "Rust provides no language-level way to access the raw discriminant of an enum with fields.
-        // Instead, currently unsafe code must be used to inspect the discriminant of an enum with fields.
-        // Since this feature is intended for use with cross-language FFI where unsafe code is already
-        // necessary, this should hopefully not be too much of an extra burden."
-        // https://blog.rust-lang.org/2022/12/15/Rust-1.66.0.html#explicit-discriminants-on-enums-with-fields
-        //
-        // Pointer casting:
-        // https://doc.rust-lang.org/reference/items/enumerations.html#pointer-casting
-        unsafe { *(self as *const Self as *const u8) }
     }
 }
 
@@ -243,7 +218,6 @@ mod tests {
             serial_number: 1,
             origin_node_id: Id::from_str("00000000-0000-0000-0000-000000000001")?,
             origin_serial_number: 1,
-            type_number: change.type_number() as i16,
             change,
             import_error: None,
             inserted_at: NaiveDateTime::parse_from_str("2023-01-02 03:04:05", "%Y-%m-%d %H:%M:%S")?,
@@ -258,7 +232,6 @@ mod tests {
               "serial_number": 1,
               "origin_node_id": "00000000-0000-0000-0000-000000000001",
               "origin_serial_number": 1,
-              "type_number": 0,
               "change": "None",
               "inserted_at": "2023-01-02T03:04:05"
             }"#}

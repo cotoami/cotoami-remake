@@ -222,7 +222,6 @@ fn duplicate_changes_from_different_parents() -> Result<()> {
         serial_number: 1,
         origin_node_id,
         origin_serial_number: 1,
-        type_number: 0,
         change: Change::None,
         import_error: None,
         inserted_at: Utc::now().naive_utc(),
@@ -276,7 +275,6 @@ fn import_error() -> Result<()> {
         serial_number: 1,
         origin_node_id: parent_node.uuid,
         origin_serial_number: 1,
-        type_number: 1,
         change: Change::RenameNode {
             node_id: Id::generate(), // no such node
             name: "hello".into(),
