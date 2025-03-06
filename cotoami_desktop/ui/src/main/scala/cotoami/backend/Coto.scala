@@ -66,6 +66,11 @@ object CotoJson {
       )
     )
 
+  def promote(
+      id: Id[Coto]
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+    Commands.send(Commands.Promote(id))
+
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, String]] =
     Commands.send(Commands.DeleteCoto(id))
 
@@ -133,6 +138,15 @@ object CotoBackend {
   ): Cmd.One[Either[ErrorJson, Coto]] =
     CotoJson.edit(id, content, summary, mediaContent, location, timeRange)
       .map(_.map(CotoBackend.toModel))
+
+  def promote(
+      id: Id[Coto]
+  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+    CotoJson.promote(id).map(
+      _.map(pair =>
+        (CotonomaBackend.toModel(pair._1), CotoBackend.toModel(pair._2))
+      )
+    )
 
   def delete(id: Id[Coto]): Cmd.One[Either[ErrorJson, Id[Coto]]] =
     CotoJson.delete(id).map(_.map(Id(_)))

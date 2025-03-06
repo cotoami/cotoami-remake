@@ -277,6 +277,8 @@ object Commands {
       )
     )
 
+  def Promote(id: Id[Coto]) = jso(Promote = jso(id = id.uuid))
+
   def DeleteCoto(id: Id[Coto]) = jso(DeleteCoto = jso(id = id.uuid))
 
   def Repost(id: Id[Coto], dest: Id[Cotonoma]) =
