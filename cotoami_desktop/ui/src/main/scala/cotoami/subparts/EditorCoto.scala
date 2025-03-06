@@ -369,6 +369,8 @@ object EditorCoto {
 
       def name: String = nameInput.trim
 
+      def isNew: Boolean = originalName.isEmpty
+
       def edited: Boolean = originalName match {
         case Some(original) => name != original
         case None           => !name.isEmpty()
@@ -480,7 +482,8 @@ object EditorCoto {
       input(
         className := "cotonoma-name",
         `type` := "text",
-        placeholder := "New cotonoma name",
+        placeholder := (if (model.isNew) "New cotonoma name"
+                        else "Cotonoma name"),
         value := model.nameInput,
         Validation.ariaInvalid(model.validation),
         slinky.web.html.onFocus := onFocus,
