@@ -2,10 +2,10 @@
 -- A changelog is a series of changes in a Cotoami database recorded 
 -- for state machine replication.
 --
--- A node (database) could incorporate a same node more than once via 
+-- A node (database) could incorporate a same database more than once via 
 -- different parents, therefore it could receive a same changelog entry 
 -- more than once. The pair of `origin_node_id` and `origin_serial_number` with 
--- a unique constraint is a way to avoid duplicate entries inserted in changelog.
+-- a unique constraint is a way to avoid duplicate entries inserted in this table.
 --
 CREATE TABLE changelog (
   -- Serial number of a changelog entry based on SQLite ROWID
@@ -13,7 +13,7 @@ CREATE TABLE changelog (
   -- ROWID will be filled automatically with an unused integer, 
   -- usually one more than the largest ROWID currently in use.
   --
-  -- When replicating a database to another node, that node must ensure to 
+  -- When replicating a database in another node, that node must ensure to 
   -- apply the changelog entries in the serial number order (state machine replication).
   --
   -- If it is possible for an entry with the largest ROWID to be deleted, 
