@@ -276,11 +276,6 @@ object SectionTimeline {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
       header(className := "tools")(
-        toolButton(
-          symbol = "filter_list",
-          tip = Some("Filter"),
-          classes = "filter"
-        ),
         div(className := "search")(
           input(
             `type` := "search",
