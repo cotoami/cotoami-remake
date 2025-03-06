@@ -1,9 +1,9 @@
 use std::{borrow::Cow, sync::Arc, time::Instant};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
-use futures::{Stream, stream::StreamExt};
+use futures::{stream::StreamExt, Stream};
 use googletest::prelude::*;
 use test_log::test;
 
@@ -308,6 +308,37 @@ where
             description: some(eq("The second ito")),
             order: eq(&1),
         })]
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: Promote
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::Promote {
+        id: posted_coto.uuid,
+    }
+    .into_request();
+    let (cotonoma, coto) = service.call(request).await?.content::<(Cotonoma, Coto)>()?;
+
+    assert_that!(
+        cotonoma,
+        pat!(Cotonoma {
+            node_id: eq(&backend_node.uuid),
+            name: eq("Hello, Cotoami!"),
+            coto_id: eq(&coto.uuid),
+            created_at: eq(&coto.updated_at),
+            updated_at: eq(&coto.updated_at),
+        }),
+        "Unexpected response (Cotonoma) of Promote command"
+    );
+    assert_that!(
+        coto,
+        pat!(Coto {
+            content: none(),
+            summary: some(eq("Hello, Cotoami!")),
+            is_cotonoma: eq(&true),
+        }),
+        "Unexpected response (Coto) of Promote command"
     );
 
     Ok(())
