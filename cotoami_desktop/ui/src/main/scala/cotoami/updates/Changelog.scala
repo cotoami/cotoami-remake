@@ -121,6 +121,11 @@ object Changelog {
       }
     }
 
+    // PromoteJson
+    for (json <- change.Promote.toOption) {
+      return (model, Root.fetchCotoDetails(Id(json.coto_id)))
+    }
+
     // UpsertNode
     for (json <- change.UpsertNode.toOption) {
       val node = NodeBackend.toModel(json)

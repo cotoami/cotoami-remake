@@ -130,16 +130,16 @@ pub enum Change {
         diff: CotoContentDiff<'static>,
         updated_at: NaiveDateTime,
     } = 7,
+    Promote {
+        coto_id: Id<Coto>,
+        promoted_at: NaiveDateTime,
+    } = 10,
     // Used to delete a coto or cotonoma
     DeleteCoto {
         coto_id: Id<Coto>,
         deleted_at: NaiveDateTime,
     } = 8,
     CreateCotonoma(Cotonoma, Coto) = 9,
-    Promote {
-        coto_id: Id<Coto>,
-        promoted_at: NaiveDateTime,
-    } = 10,
     RenameCotonoma {
         cotonoma_id: Id<Cotonoma>,
         name: String,

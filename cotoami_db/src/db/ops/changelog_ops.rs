@@ -217,6 +217,12 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 // Accept the image size from a parent by skipping resizing (image_max_size as None).
                 coto_ops::edit(coto_id, diff, None, Some(*updated_at)).run(ctx)?;
             }
+            Change::Promote {
+                coto_id,
+                promoted_at,
+            } => {
+                coto_ops::promote(coto_id, Some(*promoted_at)).run(ctx)?;
+            }
             Change::DeleteCoto {
                 coto_id,
                 deleted_at,
@@ -226,12 +232,6 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
             Change::CreateCotonoma(cotonoma, coto) => {
                 coto_ops::insert(&coto.to_import()?).run(ctx)?;
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
-            }
-            Change::Promote {
-                coto_id,
-                promoted_at,
-            } => {
-                coto_ops::promote(coto_id, Some(*promoted_at)).run(ctx)?;
             }
             Change::RenameCotonoma {
                 cotonoma_id,
