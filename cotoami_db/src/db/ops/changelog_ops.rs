@@ -142,10 +142,13 @@ pub(crate) fn import_change<'a>(
         );
 
         // Import the change only if the same change has not yet been imported before.
-        let log_entry = if contains_change(log).run(ctx)? {
+        let imported_log = if contains_change(log).run(ctx)? {
             debug!(
-                "Change {} skipped (origin node: {}, origin number: {})",
-                log.serial_number, log.origin_node_id, log.origin_serial_number
+                "Skipping change {} from parent:{} (origin: {}, number: {})",
+                log.serial_number,
+                parent_node.node_id,
+                log.origin_node_id,
+                log.origin_serial_number
             );
             None
         } else {
@@ -157,8 +160,7 @@ pub(crate) fn import_change<'a>(
                 // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
                 log_to_import.set_import_error(format!("{e:#?}"));
             }
-            let log_entry = insert(&log_to_import).run(ctx)?;
-            Some(log_entry)
+            Some(insert(&log_to_import).run(ctx)?)
         };
 
         // Increment the count of received changes
@@ -168,11 +170,11 @@ pub(crate) fn import_change<'a>(
             // If the same change has already been received from another parent,
             // `log_entry` should be None, so the current timpstamp will be used
             // as the `received_at` timpstamp.
-            log_entry.as_ref().map(|e| e.inserted_at),
+            imported_log.as_ref().map(|e| e.inserted_at),
         )
         .run(ctx)?;
 
-        Ok(log_entry)
+        Ok(imported_log)
     })
 }
 
