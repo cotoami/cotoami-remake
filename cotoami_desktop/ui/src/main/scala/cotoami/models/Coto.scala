@@ -74,11 +74,13 @@ case class Coto(
     ((summary, content) match {
       case (Some(summary), _) =>
         copy(summary = Some(summary.take(Cotonoma.NameMaxLength)))
-      case (None, Some(content)) =>
+      case (None, Some(content)) => {
+        val text = Coto.stripMarkdown.processSync(content).toString()
         if (content.length() <= Cotonoma.NameMaxLength)
-          copy(summary = Some(content), content = None)
+          copy(summary = Some(text), content = None)
         else
-          copy(summary = Some(content.take(Cotonoma.NameMaxLength)))
+          copy(summary = Some(text.take(Cotonoma.NameMaxLength)))
+      }
       case _ => this
     }).copy(isCotonoma = true)
 
