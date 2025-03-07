@@ -1,0 +1,17 @@
+dialog.promote {
+  article {
+    width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2));
+    max-width: none;
+
+    div.modal-body {
+      height: 70vh;
+
+      display: flex;
+      flex-direction: column;
+
+      div.cotonoma-form {
+        margin-bottom: 8px;
+      }
+    }
+  }
+}
