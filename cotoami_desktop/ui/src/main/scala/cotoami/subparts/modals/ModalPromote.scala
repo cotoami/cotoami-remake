@@ -128,7 +128,7 @@ object ModalPromote {
       CotoForm.sectionValidationError(form)
     )
     div(className := "coto-form")(
-      CotoForm.sectionMediaPreview(form) match {
+      CotoForm.sectionMediaPreview(form, false) match {
         case Some(mediaPreview) =>
           SplitPane(
             vertical = false,

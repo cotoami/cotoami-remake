@@ -343,7 +343,8 @@ object EditorCoto {
       )
 
     def sectionMediaPreview(
-        model: Model
+        model: Model,
+        enableDelete: Boolean = true
     )(implicit dispatch: Msg => Unit): Option[ReactElement] =
       model.mediaBlob.map { blob =>
         val url = dom.URL.createObjectURL(blob)
@@ -353,13 +354,15 @@ object EditorCoto {
               src := url,
               onLoad := (_ => dom.URL.revokeObjectURL(url))
             ),
-            toolButton(
-              symbol = "close",
-              tip = Some("Delete"),
-              classes = "delete",
-              disabled = model.encodingMedia,
-              onClick = _ => dispatch(Msg.DeleteMediaContent)
-            )
+            Option.when(enableDelete) {
+              toolButton(
+                symbol = "close",
+                tip = Some("Delete"),
+                classes = "delete",
+                disabled = model.encodingMedia,
+                onClick = _ => dispatch(Msg.DeleteMediaContent)
+              )
+            }
           )
         )
       }
