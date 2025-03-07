@@ -119,7 +119,7 @@ object ModalEditCoto {
         dateTimeRange = coto.dateTimeRange
       )
 
-      val cotonomaForm = CotonomaForm.Model(
+      val cotonomaForm = CotonomaForm.Model.forUpdate(
         coto.nameAsCotonoma.getOrElse("")
       )
 

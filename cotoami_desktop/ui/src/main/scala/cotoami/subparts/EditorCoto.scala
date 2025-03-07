@@ -401,10 +401,17 @@ object EditorCoto {
     }
 
     object Model {
-      def apply(originalName: String): Model = Model(
+      def forUpdate(originalName: String): Model = Model(
         originalName = Some(originalName),
         nameInput = originalName
       )
+
+      def withDefault(
+          defaultName: String,
+          nodeId: Id[Node]
+      ): (Model, Cmd[Msg]) =
+        Model(originalName = None, nameInput = defaultName)
+          .validate(nodeId)
     }
 
     sealed trait Msg
