@@ -253,11 +253,7 @@ object EditorCoto {
       if (model.inPreview)
         sectionPreview(model)
       else
-        CotoForm.sectionEditor(
-          model = model,
-          onFocus = onFocus,
-          onCtrlEnter = onCtrlEnter
-        )(dispatch)
+        sectionEditor(model, onCtrlEnter, onFocus)
 
     def sectionEditor(
         model: CotoForm.Model,
