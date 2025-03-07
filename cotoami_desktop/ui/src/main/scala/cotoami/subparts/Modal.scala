@@ -71,6 +71,11 @@ object Modal {
     }
   }
 
+  case class Promote(model: ModalPromote.Model) extends Modal
+  object Promote {
+    def apply(coto: Coto): Promote = Promote(ModalPromote.Model(coto))
+  }
+
   case class EditIto(model: ModalEditIto.Model) extends Modal
   object EditIto {
     def apply(ito: Ito): EditIto = EditIto(ModalEditIto.Model(ito))
@@ -149,6 +154,7 @@ object Modal {
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
     case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
+    case class PromoteMsg(msg: ModalPromote.Msg) extends Msg
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
     case class SelectionMsg(msg: ModalSelection.Msg) extends Msg
     case class ConnectMsg(msg: ModalConnect.Msg) extends Msg
@@ -203,6 +209,13 @@ object Modal {
                   .modify(_.geomap).setTo(geomap),
                 cmds
               )
+          }
+        }
+
+      case Msg.PromoteMsg(modalMsg) =>
+        stack.get[Promote].map { case Promote(modal) =>
+          ModalPromote.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(Promote(modal), model), cmds)
           }
         }
 
@@ -374,6 +387,8 @@ object Modal {
         )
 
       case EditCoto(modal) => Some(ModalEditCoto(modal))
+
+      case Promote(modal) => Some(ModalPromote(modal))
 
       case EditIto(modal) => Some(ModalEditIto(modal))
 

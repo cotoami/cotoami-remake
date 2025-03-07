@@ -68,7 +68,7 @@ object ToolbarCoto {
         toolButton(
           classes = "add-sub-coto",
           symbol = "add",
-          tip = Some("Write a sub-coto"),
+          tip = Some("Write Sub-coto"),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -95,8 +95,12 @@ object ToolbarCoto {
         toolButton(
           classes = "promote-to-cotonoma",
           symbol = "drive_folder_upload",
-          tip = Some("Promote to a cotonoma"),
-          tipPlacement = "left"
+          tip = Some("Promote to Cotonoma"),
+          tipPlacement = "left",
+          onClick = e => {
+            e.stopPropagation()
+            dispatch(Modal.Msg.OpenModal(Modal.Promote(coto)))
+          }
         )
       },
       Option.when(context.repo.nodes.canEdit(coto) && !coto.isCotonoma) {
