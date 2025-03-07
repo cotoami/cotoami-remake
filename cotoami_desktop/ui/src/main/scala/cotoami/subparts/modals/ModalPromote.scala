@@ -22,6 +22,7 @@ object ModalPromote {
   case class Model(
       coto: Coto,
       cotonomaForm: CotonomaForm.Model,
+      cotoForm: CotoForm.Model,
       error: Option[String] = None
   )
 
@@ -31,8 +32,9 @@ object ModalPromote {
         val defaultName = coto.summary.getOrElse("")
         val (cotonomaForm, cmd) =
           CotonomaForm.Model.withDefault(defaultName, coto.nodeId)
+        val cotoForm = CotoForm.Model.forUpdate(coto)
         (
-          Model(coto, cotonomaForm),
+          Model(coto, cotonomaForm, cotoForm),
           cmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
@@ -48,6 +50,7 @@ object ModalPromote {
 
   object Msg {
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
+    case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -60,6 +63,14 @@ object ModalPromote {
         default.copy(
           _1 = model.copy(cotonomaForm = form),
           _2 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+        )
+      }
+
+      case Msg.CotoFormMsg(submsg) => {
+        val (form, _, subcmd) = CotoForm.update(submsg, model.cotoForm)
+        default.copy(
+          _1 = model.copy(cotoForm = form),
+          _2 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
     }
