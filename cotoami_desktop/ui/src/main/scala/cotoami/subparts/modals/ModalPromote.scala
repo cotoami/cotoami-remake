@@ -9,7 +9,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma}
-import cotoami.components.{materialSymbol, SplitPane}
+import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 
@@ -84,7 +84,12 @@ object ModalPromote {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
-      dialogClasses = "promote",
+      dialogClasses = optionalClasses(
+        Seq(
+          ("promote", true),
+          ("with-media-content", model.cotoForm.mediaBlob.isDefined)
+        )
+      ),
       closeButton = Some((classOf[Modal.Promote], dispatch)),
       error = model.error
     )(

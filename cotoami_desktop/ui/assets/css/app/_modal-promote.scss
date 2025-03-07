@@ -22,4 +22,8 @@ dialog.promote {
       }
     }
   }
+
+  &.with-media-content div.modal-body {
+    height: 70vh;
+  }
 }
