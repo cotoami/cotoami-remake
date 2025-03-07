@@ -414,7 +414,7 @@ object SectionFlowInput {
       primary = SplitPane.Primary.Props(className = Some("coto-form-pane"))(
         CotoForm.sectionEditorOrPreview(
           model = form,
-          onCtrlEnter = () => dispatch(Msg.Post),
+          onCtrlEnter = Some(() => dispatch(Msg.Post)),
           onFocus = Some(() => dispatch(Msg.SetFolded(false)))
         )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),

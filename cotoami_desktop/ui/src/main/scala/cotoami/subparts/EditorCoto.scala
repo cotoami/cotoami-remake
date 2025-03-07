@@ -229,7 +229,7 @@ object EditorCoto {
 
     def apply(
         model: CotoForm.Model,
-        onCtrlEnter: () => Unit,
+        onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         vertical: Boolean = false
     )(implicit
@@ -263,7 +263,7 @@ object EditorCoto {
 
     def sectionEditorOrPreview(
         model: CotoForm.Model,
-        onCtrlEnter: () => Unit,
+        onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
     )(implicit dispatch: Msg => Unit): ReactElement =
@@ -274,7 +274,7 @@ object EditorCoto {
 
     def sectionEditor(
         model: CotoForm.Model,
-        onCtrlEnter: () => Unit,
+        onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
     )(implicit dispatch: Msg => Unit): ReactElement =
@@ -288,7 +288,7 @@ object EditorCoto {
             onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
             onKeyDown := (e =>
               if (model.hasValidContents && detectCtrlEnter(e)) {
-                onCtrlEnter()
+                onCtrlEnter.map(_())
               }
             )
           )
@@ -302,7 +302,7 @@ object EditorCoto {
           onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
           onKeyDown := (e =>
             if (model.hasValidContents && detectCtrlEnter(e)) {
-              onCtrlEnter()
+              onCtrlEnter.map(_())
             }
           )
         ),

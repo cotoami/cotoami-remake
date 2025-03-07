@@ -197,7 +197,7 @@ object ModalSubcoto {
       CotoForm(
         model = model.cotoForm,
         vertical = true,
-        onCtrlEnter = () => dispatch(Msg.Post)
+        onCtrlEnter = Some(() => dispatch(Msg.Post))
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
       sectionPost(model)
     )

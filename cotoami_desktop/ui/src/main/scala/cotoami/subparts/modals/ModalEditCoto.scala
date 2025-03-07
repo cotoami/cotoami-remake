@@ -230,7 +230,7 @@ object ModalEditCoto {
       },
       CotoForm(
         model = model.cotoForm,
-        onCtrlEnter = () => dispatch(Msg.Save)
+        onCtrlEnter = Some(() => dispatch(Msg.Save))
       )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
       div(className := "buttons")(
         CotoForm.buttonPreview(model = model.cotoForm)(submsg =>
