@@ -7,6 +7,7 @@ import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma}
 import cotoami.components.materialSymbol
 import cotoami.subparts.Modal
@@ -31,10 +32,7 @@ object ModalPromote {
         val (cotonomaForm, cmd) =
           CotonomaForm.Model.withDefault(defaultName, coto.nodeId)
         (
-          Model(
-            coto = coto,
-            cotonomaForm = cotonomaForm
-          ),
+          Model(coto, cotonomaForm),
           cmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
@@ -86,5 +84,14 @@ object ModalPromote {
       ),
       "Promote to Cotonoma"
     )(
+      div(className := "cotonoma-form")(
+        CotonomaForm.inputName(
+          model = model.cotonomaForm,
+          onFocus = None,
+          onBlur = None,
+          onCtrlEnter = () => ()
+        )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
+        Validation.sectionValidationError(model.cotonomaForm.validation)
+      )
     )
 }
