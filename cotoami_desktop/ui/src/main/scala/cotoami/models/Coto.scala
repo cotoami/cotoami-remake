@@ -70,6 +70,18 @@ case class Coto(
 
   def isRepost: Boolean = repostOfId.isDefined
 
+  def toPromote: Coto =
+    ((summary, content) match {
+      case (Some(summary), _) =>
+        copy(summary = Some(summary.take(Cotonoma.NameMaxLength)))
+      case (None, Some(content)) =>
+        if (content.length() <= Cotonoma.NameMaxLength)
+          copy(summary = Some(content), content = None)
+        else
+          copy(summary = Some(content.take(Cotonoma.NameMaxLength)))
+      case _ => this
+    }).copy(isCotonoma = true)
+
   lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
   lazy val updatedAt: Instant = parseUtcIso(updatedAtUtcIso)
 
