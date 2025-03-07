@@ -5,7 +5,7 @@ import scala.util.chaining._
 import slinky.core.facade.ReactElement
 
 import fui.Cmd
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma}
 import cotoami.components.materialSymbol
 import cotoami.subparts.Modal
@@ -24,11 +24,17 @@ object ModalPromote {
   )
 
   object Model {
-    def apply(coto: Coto): Model =
+    def apply(coto: Coto): (Model, Cmd[AppMsg]) =
       coto.toPromote.pipe { coto =>
-        Model(
-          coto = coto,
-          cotonomaForm = CotonomaForm.Model()
+        val defaultName = coto.summary.getOrElse("")
+        val (cotonomaForm, cmd) =
+          CotonomaForm.Model.withDefault(defaultName, coto.nodeId)
+        (
+          Model(
+            coto = coto,
+            cotonomaForm = cotonomaForm
+          ),
+          cmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
   }
@@ -37,10 +43,28 @@ object ModalPromote {
   // Update
   /////////////////////////////////////////////////////////////////////////////
 
-  sealed trait Msg
+  sealed trait Msg extends Into[AppMsg] {
+    def into = Modal.Msg.PromoteMsg(this).pipe(AppMsg.ModalMsg)
+  }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+  object Msg {
+    case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
+  }
+
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cmd[AppMsg]) = {
+    val default = (model, Cmd.none)
+    msg match {
+      case Msg.CotonomaFormMsg(submsg) => {
+        val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
+        default.copy(
+          _1 = model.copy(cotonomaForm = form),
+          _2 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+        )
+      }
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View

@@ -73,7 +73,10 @@ object Modal {
 
   case class Promote(model: ModalPromote.Model) extends Modal
   object Promote {
-    def apply(coto: Coto): Promote = Promote(ModalPromote.Model(coto))
+    def apply(coto: Coto): (Promote, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalPromote.Model(coto)
+      (Promote(model), cmd)
+    }
   }
 
   case class EditIto(model: ModalEditIto.Model) extends Modal
