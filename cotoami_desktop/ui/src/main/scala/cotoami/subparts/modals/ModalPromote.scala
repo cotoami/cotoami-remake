@@ -2,14 +2,14 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma}
-import cotoami.components.materialSymbol
+import cotoami.components.{materialSymbol, SplitPane}
 import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 
@@ -104,8 +104,9 @@ object ModalPromote {
         )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
         Validation.sectionValidationError(model.cotonomaForm.validation)
       ),
+      divCotoForm(model.cotoForm)(submsg => dispatch(Msg.CotoFormMsg(submsg))),
       div(className := "buttons")(
-        CotoForm.buttonPreview(model = model.cotoForm)(submsg =>
+        CotoForm.buttonPreview(model.cotoForm)(submsg =>
           dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
@@ -113,4 +114,25 @@ object ModalPromote {
         )("Promote")
       )
     )
+
+  private def divCotoForm(form: CotoForm.Model)(implicit
+      dispatch: CotoForm.Msg => Unit
+  ): ReactElement = {
+    val editor = Fragment(
+      CotoForm.sectionEditorOrPreview(form, None, None, false),
+      CotoForm.sectionValidationError(form)
+    )
+    div(className := "coto-form")(
+      CotoForm.sectionMediaPreview(form) match {
+        case Some(mediaPreview) =>
+          SplitPane(
+            vertical = false,
+            initialPrimarySize = 300,
+            primary = SplitPane.Primary.Props()(mediaPreview),
+            secondary = SplitPane.Secondary.Props()(editor)
+          )
+        case None => editor
+      }
+    )
+  }
 }

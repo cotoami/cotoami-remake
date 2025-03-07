@@ -237,7 +237,7 @@ object EditorCoto {
         dispatch: Msg => Unit
     ): ReactElement = {
       val editor = Fragment(
-        sectionEditorOrPreview(model, onCtrlEnter, onFocus)(dispatch),
+        sectionEditorOrPreview(model, onCtrlEnter, onFocus),
         ulAttributes(
           model.dateTimeRange,
           model.mediaDateTime,
@@ -247,7 +247,7 @@ object EditorCoto {
         sectionValidationError(model)
       )
       div(className := "coto-form")(
-        sectionMediaPreview(model)(dispatch) match {
+        sectionMediaPreview(model) match {
           case Some(mediaPreview) =>
             SplitPane(
               vertical = vertical,
@@ -255,7 +255,6 @@ object EditorCoto {
               primary = SplitPane.Primary.Props()(mediaPreview),
               secondary = SplitPane.Secondary.Props()(editor)
             )
-
           case None => editor
         }
       )
