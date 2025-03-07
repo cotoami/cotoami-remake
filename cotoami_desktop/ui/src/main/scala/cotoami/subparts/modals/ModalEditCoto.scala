@@ -106,23 +106,11 @@ object ModalEditCoto {
 
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) = {
-      val cotoForm = CotoForm.Model(
-        isCotonoma = coto.isCotonoma,
-        summaryInput = coto.summary.getOrElse(""),
-        contentInput = coto.content.getOrElse(""),
-        mediaBlob = coto.mediaBlob.map(_._1),
-        // The content of `mediaBase64` will be used only if `mediaContentChanged` is true,
-        // so let's set dummy data here to avoid the cost of base64-encoding `mediaBlob`
-        // and just to denote that the coto has some media content
-        // (cf. `CotoForm.Model.hasContents`).
-        mediaBase64 = coto.mediaBlob.map { case (_, t) => ("", t) },
-        dateTimeRange = coto.dateTimeRange
-      )
-
-      val cotonomaForm = CotonomaForm.Model.forUpdate(
-        coto.nameAsCotonoma.getOrElse("")
-      )
-
+      val cotoForm = CotoForm.Model.forUpdate(coto)
+      val cotonomaForm =
+        CotonomaForm.Model.forUpdate(
+          coto.nameAsCotonoma.getOrElse("")
+        )
       (
         Model(coto, cotoForm, cotonomaForm),
         Browser.send(
@@ -130,7 +118,6 @@ object ModalEditCoto {
         ) +: cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
       )
     }
-
   }
 
   /////////////////////////////////////////////////////////////////////////////

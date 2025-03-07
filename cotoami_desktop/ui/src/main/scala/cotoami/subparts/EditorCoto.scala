@@ -94,6 +94,22 @@ object EditorCoto {
         hasContents && !validate.failed
     }
 
+    object Model {
+      def forUpdate(original: Coto): Model =
+        CotoForm.Model(
+          isCotonoma = original.isCotonoma,
+          summaryInput = original.summary.getOrElse(""),
+          contentInput = original.content.getOrElse(""),
+          mediaBlob = original.mediaBlob.map(_._1),
+          // The content of `mediaBase64` will be used only if the media content has been
+          // changed, so let's set dummy data here to avoid the cost of base64-encoding
+          // `mediaBlob` and just to denote that the coto has some media content
+          // (cf. `CotoForm.Model.hasContents`).
+          mediaBase64 = original.mediaBlob.map { case (_, t) => ("", t) },
+          dateTimeRange = original.dateTimeRange
+        )
+    }
+
     sealed trait Msg
 
     object Msg {
