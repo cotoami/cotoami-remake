@@ -248,17 +248,19 @@ object EditorCoto {
     def sectionEditorOrPreview(
         model: CotoForm.Model,
         onCtrlEnter: () => Unit,
-        onFocus: Option[() => Unit] = None
+        onFocus: Option[() => Unit] = None,
+        enableImageInput: Boolean = true
     )(implicit dispatch: Msg => Unit): ReactElement =
       if (model.inPreview)
         sectionPreview(model)
       else
-        sectionEditor(model, onCtrlEnter, onFocus)
+        sectionEditor(model, onCtrlEnter, onFocus, enableImageInput)
 
     def sectionEditor(
         model: CotoForm.Model,
         onCtrlEnter: () => Unit,
-        onFocus: Option[() => Unit] = None
+        onFocus: Option[() => Unit] = None,
+        enableImageInput: Boolean = true
     )(implicit dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
         Option.when(!model.isCotonoma) {
@@ -288,13 +290,15 @@ object EditorCoto {
             }
           )
         ),
-        div(className := "input-image")(
-          InputFile(
-            accept = js.Dictionary("image/*" -> js.Array[String]()),
-            message = "Drop an image file here, or click to select one",
-            onSelect = file => dispatch(Msg.FileInput(file))
+        Option.when(enableImageInput) {
+          div(className := "input-image")(
+            InputFile(
+              accept = js.Dictionary("image/*" -> js.Array[String]()),
+              message = "Drop an image file here, or click to select one",
+              onSelect = file => dispatch(Msg.FileInput(file))
+            )
           )
-        )
+        }
       )
 
     def sectionPreview(model: CotoForm.Model): ReactElement =
