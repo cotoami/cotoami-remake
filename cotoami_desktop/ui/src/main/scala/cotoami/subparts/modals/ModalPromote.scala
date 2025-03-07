@@ -103,6 +103,14 @@ object ModalPromote {
           onCtrlEnter = () => ()
         )(submsg => dispatch(Msg.CotonomaFormMsg(submsg))),
         Validation.sectionValidationError(model.cotonomaForm.validation)
+      ),
+      div(className := "buttons")(
+        CotoForm.buttonPreview(model = model.cotoForm)(submsg =>
+          dispatch(Msg.CotoFormMsg(submsg))
+        ),
+        button(
+          className := "promote"
+        )("Promote")
       )
     )
 }
