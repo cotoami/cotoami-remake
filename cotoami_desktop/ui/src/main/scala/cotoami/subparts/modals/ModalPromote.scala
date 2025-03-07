@@ -3,6 +3,7 @@ package cotoami.subparts.modals
 import scala.util.chaining._
 
 import slinky.core.facade.ReactElement
+import slinky.web.html._
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
@@ -78,7 +79,11 @@ object ModalPromote {
       closeButton = Some((classOf[Modal.Promote], dispatch)),
       error = model.error
     )(
-      materialSymbol(Cotonoma.IconName),
+      span(className := "icon")(
+        materialSymbol(Coto.IconName),
+        materialSymbol("arrow_right_alt"),
+        materialSymbol(Cotonoma.IconName)
+      ),
       "Promote to Cotonoma"
     )(
     )
