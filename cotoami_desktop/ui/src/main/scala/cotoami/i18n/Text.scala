@@ -11,6 +11,9 @@ trait Text {
   val NodeRoot: String
 
   val Save: String
+  val Edit: String
+  val Connect: String
+  val WriteSubcoto: String
 
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement

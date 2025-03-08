@@ -7,7 +7,7 @@ import slinky.web.html._
 
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
-import cotoami.models.{Coto, Ito, OrderContext}
+import cotoami.models.{Coto, Id, Ito, OrderContext}
 import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 
 object SectionCotoDetails {
@@ -41,19 +41,28 @@ object SectionCotoDetails {
           articleMainCoto(coto),
           div(className := "sub-cotos")(
             olSubCotos(coto),
-            divAddSubCoto
+            divAddSubCoto(coto.id, None)
           )
         ).withKey(coto.id.uuid) // Reset the state when the coto is changed
       )
     )
 
-  private def divAddSubCoto: ReactElement =
+  private def divAddSubCoto(sourceCotoId: Id[Coto], order: Option[Int])(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
     div(className := "insert-sub-coto")(
       toolButton(
         symbol = "add_circle",
-        tip = Some("Write a sub-coto"),
+        tip = Some(context.i18n.text.WriteSubcoto),
         tipPlacement = "bottom",
-        classes = "insert-sub-coto"
+        classes = "insert-sub-coto",
+        onClick = e =>
+          dispatch(
+            Modal.Msg.OpenModal(
+              Modal.Subcoto(sourceCotoId, order, context.repo)
+            )
+          )
       )
     )
 
@@ -101,7 +110,7 @@ object SectionCotoDetails {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     li(key := ito.id.uuid, className := "sub")(
-      divAddSubCoto,
+      divAddSubCoto(ito.sourceCotoId, Some(ito.order)),
       div(className := "sub")(
         PartsCoto.ulParents(
           repo.parentsOf(coto.id).filter(_._2.id != ito.id),

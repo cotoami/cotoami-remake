@@ -27,7 +27,7 @@ object ToolbarCoto {
         toolButton(
           classes = "connect",
           symbol = Ito.ConnectIconName,
-          tip = Some("Connect"),
+          tip = Some(context.i18n.text.Connect),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -39,7 +39,7 @@ object ToolbarCoto {
         toolButton(
           classes = "pin-coto",
           symbol = "push_pin",
-          tip = Some("Pin"),
+          tip = Some(context.i18n.text.Pin),
           tipPlacement = "left",
           disabled = context.repo.beingPinned(coto.id),
           onClick = e => {
@@ -52,7 +52,7 @@ object ToolbarCoto {
         toolButton(
           classes = "edit-coto",
           symbol = "edit",
-          tip = Some("Edit"),
+          tip = Some(context.i18n.text.Edit),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -64,7 +64,7 @@ object ToolbarCoto {
         toolButton(
           classes = "add-sub-coto",
           symbol = "add",
-          tip = Some("Write Sub-coto"),
+          tip = Some(context.i18n.text.WriteSubcoto),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()

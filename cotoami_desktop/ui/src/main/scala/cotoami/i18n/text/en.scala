@@ -14,6 +14,9 @@ object en extends Text {
   val NodeRoot = "Node Root"
 
   val Save = "Save"
+  val Edit = "Edit"
+  val Connect = "Connect"
+  val WriteSubcoto = "Write Sub-coto"
 
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """
