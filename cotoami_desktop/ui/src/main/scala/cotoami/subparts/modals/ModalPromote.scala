@@ -127,6 +127,7 @@ object ModalPromote {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply(model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
@@ -168,8 +169,7 @@ object ModalPromote {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  "Are you sure you want to promote this coto to a cotonoma?" ++
-                    " It is an irreversible change.",
+                  context.i18n.text.ModalPromote_confirm,
                   Msg.Promote
                 )
               )

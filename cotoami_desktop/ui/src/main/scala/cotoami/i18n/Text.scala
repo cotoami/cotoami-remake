@@ -2,11 +2,13 @@ package cotoami.i18n
 
 import slinky.core.facade.ReactElement
 
-trait Help {
+trait Text {
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement
+
+  val ModalPromote_confirm: String
 }
 
-object Help {
-  def inLang(lang: String): Help = help.en
+object Text {
+  def inLang(lang: String): Text = text.en
 }

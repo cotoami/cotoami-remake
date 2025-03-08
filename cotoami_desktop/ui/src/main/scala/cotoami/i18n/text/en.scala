@@ -1,11 +1,11 @@
-package cotoami.i18n.help
+package cotoami.i18n.text
 
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import cotoami.i18n.Help
+import cotoami.i18n.Text
 
-object en extends Help {
+object en extends Text {
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """
     You can incorporate another database node into your database.
@@ -23,4 +23,7 @@ object en extends Help {
     """,
     code()(operatingNodeId)
   )
+
+  val ModalPromote_confirm =
+    "Are you sure you want to promote this coto to a cotonoma? It is an irreversible change."
 }

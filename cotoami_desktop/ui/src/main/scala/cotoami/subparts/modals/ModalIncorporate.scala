@@ -189,7 +189,7 @@ object ModalIncorporate {
       sectionHelp(
         model.helpIntro,
         () => dispatch(Msg.HelpIntro(false)),
-        context.i18n.help.ModalIncorporate_intro
+        context.i18n.text.ModalIncorporate_intro
       ),
       model.nodeSession
         .map(sectionIncorporate(model, _))
