@@ -98,8 +98,8 @@ object Modal {
 
   case class Subcoto(model: ModalSubcoto.Model) extends Modal
   object Subcoto {
-    def apply(sourceCotoId: Id[Coto], repo: Root): Subcoto =
-      Subcoto(ModalSubcoto.Model(sourceCotoId, repo))
+    def apply(sourceCotoId: Id[Coto], order: Option[Int], repo: Root): Subcoto =
+      Subcoto(ModalSubcoto.Model(sourceCotoId, order, repo))
   }
 
   case class Incorporate(

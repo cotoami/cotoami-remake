@@ -28,6 +28,7 @@ object ModalSubcoto {
       targetCotonomas: Seq[TargetCotonoma],
       postTo: Option[TargetCotonoma],
       descriptionInput: String = "",
+      order: Option[Int] = None,
       cotoForm: CotoForm.Model = CotoForm.Model(),
       posting: Boolean = false,
       error: Option[String] = None
@@ -68,7 +69,7 @@ object ModalSubcoto {
     private def connect(
         targetCoto: Coto
     ): Cmd.One[Either[ErrorJson, (Ito, Coto)]] =
-      ItoBackend.connect(sourceCotoId, targetCoto.id, description, None, None)
+      ItoBackend.connect(sourceCotoId, targetCoto.id, description, None, order)
         .map(_.map(_ -> targetCoto))
   }
 
@@ -82,7 +83,7 @@ object ModalSubcoto {
   }
 
   object Model {
-    def apply(sourceCotoId: Id[Coto], repo: Root): Model = {
+    def apply(sourceCotoId: Id[Coto], order: Option[Int], repo: Root): Model = {
       val postedInIds =
         repo.cotos.get(sourceCotoId).map(_.postedInIds).getOrElse(Seq.empty)
 
@@ -110,7 +111,8 @@ object ModalSubcoto {
       Model(
         sourceCotoId = sourceCotoId,
         targetCotonomas = targetCotonomas,
-        postTo = targetCotonomas.headOption
+        postTo = targetCotonomas.headOption,
+        order = order
       )
     }
   }
