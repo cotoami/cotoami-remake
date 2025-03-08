@@ -59,7 +59,10 @@ object Changelog {
         model.modify(_.repo.itos).using(_.put(ito)),
         Cmd.Batch(
           Root.fetchGraphFromCoto(ito.targetCotoId),
-          Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
+          if (model.repo.isPin(ito))
+            Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
+          else
+            Cmd.none
         )
       )
     }
