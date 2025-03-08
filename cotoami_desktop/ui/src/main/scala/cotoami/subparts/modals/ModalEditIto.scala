@@ -134,12 +134,12 @@ object ModalEditIto {
       if (context.repo.isPin(model.original))
         Fragment(
           Modal.spanTitleIcon(Ito.PinIconName),
-          "Pin"
+          context.i18n.text.Pin
         )
       else
         Fragment(
           Modal.spanTitleIcon(Ito.IconName),
-          "Ito"
+          context.i18n.text.Ito
         )
     )(
       section(className := "source-coto")(
@@ -158,7 +158,7 @@ object ModalEditIto {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  "Are you sure you want to delete this ito?",
+                  context.i18n.text.ModalEditIto_confirmDisconnect,
                   Msg.Disconnect(model.original.id)
                 )
               )
@@ -166,14 +166,14 @@ object ModalEditIto {
           )
         )(
           materialSymbol("content_cut"),
-          span(className := "label")("Disconnect")
+          span(className := "label")(context.i18n.text.ModalEditIto_disconnect)
         ),
         button(
           className := "save",
           disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString(),
           onClick := (_ => dispatch(Msg.Save))
-        )("Save")
+        )(context.i18n.text.Save)
       )
     )
 

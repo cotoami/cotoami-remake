@@ -3,10 +3,22 @@ package cotoami.i18n
 import slinky.core.facade.ReactElement
 
 trait Text {
+  val Coto: String
+  val Cotonoma: String
+  val Ito: String
+  val Pin: String
+  val Node: String
+  val NodeRoot: String
+
+  val Save: String
+
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement
 
   val ModalPromote_confirm: String
+
+  val ModalEditIto_disconnect: String
+  val ModalEditIto_confirmDisconnect: String
 }
 
 object Text {

@@ -204,17 +204,17 @@ object ModalEditCoto {
         if (context.repo.isNodeRoot(model.original.id))
           Fragment(
             Modal.spanTitleIcon(Node.IconName),
-            "Node Root"
+            context.i18n.text.NodeRoot
           )
         else
           Fragment(
             Modal.spanTitleIcon(Cotonoma.IconName),
-            "Cotonoma"
+            context.i18n.text.Cotonoma
           )
       else
         Fragment(
           Modal.spanTitleIcon(Coto.IconName),
-          "Coto"
+          context.i18n.text.Coto
         )
     )(
       Option.when(model.original.isCotonoma) {
@@ -241,7 +241,10 @@ object ModalEditCoto {
           disabled := !model.readyToSave(context.geomap),
           aria - "busy" := model.saving.toString(),
           onClick := (_ => dispatch(Msg.Save))
-        )("Save", span(className := "shortcut-help")("(Ctrl + Enter)"))
+        )(
+          context.i18n.text.Save,
+          span(className := "shortcut-help")("(Ctrl + Enter)")
+        )
       )
     )
 }

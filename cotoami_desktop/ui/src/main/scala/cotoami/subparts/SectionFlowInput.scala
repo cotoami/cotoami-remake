@@ -381,7 +381,7 @@ object SectionFlowInput {
         )(
           span(className := "label")(
             materialSymbol(Coto.IconName),
-            "Coto"
+            context.i18n.text.Coto
           )
         ),
         button(
@@ -391,7 +391,7 @@ object SectionFlowInput {
         )(
           span(className := "label")(
             materialSymbol(Cotonoma.IconName),
-            "Cotonoma"
+            context.i18n.text.Cotonoma
           )
         )
       )
