@@ -7,7 +7,7 @@ import slinky.web.html._
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Server, ServerNode}
+import cotoami.models.{Node, Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
 import cotoami.repository.Nodes
 import cotoami.subparts.{
@@ -179,6 +179,7 @@ object ModalIncorporate {
       dialogClasses = "incorporate",
       closeButton = Some((classOf[Modal.Incorporate], dispatch))
     )(
+      Modal.spanTitleIcon(Node.IconName),
       "Incorporate Remote Database",
       buttonHelp(
         model.helpIntro,

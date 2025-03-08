@@ -2,6 +2,14 @@ dialog.subcoto {
   &>article {
     width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2));
 
+    &>header h1 span.title-icon {
+      margin-right: 10px;
+
+      .arrow {
+        vertical-align: baseline;
+      }
+    }
+
     div.modal-body {
       height: 70vh;
 

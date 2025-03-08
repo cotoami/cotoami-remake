@@ -88,6 +88,7 @@ object ModalOperateAs {
       closeButton = Some((modalType, dispatch)),
       error = model.switchingError
     )(
+      Modal.spanTitleIcon(Node.SwitchIconName),
       "Switch Operating Node"
     )(
       section(className := "preview")(

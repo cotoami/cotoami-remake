@@ -97,7 +97,7 @@ object ModalPromote {
       closeButton = Some((classOf[Modal.Promote], dispatch)),
       error = model.error
     )(
-      span(className := "icon")(
+      span(className := "title-icon")(
         materialSymbol(Coto.IconName),
         materialSymbol("arrow_right_alt"),
         materialSymbol(Cotonoma.IconName)

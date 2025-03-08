@@ -8,13 +8,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
 import cotoami.repository.Cotos
-import cotoami.components.{
-  materialSymbol,
-  toolButton,
-  Flipped,
-  Flipper,
-  ScrollArea
-}
+import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 import cotoami.subparts.{Modal, PartsCoto}
 
 object ModalSelection {
@@ -65,7 +59,7 @@ object ModalSelection {
       dialogClasses = "selection",
       closeButton = Some((classOf[Modal.Selection], dispatch))
     )(
-      materialSymbol("check_box"),
+      Modal.spanTitleIcon("check_box"),
       s"Selected cotos (${cotos.selectedIds.size})"
     )(
       ScrollArea(className = Some("selected-cotos"))(

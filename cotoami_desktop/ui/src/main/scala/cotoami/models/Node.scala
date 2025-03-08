@@ -48,6 +48,7 @@ case class Node(
 
 object Node {
   final val IconName = "database"
+  final val SwitchIconName = "switch_account"
 
   final val IconMimeType = "image/png"
 

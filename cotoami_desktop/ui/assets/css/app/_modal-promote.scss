@@ -3,12 +3,8 @@ dialog.promote {
     width: calc(var(--max-article-width) + (var(--block-spacing-horizontal) * 2));
     max-width: none;
 
-    &>header h1 span.icon {
+    &>header h1 span.title-icon {
       margin-right: 10px;
-
-      span.material-symbols {
-        margin-right: 0;
-      }
     }
 
     div.modal-body {

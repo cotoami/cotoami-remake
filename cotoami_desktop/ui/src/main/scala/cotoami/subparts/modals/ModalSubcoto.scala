@@ -188,6 +188,10 @@ object ModalSubcoto {
       closeButton = Some((classOf[Modal.Subcoto], dispatch)),
       error = model.error
     )(
+      span(className := "title-icon")(
+        materialSymbol("subdirectory_arrow_right", "arrow"),
+        materialSymbol(Coto.IconName)
+      ),
       "New sub-coto"
     )(
       section(className := "source")(

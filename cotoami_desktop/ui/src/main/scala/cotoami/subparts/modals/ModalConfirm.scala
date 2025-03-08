@@ -6,7 +6,6 @@ import slinky.web.html._
 
 import fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
-import cotoami.components.materialSymbol
 import cotoami.subparts.Modal
 
 object ModalConfirm {
@@ -57,7 +56,7 @@ object ModalConfirm {
       closeButton = Some((modalType, dispatch))
     )(
       Fragment(
-        materialSymbol("check_circle"),
+        Modal.spanTitleIcon("check_circle"),
         "Confirmation"
       )
     )(

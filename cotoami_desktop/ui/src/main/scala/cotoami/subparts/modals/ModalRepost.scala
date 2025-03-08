@@ -232,7 +232,7 @@ object ModalRepost {
       closeButton = Some((classOf[Modal.Repost], dispatch)),
       error = model.error
     )(
-      materialSymbol(Coto.RepostIconName),
+      Modal.spanTitleIcon(Coto.RepostIconName),
       "Repost"
     )(
       section(className := "repost-form")(

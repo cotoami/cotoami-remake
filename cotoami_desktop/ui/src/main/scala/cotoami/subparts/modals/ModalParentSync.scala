@@ -54,6 +54,7 @@ object ModalParentSync {
     Modal.view(
       dialogClasses = "parent-sync"
     )(
+      Modal.spanTitleIcon("sync"),
       "Syncing with Remote Nodes"
     )(
       Option.when(!parentSync.syncing.isEmpty) {

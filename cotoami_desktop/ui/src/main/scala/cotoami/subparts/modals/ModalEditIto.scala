@@ -133,12 +133,12 @@ object ModalEditIto {
     )(
       if (context.repo.isPin(model.original))
         Fragment(
-          materialSymbol(Ito.PinIconName),
+          Modal.spanTitleIcon(Ito.PinIconName),
           "Pin"
         )
       else
         Fragment(
-          materialSymbol(Ito.IconName),
+          Modal.spanTitleIcon(Ito.IconName),
           "Ito"
         )
     )(

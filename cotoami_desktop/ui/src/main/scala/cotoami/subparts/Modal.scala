@@ -10,6 +10,7 @@ import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.{Nodes, Root}
+import cotoami.components.materialSymbol
 import cotoami.subparts.modals._
 
 sealed trait Modal
@@ -377,6 +378,9 @@ object Modal {
         div(className := s"modal-body ${bodyClasses}")(body: _*)
       )
     )
+
+  def spanTitleIcon(iconName: String): ReactElement =
+    span(className := "title-icon")(materialSymbol(iconName))
 
   def apply(
       model: AppModel

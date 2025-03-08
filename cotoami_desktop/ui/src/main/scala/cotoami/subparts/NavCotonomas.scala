@@ -261,7 +261,7 @@ object NavCotonomas {
               .map(_.asOwner).getOrElse(false)
         ) {
           toolButton(
-            symbol = "switch_account",
+            symbol = Node.SwitchIconName,
             tip = Some("Operate as"),
             classes = "operate",
             onClick = _ =>

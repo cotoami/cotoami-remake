@@ -138,7 +138,7 @@ object ModalNodeProfile {
       closeButton = Some((classOf[Modal.NodeProfile], dispatch)),
       error = model.error
     )(
-      materialSymbol(Node.IconName),
+      Modal.spanTitleIcon(Node.IconName),
       "Node Profile"
     )(
       context.repo.nodes.get(model.nodeId)

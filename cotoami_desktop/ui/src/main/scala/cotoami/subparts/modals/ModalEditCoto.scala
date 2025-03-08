@@ -11,7 +11,7 @@ import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.components.{materialSymbol, optionalClasses}
+import cotoami.components.optionalClasses
 import cotoami.subparts.{Modal, SectionGeomap}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
@@ -203,17 +203,17 @@ object ModalEditCoto {
       if (model.original.isCotonoma)
         if (context.repo.isNodeRoot(model.original.id))
           Fragment(
-            materialSymbol(Node.IconName),
+            Modal.spanTitleIcon(Node.IconName),
             "Node Root"
           )
         else
           Fragment(
-            materialSymbol(Cotonoma.IconName),
+            Modal.spanTitleIcon(Cotonoma.IconName),
             "Cotonoma"
           )
       else
         Fragment(
-          materialSymbol(Coto.IconName),
+          Modal.spanTitleIcon(Coto.IconName),
           "Coto"
         )
     )(

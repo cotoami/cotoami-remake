@@ -11,10 +11,14 @@ dialog {
         font-size: 1.2rem;
         font-weight: 800;
 
-        span.material-symbols {
+        span.title-icon {
           margin-right: 5px;
-          vertical-align: -4px;
-          font-size: 21px;
+
+          span.material-symbols {
+            vertical-align: -4px;
+            font-size: 21px;
+            opacity: 0.6;
+          }
         }
       }
     }
