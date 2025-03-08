@@ -23,8 +23,12 @@ object ModalPromote {
       coto: Coto,
       cotonomaForm: CotonomaForm.Model,
       cotoForm: CotoForm.Model,
+      promoting: Boolean = false,
       error: Option[String] = None
-  )
+  ) {
+    def readyToPromote: Boolean =
+      !promoting && cotonomaForm.hasValidContents && !cotoForm.validate.failed
+  }
 
   object Model {
     def apply(coto: Coto): (Model, Cmd[AppMsg]) =
@@ -115,7 +119,9 @@ object ModalPromote {
           dispatch(Msg.CotoFormMsg(submsg))
         ),
         button(
-          className := "promote"
+          className := "promote",
+          disabled := !model.readyToPromote,
+          aria - "busy" := model.promoting.toString()
         )("Promote")
       )
     )
