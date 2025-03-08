@@ -20,25 +20,35 @@ object ModalPromote {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      coto: Coto,
+      original: Coto,
       cotonomaForm: CotonomaForm.Model,
       cotoForm: CotoForm.Model,
       promoting: Boolean = false,
       error: Option[String] = None
   ) {
+    def diffSummary: Option[Option[String]] =
+      Option.when(cotoForm.summary != original.summary) {
+        cotoForm.summary
+      }
+
+    def diffContent: Option[String] =
+      Option.when(cotoForm.content != original.content.getOrElse("")) {
+        cotoForm.content
+      }
+
     def readyToPromote: Boolean =
       !promoting && cotonomaForm.hasValidContents && !cotoForm.validate.failed
   }
 
   object Model {
-    def apply(coto: Coto): (Model, Cmd[AppMsg]) =
-      coto.toPromote.pipe { coto =>
+    def apply(original: Coto): (Model, Cmd[AppMsg]) =
+      original.toPromote.pipe { coto =>
         val defaultName = coto.summary.getOrElse("")
         val (cotonomaForm, cmd) =
           CotonomaForm.Model.withDefault(defaultName, coto.nodeId)
         val cotoForm = CotoForm.Model.forUpdate(coto)
         (
-          Model(coto, cotonomaForm, cotoForm),
+          Model(original, cotonomaForm, cotoForm),
           cmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
