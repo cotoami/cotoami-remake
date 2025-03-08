@@ -42,7 +42,6 @@ where
             rowid: 0, // skip_deserializing
             ..backend_node.clone()
         }),
-        "Unexpected response of LocalNode command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -103,7 +102,6 @@ where
                 version: eq(&0)
             })
         }),
-        "Unexpected response of AddClient command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -125,7 +123,6 @@ where
             node_id: eq(&new_client_id),
             disabled: eq(&true)
         }),
-        "Unexpected response of EditClient command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -160,7 +157,6 @@ where
             repost_of_id: none(),
             reposted_in_ids: none(),
         }),
-        "Unexpected response of PostCoto command"
     );
     assert_that!(
         changes.next().await,
@@ -171,7 +167,6 @@ where
                 ..posted_coto
             })))
         })),
-        "Unexpected changelogEntry on PostCoto command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -194,7 +189,6 @@ where
             details: none(),
             order: eq(&1),
         }),
-        "Unexpected response of Connect command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -248,7 +242,6 @@ where
             uuid: eq(&ito2.uuid),
             order: eq(&1),
         }),
-        "Unexpected response of ChangeItoOrder command"
     );
 
     let itos = backend_ds.outgoing_itos(&[backend_root_coto.uuid])?;
@@ -286,7 +279,6 @@ where
             description: some(eq("Updated phrase")),
             details: some(eq("Added details")),
         }),
-        "Unexpected response of EditIto command"
     );
 
     /////////////////////////////////////////////////////////////////////////////
@@ -329,7 +321,6 @@ where
             created_at: eq(&coto.updated_at),
             updated_at: eq(&coto.updated_at),
         }),
-        "Unexpected response (Cotonoma) of Promote command"
     );
     assert_that!(
         coto,
@@ -338,7 +329,34 @@ where
             summary: some(eq("Hello, Cotoami!")),
             is_cotonoma: eq(&true),
         }),
-        "Unexpected response (Coto) of Promote command"
+    );
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: Cotonoma
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::Cotonoma { id: cotonoma.uuid }.into_request();
+    let (cotonoma, coto) = service.call(request).await?.content::<(Cotonoma, Coto)>()?;
+
+    assert_that!(
+        cotonoma,
+        pat!(Cotonoma {
+            node_id: eq(&backend_node.uuid),
+            name: eq("Hello, Cotoami!"),
+            coto_id: eq(&coto.uuid),
+            created_at: eq(&coto.updated_at),
+            updated_at: eq(&coto.updated_at),
+        }),
+        "Unexpected response (Cotonoma) of Cotonoma command"
+    );
+    assert_that!(
+        coto,
+        pat!(Coto {
+            content: none(),
+            summary: some(eq("Hello, Cotoami!")),
+            is_cotonoma: eq(&true),
+        }),
+        "Unexpected response (Coto) of Cotonoma command"
     );
 
     Ok(())
