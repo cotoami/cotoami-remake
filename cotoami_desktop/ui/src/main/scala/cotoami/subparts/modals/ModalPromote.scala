@@ -41,6 +41,15 @@ object ModalPromote {
     def readyToPromote: Boolean =
       !promoting && cotonomaForm.hasValidContents && !cotoForm.validate.failed
 
+    def promote: (Model, Cmd.One[AppMsg]) =
+      (
+        copy(promoting = true),
+        updateCoto.flatMap(_ match {
+          case Right(coto) => CotoBackend.promote(coto.id)
+          case Left(e)     => pure(Left(e))
+        }).map(Msg.Promoted(_).into)
+      )
+
     private def updateCoto: Cmd.One[Either[ErrorJson, Coto]] =
       (diffSummary, diffContent) match {
         case (None, None) => pure(Right(original))
