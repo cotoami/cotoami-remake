@@ -83,42 +83,44 @@ object ModalPromote {
   object Msg {
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    object Promote extends Msg
     case class Promoted(result: Either[ErrorJson, (Cotonoma, Coto)]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Cmd[AppMsg]) = {
-    val default = (model, Cmd.none)
+  ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.CotonomaFormMsg(submsg) => {
         val (form, subcmd) = CotonomaForm.update(submsg, model.cotonomaForm)
-        default.copy(
-          _1 = model.copy(cotonomaForm = form),
-          _2 = subcmd.map(Msg.CotonomaFormMsg).map(_.into)
+        (
+          model.copy(cotonomaForm = form),
+          subcmd.map(Msg.CotonomaFormMsg).map(_.into)
         )
       }
 
       case Msg.CotoFormMsg(submsg) => {
         val (form, _, subcmd) = CotoForm.update(submsg, model.cotoForm)
-        default.copy(
-          _1 = model.copy(cotoForm = form),
-          _2 = subcmd.map(Msg.CotoFormMsg).map(_.into)
+        (
+          model.copy(cotoForm = form),
+          subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
 
+      case Msg.Promote => model.promote
+
       case Msg.Promoted(Right(_)) =>
-        default.copy(
-          _1 = model.copy(promoting = false),
-          _2 = Modal.close(classOf[Modal.Promote])
+        (
+          model.copy(promoting = false),
+          Modal.close(classOf[Modal.Promote])
         )
 
       case Msg.Promoted(Left(e)) =>
-        default.copy(
-          _1 = model.copy(promoting = false, error = Some(e.default_message))
+        (
+          model.copy(promoting = false, error = Some(e.default_message)),
+          Cmd.none
         )
     }
-  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -161,7 +163,18 @@ object ModalPromote {
         button(
           className := "promote",
           disabled := !model.readyToPromote,
-          aria - "busy" := model.promoting.toString()
+          aria - "busy" := model.promoting.toString(),
+          onClick := (_ =>
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  "Are you sure you want to promote this coto to a cotonoma?" ++
+                    " It is an irreversible change.",
+                  Msg.Promote
+                )
+              )
+            )
+          )
         )("Promote")
       )
     )
