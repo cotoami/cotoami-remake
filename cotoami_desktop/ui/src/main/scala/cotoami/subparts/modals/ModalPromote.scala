@@ -9,6 +9,7 @@ import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma}
+import cotoami.backend.ErrorJson
 import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
@@ -65,6 +66,7 @@ object ModalPromote {
   object Msg {
     case class CotonomaFormMsg(submsg: CotonomaForm.Msg) extends Msg
     case class CotoFormMsg(submsg: CotoForm.Msg) extends Msg
+    case class Promoted(result: Either[ErrorJson, (Cotonoma, Coto)]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -87,6 +89,17 @@ object ModalPromote {
           _2 = subcmd.map(Msg.CotoFormMsg).map(_.into)
         )
       }
+
+      case Msg.Promoted(Right(_)) =>
+        default.copy(
+          _1 = model.copy(promoting = false),
+          _2 = Modal.close(classOf[Modal.Promote])
+        )
+
+      case Msg.Promoted(Left(e)) =>
+        default.copy(
+          _1 = model.copy(promoting = false, error = Some(e.default_message))
+        )
     }
   }
 
