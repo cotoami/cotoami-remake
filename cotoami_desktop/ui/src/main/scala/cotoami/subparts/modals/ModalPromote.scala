@@ -6,10 +6,11 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import fui.Cmd
+import fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma}
-import cotoami.backend.ErrorJson
+import cotoami.backend.{CotoBackend, ErrorJson}
 import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
@@ -39,6 +40,13 @@ object ModalPromote {
 
     def readyToPromote: Boolean =
       !promoting && cotonomaForm.hasValidContents && !cotoForm.validate.failed
+
+    private def updateCoto: Cmd.One[Either[ErrorJson, Coto]] =
+      (diffSummary, diffContent) match {
+        case (None, None) => pure(Right(original))
+        case (summary, content) =>
+          CotoBackend.edit(original.id, content, summary, None, None, None)
+      }
   }
 
   object Model {
