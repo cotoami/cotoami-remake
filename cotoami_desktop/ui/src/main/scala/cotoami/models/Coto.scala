@@ -92,7 +92,7 @@ case class Coto(
 }
 
 object Coto {
-  final val IconName = "chat"
+  final val IconName = "text_snippet"
   final val RepostIconName = "repeat"
 
   final val SummaryMaxLength = 200
