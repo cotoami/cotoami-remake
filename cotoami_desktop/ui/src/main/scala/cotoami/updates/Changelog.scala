@@ -55,16 +55,27 @@ object Changelog {
     // CreateIto
     for (json <- change.CreateIto.toOption) {
       val ito = ItoBackend.toModel(json)
-      return (
-        model.modify(_.repo.itos).using(_.put(ito)),
-        Cmd.Batch(
-          Root.fetchGraphFromCoto(ito.targetCotoId),
-          if (model.repo.isPin(ito))
-            Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
-          else
-            Cmd.none
+      if (model.repo.itos.hasDuplicateOrder(ito))
+        return (
+          model,
+          Cmd.Batch(
+            Root.fetchGraphFromCoto(ito.targetCotoId),
+            // Insertion: refresh sibling itos if there's an order duplication.
+            Root.fetchOutgoingItos(ito.sourceCotoId)
+          )
         )
-      )
+      else
+        return (
+          model.modify(_.repo.itos).using(_.put(ito)),
+          Cmd.Batch(
+            Root.fetchGraphFromCoto(ito.targetCotoId),
+            if (model.repo.isPin(ito))
+              // Scroll to the just added pin
+              Browser.send(SectionPins.Msg.ScrollToPin(ito).into)
+            else
+              Cmd.none
+          )
+        )
     }
 
     // DeleteIto
