@@ -43,6 +43,9 @@ case class Itos(
 
   def anyFrom(id: Id[Coto]): Boolean = outgoingItos.anyFrom(id)
 
+  def hasDuplicateOrder(ito: Ito): Boolean =
+    outgoingItos.hasDuplicateOrder(ito)
+
   def to(id: Id[Coto]): Seq[Ito] =
     incomingItoIds.get(id).map(_.map(get).flatten.toSeq)
       .getOrElse(Seq.empty)
@@ -61,6 +64,9 @@ case class OutgoingItos(map: Map[Id[Coto], TreeMap[Int, Ito]] = Map.empty)
 
   def anyFrom(id: Id[Coto]): Boolean =
     map.get(id).map(!_.isEmpty).getOrElse(false)
+
+  def hasDuplicateOrder(ito: Ito): Boolean =
+    map.get(ito.sourceCotoId).map(_.contains(ito.order)).getOrElse(false)
 
   def put(ito: Ito): OutgoingItos =
     copy(map =
