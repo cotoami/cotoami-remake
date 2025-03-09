@@ -1,6 +1,6 @@
 package cotoami.repository
 
-import scala.collection.immutable.{HashSet, TreeSet}
+import scala.collection.immutable.{HashSet, TreeMap}
 import com.softwaremill.quicklens._
 
 import cotoami.models.{Coto, Id, Ito}
@@ -39,7 +39,7 @@ case class Itos(
       _.exists(get(_).map(_.sourceCotoId == from).getOrElse(false))
     ).getOrElse(false)
 
-  def from(id: Id[Coto]): TreeSet[Ito] = outgoingItos.get(id)
+  def from(id: Id[Coto]): Iterable[Ito] = outgoingItos.from(id)
 
   def anyFrom(id: Id[Coto]): Boolean = outgoingItos.anyFrom(id)
 
@@ -53,10 +53,11 @@ case class Itos(
   }
 }
 
-// Hold each outgoing itos in TreeSet so that they are ordered by Ito.order
-case class OutgoingItos(map: Map[Id[Coto], TreeSet[Ito]] = Map.empty)
+// Hold each outgoing itos in TreeMap so that they are ordered by Ito.order
+case class OutgoingItos(map: Map[Id[Coto], TreeMap[Int, Ito]] = Map.empty)
     extends AnyVal {
-  def get(id: Id[Coto]): TreeSet[Ito] = map.get(id).getOrElse(TreeSet.empty)
+  def from(id: Id[Coto]): Iterable[Ito] =
+    map.get(id).map(_.values).getOrElse(Seq.empty)
 
   def anyFrom(id: Id[Coto]): Boolean =
     map.get(id).map(!_.isEmpty).getOrElse(false)
@@ -65,17 +66,20 @@ case class OutgoingItos(map: Map[Id[Coto], TreeSet[Ito]] = Map.empty)
     copy(map =
       map + (ito.sourceCotoId ->
         map.get(ito.sourceCotoId)
-          .map(_.filterNot(_.id == ito.id)) // remove old version
-          .map(_ + ito)
-          .getOrElse(TreeSet(ito)))
+          .map(_.filterNot(_._2.id == ito.id)) // remove old version
+          .map(_ + (ito.order -> ito))
+          .getOrElse(TreeMap(ito.order -> ito)))
     )
 
   def replace(cotoId: Id[Coto], itos: Iterable[Ito]): OutgoingItos =
-    copy(map = (map - cotoId) + (cotoId -> TreeSet.from(itos)))
+    copy(map =
+      (map - cotoId) + (cotoId ->
+        TreeMap.from(itos.map(ito => ito.order -> ito)))
+    )
 
   def delete(id: Id[Ito]): OutgoingItos =
     copy(map = map.map { case (cotoId, itos) =>
-      (cotoId, itos.filterNot(_.id == id))
+      (cotoId, itos.filterNot(_._2.id == id))
     }
       .filterNot(_._2.isEmpty))
 }

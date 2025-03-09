@@ -1,6 +1,5 @@
 package cotoami.models
 
-import scala.math.Ordering
 import java.time.Instant
 
 import cotoami.utils.Validation
@@ -31,9 +30,6 @@ case class Ito(
 }
 
 object Ito {
-  implicit val ordering: Ordering[Ito] =
-    Ordering.fromLessThan[Ito](_.order < _.order)
-
   final val IconName = "north_east"
   final val ConnectIconName = "add_link"
   final val PinIconName = "push_pin"
