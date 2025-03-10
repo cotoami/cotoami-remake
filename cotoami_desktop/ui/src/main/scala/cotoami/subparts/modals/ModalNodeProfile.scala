@@ -192,7 +192,7 @@ object ModalNodeProfile {
                 else
                   context.i18n.text.Post
               }
-              case None => "Read-only"
+              case None => context.i18n.text.ReadOnly
             }
           ),
           context.repo.nodes.operating.map(imgNode(_))

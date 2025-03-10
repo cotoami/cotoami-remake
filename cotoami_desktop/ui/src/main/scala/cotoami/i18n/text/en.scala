@@ -13,6 +13,7 @@ object en extends Text {
   val Node = "Node"
   val NodeRoot = "Node Root"
   val Owner = "Owner"
+  val ReadOnly = "Read-only"
 
   val Post = "Post"
   val Save = "Save"

@@ -295,7 +295,7 @@ object ModalIncorporate {
             else
               context.i18n.text.Post
           }
-          case None => "an anonymous read-only client"
+          case None => context.i18n.text.ReadOnly
         }
       )
     )

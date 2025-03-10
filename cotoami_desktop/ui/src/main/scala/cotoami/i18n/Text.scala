@@ -10,6 +10,7 @@ trait Text {
   val Node: String
   val NodeRoot: String
   val Owner: String
+  val ReadOnly: String
 
   val Post: String
   val Save: String
