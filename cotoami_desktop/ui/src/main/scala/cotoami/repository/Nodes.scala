@@ -37,14 +37,14 @@ case class Nodes(
   def put(node: Node): Nodes =
     this.modify(_.map).using { map =>
       map.get(node.id) match {
-        case Some(existingNode) if existingNode == node => {
-          // To avoid a redundant icon url change,
-          // it won't be replaced with the same node.
-          map
-        }
         case Some(existingNode) => {
-          existingNode.revokeIconUrl() // Side-effect!
-          map + (node.id -> node)
+          // Replace the same node only if the version will be upgraded
+          if (node.version > existingNode.version) {
+            existingNode.revokeIconUrl() // Side-effect!
+            map + (node.id -> node)
+          } else {
+            map
+          }
         }
         case None => map + (node.id -> node)
       }
