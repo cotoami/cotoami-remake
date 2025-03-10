@@ -18,9 +18,17 @@ object en extends Text {
   val Post = "Post"
   val Save = "Save"
   val Edit = "Edit"
+  val Delete = "Delete"
   val Connect = "Connect"
   val WriteSubcoto = "Write Sub-coto"
   val EditItos = "Edit Itos"
+
+  val ConfirmDeleteCoto = "Are you sure you want to delete the coto?"
+  def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =
+    span(className := "delete-others-coto")(
+      "As an owner, you are about to delete a coto posted by:",
+      someoneElse
+    )
 
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """

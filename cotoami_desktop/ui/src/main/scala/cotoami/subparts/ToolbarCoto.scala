@@ -103,7 +103,7 @@ object ToolbarCoto {
         toolButton(
           classes = "delete-coto",
           symbol = "delete",
-          tip = Some("Delete"),
+          tip = Some(context.i18n.text.Delete),
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
@@ -111,10 +111,9 @@ object ToolbarCoto {
               Modal.Msg.OpenModal(
                 Modal.Confirm(
                   if (repo.nodes.isOperating(coto.postedById))
-                    "Are you sure you want to delete the coto?"
+                    context.i18n.text.ConfirmDeleteCoto
                   else
-                    span(className := "delete-coto-by-others")(
-                      "As an owner, you are about to delete a coto posted by:",
+                    context.i18n.text.ConfirmDeleteOthersCoto(
                       repo.nodes.get(coto.postedById).map(PartsNode.spanNode)
                     ),
                   Root.Msg.DeleteCoto(coto.id)
