@@ -68,7 +68,7 @@ object ModalIncorporate {
       (
         copy(incorporating = true, incorporatingError = None),
         ServerBackend.addServer(nodeUrl, password)
-          .map(Msg.NodeIncorporated(_).into)
+          .map(Msg.Incorporated(_).into)
       )
 
     def cancel: Model =
@@ -97,7 +97,7 @@ object ModalIncorporate {
         extends Msg
     case object Cancel extends Msg
     case object Incorporate extends Msg
-    case class NodeIncorporated(result: Either[ErrorJson, Server]) extends Msg
+    case class Incorporated(result: Either[ErrorJson, Server]) extends Msg
   }
 
   def update(
@@ -158,14 +158,14 @@ object ModalIncorporate {
           default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.NodeIncorporated(Right(server)) =>
+      case Msg.Incorporated(Right(server)) =>
         default.copy(
           _1 = model.copy(incorporating = false, incorporatingError = None),
           _2 = nodes.addServer(server),
           _3 = Modal.close(classOf[Modal.Incorporate])
         )
 
-      case Msg.NodeIncorporated(Left(e)) =>
+      case Msg.Incorporated(Left(e)) =>
         default.copy(
           _1 = model.copy(
             incorporating = false,
