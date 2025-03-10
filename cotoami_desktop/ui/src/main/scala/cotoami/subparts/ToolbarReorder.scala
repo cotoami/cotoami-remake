@@ -17,7 +17,7 @@ object ToolbarReorder {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] =
-    Option.when(context.repo.nodes.canCreateItosIn(ito.nodeId)) {
+    Option.when(context.repo.nodes.canEditItosIn(ito.nodeId)) {
       val reordering = context.repo.reordering.contains(ito.sourceCotoId)
       section(className := "reorder-toolbar")(
         toolButton(

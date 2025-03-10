@@ -232,9 +232,9 @@ case class Root(
       case None           => false
     }
 
-  def canCreateItos: Boolean =
+  def canEditItos: Boolean =
     currentCotonoma match {
-      case Some(cotonoma) => nodes.canCreateItosIn(cotonoma.nodeId)
+      case Some(cotonoma) => nodes.canEditItosIn(cotonoma.nodeId)
       case None           => false
     }
 
@@ -245,7 +245,7 @@ case class Root(
     ).flatten.contains(cotoId)
 
   def canPin(cotoId: Id[Coto]): Boolean =
-    canCreateItos && !pinned(cotoId) &&
+    canEditItos && !pinned(cotoId) &&
       // You can't pin the current cotonoma (obviously) and the current node root.
       !Seq(
         currentCotonomaPair.map(_._2.id),

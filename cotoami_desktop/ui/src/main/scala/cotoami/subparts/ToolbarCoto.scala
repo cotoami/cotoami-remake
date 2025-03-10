@@ -58,7 +58,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(repo.nodes.canCreateItosIn(coto.nodeId)) {
+      Option.when(repo.nodes.canEditItosIn(coto.nodeId)) {
         toolButton(
           classes = "add-sub-coto",
           symbol = "add",

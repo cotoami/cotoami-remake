@@ -162,7 +162,7 @@ case class Nodes(
     canPostTo(ito.nodeId) &&
       (isOperating(ito.createdById) || isOwnerOf(ito.nodeId))
 
-  def canCreateItosIn(nodeId: Id[Node]): Boolean =
+  def canEditItosIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
       childPrivilegesTo(nodeId).map(_.canEditItos).getOrElse(false)
 
