@@ -117,15 +117,15 @@ object ModalClients {
       error = model.error,
       bodyClasses = "header-and-body"
     )(
-      "Client nodes"
+      "Client Nodes"
     )(
       header()(
-        toolButton(
-          symbol = "add",
-          tip = Some("Add client"),
-          tipPlacement = "right",
-          classes = "add",
-          onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.NewClient()))
+        button(
+          className := "add contrast outline",
+          onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.NewClient())))
+        )(
+          materialSymbol("add"),
+          "Add Client"
         ),
         sectionClientNodesCount(
           model.clientNodes.totalItems,

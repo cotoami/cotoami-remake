@@ -13,10 +13,17 @@ dialog.clients {
       align-items: center;
 
       margin: 0 -10px;
-      padding-top: 4px;
+      padding-top: 6px;
 
-      span.material-symbols {
-        font-size: 24px;
+      button.add {
+        height: 36px;
+        padding-top: 2px;
+        padding-left: 8px;
+
+        span.material-symbols {
+          font-size: 20px;
+          vertical-align: -4px;
+        }
       }
 
       section.client-nodes-count {

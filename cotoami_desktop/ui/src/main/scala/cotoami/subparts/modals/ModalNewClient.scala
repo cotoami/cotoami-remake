@@ -156,7 +156,7 @@ object ModalNewClient {
       closeButton = Some((classOf[Modal.NewClient], dispatch)),
       error = model.error
     )(
-      "New client"
+      "New Client"
     )(
       Option.when(model.registered) {
         section(className := "message")(
@@ -192,7 +192,7 @@ object ModalNewClient {
               disabled := model.registered,
               onChange := (_ => dispatch(Msg.CanEditItosToggled))
             ),
-            "Permit to create itos"
+            "Permit to create itos (connect/disconnect)"
           ),
           label(htmlFor := "as-owner")(
             input(
