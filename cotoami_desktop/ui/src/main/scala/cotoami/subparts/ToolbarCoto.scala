@@ -19,11 +19,9 @@ object ToolbarCoto {
   ): Option[ReactElement] = {
     if (coto.isRepost) return None
 
+    val repo = context.repo
     val buttons = Seq(
-      Option.when(
-        context.repo.cotos.anySelected &&
-          !context.repo.cotos.isSelecting(coto.id)
-      ) {
+      Option.when(repo.cotos.anySelected && !repo.cotos.isSelecting(coto.id)) {
         toolButton(
           classes = "connect",
           symbol = Ito.ConnectIconName,
@@ -35,20 +33,20 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.repo.canPin(coto.id)) {
+      Option.when(repo.canPin(coto.id)) {
         toolButton(
           classes = "pin-coto",
           symbol = "push_pin",
           tip = Some(context.i18n.text.Pin),
           tipPlacement = "left",
-          disabled = context.repo.beingPinned(coto.id),
+          disabled = repo.beingPinned(coto.id),
           onClick = e => {
             e.stopPropagation()
             dispatch(Root.Msg.Pin(coto.id))
           }
         )
       },
-      Option.when(context.repo.nodes.canEdit(coto)) {
+      Option.when(repo.nodes.canEdit(coto)) {
         toolButton(
           classes = "edit-coto",
           symbol = "edit",
@@ -60,7 +58,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.repo.nodes.canCreateItosIn(coto.nodeId)) {
+      Option.when(repo.nodes.canCreateItosIn(coto.nodeId)) {
         toolButton(
           classes = "add-sub-coto",
           symbol = "add",
@@ -69,12 +67,12 @@ object ToolbarCoto {
           onClick = e => {
             e.stopPropagation()
             dispatch(
-              Modal.Msg.OpenModal(Modal.Subcoto(coto.id, None, context.repo))
+              Modal.Msg.OpenModal(Modal.Subcoto(coto.id, None, repo))
             )
           }
         )
       },
-      Option.when(context.repo.canRepost(coto.id)) {
+      Option.when(repo.canRepost(coto.id)) {
         toolButton(
           classes = "repost-coto",
           symbol = Coto.RepostIconName,
@@ -82,14 +80,14 @@ object ToolbarCoto {
           tipPlacement = "left",
           onClick = e => {
             e.stopPropagation()
-            Modal.Repost(coto, context.repo) match {
+            Modal.Repost(coto, repo) match {
               case Some(modal) => dispatch(Modal.Msg.OpenModal(modal))
               case None        => () // should be unreachable
             }
           }
         )
       },
-      Option.when(context.repo.nodes.canPromote(coto)) {
+      Option.when(repo.nodes.canPromote(coto)) {
         toolButton(
           classes = "promote-to-cotonoma",
           symbol = "drive_folder_upload",
@@ -101,7 +99,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.repo.nodes.canDelete(coto) && !coto.isCotonoma) {
+      Option.when(repo.nodes.canDelete(coto) && !coto.isCotonoma) {
         toolButton(
           classes = "delete-coto",
           symbol = "delete",
@@ -112,12 +110,12 @@ object ToolbarCoto {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  if (context.repo.nodes.isOperating(coto.postedById))
+                  if (repo.nodes.isOperating(coto.postedById))
                     "Are you sure you want to delete the coto?"
                   else
                     span(className := "delete-coto-by-others")(
                       "As an owner, you are about to delete a coto posted by:",
-                      context.repo.nodes.get(coto.postedById).map(spanNode)
+                      repo.nodes.get(coto.postedById).map(spanNode)
                     ),
                   Root.Msg.DeleteCoto(coto.id)
                 )
@@ -127,7 +125,7 @@ object ToolbarCoto {
         )
       },
       Some(
-        if (context.repo.cotos.isSelecting(coto.id))
+        if (repo.cotos.isSelecting(coto.id))
           toolButton(
             classes = "select-check-box",
             symbol = "check_box",
