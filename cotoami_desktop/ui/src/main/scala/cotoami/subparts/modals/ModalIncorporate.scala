@@ -148,8 +148,7 @@ object ModalIncorporate {
           _1 = model.copy(
             connecting = false,
             connectingError = Some(e.default_message)
-          ),
-          _3 = cotoami.error("Node connecting error.", e)
+          )
         )
 
       case Msg.Cancel => default.copy(_1 = model.cancel)
