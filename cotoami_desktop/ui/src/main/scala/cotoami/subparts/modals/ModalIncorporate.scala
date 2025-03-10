@@ -55,6 +55,13 @@ object ModalIncorporate {
 
     def readyToConnect: Boolean = !connecting && validateNodeUrl.validated
 
+    def connect: (Model, Cmd.One[AppMsg]) =
+      (
+        copy(connecting = true, connectingError = None),
+        ClientNodeSession.logIntoServer(nodeUrl, password)
+          .map(Msg.NodeConnected(_).into)
+      )
+
     def readyToIncorporate: Boolean = !connecting && !incorporating
   }
 
@@ -97,11 +104,9 @@ object ModalIncorporate {
         default.copy(_1 = model.copy(passwordInput = password))
 
       case Msg.Connect =>
-        default.copy(
-          _1 = model.copy(connecting = true, connectingError = None),
-          _3 = ClientNodeSession.logIntoServer(model.nodeUrl, model.password)
-            .map(Msg.NodeConnected(_).into)
-        )
+        model.connect.pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
 
       case Msg.NodeConnected(Right(session)) => {
         if (nodes.servers.contains(session.server.id))
