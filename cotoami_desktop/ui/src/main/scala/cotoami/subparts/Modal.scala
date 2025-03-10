@@ -57,7 +57,7 @@ object Modal {
 
   case class Confirm(model: ModalConfirm.Model) extends Modal
   object Confirm {
-    def apply(message: String, msgOnConfirm: Into[AppMsg]): Confirm =
+    def apply(message: ReactElement, msgOnConfirm: Into[AppMsg]): Confirm =
       Confirm(ModalConfirm.Model(message, msgOnConfirm.into))
   }
 

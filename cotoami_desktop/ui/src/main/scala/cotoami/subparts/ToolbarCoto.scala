@@ -101,7 +101,7 @@ object ToolbarCoto {
           }
         )
       },
-      Option.when(context.repo.nodes.canEdit(coto) && !coto.isCotonoma) {
+      Option.when(context.repo.nodes.canDelete(coto) && !coto.isCotonoma) {
         toolButton(
           classes = "delete-coto",
           symbol = "delete",
@@ -112,7 +112,13 @@ object ToolbarCoto {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  "Are you sure you want to delete the coto?",
+                  if (context.repo.nodes.isOperating(coto.postedById))
+                    "Are you sure you want to delete the coto?"
+                  else
+                    span(className := "delete-coto-by-others")(
+                      "As an owner, you are about to delete a coto posted by:",
+                      context.repo.nodes.get(coto.postedById).map(spanNode)
+                    ),
                   Root.Msg.DeleteCoto(coto.id)
                 )
               )

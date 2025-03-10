@@ -15,7 +15,7 @@ object ModalConfirm {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      message: String,
+      message: ReactElement,
       msgOnConfirm: AppMsg
   )
 
