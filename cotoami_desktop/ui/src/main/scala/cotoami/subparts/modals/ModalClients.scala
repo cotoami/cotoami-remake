@@ -117,7 +117,7 @@ object ModalClients {
       error = model.error,
       bodyClasses = "header-and-body"
     )(
-      "Client Nodes"
+      context.i18n.text.ModalClients_title
     )(
       header()(
         button(
@@ -125,7 +125,7 @@ object ModalClients {
           onClick := (_ => dispatch(Modal.Msg.OpenModal(Modal.NewClient())))
         )(
           materialSymbol("add"),
-          "Add Client"
+          context.i18n.text.ModalClients_add
         ),
         sectionClientNodesCount(
           model.clientNodes.totalItems,

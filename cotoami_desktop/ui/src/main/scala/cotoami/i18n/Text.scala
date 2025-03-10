@@ -25,6 +25,9 @@ trait Text {
 
   val ModalEditIto_disconnect: String
   val ModalEditIto_confirmDisconnect: String
+
+  val ModalClients_title: String
+  val ModalClients_add: String
 }
 
 object Text {

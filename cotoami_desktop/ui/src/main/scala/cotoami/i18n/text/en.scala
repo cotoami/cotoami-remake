@@ -45,4 +45,7 @@ object en extends Text {
   val ModalEditIto_disconnect = "Disconnect"
   val ModalEditIto_confirmDisconnect =
     "Are you sure you want to delete this ito?"
+
+  val ModalClients_title = "Client Nodes"
+  val ModalClients_add = "Add Client"
 }
