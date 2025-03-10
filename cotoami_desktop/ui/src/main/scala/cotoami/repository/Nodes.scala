@@ -156,15 +156,13 @@ case class Nodes(
     canPostTo(coto.nodeId) &&
       (isOperating(coto.postedById) || isOperating(coto.nodeId))
 
-  // An ito can be edited/deleted by:
-  // the creator or an owner of the node in which it was created.
-  def canEdit(ito: Ito): Boolean =
-    canPostTo(ito.nodeId) &&
-      (isOperating(ito.createdById) || isOwnerOf(ito.nodeId))
+  def canEdit(ito: Ito): Boolean = canEditItosIn(ito.nodeId)
 
   def canEditItosIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
-      childPrivilegesTo(nodeId).map(_.canEditItos).getOrElse(false)
+      childPrivilegesTo(nodeId)
+        .map(child => child.asOwner || child.canEditItos)
+        .getOrElse(false)
 
   def canPromote(coto: Coto): Boolean = canEdit(coto) && !coto.isCotonoma
 }
