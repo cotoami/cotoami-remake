@@ -14,9 +14,9 @@ import cotoami.subparts.{
   buttonHelp,
   labeledInputField,
   sectionHelp,
-  spanNode,
   Modal,
-  PartsCoto
+  PartsCoto,
+  PartsNode
 }
 
 object ModalIncorporate {
@@ -256,7 +256,7 @@ object ModalIncorporate {
 
       // Node preview
       section(className := "node-preview")(
-        section(className := "node")(spanNode(nodeSession.server)),
+        section(className := "node")(PartsNode.spanNode(nodeSession.server)),
         sectionChildPrivileges(nodeSession),
         nodeSession.serverRoot.map { case (_, coto) =>
           PartsCoto.sectionCotonomaContent(coto)

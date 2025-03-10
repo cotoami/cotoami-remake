@@ -46,7 +46,7 @@ object PartsCoto {
       nodes: Nodes
   ): ReactElement =
     address(className := "author")(
-      nodes.get(coto.postedById).map(spanNode)
+      nodes.get(coto.postedById).map(PartsNode.spanNode)
     )
 
   def divAttributes(
@@ -73,7 +73,7 @@ object PartsCoto {
           title := (if (connected) "Remote (connected)"
                     else "Remote (disconnected)")
         )(
-          context.repo.nodes.get(coto.nodeId).map(imgNode(_))
+          context.repo.nodes.get(coto.nodeId).map(PartsNode.imgNode(_))
         )
       }
     )
@@ -128,7 +128,7 @@ object PartsCoto {
           dispatch(AppMsg.FocusCotonoma(cotonoma))
         })
       )(
-        context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+        context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
         cotonoma.name
       )
     )
@@ -141,7 +141,7 @@ object PartsCoto {
       context.repo.cotonomas.asCotonoma(coto).map(cotonoma =>
         section(className := "cotonoma-label")(
           span(className := "cotonoma")(
-            context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
             cotonoma.name
           )
         )
@@ -155,7 +155,8 @@ object PartsCoto {
       post.nameAsCotonoma.map(name =>
         section(className := "cotonoma-content")(
           span(className := "cotonoma")(
-            context.repo.nodes.get(post.postedIn.nodeId).map(imgNode(_)),
+            context.repo.nodes.get(post.postedIn.nodeId)
+              .map(PartsNode.imgNode(_)),
             name
           )
         )

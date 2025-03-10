@@ -115,7 +115,7 @@ object ToolbarCoto {
                   else
                     span(className := "delete-coto-by-others")(
                       "As an owner, you are about to delete a coto posted by:",
-                      repo.nodes.get(coto.postedById).map(spanNode)
+                      repo.nodes.get(coto.postedById).map(PartsNode.spanNode)
                     ),
                   Root.Msg.DeleteCoto(coto.id)
                 )

@@ -370,7 +370,8 @@ object SectionFlowInput {
           dispatch(AppMsg.FocusCoto(currentCotonoma.cotoId))
         )
       )(
-        context.repo.nodes.get(currentCotonoma.nodeId).map(imgNode(_)),
+        context.repo.nodes.get(currentCotonoma.nodeId)
+          .map(PartsNode.imgNode(_)),
         currentCotonoma.name
       ),
       section(className := "coto-type-switch")(
@@ -481,7 +482,7 @@ object SectionFlowInput {
 
   private def addressPoster(operatingNode: Node): ReactElement =
     address(className := "poster")(
-      spanNode(operatingNode)
+      PartsNode.spanNode(operatingNode)
     )
 
   private def buttonPost(

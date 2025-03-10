@@ -102,7 +102,7 @@ object SectionPins {
             className := "current-cotonoma-name",
             onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
           )(
-            context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+            context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
             cotonoma.name
           )
         ),
@@ -362,7 +362,8 @@ object SectionPins {
                 )(
                   if (coto.isCotonoma)
                     span(className := "cotonoma")(
-                      context.repo.nodes.get(coto.nodeId).map(imgNode(_)),
+                      context.repo.nodes.get(coto.nodeId)
+                        .map(PartsNode.imgNode(_)),
                       coto.nameAsCotonoma
                     )
                   else

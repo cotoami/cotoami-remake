@@ -431,6 +431,6 @@ object SectionTimeline {
 
   private def reposter(coto: Coto, nodes: Nodes): ReactElement =
     address(className := "reposter")(
-      nodes.get(coto.postedById).map(spanNode)
+      nodes.get(coto.postedById).map(PartsNode.spanNode)
     )
 }

@@ -19,12 +19,12 @@ import cotoami.backend.{
 }
 import cotoami.components.{materialSymbol, toolButton, ScrollArea}
 import cotoami.subparts.{
-  imgNode,
   labeledField,
   labeledInputField,
   sectionClientNodesCount,
   Modal,
-  PartsCoto
+  PartsCoto,
+  PartsNode
 }
 
 object ModalNodeProfile {
@@ -174,7 +174,7 @@ object ModalNodeProfile {
   ): ReactElement =
     div(className := "sidebar")(
       section(className := "node-icon")(
-        imgNode(node),
+        PartsNode.imgNode(node),
         Option.when(model.isOperatingNode()) {
           buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
         }
@@ -195,7 +195,7 @@ object ModalNodeProfile {
               case None => context.i18n.text.ReadOnly
             }
           ),
-          context.repo.nodes.operating.map(imgNode(_))
+          context.repo.nodes.operating.map(PartsNode.imgNode(_))
         )
       }
     )

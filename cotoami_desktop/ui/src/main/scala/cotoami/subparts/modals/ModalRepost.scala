@@ -12,7 +12,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repository.{Cotonomas, Nodes, Root}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.subparts.{imgNode, Modal, PartsCoto}
+import cotoami.subparts.{Modal, PartsCoto, PartsNode}
 import cotoami.components.{materialSymbol, ScrollArea, Select}
 
 object ModalRepost {
@@ -279,7 +279,7 @@ object ModalRepost {
     dest match {
       case dest: ExistingCotonoma =>
         div(className := "existing-cotonoma")(
-          nodes.get(dest.cotonoma.nodeId).map(imgNode(_)),
+          nodes.get(dest.cotonoma.nodeId).map(PartsNode.imgNode(_)),
           span(className := "cotonoma-name")(dest.cotonoma.name),
           spanRootCotonomaMark(dest.cotonoma, nodes)
         )
@@ -287,7 +287,7 @@ object ModalRepost {
       case dest: NewCotonoma =>
         div(className := "new-cotonoma")(
           span(className := "description")("New cotonoma:"),
-          nodes.get(Id(dest.targetNodeId)).map(imgNode(_)),
+          nodes.get(Id(dest.targetNodeId)).map(PartsNode.imgNode(_)),
           span(className := "cotonoma-name")(dest.name)
         )
     }
@@ -314,7 +314,7 @@ object ModalRepost {
         ul()(
           model.alreadyPostedIn.reverse.map(cotonoma =>
             li()(
-              context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+              context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
               span(className := "cotonoma-name")(cotonoma.name),
               spanRootCotonomaMark(cotonoma, context.repo.nodes)
             )

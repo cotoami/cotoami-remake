@@ -9,7 +9,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.backend.{ErrorJson, InitialDataset}
 import cotoami.components.materialSymbol
-import cotoami.subparts.{spanNode, Modal}
+import cotoami.subparts.{Modal, PartsNode}
 
 object ModalOperateAs {
 
@@ -117,7 +117,7 @@ object ModalOperateAs {
       context: Context
   ): ReactElement =
     section(className := elementClasses)(
-      spanNode(node),
+      PartsNode.spanNode(node),
       Option.when(context.repo.nodes.isLocal(node.id)) {
         span(className := "is-local")("(local)")
       }

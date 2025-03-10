@@ -13,7 +13,7 @@ import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
 import cotoami.backend.{CotoBackend, ErrorJson, ItoBackend}
 import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
-import cotoami.subparts.{imgNode, Modal, PartsCoto, PartsIto}
+import cotoami.subparts.{Modal, PartsCoto, PartsIto, PartsNode}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -278,7 +278,7 @@ object ModalSubcoto {
   ): ReactElement = {
     val target = option.asInstanceOf[TargetCotonoma]
     div(className := "target-cotonoma")(
-      repo.nodes.get(target.cotonoma.nodeId).map(imgNode(_)),
+      repo.nodes.get(target.cotonoma.nodeId).map(PartsNode.imgNode(_)),
       span(className := "cotonoma-name")(target.cotonoma.name),
       Option.when(Some(target.cotonoma.id) == repo.currentCotonomaId) {
         span(className := "current-mark")("(current)")

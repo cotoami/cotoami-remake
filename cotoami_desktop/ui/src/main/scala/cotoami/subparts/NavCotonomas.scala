@@ -370,7 +370,7 @@ object NavCotonomas {
       cotonoma: Cotonoma
   )(implicit context: Context): ReactElement =
     Fragment(
-      context.repo.nodes.get(cotonoma.nodeId).map(imgNode(_)),
+      context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
       cotonoma.name
     )
 }

@@ -12,7 +12,7 @@ import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.components.{materialSymbol, toolButton}
-import cotoami.subparts.{sectionClientNodesCount, spanNode, Modal}
+import cotoami.subparts.{sectionClientNodesCount, Modal, PartsNode}
 
 object ModalClients {
 
@@ -171,7 +171,7 @@ object ModalClients {
             "<Not yet connected>"
           )
         else
-          spanNode(client.node)
+          PartsNode.spanNode(client.node)
       ),
       td(className := "status")(
         if (client.active.isDefined)

@@ -91,8 +91,8 @@ object NavNodes {
                 )
               )
             )(
-              imgNode(localNode, "local"),
-              imgNode(operatingNode, "operating")
+              PartsNode.imgNode(localNode, "local"),
+              PartsNode.imgNode(operatingNode, "operating")
             ),
             div(className := "separator")()
           )
@@ -122,7 +122,7 @@ object NavNodes {
       disabled := nodes.isFocusing(node.id),
       onClick := (_ => dispatch(AppMsg.FocusNode(node.id)))
     )(
-      imgNode(node),
+      PartsNode.imgNode(node),
       status.map(s => span(className := s"status ${s.className}")(s.icon))
     )
   }

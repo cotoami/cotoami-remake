@@ -7,24 +7,11 @@ import slinky.web.SyntheticKeyboardEvent
 
 import cotoami.{Msg => AppMsg}
 import cotoami.utils.Validation
-import cotoami.models.{Node, ParentStatus}
+import cotoami.models.ParentStatus
 import cotoami.repository.Nodes
 import cotoami.components.materialSymbol
 
 package object subparts {
-
-  def imgNode(node: Node, additionalClasses: String = ""): ReactElement =
-    img(
-      className := s"node-icon ${additionalClasses}",
-      alt := node.name,
-      src := node.iconUrl
-    )
-
-  def spanNode(node: Node): ReactElement =
-    span(className := "node")(
-      imgNode(node),
-      span(className := "name")(node.name)
-    )
 
   def labeledField(
       classes: String = "",

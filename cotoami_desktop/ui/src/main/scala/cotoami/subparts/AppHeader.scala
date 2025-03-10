@@ -61,7 +61,7 @@ object AppHeader {
           dispatch(AppMsg.FocusNode(node.id))
         })
       )(
-        imgNode(node),
+        PartsNode.imgNode(node),
         span(className := "node-name")(node.name)
       ),
       cotonoma.map(cotonoma =>
@@ -162,6 +162,6 @@ object AppHeader {
         )
       )
     )(
-      imgNode(node)
+      PartsNode.imgNode(node)
     )
 }

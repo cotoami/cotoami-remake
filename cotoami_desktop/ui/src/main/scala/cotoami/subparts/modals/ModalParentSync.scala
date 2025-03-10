@@ -9,7 +9,7 @@ import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.facade.Nullable
 import cotoami.models.{Id, Node, ParentSync}
-import cotoami.subparts.Modal
+import cotoami.subparts.{Modal, PartsNode}
 
 object ModalParentSync {
 
@@ -122,7 +122,7 @@ object ModalParentSync {
     )
 
   private def spanNode(id: Id[Node])(implicit context: Context): ReactElement =
-    context.repo.nodes.get(id).map(cotoami.subparts.spanNode)
+    context.repo.nodes.get(id).map(PartsNode.spanNode)
       .getOrElse(
         span(className := "node not-found")(
           s"Node not found: ${id}"
