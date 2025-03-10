@@ -241,7 +241,7 @@ object ModalIncorporate {
   private def sectionIncorporate(
       model: Model,
       nodeSession: ClientNodeSession
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "incorporate")(
       model.incorporatingError.map(e => section(className := "error")(e)),
 
@@ -273,18 +273,18 @@ object ModalIncorporate {
 
   private def sectionChildPrivileges(
       nodeSession: ClientNodeSession
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     section(className := "child-privileges")(
       "Your privileges: ",
       span(className := "privileges")(
         nodeSession.childPrivileges match {
           case Some(privileges) => {
             if (privileges.asOwner)
-              "an owner"
+              context.i18n.text.Owner
             else if (privileges.canEditItos)
-              "post, edit itos"
+              s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
             else
-              "post"
+              context.i18n.text.Post
           }
           case None => "an anonymous read-only client"
         }

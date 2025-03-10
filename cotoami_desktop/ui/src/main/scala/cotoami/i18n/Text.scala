@@ -9,11 +9,14 @@ trait Text {
   val Pin: String
   val Node: String
   val NodeRoot: String
+  val Owner: String
 
+  val Post: String
   val Save: String
   val Edit: String
   val Connect: String
   val WriteSubcoto: String
+  val EditItos: String
 
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement

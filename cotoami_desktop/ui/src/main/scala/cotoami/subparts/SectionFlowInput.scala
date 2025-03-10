@@ -487,14 +487,14 @@ object SectionFlowInput {
   private def buttonPost(
       model: Model,
       currentCotonoma: Cotonoma
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     button(
       className := "post",
       disabled := !model.readyToPost,
       aria - "busy" := model.posting.toString(),
       onClick := (_ => dispatch(Msg.Post))
     )(
-      "Post",
+      context.i18n.text.Post,
       span(className := "shortcut-help")("(Ctrl + Enter)")
     )
 }

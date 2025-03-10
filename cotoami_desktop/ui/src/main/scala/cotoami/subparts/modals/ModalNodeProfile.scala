@@ -186,11 +186,11 @@ object ModalNodeProfile {
             context.repo.nodes.childPrivilegesTo(node.id) match {
               case Some(privileges) => {
                 if (privileges.asOwner)
-                  "Owner"
+                  context.i18n.text.Owner
                 else if (privileges.canEditItos)
-                  "Post, Edit itos"
+                  s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
                 else
-                  "Post"
+                  context.i18n.text.Post
               }
               case None => "Read-only"
             }

@@ -12,11 +12,14 @@ object en extends Text {
   val Pin = "Pin"
   val Node = "Node"
   val NodeRoot = "Node Root"
+  val Owner = "Owner"
 
+  val Post = "Post"
   val Save = "Save"
   val Edit = "Edit"
   val Connect = "Connect"
   val WriteSubcoto = "Write Sub-coto"
+  val EditItos = "Edit Itos"
 
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """
