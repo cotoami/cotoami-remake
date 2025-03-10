@@ -70,6 +70,14 @@ object ModalIncorporate {
         ServerBackend.addServer(nodeUrl, password)
           .map(Msg.NodeIncorporated(_).into)
       )
+
+    def cancel: Model =
+      copy(
+        connecting = false,
+        connectingError = None,
+        incorporatingError = None,
+        nodeSession = None
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -144,15 +152,7 @@ object ModalIncorporate {
           _3 = cotoami.error("Node connecting error.", e)
         )
 
-      case Msg.Cancel =>
-        default.copy(
-          _1 = model.copy(
-            connecting = false,
-            connectingError = None,
-            incorporatingError = None,
-            nodeSession = None
-          )
-        )
+      case Msg.Cancel => default.copy(_1 = model.cancel)
 
       case Msg.Incorporate =>
         model.incorporate.pipe { case (model, cmd) =>
