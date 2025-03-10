@@ -59,7 +59,7 @@ object ModalIncorporate {
       (
         copy(connecting = true, connectingError = None),
         ClientNodeSession.logIntoServer(nodeUrl, password)
-          .map(Msg.NodeConnected(_).into)
+          .map(Msg.Connected(_).into)
       )
 
     def readyToIncorporate: Boolean = !connecting && !incorporating
@@ -93,7 +93,7 @@ object ModalIncorporate {
     case class NodeUrlInput(url: String) extends Msg
     case class PasswordInput(password: String) extends Msg
     case object Connect extends Msg
-    case class NodeConnected(result: Either[ErrorJson, ClientNodeSession])
+    case class Connected(result: Either[ErrorJson, ClientNodeSession])
         extends Msg
     case object Cancel extends Msg
     case object Incorporate extends Msg
@@ -123,7 +123,7 @@ object ModalIncorporate {
           default.copy(_1 = model, _3 = cmd)
         }
 
-      case Msg.NodeConnected(Right(session)) => {
+      case Msg.Connected(Right(session)) => {
         if (nodes.servers.contains(session.server.id))
           default.copy(
             _1 = model.copy(
@@ -143,7 +143,7 @@ object ModalIncorporate {
           )
       }
 
-      case Msg.NodeConnected(Left(e)) =>
+      case Msg.Connected(Left(e)) =>
         default.copy(
           _1 = model.copy(
             connecting = false,
