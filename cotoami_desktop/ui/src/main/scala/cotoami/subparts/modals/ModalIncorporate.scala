@@ -63,6 +63,13 @@ object ModalIncorporate {
       )
 
     def readyToIncorporate: Boolean = !connecting && !incorporating
+
+    def incorporate: (Model, Cmd.One[AppMsg]) =
+      (
+        copy(incorporating = true, incorporatingError = None),
+        ServerBackend.addServer(nodeUrl, password)
+          .map(Msg.NodeIncorporated(_).into)
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -148,11 +155,9 @@ object ModalIncorporate {
         )
 
       case Msg.Incorporate =>
-        default.copy(
-          _1 = model.copy(incorporating = true, incorporatingError = None),
-          _3 = ServerBackend.addServer(model.nodeUrl, model.password)
-            .map(Msg.NodeIncorporated(_).into)
-        )
+        model.incorporate.pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
 
       case Msg.NodeIncorporated(Right(server)) =>
         default.copy(
