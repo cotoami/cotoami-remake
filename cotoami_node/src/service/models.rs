@@ -278,6 +278,7 @@ pub struct CotonomaDetails {
     pub coto: Coto,
     pub supers: Vec<Cotonoma>,
     pub subs: Page<Cotonoma>,
+    pub post_count: i64,
 }
 
 /////////////////////////////////////////////////////////////////////////////

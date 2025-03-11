@@ -12,6 +12,7 @@ case class CotonomaDetails(json: CotonomaDetailsJson) {
     json.supers.map(CotonomaBackend.toModel(_))
   def subs: Page[Cotonoma] =
     PageBackend.toModel(json.subs, CotonomaBackend.toModel)
+  def postCount: Double = json.post_count
 }
 
 object CotonomaDetails {
@@ -25,6 +26,7 @@ trait CotonomaDetailsJson extends js.Object {
   val coto: CotoJson = js.native
   val supers: js.Array[CotonomaJson] = js.native
   val subs: PageJson[CotonomaJson] = js.native
+  val post_count: Double = js.native
 }
 
 object CotonomaDetailsJson {

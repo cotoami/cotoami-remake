@@ -67,7 +67,10 @@ impl NodeState {
             let (cotonoma, coto) = ds.try_get_cotonoma_pair(&id)?;
             let supers = ds.super_cotonomas(&coto)?;
             let subs = ds.sub_cotonomas(&cotonoma.uuid, DEFAULT_SUB_PAGE_SIZE, 0)?;
-            Ok(CotonomaDetails::new(cotonoma, coto, supers, subs))
+            let post_count = ds.count_posts(&id)?;
+            Ok(CotonomaDetails::new(
+                cotonoma, coto, supers, subs, post_count,
+            ))
         })
         .await
     }
