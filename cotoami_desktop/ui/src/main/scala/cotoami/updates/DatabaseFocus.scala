@@ -15,7 +15,7 @@ object DatabaseFocus {
     model
       .modify(_.repo).using(_.focusNode(nodeId))
       .modify(_.search).using(_.clear)
-      .modify(_.flowInput).using(_.onCotonomaChange)
+      .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           model.navCotonomas.fetchRecent()(model)
@@ -45,7 +45,7 @@ object DatabaseFocus {
     model
       .modify(_.repo).using(_.focusCotonoma(nodeId, cotonomaId))
       .modify(_.search).using(_.clear)
-      .modify(_.flowInput).using(_.onCotonomaChange)
+      .modify(_.flowInput).using(_.onFocusChange)
       .pipe { model =>
         val (navCotonomas, fetchRecentCotonomas) =
           if (shouldRecentFetchCotonomas)
