@@ -236,6 +236,18 @@ pub(crate) fn recently_updated<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn count_posts<Conn: AsReadableConn>(
+    id: &Id<Cotonoma>,
+) -> impl Operation<Conn, i64> + '_ {
+    read_op(move |conn| {
+        cotos::table
+            .select(diesel::dsl::count_star())
+            .filter(cotos::posted_in_id.eq(id))
+            .first(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn subs<Conn: AsReadableConn>(
     id: &Id<Cotonoma>,
     page_size: i64,

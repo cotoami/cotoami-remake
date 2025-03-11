@@ -115,6 +115,10 @@ impl<'a> DatabaseSession<'a> {
         ))
     }
 
+    pub fn count_posts(&mut self, id: &Id<Cotonoma>) -> Result<i64> {
+        self.read_transaction(cotonoma_ops::count_posts(id))
+    }
+
     pub fn super_cotonomas(&mut self, coto: &Coto) -> Result<Vec<Cotonoma>> {
         let mut cotonoma_ids: Vec<Id<Cotonoma>> = Vec::new();
         if let Some(id) = coto.posted_in_id {
