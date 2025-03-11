@@ -5,6 +5,7 @@ import slinky.web.html._
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
+import cotoami.repository.Root
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 object AppHeader {
@@ -64,42 +65,52 @@ object AppHeader {
         PartsNode.imgNode(node),
         span(className := "node-name")(node.name)
       ),
-      cotonoma.map(cotonoma =>
-        Fragment(
-          materialSymbol("chevron_right", "arrow"),
-          h1(className := "current-cotonoma")(cotonoma.name),
-          context.repo.cotonomas.totalPostsInFocus.map(posts =>
-            span(className := "total-posts")(
-              s"(${context.i18n.format(posts.max(0))})"
-            )
-          )
-        )
-      ),
-      Option.when(
-        context.repo.cotonomas.totalPostsInFocus.map(_ <= 0)
-          .getOrElse(false)
-      ) {
-        toolButton(
-          classes = "delete-cotonoma",
-          symbol = "delete",
-          tip = Some("Delete Cotonoma"),
-          onClick = (e => {
-            e.stopPropagation()
-          })
-        )
-      },
+      cotonoma.map(fragmentCurrentCotonoma),
       Option.when(context.repo.geolocationInFocus.isDefined)(
         toolButton(
           classes = "geolocation",
           symbol = "location_on",
-          onClick = (e => {
-            e.stopPropagation()
-            dispatch(AppMsg.DisplayGeolocationInFocus)
-          })
+          onClick = e => dispatch(AppMsg.DisplayGeolocationInFocus)
         )
       )
     )
   }
+
+  private def fragmentCurrentCotonoma(
+      cotonoma: Cotonoma
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    Fragment(
+      materialSymbol("chevron_right", "arrow"),
+      h1(className := "current-cotonoma")(cotonoma.name),
+      context.repo.cotonomas.totalPostsInFocus.map(posts =>
+        Fragment(
+          span(className := "total-posts")(
+            s"(${context.i18n.format(posts.max(0))})"
+          ),
+          Option.when(posts <= 0 && context.repo.canDeleteEmpty(cotonoma)) {
+            buttonDeleteCotonoma(cotonoma)
+          }
+        )
+      )
+    )
+
+  private def buttonDeleteCotonoma(cotonoma: Cotonoma)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    toolButton(
+      classes = "delete-cotonoma",
+      symbol = "delete",
+      tip = Some("Delete Cotonoma"),
+      onClick = e =>
+        dispatch(
+          Modal.Msg.OpenModal(
+            Modal.Confirm(
+              "Are you sure you want to delete the cotonoma?",
+              Root.Msg.DeleteCotonoma(cotonoma)
+            )
+          )
+        )
+    )
 
   private def divSearch(
       search: PaneSearch.Model

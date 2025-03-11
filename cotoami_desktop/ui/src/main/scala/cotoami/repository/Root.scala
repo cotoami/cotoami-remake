@@ -258,6 +258,9 @@ case class Root(
         currentNodeRoot.map(_._2.id)
       ).flatten.contains(cotoId)
 
+  def canDeleteEmpty(cotonoma: Cotonoma): Boolean =
+    cotos.get(cotonoma.cotoId).map(nodes.canDelete).getOrElse(false)
+
   /////////////////////////////////////////////////////////////////////////////
   // Import
   /////////////////////////////////////////////////////////////////////////////
@@ -393,6 +396,7 @@ object Root {
     case class CotoGraphFetched(result: Either[ErrorJson, CotoGraph])
         extends Msg
     case class DeleteCoto(id: Id[Coto]) extends Msg
+    case class DeleteCotonoma(cotonoma: Cotonoma) extends Msg
     case class CotoDeleted(id: Id[Coto], result: Either[ErrorJson, Id[Coto]])
         extends Msg
     case class Pin(cotoId: Id[Coto]) extends Msg
@@ -467,6 +471,15 @@ object Root {
         (
           model.modify(_.deleting).using(_ + id),
           deleteCoto(id)
+        )
+
+      case Msg.DeleteCotonoma(cotonoma) =>
+        (
+          model.modify(_.deleting).using(_ + cotonoma.cotoId),
+          Cmd.Batch(
+            deleteCoto(cotonoma.cotoId),
+            Browser.send(AppMsg.UnfocusCotonoma)
+          )
         )
 
       case Msg.CotoDeleted(id, Right(_)) =>
