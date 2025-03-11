@@ -43,7 +43,7 @@ object SectionGeomap {
     // have been loaded before calling this method.
     def onFocusChange(repo: Root): (Model, Cmd.One[AppMsg]) =
       (
-        copy(fetchingCotosInFocus = true),
+        unfocus.copy(fetchingCotosInFocus = true),
         GeolocatedCotos.fetch(
           repo.nodes.focusedId,
           repo.cotonomas.focusedId
