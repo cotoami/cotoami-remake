@@ -53,7 +53,7 @@ object SectionTimeline {
       imeActive: Boolean = false,
       loading: Boolean = false
   ) {
-    def onCotonomaChange: Model =
+    def onFocusChange(repo: Root): (Model, Cmd.One[AppMsg]) =
       copy(
         cotoIds = PaginatedIds(),
         waitingPosts = WaitingPosts(),
@@ -62,7 +62,7 @@ object SectionTimeline {
         fetchNumber = 0,
         loading = false,
         imeActive = false
-      )
+      ).fetchFirst(repo)
 
     def cotos(repo: Root): Seq[Coto] = {
       val rootCotoId = repo.currentNodeRootCotonoma.map(_.cotoId)
