@@ -13,7 +13,12 @@ case class Cotonomas(
     focusedId: Option[Id[Cotonoma]] = None,
     superIds: Seq[Id[Cotonoma]] = Seq.empty,
     subIds: PaginatedIds[Cotonoma] = PaginatedIds(),
-    recentIds: PaginatedIds[Cotonoma] = PaginatedIds()
+    recentIds: PaginatedIds[Cotonoma] = PaginatedIds(),
+
+    // Total post count in the focused cotonoma.
+    // This values will be set via `setCotonomaDetails` when the focus is changed,
+    // and updated on receiving changelogs, but its accuracy is not guaranteed.
+    totalPostsInFocus: Option[Double] = None
 ) {
   def get(id: Id[Cotonoma]): Option[Cotonoma] = map.get(id)
 
@@ -32,6 +37,9 @@ case class Cotonomas(
 
   def putAll(cotonomas: Iterable[Cotonoma]): Cotonomas =
     cotonomas.foldLeft(this)(_ put _)
+
+  def deleteByCoto(coto: Coto): Cotonomas =
+    incrementTotalPosts(coto, -1).deleteByCotoId(coto.id)
 
   def deleteByCotoId(cotoId: Id[Coto]): Cotonomas =
     mapByCotoId.get(cotoId) match {
@@ -65,6 +73,7 @@ case class Cotonomas(
       .focus(Some(details.cotonoma.id))
       .modify(_.superIds).setTo(details.supers.map(_.id).toSeq)
       .modify(_.subIds).using(_.appendPage(details.subs))
+      .modify(_.totalPostsInFocus).setTo(Some(details.postCount))
   }
 
   def asCotonoma(coto: Coto): Option[Cotonoma] =
@@ -77,12 +86,24 @@ case class Cotonomas(
     unfocus.copy(focusedId = id)
 
   def unfocus: Cotonomas =
-    copy(focusedId = None, superIds = Seq.empty, subIds = PaginatedIds())
+    copy(
+      focusedId = None,
+      superIds = Seq.empty,
+      subIds = PaginatedIds(),
+      totalPostsInFocus = None
+    )
 
   def isFocusing(id: Id[Cotonoma]): Boolean =
     focusedId.map(_ == id).getOrElse(false)
 
   def focused: Option[Cotonoma] = focusedId.flatMap(get)
+
+  def inFocus(coto: Coto): Boolean = coto.postedInId == focusedId
+
+  def incrementTotalPosts(coto: Coto, delta: Int = 1): Cotonomas =
+    this.modify(_.totalPostsInFocus.each).using(posts =>
+      if (inFocus(coto)) posts + delta else posts
+    )
 
   val supers: Seq[Cotonoma] = superIds.map(get).flatten
 

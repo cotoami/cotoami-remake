@@ -79,15 +79,18 @@ case class Root(
   def isNodeRoot(cotoId: Id[Coto]): Boolean =
     cotonomas.getByCotoId(cotoId).map(nodes.isNodeRoot(_)).getOrElse(false)
 
-  def deleteCoto(id: Id[Coto]): Root = {
+  def deleteCoto(id: Id[Coto]): Root =
     // Delete the reposts first if they exist
     cotos.repostsOf(id).foldLeft(this)(_ deleteCoto _.id)
-      // then, delete the specified coto (which could be a cotonoma)
+      // then, delete the coto (which could be a cotonoma)
       // and the itos to/from the coto.
       .modify(_.cotos).using(_.delete(id))
-      .modify(_.cotonomas).using(_.deleteByCotoId(id))
+      .modify(_.cotonomas).using(cotonomas =>
+        cotos.get(id)
+          .map(cotonomas.deleteByCoto)
+          .getOrElse(cotonomas.deleteByCotoId(id))
+      )
       .modify(_.itos).using(_.onCotoDelete(id))
-  }
 
   def beingDeleted(cotoId: Id[Coto]): Boolean = deleting.contains(cotoId)
 
@@ -106,6 +109,9 @@ case class Root(
     cotonomas.focusedId.orElse(
       nodes.current.flatMap(_.rootCotonomaId)
     )
+
+  def inCurrentCotonoma(coto: Coto): Boolean =
+    coto.postedInId == currentCotonomaId
 
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
   // return `None` if the cotonoma object has not been loaded.

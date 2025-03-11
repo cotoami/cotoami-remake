@@ -193,14 +193,16 @@ object Changelog {
     val coto = CotoBackend.toModel(cotoJson)
     val cotos = repo.cotos.put(coto)
 
-    // Update the target cotonoma or fetch it if not registered yet
+    // Update cotonomas
     val (cotonomas, fetchCotonoma) =
-      coto.postedInId.map(
-        touchCotonoma(_, coto.createdAtUtcIso, repo.cotonomas)
-      )
-        .getOrElse((repo.cotonomas, Cmd.none))
+      repo.cotonomas.incrementTotalPosts(coto).pipe { cotonomas =>
+        // Update the cotonoma's timestamp or fetch it
+        coto.postedInId
+          .map(touchCotonoma(_, coto.createdAtUtcIso, cotonomas))
+          .getOrElse((cotonomas, Cmd.none))
+      }
 
-    // Post the coto to the timeline
+    // Post it to the timeline
     val timeline =
       (repo.nodes.focused, repo.cotonomas.focused) match {
         case (None, None) => model.timeline.post(coto.id) // all posts
@@ -209,8 +211,8 @@ object Changelog {
             model.timeline.post(coto.id) // posts in the focused node
           else
             model.timeline
-        case (_, Some(cotonom)) =>
-          if (coto.postedInId == Some(cotonom.id))
+        case (_, Some(cotonoma)) =>
+          if (coto.postedInId == Some(cotonoma.id))
             model.timeline.post(coto.id) // posts in the focused cotonoma
           else
             model.timeline
@@ -222,6 +224,7 @@ object Changelog {
         model.geomap.addOrRemoveMarkers
       else
         model.geomap
+
     (
       model
         .modify(_.repo.cotos).setTo(cotos)
