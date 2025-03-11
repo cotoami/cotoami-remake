@@ -95,17 +95,18 @@ object AppHeader {
     )
 
   private def buttonDeleteCotonoma(cotonoma: Cotonoma)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     toolButton(
       classes = "delete-cotonoma",
       symbol = "delete",
-      tip = Some("Delete Cotonoma"),
+      tip = Some(context.i18n.text.DeleteCotonoma),
       onClick = e =>
         dispatch(
           Modal.Msg.OpenModal(
             Modal.Confirm(
-              "Are you sure you want to delete the cotonoma?",
+              context.i18n.text.ConfirmDeleteCotonoma,
               Root.Msg.DeleteCotonoma(cotonoma)
             )
           )

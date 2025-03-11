@@ -16,12 +16,14 @@ trait Text {
   val Save: String
   val Edit: String
   val Delete: String
+  val DeleteCotonoma: String
   val Connect: String
   val WriteSubcoto: String
   val EditItos: String
 
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
+  val ConfirmDeleteCotonoma: String
 
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement

@@ -19,6 +19,7 @@ object en extends Text {
   val Save = "Save"
   val Edit = "Edit"
   val Delete = "Delete"
+  val DeleteCotonoma = "Delete Cotonoma"
   val Connect = "Connect"
   val WriteSubcoto = "Write Sub-coto"
   val EditItos = "Edit Itos"
@@ -29,6 +30,7 @@ object en extends Text {
       "As an owner, you are about to delete a coto posted by:",
       someoneElse
     )
+  val ConfirmDeleteCotonoma = "Are you sure you want to delete the cotonoma?"
 
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """
