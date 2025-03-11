@@ -67,7 +67,12 @@ object AppHeader {
       cotonoma.map(cotonoma =>
         Fragment(
           materialSymbol("chevron_right", "arrow"),
-          h1(className := "current-cotonoma")(cotonoma.name)
+          h1(className := "current-cotonoma")(cotonoma.name),
+          context.repo.cotonomas.totalPostsInFocus.map(posts =>
+            span(className := "total-posts")(
+              s"(${context.i18n.format(posts.max(0))})"
+            )
+          )
         )
       ),
       Option.when(context.repo.geolocationInFocus.isDefined)(
