@@ -195,7 +195,7 @@ case class Root(
 
   /** Returns the geolocation or bounds calculated from the cotos in the focus.
     *
-    * NOTE: When the focus is on a cotonoma, the target cotonoma must have been
+    * NOTE: if the focus is on a cotonoma, the target cotonoma must have been
     * loaded, otherwise the cotonoma geolocation will not be used.
     */
   lazy val geolocationInFocus: Option[CenterOrBounds] =

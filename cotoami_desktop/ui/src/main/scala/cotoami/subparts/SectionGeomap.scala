@@ -39,6 +39,17 @@ object SectionGeomap {
       // ActionTriggers
       triggers: ActionTriggers = ActionTriggers()
   ) {
+    // If the new focus is on a cotonoma, the target cotonoma must
+    // have been loaded before calling this method.
+    def onFocusChange(repo: Root): (Model, Cmd.One[AppMsg]) =
+      (
+        copy(fetchingCotosInFocus = true),
+        GeolocatedCotos.fetch(
+          repo.nodes.focusedId,
+          repo.cotonomas.focusedId
+        ).map(Msg.CotosInFocusFetched(_).into)
+      )
+
     def applyCenterZoom: Model =
       this.modify(_.triggers.applyCenterZoom).using(_ + 1)
 
@@ -122,7 +133,6 @@ object SectionGeomap {
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
     case class BoundsChanged(bounds: GeoBounds) extends Msg
-    case object DatabaseFocusChanged extends Msg
     case class CotosInFocusFetched(
         result: Either[ErrorJson, GeolocatedCotos]
     ) extends Msg
@@ -166,15 +176,6 @@ object SectionGeomap {
           _3 = fetch
         )
       }
-
-      case Msg.DatabaseFocusChanged =>
-        default.copy(
-          _1 = model.copy(fetchingCotosInFocus = true),
-          _3 = GeolocatedCotos.fetch(
-            context.repo.nodes.focusedId,
-            context.repo.cotonomas.focusedId
-          ).map(Msg.CotosInFocusFetched(_).into)
-        )
 
       case Msg.CotosInFocusFetched(Right(cotos)) => {
         context.repo.importFrom(cotos).pipe { repo =>

@@ -3,11 +3,10 @@ package cotoami.updates
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
-import fui.{Browser, Cmd}
+import fui.Cmd
 import cotoami.{Model, Msg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.backend.CotonomaDetails
-import cotoami.subparts.SectionGeomap
 
 object DatabaseFocus {
 
@@ -20,13 +19,18 @@ object DatabaseFocus {
         val (navCotonomas, fetchRecentCotonomas) =
           model.navCotonomas.fetchRecent()(model)
         val (timeline, timelineCmd) = model.timeline.onFocusChange(model.repo)
+        val (geomap, geomapCmd) = model.geomap.onFocusChange(model.repo)
         (
-          model.copy(navCotonomas = navCotonomas, timeline = timeline),
+          model.copy(
+            navCotonomas = navCotonomas,
+            timeline = timeline,
+            geomap = geomap
+          ),
           Cmd.Batch(
             fetchRecentCotonomas,
             timelineCmd,
             model.repo.fetchGraph,
-            Browser.send(SectionGeomap.Msg.DatabaseFocusChanged.into)
+            geomapCmd
           )
         )
       }

@@ -211,7 +211,11 @@ object Main {
 
       case Msg.FocusedCotonomaDetailsFetched(Right(details)) =>
         model.modify(_.repo).using(_.setCotonomaDetails(details)).pipe {
-          _ -> Browser.send(SectionGeomap.Msg.DatabaseFocusChanged.into)
+          model =>
+            {
+              val (geomap, cmd) = model.geomap.onFocusChange(model.repo)
+              (model.copy(geomap = geomap), cmd)
+            }
         }
 
       case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
