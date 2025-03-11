@@ -75,14 +75,28 @@ object AppHeader {
           )
         )
       ),
+      Option.when(
+        context.repo.cotonomas.totalPostsInFocus.map(_ <= 0)
+          .getOrElse(false)
+      ) {
+        toolButton(
+          classes = "delete-cotonoma",
+          symbol = "delete",
+          tip = Some("Delete Cotonoma"),
+          onClick = (e => {
+            e.stopPropagation()
+          })
+        )
+      },
       Option.when(context.repo.geolocationInFocus.isDefined)(
-        button(
-          className := "geolocation default",
-          onClick := (e => {
+        toolButton(
+          classes = "geolocation",
+          symbol = "location_on",
+          onClick = (e => {
             e.stopPropagation()
             dispatch(AppMsg.DisplayGeolocationInFocus)
           })
-        )(materialSymbol("location_on"))
+        )
       )
     )
   }
