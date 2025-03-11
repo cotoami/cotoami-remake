@@ -339,7 +339,10 @@ object NavCotonomas {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     li(
       className := optionalClasses(
-        Seq(("focused", context.repo.cotonomas.isFocusing(cotonoma.id)))
+        Seq(
+          ("focused", context.repo.cotonomas.isFocusing(cotonoma.id)),
+          ("being-deleted", context.repo.beingDeleted(cotonoma.cotoId))
+        )
       ),
       key := cotonoma.id.uuid
     )(

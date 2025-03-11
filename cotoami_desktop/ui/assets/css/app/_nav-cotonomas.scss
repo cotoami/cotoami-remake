@@ -194,6 +194,10 @@ nav.cotonomas {
     background-color: var(--focused-background-color);
   }
 
+  .being-deleted {
+    opacity: 0.3;
+  }
+
   img.node-icon {
     width: 16px;
     height: 16px;
