@@ -393,8 +393,7 @@ object Main {
       }
 
       case Msg.SectionGeomapMsg(submsg) => {
-        val (geomap, repo, cmd) =
-          SectionGeomap.update(submsg, model.geomap)
+        val (geomap, repo, cmd) = SectionGeomap.update(submsg, model.geomap)
         (model.copy(geomap = geomap, repo = repo), cmd)
       }
     }
