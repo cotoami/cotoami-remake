@@ -250,7 +250,7 @@ object ModalNodeProfile {
           value := server.server.urlPrefix
         ),
         div(className := "tools")(
-          buttonEdit(_ => ())
+          // buttonEdit(_ => ())
         )
       )
     )
