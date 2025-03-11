@@ -363,14 +363,13 @@ object Main {
           SectionFlowInput.update(
             submsg,
             model.flowInput,
-            model.waitingPosts
-          )(model)
+            model.timeline.waitingPosts
+          )
         (
-          model.copy(
-            flowInput = flowInput,
-            geomap = geomap,
-            waitingPosts = waitingPosts
-          ),
+          model
+            .modify(_.flowInput).setTo(flowInput)
+            .modify(_.geomap).setTo(geomap)
+            .modify(_.timeline.waitingPosts).setTo(waitingPosts),
           cmds
         )
       }

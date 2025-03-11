@@ -36,6 +36,9 @@ object SectionTimeline {
   case class Model(
       cotoIds: PaginatedIds[Coto] = PaginatedIds(),
 
+      // Coto/Cotonoma inputs waiting to be posted
+      waitingPosts: WaitingPosts = WaitingPosts(),
+
       // Filter criteria for cotos in this timeline
       onlyCotonomas: Boolean = false,
       queryInput: String = "",
@@ -53,6 +56,7 @@ object SectionTimeline {
     def onCotonomaChange: Model =
       copy(
         cotoIds = PaginatedIds(),
+        waitingPosts = WaitingPosts(),
         onlyCotonomas = false,
         queryInput = "",
         fetchNumber = 0,
@@ -252,8 +256,7 @@ object SectionTimeline {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply(
-      model: Model,
-      waitingPosts: WaitingPosts
+      model: Model
   )(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
@@ -261,9 +264,9 @@ object SectionTimeline {
     val cotos = model.cotos(context.repo)
     context.repo.currentCotonomaId.flatMap(cotonomaId =>
       Option.when(
-        !model.queryInput.isBlank || !cotos.isEmpty || !waitingPosts.isEmpty
+        !model.queryInput.isBlank || !cotos.isEmpty || !model.waitingPosts.isEmpty
       )(
-        sectionTimeline(model, cotos, waitingPosts, cotonomaId)
+        sectionTimeline(model, cotos, cotonomaId)
       )
     )
   }
@@ -271,7 +274,6 @@ object SectionTimeline {
   private def sectionTimeline(
       model: Model,
       cotos: Seq[Coto],
-      waitingPosts: WaitingPosts,
       currentCotonomaId: Id[Cotonoma]
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "timeline header-and-body")(
@@ -308,7 +310,7 @@ object SectionTimeline {
             className = "posts",
             flipKey = cotos.length.toString()
           )(
-            (waitingPosts.posts.map(sectionWaitingPost) ++
+            (model.waitingPosts.posts.map(sectionWaitingPost) ++
               cotos.map(coto =>
                 Flipped(key = coto.id.uuid, flipId = coto.id.uuid)(
                   sectionPost(coto, model)

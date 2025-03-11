@@ -40,9 +40,6 @@ case class Model(
     // Highlighted coto by hover
     highlight: Option[Id[Coto]] = None,
 
-    // Coto/Cotonoma inputs waiting to be posted
-    waitingPosts: WaitingPosts = WaitingPosts(),
-
     // Status of syncing with parent nodes
     parentSync: ParentSync = ParentSync(),
 
@@ -67,7 +64,6 @@ case class Model(
   def changeUrl(url: URL): Model =
     copy(
       url = url,
-      waitingPosts = WaitingPosts(),
       traversals = SectionTraversals.Model()
     )
 }
