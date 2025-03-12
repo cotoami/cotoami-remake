@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{ensure, Result};
 
 use crate::{
     db::{
@@ -126,9 +126,10 @@ impl<'a> DatabaseSession<'a> {
         &mut self,
         parent_id: &Id<Node>,
     ) -> Result<Option<(Ito, Cotonoma, ChangelogEntry)>> {
-        if !self.globals.is_parent(parent_id) {
-            bail!("The specified node is not a parent: {parent_id}");
-        }
+        ensure!(
+            self.globals.is_parent(parent_id),
+            "The specified node is not a parent: {parent_id}"
+        );
 
         // Local root cotonoma
         let Some((_, local_root_coto)) = self.local_node_root()? else {
