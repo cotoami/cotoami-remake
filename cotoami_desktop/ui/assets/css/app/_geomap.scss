@@ -8,6 +8,10 @@ section.geomap {
 
   .focused-location-marker {
     z-index: 10;
+
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   div.geomap-marker {

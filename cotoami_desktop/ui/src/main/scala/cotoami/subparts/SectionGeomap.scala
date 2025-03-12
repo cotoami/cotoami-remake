@@ -294,7 +294,8 @@ object SectionGeomap {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.BoundsChanged(bounds))
       }),
-      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id)))
+      onMarkerClick = Some(id => dispatch(Msg.MarkerClicked(id))),
+      onFocusedLocationClick = Some(() => dispatch(Msg.FocusLocation(None)))
     )
   }
 

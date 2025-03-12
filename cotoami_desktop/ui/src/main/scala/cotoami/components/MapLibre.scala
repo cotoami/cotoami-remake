@@ -62,7 +62,8 @@ import cotoami.libs.geomap.pmtiles
       onZoomChanged: Option[Double => Unit] = None,
       onCenterMoved: Option[LngLat => Unit] = None,
       onBoundsChanged: Option[LngLatBounds => Unit] = None,
-      onMarkerClick: Option[String => Unit] = None
+      onMarkerClick: Option[String => Unit] = None,
+      onFocusedLocationClick: Option[() => Unit] = None
   )
 
   val component = FunctionalComponent[Props] { props =>
@@ -169,14 +170,15 @@ import cotoami.libs.geomap.pmtiles
             // Delay rendering the map to ensure it to fit to the container section.
             js.timers.setTimeout(10) {
               val map = new ExtendedMap(
-                new MapOptions {
+                options = new MapOptions {
                   override val container = props.id
                   override val zoom = props.zoom
                   override val center = props.center
                   override val style = toAbsoluteUrl(props.styleLocation)
                   override val transformRequest = _transformRequest
                 },
-                props.onMarkerClick
+                onMarkerClick = props.onMarkerClick,
+                onFocusedLocationClick = props.onFocusedLocationClick
               )
               map.addControl(
                 new NavigationControl(
@@ -321,7 +323,8 @@ import cotoami.libs.geomap.pmtiles
 
   class ExtendedMap(
       options: MapOptions,
-      onMarkerClick: Option[String => Unit] = None
+      onMarkerClick: Option[String => Unit] = None,
+      onFocusedLocationClick: Option[() => Unit] = None
   ) extends Map(options) {
     var focusedLocationMarker: Option[Marker] = None
     val markers: MutableMap[String, Marker] = MutableMap.empty
@@ -339,6 +342,13 @@ import cotoami.libs.geomap.pmtiles
         .setLngLat(lngLat)
         .addTo(this)
       marker.addClassName(FocusedLocationMarkerClassName)
+      marker.getElement().addEventListener(
+        "click",
+        (e: dom.MouseEvent) => {
+          e.stopPropagation()
+          onFocusedLocationClick.foreach(_())
+        }
+      )
       focusedLocationMarker = Some(marker)
     }
 
