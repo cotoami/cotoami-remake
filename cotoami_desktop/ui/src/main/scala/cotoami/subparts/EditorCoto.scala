@@ -22,16 +22,19 @@ object EditorCoto {
     def hasContents: Boolean
     def hasValidContents: Boolean
 
-    def mediaLocation: Option[Geolocation]
-    def mediaDateTime: Option[DateTimeRange]
-    def geolocation: Option[Geolocation]
     def dateTimeRange: Option[DateTimeRange]
+    def geolocation: Option[Geolocation]
 
-    def isMediaLocationNotUsed: Boolean =
-      mediaLocation.isDefined && geolocation != mediaLocation
+    def mediaDateTime: Option[DateTimeRange]
+    def mediaLocation: Option[Geolocation]
 
     def isMediaDateTimeNotUsed: Boolean =
       mediaDateTime.isDefined && dateTimeRange != mediaDateTime
+
+    def isMediaLocationNotUsed: Boolean =
+      mediaLocation.isDefined && geolocation != mediaLocation
+    def isGeomapLocationNotUsed(map: Geomap): Boolean =
+      map.focusedLocation.isDefined && geolocation != map.focusedLocation
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -41,16 +44,16 @@ object EditorCoto {
   object CotoForm {
     case class Model(
         isCotonoma: Boolean = false,
+        inPreview: Boolean = false,
         summaryInput: String = "",
         contentInput: String = "",
-        inPreview: Boolean = false,
+        dateTimeRange: Option[DateTimeRange] = None,
+        geolocation: Option[Geolocation] = None,
         mediaBlob: Option[dom.Blob] = None,
         encodingMedia: Boolean = false,
         mediaBase64: Option[(String, String)] = None,
-        mediaLocation: Option[Geolocation] = None,
         mediaDateTime: Option[DateTimeRange] = None,
-        geolocation: Option[Geolocation] = None,
-        dateTimeRange: Option[DateTimeRange] = None
+        mediaLocation: Option[Geolocation] = None
     ) extends Form {
       def hasContents: Boolean =
         !summaryInput.isBlank || !contentInput.isBlank || mediaBase64.isDefined
@@ -112,14 +115,14 @@ object EditorCoto {
           isCotonoma = original.isCotonoma,
           summaryInput = original.summary.getOrElse(""),
           contentInput = original.content.getOrElse(""),
+          dateTimeRange = original.dateTimeRange,
+          geolocation = original.geolocation,
           mediaBlob = original.mediaBlob.map(_._1),
           // The content of `mediaBase64` will be used only if the media content has been
           // changed, so let's set dummy data here to avoid the cost of base64-encoding
           // `mediaBlob` and just to denote that the coto has some media content
           // (cf. `CotoForm.Model.hasContents`).
-          mediaBase64 = original.mediaBlob.map { case (_, t) => ("", t) },
-          geolocation = original.geolocation,
-          dateTimeRange = original.dateTimeRange
+          mediaBase64 = original.mediaBlob.map { case (_, t) => ("", t) }
         )
     }
 
@@ -142,7 +145,8 @@ object EditorCoto {
       case object DeleteDateTimeRange extends Msg
       case object DeleteGeolocation extends Msg
       case object UseMediaDateTime extends Msg
-      case object UseMediaGeolocation extends Msg
+      case object UseGeomapLocation extends Msg
+      case object UseMediaLocation extends Msg
     }
 
     def update(msg: Msg, model: Model)(implicit
@@ -173,7 +177,10 @@ object EditorCoto {
 
         case Msg.ExifLocationDetected(Right(location)) =>
           default.copy(
-            _1 = model.copy(mediaLocation = location),
+            _1 = model.copy(
+              mediaLocation = location,
+              geolocation = model.geolocation.orElse(location)
+            ),
             _2 = (location, context.geomap.focusedLocation) match {
               case (Some(location), None) => context.geomap.focus(location)
               case _                      => context.geomap
@@ -232,11 +239,19 @@ object EditorCoto {
         case Msg.UseMediaDateTime =>
           default.copy(_1 = model.copy(dateTimeRange = model.mediaDateTime))
 
-        case Msg.UseMediaGeolocation =>
-          default.copy(_2 = model.mediaLocation match {
-            case Some(location) => context.geomap.focus(location)
-            case None           => context.geomap
-          })
+        case Msg.UseGeomapLocation =>
+          default.copy(_1 =
+            model.copy(geolocation = context.geomap.focusedLocation)
+          )
+
+        case Msg.UseMediaLocation =>
+          default.copy(
+            _1 = model.copy(geolocation = model.mediaLocation),
+            _2 = model.mediaLocation match {
+              case Some(location) => context.geomap.focus(location)
+              case None           => context.geomap
+            }
+          )
       }
     }
 
@@ -389,8 +404,8 @@ object EditorCoto {
         nameInput: String = "",
         imeActive: Boolean = false,
         validation: Validation.Result = Validation.Result.notYetValidated,
-        geolocation: Option[Geolocation] = None,
         dateTimeRange: Option[DateTimeRange] = None,
+        geolocation: Option[Geolocation] = None,
         error: Option[String] = None
     ) extends Form {
       def hasContents: Boolean = !nameInput.isBlank
@@ -428,8 +443,8 @@ object EditorCoto {
         hasContents && (Some(name) == originalName || validation.validated)
 
       // CotonomaForm doesn't support media input
-      val mediaLocation: Option[Geolocation] = None
       val mediaDateTime: Option[DateTimeRange] = None
+      val mediaLocation: Option[Geolocation] = None
     }
 
     object Model {
@@ -568,12 +583,14 @@ object EditorCoto {
             context.time.formatDateTime(range.start)
           )
         ),
-        Option.when(form.isMediaDateTimeNotUsed) {
-          divUseMediaMetadata(
-            "Use the image timestamp",
-            _ => dispatch(CotoForm.Msg.UseMediaDateTime)
-          )
-        },
+        div(className := "from-buttons")(
+          Option.when(form.isMediaDateTimeNotUsed) {
+            button(
+              className := "default",
+              onClick := (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
+            )("From Image")
+          }
+        ),
         Option.when(form.dateTimeRange.isDefined) {
           divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteDateTimeRange))
         }
@@ -608,28 +625,25 @@ object EditorCoto {
             )
           )
         ),
-        Option.when(form.isMediaLocationNotUsed) {
-          divUseMediaMetadata(
-            "Use the image location",
-            _ => dispatch(CotoForm.Msg.UseMediaGeolocation)
-          )
-        },
+        div(className := "from-buttons")(
+          Option.when(form.isGeomapLocationNotUsed(context.geomap)) {
+            button(
+              className := "default",
+              onClick := (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
+            )("From Map")
+          },
+          Option.when(form.isMediaLocationNotUsed) {
+            button(
+              className := "default",
+              onClick := (_ => dispatch(CotoForm.Msg.UseMediaLocation))
+            )("From Image")
+          }
+        ),
         Option.when(form.geolocation.isDefined) {
           divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteGeolocation))
         }
       )
     }
-
-  private def divUseMediaMetadata(
-      label: String,
-      onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
-    div(className := "use-media-metadata")(
-      button(
-        className := "default",
-        slinky.web.html.onClick := onClick
-      )(label)
-    )
 
   private def divAttributeDelete(
       onClick: SyntheticMouseEvent[_] => Unit
