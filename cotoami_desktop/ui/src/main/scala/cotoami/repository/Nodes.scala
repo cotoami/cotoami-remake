@@ -147,9 +147,12 @@ case class Nodes(
   def canPostTo(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) || childPrivilegesTo(nodeId).isDefined
 
-  // A coto can be edited only by its creator.
+  // A coto can be edited only by its creator, but if a coto is a cotonoma,
+  // owners can edit it, too.
   def canEdit(coto: Coto): Boolean =
-    canPostTo(coto.nodeId) && isOperating(coto.postedById)
+    canPostTo(coto.nodeId) &&
+      (isOperating(coto.postedById) ||
+        (coto.isCotonoma && isOwnerOf(coto.nodeId)))
 
   // A coto can be deleted by its creator or the node owner.
   def canDelete(coto: Coto): Boolean =
