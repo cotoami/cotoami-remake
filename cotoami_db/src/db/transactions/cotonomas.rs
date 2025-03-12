@@ -229,7 +229,7 @@ impl<'a> DatabaseSession<'a> {
             self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
                 let (cotonoma, coto) = cotonoma_ops::try_get_pair(id).run(ctx)??;
                 self.globals.ensure_local(&cotonoma)?;
-                operator.can_rename_cotonoma(&coto)?;
+                operator.can_update_coto(&coto)?;
 
                 let (cotonoma, coto) = cotonoma_ops::rename(id, name, None).run(ctx)?;
                 let change = Change::RenameCotonoma {

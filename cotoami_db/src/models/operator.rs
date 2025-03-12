@@ -3,9 +3,9 @@ use anyhow::Result;
 use crate::{
     db::error::*,
     models::{
-        Id,
         coto::Coto,
-        node::{Node, child::ChildNode},
+        node::{child::ChildNode, Node},
+        Id,
     },
 };
 
@@ -54,7 +54,11 @@ impl Operator {
     }
 
     pub fn can_update_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
-        if self.node_id() == Some(coto.posted_by_id) {
+        // Basically only the poster can update a coto,
+        if self.node_id() == Some(coto.posted_by_id)
+            // but if a coto is a cotonoma, owners can update it, too.
+            || (coto.is_cotonoma && self.has_owner_permission())
+        {
             Ok(())
         } else {
             Err(DatabaseError::PermissionDenied)
@@ -63,14 +67,6 @@ impl Operator {
 
     pub fn can_delete_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
         if self.can_update_coto(coto).is_ok() || self.has_owner_permission() {
-            Ok(())
-        } else {
-            Err(DatabaseError::PermissionDenied)
-        }
-    }
-
-    pub fn can_rename_cotonoma(&self, cotonoma_coto: &Coto) -> Result<(), DatabaseError> {
-        if self.can_update_coto(cotonoma_coto).is_ok() || self.has_owner_permission() {
             Ok(())
         } else {
             Err(DatabaseError::PermissionDenied)
