@@ -179,7 +179,13 @@ ul.attributes {
       button {
         border: 1px solid var(--pane-border-color);
         border-radius: var(--border-radius);
+
+        margin-left: 8px;
         padding: 4px 12px;
+
+        span.material-symbols {
+          font-size: 18px;
+        }
       }
     }
 

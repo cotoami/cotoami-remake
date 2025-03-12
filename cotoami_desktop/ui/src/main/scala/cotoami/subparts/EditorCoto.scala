@@ -234,7 +234,7 @@ object EditorCoto {
           default.copy(_1 = model.copy(dateTimeRange = None))
 
         case Msg.DeleteGeolocation =>
-          default.copy(_2 = context.geomap.unfocus)
+          default.copy(_1 = model.copy(geolocation = None))
 
         case Msg.UseMediaDateTime =>
           default.copy(_1 = model.copy(dateTimeRange = model.mediaDateTime))
@@ -585,10 +585,12 @@ object EditorCoto {
         ),
         div(className := "from-buttons")(
           Option.when(form.isMediaDateTimeNotUsed) {
-            button(
-              className := "default",
-              onClick := (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
-            )("From Image")
+            toolButton(
+              classes = "from-image",
+              symbol = "image",
+              tip = Some("From Image"),
+              onClick = (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
+            )
           }
         ),
         Option.when(form.dateTimeRange.isDefined) {
@@ -627,16 +629,20 @@ object EditorCoto {
         ),
         div(className := "from-buttons")(
           Option.when(form.isGeomapLocationNotUsed(context.geomap)) {
-            button(
-              className := "default",
-              onClick := (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
-            )("From Map")
+            toolButton(
+              classes = "from-map",
+              symbol = "public",
+              tip = Some("From Map"),
+              onClick = (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
+            )
           },
           Option.when(form.isMediaLocationNotUsed) {
-            button(
-              className := "default",
-              onClick := (_ => dispatch(CotoForm.Msg.UseMediaLocation))
-            )("From Image")
+            toolButton(
+              classes = "from-image",
+              symbol = "image",
+              tip = Some("From Image"),
+              onClick = (_ => dispatch(CotoForm.Msg.UseMediaLocation))
+            )
           }
         ),
         Option.when(form.geolocation.isDefined) {
