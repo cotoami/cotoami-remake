@@ -12,7 +12,7 @@ import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.optionalClasses
-import cotoami.subparts.{Modal, SectionGeomap}
+import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
@@ -111,9 +111,7 @@ object ModalEditCoto {
         )
       (
         Model(coto, cotoForm, cotonomaForm),
-        Browser.send(
-          SectionGeomap.Msg.FocusLocation(coto.geolocation).into
-        ) +: cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
+        cotoForm.scanMediaMetadata.map(Msg.CotoFormMsg).map(_.into)
       )
     }
   }
