@@ -38,6 +38,7 @@ object EditorCoto {
         mediaBase64: Option[(String, String)] = None,
         mediaLocation: Option[Geolocation] = None,
         mediaDateTime: Option[DateTimeRange] = None,
+        geolocation: Option[Geolocation] = None,
         dateTimeRange: Option[DateTimeRange] = None
     ) extends Form {
       def hasContents: Boolean =
@@ -106,6 +107,7 @@ object EditorCoto {
           // `mediaBlob` and just to denote that the coto has some media content
           // (cf. `CotoForm.Model.hasContents`).
           mediaBase64 = original.mediaBlob.map { case (_, t) => ("", t) },
+          geolocation = original.geolocation,
           dateTimeRange = original.dateTimeRange
         )
     }
@@ -228,7 +230,7 @@ object EditorCoto {
     }
 
     def apply(
-        model: CotoForm.Model,
+        form: CotoForm.Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         vertical: Boolean = false
@@ -237,17 +239,17 @@ object EditorCoto {
         dispatch: Msg => Unit
     ): ReactElement = {
       val editor = Fragment(
-        sectionEditorOrPreview(model, onCtrlEnter, onFocus),
+        sectionEditorOrPreview(form, onCtrlEnter, onFocus),
         ulAttributes(
-          model.dateTimeRange,
-          model.mediaDateTime,
+          form.dateTimeRange,
+          form.mediaDateTime,
           context.geomap.focusedLocation,
-          model.mediaLocation
+          form.mediaLocation
         ),
-        sectionValidationError(model)
+        sectionValidationError(form)
       )
       div(className := "coto-form")(
-        sectionMediaPreview(model) match {
+        sectionMediaPreview(form) match {
           case Some(mediaPreview) =>
             SplitPane(
               vertical = vertical,
@@ -261,46 +263,46 @@ object EditorCoto {
     }
 
     def sectionEditorOrPreview(
-        model: CotoForm.Model,
+        form: CotoForm.Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
     )(implicit dispatch: Msg => Unit): ReactElement =
-      if (model.inPreview)
-        sectionPreview(model)
+      if (form.inPreview)
+        sectionPreview(form)
       else
-        sectionEditor(model, onCtrlEnter, onFocus, enableImageInput)
+        sectionEditor(form, onCtrlEnter, onFocus, enableImageInput)
 
     def sectionEditor(
-        model: CotoForm.Model,
+        form: CotoForm.Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
     )(implicit dispatch: Msg => Unit): ReactElement =
       section(className := "coto-editor fill")(
-        Option.when(!model.isCotonoma) {
+        Option.when(!form.isCotonoma) {
           input(
             className := "summary",
             `type` := "text",
             placeholder := "Summary (optional)",
-            value := model.summaryInput,
+            value := form.summaryInput,
             onChange := (e => dispatch(Msg.SummaryInput(e.target.value))),
             onKeyDown := (e =>
-              if (model.hasValidContents && detectCtrlEnter(e)) {
+              if (form.hasValidContents && detectCtrlEnter(e)) {
                 onCtrlEnter.map(_())
               }
             )
           )
         },
         textarea(
-          placeholder := (if (model.isCotonoma)
+          placeholder := (if (form.isCotonoma)
                             "Write a cotonoma description in Markdown"
                           else "Write your coto in Markdown"),
-          value := model.contentInput,
+          value := form.contentInput,
           slinky.web.html.onFocus := onFocus,
           onChange := (e => dispatch(Msg.ContentInput(e.target.value))),
           onKeyDown := (e =>
-            if (model.hasValidContents && detectCtrlEnter(e)) {
+            if (form.hasValidContents && detectCtrlEnter(e)) {
               onCtrlEnter.map(_())
             }
           )
@@ -316,27 +318,27 @@ object EditorCoto {
         }
       )
 
-    def sectionPreview(model: CotoForm.Model): ReactElement =
+    def sectionPreview(form: CotoForm.Model): ReactElement =
       section(className := "coto-preview fill")(
         ScrollArea()(
-          Option.when(!model.isCotonoma) {
-            model.summary.map(section(className := "summary")(_))
+          Option.when(!form.isCotonoma) {
+            form.summary.map(section(className := "summary")(_))
           },
           div(className := "content")(
-            PartsCoto.sectionTextContent(Some(model.content))
+            PartsCoto.sectionTextContent(Some(form.content))
           )
         )
       )
 
     def buttonPreview(
-        model: CotoForm.Model
+        form: CotoForm.Model
     )(implicit dispatch: Msg => Unit): ReactElement =
       button(
         className := "preview contrast outline",
-        disabled := !model.validate.validated,
+        disabled := !form.validate.validated,
         onClick := (_ => dispatch(Msg.TogglePreview))
       )(
-        if (model.inPreview)
+        if (form.inPreview)
           "Edit"
         else
           "Preview"
@@ -524,6 +526,24 @@ object EditorCoto {
       )
   }
 
+  def ulAttributes(
+      dateTimeRange: Option[DateTimeRange],
+      mediaDateTime: Option[DateTimeRange],
+      location: Option[Geolocation],
+      mediaLocation: Option[Geolocation]
+  )(implicit
+      context: Context,
+      dispatch: CotoForm.Msg => Unit
+  ): Option[ReactElement] =
+    Seq(
+      liAttributeDateTimeRange(dateTimeRange, mediaDateTime),
+      liAttributeGeolocation(location, mediaLocation)
+    ).flatten match {
+      case Seq() => None
+      case attributes =>
+        Some(ul(className := "attributes")(attributes: _*))
+    }
+
   private def liAttributeDateTimeRange(
       dateTimeRange: Option[DateTimeRange],
       mediaDateTime: Option[DateTimeRange]
@@ -550,24 +570,6 @@ object EditorCoto {
           divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteDateTimeRange))
         }
       )
-    }
-
-  def ulAttributes(
-      dateTimeRange: Option[DateTimeRange],
-      mediaDateTime: Option[DateTimeRange],
-      location: Option[Geolocation],
-      mediaLocation: Option[Geolocation]
-  )(implicit
-      context: Context,
-      dispatch: CotoForm.Msg => Unit
-  ): Option[ReactElement] =
-    Seq(
-      liAttributeDateTimeRange(dateTimeRange, mediaDateTime),
-      liAttributeGeolocation(location, mediaLocation)
-    ).flatten match {
-      case Seq() => None
-      case attributes =>
-        Some(ul(className := "attributes")(attributes: _*))
     }
 
   private def liAttributeGeolocation(

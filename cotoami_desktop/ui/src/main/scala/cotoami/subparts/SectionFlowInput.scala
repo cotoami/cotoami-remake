@@ -414,7 +414,7 @@ object SectionFlowInput {
       onPrimarySizeChanged = Some(onEditorHeightChanged),
       primary = SplitPane.Primary.Props(className = Some("coto-form-pane"))(
         CotoForm.sectionEditorOrPreview(
-          model = form,
+          form = form,
           onCtrlEnter = Some(() => dispatch(Msg.Post)),
           onFocus = Some(() => dispatch(Msg.SetFolded(false)))
         )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
@@ -439,7 +439,7 @@ object SectionFlowInput {
             ),
             addressPoster(operatingNode),
             div(className := "buttons")(
-              CotoForm.buttonPreview(model = form)(submsg =>
+              CotoForm.buttonPreview(form)(submsg =>
                 dispatch(Msg.CotoFormMsg(submsg))
               ),
               buttonPost(model, currentCotonoma)
