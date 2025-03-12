@@ -45,22 +45,22 @@ object ModalSubcoto {
     def readyToPost: Boolean =
       !posting && postTo.isDefined && cotoForm.hasValidContents && !validateDescription.failed
 
-    def postAndConnect(geomap: Geomap): (Model, Cmd.One[AppMsg]) =
+    def postAndConnect: (Model, Cmd.One[AppMsg]) =
       (
         copy(posting = true),
-        post(geomap).flatMap(_ match {
+        post.flatMap(_ match {
           case Right(coto) => connect(coto)
           case Left(e)     => pure(Left(e))
         }).map(Msg.Posted(_).into)
       )
 
-    private def post(geomap: Geomap): Cmd.One[Either[ErrorJson, Coto]] =
+    private def post: Cmd.One[Either[ErrorJson, Coto]] =
       postTo.map(target =>
         CotoBackend.post(
           cotoForm.content,
           cotoForm.summary,
           cotoForm.mediaBase64,
-          geomap.focusedLocation,
+          cotoForm.geolocation,
           cotoForm.dateTimeRange,
           target.cotonoma.id
         )
@@ -154,7 +154,7 @@ object ModalSubcoto {
         default.copy(_1 = model.copy(postTo = target))
 
       case Msg.Post =>
-        model.postAndConnect(context.geomap).pipe { case (model, cmd) =>
+        model.postAndConnect.pipe { case (model, cmd) =>
           default.copy(_1 = model, _3 = cmd)
         }
 
