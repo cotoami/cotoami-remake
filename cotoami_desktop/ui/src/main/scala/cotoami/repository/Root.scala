@@ -211,8 +211,8 @@ case class Root(
         }
     }
 
-  lazy val locationMarkers: Seq[Geolocation.MarkerOfCotos] = {
-    var markers: Map[Geolocation, Geolocation.MarkerOfCotos] = Map.empty
+  lazy val cotoMarkers: Seq[CotoMarker] = {
+    var markers: Map[Geolocation, CotoMarker] = Map.empty
     cotos.geolocated.foreach { case (coto, location) =>
       nodes.get(coto.nodeId).foreach(node =>
         markers = markers.updatedWith(location) {
@@ -220,7 +220,7 @@ case class Root(
             Some(marker.addCoto(coto, node.iconUrl, inFocus(coto)))
           case None =>
             Some(
-              Geolocation.MarkerOfCotos(
+              CotoMarker(
                 location,
                 Seq(coto),
                 Set(node.iconUrl),

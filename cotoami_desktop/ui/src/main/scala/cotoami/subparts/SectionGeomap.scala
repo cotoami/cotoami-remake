@@ -8,7 +8,7 @@ import slinky.core.facade.ReactElement
 
 import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{CenterOrBounds, GeoBounds, Geolocation, Id}
+import cotoami.models.{CenterOrBounds, CotoMarker, GeoBounds, Geolocation, Id}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
 import cotoami.components.{optionalClasses, MapLibre}
@@ -270,7 +270,7 @@ object SectionGeomap {
           None
       ),
       focusedLocation = model.focusedLocation.map(_.toMapLibre),
-      markerDefs = toMarkerDefs(context.repo.locationMarkers),
+      markerDefs = toMarkerDefs(context.repo.cotoMarkers),
       focusedMarkerId = context.repo.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model.triggers.applyCenterZoom,
@@ -299,27 +299,23 @@ object SectionGeomap {
     )
   }
 
-  private def toMarkerDefs(
-      markers: Seq[Geolocation.MarkerOfCotos]
-  ): Seq[MapLibre.MarkerDef] =
+  private def toMarkerDefs(markers: Seq[CotoMarker]): Seq[MapLibre.MarkerDef] =
     markers.map(toMarkerDef(_))
 
   val IdSeparator = ","
 
-  private def toMarkerDef(
-      markerOfCotos: Geolocation.MarkerOfCotos
-  ): MapLibre.MarkerDef =
+  private def toMarkerDef(cotoMarker: CotoMarker): MapLibre.MarkerDef =
     MapLibre.MarkerDef(
-      markerOfCotos.cotos.map(_.id.uuid).mkString(IdSeparator),
-      markerOfCotos.location.toLngLat,
+      cotoMarker.cotos.map(_.id.uuid).mkString(IdSeparator),
+      cotoMarker.location.toLngLat,
       markerElement(
-        markerOfCotos.nodeIconUrls.take(4),
-        markerOfCotos.inFocus,
-        markerOfCotos.cotos.size,
-        markerOfCotos.containsCotonomas,
-        markerOfCotos.label
+        cotoMarker.nodeIconUrls.take(4),
+        cotoMarker.inFocus,
+        cotoMarker.cotos.size,
+        cotoMarker.containsCotonomas,
+        cotoMarker.label
       ),
-      markerOfCotos.cotos match {
+      cotoMarker.cotos match {
         case Seq(coto) =>
           popupHtml(
             if (coto.isCotonoma) None else coto.abbreviate,
