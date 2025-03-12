@@ -63,14 +63,12 @@ pub(crate) fn insert<'a>(new_node: &'a NewNode<'a>) -> impl Operation<WritableCo
     })
 }
 
-pub(crate) fn get_or_insert_placeholder<'a>(
-    id: Id<Node>,
-) -> impl Operation<WritableConn, Node> + 'a {
+pub(crate) fn get_or_insert_placeholder(id: &Id<Node>) -> impl Operation<WritableConn, Node> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if let Some(node) = get(&id).run(ctx)? {
+        if let Some(node) = get(id).run(ctx)? {
             Ok(node)
         } else {
-            insert(&NewNode::new_placeholder(id)).run(ctx)
+            insert(&NewNode::new_placeholder(*id)).run(ctx)
         }
     })
 }

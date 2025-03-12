@@ -1,6 +1,6 @@
 use core::time::Duration;
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 
 use crate::{
     db::{
@@ -51,12 +51,17 @@ impl<'a> DatabaseSession<'a> {
     /// updated with real data when the client node connects to this node.
     pub fn register_client_node(
         &self,
-        id: Id<Node>,
+        id: &Id<Node>,
         password: &str,
         database_role: NewDatabaseRole,
         operator: &Operator,
     ) -> Result<(ClientNode, Node, DatabaseRole)> {
         operator.requires_to_be_owner()?;
+        ensure!(
+            *id != self.globals.try_get_local_node_id()?,
+            "The local node can't be a client."
+        );
+
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let node = node_ops::get_or_insert_placeholder(id).run(ctx)?;
             let (client, database_role) =
