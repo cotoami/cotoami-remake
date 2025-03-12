@@ -221,7 +221,7 @@ object SectionFlowInput {
               cotonoma
             ),
             _4 = Cmd.Batch(
-              postCoto(postId, form, context.geomap, cotonoma.id),
+              postCoto(postId, form, cotonoma.id),
               model.save
             )
           )
@@ -236,7 +236,7 @@ object SectionFlowInput {
               _1 = model,
               _2 = context.geomap.copy(focusedLocation = None),
               _3 = waitingPosts.addCotonoma(postId, form.name, cotonoma),
-              _4 = postCotonoma(postId, form, context.geomap, cotonoma.id)
+              _4 = postCotonoma(postId, form, cotonoma.id)
             )
         }
       }
@@ -283,14 +283,13 @@ object SectionFlowInput {
   private def postCoto(
       postId: String,
       form: CotoForm.Model,
-      geomap: Geomap,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
     CotoBackend.post(
       form.content,
       form.summary,
       form.mediaBase64,
-      geomap.focusedLocation,
+      form.geolocation,
       form.dateTimeRange,
       postTo
     )
@@ -299,10 +298,9 @@ object SectionFlowInput {
   private def postCotonoma(
       postId: String,
       form: CotonomaForm.Model,
-      geomap: Geomap,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
-    CotonomaBackend.post(form.name, geomap.focusedLocation, None, postTo)
+    CotonomaBackend.post(form.name, form.geolocation, None, postTo)
       .map(Msg.CotonomaPosted(postId, _).into)
 
   /////////////////////////////////////////////////////////////////////////////
