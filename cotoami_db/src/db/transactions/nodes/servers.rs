@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{ensure, Result};
 
 use crate::{
     db::{
@@ -47,6 +47,11 @@ impl<'a> DatabaseSession<'a> {
         operator: &Operator,
     ) -> Result<(ServerNode, DatabaseRole)> {
         operator.requires_to_be_owner()?;
+        ensure!(
+            *id != self.globals.try_get_local_node_id()?,
+            "The local node can't be a server."
+        );
+
         let (server, database_role) = self.write_transaction(
             node_role_ops::register_server_node(id, url_prefix, database_role),
         )?;
