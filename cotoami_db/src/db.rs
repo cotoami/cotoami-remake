@@ -3,7 +3,7 @@
 use core::time::Duration;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Result};
+use anyhow::{ensure, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use parking_lot::Mutex;
@@ -128,9 +128,7 @@ pub fn new_ro_conn(uri: &str) -> Result<SqliteConnection> {
 
 fn ensure_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
     let path = path.as_ref().canonicalize()?;
-    if !path.is_dir() {
-        bail!(DatabaseError::InvalidRootDir(path));
-    }
+    ensure!(path.is_dir(), DatabaseError::InvalidRootDir(path));
     Ok(path)
 }
 

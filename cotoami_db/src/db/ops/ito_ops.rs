@@ -2,7 +2,7 @@
 
 use std::ops::DerefMut;
 
-use anyhow::bail;
+use anyhow::ensure;
 use chrono::NaiveDateTime;
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
@@ -63,11 +63,11 @@ pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, It
         new_ito.validate()?;
 
         // Ensure both of cotos are not reposts
-        if coto_ops::any_reposts_in(&[*new_ito.source_coto_id(), *new_ito.target_coto_id()])
-            .run(ctx)?
-        {
-            bail!(DatabaseError::RepostsCannotBeConnected);
-        }
+        ensure!(
+            !coto_ops::any_reposts_in(&[*new_ito.source_coto_id(), *new_ito.target_coto_id()])
+                .run(ctx)?,
+            DatabaseError::RepostsCannotBeConnected
+        );
 
         // Deal with the order
         if let Some(order) = new_ito.order {

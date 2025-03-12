@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::bail;
+use anyhow::{bail, ensure};
 
 use crate::{
     db::{error::*, op::*},
@@ -78,12 +78,13 @@ pub(crate) fn set_network_disabled(
     composite_op::<WritableConn, _, _>(move |ctx| {
         if !disabled {
             if let Some(DatabaseRole::Parent(parent)) = database_role_of(node_id).run(ctx)? {
-                if parent.forked {
-                    // A forked parent can't be enabled
-                    bail!(DatabaseError::AlreadyForkedFromParent {
+                // A forked parent can't be enabled
+                ensure!(
+                    !parent.forked,
+                    DatabaseError::AlreadyForkedFromParent {
                         parent_node_id: parent.node_id
-                    });
-                }
+                    }
+                );
             }
         }
         match network_role_of(node_id).run(ctx)? {

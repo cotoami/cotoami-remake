@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, collections::HashMap, ops::DerefMut};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{ensure, Context, Result};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use validator::Validate;
@@ -268,12 +268,11 @@ fn reposted<'a>(
     reposted_at: NaiveDateTime,
 ) -> impl Operation<WritableConn, Coto> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if original.repost_of_id.is_some() {
-            bail!("A coto to be reposted must not be a repost.")
-        }
-        if original.posted_in(dest) {
-            bail!(DatabaseError::DuplicateRepost)
-        }
+        ensure!(
+            original.repost_of_id.is_none(),
+            "A coto to be reposted must not be a repost."
+        );
+        ensure!(!original.posted_in(dest), DatabaseError::DuplicateRepost);
 
         let mut update_original = original.to_update();
         update_original.repost_in(*dest, &original);

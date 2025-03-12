@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, ensure, Result};
 use diesel::sqlite::SqliteConnection;
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
@@ -74,10 +74,10 @@ impl Globals {
     }
 
     pub fn ensure_local<T: BelongsToNode + std::fmt::Debug>(&self, entity: &T) -> Result<()> {
-        let local_node_id = self.try_read_local_node()?.node_id;
-        if *entity.node_id() != local_node_id {
-            bail!("The entity doesn't belong to the local node: {entity:?}");
-        }
+        ensure!(
+            *entity.node_id() == self.try_get_local_node_id()?,
+            "The entity doesn't belong to the local node: {entity:?}"
+        );
         Ok(())
     }
 

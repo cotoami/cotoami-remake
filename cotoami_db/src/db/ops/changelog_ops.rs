@@ -124,11 +124,12 @@ pub(crate) fn import_change<'a>(
 ) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         // Check if the local node has been forked from the parent
-        if parent_node.forked {
-            bail!(DatabaseError::AlreadyForkedFromParent {
+        ensure!(
+            !parent_node.forked,
+            DatabaseError::AlreadyForkedFromParent {
                 parent_node_id: parent_node.node_id
-            });
-        }
+            }
+        );
 
         // Check the serial number of the change
         let expected_number = parent_node.changes_received + 1;
