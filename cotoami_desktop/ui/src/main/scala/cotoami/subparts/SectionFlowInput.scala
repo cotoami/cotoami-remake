@@ -300,7 +300,7 @@ object SectionFlowInput {
       form: CotonomaForm.Model,
       postTo: Id[Cotonoma]
   ): Cmd.One[AppMsg] =
-    CotonomaBackend.post(form.name, form.geolocation, None, postTo)
+    CotonomaBackend.post(form.name, None, None, postTo)
       .map(Msg.CotonomaPosted(postId, _).into)
 
   /////////////////////////////////////////////////////////////////////////////
@@ -418,7 +418,7 @@ object SectionFlowInput {
         )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
-        EditorCoto.ulAttributes(form)(
+        CotoForm.ulAttributes(form)(
           context,
           submsg => dispatch(Msg.CotoFormMsg(submsg))
         ),
@@ -460,10 +460,6 @@ object SectionFlowInput {
           onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
           onCtrlEnter = () => dispatch(Msg.Post)
         )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
-      ),
-      ulAttributes(form)(
-        context,
-        submsg => dispatch(Msg.CotoFormMsg(submsg))
       ),
       div(className := "post")(
         Validation.sectionValidationError(form.validation),

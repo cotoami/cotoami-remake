@@ -21,20 +21,6 @@ object EditorCoto {
   sealed trait Form {
     def hasContents: Boolean
     def hasValidContents: Boolean
-
-    def dateTimeRange: Option[DateTimeRange]
-    def geolocation: Option[Geolocation]
-
-    def mediaDateTime: Option[DateTimeRange]
-    def mediaLocation: Option[Geolocation]
-
-    def isMediaDateTimeNotUsed: Boolean =
-      mediaDateTime.isDefined && dateTimeRange != mediaDateTime
-
-    def isMediaLocationNotUsed: Boolean =
-      mediaLocation.isDefined && geolocation != mediaLocation
-    def isGeomapLocationNotUsed(map: Geomap): Boolean =
-      map.focusedLocation.isDefined && geolocation != map.focusedLocation
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -107,6 +93,14 @@ object EditorCoto {
       def hasValidContents: Boolean =
         // validate.validated is not necessarily required for a media-only coto.
         hasContents && !validate.failed
+
+      def isMediaDateTimeNotUsed: Boolean =
+        mediaDateTime.isDefined && dateTimeRange != mediaDateTime
+
+      def isMediaLocationNotUsed: Boolean =
+        mediaLocation.isDefined && geolocation != mediaLocation
+      def isGeomapLocationNotUsed(map: Geomap): Boolean =
+        map.focusedLocation.isDefined && geolocation != map.focusedLocation
     }
 
     object Model {
@@ -366,10 +360,10 @@ object EditorCoto {
       )
 
     def sectionMediaPreview(
-        model: Model,
+        form: Model,
         enableDelete: Boolean = true
     )(implicit dispatch: Msg => Unit): Option[ReactElement] =
-      model.mediaBlob.map { blob =>
+      form.mediaBlob.map { blob =>
         val url = dom.URL.createObjectURL(blob)
         section(className := "media-preview fill")(
           div(className := "media-content")(
@@ -382,7 +376,7 @@ object EditorCoto {
                 symbol = "close",
                 tip = Some("Delete"),
                 classes = "delete",
-                disabled = model.encodingMedia,
+                disabled = form.encodingMedia,
                 onClick = _ => dispatch(Msg.DeleteMediaContent)
               )
             }
@@ -390,8 +384,120 @@ object EditorCoto {
         )
       }
 
-    def sectionValidationError(model: Model): ReactElement =
-      Validation.sectionValidationError(model.validate)
+    def sectionValidationError(form: Model): ReactElement =
+      Validation.sectionValidationError(form.validate)
+
+    def ulAttributes(
+        form: Model
+    )(implicit
+        context: Context,
+        dispatch: CotoForm.Msg => Unit
+    ): Option[ReactElement] =
+      Seq(
+        liAttributeDateTimeRange(form),
+        liAttributeGeolocation(form)
+      ).flatten match {
+        case Seq() => None
+        case attributes =>
+          Some(ul(className := "attributes")(attributes: _*))
+      }
+
+    private def liAttributeDateTimeRange(form: Model)(implicit
+        context: Context,
+        dispatch: CotoForm.Msg => Unit
+    ): Option[ReactElement] =
+      Option.when(
+        form.dateTimeRange.isDefined || form.mediaDateTime.isDefined
+      ) {
+        li(className := "attribute time-range")(
+          div(className := "attribute-name")(
+            materialSymbol("calendar_month"),
+            "Date"
+          ),
+          div(className := "attribute-value")(
+            form.dateTimeRange.map(range =>
+              context.time.formatDateTime(range.start)
+            )
+          ),
+          div(className := "from-buttons")(
+            Option.when(form.isMediaDateTimeNotUsed) {
+              toolButton(
+                classes = "from-image",
+                symbol = "image",
+                tip = Some("From Image"),
+                onClick = (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
+              )
+            }
+          ),
+          Option.when(form.dateTimeRange.isDefined) {
+            divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteDateTimeRange))
+          }
+        )
+      }
+
+    private def liAttributeGeolocation(
+        form: Model
+    )(implicit
+        context: Context,
+        dispatch: CotoForm.Msg => Unit
+    ): Option[ReactElement] =
+      Option.when(
+        form.geolocation.isDefined || form.mediaLocation.isDefined || context.geomap.focusedLocation.isDefined
+      ) {
+        li(className := "attribute geolocation")(
+          div(className := "attribute-name")(
+            materialSymbol("location_on"),
+            "Location"
+          ),
+          div(className := "attribute-value")(
+            form.geolocation.map(location =>
+              Fragment(
+                div(className := "longitude")(
+                  span(className := "label")("longitude:"),
+                  span(className := "value longitude")(location.longitude)
+                ),
+                div(className := "latitude")(
+                  span(className := "label")("latitude:"),
+                  span(className := "value latitude")(location.latitude)
+                )
+              )
+            )
+          ),
+          div(className := "from-buttons")(
+            Option.when(form.isGeomapLocationNotUsed(context.geomap)) {
+              toolButton(
+                classes = "from-map",
+                symbol = "public",
+                tip = Some("From Map"),
+                onClick = (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
+              )
+            },
+            Option.when(form.isMediaLocationNotUsed) {
+              toolButton(
+                classes = "from-image",
+                symbol = "image",
+                tip = Some("From Image"),
+                onClick = (_ => dispatch(CotoForm.Msg.UseMediaLocation))
+              )
+            }
+          ),
+          Option.when(form.geolocation.isDefined) {
+            divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteGeolocation))
+          }
+        )
+      }
+
+    private def divAttributeDelete(
+        onClick: SyntheticMouseEvent[_] => Unit
+    ): ReactElement =
+      div(className := "attribute-delete")(
+        toolButton(
+          symbol = "close",
+          tip = Some("Delete"),
+          classes = "delete",
+          onClick = onClick
+        )
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -404,8 +510,6 @@ object EditorCoto {
         nameInput: String = "",
         imeActive: Boolean = false,
         validation: Validation.Result = Validation.Result.notYetValidated,
-        dateTimeRange: Option[DateTimeRange] = None,
-        geolocation: Option[Geolocation] = None,
         error: Option[String] = None
     ) extends Form {
       def hasContents: Boolean = !nameInput.isBlank
@@ -552,114 +656,4 @@ object EditorCoto {
         )
       )
   }
-
-  def ulAttributes(
-      form: Form
-  )(implicit
-      context: Context,
-      dispatch: CotoForm.Msg => Unit
-  ): Option[ReactElement] =
-    Seq(
-      liAttributeDateTimeRange(form),
-      liAttributeGeolocation(form)
-    ).flatten match {
-      case Seq() => None
-      case attributes =>
-        Some(ul(className := "attributes")(attributes: _*))
-    }
-
-  private def liAttributeDateTimeRange(form: Form)(implicit
-      context: Context,
-      dispatch: CotoForm.Msg => Unit
-  ): Option[ReactElement] =
-    Option.when(form.dateTimeRange.isDefined || form.mediaDateTime.isDefined) {
-      li(className := "attribute time-range")(
-        div(className := "attribute-name")(
-          materialSymbol("calendar_month"),
-          "Date"
-        ),
-        div(className := "attribute-value")(
-          form.dateTimeRange.map(range =>
-            context.time.formatDateTime(range.start)
-          )
-        ),
-        div(className := "from-buttons")(
-          Option.when(form.isMediaDateTimeNotUsed) {
-            toolButton(
-              classes = "from-image",
-              symbol = "image",
-              tip = Some("From Image"),
-              onClick = (_ => dispatch(CotoForm.Msg.UseMediaDateTime))
-            )
-          }
-        ),
-        Option.when(form.dateTimeRange.isDefined) {
-          divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteDateTimeRange))
-        }
-      )
-    }
-
-  private def liAttributeGeolocation(
-      form: Form
-  )(implicit
-      context: Context,
-      dispatch: CotoForm.Msg => Unit
-  ): Option[ReactElement] =
-    Option.when(
-      form.geolocation.isDefined || form.mediaLocation.isDefined || context.geomap.focusedLocation.isDefined
-    ) {
-      li(className := "attribute geolocation")(
-        div(className := "attribute-name")(
-          materialSymbol("location_on"),
-          "Location"
-        ),
-        div(className := "attribute-value")(
-          form.geolocation.map(location =>
-            Fragment(
-              div(className := "longitude")(
-                span(className := "label")("longitude:"),
-                span(className := "value longitude")(location.longitude)
-              ),
-              div(className := "latitude")(
-                span(className := "label")("latitude:"),
-                span(className := "value latitude")(location.latitude)
-              )
-            )
-          )
-        ),
-        div(className := "from-buttons")(
-          Option.when(form.isGeomapLocationNotUsed(context.geomap)) {
-            toolButton(
-              classes = "from-map",
-              symbol = "public",
-              tip = Some("From Map"),
-              onClick = (_ => dispatch(CotoForm.Msg.UseGeomapLocation))
-            )
-          },
-          Option.when(form.isMediaLocationNotUsed) {
-            toolButton(
-              classes = "from-image",
-              symbol = "image",
-              tip = Some("From Image"),
-              onClick = (_ => dispatch(CotoForm.Msg.UseMediaLocation))
-            )
-          }
-        ),
-        Option.when(form.geolocation.isDefined) {
-          divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteGeolocation))
-        }
-      )
-    }
-
-  private def divAttributeDelete(
-      onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
-    div(className := "attribute-delete")(
-      toolButton(
-        symbol = "close",
-        tip = Some("Delete"),
-        classes = "delete",
-        onClick = onClick
-      )
-    )
 }
