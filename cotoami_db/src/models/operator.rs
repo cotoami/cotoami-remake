@@ -53,6 +53,8 @@ impl Operator {
         }
     }
 
+    /// Checks if this operator can update the given coto.
+    /// The coto must belong to the local node.
     pub fn can_update_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
         // Basically only the poster can update a coto,
         if self.node_id() == Some(coto.posted_by_id)
@@ -65,6 +67,8 @@ impl Operator {
         }
     }
 
+    /// Checks if this operator can delete the given local coto.
+    /// The coto must belong to the local node.
     pub fn can_delete_coto(&self, coto: &Coto) -> Result<(), DatabaseError> {
         if self.can_update_coto(coto).is_ok() || self.has_owner_permission() {
             Ok(())
