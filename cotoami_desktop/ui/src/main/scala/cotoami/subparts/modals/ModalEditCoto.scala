@@ -30,16 +30,15 @@ object ModalEditCoto {
       saving: Boolean = false,
       error: Option[String] = None
   ) {
-    def edited(geomap: Geomap): Boolean =
-      cotoFormEdited(geomap) ||
-        (original.isCotonoma && cotonomaForm.edited)
+    lazy val edited: Boolean =
+      cotoFormEdited || (original.isCotonoma && cotonomaForm.edited)
 
-    def cotoFormEdited(geomap: Geomap): Boolean =
+    lazy val cotoFormEdited: Boolean =
       diffSummary.isDefined ||
         diffContent.isDefined ||
         diffMediaContent.isDefined ||
-        diffGeolocation(geomap).isDefined ||
-        diffDateTimeRange.isDefined
+        diffDateTimeRange.isDefined ||
+        diffGeolocation.isDefined
 
     def diffSummary: Option[Option[String]] =
       Option.when(cotoForm.summary != original.summary) {
@@ -56,51 +55,50 @@ object ModalEditCoto {
         cotoForm.mediaBase64
       }
 
-    def diffGeolocation(geomap: Geomap): Option[Option[Geolocation]] =
-      Option.when(geomap.focusedLocation != original.geolocation) {
-        geomap.focusedLocation
-      }
-
     def diffDateTimeRange: Option[Option[DateTimeRange]] =
       Option.when(cotoForm.dateTimeRange != original.dateTimeRange) {
         cotoForm.dateTimeRange
       }
 
-    def readyToSave(geomap: Geomap): Boolean =
-      edited(geomap) && !saving && cotoForm.hasValidContents &&
+    def diffGeolocation: Option[Option[Geolocation]] =
+      Option.when(cotoForm.geolocation != original.geolocation) {
+        cotoForm.geolocation
+      }
+
+    lazy val readyToSave: Boolean =
+      edited && !saving && cotoForm.hasValidContents &&
         (!original.isCotonoma || cotonomaForm.hasValidContents)
 
-    def save(geomap: Geomap, cotonomas: Cotonomas): (Model, Cmd.One[AppMsg]) =
+    def save(cotonomas: Cotonomas): (Model, Cmd.One[AppMsg]) =
       (
         copy(saving = true),
         if (original.isCotonoma)
-          saveCotonoma(cotonomas, geomap)
+          saveCotonoma(cotonomas)
         else
-          saveCoto(geomap)
+          saveCoto
       )
 
-    private def saveCoto(geomap: Geomap): Cmd.One[AppMsg] =
-      if (cotoFormEdited(geomap))
+    private def saveCoto: Cmd.One[AppMsg] =
+      if (cotoFormEdited)
         CotoBackend.edit(
           original.id,
           diffContent,
           diffSummary,
           diffMediaContent,
-          diffGeolocation(geomap),
+          diffGeolocation,
           diffDateTimeRange
         ).map(Msg.Saved(_).into)
       else
         Browser.send(Msg.Saved(Right(original)).into)
 
     private def saveCotonoma(
-        cotonomas: Cotonomas,
-        geomap: Geomap
+        cotonomas: Cotonomas
     ): Cmd.One[AppMsg] =
       (cotonomaForm.edited, cotonomas.asCotonoma(original)) match {
         case (true, Some(cotonoma)) =>
           CotonomaBackend.rename(cotonoma.id, cotonomaForm.name)
-            .flatMap(_ => saveCoto(geomap))
-        case _ => saveCoto(geomap)
+            .flatMap(_ => saveCoto)
+        case _ => saveCoto
       }
   }
 
@@ -165,8 +163,8 @@ object ModalEditCoto {
       }
 
       case Msg.Save =>
-        model.save(context.geomap, context.repo.cotonomas).pipe {
-          case (model, cmd) => default.copy(_1 = model, _3 = cmd)
+        model.save(context.repo.cotonomas).pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
         }
 
       case Msg.Saved(Right(_)) =>
@@ -238,7 +236,7 @@ object ModalEditCoto {
         ),
         button(
           className := "save",
-          disabled := !model.readyToSave(context.geomap),
+          disabled := !model.readyToSave,
           aria - "busy" := model.saving.toString(),
           onClick := (_ => dispatch(Msg.Save))
         )(
