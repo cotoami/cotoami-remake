@@ -420,12 +420,10 @@ object SectionFlowInput {
         )(submsg => dispatch(Msg.CotoFormMsg(submsg)))
       ),
       secondary = SplitPane.Secondary.Props()(
-        EditorCoto.ulAttributes(
-          form.dateTimeRange,
-          form.mediaDateTime,
-          geomap.focusedLocation,
-          form.mediaLocation
-        )(context, submsg => dispatch(Msg.CotoFormMsg(submsg))),
+        EditorCoto.ulAttributes(form)(
+          context,
+          submsg => dispatch(Msg.CotoFormMsg(submsg))
+        ),
         div(className := "post")(
           CotoForm.sectionValidationError(form),
           section(className := "post")(
@@ -465,7 +463,7 @@ object SectionFlowInput {
           onCtrlEnter = () => dispatch(Msg.Post)
         )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),
-      ulAttributes(None, None, geomap.focusedLocation, None)(
+      ulAttributes(form)(
         context,
         submsg => dispatch(Msg.CotoFormMsg(submsg))
       ),

@@ -21,6 +21,17 @@ object EditorCoto {
   sealed trait Form {
     def hasContents: Boolean
     def hasValidContents: Boolean
+
+    def mediaLocation: Option[Geolocation]
+    def mediaDateTime: Option[DateTimeRange]
+    def geolocation: Option[Geolocation]
+    def dateTimeRange: Option[DateTimeRange]
+
+    def isMediaLocationNotUsed: Boolean =
+      mediaLocation.isDefined && geolocation != mediaLocation
+
+    def isMediaDateTimeNotUsed: Boolean =
+      mediaDateTime.isDefined && dateTimeRange != mediaDateTime
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -230,7 +241,7 @@ object EditorCoto {
     }
 
     def apply(
-        form: CotoForm.Model,
+        form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         vertical: Boolean = false
@@ -240,12 +251,7 @@ object EditorCoto {
     ): ReactElement = {
       val editor = Fragment(
         sectionEditorOrPreview(form, onCtrlEnter, onFocus),
-        ulAttributes(
-          form.dateTimeRange,
-          form.mediaDateTime,
-          context.geomap.focusedLocation,
-          form.mediaLocation
-        ),
+        ulAttributes(form),
         sectionValidationError(form)
       )
       div(className := "coto-form")(
@@ -263,7 +269,7 @@ object EditorCoto {
     }
 
     def sectionEditorOrPreview(
-        form: CotoForm.Model,
+        form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
@@ -274,7 +280,7 @@ object EditorCoto {
         sectionEditor(form, onCtrlEnter, onFocus, enableImageInput)
 
     def sectionEditor(
-        form: CotoForm.Model,
+        form: Model,
         onCtrlEnter: Option[() => Unit] = None,
         onFocus: Option[() => Unit] = None,
         enableImageInput: Boolean = true
@@ -318,7 +324,7 @@ object EditorCoto {
         }
       )
 
-    def sectionPreview(form: CotoForm.Model): ReactElement =
+    def sectionPreview(form: Model): ReactElement =
       section(className := "coto-preview fill")(
         ScrollArea()(
           Option.when(!form.isCotonoma) {
@@ -331,7 +337,7 @@ object EditorCoto {
       )
 
     def buttonPreview(
-        form: CotoForm.Model
+        form: Model
     )(implicit dispatch: Msg => Unit): ReactElement =
       button(
         className := "preview contrast outline",
@@ -383,6 +389,8 @@ object EditorCoto {
         nameInput: String = "",
         imeActive: Boolean = false,
         validation: Validation.Result = Validation.Result.notYetValidated,
+        geolocation: Option[Geolocation] = None,
+        dateTimeRange: Option[DateTimeRange] = None,
         error: Option[String] = None
     ) extends Form {
       def hasContents: Boolean = !nameInput.isBlank
@@ -418,6 +426,10 @@ object EditorCoto {
 
       def hasValidContents: Boolean =
         hasContents && (Some(name) == originalName || validation.validated)
+
+      // CotonomaForm doesn't support media input
+      val mediaLocation: Option[Geolocation] = None
+      val mediaDateTime: Option[DateTimeRange] = None
     }
 
     object Model {
@@ -527,63 +539,63 @@ object EditorCoto {
   }
 
   def ulAttributes(
-      dateTimeRange: Option[DateTimeRange],
-      mediaDateTime: Option[DateTimeRange],
-      location: Option[Geolocation],
-      mediaLocation: Option[Geolocation]
+      form: Form
   )(implicit
       context: Context,
       dispatch: CotoForm.Msg => Unit
   ): Option[ReactElement] =
     Seq(
-      liAttributeDateTimeRange(dateTimeRange, mediaDateTime),
-      liAttributeGeolocation(location, mediaLocation)
+      liAttributeDateTimeRange(form),
+      liAttributeGeolocation(form)
     ).flatten match {
       case Seq() => None
       case attributes =>
         Some(ul(className := "attributes")(attributes: _*))
     }
 
-  private def liAttributeDateTimeRange(
-      dateTimeRange: Option[DateTimeRange],
-      mediaDateTime: Option[DateTimeRange]
-  )(implicit
+  private def liAttributeDateTimeRange(form: Form)(implicit
       context: Context,
       dispatch: CotoForm.Msg => Unit
   ): Option[ReactElement] =
-    Option.when(dateTimeRange.isDefined || mediaDateTime.isDefined) {
+    Option.when(form.dateTimeRange.isDefined || form.mediaDateTime.isDefined) {
       li(className := "attribute time-range")(
         div(className := "attribute-name")(
           materialSymbol("calendar_month"),
           "Date"
         ),
         div(className := "attribute-value")(
-          dateTimeRange.map(range => context.time.formatDateTime(range.start))
+          form.dateTimeRange.map(range =>
+            context.time.formatDateTime(range.start)
+          )
         ),
-        Option.when(mediaDateTime.isDefined && dateTimeRange != mediaDateTime) {
+        Option.when(form.isMediaDateTimeNotUsed) {
           divUseMediaMetadata(
             "Use the image timestamp",
             _ => dispatch(CotoForm.Msg.UseMediaDateTime)
           )
         },
-        Option.when(dateTimeRange.isDefined) {
+        Option.when(form.dateTimeRange.isDefined) {
           divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteDateTimeRange))
         }
       )
     }
 
   private def liAttributeGeolocation(
-      location: Option[Geolocation],
-      mediaLocation: Option[Geolocation]
-  )(implicit dispatch: CotoForm.Msg => Unit): Option[ReactElement] =
-    Option.when(location.isDefined || mediaLocation.isDefined) {
+      form: Form
+  )(implicit
+      context: Context,
+      dispatch: CotoForm.Msg => Unit
+  ): Option[ReactElement] =
+    Option.when(
+      form.geolocation.isDefined || form.mediaLocation.isDefined || context.geomap.focusedLocation.isDefined
+    ) {
       li(className := "attribute geolocation")(
         div(className := "attribute-name")(
           materialSymbol("location_on"),
           "Location"
         ),
         div(className := "attribute-value")(
-          location.map(location =>
+          form.geolocation.map(location =>
             Fragment(
               div(className := "longitude")(
                 span(className := "label")("longitude:"),
@@ -596,13 +608,13 @@ object EditorCoto {
             )
           )
         ),
-        Option.when(mediaLocation.isDefined && location != mediaLocation) {
+        Option.when(form.isMediaLocationNotUsed) {
           divUseMediaMetadata(
             "Use the image location",
             _ => dispatch(CotoForm.Msg.UseMediaGeolocation)
           )
         },
-        Option.when(location.isDefined) {
+        Option.when(form.geolocation.isDefined) {
           divAttributeDelete(_ => dispatch(CotoForm.Msg.DeleteGeolocation))
         }
       )
