@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
 use tracing::debug;
@@ -8,9 +8,9 @@ use validator::Validate;
 
 use crate::{
     service::{
-        ServiceError,
         error::IntoServiceResult,
         models::{AddClient, ClientAdded, EditClient, NodeRole, Pagination},
+        ServiceError,
     },
     state::NodeState,
 };
@@ -78,7 +78,7 @@ impl NodeState {
             move || {
                 let ds = state.db().new_session()?;
                 let (client, node, role) = ds.register_client_node(
-                    input.id.unwrap_or_else(|| unreachable!()),
+                    &input.id.unwrap_or_else(|| unreachable!()),
                     &password,
                     role,
                     &operator,

@@ -172,8 +172,11 @@ where
             }
             Some(DatabaseError::AuthenticationFailed) => return ServiceError::Unauthorized,
             Some(DatabaseError::PermissionDenied) => return ServiceError::Permission,
-            Some(DatabaseError::NodeRoleConflict) => {
-                return Self::request("invalid-node-role", "Couldn't attach the role to the node.");
+            Some(DatabaseError::NodeRoleConflict { with }) => {
+                return Self::request(
+                    "invalid-node-role",
+                    format!("Couldn't attach the role to: {with}"),
+                );
             }
             _ => (),
         }
