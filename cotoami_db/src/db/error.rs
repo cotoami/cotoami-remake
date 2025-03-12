@@ -44,8 +44,8 @@ pub enum DatabaseError {
     #[error("The local node has already been forked from: {parent_node_id}")]
     AlreadyForkedFromParent { parent_node_id: Id<Node> },
 
-    #[error("Node role conflict")]
-    NodeRoleConflict,
+    #[error("Node role conflict with: {with}")]
+    NodeRoleConflict { with: String },
 
     #[error("Duplicate repost")]
     DuplicateRepost,

@@ -53,8 +53,10 @@ pub(crate) fn set_network_role<'a>(
     role: NewNetworkRole<'a>,
 ) -> impl Operation<WritableConn, NetworkRole> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if network_role_of(node_id).run(ctx)?.is_some() {
-            bail!(DatabaseError::NodeRoleConflict);
+        if let Some(role) = network_role_of(node_id).run(ctx)? {
+            bail!(DatabaseError::NodeRoleConflict {
+                with: role.to_string()
+            });
         }
         match role {
             NewNetworkRole::Server { url_prefix } => {
@@ -144,8 +146,10 @@ pub(crate) fn set_database_role(
     role: NewDatabaseRole,
 ) -> impl Operation<WritableConn, DatabaseRole> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        if database_role_of(node_id).run(ctx)?.is_some() {
-            bail!(DatabaseError::NodeRoleConflict);
+        if let Some(role) = database_role_of(node_id).run(ctx)? {
+            bail!(DatabaseError::NodeRoleConflict {
+                with: role.to_string()
+            });
         }
         match role {
             NewDatabaseRole::Parent => {
