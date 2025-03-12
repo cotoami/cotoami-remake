@@ -20,8 +20,7 @@ case class Geolocation(longitude: Double, latitude: Double) {
 }
 
 object Geolocation {
-  // The Tokyo station
-  val default: Geolocation = Geolocation(139.76730676352, 35.680959106959)
+  val default: Geolocation = Geolocation(0, 0)
 
   def fromLngLat(lngLat: (Double, Double)): Geolocation =
     Geolocation(lngLat._1, lngLat._2)
