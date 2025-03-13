@@ -336,28 +336,20 @@ where
     /////////////////////////////////////////////////////////////////////////////
 
     let request = Command::Cotonoma { id: cotonoma.uuid }.into_request();
-    let (cotonoma, coto) = service.call(request).await?.content::<(Cotonoma, Coto)>()?;
+    let (cotonoma1, coto1) = service.call(request).await?.content::<(Cotonoma, Coto)>()?;
 
-    assert_that!(
-        cotonoma,
-        pat!(Cotonoma {
-            node_id: eq(&backend_node.uuid),
-            name: eq("Hello, Cotoami!"),
-            coto_id: eq(&coto.uuid),
-            created_at: eq(&coto.updated_at),
-            updated_at: eq(&coto.updated_at),
-        }),
-        "Unexpected response (Cotonoma) of Cotonoma command"
-    );
-    assert_that!(
-        coto,
-        pat!(Coto {
-            content: none(),
-            summary: some(eq("Hello, Cotoami!")),
-            is_cotonoma: eq(&true),
-        }),
-        "Unexpected response (Coto) of Cotonoma command"
-    );
+    assert_that!(cotonoma1, eq(&cotonoma));
+    assert_that!(coto1, eq(&coto));
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: CotonomaByCotoId
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::CotonomaByCotoId { id: coto.uuid }.into_request();
+    let (cotonoma2, coto2) = service.call(request).await?.content::<(Cotonoma, Coto)>()?;
+
+    assert_that!(cotonoma2, eq(&cotonoma));
+    assert_that!(coto2, eq(&coto));
 
     Ok(())
 }

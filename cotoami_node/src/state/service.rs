@@ -68,6 +68,9 @@ impl NodeState {
             }
             Command::Cotonoma { id } => format.serialize(self.cotonoma_pair(id).await),
             Command::CotonomaDetails { id } => format.serialize(self.cotonoma_details(id).await),
+            Command::CotonomaByCotoId { id } => {
+                format.serialize(self.cotonoma_pair_by_coto_id(id).await)
+            }
             Command::CotonomaByName { name, node } => {
                 format.serialize(self.cotonoma_by_name(name, node).await)
             }

@@ -150,6 +150,9 @@ impl HttpClient {
             Command::CotonomaDetails { id } => {
                 self.get(&format!("{API_PATH_COTONOMAS}/{id}/details"))
             }
+            Command::CotonomaByCotoId { id } => {
+                self.get(&format!("{API_PATH_COTOS}/{id}/cotonoma"))
+            }
             Command::CotonomaByName { name, node } => {
                 let name = utf8_percent_encode(&name, NON_ALPHANUMERIC).to_string();
                 self.get(&format!("{API_PATH_NODES}/{node}/cotonomas/{name}"))

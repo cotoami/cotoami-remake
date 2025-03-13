@@ -30,6 +30,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/search/{query}", get(search_cotos))
         .route("/search/cotonomas/{query}", get(search_cotonoma_cotos))
         .route("/{coto_id}/details", get(coto_details))
+        .route("/{coto_id}/cotonoma", get(cotonoma))
         .route("/{coto_id}", put(edit_coto).delete(delete_coto))
         .route("/{coto_id}/promote", put(promote))
         .route("/{coto_id}/itos", get(outgoing_itos))
@@ -143,6 +144,21 @@ async fn coto_details(
         .coto_details(coto_id)
         .await
         .map(|details| Content(details, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/cotos/{coto_id}/cotonoma
+/////////////////////////////////////////////////////////////////////////////
+
+async fn cotonoma(
+    State(state): State<NodeState>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(coto_id): Path<Id<Coto>>,
+) -> Result<Content<(Cotonoma, Coto)>, ServiceError> {
+    state
+        .cotonoma_pair_by_coto_id(coto_id)
+        .await
+        .map(|cotonoma| Content(cotonoma, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

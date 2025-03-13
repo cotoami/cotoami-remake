@@ -70,6 +70,9 @@ pub enum Command {
     /// Request a [CotonomaDetails] of the given ID.
     CotonomaDetails { id: Id<Cotonoma> },
 
+    /// Request a tuple of [Cotonoma] and [Coto] `(Cotonoma, Coto)` of the given coto ID.
+    CotonomaByCotoId { id: Id<Coto> },
+
     /// Request a [Cotonoma] of the given name in the given node.
     CotonomaByName { name: String, node: Id<Node> },
 
