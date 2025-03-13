@@ -29,6 +29,11 @@ object CotonomaJson {
   ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
     Commands.send(Commands.Cotonoma(id))
 
+  def fetchByCotoId(
+      id: Id[Coto]
+  ): Cmd.One[Either[ErrorJson, js.Tuple2[CotonomaJson, CotoJson]]] =
+    Commands.send(Commands.CotonomaByCotoId(id))
+
   def fetchByName(
       name: String,
       nodeId: Id[Node]
@@ -81,6 +86,12 @@ object CotonomaBackend {
 
   def fetch(id: Id[Cotonoma]): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
     CotonomaJson.fetch(id)
+      .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
+
+  def fetchByCotoId(
+      id: Id[Coto]
+  ): Cmd.One[Either[ErrorJson, (Cotonoma, Coto)]] =
+    CotonomaJson.fetchByCotoId(id)
       .map(_.map(pair => (toModel(pair._1), CotoBackend.toModel(pair._2))))
 
   def fetchByName(
