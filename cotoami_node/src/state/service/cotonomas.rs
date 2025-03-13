@@ -59,6 +59,14 @@ impl NodeState {
         self.get(move |ds| ds.try_get_cotonoma_pair(&id)).await
     }
 
+    pub async fn cotonoma_pair_by_coto_id(
+        &self,
+        id: Id<Coto>,
+    ) -> Result<(Cotonoma, Coto), ServiceError> {
+        self.get(move |ds| ds.try_get_cotonoma_by_coto_id(&id))
+            .await
+    }
+
     pub async fn cotonoma_details(
         &self,
         id: Id<Cotonoma>,
