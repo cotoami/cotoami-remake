@@ -28,9 +28,10 @@ object ModalPromote {
       promoting: Boolean = false,
       error: Option[String] = None
   ) {
-    def diffSummary: Option[Option[String]] =
-      Option.when(cotoForm.summary != original.summary) {
-        cotoForm.summary
+    def diffName: Option[Option[String]] =
+      // use cotonomaForm as cotonoma-name/coto-summary input
+      Option.when(cotonomaForm.name != original.summary) {
+        Some(cotonomaForm.name)
       }
 
     def diffContent: Option[String] =
@@ -51,10 +52,10 @@ object ModalPromote {
       )
 
     private def updateCoto: Cmd.One[Either[ErrorJson, Coto]] =
-      (diffSummary, diffContent) match {
+      (diffName, diffContent) match {
         case (None, None) => pure(Right(original))
-        case (summary, content) =>
-          CotoBackend.edit(original.id, content, summary, None, None, None)
+        case (name, content) =>
+          CotoBackend.edit(original.id, content, name, None, None, None)
       }
   }
 
