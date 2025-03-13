@@ -131,7 +131,13 @@ object Changelog {
       ).pipe { case (cotonomas, cmd) =>
         (
           model.modify(_.repo.cotonomas).setTo(cotonomas),
-          Cmd.Batch(cmd, Root.fetchCotonoma(cotonomaId))
+          Cmd.Batch(
+            cmd,
+            cotonomas.get(cotonomaId)
+              .map(_.cotoId)
+              .map(updateCoto)
+              .getOrElse(Cmd.none)
+          )
         )
       }
     }
