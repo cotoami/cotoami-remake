@@ -312,12 +312,7 @@ import cotoami.libs.geomap.pmtiles
     // Focus/Unfocus marker
     useEffect(
       () => {
-        mapRef.current.foreach(map =>
-          props.focusedMarkerId match {
-            case Some(markerId) => map.focusMarker(markerId)
-            case None           => map.unfocusMarker()
-          }
-        )
+        mapRef.current.foreach(_.focusOrUnfocusMarker(props.focusedMarkerId))
       },
       Seq(props.focusedMarkerId.toString())
     )
@@ -438,6 +433,12 @@ import cotoami.libs.geomap.pmtiles
       )
       focusedMarkerId = None
     }
+
+    def focusOrUnfocusMarker(id: Option[String]): Unit =
+      id match {
+        case Some(id) => focusMarker(id)
+        case None     => unfocusMarker()
+      }
 
     def addOrRemoveMarkers(markerDefs: Iterable[MarkerDef]): Unit = {
       val defMap = markerDefs.map(d => d.id -> d).toMap
