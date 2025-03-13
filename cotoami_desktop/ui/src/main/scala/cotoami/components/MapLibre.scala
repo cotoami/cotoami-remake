@@ -298,7 +298,7 @@ import cotoami.libs.geomap.pmtiles
     // Updatea marker
     useEffect(
       () => {
-        props.markerToUpdate.map(markerDef =>
+        props.markerToUpdate.foreach(markerDef =>
           mapRef.current.foreach(_.putMarker(markerDef))
         )
       },
