@@ -283,7 +283,10 @@ import cotoami.libs.geomap.pmtiles
     // addOrRemoveMarkers
     useEffect(
       () => {
-        mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs.values))
+        mapRef.current.foreach { map =>
+          map.addOrRemoveMarkers(props.markerDefs.values)
+          map.focusOrUnfocusMarker(props.focusedMarkerId)
+        }
       },
       Seq(props.markerDefs.keySet.toString())
     )
@@ -291,7 +294,10 @@ import cotoami.libs.geomap.pmtiles
     // refreshMarkers
     useEffect(
       () => {
-        mapRef.current.foreach(_.refreshMarkers(props.markerDefs.values))
+        mapRef.current.foreach { map =>
+          map.refreshMarkers(props.markerDefs.values)
+          map.focusOrUnfocusMarker(props.focusedMarkerId)
+        }
       },
       Seq(props.refreshMarkers)
     )
@@ -300,7 +306,10 @@ import cotoami.libs.geomap.pmtiles
     useEffect(
       () => {
         props.markerToUpdate.foreach(markerDef =>
-          mapRef.current.foreach(_.putMarker(markerDef))
+          mapRef.current.foreach { map =>
+            map.putMarker(markerDef)
+            map.focusOrUnfocusMarker(props.focusedMarkerId)
+          }
         )
       },
       Seq(props.updateMarker._1)
