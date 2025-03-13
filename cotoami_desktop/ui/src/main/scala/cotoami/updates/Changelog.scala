@@ -12,6 +12,7 @@ import cotoami.backend.{
   ChangeJson,
   ChangelogEntryJson,
   CotoBackend,
+  CotoDetails,
   CotoJson,
   CotonomaBackend,
   CotonomaJson,
@@ -100,7 +101,7 @@ object Changelog {
 
     // EditCoto
     for (json <- change.EditCoto.toOption) {
-      return (model, Root.fetchCotoDetails(Id(json.coto_id)))
+      return (model, updateCoto(Id(json.coto_id)))
     }
 
     // DeleteCoto
@@ -110,7 +111,7 @@ object Changelog {
         model.modify(_.repo).using(_.deleteCoto(cotoId)),
         // Update the original coto if it's a repost
         model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
-          .map(Root.fetchCotoDetails)
+          .map(updateCoto)
           .getOrElse(Cmd.none)
       )
     }
@@ -256,4 +257,7 @@ object Changelog {
       else
         Cmd.none
     )
+
+  private def updateCoto(id: Id[Coto]): Cmd.One[Msg] =
+    CotoDetails.fetch(id).map(Msg.CotoUpdated(_).into)
 }
