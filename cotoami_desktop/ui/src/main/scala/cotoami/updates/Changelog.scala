@@ -144,7 +144,7 @@ object Changelog {
 
     // PromoteJson
     for (json <- change.Promote.toOption) {
-      return (model, updateCoto(Id(json.coto_id)))
+      return (model, promote(Id(json.coto_id)))
     }
 
     // UpsertNode
@@ -266,4 +266,7 @@ object Changelog {
 
   private def updateCoto(id: Id[Coto]): Cmd.One[Msg] =
     CotoDetails.fetch(id).map(Msg.CotoUpdated(_).into)
+
+  private def promote(id: Id[Coto]): Cmd.One[Msg] =
+    CotonomaBackend.fetchByCotoId(id).map(Msg.Promoted(_).into)
 }
