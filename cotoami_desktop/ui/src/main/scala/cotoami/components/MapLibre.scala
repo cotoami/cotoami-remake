@@ -420,11 +420,11 @@ import cotoami.libs.geomap.pmtiles
     def removeMarker(id: String): Unit =
       markers.remove(id).foreach(_.remove())
 
-    def focusMarker(markerId: String): Unit = {
+    def focusMarker(id: String): Unit = {
       unfocusMarker()
-      markers.get(markerId).foreach { marker =>
+      markers.get(id).foreach { marker =>
         marker.addClassName(FocusedMarkerClassName)
-        focusedMarkerId = Some(markerId)
+        focusedMarkerId = Some(id)
       }
     }
 

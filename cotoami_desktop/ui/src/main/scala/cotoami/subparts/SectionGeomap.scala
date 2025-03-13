@@ -88,6 +88,11 @@ object SectionGeomap {
     def refreshMarkers: Model =
       this.modify(_.triggers.refreshMarkers).using(_ + 1)
 
+    def updateMarker(id: String): Model =
+      this.modify(_.triggers.updateMarker).using(previous =>
+        (previous._1 + 1, id)
+      )
+
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
       if (!fetchingCotosInFocus && !fetchingCotosInBounds)
         (
@@ -113,7 +118,8 @@ object SectionGeomap {
   case class ActionTriggers(
       applyCenterZoom: Int = 0,
       fitBounds: Int = 0,
-      refreshMarkers: Int = 0
+      refreshMarkers: Int = 0,
+      updateMarker: (Int, String) = (0, "")
   )
 
   /////////////////////////////////////////////////////////////////////////////
@@ -270,6 +276,7 @@ object SectionGeomap {
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model.triggers.applyCenterZoom,
       refreshMarkers = model.triggers.refreshMarkers,
+      updateMarker = model.triggers.updateMarker,
       fitBounds = model.triggers.fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
