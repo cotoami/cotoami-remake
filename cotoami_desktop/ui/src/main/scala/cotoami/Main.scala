@@ -316,6 +316,18 @@ object Main {
       case Msg.CotoUpdated(Left(e)) =>
         (model.error("Couldn't fetch coto details.", Some(e)), Cmd.none)
 
+      case Msg.Promoted(Right((cotonoma, coto))) =>
+        (
+          model
+            .modify(_.repo.cotos).using(_.put(coto))
+            .modify(_.repo.cotonomas).using(_.post(cotonoma, coto))
+            .modify(_.geomap).using(_.updateMarker(coto.id.uuid)),
+          Cmd.none
+        )
+
+      case Msg.Promoted(Left(e)) =>
+        (model.error("Couldn't fetch a cotonoma pair.", Some(e)), Cmd.none)
+
       case Msg.OpenGeomap =>
         updates.uiState(_.openGeomap, model)
 
