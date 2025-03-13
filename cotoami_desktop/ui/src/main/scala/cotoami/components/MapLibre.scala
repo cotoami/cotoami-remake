@@ -356,39 +356,7 @@ import cotoami.libs.geomap.pmtiles
       focusedLocationMarker.foreach(_.remove())
     }
 
-    def focusMarker(markerId: String): Unit = {
-      unfocusMarker()
-      markers.get(markerId).foreach { marker =>
-        marker.addClassName(FocusedMarkerClassName)
-        focusedMarkerId = Some(markerId)
-      }
-    }
-
-    def unfocusMarker(): Unit = {
-      focusedMarkerId.foreach(
-        markers.get(_).foreach(_.removeClassName(FocusedMarkerClassName))
-      )
-      focusedMarkerId = None
-    }
-
-    def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {
-      val defMap = markerDefs.map(d => d.id -> d).toMap
-
-      // Add
-      val toAdd = defMap.keySet.diff(markers.keySet)
-      toAdd.flatMap(defMap.get).foreach(putMarker)
-
-      // Remove
-      val toRemove = markers.keySet.diff(defMap.keySet)
-      toRemove.foreach(removeMarker)
-    }
-
-    def refreshMarkers(markerDefs: Seq[MarkerDef]): Unit = {
-      clearMarkers()
-      markerDefs.foreach(putMarker)
-    }
-
-    private def putMarker(markerDef: MarkerDef): Unit = {
+    def putMarker(markerDef: MarkerDef): Unit = {
       removeMarker(markerDef.id)
 
       val lngLat = js.Tuple2.fromScalaTuple2(markerDef.lngLat)
@@ -430,13 +398,45 @@ import cotoami.libs.geomap.pmtiles
       markers.put(markerDef.id, marker)
     }
 
-    private def clearMarkers(): Unit = {
+    def clearMarkers(): Unit = {
       markers.values.foreach(_.remove())
       markers.clear()
     }
 
-    private def removeMarker(id: String): Unit =
+    def removeMarker(id: String): Unit =
       markers.remove(id).foreach(_.remove())
+
+    def focusMarker(markerId: String): Unit = {
+      unfocusMarker()
+      markers.get(markerId).foreach { marker =>
+        marker.addClassName(FocusedMarkerClassName)
+        focusedMarkerId = Some(markerId)
+      }
+    }
+
+    def unfocusMarker(): Unit = {
+      focusedMarkerId.foreach(
+        markers.get(_).foreach(_.removeClassName(FocusedMarkerClassName))
+      )
+      focusedMarkerId = None
+    }
+
+    def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      val defMap = markerDefs.map(d => d.id -> d).toMap
+
+      // Add
+      val toAdd = defMap.keySet.diff(markers.keySet)
+      toAdd.flatMap(defMap.get).foreach(putMarker)
+
+      // Remove
+      val toRemove = markers.keySet.diff(defMap.keySet)
+      toRemove.foreach(removeMarker)
+    }
+
+    def refreshMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+      clearMarkers()
+      markerDefs.foreach(putMarker)
+    }
   }
 
   case class MarkerDef(
