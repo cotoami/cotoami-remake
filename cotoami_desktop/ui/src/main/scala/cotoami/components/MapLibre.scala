@@ -239,12 +239,9 @@ import cotoami.libs.geomap.pmtiles
 
     // Update focused location marker
     useEffect(
-      () =>
-        (mapRef.current, props.focusedLocation) match {
-          case (Some(map), Some(location)) => map.focusLocation(location)
-          case (Some(map), None)           => map.unfocusLocation()
-          case _                           => ()
-        },
+      () => {
+        mapRef.current.foreach(_.focusOrUnfocusLocation(props.focusedLocation))
+      },
       Seq(
         mapInitialized, // `focusedLocation` can be changed during map init
         props.focusedLocation.toString()
@@ -365,9 +362,14 @@ import cotoami.libs.geomap.pmtiles
       focusedLocationMarker = Some(marker)
     }
 
-    def unfocusLocation(): Unit = {
+    def unfocusLocation(): Unit =
       focusedLocationMarker.foreach(_.remove())
-    }
+
+    def focusOrUnfocusLocation(lngLat: Option[LngLat]): Unit =
+      lngLat match {
+        case Some(lngLat) => focusLocation(lngLat)
+        case None         => unfocusLocation()
+      }
 
     def putMarker(markerDef: MarkerDef): Unit = {
       removeMarker(markerDef.id)
