@@ -3,6 +3,7 @@ package cotoami
 import scala.scalajs.js
 import org.scalajs.dom.URL
 
+import fui.Cmd
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repository._
@@ -66,4 +67,7 @@ case class Model(
       url = url,
       traversals = SectionTraversals.Model()
     )
+
+  def openOrClosePane(name: String, open: Boolean): (Model, Cmd.One[Msg]) =
+    updates.uiState(_.openOrClosePane(name, open), this)
 }

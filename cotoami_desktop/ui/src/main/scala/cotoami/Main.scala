@@ -176,8 +176,7 @@ object Main {
             (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
         }
 
-      case Msg.OpenOrClosePane(name, open) =>
-        updates.uiState(_.openOrClosePane(name, open), model)
+      case Msg.OpenOrClosePane(name, open) => model.openOrClosePane(name, open)
 
       case Msg.ResizePane(name, newSize) =>
         updates.uiState(_.resizePane(name, newSize), model)
@@ -232,33 +231,21 @@ object Main {
       case Msg.FocusCoto(id, moveTo) => {
         val newUrl = new URL(model.url.toString())
         newUrl.hash = s"#${id.uuid}"
-        model.copy(url = newUrl).pipe { model =>
-          DatabaseFocus.coto(id, moveTo, model).pipe { case (model, focus) =>
-            (
-              model,
-              Cmd.Batch(
-                Browser.send(Msg.OpenOrClosePane(PaneFlow.PaneName, true)),
-                Browser.pushUrl(newUrl.toString(), notify = false),
-                focus
-              )
-            )
-          }
-        }
+
+        val model1 = model.copy(url = newUrl)
+        val (model2, focus) = DatabaseFocus.coto(id, moveTo, model1)
+        val (model3, openPane) = model2.openOrClosePane(PaneFlow.PaneName, true)
+        val pushUrl = Browser.pushUrl(newUrl.toString(), notify = false)
+
+        (model3, Cmd.Batch(pushUrl, openPane, focus))
       }
 
-      case Msg.FocusedCotoDetailsFetched(Right(details)) =>
-        model.modify(_.repo).using(_.importFrom(details)).pipe { model =>
-          DatabaseFocus.coto(details.coto.id, true, model).pipe {
-            case (model, focus) =>
-              (
-                model,
-                Cmd.Batch(
-                  Browser.send(Msg.OpenOrClosePane(PaneFlow.PaneName, true)),
-                  focus
-                )
-              )
-          }
-        }
+      case Msg.FocusedCotoDetailsFetched(Right(details)) => {
+        val model1 = model.modify(_.repo).using(_.importFrom(details))
+        val (model2, focus) = DatabaseFocus.coto(details.coto.id, true, model1)
+        val (model3, openPane) = model2.openOrClosePane(PaneFlow.PaneName, true)
+        (model3, Cmd.Batch(openPane, focus))
+      }
 
       case Msg.FocusedCotoDetailsFetched(Left(e)) =>
         update(Msg.UnfocusCoto, model)
