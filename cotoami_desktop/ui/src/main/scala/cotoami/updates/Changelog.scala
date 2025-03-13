@@ -218,19 +218,11 @@ object Changelog {
             model.timeline
       }
 
-    // Refresh geomap markers
-    val geomap =
-      if (coto.geolocated)
-        model.geomap.addOrRemoveMarkers
-      else
-        model.geomap
-
     (
       model
         .modify(_.repo.cotos).setTo(cotos)
         .modify(_.repo.cotonomas).setTo(cotonomas)
-        .modify(_.timeline).setTo(timeline)
-        .modify(_.geomap).setTo(geomap),
+        .modify(_.timeline).setTo(timeline),
       Cmd.Batch(
         fetchCotonoma,
         // Fetch the updated original if this is a repost

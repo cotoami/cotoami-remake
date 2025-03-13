@@ -1,6 +1,7 @@
 package cotoami.subparts
 
 import scala.util.chaining._
+import scala.collection.immutable.TreeMap
 import org.scalajs.dom
 import org.scalajs.dom.document.createElement
 import com.softwaremill.quicklens._
@@ -84,9 +85,6 @@ object SectionGeomap {
     def isFocusing(location: Geolocation): Boolean =
       Some(location) == focusedLocation
 
-    def addOrRemoveMarkers: Model =
-      this.modify(_.triggers.addOrRemoveMarkers).using(_ + 1)
-
     def refreshMarkers: Model =
       this.modify(_.triggers.refreshMarkers).using(_ + 1)
 
@@ -115,7 +113,6 @@ object SectionGeomap {
   case class ActionTriggers(
       applyCenterZoom: Int = 0,
       fitBounds: Int = 0,
-      addOrRemoveMarkers: Int = 0,
       refreshMarkers: Int = 0
   )
 
@@ -153,9 +150,7 @@ object SectionGeomap {
           case None           => model.fetchCotosInCurrentBounds
         }) pipe { case (model, cmd) =>
           default.copy(
-            _1 = model
-              .modify(_.currentBounds).setTo(Some(bounds))
-              .addOrRemoveMarkers,
+            _1 = model.modify(_.currentBounds).setTo(Some(bounds)),
             _3 = cmd
           )
         }
@@ -213,7 +208,7 @@ object SectionGeomap {
           }
         }.pipe { case (model, fetchNext) =>
           default.copy(
-            _1 = model.addOrRemoveMarkers,
+            _1 = model,
             _2 = context.repo.importFrom(cotos),
             _3 = fetchNext
           )
@@ -274,7 +269,6 @@ object SectionGeomap {
       focusedMarkerId = context.repo.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
       applyCenterZoom = model.triggers.applyCenterZoom,
-      addOrRemoveMarkers = model.triggers.addOrRemoveMarkers,
       refreshMarkers = model.triggers.refreshMarkers,
       fitBounds = model.triggers.fitBounds,
       onInit = Some(lngLatBounds => {
@@ -299,8 +293,10 @@ object SectionGeomap {
     )
   }
 
-  private def toMarkerDefs(markers: Seq[CotoMarker]): Seq[MapLibre.MarkerDef] =
-    markers.map(toMarkerDef(_))
+  private def toMarkerDefs(
+      markers: Seq[CotoMarker]
+  ): TreeMap[String, MapLibre.MarkerDef] =
+    TreeMap.from(markers.map(toMarkerDef).map(d => d.id -> d))
 
   val IdSeparator = ","
 

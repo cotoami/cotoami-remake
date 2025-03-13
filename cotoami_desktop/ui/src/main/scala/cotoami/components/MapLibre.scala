@@ -1,5 +1,6 @@
 package cotoami.components
 
+import scala.collection.immutable.TreeMap
 import scala.collection.mutable.{Map => MutableMap}
 import scala.util.{Failure, Success}
 import scala.scalajs.js
@@ -38,7 +39,7 @@ import cotoami.libs.geomap.pmtiles
 
       // Markers
       focusedLocation: Option[LngLat] = None,
-      markerDefs: Seq[MarkerDef] = Seq.empty,
+      markerDefs: TreeMap[String, MarkerDef] = TreeMap.empty,
       focusedMarkerId: Option[String] = None,
 
       // GeoBounds
@@ -48,7 +49,6 @@ import cotoami.libs.geomap.pmtiles
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
       applyCenterZoom: Int = 0,
-      addOrRemoveMarkers: Int = 0,
       refreshMarkers: Int = 0,
       fitBounds: Int = 0,
 
@@ -195,6 +195,7 @@ import cotoami.libs.geomap.pmtiles
 
               // Restore the state
               props.focusedLocation.map(map.focusLocation)
+              map.addOrRemoveMarkers(props.markerDefs.values)
 
               // onInit
               boundsRef.current = Some(map.getBounds())
@@ -278,15 +279,15 @@ import cotoami.libs.geomap.pmtiles
     // Add or remove markers according to the IDs of props.markerDefs.
     useEffect(
       () => {
-        mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs))
+        mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs.values))
       },
-      Seq(props.addOrRemoveMarkers)
+      Seq(props.markerDefs.keySet.toString())
     )
 
     // Refresh (clear and create) markers to sync with props.markerDefs.
     useEffect(
       () => {
-        mapRef.current.foreach(_.refreshMarkers(props.markerDefs))
+        mapRef.current.foreach(_.refreshMarkers(props.markerDefs.values))
       },
       Seq(props.refreshMarkers)
     )
@@ -421,7 +422,7 @@ import cotoami.libs.geomap.pmtiles
       focusedMarkerId = None
     }
 
-    def addOrRemoveMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+    def addOrRemoveMarkers(markerDefs: Iterable[MarkerDef]): Unit = {
       val defMap = markerDefs.map(d => d.id -> d).toMap
 
       // Add
@@ -433,7 +434,7 @@ import cotoami.libs.geomap.pmtiles
       toRemove.foreach(removeMarker)
     }
 
-    def refreshMarkers(markerDefs: Seq[MarkerDef]): Unit = {
+    def refreshMarkers(markerDefs: Iterable[MarkerDef]): Unit = {
       clearMarkers()
       markerDefs.foreach(putMarker)
     }
