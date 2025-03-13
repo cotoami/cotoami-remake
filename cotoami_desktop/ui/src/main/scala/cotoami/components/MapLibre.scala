@@ -236,7 +236,7 @@ import cotoami.libs.geomap.pmtiles
       Seq.empty
     )
 
-    // On/Off a focused location marker.
+    // Update focused location marker
     useEffect(
       () =>
         (mapRef.current, props.focusedLocation) match {
@@ -247,7 +247,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.focusedLocation.toString())
     )
 
-    // Apply the center and zoom of the props.
+    // applyCenterZoom
     useEffect(
       () => {
         mapRef.current.foreach(
@@ -279,7 +279,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.fitBounds)
     )
 
-    // Add or remove markers according to the IDs of props.markerDefs.
+    // addOrRemoveMarkers
     useEffect(
       () => {
         mapRef.current.foreach(_.addOrRemoveMarkers(props.markerDefs.values))
@@ -287,7 +287,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.markerDefs.keySet.toString())
     )
 
-    // Refresh (clear and create) markers to sync with props.markerDefs.
+    // refreshMarkers
     useEffect(
       () => {
         mapRef.current.foreach(_.refreshMarkers(props.markerDefs.values))
@@ -295,7 +295,7 @@ import cotoami.libs.geomap.pmtiles
       Seq(props.refreshMarkers)
     )
 
-    // Updatea marker
+    // updateMarker
     useEffect(
       () => {
         props.markerToUpdate.foreach(markerDef =>
