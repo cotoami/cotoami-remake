@@ -49,8 +49,9 @@ import cotoami.libs.geomap.pmtiles
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
       applyCenterZoom: Int = 0,
-      refreshMarkers: Int = 0,
       fitBounds: Int = 0,
+      refreshMarkers: Int = 0,
+      updateMarker: (Int, String) = (0, ""),
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -64,7 +65,9 @@ import cotoami.libs.geomap.pmtiles
       onBoundsChanged: Option[LngLatBounds => Unit] = None,
       onMarkerClick: Option[String => Unit] = None,
       onFocusedLocationClick: Option[() => Unit] = None
-  )
+  ) {
+    def markerToUpdate: Option[MarkerDef] = markerDefs.get(updateMarker._2)
+  }
 
   val component = FunctionalComponent[Props] { props =>
     val (zoomClass, setZoomClass) = useState[Option[String]](None)
@@ -290,6 +293,16 @@ import cotoami.libs.geomap.pmtiles
         mapRef.current.foreach(_.refreshMarkers(props.markerDefs.values))
       },
       Seq(props.refreshMarkers)
+    )
+
+    // Updatea marker
+    useEffect(
+      () => {
+        props.markerToUpdate.map(markerDef =>
+          mapRef.current.foreach(_.putMarker(markerDef))
+        )
+      },
+      Seq(props.updateMarker._1)
     )
 
     // Focus/Unfocus marker
