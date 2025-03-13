@@ -200,10 +200,6 @@ import cotoami.libs.geomap.pmtiles
               props.focusedLocation.map(map.focusLocation)
               map.addOrRemoveMarkers(props.markerDefs.values)
 
-              // onInit
-              boundsRef.current = Some(map.getBounds())
-              props.onInit.map(_(map.getBounds()))
-
               // Event handlers
               map.on("click", onClick)
               map.on("zoomend", onZoomend)
@@ -219,7 +215,10 @@ import cotoami.libs.geomap.pmtiles
                 }
               )
 
+              // Map init completed
               mapRef.current = Some(map)
+              boundsRef.current = Some(map.getBounds())
+              props.onInit.map(_(map.getBounds()))
             }
           }
           case Failure(t) =>
