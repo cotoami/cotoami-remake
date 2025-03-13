@@ -138,7 +138,7 @@ object Changelog {
 
     // PromoteJson
     for (json <- change.Promote.toOption) {
-      return (model, Root.fetchCotoDetails(Id(json.coto_id)))
+      return (model, updateCoto(Id(json.coto_id)))
     }
 
     // UpsertNode
@@ -227,7 +227,7 @@ object Changelog {
       Cmd.Batch(
         fetchCotonoma,
         // Fetch the updated original if this is a repost
-        coto.repostOfId.map(Root.fetchCotoDetails).getOrElse(Cmd.none)
+        coto.repostOfId.map(updateCoto).getOrElse(Cmd.none)
       )
     )
   }
