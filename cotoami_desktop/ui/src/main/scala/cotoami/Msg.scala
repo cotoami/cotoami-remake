@@ -65,6 +65,7 @@ object Msg {
   // Repository
   case object ReloadRepository extends Msg
   case class RepositoryMsg(submsg: Root.Msg) extends Msg
+  case class CotoUpdated(result: Either[ErrorJson, CotoDetails]) extends Msg
 
   // Map
   case object OpenGeomap extends Msg

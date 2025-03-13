@@ -318,6 +318,17 @@ object Main {
         (model.copy(repo = repo), cmds)
       }
 
+      case Msg.CotoUpdated(Right(details)) =>
+        (
+          model
+            .modify(_.repo).using(_.importFrom(details))
+            .modify(_.geomap).using(_.updateMarker(details.coto.id.uuid)),
+          Cmd.none
+        )
+
+      case Msg.CotoUpdated(Left(e)) =>
+        (model.error("Couldn't fetch coto details.", Some(e)), Cmd.none)
+
       case Msg.OpenGeomap =>
         updates.uiState(_.openGeomap, model)
 
