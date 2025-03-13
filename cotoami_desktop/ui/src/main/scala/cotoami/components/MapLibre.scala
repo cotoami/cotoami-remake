@@ -70,6 +70,7 @@ import cotoami.libs.geomap.pmtiles
   }
 
   val component = FunctionalComponent[Props] { props =>
+    val (mapInitialized, setMapInitialized) = useState[Boolean](false)
     val (zoomClass, setZoomClass) = useState[Option[String]](None)
 
     val resourceDirRef = useRef("")
@@ -219,6 +220,7 @@ import cotoami.libs.geomap.pmtiles
               mapRef.current = Some(map)
               boundsRef.current = Some(map.getBounds())
               props.onInit.map(_(map.getBounds()))
+              setMapInitialized(true)
             }
           }
           case Failure(t) =>
@@ -243,7 +245,10 @@ import cotoami.libs.geomap.pmtiles
           case (Some(map), None)           => map.unfocusLocation()
           case _                           => ()
         },
-      Seq(props.focusedLocation.toString())
+      Seq(
+        mapInitialized, // `focusedLocation` can be changed during map init
+        props.focusedLocation.toString()
+      )
     )
 
     // applyCenterZoom
