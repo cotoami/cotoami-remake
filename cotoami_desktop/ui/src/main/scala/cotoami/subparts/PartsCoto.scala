@@ -10,7 +10,7 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.libs.{rehypePlugins, remarkPlugins}
+import cotoami.libs.{lowlight, rehypePlugins, remarkPlugins}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
 import cotoami.repository.Nodes
 import cotoami.components.{
@@ -239,7 +239,10 @@ object PartsCoto {
         remarkPlugins = Seq(remarkPlugins.breaks),
         rehypePlugins = Seq(
           js.Tuple2(rehypePlugins.externalLinks, jso(target = "_blank")),
-          js.Tuple2(rehypePlugins.highlight, jso(detect = false))
+          js.Tuple2(
+            rehypePlugins.highlight,
+            jso(languages = lowlight.all, detect = false)
+          )
         )
       )(content)
     )
