@@ -237,14 +237,22 @@ import cotoami.libs.geomap.pmtiles
       Seq.empty
     )
 
+    // Effects that require a Map instance.
+    //
+    // Some of the props can be changed during Map initialization (ex. page's first
+    // load or reload). if an effect depends on one of those props,
+    // there can be cases where it doesn't take effect for an undefined Map, unless
+    // you specify `mapInitialized` as a dependency so that it will be invoked again
+    // after Map initialization has completed.
+
     // Update focused location marker
     useEffect(
       () => {
         mapRef.current.foreach(_.focusOrUnfocusLocation(props.focusedLocation))
       },
       Seq(
-        mapInitialized, // `focusedLocation` can be changed during map init
-        props.focusedLocation.toString()
+        props.focusedLocation.toString(),
+        mapInitialized // `props.focusedLocation` can be changed during map init.
       )
     )
 
@@ -288,7 +296,10 @@ import cotoami.libs.geomap.pmtiles
           map.focusOrUnfocusMarker(props.focusedMarkerId)
         }
       },
-      Seq(props.markerDefs.keySet.toString())
+      Seq(
+        props.markerDefs.keySet.toString(),
+        mapInitialized // `props.markerDefs` can be changed during map init.
+      )
     )
 
     // refreshMarkers
