@@ -237,8 +237,10 @@ object PartsCoto {
     section(className := "text-content")(
       Markdown(
         remarkPlugins = Seq(remarkPlugins.breaks),
-        rehypePlugins =
-          Seq(js.Tuple2(rehypePlugins.externalLinks, jso(target = "_blank")))
+        rehypePlugins = Seq(
+          js.Tuple2(rehypePlugins.externalLinks, jso(target = "_blank")),
+          js.Tuple2(rehypePlugins.highlight, jso(detect = false))
+        )
       )(content)
     )
 
