@@ -458,7 +458,7 @@ object SectionFlowInput {
           model = form,
           onFocus = Some(() => dispatch(Msg.SetFolded(false))),
           onBlur = Some(() => dispatch(Msg.SetFolded(!model.hasContents))),
-          onCtrlEnter = () => dispatch(Msg.Post)
+          onCtrlEnter = Some(() => dispatch(Msg.Post))
         )(submsg => dispatch(Msg.CotonomaFormMsg(submsg)))
       ),
       div(className := "post")(

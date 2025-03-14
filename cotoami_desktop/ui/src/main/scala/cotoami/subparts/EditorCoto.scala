@@ -633,9 +633,9 @@ object EditorCoto {
 
     def inputName(
         model: Model,
-        onFocus: Option[() => Unit],
-        onBlur: Option[() => Unit],
-        onCtrlEnter: () => Unit
+        onFocus: Option[() => Unit] = None,
+        onBlur: Option[() => Unit] = None,
+        onCtrlEnter: Option[() => Unit] = None
     )(implicit dispatch: Msg => Unit): ReactElement =
       input(
         className := "cotonoma-name",
@@ -651,7 +651,7 @@ object EditorCoto {
         onCompositionEnd := (_ => dispatch(Msg.ImeCompositionEnd)),
         onKeyDown := (e =>
           if (model.hasValidContents && detectCtrlEnter(e)) {
-            onCtrlEnter()
+            onCtrlEnter.map(_())
           }
         )
       )
