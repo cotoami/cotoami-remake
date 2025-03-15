@@ -203,6 +203,7 @@ section.pins {
               padding: 5px 15px;
               font-size: 0.9rem;
 
+              &:hover,
               &.highlighted {
                 background-color: var(--hover-background-color);
               }

@@ -33,6 +33,7 @@ article.coto {
     border: 2px dotted var(--selection-color);
   }
 
+  &:hover,
   &.highlighted {
     background-color: var(--hover-background-color) !important;
   }

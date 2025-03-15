@@ -185,6 +185,7 @@ nav.cotonomas {
       text-decoration: none;
     }
 
+    &:hover,
     &.highlighted {
       background-color: var(--hover-background-color);
     }
