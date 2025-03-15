@@ -227,9 +227,9 @@ pub(crate) fn recently_updated<Conn: AsReadableConn>(
             }
             query.order((
                 cotonomas::updated_at.desc(),
-                // When a cotonoma has been posted, the updated_at timestamps of
-                // the super/sub cotonoma will become the same, in the case,
-                // the new(sub) cotonoma should be should precede in a recent list.
+                // When a cotonoma is posted, the `updated_at` of it (sub) and the
+                // cotonoma it has been posted to (super) become the same. In that case,
+                // the posted cotonoma should precede in a recent list.
                 cotonomas::created_at.desc(),
             ))
         })
