@@ -357,12 +357,15 @@ object PartsCoto {
       button(
         className := "time-range default",
         data - "tooltip" := context.time.formatDateTime(range.start),
-        data - "placement" := "left",
+        data - "placement" := "bottom",
         onClick := (e => {
           e.stopPropagation()
         })
       )(
-        materialSymbol("calendar_month")
+        materialSymbol("calendar_month"),
+        span(className := "date")(
+          context.time.formatDate(range.start)
+        )
       )
     )
 }
