@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     let json = args.load_json()?;
 
     let start = Instant::now();
-    import(db, json)?;
+    import(db, json, args.exclude_cotonoma)?;
     println!("Import completed - elapsed {:?}.", start.elapsed());
 
     Ok(())
@@ -38,6 +38,9 @@ struct Args {
     json_file: String,
     db_dir: String,
     new_node_name: Option<String>,
+
+    #[arg(long)]
+    exclude_cotonoma: Vec<String>,
 }
 
 impl Args {
@@ -66,6 +69,7 @@ impl Args {
 struct Context {
     local_node_id: Id<Node>,
     root_cotonoma: Cotonoma,
+    exclude_cotonoma: Vec<String>,
 
     coto_waitlist: HashSet<Id<Coto>>,
     cotonoma_waitlist: HashSet<Id<Cotonoma>>,
@@ -82,12 +86,14 @@ impl Context {
     fn new(
         local_node_id: Id<Node>,
         root_cotonoma: Cotonoma,
+        exclude_cotonoma: Vec<String>,
         coto_waitlist: HashSet<Id<Coto>>,
         cotonoma_waitlist: HashSet<Id<Cotonoma>>,
     ) -> Self {
         Self {
             local_node_id,
             root_cotonoma,
+            exclude_cotonoma,
             coto_waitlist,
             cotonoma_waitlist,
             imported_cotos: 0,
@@ -96,6 +102,20 @@ impl Context {
             rejected_cotos: 0,
             rejected_connections: 0,
         }
+    }
+
+    fn should_exclude(&self, coto_json: &CotoJson) -> bool {
+        if let Some(ref posted_in_id) = coto_json.posted_in_id {
+            if self.exclude_cotonoma.contains(&posted_in_id.to_string()) {
+                return true;
+            }
+        }
+        if let Some(ref cotonoma) = coto_json.cotonoma {
+            if self.exclude_cotonoma.contains(&cotonoma.id.to_string()) {
+                return true;
+            }
+        }
+        false
     }
 
     fn has_coto_in_waitlist(&self, id: &Id<Coto>) -> bool { self.coto_waitlist.contains(id) }
@@ -121,7 +141,7 @@ impl Context {
     fn reject_coto(&mut self, coto_json: &CotoJson, reason: &str) {
         self.remove_from_waitlist(coto_json);
         self.rejected_cotos += 1;
-        println!("Rejected coto ({}): {reason}", coto_json.id);
+        println!("Rejected coto ({}): {reason}", coto_json.name_or_id());
     }
 
     fn reject_connection(&mut self, connection_json: &ConnectionJson, reason: &str) {
@@ -133,7 +153,7 @@ impl Context {
     }
 }
 
-fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
+fn import(db: Database, json: CotoamiExportJson, exclude_cotonoma: Vec<String>) -> Result<()> {
     let mut ds = db.new_session()?;
 
     // Init a context
@@ -143,6 +163,7 @@ fn import(db: Database, json: CotoamiExportJson) -> Result<()> {
     let mut context = Context::new(
         db.globals().try_get_local_node_id()?,
         root_cotonoma,
+        exclude_cotonoma,
         json.all_coto_ids(),
         json.all_cotonoma_ids(),
     );
@@ -177,6 +198,12 @@ fn import_cotos(
     println!("Importing cotos ...");
     let mut pendings: Vec<CotoJson> = Vec::new();
     for mut coto_json in coto_jsons {
+        // Exclude by cotonoma
+        if context.should_exclude(&coto_json) {
+            context.reject_coto(&coto_json, "excluded");
+            continue;
+        }
+
         // Dependency check: `posted_in_id`
         if let Some(posted_in_id) = coto_json.posted_in_id {
             if ds.contains_cotonoma(&posted_in_id)? {
@@ -373,6 +400,13 @@ impl CotoJson {
             created_at: from_timestamp_millis(self.inserted_at)?,
             updated_at: from_timestamp_millis(self.updated_at)?,
         })
+    }
+
+    fn name_or_id(&self) -> String {
+        self.cotonoma
+            .as_ref()
+            .map(|c| c.name.clone())
+            .unwrap_or(self.id.to_string())
     }
 }
 
