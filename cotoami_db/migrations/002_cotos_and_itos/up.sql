@@ -78,7 +78,7 @@ CREATE TRIGGER cotos_reposts_sync AFTER UPDATE ON cotos BEGIN
   UPDATE cotos 
     SET 
       is_cotonoma = new.is_cotonoma, 
-      updated_at = new.updated_at
+      updated_at = new.updated_at -- ref. cotonoma_ops::subs
     WHERE repost_of_id = new.uuid;
 END;
 

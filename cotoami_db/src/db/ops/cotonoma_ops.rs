@@ -260,6 +260,9 @@ pub(crate) fn subs<Conn: AsReadableConn>(
                 cotos::table
                     .filter(cotos::is_cotonoma.eq(true))
                     .filter(cotos::posted_in_id.eq(id))
+                    // For reposted cotonoma-cotos, `updated_at` of each coto
+                    // should be synced with the original coto in order for
+                    // this query to work expectedly.
                     .order(cotos::updated_at.desc())
             })?;
 
