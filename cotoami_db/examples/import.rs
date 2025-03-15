@@ -176,7 +176,7 @@ fn import_cotos(
 ) -> Result<()> {
     println!("Importing cotos ...");
     let mut pendings: Vec<CotoJson> = Vec::new();
-    for coto_json in coto_jsons {
+    for mut coto_json in coto_jsons {
         // Dependency check: `posted_in_id`
         if let Some(posted_in_id) = coto_json.posted_in_id {
             if ds.contains_cotonoma(&posted_in_id)? {
@@ -194,8 +194,13 @@ fn import_cotos(
 
         // Dependency check: `repost_id`
         if let Some(repost_id) = coto_json.repost_id {
-            if ds.contains_coto(&repost_id)? {
+            if let Some(original) = ds.coto(&repost_id)? {
                 // OK
+                // Sync repost's update timestamp with the original
+                coto_json.updated_at = std::cmp::max(
+                    coto_json.updated_at,
+                    original.updated_at.and_utc().timestamp_millis(),
+                );
             } else {
                 if context.has_coto_in_waitlist(&repost_id) {
                     // Put in the pending list until the original coto is imported
