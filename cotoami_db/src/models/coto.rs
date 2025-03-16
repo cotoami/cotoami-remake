@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, convert::AsRef, fmt::Display};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Result};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use derive_new::new;
 use diesel::prelude::*;
@@ -133,9 +133,7 @@ impl Coto {
     pub(crate) fn to_update(&self) -> UpdateCoto { UpdateCoto::new(&self.uuid) }
 
     pub(crate) fn to_promote(&self) -> Result<UpdateCoto> {
-        if self.is_cotonoma {
-            bail!("The coto is already a cotonoma.");
-        }
+        ensure!(!self.is_cotonoma, "The coto is already a cotonoma.");
 
         let name_max_length = Cotonoma::NAME_MAX_LENGTH as usize;
         let mut update = self.to_update();
@@ -167,12 +165,13 @@ impl Coto {
     }
 
     pub(crate) fn to_import(&self) -> Result<NewCoto> {
-        // Since it can't import reposts before the original and
+        // Since it can't import reposts before the originals and
         // `reposted_in_ids` will be updated when inserting a repost,
         // `reposted_in_ids` must be None for import.
-        if self.reposted_in_ids.is_some() {
-            bail!("Coto::reposted_in_ids must be None for import.");
-        }
+        ensure!(
+            self.reposted_in_ids.is_none(),
+            "reposted_in_ids must be None for import."
+        );
         Ok(NewCoto {
             uuid: self.uuid,
             node_id: &self.node_id,
