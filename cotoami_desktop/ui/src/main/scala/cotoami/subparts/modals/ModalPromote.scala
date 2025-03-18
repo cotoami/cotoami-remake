@@ -30,7 +30,7 @@ object ModalPromote {
   ) {
     def diffName: Option[Option[String]] =
       // use cotonomaForm as cotonoma-name/coto-summary input
-      Option.when(cotonomaForm.name != original.summary) {
+      Option.when(Some(cotonomaForm.name) != original.summary) {
         Some(cotonomaForm.name)
       }
 

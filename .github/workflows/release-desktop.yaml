@@ -34,7 +34,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: corretto
-        java-version: 17
+        java-version: 23
         cache: sbt
 
     # https://eed3si9n.com/setup-sbt/
