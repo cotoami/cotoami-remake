@@ -55,7 +55,7 @@ import cotoami.libs.geomap.pmtiles
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
-      vectorTilesLocation: String = "/geomap/japan.pmtiles",
+      vectorTilesLocation: String = "/geomap/planet.pmtiles",
 
       // Event handlers (which will be registered during map or marker initialization)
       onInit: Option[LngLatBounds => Unit] = None,
