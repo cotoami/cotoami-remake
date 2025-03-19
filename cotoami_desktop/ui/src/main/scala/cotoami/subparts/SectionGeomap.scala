@@ -50,6 +50,9 @@ object SectionGeomap {
         ).map(Msg.CotosInFocusFetched(_).into)
       )
 
+    def initMap: Model =
+      this.modify(_.triggers.initMap).using(_ + 1)
+
     def applyCenterZoom: Model =
       this.modify(_.triggers.applyCenterZoom).using(_ + 1)
 
@@ -104,6 +107,7 @@ object SectionGeomap {
   }
 
   case class ActionTriggers(
+      initMap: Int = 0,
       applyCenterZoom: Int = 0,
       fitBounds: Int = 0,
       refreshMarkers: Int = 0,
