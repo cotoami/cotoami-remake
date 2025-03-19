@@ -260,6 +260,7 @@ object SectionGeomap {
       markerDefs = toMarkerDefs(context.repo.cotoMarkers),
       focusedMarkerId = context.repo.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
+      createMap = model.triggers.createMap,
       applyCenterZoom = model.triggers.applyCenterZoom,
       refreshMarkers = model.triggers.refreshMarkers,
       updateMarker = model.triggers.updateMarker,

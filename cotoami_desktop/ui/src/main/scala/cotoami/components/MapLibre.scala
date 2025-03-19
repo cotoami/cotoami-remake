@@ -141,11 +141,6 @@ import cotoami.libs.geomap.pmtiles
     // createMap
     useEffect(
       () => {
-        // Destroy the existing map
-        mapRef.current.foreach(_.remove())
-        mapRef.current = None
-        setMapInitialized(false)
-
         val onClick: js.Function1[MapMouseEvent, Unit] =
           e => props.onClick.foreach(_(e))
 
@@ -229,7 +224,11 @@ import cotoami.libs.geomap.pmtiles
             println(s"Couldn't get tauri.path.resourceDir: ${t.toString()}")
         }
 
-        () => mapRef.current.foreach(_.remove())
+        () => {
+          mapRef.current.foreach(_.remove())
+          mapRef.current = None
+          setMapInitialized(false)
+        }
       },
       Seq(props.createMap)
     )
