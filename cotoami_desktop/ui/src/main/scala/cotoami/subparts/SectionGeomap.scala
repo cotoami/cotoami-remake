@@ -124,7 +124,7 @@ object SectionGeomap {
 
   object Msg {
     case object RecreateMap extends Msg
-    case class Initialized(bounds: GeoBounds) extends Msg
+    case class MapInitialized(bounds: GeoBounds) extends Msg
     case class FocusLocation(location: Option[Geolocation]) extends Msg
     case class ZoomChanged(zoom: Double) extends Msg
     case class CenterMoved(center: Geolocation) extends Msg
@@ -146,7 +146,7 @@ object SectionGeomap {
       case Msg.RecreateMap => default.copy(_1 = model.initMap)
 
       // When a geomap is opened:
-      case Msg.Initialized(bounds) =>
+      case Msg.MapInitialized(bounds) =>
         model.copy(currentBounds = Some(bounds)).pipe { model =>
           // Move to the location calculated from the current focus:
           // Msg.CotosInFocusFetched should happen on each focus change,
@@ -266,7 +266,7 @@ object SectionGeomap {
       fitBounds = model.triggers.fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
-        dispatch(Msg.Initialized(bounds))
+        dispatch(Msg.MapInitialized(bounds))
       }),
       onClick = Some(e => {
         val location = Geolocation.fromMapLibre(e.lngLat)
