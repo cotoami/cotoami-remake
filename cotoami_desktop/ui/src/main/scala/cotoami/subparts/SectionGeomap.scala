@@ -50,8 +50,8 @@ object SectionGeomap {
         ).map(Msg.CotosInFocusFetched(_).into)
       )
 
-    def initMap: Model =
-      this.modify(_.triggers.initMap).using(_ + 1)
+    def recreateMap: Model =
+      this.modify(_.triggers.createMap).using(_ + 1)
 
     def applyCenterZoom: Model =
       this.modify(_.triggers.applyCenterZoom).using(_ + 1)
@@ -107,7 +107,7 @@ object SectionGeomap {
   }
 
   case class ActionTriggers(
-      initMap: Int = 0,
+      createMap: Int = 0,
       applyCenterZoom: Int = 0,
       fitBounds: Int = 0,
       refreshMarkers: Int = 0,
@@ -143,7 +143,7 @@ object SectionGeomap {
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
     msg match {
-      case Msg.RecreateMap => default.copy(_1 = model.initMap)
+      case Msg.RecreateMap => default.copy(_1 = model.recreateMap)
 
       // When a geomap is opened:
       case Msg.MapInitialized(bounds) =>
