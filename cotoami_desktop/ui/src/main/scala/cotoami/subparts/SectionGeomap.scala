@@ -109,10 +109,7 @@ object SectionGeomap {
         )
 
     def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
-      currentBounds match {
-        case Some(currentBounds) => fetchCotosInBounds(currentBounds)
-        case None                => (this, Cmd.none)
-      }
+      currentBounds.map(fetchCotosInBounds).getOrElse((this, Cmd.none))
   }
 
   case class ActionTriggers(
