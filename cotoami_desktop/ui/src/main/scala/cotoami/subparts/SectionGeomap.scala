@@ -168,19 +168,19 @@ object SectionGeomap {
 
       case Msg.CotosInFocusFetched(Right(cotos)) => {
         context.repo.importFrom(cotos).pipe { repo =>
-          (repo.geolocationInFocus match {
-            case Some(location) => (model.moveTo(location), Cmd.none)
-            case None           => model.fetchCotosInCurrentBounds
-          }) pipe { case (model, cmd) =>
-            default.copy(
-              _1 = model.copy(fetchingCotosInFocus = false)
-                // Force to refresh when the focus has been changed
-                // (ex. marker's `in-focus` state could be changed)
-                .refreshMarkers,
-              _2 = repo,
-              _3 = cmd
-            )
-          }
+          repo.geolocationInFocus
+            .map(location => (model.moveTo(location), Cmd.none))
+            .getOrElse(model.fetchCotosInCurrentBounds)
+            .pipe { case (model, cmd) =>
+              default.copy(
+                _1 = model.copy(fetchingCotosInFocus = false)
+                  // Force to refresh when the focus has been changed
+                  // (ex. marker's `in-focus` state could be changed)
+                  .refreshMarkers,
+                _2 = repo,
+                _3 = cmd
+              )
+            }
         }
       }
 
