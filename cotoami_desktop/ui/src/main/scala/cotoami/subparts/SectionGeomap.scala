@@ -123,6 +123,7 @@ object SectionGeomap {
   }
 
   object Msg {
+    case object RecreateMap extends Msg
     case class Initialized(bounds: GeoBounds) extends Msg
     case class FocusLocation(location: Option[Geolocation]) extends Msg
     case class ZoomChanged(zoom: Double) extends Msg
@@ -142,6 +143,8 @@ object SectionGeomap {
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
     msg match {
+      case Msg.RecreateMap => default.copy(_1 = model.initMap)
+
       // When a geomap is opened:
       case Msg.Initialized(bounds) =>
         model.copy(currentBounds = Some(bounds)).pipe { model =>
