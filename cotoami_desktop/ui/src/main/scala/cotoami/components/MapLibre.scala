@@ -48,7 +48,7 @@ import cotoami.libs.geomap.pmtiles
 
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
-      initMap: Int = 0,
+      createMap: Int = 0,
       applyCenterZoom: Int = 0,
       fitBounds: Int = 0,
       refreshMarkers: Int = 0,
@@ -138,10 +138,10 @@ import cotoami.libs.geomap.pmtiles
         Seq.empty
       )
 
-    // Initialize the map.
+    // createMap
     useEffect(
       () => {
-        // Destroy the existing map if it's not the first init
+        // Destroy the existing map
         mapRef.current.foreach(_.remove())
         mapRef.current = None
         setMapInitialized(false)
@@ -231,7 +231,7 @@ import cotoami.libs.geomap.pmtiles
 
         () => mapRef.current.foreach(_.remove())
       },
-      Seq(props.initMap)
+      Seq(props.createMap)
     )
 
     // Effects that require a Map instance.
