@@ -144,17 +144,13 @@ import cotoami.libs.geomap.pmtiles
           e => props.onClick.foreach(_(e))
 
         val detectBoundsChange = (e: MapLibreEvent) => {
-          props.onBoundsChanged match {
-            case Some(onBoundsChanged) => {
-              val bounds = e.target.getBounds()
-              if (Some(bounds).toString() != boundsRef.current.toString()) {
-                boundsRef.current = Some(bounds)
-                onBoundsChanged(bounds)
-              }
+          props.onBoundsChanged.foreach { onBoundsChanged =>
+            val bounds = e.target.getBounds()
+            if (Some(bounds).toString() != boundsRef.current.toString()) {
+              boundsRef.current = Some(bounds)
+              onBoundsChanged(bounds)
             }
-            case None => ()
           }
-
         }
         val onZoomend: js.Function1[MapLibreEvent, Unit] = e => {
           props.onZoomChanged.foreach(_(e.target.getZoom()))
