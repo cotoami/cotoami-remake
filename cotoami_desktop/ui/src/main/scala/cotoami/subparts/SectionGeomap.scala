@@ -34,7 +34,6 @@ object SectionGeomap {
 
       // Coto fetching
       fetchingCotosInFocus: Boolean = false,
-      nextBoundsToFetch: Option[GeoBounds] = None,
       fetchingCotosInBounds: Boolean = false,
 
       // ActionTriggers
@@ -94,19 +93,11 @@ object SectionGeomap {
       )
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
-      if (!fetchingCotosInFocus && !fetchingCotosInBounds)
-        (
-          copy(fetchingCotosInBounds = true),
-          GeolocatedCotos.inGeoBounds(bounds)
-            .map(Msg.CotosInBoundsFetched(_).into)
-        )
-      else
-        (
-          // To avoid simultaneous fetchings, defer this fetch to the next round.
-          // The current waiting bounds will be replaced with the new one.
-          copy(nextBoundsToFetch = Some(bounds)),
-          Cmd.none
-        )
+      (
+        copy(fetchingCotosInBounds = true),
+        GeolocatedCotos.inGeoBounds(bounds)
+          .map(Msg.CotosInBoundsFetched(_).into)
+      )
 
     def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
       currentBounds.map(fetchCotosInBounds).getOrElse((this, Cmd.none))
@@ -171,7 +162,7 @@ object SectionGeomap {
         val (geomap, fetch) = model.fetchCotosInBounds(bounds)
         default.copy(
           _1 = geomap.copy(currentBounds = Some(bounds)),
-          _3 = fetch
+          _3 = fetch.debounce("SectionGeomap.fetch", 200)
         )
       }
 
@@ -182,8 +173,7 @@ object SectionGeomap {
             case None           => model.fetchCotosInCurrentBounds
           }) pipe { case (model, cmd) =>
             default.copy(
-              _1 = model
-                .modify(_.fetchingCotosInFocus).setTo(false)
+              _1 = model.copy(fetchingCotosInFocus = false)
                 // Force to refresh when the focus has been changed
                 // (ex. marker's `in-focus` state could be changed)
                 .refreshMarkers,
@@ -201,21 +191,10 @@ object SectionGeomap {
         )
 
       case Msg.CotosInBoundsFetched(Right(cotos)) =>
-        model.copy(fetchingCotosInBounds = false).pipe { model =>
-          model.nextBoundsToFetch match {
-            case Some(bounds) =>
-              model.fetchCotosInBounds(bounds).pipe { case (model, fetchNext) =>
-                (model.copy(nextBoundsToFetch = None), fetchNext)
-              }
-            case None => (model, Cmd.none)
-          }
-        }.pipe { case (model, fetchNext) =>
-          default.copy(
-            _1 = model,
-            _2 = context.repo.importFrom(cotos),
-            _3 = fetchNext
-          )
-        }
+        default.copy(
+          _1 = model.copy(fetchingCotosInBounds = false),
+          _2 = context.repo.importFrom(cotos)
+        )
 
       case Msg.CotosInBoundsFetched(Left(e)) =>
         default.copy(
