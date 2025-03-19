@@ -48,6 +48,7 @@ import cotoami.libs.geomap.pmtiles
 
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
+      initMap: Int = 0,
       applyCenterZoom: Int = 0,
       fitBounds: Int = 0,
       refreshMarkers: Int = 0,
@@ -140,6 +141,11 @@ import cotoami.libs.geomap.pmtiles
     // Initialize the map.
     useEffect(
       () => {
+        // Destroy the existing map if it's not the first init
+        mapRef.current.foreach(_.remove())
+        mapRef.current = None
+        setMapInitialized(false)
+
         val onClick: js.Function1[MapMouseEvent, Unit] =
           e => props.onClick.foreach(_(e))
 
@@ -223,14 +229,9 @@ import cotoami.libs.geomap.pmtiles
             println(s"Couldn't get tauri.path.resourceDir: ${t.toString()}")
         }
 
-        () =>
-          mapRef.current.foreach { map =>
-            map.off("click", onClick)
-            map.off("zoomend", onZoomend)
-            map.off("moveend", onMoveend)
-          }
+        () => mapRef.current.foreach(_.remove())
       },
-      Seq.empty
+      Seq(props.initMap)
     )
 
     // Effects that require a Map instance.

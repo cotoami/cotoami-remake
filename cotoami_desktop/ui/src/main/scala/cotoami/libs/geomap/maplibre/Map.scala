@@ -20,6 +20,17 @@ class Map(options: MapOptions) extends js.Object {
       position: js.UndefOr[String] = js.undefined
   ): Map = js.native
 
+  /** Clean up and release all internal resources associated with this map.
+    *
+    * This includes DOM elements, event bindings, web workers, and WebGL
+    * resources.
+    *
+    * Use this method when you are done using the map and wish to ensure that it
+    * no longer consumes browser resources. Afterwards, you must not call any
+    * other methods on the map.
+    */
+  def remove(): Unit = js.native
+
   /** Returns the map's geographical centerpoint.
     */
   def getCenter(): LngLat = js.native
