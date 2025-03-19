@@ -139,15 +139,15 @@ object SectionGeomap {
     val default = (model, context.repo, Cmd.none)
     msg match {
       case Msg.Init(bounds) =>
-        (context.repo.geolocationInFocus match {
-          case Some(location) => (model.moveTo(location), Cmd.none)
-          case None           => model.fetchCotosInCurrentBounds
-        }) pipe { case (model, cmd) =>
-          default.copy(
-            _1 = model.modify(_.currentBounds).setTo(Some(bounds)),
-            _3 = cmd
-          )
-        }
+        context.repo.geolocationInFocus
+          .map(location => (model.moveTo(location), Cmd.none))
+          .getOrElse(model.fetchCotosInCurrentBounds)
+          .pipe { case (model, cmd) =>
+            default.copy(
+              _1 = model.copy(currentBounds = Some(bounds)),
+              _3 = cmd
+            )
+          }
 
       case Msg.FocusLocation(location) =>
         default.copy(_1 = model.copy(focusedLocation = location))
