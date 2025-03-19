@@ -25,7 +25,7 @@ section.coto-graph {
 
   &.with-traversals-opened {
 
-    div.scroll-area.coto-graph {
+    >div.scroll-area {
       .scrollable-coto-graph {
         overflow-x: auto;
         overflow-y: hidden;

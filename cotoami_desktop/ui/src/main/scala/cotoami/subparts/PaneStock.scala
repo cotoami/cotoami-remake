@@ -83,7 +83,6 @@ object PaneStock {
     )(
       if (sectionTraversals.isDefined)
         ScrollArea(
-          className = Some("coto-graph"),
           scrollableClassName = Some("scrollable-coto-graph"),
           scrollableElementId = Some(CotoGraphScrollableElementId)
         )(contents)
