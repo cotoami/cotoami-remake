@@ -138,16 +138,19 @@ object SectionGeomap {
   ): (Model, Root, Cmd[AppMsg]) = {
     val default = (model, context.repo, Cmd.none)
     msg match {
+      // When a geomap is opened:
       case Msg.Init(bounds) =>
-        context.repo.geolocationInFocus
-          .map(location => (model.moveTo(location), Cmd.none))
-          .getOrElse(model.fetchCotosInCurrentBounds)
-          .pipe { case (model, cmd) =>
-            default.copy(
-              _1 = model.copy(currentBounds = Some(bounds)),
-              _3 = cmd
-            )
-          }
+        model.copy(currentBounds = Some(bounds)).pipe { model =>
+          // Move to the location calculated from the current focus:
+          // Msg.CotosInFocusFetched should happen on each focus change,
+          // so here, it just needs to get the location of the current focus.
+          context.repo.geolocationInFocus
+            .map(location => (model.moveTo(location), Cmd.none))
+            .getOrElse(model.fetchCotosInCurrentBounds)
+            .pipe { case (model, cmd) =>
+              default.copy(_1 = model, _3 = cmd)
+            }
+        }
 
       case Msg.FocusLocation(location) =>
         default.copy(_1 = model.copy(focusedLocation = location))
