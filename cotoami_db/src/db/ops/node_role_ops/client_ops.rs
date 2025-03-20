@@ -3,7 +3,7 @@
 use core::time::Duration;
 use std::ops::DerefMut;
 
-use anyhow::{bail, Context};
+use anyhow::{ensure, Context};
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -139,10 +139,8 @@ pub(crate) fn start_session<'a>(
             .context(DatabaseError::AuthenticationFailed)?;
 
         // Do not allow a disabled client to start a session
-        if client.disabled {
-            // Hide a disabled error for a security reason
-            bail!(DatabaseError::AuthenticationFailed);
-        }
+        // (Hide a disabled error for a security reason)
+        ensure!(!client.disabled, DatabaseError::AuthenticationFailed);
 
         let mut principal = client.as_principal();
         let duration = chrono::Duration::from_std(duration)?;
