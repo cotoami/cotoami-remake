@@ -1,6 +1,6 @@
 use core::time::Duration;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Result};
 
 use crate::{
     db::{
@@ -189,9 +189,10 @@ impl<'a> DatabaseSession<'a> {
     pub fn set_owner_password_if_none(&self, new_password: &str) -> Result<()> {
         self.update_local_node(|local_node| {
             let mut principal = local_node.as_principal();
-            if principal.password_hash().is_some() {
-                bail!("The local node already has a password.");
-            }
+            ensure!(
+                principal.password_hash().is_none(),
+                "The local node already has a password."
+            );
             principal.update_password(new_password)?;
             self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
                 let local_node = local_ops::update_as_principal(&principal).run(ctx)?;
