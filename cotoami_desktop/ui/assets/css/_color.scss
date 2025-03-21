@@ -1,6 +1,7 @@
 @use "./pico-customized" as pico;
 
 @mixin light-colors {
+  --form-element-background-color: #{pico.$white};
   --pane-border-color: #{pico.$grey-100};
   --focused-background-color: #{pico.$grey-100};
   --focused-border-color: #{pico.$grey-700};
