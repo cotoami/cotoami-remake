@@ -7,6 +7,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Thenable.Implicits._
 
 import org.scalajs.dom
+import org.scalajs.dom.document.createElement
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 
 import slinky.core._
@@ -452,8 +453,14 @@ import cotoami.libs.geomap.pmtiles
     ): Marker = {
       val jsLngLat = js.Tuple2.fromScalaTuple2(lngLat)
 
+      // Create a fresh root element that holds the event listeners,
+      // which will be registered below.
+      val markerRootElement =
+        createElement("div").asInstanceOf[dom.HTMLDivElement]
+      markerRootElement.append(markerElement)
+
       val marker = new Marker(new MarkerOptions() {
-        override val element = markerElement
+        override val element = markerRootElement
       }).setLngLat(jsLngLat).addTo(map)
 
       marker.getElement().addEventListener(
