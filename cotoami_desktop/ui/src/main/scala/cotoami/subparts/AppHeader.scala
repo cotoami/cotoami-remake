@@ -7,6 +7,7 @@ import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Node, UiState}
 import cotoami.repository.Root
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
+import cotoami.subparts.PaneStock
 
 object AppHeader {
 
@@ -70,7 +71,7 @@ object AppHeader {
         toolButton(
           classes = "geolocation",
           symbol = "location_on",
-          onClick = e => dispatch(AppMsg.DisplayGeolocationInFocus)
+          onClick = e => dispatch(PaneStock.Msg.DisplayGeolocationInFocus)
         )
       )
     )
@@ -161,9 +162,9 @@ object AppHeader {
         tip = Some(if (uiState.geomapOpened) "Close map" else "Open map"),
         onClick = (_ => {
           if (uiState.geomapOpened)
-            dispatch(AppMsg.CloseMap)
+            dispatch(PaneStock.Msg.CloseMap)
           else
-            dispatch(AppMsg.OpenGeomap)
+            dispatch(PaneStock.Msg.OpenGeomap)
         })
       ),
       toolButton(

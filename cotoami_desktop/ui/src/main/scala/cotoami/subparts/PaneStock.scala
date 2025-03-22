@@ -1,10 +1,15 @@
 package cotoami.subparts
 
+import scala.util.chaining._
+import com.softwaremill.quicklens._
+
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import fui.Cmd
 import cotoami.{Context, Into, Model, Msg => AppMsg}
-import cotoami.models.UiState
+import cotoami.models.{Geolocation, UiState}
+import cotoami.updates
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
@@ -14,6 +19,52 @@ import cotoami.components.{
 }
 
 object PaneStock {
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Update
+  /////////////////////////////////////////////////////////////////////////////
+
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.PaneStockMsg(this)
+  }
+
+  object Msg {
+    case object OpenGeomap extends Msg
+    case object CloseMap extends Msg
+    case class FocusGeolocation(location: Geolocation) extends Msg
+    case object DisplayGeolocationInFocus extends Msg
+  }
+
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+    msg match {
+      case Msg.OpenGeomap =>
+        updates.uiState(_.openGeomap, model)
+
+      case Msg.CloseMap =>
+        updates.uiState(_.closeMap, model)
+
+      case Msg.FocusGeolocation(location) =>
+        updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
+          (model.modify(_.geomap).using(_.focus(location)), cmds)
+        }
+
+      case Msg.DisplayGeolocationInFocus =>
+        model.repo.geolocationInFocus match {
+          case Some(location) =>
+            updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
+              (
+                model.modify(_.geomap).using(_.moveTo(location)),
+                cmds
+              )
+            }
+          case None => (model, Cmd.none)
+        }
+    }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // View
+  /////////////////////////////////////////////////////////////////////////////
+
   final val PaneName = "PaneStock"
 
   final val PaneMapName = "PaneMap"
@@ -67,7 +118,7 @@ object PaneStock {
       ),
       button(
         className := "default close-map",
-        onClick := (_ => dispatch(AppMsg.CloseMap))
+        onClick := (_ => dispatch(Msg.CloseMap))
       )(
         materialSymbol("arrow_drop_up")
       )

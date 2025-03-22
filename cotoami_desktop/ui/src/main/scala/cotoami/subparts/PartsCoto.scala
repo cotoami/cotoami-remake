@@ -341,7 +341,7 @@ object PartsCoto {
             if (focused)
               SectionGeomap.Msg.FocusLocation(None)
             else
-              AppMsg.FocusGeolocation(location)
+              PaneStock.Msg.FocusGeolocation(location)
           )
         })
       )(

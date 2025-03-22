@@ -328,29 +328,6 @@ object Main {
       case Msg.Promoted(Left(e)) =>
         (model.error("Couldn't fetch a cotonoma pair.", Some(e)), Cmd.none)
 
-      case Msg.OpenGeomap =>
-        updates.uiState(_.openGeomap, model)
-
-      case Msg.CloseMap =>
-        updates.uiState(_.closeMap, model)
-
-      case Msg.FocusGeolocation(location) =>
-        updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
-          (model.modify(_.geomap).using(_.focus(location)), cmds)
-        }
-
-      case Msg.DisplayGeolocationInFocus =>
-        model.repo.geolocationInFocus match {
-          case Some(location) =>
-            updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
-              (
-                model.modify(_.geomap).using(_.moveTo(location)),
-                cmds
-              )
-            }
-          case None => (model, Cmd.none)
-        }
-
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
       case Msg.NavCotonomasMsg(submsg) => {
@@ -362,6 +339,8 @@ object Main {
           cmds
         )
       }
+
+      case Msg.PaneStockMsg(submsg) => PaneStock.update(submsg, model)
 
       case Msg.PaneSearchMsg(submsg) => {
         val (search, repo, cmd) =

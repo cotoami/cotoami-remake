@@ -68,15 +68,10 @@ object Msg {
   case class CotoUpdated(result: Either[ErrorJson, CotoDetails]) extends Msg
   case class Promoted(result: Either[ErrorJson, (Cotonoma, Coto)]) extends Msg
 
-  // Map
-  case object OpenGeomap extends Msg
-  case object CloseMap extends Msg
-  case class FocusGeolocation(location: Geolocation) extends Msg
-  case object DisplayGeolocationInFocus extends Msg
-
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
+  case class PaneStockMsg(submsg: PaneStock.Msg) extends Msg
   case class PaneSearchMsg(submsg: PaneSearch.Msg) extends Msg
   case class FlowInputMsg(submsg: SectionFlowInput.Msg) extends Msg
   case class SectionTimelineMsg(submsg: SectionTimeline.Msg) extends Msg
