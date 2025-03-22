@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
 import cotoami.updates
@@ -17,6 +17,7 @@ import cotoami.components.{
   ScrollArea,
   SplitPane
 }
+import cotoami.subparts.SectionGeomap
 
 object PaneStock {
 
@@ -31,6 +32,7 @@ object PaneStock {
   object Msg {
     case object OpenGeomap extends Msg
     case object CloseMap extends Msg
+    case class SetMapOrientation(vertical: Boolean) extends Msg
     case class FocusGeolocation(location: Geolocation) extends Msg
     case object DisplayGeolocationInFocus extends Msg
   }
@@ -43,18 +45,27 @@ object PaneStock {
       case Msg.CloseMap =>
         updates.uiState(_.closeMap, model)
 
+      case Msg.SetMapOrientation(vertical) =>
+        updates.uiState(_.setMapOrientation(vertical), model).pipe {
+          case (model, cmd) =>
+            (
+              model,
+              Cmd.Batch(cmd, Browser.send(SectionGeomap.Msg.RecreateMap.into))
+            )
+        }
+
       case Msg.FocusGeolocation(location) =>
-        updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
-          (model.modify(_.geomap).using(_.focus(location)), cmds)
+        updates.uiState(_.openGeomap, model).pipe { case (model, cmd) =>
+          (model.modify(_.geomap).using(_.focus(location)), cmd)
         }
 
       case Msg.DisplayGeolocationInFocus =>
         model.repo.geolocationInFocus match {
           case Some(location) =>
-            updates.uiState(_.openGeomap, model).pipe { case (model, cmds) =>
+            updates.uiState(_.openGeomap, model).pipe { case (model, cmd) =>
               (
                 model.modify(_.geomap).using(_.moveTo(location)),
-                cmds
+                cmd
               )
             }
           case None => (model, Cmd.none)
