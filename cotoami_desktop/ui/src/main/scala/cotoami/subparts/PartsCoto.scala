@@ -19,6 +19,7 @@ import cotoami.components.{
   toolButton,
   Markdown
 }
+import cotoami.subparts.SectionGeomap
 
 object PartsCoto {
 
@@ -338,7 +339,7 @@ object PartsCoto {
           e.stopPropagation()
           dispatch(
             if (focused)
-              AppMsg.UnfocusGeolocation
+              SectionGeomap.Msg.FocusLocation(None)
             else
               AppMsg.FocusGeolocation(location)
           )

@@ -339,9 +339,6 @@ object Main {
           (model.modify(_.geomap).using(_.focus(location)), cmds)
         }
 
-      case Msg.UnfocusGeolocation =>
-        (model.modify(_.geomap).using(_.unfocus), Cmd.none)
-
       case Msg.DisplayGeolocationInFocus =>
         model.repo.geolocationInFocus match {
           case Some(location) =>
