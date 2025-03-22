@@ -389,43 +389,7 @@ import cotoami.libs.geomap.pmtiles
 
     def putMarker(markerDef: MarkerDef): Unit = {
       removeMarker(markerDef.id)
-
-      val lngLat = js.Tuple2.fromScalaTuple2(markerDef.lngLat)
-
-      val marker = new Marker(new MarkerOptions() {
-        override val element = markerDef.markerElement
-      }).setLngLat(lngLat).addTo(this)
-
-      marker.getElement().addEventListener(
-        "click",
-        (e: dom.MouseEvent) => {
-          e.stopPropagation()
-          onMarkerClick.foreach(_(markerDef.id))
-        }
-      )
-
-      markerDef.popupHtml match {
-        case Some(html) => {
-          val popup = new Popup(new PopupOptions() {
-            override val closeButton = false
-            override val closeOnClick = false
-          })
-          marker.getElement().addEventListener(
-            "mouseenter",
-            (e: dom.MouseEvent) => {
-              popup.setLngLat(lngLat).setHTML(html).addTo(this)
-            }
-          )
-          marker.getElement().addEventListener(
-            "mouseleave",
-            (e: dom.MouseEvent) => {
-              popup.remove()
-            }
-          )
-        }
-        case None => ()
-      }
-
+      val marker = markerDef.createMarker(this, onMarkerClick)
       markers.put(markerDef.id, marker)
     }
 
@@ -481,5 +445,45 @@ import cotoami.libs.geomap.pmtiles
       lngLat: (Double, Double),
       markerElement: dom.Element,
       popupHtml: Option[String]
-  )
+  ) {
+    def createMarker(
+        map: Map,
+        onClick: Option[String => Unit] = None
+    ): Marker = {
+      val jsLngLat = js.Tuple2.fromScalaTuple2(lngLat)
+
+      val marker = new Marker(new MarkerOptions() {
+        override val element = markerElement
+      }).setLngLat(jsLngLat).addTo(map)
+
+      marker.getElement().addEventListener(
+        "click",
+        (e: dom.MouseEvent) => {
+          e.stopPropagation()
+          onClick.foreach(_(id))
+        }
+      )
+
+      popupHtml.foreach { html =>
+        val popup = new Popup(new PopupOptions() {
+          override val closeButton = false
+          override val closeOnClick = false
+        })
+        marker.getElement().addEventListener(
+          "mouseenter",
+          (e: dom.MouseEvent) => {
+            popup.setLngLat(jsLngLat).setHTML(html).addTo(map)
+          }
+        )
+        marker.getElement().addEventListener(
+          "mouseleave",
+          (e: dom.MouseEvent) => {
+            popup.remove()
+          }
+        )
+      }
+
+      marker
+    }
+  }
 }
