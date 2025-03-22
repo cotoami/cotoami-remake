@@ -142,6 +142,7 @@ section.pins {
 
       div.content {
         flex: 1;
+        min-width: 0; // let this item shrink below the content size
       }
 
       div.itos {

@@ -84,6 +84,7 @@ section.traversals {
 
         div.content {
           flex: 1;
+          min-width: 0; // let this item shrink below the content size
 
           section.abbreviated-content {
             padding: 0 var(--block-spacing-horizontal);
