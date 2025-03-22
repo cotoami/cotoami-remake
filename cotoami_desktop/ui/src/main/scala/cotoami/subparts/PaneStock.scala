@@ -119,9 +119,10 @@ object PaneStock {
             "splitscreen_left",
         tip =
           if (uiState.mapVertical)
-            Some("Split to Top")
+            Some("Switch to Top Pane")
           else
-            Some("Split to Left")
+            Some("Switch to Left Pane"),
+        onClick = _ => dispatch(Msg.SetMapOrientation(!uiState.mapVertical))
       ),
       button(
         className := "default close-map",
