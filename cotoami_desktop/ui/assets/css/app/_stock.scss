@@ -38,13 +38,27 @@ section.stock {
   div.map {
     position: relative;
 
+    button.change-split-orientation {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      padding: 0 6px;
+
+      display: none;
+
+      span.material-symbols {
+        color: hsl(205, 20%, 32%);
+        font-size: 26px;
+      }
+    }
+
     div.close-map-button {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 30px;
       height: 26px;
-      color: var(--background-color);
+      color: hsl(205, 20%, 32%);
 
       button.close-map {
         opacity: .5;
@@ -56,6 +70,12 @@ section.stock {
         span.material-symbols {
           font-size: 24px;
         }
+      }
+    }
+
+    &:hover {
+      button.change-split-orientation {
+        display: block;
       }
     }
   }

@@ -8,6 +8,7 @@ import cotoami.models.UiState
 import cotoami.components.{
   materialSymbol,
   optionalClasses,
+  toolButton,
   ScrollArea,
   SplitPane
 }
@@ -51,6 +52,11 @@ object PaneStock {
       Option.when(uiState.geomapOpened) {
         SectionGeomap(model.geomap)(model, dispatch)
       },
+      toolButton(
+        classes = "change-split-orientation",
+        symbol = "splitscreen_left",
+        tip = Some("Split to Left")
+      ),
       div(className := "close-map-button")(
         button(
           className := "default close-map",
