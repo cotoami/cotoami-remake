@@ -21,6 +21,11 @@ import cotoami.subparts.SectionGeomap
 
 object PaneStock {
 
+  final val PaneName = "PaneStock"
+
+  final val PaneMapName = "PaneMap"
+  final val PaneMapDefaultSize = 400
+
   /////////////////////////////////////////////////////////////////////////////
   // Update
   /////////////////////////////////////////////////////////////////////////////
@@ -46,7 +51,11 @@ object PaneStock {
         updates.uiState(_.closeMap, model)
 
       case Msg.SetMapOrientation(vertical) =>
-        updates.uiState(_.setMapOrientation(vertical), model)
+        updates.uiState(
+          _.setMapOrientation(vertical)
+            .resizePane(PaneMapName, PaneMapDefaultSize),
+          model
+        )
 
       case Msg.FocusGeolocation(location) =>
         updates.uiState(_.openGeomap, model)
@@ -69,11 +78,6 @@ object PaneStock {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  final val PaneName = "PaneStock"
-
-  final val PaneMapName = "PaneMap"
-  final val PaneMapDefaultWidth = 400
-
   def apply(
       model: Model,
       uiState: UiState
@@ -84,7 +88,7 @@ object PaneStock {
           vertical = uiState.mapVertical,
           initialPrimarySize = uiState.paneSizes.getOrElse(
             PaneMapName,
-            PaneMapDefaultWidth
+            PaneMapDefaultSize
           ),
           onPrimarySizeChanged = Some((newSize) =>
             dispatch(AppMsg.ResizePane(PaneMapName, newSize))
@@ -95,7 +99,8 @@ object PaneStock {
           secondary = SplitPane.Secondary.Props()(
             sectionCotoGraph(model, uiState)(model, dispatch)
           )
-        )
+          // Re-create the component on orientation change
+        ).withKey(uiState.mapVertical.toString())
       else
         sectionCotoGraph(model, uiState)(model, dispatch)
     )
