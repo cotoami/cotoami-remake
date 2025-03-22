@@ -41,7 +41,7 @@ section.stock {
     button.change-split-orientation {
       position: absolute;
       top: 10px;
-      left: 15px;
+      left: 12px;
       padding: 0 6px;
 
       display: none;
@@ -52,24 +52,21 @@ section.stock {
       }
     }
 
-    div.close-map-button {
+    button.close-map {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 30px;
       height: 26px;
       color: hsl(205, 20%, 32%);
+      opacity: 0.6;
 
-      button.close-map {
-        opacity: .5;
+      &:hover {
+        opacity: 1;
+      }
 
-        &:hover {
-          opacity: 1;
-        }
-
-        span.material-symbols {
-          font-size: 24px;
-        }
+      span.material-symbols {
+        font-size: 24px;
       }
     }
 

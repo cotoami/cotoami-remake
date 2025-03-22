@@ -57,13 +57,11 @@ object PaneStock {
         symbol = "splitscreen_left",
         tip = Some("Split to Left")
       ),
-      div(className := "close-map-button")(
-        button(
-          className := "default close-map",
-          onClick := (_ => dispatch(AppMsg.CloseMap))
-        )(
-          materialSymbol("arrow_drop_up")
-        )
+      button(
+        className := "default close-map",
+        onClick := (_ => dispatch(AppMsg.CloseMap))
+      )(
+        materialSymbol("arrow_drop_up")
       )
     )
 
