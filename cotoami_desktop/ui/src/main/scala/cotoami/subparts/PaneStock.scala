@@ -47,9 +47,6 @@ object PaneStock {
 
       case Msg.SetMapOrientation(vertical) =>
         updates.uiState(_.setMapOrientation(vertical), model)
-          .pipe { case (model, cmd) =>
-            (model.modify(_.geomap).using(_.recreateMap), cmd)
-          }
 
       case Msg.FocusGeolocation(location) =>
         updates.uiState(_.openGeomap, model)
