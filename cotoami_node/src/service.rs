@@ -15,7 +15,7 @@
 
 use std::{borrow::Cow, future::Future, sync::Arc};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{ensure, Context, Result};
 use cotoami_db::prelude::*;
 use derive_new::new;
 use dyn_clone::DynClone;
@@ -176,9 +176,10 @@ impl Response {
     }
 
     pub fn json(self) -> Result<String> {
-        if !matches!(self.body_format, SerializeFormat::Json) {
-            bail!("Response body format is not JSON.");
-        }
+        ensure!(
+            matches!(self.body_format, SerializeFormat::Json),
+            "Response body format is not JSON."
+        );
 
         let bytes = self.body.map_err(BackendServiceError)?;
         std::str::from_utf8(bytes.as_ref())
