@@ -23,6 +23,7 @@ case class UiState(
     ),
     paneSizes: Map[String, Int] = Map(),
     pinsInColumns: HashSet[String] = HashSet.empty,
+    mapVertical: Boolean = false,
     geomapOpened: Boolean = false
 ) {
   def isDarkMode: Boolean = theme == UiState.DarkMode
@@ -52,6 +53,9 @@ case class UiState(
 
   def arePinsInColumns(cotonoma: Id[Cotonoma]): Boolean =
     pinsInColumns.contains(cotonoma.uuid)
+
+  def setMapOrientation(vertical: Boolean): UiState =
+    copy(mapVertical = vertical)
 
   def openGeomap: UiState =
     copy(geomapOpened = true).openOrClosePane(PaneStock.PaneName, true)

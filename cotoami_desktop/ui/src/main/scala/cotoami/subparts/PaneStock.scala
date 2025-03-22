@@ -26,7 +26,7 @@ object PaneStock {
     section(className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
-          vertical = false,
+          vertical = uiState.mapVertical,
           initialPrimarySize = uiState.paneSizes.getOrElse(
             PaneMapName,
             PaneMapDefaultWidth
@@ -54,8 +54,16 @@ object PaneStock {
       },
       toolButton(
         classes = "change-split-orientation",
-        symbol = "splitscreen_left",
-        tip = Some("Split to Left")
+        symbol =
+          if (uiState.mapVertical)
+            "splitscreen_top"
+          else
+            "splitscreen_left",
+        tip =
+          if (uiState.mapVertical)
+            Some("Split to Top")
+          else
+            Some("Split to Left")
       ),
       button(
         className := "default close-map",
