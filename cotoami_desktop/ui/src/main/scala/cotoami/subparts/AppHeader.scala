@@ -168,6 +168,11 @@ object AppHeader {
         })
       ),
       toolButton(
+        classes = "swap-pane",
+        symbol = "swap_horiz",
+        tip = Some("Swap Pane")
+      ),
+      toolButton(
         classes = "toggle-dark-mode",
         symbol = if (uiState.isDarkMode) "light_mode" else "dark_mode",
         tip = Some(if (uiState.isDarkMode) "Light mode" else "Dark mode"),
