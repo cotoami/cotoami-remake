@@ -22,6 +22,7 @@ case class UiState(
       PaneStock.PaneName -> false // fold PaneStock by default
     ),
     paneSizes: Map[String, Int] = Map(),
+    reverseMainSplitPane: Boolean = false,
     pinsInColumns: HashSet[String] = HashSet.empty,
     mapVertical: Boolean = false,
     geomapOpened: Boolean = false
