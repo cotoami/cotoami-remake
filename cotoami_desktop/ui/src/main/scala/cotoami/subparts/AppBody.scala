@@ -98,7 +98,7 @@ object AppBody {
     slinky.web.html.main(className := "fill")(
       SplitPane(
         vertical = true,
-        reverse = uiState.reverseMainSplitPane,
+        reverse = uiState.reverseMainPanes,
         initialPrimarySize = uiState.paneSizes.getOrElse(
           PaneFlow.PaneName,
           PaneFlow.DefaultWidth

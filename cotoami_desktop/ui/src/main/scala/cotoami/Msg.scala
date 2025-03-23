@@ -39,6 +39,7 @@ object Msg {
   case class SetTheme(theme: String) extends Msg
   case class OpenOrClosePane(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
+  case object SwapPane extends Msg
 
   // Focus
   case class FocusNode(id: Id[Node]) extends Msg

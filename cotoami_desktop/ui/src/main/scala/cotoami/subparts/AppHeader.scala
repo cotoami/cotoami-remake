@@ -170,7 +170,8 @@ object AppHeader {
       toolButton(
         classes = "swap-pane",
         symbol = "swap_horiz",
-        tip = Some("Swap Pane")
+        tip = Some("Swap Pane"),
+        onClick = _ => dispatch(AppMsg.SwapPane)
       ),
       toolButton(
         classes = "toggle-dark-mode",

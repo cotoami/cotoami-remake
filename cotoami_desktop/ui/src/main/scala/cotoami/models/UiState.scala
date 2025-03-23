@@ -22,7 +22,7 @@ case class UiState(
       PaneStock.PaneName -> false // fold PaneStock by default
     ),
     paneSizes: Map[String, Int] = Map(),
-    reverseMainSplitPane: Boolean = false,
+    reverseMainPanes: Boolean = false,
     pinsInColumns: HashSet[String] = HashSet.empty,
     mapVertical: Boolean = false,
     geomapOpened: Boolean = false
@@ -43,6 +43,8 @@ case class UiState(
 
   def resizePane(name: String, newSize: Int): UiState =
     copy(paneSizes = paneSizes + (name -> newSize))
+
+  def swapPane: UiState = copy(reverseMainPanes = !reverseMainPanes)
 
   def setPinsInColumns(cotonoma: Id[Cotonoma], inColumns: Boolean): UiState =
     this.modify(_.pinsInColumns).using(

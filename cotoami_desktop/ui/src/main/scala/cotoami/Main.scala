@@ -181,6 +181,8 @@ object Main {
       case Msg.ResizePane(name, newSize) =>
         updates.uiState(_.resizePane(name, newSize), model)
 
+      case Msg.SwapPane => updates.uiState(_.swapPane, model)
+
       case Msg.FocusNode(id) =>
         (model, Browser.pushUrl(Route.node.url(id)))
 
