@@ -159,7 +159,7 @@ object AppHeader {
           )
         ),
         symbol = "public",
-        tip = Some(if (uiState.geomapOpened) "Close map" else "Open map"),
+        tip = Some(if (uiState.geomapOpened) "Close Map" else "Open Map"),
         onClick = (_ => {
           if (uiState.geomapOpened)
             dispatch(PaneStock.Msg.CloseMap)
@@ -176,7 +176,7 @@ object AppHeader {
       toolButton(
         classes = "toggle-dark-mode",
         symbol = if (uiState.isDarkMode) "light_mode" else "dark_mode",
-        tip = Some(if (uiState.isDarkMode) "Light mode" else "Dark mode"),
+        tip = Some(if (uiState.isDarkMode) "Light Mode" else "Dark Mode"),
         onClick = (_ => {
           val theme =
             if (uiState.isDarkMode) UiState.LightMode
