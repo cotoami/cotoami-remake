@@ -116,6 +116,10 @@ div.app {
           }
         }
 
+        &.map-opened-vert>.pane-toggle {
+          color: var(--color);
+        }
+
         // make space for pane-toggle
         .maplibregl-ctrl-top-right {
           top: 8px;

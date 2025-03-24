@@ -141,7 +141,15 @@ object AppBody {
                 ("stock", true),
                 ("pane", true),
                 ("folded", !stockOpened),
-                ("map-opened", uiState.geomapOpened)
+                ("map-opened", uiState.geomapOpened),
+                (
+                  "map-opened-vert",
+                  uiState.geomapOpened && uiState.mapVertical
+                ),
+                (
+                  "map-opened-hor",
+                  uiState.geomapOpened && !uiState.mapVertical
+                )
               )
             )
           ),
