@@ -77,6 +77,15 @@ object ModalWelcome {
 
     def readyToOpen: Boolean =
       !processing && databaseFolderValidation.validated
+
+    def openDatabase: (Model, Cmd[AppMsg]) = openDatabaseIn(databaseFolder)
+
+    def openDatabaseIn(folder: String): (Model, Cmd[AppMsg]) =
+      (
+        copy(processing = true),
+        DatabaseInfo.openDatabase(folder)
+          .map(Msg.DatabaseOpened(_).into)
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -205,19 +214,9 @@ object ModalWelcome {
           Cmd.none
         )
 
-      case Msg.OpenDatabase =>
-        (
-          model.copy(processing = true),
-          DatabaseInfo.openDatabase(model.databaseFolder)
-            .map(Msg.DatabaseOpened(_).into)
-        )
+      case Msg.OpenDatabase => model.openDatabase
 
-      case Msg.OpenDatabaseIn(folder) =>
-        (
-          model.copy(processing = true),
-          DatabaseInfo.openDatabase(folder)
-            .map(Msg.DatabaseOpened(_).into)
-        )
+      case Msg.OpenDatabaseIn(folder) => model.openDatabaseIn(folder)
 
       case Msg.DatabaseOpened(Right(info)) => {
         (
