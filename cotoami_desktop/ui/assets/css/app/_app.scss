@@ -41,18 +41,48 @@ div.app {
         }
       }
     }
+  }
 
-    // flow and stock
-    main {
-      display: flex;
-      flex-direction: row;
+  // flow and stock
+  main {
+    display: flex;
+    flex-direction: row;
 
-      .split-pane {
-        width: 100%;
+    .split-pane {
+      width: 100%;
+    }
+
+    .flow.pane.occupying {
+      flex: 1 !important;
+    }
+
+    .stock.pane {
+      >.pane-toggle {
+        left: 0;
+        right: auto;
+
+        button {
+          left: -4px;
+          right: auto;
+        }
       }
 
-      .flow.pane.occupying {
-        flex: 1 !important;
+      &.map-opened>.pane-toggle {
+        color: var(--background-color);
+      }
+
+      // prevent the icon from overflowing to the right side of screen 
+      &.folded>.pane-toggle {
+        left: auto;
+        right: 0;
+
+        color: var(--color);
+
+        button {
+          left: auto;
+          right: 0;
+          overflow: hidden;
+        }
       }
     }
   }

@@ -1,33 +1,3 @@
-.stock.pane {
-  >.pane-toggle {
-    left: 0;
-    right: auto;
-
-    button {
-      left: -4px;
-      right: auto;
-    }
-  }
-
-  &.map-opened>.pane-toggle {
-    color: var(--background-color);
-  }
-
-  // prevent the icon from overflowing to the right side of screen 
-  &.folded>.pane-toggle {
-    left: auto;
-    right: 0;
-
-    color: var(--color);
-
-    button {
-      left: auto;
-      right: 0;
-      overflow: hidden;
-    }
-  }
-}
-
 section.stock {
   position: relative;
 
