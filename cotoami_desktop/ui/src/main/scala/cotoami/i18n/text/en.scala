@@ -36,7 +36,7 @@ object en extends Text {
   val ModalNewPassword_message =
     """
     Store this password in a safe place. 
-    You will need it to migrate this database to another computer
+    You will need it to migrate this database to another computer and open it
     (you can obtain a new password at any time via the node profile).
     """
 
