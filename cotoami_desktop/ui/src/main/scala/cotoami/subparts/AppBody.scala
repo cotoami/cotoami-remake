@@ -135,7 +135,6 @@ object AppBody {
                 ("stock", true),
                 ("pane", true),
                 ("folded", !stockOpened),
-                ("occupying", !flowOpened && stockOpened),
                 ("map-opened", uiState.geomapOpened)
               )
             )
