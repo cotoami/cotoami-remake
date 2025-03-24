@@ -13,7 +13,7 @@
   --pinned-background-color: #{rgba(pico.$grey-50, 0.5)};
   --parent-button-color: #{rgba(pico.$grey-50, 0.5)};
   --error-color: #{pico.$red-900};
-  --color-in-white-background: #{pico.$grey-700};
+  --color-in-light-background: #{pico.$grey-700};
   --embedded-cotobackground-color: #{rgba(pico.$grey-50, 0.5)};
 }
 
@@ -29,7 +29,7 @@
   --pinned-background-color: #{pico.$grey-900};
   --parent-button-color: #{mix(pico.$grey-900, pico.$grey-800, 75%)};
   --error-color: #{pico.$red-900};
-  --color-in-white-background: #{pico.$grey-700};
+  --color-in-light-background: #{pico.$grey-700};
   --embedded-cotobackground-color: #{pico.$grey-900};
 }
 
