@@ -22,6 +22,7 @@ pub struct DatabaseInfo {
     folder: String,
     local_node_id: Id<Node>,
     initial_dataset: InitialDataset, // could be from a remote node
+    new_owner_password: Option<String>,
 }
 
 impl DatabaseInfo {
@@ -29,11 +30,13 @@ impl DatabaseInfo {
         folder: String,
         node_state: &NodeState,
         operating_as: &OperatingAs,
+        new_owner_password: Option<String>,
     ) -> Result<Self, Error> {
         Ok(Self {
             folder,
             local_node_id: node_state.try_get_local_node_id()?,
             initial_dataset: initial_dataset(node_state, operating_as).await?,
+            new_owner_password,
         })
     }
 
@@ -112,8 +115,9 @@ pub async fn create_database(
     app_handle.debug("Creating a database...", Some(&folder));
 
     // Create a new config.
+    let new_owner_password = cotoami_db::generate_secret(None);
     let mut node_config = NodeConfig::new_standalone(Some(folder.clone()), Some(database_name));
-    node_config.owner_password = Some(cotoami_db::generate_secret(None));
+    node_config.owner_password = Some(new_owner_password.clone());
 
     // Create a node state with the config.
     let node_state = NodeState::new(node_config.clone()).await?;
@@ -128,7 +132,13 @@ pub async fn create_database(
     operating_as.operate_as_local(node_state.clone(), app_handle.clone())?;
 
     // DatabaseInfo
-    let db_info = DatabaseInfo::new(folder.clone(), &node_state, &operating_as).await?;
+    let db_info = DatabaseInfo::new(
+        folder.clone(),
+        &node_state,
+        &operating_as,
+        Some(new_owner_password),
+    )
+    .await?;
     app_handle.info("Database created.", Some(&folder));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
@@ -148,32 +158,33 @@ pub async fn open_database(
     validate_database_folder(&folder)?;
 
     // Load or create a config.
-    let node_config = if let Some((node, require_password)) = Database::try_read_node_info(&folder)?
-    {
-        let mut configs = Configs::load(&app_handle);
-        let config = if let Some(config) = configs.get_mut(&node.uuid) {
-            app_handle.debug("Found an existing config.", Some(&node.name));
-            config.db_dir = Some(folder.clone());
-            // sync just to avoid confusion, though `node_name` has an effect only in database creation.
-            config.node_name = Some(node.name);
-            config.clone()
-        } else {
-            let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
-            if require_password {
-                unimplemented!("Need to display a modal to input a password here.");
+    let (node_config, new_owner_password) =
+        if let Some((node, require_password)) = Database::try_read_node_info(&folder)? {
+            let mut new_owner_password = None;
+            let mut configs = Configs::load(&app_handle);
+            let config = if let Some(config) = configs.get_mut(&node.uuid) {
+                app_handle.debug("Found an existing config.", Some(&node.name));
+                config.db_dir = Some(folder.clone());
+                // sync just to avoid confusion, though `node_name` has an effect only in database creation.
+                config.node_name = Some(node.name);
+                config.clone()
             } else {
-                config.owner_password = Some(cotoami_db::generate_secret(None));
-                app_handle.debug("The owner password is going to be initialized.", None);
-            }
-            configs.insert(node.uuid, config.clone());
-            config
+                let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
+                if require_password {
+                    unimplemented!("Need to display a modal to input a password here.");
+                } else {
+                    new_owner_password = Some(cotoami_db::generate_secret(None));
+                    config.owner_password = new_owner_password.clone();
+                }
+                configs.insert(node.uuid, config.clone());
+                config
+            };
+            configs.save(&app_handle);
+            (config, new_owner_password)
+        } else {
+            // Since the database folder has been vailidated:
+            unreachable!();
         };
-        configs.save(&app_handle);
-        config
-    } else {
-        // Since the database folder has been vailidated:
-        unreachable!();
-    };
 
     // Reuse an existing state or create a new one.
     // TODO: Support opening another database.
@@ -208,6 +219,7 @@ pub async fn open_database(
         folder.clone(),
         &node_state,
         &app_handle.state::<OperatingAs>(),
+        new_owner_password,
     )
     .await?;
     app_handle.info("Database opened.", Some(&folder));
