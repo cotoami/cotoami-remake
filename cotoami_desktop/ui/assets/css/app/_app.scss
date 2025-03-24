@@ -50,38 +50,76 @@ div.app {
 
     .split-pane {
       width: 100%;
-    }
 
-    .flow.pane.occupying {
-      flex: 1 !important;
-    }
+      .flow.pane.occupying {
+        flex: 1 !important;
+      }
 
-    .stock.pane {
-      >.pane-toggle {
-        left: 0;
-        right: auto;
-
-        button {
-          left: -4px;
+      .stock.pane {
+        >.pane-toggle {
+          left: 0;
           right: auto;
+
+          button {
+            left: -4px;
+            right: auto;
+          }
+        }
+
+        &.map-opened>.pane-toggle {
+          color: var(--background-color);
+        }
+
+        // prevent the icon from overflowing to the right side of screen 
+        &.folded>.pane-toggle {
+          left: auto;
+          right: 0;
+
+          color: var(--color);
+
+          button {
+            left: auto;
+            right: 0;
+            overflow: hidden;
+          }
+        }
+      }
+    }
+
+    .split-pane.reverse {
+      .flow.pane {
+        >.pane-toggle {
+          left: 0;
+          right: auto;
+
+          button {
+            left: -4px;
+            right: auto;
+          }
+        }
+
+        // make space for pane-toggle
+        section.flow-input>header {
+          padding-left: 12px;
         }
       }
 
-      &.map-opened>.pane-toggle {
-        color: var(--background-color);
-      }
-
-      // prevent the icon from overflowing to the right side of screen 
-      &.folded>.pane-toggle {
-        left: auto;
-        right: 0;
-
-        color: var(--color);
-
-        button {
-          left: auto;
+      .stock.pane {
+        >.pane-toggle {
           right: 0;
-          overflow: hidden;
+          left: auto;
+
+          button {
+            top: -6px;
+            right: -1px;
+            left: auto;
+          }
+        }
+
+        // make space for pane-toggle
+        .maplibregl-ctrl-top-right {
+          top: 8px;
+          right: 8px;
         }
       }
     }

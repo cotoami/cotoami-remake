@@ -124,7 +124,13 @@ object AppBody {
           }
         )(
           Option.when(stockOpened) {
-            paneToggle(PaneFlow.PaneName)
+            paneToggle(
+              PaneFlow.PaneName,
+              if (uiState.reverseMainPanes)
+                ToRight
+              else
+                ToLeft
+            )
           },
           PaneFlow(model, uiState)
         ),
@@ -144,7 +150,13 @@ object AppBody {
           }
         )(
           Option.when(flowOpened) {
-            paneToggle(PaneStock.PaneName, ToRight)
+            paneToggle(
+              PaneStock.PaneName,
+              if (uiState.reverseMainPanes)
+                ToLeft
+              else
+                ToRight
+            )
           },
           PaneStock(model, uiState)
         )
