@@ -302,9 +302,11 @@ import cotoami.libs.geomap.pmtiles
     // refreshMarkers
     useEffect(
       () => {
-        mapRef.current.foreach { map =>
-          map.refreshMarkers(props.markerDefs.values)
-          map.focusOrUnfocusMarker(props.focusedMarkerId)
+        if (props.refreshMarkers > 0) { // prevent being executed during init
+          mapRef.current.foreach { map =>
+            map.refreshMarkers(props.markerDefs.values)
+            map.focusOrUnfocusMarker(props.focusedMarkerId)
+          }
         }
       },
       Seq(props.refreshMarkers)
