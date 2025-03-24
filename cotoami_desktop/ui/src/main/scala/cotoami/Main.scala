@@ -145,7 +145,10 @@ object Main {
               model,
               Cmd.Batch(
                 DatabaseFolder.save(info.folder),
-                connectToServers()
+                connectToServers(),
+                info.newOwnerPassword
+                  .map(password => Modal.open(Modal.NewPassword(password)))
+                  .getOrElse(Cmd.none)
               ) ++ cmd
             )
           }

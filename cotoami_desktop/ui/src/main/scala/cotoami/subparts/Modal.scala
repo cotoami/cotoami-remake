@@ -64,6 +64,12 @@ object Modal {
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Modal
 
+  case class NewPassword(model: ModalNewPassword.Model) extends Modal
+  object NewPassword {
+    def apply(password: String): NewPassword =
+      NewPassword(ModalNewPassword.Model(password))
+  }
+
   case class EditCoto(model: ModalEditCoto.Model) extends Modal
   object EditCoto {
     def apply(coto: Coto): (EditCoto, Cmd[AppMsg]) = {
@@ -392,6 +398,8 @@ object Modal {
         model.systemInfo.map(info =>
           ModalWelcome(modal, info.recent_databases.toSeq)
         )
+
+      case NewPassword(modal) => Some(ModalNewPassword(modal))
 
       case EditCoto(modal) => Some(ModalEditCoto(modal))
 

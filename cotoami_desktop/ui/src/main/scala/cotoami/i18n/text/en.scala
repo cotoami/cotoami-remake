@@ -32,6 +32,14 @@ object en extends Text {
     )
   val ConfirmDeleteCotonoma = "Are you sure you want to delete the cotonoma?"
 
+  val ModalNewPassword_title = "New Owner Password"
+  val ModalNewPassword_message =
+    """
+    Store this password in a safe place. 
+    You will need it to migrate this database to another computer
+    (you can obtain a new password at any time via the node profile).
+    """
+
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """
     You can incorporate another database node into your database.
