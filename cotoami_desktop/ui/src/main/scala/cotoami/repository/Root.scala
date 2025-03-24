@@ -281,6 +281,19 @@ case class Root(
       .modify(_.cotonomas).using(_.setCotonomaDetails(details))
       .modify(_.cotos).using(_.put(details.coto))
 
+  def importFrom(details: NodeDetails): Root =
+    this
+      .modify(_.nodes).using(_.put(details.node))
+      .pipe { model =>
+        details.root
+          .map { case (cotonoma, coto) =>
+            model
+              .modify(_.cotonomas).using(_.put(cotonoma))
+              .modify(_.cotos).using(_.put(coto))
+          }
+          .getOrElse(model)
+      }
+
   def importFrom(details: CotoDetails): Root =
     this
       .modify(_.cotos).using(_.put(details.coto))
@@ -421,18 +434,7 @@ object Root {
   def update(msg: Msg, model: Root): (Root, Cmd[AppMsg]) =
     msg match {
       case Msg.NodeDetailsFetched(Right(details)) =>
-        (
-          model.modify(_.nodes).using(_.put(details.node)).pipe { model =>
-            details.root match {
-              case Some((cotonoma, coto)) =>
-                model
-                  .modify(_.cotonomas).using(_.put(cotonoma))
-                  .modify(_.cotos).using(_.put(coto))
-              case None => model
-            }
-          },
-          Cmd.none
-        )
+        (model.importFrom(details), Cmd.none)
 
       case Msg.NodeDetailsFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch node details.", e))

@@ -17,7 +17,8 @@ import cotoami.backend.{
   CotonomaBackend,
   CotonomaJson,
   ItoBackend,
-  NodeBackend
+  NodeBackend,
+  NodeDetails
 }
 import cotoami.subparts.SectionPins
 
@@ -166,13 +167,7 @@ object Changelog {
 
     // RenameNode
     for (json <- change.RenameNode.toOption) {
-      val nodeId: Id[Node] = Id(json.node_id)
-      return (
-        model
-          .modify(_.repo.nodes).using(_.rename(nodeId, json.name))
-          .modify(_.geomap).using(_.refreshMarkers),
-        Root.fetchNodeDetails(nodeId)
-      )
+      return (model, updateNode(Id(json.node_id)))
     }
 
     // SetNodeIcon
@@ -264,9 +259,12 @@ object Changelog {
         Cmd.none
     )
 
+  private def updateNode(id: Id[Node]): Cmd.One[Msg] =
+    NodeDetails.fetch(id).map(Msg.NodeUpdated(_))
+
   private def updateCoto(id: Id[Coto]): Cmd.One[Msg] =
-    CotoDetails.fetch(id).map(Msg.CotoUpdated(_).into)
+    CotoDetails.fetch(id).map(Msg.CotoUpdated(_))
 
   private def promote(id: Id[Coto]): Cmd.One[Msg] =
-    CotonomaBackend.fetchByCotoId(id).map(Msg.Promoted(_).into)
+    CotonomaBackend.fetchByCotoId(id).map(Msg.Promoted(_))
 }

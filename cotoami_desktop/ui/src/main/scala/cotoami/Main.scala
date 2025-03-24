@@ -307,6 +307,22 @@ object Main {
         (model.copy(repo = repo), cmds)
       }
 
+      case Msg.NodeUpdated(Right(details)) =>
+        (
+          model
+            .modify(_.repo).using(_.importFrom(details))
+            .modify(_.geomap).using { geomap =>
+              details.root
+                .map(_._2)
+                .map(coto => geomap.updateMarker(coto.id.uuid))
+                .getOrElse(geomap)
+            },
+          Cmd.none
+        )
+
+      case Msg.NodeUpdated(Left(e)) =>
+        (model.error("Couldn't fetch node details.", Some(e)), Cmd.none)
+
       case Msg.CotoUpdated(Right(details)) =>
         (
           model
