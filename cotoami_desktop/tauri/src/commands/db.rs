@@ -155,52 +155,49 @@ pub async fn open_database(
     database_folder: String,
     owner_password: Option<String>,
 ) -> Result<DatabaseInfo, Error> {
+    // Read node infro from the given folder.
     let folder = normalize_path(&database_folder)?;
     validate_database_folder(&folder)?;
+    let Some((node, require_password)) = Database::try_read_node_info(&folder)? else {
+        unreachable!(); // Since the database folder has been vailidated.
+    };
 
     // Load or create a config.
-    let (node_config, new_owner_password) =
-        if let Some((node, require_password)) = Database::try_read_node_info(&folder)? {
-            let mut new_owner_password = None;
-            let mut configs = Configs::load(&app_handle);
+    let mut new_owner_password = None;
+    let mut configs = Configs::load(&app_handle);
 
-            let config = if let Some(config) = configs.get_mut(&node.uuid) {
-                config.db_dir = Some(folder.clone());
+    let node_config = if let Some(config) = configs.get_mut(&node.uuid) {
+        config.db_dir = Some(folder.clone());
 
-                // Although the config `node_name` has an effect only in database creation,
-                // update it to the actual name to avoid confusion.
-                config.node_name = Some(node.name);
+        // Although the config `node_name` has an effect only in database creation,
+        // update it to the actual name to avoid confusion.
+        config.node_name = Some(node.name);
 
-                // Override the owner password with the given one
-                if let Some(password) = owner_password {
-                    config.owner_password = Some(password);
-                }
+        // Override the owner password with the given one
+        if let Some(password) = owner_password {
+            config.owner_password = Some(password);
+        }
 
-                config.clone()
+        config.clone()
+    } else {
+        let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
+        if require_password {
+            if let Some(password) = owner_password {
+                config.owner_password = Some(password);
             } else {
-                let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
-                if require_password {
-                    if let Some(password) = owner_password {
-                        config.owner_password = Some(password);
-                    } else {
-                        // Missing password
-                        return Err(Error::invalid_owner_password());
-                    }
-                } else {
-                    // Configure the owner password
-                    new_owner_password = Some(cotoami_db::generate_secret(None));
-                    config.owner_password = new_owner_password.clone();
-                }
-                configs.insert(node.uuid, config.clone());
-                config
-            };
-
-            configs.save(&app_handle);
-            (config, new_owner_password)
+                // Missing password
+                return Err(Error::invalid_owner_password());
+            }
         } else {
-            // Since the database folder has been vailidated:
-            unreachable!();
-        };
+            // Configure the owner password
+            new_owner_password = Some(cotoami_db::generate_secret(None));
+            config.owner_password = new_owner_password.clone();
+        }
+        configs.insert(node.uuid, config.clone());
+        config
+    };
+
+    configs.save(&app_handle);
 
     // Reuse an existing state (on reloading) or create a new one.
     // TODO: Support opening another database. Currently, it will reuse an existing
