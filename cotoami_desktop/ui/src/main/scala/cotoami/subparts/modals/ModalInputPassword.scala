@@ -41,7 +41,7 @@ object ModalInputPassword {
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.InputPassword]
     Modal.view(
-      dialogClasses = "confirm",
+      dialogClasses = "input-password",
       closeButton = Some((modalType, dispatch))
     )(
       Fragment(

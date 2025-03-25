@@ -46,6 +46,11 @@ dialog {
       >.error {
         margin-bottom: var(--spacing);
       }
+
+      section.message {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
     }
 
     .labeled-field {

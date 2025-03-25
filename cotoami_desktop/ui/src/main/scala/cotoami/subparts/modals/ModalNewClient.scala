@@ -159,7 +159,7 @@ object ModalNewClient {
       "New Client"
     )(
       Option.when(model.registered) {
-        section(className := "message")(
+        section(className := "notice")(
           materialSymbol("check_circle", "completed"),
           "The child node below has been registered."
         )
