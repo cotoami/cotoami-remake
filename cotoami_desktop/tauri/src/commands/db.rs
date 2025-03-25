@@ -163,15 +163,15 @@ pub async fn open_database(
             let mut new_owner_password = None;
             let mut configs = Configs::load(&app_handle);
             let config = if let Some(config) = configs.get_mut(&node.uuid) {
-                app_handle.debug("Found an existing config.", Some(&node.name));
                 config.db_dir = Some(folder.clone());
-                // sync just to avoid confusion, though `node_name` has an effect only in database creation.
+                // Although the config `node_name` has an effect only in database creation,
+                // update it to the actual name to avoid confusion.
                 config.node_name = Some(node.name);
                 config.clone()
             } else {
                 let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
                 if require_password {
-                    unimplemented!("Need to display a modal to input a password here.");
+                    return Err(Error::invalid_owner_password());
                 } else {
                     new_owner_password = Some(cotoami_db::generate_secret(None));
                     config.owner_password = new_owner_password.clone();
@@ -186,7 +186,7 @@ pub async fn open_database(
             unreachable!();
         };
 
-    // Reuse an existing state or create a new one.
+    // Reuse an existing state (on reloading) or create a new one.
     // TODO: Support opening another database.
     //       Currently, it will reuse an existing state whatever database it belongs.
     let node_state = match app_handle.try_state::<NodeState>() {

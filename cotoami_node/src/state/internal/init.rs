@@ -30,7 +30,7 @@ impl NodeState {
         spawn_blocking(move || {
             let ds = db.new_session()?;
 
-            // Handle the existing local node or creating one.
+            // Handle the existing node or create a new one.
             let local_node = if let Some(local_node) = db.globals().local_node() {
                 let owner = local_node.as_principal();
                 if owner.has_password() {
@@ -40,9 +40,8 @@ impl NodeState {
                         .authenticate(config.owner_password.as_deref())
                         .context("Owner authentication has been failed.")?;
                 } else {
-                    // Set the owner password if:
-                    //   1) the current password is `None`.
-                    //   2) `NodeConfig::owner_password` has `Some` value.
+                    // Initialize the owner password if `NodeConfig::owner_password`
+                    // has `Some` value.
                     if let Some(ref new_password) = config.owner_password {
                         ds.set_owner_password_if_none(new_password)?;
                         debug!("The owner password has been initialized.");

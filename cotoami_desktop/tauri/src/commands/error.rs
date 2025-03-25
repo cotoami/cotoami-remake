@@ -19,6 +19,10 @@ impl Error {
         }
     }
 
+    pub fn invalid_owner_password() -> Self {
+        Error::new("invalid-owner-password", "Invalid owner password.")
+    }
+
     // TODO: write thorough conversion
     fn from_service_error(e: ServiceError) -> Self {
         match e {
