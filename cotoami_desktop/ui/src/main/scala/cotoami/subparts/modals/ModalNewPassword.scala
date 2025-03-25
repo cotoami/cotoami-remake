@@ -4,7 +4,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.subparts.Modal
+import cotoami.subparts.{Modal, PartsNode}
 
 object ModalNewPassword {
 
@@ -25,6 +25,9 @@ object ModalNewPassword {
         context.i18n.text.ModalNewPassword_title
       )
     )(
+      section(className := "operating-node")(
+        context.repo.nodes.operating.map(PartsNode.spanNode)
+      ),
       section(className := "password")(
         input(
           `type` := "text",
