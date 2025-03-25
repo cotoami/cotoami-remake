@@ -183,13 +183,14 @@ pub async fn open_database(
         let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
         if require_password {
             if let Some(password) = owner_password {
+                // Set the given password to authenticate
                 config.owner_password = Some(password);
             } else {
                 // Missing password
                 return Err(Error::invalid_owner_password());
             }
         } else {
-            // Configure the owner password
+            // Configure a new owner password
             new_owner_password = Some(cotoami_db::generate_secret(None));
             config.owner_password = new_owner_password.clone();
         }
