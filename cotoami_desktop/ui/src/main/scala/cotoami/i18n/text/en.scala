@@ -41,7 +41,7 @@ object en extends Text {
     """
     Store this password in a safe place. 
     You will need it to open this database on another computer.
-    (you can obtain a new password at any time via the node profile).
+    (you can obtain a new password via the node profile at any time).
     """
 
   lazy val ModalIncorporate_intro: ReactElement = p()(
