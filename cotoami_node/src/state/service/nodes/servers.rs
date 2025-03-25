@@ -75,18 +75,24 @@ impl NodeState {
 
     pub async fn add_server(
         &self,
-        input: LogIntoServer,
+        mut input: LogIntoServer,
         operator: Arc<Operator>,
     ) -> Result<Server, ServiceError> {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
 
-        // Clone the password before moving the `input` to `log_into_server`
-        let password = input.password.clone();
+        // Generate a new password to make the initial one expire
+        // for a non-anonymous client
+        let password = if input.password.is_some() {
+            debug!("Generating a new password...");
+            input.new_password = Some(cotoami_db::generate_secret(None));
+            input.new_password.clone()
+        } else {
+            None
+        };
 
         // Log into the server to create a session
-        // TODO: change the password on adding the node
         let (client_session, http_client) = self.log_into_server(input).await?;
         let server_id = client_session.server.uuid;
 
