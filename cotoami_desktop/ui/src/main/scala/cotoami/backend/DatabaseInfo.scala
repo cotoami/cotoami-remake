@@ -25,9 +25,11 @@ object DatabaseInfo {
       .map(_.map(DatabaseInfo(_)))
 
   def openDatabase(
-      folder: String
+      folder: String,
+      ownerPassword: Option[String] = None
   ): Cmd.One[Either[ErrorJson, DatabaseInfo]] =
-    DatabaseInfoJson.openDatabase(folder).map(_.map(DatabaseInfo(_)))
+    DatabaseInfoJson.openDatabase(folder, ownerPassword)
+      .map(_.map(DatabaseInfo(_)))
 }
 
 @js.native
@@ -56,14 +58,16 @@ object DatabaseInfoJson {
       )
 
   def openDatabase(
-      folder: String
+      folder: String,
+      ownerPassword: Option[String] = None
   ): Cmd.One[Either[ErrorJson, DatabaseInfoJson]] =
     tauri
       .invokeCommand(
         "open_database",
         js.Dynamic
           .literal(
-            databaseFolder = folder
+            databaseFolder = folder,
+            ownerPassword = ownerPassword.getOrElse(null)
           )
       )
 }
