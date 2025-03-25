@@ -71,4 +71,11 @@ object en extends Text {
 
   val ModalClients_title = "Client Nodes"
   val ModalClients_add = "Add Client"
+
+  val ModalNewClient_title = "New Client"
+  val ModalNewClient_registered =
+    """
+    The child node below has been registered.
+    Send the generated password to the node's owner in a secure way.
+    """
 }

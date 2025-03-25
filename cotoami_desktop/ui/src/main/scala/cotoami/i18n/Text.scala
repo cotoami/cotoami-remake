@@ -41,6 +41,9 @@ trait Text {
 
   val ModalClients_title: String
   val ModalClients_add: String
+
+  val ModalNewClient_title: String
+  val ModalNewClient_registered: String
 }
 
 object Text {

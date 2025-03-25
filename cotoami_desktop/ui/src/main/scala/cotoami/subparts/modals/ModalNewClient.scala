@@ -149,6 +149,7 @@ object ModalNewClient {
   /////////////////////////////////////////////////////////////////////////////
 
   def apply(model: Model)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Modal.view(
@@ -156,12 +157,12 @@ object ModalNewClient {
       closeButton = Some((classOf[Modal.NewClient], dispatch)),
       error = model.error
     )(
-      "New Client"
+      context.i18n.text.ModalNewClient_title
     )(
       Option.when(model.registered) {
         section(className := "notice")(
           materialSymbol("check_circle", "completed"),
-          "The child node below has been registered."
+          context.i18n.text.ModalNewClient_registered
         )
       },
       form()(
