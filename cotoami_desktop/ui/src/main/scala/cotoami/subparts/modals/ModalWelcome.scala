@@ -27,6 +27,7 @@ object ModalWelcome {
       folderName: String = "",
       folderNameValidation: Validation.Result =
         Validation.Result.notYetValidated,
+      newDatabaseFolder: Option[String] = None,
 
       // Open an existing database
       databaseFolder: String = "",
@@ -80,11 +81,14 @@ object ModalWelcome {
 
     def openDatabase: (Model, Cmd[AppMsg]) = openDatabaseIn(databaseFolder)
 
-    def openDatabaseIn(folder: String): (Model, Cmd[AppMsg]) =
+    def openDatabaseIn(
+        folder: String,
+        ownerPassword: Option[String] = None
+    ): (Model, Cmd[AppMsg]) =
       (
         copy(processing = true),
-        DatabaseInfo.openDatabase(folder)
-          .map(Msg.DatabaseOpened(_).into)
+        DatabaseInfo.openDatabase(folder, ownerPassword)
+          .map(Msg.DatabaseOpened(folder, _).into)
       )
   }
 
@@ -103,7 +107,8 @@ object ModalWelcome {
     case class BaseFolderSelected(result: Either[Throwable, Option[String]])
         extends Msg
     case class FolderNameInput(query: String) extends Msg
-    case class NewFolderValidation(result: Either[ErrorJson, Null]) extends Msg
+    case class NewFolderValidation(result: Either[ErrorJson, String])
+        extends Msg
     case object CreateDatabase extends Msg
 
     // Open an existing database
@@ -113,9 +118,12 @@ object ModalWelcome {
     case class DatabaseFolderValidation(result: Either[ErrorJson, Null])
         extends Msg
     case object OpenDatabase extends Msg
-    case class OpenDatabaseIn(folder: String) extends Msg
-    case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo])
+    case class OpenDatabaseIn(folder: String, password: Option[String] = None)
         extends Msg
+    case class DatabaseOpened(
+        folder: String,
+        result: Either[ErrorJson, DatabaseInfo]
+    ) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -154,16 +162,21 @@ object ModalWelcome {
           folderNameValidation = Validation.Result.notYetValidated
         ).pipe(model => (model, model.validateNewFolder))
 
-      case Msg.NewFolderValidation(Right(_)) =>
+      case Msg.NewFolderValidation(Right(folder)) =>
         (
-          model.copy(folderNameValidation = Validation.Result.validated),
+          model.copy(
+            folderNameValidation = Validation.Result.validated,
+            newDatabaseFolder = Some(folder)
+          ),
           Cmd.none
         )
 
       case Msg.NewFolderValidation(Left(error)) =>
         (
-          model.copy(folderNameValidation =
-            Validation.Result(Seq(ErrorJson.toValidationError(error)))
+          model.copy(
+            folderNameValidation =
+              Validation.Result(Seq(ErrorJson.toValidationError(error))),
+            newDatabaseFolder = None
           ),
           Cmd.none
         )
@@ -175,7 +188,9 @@ object ModalWelcome {
             model.databaseName,
             model.baseFolder,
             model.folderName
-          ).map(Msg.DatabaseOpened(_).into)
+          ).map(
+            Msg.DatabaseOpened(model.newDatabaseFolder.getOrElse(""), _).into
+          )
         )
 
       case Msg.SelectDatabaseFolder =>
@@ -218,9 +233,10 @@ object ModalWelcome {
 
       case Msg.OpenDatabase => model.openDatabase
 
-      case Msg.OpenDatabaseIn(folder) => model.openDatabaseIn(folder)
+      case Msg.OpenDatabaseIn(folder, password) =>
+        model.openDatabaseIn(folder, password)
 
-      case Msg.DatabaseOpened(Right(info)) => {
+      case Msg.DatabaseOpened(folder, Right(info)) => {
         (
           model,
           Cmd.Batch(
@@ -230,13 +246,14 @@ object ModalWelcome {
         )
       }
 
-      case Msg.DatabaseOpened(Left(e)) =>
+      case Msg.DatabaseOpened(folder, Left(e)) =>
         model.copy(processing = false).pipe { model =>
           if (e.code == "invalid-owner-password")
             (
               model,
               Modal.open(
                 Modal.InputPassword(
+                  password => Msg.OpenDatabaseIn(folder, Some(password)).into,
                   context.i18n.text.ModalInputOwnerPassword_title,
                   Some(context.i18n.text.ModalInputOwnerPassword_message)
                 )

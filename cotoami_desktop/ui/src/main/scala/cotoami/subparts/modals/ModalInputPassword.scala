@@ -16,6 +16,7 @@ object ModalInputPassword {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      msgOnSubmit: String => AppMsg,
       title: String,
       message: Option[String] = None,
       passwordInput: String = ""

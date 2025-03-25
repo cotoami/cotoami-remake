@@ -64,7 +64,10 @@ pub(crate) async fn initial_dataset(
 }
 
 #[tauri::command]
-pub fn validate_new_database_folder(base_folder: String, folder_name: String) -> Result<(), Error> {
+pub fn validate_new_database_folder(
+    base_folder: String,
+    folder_name: String,
+) -> Result<String, Error> {
     let mut path = PathBuf::from(base_folder);
     if !path.is_dir() {
         return Err(Error::new(
@@ -78,7 +81,7 @@ pub fn validate_new_database_folder(base_folder: String, folder_name: String) ->
             "folder-already-exists",
             "The folder already exists.",
         )),
-        Ok(false) => Ok(()),
+        Ok(false) => Ok(path.to_string_lossy().to_string()),
         Err(e) => Err(Error::new("file-system-error", e.to_string())),
     }
 }
