@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import fui._
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.libs.tauri
 import cotoami.utils.Validation
 import cotoami.models.Node
@@ -118,7 +118,9 @@ object ModalWelcome {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.DatabaseNameInput(value) =>
         (model.copy(databaseName = value), Cmd.none)
@@ -233,7 +235,12 @@ object ModalWelcome {
           if (e.code == "invalid-owner-password")
             (
               model,
-              Modal.open(Modal.InputPassword())
+              Modal.open(
+                Modal.InputPassword(
+                  context.i18n.text.ModalInputOwnerPassword_title,
+                  Some(context.i18n.text.ModalInputOwnerPassword_message)
+                )
+              )
             )
           else
             (

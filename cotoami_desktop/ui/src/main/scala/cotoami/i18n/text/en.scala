@@ -32,6 +32,10 @@ object en extends Text {
     )
   val ConfirmDeleteCotonoma = "Are you sure you want to delete the cotonoma?"
 
+  val ModalInputOwnerPassword_title = "Input Owner Password"
+  val ModalInputOwnerPassword_message =
+    "You need to input the owner password to open this database."
+
   val ModalNewPassword_title = "New Owner Password"
   val ModalNewPassword_message =
     """

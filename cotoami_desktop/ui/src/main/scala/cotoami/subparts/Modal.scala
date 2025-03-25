@@ -64,9 +64,11 @@ object Modal {
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Modal
 
-  case class InputPassword(
-      model: ModalInputPassword.Model = ModalInputPassword.Model()
-  ) extends Modal
+  case class InputPassword(model: ModalInputPassword.Model) extends Modal
+  object InputPassword {
+    def apply(title: String, message: Option[String] = None): InputPassword =
+      InputPassword(ModalInputPassword.Model(title, message))
+  }
 
   case class NewPassword(model: ModalNewPassword.Model) extends Modal
   object NewPassword {

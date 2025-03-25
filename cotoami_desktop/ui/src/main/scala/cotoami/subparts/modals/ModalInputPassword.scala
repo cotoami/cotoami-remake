@@ -16,6 +16,8 @@ object ModalInputPassword {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      title: String,
+      message: Option[String] = None,
       passwordInput: String = ""
   )
 
@@ -44,9 +46,10 @@ object ModalInputPassword {
     )(
       Fragment(
         Modal.spanTitleIcon("key"),
-        "Input Owner Password"
+        model.title
       )
     )(
+      model.message.map(section(className := "message")(_)),
       section(className := "input-password")(
         input(
           `type` := "password",
