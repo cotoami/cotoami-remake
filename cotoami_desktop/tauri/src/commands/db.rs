@@ -153,6 +153,7 @@ pub async fn create_database(
 pub async fn open_database(
     app_handle: tauri::AppHandle,
     database_folder: String,
+    owner_password: Option<String>,
 ) -> Result<DatabaseInfo, Error> {
     let folder = normalize_path(&database_folder)?;
     validate_database_folder(&folder)?;
@@ -162,24 +163,38 @@ pub async fn open_database(
         if let Some((node, require_password)) = Database::try_read_node_info(&folder)? {
             let mut new_owner_password = None;
             let mut configs = Configs::load(&app_handle);
+
             let config = if let Some(config) = configs.get_mut(&node.uuid) {
                 config.db_dir = Some(folder.clone());
+
                 // Although the config `node_name` has an effect only in database creation,
                 // update it to the actual name to avoid confusion.
                 config.node_name = Some(node.name);
+
+                // Override the owner password with the given one
+                if let Some(password) = owner_password {
+                    config.owner_password = Some(password);
+                }
+
                 config.clone()
             } else {
                 let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
                 if require_password {
-                    // Missing password
-                    return Err(Error::invalid_owner_password());
+                    if let Some(password) = owner_password {
+                        config.owner_password = Some(password);
+                    } else {
+                        // Missing password
+                        return Err(Error::invalid_owner_password());
+                    }
                 } else {
+                    // Configure the owner password
                     new_owner_password = Some(cotoami_db::generate_secret(None));
                     config.owner_password = new_owner_password.clone();
                 }
                 configs.insert(node.uuid, config.clone());
                 config
             };
+
             configs.save(&app_handle);
             (config, new_owner_password)
         } else {
