@@ -229,10 +229,18 @@ object ModalWelcome {
       }
 
       case Msg.DatabaseOpened(Left(e)) =>
-        (
-          model.copy(processing = false, error = Some(e.default_message)),
-          cotoami.error(e.default_message, e)
-        )
+        model.copy(processing = false).pipe { model =>
+          if (e.code == "invalid-owner-password")
+            (
+              model,
+              Modal.open(Modal.InputPassword())
+            )
+          else
+            (
+              model.copy(error = Some(e.default_message)),
+              cotoami.error(e.default_message, e)
+            )
+        }
     }
 
   /////////////////////////////////////////////////////////////////////////////

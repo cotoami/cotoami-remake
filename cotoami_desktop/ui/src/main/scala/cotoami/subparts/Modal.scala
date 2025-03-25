@@ -64,6 +64,10 @@ object Modal {
   case class Welcome(model: ModalWelcome.Model = ModalWelcome.Model())
       extends Modal
 
+  case class InputPassword(
+      model: ModalInputPassword.Model = ModalInputPassword.Model()
+  ) extends Modal
+
   case class NewPassword(model: ModalNewPassword.Model) extends Modal
   object NewPassword {
     def apply(password: String): NewPassword =
@@ -163,6 +167,7 @@ object Modal {
 
     case class ConfirmMsg(msg: ModalConfirm.Msg) extends Msg
     case class WelcomeMsg(msg: ModalWelcome.Msg) extends Msg
+    case class InputPasswordMsg(msg: ModalInputPassword.Msg) extends Msg
     case class EditCotoMsg(msg: ModalEditCoto.Msg) extends Msg
     case class PromoteMsg(msg: ModalPromote.Msg) extends Msg
     case class EditItoMsg(msg: ModalEditIto.Msg) extends Msg
@@ -207,6 +212,14 @@ object Modal {
         stack.get[Welcome].map { case Welcome(modal) =>
           ModalWelcome.update(modalMsg, modal).pipe { case (modal, cmds) =>
             (updateModal(Welcome(modal), model), cmds)
+          }
+        }
+
+      case Msg.InputPasswordMsg(modalMsg) =>
+        stack.get[InputPassword].map { case InputPassword(modal) =>
+          ModalInputPassword.update(modalMsg, modal).pipe {
+            case (modal, cmds) =>
+              (updateModal(InputPassword(modal), model), cmds)
           }
         }
 
@@ -398,6 +411,8 @@ object Modal {
         model.systemInfo.map(info =>
           ModalWelcome(modal, info.recent_databases.toSeq)
         )
+
+      case InputPassword(modal) => Some(ModalInputPassword(modal))
 
       case NewPassword(modal) => Some(ModalNewPassword(modal))
 
