@@ -12,7 +12,7 @@ use crate::{
         error::ServiceError,
         models::{AddClient, NodeRole},
     },
-    state::{NodeState, ServerConnection},
+    state::{error::NodeError, NodeState, ServerConnection},
 };
 
 impl NodeState {
@@ -38,7 +38,7 @@ impl NodeState {
                     // `NodeConfig::owner_password` must be verified against it.
                     owner
                         .authenticate(config.owner_password.as_deref())
-                        .context("Owner authentication has been failed.")?;
+                        .context(NodeError::OwnerAuthenticationFailed)?;
                 } else {
                     // Initialize the owner password if `NodeConfig::owner_password`
                     // has `Some` value.

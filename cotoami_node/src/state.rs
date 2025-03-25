@@ -19,12 +19,13 @@ use crate::{
 };
 
 mod client_conn;
+mod error;
 mod internal;
 mod pubsub;
 mod server_conn;
 mod service;
 
-pub use self::{client_conn::*, pubsub::*, server_conn::*};
+pub use self::{client_conn::*, error::*, pubsub::*, server_conn::*};
 
 #[derive(Clone)]
 pub struct NodeState {

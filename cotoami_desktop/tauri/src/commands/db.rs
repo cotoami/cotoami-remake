@@ -171,6 +171,7 @@ pub async fn open_database(
             } else {
                 let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
                 if require_password {
+                    // Missing password
                     return Err(Error::invalid_owner_password());
                 } else {
                     new_owner_password = Some(cotoami_db::generate_secret(None));
@@ -187,16 +188,20 @@ pub async fn open_database(
         };
 
     // Reuse an existing state (on reloading) or create a new one.
-    // TODO: Support opening another database.
-    //       Currently, it will reuse an existing state whatever database it belongs.
+    // TODO: Support opening another database. Currently, it will reuse an existing
+    //       state whatever database it belongs to.
     let node_state = match app_handle.try_state::<NodeState>() {
-        Some(state) => {
-            app_handle.debug("Reusing the existing NodeState.", None);
-            state.inner().clone()
-        }
+        Some(state) => state.inner().clone(),
         None => {
-            app_handle.debug("Creating a new NodeState.", None);
-            let node_state = NodeState::new(node_config).await?;
+            let node_state = match NodeState::new(node_config).await {
+                Ok(node_state) => node_state,
+                Err(error) => match error.downcast_ref::<NodeError>() {
+                    Some(NodeError::OwnerAuthenticationFailed) => {
+                        return Err(Error::invalid_owner_password())
+                    }
+                    _ => return Err(error.into()),
+                },
+            };
 
             // Update RecentDatabases
             let local_node = node_state.local_node().await?;
