@@ -19,8 +19,11 @@ object ModalInputPassword {
       msgOnSubmit: String => AppMsg,
       title: String,
       message: Option[String] = None,
-      passwordInput: String = ""
-  )
+      passwordInput: String = "",
+      submitting: Boolean = false
+  ) {
+    def readyToSubmit: Boolean = !submitting && !passwordInput.isBlank()
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -62,7 +65,7 @@ object ModalInputPassword {
         input(
           `type` := "password",
           value := model.passwordInput,
-          onChange := (e => Msg.PasswordInput(e.target.value))
+          onChange := (e => dispatch(Msg.PasswordInput(e.target.value)))
         )
       ),
       div(className := "buttons")(
@@ -72,7 +75,9 @@ object ModalInputPassword {
           onClick := (_ => dispatch(Modal.Msg.CloseModal(modalType)))
         )("Cancel"),
         button(
-          `type` := "button"
+          `type` := "button",
+          disabled := !model.readyToSubmit,
+          aria - "busy" := model.submitting.toString()
         )("OK")
       )
     )
