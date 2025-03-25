@@ -5,7 +5,7 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.subparts.Modal
 
@@ -23,6 +23,8 @@ object ModalInputPassword {
       submitting: Boolean = false
   ) {
     def readyToSubmit: Boolean = !submitting && !passwordInput.isBlank()
+
+    def createMsg: AppMsg = msgOnSubmit(passwordInput)
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -35,12 +37,22 @@ object ModalInputPassword {
 
   object Msg {
     case class PasswordInput(password: String) extends Msg
+    case object Submit extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.PasswordInput(password) =>
         (model.copy(passwordInput = password), Cmd.none)
+
+      case Msg.Submit =>
+        (
+          model.copy(submitting = true),
+          Cmd.Batch(
+            Browser.send(model.createMsg),
+            Modal.close(classOf[Modal.InputPassword])
+          )
+        )
     }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -77,7 +89,8 @@ object ModalInputPassword {
         button(
           `type` := "button",
           disabled := !model.readyToSubmit,
-          aria - "busy" := model.submitting.toString()
+          aria - "busy" := model.submitting.toString(),
+          onClick := (_ => dispatch(Msg.Submit))
         )("OK")
       )
     )
