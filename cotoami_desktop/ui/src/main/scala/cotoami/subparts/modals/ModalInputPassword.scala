@@ -30,8 +30,15 @@ object ModalInputPassword {
     def into = Modal.Msg.InputPasswordMsg(this).pipe(AppMsg.ModalMsg)
   }
 
+  object Msg {
+    case class PasswordInput(password: String) extends Msg
+  }
+
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+    msg match {
+      case Msg.PasswordInput(password) =>
+        (model.copy(passwordInput = password), Cmd.none)
+    }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -54,7 +61,8 @@ object ModalInputPassword {
       section(className := "input-password")(
         input(
           `type` := "password",
-          value := model.passwordInput
+          value := model.passwordInput,
+          onChange := (e => Msg.PasswordInput(e.target.value))
         )
       ),
       div(className := "buttons")(
