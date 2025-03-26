@@ -13,6 +13,7 @@ import cotoami.repository.{Nodes, Root}
 import cotoami.backend.{
   ClientNodeBackend,
   Commands,
+  DatabaseInfo,
   ErrorJson,
   LocalServer,
   ServerConfig
@@ -74,6 +75,7 @@ object ModalNodeProfile {
   }
 
   object Msg {
+    case object GenerateOwnerPassword extends Msg
     case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
         extends Msg
     case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
@@ -87,6 +89,13 @@ object ModalNodeProfile {
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.GenerateOwnerPassword =>
+        (
+          model,
+          DatabaseInfo.newOwnerPassword
+            .map(Msg.OwnerPasswordGenerated(_).into)
+        )
+
       case Msg.OwnerPasswordGenerated(Right(password)) =>
         (model, Modal.open(Modal.NewPassword(password)))
 
