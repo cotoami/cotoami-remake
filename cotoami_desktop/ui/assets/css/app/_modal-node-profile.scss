@@ -69,6 +69,14 @@ dialog.node-profile {
       div.tools {
         text-align: right;
 
+        div.get-owner-password {
+          display: inline-block;
+
+          span.processing {
+            vertical-align: 4px;
+          }
+        }
+
         button {
           padding: 0 6px;
 

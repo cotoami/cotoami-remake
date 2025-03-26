@@ -36,6 +36,7 @@ object ModalNodeProfile {
 
   case class Model(
       nodeId: Id[Node],
+      generatingOwnerPassword: Boolean = false,
       clientCount: Double = 0,
       localServer: Option[LocalServer] = None,
       enablingAnonymousRead: Boolean = false,
@@ -91,17 +92,23 @@ object ModalNodeProfile {
     msg match {
       case Msg.GenerateOwnerPassword =>
         (
-          model,
+          model.copy(generatingOwnerPassword = true),
           DatabaseInfo.newOwnerPassword
             .map(Msg.OwnerPasswordGenerated(_).into)
         )
 
       case Msg.OwnerPasswordGenerated(Right(password)) =>
-        (model, Modal.open(Modal.NewPassword(password)))
+        (
+          model.copy(generatingOwnerPassword = false),
+          Modal.open(Modal.NewPassword(password))
+        )
 
       case Msg.OwnerPasswordGenerated(Left(e)) =>
         (
-          model.copy(error = Some(e.default_message)),
+          model.copy(
+            generatingOwnerPassword = false,
+            error = Some(e.default_message)
+          ),
           cotoami.error("Couldn't generate an owner password.", e)
         )
 
@@ -229,20 +236,27 @@ object ModalNodeProfile {
   ): ReactElement =
     div(className := "tools")(
       Option.when(model.isLocalNode()) {
-        toolButton(
-          classes = "get-owner-password",
-          symbol = "key",
-          tip = Some(context.i18n.text.ModalNodeProfile_getOwnerPassword),
-          tipPlacement = "left",
-          onClick = e =>
-            dispatch(
-              Modal.Msg.OpenModal(
-                Modal.Confirm(
-                  context.i18n.text.ModalNodeProfile_confirmGetOwnerPassword,
-                  Msg.GenerateOwnerPassword
+        div(className := "get-owner-password")(
+          span(
+            className := "processing",
+            aria - "busy" := model.generatingOwnerPassword.toString()
+          )(),
+          toolButton(
+            classes = "get-owner-password",
+            symbol = "key",
+            tip = Some(context.i18n.text.ModalNodeProfile_getOwnerPassword),
+            tipPlacement = "left",
+            disabled = model.generatingOwnerPassword,
+            onClick = e =>
+              dispatch(
+                Modal.Msg.OpenModal(
+                  Modal.Confirm(
+                    context.i18n.text.ModalNodeProfile_confirmGetOwnerPassword,
+                    Msg.GenerateOwnerPassword
+                  )
                 )
               )
-            )
+          )
         )
       }
     )
