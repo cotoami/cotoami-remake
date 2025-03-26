@@ -30,6 +30,9 @@ object DatabaseInfo {
   ): Cmd.One[Either[ErrorJson, DatabaseInfo]] =
     DatabaseInfoJson.openDatabase(folder, ownerPassword)
       .map(_.map(DatabaseInfo(_)))
+
+  def newOwnerPassword: Cmd.One[Either[ErrorJson, String]] =
+    tauri.invokeCommand("new_owner_password")
 }
 
 @js.native

@@ -24,6 +24,7 @@ fn main() {
             commands::db::validate_database_folder,
             commands::db::create_database,
             commands::db::open_database,
+            commands::db::new_owner_password,
             commands::conn::connect_to_servers
         ])
         .run(tauri::generate_context!())
