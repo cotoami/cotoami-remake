@@ -252,18 +252,16 @@ fn init_as_node() -> Result<()> {
 #[test]
 fn set_icon() -> Result<()> {
     // setup
-    let root_dir = tempdir()?;
-    let db = Database::new(&root_dir)?;
+    let (_dir, db, node) = common::setup_db("My Node")?;
     let ds = db.new_session()?;
-    let ((_, node), _) = ds.init_as_node(Some("My Node"), None)?;
-    let operator = db.globals().local_node_as_operator()?;
+    let opr = db.globals().local_node_as_operator()?;
 
     // when
     let new_icon = Identicon::new("test")
         .set_scale(1000)?
         .set_border(100)
         .export_jpeg_data()?;
-    let (new_node, _) = ds.set_local_node_icon(new_icon.as_ref(), &operator)?;
+    let (new_node, _) = ds.set_local_node_icon(new_icon.as_ref(), &opr)?;
 
     // then
     assert_that!(new_node.icon, not(eq(&node.icon)));
