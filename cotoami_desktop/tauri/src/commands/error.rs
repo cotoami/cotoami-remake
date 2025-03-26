@@ -23,6 +23,10 @@ impl Error {
         Error::new("invalid-owner-password", "Invalid owner password.")
     }
 
+    pub fn system_error(message: impl Into<String>) -> Self {
+        Error::new("system-error", message.into())
+    }
+
     // TODO: write thorough conversion
     fn from_service_error(e: ServiceError) -> Self {
         match e {
@@ -38,10 +42,6 @@ impl Error {
             ServiceError::Server(msg) => Error::new("server-error", msg),
             _ => Error::new("service-error", format!("{e:?}")),
         }
-    }
-
-    fn system_error(message: impl Into<String>) -> Self {
-        Error::new("system-error", message.into())
     }
 }
 

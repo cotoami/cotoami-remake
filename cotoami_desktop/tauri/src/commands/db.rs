@@ -255,3 +255,41 @@ fn normalize_path<P: AsRef<Path>>(path: P) -> Result<String, Error> {
         "The path contains invalid unicodes.",
     ))
 }
+
+#[tauri::command]
+pub async fn new_owner_password(
+    app_handle: tauri::AppHandle,
+    state: tauri::State<'_, NodeState>,
+) -> Result<String, Error> {
+    let node_state = state.inner();
+    let local_node = node_state.db().globals().try_read_local_node()?;
+
+    // Load the local node config
+    let mut configs = Configs::load(&app_handle);
+    let Some(config) = configs.get_mut(&local_node.node_id) else {
+        return Err(Error::system_error("Local node config not found."));
+    };
+
+    // Set a new owner password
+    let new_password = cotoami_db::generate_secret(None);
+    let ds = node_state.db().new_session()?;
+    if local_node.as_principal().has_password() {
+        let Some(ref current_password) = config.owner_password else {
+            return Err(Error::system_error(
+                "Current owner password is missing in config",
+            ));
+        };
+        ds.change_owner_password(&new_password, current_password)?;
+    } else {
+        // As in `create_database` and `open_database`, this app will set an
+        // auto-genereated owner password during startup. So this code won't be
+        // executed unless there's some illegal state.
+        ds.set_owner_password_if_none(&new_password)?;
+    }
+
+    // Save the password in the config
+    config.owner_password = Some(new_password.clone());
+    configs.save(&app_handle);
+
+    Ok(new_password)
+}
