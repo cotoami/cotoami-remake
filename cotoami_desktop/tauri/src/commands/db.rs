@@ -7,6 +7,7 @@ use std::{
 use cotoami_db::prelude::*;
 use cotoami_node::prelude::*;
 use tauri::Manager;
+use tracing::debug;
 
 use self::recent::RecentDatabases;
 use crate::{
@@ -261,8 +262,9 @@ pub async fn new_owner_password(
     app_handle: tauri::AppHandle,
     state: tauri::State<'_, NodeState>,
 ) -> Result<String, Error> {
+    debug!("Generating a new owner password...");
     let node_state = state.inner();
-    let local_node = node_state.db().globals().try_read_local_node()?;
+    let local_node = node_state.db().globals().try_get_local_node()?;
 
     // Load the local node config
     let mut configs = Configs::load(&app_handle);
