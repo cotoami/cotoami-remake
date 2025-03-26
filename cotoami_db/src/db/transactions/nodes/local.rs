@@ -215,7 +215,7 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    /// Util function to update the [LocalNode] and make sure to update the cache.
+    /// Utility function to update the [LocalNode] to make sure to also update the cache.
     fn update_local_node<Update>(&self, update: Update) -> Result<()>
     where
         Update: FnOnce(&LocalNode) -> Result<LocalNode>,
