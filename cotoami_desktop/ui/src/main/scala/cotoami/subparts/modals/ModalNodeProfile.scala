@@ -74,6 +74,8 @@ object ModalNodeProfile {
   }
 
   object Msg {
+    case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
+        extends Msg
     case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
         extends Msg
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
@@ -83,41 +85,47 @@ object ModalNodeProfile {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) = {
-    val default = (model, Cmd.none)
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.OwnerPasswordGenerated(Right(password)) =>
+        (model, Modal.open(Modal.NewPassword(password)))
+
+      case Msg.OwnerPasswordGenerated(Left(e)) =>
+        (
+          model.copy(error = Some(e.default_message)),
+          cotoami.error("Couldn't generate an owner password.", e)
+        )
+
       case Msg.LocalServerFetched(Right(server)) =>
-        default.copy(_1 = model.copy(localServer = Some(server)))
+        (model.copy(localServer = Some(server)), Cmd.none)
 
       case Msg.LocalServerFetched(Left(e)) =>
-        default.copy(_2 = cotoami.error("Couldn't fetch the local server.", e))
+        (model, cotoami.error("Couldn't fetch the local server.", e))
 
       case Msg.ClientCountFetched(Right(page)) =>
-        default.copy(_1 = model.copy(clientCount = page.totalItems))
+        (model.copy(clientCount = page.totalItems), Cmd.none)
 
       case Msg.ClientCountFetched(Left(e)) =>
-        default.copy(_2 = cotoami.error("Couldn't fetch client count.", e))
+        (model, cotoami.error("Couldn't fetch client count.", e))
 
       case Msg.EnableAnonymousRead(enable) =>
-        default.copy(
-          _1 = model.copy(enablingAnonymousRead = true),
-          _2 = enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
+        (
+          model.copy(enablingAnonymousRead = true),
+          enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
         )
 
       case Msg.AnonymousReadEnabled(Right(enabled)) =>
-        default.copy(
-          _1 = model
+        (
+          model
             .modify(_.enablingAnonymousRead).setTo(false)
             .modify(_.localServer.each.anonymousReadEnabled).setTo(enabled)
-            .modify(_.localServer.each.anonymousConnections).setTo(0)
+            .modify(_.localServer.each.anonymousConnections).setTo(0),
+          Cmd.none
         )
 
       case Msg.AnonymousReadEnabled(Left(e)) =>
-        default.copy(_2 =
-          cotoami.error("Couldn't enable/disable anonymous read.", e)
-        )
+        (model, cotoami.error("Couldn't enable/disable anonymous read.", e))
     }
-  }
 
   def fetchClientCount: Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(0, Some(1))
