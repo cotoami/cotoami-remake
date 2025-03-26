@@ -95,9 +95,9 @@ fn duplicate_node() -> Result<()> {
     // then
     assert_that!(
         result,
-        err(pat!(anyhow::Error{
-            to_string(): eq("UNIQUE constraint failed: local_node.rowid")
-        }))
+        err(displays_as(eq(
+            "UNIQUE constraint failed: local_node.rowid"
+        )))
     );
     Ok(())
 }
@@ -110,15 +110,20 @@ fn owner_session() -> Result<()> {
     let ds = db.new_session()?;
     let duration = Duration::minutes(30);
 
-    let ((local_node, _), _) = ds.init_as_node(None, Some("foo"))?;
+    let ((local_node, _), _) = ds.init_as_node(None, Some("correct-password"))?;
     let mut owner = local_node.as_principal();
 
     // when: start_session with an invalid password
-    assert_that!(owner.start_session("bar", duration), err(anything()));
+    assert_that!(
+        owner.start_session("invalid-password", duration),
+        err(anything())
+    );
 
     // when
     let mock_time = time::mock_time();
-    let session_id = owner.start_session("foo", duration)?.to_owned();
+    let session_id = owner
+        .start_session("correct-password", duration)?
+        .to_owned();
 
     // then
     assert_that!(owner.session_token(), some(eq(&session_id)));
