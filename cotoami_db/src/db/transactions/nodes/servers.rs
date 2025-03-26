@@ -1,7 +1,8 @@
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context as _, Result};
 
 use crate::{
     db::{
+        error::DatabaseError,
         op::*,
         ops::node_role_ops::{self, server_ops, NewDatabaseRole},
         DatabaseSession,
@@ -77,13 +78,22 @@ impl<'a> DatabaseSession<'a> {
         &self,
         id: &Id<Node>,
         password: &str,
-        encryption_password: &str,
+        owner_password: &str,
         operator: &Operator,
     ) -> Result<ServerNode> {
         operator.requires_to_be_owner()?;
+
+        // Verify the owner_password
+        let local_node = self.globals.try_read_local_node()?;
+        local_node
+            .as_principal()
+            .verify_password(owner_password)
+            .context(DatabaseError::AuthenticationFailed)?;
+
+        // Save the password to the server node
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             let mut update_server = UpdateServerNode::new(id);
-            update_server.set_password(password, encryption_password)?;
+            update_server.set_password(password, owner_password)?;
             let server = server_ops::update(&update_server).run(ctx)?;
             Ok(server)
         })
