@@ -32,8 +32,8 @@ trait Text {
   val ModalNewPassword_message: String
 
   val ModalNodeProfile_title: String
-  val ModalNodeProfile_getOwnerPassword: String
-  val ModalNodeProfile_confirmGetOwnerPassword: String
+  val ModalNodeProfile_generateOwnerPassword: String
+  val ModalNodeProfile_confirmGenerateOwnerPassword: String
 
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement

@@ -40,13 +40,13 @@ object en extends Text {
   val ModalNewPassword_message =
     """
     Store this password in a safe place. 
-    You will need it to open this database on another computer.
-    (you can obtain a new password via the node profile at any time).
+    You will need it to open this database on another computer. 
+    You can generate a new password from the node profile at any time.
     """
 
   val ModalNodeProfile_title = "Node Profile"
-  val ModalNodeProfile_getOwnerPassword = "Get Owner Password"
-  val ModalNodeProfile_confirmGetOwnerPassword =
+  val ModalNodeProfile_generateOwnerPassword = "Generate Owner Password"
+  val ModalNodeProfile_confirmGenerateOwnerPassword =
     """
     Are you sure you want to generate a new owner password? 
     Doing so will invalidate the current password.

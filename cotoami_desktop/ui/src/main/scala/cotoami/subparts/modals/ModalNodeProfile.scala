@@ -236,22 +236,23 @@ object ModalNodeProfile {
   ): ReactElement =
     div(className := "tools")(
       Option.when(model.isLocalNode()) {
-        div(className := "get-owner-password")(
+        div(className := "generate-owner-password")(
           span(
             className := "processing",
             aria - "busy" := model.generatingOwnerPassword.toString()
           )(),
           toolButton(
-            classes = "get-owner-password",
+            classes = "generate-owner-password",
             symbol = "key",
-            tip = Some(context.i18n.text.ModalNodeProfile_getOwnerPassword),
+            tip =
+              Some(context.i18n.text.ModalNodeProfile_generateOwnerPassword),
             tipPlacement = "left",
             disabled = model.generatingOwnerPassword,
             onClick = e =>
               dispatch(
                 Modal.Msg.OpenModal(
                   Modal.Confirm(
-                    context.i18n.text.ModalNodeProfile_confirmGetOwnerPassword,
+                    context.i18n.text.ModalNodeProfile_confirmGenerateOwnerPassword,
                     Msg.GenerateOwnerPassword
                   )
                 )
