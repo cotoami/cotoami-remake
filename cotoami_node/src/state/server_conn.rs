@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, ensure, Result};
 use cotoami_db::prelude::*;
 use parking_lot::RwLock;
 use tokio::task::AbortHandle;
@@ -89,9 +89,10 @@ impl ServerConnection {
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());
 
-        if session.server.uuid != self.server.node_id {
-            bail!("The remote server ID does not match the stored value.");
-        }
+        ensure!(
+            session.server.uuid == self.server.node_id,
+            "The remote node ID does not match the registered server ID."
+        );
 
         self.start_event_loop(http_client, session.child_privileges)
             .await
