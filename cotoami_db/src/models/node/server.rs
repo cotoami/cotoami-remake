@@ -2,7 +2,7 @@ use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
     Aes256Gcm, Key,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use argon2::Argon2;
 use chrono::NaiveDateTime;
 use derive_new::new;
@@ -58,9 +58,10 @@ impl ServerNode {
     // cf. https://stackoverflow.com/a/417184
     pub const URL_PREFIX_MAX_LENGTH: u64 = 1500;
 
-    pub fn password(&self, encryption_password: &str) -> Result<Option<String>> {
+    pub fn password(&self, owner_password: &str) -> Result<Option<String>> {
         if let Some(ref encrypted_password) = self.encrypted_password {
-            let plaintext = decrypt_password(encrypted_password, encryption_password)?;
+            let plaintext = decrypt_password(encrypted_password, owner_password)
+                .context("Invalid owner password.")?;
             Ok(Some(plaintext))
         } else {
             Ok(None)
