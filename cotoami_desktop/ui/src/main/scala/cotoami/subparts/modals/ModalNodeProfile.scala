@@ -159,7 +159,7 @@ object ModalNodeProfile {
       error = model.error
     )(
       Modal.spanTitleIcon(Node.IconName),
-      "Node Profile"
+      context.i18n.text.ModalNodeProfile_title
     )(
       context.repo.nodes.get(model.nodeId)
         .map(modalContent(_, model))
@@ -224,15 +224,25 @@ object ModalNodeProfile {
     )
 
   private def divTools(model: Model)(implicit
-      context: Context
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "tools")(
       Option.when(model.isLocalNode()) {
         toolButton(
           classes = "get-owner-password",
           symbol = "key",
-          tip = Some("Get Owner Password"),
-          tipPlacement = "left"
+          tip = Some(context.i18n.text.ModalNodeProfile_getOwnerPassword),
+          tipPlacement = "left",
+          onClick = e =>
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  context.i18n.text.ModalNodeProfile_confirmGetOwnerPassword,
+                  Msg.GenerateOwnerPassword
+                )
+              )
+            )
         )
       }
     )

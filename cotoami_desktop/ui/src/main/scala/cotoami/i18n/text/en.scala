@@ -44,6 +44,14 @@ object en extends Text {
     (you can obtain a new password via the node profile at any time).
     """
 
+  val ModalNodeProfile_title = "Node Profile"
+  val ModalNodeProfile_getOwnerPassword = "Get Owner Password"
+  val ModalNodeProfile_confirmGetOwnerPassword =
+    """
+    Are you sure you want to generate a new owner password? 
+    Doing so will invalidate the current password.
+    """
+
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """
     You can incorporate another database node into your database.
