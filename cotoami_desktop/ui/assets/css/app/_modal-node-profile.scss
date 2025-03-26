@@ -1,7 +1,6 @@
 dialog.node-profile {
   article {
     width: 600px;
-    padding-bottom: 20px;
   }
 
   div.modal-body {
@@ -61,38 +60,57 @@ dialog.node-profile {
       }
     }
 
-    div.fields {
+    div.main {
       flex: 1;
-      margin-left: 16px;
-      max-height: 60vh;
 
-      div.scroll-fields {
-        padding-right: 16px;
-        padding-bottom: 20px;
-        overflow-x: hidden;
-      }
+      display: flex;
+      flex-direction: column;
 
-      input[readOnly] {
-        background-color: var(--card-background-color);
-      }
+      div.tools {
+        text-align: right;
 
-      div.input-with-tools {
-        position: relative;
+        button {
+          padding: 0 6px;
 
-        div.tools {
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          right: 10px;
-
-          button {
-            height: 100%;
+          span.material-symbols {
+            font-size: 20px;
           }
         }
       }
 
-      div.node-id {
-        margin-top: 0;
+      div.fields {
+        flex: 1;
+        margin-left: 16px;
+        max-height: 60vh;
+
+        div.scroll-fields {
+          padding-right: 16px;
+          padding-bottom: 20px;
+          overflow-x: hidden;
+        }
+
+        input[readOnly] {
+          background-color: var(--card-background-color);
+        }
+
+        div.input-with-tools {
+          position: relative;
+
+          div.tools {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 10px;
+
+            button {
+              height: 100%;
+            }
+          }
+        }
+
+        div.node-id {
+          margin-top: 0;
+        }
       }
     }
 

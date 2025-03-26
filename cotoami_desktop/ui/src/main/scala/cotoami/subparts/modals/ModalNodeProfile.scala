@@ -40,6 +40,9 @@ object ModalNodeProfile {
       enablingAnonymousRead: Boolean = false,
       error: Option[String] = None
   ) {
+    def isLocalNode()(implicit context: Context): Boolean =
+      context.repo.nodes.isLocal(nodeId)
+
     def isOperatingNode()(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
 
@@ -154,14 +157,17 @@ object ModalNodeProfile {
     val asServer = context.repo.nodes.servers.get(model.nodeId)
     Fragment(
       divSidebar(node, model),
-      div(className := "fields")(
-        ScrollArea(className = Some("scroll-fields"))(
-          fieldId(node),
-          fieldName(node, rootCoto, model),
-          asServer.map(fieldServerUrl),
-          rootCoto.map(fieldDescription(_, model)),
-          model.localServer.flatMap(_.activeConfig).map(
-            sectionLocalServer(_, model)
+      div(className := "main")(
+        divTools(model),
+        div(className := "fields")(
+          ScrollArea(className = Some("scroll-fields"))(
+            fieldId(node),
+            fieldName(node, rootCoto, model),
+            asServer.map(fieldServerUrl),
+            rootCoto.map(fieldDescription(_, model)),
+            model.localServer.flatMap(_.activeConfig).map(
+              sectionLocalServer(_, model)
+            )
           )
         )
       )
@@ -196,6 +202,20 @@ object ModalNodeProfile {
             }
           ),
           context.repo.nodes.operating.map(PartsNode.imgNode(_))
+        )
+      }
+    )
+
+  private def divTools(model: Model)(implicit
+      context: Context
+  ): ReactElement =
+    div(className := "tools")(
+      Option.when(model.isLocalNode()) {
+        toolButton(
+          classes = "get-owner-password",
+          symbol = "key",
+          tip = Some("Get Owner Password"),
+          tipPlacement = "left"
         )
       }
     )
