@@ -98,7 +98,7 @@ import slinky.web.SyntheticMouseEvent
             setPrimarySize(newSize)
           }
         },
-        Seq(props.vertical)
+        Seq(props.vertical, props.reverse)
       )
 
     val onMouseUp: js.Function1[dom.MouseEvent, Unit] = useCallback(
@@ -123,7 +123,7 @@ import slinky.web.SyntheticMouseEvent
           dom.document.removeEventListener("mouseup", onMouseUp)
         }
       },
-      Seq.empty
+      Seq(props.vertical, props.reverse)
     )
 
     div(
