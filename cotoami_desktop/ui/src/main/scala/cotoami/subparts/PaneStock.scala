@@ -82,7 +82,7 @@ object PaneStock {
       model: Model,
       uiState: UiState
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(className := "stock fill")(
+    section(id := "stock-pane", className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
           vertical = uiState.mapVertical,

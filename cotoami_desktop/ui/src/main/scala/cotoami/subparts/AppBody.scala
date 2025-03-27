@@ -1,8 +1,14 @@
 package cotoami.subparts
 
+import scala.util.chaining._
+
+import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import fui.Cmd
+import cotoami.libs.tauri
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.components.{optionalClasses, SplitPane}
@@ -170,5 +176,35 @@ object AppBody {
         )
       )
     )
+  }
+
+  def resizeWindowOnPaneToggle(
+      name: String,
+      open: Boolean,
+      uiState: UiState
+  ): Cmd.One[Either[Throwable, Unit]] = {
+    val flowWidth = uiState.paneSizes.getOrElse(
+      PaneFlow.PaneName,
+      PaneFlow.DefaultWidth
+    )
+
+    val stockPane =
+      dom.document.getElementById("stock-pane") match {
+        case element: HTMLElement => element
+        case _                    => return Cmd.none
+      }
+    val stockWidth = stockPane.offsetWidth
+
+    (name, open) match {
+      case (PaneFlow.PaneName, true) =>
+        tauri.resizeWindow(flowWidth, 0).pipe(Cmd.fromFuture)
+      case (PaneFlow.PaneName, false) =>
+        tauri.resizeWindow(-1 * flowWidth, 0).pipe(Cmd.fromFuture)
+      case (PaneStock.PaneName, true) =>
+        tauri.resizeWindow(flowWidth, 0).pipe(Cmd.fromFuture)
+      case (PaneStock.PaneName, false) =>
+        tauri.resizeWindow(-1 * stockWidth, 0).pipe(Cmd.fromFuture)
+      case _ => Cmd.none
+    }
   }
 }
