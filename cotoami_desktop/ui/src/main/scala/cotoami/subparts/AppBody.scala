@@ -50,7 +50,7 @@ object AppBody {
             )
           ),
           onClick = Option.when(!uiState.paneOpened(NavCotonomas.PaneName)) {
-            () => dispatch(AppMsg.OpenOrClosePane(NavCotonomas.PaneName, true))
+            () => dispatch(AppMsg.SetPaneOpen(NavCotonomas.PaneName, true))
           }
         )(
           paneToggle(NavCotonomas.PaneName),
@@ -120,7 +120,7 @@ object AppBody {
             )
           ),
           onClick = Option.when(!flowOpened) { () =>
-            dispatch(AppMsg.OpenOrClosePane(PaneFlow.PaneName, true))
+            dispatch(AppMsg.SetPaneOpen(PaneFlow.PaneName, true))
           }
         )(
           Option.when(stockOpened) {
@@ -154,7 +154,7 @@ object AppBody {
             )
           ),
           onClick = Option.when(!stockOpened) { () =>
-            dispatch(AppMsg.OpenOrClosePane(PaneStock.PaneName, true))
+            dispatch(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
           }
         )(
           Option.when(flowOpened) {

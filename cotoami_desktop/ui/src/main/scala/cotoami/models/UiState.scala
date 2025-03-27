@@ -32,7 +32,7 @@ case class UiState(
   def paneOpened(name: String): Boolean =
     paneToggles.getOrElse(name, true) // open by default
 
-  def openOrClosePane(name: String, open: Boolean): UiState = {
+  def setPaneOpen(name: String, open: Boolean): UiState = {
     val toggles = paneToggles + (name -> open)
     (toggles.get(PaneFlow.PaneName), toggles.get(PaneStock.PaneName)) match {
       // Not allow fold both PaneFlow and PaneStock at the same time.
@@ -61,7 +61,7 @@ case class UiState(
     copy(mapVertical = vertical)
 
   def openGeomap: UiState =
-    copy(geomapOpened = true).openOrClosePane(PaneStock.PaneName, true)
+    copy(geomapOpened = true).setPaneOpen(PaneStock.PaneName, true)
 
   def closeMap: UiState =
     copy(geomapOpened = false)

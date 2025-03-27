@@ -113,9 +113,7 @@ object SectionTraversals {
         (
           model.openTraversal(start),
           Cmd.Batch(
-            Browser.send(
-              AppMsg.OpenOrClosePane(PaneStock.PaneName, true)
-            ),
+            Browser.send(AppMsg.SetPaneOpen(PaneStock.PaneName, true)),
             // scroll to the right end on opening a traversal.
             Cmd(IO.async { cb =>
               IO {

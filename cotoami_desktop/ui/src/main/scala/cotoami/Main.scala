@@ -179,7 +179,7 @@ object Main {
             (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
         }
 
-      case Msg.OpenOrClosePane(name, open) => model.openOrClosePane(name, open)
+      case Msg.SetPaneOpen(name, open) => model.setPaneOpen(name, open)
 
       case Msg.ResizePane(name, newSize) =>
         updates.uiState(_.resizePane(name, newSize), model)
@@ -239,7 +239,7 @@ object Main {
 
         val model1 = model.copy(url = newUrl)
         val (model2, focus) = DatabaseFocus.coto(id, moveTo, model1)
-        val (model3, openPane) = model2.openOrClosePane(PaneFlow.PaneName, true)
+        val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
         val pushUrl = Browser.pushUrl(newUrl.toString(), notify = false)
 
         (model3, Cmd.Batch(pushUrl, openPane, focus))
@@ -248,7 +248,7 @@ object Main {
       case Msg.FocusedCotoDetailsFetched(Right(details)) => {
         val model1 = model.modify(_.repo).using(_.importFrom(details))
         val (model2, focus) = DatabaseFocus.coto(details.coto.id, true, model1)
-        val (model3, openPane) = model2.openOrClosePane(PaneFlow.PaneName, true)
+        val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
         (model3, Cmd.Batch(openPane, focus))
       }
 

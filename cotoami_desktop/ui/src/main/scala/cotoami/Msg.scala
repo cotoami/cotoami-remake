@@ -37,7 +37,7 @@ object Msg {
 
   // UI
   case class SetTheme(theme: String) extends Msg
-  case class OpenOrClosePane(name: String, open: Boolean) extends Msg
+  case class SetPaneOpen(name: String, open: Boolean) extends Msg
   case class ResizePane(name: String, newSize: Int) extends Msg
   case object SwapPane extends Msg
 

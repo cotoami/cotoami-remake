@@ -27,7 +27,7 @@ object NavNodes {
       aria - "label" := "Nodes",
       onClick := (_ =>
         if (!uiState.paneOpened(PaneName)) {
-          dispatch(AppMsg.OpenOrClosePane(PaneName, true))
+          dispatch(AppMsg.SetPaneOpen(PaneName, true))
         }
       )
     )(

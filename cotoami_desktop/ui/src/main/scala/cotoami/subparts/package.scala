@@ -93,7 +93,7 @@ package object subparts {
       button(
         className := "fold default",
         title := "Fold",
-        onClick := (_ => dispatch(AppMsg.OpenOrClosePane(paneName, false)))
+        onClick := (_ => dispatch(AppMsg.SetPaneOpen(paneName, false)))
       )(
         span(className := "material-symbols")(
           direction match {
@@ -105,7 +105,7 @@ package object subparts {
       button(
         className := "unfold default",
         title := "Unfold",
-        onClick := (_ => dispatch(AppMsg.OpenOrClosePane(paneName, true)))
+        onClick := (_ => dispatch(AppMsg.SetPaneOpen(paneName, true)))
       )(
         span(className := "material-symbols")(
           direction match {

@@ -68,6 +68,6 @@ case class Model(
       traversals = SectionTraversals.Model()
     )
 
-  def openOrClosePane(name: String, open: Boolean): (Model, Cmd.One[Msg]) =
-    updates.uiState(_.openOrClosePane(name, open), this)
+  def setPaneOpen(name: String, open: Boolean): (Model, Cmd.One[Msg]) =
+    updates.uiState(_.setPaneOpen(name, open), this)
 }
