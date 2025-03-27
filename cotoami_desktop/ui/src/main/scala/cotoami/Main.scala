@@ -249,7 +249,7 @@ object Main {
         val model1 = model.modify(_.repo).using(_.importFrom(details))
         val (model2, focus) = DatabaseFocus.coto(details.coto.id, true, model1)
         val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
-        (model3, focus +: openPane)
+        (model3, focus ++ openPane)
       }
 
       case Msg.FocusedCotoDetailsFetched(Left(e)) =>
