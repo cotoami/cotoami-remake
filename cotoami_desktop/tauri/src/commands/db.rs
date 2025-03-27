@@ -272,22 +272,20 @@ pub async fn new_owner_password(
         return Err(Error::system_error("Local node config not found."));
     };
 
-    // Set a new owner password
-    let new_password = cotoami_db::generate_secret(None);
-    let ds = node_state.db().new_session()?;
-    if local_node.as_principal().has_password() {
+    // Generate a new owner password
+    let new_password = if local_node.as_principal().has_password() {
         let Some(ref current_password) = config.owner_password else {
             return Err(Error::system_error(
                 "Current owner password is missing in config",
             ));
         };
-        ds.change_owner_password(&new_password, current_password)?;
+        state.generate_owner_password(Some(current_password))?
     } else {
         // As in `create_database` and `open_database`, this app will set an
         // auto-genereated owner password during startup. So this code won't be
         // executed unless there's some illegal state.
-        ds.set_owner_password_if_none(&new_password)?;
-    }
+        state.generate_owner_password(None)?
+    };
 
     // Save the password in the config
     config.owner_password = Some(new_password.clone());

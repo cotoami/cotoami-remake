@@ -82,6 +82,20 @@ impl NodeState {
 
     pub fn read_config(&self) -> RwLockReadGuard<NodeConfig> { self.inner.config.read() }
 
+    pub fn generate_owner_password(&self, current_password: Option<&str>) -> Result<String> {
+        let new_password = cotoami_db::generate_secret(None);
+
+        let ds = self.db().new_session()?;
+        if let Some(current_password) = current_password {
+            ds.change_owner_password(&new_password, current_password)?;
+        } else {
+            ds.set_owner_password_if_none(&new_password)?;
+        }
+
+        self.inner.config.write().owner_password = Some(new_password.clone());
+        Ok(new_password)
+    }
+
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
     pub fn try_get_local_node_id(&self) -> Result<Id<Node>> {
