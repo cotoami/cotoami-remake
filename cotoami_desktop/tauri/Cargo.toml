@@ -28,7 +28,7 @@ log = "0.4.21"
 parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tauri = {version = "1.8.2", features = ["protocol-all", "path-all", "window-start-dragging", "dialog-open", "shell-open"] }
+tauri = {version = "1.8.2", features = [ "window-all", "protocol-all", "path-all", "dialog-open", "shell-open"] }
 tauri-plugin-log = {git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1"}
 thiserror.workspace = true
 tokio = {version = "1.0", features = ["full"] }
