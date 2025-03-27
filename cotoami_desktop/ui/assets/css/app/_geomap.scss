@@ -186,6 +186,12 @@ section.geomap {
     }
   }
 
+  // make space for pane-toggle
+  .maplibregl-ctrl-top-right {
+    top: 8px;
+    right: 8px;
+  }
+
   div.maplibregl-popup {
     z-index: 5;
 

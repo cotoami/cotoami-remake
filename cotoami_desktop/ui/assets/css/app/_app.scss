@@ -56,78 +56,12 @@ div.app {
       }
 
       .stock.pane {
-        >.pane-toggle {
-          left: 0;
-          right: auto;
-
-          button {
-            left: -4px;
-            right: auto;
-          }
-        }
-
-        &.map-opened>.pane-toggle {
+        &.map-opened-hor>.pane-toggle {
           color: var(--color-in-light-background);
         }
 
-        // prevent the icon from overflowing to the right side of screen 
         &.folded>.pane-toggle {
-          left: auto;
-          right: 0;
-
           color: var(--color);
-
-          button {
-            left: auto;
-            right: 0;
-            overflow: hidden;
-          }
-        }
-      }
-    }
-
-    .split-pane.reverse {
-      .flow.pane {
-        >.pane-toggle {
-          left: 0;
-          right: auto;
-
-          button {
-            left: -4px;
-            right: auto;
-          }
-        }
-
-        // make space for pane-toggle
-        section.flow-input>header {
-          padding-left: 12px;
-        }
-
-        section.coto-details>header {
-          padding-left: 16px;
-        }
-      }
-
-      .stock.pane {
-        >.pane-toggle {
-          right: 0;
-          left: auto;
-
-          button {
-            top: -6px;
-            right: -1px;
-            left: auto;
-          }
-        }
-
-        &.map-opened-vert>.pane-toggle {
-          color: var(--color);
-        }
-
-        // make space for pane-toggle
-        .maplibregl-ctrl-top-right {
-          top: 8px;
-          right: 8px;
         }
       }
     }
