@@ -73,8 +73,9 @@ impl ServerConnection {
         let mut http_client = HttpClient::new(&self.server.url_prefix)?;
 
         // Attempt to log into the server node
-        let owner_password = self.node_state.config().try_get_owner_password()?;
-        let password = self.server.password(owner_password)?; // None for anonymous access
+        let password = self
+            .server
+            .password(self.node_state.read_config().try_get_owner_password()?)?;
         let session = http_client
             .create_client_node_session(CreateClientNodeSession {
                 password,

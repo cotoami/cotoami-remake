@@ -108,7 +108,7 @@ impl NodeConfig {
 
     pub fn try_get_owner_password(&self) -> Result<&str> {
         self.owner_password.as_deref().ok_or(anyhow!(
-            "The owner password is required to invoke this operation."
+            "Owner password is required to invoke this operation."
         ))
     }
 

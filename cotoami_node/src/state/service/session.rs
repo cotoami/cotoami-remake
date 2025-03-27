@@ -34,7 +34,7 @@ impl NodeState {
     ) -> Result<ClientNodeSession, ServiceError> {
         let db = self.db().clone();
         let change_pubsub = self.pubsub().changes().clone();
-        let session_seconds = self.config().session_seconds();
+        let session_seconds = self.read_config().session_seconds();
         spawn_blocking(move || {
             let mut ds = db.new_session()?;
 

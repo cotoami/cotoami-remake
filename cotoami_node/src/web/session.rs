@@ -110,7 +110,7 @@ async fn create_owner_session(
         let db = state.db().new_session()?;
         let local_node = db.start_owner_session(
             &form.password.unwrap(), // validated to be Some
-            Duration::from_secs(state.config().session_seconds()),
+            Duration::from_secs(state.read_config().session_seconds()),
         )?;
         let token = SessionToken {
             token: local_node.owner_session_token.unwrap(),

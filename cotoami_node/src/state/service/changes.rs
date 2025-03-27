@@ -15,7 +15,7 @@ impl NodeState {
     }
 
     pub async fn chunk_of_changes(&self, from: i64) -> Result<ChunkOfChanges, ServiceError> {
-        let changes_chunk_size = self.config().changes_chunk_size;
+        let changes_chunk_size = self.read_config().changes_chunk_size;
         self.get(
             move |ds| match ds.chunk_of_changes(from, changes_chunk_size) {
                 Ok((chunk, last_serial_number)) => Ok(ChunkOfChanges::Fetched(Changes {

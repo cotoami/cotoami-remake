@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
-use parking_lot::RwLock;
+use parking_lot::{RwLock, RwLockReadGuard};
 use tokio::{sync::oneshot::Sender, task::JoinHandle};
 use tracing::debug;
 use uuid::Uuid;
@@ -33,7 +33,7 @@ pub struct NodeState {
 }
 
 struct State {
-    config: Arc<NodeConfig>,
+    config: Arc<RwLock<NodeConfig>>,
     db: Arc<Database>,
     pubsub: Pubsub,
     server_conns: ServerConnections,
@@ -61,7 +61,7 @@ impl NodeState {
         let db = Database::new(db_dir)?;
 
         let inner = State {
-            config: Arc::new(config),
+            config: Arc::new(RwLock::new(config)),
             db: Arc::new(db),
             pubsub: Pubsub::default(),
             server_conns: ServerConnections::default(),
@@ -78,7 +78,9 @@ impl NodeState {
         Ok(state)
     }
 
-    pub fn config(&self) -> &Arc<NodeConfig> { &self.inner.config }
+    pub fn config_arc(&self) -> Arc<RwLock<NodeConfig>> { self.inner.config.clone() }
+
+    pub fn read_config(&self) -> RwLockReadGuard<NodeConfig> { self.inner.config.read() }
 
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
@@ -170,7 +172,7 @@ impl Drop for State {
     fn drop(&mut self) {
         debug!(
             "NodeState [{:?}] is being destroyed.",
-            self.config.node_name
+            self.config.read().node_name
         )
     }
 }

@@ -119,9 +119,12 @@ impl NodeState {
 
                 // Save the password in the ServerNode for auto-login
                 if let Some(password) = password {
-                    let master_password = state.config().try_get_owner_password()?;
-                    server =
-                        ds.save_server_password(&server_id, &password, master_password, &operator)?;
+                    server = ds.save_server_password(
+                        &server_id,
+                        &password,
+                        state.read_config().try_get_owner_password()?,
+                        &operator,
+                    )?;
                 }
 
                 // Results

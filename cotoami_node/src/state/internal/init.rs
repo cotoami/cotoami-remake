@@ -26,9 +26,10 @@ impl NodeState {
 
     async fn init_local_node(&self) -> Result<()> {
         let db = self.db().clone();
-        let config = self.config().clone();
+        let config = self.config_arc();
         spawn_blocking(move || {
             let ds = db.new_session()?;
+            let config = config.read();
 
             // Handle the existing node or create a new one.
             let local_node = if let Some(local_node) = db.globals().local_node() {
@@ -78,8 +79,8 @@ impl NodeState {
 
     async fn register_owner_remote_node(&self) -> Result<()> {
         match (
-            self.config().owner_remote_node_id,
-            self.config().owner_remote_node_password.as_ref(),
+            self.read_config().owner_remote_node_id,
+            self.read_config().owner_remote_node_password.as_ref(),
         ) {
             (Some(node_id), Some(password)) => {
                 let add_client = AddClient {
