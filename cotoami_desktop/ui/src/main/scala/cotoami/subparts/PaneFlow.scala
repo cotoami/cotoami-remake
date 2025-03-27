@@ -18,7 +18,7 @@ object PaneFlow {
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "flow fill")(
-      model.repo.cotos.focused.map(SectionCotoDetails(_)(model, dispatch))
+      model.repo.cotos.focused.map(SectionCotoDetails(_))
         .getOrElse(timeline(model, uiState))
     )
 
@@ -44,10 +44,10 @@ object PaneFlow {
                 EditorDefaultHeight
               ),
               (newSize) => dispatch(AppMsg.ResizePane(EditorPaneName, newSize))
-            )(context, dispatch)
+            )
           )
         case _ => None
       },
-      SectionTimeline(model.timeline)(model, dispatch)
+      SectionTimeline(model.timeline)
     )
 }
