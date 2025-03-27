@@ -161,7 +161,7 @@ object ModalClients {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    tr()(
+    tr(key := client.node.id.uuid)(
       td(className := "id")(
         code()(client.node.id.uuid)
       ),
