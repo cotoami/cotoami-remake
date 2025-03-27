@@ -19,7 +19,7 @@ import cotoami.components.{
 
 object NavCotonomas {
   final val PaneName = "NavCotonomas"
-  final val DefaultWidth = 230
+  final val DefaultWidth = 200
 
   /////////////////////////////////////////////////////////////////////////////
   // Model

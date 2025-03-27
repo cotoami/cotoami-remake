@@ -9,8 +9,6 @@ import cotoami.repository.Root
 import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 import cotoami.subparts.PaneStock
 
-import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
-
 object AppHeader {
 
   def apply(
@@ -27,12 +25,7 @@ object AppHeader {
         model.repo.currentFocus.map(sectionCurrentFocus(_)).getOrElse(
           button(
             className := "app-info default",
-            title := "View app info",
-            onClick := (_ => {
-              cotoami.libs.tauri.resizeWindow(20, 0).foreach(_ =>
-                println("resized")
-              )
-            })
+            title := "View app info"
           )(
             img(
               className := "app-icon",

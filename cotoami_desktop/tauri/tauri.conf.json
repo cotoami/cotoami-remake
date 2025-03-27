@@ -83,7 +83,7 @@
         "fullscreen": false,
         "resizable": true,
         "title": "Cotoami",
-        "width": 1000,
+        "width": 900,
         "height": 800,
         "hiddenTitle": true,
         "titleBarStyle": "Overlay",

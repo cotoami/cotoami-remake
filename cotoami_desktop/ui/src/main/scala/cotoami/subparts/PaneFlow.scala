@@ -8,7 +8,7 @@ import cotoami.models.UiState
 
 object PaneFlow {
   final val PaneName = "PaneFlow"
-  final val DefaultWidth = 500
+  final val DefaultWidth = 600
 
   final val EditorPaneName = "PaneFlow.editor"
   final val EditorDefaultHeight = 300

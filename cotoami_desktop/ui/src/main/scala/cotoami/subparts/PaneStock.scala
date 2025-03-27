@@ -22,6 +22,7 @@ import cotoami.subparts.SectionGeomap
 object PaneStock {
 
   final val PaneName = "PaneStock"
+  final val DefaultWidth = 600
 
   final val PaneMapName = "PaneMap"
   final val PaneMapDefaultSize = 400
