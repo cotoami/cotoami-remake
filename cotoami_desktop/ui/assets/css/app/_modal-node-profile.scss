@@ -3,6 +3,7 @@ dialog.node-profile {
     width: 600px;
   }
 
+  // modal-body layout
   div.modal-body {
     display: flex;
     flex-direction: row;
@@ -11,53 +12,6 @@ dialog.node-profile {
       display: flex;
       flex-direction: column;
       align-items: center;
-
-      width: 120px;
-      padding-right: 16px;
-
-      section.node-icon {
-        position: relative;
-
-        img {
-          border-radius: 4px;
-        }
-
-        button.edit {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 24px;
-          height: 24px;
-          line-height: 24px;
-          vertical-align: middle;
-          text-align: center;
-          background-color: rgba(0, 0, 0, .4);
-        }
-      }
-
-      section.operating-node {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-
-        div.arrow {
-          margin-top: 10px;
-          margin-bottom: -10px;
-          font-size: 20px;
-        }
-
-        section.privileges {
-          margin-bottom: 16px;
-          font-size: 0.9rem;
-          opacity: 0.8;
-        }
-
-        img {
-          width: 32px;
-          height: 32px;
-          border-radius: 4px;
-        }
-      }
     }
 
     div.main {
@@ -66,84 +20,136 @@ dialog.node-profile {
       display: flex;
       flex-direction: column;
 
-      div.tools {
-        text-align: right;
-
-        div.generate-owner-password {
-          display: inline-block;
-
-          span.processing {
-            vertical-align: 4px;
-          }
-        }
-
-        button {
-          padding: 0 6px;
-
-          span.material-symbols {
-            font-size: 20px;
-          }
-        }
-      }
-
       div.fields {
         flex: 1;
-        margin-left: 16px;
-        max-height: 60vh;
+      }
+    }
+  }
 
-        div.scroll-fields {
-          padding-right: 16px;
-          padding-bottom: 20px;
-          overflow-x: hidden;
-        }
+  div.sidebar {
+    width: 120px;
+    padding-right: 16px;
 
-        input[readOnly] {
-          background-color: var(--card-background-color);
-        }
+    section.node-icon {
+      position: relative;
 
-        div.input-with-tools {
-          position: relative;
+      img {
+        border-radius: 4px;
+      }
 
-          div.tools {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            right: 10px;
-
-            button {
-              height: 100%;
-            }
-          }
-        }
-
-        div.node-id {
-          margin-top: 0;
-        }
+      button.edit {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        vertical-align: middle;
+        text-align: center;
+        background-color: rgba(0, 0, 0, .4);
       }
     }
 
-    section.node-description {
-      border: 1px solid var(--pane-border-color);
-      min-height: 42px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
+    section.operating-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
 
-    section.local-server {
-      margin-top: 40px;
+      div.arrow {
+        margin-top: 10px;
+        margin-bottom: -10px;
+        font-size: 20px;
+      }
 
-      span.anonymous-connections {
-        margin-left: 6px;
+      section.privileges {
+        margin-bottom: 16px;
         font-size: 0.9rem;
-        opacity: 0.6;
+        opacity: 0.8;
+      }
+
+      img {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  div.tools {
+    text-align: right;
+
+    div.generate-owner-password {
+      display: inline-block;
+
+      span.processing {
+        vertical-align: 4px;
       }
     }
 
-    section.client-nodes-count {
-      border: 1px solid var(--pane-border-color);
-      border-radius: var(--border-radius);
-      padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
-      padding-left: 6px;
+    button {
+      padding: 0 6px;
+
+      span.material-symbols {
+        font-size: 20px;
+      }
     }
+  }
+
+  div.fields {
+    margin-left: 16px;
+    max-height: 60vh;
+
+    div.scroll-fields {
+      padding-right: 16px;
+      padding-bottom: 20px;
+      overflow-x: hidden;
+    }
+
+    input[readOnly] {
+      background-color: var(--card-background-color);
+    }
+
+    div.input-with-tools {
+      position: relative;
+
+      div.tools {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 10px;
+
+        button {
+          height: 100%;
+        }
+      }
+    }
+
+    div.node-id {
+      margin-top: 0;
+    }
+  }
+
+  section.node-description {
+    border: 1px solid var(--pane-border-color);
+    min-height: 42px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  section.local-server {
+    margin-top: 40px;
+
+    span.anonymous-connections {
+      margin-left: 6px;
+      font-size: 0.9rem;
+      opacity: 0.6;
+    }
+  }
+
+  section.client-nodes-count {
+    border: 1px solid var(--pane-border-color);
+    border-radius: var(--border-radius);
+    padding: var(--form-element-spacing-vertical) var(--form-element-spacing-horizontal);
+    padding-left: 6px;
   }
 }
