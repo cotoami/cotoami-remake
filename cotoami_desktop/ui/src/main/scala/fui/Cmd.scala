@@ -32,6 +32,8 @@ object Cmd {
         case Sequence(batches @ _*) => Sequence.fromSeq(toBatch +: batches)
       }
 
+    def toNone[OtherMsg]: One[OtherMsg] = One(io.map(_ => None))
+
     def toBatch: Batch[Msg] = Batch(this)
 
     def debounce(key: String, delay: Double): One[Msg] =

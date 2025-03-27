@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom.URL
 
@@ -68,6 +69,17 @@ case class Model(
       traversals = SectionTraversals.Model()
     )
 
-  def setPaneOpen(name: String, open: Boolean): (Model, Cmd.One[Msg]) =
+  def setPaneOpen(name: String, open: Boolean): (Model, Cmd.Batch[Msg]) =
     updates.uiState(_.setPaneOpen(name, open), this)
+      .pipe { case (model, cmd) =>
+        (
+          model,
+          Cmd.Batch(
+            cmd,
+            model.uiState
+              .map(AppBody.resizeWindowOnPaneToggle(name, open, _).toNone)
+              .getOrElse(Cmd.none)
+          )
+        )
+      }
 }

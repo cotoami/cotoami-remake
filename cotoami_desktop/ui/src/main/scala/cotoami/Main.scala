@@ -242,14 +242,14 @@ object Main {
         val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
         val pushUrl = Browser.pushUrl(newUrl.toString(), notify = false)
 
-        (model3, Cmd.Batch(pushUrl, openPane, focus))
+        (model3, Cmd.Batch(pushUrl, focus) ++ openPane)
       }
 
       case Msg.FocusedCotoDetailsFetched(Right(details)) => {
         val model1 = model.modify(_.repo).using(_.importFrom(details))
         val (model2, focus) = DatabaseFocus.coto(details.coto.id, true, model1)
         val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
-        (model3, Cmd.Batch(openPane, focus))
+        (model3, focus +: openPane)
       }
 
       case Msg.FocusedCotoDetailsFetched(Left(e)) =>

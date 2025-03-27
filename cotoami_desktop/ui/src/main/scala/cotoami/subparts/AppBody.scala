@@ -195,6 +195,8 @@ object AppBody {
       }
     val stockWidth = stockPane.offsetWidth
 
+    val foldedPaneWidth = 16
+
     (name, open) match {
       case (PaneFlow.PaneName, true) =>
         tauri.resizeWindow(flowWidth, 0).pipe(Cmd.fromFuture)
@@ -203,7 +205,8 @@ object AppBody {
       case (PaneStock.PaneName, true) =>
         tauri.resizeWindow(flowWidth, 0).pipe(Cmd.fromFuture)
       case (PaneStock.PaneName, false) =>
-        tauri.resizeWindow(-1 * stockWidth, 0).pipe(Cmd.fromFuture)
+        tauri.resizeWindow(-1 * (stockWidth - foldedPaneWidth), 0)
+          .pipe(Cmd.fromFuture)
       case _ => Cmd.none
     }
   }
