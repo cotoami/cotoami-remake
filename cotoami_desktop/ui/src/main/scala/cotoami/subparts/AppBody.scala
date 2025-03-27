@@ -187,12 +187,14 @@ object AppBody {
 
     (name, open) match {
       case (PaneFlow.PaneName, true) =>
-        tauri.resizeWindow(flowWidth, 0).pipe(Cmd.fromFuture)
+        tauri.resizeWindow(flowWidth - foldedPaneWidth, 0)
+          .pipe(Cmd.fromFuture)
       case (PaneFlow.PaneName, false) =>
         tauri.resizeWindow(-1 * (flowWidth - foldedPaneWidth), 0)
           .pipe(Cmd.fromFuture)
       case (PaneStock.PaneName, true) =>
-        tauri.resizeWindow(PaneStock.DefaultWidth, 0).pipe(Cmd.fromFuture)
+        tauri.resizeWindow(PaneStock.DefaultWidth - foldedPaneWidth, 0)
+          .pipe(Cmd.fromFuture)
       case (PaneStock.PaneName, false) =>
         tauri.resizeWindow(-1 * (stockWidth - foldedPaneWidth), 0)
           .pipe(Cmd.fromFuture)
