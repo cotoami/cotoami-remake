@@ -68,7 +68,12 @@ case class Model(
       traversals = SectionTraversals.Model()
     )
 
-  def setPaneOpen(name: String, open: Boolean): (Model, Cmd[Msg]) =
+  def setPaneOpen(name: String, open: Boolean): (Model, Cmd[Msg]) = {
+    val changed = uiState.map(_.paneOpened(name) != open).getOrElse(false)
+    if (!changed) {
+      return (this, Cmd.none) // Do nothing if uiState won't change
+    }
+
     updates.addCmd(
       updates.uiState(_.setPaneOpen(name, open), this),
       (model: Model) =>
@@ -76,4 +81,5 @@ case class Model(
           .map(AppBody.resizeWindowOnPaneToggle(name, open, _).toNone)
           .getOrElse(Cmd.none)
     )
+  }
 }
