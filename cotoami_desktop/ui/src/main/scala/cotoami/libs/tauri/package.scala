@@ -1,6 +1,7 @@
 package cotoami.libs
 
 import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
@@ -125,4 +126,21 @@ package object tauri {
         None
       }
     })
+
+  def resizeWindow(
+      deltaWidth: Double,
+      deltaHeight: Double
+  ): Future[Unit] = {
+    val appWindow = cotoami.libs.tauri.window.appWindow
+    appWindow.scaleFactor().toFuture.flatMap(factor =>
+      appWindow.innerSize().toFuture.flatMap(physical => {
+        val currentSize = physical.toLogical(factor)
+        val newSize = new window.LogicalSize(
+          currentSize.width + deltaWidth,
+          currentSize.height + deltaHeight
+        )
+        appWindow.setSize(newSize).toFuture
+      })
+    )
+  }
 }

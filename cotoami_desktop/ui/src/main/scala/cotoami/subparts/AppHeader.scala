@@ -29,14 +29,9 @@ object AppHeader {
             className := "app-info default",
             title := "View app info",
             onClick := (_ => {
-              val window = cotoami.libs.tauri.window.appWindow
-              window.scaleFactor().toFuture.foreach(factor => {
-                println(s"factor: ${factor}")
-                window.innerSize().toFuture.foreach(physical => {
-                  val logical = physical.toLogical(factor)
-                  println(s"window size: ${logical.width} * ${logical.height}")
-                })
-              })
+              cotoami.libs.tauri.resizeWindow(20, 0).foreach(_ =>
+                println("resized")
+              )
             })
           )(
             img(
