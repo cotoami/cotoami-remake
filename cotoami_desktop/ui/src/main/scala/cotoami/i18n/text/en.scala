@@ -71,7 +71,10 @@ object en extends Text {
   )
 
   val ModalPromote_confirm =
-    "Are you sure you want to promote this coto to a cotonoma? It is an irreversible change."
+    """
+    Are you sure you want to promote this coto to a cotonoma?
+    This action cannot be undone.
+    """
 
   val ModalEditIto_disconnect = "Disconnect"
   val ModalEditIto_confirmDisconnect =
