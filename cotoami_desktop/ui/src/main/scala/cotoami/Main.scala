@@ -310,13 +310,14 @@ object Main {
         (model.copy(repo = repo), cmd)
       }
 
-      case Msg.Pin(cotoId) => {
-        val (repo, cmd) = updates.addCmd(
-          model.repo.pin(cotoId),
-          (_: Root) => Browser.send(Msg.SetPaneOpen(PaneStock.PaneName, true))
-        )
-        (model.copy(repo = repo), cmd)
-      }
+      case Msg.Pin(cotoId) =>
+        model.repo.pin(cotoId)
+          .pipe(
+            addCmd((_: Root) =>
+              Browser.send(Msg.SetPaneOpen(PaneStock.PaneName, true))
+            )
+          )
+          .pipe { case (repo, cmd) => (model.copy(repo = repo), cmd) }
 
       case Msg.NodeUpdated(Right(details)) =>
         (

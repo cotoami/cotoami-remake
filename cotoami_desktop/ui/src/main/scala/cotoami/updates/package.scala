@@ -9,9 +9,8 @@ import cotoami.models.UiState
 package object updates {
 
   def addCmd[Model](
-      pair: (Model, Cmd[Msg]),
       createCmd: Model => Cmd[Msg]
-  ): (Model, Cmd[Msg]) = {
+  )(pair: (Model, Cmd[Msg])): (Model, Cmd[Msg]) = {
     val (model, cmd) = pair
     (model, cmd ++ createCmd(model))
   }

@@ -1,5 +1,6 @@
 package cotoami
 
+import scala.util.chaining._
 import scala.scalajs.js
 import org.scalajs.dom.URL
 
@@ -73,13 +74,13 @@ case class Model(
     if (!changed) {
       return (this, Cmd.none) // Do nothing if uiState won't change
     }
-
-    updates.addCmd(
-      updates.uiState(_.setPaneOpen(name, open), this),
-      (model: Model) =>
-        model.uiState
-          .map(AppBody.resizeWindowOnPaneToggle(name, open, _).toNone)
-          .getOrElse(Cmd.none)
-    )
+    updates.uiState(_.setPaneOpen(name, open), this)
+      .pipe(
+        updates.addCmd((model: Model) =>
+          model.uiState
+            .map(AppBody.resizeWindowOnPaneToggle(name, open, _).toNone)
+            .getOrElse(Cmd.none)
+        )
+      )
   }
 }

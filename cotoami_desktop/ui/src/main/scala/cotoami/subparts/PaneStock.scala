@@ -46,11 +46,12 @@ object PaneStock {
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.OpenGeomap =>
-        updates.addCmd(
-          updates.uiState(_.openGeomap, model),
-          (_: Model) =>
-            Browser.send(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
-        )
+        updates.uiState(_.openGeomap, model)
+          .pipe(
+            updates.addCmd((_: Model) =>
+              Browser.send(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
+            )
+          )
 
       case Msg.CloseMap =>
         updates.uiState(_.closeMap, model)
