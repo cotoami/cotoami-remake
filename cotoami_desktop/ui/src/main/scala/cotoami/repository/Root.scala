@@ -211,6 +211,21 @@ case class Root(
       itos.connected(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
 
+  def pin(cotoId: Id[Coto]): (Root, Cmd.One[AppMsg]) =
+    currentCotonoma.map(cotonoma =>
+      (
+        this.modify(_.pinning).using(_ + cotoId),
+        ItoBackend.connect(
+          cotonoma.cotoId,
+          cotoId,
+          None,
+          None,
+          None
+        )
+          .map(Root.Msg.Pinned(cotoId, _).into)
+      )
+    ).getOrElse((this, Cmd.none))
+
   def fetchGraph: Cmd.One[AppMsg] =
     currentCotonomaId
       .map(Root.fetchGraphFromCotonoma)
@@ -493,20 +508,7 @@ object Root {
           cotoami.error("Couldn't delete a coto.", e)
         )
 
-      case Msg.Pin(cotoId) =>
-        model.currentCotonoma.map(cotonoma =>
-          (
-            model.modify(_.pinning).using(_ + cotoId),
-            ItoBackend.connect(
-              cotonoma.cotoId,
-              cotoId,
-              None,
-              None,
-              None
-            )
-              .map(Msg.Pinned(cotoId, _).into)
-          )
-        ).getOrElse((model, Cmd.none))
+      case Msg.Pin(cotoId) => model.pin(cotoId)
 
       case Msg.Pinned(cotoId, Right(_)) =>
         (
