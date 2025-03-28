@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
 import cotoami.updates
@@ -46,7 +46,11 @@ object PaneStock {
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.OpenGeomap =>
-        updates.uiState(_.openGeomap, model)
+        updates.addCmd(
+          updates.uiState(_.openGeomap, model),
+          (_: Model) =>
+            Browser.send(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
+        )
 
       case Msg.CloseMap =>
         updates.uiState(_.closeMap, model)

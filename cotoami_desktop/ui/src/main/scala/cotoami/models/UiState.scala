@@ -60,11 +60,9 @@ case class UiState(
   def setMapOrientation(vertical: Boolean): UiState =
     copy(mapVertical = vertical)
 
-  def openGeomap: UiState =
-    copy(geomapOpened = true).setPaneOpen(PaneStock.PaneName, true)
+  def openGeomap: UiState = copy(geomapOpened = true)
 
-  def closeMap: UiState =
-    copy(geomapOpened = false)
+  def closeMap: UiState = copy(geomapOpened = false)
 
   def mapOpened: Boolean = geomapOpened
 
