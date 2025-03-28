@@ -249,7 +249,7 @@ object SectionGeomap {
     MapLibre(
       id = "main-geomap",
       center = model.center.getOrElse(Geolocation.default).toMapLibre,
-      zoom = model.zoom.getOrElse(8),
+      zoom = model.zoom.getOrElse(4),
       detectZoomClass = Some(zoom =>
         if (zoom <= 7)
           Some("hide-labels")
