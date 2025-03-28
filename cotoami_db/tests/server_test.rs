@@ -50,7 +50,7 @@ fn update_server() -> Result<()> {
 
     assert_that!(
         server.password("invalid-password"),
-        err(displays_as(eq("aead::Error")))
+        err(displays_as(eq("Invalid owner password.")))
     );
     assert_that!(
         server.password("earth-password")?,
@@ -90,7 +90,7 @@ fn update_server() -> Result<()> {
     let server = earth_ds.server_node(&server.node_id, &earth_opr)?.unwrap();
     assert_that!(
         server.password("earth-password"),
-        err(displays_as(eq("aead::Error")))
+        err(displays_as(eq("Invalid owner password.")))
     );
     assert_that!(
         server.password("earth-password2")?,
