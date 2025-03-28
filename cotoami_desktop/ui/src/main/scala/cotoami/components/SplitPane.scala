@@ -25,8 +25,11 @@ import slinky.web.SyntheticMouseEvent
       secondary: Secondary.Props
   )
 
+  val PaneClassPrefix = "split-pane-"
+
   case class Context(
       vertical: Boolean,
+      reverse: Boolean,
       primarySize: Int,
       setPrimarySize: SetStateHookCallback[Int]
   )
@@ -140,7 +143,7 @@ import slinky.web.SyntheticMouseEvent
       ref := splitPaneRef
     )(
       splitPaneContext.Provider(value =
-        Context(props.vertical, primarySize, setPrimarySize)
+        Context(props.vertical, props.reverse, primarySize, setPrimarySize)
       )(
         Primary.component(props.primary),
         div(
@@ -170,7 +173,7 @@ import slinky.web.SyntheticMouseEvent
 
     val component = FunctionalComponent[Props] { props =>
       val primaryRef = useRef[html.Div](null)
-      val Context(vertical, primarySize, setPrimarySize) =
+      val Context(vertical, reverse, primarySize, setPrimarySize) =
         useContext(splitPaneContext)
 
       useEffect(
@@ -187,7 +190,8 @@ import slinky.web.SyntheticMouseEvent
       div(
         className := optionalClasses(
           Seq(
-            ("split-pane-primary", true),
+            (s"${PaneClassPrefix}primary", true),
+            (positionalClass(vertical, reverse), true),
             (props.className.getOrElse(""), props.className.nonEmpty)
           )
         ),
@@ -197,6 +201,17 @@ import slinky.web.SyntheticMouseEvent
         props.getChildren: _*
       )
     }
+
+    private def positionalClass(
+        vertical: Boolean,
+        reverse: Boolean
+    ): String =
+      (vertical, reverse) match {
+        case (true, false)  => s"${PaneClassPrefix}left"
+        case (true, true)   => s"${PaneClassPrefix}right"
+        case (false, false) => s"${PaneClassPrefix}top"
+        case (false, true)  => s"${PaneClassPrefix}bottom"
+      }
   }
 
   @react object Secondary {
@@ -208,15 +223,30 @@ import slinky.web.SyntheticMouseEvent
     }
 
     val component = FunctionalComponent[Props] { props =>
+      val Context(vertical, reverse, primarySize, setPrimarySize) =
+        useContext(splitPaneContext)
+
       div(
         className := optionalClasses(
           Seq(
-            ("split-pane-secondary", true),
+            (s"${PaneClassPrefix}secondary", true),
+            (positionalClass(vertical, reverse), true),
             (props.className.getOrElse(""), props.className.nonEmpty)
           )
         ),
         onClick := props.onClick
       )(props.getChildren: _*)
     }
+
+    private def positionalClass(
+        vertical: Boolean,
+        reverse: Boolean
+    ): String =
+      (vertical, reverse) match {
+        case (true, false)  => s"${PaneClassPrefix}right"
+        case (true, true)   => s"${PaneClassPrefix}left"
+        case (false, false) => s"${PaneClassPrefix}bottom"
+        case (false, true)  => s"${PaneClassPrefix}top"
+      }
   }
 }
