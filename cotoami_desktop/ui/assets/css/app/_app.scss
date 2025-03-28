@@ -48,7 +48,7 @@ div.app {
     display: flex;
     flex-direction: row;
 
-    .split-pane {
+    >.split-pane {
       width: 100%;
 
       .flow.pane.occupying {
@@ -63,6 +63,11 @@ div.app {
         &.folded>.pane-toggle {
           color: var(--color);
         }
+      }
+
+      >.split-pane-right>.pane-toggle {
+        // The default 0px puts the toggle too close to the right edge.
+        right: 2px;
       }
     }
   }
