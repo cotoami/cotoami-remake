@@ -211,7 +211,12 @@ object ModalClients {
           symbol = "settings",
           tip = Some("Settings"),
           tipPlacement = "bottom",
-          onClick = _ => ()
+          onClick = _ =>
+            dispatch(
+              (Modal.Msg.OpenModal.apply _).tupled(
+                Modal.NodeProfile(client.node.id, context.repo.nodes)
+              )
+            )
         )
       )
     )
