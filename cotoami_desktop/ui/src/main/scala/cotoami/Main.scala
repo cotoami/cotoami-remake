@@ -306,8 +306,16 @@ object Main {
       }
 
       case Msg.RepositoryMsg(submsg) => {
-        val (repo, cmds) = Root.update(submsg, model.repo)
-        (model.copy(repo = repo), cmds)
+        val (repo, cmd) = Root.update(submsg, model.repo)
+        (model.copy(repo = repo), cmd)
+      }
+
+      case Msg.Pin(cotoId) => {
+        val (repo, cmd) = updates.addCmd(
+          model.repo.pin(cotoId),
+          (_: Root) => Browser.send(Msg.SetPaneOpen(PaneStock.PaneName, true))
+        )
+        (model.copy(repo = repo), cmd)
       }
 
       case Msg.NodeUpdated(Right(details)) =>

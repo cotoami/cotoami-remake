@@ -66,6 +66,7 @@ object Msg {
   // Repository
   case object ReloadRepository extends Msg
   case class RepositoryMsg(submsg: Root.Msg) extends Msg
+  case class Pin(cotoId: Id[Coto]) extends Msg
   case class NodeUpdated(result: Either[ErrorJson, NodeDetails]) extends Msg
   case class CotoUpdated(result: Either[ErrorJson, CotoDetails]) extends Msg
   case class Promoted(result: Either[ErrorJson, (Cotonoma, Coto)]) extends Msg

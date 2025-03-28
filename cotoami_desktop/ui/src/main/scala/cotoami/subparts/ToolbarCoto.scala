@@ -42,7 +42,7 @@ object ToolbarCoto {
           disabled = repo.beingPinned(coto.id),
           onClick = e => {
             e.stopPropagation()
-            dispatch(Root.Msg.Pin(coto.id))
+            dispatch(AppMsg.Pin(coto.id))
           }
         )
       },
