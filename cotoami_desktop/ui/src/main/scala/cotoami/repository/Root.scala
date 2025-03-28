@@ -63,6 +63,17 @@ case class Root(
       cotos.get(cotonoma.cotoId).map(cotonoma -> _)
     )
 
+  def inFocus(coto: Coto): Boolean =
+    (nodes.focusedId, cotonomas.focusedId) match {
+      case (None, None)         => true
+      case (Some(nodeId), None) => coto.nodeId == nodeId
+      case (_, Some(cotonomaId)) =>
+        coto.postedInIds.contains(cotonomaId) || (
+          // if the coto is the current cotonoma itself
+          cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
+        )
+    }
+
   private def clearProcessingState: Root =
     copy(
       graphLoading = HashSet.empty,
@@ -138,6 +149,27 @@ case class Root(
     cotonomas.supers.filter(c => Some(c.id) != nodes.currentNodeRootCotonomaId)
   }
 
+  def fetchRecentCotonomas(
+      pageIndex: Double
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
+    CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
+
+  def fetchMoreRecentCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
+    cotonomas.recentIds.nextPageIndex
+      .map(fetchRecentCotonomas)
+      .getOrElse(Cmd.none)
+
+  def fetchSubCotonomas(
+      pageIndex: Double
+  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
+    cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
+      .getOrElse(Cmd.none)
+
+  def fetchMoreSubCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
+    cotonomas.subIds.nextPageIndex
+      .map(fetchSubCotonomas)
+      .getOrElse(Cmd.none)
+
   /////////////////////////////////////////////////////////////////////////////
   // Itos
   /////////////////////////////////////////////////////////////////////////////
@@ -178,6 +210,23 @@ case class Root(
     currentCotonoma.map(cotonoma =>
       itos.connected(cotonoma.cotoId, cotoId)
     ).getOrElse(false)
+
+  def fetchGraph: Cmd.One[AppMsg] =
+    currentCotonomaId
+      .map(Root.fetchGraphFromCotonoma)
+      .getOrElse(Cmd.none)
+
+  def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
+    if (
+      !alreadyLoadedGraphFrom(cotoId) &&
+      (
+        cotos.isCotonoma(cotoId).getOrElse(false) ||
+          anyTargetMissingItosFrom(cotoId)
+      )
+    )
+      Root.fetchGraphFromCoto(cotoId)
+    else
+      Cmd.none
 
   /////////////////////////////////////////////////////////////////////////////
   // Graph
@@ -322,63 +371,6 @@ case class Root(
       .modify(_.cotos).using(_.importFrom(graph))
       .modify(_.cotonomas).using(_.importFrom(graph))
       .modify(_.itos).using(_.putAll(graph.itos))
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Commands
-  /////////////////////////////////////////////////////////////////////////////
-
-  def fetchRecentCotonomas(
-      pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    CotonomaBackend.fetchRecent(nodes.focusedId, pageIndex)
-
-  def fetchMoreRecentCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    cotonomas.recentIds.nextPageIndex
-      .map(fetchRecentCotonomas)
-      .getOrElse(Cmd.none)
-
-  def fetchSubCotonomas(
-      pageIndex: Double
-  ): Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    cotonomas.focusedId.map(CotonomaBackend.fetchSubs(_, pageIndex))
-      .getOrElse(Cmd.none)
-
-  def fetchMoreSubCotonomas: Cmd.One[Either[ErrorJson, Page[Cotonoma]]] =
-    cotonomas.subIds.nextPageIndex
-      .map(fetchSubCotonomas)
-      .getOrElse(Cmd.none)
-
-  def fetchGraph: Cmd.One[AppMsg] =
-    currentCotonomaId
-      .map(Root.fetchGraphFromCotonoma)
-      .getOrElse(Cmd.none)
-
-  def lazyFetchGraphFrom(cotoId: Id[Coto]): Cmd.One[AppMsg] =
-    if (
-      !alreadyLoadedGraphFrom(cotoId) &&
-      (
-        cotos.isCotonoma(cotoId).getOrElse(false) ||
-          anyTargetMissingItosFrom(cotoId)
-      )
-    )
-      Root.fetchGraphFromCoto(cotoId)
-    else
-      Cmd.none
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Private
-  /////////////////////////////////////////////////////////////////////////////
-
-  private def inFocus(coto: Coto): Boolean =
-    (nodes.focusedId, cotonomas.focusedId) match {
-      case (None, None)         => true
-      case (Some(nodeId), None) => coto.nodeId == nodeId
-      case (_, Some(cotonomaId)) =>
-        coto.postedInIds.contains(cotonomaId) || (
-          // if the coto is the current cotonoma itself
-          cotonomas.getByCotoId(coto.id).map(_.id) == Some(cotonomaId)
-        )
-    }
 }
 
 object Root {
