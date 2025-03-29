@@ -67,6 +67,13 @@ dialog.clients {
           span.not-yet-connected {
             color: var(--muted-color);
           }
+
+          span.local-node-mark {
+            margin-left: 4px;
+            font-size: 90%;
+            vertical-align: middle;
+            opacity: 0.5;
+          }
         }
 
         td.status {

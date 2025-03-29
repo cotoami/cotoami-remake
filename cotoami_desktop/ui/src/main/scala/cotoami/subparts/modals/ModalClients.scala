@@ -172,7 +172,10 @@ object ModalClients {
             "<Not yet connected>"
           )
         else
-          PartsNode.spanNode(client.node)
+          PartsNode.spanNode(client.node),
+        Option.when(isLocal) {
+          span(className := "local-node-mark")("(You)")
+        }
       ),
       td(className := "status")(
         if (client.active.isDefined)
