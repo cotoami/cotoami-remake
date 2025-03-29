@@ -22,7 +22,7 @@ object PartsNode {
       span(className := "name")(node.name)
     )
 
-  def buttonOperateAs(switchTo: Node)(implicit
+  def buttonOperateAs(switchTo: Node, tipPlacement: String = "bottom")(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): Option[ReactElement] = {
@@ -35,6 +35,7 @@ object PartsNode {
       toolButton(
         symbol = Node.SwitchIconName,
         tip = Some("Operate as"),
+        tipPlacement = tipPlacement,
         classes = "operate",
         onClick = _ =>
           dispatch(

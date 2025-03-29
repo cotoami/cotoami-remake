@@ -187,7 +187,7 @@ object ModalNodeProfile {
     Fragment(
       divSidebar(node, model),
       div(className := "main")(
-        divTools(model),
+        divTools(node, model),
         div(className := "fields")(
           ScrollArea(className = Some("scroll-fields"))(
             fieldId(node),
@@ -256,11 +256,12 @@ object ModalNodeProfile {
       context.repo.nodes.operating.map(PartsNode.imgNode(_))
     )
 
-  private def divTools(model: Model)(implicit
+  private def divTools(node: Node, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "tools")(
+      PartsNode.buttonOperateAs(node, "left"),
       Option.when(model.isLocalNode() && model.isOperatingNode()) {
         div(className := "generate-owner-password")(
           span(
