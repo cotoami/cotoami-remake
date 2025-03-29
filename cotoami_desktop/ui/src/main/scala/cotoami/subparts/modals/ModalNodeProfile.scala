@@ -235,7 +235,7 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "tools")(
-      Option.when(model.isLocalNode()) {
+      Option.when(model.isLocalNode() && model.isOperatingNode()) {
         div(className := "generate-owner-password")(
           span(
             className := "processing",
