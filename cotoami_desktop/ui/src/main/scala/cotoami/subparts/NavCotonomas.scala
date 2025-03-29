@@ -255,23 +255,7 @@ object NavCotonomas {
               )
             )
         ),
-        Option.when(
-          !repo.nodes.operatingRemote &&
-            repo.nodes.childPrivilegesTo(node.id)
-              .map(_.asOwner).getOrElse(false)
-        ) {
-          toolButton(
-            symbol = Node.SwitchIconName,
-            tip = Some("Operate as"),
-            classes = "operate",
-            onClick = _ =>
-              dispatch(
-                Modal.Msg.OpenModal(
-                  Modal.OperateAs(repo.nodes.operating.get, node)
-                )
-              )
-          )
-        }
+        PartsNode.buttonOperateAs(node)
       )
     )
   }

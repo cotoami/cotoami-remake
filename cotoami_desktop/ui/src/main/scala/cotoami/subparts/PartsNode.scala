@@ -3,7 +3,9 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
+import cotoami.components.toolButton
 
 object PartsNode {
 
@@ -19,4 +21,29 @@ object PartsNode {
       imgNode(node),
       span(className := "name")(node.name)
     )
+
+  def buttonOperateAs(switchTo: Node)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): Option[ReactElement] = {
+    val repo = context.repo
+    Option.when(
+      !repo.nodes.operatingRemote &&
+        repo.nodes.childPrivilegesTo(switchTo.id)
+          .map(_.asOwner).getOrElse(false)
+    ) {
+      toolButton(
+        symbol = Node.SwitchIconName,
+        tip = Some("Operate as"),
+        classes = "operate",
+        onClick = _ =>
+          dispatch(
+            Modal.Msg.OpenModal(
+              Modal.OperateAs(repo.nodes.operating.get, switchTo)
+            )
+          )
+      )
+    }
+  }
+
 }
