@@ -21,6 +21,8 @@ trait Text {
   val WriteSubcoto: String
   val EditItos: String
 
+  val Node_notYetConnected: String
+
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
   val ConfirmDeleteCotonoma: String

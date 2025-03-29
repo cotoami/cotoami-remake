@@ -23,6 +23,8 @@ case class Node(
       case _          => false
     }
 
+  def hasIcon: Boolean = icon.size != 0
+
   lazy val iconUrl: String = dom.URL.createObjectURL(icon)
 
   def setIcon(icon: String): Node = {

@@ -169,7 +169,7 @@ object ModalClients {
       td(className := "name")(
         if (client.node.name.isBlank())
           span(className := "not-yet-connected")(
-            "<Not yet connected>"
+            s"<${context.i18n.text.Node_notYetConnected}>"
           )
         else
           PartsNode.spanNode(client.node),

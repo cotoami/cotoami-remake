@@ -24,6 +24,8 @@ object en extends Text {
   val WriteSubcoto = "Write Sub-coto"
   val EditItos = "Edit Itos"
 
+  val Node_notYetConnected = "Not yet connected"
+
   val ConfirmDeleteCoto = "Are you sure you want to delete the coto?"
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =
     span(className := "delete-others-coto")(

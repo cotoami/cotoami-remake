@@ -50,6 +50,18 @@ dialog.node-profile {
       }
     }
 
+    section.node-icon.empty {
+      display: inline-flex;
+      align-items: center;
+      text-align: center;
+      width: 100px;
+      height: 100px;
+      border: 2px dotted var(--pane-border-color);
+      border-radius: 4px;
+      font-size: 90%;
+      opacity: 0.5;
+    }
+
     section.operating-node-mark {
       margin-top: 4px;
       font-size: 90%;

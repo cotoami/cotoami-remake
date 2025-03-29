@@ -18,7 +18,12 @@ import cotoami.backend.{
   LocalServer,
   ServerConfig
 }
-import cotoami.components.{materialSymbol, toolButton, ScrollArea}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  toolButton,
+  ScrollArea
+}
 import cotoami.subparts.{
   labeledField,
   labeledInputField,
@@ -203,11 +208,25 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "sidebar")(
-      section(className := "node-icon")(
-        PartsNode.imgNode(node),
-        Option.when(model.isOperatingNode()) {
-          buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
-        }
+      section(
+        className := optionalClasses(
+          Seq(
+            ("node-icon", true),
+            ("empty", !node.hasIcon)
+          )
+        )
+      )(
+        if (node.hasIcon)
+          Fragment(
+            PartsNode.imgNode(node),
+            Option.when(model.isOperatingNode()) {
+              buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
+            }
+          )
+        else
+          span(className := "empty-icon")(
+            context.i18n.text.Node_notYetConnected
+          )
       ),
       if (context.repo.nodes.isOperating(node.id))
         section(className := "operating-node-mark")("You")
