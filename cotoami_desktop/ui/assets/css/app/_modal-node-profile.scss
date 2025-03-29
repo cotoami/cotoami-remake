@@ -50,6 +50,12 @@ dialog.node-profile {
       }
     }
 
+    section.operating-node-mark {
+      margin-top: 4px;
+      font-size: 90%;
+      opacity: 0.5;
+    }
+
     section.operating-node {
       display: flex;
       flex-direction: column;

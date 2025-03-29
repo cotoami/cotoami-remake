@@ -209,7 +209,9 @@ object ModalNodeProfile {
           buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
         }
       ),
-      Option.when(!context.repo.nodes.isOperating(node.id)) {
+      if (context.repo.nodes.isOperating(node.id))
+        section(className := "operating-node-mark")("You")
+      else
         section(className := "operating-node")(
           div(className := "arrow")(materialSymbol("arrow_upward")),
           section(className := "privileges")(
@@ -227,7 +229,6 @@ object ModalNodeProfile {
           ),
           context.repo.nodes.operating.map(PartsNode.imgNode(_))
         )
-      }
     )
 
   private def divTools(model: Model)(implicit
