@@ -8,7 +8,7 @@ import slinky.web.SyntheticMouseEvent
 
 import fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ClientNode, Coto, Id, Node, Page, Server}
+import cotoami.models.{ChildNode, ClientNode, Coto, Id, Node, Page, Server}
 import cotoami.repository.{Nodes, Root}
 import cotoami.backend.{
   ClientNodeBackend,
@@ -212,23 +212,24 @@ object ModalNodeProfile {
       if (context.repo.nodes.isOperating(node.id))
         section(className := "operating-node-mark")("You")
       else
-        section(className := "operating-node")(
-          div(className := "arrow")(materialSymbol("arrow_upward")),
-          section(className := "privileges")(
-            context.repo.nodes.childPrivilegesTo(node.id) match {
-              case Some(privileges) => {
-                if (privileges.asOwner)
-                  context.i18n.text.Owner
-                else if (privileges.canEditItos)
-                  s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
-                else
-                  context.i18n.text.Post
-              }
-              case None => context.i18n.text.ReadOnly
-            }
-          ),
-          context.repo.nodes.operating.map(PartsNode.imgNode(_))
-        )
+        context.repo.nodes.childPrivilegesTo(node.id)
+          .map(sectionOperatingNodeAsChild)
+    )
+
+  private def sectionOperatingNodeAsChild(privileges: ChildNode)(implicit
+      context: Context
+  ): ReactElement =
+    section(className := "operating-node")(
+      div(className := "arrow")(materialSymbol("arrow_upward")),
+      section(className := "privileges")(
+        if (privileges.asOwner)
+          context.i18n.text.Owner
+        else if (privileges.canEditItos)
+          s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
+        else
+          context.i18n.text.Post
+      ),
+      context.repo.nodes.operating.map(PartsNode.imgNode(_))
     )
 
   private def divTools(model: Model)(implicit
