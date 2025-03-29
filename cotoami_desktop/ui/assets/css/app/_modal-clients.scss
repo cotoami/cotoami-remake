@@ -101,6 +101,10 @@ dialog.clients {
           padding-left: 16px;
           padding-right: 16px;
 
+          button:disabled {
+            opacity: 0.1;
+          }
+
           span.material-symbols {
             font-size: 18px;
           }

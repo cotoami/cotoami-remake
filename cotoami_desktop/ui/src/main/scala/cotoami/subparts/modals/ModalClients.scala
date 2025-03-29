@@ -160,7 +160,8 @@ object ModalClients {
   private def trClient(client: Client, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
+  ): ReactElement = {
+    val isLocal = Some(client.node.id) == context.repo.nodes.localId
     tr(key := client.node.id.uuid)(
       td(className := "id")(
         code()(client.node.id.uuid)
@@ -199,7 +200,7 @@ object ModalClients {
           disabled := (
             model.togglingDisabled.contains(client.node.id) ||
               // Avoid disabling oneself unintentionally when operating as a parent node
-              Some(client.node.id) == context.repo.nodes.localId
+              isLocal
           ),
           onChange := (_ =>
             dispatch(Msg.SetDisabled(client.node.id, !client.client.disabled))
@@ -209,8 +210,9 @@ object ModalClients {
       td(className := "settings")(
         toolButton(
           symbol = "settings",
-          tip = Some("Settings"),
+          tip = Option.when(!isLocal)("Settings"),
           tipPlacement = "bottom",
+          disabled = isLocal,
           onClick = _ =>
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
@@ -220,4 +222,5 @@ object ModalClients {
         )
       )
     )
+  }
 }
