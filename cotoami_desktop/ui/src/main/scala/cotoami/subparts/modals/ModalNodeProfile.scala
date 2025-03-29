@@ -229,7 +229,12 @@ object ModalNodeProfile {
           )
       ),
       if (context.repo.nodes.isOperating(node.id))
-        section(className := "operating-node-mark")("You")
+        section(className := "operating-node-mark")(
+          "You",
+          Option.when(!context.repo.nodes.isLocal(node.id)) {
+            " (switched)"
+          }
+        )
       else
         context.repo.nodes.childPrivilegesTo(node.id)
           .map(sectionOperatingNodeAsChild)
