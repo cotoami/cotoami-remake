@@ -183,7 +183,6 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val rootCoto = context.repo.rootOf(model.nodeId).map(_._2)
-    val asServer = context.repo.nodes.servers.get(model.nodeId)
     Fragment(
       divSidebar(node, model),
       div(className := "main")(
@@ -192,7 +191,7 @@ object ModalNodeProfile {
           ScrollArea(className = Some("scroll-fields"))(
             fieldId(node),
             fieldName(node, rootCoto, model),
-            asServer.map(fieldUrl),
+            context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
             model.localServer.flatMap(_.activeConfig)
               .map(sectionLocalServer(_, model))
