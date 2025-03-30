@@ -194,9 +194,8 @@ object ModalNodeProfile {
             fieldName(node, rootCoto, model),
             asServer.map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
-            model.localServer.flatMap(_.activeConfig).map(
-              sectionLocalServer(_, model)
-            )
+            model.localServer.flatMap(_.activeConfig)
+              .map(sectionLocalServer(_, model))
           )
         )
       )
