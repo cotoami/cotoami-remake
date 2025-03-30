@@ -192,7 +192,7 @@ object ModalNodeProfile {
           ScrollArea(className = Some("scroll-fields"))(
             fieldId(node),
             fieldName(node, rootCoto, model),
-            asServer.map(fieldServerUrl),
+            asServer.map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
             model.localServer.flatMap(_.activeConfig).map(
               sectionLocalServer(_, model)
@@ -325,16 +325,16 @@ object ModalNodeProfile {
       )
     )
 
-  private def fieldServerUrl(server: Server): ReactElement =
+  private def fieldUrl(server: Server): ReactElement =
     labeledField(
-      classes = "server-url",
-      label = "Server URL",
-      labelFor = Some("node-profile-server-url")
+      classes = "server",
+      label = "URL",
+      labelFor = Some("node-profile-url")
     )(
       div(className := "input-with-tools")(
         input(
           `type` := "text",
-          id := "node-profile-server-url",
+          id := "node-profile-url",
           readOnly := true,
           value := server.server.urlPrefix
         ),
