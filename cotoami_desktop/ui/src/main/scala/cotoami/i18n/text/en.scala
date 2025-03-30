@@ -53,6 +53,10 @@ object en extends Text {
     Are you sure you want to generate a new owner password? 
     Doing so will invalidate the current password.
     """
+  val ModalNodeProfile_localServer = "As Server"
+  val ModalNodeProfile_localServerUrl = "Server URL"
+  val ModalNodeProfile_clientNodes = "Client Nodes"
+  val ModalNodeProfile_anonymousRead = "Accept Anonymous Read"
 
   lazy val ModalIncorporate_intro: ReactElement = p()(
     """

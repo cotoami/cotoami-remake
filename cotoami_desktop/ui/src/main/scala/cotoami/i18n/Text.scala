@@ -36,6 +36,10 @@ trait Text {
   val ModalNodeProfile_title: String
   val ModalNodeProfile_generateOwnerPassword: String
   val ModalNodeProfile_confirmGenerateOwnerPassword: String
+  val ModalNodeProfile_localServer: String
+  val ModalNodeProfile_localServerUrl: String
+  val ModalNodeProfile_clientNodes: String
+  val ModalNodeProfile_anonymousRead: String
 
   def ModalIncorporate_intro: ReactElement
   def ModalIncorporate_connect(operatingNodeId: String): ReactElement

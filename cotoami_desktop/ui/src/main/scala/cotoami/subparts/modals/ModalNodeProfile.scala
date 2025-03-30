@@ -371,16 +371,18 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     section(className := "local-server")(
-      h2()("Local server"),
+      h2()(context.i18n.text.ModalNodeProfile_localServer),
       fieldLocalServerUrl(config),
       fieldClientNodes(model),
       fieldAnonymousRead(model)
     )
 
-  private def fieldLocalServerUrl(config: ServerConfig): ReactElement =
+  private def fieldLocalServerUrl(config: ServerConfig)(implicit
+      context: Context
+  ): ReactElement =
     labeledInputField(
       classes = "local-server-url",
-      label = "Local server URL",
+      label = context.i18n.text.ModalNodeProfile_localServerUrl,
       inputId = "node-profile-local-server-url",
       inputType = "text",
       inputValue = config.url,
@@ -393,7 +395,7 @@ object ModalNodeProfile {
   ): ReactElement =
     labeledField(
       classes = "client-nodes",
-      label = "Client nodes",
+      label = context.i18n.text.ModalNodeProfile_clientNodes,
       labelFor = Some("node-profile-client-nodes")
     )(
       div(className := "input-with-tools")(
@@ -414,10 +416,10 @@ object ModalNodeProfile {
 
   private def fieldAnonymousRead(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     labeledField(
       classes = "anonymous-read",
-      label = "Anonymous read",
+      label = context.i18n.text.ModalNodeProfile_anonymousRead,
       labelFor = Some("node-profile-anonymous-read")
     )(
       input(
