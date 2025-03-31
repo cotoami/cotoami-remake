@@ -22,9 +22,21 @@ object ModalClients {
 
   case class Model(
       clientNodes: PaginatedItems[ClientNode] = PaginatedItems(),
+      loading: Boolean = false,
       togglingDisabled: Set[Id[Node]] = Set.empty,
       error: Option[String] = None
   ) {
+    def fetchFirst: (Model, Cmd.One[AppMsg]) =
+      (
+        Model(loading = true),
+        fetchClients(0)
+      )
+
+    def appendPage(page: Page[ClientNode]): Model =
+      this
+        .modify(_.loading).setTo(false)
+        .modify(_.clientNodes).using(_.appendPage(page))
+
     def clients(nodes: Nodes): Seq[Client] =
       clientNodes.items.flatMap { client =>
         nodes.get(client.nodeId).map { node =>
@@ -44,11 +56,7 @@ object ModalClients {
   )
 
   object Model {
-    def apply(): (Model, Cmd[AppMsg]) =
-      (
-        Model(),
-        fetchClients(0)
-      )
+    def apply(): (Model, Cmd[AppMsg]) = new Model().fetchFirst
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -60,8 +68,7 @@ object ModalClients {
   }
 
   object Msg {
-    case class ClientsFetched(result: Either[ErrorJson, Page[ClientNode]])
-        extends Msg
+    case class Fetched(result: Either[ErrorJson, Page[ClientNode]]) extends Msg
     case class SetDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class ClientUpdated(
         id: Id[Node],
@@ -71,10 +78,10 @@ object ModalClients {
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.ClientsFetched(Right(page)) =>
-        (model.modify(_.clientNodes).using(_.appendPage(page)), Cmd.none)
+      case Msg.Fetched(Right(page)) =>
+        (model.appendPage(page), Cmd.none)
 
-      case Msg.ClientsFetched(Left(e)) =>
+      case Msg.Fetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch clients.", e))
 
       case Msg.SetDisabled(id, disable) =>
@@ -101,7 +108,7 @@ object ModalClients {
 
   def fetchClients(pageIndex: Double): Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(pageIndex)
-      .map(Msg.ClientsFetched(_).into)
+      .map(Msg.Fetched(_).into)
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -153,7 +160,11 @@ object ModalClients {
                 clients.map(trClient(_, model))
               )
             )
-        }
+        },
+        div(
+          className := "more",
+          aria - "busy" := model.loading.toString()
+        )()
       )
     )
 
