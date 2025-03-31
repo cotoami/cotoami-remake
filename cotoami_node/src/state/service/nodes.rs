@@ -20,7 +20,7 @@ impl NodeState {
         self.get(move |ds| {
             let node = ds.try_get_node(&id)?;
             let root = if let Some(cotonoma_id) = node.root_cotonoma_id {
-                Some(ds.try_get_cotonoma_pair(&cotonoma_id)?)
+                ds.cotonoma_pair(&cotonoma_id)?
             } else {
                 None
             };

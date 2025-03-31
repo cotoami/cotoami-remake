@@ -156,6 +156,12 @@ impl InitialDataset {
 #[derive(Debug, serde::Serialize, serde::Deserialize, new)]
 pub struct NodeDetails {
     pub node: Node,
+
+    /// The root cotonoma and coto pair of the node.
+    ///
+    /// Even if [Node::root_cotonoma_id] has [Some] value, the `root` will be
+    /// [None] if the node is a client (as long as the local node has not been
+    /// received the changelogs from it).
     pub root: Option<(Cotonoma, Coto)>,
 }
 
