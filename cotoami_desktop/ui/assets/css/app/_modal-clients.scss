@@ -40,84 +40,84 @@ dialog.clients {
         text-align: center;
         color: var(--muted-color);
       }
+    }
+  }
 
-      table.client-nodes {
-        margin-bottom: 10px;
+  table.client-nodes {
+    margin-bottom: 10px;
 
-        th {
-          text-align: center;
-          font-size: 90%;
-          opacity: 0.8;
+    th {
+      text-align: center;
+      font-size: 90%;
+      opacity: 0.8;
+    }
+
+    td.id {
+      font-size: 90%;
+      white-space: nowrap;
+
+      code {
+        color: var(--color);
+      }
+    }
+
+    td.name {
+      text-align: left;
+      max-width: 180px;
+      white-space: nowrap;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
+
+      span.not-yet-connected {
+        color: var(--muted-color);
+      }
+
+      span.local-node-mark {
+        margin-left: 4px;
+        font-size: 90%;
+        vertical-align: middle;
+        opacity: 0.5;
+      }
+    }
+
+    td.status {
+      text-align: center;
+      padding: 0;
+
+      span.status {
+        cursor: default;
+        border-style: none;
+
+        &.connected {
+          color: var(--form-element-valid-border-color);
         }
 
-        td.id {
-          font-size: 90%;
-          white-space: nowrap;
-
-          code {
-            color: var(--color);
-          }
+        &.disconnected {
+          color: var(--muted-color);
         }
+      }
 
-        td.name {
-          text-align: left;
-          max-width: 180px;
-          white-space: nowrap;
-          overflow-x: hidden;
-          text-overflow: ellipsis;
+      span.material-symbols {
+        font-size: 24px;
+      }
+    }
 
-          span.not-yet-connected {
-            color: var(--muted-color);
-          }
+    td.enabled {
+      text-align: center;
+    }
 
-          span.local-node-mark {
-            margin-left: 4px;
-            font-size: 90%;
-            vertical-align: middle;
-            opacity: 0.5;
-          }
-        }
+    td.settings {
+      text-align: center;
+      padding: 0;
+      padding-left: 16px;
+      padding-right: 16px;
 
-        td.status {
-          text-align: center;
-          padding: 0;
+      button:disabled {
+        opacity: 0.1;
+      }
 
-          span.status {
-            cursor: default;
-            border-style: none;
-
-            &.connected {
-              color: var(--form-element-valid-border-color);
-            }
-
-            &.disconnected {
-              color: var(--muted-color);
-            }
-          }
-
-          span.material-symbols {
-            font-size: 24px;
-          }
-        }
-
-        td.enabled {
-          text-align: center;
-        }
-
-        td.settings {
-          text-align: center;
-          padding: 0;
-          padding-left: 16px;
-          padding-right: 16px;
-
-          button:disabled {
-            opacity: 0.1;
-          }
-
-          span.material-symbols {
-            font-size: 18px;
-          }
-        }
+      span.material-symbols {
+        font-size: 18px;
       }
     }
   }
