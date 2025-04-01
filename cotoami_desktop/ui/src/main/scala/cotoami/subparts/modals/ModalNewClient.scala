@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.Cmd
+import fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id, Node}
@@ -133,7 +133,7 @@ object ModalNewClient {
             generatedPassword = Some(client.password)
           ),
           _2 = context.repo.nodes.put(client.node),
-          _3 = ModalClients.fetchClients(0)
+          _3 = Browser.send(ModalClients.Msg.FetchFirst.into)
         )
 
       case Msg.Registered(Left(e)) =>

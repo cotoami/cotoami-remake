@@ -26,10 +26,21 @@ object ModalClients {
       togglingDisabled: Set[Id[Node]] = Set.empty,
       error: Option[String] = None
   ) {
-    def fetchFirst: (Model, Cmd.One[AppMsg]) =
+    def fetchFirst: (Model, Cmd.One[AppMsg]) = fetch(0)
+
+    def fetchMore: (Model, Cmd.One[AppMsg]) =
+      if (loading)
+        (this, Cmd.none)
+      else
+        clientNodes.nextPageIndex
+          .map(fetch)
+          .getOrElse((this, Cmd.none)) // no more
+
+    private def fetch(pageIndex: Double): (Model, Cmd.One[AppMsg]) =
       (
-        Model(loading = true),
-        fetchClients(0)
+        copy(loading = true),
+        ClientNodeBackend.fetchRecent(pageIndex)
+          .map(Msg.Fetched(_).into)
       )
 
     def appendPage(page: Page[ClientNode]): Model =
@@ -68,6 +79,8 @@ object ModalClients {
   }
 
   object Msg {
+    case object FetchFirst extends Msg
+    case object FetchMore extends Msg
     case class Fetched(result: Either[ErrorJson, Page[ClientNode]]) extends Msg
     case class SetDisabled(id: Id[Node], disable: Boolean) extends Msg
     case class ClientUpdated(
@@ -78,6 +91,10 @@ object ModalClients {
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.FetchFirst => model.fetchFirst
+
+      case Msg.FetchMore => model.fetchMore
+
       case Msg.Fetched(Right(page)) =>
         (model.appendPage(page), Cmd.none)
 
@@ -105,10 +122,6 @@ object ModalClients {
           cotoami.error("Couldn't update a client.", e)
         )
     }
-
-  def fetchClients(pageIndex: Double): Cmd.One[AppMsg] =
-    ClientNodeBackend.fetchRecent(pageIndex)
-      .map(Msg.Fetched(_).into)
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -163,7 +176,9 @@ object ModalClients {
             div(className := "column settings")()
           ),
           div(className := "table-body")(
-            ScrollArea()(
+            ScrollArea(
+              onScrollToBottom = Some(() => dispatch(Msg.FetchMore))
+            )(
               (
                 clients.map(divClientRow(_, model)) :+
                   div(
