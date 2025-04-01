@@ -71,6 +71,41 @@ button.default {
   }
 }
 
+//
+// Class-based table layout
+//
+
+.table {
+  .column {
+    padding: 5px;
+  }
+
+  .table-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 90%;
+    opacity: 0.8;
+
+    .column {
+      text-align: center;
+      font-weight: 600;
+    }
+  }
+
+  .table-body {
+    .row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      &:nth-child(odd) {
+        background-color: var(--table-row-stripped-background-color);
+      }
+    }
+  }
+}
+
 
 //
 // Collapsible pane

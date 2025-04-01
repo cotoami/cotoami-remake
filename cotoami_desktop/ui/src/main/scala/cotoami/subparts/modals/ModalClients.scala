@@ -11,7 +11,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
-import cotoami.components.{materialSymbol, toolButton}
+import cotoami.components.{materialSymbol, toolButton, ScrollArea}
 import cotoami.subparts.{sectionClientNodesCount, Modal, PartsNode}
 
 object ModalClients {
@@ -140,44 +140,52 @@ object ModalClients {
         )
       ),
       div(className := "body")(
-        model.clients(context.repo.nodes) match {
-          case Seq() =>
-            div(className := "empty")(
-              "No client nodes registered yet."
-            )
-          case clients =>
-            table(className := "client-nodes", role := "grid")(
-              thead()(
-                tr()(
-                  th()("Node ID"),
-                  th()("Name"),
-                  th()("Status"),
-                  th()("Enabled"),
-                  th()()
-                )
-              ),
-              tbody()(
-                clients.map(trClient(_, model))
-              )
-            )
-        },
-        div(
-          className := "more",
-          aria - "busy" := model.loading.toString()
-        )()
+        sectionClientNodes(model)
       )
     )
 
-  private def trClient(client: Client, model: Model)(implicit
+  private def sectionClientNodes(model: Model)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    model.clients(context.repo.nodes) match {
+      case Seq() =>
+        section(className := "client-nodes empty")(
+          "No client nodes registered yet."
+        )
+      case clients =>
+        section(className := "client-nodes table")(
+          div(className := "table-header")(
+            div(className := "column node-id")("Node ID"),
+            div(className := "column name")("Name"),
+            div(className := "column status")("Status"),
+            div(className := "column enabled")("Enabled"),
+            div(className := "column settings")()
+          ),
+          div(className := "table-body")(
+            ScrollArea()(
+              (
+                clients.map(divClientRow(_, model)) :+
+                  div(
+                    className := "more",
+                    aria - "busy" := model.loading.toString()
+                  )()
+              ): _*
+            )
+          )
+        )
+    }
+
+  private def divClientRow(client: Client, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement = {
     val isLocal = Some(client.node.id) == context.repo.nodes.localId
-    tr(key := client.node.id.uuid)(
-      td(className := "id")(
+    div(key := client.node.id.uuid, className := "row client")(
+      div(className := "column node-id")(
         code()(client.node.id.uuid)
       ),
-      td(className := "name")(
+      div(className := "column name")(
         if (client.node.name.isBlank())
           span(className := "not-yet-connected")(
             s"<${context.i18n.text.Node_notYetConnected}>"
@@ -188,12 +196,12 @@ object ModalClients {
           span(className := "local-node-mark")("(You)")
         }
       ),
-      td(className := "status")(
+      div(className := "column status")(
         if (client.active.isDefined)
           span(
             className := "status connected",
             data - "tooltip" := "Connected",
-            data - "placement" := "bottom"
+            data - "placement" := "right"
           )(
             materialSymbol("link")
           )
@@ -201,12 +209,12 @@ object ModalClients {
           span(
             className := "status disconnected",
             data - "tooltip" := "Disconnected",
-            data - "placement" := "bottom"
+            data - "placement" := "right"
           )(
             materialSymbol("do_not_disturb_on")
           )
       ),
-      td(className := "enabled")(
+      div(className := "column enabled")(
         input(
           `type` := "checkbox",
           role := "switch",
@@ -221,11 +229,9 @@ object ModalClients {
           )
         )
       ),
-      td(className := "settings")(
+      div(className := "column settings")(
         toolButton(
           symbol = "settings",
-          tip = Option.when(!isLocal)("Settings"),
-          tipPlacement = "bottom",
           disabled = isLocal,
           onClick = _ =>
             dispatch(

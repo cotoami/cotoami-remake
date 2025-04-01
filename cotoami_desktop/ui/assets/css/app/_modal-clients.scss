@@ -36,88 +36,111 @@ dialog.clients {
     div.body {
       min-height: 30px;
 
-      div.empty {
+      section.client-nodes.empty {
         text-align: center;
         color: var(--muted-color);
       }
     }
   }
 
-  table.client-nodes {
+  section.client-nodes {
+    width: 70vw;
+    max-width: 800px;
+    min-width: 600px;
+    margin-top: 10px;
     margin-bottom: 10px;
 
-    th {
-      text-align: center;
-      font-size: 90%;
-      opacity: 0.8;
-    }
+    div.column {
+      &.node-id {
+        width: 330px;
+      }
 
-    td.id {
-      font-size: 90%;
-      white-space: nowrap;
+      &.name {
+        flex: 1;
+      }
 
-      code {
-        color: var(--color);
+      &.status {
+        width: 60px;
+      }
+
+      &.enabled {
+        width: 70px;
+      }
+
+      &.settings {
+        width: 60px;
       }
     }
 
-    td.name {
-      text-align: left;
-      max-width: 180px;
-      white-space: nowrap;
-      overflow-x: hidden;
-      text-overflow: ellipsis;
+    .table-body {
+      max-height: 70vh;
+    }
 
-      span.not-yet-connected {
-        color: var(--muted-color);
-      }
-
-      span.local-node-mark {
-        margin-left: 4px;
+    div.row.client div.column {
+      &.node-id {
+        text-align: center;
         font-size: 90%;
-        vertical-align: middle;
-        opacity: 0.5;
-      }
-    }
+        white-space: nowrap;
 
-    td.status {
-      text-align: center;
-      padding: 0;
-
-      span.status {
-        cursor: default;
-        border-style: none;
-
-        &.connected {
-          color: var(--form-element-valid-border-color);
+        code {
+          color: var(--color);
         }
+      }
 
-        &.disconnected {
+      &.name {
+        text-align: left;
+        white-space: nowrap;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+
+        span.not-yet-connected {
           color: var(--muted-color);
         }
+
+        span.local-node-mark {
+          margin-left: 4px;
+          font-size: 90%;
+          vertical-align: middle;
+          opacity: 0.5;
+        }
       }
 
-      span.material-symbols {
-        font-size: 24px;
+      &.status {
+        text-align: center;
+
+        span.status {
+          display: inline-block;
+          cursor: default;
+          border-style: none;
+
+          &.connected {
+            color: var(--form-element-valid-border-color);
+          }
+
+          &.disconnected {
+            color: var(--muted-color);
+          }
+        }
+
+        span.material-symbols {
+          font-size: 24px;
+        }
       }
-    }
 
-    td.enabled {
-      text-align: center;
-    }
-
-    td.settings {
-      text-align: center;
-      padding: 0;
-      padding-left: 16px;
-      padding-right: 16px;
-
-      button:disabled {
-        opacity: 0.1;
+      &.enabled {
+        text-align: center;
       }
 
-      span.material-symbols {
-        font-size: 18px;
+      &.settings {
+        text-align: center;
+
+        button:disabled {
+          opacity: 0.1;
+        }
+
+        span.material-symbols {
+          font-size: 18px;
+        }
       }
     }
   }

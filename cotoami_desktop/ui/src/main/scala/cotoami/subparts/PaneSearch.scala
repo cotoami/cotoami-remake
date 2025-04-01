@@ -198,11 +198,13 @@ object PaneSearch {
         ScrollArea(
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore))
         )(
-          (model.cotos(context.repo).map(sectionCoto) :+
-            div(
-              className := "more",
-              aria - "busy" := model.loading.toString()
-            )()): _*
+          (
+            model.cotos(context.repo).map(sectionCoto) :+
+              div(
+                className := "more",
+                aria - "busy" := model.loading.toString()
+              )()
+          ): _*
         )
       )
     )
