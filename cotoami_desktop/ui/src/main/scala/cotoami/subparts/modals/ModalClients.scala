@@ -11,7 +11,12 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
-import cotoami.components.{materialSymbol, toolButton, ScrollArea}
+import cotoami.components.{
+  materialSymbol,
+  optionalClasses,
+  toolButton,
+  ScrollArea
+}
 import cotoami.subparts.{sectionClientNodesCount, Modal, PartsNode}
 
 object ModalClients {
@@ -169,8 +174,8 @@ object ModalClients {
       case clients =>
         section(className := "client-nodes table")(
           div(className := "table-header")(
-            div(className := "column node-id")("Node ID"),
             div(className := "column name")("Name"),
+            div(className := "column last-login")("Last Login"),
             div(className := "column status")("Status"),
             div(className := "column enabled")("Enabled"),
             div(className := "column settings")()
@@ -197,19 +202,27 @@ object ModalClients {
   ): ReactElement = {
     val isLocal = Some(client.node.id) == context.repo.nodes.localId
     div(key := client.node.id.uuid, className := "row client")(
-      div(className := "column node-id")(
-        code()(client.node.id.uuid)
-      ),
-      div(className := "column name")(
-        if (client.node.name.isBlank())
-          span(className := "not-yet-connected")(
-            s"<${context.i18n.text.Node_notYetConnected}>"
+      div(
+        className := optionalClasses(
+          Seq(
+            ("column", true),
+            ("name", true),
+            ("not-yet-connected", client.node.name.isBlank())
           )
+        )
+      )(
+        if (client.node.name.isBlank())
+          code()(client.node.id.uuid)
         else
           PartsNode.spanNode(client.node),
         Option.when(isLocal) {
           span(className := "local-node-mark")("(You)")
         }
+      ),
+      div(className := "column last-login")(
+        client.client.lastSessionCreatedAt
+          .map(context.time.display)
+          .getOrElse("-"): String
       ),
       div(className := "column status")(
         if (client.active.isDefined)

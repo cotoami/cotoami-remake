@@ -45,18 +45,18 @@ dialog.clients {
 
   section.client-nodes {
     width: 70vw;
-    max-width: 800px;
+    max-width: 700px;
     min-width: 600px;
     margin-top: 10px;
     margin-bottom: 10px;
 
     div.column {
-      &.node-id {
-        width: 330px;
-      }
-
       &.name {
         flex: 1;
+      }
+
+      &.last-login {
+        width: 180px;
       }
 
       &.status {
@@ -77,23 +77,13 @@ dialog.clients {
     }
 
     div.row.client div.column {
-      &.node-id {
-        text-align: center;
-        font-size: 90%;
-        white-space: nowrap;
-
-        code {
-          color: var(--color);
-        }
-      }
-
       &.name {
         text-align: left;
         white-space: nowrap;
         overflow-x: hidden;
         text-overflow: ellipsis;
 
-        span.not-yet-connected {
+        &.not-yet-connected {
           color: var(--muted-color);
           font-size: 90%;
         }
@@ -104,6 +94,12 @@ dialog.clients {
           vertical-align: middle;
           opacity: 0.5;
         }
+      }
+
+      &.last-login {
+        text-align: center;
+        opacity: 0.8;
+        font-size: 90%;
       }
 
       &.status {
