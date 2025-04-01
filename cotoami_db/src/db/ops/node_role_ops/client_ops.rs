@@ -73,7 +73,10 @@ pub(crate) fn recent_pairs<'a, Conn: AsReadableConn>(
             client_nodes::table
                 .inner_join(nodes::table)
                 .select((ClientNode::as_select(), Node::as_select()))
-                .order(client_nodes::created_at.desc())
+                .order((
+                    client_nodes::last_session_created_at.desc(),
+                    client_nodes::created_at.desc(),
+                ))
         })
     })
 }
