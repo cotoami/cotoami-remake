@@ -72,8 +72,8 @@ dialog.clients {
       }
     }
 
-    .table-body {
-      height: 100px;
+    .scroll-area {
+      max-height: 60vh;
     }
 
     div.row.client div.column {
@@ -95,6 +95,7 @@ dialog.clients {
 
         span.not-yet-connected {
           color: var(--muted-color);
+          font-size: 90%;
         }
 
         span.local-node-mark {

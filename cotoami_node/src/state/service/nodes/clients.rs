@@ -15,7 +15,7 @@ use crate::{
     state::NodeState,
 };
 
-const DEFAULT_RECENT_PAGE_SIZE: i64 = 5;
+const DEFAULT_RECENT_PAGE_SIZE: i64 = 50;
 
 impl NodeState {
     pub async fn client_node(
