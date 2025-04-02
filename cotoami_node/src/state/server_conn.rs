@@ -118,7 +118,7 @@ impl ServerConnection {
         .await?;
 
         // Try to connect via WebSocket first
-        let mut ws_client = WebSocketClient::new(client_state.clone(), &http_client).await?;
+        let mut ws_client = WebSocketClient::new(client_state.clone(), http_client.clone()).await?;
         match ws_client.connect().await {
             Ok(_) => self.set_conn_state(ConnectionState::WebSocket(ws_client), false),
             Err(e) => {
@@ -211,7 +211,7 @@ impl ConnectionState {
                 task.abort();
                 true
             }
-            Self::WebSocket(client) => client.disconnect(),
+            Self::WebSocket(client) => client.disconnect().await,
             Self::Sse(client) => client.disconnect().await,
             _ => false,
         }

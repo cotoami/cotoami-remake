@@ -12,7 +12,7 @@ use tokio_tungstenite::{
     tungstenite::{client::IntoClientRequest, handshake::client::Request},
 };
 use tokio_util::sync::PollSender;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 use url::Url;
 
 use crate::{
@@ -27,16 +27,19 @@ use crate::{
 #[derive(derive_more::Debug, Clone)]
 pub struct WebSocketClient {
     state: ClientState,
+    http_client: HttpClient,
     ws_request: Request,
     #[debug(skip)]
     reconnecting: Arc<Mutex<Option<RetryState>>>,
 }
 
 impl WebSocketClient {
-    pub async fn new(state: ClientState, http_client: &HttpClient) -> Result<Self> {
+    pub async fn new(state: ClientState, http_client: HttpClient) -> Result<Self> {
+        let ws_request = http_client.ws_request()?;
         Ok(Self {
             state,
-            ws_request: http_client.ws_request()?,
+            http_client,
+            ws_request,
             reconnecting: Arc::new(Mutex::new(None)),
         })
     }
@@ -171,8 +174,11 @@ impl WebSocketClient {
         Ok(())
     }
 
-    pub fn disconnect(&self) -> bool {
+    pub async fn disconnect(&self) -> bool {
         self.reconnecting.lock().take(); // cancel reconnecting
+        if let Err(e) = self.http_client.delete_session().await {
+            error!("Failed to delete the session: {e:?}")
+        }
         self.state.disconnect()
     }
 }
