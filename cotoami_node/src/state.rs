@@ -161,7 +161,7 @@ impl NodeState {
         self.inner.abortables.spawn(future)
     }
 
-    pub async fn abort_tasks(&self) {
+    pub async fn shutdown(&self) {
         self.server_conns().disconnect_all().await;
         self.inner.abortables.abort_all();
     }
