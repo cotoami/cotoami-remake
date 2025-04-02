@@ -92,6 +92,8 @@ impl HttpClient {
             .headers(self.headers.read().clone())
     }
 
+    pub fn delete_session(&self) -> RequestBuilder { self.delete(API_PATH_SESSION) }
+
     async fn handle_request(self, request: Request) -> Result<Response> {
         let request_id = *request.id();
         let accept = request.accept();
@@ -308,6 +310,7 @@ impl HttpClient {
     }
 }
 
+const API_PATH_SESSION: &str = "/api/session";
 const API_PATH_DATA: &str = "/api/data";
 const API_PATH_CHANGES: &str = concatcp!(API_PATH_DATA, "/changes");
 const API_PATH_NODES: &str = concatcp!(API_PATH_DATA, "/nodes");
