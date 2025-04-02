@@ -161,8 +161,8 @@ impl NodeState {
         self.inner.abortables.spawn(future)
     }
 
-    pub fn abort_tasks(&self) {
-        self.server_conns().disconnect_all();
+    pub async fn abort_tasks(&self) {
+        self.server_conns().disconnect_all().await;
         self.inner.abortables.abort_all();
     }
 
@@ -172,13 +172,6 @@ impl NodeState {
 
     pub fn local_server_config(&self) -> Option<Arc<ServerConfig>> {
         self.inner.local_server_config.read().clone()
-    }
-
-    pub fn debug(&self, label: &str) {
-        debug!(
-            "NodeState inner pointers({label}): {}",
-            Arc::strong_count(&self.inner)
-        );
     }
 }
 

@@ -207,7 +207,7 @@ impl NodeState {
 
         if disabled {
             // Just to publish a connection state change.
-            self.server_conns().try_get(&node_id)?.disable();
+            self.server_conns().try_get(&node_id)?.disable().await;
         }
         Ok(server)
     }

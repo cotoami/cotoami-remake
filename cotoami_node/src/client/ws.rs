@@ -171,7 +171,7 @@ impl WebSocketClient {
         Ok(())
     }
 
-    pub fn disconnect(&mut self) -> bool {
+    pub fn disconnect(&self) -> bool {
         self.reconnecting.lock().take(); // cancel reconnecting
         self.state.disconnect()
     }

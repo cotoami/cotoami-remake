@@ -103,7 +103,12 @@ impl SseClient {
         Ok(())
     }
 
-    pub fn disconnect(&mut self) -> bool { self.state.disconnect() }
+    pub async fn disconnect(&self) -> bool {
+        if let Err(e) = self.http_client.delete_session().await {
+            error!("Failed to delete the session: {e:?}")
+        }
+        self.state.disconnect()
+    }
 
     async fn event_loop(mut self, mut event_source: EventSource) {
         while let Some(item) = event_source.next().await {

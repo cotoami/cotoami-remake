@@ -132,13 +132,13 @@ impl ServerConnection {
         Ok(())
     }
 
-    pub fn disable(&self) {
-        self.conn_state.write().disconnect();
+    pub async fn disable(&self) {
+        self.conn_state.write().disconnect().await;
         self.set_conn_state(ConnectionState::Disabled, true);
     }
 
-    pub fn disconnect(&self, reason: Option<&str>) {
-        self.conn_state.write().disconnect();
+    pub async fn disconnect(&self, reason: Option<&str>) {
+        self.conn_state.write().disconnect().await;
         self.set_conn_state(
             ConnectionState::Disconnected(reason.map(String::from)),
             true,
@@ -146,7 +146,7 @@ impl ServerConnection {
     }
 
     pub async fn reboot(&self) {
-        self.disconnect(None);
+        self.disconnect(None).await;
         self.connect().await;
     }
 
@@ -176,7 +176,7 @@ impl ServerConnection {
 // ConnectionState
 /////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum ConnectionState {
     Disconnected(Option<String>),
     Disabled,
@@ -205,21 +205,17 @@ impl ConnectionState {
         }
     }
 
-    fn disconnect(&mut self) -> bool {
+    async fn disconnect(&self) -> bool {
         match self {
             Self::Initializing(task) => {
                 task.abort();
                 true
             }
             Self::WebSocket(client) => client.disconnect(),
-            Self::Sse(client) => client.disconnect(),
+            Self::Sse(client) => client.disconnect().await,
             _ => false,
         }
     }
-}
-
-impl Drop for ConnectionState {
-    fn drop(&mut self) { self.disconnect(); }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -259,9 +255,9 @@ impl ServerConnections {
         }
     }
 
-    pub fn disconnect_all(&self) {
+    pub async fn disconnect_all(&self) {
         for conn in self.0.read().values() {
-            conn.disconnect(None);
+            conn.disconnect(None).await;
         }
     }
 }

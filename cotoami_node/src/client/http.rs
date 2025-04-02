@@ -5,7 +5,7 @@
 
 use std::{borrow::Cow, sync::Arc};
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use const_format::concatcp;
 use cotoami_db::models::Bytes;
 use futures::future::FutureExt;
@@ -92,7 +92,14 @@ impl HttpClient {
             .headers(self.headers.read().clone())
     }
 
-    pub fn delete_session(&self) -> RequestBuilder { self.delete(API_PATH_SESSION) }
+    pub async fn delete_session(&self) -> Result<()> {
+        let response = self.delete(API_PATH_SESSION).send().await?;
+        ensure!(
+            response.status().is_success(),
+            "DELETE {API_PATH_SESSION} returns: {response:?}"
+        );
+        Ok(())
+    }
 
     async fn handle_request(self, request: Request) -> Result<Response> {
         let request_id = *request.id();
