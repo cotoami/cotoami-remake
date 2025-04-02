@@ -85,13 +85,6 @@ nav.nodes {
       }
     }
 
-    &:hover,
-    &.focused {
-      span.status span.material-symbols {
-        color: #555;
-      }
-    }
-
     span.status.init-failed {
       span.material-symbols {
         color: var(--error-color);
