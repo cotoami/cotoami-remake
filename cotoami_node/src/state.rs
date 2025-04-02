@@ -162,6 +162,7 @@ impl NodeState {
     }
 
     pub async fn shutdown(&self) {
+        debug!("NodeState is shutting down...");
         self.server_conns().disconnect_all().await;
         self.inner.abortables.abort_all();
     }
@@ -178,7 +179,7 @@ impl NodeState {
 impl Drop for State {
     fn drop(&mut self) {
         debug!(
-            "NodeState [{:?}] is being destroyed.",
+            "NodeState [{:?}] has been destroyed.",
             self.config.read().node_name
         )
     }

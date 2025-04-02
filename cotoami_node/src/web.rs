@@ -56,8 +56,12 @@ pub async fn launch_server(
     let listener = TcpListener::bind(addr).await.unwrap();
     let (shutdown_trigger, rx) = oneshot::channel::<()>();
     let serve = axum::serve(listener, api)
-        .with_graceful_shutdown(async {
-            rx.await.ok();
+        .with_graceful_shutdown({
+            let node_state = node_state.clone();
+            async move {
+                rx.await.ok();
+                node_state.shutdown().await;
+            }
         })
         .into_future()
         .map_err(anyhow::Error::from);
