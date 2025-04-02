@@ -109,29 +109,27 @@ impl ServerConnection {
             return Ok(());
         }
 
-        // Try to connect via WebSocket first
-        let mut ws_client = WebSocketClient::new(
-            self.new_client_state(child_privileges.clone()).await?,
-            &http_client,
+        // Create a client state
+        let client_state = ClientState::new(
+            self.server.node_id,
+            child_privileges,
+            self.node_state.clone(),
         )
         .await?;
+
+        // Try to connect via WebSocket first
+        let mut ws_client = WebSocketClient::new(client_state.clone(), &http_client).await?;
         match ws_client.connect().await {
             Ok(_) => self.set_conn_state(ConnectionState::WebSocket(ws_client), false),
             Err(e) => {
                 // Fallback to SSE
                 info!("Falling back to SSE due to: {e:?}");
-                let mut sse_client =
-                    SseClient::new(self.new_client_state(child_privileges).await?, http_client)
-                        .await?;
+                let mut sse_client = SseClient::new(client_state, http_client).await?;
                 sse_client.connect().await?;
                 self.set_conn_state(ConnectionState::Sse(sse_client), false);
             }
         }
         Ok(())
-    }
-
-    async fn new_client_state(&self, as_child: Option<ChildNode>) -> Result<ClientState> {
-        ClientState::new(self.server.node_id, as_child, self.node_state.clone()).await
     }
 
     pub fn disable(&self) {
@@ -153,7 +151,7 @@ impl ServerConnection {
     }
 
     pub fn child_privileges(&self) -> Option<ChildNode> {
-        self.conn_state.read().child_privileges().cloned()
+        self.conn_state.read().child_privileges()
     }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.conn_state.read().not_connected() }
@@ -188,7 +186,7 @@ enum ConnectionState {
     Sse(SseClient),
 }
 impl ConnectionState {
-    fn child_privileges(&self) -> Option<&ChildNode> {
+    fn child_privileges(&self) -> Option<ChildNode> {
         match self {
             Self::WebSocket(client) => client.child_privileges(),
             Self::Sse(client) => client.child_privileges(),

@@ -26,7 +26,7 @@ use crate::{
 
 #[derive(derive_more::Debug, Clone)]
 pub struct WebSocketClient {
-    state: Arc<ClientState>,
+    state: ClientState,
     ws_request: Request,
     #[debug(skip)]
     reconnecting: Arc<Mutex<Option<RetryState>>>,
@@ -35,13 +35,13 @@ pub struct WebSocketClient {
 impl WebSocketClient {
     pub async fn new(state: ClientState, http_client: &HttpClient) -> Result<Self> {
         Ok(Self {
-            state: Arc::new(state),
+            state,
             ws_request: http_client.ws_request()?,
             reconnecting: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub fn child_privileges(&self) -> Option<&ChildNode> { self.state.child_privileges() }
+    pub fn child_privileges(&self) -> Option<ChildNode> { self.state.child_privileges() }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 

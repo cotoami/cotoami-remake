@@ -17,16 +17,22 @@ mod ws;
 
 pub use self::{http::HttpClient, sse::SseClient, ws::WebSocketClient};
 
-#[derive(derive_more::Debug)]
+/// Protocol-agnostic client state.
+#[derive(derive_more::Debug, Clone)]
 pub(crate) struct ClientState {
     server_id: Id<Node>,
+
+    // Roles
     server_as_operator: Option<Arc<Operator>>,
-    child_privileges: Option<ChildNode>,
-    conn_state: RwLock<ConnectionState>,
-    #[debug(skip)]
-    node_state: NodeState,
+    child_privileges: Option<Arc<ChildNode>>,
+
+    // Connection state
+    conn_state: Arc<RwLock<ConnectionState>>,
     #[debug(skip)]
     abortables: Abortables,
+
+    #[debug(skip)]
+    node_state: NodeState,
 }
 
 impl ClientState {
@@ -38,14 +44,16 @@ impl ClientState {
         Ok(Self {
             server_id,
             server_as_operator: node_state.as_operator(server_id).await?.map(Arc::new),
-            child_privileges,
-            conn_state: RwLock::new(ConnectionState::Disconnected(None)),
-            node_state,
+            child_privileges: child_privileges.map(Arc::new),
+            conn_state: Arc::new(RwLock::new(ConnectionState::Disconnected(None))),
             abortables: Abortables::default(),
+            node_state,
         })
     }
 
-    pub fn child_privileges(&self) -> Option<&ChildNode> { self.child_privileges.as_ref() }
+    pub fn child_privileges(&self) -> Option<ChildNode> {
+        self.child_privileges.as_deref().map(|node| node.clone())
+    }
 
     fn is_server_parent(&self) -> bool { self.node_state.is_parent(&self.server_id) }
 
@@ -56,7 +64,7 @@ impl ClientState {
             self.server_id,
             before,
             self.not_connected(),
-            self.child_privileges.clone(),
+            self.child_privileges(),
         )
     }
 

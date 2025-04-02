@@ -1,6 +1,6 @@
 //! Server-Sent Events client of Node API Service.
 
-use std::{ops::ControlFlow, sync::Arc, time::Duration};
+use std::{ops::ControlFlow, time::Duration};
 
 use anyhow::{bail, Result};
 use bytes::Bytes;
@@ -27,7 +27,7 @@ use crate::{
 /// An [SseClient] handles events streamed from an [EventSource].
 #[derive(Debug, Clone)]
 pub struct SseClient {
-    state: Arc<ClientState>,
+    state: ClientState,
     http_client: HttpClient,
 }
 
@@ -40,13 +40,10 @@ impl SseClient {
     );
 
     pub async fn new(state: ClientState, http_client: HttpClient) -> Result<Self> {
-        Ok(Self {
-            state: Arc::new(state),
-            http_client,
-        })
+        Ok(Self { state, http_client })
     }
 
-    pub fn child_privileges(&self) -> Option<&ChildNode> { self.state.child_privileges() }
+    pub fn child_privileges(&self) -> Option<ChildNode> { self.state.child_privileges() }
 
     pub fn not_connected(&self) -> Option<NotConnected> { self.state.not_connected() }
 
