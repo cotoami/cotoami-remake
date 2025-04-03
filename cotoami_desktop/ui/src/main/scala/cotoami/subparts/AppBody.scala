@@ -2,8 +2,6 @@ package cotoami.subparts
 
 import scala.util.chaining._
 
-import org.scalajs.dom
-import org.scalajs.dom.HTMLElement
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
@@ -171,34 +169,21 @@ object AppBody {
       open: Boolean,
       uiState: UiState
   ): Cmd.One[Either[Throwable, Unit]] = {
-    val flowWidth = uiState.paneSizes.getOrElse(
-      PaneFlow.PaneName,
-      PaneFlow.DefaultWidth
-    )
-
-    val stockPane =
-      dom.document.getElementById("stock-pane") match {
-        case element: HTMLElement => element
-        case _                    => return Cmd.none
-      }
-    val stockWidth = stockPane.offsetWidth
-
     val foldedPaneWidth = 16
-
-    (name, open) match {
+    val deltaWidth = (name, open) match {
       case (PaneFlow.PaneName, true) =>
-        tauri.resizeWindow(flowWidth - foldedPaneWidth, 0)
-          .pipe(Cmd.fromFuture)
+        PaneFlow.widthIn(uiState) - foldedPaneWidth
       case (PaneFlow.PaneName, false) =>
-        tauri.resizeWindow(-1 * (flowWidth - foldedPaneWidth), 0)
-          .pipe(Cmd.fromFuture)
+        -1 * (PaneFlow.currentWidth - foldedPaneWidth)
       case (PaneStock.PaneName, true) =>
-        tauri.resizeWindow(PaneStock.DefaultWidth - foldedPaneWidth, 0)
-          .pipe(Cmd.fromFuture)
+        PaneStock.DefaultWidth - foldedPaneWidth
       case (PaneStock.PaneName, false) =>
-        tauri.resizeWindow(-1 * (stockWidth - foldedPaneWidth), 0)
-          .pipe(Cmd.fromFuture)
-      case _ => Cmd.none
+        -1 * (PaneStock.currentWidth - foldedPaneWidth)
+      case _ => 0
     }
+    if (deltaWidth != 0)
+      tauri.resizeWindow(deltaWidth, 0).pipe(Cmd.fromFuture)
+    else
+      Cmd.none
   }
 }

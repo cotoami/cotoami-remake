@@ -2,6 +2,8 @@ package cotoami.subparts
 
 import scala.util.chaining._
 import com.softwaremill.quicklens._
+import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
 
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
@@ -21,11 +23,17 @@ import cotoami.subparts.SectionGeomap
 
 object PaneStock {
 
+  final val PaneId = "stock-pane"
   final val PaneName = "PaneStock"
   final val DefaultWidth = 650
 
   final val PaneMapName = "PaneMap"
   final val PaneMapDefaultSize = 400
+
+  def currentWidth: Double = dom.document.getElementById(PaneId) match {
+    case element: HTMLElement => element.offsetWidth
+    case _                    => 0
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -88,7 +96,7 @@ object PaneStock {
       model: Model,
       uiState: UiState
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
-    section(id := "stock-pane", className := "stock fill")(
+    section(id := PaneId, className := "stock fill")(
       if (uiState.mapOpened)
         SplitPane(
           vertical = uiState.mapVertical,
