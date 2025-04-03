@@ -78,7 +78,9 @@ case class Model(
       .pipe(
         updates.addCmd((model: Model) =>
           model.uiState
-            .map(AppBody.resizeWindowOnPaneToggle(name, open, _).toNone)
+            .map(
+              MainFlowAndStock.resizeWindowOnPaneToggle(name, open, _).toNone
+            )
             .getOrElse(Cmd.none)
         )
       )
