@@ -59,7 +59,7 @@ object AppBody {
           )
         ),
         secondary = SplitPane.Secondary.Props()(
-          MainFlowAndStock(model, uiState)
+          AppMain(model, uiState)
         )
       )
     )
@@ -84,7 +84,7 @@ object AppBody {
           PaneSearch(model.search)
         ),
         secondary = SplitPane.Secondary.Props()(
-          MainFlowAndStock(model, uiState)
+          AppMain(model, uiState)
         )
       )
     )

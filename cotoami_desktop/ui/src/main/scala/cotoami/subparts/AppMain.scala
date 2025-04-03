@@ -11,7 +11,12 @@ import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.components.{optionalClasses, SplitPane}
 
-object MainFlowAndStock {
+object AppMain {
+
+  sealed trait Msg
+
+  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+    (model, Cmd.none)
 
   def apply(
       model: Model,
