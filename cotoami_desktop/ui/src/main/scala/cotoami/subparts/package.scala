@@ -81,39 +81,12 @@ package object subparts {
       )
     }
 
-  sealed trait CollapseDirection
-  case object ToLeft extends CollapseDirection
-  case object ToRight extends CollapseDirection
-
   def paneToggle(
-      paneName: String,
-      direction: CollapseDirection = ToLeft
+      paneName: String
   )(implicit dispatch: AppMsg => Unit): ReactElement =
-    div(className := "pane-toggle")(
-      button(
-        className := "fold default",
-        title := "Fold",
-        onClick := (_ => dispatch(AppMsg.SetPaneOpen(paneName, false)))
-      )(
-        span(className := "material-symbols")(
-          direction match {
-            case ToLeft  => "arrow_left"
-            case ToRight => "arrow_right"
-          }
-        )
-      ),
-      button(
-        className := "unfold default",
-        title := "Unfold",
-        onClick := (_ => dispatch(AppMsg.SetPaneOpen(paneName, true)))
-      )(
-        span(className := "material-symbols")(
-          direction match {
-            case ToLeft  => "arrow_right"
-            case ToRight => "arrow_left"
-          }
-        )
-      )
+    cotoami.components.paneToggle(
+      onFoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, false)),
+      onUnfoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, true))
     )
 
   val EnterKey = "Enter"

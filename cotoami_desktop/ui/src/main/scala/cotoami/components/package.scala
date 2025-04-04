@@ -30,4 +30,42 @@ package object components {
     )(
       materialSymbol(symbol)
     )
+
+  sealed trait CollapseDirection
+  object CollapseDirection {
+    case object ToLeft extends CollapseDirection
+    case object ToRight extends CollapseDirection
+  }
+
+  def paneToggle(
+      onFoldClick: () => Unit,
+      onUnfoldClick: () => Unit,
+      direction: CollapseDirection = CollapseDirection.ToLeft
+  ): ReactElement =
+    div(className := "pane-toggle")(
+      button(
+        className := "fold default",
+        title := "Fold",
+        onClick := (_ => onFoldClick())
+      )(
+        span(className := "material-symbols")(
+          direction match {
+            case CollapseDirection.ToLeft  => "arrow_left"
+            case CollapseDirection.ToRight => "arrow_right"
+          }
+        )
+      ),
+      button(
+        className := "unfold default",
+        title := "Unfold",
+        onClick := (_ => onUnfoldClick())
+      )(
+        span(className := "material-symbols")(
+          direction match {
+            case CollapseDirection.ToLeft  => "arrow_right"
+            case CollapseDirection.ToRight => "arrow_left"
+          }
+        )
+      )
+    )
 }

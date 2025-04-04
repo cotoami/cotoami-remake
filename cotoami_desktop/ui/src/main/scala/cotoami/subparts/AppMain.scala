@@ -10,7 +10,7 @@ import cotoami.libs.tauri
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.updates
-import cotoami.components.{optionalClasses, SplitPane}
+import cotoami.components.{optionalClasses, paneToggle, SplitPane}
 
 object AppMain {
 
@@ -129,9 +129,7 @@ object AppMain {
             dispatch(Msg.SetPaneFlowOpen(true))
           }
         )(
-          Option.when(stockOpened) {
-            paneToggle(PaneFlow.PaneName)
-          },
+          Option.when(stockOpened)(flowPaneToggle),
           PaneFlow(model, uiState)
         ),
         secondary = SplitPane.Secondary.Props(
@@ -157,13 +155,22 @@ object AppMain {
             dispatch(Msg.SetPaneStockOpen(true))
           }
         )(
-          Option.when(flowOpened) {
-            paneToggle(PaneStock.PaneName)
-          },
+          Option.when(flowOpened)(stockPaneToggle),
           PaneStock(model, uiState)
         )
       )
     )
   }
 
+  private def flowPaneToggle(implicit dispatch: AppMsg => Unit): ReactElement =
+    paneToggle(
+      onFoldClick = () => dispatch(Msg.SetPaneFlowOpen(false).into),
+      onUnfoldClick = () => dispatch(Msg.SetPaneFlowOpen(true).into)
+    )
+
+  private def stockPaneToggle(implicit dispatch: AppMsg => Unit): ReactElement =
+    paneToggle(
+      onFoldClick = () => dispatch(Msg.SetPaneStockOpen(false).into),
+      onUnfoldClick = () => dispatch(Msg.SetPaneStockOpen(true).into)
+    )
 }
