@@ -384,7 +384,13 @@ object Main {
         )
       }
 
-      case Msg.AppMainMsg(submsg) => AppMain.update(submsg, model)
+      case Msg.AppMainMsg(submsg) =>
+        model.uiState
+          .map(AppMain.update(submsg))
+          .map { case (uiState, cmd) =>
+            (model.copy(uiState = Some(uiState)), cmd)
+          }
+          .getOrElse((model, Cmd.none))
 
       case Msg.PaneStockMsg(submsg) => PaneStock.update(submsg, model)
 

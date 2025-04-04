@@ -9,7 +9,6 @@ import fui.Cmd
 import cotoami.libs.tauri
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
-import cotoami.updates
 import cotoami.components.{optionalClasses, paneToggle, SplitPane}
 
 object AppMain {
@@ -27,48 +26,46 @@ object AppMain {
     case class SetPaneStockOpen(open: Boolean) extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg)(uiState: UiState): (UiState, Cmd[AppMsg]) =
     msg match {
       case Msg.SetPaneFlowOpen(open) =>
-        setPaneOpen(model, PaneFlow.PaneName, open)
+        setPaneOpen(uiState, PaneFlow.PaneName, open)
 
       case Msg.SetPaneStockOpen(open) =>
-        setPaneOpen(model, PaneStock.PaneName, open)
+        setPaneOpen(uiState, PaneStock.PaneName, open)
     }
 
-  def setPaneOpen(
-      model: Model,
+  private def setPaneOpen(
+      uiState: UiState,
       name: String,
       open: Boolean
-  ): (Model, Cmd[AppMsg]) = {
-    val changed = model.uiState.map(_.paneOpened(name) != open).getOrElse(false)
-    if (!changed) {
-      return (model, Cmd.none) // Do nothing if uiState won't change
+  ): (UiState, Cmd[AppMsg]) = {
+    if (uiState.paneOpened(name) == open) {
+      // the pane state won't change
+      return (uiState, Cmd.none)
     }
-    model
-      .pipe(
-        updates.uiState(state => {
-          val toggles = state.paneToggles + (name -> open)
-          (
-            toggles.get(PaneFlow.PaneName),
-            toggles.get(PaneStock.PaneName)
-          ) match {
-            // Not allow fold both PaneFlow and PaneStock at the same time.
-            case (Some(false), Some(false)) => state
-            case _                          => state.copy(paneToggles = toggles)
-          }
-        })
-      )
-      .pipe(
-        updates.addCmd((model: Model) =>
-          model.uiState
-            .map(AppMain.resizeWindowOnPaneToggle(name, open, _).toNone)
-            .getOrElse(Cmd.none)
+
+    uiState.setPaneOpen(name, open).pipe { newState =>
+      (
+        newState.paneOpened(PaneFlow.PaneName),
+        newState.paneOpened(PaneStock.PaneName)
+      ) match {
+        case (false, false) => uiState // Can't fold both panes at the same time
+        case _              => newState
+      }
+    }
+      .pipe { uiState =>
+        (
+          uiState,
+          Cmd.Batch(
+            uiState.save,
+            resizeWindow(name, open, uiState).toNone
+          )
         )
-      )
+      }
   }
 
-  def resizeWindowOnPaneToggle(
+  def resizeWindow(
       name: String,
       open: Boolean,
       uiState: UiState
