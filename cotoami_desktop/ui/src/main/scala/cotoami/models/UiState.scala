@@ -14,7 +14,7 @@ import fui.Cmd
 import cotoami.Msg
 import cotoami.utils.Log
 import cotoami.models.Cotonoma
-import cotoami.subparts.{PaneFlow, PaneStock}
+import cotoami.subparts.PaneStock
 
 case class UiState(
     theme: String = UiState.DefaultTheme,
@@ -32,14 +32,8 @@ case class UiState(
   def paneOpened(name: String): Boolean =
     paneToggles.getOrElse(name, true) // open by default
 
-  def setPaneOpen(name: String, open: Boolean): UiState = {
-    val toggles = paneToggles + (name -> open)
-    (toggles.get(PaneFlow.PaneName), toggles.get(PaneStock.PaneName)) match {
-      // Not allow fold both PaneFlow and PaneStock at the same time.
-      case (Some(false), Some(false)) => this
-      case _                          => copy(paneToggles = toggles)
-    }
-  }
+  def setPaneOpen(name: String, open: Boolean): UiState =
+    this.modify(_.paneToggles).using(_ + (name -> open))
 
   def resizePane(name: String, newSize: Int): UiState =
     copy(paneSizes = paneSizes + (name -> newSize))

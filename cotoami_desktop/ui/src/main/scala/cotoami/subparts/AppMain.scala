@@ -9,14 +9,91 @@ import fui.Cmd
 import cotoami.libs.tauri
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
+import cotoami.updates
 import cotoami.components.{optionalClasses, SplitPane}
 
 object AppMain {
 
-  sealed trait Msg
+  /////////////////////////////////////////////////////////////////////////////
+  // Update
+  /////////////////////////////////////////////////////////////////////////////
+
+  sealed trait Msg extends Into[AppMsg] {
+    def into = AppMsg.AppMainMsg(this)
+  }
+
+  object Msg {
+    case class SetPaneFlowOpen(open: Boolean) extends Msg
+    case class SetPaneStockOpen(open: Boolean) extends Msg
+  }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
-    (model, Cmd.none)
+    msg match {
+      case Msg.SetPaneFlowOpen(open) =>
+        setPaneOpen(model, PaneFlow.PaneName, open)
+
+      case Msg.SetPaneStockOpen(open) =>
+        setPaneOpen(model, PaneStock.PaneName, open)
+    }
+
+  def setPaneOpen(
+      model: Model,
+      name: String,
+      open: Boolean
+  ): (Model, Cmd[AppMsg]) = {
+    val changed = model.uiState.map(_.paneOpened(name) != open).getOrElse(false)
+    if (!changed) {
+      return (model, Cmd.none) // Do nothing if uiState won't change
+    }
+    updates.uiState(
+      state => {
+        val toggles = state.paneToggles + (name -> open)
+        (
+          toggles.get(PaneFlow.PaneName),
+          toggles.get(PaneStock.PaneName)
+        ) match {
+          // Not allow fold both PaneFlow and PaneStock at the same time.
+          case (Some(false), Some(false)) => state
+          case _                          => state.copy(paneToggles = toggles)
+        }
+      },
+      model
+    )
+      .pipe(
+        updates.addCmd((model: Model) =>
+          model.uiState
+            .map(AppMain.resizeWindowOnPaneToggle(name, open, _).toNone)
+            .getOrElse(Cmd.none)
+        )
+      )
+  }
+
+  def resizeWindowOnPaneToggle(
+      name: String,
+      open: Boolean,
+      uiState: UiState
+  ): Cmd.One[Either[Throwable, Unit]] = {
+    val foldedPaneWidth = 16
+    val deltaWidth = (name, open) match {
+      case (PaneFlow.PaneName, true) =>
+        PaneFlow.widthIn(uiState) - foldedPaneWidth
+      case (PaneFlow.PaneName, false) =>
+        -1 * (PaneFlow.currentWidth - foldedPaneWidth)
+      case (PaneStock.PaneName, true) =>
+        PaneStock.DefaultWidth - foldedPaneWidth
+      case (PaneStock.PaneName, false) =>
+        -1 * (PaneStock.currentWidth - foldedPaneWidth)
+      case _ => 0
+    }
+    if (deltaWidth != 0)
+      tauri.resizeWindow(deltaWidth, 0).pipe(Cmd.fromFuture)
+    else
+      Cmd.none
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // View
+  /////////////////////////////////////////////////////////////////////////////
 
   def apply(
       model: Model,
@@ -49,7 +126,7 @@ object AppMain {
             )
           ),
           onClick = Option.when(!flowOpened) { () =>
-            dispatch(AppMsg.SetPaneOpen(PaneFlow.PaneName, true))
+            dispatch(Msg.SetPaneFlowOpen(true))
           }
         )(
           Option.when(stockOpened) {
@@ -77,7 +154,7 @@ object AppMain {
             )
           ),
           onClick = Option.when(!stockOpened) { () =>
-            dispatch(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
+            dispatch(Msg.SetPaneStockOpen(true))
           }
         )(
           Option.when(flowOpened) {
@@ -89,26 +166,4 @@ object AppMain {
     )
   }
 
-  def resizeWindowOnPaneToggle(
-      name: String,
-      open: Boolean,
-      uiState: UiState
-  ): Cmd.One[Either[Throwable, Unit]] = {
-    val foldedPaneWidth = 16
-    val deltaWidth = (name, open) match {
-      case (PaneFlow.PaneName, true) =>
-        PaneFlow.widthIn(uiState) - foldedPaneWidth
-      case (PaneFlow.PaneName, false) =>
-        -1 * (PaneFlow.currentWidth - foldedPaneWidth)
-      case (PaneStock.PaneName, true) =>
-        PaneStock.DefaultWidth - foldedPaneWidth
-      case (PaneStock.PaneName, false) =>
-        -1 * (PaneStock.currentWidth - foldedPaneWidth)
-      case _ => 0
-    }
-    if (deltaWidth != 0)
-      tauri.resizeWindow(deltaWidth, 0).pipe(Cmd.fromFuture)
-    else
-      Cmd.none
-  }
 }

@@ -179,7 +179,8 @@ object Main {
             (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
         }
 
-      case Msg.SetPaneOpen(name, open) => model.setPaneOpen(name, open)
+      case Msg.SetPaneOpen(name, open) =>
+        updates.uiState(_.setPaneOpen(name, open), model)
 
       case Msg.ResizePane(name, newSize) =>
         updates.uiState(_.resizePane(name, newSize), model)
@@ -237,20 +238,32 @@ object Main {
         val newUrl = new URL(model.url.toString())
         newUrl.hash = s"#${id.uuid}"
 
-        val model1 = model.copy(url = newUrl)
-        val (model2, focus) = DatabaseFocus.coto(id, moveTo, model1)
-        val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
-        val pushUrl = Browser.pushUrl(newUrl.toString(), notify = false)
-
-        (model3, Cmd.Batch(pushUrl, focus) ++ openPane)
+        model.copy(url = newUrl)
+          .pipe(DatabaseFocus.coto(id, moveTo))
+          .pipe { case (model, focus) =>
+            (
+              model,
+              Cmd.Batch(
+                focus,
+                Browser.pushUrl(newUrl.toString(), notify = false),
+                Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into)
+              )
+            )
+          }
       }
 
-      case Msg.FocusedCotoDetailsFetched(Right(details)) => {
-        val model1 = model.modify(_.repo).using(_.importFrom(details))
-        val (model2, focus) = DatabaseFocus.coto(details.coto.id, true, model1)
-        val (model3, openPane) = model2.setPaneOpen(PaneFlow.PaneName, true)
-        (model3, focus ++ openPane)
-      }
+      case Msg.FocusedCotoDetailsFetched(Right(details)) =>
+        model.modify(_.repo).using(_.importFrom(details))
+          .pipe(DatabaseFocus.coto(details.coto.id, true))
+          .pipe { case (model, focus) =>
+            (
+              model,
+              Cmd.Batch(
+                focus,
+                Browser.send(AppMain.Msg.SetPaneFlowOpen(true).into)
+              )
+            )
+          }
 
       case Msg.FocusedCotoDetailsFetched(Left(e)) =>
         update(Msg.UnfocusCoto, model)
@@ -369,6 +382,8 @@ object Main {
           cmds
         )
       }
+
+      case Msg.AppMainMsg(submsg) => AppMain.update(submsg, model)
 
       case Msg.PaneStockMsg(submsg) => PaneStock.update(submsg, model)
 

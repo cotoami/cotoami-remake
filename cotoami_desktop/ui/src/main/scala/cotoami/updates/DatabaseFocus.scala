@@ -72,9 +72,8 @@ object DatabaseFocus {
 
   def coto(
       cotoId: Id[Coto],
-      moveTo: Boolean,
-      model: Model
-  ): (Model, Cmd.One[Msg]) = {
+      moveTo: Boolean
+  )(model: Model): (Model, Cmd.One[Msg]) = {
     model
       .modify(_.repo.cotos).using(_.focus(cotoId))
       .pipe { model =>
