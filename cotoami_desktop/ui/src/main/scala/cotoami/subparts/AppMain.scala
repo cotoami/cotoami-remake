@@ -45,20 +45,20 @@ object AppMain {
     if (!changed) {
       return (model, Cmd.none) // Do nothing if uiState won't change
     }
-    updates.uiState(
-      state => {
-        val toggles = state.paneToggles + (name -> open)
-        (
-          toggles.get(PaneFlow.PaneName),
-          toggles.get(PaneStock.PaneName)
-        ) match {
-          // Not allow fold both PaneFlow and PaneStock at the same time.
-          case (Some(false), Some(false)) => state
-          case _                          => state.copy(paneToggles = toggles)
-        }
-      },
-      model
-    )
+    model
+      .pipe(
+        updates.uiState(state => {
+          val toggles = state.paneToggles + (name -> open)
+          (
+            toggles.get(PaneFlow.PaneName),
+            toggles.get(PaneStock.PaneName)
+          ) match {
+            // Not allow fold both PaneFlow and PaneStock at the same time.
+            case (Some(false), Some(false)) => state
+            case _                          => state.copy(paneToggles = toggles)
+          }
+        })
+      )
       .pipe(
         updates.addCmd((model: Model) =>
           model.uiState

@@ -174,18 +174,19 @@ object Main {
         )
 
       case Msg.SetTheme(theme) =>
-        updates.uiState(_.copy(theme = theme), model).pipe {
-          case (model, cmd) =>
+        model
+          .pipe(updates.uiState(_.copy(theme = theme)))
+          .pipe { case (model, cmd) =>
             (model, Cmd.Batch(cmd, Browser.setHtmlTheme(theme)))
-        }
+          }
 
       case Msg.SetPaneOpen(name, open) =>
-        updates.uiState(_.setPaneOpen(name, open), model)
+        updates.uiState(_.setPaneOpen(name, open))(model)
 
       case Msg.ResizePane(name, newSize) =>
-        updates.uiState(_.resizePane(name, newSize), model)
+        updates.uiState(_.resizePane(name, newSize))(model)
 
-      case Msg.SwapPane => updates.uiState(_.swapPane, model)
+      case Msg.SwapPane => updates.uiState(_.swapPane)(model)
 
       case Msg.FocusNode(id) =>
         (model, Browser.pushUrl(Route.node.url(id)))
@@ -443,22 +444,22 @@ object Main {
       }
     url.pathname + url.search + url.hash match {
       case Route.index(_) =>
-        DatabaseFocus.node(None, model)
+        DatabaseFocus.node(None)(model)
           .modify(_._2).using(_ :+ focusCoto)
 
       case Route.node(id) =>
         if (model.repo.nodes.contains(id))
-          DatabaseFocus.node(Some(id), model)
+          DatabaseFocus.node(Some(id))(model)
             .modify(_._2).using(_ :+ focusCoto)
         else
           (model, Browser.pushUrl(Route.index.url(())))
 
       case Route.cotonoma(id) =>
-        DatabaseFocus.cotonoma(None, id, model)
+        DatabaseFocus.cotonoma(None, id)(model)
           .modify(_._2).using(_ :+ focusCoto)
 
       case Route.cotonomaInNode((nodeId, cotonomaId)) =>
-        DatabaseFocus.cotonoma(Some(nodeId), cotonomaId, model)
+        DatabaseFocus.cotonoma(Some(nodeId), cotonomaId)(model)
           .modify(_._2).using(_ :+ focusCoto)
 
       case _ =>

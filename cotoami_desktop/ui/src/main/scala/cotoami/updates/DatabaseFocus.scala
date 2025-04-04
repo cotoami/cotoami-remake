@@ -10,7 +10,7 @@ import cotoami.backend.CotonomaDetails
 
 object DatabaseFocus {
 
-  def node(nodeId: Option[Id[Node]], model: Model): (Model, Cmd.Batch[Msg]) =
+  def node(nodeId: Option[Id[Node]])(model: Model): (Model, Cmd.Batch[Msg]) =
     model
       .modify(_.repo).using(_.focusNode(nodeId))
       .modify(_.search).using(_.clear)
@@ -37,9 +37,8 @@ object DatabaseFocus {
 
   def cotonoma(
       nodeId: Option[Id[Node]],
-      cotonomaId: Id[Cotonoma],
-      model: Model
-  ): (Model, Cmd.Batch[Msg]) = {
+      cotonomaId: Id[Cotonoma]
+  )(model: Model): (Model, Cmd.Batch[Msg]) = {
     val shouldRecentFetchCotonomas =
       // the focused node is changed
       nodeId != model.repo.nodes.focusedId ||

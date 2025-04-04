@@ -54,25 +54,27 @@ object PaneStock {
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.OpenGeomap =>
-        updates.uiState(_.openGeomap, model)
+        model
+          .pipe(updates.uiState(_.openGeomap))
           .pipe(
             updates.addCmd((_: Model) =>
               Browser.send(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
             )
           )
 
-      case Msg.CloseMap =>
-        updates.uiState(_.closeMap, model)
+      case Msg.CloseMap => updates.uiState(_.closeMap)(model)
 
       case Msg.SetMapOrientation(vertical) =>
-        updates.uiState(
-          _.setMapOrientation(vertical)
-            .resizePane(PaneMapName, PaneMapDefaultSize),
-          model
+        model.pipe(
+          updates.uiState(
+            _.setMapOrientation(vertical)
+              .resizePane(PaneMapName, PaneMapDefaultSize)
+          )
         )
 
       case Msg.FocusGeolocation(location) =>
-        updates.uiState(_.openGeomap, model)
+        model
+          .pipe(updates.uiState(_.openGeomap))
           .pipe { case (model, cmd) =>
             (model.modify(_.geomap).using(_.focus(location)), cmd)
           }
@@ -80,7 +82,8 @@ object PaneStock {
       case Msg.DisplayGeolocationInFocus =>
         model.repo.geolocationInFocus
           .map(location =>
-            updates.uiState(_.openGeomap, model)
+            model
+              .pipe(updates.uiState(_.openGeomap))
               .pipe { case (model, cmd) =>
                 (model.modify(_.geomap).using(_.moveTo(location)), cmd)
               }
