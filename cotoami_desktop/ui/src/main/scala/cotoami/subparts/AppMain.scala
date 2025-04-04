@@ -45,21 +45,30 @@ object AppMain {
       return (uiState, Cmd.none)
     }
 
-    uiState.setPaneOpen(name, open).pipe { newState =>
-      (
-        newState.paneOpened(PaneFlow.PaneName),
-        newState.paneOpened(PaneStock.PaneName)
-      ) match {
-        case (false, false) => uiState // Can't fold both panes at the same time
-        case _              => newState
+    uiState
+      .pipe { state =>
+        if (state.paneOpened(PaneFlow.PaneName))
+          state.resizePane(PaneFlow.PaneName, PaneFlow.currentWidth.toInt)
+        else
+          state
       }
-    }
-      .pipe { uiState =>
+      .setPaneOpen(name, open)
+      .pipe { newState =>
         (
-          uiState,
+          newState.paneOpened(PaneFlow.PaneName),
+          newState.paneOpened(PaneStock.PaneName)
+        ) match {
+          case (false, false) =>
+            uiState // Can't fold both panes at the same time
+          case _ => newState
+        }
+      }
+      .pipe { state =>
+        (
+          state,
           Cmd.Batch(
-            uiState.save,
-            resizeWindow(name, open, uiState).toNone
+            state.save,
+            resizeWindow(name, open, state).toNone
           )
         )
       }
