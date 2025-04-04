@@ -12,7 +12,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, CotoMarker, GeoBounds, Geolocation, Id}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
-import cotoami.components.{optionalClasses, MapLibre}
+import cotoami.components.{optionalClasses, Action, MapLibre}
 
 object SectionGeomap {
 
@@ -36,8 +36,12 @@ object SectionGeomap {
       fetchingCotosInFocus: Boolean = false,
       fetchingCotosInBounds: Boolean = false,
 
-      // ActionTriggers
-      triggers: ActionTriggers = ActionTriggers()
+      // Actions
+      _createMap: Action[Unit] = Action.default,
+      _applyCenterZoom: Action[Unit] = Action.default,
+      _fitBounds: Action[Unit] = Action.default,
+      _refreshMarkers: Action[Unit] = Action.default,
+      _updateMarker: Action[String] = Action.default
   ) {
     // If the new focus is on a cotonoma, the target cotonoma must
     // have been loaded before calling this method.
@@ -51,10 +55,10 @@ object SectionGeomap {
       )
 
     def recreateMap: Model =
-      this.modify(_.triggers.createMap).using(_ + 1)
+      this.modify(_._createMap).using(_.trigger)
 
     def applyCenterZoom: Model =
-      this.modify(_.triggers.applyCenterZoom).using(_ + 1)
+      this.modify(_._applyCenterZoom).using(_.trigger)
 
     def moveTo(location: Geolocation): Model =
       copy(
@@ -69,7 +73,7 @@ object SectionGeomap {
       }
 
     def fitBounds: Model =
-      this.modify(_.triggers.fitBounds).using(_ + 1)
+      this.modify(_._fitBounds).using(_.trigger)
 
     def fitBounds(bounds: GeoBounds): Model =
       copy(bounds = Some(bounds)).fitBounds
@@ -88,12 +92,10 @@ object SectionGeomap {
       Some(location) == focusedLocation
 
     def refreshMarkers: Model =
-      this.modify(_.triggers.refreshMarkers).using(_ + 1)
+      this.modify(_._refreshMarkers).using(_.trigger)
 
     def updateMarker(id: String): Model =
-      this.modify(_.triggers.updateMarker).using(previous =>
-        (previous._1 + 1, id)
-      )
+      this.modify(_._updateMarker).using(_.trigger(id))
 
     def fetchCotosInBounds(bounds: GeoBounds): (Model, Cmd.One[AppMsg]) =
       (
@@ -105,14 +107,6 @@ object SectionGeomap {
     def fetchCotosInCurrentBounds: (Model, Cmd.One[AppMsg]) =
       currentBounds.map(fetchCotosInBounds).getOrElse((this, Cmd.none))
   }
-
-  case class ActionTriggers(
-      createMap: Int = 0,
-      applyCenterZoom: Int = 0,
-      fitBounds: Int = 0,
-      refreshMarkers: Int = 0,
-      updateMarker: (Int, String) = (0, "")
-  )
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -260,11 +254,11 @@ object SectionGeomap {
       markerDefs = toMarkerDefs(context.repo.cotoMarkers),
       focusedMarkerId = context.repo.cotos.focusedId.map(_.uuid),
       bounds = model.bounds.map(_.toMapLibre),
-      createMap = model.triggers.createMap,
-      applyCenterZoom = model.triggers.applyCenterZoom,
-      refreshMarkers = model.triggers.refreshMarkers,
-      updateMarker = model.triggers.updateMarker,
-      fitBounds = model.triggers.fitBounds,
+      createMap = model._createMap,
+      applyCenterZoom = model._applyCenterZoom,
+      refreshMarkers = model._refreshMarkers,
+      updateMarker = model._updateMarker,
+      fitBounds = model._fitBounds,
       onInit = Some(lngLatBounds => {
         val bounds = GeoBounds.fromMapLibre(lngLatBounds)
         dispatch(Msg.MapInitialized(bounds))

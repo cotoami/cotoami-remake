@@ -10,6 +10,18 @@ package object components {
     classes.filter(_._2).map(_._1).mkString(" ")
   }
 
+  case class Action[T](triggered: Int = 0, parameter: Option[T] = None) {
+    def trigger: Action[T] =
+      copy(triggered = triggered + 1, parameter = None)
+
+    def trigger(parameter: T): Action[T] =
+      copy(triggered = triggered + 1, parameter = Some(parameter))
+  }
+
+  object Action {
+    def default[T]: Action[T] = Action[T]()
+  }
+
   def materialSymbol(name: String, classNames: String = ""): ReactElement =
     span(className := s"material-symbols ${classNames}")(name)
 

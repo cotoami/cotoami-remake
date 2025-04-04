@@ -49,11 +49,11 @@ import cotoami.libs.geomap.pmtiles
 
       // Triggers to invoke effects
       // Changing the following values will trigger an effect.
-      createMap: Int = 0,
-      applyCenterZoom: Int = 0,
-      fitBounds: Int = 0,
-      refreshMarkers: Int = 0,
-      updateMarker: (Int, String) = (0, ""),
+      createMap: Action[Unit] = Action.default,
+      applyCenterZoom: Action[Unit] = Action.default,
+      fitBounds: Action[Unit] = Action.default,
+      refreshMarkers: Action[Unit] = Action.default,
+      updateMarker: Action[String] = Action.default,
 
       // Map resources
       styleLocation: String = "/geomap/style.json",
@@ -68,7 +68,8 @@ import cotoami.libs.geomap.pmtiles
       onMarkerClick: Option[String => Unit] = None,
       onFocusedLocationClick: Option[() => Unit] = None
   ) {
-    def markerToUpdate: Option[MarkerDef] = markerDefs.get(updateMarker._2)
+    def markerToUpdate: Option[MarkerDef] =
+      updateMarker.parameter.flatMap(markerDefs.get)
   }
 
   val component = FunctionalComponent[Props] { props =>
@@ -231,7 +232,7 @@ import cotoami.libs.geomap.pmtiles
           setMapInitialized(false)
         }
       },
-      Seq(props.createMap)
+      Seq(props.createMap.triggered)
     )
 
     // Effects that require a Map instance.
@@ -264,7 +265,7 @@ import cotoami.libs.geomap.pmtiles
           })
         )
       },
-      Seq(props.applyCenterZoom)
+      Seq(props.applyCenterZoom.triggered)
     )
 
     // fitBounds
@@ -282,7 +283,7 @@ import cotoami.libs.geomap.pmtiles
           )
         )
       },
-      Seq(props.fitBounds)
+      Seq(props.fitBounds.triggered)
     )
 
     // addOrRemoveMarkers
@@ -302,14 +303,14 @@ import cotoami.libs.geomap.pmtiles
     // refreshMarkers
     useEffect(
       () => {
-        if (props.refreshMarkers > 0) { // prevent being executed during init
+        if (props.refreshMarkers.triggered > 0) { // prevent being executed during init
           mapRef.current.foreach { map =>
             map.refreshMarkers(props.markerDefs.values)
             map.focusOrUnfocusMarker(props.focusedMarkerId)
           }
         }
       },
-      Seq(props.refreshMarkers)
+      Seq(props.refreshMarkers.triggered)
     )
 
     // updateMarker
@@ -322,7 +323,7 @@ import cotoami.libs.geomap.pmtiles
           }
         )
       },
-      Seq(props.updateMarker._1)
+      Seq(props.updateMarker.triggered)
     )
 
     // Focus/Unfocus marker
