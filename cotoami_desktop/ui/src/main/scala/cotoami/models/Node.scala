@@ -4,7 +4,7 @@ import org.scalajs.dom
 import java.time.Instant
 
 import marubinotto.fui.Browser
-import cotoami.utils.Validation
+import marubinotto.Validation
 
 case class Node(
     id: Id[Node],

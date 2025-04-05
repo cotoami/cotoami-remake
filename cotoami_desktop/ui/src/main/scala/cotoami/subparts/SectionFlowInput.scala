@@ -11,8 +11,9 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 
 import marubinotto.fui._
+import marubinotto.Validation
+
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.components.{materialSymbol, optionalClasses, SplitPane}

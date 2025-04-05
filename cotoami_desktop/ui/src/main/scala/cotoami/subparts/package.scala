@@ -5,8 +5,9 @@ import slinky.web.html
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
+import marubinotto.Validation
+
 import cotoami.{Msg => AppMsg}
-import cotoami.utils.Validation
 import cotoami.models.ParentStatus
 import cotoami.repository.Nodes
 import cotoami.components.materialSymbol

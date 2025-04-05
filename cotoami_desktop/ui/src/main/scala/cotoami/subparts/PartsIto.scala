@@ -3,8 +3,9 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import marubinotto.Validation
+
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.utils.Validation
 import cotoami.models.Ito
 import cotoami.components.{optionalClasses, toolButton}
 

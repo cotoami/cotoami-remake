@@ -1,4 +1,4 @@
-package cotoami.utils
+package marubinotto
 
 import java.net.{URI, URISyntaxException}
 import com.softwaremill.quicklens._

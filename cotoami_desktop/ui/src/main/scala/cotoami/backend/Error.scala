@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 
-import cotoami.utils.Validation
+import marubinotto.Validation
 
 @js.native
 trait ErrorJson extends js.Object {

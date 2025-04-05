@@ -10,8 +10,9 @@ import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.Validation
+
 import cotoami.Context
-import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
 import cotoami.components.{materialSymbol, toolButton, ScrollArea, SplitPane}

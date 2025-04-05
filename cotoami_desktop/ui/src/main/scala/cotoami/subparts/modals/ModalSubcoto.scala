@@ -7,9 +7,9 @@ import slinky.web.html._
 import marubinotto.fui.Cmd
 import marubinotto.fui.Cmd.One.pure
 import marubinotto.facade.Nullable
+import marubinotto.Validation
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
 import cotoami.backend.{CotoBackend, ErrorJson, ItoBackend}

@@ -1,7 +1,7 @@
 package cotoami.models
 
 import java.time.Instant
-import cotoami.utils.Validation
+import marubinotto.Validation
 
 case class Server(
     server: ServerNode,

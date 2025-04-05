@@ -7,8 +7,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.Validation
+
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}

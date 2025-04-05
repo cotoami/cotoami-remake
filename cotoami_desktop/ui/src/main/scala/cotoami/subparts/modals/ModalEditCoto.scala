@@ -6,8 +6,9 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.Validation
+
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
