@@ -3,8 +3,6 @@ package cotoami
 import scala.scalajs.js
 import org.scalajs.dom.URL
 
-import marubinotto.Action
-
 import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repository._
@@ -48,7 +46,6 @@ case class Model(
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
-    resizePaneFlow: Action[Int] = Action.default,
     search: PaneSearch.Model = PaneSearch.Model(),
     flowInput: SectionFlowInput.Model,
     timeline: SectionTimeline.Model = SectionTimeline.Model(),
