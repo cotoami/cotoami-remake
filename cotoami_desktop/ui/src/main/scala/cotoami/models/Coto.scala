@@ -4,7 +4,7 @@ import org.scalajs.dom
 import java.time.Instant
 
 import cotoami.libs.unified.Remark
-import cotoami.libs.remarkPlugins.StripMarkdown
+import cotoami.libs.unified.remarkPlugins.StripMarkdown
 import cotoami.utils.Validation
 
 trait CotoContent {

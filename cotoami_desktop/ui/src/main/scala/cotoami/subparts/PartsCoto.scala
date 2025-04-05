@@ -10,7 +10,8 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.libs.{lowlight, rehypePlugins, remarkPlugins}
+import cotoami.libs.{lowlight, rehypePlugins}
+import cotoami.libs.unified.remarkPlugins
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
 import cotoami.repository.Nodes
 import cotoami.components.{
