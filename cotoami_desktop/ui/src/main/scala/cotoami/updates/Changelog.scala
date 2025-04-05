@@ -4,7 +4,8 @@ import scala.util.chaining._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.{Browser, Cmd}
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
+
 import cotoami.{Model, Msg}
 import cotoami.models._
 import cotoami.repository._

@@ -2,7 +2,8 @@ package cotoami.updates
 
 import com.softwaremill.quicklens._
 
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
+
 import cotoami.Model
 import cotoami.models.{Id, Node}
 import cotoami.backend.{

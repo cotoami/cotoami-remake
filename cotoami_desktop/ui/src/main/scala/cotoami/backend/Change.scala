@@ -1,7 +1,7 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
 
 @js.native
 trait ChangelogEntryJson extends js.Object {

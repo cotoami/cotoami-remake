@@ -1,9 +1,10 @@
 package cotoami.backend
 
 import scala.scalajs.js
-import marubinotto.fui.Cmd
 
-import cotoami.utils.facade.Nullable
+import marubinotto.fui.Cmd
+import marubinotto.facade.Nullable
+
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 
 case class CotoGraph(json: CotoGraphJson) {

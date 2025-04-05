@@ -2,7 +2,7 @@ package cotoami.backend
 
 import scala.scalajs.js
 
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
 import cotoami.models.{ChildNode, DatabaseRole, Id, ParentNode}
 
 @js.native

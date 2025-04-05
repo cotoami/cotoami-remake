@@ -3,7 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 
 import marubinotto.fui.{Browser, Cmd}
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
+
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id}
 
 @js.native

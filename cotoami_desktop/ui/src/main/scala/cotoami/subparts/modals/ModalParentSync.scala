@@ -6,8 +6,9 @@ import slinky.web.html
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.facade.Nullable
+
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.utils.facade.Nullable
 import cotoami.models.{Id, Node, ParentSync}
 import cotoami.subparts.{Modal, PartsNode}
 

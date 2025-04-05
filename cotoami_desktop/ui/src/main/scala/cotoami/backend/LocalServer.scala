@@ -3,7 +3,7 @@ package cotoami.backend
 import scala.scalajs.js
 
 import marubinotto.fui.Cmd
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
 
 case class LocalServer(
     activeConfig: Option[ServerConfig],

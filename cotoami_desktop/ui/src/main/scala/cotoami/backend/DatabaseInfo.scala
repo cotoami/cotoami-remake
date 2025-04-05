@@ -3,7 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 
 import marubinotto.fui.Cmd
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
+
 import cotoami.libs.tauri
 import cotoami.models.{Id, Node}
 

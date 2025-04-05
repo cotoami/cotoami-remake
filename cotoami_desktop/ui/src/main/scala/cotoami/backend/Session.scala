@@ -4,7 +4,7 @@ import scala.scalajs.js
 import java.time.Instant
 
 import marubinotto.fui.Cmd
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
 import cotoami.models.{ChildNode, Coto, Cotonoma, Node}
 
 case class SessionToken(json: SessionTokenJson) {

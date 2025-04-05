@@ -7,7 +7,7 @@ import slinky.core._
 import slinky.core.annotations.react
 import slinky.core.facade.ReactElement
 
-import cotoami.utils.facade.Nullable
+import marubinotto.facade.Nullable
 
 @react object Select extends ExternalComponent {
   case class Props(

@@ -1,4 +1,4 @@
-package cotoami.utils
+package marubinotto
 
 import scala.scalajs.js.|
 
