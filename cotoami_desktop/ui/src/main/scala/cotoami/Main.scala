@@ -329,7 +329,7 @@ object Main {
         model.repo.pin(cotoId)
           .pipe(
             addCmd((_: Root) =>
-              Browser.send(Msg.SetPaneOpen(PaneStock.PaneName, true))
+              Browser.send(AppMain.Msg.SetPaneStockOpen(true).into)
             )
           )
           .pipe { case (repo, cmd) => (model.copy(repo = repo), cmd) }
