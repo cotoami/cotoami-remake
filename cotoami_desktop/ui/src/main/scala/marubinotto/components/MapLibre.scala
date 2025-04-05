@@ -15,6 +15,7 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
+import marubinotto.Action
 import marubinotto.libs.tauri
 import marubinotto.libs.geomap.maplibre
 import marubinotto.libs.geomap.maplibre._

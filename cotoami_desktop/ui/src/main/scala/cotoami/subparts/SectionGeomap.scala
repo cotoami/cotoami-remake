@@ -8,8 +8,9 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
 import marubinotto.optionalClasses
+import marubinotto.Action
 import marubinotto.fui.{Browser, Cmd}
-import marubinotto.components.{Action, MapLibre}
+import marubinotto.components.MapLibre
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, CotoMarker, GeoBounds, Geolocation, Id}
