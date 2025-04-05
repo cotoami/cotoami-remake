@@ -9,7 +9,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.Context
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}

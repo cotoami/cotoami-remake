@@ -5,8 +5,8 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.Cmd
-import fui.Cmd.One.pure
+import marubinotto.fui.Cmd
+import marubinotto.fui.Cmd.One.pure
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}

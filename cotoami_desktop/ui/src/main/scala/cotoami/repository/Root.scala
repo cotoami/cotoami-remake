@@ -6,7 +6,7 @@ import scala.scalajs.js
 
 import com.softwaremill.quicklens._
 
-import fui._
+import marubinotto.fui._
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.models._
 import cotoami.backend._

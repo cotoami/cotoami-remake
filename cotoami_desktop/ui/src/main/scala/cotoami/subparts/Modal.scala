@@ -6,7 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.{Nodes, Root}

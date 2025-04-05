@@ -12,7 +12,7 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 import java.time.Instant
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Ito, OrderContext}
 import cotoami.repository.Itos

@@ -5,7 +5,7 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
 import cotoami.repository.Cotonomas

@@ -10,7 +10,7 @@ import io.circe.generic.semiauto._
 import io.circe.syntax._
 import io.circe.parser._
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.Msg
 import cotoami.utils.Log
 import cotoami.models.Cotonoma

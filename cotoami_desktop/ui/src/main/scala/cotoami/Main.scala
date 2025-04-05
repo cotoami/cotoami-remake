@@ -13,7 +13,7 @@ import com.softwaremill.quicklens._
 import cats.effect.IO
 import cats.syntax.all._
 
-import fui._
+import marubinotto.fui._
 import cotoami.utils.facade.Nullable
 import cotoami.libs.tauri
 import cotoami.backend._

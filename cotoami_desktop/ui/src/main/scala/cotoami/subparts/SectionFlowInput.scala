@@ -10,7 +10,7 @@ import slinky.web.html._
 import cats.effect.IO
 import com.softwaremill.quicklens._
 
-import fui._
+import marubinotto.fui._
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}

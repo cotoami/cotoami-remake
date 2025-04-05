@@ -5,7 +5,7 @@ import scala.scalajs.js
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui._
+import marubinotto.fui._
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.libs.tauri
 import cotoami.utils.Validation

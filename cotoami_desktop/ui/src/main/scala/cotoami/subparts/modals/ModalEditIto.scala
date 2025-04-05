@@ -5,7 +5,7 @@ import scala.util.chaining._
 import slinky.web.html._
 import slinky.core.facade.{Fragment, ReactElement}
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{Coto, Id, Ito}

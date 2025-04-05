@@ -4,7 +4,7 @@ import org.scalajs.dom
 import java.time.Instant
 import com.softwaremill.quicklens._
 
-import fui.Browser
+import marubinotto.fui.Browser
 
 case class WaitingPost(
     postId: String,

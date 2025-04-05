@@ -4,7 +4,7 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.subparts.Modal
 

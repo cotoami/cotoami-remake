@@ -4,7 +4,7 @@ import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.backend.{ErrorJson, InitialDataset}

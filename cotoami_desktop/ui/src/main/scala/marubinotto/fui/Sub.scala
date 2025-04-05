@@ -1,4 +1,4 @@
-package fui
+package marubinotto.fui
 
 import scala.concurrent.duration.FiniteDuration
 import scala.scalajs.js

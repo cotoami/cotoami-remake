@@ -2,7 +2,7 @@ import scala.scalajs.js
 
 import cats.effect.IO
 
-import fui._
+import marubinotto.fui._
 import cotoami.utils.Log
 import cotoami.backend.ErrorJson
 

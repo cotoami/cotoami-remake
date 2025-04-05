@@ -3,7 +3,7 @@ package cotoami.updates
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.utils.facade.Nullable
 import cotoami.{Model, Msg}
 import cotoami.models._

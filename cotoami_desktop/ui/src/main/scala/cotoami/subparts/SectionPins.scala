@@ -14,7 +14,7 @@ import slinky.core.facade.{ReactElement, ReactRef}
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito, OrderContext, Siblings, UiState}
 import cotoami.repository.Root

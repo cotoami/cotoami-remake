@@ -6,7 +6,7 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.Validation
 import cotoami.models.{ClientNode, Id, Node}

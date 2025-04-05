@@ -6,7 +6,7 @@ import org.scalajs.dom
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import cats.effect.IO
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.libs.geomap.maplibre.LngLat
 import cotoami.libs.exifr
 

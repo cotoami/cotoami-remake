@@ -10,7 +10,7 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import slinky.core._
 import slinky.core.annotations.react
 
-import fui.Browser
+import marubinotto.fui.Browser
 
 @react object FixedAspectCrop extends ExternalComponent {
   case class Props(

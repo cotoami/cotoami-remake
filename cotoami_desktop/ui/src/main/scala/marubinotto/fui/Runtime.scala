@@ -1,4 +1,4 @@
-package fui
+package marubinotto.fui
 
 import scala.collection.mutable.{Map => MutableMap}
 import org.scalajs.dom

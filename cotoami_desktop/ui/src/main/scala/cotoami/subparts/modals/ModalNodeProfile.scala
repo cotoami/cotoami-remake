@@ -6,7 +6,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, ClientNode, Coto, Id, Node, Page, Server}
 import cotoami.repository.{Nodes, Root}

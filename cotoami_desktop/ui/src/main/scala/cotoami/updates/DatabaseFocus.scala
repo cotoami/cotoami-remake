@@ -3,7 +3,7 @@ package cotoami.updates
 import scala.util.chaining._
 import com.softwaremill.quicklens._
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.{Model, Msg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.backend.CotonomaDetails

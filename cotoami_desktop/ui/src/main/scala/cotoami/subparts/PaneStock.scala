@@ -8,7 +8,7 @@ import org.scalajs.dom.HTMLElement
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Geolocation, UiState}
 import cotoami.updates

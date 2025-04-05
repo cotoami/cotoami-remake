@@ -2,7 +2,7 @@ package cotoami
 
 import scala.util.chaining._
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.Model
 import cotoami.models.UiState
 

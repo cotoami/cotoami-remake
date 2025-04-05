@@ -5,7 +5,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html
 import slinky.web.html._
 
-import fui.{Browser, Cmd}
+import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.utils.facade.Nullable
 import cotoami.models.{Id, Node, ParentSync}

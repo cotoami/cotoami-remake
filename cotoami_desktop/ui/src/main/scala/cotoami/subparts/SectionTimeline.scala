@@ -6,7 +6,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import com.softwaremill.quicklens._
 
-import fui._
+import marubinotto.fui._
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{
   Coto,

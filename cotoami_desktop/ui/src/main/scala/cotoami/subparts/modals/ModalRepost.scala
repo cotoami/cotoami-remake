@@ -6,7 +6,7 @@ import scala.scalajs.js
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.utils.facade.Nullable
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}

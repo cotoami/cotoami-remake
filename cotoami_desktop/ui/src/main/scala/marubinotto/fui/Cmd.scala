@@ -1,4 +1,4 @@
-package fui
+package marubinotto.fui
 
 import scala.util.{Failure, Success}
 import scala.concurrent.Future

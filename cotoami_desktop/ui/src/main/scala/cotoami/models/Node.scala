@@ -3,7 +3,7 @@ package cotoami.models
 import org.scalajs.dom
 import java.time.Instant
 
-import fui.Browser
+import marubinotto.fui.Browser
 import cotoami.utils.Validation
 
 case class Node(

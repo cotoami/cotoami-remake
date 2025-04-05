@@ -9,7 +9,7 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import cats.effect.IO
 
-import fui.Cmd
+import marubinotto.fui.Cmd
 import cotoami.libs.exifr
 
 case class DateTimeRange(

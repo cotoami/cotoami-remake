@@ -1,4 +1,4 @@
-package fui
+package marubinotto.fui
 
 import org.scalajs.dom.URL
 
