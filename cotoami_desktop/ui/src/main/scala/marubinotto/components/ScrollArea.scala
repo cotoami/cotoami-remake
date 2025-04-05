@@ -16,11 +16,14 @@ import slinky.core.facade.Hooks._
       scrollableElementId: Option[String] = None,
       scrollableClassName: Option[String] = None,
       autoHide: Boolean = true,
-      initialScrollTop: Option[Double] = None,
       bottomThreshold: Option[Int] = None,
       onScrollToBottom: Option[() => Unit] = None,
+
       // Notify when being unmounted with the scroll position (scrollTop).
-      onUnmounted: Option[Double => Unit] = None
+      onUnmounted: Option[Double => Unit] = None,
+
+      // scrollTop will be set to the given value during init and when the value has changed
+      setScrollTop: Option[Double] = None
   )(children: ReactElement*) {
     // While @react converts `children: ReactElement*` into a curried parameter of `ScrollArea.apply`,
     // the varargs makes default `Props` values unusable, which is inconvenient.
@@ -55,16 +58,14 @@ import slinky.core.facade.Hooks._
       Seq(props.onScrollToBottom)
     )
 
-    // Set the initial scrollTop
+    // setScrollTop
     useEffect(
       () => {
-        props.initialScrollTop match {
-          case Some(scrollTop) =>
-            scrollableNodeRef.current.scrollTop = scrollTop
-          case None => ()
+        props.setScrollTop.foreach { scrollTop =>
+          scrollableNodeRef.current.scrollTop = scrollTop
         }
       },
-      Seq.empty
+      Seq(props.setScrollTop.getOrElse(-1))
     )
 
     // Register onScroll

@@ -298,7 +298,7 @@ object SectionTimeline {
       ),
       div(className := "coto-flow body")(
         ScrollArea(
-          initialScrollTop = model.getScrollPos(currentCotonomaId),
+          setScrollTop = model.getScrollPos(currentCotonomaId),
           onScrollToBottom = Some(() => dispatch(Msg.FetchMore)),
           onUnmounted = Some(scrollTop =>
             dispatch(
