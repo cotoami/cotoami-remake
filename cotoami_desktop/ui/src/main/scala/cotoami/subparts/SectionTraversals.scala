@@ -13,10 +13,7 @@ import com.softwaremill.quicklens._
 import java.time.Instant
 
 import marubinotto.fui.{Browser, Cmd}
-import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Id, Ito, OrderContext}
-import cotoami.repository.Itos
-import cotoami.components.{
+import marubinotto.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
@@ -24,6 +21,10 @@ import cotoami.components.{
   Flipper,
   ScrollArea
 }
+
+import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.models.{Coto, Id, Ito, OrderContext}
+import cotoami.repository.Itos
 
 object SectionTraversals {
 

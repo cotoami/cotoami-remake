@@ -7,11 +7,12 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.Cmd
+import marubinotto.components.{materialSymbol, ScrollArea}
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, PaginatedIds}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, PaginatedCotos}
-import cotoami.components.{materialSymbol, ScrollArea}
 
 object PaneSearch {
 

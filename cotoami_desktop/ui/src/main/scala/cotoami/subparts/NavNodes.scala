@@ -3,10 +3,10 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.components.{materialSymbol, optionalClasses, toolButton}
 import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
 import cotoami.repository.Nodes
-import cotoami.components.{materialSymbol, optionalClasses, toolButton}
 
 object NavNodes {
   final val PaneName = "nav-nodes"

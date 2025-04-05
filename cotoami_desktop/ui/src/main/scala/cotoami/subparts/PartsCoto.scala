@@ -11,16 +11,16 @@ import slinky.web.html._
 
 import marubinotto.libs.lowlight
 import marubinotto.libs.unified.{rehypePlugins, remarkPlugins}
-
-import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
-import cotoami.repository.Nodes
-import cotoami.components.{
+import marubinotto.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
   Markdown
 }
+
+import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}
+import cotoami.repository.Nodes
 import cotoami.subparts.SectionGeomap
 
 object PartsCoto {

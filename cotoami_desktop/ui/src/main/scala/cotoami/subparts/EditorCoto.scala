@@ -11,11 +11,16 @@ import slinky.web.SyntheticMouseEvent
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
+import marubinotto.components.{
+  materialSymbol,
+  toolButton,
+  ScrollArea,
+  SplitPane
+}
 
 import cotoami.Context
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Id, Node}
 import cotoami.backend.{CotonomaBackend, ErrorJson}
-import cotoami.components.{materialSymbol, toolButton, ScrollArea, SplitPane}
 import cotoami.subparts.SectionGeomap.{Model => Geomap}
 
 object EditorCoto {

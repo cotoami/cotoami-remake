@@ -7,10 +7,10 @@ import slinky.web.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.libs.tauri
+import marubinotto.components.{optionalClasses, paneToggle, SplitPane}
 
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
-import cotoami.components.{optionalClasses, paneToggle, SplitPane}
 
 object AppMain {
 

@@ -5,10 +5,10 @@ import org.scalajs.dom
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.Context
 import cotoami.models.{Coto, Id, Ito, OrderContext}
-import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 
 object SectionCotoDetails {
 

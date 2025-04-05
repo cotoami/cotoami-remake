@@ -3,9 +3,9 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
-import cotoami.components.toolButton
 
 object PartsNode {
 

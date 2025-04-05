@@ -5,10 +5,11 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
+import marubinotto.components.{toolButton, Flipped, Flipper, ScrollArea}
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Coto
 import cotoami.repository.Cotos
-import cotoami.components.{toolButton, Flipped, Flipper, ScrollArea}
 import cotoami.subparts.{Modal, PartsCoto}
 
 object ModalSelection {

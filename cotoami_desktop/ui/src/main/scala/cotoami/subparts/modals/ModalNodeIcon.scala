@@ -12,12 +12,13 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.components.FixedAspectCrop
+import marubinotto.components.FixedAspectCrop.Area
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.repository.Nodes
 import cotoami.backend.{ErrorJson, NodeBackend}
-import cotoami.components.FixedAspectCrop
-import cotoami.components.FixedAspectCrop.Area
 import cotoami.subparts.{InputFile, Modal}
 
 object ModalNodeIcon {

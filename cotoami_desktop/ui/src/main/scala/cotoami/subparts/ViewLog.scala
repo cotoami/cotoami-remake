@@ -8,9 +8,9 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
+import marubinotto.components.materialSymbol
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.utils.Log
-import cotoami.components.materialSymbol
 
 object ViewLog {
 

@@ -8,11 +8,12 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.components.{optionalClasses, Action, MapLibre}
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{CenterOrBounds, CotoMarker, GeoBounds, Geolocation, Id}
 import cotoami.repository.Root
 import cotoami.backend.{ErrorJson, GeolocatedCotos}
-import cotoami.components.{optionalClasses, Action, MapLibre}
 
 object SectionGeomap {
 

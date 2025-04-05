@@ -4,10 +4,10 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.Validation
+import marubinotto.components.{optionalClasses, toolButton}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Ito
-import cotoami.components.{optionalClasses, toolButton}
 
 object PartsIto {
 

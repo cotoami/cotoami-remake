@@ -9,16 +9,17 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
-import cotoami.{Context, Into, Model, Msg => AppMsg}
-import cotoami.models.{Geolocation, UiState}
-import cotoami.updates
-import cotoami.components.{
+import marubinotto.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
   ScrollArea,
   SplitPane
 }
+
+import cotoami.{Context, Into, Model, Msg => AppMsg}
+import cotoami.models.{Geolocation, UiState}
+import cotoami.updates
 import cotoami.subparts.SectionGeomap
 
 object PaneStock {

@@ -5,10 +5,11 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.components.materialSymbol
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.backend.{ErrorJson, InitialDataset}
-import cotoami.components.materialSymbol
 import cotoami.subparts.{Modal, PartsNode}
 
 object ModalOperateAs {

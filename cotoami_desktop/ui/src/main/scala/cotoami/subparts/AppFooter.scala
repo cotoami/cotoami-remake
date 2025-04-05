@@ -3,8 +3,8 @@ package cotoami.subparts
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import marubinotto.components.materialSymbol
 import cotoami.{Into, Model, Msg => AppMsg}
-import cotoami.components.materialSymbol
 
 object AppFooter {
 

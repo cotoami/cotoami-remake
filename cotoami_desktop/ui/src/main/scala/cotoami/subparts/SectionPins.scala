@@ -15,16 +15,17 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Coto, Cotonoma, Id, Ito, OrderContext, Siblings, UiState}
-import cotoami.repository.Root
-import cotoami.components.{
+import marubinotto.components.{
   optionalClasses,
   toolButton,
   Flipped,
   Flipper,
   ScrollArea
 }
+
+import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.models.{Coto, Cotonoma, Id, Ito, OrderContext, Siblings, UiState}
+import cotoami.repository.Root
 
 object SectionPins {
 

@@ -7,6 +7,14 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui._
+import marubinotto.components.{
+  materialSymbol,
+  toolButton,
+  Flipped,
+  Flipper,
+  ScrollArea
+}
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{
   Coto,
@@ -19,13 +27,6 @@ import cotoami.models.{
 }
 import cotoami.repository._
 import cotoami.backend.{ErrorJson, PaginatedCotos}
-import cotoami.components.{
-  materialSymbol,
-  toolButton,
-  Flipped,
-  Flipper,
-  ScrollArea
-}
 
 object SectionTimeline {
 

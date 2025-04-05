@@ -1,4 +1,4 @@
-package cotoami.components
+package marubinotto.components
 
 import scala.scalajs.js
 import org.scalajs.dom

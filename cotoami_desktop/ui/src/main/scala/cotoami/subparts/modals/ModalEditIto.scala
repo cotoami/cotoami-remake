@@ -7,11 +7,11 @@ import slinky.core.facade.{Fragment, ReactElement}
 
 import marubinotto.fui.Cmd
 import marubinotto.Validation
+import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Ito}
 import cotoami.backend.{ErrorJson, ItoBackend}
-import cotoami.components.{materialSymbol, ScrollArea}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto}
 
 object ModalEditIto {

@@ -6,16 +6,17 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
-import cotoami.repository.Cotonomas
-import cotoami.backend.{ErrorJson, ServerNodeBackend}
-import cotoami.components.{
+import marubinotto.components.{
   materialSymbol,
   optionalClasses,
   toolButton,
   ScrollArea
 }
+
+import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
+import cotoami.repository.Cotonomas
+import cotoami.backend.{ErrorJson, ServerNodeBackend}
 
 object NavCotonomas {
   final val PaneName = "NavCotonomas"

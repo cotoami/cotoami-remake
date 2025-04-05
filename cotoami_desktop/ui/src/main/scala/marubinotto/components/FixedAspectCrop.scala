@@ -1,4 +1,4 @@
-package cotoami.components
+package marubinotto.components
 
 import scala.util.{Failure, Success}
 import scala.concurrent._

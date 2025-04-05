@@ -8,12 +8,17 @@ import marubinotto.fui.Cmd
 import marubinotto.fui.Cmd.One.pure
 import marubinotto.facade.Nullable
 import marubinotto.Validation
+import marubinotto.components.{
+  materialSymbol,
+  optionalClasses,
+  ScrollArea,
+  Select
+}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
 import cotoami.repository.Root
 import cotoami.backend.{CotoBackend, ErrorJson, ItoBackend}
-import cotoami.components.{materialSymbol, optionalClasses, ScrollArea, Select}
 import cotoami.subparts.{Modal, PartsCoto, PartsIto, PartsNode}
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}

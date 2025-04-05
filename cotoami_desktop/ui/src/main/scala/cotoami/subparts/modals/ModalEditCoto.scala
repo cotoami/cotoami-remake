@@ -7,12 +7,12 @@ import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
+import marubinotto.components.optionalClasses
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
-import cotoami.components.optionalClasses
 import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 import cotoami.subparts.SectionGeomap.{Model => Geomap}

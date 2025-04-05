@@ -6,11 +6,11 @@ import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
 import marubinotto.Validation
+import marubinotto.components.materialSymbol
 
 import cotoami.{Msg => AppMsg}
 import cotoami.models.ParentStatus
 import cotoami.repository.Nodes
-import cotoami.components.materialSymbol
 
 package object subparts {
 
@@ -85,7 +85,7 @@ package object subparts {
   def paneToggle(
       paneName: String
   )(implicit dispatch: AppMsg => Unit): ReactElement =
-    cotoami.components.paneToggle(
+    marubinotto.components.paneToggle(
       onFoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, false)),
       onUnfoldClick = () => dispatch(AppMsg.SetPaneOpen(paneName, true))
     )

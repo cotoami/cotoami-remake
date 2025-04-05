@@ -7,10 +7,11 @@ import slinky.web.html._
 import com.softwaremill.quicklens._
 
 import marubinotto.fui.{Browser, Cmd}
+import marubinotto.components.materialSymbol
+
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.{Nodes, Root}
-import cotoami.components.materialSymbol
 import cotoami.subparts.modals._
 
 sealed trait Modal

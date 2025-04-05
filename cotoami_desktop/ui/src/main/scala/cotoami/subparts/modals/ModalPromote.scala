@@ -8,11 +8,11 @@ import slinky.web.html._
 import marubinotto.fui.Cmd
 import marubinotto.fui.Cmd.One.pure
 import marubinotto.Validation
+import marubinotto.components.{materialSymbol, optionalClasses, SplitPane}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma}
 import cotoami.backend.{CotoBackend, ErrorJson}
-import cotoami.components.{materialSymbol, optionalClasses, SplitPane}
 import cotoami.subparts.Modal
 import cotoami.subparts.EditorCoto._
 

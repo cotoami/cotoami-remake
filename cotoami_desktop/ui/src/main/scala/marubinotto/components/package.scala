@@ -1,4 +1,4 @@
-package cotoami
+package marubinotto
 
 import slinky.core.facade.ReactElement
 import slinky.web.SyntheticMouseEvent

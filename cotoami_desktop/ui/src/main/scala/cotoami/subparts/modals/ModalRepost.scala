@@ -8,13 +8,13 @@ import slinky.web.html._
 
 import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
+import marubinotto.components.{materialSymbol, ScrollArea, Select}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node}
 import cotoami.repository.{Cotonomas, Nodes, Root}
 import cotoami.backend.{CotoBackend, CotonomaBackend, ErrorJson}
 import cotoami.subparts.{Modal, PartsCoto, PartsNode}
-import cotoami.components.{materialSymbol, ScrollArea, Select}
 
 object ModalRepost {
 

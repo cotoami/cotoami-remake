@@ -8,10 +8,10 @@ import slinky.web.html._
 import marubinotto.fui._
 import marubinotto.libs.tauri
 import marubinotto.Validation
+import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
-import cotoami.components.materialSymbol
 import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson}
 import cotoami.subparts.{labeledField, labeledInputField, Modal}
 

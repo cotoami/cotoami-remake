@@ -1,4 +1,4 @@
-package cotoami.components
+package marubinotto.components
 
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.{Map => MutableMap}

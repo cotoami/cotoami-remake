@@ -10,7 +10,7 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.libs.reactDropzone._
-import cotoami.components.optionalClasses
+import marubinotto.components.optionalClasses
 
 @react object InputFile {
   case class Props(
