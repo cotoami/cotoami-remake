@@ -12,6 +12,7 @@ import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
 import marubinotto.optionalClasses
+import marubinotto.Action
 
 @react object SplitPane {
   case class Props(
@@ -19,6 +20,7 @@ import marubinotto.optionalClasses
       reverse: Boolean = false,
       initialPrimarySize: Int,
       resizable: Boolean = true,
+      resize: Action[Int] = Action.default,
       className: Option[String] = None,
       onResizeStart: Option[() => Unit] = None,
       onResizeEnd: Option[() => Unit] = None,
@@ -129,6 +131,14 @@ import marubinotto.optionalClasses
         }
       },
       Seq(props.vertical, props.reverse)
+    )
+
+    // resize
+    useEffect(
+      () => {
+        props.resize.parameter.foreach(setPrimarySize)
+      },
+      Seq(props.resize.triggered)
     )
 
     div(
