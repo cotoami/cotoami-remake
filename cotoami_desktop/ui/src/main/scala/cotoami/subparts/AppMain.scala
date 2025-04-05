@@ -6,6 +6,7 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.optionalClasses
+import marubinotto.Action
 import marubinotto.fui.Cmd
 import marubinotto.libs.tauri
 import marubinotto.components.{paneToggle, SplitPane}
@@ -28,32 +29,29 @@ object AppMain {
     case class SetPaneStockOpen(open: Boolean) extends Msg
   }
 
-  def update(msg: Msg)(uiState: UiState): (UiState, Cmd[AppMsg]) =
+  def update(msg: Msg, resizePaneFlow: Action[Int])(
+      uiState: UiState
+  ): (UiState, Action[Int], Cmd[AppMsg]) =
     msg match {
       case Msg.SetPaneFlowOpen(open) =>
-        setPaneOpen(uiState, PaneFlow.PaneName, open)
+        setPaneOpen(uiState, resizePaneFlow, PaneFlow.PaneName, open)
 
       case Msg.SetPaneStockOpen(open) =>
-        setPaneOpen(uiState, PaneStock.PaneName, open)
+        setPaneOpen(uiState, resizePaneFlow, PaneStock.PaneName, open)
     }
 
   private def setPaneOpen(
       uiState: UiState,
+      resizePaneFlow: Action[Int],
       name: String,
       open: Boolean
-  ): (UiState, Cmd[AppMsg]) = {
+  ): (UiState, Action[Int], Cmd[AppMsg]) = {
     if (uiState.paneOpened(name) == open) {
       // the pane state won't change
-      return (uiState, Cmd.none)
+      return (uiState, resizePaneFlow, Cmd.none)
     }
 
     uiState
-      .pipe { state =>
-        if (state.paneOpened(PaneFlow.PaneName))
-          state.resizePane(PaneFlow.PaneName, PaneFlow.currentWidth.toInt)
-        else
-          state
-      }
       .setPaneOpen(name, open)
       .pipe { newState =>
         (
@@ -61,13 +59,20 @@ object AppMain {
           newState.paneOpened(PaneStock.PaneName)
         ) match {
           case (false, false) =>
-            uiState // Can't fold both panes at the same time
-          case _ => newState
+            (uiState, resizePaneFlow) // Can't fold both panes at the same time
+          case (true, true) =>
+            if (uiState.paneOpened(PaneFlow.PaneName))
+              // Retain the width of flow-pane when opening stock-pane
+              (newState, resizePaneFlow.trigger(PaneFlow.currentWidth.toInt))
+            else
+              (newState, resizePaneFlow)
+          case _ => (newState, resizePaneFlow)
         }
       }
-      .pipe { state =>
+      .pipe { case (state, resizePaneFlow) =>
         (
           state,
+          resizePaneFlow,
           Cmd.Batch(
             state.save,
             resizeWindow(name, open, state).toNone
@@ -118,6 +123,7 @@ object AppMain {
           PaneFlow.DefaultWidth
         ),
         resizable = flowOpened && stockOpened,
+        resize = model.resizePaneFlow,
         className = Some("main"),
         onPrimarySizeChanged = Some((newSize) =>
           dispatch(AppMsg.ResizePane(PaneFlow.PaneName, newSize))

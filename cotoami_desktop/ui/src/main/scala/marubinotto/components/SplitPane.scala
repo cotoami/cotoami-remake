@@ -136,7 +136,12 @@ import marubinotto.Action
     // resize
     useEffect(
       () => {
-        props.resize.parameter.foreach(setPrimarySize)
+        if (props.resizable) {
+          props.resize.parameter.foreach { newSize =>
+            setPrimarySize(newSize)
+            props.onPrimarySizeChanged.map(_(newSize))
+          }
+        }
       },
       Seq(props.resize.triggered)
     )

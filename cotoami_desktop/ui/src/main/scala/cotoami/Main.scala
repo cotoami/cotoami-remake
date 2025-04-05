@@ -387,9 +387,9 @@ object Main {
 
       case Msg.AppMainMsg(submsg) =>
         model.uiState
-          .map(AppMain.update(submsg))
-          .map { case (uiState, cmd) =>
-            (model.copy(uiState = Some(uiState)), cmd)
+          .map(AppMain.update(submsg, model.resizePaneFlow))
+          .map { case (uiState, resize, cmd) =>
+            (model.copy(uiState = Some(uiState), resizePaneFlow = resize), cmd)
           }
           .getOrElse((model, Cmd.none))
 
