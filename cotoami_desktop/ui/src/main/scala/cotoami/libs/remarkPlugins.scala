@@ -8,4 +8,9 @@ object remarkPlugins {
   @js.native
   @JSImport("remark-breaks", JSImport.Default)
   object breaks extends js.Object
+
+  // https://github.com/remarkjs/strip-markdown
+  @js.native
+  @JSImport("strip-markdown", JSImport.Default)
+  object StripMarkdown extends js.Any
 }

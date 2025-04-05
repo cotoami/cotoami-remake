@@ -3,7 +3,9 @@ package cotoami.models
 import org.scalajs.dom
 import java.time.Instant
 
-import cotoami.utils.{Remark, StripMarkdown, Validation}
+import cotoami.libs.unified.Remark
+import cotoami.libs.remarkPlugins.StripMarkdown
+import cotoami.utils.Validation
 
 trait CotoContent {
   def content: Option[String]
