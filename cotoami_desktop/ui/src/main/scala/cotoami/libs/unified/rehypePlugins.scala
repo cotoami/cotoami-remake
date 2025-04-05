@@ -1,4 +1,4 @@
-package cotoami.libs
+package cotoami.libs.unified
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
