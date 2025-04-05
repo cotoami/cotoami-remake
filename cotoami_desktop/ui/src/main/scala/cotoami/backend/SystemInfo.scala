@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
-import cotoami.libs.tauri
+import marubinotto.libs.tauri
 
 @js.native
 trait SystemInfoJson extends js.Object {

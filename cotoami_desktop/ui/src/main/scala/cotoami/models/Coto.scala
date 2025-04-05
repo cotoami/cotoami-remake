@@ -3,8 +3,8 @@ package cotoami.models
 import org.scalajs.dom
 import java.time.Instant
 
-import cotoami.libs.unified.Remark
-import cotoami.libs.unified.remarkPlugins.StripMarkdown
+import marubinotto.libs.unified.Remark
+import marubinotto.libs.unified.remarkPlugins.StripMarkdown
 import cotoami.utils.Validation
 
 trait CotoContent {

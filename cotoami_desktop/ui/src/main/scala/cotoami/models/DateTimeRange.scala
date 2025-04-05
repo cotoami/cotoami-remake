@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 import cats.effect.IO
 
 import marubinotto.fui.Cmd
-import cotoami.libs.exifr
+import marubinotto.libs.exifr
 
 case class DateTimeRange(
     startUtcIso: String,

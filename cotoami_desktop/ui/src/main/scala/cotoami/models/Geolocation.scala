@@ -7,8 +7,8 @@ import org.scalajs.macrotaskexecutor.MacrotaskExecutor.Implicits._
 import cats.effect.IO
 
 import marubinotto.fui.Cmd
-import cotoami.libs.geomap.maplibre.LngLat
-import cotoami.libs.exifr
+import marubinotto.libs.geomap.maplibre.LngLat
+import marubinotto.libs.exifr
 
 case class Geolocation(longitude: Double, latitude: Double) {
   val lng = longitude

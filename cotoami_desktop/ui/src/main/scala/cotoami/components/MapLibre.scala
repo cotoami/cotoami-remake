@@ -15,10 +15,10 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.libs.tauri
-import cotoami.libs.geomap.maplibre
-import cotoami.libs.geomap.maplibre._
-import cotoami.libs.geomap.pmtiles
+import marubinotto.libs.tauri
+import marubinotto.libs.geomap.maplibre
+import marubinotto.libs.geomap.maplibre._
+import marubinotto.libs.geomap.pmtiles
 
 @react object MapLibre {
 

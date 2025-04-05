@@ -1,4 +1,4 @@
-package cotoami.libs
+package marubinotto.libs
 
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
@@ -131,7 +131,7 @@ package object tauri {
       deltaWidth: Double,
       deltaHeight: Double
   ): Future[Unit] = {
-    val appWindow = cotoami.libs.tauri.window.appWindow
+    val appWindow = marubinotto.libs.tauri.window.appWindow
     appWindow.scaleFactor().toFuture.flatMap(factor =>
       appWindow.innerSize().toFuture.flatMap(physical => {
         val currentSize = physical.toLogical(factor)

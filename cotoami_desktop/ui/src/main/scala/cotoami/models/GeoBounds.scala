@@ -1,6 +1,6 @@
 package cotoami.models
 
-import cotoami.libs.geomap.maplibre.LngLatBounds
+import marubinotto.libs.geomap.maplibre.LngLatBounds
 
 case class GeoBounds(southwest: Geolocation, northeast: Geolocation) {
   val sw = southwest

@@ -6,7 +6,8 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import cotoami.libs.tauri
+import marubinotto.libs.tauri
+
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 import cotoami.components.{optionalClasses, paneToggle, SplitPane}

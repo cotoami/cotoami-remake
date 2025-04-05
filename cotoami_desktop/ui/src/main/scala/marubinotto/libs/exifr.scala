@@ -1,4 +1,4 @@
-package cotoami.libs
+package marubinotto.libs
 
 import org.scalajs.dom
 

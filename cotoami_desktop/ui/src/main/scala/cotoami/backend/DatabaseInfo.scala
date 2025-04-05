@@ -4,8 +4,8 @@ import scala.scalajs.js
 
 import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
+import marubinotto.libs.tauri
 
-import cotoami.libs.tauri
 import cotoami.models.{Id, Node}
 
 case class DatabaseInfo(json: DatabaseInfoJson) {

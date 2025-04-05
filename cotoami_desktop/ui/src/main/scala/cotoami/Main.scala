@@ -15,8 +15,8 @@ import cats.syntax.all._
 
 import marubinotto.fui._
 import marubinotto.facade.Nullable
+import marubinotto.libs.tauri
 
-import cotoami.libs.tauri
 import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._

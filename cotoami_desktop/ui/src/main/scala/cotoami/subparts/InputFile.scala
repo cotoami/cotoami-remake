@@ -9,7 +9,7 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
-import cotoami.libs.reactDropzone._
+import marubinotto.libs.reactDropzone._
 import cotoami.components.optionalClasses
 
 @react object InputFile {

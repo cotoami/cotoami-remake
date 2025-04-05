@@ -1,4 +1,4 @@
-package cotoami.libs
+package marubinotto.libs
 
 import scala.scalajs.js
 import scala.scalajs.js.|

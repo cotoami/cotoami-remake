@@ -6,8 +6,9 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui._
+import marubinotto.libs.tauri
+
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.libs.tauri
 import cotoami.utils.Validation
 import cotoami.models.Node
 import cotoami.components.materialSymbol

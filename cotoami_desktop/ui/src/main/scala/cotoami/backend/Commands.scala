@@ -4,7 +4,8 @@ import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => jso}
 
 import marubinotto.fui.Cmd
-import cotoami.libs.tauri
+import marubinotto.libs.tauri
+
 import cotoami.models._
 
 object Commands {

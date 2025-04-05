@@ -1,4 +1,4 @@
-package cotoami.libs.geomap
+package marubinotto.libs.geomap
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport

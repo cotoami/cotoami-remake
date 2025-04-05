@@ -3,7 +3,8 @@ package cotoami.backend
 import scala.scalajs.js
 
 import marubinotto.fui.Cmd
-import cotoami.libs.tauri
+import marubinotto.libs.tauri
+
 import cotoami.models.{ActiveClient, Id, Node, Server}
 
 case class InitialDataset(json: InitialDatasetJson) {
