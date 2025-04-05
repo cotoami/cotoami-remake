@@ -6,13 +6,9 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
+import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.components.{
-  materialSymbol,
-  optionalClasses,
-  toolButton,
-  ScrollArea
-}
+import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, ClientNode, Coto, Id, Node, Page, Server}

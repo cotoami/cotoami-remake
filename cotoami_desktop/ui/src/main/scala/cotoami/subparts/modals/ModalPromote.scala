@@ -5,10 +5,11 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
 import marubinotto.fui.Cmd.One.pure
 import marubinotto.Validation
-import marubinotto.components.{materialSymbol, optionalClasses, SplitPane}
+import marubinotto.components.{materialSymbol, SplitPane}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma}

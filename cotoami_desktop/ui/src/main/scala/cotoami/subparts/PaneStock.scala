@@ -8,10 +8,10 @@ import org.scalajs.dom.HTMLElement
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.{
   materialSymbol,
-  optionalClasses,
   toolButton,
   ScrollArea,
   SplitPane

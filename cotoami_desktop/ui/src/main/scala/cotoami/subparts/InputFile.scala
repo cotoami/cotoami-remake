@@ -9,8 +9,8 @@ import slinky.core.annotations.react
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.libs.reactDropzone._
-import marubinotto.components.optionalClasses
 
 @react object InputFile {
   case class Props(

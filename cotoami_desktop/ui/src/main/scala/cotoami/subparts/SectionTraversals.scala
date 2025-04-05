@@ -12,10 +12,10 @@ import cats.effect.IO
 import com.softwaremill.quicklens._
 import java.time.Instant
 
+import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.{
   materialSymbol,
-  optionalClasses,
   toolButton,
   Flipped,
   Flipper,

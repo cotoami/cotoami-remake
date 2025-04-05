@@ -6,10 +6,6 @@ import slinky.web.html._
 
 package object components {
 
-  def optionalClasses(classes: Seq[(String, Boolean)]): String = {
-    classes.filter(_._2).map(_._1).mkString(" ")
-  }
-
   case class Action[T](triggered: Int = 0, parameter: Option[T] = None) {
     def trigger: Action[T] =
       copy(triggered = triggered + 1, parameter = None)

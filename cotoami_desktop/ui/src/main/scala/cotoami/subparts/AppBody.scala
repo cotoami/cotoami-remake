@@ -3,7 +3,9 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.components.{optionalClasses, SplitPane}
+import marubinotto.optionalClasses
+import marubinotto.components.SplitPane
+
 import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.UiState
 

@@ -3,7 +3,9 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.components.{materialSymbol, optionalClasses, toolButton}
+import marubinotto.optionalClasses
+import marubinotto.components.{materialSymbol, toolButton}
+
 import cotoami.{Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
 import cotoami.repository.Nodes

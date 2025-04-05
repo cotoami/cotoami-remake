@@ -6,13 +6,9 @@ import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.components.{
-  materialSymbol,
-  optionalClasses,
-  toolButton,
-  ScrollArea
-}
+import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}

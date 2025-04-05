@@ -9,14 +9,10 @@ import slinky.core.facade.ReactElement
 import slinky.core.facade.Hooks._
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.libs.lowlight
 import marubinotto.libs.unified.{rehypePlugins, remarkPlugins}
-import marubinotto.components.{
-  materialSymbol,
-  optionalClasses,
-  toolButton,
-  Markdown
-}
+import marubinotto.components.{materialSymbol, toolButton, Markdown}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, CotoContent, Cotonoma, Id, Ito, WaitingPost}

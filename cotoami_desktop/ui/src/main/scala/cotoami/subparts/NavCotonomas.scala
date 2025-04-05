@@ -5,13 +5,9 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.components.{
-  materialSymbol,
-  optionalClasses,
-  toolButton,
-  ScrollArea
-}
+import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}

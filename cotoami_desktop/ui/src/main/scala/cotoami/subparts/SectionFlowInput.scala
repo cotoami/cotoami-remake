@@ -10,9 +10,10 @@ import slinky.web.html._
 import cats.effect.IO
 import com.softwaremill.quicklens._
 
+import marubinotto.optionalClasses
 import marubinotto.fui._
 import marubinotto.Validation
-import marubinotto.components.{materialSymbol, optionalClasses, SplitPane}
+import marubinotto.components.{materialSymbol, SplitPane}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Node, WaitingPost, WaitingPosts}

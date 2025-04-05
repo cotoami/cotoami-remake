@@ -11,6 +11,8 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
+import marubinotto.optionalClasses
+
 @react object SplitPane {
   case class Props(
       vertical: Boolean, // true: "vertical", false: "horizontal"

@@ -5,9 +5,9 @@ import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.fui.{Browser, Cmd}
 import marubinotto.Validation
-import marubinotto.components.optionalClasses
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, DateTimeRange, Geolocation, Node}

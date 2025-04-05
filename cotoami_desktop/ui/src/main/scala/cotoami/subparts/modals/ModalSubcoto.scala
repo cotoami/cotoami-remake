@@ -4,16 +4,12 @@ import scala.util.chaining._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
 import marubinotto.fui.Cmd.One.pure
 import marubinotto.facade.Nullable
 import marubinotto.Validation
-import marubinotto.components.{
-  materialSymbol,
-  optionalClasses,
-  ScrollArea,
-  Select
-}
+import marubinotto.components.{materialSymbol, ScrollArea, Select}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Coto, Cotonoma, Id, Ito}
