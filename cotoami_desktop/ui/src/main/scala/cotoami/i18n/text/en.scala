@@ -59,6 +59,12 @@ object en extends Text {
     Are you sure you want to generate a new owner password? 
     Doing so will invalidate the current password.
     """
+  val ModalNodeProfile_generateClientPassword = "Generate Client Password"
+  val ModalNodeProfile_confirmGenerateClientPassword =
+    """
+    Are you sure you want to generate a new client password? 
+    Doing so will invalidate the current password.
+    """
   val ModalNodeProfile_clientLastLogin = "Last Login"
   val ModalNodeProfile_clientRemoteAddress = "Remote Address"
   val ModalNodeProfile_localServer = "As Server"
