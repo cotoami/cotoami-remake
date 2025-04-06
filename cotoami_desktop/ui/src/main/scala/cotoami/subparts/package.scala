@@ -29,7 +29,7 @@ package object subparts {
   def labeledInputField(
       classes: String = "",
       label: String,
-      inputType: String,
+      inputType: String = "text",
       inputPlaceholder: Option[String] = None,
       inputValue: String,
       readOnly: Boolean = false,

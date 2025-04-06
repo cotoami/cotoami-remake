@@ -326,7 +326,6 @@ object ModalNodeProfile {
     labeledInputField(
       classes = "node-id",
       label = "ID",
-      inputType = "text",
       inputValue = node.id.uuid,
       readOnly = true
     )
@@ -404,7 +403,6 @@ object ModalNodeProfile {
       labeledInputField(
         classes = "client-last-login",
         label = context.i18n.text.ModalNodeProfile_clientLastLogin,
-        inputType = "text",
         inputValue = client.client.lastSessionCreatedAt
           .map(context.time.formatDateTime)
           .getOrElse("-"): String,
@@ -432,7 +430,6 @@ object ModalNodeProfile {
     labeledInputField(
       classes = "local-server-url",
       label = context.i18n.text.ModalNodeProfile_localServerUrl,
-      inputType = "text",
       inputValue = config.url,
       readOnly = true
     )

@@ -171,7 +171,6 @@ object ModalNewClient {
         labeledInputField(
           classes = "node-id",
           label = "Node ID",
-          inputType = "text",
           inputPlaceholder = Some("00000000-0000-0000-0000-000000000000"),
           inputValue = model.nodeId,
           inputErrors = Option.when(!model.registered)(model.nodeIdValidation),
@@ -211,7 +210,6 @@ object ModalNewClient {
         Option.when(model.registered) {
           labeledInputField(
             label = "Generated password",
-            inputType = "text",
             inputValue = model.generatedPassword.getOrElse(""),
             readOnly = true
           )

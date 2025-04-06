@@ -216,7 +216,6 @@ object ModalIncorporate {
         labeledInputField(
           classes = "field-node-url",
           label = "Node URL",
-          inputType = "text",
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrlInput,
           inputErrors = Some(model.validateNodeUrl),
