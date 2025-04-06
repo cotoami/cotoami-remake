@@ -96,6 +96,16 @@ object Modal {
         context.repo.nodes.operating,
         password
       )
+
+    def forClient(node: Node, password: String)(implicit
+        context: Context
+    ): NewPassword =
+      NewPassword(
+        context.i18n.text.ModalNewClientPassword_title,
+        context.i18n.text.ModalNewClientPassword_message,
+        Some(node),
+        password
+      )
   }
 
   case class EditCoto(model: ModalEditCoto.Model) extends Modal

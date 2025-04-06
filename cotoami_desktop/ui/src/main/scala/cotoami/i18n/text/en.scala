@@ -46,6 +46,12 @@ object en extends Text {
     You can generate a new password from the node profile at any time.
     """
 
+  val ModalNewClientPassword_title = "New Client Password"
+  val ModalNewClientPassword_message =
+    """
+    Send this password to the node owner using a secure method.
+    """
+
   val ModalNodeProfile_title = "Node Profile"
   val ModalNodeProfile_generateOwnerPassword = "Generate Owner Password"
   val ModalNodeProfile_confirmGenerateOwnerPassword =

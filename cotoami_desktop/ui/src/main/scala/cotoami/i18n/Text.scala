@@ -33,6 +33,9 @@ trait Text {
   val ModalNewOwnerPassword_title: String
   val ModalNewOwnerPassword_message: String
 
+  val ModalNewClientPassword_title: String
+  val ModalNewClientPassword_message: String
+
   val ModalNodeProfile_title: String
   val ModalNodeProfile_generateOwnerPassword: String
   val ModalNodeProfile_confirmGenerateOwnerPassword: String
