@@ -85,6 +85,12 @@ object ModalNodeProfile {
             Cmd.none
         )
       )
+
+    def apply(nodeId: Id[Node], client: Client): (Model, Cmd[AppMsg]) =
+      (
+        Model(nodeId, client = Some(client)),
+        Root.fetchNodeDetails(nodeId)
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -209,7 +215,8 @@ object ModalNodeProfile {
             context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
             model.localServer.flatMap(_.activeConfig)
-              .map(sectionLocalServer(_, model))
+              .map(sectionLocalServer(_, model)),
+            model.client.map(fieldsClient)
           )
         )
       )
@@ -375,6 +382,22 @@ object ModalNodeProfile {
             buttonEditRootCoto(rootCoto)
           )
         }
+      )
+    )
+
+  private def fieldsClient(client: Client)(implicit
+      context: Context
+  ): ReactElement =
+    Fragment(
+      labeledInputField(
+        classes = "client-last-login",
+        label = context.i18n.text.ModalNodeProfile_clientLastLogin,
+        inputId = "node-profile-client-last-login",
+        inputType = "text",
+        inputValue = client.client.lastSessionCreatedAt
+          .map(context.time.formatDateTime)
+          .getOrElse("-"): String,
+        readOnly = true
       )
     )
 

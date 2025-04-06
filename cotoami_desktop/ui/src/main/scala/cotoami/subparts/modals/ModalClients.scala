@@ -255,7 +255,7 @@ object ModalClients {
           onClick = _ =>
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.NodeProfile(client.node.id, context.repo.nodes)
+                Modal.NodeProfile(client.node.id, client)
               )
             )
         )

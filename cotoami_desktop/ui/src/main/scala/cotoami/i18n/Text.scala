@@ -36,6 +36,7 @@ trait Text {
   val ModalNodeProfile_title: String
   val ModalNodeProfile_generateOwnerPassword: String
   val ModalNodeProfile_confirmGenerateOwnerPassword: String
+  val ModalNodeProfile_clientLastLogin: String
   val ModalNodeProfile_localServer: String
   val ModalNodeProfile_localServerUrl: String
   val ModalNodeProfile_clientNodes: String
