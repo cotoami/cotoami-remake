@@ -324,7 +324,10 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     div(className := "tools")(
+      // Operate as
       PartsNode.buttonOperateAs(node, "left"),
+
+      // Generate Owner Password
       Option.when(model.isLocalNode() && model.isOperatingNode()) {
         buttonGeneratePassword(
           context.i18n.text.ModalNodeProfile_generateOwnerPassword,
@@ -335,6 +338,23 @@ object ModalNodeProfile {
                 Modal.Confirm(
                   context.i18n.text.ModalNodeProfile_confirmGenerateOwnerPassword,
                   Msg.GenerateOwnerPassword
+                )
+              )
+            )
+        )
+      },
+
+      // Generate Client Password
+      model.client.map { client =>
+        buttonGeneratePassword(
+          context.i18n.text.ModalNodeProfile_generateClientPassword,
+          model,
+          e =>
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  context.i18n.text.ModalNodeProfile_confirmGenerateClientPassword,
+                  Msg.GenerateClientPassword(client.node)
                 )
               )
             )
