@@ -11,7 +11,16 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ChildNode, ClientNode, Coto, Id, Node, Page, Server}
+import cotoami.models.{
+  ChildNode,
+  Client,
+  ClientNode,
+  Coto,
+  Id,
+  Node,
+  Page,
+  Server
+}
 import cotoami.repository.{Nodes, Root}
 import cotoami.backend.{
   ClientNodeBackend,
@@ -38,10 +47,19 @@ object ModalNodeProfile {
 
   case class Model(
       nodeId: Id[Node],
+
+      // For local node
       generatingOwnerPassword: Boolean = false,
+
+      // For client node
+      client: Option[Client] = None,
+
+      // For local server
       clientCount: Double = 0,
       localServer: Option[LocalServer] = None,
       enablingAnonymousRead: Boolean = false,
+
+      // Global error
       error: Option[String] = None
   ) {
     def isLocalNode()(implicit context: Context): Boolean =

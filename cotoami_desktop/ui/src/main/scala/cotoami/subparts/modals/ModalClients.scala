@@ -11,7 +11,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ActiveClient, ClientNode, Id, Node, Page, PaginatedItems}
+import cotoami.models.{Client, ClientNode, Id, Node, Page, PaginatedItems}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.{sectionClientNodesCount, Modal, PartsNode}
@@ -61,12 +61,6 @@ object ModalClients {
       this.modify(_.clientNodes.items.eachWhere(_.nodeId == client.nodeId))
         .setTo(client)
   }
-
-  case class Client(
-      node: Node,
-      client: ClientNode,
-      active: Option[ActiveClient]
-  )
 
   object Model {
     def apply(): (Model, Cmd[AppMsg]) = new Model().fetchFirst

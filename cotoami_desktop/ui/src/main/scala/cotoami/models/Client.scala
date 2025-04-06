@@ -4,6 +4,12 @@ import java.time.Instant
 
 import marubinotto.Validation
 
+case class Client(
+    node: Node,
+    client: ClientNode,
+    active: Option[ActiveClient]
+)
+
 case class ClientNode(
     nodeId: Id[Node],
     createdAtUtcIso: String,
