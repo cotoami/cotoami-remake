@@ -135,6 +135,16 @@ where
     assert_that!(client, eq(&updated_client));
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: GenerateClientPassword
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::GenerateClientPassword { id: new_client_id }.into_request();
+    let new_password = service.call(request).await?.content::<String>()?;
+
+    let client = backend_ds.try_get_client_node(&new_client_id, &backend_owner)?;
+    client.as_principal().verify_password(&new_password)?;
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: PostCoto
     /////////////////////////////////////////////////////////////////////////////
 
