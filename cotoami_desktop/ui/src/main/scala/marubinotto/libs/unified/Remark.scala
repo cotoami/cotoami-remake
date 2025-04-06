@@ -1,7 +1,6 @@
 package marubinotto.libs.unified
 
 import scala.scalajs.js
-import scala.scalajs.js.|
 import scala.scalajs.js.annotation.JSImport
 
 // https://github.com/remarkjs/remark/tree/main/packages/remark
