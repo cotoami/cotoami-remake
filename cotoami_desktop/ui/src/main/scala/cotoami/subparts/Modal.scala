@@ -77,8 +77,25 @@ object Modal {
 
   case class NewPassword(model: ModalNewPassword.Model) extends Modal
   object NewPassword {
-    def apply(password: String): NewPassword =
-      NewPassword(ModalNewPassword.Model(password))
+    def apply(
+        title: String,
+        message: String,
+        principalNode: Option[Node],
+        password: String
+    ): NewPassword =
+      NewPassword(
+        ModalNewPassword.Model(title, message, principalNode, password)
+      )
+
+    def forOwner(password: String)(implicit
+        context: Context
+    ): NewPassword =
+      NewPassword(
+        context.i18n.text.ModalNewOwnerPassword_title,
+        context.i18n.text.ModalNewOwnerPassword_message,
+        context.repo.nodes.operating,
+        password
+      )
   }
 
   case class EditCoto(model: ModalEditCoto.Model) extends Modal

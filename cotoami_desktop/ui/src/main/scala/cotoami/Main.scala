@@ -148,7 +148,9 @@ object Main {
                 DatabaseFolder.save(info.folder),
                 connectToServers(),
                 info.newOwnerPassword
-                  .map(password => Modal.open(Modal.NewPassword(password)))
+                  .map(password =>
+                    Modal.open(Modal.NewPassword.forOwner(password))
+                  )
                   .getOrElse(Cmd.none)
               ) ++ cmd
             )

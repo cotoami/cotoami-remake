@@ -38,8 +38,8 @@ object en extends Text {
   val ModalInputOwnerPassword_message =
     "You need to input the owner password to open this database."
 
-  val ModalNewPassword_title = "New Owner Password"
-  val ModalNewPassword_message =
+  val ModalNewOwnerPassword_title = "New Owner Password"
+  val ModalNewOwnerPassword_message =
     """
     Store this password in a safe place. 
     You will need it to open this database on another computer. 

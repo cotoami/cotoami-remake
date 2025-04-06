@@ -114,7 +114,9 @@ object ModalNodeProfile {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.GenerateOwnerPassword =>
         (
@@ -126,7 +128,7 @@ object ModalNodeProfile {
       case Msg.OwnerPasswordGenerated(Right(password)) =>
         (
           model.copy(generatingOwnerPassword = false),
-          Modal.open(Modal.NewPassword(password))
+          Modal.open(Modal.NewPassword.forOwner(password))
         )
 
       case Msg.OwnerPasswordGenerated(Left(e)) =>

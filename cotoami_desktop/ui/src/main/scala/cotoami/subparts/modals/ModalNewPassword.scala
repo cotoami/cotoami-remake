@@ -3,18 +3,22 @@ package cotoami.subparts.modals
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import cotoami.{Context, Into, Msg => AppMsg}
+import cotoami.{Into, Msg => AppMsg}
+import cotoami.models.Node
 import cotoami.subparts.{Modal, PartsNode}
 
 object ModalNewPassword {
 
   case class Model(
+      title: String,
+      message: String,
+      principalNode: Option[Node],
       password: String
   )
 
   def apply(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.NewPassword]
     Modal.view(
       dialogClasses = "new-password",
@@ -22,11 +26,13 @@ object ModalNewPassword {
     )(
       Fragment(
         Modal.spanTitleIcon("key"),
-        context.i18n.text.ModalNewPassword_title
+        model.title
       )
     )(
-      section(className := "operating-node")(
-        context.repo.nodes.operating.map(PartsNode.spanNode)
+      model.principalNode.map(node =>
+        section(className := "principal-node")(
+          PartsNode.spanNode(node)
+        )
       ),
       section(className := "password")(
         input(
@@ -35,9 +41,7 @@ object ModalNewPassword {
           value := model.password
         )
       ),
-      section(className := "message")(
-        context.i18n.text.ModalNewPassword_message
-      ),
+      section(className := "message")(model.message),
       div(className := "buttons")(
         button(
           `type` := "button",
