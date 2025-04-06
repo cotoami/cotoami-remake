@@ -326,30 +326,40 @@ object ModalNodeProfile {
     div(className := "tools")(
       PartsNode.buttonOperateAs(node, "left"),
       Option.when(model.isLocalNode() && model.isOperatingNode()) {
-        div(className := "generate-owner-password")(
-          span(
-            className := "processing",
-            aria - "busy" := model.generatingPassword.toString()
-          )(),
-          toolButton(
-            classes = "generate-owner-password",
-            symbol = "key",
-            tip =
-              Some(context.i18n.text.ModalNodeProfile_generateOwnerPassword),
-            tipPlacement = "left",
-            disabled = model.generatingPassword,
-            onClick = e =>
-              dispatch(
-                Modal.Msg.OpenModal(
-                  Modal.Confirm(
-                    context.i18n.text.ModalNodeProfile_confirmGenerateOwnerPassword,
-                    Msg.GenerateOwnerPassword
-                  )
+        buttonGeneratePassword(
+          context.i18n.text.ModalNodeProfile_generateOwnerPassword,
+          model,
+          e =>
+            dispatch(
+              Modal.Msg.OpenModal(
+                Modal.Confirm(
+                  context.i18n.text.ModalNodeProfile_confirmGenerateOwnerPassword,
+                  Msg.GenerateOwnerPassword
                 )
               )
-          )
+            )
         )
       }
+    )
+
+  private def buttonGeneratePassword(
+      tip: String,
+      model: Model,
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    div(className := "generate-password")(
+      span(
+        className := "processing",
+        aria - "busy" := model.generatingPassword.toString()
+      )(),
+      toolButton(
+        classes = "generate-password",
+        symbol = "key",
+        tip = Some(tip),
+        tipPlacement = "left",
+        disabled = model.generatingPassword,
+        onClick = onClick
+      )
     )
 
   private def fieldId(node: Node): ReactElement =
