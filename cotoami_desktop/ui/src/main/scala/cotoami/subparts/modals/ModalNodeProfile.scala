@@ -256,8 +256,12 @@ object ModalNodeProfile {
           }
         )
       else
-        context.repo.nodes.childPrivilegesTo(node.id)
-          .map(sectionOperatingNodeAsChild)
+        model.client
+          .map(_ => sectionOperatingNodeAsServer)
+          .getOrElse(
+            context.repo.nodes.childPrivilegesTo(node.id)
+              .map(sectionOperatingNodeAsChild)
+          )
     )
 
   private def sectionOperatingNodeAsChild(privileges: ChildNode)(implicit
@@ -273,6 +277,15 @@ object ModalNodeProfile {
         else
           context.i18n.text.Post
       ),
+      context.repo.nodes.operating.map(PartsNode.imgNode(_))
+    )
+
+  private def sectionOperatingNodeAsServer(implicit
+      context: Context
+  ): ReactElement =
+    section(className := "operating-node")(
+      div(className := "arrow")(materialSymbol("arrow_upward")),
+      section(className := "privileges")("Server"),
       context.repo.nodes.operating.map(PartsNode.imgNode(_))
     )
 
