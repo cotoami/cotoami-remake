@@ -47,21 +47,16 @@ object ModalNodeProfile {
 
   case class Model(
       nodeId: Id[Node],
-
-      // For local node
-      generatingOwnerPassword: Boolean = false,
+      error: Option[String] = None,
+      generatingPassword: Boolean = false,
 
       // For client node
       client: Option[Client] = None,
-      generatingClientPassword: Boolean = false,
 
       // For local server
       clientCount: Double = 0,
       localServer: Option[LocalServer] = None,
-      enablingAnonymousRead: Boolean = false,
-
-      // Global error
-      error: Option[String] = None
+      enablingAnonymousRead: Boolean = false
   ) {
     def isLocalNode()(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
@@ -103,13 +98,19 @@ object ModalNodeProfile {
   }
 
   object Msg {
+    // For local node
     case object GenerateOwnerPassword extends Msg
     case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
         extends Msg
+
+    // For client node
+    case class GenerateClientPassword(node: Node) extends Msg
     case class ClientPasswordGenerated(
         node: Node,
         result: Either[ErrorJson, String]
     ) extends Msg
+
+    // For local server
     case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
         extends Msg
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
@@ -125,36 +126,43 @@ object ModalNodeProfile {
     msg match {
       case Msg.GenerateOwnerPassword =>
         (
-          model.copy(generatingOwnerPassword = true),
+          model.copy(generatingPassword = true),
           DatabaseInfo.newOwnerPassword
             .map(Msg.OwnerPasswordGenerated(_).into)
         )
 
       case Msg.OwnerPasswordGenerated(Right(password)) =>
         (
-          model.copy(generatingOwnerPassword = false),
+          model.copy(generatingPassword = false),
           Modal.open(Modal.NewPassword.forOwner(password))
         )
 
       case Msg.OwnerPasswordGenerated(Left(e)) =>
         (
           model.copy(
-            generatingOwnerPassword = false,
+            generatingPassword = false,
             error = Some(e.default_message)
           ),
           cotoami.error("Couldn't generate an owner password.", e)
         )
 
+      case Msg.GenerateClientPassword(node) =>
+        (
+          model.copy(generatingPassword = true),
+          ClientNodeBackend.generatePassword(node.id)
+            .map(Msg.ClientPasswordGenerated(node, _).into)
+        )
+
       case Msg.ClientPasswordGenerated(node, Right(password)) =>
         (
-          model.copy(generatingClientPassword = false),
+          model.copy(generatingPassword = false),
           Modal.open(Modal.NewPassword.forClient(node, password))
         )
 
       case Msg.ClientPasswordGenerated(node, Left(e)) =>
         (
           model.copy(
-            generatingClientPassword = false,
+            generatingPassword = false,
             error = Some(e.default_message)
           ),
           cotoami.error("Couldn't generate a client password.", e)
@@ -321,7 +329,7 @@ object ModalNodeProfile {
         div(className := "generate-owner-password")(
           span(
             className := "processing",
-            aria - "busy" := model.generatingOwnerPassword.toString()
+            aria - "busy" := model.generatingPassword.toString()
           )(),
           toolButton(
             classes = "generate-owner-password",
@@ -329,7 +337,7 @@ object ModalNodeProfile {
             tip =
               Some(context.i18n.text.ModalNodeProfile_generateOwnerPassword),
             tipPlacement = "left",
-            disabled = model.generatingOwnerPassword,
+            disabled = model.generatingPassword,
             onClick = e =>
               dispatch(
                 Modal.Msg.OpenModal(
