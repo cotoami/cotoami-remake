@@ -167,12 +167,12 @@ pub(crate) fn clear_session(id: &Id<Node>) -> impl Operation<WritableConn, Clien
 
 pub fn change_password<'a>(
     id: &'a Id<Node>,
-    password: &'a str,
+    new_password: &'a str,
 ) -> impl Operation<WritableConn, ClientNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let client = try_get(id).run(ctx)??;
         let mut principal = client.as_principal();
-        principal.update_password(password)?;
+        principal.update_password(new_password)?;
         let client = update_as_principal(&principal).run(ctx)?;
         Ok(client)
     })

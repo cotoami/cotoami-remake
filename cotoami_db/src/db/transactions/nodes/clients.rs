@@ -87,8 +87,12 @@ impl<'a> DatabaseSession<'a> {
         self.write_transaction(client_ops::clear_session(id))
     }
 
-    pub fn change_client_node_password(&self, id: &Id<Node>, password: &str) -> Result<ClientNode> {
-        self.write_transaction(client_ops::change_password(id, password))
+    pub fn change_client_node_password(
+        &self,
+        id: &Id<Node>,
+        new_password: &str,
+    ) -> Result<ClientNode> {
+        self.write_transaction(client_ops::change_password(id, new_password))
     }
 
     pub fn client_session(&mut self, token: &str) -> Result<Option<ClientSession>> {

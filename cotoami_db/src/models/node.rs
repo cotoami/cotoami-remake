@@ -224,8 +224,8 @@ pub trait Principal {
             .map(|expires_at| Local.from_utc_datetime(expires_at))
     }
 
-    fn update_password(&mut self, password: &str) -> Result<()> {
-        let hash = hash_password(password.as_bytes())?;
+    fn update_password(&mut self, new_password: &str) -> Result<()> {
+        let hash = hash_password(new_password.as_bytes())?;
         self.set_password_hash(Some(hash));
         Ok(())
     }
