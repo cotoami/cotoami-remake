@@ -196,7 +196,7 @@ where
     message_sink.send(Message::Binary(bytes.into())).await
 }
 
-/// Handle [NodeSentEvent]s in WebSocket messages streamed from a peer with a specified `handler`.
+/// Read WebSocket messages as [NodeSentEvent]s and handle them with the given `handler`.
 async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
     mut msg_stream: MsgStream,
     peer_id: Option<Id<Node>>,
@@ -233,6 +233,8 @@ async fn handle_message_stream<MsgStream, MsgStreamErr, H, F>(
                 the_others => debug!("Message ignored: {:?}", the_others),
             },
             Some(Err(e)) => {
+                // Currently, manual disconnection produces the following error:
+                // "WebSocket protocol error: Connection reset without closing handshake"
                 let anyhow_error = e.into();
                 debug!("Message stream error: {anyhow_error:?}");
                 error
