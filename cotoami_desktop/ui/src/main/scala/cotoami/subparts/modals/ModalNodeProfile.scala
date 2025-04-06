@@ -53,6 +53,7 @@ object ModalNodeProfile {
 
       // For client node
       client: Option[Client] = None,
+      generatingClientPassword: Boolean = false,
 
       // For local server
       clientCount: Double = 0,
@@ -105,6 +106,10 @@ object ModalNodeProfile {
     case object GenerateOwnerPassword extends Msg
     case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
         extends Msg
+    case class ClientPasswordGenerated(
+        node: Node,
+        result: Either[ErrorJson, String]
+    ) extends Msg
     case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
         extends Msg
     case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
@@ -138,6 +143,21 @@ object ModalNodeProfile {
             error = Some(e.default_message)
           ),
           cotoami.error("Couldn't generate an owner password.", e)
+        )
+
+      case Msg.ClientPasswordGenerated(node, Right(password)) =>
+        (
+          model.copy(generatingClientPassword = false),
+          Modal.open(Modal.NewPassword.forClient(node, password))
+        )
+
+      case Msg.ClientPasswordGenerated(node, Left(e)) =>
+        (
+          model.copy(
+            generatingClientPassword = false,
+            error = Some(e.default_message)
+          ),
+          cotoami.error("Couldn't generate a client password.", e)
         )
 
       case Msg.LocalServerFetched(Right(server)) =>
