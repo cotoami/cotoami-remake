@@ -407,6 +407,14 @@ object ModalNodeProfile {
           .map(context.time.formatDateTime)
           .getOrElse("-"): String,
         readOnly = true
+      ),
+      client.active.map(active =>
+        labeledInputField(
+          classes = "client-remote-address",
+          label = context.i18n.text.ModalNodeProfile_clientRemoteAddress,
+          inputValue = active.remoteAddr,
+          readOnly = true
+        )
       )
     )
 

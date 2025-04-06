@@ -54,6 +54,7 @@ object en extends Text {
     Doing so will invalidate the current password.
     """
   val ModalNodeProfile_clientLastLogin = "Last Login"
+  val ModalNodeProfile_clientRemoteAddress = "Remote Address"
   val ModalNodeProfile_localServer = "As Server"
   val ModalNodeProfile_localServerUrl = "Server URL"
   val ModalNodeProfile_clientNodes = "Client Nodes"
