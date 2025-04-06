@@ -29,7 +29,6 @@ package object subparts {
   def labeledInputField(
       classes: String = "",
       label: String,
-      inputId: String,
       inputType: String,
       inputPlaceholder: Option[String] = None,
       inputValue: String,
@@ -39,12 +38,10 @@ package object subparts {
   ): ReactElement =
     labeledField(
       classes = classes,
-      label = label,
-      labelFor = Some(inputId)
+      label = label
     )(
       input(
         `type` := inputType,
-        id := inputId,
         placeholder := inputPlaceholder,
         value := inputValue,
         html.readOnly := readOnly,

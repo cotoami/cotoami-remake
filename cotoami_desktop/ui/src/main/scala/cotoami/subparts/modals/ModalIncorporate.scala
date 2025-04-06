@@ -216,7 +216,6 @@ object ModalIncorporate {
         labeledInputField(
           classes = "field-node-url",
           label = "Node URL",
-          inputId = "node-url",
           inputType = "text",
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrlInput,
@@ -227,7 +226,6 @@ object ModalIncorporate {
         // Password
         labeledInputField(
           label = "Password",
-          inputId = "password",
           inputType = "password",
           inputValue = model.passwordInput,
           onInput = (input => dispatch(Msg.PasswordInput(input)))

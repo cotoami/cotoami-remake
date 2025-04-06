@@ -337,7 +337,6 @@ object ModalWelcome {
         // Name
         labeledInputField(
           label = "Name",
-          inputId = "database-name",
           inputType = "text",
           inputValue = model.databaseName,
           inputErrors = Some(model.validateDatabaseName),
@@ -363,7 +362,6 @@ object ModalWelcome {
         // Folder name
         labeledInputField(
           label = "Folder name to create",
-          inputId = "folder-name",
           inputType = "text",
           inputValue = model.folderName,
           inputErrors = Some(model.folderNameValidation),
