@@ -64,6 +64,7 @@ impl WebSocketClient {
                         self.run_reconnecting_task();
                     }
                     _ => {
+                        // TODO: try to re-login to the server when the error is 401
                         debug!("Abort reconnecting due to: {e:?}");
                         self.reconnecting.lock().take();
                         self.state
