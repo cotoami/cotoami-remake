@@ -269,6 +269,7 @@ async fn require_session(
         request.extensions_mut().insert(session);
         Ok(next.run(request).await)
     } else {
+        debug!("Invalid session token.");
         Err(ServiceError::Unauthorized) // invalid token (session expired, etc.)
     }
 }
