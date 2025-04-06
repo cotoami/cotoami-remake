@@ -134,6 +134,9 @@ impl HttpClient {
             Command::RecentClients { pagination } => self.get(API_PATH_CLIENTS).query(&pagination),
             Command::ClientNode { id } => self.get(&format!("{API_PATH_CLIENTS}/{id}")),
             Command::AddClient(input) => self.post(API_PATH_CLIENTS).form(&input),
+            Command::GenerateClientPassword { id } => {
+                self.get(&format!("{API_PATH_CLIENTS}/{id}/new-password"))
+            }
             Command::EditClient { id, values } => {
                 self.put(&format!("{API_PATH_CLIENTS}/{id}")).form(&values)
             }

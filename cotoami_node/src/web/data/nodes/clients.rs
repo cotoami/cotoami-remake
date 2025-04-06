@@ -24,6 +24,7 @@ pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_clients).post(add_client))
         .route("/{node_id}", get(client).put(edit_client))
+        .route("/{node_id}/new-password", get(new_password))
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -46,7 +47,7 @@ async fn recent_clients(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// GET /api/data/nodes/clients/:node_id
+// GET /api/data/nodes/clients/{node_id}
 /////////////////////////////////////////////////////////////////////////////
 
 async fn client(
@@ -59,6 +60,22 @@ async fn client(
         .client_node(node_id, Arc::new(operator))
         .await
         .map(|client| Content(client, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/clients/{node_id}/new-password
+/////////////////////////////////////////////////////////////////////////////
+
+async fn new_password(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Content<String>, ServiceError> {
+    state
+        .generate_client_password(node_id, Arc::new(operator))
+        .await
+        .map(|password| Content(password, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////
