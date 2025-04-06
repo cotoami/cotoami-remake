@@ -279,12 +279,14 @@ pub async fn new_owner_password(
                 "Current owner password is missing in config",
             ));
         };
-        state.generate_owner_password(Some(current_password))?
+        state
+            .generate_owner_password(Some(current_password.clone()))
+            .await?
     } else {
         // As in `create_database` and `open_database`, this app will set an
         // auto-genereated owner password during startup. So this code won't be
         // executed unless there's some illegal state.
-        state.generate_owner_password(None)?
+        state.generate_owner_password(None).await?
     };
 
     // Save the password in the config

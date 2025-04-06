@@ -6,7 +6,10 @@ use std::{collections::HashMap, fs, io::ErrorKind, sync::Arc};
 use anyhow::{anyhow, bail, Result};
 use cotoami_db::prelude::*;
 use parking_lot::{RwLock, RwLockReadGuard};
-use tokio::{sync::oneshot::Sender, task::JoinHandle};
+use tokio::{
+    sync::oneshot::Sender,
+    task::{spawn_blocking, JoinHandle},
+};
 use tracing::debug;
 use uuid::Uuid;
 use validator::Validate;
@@ -82,20 +85,6 @@ impl NodeState {
 
     pub fn read_config(&self) -> RwLockReadGuard<NodeConfig> { self.inner.config.read() }
 
-    pub fn generate_owner_password(&self, current_password: Option<&str>) -> Result<String> {
-        let new_password = cotoami_db::generate_secret(None);
-
-        let ds = self.db().new_session()?;
-        if let Some(current_password) = current_password {
-            ds.change_owner_password(&new_password, current_password)?;
-        } else {
-            ds.set_owner_password_if_none(&new_password)?;
-        }
-
-        self.inner.config.write().owner_password = Some(new_password.clone());
-        Ok(new_password)
-    }
-
     pub fn db(&self) -> &Arc<Database> { &self.inner.db }
 
     pub fn try_get_local_node_id(&self) -> Result<Id<Node>> {
@@ -104,6 +93,31 @@ impl NodeState {
 
     pub fn local_node_as_operator(&self) -> Result<Operator> {
         self.db().globals().local_node_as_operator()
+    }
+
+    pub async fn generate_owner_password(
+        &self,
+        current_password: Option<String>,
+    ) -> Result<String> {
+        let new_password = cotoami_db::generate_secret(None);
+        spawn_blocking({
+            let state = self.clone();
+            move || {
+                let ds = state.db().new_session()?;
+
+                // Change or newly set the password
+                if let Some(ref current_password) = current_password {
+                    ds.change_owner_password(&new_password, current_password)?;
+                } else {
+                    ds.set_owner_password_if_none(&new_password)?;
+                }
+
+                // Update the [NodeConfig::owner_password] in the node state
+                state.inner.config.write().owner_password = Some(new_password.clone());
+                Ok(new_password)
+            }
+        })
+        .await?
     }
 
     pub fn pubsub(&self) -> &Pubsub { &self.inner.pubsub }
