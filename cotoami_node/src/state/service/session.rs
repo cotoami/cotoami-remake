@@ -67,7 +67,7 @@ impl NodeState {
             )?;
             debug!("Client session started: {}", client.node_id);
 
-            // Change password
+            // Change password (the old password has been verified above)
             if let Some(new_password) = input.new_password {
                 ds.change_client_node_password(&client.node_id, &new_password)?;
                 debug!("Password changed.");

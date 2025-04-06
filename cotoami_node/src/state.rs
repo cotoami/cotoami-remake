@@ -99,13 +99,13 @@ impl NodeState {
         &self,
         current_password: Option<String>,
     ) -> Result<String> {
-        let new_password = cotoami_db::generate_secret(None);
         spawn_blocking({
             let state = self.clone();
             move || {
-                let ds = state.db().new_session()?;
+                let new_password = cotoami_db::generate_secret(None);
 
                 // Change or newly set the password
+                let ds = state.db().new_session()?;
                 if let Some(ref current_password) = current_password {
                     ds.change_owner_password(&new_password, current_password)?;
                 } else {

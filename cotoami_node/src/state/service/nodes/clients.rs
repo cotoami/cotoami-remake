@@ -94,6 +94,26 @@ impl NodeState {
         .await?
     }
 
+    pub async fn generate_client_password(
+        &self,
+        node_id: Id<Node>,
+        operator: Arc<Operator>,
+    ) -> Result<String, ServiceError> {
+        operator.requires_to_be_owner()?;
+        let new_password = spawn_blocking({
+            let state = self.clone();
+            move || {
+                let new_password = cotoami_db::generate_secret(None);
+                let ds = state.db().new_session()?;
+                ds.change_client_node_password(&node_id, &new_password)?;
+                Ok::<_, anyhow::Error>(new_password)
+            }
+        })
+        .await??;
+        self.client_conns().disconnect(&node_id);
+        Ok(new_password)
+    }
+
     pub async fn edit_client(
         &self,
         node_id: Id<Node>,
