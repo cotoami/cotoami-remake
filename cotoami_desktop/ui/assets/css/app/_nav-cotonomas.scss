@@ -49,7 +49,7 @@ nav.cotonomas {
           }
         }
 
-        &.init-failed {
+        &.error {
           summary {
             color: var(--error-color);
           }

@@ -10,7 +10,7 @@ use crate::{
     client::{ClientState, HttpClient, SseClient, WebSocketClient},
     service::{
         models::{CreateClientNodeSession, NodeRole, NotConnected},
-        RemoteNodeServiceExt,
+        BackendServiceError, RemoteNodeServiceExt, ServiceError,
     },
     state::NodeState,
 };
@@ -60,7 +60,13 @@ impl ServerConnection {
             }
             Ok(Err(e)) => {
                 debug!("Failed to initialize a server connection: {:?}", e);
-                self.set_conn_state(ConnectionState::InitFailed(Arc::new(e)), true);
+                let conn_state = match e.downcast_ref::<BackendServiceError>() {
+                    Some(BackendServiceError(ServiceError::Unauthorized)) => {
+                        ConnectionState::Unauthorized
+                    }
+                    _ => ConnectionState::InitFailed(Arc::new(e)),
+                };
+                self.set_conn_state(conn_state, true);
             }
             Err(e) => {
                 debug!("Initializing task has been aborted: {:?}", e);
@@ -182,6 +188,7 @@ enum ConnectionState {
     Disabled,
     Initializing(AbortHandle),
     InitFailed(Arc<anyhow::Error>),
+    Unauthorized,
     WebSocket(WebSocketClient),
     Sse(SseClient),
 }
@@ -200,6 +207,7 @@ impl ConnectionState {
             Self::Initializing(_) => Some(NotConnected::Connecting(None)),
             Self::Disabled => Some(NotConnected::Disabled),
             Self::InitFailed(e) => Some(NotConnected::InitFailed(e.to_string())),
+            Self::Unauthorized => Some(NotConnected::Unauthorized),
             Self::WebSocket(client) => client.not_connected(),
             Self::Sse(client) => client.not_connected(),
         }

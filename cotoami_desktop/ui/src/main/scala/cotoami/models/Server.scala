@@ -16,6 +16,7 @@ object Server {
     case object Disabled extends NotConnected
     case class Connecting(details: Option[String]) extends NotConnected
     case class InitFailed(details: String) extends NotConnected
+    case object Unauthorized extends NotConnected
     case class Disconnected(details: Option[String]) extends NotConnected
   }
 }

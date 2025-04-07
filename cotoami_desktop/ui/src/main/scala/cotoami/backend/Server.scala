@@ -83,9 +83,10 @@ trait NotConnectedJson extends js.Object {
 
 object NotConnectedBackend {
   def toModel(json: NotConnectedJson): Server.NotConnected = json.reason match {
-    case "Disabled"   => Server.NotConnected.Disabled
-    case "Connecting" => Server.NotConnected.Connecting(Option(json.details))
-    case "InitFailed" => Server.NotConnected.InitFailed(json.details)
+    case "Disabled"     => Server.NotConnected.Disabled
+    case "Connecting"   => Server.NotConnected.Connecting(Option(json.details))
+    case "InitFailed"   => Server.NotConnected.InitFailed(json.details)
+    case "Unauthorized" => Server.NotConnected.Unauthorized
     case "Disconnected" =>
       Server.NotConnected.Disconnected(Option(json.details))
   }

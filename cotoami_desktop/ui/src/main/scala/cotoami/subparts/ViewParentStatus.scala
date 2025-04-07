@@ -40,10 +40,19 @@ object ViewParentStatus {
           case NotConnected.InitFailed(message) =>
             Some(
               ViewParentStatus(
-                "init-failed",
+                "error init-failed",
                 materialSymbol("error"),
                 "initialization failed",
                 Some(message)
+              )
+            )
+          case NotConnected.Unauthorized =>
+            Some(
+              ViewParentStatus(
+                "error authentication-failed",
+                materialSymbol("error"),
+                "authentication failed",
+                None
               )
             )
           case NotConnected.Disconnected(message) =>
