@@ -2,7 +2,7 @@ package cotoami.repository
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{ChildNode, Id, Node, Server}
+import cotoami.models.{ChildNode, Id, Node, Server, ServerNode}
 
 case class Servers(
     map: Map[Id[Node], Server] = Map.empty
@@ -14,6 +14,9 @@ case class Servers(
 
   def putAll(servers: Iterable[Server]): Servers =
     servers.foldLeft(this)(_ put _)
+
+  def updateSpec(spec: ServerNode): Servers =
+    this.modify(_.map.index(spec.nodeId)).using(_.copy(server = spec))
 
   def setState(
       id: Id[Node],

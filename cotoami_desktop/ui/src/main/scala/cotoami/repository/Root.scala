@@ -410,6 +410,7 @@ object Root {
   }
 
   object Msg {
+    case class Reconnected(result: Either[ErrorJson, ServerNode]) extends Msg
     case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
     case class CotonomaFetched(result: Either[ErrorJson, (Cotonoma, Coto)])
@@ -440,6 +441,12 @@ object Root {
 
   def update(msg: Msg, model: Root): (Root, Cmd[AppMsg]) =
     msg match {
+      case Msg.Reconnected(Right(server)) =>
+        (model.modify(_.nodes.servers).using(_.updateSpec(server)), Cmd.none)
+
+      case Msg.Reconnected(Left(e)) =>
+        (model, cotoami.error("Couldn't reconnect to a server.", e))
+
       case Msg.NodeDetailsFetched(Right(details)) =>
         (model.importFrom(details), Cmd.none)
 
