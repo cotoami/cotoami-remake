@@ -152,6 +152,18 @@ impl NodeState {
         Ok(server)
     }
 
+    pub async fn reconnect_to_server(
+        &self,
+        server_id: Id<Node>,
+        operator: Arc<Operator>,
+    ) -> Result<ServerNode, ServiceError> {
+        let server = self.server_node(server_id, operator).await?;
+        let conn = ServerConnection::new(server.clone(), self.clone());
+        conn.connect().await;
+        self.server_conns().put(server_id, conn);
+        Ok(server)
+    }
+
     pub async fn edit_server(
         &self,
         node_id: Id<Node>,
@@ -175,11 +187,8 @@ impl NodeState {
                 .await?;
         }
 
-        // Recreate a connection with the updated [ServerNode].
-        let server = self.server_node(node_id, operator).await?;
-        let conn = ServerConnection::new(server.clone(), self.clone());
-        conn.connect().await;
-        self.server_conns().put(node_id, conn);
+        // Recreate a connection with the new settings
+        let server = self.reconnect_to_server(node_id, operator).await?;
 
         Ok(server)
     }
