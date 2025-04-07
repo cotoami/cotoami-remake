@@ -10,7 +10,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, Page, ParentStatus, ServerNode}
+import cotoami.models.{Cotonoma, Id, Node, Page, ServerNode}
 import cotoami.repository.Cotonomas
 import cotoami.backend.{ErrorJson, ServerNodeBackend}
 
@@ -218,7 +218,7 @@ object NavCotonomas {
       ),
       div(className := "tools")(
         status.map(status => {
-          val syncDisabled = status == ParentStatus.Disabled
+          val syncDisabled = status.disabled
           Fragment(
             span(
               className := "sync-switch",

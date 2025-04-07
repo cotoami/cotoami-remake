@@ -106,17 +106,9 @@ case class Nodes(
     if (!parentIds.contains(parentId)) return None
 
     servers.get(parentId).map(server =>
-      server.notConnected.map {
-        case Server.NotConnected.Disabled => ParentStatus.Disabled
-        case Server.NotConnected.Connecting(details) =>
-          ParentStatus.Connecting(details)
-        case Server.NotConnected.InitFailed(details) =>
-          ParentStatus.InitFailed(details)
-        case Server.NotConnected.Disconnected(details) =>
-          ParentStatus.Disconnected(details)
-      }.getOrElse(
-        ParentStatus.Connected(server.childPrivileges)
-      )
+      server.notConnected
+        .map(ParentStatus.ServerDisconnected(_))
+        .getOrElse(ParentStatus.Connected(server.childPrivileges))
     )
   }
 

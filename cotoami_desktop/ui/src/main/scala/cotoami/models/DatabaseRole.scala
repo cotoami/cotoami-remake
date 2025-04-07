@@ -21,13 +21,18 @@ case class ParentNode(
     lastChangeReceivedAtUtcIso.map(parseUtcIso)
 }
 
-sealed trait ParentStatus
+sealed trait ParentStatus {
+  def disabled: Boolean =
+    this match {
+      case ParentStatus.ServerDisconnected(Server.NotConnected.Disabled) => true
+      case _ => false
+    }
+}
+
 object ParentStatus {
   case class Connected(child: Option[ChildNode]) extends ParentStatus
-  case object Disabled extends ParentStatus
-  case class Connecting(message: Option[String]) extends ParentStatus
-  case class InitFailed(message: String) extends ParentStatus
-  case class Disconnected(message: Option[String]) extends ParentStatus
+  case class ServerDisconnected(details: Server.NotConnected)
+      extends ParentStatus
 }
 
 case class ChildNode(
