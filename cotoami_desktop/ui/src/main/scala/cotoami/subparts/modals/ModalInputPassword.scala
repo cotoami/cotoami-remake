@@ -7,7 +7,8 @@ import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
 import cotoami.{Into, Msg => AppMsg}
-import cotoami.subparts.Modal
+import cotoami.models.Node
+import cotoami.subparts.{Modal, PartsNode}
 
 object ModalInputPassword {
 
@@ -19,6 +20,7 @@ object ModalInputPassword {
       msgOnSubmit: String => AppMsg,
       title: String,
       message: Option[String] = None,
+      targetNode: Option[Node] = None,
       passwordInput: String = "",
       submitting: Boolean = false
   ) {
@@ -72,6 +74,11 @@ object ModalInputPassword {
         model.title
       )
     )(
+      model.targetNode.map(node =>
+        section(className := "target-node")(
+          PartsNode.spanNode(node)
+        )
+      ),
       model.message.map(section(className := "message")(_)),
       section(className := "input-password")(
         input(

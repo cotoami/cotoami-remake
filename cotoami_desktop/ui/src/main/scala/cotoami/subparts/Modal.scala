@@ -70,9 +70,12 @@ object Modal {
     def apply(
         msgOnSubmit: String => AppMsg,
         title: String,
-        message: Option[String] = None
+        message: Option[String] = None,
+        targetNode: Option[Node] = None
     ): InputPassword =
-      InputPassword(ModalInputPassword.Model(msgOnSubmit, title, message))
+      InputPassword(
+        ModalInputPassword.Model(msgOnSubmit, title, message, targetNode)
+      )
   }
 
   case class NewPassword(model: ModalNewPassword.Model) extends Modal
