@@ -33,7 +33,6 @@ object ServerNode {
 }
 
 sealed trait NotConnected
-
 object NotConnected {
   case object Disabled extends NotConnected
   case class Connecting(details: Option[String]) extends NotConnected
