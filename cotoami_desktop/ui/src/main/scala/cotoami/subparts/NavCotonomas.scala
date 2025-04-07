@@ -197,7 +197,7 @@ object NavCotonomas {
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
     val status = repo.nodes.parentStatus(node.id)
-    val statusView = status.flatMap(viewParentStatus(_))
+    val statusView = status.flatMap(ViewParentStatus(_))
     section(className := "node-tools")(
       statusView.map(view =>
         details(

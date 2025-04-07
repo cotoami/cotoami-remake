@@ -106,7 +106,7 @@ object NavNodes {
       node: Node,
       nodes: Nodes
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val status = nodes.parentStatus(node.id).flatMap(viewParentStatus(_))
+    val status = nodes.parentStatus(node.id).flatMap(ViewParentStatus(_))
     val tooltip =
       status.map(s => s"${node.name} (${s.title})").getOrElse(node.name)
     button(

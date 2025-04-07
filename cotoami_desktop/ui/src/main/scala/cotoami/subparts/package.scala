@@ -9,7 +9,6 @@ import marubinotto.Validation
 import marubinotto.components.materialSymbol
 
 import cotoami.{Msg => AppMsg}
-import cotoami.models.ParentStatus
 import cotoami.repository.Nodes
 
 package object subparts {
@@ -91,54 +90,6 @@ package object subparts {
 
   def detectCtrlEnter[T](e: SyntheticKeyboardEvent[T]): Boolean =
     e.key == EnterKey && (e.ctrlKey || e.metaKey)
-
-  case class ParentStatusView(
-      className: String,
-      icon: ReactElement,
-      title: String,
-      message: Option[String]
-  )
-
-  def viewParentStatus(status: ParentStatus): Option[ParentStatusView] =
-    status match {
-      case ParentStatus.Disabled =>
-        Some(
-          ParentStatusView(
-            "disabled",
-            materialSymbol("link_off"),
-            "not synced",
-            None
-          )
-        )
-      case ParentStatus.Connecting(message) =>
-        Some(
-          ParentStatusView(
-            "connecting",
-            span(className := "busy", aria - "busy" := "true")(),
-            "connecting",
-            message
-          )
-        )
-      case ParentStatus.InitFailed(message) =>
-        Some(
-          ParentStatusView(
-            "init-failed",
-            materialSymbol("error"),
-            "initialization failed",
-            Some(message)
-          )
-        )
-      case ParentStatus.Disconnected(message) =>
-        Some(
-          ParentStatusView(
-            "disconnected",
-            materialSymbol("do_not_disturb_on"),
-            "disconnected",
-            message
-          )
-        )
-      case _ => None
-    }
 
   def sectionClientNodesCount(
       clientCount: Double,
