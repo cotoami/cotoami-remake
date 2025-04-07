@@ -144,11 +144,12 @@ impl ServerConnection {
     }
 
     pub async fn disconnect(&self, reason: Option<&str>) {
-        self.conn_state.write().disconnect().await;
-        self.set_conn_state(
-            ConnectionState::Disconnected(reason.map(String::from)),
-            true,
-        );
+        if self.conn_state.write().disconnect().await {
+            self.set_conn_state(
+                ConnectionState::Disconnected(reason.map(String::from)),
+                true,
+            );
+        }
     }
 
     pub async fn reboot(&self) {
@@ -260,6 +261,12 @@ impl ServerConnections {
         // https://github.com/Amanieu/parking_lot/issues/197
         for conn in self.0.read().values() {
             conn.connect().await;
+        }
+    }
+
+    pub async fn disconnect(&self, server_id: &Id<Node>) {
+        if let Some(conn) = self.get(server_id) {
+            conn.disconnect(None).await;
         }
     }
 

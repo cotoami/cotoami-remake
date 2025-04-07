@@ -157,6 +157,10 @@ impl NodeState {
         server_id: Id<Node>,
         operator: Arc<Operator>,
     ) -> Result<ServerNode, ServiceError> {
+        // Disconnect before reconnect
+        self.server_conns().disconnect(&server_id).await;
+
+        // Create a new connection with the latest [ServerNode].
         let server = self.server_node(server_id, operator).await?;
         let conn = ServerConnection::new(server.clone(), self.clone());
         conn.connect().await;
