@@ -11,7 +11,6 @@ import cotoami.models.{
   Id,
   Ito,
   Node,
-  NotConnected,
   ParentStatus,
   Server
 }
@@ -108,12 +107,12 @@ case class Nodes(
 
     servers.get(parentId).map(server =>
       server.notConnected.map {
-        case NotConnected.Disabled => ParentStatus.Disabled
-        case NotConnected.Connecting(details) =>
+        case Server.NotConnected.Disabled => ParentStatus.Disabled
+        case Server.NotConnected.Connecting(details) =>
           ParentStatus.Connecting(details)
-        case NotConnected.InitFailed(details) =>
+        case Server.NotConnected.InitFailed(details) =>
           ParentStatus.InitFailed(details)
-        case NotConnected.Disconnected(details) =>
+        case Server.NotConnected.Disconnected(details) =>
           ParentStatus.Disconnected(details)
       }.getOrElse(
         ParentStatus.Connected(server.childPrivileges)

@@ -6,9 +6,19 @@ import marubinotto.Validation
 case class Server(
     server: ServerNode,
     role: Option[DatabaseRole],
-    notConnected: Option[NotConnected],
+    notConnected: Option[Server.NotConnected],
     childPrivileges: Option[ChildNode]
 )
+
+object Server {
+  sealed trait NotConnected
+  object NotConnected {
+    case object Disabled extends NotConnected
+    case class Connecting(details: Option[String]) extends NotConnected
+    case class InitFailed(details: String) extends NotConnected
+    case class Disconnected(details: Option[String]) extends NotConnected
+  }
+}
 
 case class ServerNode(
     nodeId: Id[Node],
@@ -30,12 +40,4 @@ object ServerNode {
       Validation.httpUrl(fieldName, url)
     ).flatten
   }
-}
-
-sealed trait NotConnected
-object NotConnected {
-  case object Disabled extends NotConnected
-  case class Connecting(details: Option[String]) extends NotConnected
-  case class InitFailed(details: String) extends NotConnected
-  case class Disconnected(details: Option[String]) extends NotConnected
 }

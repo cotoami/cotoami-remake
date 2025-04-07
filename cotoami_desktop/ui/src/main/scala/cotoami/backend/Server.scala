@@ -4,7 +4,7 @@ import scala.scalajs.js
 
 import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
-import cotoami.models.{Id, Node, NotConnected, Server, ServerNode}
+import cotoami.models.{Id, Node, Server, ServerNode}
 
 @js.native
 trait ServerJson extends js.Object {
@@ -82,10 +82,11 @@ trait NotConnectedJson extends js.Object {
 }
 
 object NotConnectedBackend {
-  def toModel(json: NotConnectedJson): NotConnected = json.reason match {
-    case "Disabled"     => NotConnected.Disabled
-    case "Connecting"   => NotConnected.Connecting(Option(json.details))
-    case "InitFailed"   => NotConnected.InitFailed(json.details)
-    case "Disconnected" => NotConnected.Disconnected(Option(json.details))
+  def toModel(json: NotConnectedJson): Server.NotConnected = json.reason match {
+    case "Disabled"   => Server.NotConnected.Disabled
+    case "Connecting" => Server.NotConnected.Connecting(Option(json.details))
+    case "InitFailed" => Server.NotConnected.InitFailed(json.details)
+    case "Disconnected" =>
+      Server.NotConnected.Disconnected(Option(json.details))
   }
 }

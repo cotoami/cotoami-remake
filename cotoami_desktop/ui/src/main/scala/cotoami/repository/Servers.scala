@@ -2,7 +2,7 @@ package cotoami.repository
 
 import com.softwaremill.quicklens._
 
-import cotoami.models.{ChildNode, Id, Node, NotConnected, Server}
+import cotoami.models.{ChildNode, Id, Node, Server}
 
 case class Servers(
     map: Map[Id[Node], Server] = Map.empty
@@ -17,7 +17,7 @@ case class Servers(
 
   def setState(
       id: Id[Node],
-      notConnected: Option[NotConnected],
+      notConnected: Option[Server.NotConnected],
       childPrivileges: Option[ChildNode]
   ): Servers =
     this.modify(_.map.index(id)).using(
