@@ -410,6 +410,7 @@ object Root {
   }
 
   object Msg {
+    case class Reconnect(serverId: Id[Node], password: String) extends Msg
     case class Reconnected(result: Either[ErrorJson, ServerNode]) extends Msg
     case class NodeDetailsFetched(result: Either[ErrorJson, NodeDetails])
         extends Msg
@@ -441,6 +442,13 @@ object Root {
 
   def update(msg: Msg, model: Root): (Root, Cmd[AppMsg]) =
     msg match {
+      case Msg.Reconnect(serverId, password) =>
+        (
+          model,
+          ServerNodeBackend.edit(serverId, None, Some(password), None)
+            .map(Msg.Reconnected(_).into)
+        )
+
       case Msg.Reconnected(Right(server)) =>
         (model.modify(_.nodes.servers).using(_.updateSpec(server)), Cmd.none)
 
