@@ -53,9 +53,10 @@ object ServerNodeJson {
   def edit(
       id: Id[Node],
       disabled: Option[Boolean],
+      password: Option[String],
       url: Option[String]
   ): Cmd.One[Either[ErrorJson, ServerNodeJson]] =
-    Commands.send(Commands.EditServer(id, disabled, url))
+    Commands.send(Commands.EditServer(id, disabled, password, url))
 }
 
 object ServerNodeBackend {
@@ -70,9 +71,10 @@ object ServerNodeBackend {
   def edit(
       id: Id[Node],
       disabled: Option[Boolean],
+      password: Option[String],
       url: Option[String]
   ): Cmd.One[Either[ErrorJson, ServerNode]] =
-    ServerNodeJson.edit(id, disabled, url).map(_.map(toModel))
+    ServerNodeJson.edit(id, disabled, password, url).map(_.map(toModel))
 }
 
 @js.native

@@ -170,16 +170,16 @@ impl NodeState {
 
     pub async fn edit_server(
         &self,
-        node_id: Id<Node>,
+        server_id: Id<Node>,
         values: EditServer,
         operator: Arc<Operator>,
     ) -> Result<ServerNode, ServiceError> {
         if let Err(errors) = values.validate() {
             return errors.into_result();
         }
-        if !self.server_conns().contains(&node_id) {
+        if !self.server_conns().contains(&server_id) {
             return Err(ServiceError::NotFound(Some(format!(
-                "Server node [{node_id}] not found."
+                "Server node [{server_id}] not found."
             ))));
         }
 
@@ -187,29 +187,34 @@ impl NodeState {
 
         // Set disabled
         if let Some(disabled) = values.disabled {
-            self.set_server_disabled(node_id, disabled, operator.clone())
+            self.set_server_disabled(server_id, disabled, operator.clone())
+                .await?;
+        }
+
+        // Set password
+        if let Some(password) = values.password {
+            self.set_server_password(server_id, password, operator.clone())
                 .await?;
         }
 
         // Recreate a connection with the new settings
-        let server = self.reconnect_to_server(node_id, operator).await?;
+        let server = self.reconnect_to_server(server_id, operator).await?;
 
         Ok(server)
     }
 
     async fn set_server_disabled(
         &self,
-        node_id: Id<Node>,
+        server_id: Id<Node>,
         disabled: bool,
         operator: Arc<Operator>,
     ) -> Result<ServerNode> {
-        debug!("Updating a server node [{node_id}] to be disabled = {disabled}");
         let server = spawn_blocking({
             let db = self.db().clone();
             move || {
                 let role = db
                     .new_session()?
-                    .set_network_disabled(&node_id, disabled, &operator)?;
+                    .set_network_disabled(&server_id, disabled, &operator)?;
                 let NetworkRole::Server(server) = role else {
                     bail!("Unexpected node role: {role:?}");
                 };
@@ -220,8 +225,29 @@ impl NodeState {
 
         if disabled {
             // Just to publish a connection state change.
-            self.server_conns().try_get(&node_id)?.disable().await;
+            self.server_conns().try_get(&server_id)?.disable().await;
         }
         Ok(server)
+    }
+
+    async fn set_server_password(
+        &self,
+        server_id: Id<Node>,
+        password: String,
+        operator: Arc<Operator>,
+    ) -> Result<ServerNode> {
+        spawn_blocking({
+            let state = self.clone();
+            move || {
+                let ds = state.db().new_session()?;
+                ds.save_server_password(
+                    &server_id,
+                    &password,
+                    state.read_config().try_get_owner_password()?,
+                    &operator,
+                )
+            }
+        })
+        .await?
     }
 }

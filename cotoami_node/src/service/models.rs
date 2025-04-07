@@ -214,6 +214,7 @@ pub enum NotConnected {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Validate)]
 pub struct EditServer {
     pub disabled: Option<bool>,
+    pub password: Option<String>,
     pub url_prefix: Option<String>,
 }
 

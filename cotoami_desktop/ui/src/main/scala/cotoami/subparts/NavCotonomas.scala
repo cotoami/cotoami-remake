@@ -127,7 +127,7 @@ object NavCotonomas {
       case Msg.SetSyncDisabled(id, disable) =>
         default.copy(
           _1 = model.copy(togglingSync = true),
-          _3 = ServerNodeBackend.edit(id, Some(disable), None)
+          _3 = ServerNodeBackend.edit(id, Some(disable), None, None)
             .map(Msg.SyncToggled(_).into)
         )
 

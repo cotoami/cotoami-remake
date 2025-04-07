@@ -67,6 +67,7 @@ object Commands {
   def EditServer(
       id: Id[Node],
       disabled: Option[Boolean],
+      password: Option[String],
       url_prefix: Option[String]
   ) =
     jso(EditServer =
@@ -74,6 +75,7 @@ object Commands {
         id = id.uuid,
         values = jso(
           disabled = disabled.getOrElse(null).asInstanceOf[js.Any],
+          password = password.getOrElse(null),
           url_prefix = url_prefix.getOrElse(null)
         )
       )
