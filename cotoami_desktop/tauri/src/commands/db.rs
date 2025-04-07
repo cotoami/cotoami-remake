@@ -175,7 +175,7 @@ pub async fn open_database(
 
         // Although the config `node_name` has an effect only in database creation,
         // update it to the actual name to avoid confusion.
-        config.node_name = Some(node.name);
+        config.node_name = Some(node.name.clone());
 
         // Override the owner password with the given one
         if let Some(password) = owner_password {
@@ -184,14 +184,14 @@ pub async fn open_database(
 
         config.clone()
     } else {
-        let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name));
+        let mut config = NodeConfig::new_standalone(Some(folder.clone()), Some(node.name.clone()));
         if require_password {
             if let Some(password) = owner_password {
                 // Set the given password to authenticate
                 config.owner_password = Some(password);
             } else {
                 // Missing password
-                return Err(Error::invalid_owner_password());
+                return Err(Error::invalid_owner_password(node));
             }
         } else {
             // Configure a new owner password
@@ -214,7 +214,7 @@ pub async fn open_database(
                 Ok(node_state) => node_state,
                 Err(error) => match error.downcast_ref::<NodeError>() {
                     Some(NodeError::OwnerAuthenticationFailed) => {
-                        return Err(Error::invalid_owner_password())
+                        return Err(Error::invalid_owner_password(node))
                     }
                     _ => return Err(error.into()),
                 },

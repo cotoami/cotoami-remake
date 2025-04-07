@@ -1,5 +1,6 @@
 use std::{collections::HashMap, string::ToString};
 
+use cotoami_db::prelude::Node;
 use cotoami_node::prelude::*;
 use serde_json::value::Value;
 
@@ -19,8 +20,14 @@ impl Error {
         }
     }
 
-    pub fn invalid_owner_password() -> Self {
+    pub fn with_param(mut self, name: impl Into<String>, value: Value) -> Self {
+        self.params.insert(name.into(), value);
+        self
+    }
+
+    pub fn invalid_owner_password(node: Node) -> Self {
         Error::new("invalid-owner-password", "Invalid owner password.")
+            .with_param("node", serde_json::to_value(node).unwrap())
     }
 
     pub fn system_error(message: impl Into<String>) -> Self {

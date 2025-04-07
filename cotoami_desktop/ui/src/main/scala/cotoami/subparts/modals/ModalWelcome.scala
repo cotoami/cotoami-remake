@@ -12,7 +12,13 @@ import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
-import cotoami.backend.{DatabaseInfo, DatabaseOpenedJson, ErrorJson}
+import cotoami.backend.{
+  DatabaseInfo,
+  DatabaseOpenedJson,
+  ErrorJson,
+  NodeBackend,
+  NodeJson
+}
 import cotoami.subparts.{labeledField, labeledInputField, Modal}
 
 object ModalWelcome {
@@ -249,18 +255,22 @@ object ModalWelcome {
 
       case Msg.DatabaseOpened(folder, Left(e)) =>
         model.copy(processing = false).pipe { model =>
-          if (e.code == "invalid-owner-password")
+          if (e.code == "invalid-owner-password") {
+            val targetNode = e.params.get("node")
+              .map(_.asInstanceOf[NodeJson])
+              .map(NodeBackend.toModel)
             (
               model,
               Modal.open(
                 Modal.InputPassword(
                   password => Msg.OpenDatabaseIn(folder, Some(password)).into,
                   context.i18n.text.ModalInputOwnerPassword_title,
-                  Some(context.i18n.text.ModalInputOwnerPassword_message)
+                  Some(context.i18n.text.ModalInputOwnerPassword_message),
+                  targetNode
                 )
               )
             )
-          else
+          } else
             (
               model.copy(error = Some(e.default_message)),
               cotoami.error(e.default_message, e)
