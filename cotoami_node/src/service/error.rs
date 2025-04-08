@@ -11,6 +11,24 @@ use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 ///
 /// It doesn't implement [std::error::Error] because it has to be (de)serializable
 /// in order to be sent to other layers sometimes over the wire.
+///
+/// ## Mapping from [cotoami_db::DatabaseError]
+///
+/// Some of the error variants are produced from underlying database errors and
+/// the details of conversion are defined as
+/// `impl<E: Into<anyhow::Error>> From<E> for ServiceError` in
+/// [crate::state::service].
+///
+/// ## Mapping from/to HTTP Status Codes
+///
+/// When you access a [crate::service::NodeService] via HTTP, this error will be
+/// converted into a HTTP response at the server-side and then converted back
+/// at the client-side.
+///
+/// * Conversion from this error to an HTTP response:
+///     * As [<ServiceError as IntoResponse>::into_response] in [crate::web]
+/// * Conversion an HTTP response to this error:
+///     * [crate::client::http::HttpClient::convert_response]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ServiceError {
     Request(RequestError),
