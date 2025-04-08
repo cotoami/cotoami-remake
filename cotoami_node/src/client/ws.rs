@@ -62,7 +62,7 @@ impl WebSocketClient {
                 match e {
                     tungstenite::error::Error::Io(e) => {
                         debug!("Continue reconnecting after: {e:?}");
-                        self.run_reconnecting_task();
+                        self.next_attempt_to_reconnect();
                     }
                     tungstenite::error::Error::Http(response)
                         if response.status() == StatusCode::UNAUTHORIZED =>
@@ -139,7 +139,7 @@ impl WebSocketClient {
                         this.reconnecting.lock().replace(RetryState::default());
                         this.state
                             .change_conn_state(ConnectionState::Connecting(Some(e)));
-                        this.run_reconnecting_task();
+                        this.next_attempt_to_reconnect();
                     } else {
                         this.state
                             .change_conn_state(ConnectionState::Disconnected(e));
@@ -149,7 +149,7 @@ impl WebSocketClient {
         });
     }
 
-    fn run_reconnecting_task(&self) {
+    fn next_attempt_to_reconnect(&self) {
         tokio::spawn({
             let mut this = self.clone();
             async move {
