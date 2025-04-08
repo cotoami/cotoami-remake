@@ -6,7 +6,8 @@ import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
 
 import cotoami.{Model, Msg}
-import cotoami.models.{Id, Node}
+import cotoami.models.{Id, Node, Server}
+import cotoami.repository.Root
 import cotoami.backend.{
   ActiveClientBackend,
   ChildNodeBackend,
@@ -33,7 +34,18 @@ object LocalNodeEvent {
         model.modify(_.repo.nodes.servers).using(
           _.setState(nodeId, notConnected, clientAsChild)
         ),
-        Cmd.none
+        notConnected match {
+          case Some(Server.NotConnected.Unauthorized) =>
+            Modal.open(
+              Modal.InputPassword(
+                Root.Msg.Reconnect(nodeId, _).into,
+                model.i18n.text.ModalInputClientPassword_title,
+                Some(model.i18n.text.ModalInputClientPassword_message),
+                model.repo.nodes.get(nodeId)
+              )
+            )
+          case _ => Cmd.none
+        }
       )
     }
 
