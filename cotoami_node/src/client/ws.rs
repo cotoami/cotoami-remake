@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use cotoami_db::ChildNode;
 use futures::{Sink, StreamExt};
 use parking_lot::Mutex;
@@ -164,9 +164,10 @@ impl WebSocketClient {
     }
 
     async fn reconnecting_delay(&self) -> Result<()> {
-        if self.reconnecting.lock().is_none() {
-            return Ok(()); // Not reconnecting
-        }
+        ensure!(
+            self.reconnecting.lock().is_some(),
+            "reconnecting_delay was called not during reconnecting."
+        );
 
         let (next_delay, number) = {
             let mut lock = self.reconnecting.lock();
