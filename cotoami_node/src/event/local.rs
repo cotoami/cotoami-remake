@@ -7,7 +7,7 @@ pub enum LocalNodeEvent {
     ServerStateChanged {
         node_id: Id<Node>,
         not_connected: Option<NotConnected>,
-        client_as_child: Option<ChildNode>,
+        child_privileges: Option<ChildNode>,
     },
     ClientConnected(ActiveClient),
     ClientDisconnected {

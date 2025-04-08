@@ -27,12 +27,12 @@ object LocalNodeEvent {
       val notConnected =
         Nullable.toOption(change.not_connected)
           .map(NotConnectedBackend.toModel(_))
-      val clientAsChild =
-        Nullable.toOption(change.client_as_child)
+      val childPrivileges =
+        Nullable.toOption(change.child_privileges)
           .map(ChildNodeBackend.toModel(_))
       return (
         model.modify(_.repo.nodes.servers).using(
-          _.setState(nodeId, notConnected, clientAsChild)
+          _.setState(nodeId, notConnected, childPrivileges)
         ),
         notConnected match {
           case Some(Server.NotConnected.Unauthorized) =>

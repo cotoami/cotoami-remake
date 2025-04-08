@@ -8,11 +8,11 @@ impl NodeState {
         node_id: Id<Node>,
         before: Option<NotConnected>,
         after: Option<NotConnected>,
-        client_as_child: Option<ChildNode>,
+        child_privileges: Option<ChildNode>,
     ) -> bool {
         match (before, after) {
             (Some(_), None) => {
-                self.server_connected(node_id, client_as_child);
+                self.server_connected(node_id, child_privileges);
                 true
             }
             (None, Some(not_connected)) => {
@@ -24,7 +24,7 @@ impl NodeState {
                     .publish_event(LocalNodeEvent::ServerStateChanged {
                         node_id,
                         not_connected: Some(after),
-                        client_as_child,
+                        child_privileges,
                     });
                 true
             }
@@ -32,12 +32,12 @@ impl NodeState {
         }
     }
 
-    fn server_connected(&self, node_id: Id<Node>, client_as_child: Option<ChildNode>) {
+    fn server_connected(&self, node_id: Id<Node>, child_privileges: Option<ChildNode>) {
         self.pubsub()
             .publish_event(LocalNodeEvent::ServerStateChanged {
                 node_id,
                 not_connected: None,
-                client_as_child,
+                child_privileges,
             });
     }
 
@@ -46,7 +46,7 @@ impl NodeState {
             .publish_event(LocalNodeEvent::ServerStateChanged {
                 node_id,
                 not_connected: Some(not_connected),
-                client_as_child: None,
+                child_privileges: None,
             });
         if self.is_parent(&node_id) {
             self.parent_disconnected(node_id);
