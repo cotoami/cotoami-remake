@@ -208,6 +208,7 @@ pub enum NotConnected {
     Connecting(Option<String>),
     InitFailed(String),
     Unauthorized,
+    SessionExpired,
     Disconnected(Option<String>),
 }
 

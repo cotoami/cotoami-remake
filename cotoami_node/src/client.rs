@@ -105,11 +105,14 @@ impl ConnectionState {
     pub fn not_connected(&self) -> Option<NotConnected> {
         match self {
             ConnectionState::Connected => None,
-            ConnectionState::Connecting(err) => Some(NotConnected::Connecting(
-                err.as_ref().map(ToString::to_string),
+            ConnectionState::Connecting(e) => Some(NotConnected::Connecting(
+                e.as_ref().map(ToString::to_string),
             )),
-            ConnectionState::Disconnected(err) => Some(NotConnected::Disconnected(
-                err.as_ref().map(ToString::to_string),
+            ConnectionState::Disconnected(Some(CommunicationError::SessionExpired)) => {
+                Some(NotConnected::SessionExpired)
+            }
+            ConnectionState::Disconnected(e) => Some(NotConnected::Disconnected(
+                e.as_ref().map(ToString::to_string),
             )),
         }
     }

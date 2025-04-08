@@ -89,6 +89,7 @@ object NotConnectedBackend {
     case "Connecting"   => Server.NotConnected.Connecting(Option(json.details))
     case "InitFailed"   => Server.NotConnected.InitFailed(json.details)
     case "Unauthorized" => Server.NotConnected.Unauthorized
+    case "SessionExpired" => Server.NotConnected.SessionExpired
     case "Disconnected" =>
       Server.NotConnected.Disconnected(Option(json.details))
   }

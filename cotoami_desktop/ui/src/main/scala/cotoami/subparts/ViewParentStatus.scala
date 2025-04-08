@@ -55,6 +55,15 @@ object ViewParentStatus {
                 None
               )
             )
+          case NotConnected.SessionExpired =>
+            Some(
+              ViewParentStatus(
+                "error session-expired",
+                materialSymbol("error"),
+                "session expired",
+                None
+              )
+            )
           case NotConnected.Disconnected(message) =>
             Some(
               ViewParentStatus(
