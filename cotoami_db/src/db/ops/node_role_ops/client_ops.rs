@@ -138,12 +138,11 @@ pub(crate) fn start_session<'a>(
     composite_op::<WritableConn, _, _>(move |ctx| {
         let client = try_get(id)
             .run(ctx)?
-            // Hide a not-found error for a security reason
+            // The specified client not found
             .context(DatabaseError::AuthenticationFailed)?;
 
         // Do not allow a disabled client to start a session
-        // (Hide a disabled error for a security reason)
-        ensure!(!client.disabled, DatabaseError::AuthenticationFailed);
+        ensure!(!client.disabled, DatabaseError::PermissionDenied);
 
         let mut principal = client.as_principal();
         let duration = chrono::Duration::from_std(duration)?;
