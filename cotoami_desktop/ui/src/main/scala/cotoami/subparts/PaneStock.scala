@@ -59,7 +59,7 @@ object PaneStock {
           .pipe(updates.uiState(_.openGeomap))
           .pipe(
             updates.addCmd((_: Model) =>
-              Browser.send(AppMsg.SetPaneOpen(PaneStock.PaneName, true))
+              Browser.send(AppMain.Msg.SetPaneStockOpen(true).into)
             )
           )
 
@@ -74,8 +74,7 @@ object PaneStock {
         )
 
       case Msg.FocusGeolocation(location) =>
-        model
-          .pipe(updates.uiState(_.openGeomap))
+        update(Msg.OpenGeomap, model)
           .pipe { case (model, cmd) =>
             (model.modify(_.geomap).using(_.focus(location)), cmd)
           }
