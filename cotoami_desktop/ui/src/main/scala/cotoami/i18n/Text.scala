@@ -30,6 +30,9 @@ trait Text {
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
 
+  val ModalInputClientPassword_title: String
+  val ModalInputClientPassword_message: String
+
   val ModalNewOwnerPassword_title: String
   val ModalNewOwnerPassword_message: String
 

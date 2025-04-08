@@ -38,6 +38,13 @@ object en extends Text {
   val ModalInputOwnerPassword_message =
     "You need to input the owner password to open this database."
 
+  val ModalInputClientPassword_title = "Input Client Password"
+  val ModalInputClientPassword_message =
+    """
+    Failed to log in to the server node with the configured password.
+    To reconnect to this node, please enter a new password.
+    """
+
   val ModalNewOwnerPassword_title = "New Owner Password"
   val ModalNewOwnerPassword_message =
     """
