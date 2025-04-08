@@ -98,6 +98,10 @@ impl ConnectionState {
         ConnectionState::Disconnected(Some(CommunicationError::EventHandling(e)))
     }
 
+    pub fn session_expired() -> Self {
+        ConnectionState::Disconnected(Some(CommunicationError::SessionExpired))
+    }
+
     pub fn not_connected(&self) -> Option<NotConnected> {
         match self {
             ConnectionState::Connected => None,

@@ -6,6 +6,7 @@ use anyhow::{anyhow, bail, Result};
 use cotoami_db::ChildNode;
 use futures::{Sink, StreamExt};
 use parking_lot::Mutex;
+use reqwest::StatusCode;
 use tokio::sync::{mpsc, mpsc::Receiver};
 use tokio_tungstenite::{
     connect_async, tungstenite,
@@ -63,8 +64,16 @@ impl WebSocketClient {
                         debug!("Continue reconnecting after: {e:?}");
                         self.run_reconnecting_task();
                     }
+                    tungstenite::error::Error::Http(response)
+                        if response.status() == StatusCode::UNAUTHORIZED =>
+                    {
+                        debug!("Abort reconnecting due to session expiration");
+                        self.reconnecting.lock().take();
+                        self.state
+                            .change_conn_state(ConnectionState::session_expired());
+                        bail!("Abort reconnecting");
+                    }
                     _ => {
-                        // TODO: try to re-login to the server when the error is 401
                         debug!("Abort reconnecting due to: {e:?}");
                         self.reconnecting.lock().take();
                         self.state

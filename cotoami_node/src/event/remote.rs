@@ -37,6 +37,9 @@ pub(crate) enum CommunicationError {
 
     #[display("Event handling failed: {}", _0)]
     EventHandling(anyhow::Error),
+
+    #[display("Session expired")]
+    SessionExpired,
 }
 
 /// Handle events sent from an entity authenticated as an operator
