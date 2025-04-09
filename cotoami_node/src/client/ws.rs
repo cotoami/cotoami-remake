@@ -13,7 +13,7 @@ use tokio_tungstenite::{
     tungstenite::{client::IntoClientRequest, handshake::client::Request},
 };
 use tokio_util::sync::PollSender;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 use url::Url;
 
 use crate::{
@@ -188,7 +188,7 @@ impl WebSocketClient {
     pub async fn disconnect(&self) -> bool {
         self.reconnecting.lock().take(); // cancel reconnecting
         if let Err(e) = self.http_client.delete_session().await {
-            error!("Failed to delete the session: {e:?}")
+            debug!("Failed to delete the session: {e:?}")
         }
         self.state.disconnect()
     }

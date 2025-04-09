@@ -105,7 +105,7 @@ impl SseClient {
 
     pub async fn disconnect(&self) -> bool {
         if let Err(e) = self.http_client.delete_session().await {
-            error!("Failed to delete the session: {e:?}")
+            debug!("Failed to delete the session: {e:?}")
         }
         self.state.disconnect()
     }
