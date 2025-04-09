@@ -91,7 +91,7 @@ impl NodeConfig {
 
     // Functions returning a default value as a workaround for the issue:
     // https://github.com/serde-rs/serde/issues/368
-    fn default_session_minutes() -> u64 { 60 }
+    fn default_session_minutes() -> u64 { 60 * 24 }
     fn default_changes_chunk_size() -> i64 { 100 }
     fn default_image_max_size() -> Option<i32> { Some(1200) }
 
