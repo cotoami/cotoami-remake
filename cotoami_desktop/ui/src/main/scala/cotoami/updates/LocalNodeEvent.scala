@@ -34,17 +34,28 @@ object LocalNodeEvent {
         model.modify(_.repo.nodes.servers).using(
           _.setState(nodeId, notConnected, childPrivileges)
         ),
-        notConnected match {
-          case Some(Server.NotConnected.Unauthorized) =>
-            Modal.open(
-              Modal.InputPassword(
-                Root.Msg.Reconnect(nodeId, _).into,
-                model.i18n.text.ModalInputClientPassword_title,
-                Some(model.i18n.text.ModalInputClientPassword_message),
-                model.repo.nodes.get(nodeId)
+        if (
+          model.repo.nodes.operatingRemote &&
+          model.repo.nodes.isOperating(nodeId) &&
+          notConnected.isDefined
+        ) {
+          // Switch back to the local node when disconnected from the
+          // remote operated node.
+          println("Disconnected from the operated node.")
+          Cmd.none
+        } else {
+          notConnected match {
+            case Some(Server.NotConnected.Unauthorized) =>
+              Modal.open(
+                Modal.InputPassword(
+                  Root.Msg.Reconnect(nodeId, _).into,
+                  model.i18n.text.ModalInputClientPassword_title,
+                  Some(model.i18n.text.ModalInputClientPassword_message),
+                  model.repo.nodes.get(nodeId)
+                )
               )
-            )
-          case _ => Cmd.none
+            case _ => Cmd.none
+          }
         }
       )
     }

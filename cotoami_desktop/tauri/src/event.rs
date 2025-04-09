@@ -79,11 +79,22 @@ pub(super) async fn pipe(
     abortables.add(tasks.spawn({
         let (state, app_handle) = (state.clone(), app_handle.clone());
         let mut events = if let Some(parent_id) = parent_id {
-            state
+            let parent_events = state.pubsub().remote_events().subscribe(Some(parent_id));
+
+            // From local events, send only parent-server state changes for the frontend
+            // to be able to detect disconnection from the parent the app is operating on.
+            let local_events = state
                 .pubsub()
-                .remote_events()
-                .subscribe(Some(parent_id))
-                .boxed()
+                .events()
+                .subscribe(None::<()>)
+                .filter(move |e| {
+                    futures::future::ready(match e {
+                        LocalNodeEvent::ServerStateChanged { node_id, .. } => node_id == &parent_id,
+                        _ => false,
+                    })
+                });
+
+            futures::stream::select(parent_events, local_events).boxed()
         } else {
             state.pubsub().events().subscribe(None::<()>).boxed()
         };
