@@ -50,7 +50,7 @@ object ModalOperateAs {
       case Msg.Switch =>
         (
           model.copy(switching = true, switchingError = None),
-          InitialDataset.switchOperatingNodeTo(
+          InitialDataset.switchOperatedNodeTo(
             Option.when(!context.repo.nodes.isLocal(model.switchingTo.id))(
               model.switchingTo.id
             )
@@ -72,7 +72,7 @@ object ModalOperateAs {
             switching = false,
             switchingError = Some(e.default_message)
           ),
-          cotoami.error("Couldn't switch the operating node.", e)
+          cotoami.error("Couldn't switch the operated node.", e)
         )
     }
 
@@ -90,10 +90,10 @@ object ModalOperateAs {
       error = model.switchingError
     )(
       Modal.spanTitleIcon(Node.SwitchIconName),
-      "Switch Operating Node"
+      "Switch Node"
     )(
       section(className := "preview")(
-        p("You are about to switch the operating node as below:"),
+        p("You are about to switch the node to operate on as below:"),
         sectionNode(model.current, "current"),
         div(className := "arrow")(materialSymbol("arrow_downward", "arrow")),
         sectionNode(model.switchingTo, "switching-to")

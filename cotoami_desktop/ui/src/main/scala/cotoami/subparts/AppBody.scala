@@ -15,7 +15,7 @@ object AppBody {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     div(id := "app-body", className := "body")(
-      (model.uiState, model.repo.nodes.operating) match {
+      (model.uiState, model.repo.nodes.operated) match {
         case (Some(uiState), Some(_)) =>
           if (model.search.queryInput.isBlank())
             Some(defaultLayout(model, uiState))

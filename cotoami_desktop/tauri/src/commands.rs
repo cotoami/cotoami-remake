@@ -49,12 +49,12 @@ pub async fn node_command(
 ///
 /// This feature is implemented by the following elements:
 /// * This tauri command: [operate_as].
-/// * The [OperatingAs] struct which holds the ID of the current operating node,
+/// * The [OperatingAs] struct which holds the ID of the current node to operate on
 ///   and tasks piping events from the node to the frontend. It is stored in
 ///   [tauri::State] and modified from the [operate_as] command.
 /// * [event::pipe] spawns tasks piping each [ChangelogEntry] and [LocalNodeEvent]
-///   from the operating node to the frontend.
-/// * An [InitialDataset] will be fetched when the operating node is switched.
+///   from the operated node to the frontend.
+/// * An [InitialDataset] will be fetched when the operated node is switched.
 ///   [commands::db::initial_dataset] returns an [InitialDataset] according to
 ///   the current [OperatingAs].
 /// * The tauri command [node_command] changes the destination of [Command]s
@@ -71,21 +71,21 @@ pub async fn operate_as(
     operating_as: tauri::State<'_, OperatingAs>,
     parent_id: Option<Id<Node>>,
 ) -> Result<InitialDataset, Error> {
-    // Switch the operating node.
-    debug!("Switching the operating node to {parent_id:?}...");
+    // Switch the node to operate on.
+    debug!("Switching the operated node to {parent_id:?}...");
     operating_as.operate_as(parent_id, state.inner().clone(), app_handle)?;
 
-    // Fetch the [InitialDataset] from the new operating node.
+    // Fetch the [InitialDataset] from the new operated node.
     db::initial_dataset(&state, &operating_as).await
 }
 
 #[derive(Default)]
 pub struct OperatingAs {
-    /// The ID of the parent node that the application is currently operating.
-    /// [None] means the application is operating the local node (default).
+    /// The ID of the parent node that the application is currently operating on.
+    /// [None] means the application is operating on the local node (default).
     parent_id: RwLock<Option<Id<Node>>>,
 
-    /// Tasks to pipe operating node events into the frontend.
+    /// Tasks to pipe operated node events into the frontend.
     piping_events: Abortables,
 }
 

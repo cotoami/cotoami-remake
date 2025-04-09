@@ -369,7 +369,7 @@ object SectionTimeline {
       ToolbarCoto(coto),
       header()(
         PartsCoto.divAttributes(coto),
-        Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+        Option.when(Some(coto.postedById) != repo.nodes.operatedId) {
           PartsCoto.addressAuthor(coto, repo.nodes)
         }
       ),
@@ -393,7 +393,7 @@ object SectionTimeline {
         Option.when(repo.cotonomas.focusedId.isEmpty) {
           repostedIn(coto, repo.cotonomas)
         },
-        Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+        Option.when(Some(coto.postedById) != repo.nodes.operatedId) {
           reposter(coto, repo.nodes)
         },
         Option.when(context.repo.nodes.canEdit(coto)) {

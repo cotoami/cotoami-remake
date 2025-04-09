@@ -223,7 +223,7 @@ object PaneSearch {
         ToolbarCoto(coto),
         header()(
           PartsCoto.divAttributes(coto),
-          Option.when(Some(coto.postedById) != repo.nodes.operatingId) {
+          Option.when(Some(coto.postedById) != repo.nodes.operatedId) {
             PartsCoto.addressAuthor(coto, repo.nodes)
           }
         ),

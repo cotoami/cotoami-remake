@@ -31,10 +31,10 @@ case class InitialDataset(json: InitialDatasetJson) {
 }
 
 object InitialDataset {
-  def switchOperatingNodeTo(
+  def switchOperatedNodeTo(
       parentId: Option[Id[Node]]
   ): Cmd.One[Either[ErrorJson, InitialDataset]] =
-    InitialDatasetJson.switchOperatingNodeTo(parentId)
+    InitialDatasetJson.switchOperatedNodeTo(parentId)
       .map(_.map(InitialDataset(_)))
 }
 
@@ -49,7 +49,7 @@ trait InitialDatasetJson extends js.Object {
 }
 
 object InitialDatasetJson {
-  def switchOperatingNodeTo(
+  def switchOperatedNodeTo(
       parentId: Option[Id[Node]]
   ): Cmd.One[Either[ErrorJson, InitialDatasetJson]] =
     tauri

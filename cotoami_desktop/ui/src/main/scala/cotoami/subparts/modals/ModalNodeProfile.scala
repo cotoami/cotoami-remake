@@ -61,7 +61,7 @@ object ModalNodeProfile {
     def isLocalNode()(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
-    def isOperatingNode()(implicit context: Context): Boolean =
+    def isOperatedNode()(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
 
     def anonymousReadEnabled: Boolean =
@@ -269,7 +269,7 @@ object ModalNodeProfile {
         if (node.hasIcon)
           Fragment(
             PartsNode.imgNode(node),
-            Option.when(model.isOperatingNode()) {
+            Option.when(model.isOperatedNode()) {
               buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
             }
           )
@@ -279,7 +279,7 @@ object ModalNodeProfile {
           )
       ),
       if (context.repo.nodes.isOperating(node.id))
-        section(className := "operating-node-mark")(
+        section(className := "operated-node-mark")(
           "You",
           Option.when(!context.repo.nodes.isLocal(node.id)) {
             " (switched)"
@@ -287,17 +287,17 @@ object ModalNodeProfile {
         )
       else
         model.client
-          .map(_ => sectionOperatingNodeAsServer)
+          .map(_ => sectionOperatedNodeAsServer)
           .getOrElse(
             context.repo.nodes.childPrivilegesTo(node.id)
-              .map(sectionOperatingNodeAsChild)
+              .map(sectionOperatedNodeAsChild)
           )
     )
 
-  private def sectionOperatingNodeAsChild(privileges: ChildNode)(implicit
+  private def sectionOperatedNodeAsChild(privileges: ChildNode)(implicit
       context: Context
   ): ReactElement =
-    section(className := "operating-node")(
+    section(className := "operated-node")(
       div(className := "arrow")(materialSymbol("arrow_upward")),
       section(className := "privileges")(
         if (privileges.asOwner)
@@ -307,16 +307,16 @@ object ModalNodeProfile {
         else
           context.i18n.text.Post
       ),
-      context.repo.nodes.operating.map(PartsNode.imgNode(_))
+      context.repo.nodes.operated.map(PartsNode.imgNode(_))
     )
 
-  private def sectionOperatingNodeAsServer(implicit
+  private def sectionOperatedNodeAsServer(implicit
       context: Context
   ): ReactElement =
-    section(className := "operating-node")(
+    section(className := "operated-node")(
       div(className := "arrow")(materialSymbol("arrow_upward")),
       section(className := "privileges")("Server"),
-      context.repo.nodes.operating.map(PartsNode.imgNode(_))
+      context.repo.nodes.operated.map(PartsNode.imgNode(_))
     )
 
   private def divTools(node: Node, model: Model)(implicit
@@ -328,7 +328,7 @@ object ModalNodeProfile {
       PartsNode.buttonOperateAs(node, "left"),
 
       // Generate Owner Password
-      Option.when(model.isLocalNode() && model.isOperatingNode()) {
+      Option.when(model.isLocalNode() && model.isOperatedNode()) {
         buttonGeneratePassword(
           context.i18n.text.ModalNodeProfile_generateOwnerPassword,
           model,
@@ -408,7 +408,7 @@ object ModalNodeProfile {
           readOnly := true,
           value := node.name
         ),
-        Option.when(model.isOperatingNode()) {
+        Option.when(model.isOperatedNode()) {
           div(className := "tools")(
             rootCoto.map(buttonEditRootCoto)
           )
@@ -448,7 +448,7 @@ object ModalNodeProfile {
         section(className := "node-description")(
           PartsCoto.sectionCotonomaContent(rootCoto)
         ),
-        Option.when(model.isOperatingNode()) {
+        Option.when(model.isOperatedNode()) {
           div(className := "tools")(
             buttonEditRootCoto(rootCoto)
           )
@@ -513,7 +513,7 @@ object ModalNodeProfile {
     )(
       div(className := "input-with-tools")(
         sectionClientNodesCount(model.clientCount, context.repo.nodes),
-        Option.when(model.isOperatingNode()) {
+        Option.when(model.isOperatedNode()) {
           div(className := "tools")(
             buttonEdit(_ =>
               dispatch(

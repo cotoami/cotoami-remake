@@ -40,7 +40,7 @@ object PartsNode {
         onClick = _ =>
           dispatch(
             Modal.Msg.OpenModal(
-              Modal.OperateAs(repo.nodes.operating.get, switchTo)
+              Modal.OperateAs(repo.nodes.operated.get, switchTo)
             )
           )
       )

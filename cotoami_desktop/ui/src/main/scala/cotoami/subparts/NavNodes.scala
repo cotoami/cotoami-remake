@@ -60,8 +60,8 @@ object NavNodes {
         onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.Incorporate()))
       ),
       ul(className := "nodes")(
-        nodes.operating.map(node =>
-          li(className := "operating", key := node.id.uuid)(
+        nodes.operated.map(node =>
+          li(className := "operated", key := node.id.uuid)(
             buttonNode(node, nodes)
           )
         ),
@@ -77,8 +77,8 @@ object NavNodes {
   private def buttonSwitchBack(
       nodes: Nodes
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
-    (nodes.operatingRemote, nodes.operating, nodes.local) match {
-      case (true, Some(operatingNode), Some(localNode)) =>
+    (nodes.operatingRemote, nodes.operated, nodes.local) match {
+      case (true, Some(operatedNode), Some(localNode)) =>
         Some(
           Fragment(
             button(
@@ -88,13 +88,13 @@ object NavNodes {
               onClick := (_ =>
                 dispatch(
                   Modal.Msg.OpenModal(
-                    Modal.OperateAs(operatingNode, localNode)
+                    Modal.OperateAs(operatedNode, localNode)
                   )
                 )
               )
             )(
               PartsNode.imgNode(localNode, "local"),
-              PartsNode.imgNode(operatingNode, "operating")
+              PartsNode.imgNode(operatedNode, "operated")
             ),
             div(className := "separator")()
           )

@@ -19,7 +19,7 @@ import cotoami.backend.InitialDataset
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
     localId: Option[Id[Node]] = None,
-    operatingId: Option[Id[Node]] = None,
+    operatedId: Option[Id[Node]] = None,
     focusedId: Option[Id[Node]] = None,
 
     // remote nodes
@@ -53,14 +53,15 @@ case class Nodes(
 
   def isLocal(id: Id[Node]): Boolean = Some(id) == localId
 
-  def operating: Option[Node] = operatingId.flatMap(get)
+  def operated: Option[Node] = operatedId.flatMap(get)
 
-  def operatingRemote: Boolean = (localId, operatingId) match {
-    case (Some(local), Some(operating)) => local != operating
-    case _                              => false
-  }
+  def operatingRemote: Boolean =
+    (localId, operatedId) match {
+      case (Some(local), Some(operated)) => local != operated
+      case _                             => false
+    }
 
-  def isOperating(id: Id[Node]): Boolean = operatingId == Some(id)
+  def isOperating(id: Id[Node]): Boolean = operatedId == Some(id)
 
   def parents: Seq[Node] = parentIds.map(get).flatten
 
@@ -78,7 +79,7 @@ case class Nodes(
 
   def focused: Option[Node] = focusedId.flatMap(get)
 
-  def current: Option[Node] = focused.orElse(operating)
+  def current: Option[Node] = focused.orElse(operated)
 
   def prependParentId(id: Id[Node]): Nodes =
     if (parentIds.contains(id)) this
@@ -166,7 +167,7 @@ object Nodes {
     new Nodes(
       map = dataset.nodes,
       localId = Some(localId),
-      operatingId = Some(dataset.localNodeId),
+      operatedId = Some(dataset.localNodeId),
       parentIds = dataset.parentNodeIds.toSeq
     )
       .addServers(dataset.servers)

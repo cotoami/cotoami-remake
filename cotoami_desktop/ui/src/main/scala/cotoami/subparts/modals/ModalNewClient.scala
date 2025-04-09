@@ -82,7 +82,7 @@ object ModalNewClient {
     msg match {
       case Msg.NodeIdInput(nodeId) =>
         model.copy(nodeId = nodeId)
-          .validateNodeId(context.repo.nodes.operatingId)
+          .validateNodeId(context.repo.nodes.operatedId)
           .pipe { case (model, cmd) =>
             default.copy(_1 = model, _3 = cmd)
           }
