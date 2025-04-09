@@ -243,7 +243,7 @@ object NavCotonomas {
         }),
         toolButton(
           symbol = "settings",
-          tip = Some("Node settings"),
+          tip = Some("Node Settings"),
           classes = "settings",
           onClick = _ =>
             dispatch(
