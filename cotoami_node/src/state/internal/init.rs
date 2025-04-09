@@ -10,7 +10,7 @@ use crate::{
     event::local::LocalNodeEvent,
     service::{
         error::ServiceError,
-        models::{AddClient, NodeRole},
+        models::{AddClient, NodeRole, NotConnected},
     },
     state::{error::NodeError, NodeState, ServerConnection},
 };
@@ -118,9 +118,24 @@ impl NodeState {
             while let Some(event) = events.next().await {
                 debug!("Internal event: {event:?}");
                 match event {
+                    LocalNodeEvent::ServerStateChanged {
+                        node_id,
+                        not_connected: Some(NotConnected::SessionExpired),
+                        ..
+                    } => {
+                        debug!("Attempting to reconnect due to SessionExpired...");
+                        if let Ok(owner) = this.local_node_as_operator() {
+                            if let Err(e) = this.reconnect_to_server(node_id, Arc::new(owner)).await
+                            {
+                                info!("Failed to reconnect a server after SessionExpired: {e:?}")
+                            }
+                        }
+                    }
+
                     LocalNodeEvent::ParentDisconnected { node_id } => {
                         this.parent_services().remove(&node_id);
                     }
+
                     _ => (),
                 }
             }
@@ -136,8 +151,8 @@ impl NodeState {
         let server_nodes = spawn_blocking({
             let db = self.db().clone();
             move || {
-                let operator = db.globals().local_node_as_operator()?;
-                db.new_session()?.all_server_nodes(&operator)
+                let owner = db.globals().local_node_as_operator()?;
+                db.new_session()?.all_server_nodes(&owner)
             }
         })
         .await??;
