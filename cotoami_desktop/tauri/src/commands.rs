@@ -43,7 +43,7 @@ pub async fn node_command(
 
 /// An tauri command that is the entry point to the Operate-as feature.
 ///
-/// The Operate-as feature allows to switch the operating node between the
+/// The Operate-as feature allows to switch the operated node between the
 /// local node (default) and one of the parent nodes to which the local node
 /// has owner privilege.
 ///
@@ -81,7 +81,11 @@ pub async fn operate_as(
 
 #[derive(Default)]
 pub struct OperatingAs {
+    /// The ID of the parent node that the application is currently operating.
+    /// [None] means the application is operating the local node (default).
     parent_id: RwLock<Option<Id<Node>>>,
+
+    /// Tasks to pipe operating node events into the frontend.
     piping_events: Abortables,
 }
 
@@ -94,6 +98,11 @@ impl OperatingAs {
         self.operate_as(None, state, app_handle)
     }
 
+    /// Switch the operated node to the specified parent node if the local
+    /// node has the permissions to do so.
+    ///
+    /// If `parent_id` is [None], the operated node will be switched back to
+    /// the local node.
     pub fn operate_as(
         &self,
         parent_id: Option<Id<Node>>,
