@@ -2,15 +2,13 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use cotoami_db::Principal;
-use futures::StreamExt;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error, info};
 
 use crate::{
-    event::local::LocalNodeEvent,
     service::{
         error::ServiceError,
-        models::{AddClient, NodeRole, NotConnected},
+        models::{AddClient, NodeRole},
     },
     state::{error::NodeError, NodeState, ServerConnection},
 };
@@ -109,37 +107,6 @@ impl NodeState {
                 Ok(())
             }
         }
-    }
-
-    fn start_handling_local_events(&self) {
-        let this = self.clone();
-        self.spawn_task(async move {
-            let mut events = this.pubsub().events().subscribe(None::<()>);
-            while let Some(event) = events.next().await {
-                debug!("Internal event: {event:?}");
-                match event {
-                    LocalNodeEvent::ServerStateChanged {
-                        node_id,
-                        not_connected: Some(NotConnected::SessionExpired),
-                        ..
-                    } => {
-                        debug!("Attempting to reconnect due to SessionExpired...");
-                        if let Ok(owner) = this.local_node_as_operator() {
-                            if let Err(e) = this.reconnect_to_server(node_id, Arc::new(owner)).await
-                            {
-                                info!("Failed to reconnect a server after SessionExpired: {e:?}")
-                            }
-                        }
-                    }
-
-                    LocalNodeEvent::ParentDisconnected { node_id } => {
-                        this.parent_services().remove(&node_id);
-                    }
-
-                    _ => (),
-                }
-            }
-        });
     }
 
     /// Restores [ServerConnection] instances for the [cotoami_db::ServerNode]s

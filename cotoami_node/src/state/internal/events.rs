@@ -1,8 +1,42 @@
+use std::sync::Arc;
+
 use cotoami_db::prelude::*;
+use futures::StreamExt;
+use tracing::debug;
 
 use crate::{event::local::LocalNodeEvent, service::models::NotConnected, state::NodeState};
 
 impl NodeState {
+    pub(crate) fn start_handling_local_events(&self) {
+        let this = self.clone();
+        self.spawn_task(async move {
+            let mut events = this.pubsub().events().subscribe(None::<()>);
+            while let Some(event) = events.next().await {
+                debug!("Internal event: {event:?}");
+                match event {
+                    LocalNodeEvent::ServerStateChanged {
+                        node_id,
+                        not_connected: Some(NotConnected::SessionExpired),
+                        ..
+                    } => {
+                        if let Ok(owner) = this.local_node_as_operator() {
+                            debug!("Attempting to reconnect due to SessionExpired...");
+                            this.reconnect_to_server(node_id, Arc::new(owner))
+                                .await
+                                .ok();
+                        }
+                    }
+
+                    LocalNodeEvent::ParentDisconnected { node_id } => {
+                        this.parent_services().remove(&node_id);
+                    }
+
+                    _ => (),
+                }
+            }
+        });
+    }
+
     pub(crate) fn server_state_changed(
         &self,
         node_id: Id<Node>,
