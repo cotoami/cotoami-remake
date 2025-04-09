@@ -144,6 +144,19 @@ import marubinotto.libs.geomap.pmtiles
     // createMap
     useEffect(
       () => {
+        // Since initMap() will be called via tauri.path.resourceDir() and
+        // js.timers.setTimeout(), cleanup() can be called before or during initMap().
+        // The effectCancelled flag allows us to detect this early cleanup(), and
+        // stop executing initMap() or re-cleanup() after initMap() has finished.
+        var effectCancelled = false
+
+        val cleanup = () => {
+          effectCancelled = true
+          mapRef.current.foreach(_.remove())
+          mapRef.current = None
+          setMapInitialized(false)
+        }
+
         val onClick: js.Function1[MapMouseEvent, Unit] =
           e => props.onClick.foreach(_(e))
 
@@ -165,6 +178,62 @@ import marubinotto.libs.geomap.pmtiles
           detectBoundsChange(e)
         }
 
+        val initMap = () => {
+          val map = new ExtendedMap(
+            options = new MapOptions {
+              override val container = props.id
+              override val zoom = props.zoom
+              override val center = props.center
+              override val style = toAbsoluteUrl(props.styleLocation)
+              override val transformRequest = _transformRequest
+            },
+            onMarkerClick = props.onMarkerClick,
+            onFocusedLocationClick = props.onFocusedLocationClick
+          )
+          map.addControl(
+            new NavigationControl(
+              new NavigationControlOptions() {
+                override val showCompass = !props.disableRotation
+              }
+            )
+          )
+
+          // Disable map rotation
+          if (props.disableRotation) {
+            map.disableRotation()
+          }
+
+          // Restore the state
+          props.focusedLocation.map(map.focusLocation)
+          map.addOrRemoveMarkers(props.markerDefs.values)
+
+          // Event handlers
+          map.on("click", onClick)
+          map.on("zoomend", onZoomend)
+          map.on("moveend", onMoveend)
+          map.on(
+            "zoom",
+            (e: MapLibreEvent) => {
+              setZoomClass(
+                props.detectZoomClass.flatMap(detect =>
+                  detect(e.target.getZoom())
+                )
+              )
+            }
+          )
+
+          // Map init completed
+          mapRef.current = Some(map)
+          boundsRef.current = Some(map.getBounds())
+          props.onInit.map(_(map.getBounds()))
+          setMapInitialized(true)
+
+          if (effectCancelled) {
+            println("The effect has been cancelled during initMap()")
+            cleanup()
+          }
+        }
+
         tauri.path.resourceDir().onComplete {
           case Success(dir) => {
             // The tauri resource dir where local map resources are located.
@@ -173,65 +242,19 @@ import marubinotto.libs.geomap.pmtiles
 
             // Delay rendering the map to ensure it to fit to the container section.
             js.timers.setTimeout(10) {
-              val map = new ExtendedMap(
-                options = new MapOptions {
-                  override val container = props.id
-                  override val zoom = props.zoom
-                  override val center = props.center
-                  override val style = toAbsoluteUrl(props.styleLocation)
-                  override val transformRequest = _transformRequest
-                },
-                onMarkerClick = props.onMarkerClick,
-                onFocusedLocationClick = props.onFocusedLocationClick
-              )
-              map.addControl(
-                new NavigationControl(
-                  new NavigationControlOptions() {
-                    override val showCompass = !props.disableRotation
-                  }
-                )
-              )
-
-              // Disable map rotation
-              if (props.disableRotation) {
-                map.disableRotation()
+              if (effectCancelled) {
+                println("The effect has been cancelled before initMap()")
+              } else {
+                initMap()
               }
-
-              // Restore the state
-              props.focusedLocation.map(map.focusLocation)
-              map.addOrRemoveMarkers(props.markerDefs.values)
-
-              // Event handlers
-              map.on("click", onClick)
-              map.on("zoomend", onZoomend)
-              map.on("moveend", onMoveend)
-              map.on(
-                "zoom",
-                (e: MapLibreEvent) => {
-                  setZoomClass(
-                    props.detectZoomClass.flatMap(detect =>
-                      detect(e.target.getZoom())
-                    )
-                  )
-                }
-              )
-
-              // Map init completed
-              mapRef.current = Some(map)
-              boundsRef.current = Some(map.getBounds())
-              props.onInit.map(_(map.getBounds()))
-              setMapInitialized(true)
             }
           }
+
           case Failure(t) =>
             println(s"Couldn't get tauri.path.resourceDir: ${t.toString()}")
         }
 
-        () => {
-          mapRef.current.foreach(_.remove())
-          mapRef.current = None
-          setMapInitialized(false)
-        }
+        cleanup
       },
       Seq(props.createMap.triggered)
     )
