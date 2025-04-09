@@ -27,6 +27,9 @@ trait Text {
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
   val ConfirmDeleteCotonoma: String
 
+  val NavNodes_allNodes: String
+  val NavNodes_addNode: String
+
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
 

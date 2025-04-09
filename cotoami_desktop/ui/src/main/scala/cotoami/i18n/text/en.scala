@@ -34,6 +34,9 @@ object en extends Text {
     )
   val ConfirmDeleteCotonoma = "Are you sure you want to delete the cotonoma?"
 
+  val NavNodes_allNodes = "All Nodes"
+  val NavNodes_addNode = "Add Node"
+
   val ModalInputOwnerPassword_title = "Input Owner Password"
   val ModalInputOwnerPassword_message =
     "You need to input the owner password to open this database."

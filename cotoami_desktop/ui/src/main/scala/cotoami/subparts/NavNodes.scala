@@ -6,7 +6,7 @@ import slinky.web.html._
 import marubinotto.optionalClasses
 import marubinotto.components.{materialSymbol, toolButton}
 
-import cotoami.{Into, Model, Msg => AppMsg}
+import cotoami.{Context, Into, Model, Msg => AppMsg}
 import cotoami.models.{Node, UiState}
 import cotoami.repository.Nodes
 
@@ -16,7 +16,7 @@ object NavNodes {
   def apply(
       model: Model,
       uiState: UiState
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val nodes = model.repo.nodes
     nav(
       className := optionalClasses(
@@ -44,7 +44,7 @@ object NavNodes {
             ("focused", nodes.focused.isEmpty)
           )
         ),
-        data - "tooltip" := "All nodes",
+        data - "tooltip" := context.i18n.text.NavNodes_allNodes,
         data - "placement" := "right",
         disabled := nodes.focused.isEmpty,
         onClick := (_ => dispatch(AppMsg.UnfocusNode))
@@ -54,7 +54,7 @@ object NavNodes {
       div(className := "separator")(),
       toolButton(
         symbol = "add",
-        tip = Some("Add node"),
+        tip = Some(context.i18n.text.NavNodes_addNode),
         tipPlacement = "right",
         classes = "add",
         onClick = _ => dispatch(Modal.Msg.OpenModal(Modal.Incorporate()))
