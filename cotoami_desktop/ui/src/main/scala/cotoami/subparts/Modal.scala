@@ -169,8 +169,8 @@ object Modal {
       (NodeProfile(model), cmd)
     }
 
-    def apply(nodeId: Id[Node], client: Client): (NodeProfile, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalNodeProfile.Model(nodeId, client)
+    def client(nodeId: Id[Node], client: Client): (NodeProfile, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalNodeProfile.Model.client(nodeId, client)
       (NodeProfile(model), cmd)
     }
   }

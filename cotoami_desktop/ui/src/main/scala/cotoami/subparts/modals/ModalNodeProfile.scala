@@ -82,7 +82,7 @@ object ModalNodeProfile {
         )
       )
 
-    def apply(nodeId: Id[Node], client: Client): (Model, Cmd[AppMsg]) =
+    def client(nodeId: Id[Node], client: Client): (Model, Cmd[AppMsg]) =
       (
         Model(nodeId, client = Some(client)),
         Root.fetchNodeDetails(nodeId)
