@@ -140,6 +140,9 @@ impl HttpClient {
             Command::EditClient { id, values } => {
                 self.put(&format!("{API_PATH_CLIENTS}/{id}")).form(&values)
             }
+            Command::EditChild { id, values } => {
+                self.put(&format!("{API_PATH_CHILDREN}/{id}")).form(&values)
+            }
             Command::RecentCotonomas { node, pagination } => {
                 if let Some(node_id) = node {
                     self.get(&format!("{API_PATH_NODES}/{node_id}/cotonomas"))
@@ -327,6 +330,7 @@ const API_PATH_NODES: &str = concatcp!(API_PATH_DATA, "/nodes");
 const API_PATH_LOCAL: &str = concatcp!(API_PATH_NODES, "/local");
 const API_PATH_SERVERS: &str = concatcp!(API_PATH_NODES, "/servers");
 const API_PATH_CLIENTS: &str = concatcp!(API_PATH_NODES, "/clients");
+const API_PATH_CHILDREN: &str = concatcp!(API_PATH_NODES, "/children");
 const API_PATH_COTONOMAS: &str = concatcp!(API_PATH_DATA, "/cotonomas");
 const API_PATH_COTOS: &str = concatcp!(API_PATH_DATA, "/cotos");
 const API_PATH_ITOS: &str = concatcp!(API_PATH_DATA, "/itos");

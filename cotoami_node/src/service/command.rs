@@ -55,6 +55,9 @@ pub enum Command {
     /// Request to edit a client node and return the updated [ClientNode].
     EditClient { id: Id<Node>, values: EditClient },
 
+    /// Request to edit a child node and return the updated [ChildNode].
+    EditChild { id: Id<Node>, values: EditChild },
+
     /// Request a [Page<Cotonoma>] that contains recently updated cotonomas.
     RecentCotonomas {
         node: Option<Id<Node>>,

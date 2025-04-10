@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 use axum::{
-    extract::{Query, State},
-    routing::get,
-    Extension, Router,
+    extract::{Path, Query, State},
+    routing::{get, put},
+    Extension, Form, Router,
 };
 use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
@@ -9,12 +11,20 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{error::IntoServiceResult, models::Pagination, ServiceError},
+    service::{
+        error::IntoServiceResult,
+        models::{EditChild, Pagination},
+        ServiceError,
+    },
     state::NodeState,
     web::{Accept, Content},
 };
 
-pub(super) fn routes() -> Router<NodeState> { Router::new().route("/", get(recent_child_nodes)) }
+pub(super) fn routes() -> Router<NodeState> {
+    Router::new()
+        .route("/", get(recent_child_nodes))
+        .route("/{node_id}", put(edit_child))
+}
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
 
@@ -44,4 +54,21 @@ async fn recent_child_nodes(
         Ok(Content(nodes, accept))
     })
     .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/nodes/children/:node_id
+/////////////////////////////////////////////////////////////////////////////
+
+async fn edit_child(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+    Form(form): Form<EditChild>,
+) -> Result<Content<ChildNode>, ServiceError> {
+    state
+        .edit_child(node_id, form, Arc::new(operator))
+        .await
+        .map(|child| Content(child, accept))
 }

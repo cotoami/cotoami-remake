@@ -63,6 +63,9 @@ impl NodeState {
             Command::EditClient { id, values } => {
                 format.serialize(self.edit_client(id, values, opr?).await)
             }
+            Command::EditChild { id, values } => {
+                format.serialize(self.edit_child(id, values, opr?).await)
+            }
             Command::RecentCotonomas { node, pagination } => {
                 format.serialize(self.recent_cotonomas(node, pagination).await)
             }

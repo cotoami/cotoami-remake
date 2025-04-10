@@ -104,6 +104,16 @@ where
         }),
     );
 
+    let child_node = backend_ds.try_get_child_node(&new_client_id, &backend_owner)?;
+    assert_that!(
+        child_node,
+        pat!(ChildNode {
+            node_id: eq(&new_client_id),
+            as_owner: eq(&false),
+            can_edit_itos: eq(&false)
+        })
+    );
+
     /////////////////////////////////////////////////////////////////////////////
     // Command: EditClient
     /////////////////////////////////////////////////////////////////////////////
@@ -133,6 +143,29 @@ where
     let client = service.call(request).await?.content::<ClientNode>()?;
 
     assert_that!(client, eq(&updated_client));
+
+    /////////////////////////////////////////////////////////////////////////////
+    // Command: EditChild
+    /////////////////////////////////////////////////////////////////////////////
+
+    let request = Command::EditChild {
+        id: new_client_id,
+        values: EditChild {
+            as_owner: false,
+            can_edit_itos: true,
+        },
+    }
+    .into_request();
+    let updated_child = service.call(request).await?.content::<ChildNode>()?;
+
+    assert_that!(
+        updated_child,
+        pat!(ChildNode {
+            node_id: eq(&new_client_id),
+            as_owner: eq(&false),
+            can_edit_itos: eq(&true)
+        }),
+    );
 
     /////////////////////////////////////////////////////////////////////////////
     // Command: GenerateClientPassword
