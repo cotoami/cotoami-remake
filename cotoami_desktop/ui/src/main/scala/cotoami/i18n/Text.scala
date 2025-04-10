@@ -30,6 +30,9 @@ trait Text {
   val NavNodes_allNodes: String
   val NavNodes_addNode: String
 
+  val SectionNodeTools_enableSync: String
+  val SectionNodeTools_disableSync: String
+
   val ModalInputOwnerPassword_title: String
   val ModalInputOwnerPassword_message: String
 

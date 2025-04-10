@@ -37,6 +37,9 @@ object en extends Text {
   val NavNodes_allNodes = "All Nodes"
   val NavNodes_addNode = "Add Node"
 
+  val SectionNodeTools_enableSync = "Enable Sync"
+  val SectionNodeTools_disableSync = "Disable Sync"
+
   val ModalInputOwnerPassword_title = "Input Owner Password"
   val ModalInputOwnerPassword_message =
     "You need to input the owner password to open this database."

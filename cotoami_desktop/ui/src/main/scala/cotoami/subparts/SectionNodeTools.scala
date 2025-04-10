@@ -77,7 +77,8 @@ object SectionNodeTools {
             span(
               className := "sync-switch",
               data - "tooltip" := (
-                if (syncDisabled) "Connect" else "Disconnect"
+                if (syncDisabled) context.i18n.text.SectionNodeTools_enableSync
+                else context.i18n.text.SectionNodeTools_disableSync
               ),
               data - "placement" := "bottom"
             )(
