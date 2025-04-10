@@ -148,7 +148,7 @@ fn on_client_disconnect(
     futures::sink::unfold((), move |(), error: Option<CommunicationError>| {
         let state = state.clone();
         async move {
-            state.remove_client_conn(client_id, error.map(|e| e.to_string()));
+            state.on_client_disconnect(client_id, error.map(|e| e.to_string()));
             Ok(())
         }
     })

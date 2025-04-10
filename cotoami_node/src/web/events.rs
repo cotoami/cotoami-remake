@@ -170,7 +170,7 @@ impl Drop for StreamLocal {
     fn drop(&mut self) {
         let Self(session, anonymous_id, state) = self;
         match (session.client_node_id(), anonymous_id) {
-            (Some(client_id), _) => state.remove_client_conn(client_id, None),
+            (Some(client_id), _) => state.on_client_disconnect(client_id, None),
             (_, Some(anonymous_id)) => state.remove_anonymous_conn(anonymous_id),
             _ => (),
         }

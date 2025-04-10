@@ -133,7 +133,7 @@ impl NodeState {
         self.client_conns().put(client_conn);
     }
 
-    pub(crate) fn remove_client_conn(
+    pub(crate) fn on_client_disconnect(
         &self,
         client_id: Id<Node>,
         disconnection_error: Option<String>,
