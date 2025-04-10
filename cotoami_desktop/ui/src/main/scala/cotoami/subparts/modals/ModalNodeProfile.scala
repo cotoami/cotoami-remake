@@ -21,7 +21,7 @@ import cotoami.models.{
   Page,
   Server
 }
-import cotoami.repository.{Nodes, Root}
+import cotoami.repository.Root
 import cotoami.backend.{
   ClientNodeBackend,
   Commands,
@@ -69,17 +69,19 @@ object ModalNodeProfile {
   }
 
   object Model {
-    def apply(nodeId: Id[Node], nodes: Nodes): (Model, Cmd[AppMsg]) =
+    def apply(
+        nodeId: Id[Node]
+    )(implicit context: Context): (Model, Cmd[AppMsg]) =
       (
         Model(nodeId),
-        Cmd.Batch(
-          Root.fetchNodeDetails(nodeId),
-          fetchClientCount,
-          if (nodes.isOperating(nodeId))
-            LocalServer.fetch.map(Msg.LocalServerFetched(_).into)
-          else
-            Cmd.none
-        )
+        Root.fetchNodeDetails(nodeId) ++
+          (if (context.repo.nodes.isOperating(nodeId))
+             Cmd.Batch(
+               fetchClientCount,
+               LocalServer.fetch.map(Msg.LocalServerFetched(_).into)
+             )
+           else
+             Cmd.none)
       )
 
     def client(nodeId: Id[Node], client: Client): (Model, Cmd[AppMsg]) =

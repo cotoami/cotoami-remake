@@ -197,7 +197,7 @@ object AppHeader {
       onClick := (_ =>
         dispatch(
           (Modal.Msg.OpenModal.apply _).tupled(
-            Modal.NodeProfile(node.id, context.repo.nodes)
+            Modal.NodeProfile(node.id)
           )
         )
       )

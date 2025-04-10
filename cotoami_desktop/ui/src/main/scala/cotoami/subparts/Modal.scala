@@ -11,7 +11,7 @@ import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
 import cotoami.models.{Client, Coto, Id, Ito, Node}
-import cotoami.repository.{Nodes, Root}
+import cotoami.repository.Root
 import cotoami.subparts.modals._
 
 sealed trait Modal
@@ -164,8 +164,10 @@ object Modal {
 
   case class NodeProfile(model: ModalNodeProfile.Model) extends Modal
   object NodeProfile {
-    def apply(nodeId: Id[Node], nodes: Nodes): (NodeProfile, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalNodeProfile.Model(nodeId, nodes)
+    def apply(
+        nodeId: Id[Node]
+    )(implicit context: Context): (NodeProfile, Cmd[AppMsg]) = {
+      val (model, cmd) = ModalNodeProfile.Model(nodeId)
       (NodeProfile(model), cmd)
     }
 

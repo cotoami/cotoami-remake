@@ -103,7 +103,7 @@ object SectionNodeTools {
           onClick = _ =>
             dispatch(
               (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.NodeProfile(node.id, repo.nodes)
+                Modal.NodeProfile(node.id)
               )
             )
         ),
