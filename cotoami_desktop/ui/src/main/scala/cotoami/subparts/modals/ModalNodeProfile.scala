@@ -11,16 +11,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{
-  ChildNode,
-  Client,
-  ClientNode,
-  Coto,
-  Id,
-  Node,
-  Page,
-  Server
-}
+import cotoami.models.{ChildNode, Client, Coto, Id, Node, Server}
 import cotoami.repository.Root
 import cotoami.backend.{
   ClientNodeBackend,
@@ -115,8 +106,7 @@ object ModalNodeProfile {
     // For local server
     case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
         extends Msg
-    case class ClientCountFetched(result: Either[ErrorJson, Page[ClientNode]])
-        extends Msg
+    case class ClientCountFetched(result: Either[ErrorJson, Double]) extends Msg
     case class EnableAnonymousRead(enable: Boolean) extends Msg
     case class AnonymousReadEnabled(result: Either[ErrorJson, Boolean])
         extends Msg
@@ -176,8 +166,8 @@ object ModalNodeProfile {
       case Msg.LocalServerFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch the local server.", e))
 
-      case Msg.ClientCountFetched(Right(page)) =>
-        (model.copy(clientCount = page.totalItems), Cmd.none)
+      case Msg.ClientCountFetched(Right(count)) =>
+        (model.copy(clientCount = count), Cmd.none)
 
       case Msg.ClientCountFetched(Left(e)) =>
         (model, cotoami.error("Couldn't fetch client count.", e))
@@ -203,6 +193,7 @@ object ModalNodeProfile {
 
   def fetchClientCount: Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(0, Some(1))
+      .map(_.map(_.totalItems))
       .map(Msg.ClientCountFetched(_).into)
 
   def enableAnonymousRead(
@@ -518,11 +509,7 @@ object ModalNodeProfile {
         Option.when(model.isOperatedNode()) {
           div(className := "tools")(
             buttonEdit(_ =>
-              dispatch(
-                (Modal.Msg.OpenModal.apply _).tupled(
-                  Modal.Clients()
-                )
-              )
+              dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.Clients()))
             )
           )
         }
