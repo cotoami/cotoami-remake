@@ -61,7 +61,7 @@ object ModalOperateAs {
         (
           model.copy(switching = false, switchingError = None),
           Cmd.Batch(
-            Browser.send(AppMsg.SetRemoteInitialDataset(dataset)),
+            Browser.send(AppMsg.SetInitialDataset(dataset)),
             Modal.close(classOf[Modal.OperateAs])
           )
         )

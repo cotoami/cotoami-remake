@@ -167,7 +167,7 @@ object Main {
           Cmd.none
         )
 
-      case Msg.SetRemoteInitialDataset(dataset) =>
+      case Msg.SetInitialDataset(dataset) =>
         (
           model
             .modify(_.repo).setTo(

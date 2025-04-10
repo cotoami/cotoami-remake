@@ -2,7 +2,7 @@ package cotoami.updates
 
 import com.softwaremill.quicklens._
 
-import marubinotto.fui.Cmd
+import marubinotto.fui.{Browser, Cmd}
 import marubinotto.facade.Nullable
 
 import cotoami.{Model, Msg}
@@ -11,6 +11,7 @@ import cotoami.repository.Root
 import cotoami.backend.{
   ActiveClientBackend,
   ChildNodeBackend,
+  InitialDataset,
   LocalNodeEventJson,
   NotConnectedBackend,
   ParentSyncEndBackend,
@@ -31,18 +32,23 @@ object LocalNodeEvent {
         Nullable.toOption(change.child_privileges)
           .map(ChildNodeBackend.toModel(_))
       return (
+        // Model
         model.modify(_.repo.nodes.servers).using(
           _.setState(nodeId, notConnected, childPrivileges)
         ),
+        // Cmd[Msg]
         if (
           model.repo.nodes.operatingRemote &&
           model.repo.nodes.isOperating(nodeId) &&
           notConnected.isDefined
         ) {
           // Switch back to the local node when disconnected from the
-          // remote operated node.
-          println("Disconnected from the operated node.")
-          Cmd.none
+          // remote node on which the app is currently operating.
+          InitialDataset.switchOperatedNodeTo(None).flatMap(_ match {
+            case Right(dataset) =>
+              Browser.send(Msg.SetInitialDataset(dataset))
+            case Left(_) => Cmd.none
+          })
         } else {
           notConnected match {
             case Some(Server.NotConnected.Unauthorized) =>

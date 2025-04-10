@@ -33,7 +33,7 @@ object Msg {
   case class SetDatabaseInfo(info: DatabaseInfo) extends Msg
   case class ServerConnectionsInitialized(result: Either[ErrorJson, Null])
       extends Msg
-  case class SetRemoteInitialDataset(dataset: InitialDataset) extends Msg
+  case class SetInitialDataset(dataset: InitialDataset) extends Msg
 
   // UI
   case class SetTheme(theme: String) extends Msg
