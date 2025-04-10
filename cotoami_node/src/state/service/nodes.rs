@@ -28,4 +28,9 @@ impl NodeState {
         })
         .await
     }
+
+    pub async fn disconnect_from(&self, node_id: &Id<Node>) {
+        self.client_conns().disconnect(node_id);
+        self.server_conns().disconnect(node_id).await;
+    }
 }
