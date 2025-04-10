@@ -6,7 +6,6 @@ import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
 
 import marubinotto.Validation
-import marubinotto.components.materialSymbol
 
 import cotoami.{Msg => AppMsg}
 import cotoami.repository.Nodes
@@ -53,30 +52,6 @@ package object subparts {
       ),
       inputErrors.map(Validation.sectionValidationError)
     )
-
-  def buttonHelp(disable: Boolean, onButtonClick: () => Unit): ReactElement =
-    button(
-      className := s"default help",
-      disabled := disable,
-      onClick := onButtonClick
-    )(
-      materialSymbol("help")
-    )
-
-  def sectionHelp(
-      display: Boolean,
-      onCloseClick: () => Unit,
-      contents: ReactElement*
-  ): ReactElement =
-    Option.when(display) {
-      section(className := "help")(
-        button(
-          className := "close default",
-          onClick := onCloseClick
-        ),
-        contents
-      )
-    }
 
   def paneToggle(
       paneName: String

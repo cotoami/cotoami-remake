@@ -11,14 +11,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Node, Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
 import cotoami.repository.Nodes
-import cotoami.subparts.{
-  buttonHelp,
-  labeledInputField,
-  sectionHelp,
-  Modal,
-  PartsCoto,
-  PartsNode
-}
+import cotoami.subparts.{labeledInputField, Modal, PartsCoto, PartsNode}
 
 object ModalIncorporate {
 
@@ -27,14 +20,11 @@ object ModalIncorporate {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
-      helpIntro: Boolean = false,
-
       // form
       nodeUrlInput: String = "",
       passwordInput: String = "",
 
       // connect
-      helpConnect: Boolean = false,
       connecting: Boolean = false,
       connectingError: Option[String] = None,
       nodeSession: Option[ClientNodeSession] = None,
@@ -90,7 +80,6 @@ object ModalIncorporate {
   }
 
   object Msg {
-    case class HelpIntro(display: Boolean) extends Msg
     case class NodeUrlInput(url: String) extends Msg
     case class PasswordInput(password: String) extends Msg
     case object Connect extends Msg
@@ -110,9 +99,6 @@ object ModalIncorporate {
     val nodes = context.repo.nodes
     val default = (model, nodes, Cmd.none)
     msg match {
-      case Msg.HelpIntro(display) =>
-        default.copy(_1 = model.copy(helpIntro = display))
-
       case Msg.NodeUrlInput(url) =>
         default.copy(_1 = model.copy(nodeUrlInput = url))
 
@@ -190,17 +176,8 @@ object ModalIncorporate {
       closeButton = Some((classOf[Modal.Incorporate], dispatch))
     )(
       Modal.spanTitleIcon(Node.IconName),
-      "Incorporate Remote Database",
-      buttonHelp(
-        model.helpIntro,
-        () => dispatch(Msg.HelpIntro(true))
-      )
+      context.i18n.text.ModalIncorporate_title
     )(
-      sectionHelp(
-        model.helpIntro,
-        () => dispatch(Msg.HelpIntro(false)),
-        context.i18n.text.ModalIncorporate_intro
-      ),
       model.nodeSession
         .map(sectionIncorporate(model, _))
         .getOrElse(sectionConnect(model))

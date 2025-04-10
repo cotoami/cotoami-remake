@@ -57,8 +57,7 @@ trait Text {
   val ModalNodeProfile_clientNodes: String
   val ModalNodeProfile_anonymousRead: String
 
-  def ModalIncorporate_intro: ReactElement
-  def ModalIncorporate_connect(operatingNodeId: String): ReactElement
+  val ModalIncorporate_title: String
 
   val ModalPromote_confirm: String
 
