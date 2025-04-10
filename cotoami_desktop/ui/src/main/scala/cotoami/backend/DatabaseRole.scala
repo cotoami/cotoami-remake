@@ -2,8 +2,10 @@ package cotoami.backend
 
 import scala.scalajs.js
 
+import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
-import cotoami.models.{ChildNode, DatabaseRole, Id, ParentNode}
+
+import cotoami.models.{ChildNode, DatabaseRole, Id, Node, ParentNode}
 
 @js.native
 trait DatabaseRoleJson extends js.Object {
@@ -52,6 +54,15 @@ trait ChildNodeJson extends js.Object {
   val can_edit_itos: Boolean = js.native
 }
 
+object ChildNodeJson {
+  def edit(
+      id: Id[Node],
+      asOwner: Boolean,
+      canEditItos: Boolean
+  ): Cmd.One[Either[ErrorJson, ChildNodeJson]] =
+    Commands.send(Commands.EditChild(id, asOwner, canEditItos))
+}
+
 object ChildNodeBackend {
   def toModel(json: ChildNodeJson): ChildNode =
     ChildNode(
@@ -60,4 +71,12 @@ object ChildNodeBackend {
       asOwner = json.as_owner,
       canEditItos = json.can_edit_itos
     )
+
+  def edit(
+      id: Id[Node],
+      asOwner: Boolean,
+      canEditItos: Boolean
+  ): Cmd.One[Either[ErrorJson, ChildNode]] =
+    ChildNodeJson.edit(id, asOwner, canEditItos)
+      .map(_.map(toModel))
 }

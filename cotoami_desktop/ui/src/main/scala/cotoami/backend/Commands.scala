@@ -118,6 +118,21 @@ object Commands {
       )
     )
 
+  def EditChild(
+      id: Id[Node],
+      asOwner: Boolean,
+      canEditItos: Boolean
+  ) =
+    jso(EditChild =
+      jso(
+        id = id.uuid,
+        values = jso(
+          as_owner = asOwner,
+          can_edit_itos = canEditItos
+        )
+      )
+    )
+
   def RecentCotonomas(nodeId: Option[Id[Node]], pageIndex: Double) =
     jso(RecentCotonomas =
       jso(
