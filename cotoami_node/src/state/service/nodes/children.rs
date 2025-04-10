@@ -6,7 +6,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{ServiceError, error::IntoServiceResult, models::EditChild},
+    service::{error::IntoServiceResult, models::EditChild, ServiceError},
     state::NodeState,
 };
 
@@ -29,7 +29,8 @@ impl NodeState {
         if let Err(errors) = values.validate() {
             return errors.into_result();
         }
-        spawn_blocking({
+
+        let child_node = spawn_blocking({
             let db = self.db().clone();
             move || {
                 db.new_session()?.edit_child_node(
@@ -40,7 +41,11 @@ impl NodeState {
                 )
             }
         })
-        .await?
-        .map_err(ServiceError::from)
+        .await??;
+
+        // Disconnect from the child node to allow it to reload the settings.
+        self.disconnect_from(&node_id).await;
+
+        Ok(child_node)
     }
 }
