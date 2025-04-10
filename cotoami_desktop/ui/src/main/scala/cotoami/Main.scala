@@ -387,6 +387,12 @@ object Main {
         )
       }
 
+      case Msg.SectionNodeToolsMsg(submsg) => {
+        val (nodeTools, cmd) =
+          SectionNodeTools.update(submsg, model.nodeTools)
+        (model.copy(nodeTools = nodeTools), cmd)
+      }
+
       case Msg.AppMainMsg(submsg) =>
         model.uiState
           .map(AppMain.update(submsg))

@@ -7,12 +7,12 @@ import slinky.web.html._
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
+import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Cotonoma, Id, Node, Page, ServerNode}
+import cotoami.models.{Cotonoma, Node, Page}
 import cotoami.repository.Cotonomas
-import cotoami.backend.{ErrorJson, ServerNodeBackend}
+import cotoami.backend.ErrorJson
 
 object NavCotonomas {
   final val PaneName = "NavCotonomas"
@@ -24,8 +24,7 @@ object NavCotonomas {
 
   case class Model(
       loadingRecent: Boolean = false,
-      loadingSubs: Boolean = false,
-      togglingSync: Boolean = false
+      loadingSubs: Boolean = false
   ) {
     def fetchRecent()(implicit context: Context): (Model, Cmd.One[AppMsg]) =
       (
@@ -81,8 +80,6 @@ object NavCotonomas {
     case object FetchMoreSubs extends Msg
     case class SubsFetched(result: Either[ErrorJson, Page[Cotonoma]])
         extends Msg
-    case class SetSyncDisabled(id: Id[Node], disable: Boolean) extends Msg
-    case class SyncToggled(result: Either[ErrorJson, ServerNode]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -123,22 +120,6 @@ object NavCotonomas {
           _1 = model.copy(loadingSubs = false),
           _3 = cotoami.error("Couldn't fetch sub cotonomas.", e)
         )
-
-      case Msg.SetSyncDisabled(id, disable) =>
-        default.copy(
-          _1 = model.copy(togglingSync = true),
-          _3 = ServerNodeBackend.edit(id, Some(disable), None, None)
-            .map(Msg.SyncToggled(_).into)
-        )
-
-      case Msg.SyncToggled(result) =>
-        default.copy(
-          _1 = model.copy(togglingSync = false),
-          _3 = result match {
-            case Right(server) => Cmd.none
-            case Left(e) => cotoami.error("Failed to disable parent sync.", e)
-          }
-        )
     }
   }
 
@@ -146,8 +127,7 @@ object NavCotonomas {
   // View
   /////////////////////////////////////////////////////////////////////////////
 
-  def apply(
-      model: Model,
+  def apply(model: Model, nodeTools: SectionNodeTools.Model)(
       currentNode: Node
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val repo = context.repo
@@ -172,7 +152,7 @@ object NavCotonomas {
             currentNode.name
           )
         },
-        repo.nodes.focused.map(sectionNodeTools(_, model))
+        repo.nodes.focused.map(SectionNodeTools(_, nodeTools))
       ),
       section(className := "cotonomas body")(
         ScrollArea(
@@ -187,72 +167,6 @@ object NavCotonomas {
             aria - "busy" := model.loadingRecent.toString()
           )()
         )
-      )
-    )
-  }
-
-  private def sectionNodeTools(
-      node: Node,
-      model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val repo = context.repo
-    val status = repo.nodes.parentStatus(node.id)
-    val statusView = status.flatMap(ViewParentStatus(_))
-    section(className := "node-tools")(
-      statusView.map(view =>
-        details(
-          className := optionalClasses(
-            Seq(
-              ("node-status", true),
-              (view.className, true),
-              ("no-message", view.message.isEmpty)
-            )
-          )
-        )(
-          summary()(
-            view.icon,
-            span(className := "name")(view.title)
-          ),
-          view.message.map(p(className := "message")(_))
-        )
-      ),
-      div(className := "tools")(
-        status.map(status => {
-          val syncDisabled = status.disabled
-          Fragment(
-            span(
-              className := "sync-switch",
-              data - "tooltip" := (
-                if (syncDisabled) "Connect" else "Disconnect"
-              ),
-              data - "placement" := "bottom"
-            )(
-              input(
-                `type` := "checkbox",
-                role := "switch",
-                checked := !syncDisabled,
-                disabled := model.togglingSync,
-                onChange := (_ =>
-                  dispatch(Msg.SetSyncDisabled(node.id, !syncDisabled))
-                )
-              )
-            ),
-            span(className := "separator")()
-          )
-
-        }),
-        toolButton(
-          symbol = "settings",
-          tip = Some("Node Settings"),
-          classes = "settings",
-          onClick = _ =>
-            dispatch(
-              (Modal.Msg.OpenModal.apply _).tupled(
-                Modal.NodeProfile(node.id, repo.nodes)
-              )
-            )
-        ),
-        PartsNode.buttonOperateAs(node)
       )
     )
   }

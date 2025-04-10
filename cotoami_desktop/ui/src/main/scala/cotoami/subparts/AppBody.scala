@@ -57,7 +57,7 @@ object AppBody {
         )(
           paneToggle(NavCotonomas.PaneName),
           model.repo.nodes.current.map(
-            NavCotonomas(model.navCotonomas, _)
+            NavCotonomas(model.navCotonomas, model.nodeTools)
           )
         ),
         secondary = SplitPane.Secondary.Props()(

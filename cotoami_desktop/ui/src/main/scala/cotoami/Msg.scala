@@ -74,6 +74,7 @@ object Msg {
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
+  case class SectionNodeToolsMsg(submsg: SectionNodeTools.Msg) extends Msg
   case class AppMainMsg(submsg: AppMain.Msg) extends Msg
   case class PaneStockMsg(submsg: PaneStock.Msg) extends Msg
   case class PaneSearchMsg(submsg: PaneSearch.Msg) extends Msg
