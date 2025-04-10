@@ -171,7 +171,9 @@ object Modal {
       (NodeProfile(model), cmd)
     }
 
-    def client(nodeId: Id[Node], client: Client): (NodeProfile, Cmd[AppMsg]) = {
+    def client(nodeId: Id[Node], client: Client)(implicit
+        context: Context
+    ): (NodeProfile, Cmd[AppMsg]) = {
       val (model, cmd) = ModalNodeProfile.Model.client(nodeId, client)
       (NodeProfile(model), cmd)
     }

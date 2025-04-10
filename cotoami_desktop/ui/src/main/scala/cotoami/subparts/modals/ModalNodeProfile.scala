@@ -75,11 +75,10 @@ object ModalNodeProfile {
              Cmd.none)
       )
 
-    def client(nodeId: Id[Node], client: Client): (Model, Cmd[AppMsg]) =
-      (
-        Model(nodeId, client = Some(client)),
-        Root.fetchNodeDetails(nodeId)
-      )
+    def client(nodeId: Id[Node], client: Client)(implicit
+        context: Context
+    ): (Model, Cmd[AppMsg]) =
+      apply(nodeId).modify(_._1).using(_.copy(client = Some(client)))
   }
 
   /////////////////////////////////////////////////////////////////////////////
