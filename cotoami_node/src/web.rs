@@ -45,6 +45,7 @@ pub async fn launch_server(
     config: ServerConfig,
     node_state: NodeState,
 ) -> Result<(JoinHandle<Result<()>>, Sender<()>)> {
+    debug!("Launching a node server (v{})...", node_state.version());
     let config = Arc::new(config);
 
     // Create an API application

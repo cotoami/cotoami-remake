@@ -62,7 +62,8 @@ impl NodeState {
         }
 
         let url_prefix = input.url_prefix.clone().unwrap_or_else(|| unreachable!());
-        let session_request = input.into_session_request(self.local_node().await?)?;
+        let session_request =
+            input.into_session_request(self.local_node().await?, self.version().to_owned())?;
 
         let mut http_client = HttpClient::new(&url_prefix)?;
         let session = http_client

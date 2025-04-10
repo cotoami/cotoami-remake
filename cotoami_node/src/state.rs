@@ -36,6 +36,7 @@ pub struct NodeState {
 }
 
 struct State {
+    version: String,
     config: Arc<RwLock<NodeConfig>>,
     db: Arc<Database>,
     pubsub: Pubsub,
@@ -64,6 +65,7 @@ impl NodeState {
         let db = Database::new(db_dir)?;
 
         let inner = State {
+            version: env!("CARGO_PKG_VERSION").into(),
             config: Arc::new(RwLock::new(config)),
             db: Arc::new(db),
             pubsub: Pubsub::default(),
@@ -80,6 +82,8 @@ impl NodeState {
         state.init().await?;
         Ok(state)
     }
+
+    pub fn version(&self) -> &str { &self.inner.version }
 
     pub fn config_arc(&self) -> Arc<RwLock<NodeConfig>> { self.inner.config.clone() }
 

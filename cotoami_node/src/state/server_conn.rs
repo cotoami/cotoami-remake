@@ -92,6 +92,7 @@ impl ServerConnection {
                 } else {
                     Some(NodeRole::Parent)
                 },
+                client_version: self.node_state.version().to_owned(),
             })
             .await?;
         info!("Successfully logged in to {}", http_client.url_prefix());

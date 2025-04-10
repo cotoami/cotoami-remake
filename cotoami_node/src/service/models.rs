@@ -52,6 +52,7 @@ pub struct CreateClientNodeSession {
     pub new_password: Option<String>,
     pub client: Node,
     pub client_role: Option<NodeRole>,
+    pub client_version: String,
 }
 
 impl CreateClientNodeSession {
@@ -182,13 +183,18 @@ pub struct LogIntoServer {
 }
 
 impl LogIntoServer {
-    pub fn into_session_request(self, client: Node) -> Result<CreateClientNodeSession> {
+    pub fn into_session_request(
+        self,
+        client: Node,
+        client_version: String,
+    ) -> Result<CreateClientNodeSession> {
         self.validate()?;
         Ok(CreateClientNodeSession {
             password: self.password,
             new_password: self.new_password,
             client,
             client_role: self.client_role,
+            client_version,
         })
     }
 }
