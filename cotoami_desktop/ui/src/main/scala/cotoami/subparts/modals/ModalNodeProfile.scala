@@ -11,7 +11,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ChildNode, Client, Coto, Id, Node, Server}
+import cotoami.models.{ChildNode, Client, ClientNode, Coto, Id, Node, Server}
 import cotoami.repository.Root
 import cotoami.backend.{
   ClientNodeBackend,
@@ -96,6 +96,8 @@ object ModalNodeProfile {
         extends Msg
 
     // For client node
+    case class ClientNodeFetched(result: Either[ErrorJson, ClientNode])
+        extends Msg
     case class GenerateClientPassword(node: Node) extends Msg
     case class ClientPasswordGenerated(
         node: Node,
@@ -136,6 +138,16 @@ object ModalNodeProfile {
           ),
           cotoami.error("Couldn't generate an owner password.", e)
         )
+
+      case Msg.ClientNodeFetched(result) =>
+        result match {
+          case Right(clientNode) =>
+            (
+              model.copy(client = context.repo.nodes.clientInfo(clientNode)),
+              Cmd.none
+            )
+          case Left(_) => (model, Cmd.none)
+        }
 
       case Msg.GenerateClientPassword(node) =>
         (

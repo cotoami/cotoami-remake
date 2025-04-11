@@ -5,6 +5,8 @@ import com.softwaremill.quicklens._
 
 import cotoami.models.{
   ChildNode,
+  Client,
+  ClientNode,
   Coto,
   Cotonoma,
   DatabaseRole,
@@ -102,6 +104,11 @@ case class Nodes(
 
   def addServers(servers: Iterable[Server]): Nodes =
     servers.foldLeft(this)(_ addServer _)
+
+  def clientInfo(clientNode: ClientNode): Option[Client] =
+    get(clientNode.nodeId).map(
+      Client(_, clientNode, activeClients.get(clientNode.nodeId))
+    )
 
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
     if (!parentIds.contains(parentId)) return None

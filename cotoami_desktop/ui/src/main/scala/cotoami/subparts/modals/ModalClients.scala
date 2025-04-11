@@ -51,11 +51,7 @@ object ModalClients {
         .modify(_.clientNodes).using(_.appendPage(page))
 
     def clients(nodes: Nodes): Seq[Client] =
-      clientNodes.items.flatMap { client =>
-        nodes.get(client.nodeId).map { node =>
-          Client(node, client, nodes.activeClients.get(client.nodeId))
-        }
-      }
+      clientNodes.items.flatMap(nodes.clientInfo)
 
     def update(client: ClientNode): Model =
       this.modify(_.clientNodes.items.eachWhere(_.nodeId == client.nodeId))
