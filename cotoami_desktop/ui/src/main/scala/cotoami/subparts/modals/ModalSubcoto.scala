@@ -71,7 +71,7 @@ object ModalSubcoto {
     private def connect(
         targetCoto: Coto
     ): Cmd.One[Either[ErrorJson, (Ito, Coto)]] =
-      ItoBackend.connect(sourceCotoId, targetCoto.id, description, None, order)
+      ItoBackend.create(sourceCotoId, targetCoto.id, description, None, order)
         .map(_.map(_ -> targetCoto))
   }
 

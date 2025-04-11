@@ -318,13 +318,13 @@ object Commands {
   def OutgoingItos(cotoId: Id[Coto]) =
     jso(OutgoingItos = jso(coto = cotoId.uuid))
 
-  def Connect(
+  def CreateIto(
       sourceId: Id[Coto],
       targetId: Id[Coto],
       description: Option[String],
       details: Option[String],
       order: Option[Int]
-  ) = jso(Connect =
+  ) = jso(CreateIto =
     jso(
       source_coto_id = sourceId.uuid,
       target_coto_id = targetId.uuid,
@@ -356,7 +356,7 @@ object Commands {
       )
     )
 
-  def Disconnect(id: Id[Ito]) = jso(Disconnect = jso(id = id.uuid))
+  def DeleteIto(id: Id[Ito]) = jso(DeleteIto = jso(id = id.uuid))
 
   def ChangeItoOrder(id: Id[Ito], newOrder: Int) =
     jso(ChangeItoOrder = jso(id = id.uuid, new_order = newOrder))

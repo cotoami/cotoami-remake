@@ -25,7 +25,7 @@ object ItoJson {
   def fetch(id: Id[Ito]): Cmd.One[Either[ErrorJson, ItoJson]] =
     Commands.send(Commands.Ito(id))
 
-  def connect(
+  def create(
       sourceId: Id[Coto],
       targetId: Id[Coto],
       description: Option[String],
@@ -33,7 +33,7 @@ object ItoJson {
       order: Option[Int]
   ): Cmd.One[Either[ErrorJson, ItoJson]] =
     Commands.send(
-      Commands.Connect(
+      Commands.CreateIto(
         sourceId,
         targetId,
         description,
@@ -49,8 +49,8 @@ object ItoJson {
   ): Cmd.One[Either[ErrorJson, ItoJson]] =
     Commands.send(Commands.EditIto(id, description, details))
 
-  def disconnect(id: Id[Ito]): Cmd.One[Either[ErrorJson, String]] =
-    Commands.send(Commands.Disconnect(id))
+  def delete(id: Id[Ito]): Cmd.One[Either[ErrorJson, String]] =
+    Commands.send(Commands.DeleteIto(id))
 
   def fetchOutgoingItos(
       cotoId: Id[Coto]
@@ -91,14 +91,14 @@ object ItoBackend {
   ): Cmd.One[Either[ErrorJson, Ito]] =
     ItoJson.edit(id, description, details).map(_.map(toModel))
 
-  def connect(
+  def create(
       sourceId: Id[Coto],
       targetId: Id[Coto],
       description: Option[String],
       details: Option[String],
       order: Option[Int]
   ): Cmd.One[Either[ErrorJson, Ito]] =
-    ItoJson.connect(
+    ItoJson.create(
       sourceId,
       targetId,
       description,
@@ -106,8 +106,8 @@ object ItoBackend {
       order
     ).map(_.map(toModel))
 
-  def disconnect(id: Id[Ito]): Cmd.One[Either[ErrorJson, Id[Ito]]] =
-    ItoJson.disconnect(id).map(_.map(Id(_)))
+  def delete(id: Id[Ito]): Cmd.One[Either[ErrorJson, Id[Ito]]] =
+    ItoJson.delete(id).map(_.map(Id(_)))
 
   def fetchOutgoingItos(
       cotoId: Id[Coto]

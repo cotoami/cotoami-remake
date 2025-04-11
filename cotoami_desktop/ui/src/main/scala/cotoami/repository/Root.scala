@@ -215,7 +215,7 @@ case class Root(
     currentCotonoma.map(cotonoma =>
       (
         this.modify(_.pinning).using(_ + cotoId),
-        ItoBackend.connect(
+        ItoBackend.create(
           cotonoma.cotoId,
           cotoId,
           None,

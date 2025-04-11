@@ -52,7 +52,7 @@ object ModalEditIto {
     def disconnect: (Model, Cmd.One[AppMsg]) =
       (
         copy(disconnecting = true),
-        ItoBackend.disconnect(original.id).map(Msg.Disconnected(_).into)
+        ItoBackend.delete(original.id).map(Msg.Disconnected(_).into)
       )
 
     def readyToSave: Boolean = validate.validated && !disconnecting && !saving

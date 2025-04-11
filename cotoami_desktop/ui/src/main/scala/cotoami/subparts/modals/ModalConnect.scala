@@ -50,7 +50,7 @@ object ModalConnect {
               if (alreadyConnected(selectedId, repo.itos))
                 pure(Right(itos))
               else
-                connectOne(selectedId).map(_.map(itos :+ _))
+                createIto(selectedId).map(_.map(itos :+ _))
             }
             case Left(e) => pure(Left(e))
           })
@@ -65,10 +65,10 @@ object ModalConnect {
       else
         itos.connected(selectedId, cotoId)
 
-    private def connectOne(
+    private def createIto(
         selectedId: Id[Coto]
     ): Cmd.One[Either[ErrorJson, Ito]] =
-      ItoBackend.connect(
+      ItoBackend.create(
         if (toSelection) cotoId else selectedId,
         if (toSelection) selectedId else cotoId,
         description,
