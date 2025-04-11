@@ -27,6 +27,7 @@ object en extends Text {
   val Node_notYetConnected = "Not yet connected"
 
   val Ito_description_placeholder = "Ito description (optional)"
+  val Ito_editPin = "Edit Pin"
 
   val ChildPrivileges = "Privileges"
   val ChildPrivileges_asOwner = "As an owner"

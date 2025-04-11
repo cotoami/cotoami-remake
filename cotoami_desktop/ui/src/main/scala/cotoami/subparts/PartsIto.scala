@@ -36,7 +36,7 @@ object PartsIto {
         toolButton(
           classes = "edit-pin",
           symbol = "push_pin",
-          tip = Option.when(canEditPin)("Edit pin"),
+          tip = Option.when(canEditPin)(context.i18n.text.Ito_editPin),
           tipPlacement = "right",
           disabled = !canEditPin,
           onClick = e => {
