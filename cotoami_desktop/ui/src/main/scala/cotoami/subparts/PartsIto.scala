@@ -82,7 +82,7 @@ object PartsIto {
         toolButton(
           classes = "edit-ito",
           symbol = "subdirectory_arrow_right",
-          tip = Option.when(canEditIto)("Edit ito"),
+          tip = Option.when(canEditIto)(context.i18n.text.Ito_editIto),
           tipPlacement = "right",
           disabled = !canEditIto,
           onClick = e => {

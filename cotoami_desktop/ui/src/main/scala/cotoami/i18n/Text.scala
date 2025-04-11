@@ -25,6 +25,7 @@ trait Text {
 
   val Ito_description_placeholder: String
   val Ito_editPin: String
+  val Ito_editIto: String
 
   val ChildPrivileges: String
   val ChildPrivileges_asOwner: String

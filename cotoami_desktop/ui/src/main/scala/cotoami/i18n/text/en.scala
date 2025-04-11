@@ -28,6 +28,7 @@ object en extends Text {
 
   val Ito_description_placeholder = "Ito description (optional)"
   val Ito_editPin = "Edit Pin"
+  val Ito_editIto = "Edit Ito"
 
   val ChildPrivileges = "Privileges"
   val ChildPrivileges_asOwner = "As an owner"
