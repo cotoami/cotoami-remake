@@ -14,6 +14,9 @@ trait ChildNodeJson extends js.Object {
 }
 
 object ChildNodeJson {
+  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ChildNodeJson]] =
+    Commands.send(Commands.ChildNode(id))
+
   def edit(
       id: Id[Node],
       asOwner: Boolean,
@@ -30,6 +33,9 @@ object ChildNodeBackend {
       asOwner = json.as_owner,
       canEditItos = json.can_edit_itos
     )
+
+  def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ChildNode]] =
+    ChildNodeJson.fetch(id).map(_.map(toModel))
 
   def edit(
       id: Id[Node],
