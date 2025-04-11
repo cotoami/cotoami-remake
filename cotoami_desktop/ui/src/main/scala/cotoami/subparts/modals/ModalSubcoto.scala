@@ -228,7 +228,7 @@ object ModalSubcoto {
 
   private def sectionIto(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "ito")(
       div(className := "ito-icon")(
         materialSymbol("arrow_downward")

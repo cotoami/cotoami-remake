@@ -108,12 +108,12 @@ object PartsIto {
       description: String,
       validation: Validation.Result,
       onChange: String => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     div(className := "description")(
       input(
         className := "description",
         `type` := "text",
-        placeholder := "Description (optional)",
+        placeholder := context.i18n.text.Ito_description_placeholder,
         value := description,
         Validation.ariaInvalid(validation),
         slinky.web.html.onChange := (e => onChange(e.target.value))

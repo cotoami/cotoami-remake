@@ -23,6 +23,8 @@ trait Text {
 
   val Node_notYetConnected: String
 
+  val Ito_description_placeholder: String
+
   val ChildPrivileges: String
   val ChildPrivileges_asOwner: String
   val ChildPrivileges_canEditItos: String
