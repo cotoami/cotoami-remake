@@ -27,7 +27,6 @@ parking_lot.workspace = true
 petgraph = "0.6.4"
 rand.workspace = true
 regex.workspace = true
-rmp-serde.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
@@ -46,6 +45,16 @@ diesel_migrations = {version = "2.2.0", features = ["sqlite"]}
 # https://github.com/rusqlite/rusqlite/releases/tag/sys0.29.0
 # https://github.com/rusqlite/rusqlite/blob/sys0.29.0/libsqlite3-sys/sqlite3/sqlite3.h#L149
 libsqlite3-sys = {version = "0.29.0", features = ["bundled"]}
+
+# Fixed version of MessagePack + Serde
+#
+# cotoami_db uses rmp-serde to store the following data in SQLite:
+#   - ChangelogEntry::change 
+#   - ServerNode::encrypted_password
+#
+# In order to make stored data compatible with the future versions, 
+# we need to fix rmp-serde's version in this crate.
+rmp-serde = "1.3.0"
 
 [dev-dependencies]
 clap.workspace = true
