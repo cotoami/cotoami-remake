@@ -47,6 +47,8 @@ object ModalNodeProfile {
 
       // For child node
       child: Option[ChildNode] = None,
+      asOwner: Boolean = false,
+      canEditItos: Boolean = false,
 
       // For local server
       clientCount: Double = 0,
@@ -58,6 +60,13 @@ object ModalNodeProfile {
 
     def isOperatedNode()(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
+
+    def setChild(child: ChildNode): Model =
+      copy(
+        child = Some(child),
+        asOwner = child.asOwner,
+        canEditItos = child.canEditItos
+      )
 
     def anonymousReadEnabled: Boolean =
       localServer.map(_.anonymousReadEnabled).getOrElse(false)
@@ -181,7 +190,7 @@ object ModalNodeProfile {
 
       case Msg.ChildNodeFetched(result) =>
         result match {
-          case Right(child) => (model.copy(child = Some(child)), Cmd.none)
+          case Right(child) => (model.setChild(child), Cmd.none)
           case Left(_)      => (model, Cmd.none)
         }
 
