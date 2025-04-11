@@ -61,6 +61,8 @@ object ModalNodeProfile {
     def isOperatedNode()(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
 
+    def isChild: Boolean = child.isDefined
+
     def setChild(child: ChildNode): Model =
       copy(
         child = Some(child),
@@ -273,7 +275,8 @@ object ModalNodeProfile {
             rootCoto.map(fieldDescription(_, model)),
             model.localServer.flatMap(_.activeConfig)
               .map(sectionLocalServer(_, model)),
-            model.client.map(fieldsClient)
+            model.client.map(fieldsClient),
+            fieldChildPrivileges(model)
           )
         )
       )
@@ -506,6 +509,19 @@ object ModalNodeProfile {
         )
       )
     )
+
+  private def fieldChildPrivileges(model: Model)(implicit
+      context: Context
+  ): Option[ReactElement] =
+    Option.when(model.isChild) {
+      PartsNode.labeledFieldChildPrivileges(
+        asOwner = model.asOwner,
+        canEditItos = model.canEditItos,
+        disabled = true,
+        onAsOwnerChange = (_ => ()),
+        onCanEditItosChange = (_ => ())
+      )
+    }
 
   private def sectionLocalServer(
       config: ServerConfig,
