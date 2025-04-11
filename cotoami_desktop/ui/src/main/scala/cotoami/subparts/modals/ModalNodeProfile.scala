@@ -431,19 +431,17 @@ object ModalNodeProfile {
       name = "Name",
       classes = "node-name"
     )(
-      div(className := "input-with-tools")(
-        input(
-          `type` := "text",
-          name := "nodeName",
-          readOnly := true,
-          value := node.name
-        ),
-        Option.when(model.isOperatedNode()) {
-          div(className := "tools")(
-            rootCoto.map(buttonEditRootCoto)
-          )
-        }
-      )
+      input(
+        `type` := "text",
+        name := "nodeName",
+        readOnly := true,
+        value := node.name
+      ),
+      Option.when(model.isOperatedNode()) {
+        div(className := "edit")(
+          rootCoto.map(buttonEditRootCoto)
+        )
+      }
     )
 
   private def fieldUrl(server: Server): ReactElement =
@@ -451,15 +449,13 @@ object ModalNodeProfile {
       name = "URL",
       classes = "server"
     )(
-      div(className := "input-with-tools")(
-        input(
-          `type` := "text",
-          readOnly := true,
-          value := server.server.urlPrefix
-        ),
-        div(className := "tools")(
-          // buttonEdit(_ => ())
-        )
+      input(
+        `type` := "text",
+        readOnly := true,
+        value := server.server.urlPrefix
+      ),
+      div(className := "edit")(
+        // buttonEdit(_ => ())
       )
     )
 
@@ -471,16 +467,14 @@ object ModalNodeProfile {
       name = "Description",
       classes = "node-description"
     )(
-      div(className := "input-with-tools")(
-        section(className := "node-description")(
-          PartsCoto.sectionCotonomaContent(rootCoto)
-        ),
-        Option.when(model.isOperatedNode()) {
-          div(className := "tools")(
-            buttonEditRootCoto(rootCoto)
-          )
-        }
-      )
+      section(className := "node-description")(
+        PartsCoto.sectionCotonomaContent(rootCoto)
+      ),
+      Option.when(model.isOperatedNode()) {
+        div(className := "edit")(
+          buttonEditRootCoto(rootCoto)
+        )
+      }
     )
 
   private def fieldsClient(client: Client)(implicit
@@ -550,16 +544,14 @@ object ModalNodeProfile {
       name = context.i18n.text.ModalNodeProfile_clientNodes,
       classes = "client-nodes"
     )(
-      div(className := "input-with-tools")(
-        sectionClientNodesCount(model.clientCount, context.repo.nodes),
-        Option.when(model.isOperatedNode()) {
-          div(className := "tools")(
-            buttonEdit(_ =>
-              dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.Clients()))
-            )
+      sectionClientNodesCount(model.clientCount, context.repo.nodes),
+      Option.when(model.isOperatedNode()) {
+        div(className := "edit")(
+          buttonEdit(_ =>
+            dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.Clients()))
           )
-        }
-      )
+        )
+      }
     )
 
   private def fieldAnonymousRead(

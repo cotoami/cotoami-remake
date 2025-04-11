@@ -127,18 +127,14 @@ dialog.node-profile {
       background-color: var(--card-background-color);
     }
 
-    div.input-with-tools {
-      position: relative;
+    section.field-content div.edit {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 10px;
 
-      div.tools {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        right: 10px;
-
-        button {
-          height: 100%;
-        }
+      button {
+        height: 100%;
       }
     }
 
