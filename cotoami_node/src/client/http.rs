@@ -140,6 +140,7 @@ impl HttpClient {
             Command::EditClient { id, values } => {
                 self.put(&format!("{API_PATH_CLIENTS}/{id}")).form(&values)
             }
+            Command::ChildNode { id } => self.get(&format!("{API_PATH_CHILDREN}/{id}")),
             Command::EditChild { id, values } => {
                 self.put(&format!("{API_PATH_CHILDREN}/{id}")).form(&values)
             }

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Path, Query, State},
-    routing::{get, put},
+    routing::get,
     Extension, Form, Router,
 };
 use axum_extra::TypedHeader;
@@ -23,7 +23,7 @@ use crate::{
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
         .route("/", get(recent_child_nodes))
-        .route("/{node_id}", put(edit_child))
+        .route("/{node_id}", get(child).put(edit_child))
 }
 
 const DEFAULT_PAGE_SIZE: i64 = 30;
@@ -54,6 +54,22 @@ async fn recent_child_nodes(
         Ok(Content(nodes, accept))
     })
     .await?
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// GET /api/data/nodes/children/{node_id}
+/////////////////////////////////////////////////////////////////////////////
+
+async fn child(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Path(node_id): Path<Id<Node>>,
+) -> Result<Content<ChildNode>, ServiceError> {
+    state
+        .child_node(node_id, Arc::new(operator))
+        .await
+        .map(|child| Content(child, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

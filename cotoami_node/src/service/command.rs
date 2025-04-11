@@ -55,6 +55,9 @@ pub enum Command {
     /// Request to edit a client node and return the updated [ClientNode].
     EditClient { id: Id<Node>, values: EditClient },
 
+    /// Request a [ChildNode] of the given node ID.
+    ChildNode { id: Id<Node> },
+
     /// Request to edit a child node and return the updated [ChildNode].
     EditChild { id: Id<Node>, values: EditChild },
 

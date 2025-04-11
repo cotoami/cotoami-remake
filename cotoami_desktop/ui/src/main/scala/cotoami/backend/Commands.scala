@@ -118,6 +118,8 @@ object Commands {
       )
     )
 
+  def ChildNode(id: Id[Node]) = jso(ChildNode = jso(id = id.uuid))
+
   def EditChild(
       id: Id[Node],
       asOwner: Boolean,

@@ -63,6 +63,7 @@ impl NodeState {
             Command::EditClient { id, values } => {
                 format.serialize(self.edit_client(id, values, opr?).await)
             }
+            Command::ChildNode { id } => format.serialize(self.child_node(id, opr?).await),
             Command::EditChild { id, values } => {
                 format.serialize(self.edit_child(id, values, opr?).await)
             }
