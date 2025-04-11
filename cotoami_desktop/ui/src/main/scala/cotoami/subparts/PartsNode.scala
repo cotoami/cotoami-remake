@@ -65,10 +65,10 @@ object PartsNode {
       disabled: Boolean,
       onAsOwnerChange: SyntheticEvent[_, _] => Unit,
       onCanEditItosChange: SyntheticEvent[_, _] => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     labeledField(
       classes = "privileges",
-      label = "Privileges"
+      label = context.i18n.text.ChildPrivileges
     )(
       label(htmlFor := "as-owner")(
         input(
@@ -78,7 +78,7 @@ object PartsNode {
           slinky.web.html.disabled := disabled,
           onChange := onAsOwnerChange
         ),
-        "As an owner"
+        context.i18n.text.ChildPrivileges_asOwner
       ),
       label(htmlFor := "can-edit-itos")(
         input(
@@ -88,7 +88,7 @@ object PartsNode {
           slinky.web.html.disabled := disabled,
           onChange := onCanEditItosChange
         ),
-        "Permit to create itos (connect/disconnect)"
+        context.i18n.text.ChildPrivileges_canEditItos
       )
     )
 }

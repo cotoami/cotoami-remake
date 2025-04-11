@@ -26,6 +26,10 @@ object en extends Text {
 
   val Node_notYetConnected = "Not yet connected"
 
+  val ChildPrivileges = "Privileges"
+  val ChildPrivileges_asOwner = "As an owner"
+  val ChildPrivileges_canEditItos = "Permit to create/edit itos"
+
   val ConfirmDeleteCoto = "Are you sure you want to delete the coto?"
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =
     span(className := "delete-others-coto")(

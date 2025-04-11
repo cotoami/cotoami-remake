@@ -23,6 +23,10 @@ trait Text {
 
   val Node_notYetConnected: String
 
+  val ChildPrivileges: String
+  val ChildPrivileges_asOwner: String
+  val ChildPrivileges_canEditItos: String
+
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
   val ConfirmDeleteCotonoma: String
