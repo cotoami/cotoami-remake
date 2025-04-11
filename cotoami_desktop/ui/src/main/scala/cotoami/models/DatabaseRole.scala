@@ -9,18 +9,6 @@ object DatabaseRole {
   case class Child(info: ChildNode) extends DatabaseRole
 }
 
-case class ParentNode(
-    nodeId: Id[Node],
-    createdAtUtcIso: String,
-    changesReceived: Double,
-    lastChangeReceivedAtUtcIso: Option[String],
-    forked: Boolean
-) {
-  lazy val createdAt: Instant = parseUtcIso(createdAtUtcIso)
-  lazy val lastChangeReceivedAt: Option[Instant] =
-    lastChangeReceivedAtUtcIso.map(parseUtcIso)
-}
-
 sealed trait ParentStatus {
   def disabled: Boolean =
     this match {
