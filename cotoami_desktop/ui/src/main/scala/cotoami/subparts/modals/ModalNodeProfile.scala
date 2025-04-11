@@ -266,7 +266,7 @@ object ModalNodeProfile {
     Fragment(
       divSidebar(node, model),
       div(className := "main")(
-        divTools(node, model),
+        sectionToolButtons(node, model),
         div(className := "fields")(
           ScrollArea(className = Some("scroll-fields"))(
             fieldId(node),
@@ -349,11 +349,11 @@ object ModalNodeProfile {
       context.repo.nodes.operated.map(PartsNode.imgNode(_))
     )
 
-  private def divTools(node: Node, model: Model)(implicit
+  private def sectionToolButtons(node: Node, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    div(className := "tools")(
+    section(className := "tool-buttons")(
       // Operate as
       PartsNode.buttonOperateAs(node, "left"),
 
