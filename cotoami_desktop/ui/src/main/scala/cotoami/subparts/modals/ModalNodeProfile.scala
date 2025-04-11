@@ -72,13 +72,11 @@ object ModalNodeProfile {
                LocalServer.fetch.map(Msg.LocalServerFetched(_).into)
              )
            else
-             Cmd.none)
+             Cmd.Batch(
+               ClientNodeBackend.fetch(nodeId)
+                 .map(Msg.ClientNodeFetched(_).into)
+             ))
       )
-
-    def client(nodeId: Id[Node], client: Client)(implicit
-        context: Context
-    ): (Model, Cmd[AppMsg]) =
-      apply(nodeId).modify(_._1).using(_.copy(client = Some(client)))
   }
 
   /////////////////////////////////////////////////////////////////////////////

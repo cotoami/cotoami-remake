@@ -10,7 +10,7 @@ import marubinotto.fui.{Browser, Cmd}
 import marubinotto.components.materialSymbol
 
 import cotoami.{Context, Into, Model => AppModel, Msg => AppMsg}
-import cotoami.models.{Client, Coto, Id, Ito, Node}
+import cotoami.models.{Coto, Id, Ito, Node}
 import cotoami.repository.Root
 import cotoami.subparts.modals._
 
@@ -168,13 +168,6 @@ object Modal {
         nodeId: Id[Node]
     )(implicit context: Context): (NodeProfile, Cmd[AppMsg]) = {
       val (model, cmd) = ModalNodeProfile.Model(nodeId)
-      (NodeProfile(model), cmd)
-    }
-
-    def client(nodeId: Id[Node], client: Client)(implicit
-        context: Context
-    ): (NodeProfile, Cmd[AppMsg]) = {
-      val (model, cmd) = ModalNodeProfile.Model.client(nodeId, client)
       (NodeProfile(model), cmd)
     }
   }
