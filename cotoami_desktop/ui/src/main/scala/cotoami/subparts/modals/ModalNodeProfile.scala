@@ -347,20 +347,22 @@ object ModalNodeProfile {
       },
 
       // Generate Client Password
-      model.client.map { client =>
-        buttonGeneratePassword(
-          context.i18n.text.ModalNodeProfile_generateClientPassword,
-          model,
-          e =>
-            dispatch(
-              Modal.Msg.OpenModal(
-                Modal.Confirm(
-                  context.i18n.text.ModalNodeProfile_confirmGenerateClientPassword,
-                  Msg.GenerateClientPassword(client.node)
+      model.client.flatMap { client =>
+        Option.when(!model.isLocalNode()) {
+          buttonGeneratePassword(
+            context.i18n.text.ModalNodeProfile_generateClientPassword,
+            model,
+            e =>
+              dispatch(
+                Modal.Msg.OpenModal(
+                  Modal.Confirm(
+                    context.i18n.text.ModalNodeProfile_confirmGenerateClientPassword,
+                    Msg.GenerateClientPassword(client.node)
+                  )
                 )
               )
-            )
-        )
+          )
+        }
       }
     )
 
