@@ -185,7 +185,7 @@ fn crud_operations() -> Result<()> {
     // When: delete ito1
     /////////////////////////////////////////////////////////////////////////////
 
-    let changelog = ds.disconnect(&ito1.uuid, &opr)?;
+    let changelog = ds.delete_ito(&ito1.uuid, &opr)?;
 
     // check if it is deleted from the db
     assert_eq!(ds.ito(&ito1.uuid)?, None);

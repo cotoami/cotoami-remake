@@ -86,7 +86,7 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn disconnect(&self, id: &Id<Ito>, operator: &Operator) -> Result<ChangelogEntry> {
+    pub fn delete_ito(&self, id: &Id<Ito>, operator: &Operator) -> Result<ChangelogEntry> {
         operator.can_edit_itos()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
