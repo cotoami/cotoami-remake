@@ -66,9 +66,9 @@ object PartsNode {
       onAsOwnerChange: SyntheticEvent[_, _] => Unit,
       onCanEditItosChange: SyntheticEvent[_, _] => Unit
   )(implicit context: Context): ReactElement =
-    labeledField(
-      classes = "privileges",
-      label = context.i18n.text.ChildPrivileges
+    field(
+      name = context.i18n.text.ChildPrivileges,
+      classes = "privileges"
     )(
       label(htmlFor := "as-owner")(
         input(

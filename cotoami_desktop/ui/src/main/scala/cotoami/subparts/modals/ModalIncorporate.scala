@@ -11,7 +11,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Node, Server, ServerNode}
 import cotoami.backend.{ClientNodeSession, ErrorJson, ServerBackend}
 import cotoami.repository.Nodes
-import cotoami.subparts.{labeledInputField, Modal, PartsCoto, PartsNode}
+import cotoami.subparts.{fieldInput, Modal, PartsCoto, PartsNode}
 
 object ModalIncorporate {
 
@@ -190,9 +190,9 @@ object ModalIncorporate {
       model.connectingError.map(e => section(className := "error")(e)),
       form()(
         // Node URL
-        labeledInputField(
+        fieldInput(
+          name = "Node URL",
           classes = "field-node-url",
-          label = "Node URL",
           inputPlaceholder = Some("https://example.com"),
           inputValue = model.nodeUrlInput,
           inputErrors = Some(model.validateNodeUrl),
@@ -200,8 +200,8 @@ object ModalIncorporate {
         ),
 
         // Password
-        labeledInputField(
-          label = "Password",
+        fieldInput(
+          name = "Password",
           inputType = "password",
           inputValue = model.passwordInput,
           onInput = (input => dispatch(Msg.PasswordInput(input)))

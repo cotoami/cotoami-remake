@@ -14,7 +14,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Id, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}
-import cotoami.subparts.{labeledInputField, Modal}
+import cotoami.subparts.{fieldInput, Modal}
 import cotoami.subparts.PartsNode
 
 object ModalNewClient {
@@ -169,9 +169,9 @@ object ModalNewClient {
       },
       form()(
         // Node ID
-        labeledInputField(
+        fieldInput(
+          name = "Node ID",
           classes = "node-id",
-          label = "Node ID",
           inputPlaceholder = Some("00000000-0000-0000-0000-000000000000"),
           inputValue = model.nodeId,
           inputErrors = Option.when(!model.registered)(model.nodeIdValidation),
@@ -190,8 +190,8 @@ object ModalNewClient {
 
         // Generated password
         Option.when(model.registered) {
-          labeledInputField(
-            label = "Generated password",
+          fieldInput(
+            name = "Generated password",
             inputValue = model.generatedPassword.getOrElse(""),
             readOnly = true
           )

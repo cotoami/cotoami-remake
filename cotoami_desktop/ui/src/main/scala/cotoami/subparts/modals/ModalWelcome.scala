@@ -19,7 +19,7 @@ import cotoami.backend.{
   NodeBackend,
   NodeJson
 }
-import cotoami.subparts.{labeledField, labeledInputField, Modal}
+import cotoami.subparts.{field, fieldInput, Modal}
 
 object ModalWelcome {
 
@@ -345,22 +345,20 @@ object ModalWelcome {
       h2()("New database"),
       form()(
         // Name
-        labeledInputField(
-          label = "Name",
+        fieldInput(
+          name = "Name",
           inputValue = model.databaseName,
           inputErrors = Some(model.validateDatabaseName),
           onInput = input => dispatch(Msg.DatabaseNameInput(input))
         ),
 
         // Base folder
-        labeledField(
-          label = "Base folder",
-          labelFor = Some("select-base-folder")
+        field(
+          name = "Base folder"
         )(
           div(className := "file-select")(
             div(className := "file-path")(model.baseFolder),
             button(
-              id := "select-base-folder",
               `type` := "button",
               className := "secondary",
               onClick := (_ => dispatch(Msg.SelectBaseFolder))
@@ -369,8 +367,8 @@ object ModalWelcome {
         ),
 
         // Folder name
-        labeledInputField(
-          label = "Folder name to create",
+        fieldInput(
+          name = "Folder name to create",
           inputValue = model.folderName,
           inputErrors = Some(model.folderNameValidation),
           onInput = input => dispatch(Msg.FolderNameInput(input))
@@ -397,14 +395,12 @@ object ModalWelcome {
       h2()("Open"),
       form()(
         // Database folder
-        labeledField(
-          label = "Database folder",
-          labelFor = Some("select-database-folder")
+        field(
+          name = "Database folder"
         )(
           div(className := "file-select")(
             div(className := "file-path")(model.databaseFolder),
             button(
-              id := "select-database-folder",
               `type` := "button",
               className := "secondary",
               onClick := (_ => dispatch(Msg.SelectDatabaseFolder))

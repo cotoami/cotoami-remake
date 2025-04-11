@@ -23,8 +23,8 @@ import cotoami.backend.{
   ServerConfig
 }
 import cotoami.subparts.{
-  labeledField,
-  labeledInputField,
+  field,
+  fieldInput,
   sectionClientNodesCount,
   Modal,
   PartsCoto,
@@ -415,9 +415,9 @@ object ModalNodeProfile {
     )
 
   private def fieldId(node: Node): ReactElement =
-    labeledInputField(
+    fieldInput(
+      name = "ID",
       classes = "node-id",
-      label = "ID",
       inputValue = node.id.uuid,
       readOnly = true
     )
@@ -427,15 +427,13 @@ object ModalNodeProfile {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    labeledField(
-      classes = "node-name",
-      label = "Name",
-      labelFor = Some("node-profile-name")
+    field(
+      name = "Name",
+      classes = "node-name"
     )(
       div(className := "input-with-tools")(
         input(
           `type` := "text",
-          id := "node-profile-name",
           name := "nodeName",
           readOnly := true,
           value := node.name
@@ -449,15 +447,13 @@ object ModalNodeProfile {
     )
 
   private def fieldUrl(server: Server): ReactElement =
-    labeledField(
-      classes = "server",
-      label = "URL",
-      labelFor = Some("node-profile-url")
+    field(
+      name = "URL",
+      classes = "server"
     )(
       div(className := "input-with-tools")(
         input(
           `type` := "text",
-          id := "node-profile-url",
           readOnly := true,
           value := server.server.urlPrefix
         ),
@@ -471,10 +467,9 @@ object ModalNodeProfile {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    labeledField(
-      classes = "node-description",
-      label = "Description",
-      labelFor = Some("node-profile-description")
+    field(
+      name = "Description",
+      classes = "node-description"
     )(
       div(className := "input-with-tools")(
         section(className := "node-description")(
@@ -492,18 +487,18 @@ object ModalNodeProfile {
       context: Context
   ): ReactElement =
     Fragment(
-      labeledInputField(
+      fieldInput(
+        name = context.i18n.text.ModalNodeProfile_clientLastLogin,
         classes = "client-last-login",
-        label = context.i18n.text.ModalNodeProfile_clientLastLogin,
         inputValue = client.client.lastSessionCreatedAt
           .map(context.time.formatDateTime)
           .getOrElse("-"): String,
         readOnly = true
       ),
       client.active.map(active =>
-        labeledInputField(
+        fieldInput(
+          name = context.i18n.text.ModalNodeProfile_clientRemoteAddress,
           classes = "client-remote-address",
-          label = context.i18n.text.ModalNodeProfile_clientRemoteAddress,
           inputValue = active.remoteAddr,
           readOnly = true
         )
@@ -540,9 +535,9 @@ object ModalNodeProfile {
   private def fieldLocalServerUrl(config: ServerConfig)(implicit
       context: Context
   ): ReactElement =
-    labeledInputField(
+    fieldInput(
+      name = context.i18n.text.ModalNodeProfile_localServerUrl,
       classes = "local-server-url",
-      label = context.i18n.text.ModalNodeProfile_localServerUrl,
       inputValue = config.url,
       readOnly = true
     )
@@ -551,10 +546,9 @@ object ModalNodeProfile {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    labeledField(
-      classes = "client-nodes",
-      label = context.i18n.text.ModalNodeProfile_clientNodes,
-      labelFor = Some("node-profile-client-nodes")
+    field(
+      name = context.i18n.text.ModalNodeProfile_clientNodes,
+      classes = "client-nodes"
     )(
       div(className := "input-with-tools")(
         sectionClientNodesCount(model.clientCount, context.repo.nodes),
@@ -571,10 +565,9 @@ object ModalNodeProfile {
   private def fieldAnonymousRead(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    labeledField(
-      classes = "anonymous-read",
-      label = context.i18n.text.ModalNodeProfile_anonymousRead,
-      labelFor = Some("node-profile-anonymous-read")
+    field(
+      name = context.i18n.text.ModalNodeProfile_anonymousRead,
+      classes = "anonymous-read"
     )(
       input(
         `type` := "checkbox",

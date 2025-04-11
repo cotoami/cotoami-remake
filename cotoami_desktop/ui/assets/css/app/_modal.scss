@@ -53,12 +53,17 @@ dialog {
       }
     }
 
-    .labeled-field {
+    div.field {
       margin-top: var(--spacing);
 
-      >label {
+      >section.field-name {
         font-weight: 600;
         opacity: 0.8;
+      }
+
+      >section.field-content {
+        position: relative;
+        margin-top: 4px;
       }
     }
 

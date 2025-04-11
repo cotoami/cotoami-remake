@@ -12,21 +12,20 @@ import cotoami.repository.Nodes
 
 package object subparts {
 
-  def labeledField(
-      classes: String = "",
-      label: String,
-      labelFor: Option[String] = None
+  def field(
+      name: String,
+      classes: String = ""
   )(fieldContent: ReactElement*): ReactElement =
-    div(className := s"labeled-field ${classes}")(
-      html.label(htmlFor := labelFor)(label),
-      div(className := "field")(
+    div(className := s"field ${classes}")(
+      section(className := "field-name")(name),
+      section(className := "field-content")(
         fieldContent: _*
       )
     )
 
-  def labeledInputField(
+  def fieldInput(
+      name: String,
       classes: String = "",
-      label: String,
       inputType: String = "text",
       inputPlaceholder: Option[String] = None,
       inputValue: String,
@@ -34,9 +33,9 @@ package object subparts {
       inputErrors: Option[Validation.Result] = None,
       onInput: (String => Unit) = (_ => ())
   ): ReactElement =
-    labeledField(
-      classes = classes,
-      label = label
+    field(
+      name = name,
+      classes = classes
     )(
       input(
         `type` := inputType,
