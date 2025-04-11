@@ -16,8 +16,19 @@ object PartsNode {
       src := node.iconUrl
     )
 
-  def spanNode(node: Node): ReactElement =
-    span(className := "node")(
+  def spanNode(
+      node: Node
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    span(
+      className := "node",
+      onClick := (_ =>
+        dispatch(
+          (Modal.Msg.OpenModal.apply _).tupled(
+            Modal.NodeProfile(node.id)
+          )
+        )
+      )
+    )(
       imgNode(node),
       span(className := "name")(node.name)
     )

@@ -68,7 +68,7 @@ object ModalParentSync {
 
   private def sectionSyncing(
       parentSync: ParentSync
-  )(implicit context: Context): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "syncing")(
       h2()("Syncing"),
       ul()(
@@ -122,7 +122,9 @@ object ModalParentSync {
       )
     )
 
-  private def spanNode(id: Id[Node])(implicit context: Context): ReactElement =
+  private def spanNode(
+      id: Id[Node]
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     context.repo.nodes.get(id).map(PartsNode.spanNode)
       .getOrElse(
         span(className := "node not-found")(

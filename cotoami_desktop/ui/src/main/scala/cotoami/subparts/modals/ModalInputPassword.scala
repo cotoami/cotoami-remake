@@ -6,7 +6,7 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.fui.{Browser, Cmd}
-import cotoami.{Into, Msg => AppMsg}
+import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
 import cotoami.subparts.{Modal, PartsNode}
 
@@ -63,7 +63,7 @@ object ModalInputPassword {
 
   def apply(
       model: Model
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val modalType = classOf[Modal.InputPassword]
     Modal.view(
       dialogClasses = "input-password",

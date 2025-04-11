@@ -115,7 +115,8 @@ object ModalOperateAs {
   }
 
   private def sectionNode(node: Node, elementClasses: String)(implicit
-      context: Context
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     section(className := elementClasses)(
       PartsNode.spanNode(node),

@@ -294,7 +294,9 @@ object ModalRepost {
     }
   }
 
-  private def articleCoto(coto: Coto)(implicit context: Context): ReactElement =
+  private def articleCoto(
+      coto: Coto
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     article(className := "coto embedded")(
       header()(
         PartsCoto.addressAuthor(coto, context.repo.nodes)

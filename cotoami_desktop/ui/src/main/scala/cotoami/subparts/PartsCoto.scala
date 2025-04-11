@@ -43,7 +43,7 @@ object PartsCoto {
   def addressAuthor(
       coto: Coto,
       nodes: Nodes
-  ): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     address(className := "author")(
       nodes.get(coto.postedById).map(PartsNode.spanNode)
     )

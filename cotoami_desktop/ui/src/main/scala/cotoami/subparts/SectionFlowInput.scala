@@ -474,7 +474,9 @@ object SectionFlowInput {
       )
     )
 
-  private def addressPoster(operatingNode: Node): ReactElement =
+  private def addressPoster(
+      operatingNode: Node
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     address(className := "poster")(
       PartsNode.spanNode(operatingNode)
     )

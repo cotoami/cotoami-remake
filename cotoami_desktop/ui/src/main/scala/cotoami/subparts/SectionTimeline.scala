@@ -432,7 +432,10 @@ object SectionTimeline {
       )(cotonoma.name)
     )
 
-  private def reposter(coto: Coto, nodes: Nodes): ReactElement =
+  private def reposter(coto: Coto, nodes: Nodes)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
     address(className := "reposter")(
       nodes.get(coto.postedById).map(PartsNode.spanNode)
     )

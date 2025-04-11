@@ -207,7 +207,8 @@ object ModalConnect {
     )
 
   private def articleCoto(coto: Coto)(implicit
-      context: Context
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     article(className := "coto embedded")(
       header()(
