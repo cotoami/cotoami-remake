@@ -222,12 +222,12 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // Command: Connect
+    // Command: CreateIto
     /////////////////////////////////////////////////////////////////////////////
 
     let ito_input =
         ItoInput::new(backend_root_coto.uuid, posted_coto.uuid).description("The first ito");
-    let request = Command::Connect(ito_input).into_request();
+    let request = Command::CreateIto(ito_input).into_request();
     let created_ito = service.call(request).await?.content::<Ito>()?;
 
     assert_that!(
@@ -252,7 +252,7 @@ where
         &backend_root_cotonoma.uuid,
         &backend_owner,
     )?;
-    let (ito2, _) = backend_ds.connect(
+    let (ito2, _) = backend_ds.create_ito(
         &ItoInput::new(backend_root_coto.uuid, coto2.uuid).description("The second ito"),
         &backend_owner,
     )?;
@@ -334,10 +334,10 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // Command: Disconnect
+    // Command: DeleteIto
     /////////////////////////////////////////////////////////////////////////////
 
-    let request = Command::Disconnect {
+    let request = Command::DeleteIto {
         id: created_ito.uuid,
     }
     .into_request();

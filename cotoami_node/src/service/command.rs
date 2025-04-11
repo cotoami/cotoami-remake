@@ -171,7 +171,7 @@ pub enum Command {
     OutgoingItos { coto: Id<Coto> },
 
     /// Request to create a new [Ito] and return the [Ito] if suceeded.
-    Connect(ItoInput<'static>),
+    CreateIto(ItoInput<'static>),
 
     /// Request to edit the specified ito and return the updated [Ito] if suceeded.
     EditIto {
@@ -180,7 +180,7 @@ pub enum Command {
     },
 
     /// Request to delete an ito and return the [Id<Ito>] if suceeded.
-    Disconnect { id: Id<Ito> },
+    DeleteIto { id: Id<Ito> },
 
     /// Request to change the order of the specified ito to `new_order` and
     /// return the updated [Ito] if suceeded.

@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
-    Extension, Router,
     extract::{Json, Path, State},
     routing::{get, post, put},
+    Extension, Router,
 };
 use axum_extra::TypedHeader;
 use cotoami_db::prelude::*;
@@ -17,8 +17,8 @@ use crate::{
 
 pub(super) fn routes() -> Router<NodeState> {
     Router::new()
-        .route("/", post(connect))
-        .route("/{ito_id}", get(ito).put(edit_ito).delete(disconnect))
+        .route("/", post(create_ito))
+        .route("/{ito_id}", get(ito).put(edit_ito).delete(delete_ito))
         .route("/{ito_id}/order", put(change_order))
 }
 
@@ -26,14 +26,14 @@ pub(super) fn routes() -> Router<NodeState> {
 // POST /api/data/itos
 /////////////////////////////////////////////////////////////////////////////
 
-async fn connect(
+async fn create_ito(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Json(input): Json<ItoInput<'static>>,
 ) -> Result<Content<Ito>, ServiceError> {
     state
-        .connect(input, Arc::new(operator))
+        .create_ito(input, Arc::new(operator))
         .await
         .map(|ito| Content(ito, accept))
 }
@@ -71,14 +71,14 @@ async fn edit_ito(
 // DELETE /api/data/itos/{ito_id}
 /////////////////////////////////////////////////////////////////////////////
 
-async fn disconnect(
+async fn delete_ito(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(ito_id): Path<Id<Ito>>,
 ) -> Result<Content<Id<Ito>>, ServiceError> {
     state
-        .disconnect(ito_id, Arc::new(operator))
+        .delete_ito(ito_id, Arc::new(operator))
         .await
         .map(|ito_id| Content(ito_id, accept))
 }

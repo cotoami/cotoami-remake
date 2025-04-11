@@ -264,9 +264,9 @@ impl HttpClient {
                 .json(&name),
             Command::Ito { id } => self.get(&format!("{API_PATH_ITOS}/{id}")),
             Command::OutgoingItos { coto } => self.get(&format!("{API_PATH_COTOS}/{coto}/itos")),
-            Command::Connect(input) => self.post(API_PATH_ITOS).json(&input),
+            Command::CreateIto(input) => self.post(API_PATH_ITOS).json(&input),
             Command::EditIto { id, diff } => self.put(&format!("{API_PATH_ITOS}/{id}")).json(&diff),
-            Command::Disconnect { id } => self.delete(&format!("{API_PATH_ITOS}/{id}")),
+            Command::DeleteIto { id } => self.delete(&format!("{API_PATH_ITOS}/{id}")),
             Command::ChangeItoOrder { id, new_order } => self
                 .put(&format!("{API_PATH_ITOS}/{id}/order"))
                 .json(&new_order),

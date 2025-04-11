@@ -5,7 +5,7 @@ use validator::Validate;
 
 use super::NodeServiceExt;
 use crate::{
-    service::{ServiceError, error::IntoServiceResult},
+    service::{error::IntoServiceResult, ServiceError},
     state::NodeState,
 };
 
@@ -18,7 +18,7 @@ impl NodeState {
         self.get(move |ds| ds.outgoing_itos(&[coto_id])).await
     }
 
-    pub async fn connect(
+    pub async fn create_ito(
         self,
         input: ItoInput<'static>,
         operator: Arc<Operator>,
@@ -30,8 +30,8 @@ impl NodeState {
         self.change(
             source_coto.node_id,
             input,
-            move |ds, input| ds.connect(&input, operator.as_ref()),
-            |parent, input| parent.connect(input),
+            move |ds, input| ds.create_ito(&input, operator.as_ref()),
+            |parent, input| parent.create_ito(input),
         )
         .await
     }
@@ -71,7 +71,7 @@ impl NodeState {
         .await
     }
 
-    pub async fn disconnect(
+    pub async fn delete_ito(
         self,
         id: Id<Ito>,
         operator: Arc<Operator>,
@@ -81,10 +81,10 @@ impl NodeState {
             ito.node_id,
             id,
             move |ds, ito_id| {
-                let changelog = ds.disconnect(&ito_id, operator.as_ref())?;
+                let changelog = ds.delete_ito(&ito_id, operator.as_ref())?;
                 Ok((ito_id, changelog))
             },
-            |parent, ito_id| parent.disconnect(ito_id),
+            |parent, ito_id| parent.delete_ito(ito_id),
         )
         .await
     }

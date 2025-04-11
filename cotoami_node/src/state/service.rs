@@ -132,9 +132,9 @@ impl NodeState {
             }
             Command::Ito { id } => format.serialize(self.ito(id).await),
             Command::OutgoingItos { coto } => format.serialize(self.outgoing_itos(coto).await),
-            Command::Connect(input) => format.serialize(self.connect(input, opr?).await),
+            Command::CreateIto(input) => format.serialize(self.create_ito(input, opr?).await),
             Command::EditIto { id, diff } => format.serialize(self.edit_ito(id, diff, opr?).await),
-            Command::Disconnect { id } => format.serialize(self.disconnect(id, opr?).await),
+            Command::DeleteIto { id } => format.serialize(self.delete_ito(id, opr?).await),
             Command::ChangeItoOrder { id, new_order } => {
                 format.serialize(self.change_ito_order(id, new_order, opr?).await)
             }

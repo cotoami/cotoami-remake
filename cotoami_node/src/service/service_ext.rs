@@ -78,8 +78,8 @@ pub trait NodeServiceExt: NodeService {
         response.content::<(Cotonoma, Coto)>()
     }
 
-    async fn connect(&self, input: ItoInput<'static>) -> Result<Ito> {
-        let request = Command::Connect(input).into_request();
+    async fn create_ito(&self, input: ItoInput<'static>) -> Result<Ito> {
+        let request = Command::CreateIto(input).into_request();
         let response = self.call(request).await?;
         response.content::<Ito>()
     }
@@ -90,8 +90,8 @@ pub trait NodeServiceExt: NodeService {
         response.content::<Ito>()
     }
 
-    async fn disconnect(&self, id: Id<Ito>) -> Result<Id<Ito>> {
-        let request = Command::Disconnect { id }.into_request();
+    async fn delete_ito(&self, id: Id<Ito>) -> Result<Id<Ito>> {
+        let request = Command::DeleteIto { id }.into_request();
         let response = self.call(request).await?;
         response.content::<Id<Ito>>()
     }
