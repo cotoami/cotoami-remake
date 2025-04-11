@@ -14,6 +14,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Client, ClientNode, Coto, Id, Node, Server}
 import cotoami.repository.Root
 import cotoami.backend.{
+  ChildNodeBackend,
   ClientNodeBackend,
   Commands,
   DatabaseInfo,
@@ -43,6 +44,9 @@ object ModalNodeProfile {
 
       // For client node
       client: Option[Client] = None,
+
+      // For child node
+      child: Option[ChildNode] = None,
 
       // For local server
       clientCount: Double = 0,
@@ -74,7 +78,9 @@ object ModalNodeProfile {
            else
              Cmd.Batch(
                ClientNodeBackend.fetch(nodeId)
-                 .map(Msg.ClientNodeFetched(_).into)
+                 .map(Msg.ClientNodeFetched(_).into),
+               ChildNodeBackend.fetch(nodeId)
+                 .map(Msg.ChildNodeFetched(_).into)
              ))
       )
   }
@@ -101,6 +107,10 @@ object ModalNodeProfile {
         node: Node,
         result: Either[ErrorJson, String]
     ) extends Msg
+
+    // For child node
+    case class ChildNodeFetched(result: Either[ErrorJson, ChildNode])
+        extends Msg
 
     // For local server
     case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
@@ -168,6 +178,12 @@ object ModalNodeProfile {
           ),
           cotoami.error("Couldn't generate a client password.", e)
         )
+
+      case Msg.ChildNodeFetched(result) =>
+        result match {
+          case Right(child) => (model.copy(child = Some(child)), Cmd.none)
+          case Left(_)      => (model, Cmd.none)
+        }
 
       case Msg.LocalServerFetched(Right(server)) =>
         (model.copy(localServer = Some(server)), Cmd.none)
