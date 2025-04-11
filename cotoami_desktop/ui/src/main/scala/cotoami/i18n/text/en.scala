@@ -84,6 +84,11 @@ object en extends Text {
   val ModalNodeProfile_localServerUrl = "Server URL"
   val ModalNodeProfile_clientNodes = "Client Nodes"
   val ModalNodeProfile_anonymousRead = "Accept Anonymous Read"
+  val ModalNodeProfile_confirmEnableAnonymousRead =
+    """
+    Are you sure you want to allow anonymous read-only access
+    (anyone who knows this node's URL can view your content)?
+    """
 
   val ModalIncorporate_title = "Incorporate Remote Node"
 

@@ -563,8 +563,7 @@ object ModalNodeProfile {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  "Are you sure you want to allow anonymous read-only access?" ++
-                    " (Anyone who knows this node's URL can view your cotos and itos.)",
+                  context.i18n.text.ModalNodeProfile_confirmEnableAnonymousRead,
                   Msg.EnableAnonymousRead(true) // enable
                 )
               )

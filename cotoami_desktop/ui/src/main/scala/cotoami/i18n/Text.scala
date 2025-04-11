@@ -56,6 +56,7 @@ trait Text {
   val ModalNodeProfile_localServerUrl: String
   val ModalNodeProfile_clientNodes: String
   val ModalNodeProfile_anonymousRead: String
+  val ModalNodeProfile_confirmEnableAnonymousRead: String
 
   val ModalIncorporate_title: String
 
