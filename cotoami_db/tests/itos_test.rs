@@ -25,7 +25,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     let mock_time = time::mock_time();
-    let (ito1, changelog) = ds.connect(
+    let (ito1, changelog) = ds.create_ito(
         &ItoInput::new(coto1.uuid, coto2.uuid).description("hello"),
         &opr,
     )?;
@@ -77,7 +77,7 @@ fn crud_operations() -> Result<()> {
     /////////////////////////////////////////////////////////////////////////////
 
     time::clear_mock_time();
-    let (ito2, _) = ds.connect(
+    let (ito2, _) = ds.create_ito(
         &ItoInput::new(coto1.uuid, coto3.uuid)
             .description("bye")
             .details("some details"),
@@ -114,7 +114,7 @@ fn crud_operations() -> Result<()> {
     // When: create ito3: coto1 =(order number 1)=> coto4
     /////////////////////////////////////////////////////////////////////////////
 
-    let (ito3, _) = ds.connect(&ItoInput::new(coto1.uuid, coto4.uuid).order(1), &opr)?;
+    let (ito3, _) = ds.create_ito(&ItoInput::new(coto1.uuid, coto4.uuid).order(1), &opr)?;
 
     // check if the order of the itos has been updated
     assert_eq!(ds.ito(&ito3.uuid)?.unwrap().order, 1);

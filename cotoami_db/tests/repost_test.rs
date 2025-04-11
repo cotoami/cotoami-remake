@@ -71,7 +71,7 @@ fn repost() -> Result<()> {
     // When: try to create an ito to a repost
     /////////////////////////////////////////////////////////////////////////////
 
-    let result = ds.connect(&ItoInput::new(coto.uuid, repost1.uuid), &opr);
+    let result = ds.create_ito(&ItoInput::new(coto.uuid, repost1.uuid), &opr);
     assert_that!(
         result,
         err(pat!(anyhow::Error {

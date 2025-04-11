@@ -33,7 +33,7 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(ito_ops::recent(node_id, page_size, page_index))
     }
 
-    pub fn connect<'b>(
+    pub fn create_ito<'b>(
         &self,
         input: &ItoInput,
         operator: &Operator,
@@ -42,16 +42,16 @@ impl<'a> DatabaseSession<'a> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         let created_by_id = operator.try_get_node_id()?;
         let new_ito = NewIto::new(&local_node_id, &created_by_id, input)?;
-        self.create_ito(new_ito)
+        self.insert_ito(new_ito)
     }
 
     pub fn import_ito(&self, ito: &Ito) -> Result<(Ito, ChangelogEntry)> {
-        self.create_ito(ito.to_import())
+        self.insert_ito(ito.to_import())
     }
 
     /// Inserting a [NewIto] as a change originated in this node.
     /// Changes originated in remote nodes should be imported via [Self::import_change()].
-    fn create_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
+    fn insert_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // The source coto of the ito must belong to the local node.
@@ -146,7 +146,7 @@ impl<'a> DatabaseSession<'a> {
             };
 
         // Create a ito between the two
-        let (ito, change) = self.connect(
+        let (ito, change) = self.create_ito(
             &ItoInput::new(local_root_coto.uuid, parent_root_coto.uuid),
             &self.globals.local_node_as_operator()?,
         )?;

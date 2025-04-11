@@ -21,7 +21,7 @@ fn graph() -> Result<()> {
         let ds = db.new_session()?;
         let opr = opr.clone();
         move |input: &ItoInput| -> Result<()> {
-            let _ = ds.connect(input, &opr)?;
+            let _ = ds.create_ito(input, &opr)?;
             Ok(())
         }
     };
