@@ -14,7 +14,8 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Id, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}
-import cotoami.subparts.{labeledField, labeledInputField, Modal}
+import cotoami.subparts.{labeledInputField, Modal}
+import cotoami.subparts.PartsNode
 
 object ModalNewClient {
 
@@ -25,8 +26,8 @@ object ModalNewClient {
   case class Model(
       nodeId: String = "",
       nodeIdValidation: Validation.Result = Validation.Result.notYetValidated,
-      canEditItos: Boolean = false,
       asOwner: Boolean = false,
+      canEditItos: Boolean = false,
       error: Option[String] = None,
       registering: Boolean = false,
       generatedPassword: Option[String] = None
@@ -179,31 +180,12 @@ object ModalNewClient {
         ),
 
         // Privileges
-        labeledField(
-          classes = "privileges",
-          label = "Privileges",
-          labelFor = None
-        )(
-          label(htmlFor := "can-edit-itos")(
-            input(
-              `type` := "checkbox",
-              id := "can-edit-itos",
-              checked := model.canEditItos,
-              disabled := model.registered,
-              onChange := (_ => dispatch(Msg.CanEditItosToggled))
-            ),
-            "Permit to create itos (connect/disconnect)"
-          ),
-          label(htmlFor := "as-owner")(
-            input(
-              `type` := "checkbox",
-              id := "as-owner",
-              checked := model.asOwner,
-              disabled := model.registered,
-              onChange := (_ => dispatch(Msg.AsOwnerToggled))
-            ),
-            "As an owner"
-          )
+        PartsNode.labeledFieldChildPrivileges(
+          asOwner = model.asOwner,
+          canEditItos = model.canEditItos,
+          disabled = model.registered,
+          onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
+          onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled))
         ),
 
         // Generated password

@@ -1,5 +1,6 @@
 package cotoami.subparts
 
+import slinky.core.SyntheticEvent
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
@@ -58,4 +59,36 @@ object PartsNode {
     }
   }
 
+  def labeledFieldChildPrivileges(
+      asOwner: Boolean,
+      canEditItos: Boolean,
+      disabled: Boolean,
+      onAsOwnerChange: SyntheticEvent[_, _] => Unit,
+      onCanEditItosChange: SyntheticEvent[_, _] => Unit
+  ): ReactElement =
+    labeledField(
+      classes = "privileges",
+      label = "Privileges"
+    )(
+      label(htmlFor := "as-owner")(
+        input(
+          `type` := "checkbox",
+          id := "as-owner",
+          checked := asOwner,
+          slinky.web.html.disabled := disabled,
+          onChange := onAsOwnerChange
+        ),
+        "As an owner"
+      ),
+      label(htmlFor := "can-edit-itos")(
+        input(
+          `type` := "checkbox",
+          id := "can-edit-itos",
+          checked := canEditItos,
+          slinky.web.html.disabled := disabled,
+          onChange := onCanEditItosChange
+        ),
+        "Permit to create itos (connect/disconnect)"
+      )
+    )
 }
