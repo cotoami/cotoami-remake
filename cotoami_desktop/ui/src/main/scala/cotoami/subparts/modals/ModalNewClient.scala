@@ -14,7 +14,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Id, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}
-import cotoami.subparts.{fieldInput, Modal}
+import cotoami.subparts.{field, fieldInput, Modal}
 import cotoami.subparts.PartsNode
 
 object ModalNewClient {
@@ -180,12 +180,17 @@ object ModalNewClient {
         ),
 
         // Privileges
-        PartsNode.labeledFieldChildPrivileges(
-          asOwner = model.asOwner,
-          canEditItos = model.canEditItos,
-          disabled = model.registered,
-          onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
-          onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled))
+        field(
+          name = context.i18n.text.ChildPrivileges,
+          classes = "privileges"
+        )(
+          PartsNode.inputChildPrivileges(
+            asOwner = model.asOwner,
+            canEditItos = model.canEditItos,
+            disabled = model.registered,
+            onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
+            onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled))
+          )
         ),
 
         // Generated password

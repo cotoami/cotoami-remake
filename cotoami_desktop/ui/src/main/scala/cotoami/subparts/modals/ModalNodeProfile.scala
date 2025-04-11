@@ -503,12 +503,20 @@ object ModalNodeProfile {
       context: Context
   ): Option[ReactElement] =
     Option.when(model.isChild) {
-      PartsNode.labeledFieldChildPrivileges(
-        asOwner = model.asOwner,
-        canEditItos = model.canEditItos,
-        disabled = true,
-        onAsOwnerChange = (_ => ()),
-        onCanEditItosChange = (_ => ())
+      field(
+        name = context.i18n.text.ChildPrivileges,
+        classes = "privileges"
+      )(
+        PartsNode.inputChildPrivileges(
+          asOwner = model.asOwner,
+          canEditItos = model.canEditItos,
+          disabled = true,
+          onAsOwnerChange = (_ => ()),
+          onCanEditItosChange = (_ => ())
+        ),
+        div(className := "edit")(
+          buttonEdit(_ => ())
+        )
       )
     }
 

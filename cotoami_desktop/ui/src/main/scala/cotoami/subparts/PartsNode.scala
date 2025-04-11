@@ -1,7 +1,7 @@
 package cotoami.subparts
 
 import slinky.core.SyntheticEvent
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.components.toolButton
@@ -59,17 +59,14 @@ object PartsNode {
     }
   }
 
-  def labeledFieldChildPrivileges(
+  def inputChildPrivileges(
       asOwner: Boolean,
       canEditItos: Boolean,
       disabled: Boolean,
       onAsOwnerChange: SyntheticEvent[_, _] => Unit,
       onCanEditItosChange: SyntheticEvent[_, _] => Unit
   )(implicit context: Context): ReactElement =
-    field(
-      name = context.i18n.text.ChildPrivileges,
-      classes = "privileges"
-    )(
+    Fragment(
       label(htmlFor := "as-owner")(
         input(
           `type` := "checkbox",
