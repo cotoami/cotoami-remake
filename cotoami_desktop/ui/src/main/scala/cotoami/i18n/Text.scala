@@ -9,6 +9,7 @@ trait Text {
   val Pin: String
   val Node: String
   val NodeRoot: String
+  val Id: String
   val Owner: String
   val ReadOnly: String
 

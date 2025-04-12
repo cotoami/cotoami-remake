@@ -414,9 +414,11 @@ object ModalNodeProfile {
       )
     )
 
-  private def fieldId(node: Node): ReactElement =
+  private def fieldId(node: Node)(implicit
+      context: Context
+  ): ReactElement =
     fieldInput(
-      name = "ID",
+      name = context.i18n.text.Id,
       classes = "node-id",
       inputValue = node.id.uuid,
       readOnly = true
