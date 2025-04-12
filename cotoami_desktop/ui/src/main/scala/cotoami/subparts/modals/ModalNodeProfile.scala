@@ -1,7 +1,6 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import com.softwaremill.quicklens._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
@@ -16,16 +15,13 @@ import cotoami.repository.Root
 import cotoami.backend.{
   ChildNodeBackend,
   ClientNodeBackend,
-  Commands,
   DatabaseInfo,
-  ErrorJson,
-  LocalServer,
-  ServerConfig
+  ErrorJson
 }
 import cotoami.subparts.{
+  buttonEdit,
   field,
   fieldInput,
-  sectionClientNodesCount,
   Modal,
   PartsCoto,
   PartsNode
@@ -51,9 +47,7 @@ object ModalNodeProfile {
       canEditItos: Boolean = false,
 
       // For local server
-      clientCount: Double = 0,
-      localServer: Option[LocalServer] = None,
-      enablingAnonymousRead: Boolean = false
+      localServer: SectionLocalServer.Model
   ) {
     def isLocalNode()(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
@@ -69,31 +63,24 @@ object ModalNodeProfile {
         asOwner = child.asOwner,
         canEditItos = child.canEditItos
       )
-
-    def anonymousReadEnabled: Boolean =
-      localServer.map(_.anonymousReadEnabled).getOrElse(false)
   }
 
   object Model {
     def apply(
         nodeId: Id[Node]
-    )(implicit context: Context): (Model, Cmd[AppMsg]) =
+    )(implicit context: Context): (Model, Cmd[AppMsg]) = {
+      val (localServer, localServerCmd) = SectionLocalServer.Model(nodeId)
       (
-        Model(nodeId),
-        Root.fetchNodeDetails(nodeId) ++
-          (if (context.repo.nodes.isOperating(nodeId))
-             Cmd.Batch(
-               fetchClientCount,
-               LocalServer.fetch.map(Msg.LocalServerFetched(_).into)
-             )
-           else
-             Cmd.Batch(
-               ClientNodeBackend.fetch(nodeId)
-                 .map(Msg.ClientNodeFetched(_).into),
-               ChildNodeBackend.fetch(nodeId)
-                 .map(Msg.ChildNodeFetched(_).into)
-             ))
+        Model(nodeId = nodeId, localServer = localServer),
+        Cmd.Batch(
+          Root.fetchNodeDetails(nodeId),
+          ClientNodeBackend.fetch(nodeId)
+            .map(Msg.ClientNodeFetched(_).into),
+          ChildNodeBackend.fetch(nodeId)
+            .map(Msg.ChildNodeFetched(_).into)
+        ) ++ localServerCmd
       )
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -124,12 +111,7 @@ object ModalNodeProfile {
         extends Msg
 
     // For local server
-    case class LocalServerFetched(result: Either[ErrorJson, LocalServer])
-        extends Msg
-    case class ClientCountFetched(result: Either[ErrorJson, Double]) extends Msg
-    case class EnableAnonymousRead(enable: Boolean) extends Msg
-    case class AnonymousReadEnabled(result: Either[ErrorJson, Boolean])
-        extends Msg
+    case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -196,46 +178,12 @@ object ModalNodeProfile {
           case Left(_)      => (model, Cmd.none)
         }
 
-      case Msg.LocalServerFetched(Right(server)) =>
-        (model.copy(localServer = Some(server)), Cmd.none)
-
-      case Msg.LocalServerFetched(Left(e)) =>
-        (model, cotoami.error("Couldn't fetch the local server.", e))
-
-      case Msg.ClientCountFetched(Right(count)) =>
-        (model.copy(clientCount = count), Cmd.none)
-
-      case Msg.ClientCountFetched(Left(e)) =>
-        (model, cotoami.error("Couldn't fetch client count.", e))
-
-      case Msg.EnableAnonymousRead(enable) =>
-        (
-          model.copy(enablingAnonymousRead = true),
-          enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
-        )
-
-      case Msg.AnonymousReadEnabled(Right(enabled)) =>
-        (
-          model
-            .modify(_.enablingAnonymousRead).setTo(false)
-            .modify(_.localServer.each.anonymousReadEnabled).setTo(enabled)
-            .modify(_.localServer.each.anonymousConnections).setTo(0),
-          Cmd.none
-        )
-
-      case Msg.AnonymousReadEnabled(Left(e)) =>
-        (model, cotoami.error("Couldn't enable/disable anonymous read.", e))
+      case Msg.SectionLocalServerMsg(submsg) => {
+        val (localServer, cmd) =
+          SectionLocalServer.update(submsg, model.localServer)
+        (model.copy(localServer = localServer), cmd)
+      }
     }
-
-  def fetchClientCount: Cmd.One[AppMsg] =
-    ClientNodeBackend.fetchRecent(0, Some(1))
-      .map(_.map(_.totalItems))
-      .map(Msg.ClientCountFetched(_).into)
-
-  def enableAnonymousRead(
-      enable: Boolean
-  ): Cmd.One[Either[ErrorJson, Boolean]] =
-    Commands.send(Commands.EnableAnonymousRead(enable))
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -273,8 +221,7 @@ object ModalNodeProfile {
             fieldName(node, rootCoto, model),
             context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
-            model.localServer.flatMap(_.activeConfig)
-              .map(sectionLocalServer(_, model)),
+            SectionLocalServer(model.localServer),
             model.client.map(fieldsClient),
             fieldChildPrivileges(model)
           )
@@ -522,86 +469,6 @@ object ModalNodeProfile {
       )
     }
 
-  private def sectionLocalServer(
-      config: ServerConfig,
-      model: Model
-  )(implicit
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
-    section(className := "local-server")(
-      h2()(context.i18n.text.ModalNodeProfile_localServer),
-      fieldLocalServerUrl(config),
-      fieldClientNodes(model),
-      fieldAnonymousRead(model)
-    )
-
-  private def fieldLocalServerUrl(config: ServerConfig)(implicit
-      context: Context
-  ): ReactElement =
-    fieldInput(
-      name = context.i18n.text.ModalNodeProfile_localServerUrl,
-      classes = "local-server-url",
-      inputValue = config.url,
-      readOnly = true
-    )
-
-  private def fieldClientNodes(model: Model)(implicit
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
-    field(
-      name = context.i18n.text.ModalNodeProfile_clientNodes,
-      classes = "client-nodes"
-    )(
-      sectionClientNodesCount(model.clientCount, context.repo.nodes),
-      Option.when(model.isOperatedNode()) {
-        div(className := "edit")(
-          buttonEdit(_ =>
-            dispatch((Modal.Msg.OpenModal.apply _).tupled(Modal.Clients()))
-          )
-        )
-      }
-    )
-
-  private def fieldAnonymousRead(
-      model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    field(
-      name = context.i18n.text.ModalNodeProfile_anonymousRead,
-      classes = "anonymous-read"
-    )(
-      input(
-        `type` := "checkbox",
-        role := "switch",
-        checked := model.anonymousReadEnabled,
-        disabled := model.enablingAnonymousRead,
-        onChange := (_ =>
-          if (model.anonymousReadEnabled)
-            dispatch(Msg.EnableAnonymousRead(false)) // disable
-          else
-            dispatch(
-              Modal.Msg.OpenModal(
-                Modal.Confirm(
-                  context.i18n.text.ModalNodeProfile_confirmEnableAnonymousRead,
-                  Msg.EnableAnonymousRead(true) // enable
-                )
-              )
-            )
-        )
-      ),
-      Option.when(model.enablingAnonymousRead) {
-        span(className := "processing", aria - "busy" := "true")()
-      },
-      Option.when(model.anonymousReadEnabled) {
-        model.localServer.map(_.anonymousConnections).map(count =>
-          span(className := "anonymous-connections")(
-            s"(Active connections: ${count})"
-          )
-        )
-      }
-    )
-
   private def buttonEditRootCoto(rootCoto: Coto)(implicit
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -611,15 +478,5 @@ object ModalNodeProfile {
           Modal.EditCoto(rootCoto)
         )
       )
-    )
-
-  private def buttonEdit(
-      onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
-    toolButton(
-      symbol = "edit",
-      tip = Some("Edit"),
-      classes = "edit",
-      onClick = onClick
     )
 }

@@ -4,8 +4,10 @@ import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html
 import slinky.web.html._
 import slinky.web.SyntheticKeyboardEvent
+import slinky.web.SyntheticMouseEvent
 
 import marubinotto.Validation
+import marubinotto.components.toolButton
 
 import cotoami.{Msg => AppMsg}
 import cotoami.repository.Nodes
@@ -50,6 +52,16 @@ package object subparts {
         onChange := (e => onInput(e.target.value))
       ),
       inputErrors.map(Validation.sectionValidationError)
+    )
+
+  def buttonEdit(
+      onClick: SyntheticMouseEvent[_] => Unit
+  ): ReactElement =
+    toolButton(
+      symbol = "edit",
+      tip = Some("Edit"),
+      classes = "edit",
+      onClick = onClick
     )
 
   def paneToggle(
