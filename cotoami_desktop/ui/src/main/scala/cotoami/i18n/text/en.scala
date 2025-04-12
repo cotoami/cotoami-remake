@@ -12,9 +12,11 @@ object en extends Text {
   val Pin = "Pin"
   val Node = "Node"
   val NodeRoot = "Node Root"
-  val Id = "ID"
   val Owner = "Owner"
   val ReadOnly = "Read-only"
+
+  val Id = "ID"
+  val Name = "Name"
 
   val Post = "Post"
   val Save = "Save"

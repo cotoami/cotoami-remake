@@ -430,7 +430,7 @@ object ModalNodeProfile {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = "Name",
+      name = context.i18n.text.Name,
       classes = "node-name"
     )(
       input(
