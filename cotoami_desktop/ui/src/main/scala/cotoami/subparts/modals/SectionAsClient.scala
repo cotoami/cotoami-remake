@@ -55,15 +55,17 @@ object SectionAsClient {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.ClientNodeFetched(result) =>
-        result match {
-          case Right(clientNode) =>
-            (
-              model.copy(client = context.repo.nodes.clientInfo(clientNode)),
-              Cmd.none
-            )
-          case Left(_) => (model, Cmd.none)
-        }
+      case Msg.ClientNodeFetched(Right(clientNode)) =>
+        (
+          model.copy(
+            client = context.repo.nodes.clientInfo(clientNode),
+            loading = false
+          ),
+          Cmd.none
+        )
+
+      case Msg.ClientNodeFetched(Left(_)) =>
+        (model.copy(loading = false), Cmd.none)
 
       case Msg.GenerateClientPassword(node) =>
         (
