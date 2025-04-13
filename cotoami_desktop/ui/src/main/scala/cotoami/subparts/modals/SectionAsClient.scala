@@ -96,7 +96,7 @@ object SectionAsClient {
     model.client.map { client =>
       section(className := "field-group pas-client")(
         h2()(context.i18n.text.AsClient_title),
-        fieldPassword(client),
+        fieldPassword(client, model),
         fieldLastLogin(client),
         client.active.map(fieldRemoteAddress)
       )
@@ -109,7 +109,7 @@ object SectionAsClient {
       }
     )
 
-  private def fieldPassword(client: Client)(implicit
+  private def fieldPassword(client: Client, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
@@ -120,6 +120,8 @@ object SectionAsClient {
       button(
         `type` := "button",
         className := "reset-password contrast outline",
+        disabled := model.resettingPassword,
+        aria - "busy" := model.resettingPassword.toString(),
         onClick := (_ =>
           dispatch(
             Modal.Msg.OpenModal(
