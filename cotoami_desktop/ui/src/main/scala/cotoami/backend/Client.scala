@@ -69,8 +69,8 @@ object ClientNodeBackend {
     ClientNodeJson.add(nodeId, canEditLinks, asOowner)
       .map(_.map(ClientAdded(_)))
 
-  def generatePassword(id: Id[Node]): Cmd.One[Either[ErrorJson, String]] =
-    Commands.send(Commands.GenerateClientPassword(id))
+  def resetPassword(id: Id[Node]): Cmd.One[Either[ErrorJson, String]] =
+    Commands.send(Commands.ResetClientPassword(id))
 
   def edit(
       id: Id[Node],

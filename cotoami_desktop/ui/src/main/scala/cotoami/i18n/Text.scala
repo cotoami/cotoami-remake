@@ -68,8 +68,8 @@ trait Text {
 
   val AsClient_title: String
   val AsClient_password: String
-  val AsClient_generateClientPassword: String
-  val AsClient_confirmGenerateClientPassword: String
+  val AsClient_resetPassword: String
+  val AsClient_confirmResetPassword: String
   val AsClient_lastLogin: String
   val AsClient_remoteAddress: String
 

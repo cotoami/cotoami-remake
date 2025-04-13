@@ -16,8 +16,8 @@ object SectionAsClient {
       nodeId: Id[Node],
       loading: Boolean = false,
       client: Option[Client] = None,
-      generatingPassword: Boolean = false,
-      generatingPasswordError: Option[String] = None
+      resettingPassword: Boolean = false,
+      resettingPasswordError: Option[String] = None
   )
 
   object Model {
@@ -44,8 +44,8 @@ object SectionAsClient {
   object Msg {
     case class ClientNodeFetched(result: Either[ErrorJson, ClientNode])
         extends Msg
-    case class GenerateClientPassword(node: Node) extends Msg
-    case class ClientPasswordGenerated(
+    case class ResetClientPassword(node: Node) extends Msg
+    case class ClientPasswordReset(
         node: Node,
         result: Either[ErrorJson, String]
     ) extends Msg
@@ -67,26 +67,26 @@ object SectionAsClient {
       case Msg.ClientNodeFetched(Left(_)) =>
         (model.copy(loading = false), Cmd.none)
 
-      case Msg.GenerateClientPassword(node) =>
+      case Msg.ResetClientPassword(node) =>
         (
-          model.copy(generatingPassword = true),
-          ClientNodeBackend.generatePassword(node.id)
-            .map(Msg.ClientPasswordGenerated(node, _).into)
+          model.copy(resettingPassword = true),
+          ClientNodeBackend.resetPassword(node.id)
+            .map(Msg.ClientPasswordReset(node, _).into)
         )
 
-      case Msg.ClientPasswordGenerated(node, Right(password)) =>
+      case Msg.ClientPasswordReset(node, Right(password)) =>
         (
-          model.copy(generatingPassword = false),
+          model.copy(resettingPassword = false),
           Modal.open(Modal.NewPassword.forClient(node, password))
         )
 
-      case Msg.ClientPasswordGenerated(node, Left(e)) =>
+      case Msg.ClientPasswordReset(node, Left(e)) =>
         (
           model.copy(
-            generatingPassword = false,
-            generatingPasswordError = Some(e.default_message)
+            resettingPassword = false,
+            resettingPasswordError = Some(e.default_message)
           ),
-          cotoami.error("Couldn't generate a client password.", e)
+          cotoami.error("Couldn't reset the client password.", e)
         )
     }
 
@@ -119,18 +119,18 @@ object SectionAsClient {
     )(
       button(
         `type` := "button",
-        className := "generate-password contrast outline",
+        className := "reset-password contrast outline",
         onClick := (_ =>
           dispatch(
             Modal.Msg.OpenModal(
               Modal.Confirm(
-                context.i18n.text.AsClient_confirmGenerateClientPassword,
-                Msg.GenerateClientPassword(client.node)
+                context.i18n.text.AsClient_confirmResetPassword,
+                Msg.ResetClientPassword(client.node)
               )
             )
           )
         )
-      )(context.i18n.text.AsClient_generateClientPassword)
+      )(context.i18n.text.AsClient_resetPassword)
     )
 
   private def fieldLastLogin(client: Client)(implicit

@@ -102,8 +102,8 @@ object Commands {
       )
     )
 
-  def GenerateClientPassword(id: Id[Node]) =
-    jso(GenerateClientPassword = jso(id = id.uuid))
+  def ResetClientPassword(id: Id[Node]) =
+    jso(ResetClientPassword = jso(id = id.uuid))
 
   def EditClient(
       id: Id[Node],

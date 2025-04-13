@@ -57,8 +57,8 @@ impl NodeState {
             }
             Command::ClientNode { id } => format.serialize(self.client_node(id, opr?).await),
             Command::AddClient(input) => format.serialize(self.add_client(input, opr?).await),
-            Command::GenerateClientPassword { id } => {
-                format.serialize(self.generate_client_password(id, opr?).await)
+            Command::ResetClientPassword { id } => {
+                format.serialize(self.reset_client_password(id, opr?).await)
             }
             Command::EditClient { id, values } => {
                 format.serialize(self.edit_client(id, values, opr?).await)

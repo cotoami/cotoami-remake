@@ -49,8 +49,8 @@ pub enum Command {
     /// Request to add a new client node and return [ClientAdded] if succeeded.
     AddClient(AddClient),
 
-    /// Request to generate a new client password.
-    GenerateClientPassword { id: Id<Node> },
+    /// Request to reset the client password and return a new password.
+    ResetClientPassword { id: Id<Node> },
 
     /// Request to edit a client node and return the updated [ClientNode].
     EditClient { id: Id<Node>, values: EditClient },

@@ -95,8 +95,8 @@ object en extends Text {
 
   val AsClient_title = "As Client"
   val AsClient_password = "Password"
-  val AsClient_generateClientPassword = "Generate Client Password"
-  val AsClient_confirmGenerateClientPassword =
+  val AsClient_resetPassword = "Reset Client Password"
+  val AsClient_confirmResetPassword =
     """
     Are you sure you want to generate a new client password? 
     Doing so will invalidate the current password.

@@ -94,7 +94,7 @@ impl NodeState {
         .await?
     }
 
-    pub async fn generate_client_password(
+    pub async fn reset_client_password(
         &self,
         node_id: Id<Node>,
         operator: Arc<Operator>,
