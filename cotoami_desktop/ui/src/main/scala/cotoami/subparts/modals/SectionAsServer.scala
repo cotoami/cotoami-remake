@@ -23,7 +23,7 @@ import cotoami.subparts.{
   Modal
 }
 
-object SectionLocalServer {
+object SectionAsServer {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -62,7 +62,7 @@ object SectionLocalServer {
 
   sealed trait Msg extends Into[AppMsg] {
     def into =
-      ModalNodeProfile.Msg.SectionLocalServerMsg(this)
+      ModalNodeProfile.Msg.SectionAsServerMsg(this)
         .pipe(Modal.Msg.NodeProfileMsg)
         .pipe(AppMsg.ModalMsg)
   }

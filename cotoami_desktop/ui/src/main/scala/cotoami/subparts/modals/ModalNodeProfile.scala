@@ -40,7 +40,7 @@ object ModalNodeProfile {
 
       //
       client: SectionClient.Model,
-      localServer: SectionLocalServer.Model
+      asServer: SectionAsServer.Model
   ) {
     def isLocalNode()(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
@@ -62,15 +62,15 @@ object ModalNodeProfile {
     def apply(
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) = {
-      val (localServer, localServerCmd) = SectionLocalServer.Model(nodeId)
+      val (asServer, asServerCmd) = SectionAsServer.Model(nodeId)
       val (client, clientCmd) = SectionClient.Model(nodeId)
       (
-        Model(nodeId = nodeId, localServer = localServer, client = client),
+        Model(nodeId = nodeId, asServer = asServer, client = client),
         Cmd.Batch(
           Root.fetchNodeDetails(nodeId),
           ChildNodeBackend.fetch(nodeId)
             .map(Msg.ChildNodeFetched(_).into)
-        ) ++ localServerCmd ++ clientCmd
+        ) ++ asServerCmd ++ clientCmd
       )
     }
   }
@@ -95,7 +95,7 @@ object ModalNodeProfile {
 
     //
     case class SectionClientMsg(submsg: SectionClient.Msg) extends Msg
-    case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
+    case class SectionAsServerMsg(submsg: SectionAsServer.Msg) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -136,10 +136,10 @@ object ModalNodeProfile {
         (model.copy(client = client), cmd)
       }
 
-      case Msg.SectionLocalServerMsg(submsg) => {
-        val (localServer, cmd) =
-          SectionLocalServer.update(submsg, model.localServer)
-        (model.copy(localServer = localServer), cmd)
+      case Msg.SectionAsServerMsg(submsg) => {
+        val (asServer, cmd) =
+          SectionAsServer.update(submsg, model.asServer)
+        (model.copy(asServer = asServer), cmd)
       }
     }
 
@@ -179,7 +179,7 @@ object ModalNodeProfile {
             fieldName(node, rootCoto, model),
             context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
-            SectionLocalServer(model.localServer),
+            SectionAsServer(model.asServer),
             SectionClient(model.client),
             fieldChildPrivileges(model)
           )
