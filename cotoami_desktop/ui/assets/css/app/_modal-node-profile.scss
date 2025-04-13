@@ -115,6 +115,7 @@ dialog.node-profile {
 
   div.fields {
     margin-left: 16px;
+    margin-bottom: 20px;
     max-height: 60vh;
 
     div.scroll-fields {
@@ -141,6 +142,10 @@ dialog.node-profile {
     div.node-id {
       margin-top: 0;
     }
+
+    section.field-group {
+      margin-top: 40px;
+    }
   }
 
   section.node-description {
@@ -151,9 +156,6 @@ dialog.node-profile {
   }
 
   section.local-server {
-    margin-top: 40px;
-    margin-bottom: 20px;
-
     span.anonymous-connections {
       margin-left: 6px;
       font-size: 0.9rem;

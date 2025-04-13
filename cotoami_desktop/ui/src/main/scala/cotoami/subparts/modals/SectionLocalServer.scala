@@ -6,7 +6,6 @@ import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.backend.{
@@ -137,7 +136,7 @@ object SectionLocalServer {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     model.localServer.flatMap(_.activeConfig).map { config =>
-      section(className := "local-server")(
+      section(className := "field-group local-server")(
         h2()(context.i18n.text.ModalNodeProfile_localServer),
         fieldLocalServerUrl(config),
         fieldClientNodes(model),
@@ -146,7 +145,7 @@ object SectionLocalServer {
     }.getOrElse(
       Option.when(model.loading) {
         section(
-          className := "local-server",
+          className := "field-group local-server",
           aria - "busy" := model.loading.toString()
         )()
       }

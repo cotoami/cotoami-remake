@@ -10,14 +10,9 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ChildNode, Client, ClientNode, Coto, Id, Node, Server}
+import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.Root
-import cotoami.backend.{
-  ChildNodeBackend,
-  ClientNodeBackend,
-  DatabaseInfo,
-  ErrorJson
-}
+import cotoami.backend.{ChildNodeBackend, DatabaseInfo, ErrorJson}
 import cotoami.subparts.{
   buttonEdit,
   field,
@@ -38,15 +33,13 @@ object ModalNodeProfile {
       error: Option[String] = None,
       generatingPassword: Boolean = false,
 
-      // For client node
-      client: Option[Client] = None,
-
       // For child node
       child: Option[ChildNode] = None,
       asOwner: Boolean = false,
       canEditItos: Boolean = false,
 
-      // For local server
+      //
+      client: SectionClient.Model,
       localServer: SectionLocalServer.Model
   ) {
     def isLocalNode()(implicit context: Context): Boolean =
@@ -70,15 +63,14 @@ object ModalNodeProfile {
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) = {
       val (localServer, localServerCmd) = SectionLocalServer.Model(nodeId)
+      val (client, clientCmd) = SectionClient.Model(nodeId)
       (
-        Model(nodeId = nodeId, localServer = localServer),
+        Model(nodeId = nodeId, localServer = localServer, client = client),
         Cmd.Batch(
           Root.fetchNodeDetails(nodeId),
-          ClientNodeBackend.fetch(nodeId)
-            .map(Msg.ClientNodeFetched(_).into),
           ChildNodeBackend.fetch(nodeId)
             .map(Msg.ChildNodeFetched(_).into)
-        ) ++ localServerCmd
+        ) ++ localServerCmd ++ clientCmd
       )
     }
   }
@@ -97,20 +89,12 @@ object ModalNodeProfile {
     case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
         extends Msg
 
-    // For client node
-    case class ClientNodeFetched(result: Either[ErrorJson, ClientNode])
-        extends Msg
-    case class GenerateClientPassword(node: Node) extends Msg
-    case class ClientPasswordGenerated(
-        node: Node,
-        result: Either[ErrorJson, String]
-    ) extends Msg
-
     // For child node
     case class ChildNodeFetched(result: Either[ErrorJson, ChildNode])
         extends Msg
 
-    // For local server
+    //
+    case class SectionClientMsg(submsg: SectionClient.Msg) extends Msg
     case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
   }
 
@@ -140,43 +124,17 @@ object ModalNodeProfile {
           cotoami.error("Couldn't generate an owner password.", e)
         )
 
-      case Msg.ClientNodeFetched(result) =>
-        result match {
-          case Right(clientNode) =>
-            (
-              model.copy(client = context.repo.nodes.clientInfo(clientNode)),
-              Cmd.none
-            )
-          case Left(_) => (model, Cmd.none)
-        }
-
-      case Msg.GenerateClientPassword(node) =>
-        (
-          model.copy(generatingPassword = true),
-          ClientNodeBackend.generatePassword(node.id)
-            .map(Msg.ClientPasswordGenerated(node, _).into)
-        )
-
-      case Msg.ClientPasswordGenerated(node, Right(password)) =>
-        (
-          model.copy(generatingPassword = false),
-          Modal.open(Modal.NewPassword.forClient(node, password))
-        )
-
-      case Msg.ClientPasswordGenerated(node, Left(e)) =>
-        (
-          model.copy(
-            generatingPassword = false,
-            error = Some(e.default_message)
-          ),
-          cotoami.error("Couldn't generate a client password.", e)
-        )
-
       case Msg.ChildNodeFetched(result) =>
         result match {
           case Right(child) => (model.setChild(child), Cmd.none)
           case Left(_)      => (model, Cmd.none)
         }
+
+      case Msg.SectionClientMsg(submsg) => {
+        val (client, cmd) =
+          SectionClient.update(submsg, model.client)
+        (model.copy(client = client), cmd)
+      }
 
       case Msg.SectionLocalServerMsg(submsg) => {
         val (localServer, cmd) =
@@ -222,7 +180,7 @@ object ModalNodeProfile {
             context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
             SectionLocalServer(model.localServer),
-            model.client.map(fieldsClient),
+            SectionClient(model.client),
             fieldChildPrivileges(model)
           )
         )
@@ -263,7 +221,7 @@ object ModalNodeProfile {
           }
         )
       else
-        model.client
+        model.client.client
           .map(_ => sectionOperatedNodeAsServer)
           .getOrElse(
             context.repo.nodes.childPrivilegesTo(node.id)
@@ -319,25 +277,6 @@ object ModalNodeProfile {
               )
             )
         )
-      },
-
-      // Generate Client Password
-      model.client.flatMap { client =>
-        Option.when(!model.isLocalNode()) {
-          buttonGeneratePassword(
-            context.i18n.text.ModalNodeProfile_generateClientPassword,
-            model,
-            e =>
-              dispatch(
-                Modal.Msg.OpenModal(
-                  Modal.Confirm(
-                    context.i18n.text.ModalNodeProfile_confirmGenerateClientPassword,
-                    Msg.GenerateClientPassword(client.node)
-                  )
-                )
-              )
-          )
-        }
       }
     )
 
@@ -424,28 +363,6 @@ object ModalNodeProfile {
           buttonEditRootCoto(rootCoto)
         )
       }
-    )
-
-  private def fieldsClient(client: Client)(implicit
-      context: Context
-  ): ReactElement =
-    Fragment(
-      fieldInput(
-        name = context.i18n.text.ModalNodeProfile_clientLastLogin,
-        classes = "client-last-login",
-        inputValue = client.client.lastSessionCreatedAt
-          .map(context.time.formatDateTime)
-          .getOrElse("-"): String,
-        readOnly = true
-      ),
-      client.active.map(active =>
-        fieldInput(
-          name = context.i18n.text.ModalNodeProfile_clientRemoteAddress,
-          classes = "client-remote-address",
-          inputValue = active.remoteAddr,
-          readOnly = true
-        )
-      )
     )
 
   private def fieldChildPrivileges(model: Model)(implicit
