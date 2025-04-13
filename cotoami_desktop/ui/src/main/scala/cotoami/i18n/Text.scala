@@ -30,6 +30,14 @@ trait Text {
   val Ito_editPin: String
   val Ito_editIto: String
 
+  val Connection_disabled: String
+  val Connection_connecting: String
+  val Connection_initFailed: String
+  val Connection_authenticationFailed: String
+  val Connection_sessionExpired: String
+  val Connection_disconnected: String
+  val Connection_connected: String
+
   val ChildPrivileges: String
   val ChildPrivileges_asOwner: String
   val ChildPrivileges_canEditItos: String

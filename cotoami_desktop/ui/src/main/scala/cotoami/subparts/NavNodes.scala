@@ -105,8 +105,9 @@ object NavNodes {
   private def buttonNode(
       node: Node,
       nodes: Nodes
-  )(implicit dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val status = nodes.parentStatus(node.id).flatMap(ViewParentStatus(_))
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val status = nodes.parentStatus(node.id)
+      .flatMap(ViewConnectionStatus(_).onlyIfNotConnected)
     val tooltip =
       status.map(s => s"${node.name} (${s.title})").getOrElse(node.name)
     button(

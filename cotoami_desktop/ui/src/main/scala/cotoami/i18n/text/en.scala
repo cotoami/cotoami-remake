@@ -33,6 +33,14 @@ object en extends Text {
   val Ito_editPin = "Edit Pin"
   val Ito_editIto = "Edit Ito"
 
+  val Connection_disabled = "not synced"
+  val Connection_connecting = "connecting"
+  val Connection_initFailed = "initialization failed"
+  val Connection_authenticationFailed = "authentication failed"
+  val Connection_sessionExpired = "session expired"
+  val Connection_disconnected = "disconnected"
+  val Connection_connected = "connected"
+
   val ChildPrivileges = "Privileges"
   val ChildPrivileges_asOwner = "As an owner"
   val ChildPrivileges_canEditItos = "Permit to create/edit itos"
