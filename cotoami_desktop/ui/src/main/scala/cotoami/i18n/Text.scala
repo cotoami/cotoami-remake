@@ -61,14 +61,16 @@ trait Text {
   val ModalNodeProfile_confirmGenerateOwnerPassword: String
   val ModalNodeProfile_generateClientPassword: String
   val ModalNodeProfile_confirmGenerateClientPassword: String
-  val ModalNodeProfile_clientLastLogin: String
-  val ModalNodeProfile_clientRemoteAddress: String
 
   val AsServer_title: String
   val AsServer_url: String
   val AsServer_clientNodes: String
   val AsServer_anonymousRead: String
   val AsServer_confirmEnableAnonymousRead: String
+
+  val AsClient_title: String
+  val AsClient_lastLogin: String
+  val AsClient_remoteAddress: String
 
   val ModalIncorporate_title: String
 

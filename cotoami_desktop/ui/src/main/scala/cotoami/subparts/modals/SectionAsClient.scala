@@ -95,7 +95,7 @@ object SectionAsClient {
   )(implicit context: Context): ReactElement =
     model.client.map { client =>
       section(className := "field-group pas-client")(
-        h2()("As Client"),
+        h2()(context.i18n.text.AsClient_title),
         fieldLastLogin(client),
         client.active.map(fieldRemoteAddress)
       )
@@ -112,7 +112,7 @@ object SectionAsClient {
       context: Context
   ): ReactElement =
     fieldInput(
-      name = context.i18n.text.ModalNodeProfile_clientLastLogin,
+      name = context.i18n.text.AsClient_lastLogin,
       classes = "last-login",
       inputValue = client.client.lastSessionCreatedAt
         .map(context.time.formatDateTime)
@@ -124,7 +124,7 @@ object SectionAsClient {
       context: Context
   ): ReactElement =
     fieldInput(
-      name = context.i18n.text.ModalNodeProfile_clientRemoteAddress,
+      name = context.i18n.text.AsClient_remoteAddress,
       classes = "remote-address",
       inputValue = active.remoteAddr,
       readOnly = true

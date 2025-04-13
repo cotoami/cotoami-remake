@@ -89,8 +89,6 @@ object en extends Text {
     Are you sure you want to generate a new client password? 
     Doing so will invalidate the current password.
     """
-  val ModalNodeProfile_clientLastLogin = "Last Login"
-  val ModalNodeProfile_clientRemoteAddress = "Remote Address"
 
   val AsServer_title = "As Server"
   val AsServer_url = "Server URL"
@@ -101,6 +99,10 @@ object en extends Text {
     Are you sure you want to allow anonymous read-only access
     (anyone who knows this node's URL can view your content)?
     """
+
+  val AsClient_title = "As Client"
+  val AsClient_lastLogin = "Last Login"
+  val AsClient_remoteAddress = "Remote Address"
 
   val ModalIncorporate_title = "Incorporate Remote Node"
 
