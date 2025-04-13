@@ -84,7 +84,7 @@ object en extends Text {
     Doing so will invalidate the current password.
     """
   val AsServer_title = "As Server"
-  val AsServer_url = "Server URL"
+  val AsServer_url = "URL"
   val AsServer_clientNodes = "Client Nodes"
   val AsServer_anonymousRead = "Accept Anonymous Read"
   val AsServer_confirmEnableAnonymousRead =

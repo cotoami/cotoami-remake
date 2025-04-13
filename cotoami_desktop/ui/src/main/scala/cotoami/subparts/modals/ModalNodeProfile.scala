@@ -34,7 +34,7 @@ object ModalNodeProfile {
       generatingPassword: Boolean = false,
 
       // Roles
-      asServer: SectionAsServer.Model,
+      localServer: SectionLocalServer.Model,
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
   ) {
@@ -49,18 +49,18 @@ object ModalNodeProfile {
     def apply(
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) = {
-      val (asServer, asServerCmd) = SectionAsServer.Model(nodeId)
+      val (localServer, localServerCmd) = SectionLocalServer.Model(nodeId)
       val (asClient, asClientCmd) = SectionAsClient.Model(nodeId)
       val (asChild, asChildCmd) = SectionAsChild.Model(nodeId)
       (
         Model(
           nodeId = nodeId,
-          asServer = asServer,
+          localServer = localServer,
           asClient = asClient,
           asChild = asChild
         ),
         Root.fetchNodeDetails(nodeId) ++
-          asServerCmd ++
+          localServerCmd ++
           asClientCmd ++
           asChildCmd
       )
@@ -81,7 +81,7 @@ object ModalNodeProfile {
         extends Msg
 
     // Roles
-    case class SectionAsServerMsg(submsg: SectionAsServer.Msg) extends Msg
+    case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
     case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
     case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
   }
@@ -112,9 +112,10 @@ object ModalNodeProfile {
           cotoami.error("Couldn't generate an owner password.", e)
         )
 
-      case Msg.SectionAsServerMsg(submsg) => {
-        val (asServer, cmd) = SectionAsServer.update(submsg, model.asServer)
-        (model.copy(asServer = asServer), cmd)
+      case Msg.SectionLocalServerMsg(submsg) => {
+        val (localServer, cmd) =
+          SectionLocalServer.update(submsg, model.localServer)
+        (model.copy(localServer = localServer), cmd)
       }
 
       case Msg.SectionAsClientMsg(submsg) => {
@@ -164,7 +165,7 @@ object ModalNodeProfile {
             fieldName(node, rootCoto, model),
             context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
-            SectionAsServer(model.asServer),
+            SectionLocalServer(model.localServer),
             SectionAsClient(model.asClient),
             SectionAsChild(model.asChild)
           )
