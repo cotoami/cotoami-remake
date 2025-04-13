@@ -91,11 +91,12 @@ object en extends Text {
     """
   val ModalNodeProfile_clientLastLogin = "Last Login"
   val ModalNodeProfile_clientRemoteAddress = "Remote Address"
-  val ModalNodeProfile_localServer = "As Server"
-  val ModalNodeProfile_localServerUrl = "Server URL"
-  val ModalNodeProfile_clientNodes = "Client Nodes"
-  val ModalNodeProfile_anonymousRead = "Accept Anonymous Read"
-  val ModalNodeProfile_confirmEnableAnonymousRead =
+
+  val AsServer_title = "As Server"
+  val AsServer_url = "Server URL"
+  val AsServer_clientNodes = "Client Nodes"
+  val AsServer_anonymousRead = "Accept Anonymous Read"
+  val AsServer_confirmEnableAnonymousRead =
     """
     Are you sure you want to allow anonymous read-only access
     (anyone who knows this node's URL can view your content)?

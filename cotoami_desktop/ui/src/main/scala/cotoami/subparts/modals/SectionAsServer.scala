@@ -137,7 +137,7 @@ object SectionAsServer {
   ): ReactElement =
     model.localServer.flatMap(_.activeConfig).map { config =>
       section(className := "field-group local-server")(
-        h2()(context.i18n.text.ModalNodeProfile_localServer),
+        h2()(context.i18n.text.AsServer_title),
         fieldLocalServerUrl(config),
         fieldClientNodes(model),
         fieldAnonymousRead(model)
@@ -155,7 +155,7 @@ object SectionAsServer {
       context: Context
   ): ReactElement =
     fieldInput(
-      name = context.i18n.text.ModalNodeProfile_localServerUrl,
+      name = context.i18n.text.AsServer_url,
       classes = "local-server-url",
       inputValue = config.url,
       readOnly = true
@@ -166,7 +166,7 @@ object SectionAsServer {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = context.i18n.text.ModalNodeProfile_clientNodes,
+      name = context.i18n.text.AsServer_clientNodes,
       classes = "client-nodes"
     )(
       sectionClientNodesCount(model.clientCount, context.repo.nodes),
@@ -181,7 +181,7 @@ object SectionAsServer {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     field(
-      name = context.i18n.text.ModalNodeProfile_anonymousRead,
+      name = context.i18n.text.AsServer_anonymousRead,
       classes = "anonymous-read"
     )(
       input(
@@ -196,7 +196,7 @@ object SectionAsServer {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  context.i18n.text.ModalNodeProfile_confirmEnableAnonymousRead,
+                  context.i18n.text.AsServer_confirmEnableAnonymousRead,
                   Msg.EnableAnonymousRead(true) // enable
                 )
               )
