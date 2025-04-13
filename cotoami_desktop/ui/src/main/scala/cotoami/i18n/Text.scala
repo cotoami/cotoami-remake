@@ -73,6 +73,8 @@ trait Text {
   val AsClient_lastLogin: String
   val AsClient_remoteAddress: String
 
+  val AsChild_title: String
+
   val ModalIncorporate_title: String
 
   val ModalPromote_confirm: String

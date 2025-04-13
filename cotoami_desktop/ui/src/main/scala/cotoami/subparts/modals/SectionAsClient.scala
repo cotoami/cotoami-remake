@@ -106,7 +106,7 @@ object SectionAsClient {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.client.map { client =>
-      section(className := "field-group pas-client")(
+      section(className := "field-group as-client")(
         h2()(context.i18n.text.AsClient_title),
         fieldPassword(client, model),
         fieldLastLogin(client),

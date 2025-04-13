@@ -12,7 +12,7 @@ import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.Root
-import cotoami.backend.{ChildNodeBackend, DatabaseInfo, ErrorJson}
+import cotoami.backend.{DatabaseInfo, ErrorJson}
 import cotoami.subparts.{
   buttonEdit,
   field,
@@ -33,29 +33,16 @@ object ModalNodeProfile {
       error: Option[String] = None,
       generatingPassword: Boolean = false,
 
-      // For child node
-      child: Option[ChildNode] = None,
-      asOwner: Boolean = false,
-      canEditItos: Boolean = false,
-
-      //
+      // Roles
+      asServer: SectionAsServer.Model,
       asClient: SectionAsClient.Model,
-      asServer: SectionAsServer.Model
+      asChild: SectionAsChild.Model
   ) {
     def isLocalNode()(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
     def isOperatedNode()(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
-
-    def isChild: Boolean = child.isDefined
-
-    def setChild(child: ChildNode): Model =
-      copy(
-        child = Some(child),
-        asOwner = child.asOwner,
-        canEditItos = child.canEditItos
-      )
   }
 
   object Model {
@@ -64,13 +51,18 @@ object ModalNodeProfile {
     )(implicit context: Context): (Model, Cmd[AppMsg]) = {
       val (asServer, asServerCmd) = SectionAsServer.Model(nodeId)
       val (asClient, asClientCmd) = SectionAsClient.Model(nodeId)
+      val (asChild, asChildCmd) = SectionAsChild.Model(nodeId)
       (
-        Model(nodeId = nodeId, asServer = asServer, asClient = asClient),
-        Cmd.Batch(
-          Root.fetchNodeDetails(nodeId),
-          ChildNodeBackend.fetch(nodeId)
-            .map(Msg.ChildNodeFetched(_).into)
-        ) ++ asServerCmd ++ asClientCmd
+        Model(
+          nodeId = nodeId,
+          asServer = asServer,
+          asClient = asClient,
+          asChild = asChild
+        ),
+        Root.fetchNodeDetails(nodeId) ++
+          asServerCmd ++
+          asClientCmd ++
+          asChildCmd
       )
     }
   }
@@ -84,18 +76,14 @@ object ModalNodeProfile {
   }
 
   object Msg {
-    // For local node
     case object GenerateOwnerPassword extends Msg
     case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
         extends Msg
 
-    // For child node
-    case class ChildNodeFetched(result: Either[ErrorJson, ChildNode])
-        extends Msg
-
-    //
-    case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
+    // Roles
     case class SectionAsServerMsg(submsg: SectionAsServer.Msg) extends Msg
+    case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
+    case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
@@ -124,22 +112,19 @@ object ModalNodeProfile {
           cotoami.error("Couldn't generate an owner password.", e)
         )
 
-      case Msg.ChildNodeFetched(result) =>
-        result match {
-          case Right(child) => (model.setChild(child), Cmd.none)
-          case Left(_)      => (model, Cmd.none)
-        }
+      case Msg.SectionAsServerMsg(submsg) => {
+        val (asServer, cmd) = SectionAsServer.update(submsg, model.asServer)
+        (model.copy(asServer = asServer), cmd)
+      }
 
       case Msg.SectionAsClientMsg(submsg) => {
-        val (asClient, cmd) =
-          SectionAsClient.update(submsg, model.asClient)
+        val (asClient, cmd) = SectionAsClient.update(submsg, model.asClient)
         (model.copy(asClient = asClient), cmd)
       }
 
-      case Msg.SectionAsServerMsg(submsg) => {
-        val (asServer, cmd) =
-          SectionAsServer.update(submsg, model.asServer)
-        (model.copy(asServer = asServer), cmd)
+      case Msg.SectionAsChildMsg(submsg) => {
+        val (asChild, cmd) = SectionAsChild.update(submsg, model.asChild)
+        (model.copy(asChild = asChild), cmd)
       }
     }
 
@@ -181,7 +166,7 @@ object ModalNodeProfile {
             rootCoto.map(fieldDescription(_, model)),
             SectionAsServer(model.asServer),
             SectionAsClient(model.asClient),
-            fieldChildPrivileges(model)
+            SectionAsChild(model.asChild)
           )
         )
       )
@@ -364,27 +349,6 @@ object ModalNodeProfile {
         )
       }
     )
-
-  private def fieldChildPrivileges(model: Model)(implicit
-      context: Context
-  ): Option[ReactElement] =
-    Option.when(model.isChild) {
-      field(
-        name = context.i18n.text.ChildPrivileges,
-        classes = "privileges"
-      )(
-        PartsNode.inputChildPrivileges(
-          asOwner = model.asOwner,
-          canEditItos = model.canEditItos,
-          disabled = true,
-          onAsOwnerChange = (_ => ()),
-          onCanEditItosChange = (_ => ())
-        ),
-        div(className := "edit")(
-          buttonEdit(_ => ())
-        )
-      )
-    }
 
   private def buttonEditRootCoto(rootCoto: Coto)(implicit
       dispatch: Into[AppMsg] => Unit

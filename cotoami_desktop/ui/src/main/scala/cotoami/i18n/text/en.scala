@@ -104,6 +104,8 @@ object en extends Text {
   val AsClient_lastLogin = "Last Login"
   val AsClient_remoteAddress = "Remote Address"
 
+  val AsChild_title = "As Child"
+
   val ModalIncorporate_title = "Incorporate Remote Node"
 
   val ModalPromote_confirm =
