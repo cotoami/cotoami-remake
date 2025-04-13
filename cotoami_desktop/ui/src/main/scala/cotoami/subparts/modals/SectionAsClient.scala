@@ -10,7 +10,7 @@ import cotoami.models.{ActiveClient, Client, ClientNode, Id, Node}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
 import cotoami.subparts.{fieldInput, Modal}
 
-object SectionClient {
+object SectionAsClient {
 
   case class Model(
       nodeId: Id[Node],
@@ -36,7 +36,7 @@ object SectionClient {
 
   sealed trait Msg extends Into[AppMsg] {
     def into =
-      ModalNodeProfile.Msg.SectionClientMsg(this)
+      ModalNodeProfile.Msg.SectionAsClientMsg(this)
         .pipe(Modal.Msg.NodeProfileMsg)
         .pipe(AppMsg.ModalMsg)
   }

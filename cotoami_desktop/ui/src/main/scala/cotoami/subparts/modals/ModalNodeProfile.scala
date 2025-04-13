@@ -39,7 +39,7 @@ object ModalNodeProfile {
       canEditItos: Boolean = false,
 
       //
-      client: SectionClient.Model,
+      asClient: SectionAsClient.Model,
       asServer: SectionAsServer.Model
   ) {
     def isLocalNode()(implicit context: Context): Boolean =
@@ -63,14 +63,14 @@ object ModalNodeProfile {
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) = {
       val (asServer, asServerCmd) = SectionAsServer.Model(nodeId)
-      val (client, clientCmd) = SectionClient.Model(nodeId)
+      val (asClient, asClientCmd) = SectionAsClient.Model(nodeId)
       (
-        Model(nodeId = nodeId, asServer = asServer, client = client),
+        Model(nodeId = nodeId, asServer = asServer, asClient = asClient),
         Cmd.Batch(
           Root.fetchNodeDetails(nodeId),
           ChildNodeBackend.fetch(nodeId)
             .map(Msg.ChildNodeFetched(_).into)
-        ) ++ asServerCmd ++ clientCmd
+        ) ++ asServerCmd ++ asClientCmd
       )
     }
   }
@@ -94,7 +94,7 @@ object ModalNodeProfile {
         extends Msg
 
     //
-    case class SectionClientMsg(submsg: SectionClient.Msg) extends Msg
+    case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
     case class SectionAsServerMsg(submsg: SectionAsServer.Msg) extends Msg
   }
 
@@ -130,10 +130,10 @@ object ModalNodeProfile {
           case Left(_)      => (model, Cmd.none)
         }
 
-      case Msg.SectionClientMsg(submsg) => {
-        val (client, cmd) =
-          SectionClient.update(submsg, model.client)
-        (model.copy(client = client), cmd)
+      case Msg.SectionAsClientMsg(submsg) => {
+        val (asClient, cmd) =
+          SectionAsClient.update(submsg, model.asClient)
+        (model.copy(asClient = asClient), cmd)
       }
 
       case Msg.SectionAsServerMsg(submsg) => {
@@ -180,7 +180,7 @@ object ModalNodeProfile {
             context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
             SectionAsServer(model.asServer),
-            SectionClient(model.client),
+            SectionAsClient(model.asClient),
             fieldChildPrivileges(model)
           )
         )
@@ -221,7 +221,7 @@ object ModalNodeProfile {
           }
         )
       else
-        model.client.client
+        model.asClient.client
           .map(_ => sectionOperatedNodeAsServer)
           .getOrElse(
             context.repo.nodes.childPrivilegesTo(node.id)
