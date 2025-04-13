@@ -10,7 +10,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ChildNode, Coto, Id, Node, Server}
+import cotoami.models.{ChildNode, Coto, Id, Node}
 import cotoami.repository.Root
 import cotoami.backend.{DatabaseInfo, ErrorJson}
 import cotoami.subparts.{
@@ -163,9 +163,10 @@ object ModalNodeProfile {
           ScrollArea(className = Some("scroll-fields"))(
             fieldId(node),
             fieldName(node, rootCoto, model),
-            context.repo.nodes.servers.get(model.nodeId).map(fieldUrl),
             rootCoto.map(fieldDescription(_, model)),
             SectionLocalServer(model.localServer),
+            context.repo.nodes.servers.get(model.nodeId)
+              .map(SectionAsServer(_)),
             SectionAsClient(model.asClient),
             SectionAsChild(model.asChild)
           )
@@ -316,21 +317,6 @@ object ModalNodeProfile {
           rootCoto.map(buttonEditRootCoto)
         )
       }
-    )
-
-  private def fieldUrl(server: Server): ReactElement =
-    field(
-      name = "URL",
-      classes = "server"
-    )(
-      input(
-        `type` := "text",
-        readOnly := true,
-        value := server.server.urlPrefix
-      ),
-      div(className := "edit")(
-        // buttonEdit(_ => ())
-      )
     )
 
   private def fieldDescription(rootCoto: Coto, model: Model)(implicit
