@@ -8,7 +8,7 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ActiveClient, Client, ClientNode, Id, Node}
 import cotoami.backend.{ClientNodeBackend, ErrorJson}
-import cotoami.subparts.{fieldInput, Modal}
+import cotoami.subparts.{field, fieldInput, Modal}
 
 object SectionAsClient {
 
@@ -92,10 +92,11 @@ object SectionAsClient {
 
   def apply(
       model: Model
-  )(implicit context: Context): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.client.map { client =>
       section(className := "field-group pas-client")(
         h2()(context.i18n.text.AsClient_title),
+        fieldPassword(client),
         fieldLastLogin(client),
         client.active.map(fieldRemoteAddress)
       )
@@ -106,6 +107,30 @@ object SectionAsClient {
           aria - "busy" := model.loading.toString()
         )()
       }
+    )
+
+  private def fieldPassword(client: Client)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    field(
+      name = context.i18n.text.AsClient_password,
+      classes = "password"
+    )(
+      button(
+        `type` := "button",
+        className := "generate-password contrast outline",
+        onClick := (_ =>
+          dispatch(
+            Modal.Msg.OpenModal(
+              Modal.Confirm(
+                context.i18n.text.AsClient_confirmGenerateClientPassword,
+                Msg.GenerateClientPassword(client.node)
+              )
+            )
+          )
+        )
+      )(context.i18n.text.AsClient_generateClientPassword)
     )
 
   private def fieldLastLogin(client: Client)(implicit
