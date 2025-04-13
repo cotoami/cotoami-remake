@@ -28,6 +28,12 @@ section.node-tools {
       }
     }
 
+    &.connected {
+      summary {
+        color: var(--ok-color);
+      }
+    }
+
     &.error {
       summary {
         color: var(--error-color);
