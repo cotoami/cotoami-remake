@@ -201,7 +201,7 @@ object ModalNodeProfile {
           )
       ),
       if (context.repo.nodes.isOperating(node.id))
-        section(className := "operated-node-mark")(
+        section(className := "node-role")(
           "You",
           Option.when(!context.repo.nodes.isLocal(node.id)) {
             " (switched)"
