@@ -56,9 +56,15 @@ impl<'a> DatabaseSession<'a> {
     fn insert_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            // The source coto of the ito must belong to the local node.
+            // The source and target cotos must exist in the database.
             let source_coto = coto_ops::try_get(new_ito.source_coto_id()).run(ctx)??;
-            self.globals.ensure_local(&source_coto)?;
+            let target_coto = coto_ops::try_get(new_ito.target_coto_id()).run(ctx)??;
+
+            // At least, either of cotos must belong to the local node.
+            ensure!(
+                source_coto.node_id == local_node_id || target_coto.node_id == local_node_id,
+                "Either of the source or target cotos must belong to the local node."
+            );
 
             let inserted_ito = ito_ops::insert(new_ito).run(ctx)?;
             let change = Change::CreateIto(inserted_ito.clone());
