@@ -67,6 +67,8 @@ object SectionAsChild {
         extends Msg
     case object Edit extends Msg
     case object CancelEditing extends Msg
+    case object AsOwnerToggled extends Msg
+    case object CanEditItosToggled extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
@@ -93,6 +95,12 @@ object SectionAsChild {
             .copy(editing = false),
           Cmd.none
         )
+
+      case Msg.AsOwnerToggled =>
+        (model.copy(asOwner = !model.asOwner), Cmd.none)
+
+      case Msg.CanEditItosToggled =>
+        (model.copy(canEditItos = !model.canEditItos), Cmd.none)
     }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -128,8 +136,8 @@ object SectionAsChild {
         asOwner = model.asOwner,
         canEditItos = model.canEditItos,
         disabled = !model.editing,
-        onAsOwnerChange = (_ => ()),
-        onCanEditItosChange = (_ => ())
+        onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
+        onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled))
       ),
       Option.when(!model.isLocalNode) {
         div(className := "edit")(

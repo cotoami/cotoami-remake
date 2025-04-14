@@ -70,9 +70,9 @@ object ModalNewClient {
         nodeId: String,
         result: Either[ErrorJson, ClientNode]
     ) extends Msg
-    object CanEditItosToggled extends Msg
-    object AsOwnerToggled extends Msg
-    object Register extends Msg
+    case object AsOwnerToggled extends Msg
+    case object CanEditItosToggled extends Msg
+    case object Register extends Msg
     case class Registered(result: Either[ErrorJson, ClientAdded]) extends Msg
   }
 
@@ -112,11 +112,11 @@ object ModalNewClient {
             cotoami.error("Couldn't fetch the client node.", error)
           )
 
-      case Msg.CanEditItosToggled =>
-        default.copy(_1 = model.modify(_.canEditItos).using(!_))
-
       case Msg.AsOwnerToggled =>
         default.copy(_1 = model.modify(_.asOwner).using(!_))
+
+      case Msg.CanEditItosToggled =>
+        default.copy(_1 = model.modify(_.canEditItos).using(!_))
 
       case Msg.Register =>
         default.copy(
