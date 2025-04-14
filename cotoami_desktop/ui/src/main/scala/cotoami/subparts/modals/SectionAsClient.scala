@@ -22,7 +22,10 @@ object SectionAsClient {
       client: Option[Client] = None,
       resettingPassword: Boolean = false,
       resettingPasswordError: Option[String] = None
-  )
+  ) {
+    def isLocalNode(implicit context: Context): Boolean =
+      context.repo.nodes.isLocal(nodeId)
+  }
 
   object Model {
     def apply(
@@ -132,7 +135,7 @@ object SectionAsClient {
       button(
         `type` := "button",
         className := "reset-password contrast outline",
-        disabled := model.resettingPassword,
+        disabled := model.isLocalNode || model.resettingPassword,
         aria - "busy" := model.resettingPassword.toString(),
         onClick := (_ =>
           dispatch(
