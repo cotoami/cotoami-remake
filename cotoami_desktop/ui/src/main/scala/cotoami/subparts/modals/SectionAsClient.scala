@@ -97,7 +97,7 @@ object SectionAsClient {
             resettingPassword = false,
             resettingPasswordError = Some(e.default_message)
           ),
-          cotoami.error("Couldn't reset the client password.", e)
+          Cmd.none
         )
     }
 
@@ -147,7 +147,10 @@ object SectionAsClient {
             )
           )
         )
-      )(context.i18n.text.AsClient_resetPassword)
+      )(context.i18n.text.AsClient_resetPassword),
+      model.resettingPasswordError.map(
+        section(className := "error")(_)
+      )
     )
 
   private def fieldLastLogin(client: Client)(implicit

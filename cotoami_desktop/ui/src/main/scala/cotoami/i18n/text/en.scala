@@ -35,6 +35,13 @@ object en extends Text {
   val Ito_editPin = "Edit Pin"
   val Ito_editIto = "Edit Ito"
 
+  val Owner_resetPassword = "Reset Owner Password"
+  val Owner_confirmResetPassword =
+    """
+    Are you sure you want to generate a new owner password? 
+    Doing so will invalidate the current password.
+    """
+
   val Connection_disabled = "not synced"
   val Connection_connecting = "connecting"
   val Connection_initFailed = "initialization failed"
@@ -89,12 +96,8 @@ object en extends Text {
   val ModalNodeProfile_title = "Node Profile"
   val ModalNodeProfile_operatedNode = "You"
   val ModalNodeProfile_switched = "switched"
-  val ModalNodeProfile_generateOwnerPassword = "Generate Owner Password"
-  val ModalNodeProfile_confirmGenerateOwnerPassword =
-    """
-    Are you sure you want to generate a new owner password? 
-    Doing so will invalidate the current password.
-    """
+  val ModalNodeProfile_ownerPassword = "Owner Password"
+
   val AsServer_title = "As Server"
   val AsServer_url = "URL"
   val AsServer_connection = "Connection"

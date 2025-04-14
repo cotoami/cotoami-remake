@@ -3,11 +3,10 @@ package cotoami.subparts.modals
 import scala.util.chaining._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
-import slinky.web.SyntheticMouseEvent
 
 import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
-import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
+import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
@@ -31,7 +30,8 @@ object ModalNodeProfile {
   case class Model(
       nodeId: Id[Node],
       error: Option[String] = None,
-      generatingPassword: Boolean = false,
+      resettingPassword: Boolean = false,
+      resettingPasswordError: Option[String] = None,
 
       // Roles
       localServer: SectionLocalServer.Model,
@@ -92,9 +92,8 @@ object ModalNodeProfile {
   }
 
   object Msg {
-    case object GenerateOwnerPassword extends Msg
-    case class OwnerPasswordGenerated(result: Either[ErrorJson, String])
-        extends Msg
+    case object ResetOwnerPassword extends Msg
+    case class OwnerPasswordReset(result: Either[ErrorJson, String]) extends Msg
 
     // Roles
     case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
@@ -106,26 +105,26 @@ object ModalNodeProfile {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.GenerateOwnerPassword =>
+      case Msg.ResetOwnerPassword =>
         (
-          model.copy(generatingPassword = true),
+          model.copy(resettingPassword = true),
           DatabaseInfo.newOwnerPassword
-            .map(Msg.OwnerPasswordGenerated(_).into)
+            .map(Msg.OwnerPasswordReset(_).into)
         )
 
-      case Msg.OwnerPasswordGenerated(Right(password)) =>
+      case Msg.OwnerPasswordReset(Right(password)) =>
         (
-          model.copy(generatingPassword = false),
+          model.copy(resettingPassword = false),
           Modal.open(Modal.NewPassword.forOwner(password))
         )
 
-      case Msg.OwnerPasswordGenerated(Left(e)) =>
+      case Msg.OwnerPasswordReset(Left(e)) =>
         (
           model.copy(
-            generatingPassword = false,
-            error = Some(e.default_message)
+            resettingPassword = false,
+            resettingPasswordError = Some(e.default_message)
           ),
-          cotoami.error("Couldn't generate an owner password.", e)
+          Cmd.none
         )
 
       case Msg.SectionLocalServerMsg(submsg) => {
@@ -180,6 +179,9 @@ object ModalNodeProfile {
             fieldId(node),
             fieldName(node, rootCoto, model),
             rootCoto.map(fieldDescription(_, model)),
+            Option.when(model.isLocalNode && model.isOperatedNode) {
+              fieldOwnerPassword(model)
+            },
             SectionLocalServer(model.localServer),
             model.asServer.map(SectionAsServer(_)),
             SectionAsClient(model.asClient),
@@ -253,44 +255,7 @@ object ModalNodeProfile {
   ): ReactElement =
     section(className := "tool-buttons")(
       // Operate as
-      PartsNode.buttonOperateAs(node, "left"),
-
-      // Generate Owner Password
-      Option.when(model.isLocalNode && model.isOperatedNode) {
-        buttonGeneratePassword(
-          context.i18n.text.ModalNodeProfile_generateOwnerPassword,
-          model,
-          e =>
-            dispatch(
-              Modal.Msg.OpenModal(
-                Modal.Confirm(
-                  context.i18n.text.ModalNodeProfile_confirmGenerateOwnerPassword,
-                  Msg.GenerateOwnerPassword
-                )
-              )
-            )
-        )
-      }
-    )
-
-  private def buttonGeneratePassword(
-      tip: String,
-      model: Model,
-      onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
-    div(className := "generate-password")(
-      span(
-        className := "processing",
-        aria - "busy" := model.generatingPassword.toString()
-      )(),
-      toolButton(
-        classes = "generate-password",
-        symbol = "key",
-        tip = Some(tip),
-        tipPlacement = "left",
-        disabled = model.generatingPassword,
-        onClick = onClick
-      )
+      PartsNode.buttonOperateAs(node, "left")
     )
 
   private def fieldId(node: Node)(implicit
@@ -341,6 +306,35 @@ object ModalNodeProfile {
           buttonEditRootCoto(rootCoto)
         )
       }
+    )
+
+  private def fieldOwnerPassword(model: Model)(implicit
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
+    field(
+      name = context.i18n.text.ModalNodeProfile_ownerPassword,
+      classes = "owner-password"
+    )(
+      button(
+        `type` := "button",
+        className := "reset-password contrast outline",
+        disabled := model.resettingPassword,
+        aria - "busy" := model.resettingPassword.toString(),
+        onClick := (_ =>
+          dispatch(
+            Modal.Msg.OpenModal(
+              Modal.Confirm(
+                context.i18n.text.Owner_confirmResetPassword,
+                Msg.ResetOwnerPassword
+              )
+            )
+          )
+        )
+      )(context.i18n.text.Owner_resetPassword),
+      model.resettingPasswordError.map(
+        section(className := "error")(_)
+      )
     )
 
   private def buttonEditRootCoto(rootCoto: Coto)(implicit

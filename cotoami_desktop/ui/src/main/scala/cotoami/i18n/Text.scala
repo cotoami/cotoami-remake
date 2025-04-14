@@ -32,6 +32,9 @@ trait Text {
   val Ito_editPin: String
   val Ito_editIto: String
 
+  val Owner_resetPassword: String
+  val Owner_confirmResetPassword: String
+
   val Connection_disabled: String
   val Connection_connecting: String
   val Connection_initFailed: String
@@ -69,8 +72,7 @@ trait Text {
   val ModalNodeProfile_title: String
   val ModalNodeProfile_operatedNode: String
   val ModalNodeProfile_switched: String
-  val ModalNodeProfile_generateOwnerPassword: String
-  val ModalNodeProfile_confirmGenerateOwnerPassword: String
+  val ModalNodeProfile_ownerPassword: String
 
   val AsServer_title: String
   val AsServer_url: String
