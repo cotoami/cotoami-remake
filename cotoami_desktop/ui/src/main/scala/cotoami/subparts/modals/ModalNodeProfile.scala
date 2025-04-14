@@ -10,7 +10,7 @@ import marubinotto.fui.Cmd
 import marubinotto.components.{materialSymbol, toolButton, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{ChildNode, Coto, Id, Node}
+import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.Root
 import cotoami.backend.{DatabaseInfo, ErrorJson}
 import cotoami.subparts.{
@@ -43,6 +43,22 @@ object ModalNodeProfile {
 
     def isOperatedNode(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
+
+    def asServer(implicit context: Context): Option[Server] =
+      context.repo.nodes.servers.get(nodeId)
+
+    def nodeRoleName(implicit context: Context): Option[String] =
+      if (isOperatedNode)
+        Some(
+          context.i18n.text.ModalNodeProfile_operatedNode ++
+            Option.when(!isLocalNode)(" (switched)").getOrElse("")
+        )
+      else if (asServer.isDefined)
+        Some(context.i18n.text.Server)
+      else if (asClient.client.isDefined)
+        Some(context.i18n.text.Client)
+      else
+        None
   }
 
   object Model {
@@ -165,8 +181,7 @@ object ModalNodeProfile {
             fieldName(node, rootCoto, model),
             rootCoto.map(fieldDescription(_, model)),
             SectionLocalServer(model.localServer),
-            context.repo.nodes.servers.get(model.nodeId)
-              .map(SectionAsServer(_)),
+            model.asServer.map(SectionAsServer(_)),
             SectionAsClient(model.asClient),
             SectionAsChild(model.asChild)
           )
@@ -200,17 +215,16 @@ object ModalNodeProfile {
             context.i18n.text.Node_notYetConnected
           )
       ),
-      if (context.repo.nodes.isOperating(node.id))
-        section(className := "node-role")(
-          "You",
-          Option.when(!context.repo.nodes.isLocal(node.id)) {
-            " (switched)"
+      model.nodeRoleName.map { role =>
+        Fragment(
+          section(className := "node-role")(role),
+          Option.when(!model.isOperatedNode) {
+            sectionNodeRelationship(
+              context.repo.nodes.childPrivilegesTo(node.id)
+            )
           }
         )
-      else
-        sectionNodeRelationship(
-          context.repo.nodes.childPrivilegesTo(node.id)
-        )
+      }
     )
 
   private def sectionNodeRelationship(privileges: Option[ChildNode])(implicit

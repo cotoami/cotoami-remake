@@ -13,6 +13,8 @@ object en extends Text {
   val Node = "Node"
   val NodeRoot = "Node Root"
   val Owner = "Owner"
+  val Server = "Server"
+  val Client = "Client"
   val ReadOnly = "Read-only"
 
   val Id = "ID"
@@ -85,6 +87,8 @@ object en extends Text {
     """
 
   val ModalNodeProfile_title = "Node Profile"
+  val ModalNodeProfile_operatedNode = "You"
+  val ModalNodeProfile_switched = "switched"
   val ModalNodeProfile_generateOwnerPassword = "Generate Owner Password"
   val ModalNodeProfile_confirmGenerateOwnerPassword =
     """

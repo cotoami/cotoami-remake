@@ -10,6 +10,8 @@ trait Text {
   val Node: String
   val NodeRoot: String
   val Owner: String
+  val Server: String
+  val Client: String
   val ReadOnly: String
 
   val Id: String
@@ -65,6 +67,8 @@ trait Text {
   val ModalNewClientPassword_message: String
 
   val ModalNodeProfile_title: String
+  val ModalNodeProfile_operatedNode: String
+  val ModalNodeProfile_switched: String
   val ModalNodeProfile_generateOwnerPassword: String
   val ModalNodeProfile_confirmGenerateOwnerPassword: String
 
