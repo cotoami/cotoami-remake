@@ -59,7 +59,10 @@ pub enum Command {
     ChildNode { id: Id<Node> },
 
     /// Request to edit a child node and return the updated [ChildNode].
-    EditChild { id: Id<Node>, values: EditChild },
+    EditChild {
+        id: Id<Node>,
+        values: ChildNodeInput,
+    },
 
     /// Request a [Page<Cotonoma>] that contains recently updated cotonomas.
     RecentCotonomas {

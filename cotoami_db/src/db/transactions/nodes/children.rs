@@ -2,8 +2,8 @@ use anyhow::Result;
 
 use crate::{
     db::{
+        ops::{node_role_ops::child_ops, Page},
         DatabaseSession,
-        ops::{Page, node_role_ops::child_ops},
     },
     models::prelude::*,
 };
@@ -28,11 +28,10 @@ impl<'a> DatabaseSession<'a> {
     pub fn edit_child_node(
         &self,
         id: &Id<Node>,
-        as_owner: bool,
-        can_edit_itos: bool,
+        input: &ChildNodeInput,
         operator: &Operator,
     ) -> Result<ChildNode> {
         operator.requires_to_be_owner()?;
-        self.write_transaction(child_ops::edit(id, as_owner, can_edit_itos))
+        self.write_transaction(child_ops::edit(id, input))
     }
 }

@@ -11,11 +11,7 @@ use tokio::task::spawn_blocking;
 use validator::Validate;
 
 use crate::{
-    service::{
-        error::IntoServiceResult,
-        models::{EditChild, Pagination},
-        ServiceError,
-    },
+    service::{error::IntoServiceResult, models::Pagination, ServiceError},
     state::NodeState,
     web::{Accept, Content},
 };
@@ -81,7 +77,7 @@ async fn edit_child(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(node_id): Path<Id<Node>>,
-    Form(form): Form<EditChild>,
+    Form(form): Form<ChildNodeInput>,
 ) -> Result<Content<ChildNode>, ServiceError> {
     state
         .edit_child(node_id, form, Arc::new(operator))

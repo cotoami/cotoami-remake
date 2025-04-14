@@ -114,7 +114,8 @@ where
         pat!(ChildNode {
             node_id: eq(&new_client_id),
             as_owner: eq(&false),
-            can_edit_itos: eq(&false)
+            can_edit_itos: eq(&false),
+            can_post_cotonomas: eq(&false)
         })
     );
 
@@ -154,9 +155,10 @@ where
 
     let request = Command::EditChild {
         id: new_client_id,
-        values: EditChild {
+        values: ChildNodeInput {
             as_owner: false,
             can_edit_itos: true,
+            can_post_cotonomas: false,
         },
     }
     .into_request();
@@ -167,7 +169,8 @@ where
         pat!(ChildNode {
             node_id: eq(&new_client_id),
             as_owner: eq(&false),
-            can_edit_itos: eq(&true)
+            can_edit_itos: eq(&true),
+            can_post_cotonomas: eq(&false)
         }),
     );
 
@@ -476,10 +479,7 @@ async fn test_service_based_on_remote_node(
         client_state
             .edit_child(
                 server_id,
-                EditChild {
-                    as_owner: true,
-                    can_edit_itos: true,
-                },
+                ChildNodeInput::as_owner(),
                 Arc::new(client_state.local_node_as_operator()?),
             )
             .await

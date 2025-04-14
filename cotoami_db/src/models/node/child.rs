@@ -1,6 +1,5 @@
 use anyhow::Result;
 use chrono::NaiveDateTime;
-use derive_new::new;
 use diesel::prelude::*;
 use validator::Validate;
 
@@ -72,7 +71,7 @@ impl<'a> NewChildNode<'a> {
 // ChildNodeInput
 /////////////////////////////////////////////////////////////////////////////
 
-/// Input values to create a new [ChildNode] as a serializable struct
+/// Input values to create or update a [ChildNode] as a serializable struct
 #[derive(derive_more::Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct ChildNodeInput {
     pub as_owner: bool,
@@ -81,8 +80,8 @@ pub struct ChildNodeInput {
 }
 
 impl ChildNodeInput {
-    pub fn as_owner() -> ChildNodeInput {
-        ChildNodeInput {
+    pub fn as_owner() -> Self {
+        Self {
             as_owner: true,
             can_edit_itos: true,
             can_post_cotonomas: true,
@@ -96,17 +95,23 @@ impl ChildNodeInput {
 
 /// A changeset of [ChildNode] for update.
 /// Only fields that have [Some] value will be updated.
-#[derive(Debug, Identifiable, AsChangeset, Validate, new)]
+#[derive(Debug, Identifiable, AsChangeset, Validate)]
 #[diesel(table_name = child_nodes, primary_key(node_id))]
 pub(crate) struct UpdateChildNode<'a> {
     node_id: &'a Id<Node>,
 
-    #[new(default)]
     pub as_owner: Option<bool>,
-
-    #[new(default)]
     pub can_edit_itos: Option<bool>,
-
-    #[new(default)]
     pub can_post_cotonomas: Option<bool>,
+}
+
+impl<'a> UpdateChildNode<'a> {
+    pub fn new(node_id: &'a Id<Node>, input: &'a ChildNodeInput) -> Self {
+        Self {
+            node_id,
+            as_owner: Some(input.as_owner),
+            can_edit_itos: Some(input.can_edit_itos),
+            can_post_cotonomas: Some(input.can_post_cotonomas),
+        }
+    }
 }

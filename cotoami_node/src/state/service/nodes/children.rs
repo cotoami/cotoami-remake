@@ -3,12 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use cotoami_db::prelude::*;
 use tokio::task::spawn_blocking;
-use validator::Validate;
 
-use crate::{
-    service::{error::IntoServiceResult, models::EditChild, ServiceError},
-    state::NodeState,
-};
+use crate::{service::ServiceError, state::NodeState};
 
 impl NodeState {
     pub async fn child_node(
@@ -23,22 +19,14 @@ impl NodeState {
     pub async fn edit_child(
         &self,
         node_id: Id<Node>,
-        values: EditChild,
+        values: ChildNodeInput,
         operator: Arc<Operator>,
     ) -> Result<ChildNode, ServiceError> {
-        if let Err(errors) = values.validate() {
-            return errors.into_result();
-        }
-
         let child_node = spawn_blocking({
             let db = self.db().clone();
             move || {
-                db.new_session()?.edit_child_node(
-                    &node_id,
-                    values.as_owner,
-                    values.can_edit_itos,
-                    &operator,
-                )
+                db.new_session()?
+                    .edit_child_node(&node_id, &values, &operator)
             }
         })
         .await??;

@@ -9,7 +9,7 @@ use crate::{
     db::{error::*, op::*, ops, ops::Page},
     models::{
         node::{
-            child::{ChildNode, NewChildNode, UpdateChildNode},
+            child::{ChildNode, ChildNodeInput, NewChildNode, UpdateChildNode},
             Node,
         },
         Id,
@@ -88,15 +88,12 @@ pub(crate) fn update<'a>(
     })
 }
 
-pub(crate) fn edit(
-    id: &Id<Node>,
-    as_owner: bool,
-    can_edit_itos: bool,
-) -> impl Operation<WritableConn, ChildNode> + '_ {
+pub(crate) fn edit<'a>(
+    id: &'a Id<Node>,
+    input: &'a ChildNodeInput,
+) -> impl Operation<WritableConn, ChildNode> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
-        let mut update_child = UpdateChildNode::new(id);
-        update_child.as_owner = Some(as_owner);
-        update_child.can_edit_itos = Some(can_edit_itos);
+        let update_child = UpdateChildNode::new(id, input);
         let child = update(&update_child).run(ctx)?;
         Ok(child)
     })
