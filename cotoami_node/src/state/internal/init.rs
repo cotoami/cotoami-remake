@@ -1,15 +1,12 @@
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use cotoami_db::Principal;
+use cotoami_db::{ChildNodeInput, Principal};
 use tokio::task::spawn_blocking;
 use tracing::{debug, error, info};
 
 use crate::{
-    service::{
-        error::ServiceError,
-        models::{AddClient, NodeRole},
-    },
+    service::{error::ServiceError, models::AddClient},
     state::{error::NodeError, NodeState, ServerConnection},
 };
 
@@ -84,9 +81,7 @@ impl NodeState {
                 let add_client = AddClient {
                     id: Some(node_id),
                     password: Some(password.to_owned()),
-                    client_role: Some(NodeRole::Child),
-                    as_owner: Some(true),
-                    can_edit_itos: Some(true),
+                    as_child: Some(ChildNodeInput::as_owner()),
                 };
                 let opr = self.local_node_as_operator()?;
                 match self.add_client(add_client, Arc::new(opr)).await {

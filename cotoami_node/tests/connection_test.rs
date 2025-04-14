@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cotoami_db::ChildNodeInput;
 use cotoami_node::prelude::*;
 use futures::stream::StreamExt;
 use googletest::prelude::*;
@@ -19,7 +20,11 @@ async fn test_connecting_nodes(server_port: u16, enable_websocket: bool) -> Resu
         "server",
         server_port,
         enable_websocket,
-        AddClient::new(client_id, NodeRole::Child, Some("server-password")),
+        AddClient::new(
+            client_id,
+            Some("server-password"),
+            Some(ChildNodeInput::default()),
+        ),
     )
     .await?;
     let server_id = server_state.try_get_local_node_id()?;

@@ -81,8 +81,12 @@ where
     /////////////////////////////////////////////////////////////////////////////
 
     let new_client_id = Id::generate();
-    let request = Command::AddClient(AddClient::new(new_client_id, NodeRole::Child, None::<&str>))
-        .into_request();
+    let request = Command::AddClient(AddClient::new(
+        new_client_id,
+        None::<&str>,
+        Some(ChildNodeInput::default()),
+    ))
+    .into_request();
     let client_added = service.call(request).await?.content::<ClientAdded>()?;
 
     assert_that!(
@@ -448,8 +452,11 @@ async fn test_service_based_on_remote_node(
     let client_id = client_state.try_get_local_node_id()?;
 
     // Server node
-    let mut add_client = AddClient::new(client_id, client_role, Some("server-password"));
-    add_client.as_owner = Some(true);
+    let client_as_child = match client_role {
+        NodeRole::Parent => None,
+        NodeRole::Child => Some(ChildNodeInput::as_owner()),
+    };
+    let add_client = AddClient::new(client_id, Some("server-password"), client_as_child);
     let (server_state, shutdown) =
         common::launch_server_node("server", server_port, enable_websocket, add_client).await?;
     let server_id = server_state.try_get_local_node_id()?;

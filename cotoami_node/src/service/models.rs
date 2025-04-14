@@ -77,10 +77,7 @@ impl ClientNodeSession {
     pub fn new_server_role(&self) -> NewDatabaseRole {
         match (&self.token, &self.child_privileges) {
             (Some(_), Some(_)) => NewDatabaseRole::Parent,
-            (Some(_), None) => NewDatabaseRole::Child {
-                as_owner: false,
-                can_edit_itos: false,
-            },
+            (Some(_), None) => NewDatabaseRole::Child(ChildNodeInput::default()),
             (None, _) => NewDatabaseRole::Parent, // anonymous access
         }
     }
@@ -95,29 +92,28 @@ pub struct AddClient {
     #[validate(required)]
     pub id: Option<Id<Node>>,
     pub password: Option<String>, // if None, the password will be auto-generated
-    pub client_role: Option<NodeRole>, // the default values is: NodeRole::Child
-
-    // Client as a child
-    pub as_owner: Option<bool>,
-    pub can_edit_itos: Option<bool>,
+    pub as_child: Option<ChildNodeInput>,
 }
 
 impl AddClient {
-    pub fn new(id: Id<Node>, role: NodeRole, password: Option<impl Into<String>>) -> Self {
+    pub fn new(
+        id: Id<Node>,
+        password: Option<impl Into<String>>,
+        as_child: Option<ChildNodeInput>,
+    ) -> Self {
         Self {
             id: Some(id),
             password: password.map(Into::into),
-            client_role: Some(role),
-            as_owner: None,
-            can_edit_itos: None,
+            as_child,
         }
     }
 
-    pub fn client_role(&self) -> NodeRole { self.client_role.unwrap_or(NodeRole::Child) }
-
-    pub fn as_owner(&self) -> bool { self.as_owner.unwrap_or(false) }
-
-    pub fn can_edit_itos(&self) -> bool { self.can_edit_itos.unwrap_or(false) }
+    pub fn into_new_database_role(self) -> NewDatabaseRole {
+        match self.as_child {
+            Some(child) => NewDatabaseRole::Child(child),
+            None => NewDatabaseRole::Parent,
+        }
+    }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

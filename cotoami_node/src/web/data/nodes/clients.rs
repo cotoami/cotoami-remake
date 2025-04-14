@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Json, Path, Query, State},
     http::StatusCode,
     routing::get,
     Extension, Form, Router,
@@ -86,10 +86,10 @@ async fn add_client(
     State(state): State<NodeState>,
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
-    Form(form): Form<AddClient>,
+    Json(input): Json<AddClient>,
 ) -> Result<(StatusCode, Content<ClientAdded>), ServiceError> {
     state
-        .add_client(form, Arc::new(operator))
+        .add_client(input, Arc::new(operator))
         .await
         .map(|added| (StatusCode::CREATED, Content(added, accept)))
 }

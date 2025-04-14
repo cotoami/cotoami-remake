@@ -9,7 +9,7 @@ use validator::Validate;
 use crate::{
     service::{
         error::IntoServiceResult,
-        models::{AddClient, ClientAdded, EditClient, NodeRole, Pagination},
+        models::{AddClient, ClientAdded, EditClient, Pagination},
         ServiceError,
     },
     state::NodeState,
@@ -58,16 +58,9 @@ impl NodeState {
             return errors.into_result();
         }
 
-        // Inputs
-        let role = match input.client_role() {
-            NodeRole::Parent => NewDatabaseRole::Parent,
-            NodeRole::Child => NewDatabaseRole::Child {
-                as_owner: input.as_owner(),
-                can_edit_itos: input.can_edit_itos(),
-            },
-        };
-        let password = if let Some(password) = input.password {
-            password
+        // Generate password if not given
+        let password = if let Some(ref password) = input.password {
+            password.clone()
         } else {
             cotoami_db::generate_secret(None)
         };
@@ -80,7 +73,7 @@ impl NodeState {
                 let (client, node, role) = ds.register_client_node(
                     &input.id.unwrap_or_else(|| unreachable!()),
                     &password,
-                    role,
+                    input.into_new_database_role(),
                     &operator,
                 )?;
                 debug!("Client node ({}) registered as a {}", client.node_id, role);

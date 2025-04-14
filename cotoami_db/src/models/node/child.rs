@@ -57,19 +57,36 @@ pub(crate) struct NewChildNode<'a> {
 }
 
 impl<'a> NewChildNode<'a> {
-    pub fn new(
-        node_id: &'a Id<Node>,
-        as_owner: bool,
-        can_edit_itos: bool,
-        can_post_cotonomas: bool,
-    ) -> Result<Self> {
+    pub fn new(node_id: &'a Id<Node>, input: &ChildNodeInput) -> Result<Self> {
         Ok(Self {
             node_id,
             created_at: crate::current_datetime(),
-            as_owner,
-            can_edit_itos,
-            can_post_cotonomas,
+            as_owner: input.as_owner,
+            can_edit_itos: input.can_edit_itos,
+            can_post_cotonomas: input.can_post_cotonomas,
         })
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// ChildNodeInput
+/////////////////////////////////////////////////////////////////////////////
+
+/// Input values to create a new [ChildNode] as a serializable struct
+#[derive(derive_more::Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct ChildNodeInput {
+    pub as_owner: bool,
+    pub can_edit_itos: bool,
+    pub can_post_cotonomas: bool,
+}
+
+impl ChildNodeInput {
+    pub fn as_owner() -> ChildNodeInput {
+        ChildNodeInput {
+            as_owner: true,
+            can_edit_itos: true,
+            can_post_cotonomas: true,
+        }
     }
 }
 

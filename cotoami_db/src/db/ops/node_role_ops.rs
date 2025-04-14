@@ -8,7 +8,7 @@ use crate::{
     db::{error::*, op::*},
     models::{
         node::{
-            child::NewChildNode,
+            child::{ChildNodeInput, NewChildNode},
             client::{ClientNode, NewClientNode},
             parent::{NewParentNode, ParentNode},
             roles::{DatabaseRole, NetworkRole},
@@ -138,11 +138,7 @@ pub(crate) fn database_roles_of<Conn: AsReadableConn>(
 
 pub enum NewDatabaseRole {
     Parent,
-    Child {
-        as_owner: bool,
-        can_edit_itos: bool,
-        can_post_cotonomas: bool,
-    },
+    Child(ChildNodeInput),
 }
 
 pub(crate) fn set_database_role(
@@ -161,13 +157,8 @@ pub(crate) fn set_database_role(
                 let role = parent_ops::insert(&new_role).run(ctx)?;
                 Ok(DatabaseRole::Parent(role))
             }
-            NewDatabaseRole::Child {
-                as_owner,
-                can_edit_itos,
-                can_post_cotonomas,
-            } => {
-                let new_role =
-                    NewChildNode::new(node_id, as_owner, can_edit_itos, can_post_cotonomas)?;
+            NewDatabaseRole::Child(input) => {
+                let new_role = NewChildNode::new(node_id, &input)?;
                 let role = child_ops::insert(&new_role).run(ctx)?;
                 Ok(DatabaseRole::Child(role))
             }
