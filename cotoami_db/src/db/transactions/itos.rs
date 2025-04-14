@@ -4,7 +4,7 @@ use crate::{
     db::{
         error::*,
         op::*,
-        ops::{changelog_ops, coto_ops, ito_ops, Page},
+        ops::{changelog_ops, ito_ops, Page},
         DatabaseSession,
     },
     models::prelude::*,
@@ -56,14 +56,9 @@ impl<'a> DatabaseSession<'a> {
     fn insert_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            // The source and target cotos must exist in the database.
-            let source_coto = coto_ops::try_get(new_ito.source_coto_id()).run(ctx)??;
-            let target_coto = coto_ops::try_get(new_ito.target_coto_id()).run(ctx)??;
-
-            // At least, either of cotos must belong to the local node.
             ensure!(
-                source_coto.node_id == local_node_id || target_coto.node_id == local_node_id,
-                "Either of the source or target cotos must belong to the local node."
+                new_ito.node_id() == &local_node_id,
+                "NewIto::node_id must be local."
             );
 
             let inserted_ito = ito_ops::insert(new_ito).run(ctx)?;
