@@ -45,8 +45,9 @@ impl<'a> DatabaseSession<'a> {
         self.insert_ito(new_ito)
     }
 
-    /// For import tools (ex. original Cotoami's JSON dumps)
+    /// For import tools (ex. original Cotoami's JSON dumps).
     pub fn import_ito(&self, ito: &Ito) -> Result<(Ito, ChangelogEntry)> {
+        self.globals.ensure_local(ito)?;
         self.insert_ito(ito.to_import())
     }
 
