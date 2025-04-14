@@ -92,6 +92,7 @@ diesel::table! {
         created_at -> Timestamp,
         as_owner -> Bool,
         can_edit_itos -> Bool,
+        can_post_cotonomas -> Bool,
     }
 }
 diesel::joinable!(child_nodes -> nodes (node_id));

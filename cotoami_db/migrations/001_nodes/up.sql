@@ -176,5 +176,9 @@ CREATE TABLE child_nodes (
   -- 0 (false) and 1 (true).
   can_edit_itos INTEGER DEFAULT FALSE NOT NULL,
 
+  -- Permission to post cotonomas in this database.
+  -- 0 (false) and 1 (true).
+  can_post_cotonomas INTEGER DEFAULT FALSE NOT NULL,
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT
 ) WITHOUT ROWID;

@@ -36,6 +36,9 @@ pub struct ChildNode {
 
     /// Permission to edit itos in this database.
     pub can_edit_itos: bool,
+
+    /// Permission to post cotonomas in this database.
+    pub can_post_cotonomas: bool,
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -50,15 +53,22 @@ pub(crate) struct NewChildNode<'a> {
     created_at: NaiveDateTime,
     as_owner: bool,
     can_edit_itos: bool,
+    can_post_cotonomas: bool,
 }
 
 impl<'a> NewChildNode<'a> {
-    pub fn new(node_id: &'a Id<Node>, as_owner: bool, can_edit_itos: bool) -> Result<Self> {
+    pub fn new(
+        node_id: &'a Id<Node>,
+        as_owner: bool,
+        can_edit_itos: bool,
+        can_post_cotonomas: bool,
+    ) -> Result<Self> {
         Ok(Self {
             node_id,
             created_at: crate::current_datetime(),
             as_owner,
             can_edit_itos,
+            can_post_cotonomas,
         })
     }
 }
@@ -79,4 +89,7 @@ pub(crate) struct UpdateChildNode<'a> {
 
     #[new(default)]
     pub can_edit_itos: Option<bool>,
+
+    #[new(default)]
+    pub can_post_cotonomas: Option<bool>,
 }

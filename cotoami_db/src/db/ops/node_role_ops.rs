@@ -138,7 +138,11 @@ pub(crate) fn database_roles_of<Conn: AsReadableConn>(
 
 pub enum NewDatabaseRole {
     Parent,
-    Child { as_owner: bool, can_edit_itos: bool },
+    Child {
+        as_owner: bool,
+        can_edit_itos: bool,
+        can_post_cotonomas: bool,
+    },
 }
 
 pub(crate) fn set_database_role(
@@ -160,8 +164,10 @@ pub(crate) fn set_database_role(
             NewDatabaseRole::Child {
                 as_owner,
                 can_edit_itos,
+                can_post_cotonomas,
             } => {
-                let new_role = NewChildNode::new(node_id, as_owner, can_edit_itos)?;
+                let new_role =
+                    NewChildNode::new(node_id, as_owner, can_edit_itos, can_post_cotonomas)?;
                 let role = child_ops::insert(&new_role).run(ctx)?;
                 Ok(DatabaseRole::Child(role))
             }
