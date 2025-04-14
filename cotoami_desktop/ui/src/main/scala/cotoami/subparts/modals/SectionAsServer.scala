@@ -20,7 +20,7 @@ object SectionAsServer {
   )(implicit context: Context): ReactElement =
     field(
       name = context.i18n.text.AsServer_url,
-      classes = "server"
+      classes = "server-url"
     )(
       input(
         `type` := "text",

@@ -3,7 +3,6 @@ package cotoami.subparts
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
-import marubinotto.optionalClasses
 import marubinotto.fui.Cmd
 import marubinotto.components.toolButton
 
@@ -65,23 +64,7 @@ object SectionNodeTools {
     val status = repo.nodes.parentStatus(node.id)
     val statusView = status.map(ViewConnectionStatus(_))
     section(className := "node-tools")(
-      statusView.map(view =>
-        details(
-          className := optionalClasses(
-            Seq(
-              ("node-status", true),
-              (view.className, true),
-              ("no-message", view.message.isEmpty)
-            )
-          )
-        )(
-          summary()(
-            view.icon,
-            span(className := "name")(view.title)
-          ),
-          view.message.map(p(className := "message")(_))
-        )
-      ),
+      statusView.map(PartsNode.detailsConnectionStatus),
       div(className := "tools")(
         status.map(status => {
           val syncDisabled = status.disabled

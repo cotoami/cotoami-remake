@@ -15,17 +15,6 @@ span.node {
   }
 }
 
-section.client-nodes-count {
-  code {
-    margin-right: 2px;
-  }
-
-  span.separator {
-    margin-left: 8px;
-    margin-right: 6px;
-  }
-}
-
 section.node-description {
   padding: var(--spacing);
   background-color: var(--embedded-cotobackground-color);
@@ -36,5 +25,65 @@ section.node-description {
 
   section.text-content * {
     font-size: 0.9rem;
+  }
+}
+
+details.node-status {
+  border-style: none;
+  margin: 0;
+  margin-bottom: 8px;
+  padding: 0;
+
+  summary {
+    margin-bottom: 0;
+    text-align: center;
+
+    span.material-symbols {
+      margin-right: 3px;
+      vertical-align: text-bottom;
+    }
+
+    span.busy {
+      margin-right: 3px;
+    }
+  }
+
+  &.no-message summary {
+    pointer-events: none;
+
+    &::after {
+      display: none;
+    }
+  }
+
+  &.connected {
+    summary {
+      color: var(--ok-color);
+    }
+  }
+
+  &.error {
+    summary {
+      color: var(--error-color);
+    }
+  }
+
+  p.message {
+    margin: 5px 0;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background-color: var(--card-background-color);
+    opacity: 0.7;
+  }
+}
+
+section.client-nodes-count {
+  code {
+    margin-right: 2px;
+  }
+
+  span.separator {
+    margin-left: 8px;
+    margin-right: 6px;
   }
 }

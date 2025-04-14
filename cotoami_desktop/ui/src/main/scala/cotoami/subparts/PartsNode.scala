@@ -4,9 +4,12 @@ import slinky.core.SyntheticEvent
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
+import marubinotto.optionalClasses
 import marubinotto.components.toolButton
+
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.Node
+import cotoami.subparts.ViewConnectionStatus
 
 object PartsNode {
 
@@ -32,6 +35,23 @@ object PartsNode {
     )(
       imgNode(node),
       span(className := "name")(node.name)
+    )
+
+  def detailsConnectionStatus(status: ViewConnectionStatus): ReactElement =
+    details(
+      className := optionalClasses(
+        Seq(
+          ("node-status", true),
+          (status.className, true),
+          ("no-message", status.message.isEmpty)
+        )
+      )
+    )(
+      summary()(
+        status.icon,
+        span(className := "name")(status.title)
+      ),
+      status.message.map(p(className := "message")(_))
     )
 
   def buttonOperateAs(switchTo: Node, tipPlacement: String = "bottom")(implicit

@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import marubinotto.components.materialSymbol
 import cotoami.Context
-import cotoami.models.ParentStatus
+import cotoami.models.{ParentStatus, Server}
 import cotoami.models.Server.NotConnected
 
 case class ViewConnectionStatus(
@@ -28,6 +28,9 @@ object ViewConnectionStatus {
       context.i18n.text.Connection_connected,
       None
     )
+
+  def apply(server: Server)(implicit context: Context): ViewConnectionStatus =
+    server.notConnected.map(apply).getOrElse(connected)
 
   def apply(
       status: ParentStatus
