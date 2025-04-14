@@ -5,14 +5,15 @@ import slinky.web.html._
 
 import cotoami.Context
 import cotoami.models.Server
-import cotoami.subparts.field
+import cotoami.subparts.{field, PartsNode, ViewConnectionStatus}
 
 object SectionAsServer {
 
   def apply(server: Server)(implicit context: Context): ReactElement =
-    section(className := "field-group local-server")(
+    section(className := "field-group as-server")(
       h2()(context.i18n.text.AsServer_title),
-      fieldUrl(server)
+      fieldUrl(server),
+      fieldStatus(server)
     )
 
   private def fieldUrl(
@@ -29,6 +30,18 @@ object SectionAsServer {
       ),
       div(className := "edit")(
         // buttonEdit(_ => ())
+      )
+    )
+
+  private def fieldStatus(
+      server: Server
+  )(implicit context: Context): ReactElement =
+    field(
+      name = "Status",
+      classes = "server-status"
+    )(
+      PartsNode.detailsConnectionStatus(
+        ViewConnectionStatus(server)
       )
     )
 }

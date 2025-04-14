@@ -163,6 +163,25 @@ dialog.node-profile {
     }
   }
 
+  section.as-server {
+    details.node-status {
+      border: 1px solid var(--pane-border-color);
+      border-radius: var(--border-radius);
+      padding: 12px var(--form-element-spacing-horizontal);
+      line-height: var(--line-height);
+      font-size: 1rem;
+
+      summary {
+        text-align: left;
+      }
+
+      p.message {
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+    }
+  }
+
   section.client-nodes-count {
     border: 1px solid var(--pane-border-color);
     border-radius: var(--border-radius);
