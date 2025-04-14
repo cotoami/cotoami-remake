@@ -97,6 +97,7 @@ object en extends Text {
     """
   val AsServer_title = "As Server"
   val AsServer_url = "URL"
+  val AsServer_connection = "Connection"
   val AsServer_clientNodes = "Client Nodes"
   val AsServer_anonymousRead = "Accept Anonymous Read"
   val AsServer_confirmEnableAnonymousRead =

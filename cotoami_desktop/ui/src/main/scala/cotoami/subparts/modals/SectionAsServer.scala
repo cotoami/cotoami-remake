@@ -13,7 +13,7 @@ object SectionAsServer {
     section(className := "field-group as-server")(
       h2()(context.i18n.text.AsServer_title),
       fieldUrl(server),
-      fieldStatus(server)
+      fieldConnection(server)
     )
 
   private def fieldUrl(
@@ -33,12 +33,12 @@ object SectionAsServer {
       )
     )
 
-  private def fieldStatus(
+  private def fieldConnection(
       server: Server
   )(implicit context: Context): ReactElement =
     field(
-      name = "Status",
-      classes = "server-status"
+      name = context.i18n.text.AsServer_connection,
+      classes = "server-connection"
     )(
       PartsNode.detailsConnectionStatus(
         ViewConnectionStatus(server)

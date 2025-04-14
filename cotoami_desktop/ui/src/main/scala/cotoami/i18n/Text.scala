@@ -74,6 +74,7 @@ trait Text {
 
   val AsServer_title: String
   val AsServer_url: String
+  val AsServer_connection: String
   val AsServer_clientNodes: String
   val AsServer_anonymousRead: String
   val AsServer_confirmEnableAnonymousRead: String
