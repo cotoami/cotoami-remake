@@ -78,6 +78,7 @@ object SectionAsChild {
     case object CancelEditing extends Msg
     case object AsOwnerToggled extends Msg
     case object CanEditItosToggled extends Msg
+    case object Save extends Msg
     case class Saved(result: Either[ErrorJson, ChildNode]) extends Msg
   }
 
@@ -111,6 +112,8 @@ object SectionAsChild {
 
       case Msg.CanEditItosToggled =>
         (model.copy(canEditItos = !model.canEditItos), Cmd.none)
+
+      case Msg.Save => model.save
 
       case Msg.Saved(Right(child)) =>
         (
@@ -180,7 +183,7 @@ object SectionAsChild {
                 classes = "save",
                 symbol = "check",
                 tip = Some(context.i18n.text.Save),
-                onClick = _ => ()
+                onClick = _ => dispatch(Msg.Save.into)
               ),
               toolButton(
                 classes = "cancel",
