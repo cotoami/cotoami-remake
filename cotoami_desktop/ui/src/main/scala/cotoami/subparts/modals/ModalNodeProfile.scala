@@ -38,10 +38,10 @@ object ModalNodeProfile {
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
   ) {
-    def isLocalNode()(implicit context: Context): Boolean =
+    def isLocalNode(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
-    def isOperatedNode()(implicit context: Context): Boolean =
+    def isOperatedNode(implicit context: Context): Boolean =
       context.repo.nodes.isOperating(nodeId)
   }
 
@@ -191,7 +191,7 @@ object ModalNodeProfile {
         if (node.hasIcon)
           Fragment(
             PartsNode.imgNode(node),
-            Option.when(model.isOperatedNode()) {
+            Option.when(model.isOperatedNode) {
               buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
             }
           )
@@ -250,7 +250,7 @@ object ModalNodeProfile {
       PartsNode.buttonOperateAs(node, "left"),
 
       // Generate Owner Password
-      Option.when(model.isLocalNode() && model.isOperatedNode()) {
+      Option.when(model.isLocalNode && model.isOperatedNode) {
         buttonGeneratePassword(
           context.i18n.text.ModalNodeProfile_generateOwnerPassword,
           model,
@@ -312,7 +312,7 @@ object ModalNodeProfile {
         readOnly := true,
         value := node.name
       ),
-      Option.when(model.isOperatedNode()) {
+      Option.when(model.isOperatedNode) {
         div(className := "edit")(
           rootCoto.map(buttonEditRootCoto)
         )
@@ -330,7 +330,7 @@ object ModalNodeProfile {
       section(className := "node-description")(
         PartsCoto.sectionCotonomaContent(rootCoto)
       ),
-      Option.when(model.isOperatedNode()) {
+      Option.when(model.isOperatedNode) {
         div(className := "edit")(
           buttonEditRootCoto(rootCoto)
         )
