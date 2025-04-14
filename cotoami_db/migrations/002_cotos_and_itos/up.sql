@@ -152,7 +152,11 @@ CREATE TABLE itos (
   updated_at DATETIME NOT NULL, -- UTC
 
   UNIQUE(source_coto_id, target_coto_id),
-  UNIQUE(source_coto_id, "order"),
+
+  -- Target cotos of the same source can be from different nodes and
+  -- orders must not duplicate in each node.
+  UNIQUE(source_coto_id, node_id, "order"),
+
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(created_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(source_coto_id) REFERENCES cotos(uuid) ON DELETE CASCADE,
