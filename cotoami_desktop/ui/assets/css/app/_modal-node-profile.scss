@@ -135,9 +135,10 @@ dialog.node-profile {
       bottom: 0;
       right: 10px;
 
-      button {
-        height: 100%;
+      display: inline-flex;
+      flex-direction: row;
 
+      button {
         &.edit {
           font-size: 20px;
         }

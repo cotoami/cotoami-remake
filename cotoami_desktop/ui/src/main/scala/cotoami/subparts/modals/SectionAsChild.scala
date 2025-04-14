@@ -23,6 +23,7 @@ object SectionAsChild {
       loading: Boolean = false,
       child: Option[ChildNode] = None,
       editing: Boolean = false,
+      saving: Boolean = false,
       asOwner: Boolean = false,
       canEditItos: Boolean = false
   ) {
@@ -141,7 +142,12 @@ object SectionAsChild {
       ),
       Option.when(!model.isLocalNode) {
         div(className := "edit")(
-          if (model.editing)
+          if (model.saving)
+            span(
+              className := "processing",
+              aria - "busy" := model.saving.toString()
+            )()
+          else if (model.editing)
             Fragment(
               toolButton(
                 classes = "save",
