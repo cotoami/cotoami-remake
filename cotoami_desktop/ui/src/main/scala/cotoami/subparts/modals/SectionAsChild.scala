@@ -24,6 +24,7 @@ object SectionAsChild {
       child: Option[ChildNode] = None,
       editing: Boolean = false,
       saving: Boolean = false,
+      savingError: Option[String] = None,
       asOwner: Boolean = false,
       canEditItos: Boolean = false
   ) {
@@ -35,6 +36,13 @@ object SectionAsChild {
         child = Some(child),
         asOwner = child.asOwner,
         canEditItos = child.canEditItos
+      )
+
+    def save: (Model, Cmd[AppMsg]) =
+      (
+        copy(saving = true),
+        ChildNodeBackend.edit(nodeId, asOwner, canEditItos)
+          .map(Msg.Saved(_).into)
       )
   }
 
@@ -70,6 +78,7 @@ object SectionAsChild {
     case object CancelEditing extends Msg
     case object AsOwnerToggled extends Msg
     case object CanEditItosToggled extends Msg
+    case class Saved(result: Either[ErrorJson, ChildNode]) extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
@@ -102,6 +111,24 @@ object SectionAsChild {
 
       case Msg.CanEditItosToggled =>
         (model.copy(canEditItos = !model.canEditItos), Cmd.none)
+
+      case Msg.Saved(Right(child)) =>
+        (
+          model
+            .copy(saving = false, editing = false)
+            .setChild(child),
+          Cmd.none
+        )
+
+      case Msg.Saved(Left(e)) =>
+        (
+          model.copy(
+            saving = false,
+            editing = false,
+            savingError = Some(e.default_message)
+          ),
+          Cmd.none
+        )
     }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -165,6 +192,7 @@ object SectionAsChild {
           else
             buttonEdit(_ => dispatch(Msg.Edit.into))
         )
-      }
+      },
+      model.savingError.map(section(className := "error")(_))
     )
 }
