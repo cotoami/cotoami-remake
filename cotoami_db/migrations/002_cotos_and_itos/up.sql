@@ -153,9 +153,8 @@ CREATE TABLE itos (
 
   UNIQUE(source_coto_id, target_coto_id),
 
-  -- Target cotos of the same source can be from different nodes and
-  -- orders must not duplicate in each node.
-  UNIQUE(source_coto_id, node_id, "order"),
+  -- Itos from the same source are sorted by their orders in each node.
+  UNIQUE(node_id, source_coto_id, "order"),
 
   FOREIGN KEY(node_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,
   FOREIGN KEY(created_by_id) REFERENCES nodes(uuid) ON DELETE RESTRICT,

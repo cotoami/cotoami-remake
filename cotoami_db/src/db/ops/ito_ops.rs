@@ -71,7 +71,7 @@ pub(crate) fn insert(mut new_ito: NewIto<'_>) -> impl Operation<WritableConn, It
 
         // Deal with the order
         if let Some(order) = new_ito.order {
-            ensure_space_at(new_ito.source_coto_id(), order).run(ctx)?;
+            ensure_space_at(new_ito.node_id(), new_ito.source_coto_id(), order).run(ctx)?;
         } else {
             let last_number = last_order_number(new_ito.source_coto_id())
                 .run(ctx)?
@@ -101,7 +101,7 @@ fn last_order_number<Conn: AsReadableConn>(
 pub(crate) fn change_order(id: &Id<Ito>, new_order: i32) -> impl Operation<WritableConn, Ito> + '_ {
     composite_op::<WritableConn, _, _>(move |ctx| {
         let ito = try_get(id).run(ctx)??;
-        ensure_space_at(&ito.source_coto_id, new_order).run(ctx)?;
+        ensure_space_at(&ito.node_id, &ito.source_coto_id, new_order).run(ctx)?;
         diesel::update(itos::table)
             .filter(itos::uuid.eq(ito.uuid))
             .set(itos::order.eq(new_order))
@@ -112,10 +112,15 @@ pub(crate) fn change_order(id: &Id<Ito>, new_order: i32) -> impl Operation<Writa
 
 /// Ensure the given order is available by conditionally shifting itos to the right
 /// starting from the order.
-fn ensure_space_at(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableConn, usize> + '_ {
+fn ensure_space_at<'a>(
+    node_id: &'a Id<Node>,
+    coto_id: &'a Id<Coto>,
+    order: i32,
+) -> impl Operation<WritableConn, usize> + 'a {
     write_op(move |conn| {
         let orders_onwards: Vec<i32> = itos::table
             .select(itos::order)
+            .filter(itos::node_id.eq(node_id))
             .filter(itos::source_coto_id.eq(coto_id))
             .filter(itos::order.ge(order))
             .order(itos::order.asc())
@@ -140,6 +145,7 @@ fn ensure_space_at(coto_id: &Id<Coto>, order: i32) -> impl Operation<WritableCon
             for (old_order, new_order) in orders_onwards.iter().zip(new_orders.iter()).rev() {
                 if old_order != new_order {
                     diesel::update(itos::table)
+                        .filter(itos::node_id.eq(node_id))
                         .filter(itos::source_coto_id.eq(coto_id))
                         .filter(itos::order.eq(old_order))
                         .set(itos::order.eq(new_order))

@@ -145,6 +145,8 @@ impl<'a> NewIto<'a> {
         Ok(new_ito)
     }
 
+    pub fn node_id(&self) -> &'a Id<Node> { self.node_id }
+
     pub fn source_coto_id(&self) -> &'a Id<Coto> { self.source_coto_id }
 
     pub fn target_coto_id(&self) -> &'a Id<Coto> { self.target_coto_id }
