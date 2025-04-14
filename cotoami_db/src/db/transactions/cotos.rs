@@ -91,6 +91,7 @@ impl<'a> DatabaseSession<'a> {
         post_to: &Id<Cotonoma>,
         operator: &Operator,
     ) -> Result<(Coto, ChangelogEntry)> {
+        operator.can_post_cotos()?;
         let local_node = self.globals.try_read_local_node()?;
         let posted_by_id = operator.try_get_node_id()?;
         let new_coto = NewCoto::new(
@@ -164,6 +165,7 @@ impl<'a> DatabaseSession<'a> {
         coto_id: &Id<Coto>,
         operator: &Operator,
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
+        operator.can_post_cotonomas()?;
         let local_node_id = self.globals.try_get_local_node_id()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
             // Permission check

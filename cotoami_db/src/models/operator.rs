@@ -45,12 +45,28 @@ impl Operator {
         }
     }
 
-    pub fn can_post(&self) -> Result<(), DatabaseError> {
+    pub fn can_post_cotos(&self) -> Result<(), DatabaseError> {
         if self.node_id().is_some() {
             Ok(())
         } else {
             Err(DatabaseError::PermissionDenied)
         }
+    }
+
+    pub fn can_post_cotonomas(&self) -> Result<(), DatabaseError> {
+        if self.has_owner_permission() {
+            return Ok(());
+        }
+
+        if let Operator::ChildNode(ChildNode {
+            can_post_cotonomas: true,
+            ..
+        }) = self
+        {
+            return Ok(());
+        }
+
+        Err(DatabaseError::PermissionDenied)
     }
 
     /// Checks if this operator can update the given coto.

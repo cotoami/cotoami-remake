@@ -183,6 +183,7 @@ impl<'a> DatabaseSession<'a> {
         posted_in: &Cotonoma,
         operator: &Operator,
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
+        operator.can_post_cotonomas()?;
         self.globals.ensure_local(posted_in)?;
 
         let local_node_id = self.globals.try_get_local_node_id()?;
