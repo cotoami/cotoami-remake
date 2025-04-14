@@ -116,7 +116,7 @@ dialog.node-profile {
 
   div.fields {
     margin-left: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     max-height: 60vh;
 
     div.scroll-fields {
@@ -137,6 +137,20 @@ dialog.node-profile {
 
       button {
         height: 100%;
+
+        &.edit {
+          font-size: 20px;
+        }
+
+        &.save {
+          font-size: 22px;
+          color: var(--ok-color);
+        }
+
+        &.cancel {
+          margin-left: 8px;
+          font-size: 22px;
+        }
       }
     }
 
@@ -146,6 +160,7 @@ dialog.node-profile {
 
     section.field-group {
       margin-top: 40px;
+      margin-bottom: 10px;
     }
   }
 

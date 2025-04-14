@@ -338,6 +338,7 @@ object ModalNodeProfile {
     )
 
   private def buttonEditRootCoto(rootCoto: Coto)(implicit
+      context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     buttonEdit(_ =>

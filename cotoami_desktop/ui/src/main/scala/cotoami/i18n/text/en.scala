@@ -20,6 +20,7 @@ object en extends Text {
   val Id = "ID"
   val Name = "Name"
 
+  val Cancel = "Cancel"
   val Post = "Post"
   val Save = "Save"
   val Edit = "Edit"

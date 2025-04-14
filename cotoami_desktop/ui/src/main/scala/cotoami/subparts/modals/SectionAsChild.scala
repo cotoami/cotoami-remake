@@ -1,10 +1,11 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
+import marubinotto.components.toolButton
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
@@ -21,9 +22,13 @@ object SectionAsChild {
       nodeId: Id[Node],
       loading: Boolean = false,
       child: Option[ChildNode] = None,
+      editing: Boolean = false,
       asOwner: Boolean = false,
       canEditItos: Boolean = false
   ) {
+    def isLocalNode(implicit context: Context): Boolean =
+      context.repo.nodes.isLocal(nodeId)
+
     def setChild(child: ChildNode): Model =
       copy(
         child = Some(child),
@@ -60,6 +65,8 @@ object SectionAsChild {
   object Msg {
     case class ChildNodeFetched(result: Either[ErrorJson, ChildNode])
         extends Msg
+    case object Edit extends Msg
+    case object CancelEditing extends Msg
   }
 
   def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
@@ -69,6 +76,23 @@ object SectionAsChild {
 
       case Msg.ChildNodeFetched(Left(_)) =>
         (model.copy(loading = false), Cmd.none)
+
+      case Msg.Edit =>
+        (model.copy(editing = true), Cmd.none)
+
+      case Msg.CancelEditing =>
+        (
+          model.child
+            .map(child =>
+              model.copy(
+                asOwner = child.asOwner,
+                canEditItos = child.canEditItos
+              )
+            )
+            .getOrElse(model)
+            .copy(editing = false),
+          Cmd.none
+        )
     }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -77,7 +101,7 @@ object SectionAsChild {
 
   def apply(
       model: Model
-  )(implicit context: Context): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     model.child.map { child =>
       section(className := "field-group as-child")(
         h2()(context.i18n.text.AsChild_title),
@@ -93,7 +117,8 @@ object SectionAsChild {
     )
 
   private def fieldChildPrivileges(model: Model)(implicit
-      context: Context
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
       name = context.i18n.text.ChildPrivileges,
@@ -102,12 +127,30 @@ object SectionAsChild {
       PartsNode.inputChildPrivileges(
         asOwner = model.asOwner,
         canEditItos = model.canEditItos,
-        disabled = true,
+        disabled = !model.editing,
         onAsOwnerChange = (_ => ()),
         onCanEditItosChange = (_ => ())
       ),
-      div(className := "edit")(
-        buttonEdit(_ => ())
-      )
+      Option.when(!model.isLocalNode) {
+        div(className := "edit")(
+          if (model.editing)
+            Fragment(
+              toolButton(
+                classes = "save",
+                symbol = "check",
+                tip = Some(context.i18n.text.Save),
+                onClick = _ => ()
+              ),
+              toolButton(
+                classes = "cancel",
+                symbol = "close",
+                tip = Some(context.i18n.text.Cancel),
+                onClick = _ => dispatch(Msg.CancelEditing.into)
+              )
+            )
+          else
+            buttonEdit(_ => dispatch(Msg.Edit.into))
+        )
+      }
     )
 }

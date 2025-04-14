@@ -17,6 +17,7 @@ trait Text {
   val Id: String
   val Name: String
 
+  val Cancel: String
   val Post: String
   val Save: String
   val Edit: String

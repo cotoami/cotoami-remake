@@ -56,11 +56,11 @@ package object subparts {
 
   def buttonEdit(
       onClick: SyntheticMouseEvent[_] => Unit
-  ): ReactElement =
+  )(implicit context: Context): ReactElement =
     toolButton(
-      symbol = "edit",
-      tip = Some("Edit"),
       classes = "edit",
+      symbol = "edit",
+      tip = Some(context.i18n.text.Edit),
       onClick = onClick
     )
 
