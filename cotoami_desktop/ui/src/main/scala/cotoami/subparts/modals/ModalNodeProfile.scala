@@ -208,37 +208,29 @@ object ModalNodeProfile {
           }
         )
       else
-        model.asClient.client
-          .map(_ => sectionOperatedNodeAsServer)
-          .getOrElse(
-            context.repo.nodes.childPrivilegesTo(node.id)
-              .map(sectionOperatedNodeAsChild)
-          )
+        sectionNodeRelationship(
+          context.repo.nodes.childPrivilegesTo(node.id)
+        )
     )
 
-  private def sectionOperatedNodeAsChild(privileges: ChildNode)(implicit
+  private def sectionNodeRelationship(privileges: Option[ChildNode])(implicit
       context: Context
   ): ReactElement =
-    section(className := "operated-node")(
+    section(className := "node-relationship")(
       div(className := "arrow")(materialSymbol("arrow_upward")),
-      section(className := "privileges")(
-        if (privileges.asOwner)
-          context.i18n.text.Owner
-        else if (privileges.canEditItos)
-          s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
-        else
-          context.i18n.text.Post
-      ),
-      context.repo.nodes.operated.map(PartsNode.imgNode(_))
-    )
-
-  private def sectionOperatedNodeAsServer(implicit
-      context: Context
-  ): ReactElement =
-    section(className := "operated-node")(
-      div(className := "arrow")(materialSymbol("arrow_upward")),
-      section(className := "privileges")("Server"),
-      context.repo.nodes.operated.map(PartsNode.imgNode(_))
+      privileges.map { privileges =>
+        section(className := "privileges")(
+          if (privileges.asOwner)
+            context.i18n.text.Owner
+          else if (privileges.canEditItos)
+            s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
+          else
+            context.i18n.text.Post
+        )
+      },
+      section(className := "operated-node")(
+        context.repo.nodes.operated.map(PartsNode.imgNode(_))
+      )
     )
 
   private def sectionToolButtons(node: Node, model: Model)(implicit
