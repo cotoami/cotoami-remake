@@ -307,6 +307,12 @@ case class Root(
       case None           => false
     }
 
+  def canPostCotonoma: Boolean =
+    currentCotonoma match {
+      case Some(cotonoma) => nodes.canPostCotonoma(cotonoma.nodeId)
+      case None           => false
+    }
+
   def canEditItos: Boolean =
     currentCotonoma match {
       case Some(cotonoma) => nodes.canEditItosIn(cotonoma.nodeId)

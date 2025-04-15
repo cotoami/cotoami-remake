@@ -163,10 +163,17 @@ case class Nodes(
   def canEditItosIn(nodeId: Id[Node]): Boolean =
     isOperating(nodeId) ||
       childPrivilegesTo(nodeId)
-        .map(child => child.asOwner || child.canEditItos)
+        .map(_.canEditItos)
         .getOrElse(false)
 
-  def canPromote(coto: Coto): Boolean = canEdit(coto) && !coto.isCotonoma
+  def canPostCotonoma(nodeId: Id[Node]): Boolean =
+    isOperating(nodeId) ||
+      childPrivilegesTo(nodeId)
+        .map(_.canPostCotonomas)
+        .getOrElse(false)
+
+  def canPromote(coto: Coto): Boolean =
+    !coto.isCotonoma && canEdit(coto) && canPostCotonoma(coto.nodeId)
 }
 
 object Nodes {

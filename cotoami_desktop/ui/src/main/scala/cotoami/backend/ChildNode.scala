@@ -31,8 +31,8 @@ object ChildNodeBackend {
       nodeId = Id(json.node_id),
       createdAtUtcIso = json.created_at,
       asOwner = json.as_owner,
-      canEditItos = json.can_edit_itos,
-      canPostCotonomas = json.can_post_cotonomas
+      _canEditItos = json.can_edit_itos,
+      _canPostCotonomas = json.can_post_cotonomas
     )
 
   def fetch(id: Id[Node]): Cmd.One[Either[ErrorJson, ChildNode]] =
