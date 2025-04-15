@@ -25,6 +25,7 @@ object en extends Text {
   val Save = "Save"
   val Edit = "Edit"
   val Delete = "Delete"
+
   val DeleteCotonoma = "Delete Cotonoma"
   val Connect = "Connect"
   val WriteSubcoto = "Write Sub-coto"
@@ -52,10 +53,11 @@ object en extends Text {
   val Connection_connected = "connected"
 
   val ChildPrivileges = "Privileges"
-  val ChildPrivileges_asOwner = "As an owner"
-  val ChildPrivileges_canPostCotos = "Permit to post cotos"
-  val ChildPrivileges_canEditItos = "Permit to create/edit itos"
-  val ChildPrivileges_canPostCotonomas = "Permit to post cotonomas"
+  val ChildPrivileges_asOwner = "Owner (full privileges)"
+  val ChildPrivileges_canPostCotos = "Post Cotos"
+  val ChildPrivileges_canEditItos = "Edit Itos"
+  val ChildPrivileges_canPostCotonomas = "Post Cotonomas"
+  val ChildPrivileges_canPostAll = "Post Cotos/Cotonomas"
 
   val ConfirmDeleteCoto = "Are you sure you want to delete the coto?"
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =

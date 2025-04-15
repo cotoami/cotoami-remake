@@ -236,12 +236,7 @@ object ModalNodeProfile {
       div(className := "arrow")(materialSymbol("arrow_upward")),
       privileges.map { privileges =>
         section(className := "privileges")(
-          if (privileges.asOwner)
-            context.i18n.text.Owner
-          else if (privileges.canEditItos)
-            s"${context.i18n.text.Post}, ${context.i18n.text.EditItos}"
-          else
-            context.i18n.text.Post
+          PartsNode.textChildPrivileges(privileges)
         )
       },
       section(className := "operated-node")(

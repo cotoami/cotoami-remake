@@ -22,6 +22,7 @@ trait Text {
   val Save: String
   val Edit: String
   val Delete: String
+
   val DeleteCotonoma: String
   val Connect: String
   val WriteSubcoto: String
@@ -49,6 +50,7 @@ trait Text {
   val ChildPrivileges_canPostCotos: String
   val ChildPrivileges_canEditItos: String
   val ChildPrivileges_canPostCotonomas: String
+  val ChildPrivileges_canPostAll: String
 
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement

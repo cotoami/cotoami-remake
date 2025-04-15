@@ -8,7 +8,7 @@ import marubinotto.optionalClasses
 import marubinotto.components.toolButton
 
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.Node
+import cotoami.models.{ChildNode, Node}
 import cotoami.backend.ChildNodeInput
 import cotoami.subparts.ViewConnectionStatus
 
@@ -79,6 +79,23 @@ object PartsNode {
       )
     }
   }
+
+  def textChildPrivileges(child: ChildNode)(implicit
+      context: Context
+  ): String =
+    if (child.asOwner)
+      context.i18n.text.ChildPrivileges_asOwner
+    else {
+      val post =
+        if (child.canPostCotonomas)
+          context.i18n.text.ChildPrivileges_canPostAll
+        else
+          context.i18n.text.ChildPrivileges_canPostCotos
+
+      post ++ Option.when(child.canEditItos)(
+        s", ${context.i18n.text.ChildPrivileges_canEditItos}"
+      ).getOrElse("")
+    }
 
   def inputChildPrivileges(
       values: ChildNodeInput,
