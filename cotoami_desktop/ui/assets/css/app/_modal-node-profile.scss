@@ -80,6 +80,10 @@ dialog.node-profile {
       ul.privileges {
         font-size: 0.8rem;
         opacity: 0.8;
+
+        li {
+          text-align: center;
+        }
       }
 
       section.operated-node {
