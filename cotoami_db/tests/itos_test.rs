@@ -20,6 +20,12 @@ fn crud_operations() -> Result<()> {
     let (coto3, _) = ds.post_coto(&CotoInput::new("coto3"), &root_cotonoma.uuid, &opr)?;
     let (coto4, _) = ds.post_coto(&CotoInput::new("coto4"), &root_cotonoma.uuid, &opr)?;
 
+    // determine_ito_node
+    assert_that!(
+        ds.determine_ito_node(&coto1.uuid, &coto2.uuid, &node.uuid)?,
+        eq(node.uuid)
+    );
+
     /////////////////////////////////////////////////////////////////////////////
     // When: create ito1: coto1 => coto2
     /////////////////////////////////////////////////////////////////////////////

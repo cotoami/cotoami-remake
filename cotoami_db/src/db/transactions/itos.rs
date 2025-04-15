@@ -33,7 +33,16 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(ito_ops::recent(node_id, page_size, page_index))
     }
 
-    pub fn create_ito<'b>(
+    pub fn determine_ito_node(
+        &mut self,
+        source: &Id<Coto>,
+        target: &Id<Coto>,
+        local_node_id: &Id<Node>,
+    ) -> Result<Id<Node>> {
+        self.read_transaction(ito_ops::determine_node(source, target, local_node_id))
+    }
+
+    pub fn create_ito(
         &self,
         input: &ItoInput,
         operator: &Operator,

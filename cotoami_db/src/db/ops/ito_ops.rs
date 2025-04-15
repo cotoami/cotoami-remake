@@ -2,7 +2,7 @@
 
 use std::ops::DerefMut;
 
-use anyhow::ensure;
+use anyhow::{bail, ensure};
 use chrono::NaiveDateTime;
 use diesel::{dsl::max, prelude::*};
 use tracing::debug;
@@ -12,7 +12,7 @@ use super::Page;
 use crate::{
     db::{error::*, op::*, ops::coto_ops},
     models::{coto::Coto, ito::*, node::Node, Id},
-    schema::itos,
+    schema::{cotos, itos},
 };
 
 pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Ito>) -> impl Operation<Conn, Option<Ito>> + '_ {
@@ -55,6 +55,34 @@ pub(crate) fn recent<'a, Conn: AsReadableConn>(
             }
             query.order(itos::created_at.desc())
         })
+    })
+}
+
+pub(crate) fn determine_node<'a, Conn: AsReadableConn>(
+    source: &'a Id<Coto>,
+    target: &'a Id<Coto>,
+    local_node_id: &'a Id<Node>,
+) -> impl Operation<Conn, Id<Node>> + 'a {
+    read_op(move |conn| {
+        ensure!(
+            source != target,
+            "Source and target must be different cotos."
+        );
+
+        let node_ids = cotos::table
+            .filter(cotos::uuid.eq_any(&[source, target]))
+            .select(cotos::node_id)
+            .load::<Id<Node>>(conn)?;
+
+        if let [node_id1, node_id2] = node_ids[..] {
+            if node_id1 == node_id2 {
+                Ok(node_id1)
+            } else {
+                Ok(*local_node_id)
+            }
+        } else {
+            bail!("Invalid source and target coto IDs.");
+        }
     })
 }
 
