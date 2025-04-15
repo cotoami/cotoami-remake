@@ -262,8 +262,9 @@ object ModalIncorporate {
       "Your privileges: ",
       span(className := "privileges")(
         nodeSession.childPrivileges match {
-          case Some(privileges) => PartsNode.textChildPrivileges(privileges)
-          case None             => context.i18n.text.ReadOnly
+          case Some(privileges) =>
+            PartsNode.childPrivileges(privileges).mkString(", ")
+          case None => context.i18n.text.ReadOnly
         }
       )
     )

@@ -80,22 +80,21 @@ object PartsNode {
     }
   }
 
-  def textChildPrivileges(child: ChildNode)(implicit
+  def childPrivileges(child: ChildNode)(implicit
       context: Context
-  ): String =
+  ): Seq[String] =
     if (child.asOwner)
-      context.i18n.text.ChildPrivileges_asOwner
-    else {
-      val post =
-        if (child.canPostCotonomas)
-          context.i18n.text.ChildPrivileges_canPostAll
-        else
-          context.i18n.text.ChildPrivileges_canPostCotos
-
-      post ++ Option.when(child.canEditItos)(
-        s", ${context.i18n.text.ChildPrivileges_canEditItos}"
-      ).getOrElse("")
-    }
+      Seq(context.i18n.text.Owner)
+    else
+      Seq(
+        Some(context.i18n.text.ChildPrivileges_canPostCotos),
+        Option.when(child.canPostCotonomas)(
+          context.i18n.text.ChildPrivileges_canPostCotonomas
+        ),
+        Option.when(child.canEditItos)(
+          context.i18n.text.ChildPrivileges_canEditItos
+        )
+      ).flatten
 
   def inputChildPrivileges(
       values: ChildNodeInput,

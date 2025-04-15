@@ -235,8 +235,8 @@ object ModalNodeProfile {
     section(className := "node-relationship")(
       div(className := "arrow")(materialSymbol("arrow_upward")),
       privileges.map { privileges =>
-        section(className := "privileges")(
-          PartsNode.textChildPrivileges(privileges)
+        ul(className := "privileges")(
+          PartsNode.childPrivileges(privileges).map(li()(_)): _*
         )
       },
       section(className := "operated-node")(
