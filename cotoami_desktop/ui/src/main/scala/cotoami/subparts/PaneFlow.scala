@@ -42,7 +42,7 @@ object PaneFlow {
       (
         model.repo.nodes.operated,
         model.repo.currentCotonoma,
-        model.repo.canPost
+        model.repo.canPostCoto
       ) match {
         case (Some(operatedNode), Some(cotonoma), true) =>
           Some(

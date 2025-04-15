@@ -301,9 +301,9 @@ case class Root(
   // Permission check
   /////////////////////////////////////////////////////////////////////////////
 
-  def canPost: Boolean =
+  def canPostCoto: Boolean =
     currentCotonoma match {
-      case Some(cotonoma) => nodes.canPostTo(cotonoma.nodeId)
+      case Some(cotonoma) => nodes.isWritable(cotonoma.nodeId)
       case None           => false
     }
 
