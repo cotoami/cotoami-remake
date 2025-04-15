@@ -21,7 +21,11 @@ object ToolbarCoto {
 
     val repo = context.repo
     val buttons = Seq(
-      Option.when(repo.cotos.anySelected && !repo.cotos.isSelecting(coto.id)) {
+      Option.when(
+        repo.cotos.anySelected &&
+          !repo.cotos.isSelecting(coto.id) &&
+          repo.canEditItos
+      ) {
         toolButton(
           classes = "connect",
           symbol = Ito.ConnectIconName,
