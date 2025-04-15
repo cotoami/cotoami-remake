@@ -28,10 +28,9 @@ object ClientNodeJson {
 
   def add(
       nodeId: Id[Node],
-      canEditLinks: Boolean,
-      asOowner: Boolean
+      asChild: Option[ChildNodeInputJson]
   ): Cmd.One[Either[ErrorJson, ClientAddedJson]] =
-    Commands.send(Commands.AddClient(nodeId, canEditLinks, asOowner))
+    Commands.send(Commands.AddClient(nodeId, asChild))
 
   def edit(
       id: Id[Node],
@@ -63,10 +62,9 @@ object ClientNodeBackend {
 
   def add(
       nodeId: Id[Node],
-      canEditLinks: Boolean,
-      asOowner: Boolean
+      asChild: Option[ChildNodeInputJson]
   ): Cmd.One[Either[ErrorJson, ClientAdded]] =
-    ClientNodeJson.add(nodeId, canEditLinks, asOowner)
+    ClientNodeJson.add(nodeId, asChild)
       .map(_.map(ClientAdded(_)))
 
   def resetPassword(id: Id[Node]): Cmd.One[Either[ErrorJson, String]] =

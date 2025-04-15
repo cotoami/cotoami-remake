@@ -46,7 +46,9 @@ trait Text {
 
   val ChildPrivileges: String
   val ChildPrivileges_asOwner: String
+  val ChildPrivileges_canPostCotos: String
   val ChildPrivileges_canEditItos: String
+  val ChildPrivileges_canPostCotonomas: String
 
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement

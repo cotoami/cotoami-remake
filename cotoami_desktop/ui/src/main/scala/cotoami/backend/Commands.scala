@@ -93,12 +93,11 @@ object Commands {
 
   def ClientNode(id: Id[Node]) = jso(ClientNode = jso(id = id.uuid))
 
-  def AddClient(nodeId: Id[Node], canEditItos: Boolean, asOowner: Boolean) =
+  def AddClient(nodeId: Id[Node], asChild: Option[ChildNodeInputJson]) =
     jso(AddClient =
       jso(
         id = nodeId.uuid,
-        as_owner = asOowner,
-        can_edit_itos = canEditItos
+        as_child = asChild.getOrElse(null)
       )
     )
 
@@ -122,16 +121,12 @@ object Commands {
 
   def EditChild(
       id: Id[Node],
-      asOwner: Boolean,
-      canEditItos: Boolean
+      values: ChildNodeInputJson
   ) =
     jso(EditChild =
       jso(
         id = id.uuid,
-        values = jso(
-          as_owner = asOwner,
-          can_edit_itos = canEditItos
-        )
+        values = values
       )
     )
 

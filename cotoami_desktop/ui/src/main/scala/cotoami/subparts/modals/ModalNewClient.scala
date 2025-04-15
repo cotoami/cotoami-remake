@@ -13,7 +13,12 @@ import marubinotto.components.materialSymbol
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ClientNode, Id, Node}
 import cotoami.repository.Nodes
-import cotoami.backend.{ClientAdded, ClientNodeBackend, ErrorJson}
+import cotoami.backend.{
+  ChildNodeInput,
+  ClientAdded,
+  ClientNodeBackend,
+  ErrorJson
+}
 import cotoami.subparts.{field, fieldInput, Modal}
 import cotoami.subparts.PartsNode
 
@@ -26,8 +31,7 @@ object ModalNewClient {
   case class Model(
       nodeId: String = "",
       nodeIdValidation: Validation.Result = Validation.Result.notYetValidated,
-      asOwner: Boolean = false,
-      canEditItos: Boolean = false,
+      childInput: ChildNodeInput = ChildNodeInput(),
       error: Option[String] = None,
       registering: Boolean = false,
       generatedPassword: Option[String] = None
@@ -72,6 +76,7 @@ object ModalNewClient {
     ) extends Msg
     case object AsOwnerToggled extends Msg
     case object CanEditItosToggled extends Msg
+    case object CanPostCotonomasToggled extends Msg
     case object Register extends Msg
     case class Registered(result: Either[ErrorJson, ClientAdded]) extends Msg
   }
@@ -113,18 +118,20 @@ object ModalNewClient {
           )
 
       case Msg.AsOwnerToggled =>
-        default.copy(_1 = model.modify(_.asOwner).using(!_))
+        default.copy(_1 = model.modify(_.childInput.asOwner).using(!_))
 
       case Msg.CanEditItosToggled =>
-        default.copy(_1 = model.modify(_.canEditItos).using(!_))
+        default.copy(_1 = model.modify(_.childInput.canEditItos).using(!_))
+
+      case Msg.CanPostCotonomasToggled =>
+        default.copy(_1 = model.modify(_.childInput.canPostCotonomas).using(!_))
 
       case Msg.Register =>
         default.copy(
           _1 = model.copy(registering = true),
           _3 = ClientNodeBackend.add(
             Id(model.nodeId),
-            model.canEditItos,
-            model.asOwner
+            Some(model.childInput.toJson)
           ).map(Msg.Registered(_).into)
         )
 
@@ -185,11 +192,11 @@ object ModalNewClient {
           classes = "privileges"
         )(
           PartsNode.inputChildPrivileges(
-            asOwner = model.asOwner,
-            canEditItos = model.canEditItos,
+            values = model.childInput,
             disabled = model.registered,
             onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
-            onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled))
+            onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled)),
+            onCanPostCotonomas = (_ => dispatch(Msg.CanPostCotonomasToggled))
           )
         ),
 

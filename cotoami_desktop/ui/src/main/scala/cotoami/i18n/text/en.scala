@@ -53,7 +53,9 @@ object en extends Text {
 
   val ChildPrivileges = "Privileges"
   val ChildPrivileges_asOwner = "As an owner"
+  val ChildPrivileges_canPostCotos = "Permit to post cotos"
   val ChildPrivileges_canEditItos = "Permit to create/edit itos"
+  val ChildPrivileges_canPostCotonomas = "Permit to post cotonomas"
 
   val ConfirmDeleteCoto = "Are you sure you want to delete the coto?"
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement =

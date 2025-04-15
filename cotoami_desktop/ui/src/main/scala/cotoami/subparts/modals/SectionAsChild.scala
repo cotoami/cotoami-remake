@@ -1,6 +1,7 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import com.softwaremill.quicklens._
 import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html._
 
@@ -9,7 +10,7 @@ import marubinotto.components.toolButton
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
-import cotoami.backend.{ChildNodeBackend, ErrorJson}
+import cotoami.backend.{ChildNodeBackend, ChildNodeInput, ErrorJson}
 import cotoami.subparts.{buttonEdit, field, Modal, PartsNode}
 
 object SectionAsChild {
@@ -22,11 +23,10 @@ object SectionAsChild {
       nodeId: Id[Node],
       loading: Boolean = false,
       child: Option[ChildNode] = None,
+      childInput: ChildNodeInput = ChildNodeInput(),
       editing: Boolean = false,
       saving: Boolean = false,
-      savingError: Option[String] = None,
-      asOwner: Boolean = false,
-      canEditItos: Boolean = false
+      savingError: Option[String] = None
   ) {
     def isLocalNode(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
@@ -34,14 +34,13 @@ object SectionAsChild {
     def setChild(child: ChildNode): Model =
       copy(
         child = Some(child),
-        asOwner = child.asOwner,
-        canEditItos = child.canEditItos
+        childInput = ChildNodeInput(child)
       )
 
     def save: (Model, Cmd[AppMsg]) =
       (
         copy(saving = true),
-        ChildNodeBackend.edit(nodeId, asOwner, canEditItos)
+        ChildNodeBackend.edit(nodeId, childInput.toJson)
           .map(Msg.Saved(_).into)
       )
   }
@@ -78,6 +77,7 @@ object SectionAsChild {
     case object CancelEditing extends Msg
     case object AsOwnerToggled extends Msg
     case object CanEditItosToggled extends Msg
+    case object CanPostCotonomasToggled extends Msg
     case object Save extends Msg
     case class Saved(result: Either[ErrorJson, ChildNode]) extends Msg
   }
@@ -96,22 +96,20 @@ object SectionAsChild {
       case Msg.CancelEditing =>
         (
           model.child
-            .map(child =>
-              model.copy(
-                asOwner = child.asOwner,
-                canEditItos = child.canEditItos
-              )
-            )
+            .map(child => model.copy(childInput = ChildNodeInput(child)))
             .getOrElse(model)
             .copy(editing = false),
           Cmd.none
         )
 
       case Msg.AsOwnerToggled =>
-        (model.copy(asOwner = !model.asOwner), Cmd.none)
+        (model.modify(_.childInput.asOwner).using(!_), Cmd.none)
 
       case Msg.CanEditItosToggled =>
-        (model.copy(canEditItos = !model.canEditItos), Cmd.none)
+        (model.modify(_.childInput.canEditItos).using(!_), Cmd.none)
+
+      case Msg.CanPostCotonomasToggled =>
+        (model.modify(_.childInput.canPostCotonomas).using(!_), Cmd.none)
 
       case Msg.Save => model.save
 
@@ -164,11 +162,11 @@ object SectionAsChild {
       classes = "privileges"
     )(
       PartsNode.inputChildPrivileges(
-        asOwner = model.asOwner,
-        canEditItos = model.canEditItos,
+        values = model.childInput,
         disabled = !model.editing,
         onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
-        onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled))
+        onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled)),
+        onCanPostCotonomas = (_ => dispatch(Msg.CanPostCotonomasToggled))
       ),
       Option.when(!model.isLocalNode) {
         div(className := "edit")(
