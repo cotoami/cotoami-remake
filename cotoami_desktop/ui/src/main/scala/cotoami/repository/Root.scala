@@ -121,9 +121,6 @@ case class Root(
       nodes.current.flatMap(_.rootCotonomaId)
     )
 
-  def inCurrentCotonoma(coto: Coto): Boolean =
-    coto.postedInId == currentCotonomaId
-
   // Note: Even if `currentCotonomaId` has `Some` value, this method will
   // return `None` if the cotonoma object has not been loaded.
   def currentCotonoma: Option[Cotonoma] =
@@ -131,6 +128,11 @@ case class Root(
 
   def currentCotonomaPair: Option[(Cotonoma, Coto)] =
     currentCotonomaId.flatMap(cotonoma)
+
+  def currentCotonomaCoto: Option[Coto] = currentCotonomaPair.map(_._2)
+
+  def isCurrentCotonoma(cotoId: Id[Coto]): Boolean =
+    currentCotonomaCoto.map(_.id == cotoId).getOrElse(false)
 
   def currentNodeRoot: Option[(Cotonoma, Coto)] =
     nodes.currentNodeRootCotonomaId.flatMap(cotonoma)

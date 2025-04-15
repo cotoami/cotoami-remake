@@ -111,10 +111,18 @@ object Changelog {
       val cotoId: Id[Coto] = Id(json.coto_id)
       return (
         model.modify(_.repo).using(_.deleteCoto(cotoId)),
-        // Update the original coto if it's a repost
-        model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
-          .map(updateCoto)
-          .getOrElse(Cmd.none)
+        Cmd.Batch(
+          // Update the original coto if it's a repost
+          model.repo.cotos.get(cotoId).flatMap(_.repostOfId)
+            .map(updateCoto)
+            .getOrElse(Cmd.none),
+
+          // UnfocusCotonoma if the deleted coto is the current cotonoma
+          if (model.repo.isCurrentCotonoma(cotoId))
+            Browser.send(Msg.UnfocusCotonoma)
+          else
+            Cmd.none
+        )
       )
     }
 
