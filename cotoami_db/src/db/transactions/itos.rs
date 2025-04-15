@@ -42,6 +42,10 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(ito_ops::determine_node(source, target, local_node_id))
     }
 
+    /// Creates a new ito with [ItoInput] in the local node.
+    ///
+    /// Both of [ItoInput::source_coto_id] and [ItoInput::target_coto_id] must exist
+    /// in the local node, otherwise a database constraint error will be returned.
     pub fn create_ito(
         &self,
         input: &ItoInput,
@@ -60,7 +64,7 @@ impl<'a> DatabaseSession<'a> {
         self.insert_ito(ito.to_import())
     }
 
-    /// Inserting a [NewIto] as a change originated in this node.
+    /// Inserts a [NewIto] as a change originated in this node.
     /// Changes originated in remote nodes should be imported via [Self::import_change()].
     fn insert_ito(&self, new_ito: NewIto) -> Result<(Ito, ChangelogEntry)> {
         let local_node_id = self.globals.try_get_local_node_id()?;
