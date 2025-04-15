@@ -152,7 +152,7 @@ object PartsCoto {
   )(implicit context: Context): ReactElement =
     div(className := "content")(
       post.nameAsCotonoma.map(name =>
-        section(className := "cotonoma-content")(
+        section(className := "cotonoma-label")(
           span(className := "cotonoma")(
             context.repo.nodes.get(post.postedIn.nodeId)
               .map(PartsNode.imgNode(_)),
