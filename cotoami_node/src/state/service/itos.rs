@@ -26,14 +26,27 @@ impl NodeState {
         if let Err(errors) = input.validate() {
             return errors.into_result();
         }
-        let source_coto = self.coto(input.source_coto_id).await?;
+        let local_node_id = self.try_get_local_node_id()?;
+        let target_node_id = self
+            .determine_ito_node(input.source_coto_id, input.target_coto_id, local_node_id)
+            .await?;
         self.change(
-            source_coto.node_id,
+            target_node_id,
             input,
             move |ds, input| ds.create_ito(&input, operator.as_ref()),
             |parent, input| parent.create_ito(input),
         )
         .await
+    }
+
+    async fn determine_ito_node<'a>(
+        &self,
+        source: Id<Coto>,
+        target: Id<Coto>,
+        local_node_id: Id<Node>,
+    ) -> Result<Id<Node>, ServiceError> {
+        self.get(move |ds| ds.determine_ito_node(&source, &target, &local_node_id))
+            .await
     }
 
     pub async fn edit_ito(
