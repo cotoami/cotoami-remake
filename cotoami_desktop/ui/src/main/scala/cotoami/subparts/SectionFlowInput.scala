@@ -374,7 +374,14 @@ object SectionFlowInput {
           .map(PartsNode.imgNode(_)),
         currentCotonoma.name
       ),
-      section(className := "coto-type-switch")(
+      section(
+        className := optionalClasses(
+          Seq(
+            ("coto-type-switch", true),
+            ("cotonoma-disabled", !context.repo.canPostCotonoma)
+          )
+        )
+      )(
         button(
           className := "new-coto default",
           disabled := model.form.isInstanceOf[CotoForm.Model],
@@ -385,16 +392,18 @@ object SectionFlowInput {
             context.i18n.text.Coto
           )
         ),
-        button(
-          className := "new-cotonoma default",
-          disabled := model.form.isInstanceOf[CotonomaForm.Model],
-          onClick := (_ => dispatch(Msg.SetCotonomaForm))
-        )(
-          span(className := "label")(
-            materialSymbol(Cotonoma.IconName),
-            context.i18n.text.Cotonoma
+        Option.when(context.repo.canPostCotonoma) {
+          button(
+            className := "new-cotonoma default",
+            disabled := model.form.isInstanceOf[CotonomaForm.Model],
+            onClick := (_ => dispatch(Msg.SetCotonomaForm))
+          )(
+            span(className := "label")(
+              materialSymbol(Cotonoma.IconName),
+              context.i18n.text.Cotonoma
+            )
           )
-        )
+        }
       )
     )
 

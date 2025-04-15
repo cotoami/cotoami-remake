@@ -82,6 +82,10 @@ section.flow-input {
           }
         }
       }
+
+      &.cotonoma-disabled button.new-coto {
+        border-right: 1px solid var(--pane-border-color);
+      }
     }
 
     button.tool:disabled {

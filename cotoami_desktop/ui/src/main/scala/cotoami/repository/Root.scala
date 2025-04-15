@@ -301,19 +301,19 @@ case class Root(
   // Permission check
   /////////////////////////////////////////////////////////////////////////////
 
-  def canPostCoto: Boolean =
+  lazy val canPostCoto: Boolean =
     currentCotonoma match {
       case Some(cotonoma) => nodes.isWritable(cotonoma.nodeId)
       case None           => false
     }
 
-  def canPostCotonoma: Boolean =
+  lazy val canPostCotonoma: Boolean =
     currentCotonoma match {
       case Some(cotonoma) => nodes.canPostCotonoma(cotonoma.nodeId)
       case None           => false
     }
 
-  def canEditItos: Boolean =
+  lazy val canEditItos: Boolean =
     currentCotonoma match {
       case Some(cotonoma) => nodes.canEditItosIn(cotonoma.nodeId)
       case None           => false
