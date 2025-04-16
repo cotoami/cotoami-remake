@@ -15,15 +15,15 @@ object AppFooter {
       div(className := "browser-nav")(
         div(className := "path")(model.path)
       ),
-      model.log
-        .lastEntry()
+      model.messages
+        .lastEntry
         .map(entry =>
-          div(className := s"log-peek ${entry.level.name}")(
+          div(className := s"log-peek ${entry.category.name}")(
             button(
               className := "open-log-view default",
               onClick := ((e) => dispatch(AppMsg.ToggleLogView))
             )(
-              materialSymbol(entry.level.icon),
+              materialSymbol(entry.category.icon),
               entry.message
             )
           )

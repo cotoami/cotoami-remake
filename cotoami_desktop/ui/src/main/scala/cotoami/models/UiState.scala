@@ -12,7 +12,6 @@ import io.circe.parser._
 
 import marubinotto.fui.Cmd
 import cotoami.Msg
-import cotoami.utils.Log
 import cotoami.models.Cotonoma
 import cotoami.subparts.PaneStock
 
@@ -77,24 +76,16 @@ object UiState {
   implicit val encoder: Encoder[UiState] = deriveEncoder
   implicit val decoder: Decoder[UiState] = deriveDecoder
 
-  def restore(createMsg: Option[UiState] => Msg): Cmd.One[Msg] =
+  def restore: Cmd.One[Either[String, Option[UiState]]] =
     Cmd(IO {
       val value = dom.window.localStorage.getItem(StorageKey)
-      val msg = if (value != null) {
+      if (value != null) {
         decode[UiState](value) match {
-          case Right(uiState) => createMsg(Some(uiState))
-          case Left(error) => {
-            dom.window.localStorage.removeItem(StorageKey)
-            Msg.AddLogEntry(
-              Log.Error,
-              "Invalid uiState in localStorage.",
-              Some(value)
-            )
-          }
+          case Right(uiState) => Some(Right(Some(uiState)))
+          case Left(error)    => Some(Left(error.toString()))
         }
       } else {
-        createMsg(None)
+        Some(Right(None))
       }
-      Some(msg)
     })
 }

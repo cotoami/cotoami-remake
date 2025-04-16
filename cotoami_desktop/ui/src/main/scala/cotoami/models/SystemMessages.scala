@@ -45,6 +45,11 @@ object SystemMessages {
     val icon: String
   }
 
+  val categories = Map(
+    Info.name -> Info,
+    Error.name -> Error
+  )
+
   object Info extends Category {
     override val name = "info"
     override val icon = "info_i"

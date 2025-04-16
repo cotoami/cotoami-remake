@@ -62,7 +62,7 @@ object Main {
     (
       Model(url = url, flowInput = flowInput),
       Cmd.Batch(
-        UiState.restore(Msg.UiStateRestored),
+        UiState.restore.map(Msg.UiStateRestored),
         cotoami.backend.SystemInfoJson.fetch().map(Msg.SystemInfoFetched),
         DatabaseFolder.restore.flatMap(
           _.map(DatabaseInfo.openDatabase(_).map(Msg.DatabaseOpened))
@@ -78,16 +78,16 @@ object Main {
     msg match {
       case Msg.UrlChanged(url) => applyUrlChange(url, model.changeUrl(url))
 
-      case Msg.AddLogEntry(level, message, details) =>
+      case Msg.AddMessage(category, message, details) =>
         (
-          model.modify(_.log).using(_.log(level, message, details)),
+          model.modify(_.messages).using(_.add(category, message, details)),
           Cmd.none
         )
 
       case Msg.LogEvent(event) =>
         (
-          model.modify(_.log).using(
-            _.addEntry(LogEventJson.toLogEntry(event))
+          model.modify(_.messages).using(
+            _.add(LogEventJson.toMessage(event))
           ),
           Cmd.none
         )
@@ -119,21 +119,25 @@ object Main {
 
       case Msg.SystemInfoFetched(Left(_)) => (model, Cmd.none)
 
-      case Msg.UiStateRestored(uiState) =>
+      case Msg.UiStateRestored(Right(uiState)) =>
         (
-          model
-            .modify(_.uiState).setTo(Some(uiState.getOrElse(UiState())))
-            .info("UiState restored.", Some(uiState.toString())),
+          model.modify(_.uiState).setTo(Some(uiState.getOrElse(UiState()))),
           Browser.setHtmlTheme(
             uiState.map(_.theme).getOrElse(UiState.DefaultTheme)
           )
+        )
+
+      case Msg.UiStateRestored(Left(e)) =>
+        (
+          model.error(s"Invalid UI state in localStorage.", Some(e)),
+          Cmd.none
         )
 
       case Msg.DatabaseOpened(Right(info)) =>
         update(Msg.SetDatabaseInfo(info), model)
 
       case Msg.DatabaseOpened(Left(e)) =>
-        (model.error(e.default_message, Some(e)), Cmd.none)
+        (model.error(e.default_message, e), Cmd.none)
 
       case Msg.SetDatabaseInfo(info) => {
         model
@@ -162,7 +166,7 @@ object Main {
           result match {
             case Right(_) => model
             case Left(e) =>
-              model.error("Failed to initialize server connections.", Some(e))
+              model.error("Failed to initialize server connections.", e)
           },
           Cmd.none
         )
@@ -228,7 +232,7 @@ object Main {
         }
 
       case Msg.FocusedCotonomaDetailsFetched(Left(e)) =>
-        (model.error("Couldn't fetch cotonoma details.", Some(e)), Cmd.none)
+        (model.error("Couldn't fetch cotonoma details.", e), Cmd.none)
 
       case Msg.UnfocusCotonoma => {
         val newUrl = model.repo.nodes.focused match {
@@ -350,7 +354,7 @@ object Main {
         )
 
       case Msg.NodeUpdated(Left(e)) =>
-        (model.error("Couldn't fetch node details.", Some(e)), Cmd.none)
+        (model.error("Couldn't fetch node details.", e), Cmd.none)
 
       case Msg.CotoUpdated(Right(details)) =>
         (
@@ -361,7 +365,7 @@ object Main {
         )
 
       case Msg.CotoUpdated(Left(e)) =>
-        (model.error("Couldn't fetch coto details.", Some(e)), Cmd.none)
+        (model.error("Couldn't fetch coto details.", e), Cmd.none)
 
       case Msg.Promoted(Right((cotonoma, coto))) =>
         (
@@ -373,7 +377,7 @@ object Main {
         )
 
       case Msg.Promoted(Left(e)) =>
-        (model.error("Couldn't fetch a cotonoma pair.", Some(e)), Cmd.none)
+        (model.error("Couldn't fetch a cotonoma pair.", e), Cmd.none)
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
@@ -510,7 +514,7 @@ object Main {
       AppBody(model),
       AppFooter(model),
       if (model.logViewToggle)
-        Some(ViewLog(model.log))
+        Some(ViewSystemMessages(model.messages))
       else
         None,
       Modal(model)

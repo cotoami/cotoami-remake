@@ -2,7 +2,6 @@ package cotoami
 
 import org.scalajs.dom.URL
 
-import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
@@ -16,8 +15,8 @@ object Msg {
   case class UrlChanged(url: URL) extends Msg
 
   // Log
-  case class AddLogEntry(
-      level: Log.Level,
+  case class AddMessage(
+      category: SystemMessages.Category,
       message: String,
       details: Option[String] = None
   ) extends Msg
@@ -28,7 +27,8 @@ object Msg {
 
   // App init
   case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
-  case class UiStateRestored(state: Option[UiState]) extends Msg
+  case class UiStateRestored(result: Either[String, Option[UiState]])
+      extends Msg
   case class DatabaseOpened(result: Either[ErrorJson, DatabaseInfo]) extends Msg
   case class SetDatabaseInfo(info: DatabaseInfo) extends Msg
   case class ServerConnectionsInitialized(result: Either[ErrorJson, Null])

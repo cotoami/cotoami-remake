@@ -3,7 +3,8 @@ import scala.scalajs.js
 import cats.effect.IO
 
 import marubinotto.fui._
-import cotoami.utils.Log
+
+import cotoami.models.SystemMessages
 import cotoami.backend.ErrorJson
 
 package object cotoami {
@@ -16,13 +17,13 @@ package object cotoami {
       message: String,
       details: Option[String] = None
   ): Cmd.One[Msg] =
-    Cmd(IO { Some(Msg.AddLogEntry(Log.Info, message, details)) })
+    Cmd(IO { Some(Msg.AddMessage(SystemMessages.Info, message, details)) })
 
   def error(
       message: String,
       details: Option[String] = None
   ): Cmd.One[Msg] =
-    Cmd(IO { Some(Msg.AddLogEntry(Log.Error, message, details)) })
+    Cmd(IO { Some(Msg.AddMessage(SystemMessages.Error, message, details)) })
 
   def error(
       message: String,

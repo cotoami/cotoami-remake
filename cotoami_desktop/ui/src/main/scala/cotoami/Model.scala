@@ -2,8 +2,8 @@ package cotoami
 
 import scala.scalajs.js
 import org.scalajs.dom.URL
+import com.softwaremill.quicklens._
 
-import cotoami.utils.Log
 import cotoami.backend._
 import cotoami.repository._
 import cotoami.models._
@@ -13,7 +13,7 @@ import cotoami.subparts.Modal
 trait Context {
   def time: Time
   def i18n: I18n
-  def log: Log
+  def messages: SystemMessages
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
@@ -25,8 +25,8 @@ case class Model(
     time: Time = Time(),
     i18n: I18n = I18n(),
 
-    // Log
-    log: Log = Log(),
+    // SystemMessages
+    messages: SystemMessages = SystemMessages(),
     logViewToggle: Boolean = false,
 
     // Initial data to be loaded in Main.init()
@@ -58,9 +58,13 @@ case class Model(
   def isHighlighting(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
 
   def info(message: String, details: Option[String] = None): Model =
-    copy(log = log.info(message, details))
-  def error(message: String, error: Option[ErrorJson]): Model =
-    copy(log = log.error(message, error.map(js.JSON.stringify(_))))
+    this.modify(_.messages).using(_.info(message, details))
+  def error(message: String, details: Option[String] = None): Model =
+    this.modify(_.messages).using(_.error(message, details))
+  def error(message: String, error: ErrorJson): Model =
+    this.modify(_.messages).using(
+      _.error(message, Some(js.JSON.stringify(error)))
+    )
 
   def changeUrl(url: URL): Model =
     copy(

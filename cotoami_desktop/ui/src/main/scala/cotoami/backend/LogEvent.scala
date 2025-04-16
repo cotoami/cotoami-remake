@@ -1,8 +1,9 @@
 package cotoami.backend
 
 import scala.scalajs.js
+
 import marubinotto.facade.Nullable
-import cotoami.utils.Log
+import cotoami.models.SystemMessages
 
 @js.native
 trait LogEventJson extends js.Object {
@@ -12,9 +13,10 @@ trait LogEventJson extends js.Object {
 }
 
 object LogEventJson {
-  def toLogEntry(event: LogEventJson): Log.Entry =
-    Log.Entry(
-      Log.levels.get(event.level).getOrElse(Log.Debug),
+  def toMessage(event: LogEventJson): SystemMessages.Entry =
+    SystemMessages.Entry(
+      SystemMessages.categories.get(event.level)
+        .getOrElse(SystemMessages.Info),
       event.message,
       Nullable.toOption(event.details)
     )

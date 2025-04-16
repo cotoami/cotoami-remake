@@ -9,12 +9,15 @@ import slinky.core.facade.Hooks._
 import slinky.web.html._
 
 import marubinotto.components.materialSymbol
+
 import cotoami.{Into, Msg => AppMsg}
-import cotoami.utils.Log
+import cotoami.models.SystemMessages
 
-object ViewLog {
+object ViewSystemMessages {
 
-  def apply(log: Log)(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
+  def apply(messages: SystemMessages)(implicit
+      dispatch: Into[AppMsg] => Unit
+  ): ReactElement =
     section(className := "log-view")(
       header(className := "tools")(
         button(
@@ -22,12 +25,12 @@ object ViewLog {
           onClick := ((e) => dispatch(AppMsg.ToggleLogView))
         )(materialSymbol("close"))
       ),
-      LogEntries(entries = log.entries)
+      LogEntries(entries = messages.entries)
     )
 
   @react object LogEntries {
     case class Props(
-        entries: Seq[Log.Entry]
+        entries: Seq[SystemMessages.Entry]
     )
 
     val component = FunctionalComponent[Props] { props =>
@@ -40,10 +43,10 @@ object ViewLog {
       div(className := "log-entries")(
         props.entries.map(entry =>
           div(
-            className := s"log-entry ${entry.level.name}",
+            className := s"log-entry ${entry.category.name}",
             key := entry.timestamp.getTime().toString()
           )(
-            div(className := "level")(materialSymbol(entry.level.icon)),
+            div(className := "level")(materialSymbol(entry.category.icon)),
             div(className := "content")(
               div(className := "message")(entry.message),
               div(className := "details")(entry.details)
