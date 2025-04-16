@@ -13,7 +13,6 @@ import cotoami.subparts.Modal
 trait Context {
   def time: Time
   def i18n: I18n
-  def messages: SystemMessages
   def uiState: Option[UiState]
   def repo: Root
   def geomap: SectionGeomap.Model
@@ -24,10 +23,6 @@ case class Model(
     url: URL,
     time: Time = Time(),
     i18n: I18n = I18n(),
-
-    // SystemMessages
-    messages: SystemMessages = SystemMessages(),
-    logViewToggle: Boolean = false,
 
     // Initial data to be loaded in Main.init()
     systemInfo: Option[SystemInfoJson] = None,
@@ -45,6 +40,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
+    viewMessages: ViewSystemMessages.Model = ViewSystemMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),
     search: PaneSearch.Model = PaneSearch.Model(),
@@ -57,12 +53,14 @@ case class Model(
 
   def isHighlighting(cotoId: Id[Coto]): Boolean = highlight == Some(cotoId)
 
+  def messages: SystemMessages = viewMessages.messages
+
   def info(message: String, details: Option[String] = None): Model =
-    this.modify(_.messages).using(_.info(message, details))
+    this.modify(_.viewMessages.messages).using(_.info(message, details))
   def error(message: String, details: Option[String] = None): Model =
-    this.modify(_.messages).using(_.error(message, details))
+    this.modify(_.viewMessages.messages).using(_.error(message, details))
   def error(message: String, error: ErrorJson): Model =
-    this.modify(_.messages).using(
+    this.modify(_.viewMessages.messages).using(
       _.error(message, Some(js.JSON.stringify(error)))
     )
 

@@ -80,13 +80,15 @@ object Main {
 
       case Msg.AddMessage(category, message, details) =>
         (
-          model.modify(_.messages).using(_.add(category, message, details)),
+          model.modify(_.viewMessages.messages).using(
+            _.add(category, message, details)
+          ),
           Cmd.none
         )
 
       case Msg.LogEvent(event) =>
         (
-          model.modify(_.messages).using(
+          model.modify(_.viewMessages.messages).using(
             _.add(LogEventJson.toMessage(event))
           ),
           Cmd.none
@@ -96,9 +98,6 @@ object Main {
 
       case Msg.BackendEvent(event) =>
         updates.LocalNodeEvent.handle(event, model)
-
-      case Msg.ToggleLogView =>
-        (model.copy(logViewToggle = !model.logViewToggle), Cmd.none)
 
       case Msg.SystemInfoFetched(Right(systemInfo)) =>
         (
@@ -381,6 +380,12 @@ object Main {
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
+      case Msg.ViewSystemMessagesMsg(submsg) => {
+        val (viewMessages, cmd) =
+          ViewSystemMessages.update(submsg, model.viewMessages)
+        (model.copy(viewMessages = viewMessages), cmd)
+      }
+
       case Msg.NavCotonomasMsg(submsg) => {
         val (navCotonomas, cotonomas, cmds) =
           NavCotonomas.update(submsg, model.navCotonomas)
@@ -513,10 +518,7 @@ object Main {
       AppHeader(model),
       AppBody(model),
       AppFooter(model),
-      if (model.logViewToggle)
-        Some(ViewSystemMessages(model.messages))
-      else
-        None,
+      ViewSystemMessages(model.viewMessages),
       Modal(model)
     )
   }

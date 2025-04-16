@@ -14,16 +14,17 @@ sealed trait Msg extends Into[Msg] {
 object Msg {
   case class UrlChanged(url: URL) extends Msg
 
-  // Log
+  // SystemMessages
   case class AddMessage(
       category: SystemMessages.Category,
       message: String,
       details: Option[String] = None
   ) extends Msg
   case class LogEvent(event: LogEventJson) extends Msg
+
+  // Backend events
   case class BackendChange(log: ChangelogEntryJson) extends Msg
   case class BackendEvent(event: LocalNodeEventJson) extends Msg
-  case object ToggleLogView extends Msg
 
   // App init
   case class SystemInfoFetched(result: Either[Unit, SystemInfoJson]) extends Msg
@@ -73,6 +74,7 @@ object Msg {
 
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
+  case class ViewSystemMessagesMsg(submsg: ViewSystemMessages.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
   case class SectionNodeToolsMsg(submsg: SectionNodeTools.Msg) extends Msg
   case class AppMainMsg(submsg: AppMain.Msg) extends Msg

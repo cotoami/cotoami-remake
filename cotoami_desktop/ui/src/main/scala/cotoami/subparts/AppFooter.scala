@@ -21,7 +21,7 @@ object AppFooter {
           div(className := s"log-peek ${entry.category.name}")(
             button(
               className := "open-log-view default",
-              onClick := ((e) => dispatch(AppMsg.ToggleLogView))
+              onClick := ((e) => dispatch(ViewSystemMessages.Msg.Toggle))
             )(
               materialSymbol(entry.category.icon),
               entry.message
