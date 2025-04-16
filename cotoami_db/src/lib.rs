@@ -5,7 +5,7 @@ use rand::Rng;
 use serde::{Deserialize, Deserializer, Serializer};
 
 pub mod db;
-mod exif;
+mod image;
 pub mod models;
 mod schema;
 pub mod time;

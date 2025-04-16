@@ -642,7 +642,7 @@ fn process_media_content<'a>(
 ) -> Result<Cow<'a, [u8]>> {
     let (content, media_type) = media_content;
     if media_type.starts_with("image/") {
-        super::process_image(content, image_max_size, None)
+        crate::image::process_image(content, image_max_size, None)
     } else {
         Ok(Cow::from(content))
     }
