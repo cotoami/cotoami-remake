@@ -16,6 +16,7 @@ chrono.workspace = true
 derive-new.workspace = true
 derive_more.workspace = true
 dotenvy = "0.15"
+fs4 = "0.13.1"
 generic-array = "0.14.7"
 googletest.workspace = true
 identicon-rs = "4.0.3"

@@ -75,7 +75,7 @@ fn repost() -> Result<()> {
     assert_that!(
         result,
         err(pat!(anyhow::Error {
-            to_string(): eq("Reposts cannot be connected")
+            to_string(): eq("Reposts cannot be connected.")
         }))
     );
 

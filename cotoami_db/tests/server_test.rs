@@ -34,7 +34,7 @@ fn update_server() -> Result<()> {
             "invalid-password",
             &earth_opr,
         ),
-        err(displays_as(eq("Authentication failed")))
+        err(displays_as(eq("Authentication failed.")))
     );
 
     /////////////////////////////////////////////////////////////////////////////

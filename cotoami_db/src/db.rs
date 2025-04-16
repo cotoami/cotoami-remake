@@ -1,13 +1,17 @@
 //! Database operations and transactions
 
 use core::time::Duration;
-use std::path::{Path, PathBuf};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
-use anyhow::{ensure, Result};
+use anyhow::{bail, ensure, Result};
 use diesel::{sqlite::SqliteConnection, Connection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use fs4::fs_std::FileExt;
 use parking_lot::Mutex;
-use tracing::info;
+use tracing::{debug, info};
 use url::Url;
 
 use crate::{
@@ -31,6 +35,9 @@ pub struct Database {
     /// The root directory of this database
     root_dir: PathBuf,
 
+    /// Lock file to prevent the database from being opened by multiple Cotoami apps.
+    lock_file: File,
+
     /// Database file URI
     ///
     /// This URI should follow the spec described in the SQLite documentation.
@@ -50,16 +57,27 @@ pub struct Database {
 }
 
 impl Database {
+    const LOCK_FILE_NAME: &'static str = "cotoami.lock";
     const DATABASE_FILE_NAME: &'static str = "cotoami.db";
     const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Self> {
         let root_dir = ensure_dir(root_dir)?;
+
+        // Check the lock file
+        debug!("Locking the database {root_dir:?}...");
+        let lock_file = File::create(root_dir.join(Self::LOCK_FILE_NAME))?;
+        if !lock_file.try_lock_exclusive()? {
+            bail!(DatabaseError::CurrentlyInUse);
+        }
+
+        // Create the singleton connection for transaction
         let file_uri = to_file_uri(root_dir.join(Self::DATABASE_FILE_NAME))?;
         let rw_conn = new_rw_conn(&file_uri)?;
 
         let mut db = Self {
             root_dir,
+            lock_file,
             file_uri,
             rw_conn: Mutex::new(rw_conn),
             globals: Globals::default(),
@@ -149,5 +167,12 @@ pub fn to_file_uri<P: AsRef<Path>>(path: P) -> Result<String> {
             reason: "Invalid path".into(),
         }))?;
         Ok(uri.as_str().to_owned())
+    }
+}
+
+impl Drop for Database {
+    fn drop(&mut self) {
+        debug!("Unlocking the database {:?}...", self.root_dir);
+        FileExt::unlock(&self.lock_file).ok();
     }
 }

@@ -8,25 +8,28 @@ use crate::models::{node::Node, Id};
 
 #[derive(Error, Debug)]
 pub enum DatabaseError {
+    #[error("This database is currently in use by another Cotoami app.")]
+    CurrentlyInUse,
+
     #[error("Invalid directory path: {0}")]
     InvalidRootDir(PathBuf),
 
     #[error("Invalid file path: {path} ({reason})")]
     InvalidFilePath { path: PathBuf, reason: String },
 
-    #[error("Local node has not yet been created")]
+    #[error("Local node has not yet been created.")]
     LocalNodeNotYetInitialized,
 
-    #[error("Root cotonoma has not yet been created")]
+    #[error("Root cotonoma has not yet been created.")]
     RootCotonomaNotFound,
 
     #[error("Not found: {kind} (by: {by})")]
     EntityNotFound { kind: EntityKind, by: String },
 
-    #[error("Authentication failed")]
+    #[error("Authentication failed.")]
     AuthenticationFailed,
 
-    #[error("Permission denied")]
+    #[error("Permission denied.")]
     PermissionDenied,
 
     #[error(
@@ -47,10 +50,10 @@ pub enum DatabaseError {
     #[error("Node role conflict with: {with}")]
     NodeRoleConflict { with: String },
 
-    #[error("Duplicate repost")]
+    #[error("Duplicate repost.")]
     DuplicateRepost,
 
-    #[error("Reposts cannot be connected")]
+    #[error("Reposts cannot be connected.")]
     RepostsCannotBeConnected,
 }
 
