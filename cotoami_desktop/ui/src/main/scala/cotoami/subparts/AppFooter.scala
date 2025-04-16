@@ -18,9 +18,9 @@ object AppFooter {
       model.messages
         .lastEntry
         .map(entry =>
-          div(className := s"log-peek ${entry.category.name}")(
+          div(className := s"message-peek ${entry.category.name}")(
             button(
-              className := "open-log-view default",
+              className := "open-messages-view default",
               onClick := ((e) => dispatch(ViewSystemMessages.Msg.Toggle))
             )(
               materialSymbol(entry.category.icon),
