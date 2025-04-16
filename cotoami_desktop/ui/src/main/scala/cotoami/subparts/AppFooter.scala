@@ -21,7 +21,7 @@ object AppFooter {
           div(className := s"message-peek ${entry.category.name}")(
             button(
               className := "open-messages-view default",
-              onClick := ((e) => dispatch(ViewSystemMessages.Msg.Toggle))
+              onClick := ((e) => dispatch(ViewMessages.Msg.Toggle))
             )(
               materialSymbol(entry.category.icon),
               entry.message

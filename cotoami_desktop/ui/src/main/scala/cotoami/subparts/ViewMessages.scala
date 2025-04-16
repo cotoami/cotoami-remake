@@ -14,7 +14,7 @@ import marubinotto.components.materialSymbol
 import cotoami.{Into, Msg => AppMsg}
 import cotoami.models.SystemMessages
 
-object ViewSystemMessages {
+object ViewMessages {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -30,7 +30,7 @@ object ViewSystemMessages {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = AppMsg.ViewSystemMessagesMsg(this)
+    def into = AppMsg.ViewMessagesMsg(this)
   }
 
   object Msg {

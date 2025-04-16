@@ -40,7 +40,7 @@ case class Model(
 
     // subparts
     modalStack: Modal.Stack = Modal.Stack(),
-    viewMessages: ViewSystemMessages.Model = ViewSystemMessages.Model(),
+    viewMessages: ViewMessages.Model = ViewMessages.Model(),
     navCotonomas: NavCotonomas.Model = NavCotonomas.Model(),
     nodeTools: SectionNodeTools.Model = SectionNodeTools.Model(),
     search: PaneSearch.Model = PaneSearch.Model(),

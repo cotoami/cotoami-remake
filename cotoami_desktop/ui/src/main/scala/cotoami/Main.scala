@@ -380,9 +380,9 @@ object Main {
 
       case Msg.ModalMsg(submsg) => Modal.update(submsg, model)
 
-      case Msg.ViewSystemMessagesMsg(submsg) => {
+      case Msg.ViewMessagesMsg(submsg) => {
         val (viewMessages, cmd) =
-          ViewSystemMessages.update(submsg, model.viewMessages)
+          ViewMessages.update(submsg, model.viewMessages)
         (model.copy(viewMessages = viewMessages), cmd)
       }
 
@@ -518,7 +518,7 @@ object Main {
       AppHeader(model),
       AppBody(model),
       AppFooter(model),
-      ViewSystemMessages(model.viewMessages),
+      ViewMessages(model.viewMessages),
       Modal(model)
     )
   }

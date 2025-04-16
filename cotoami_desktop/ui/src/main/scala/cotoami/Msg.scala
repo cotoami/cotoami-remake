@@ -14,7 +14,7 @@ sealed trait Msg extends Into[Msg] {
 object Msg {
   case class UrlChanged(url: URL) extends Msg
 
-  // SystemMessages
+  // System messages
   case class AddMessage(
       category: SystemMessages.Category,
       message: String,
@@ -74,7 +74,7 @@ object Msg {
 
   // Subparts
   case class ModalMsg(submsg: Modal.Msg) extends Msg
-  case class ViewSystemMessagesMsg(submsg: ViewSystemMessages.Msg) extends Msg
+  case class ViewMessagesMsg(submsg: ViewMessages.Msg) extends Msg
   case class NavCotonomasMsg(submsg: NavCotonomas.Msg) extends Msg
   case class SectionNodeToolsMsg(submsg: SectionNodeTools.Msg) extends Msg
   case class AppMainMsg(submsg: AppMain.Msg) extends Msg
