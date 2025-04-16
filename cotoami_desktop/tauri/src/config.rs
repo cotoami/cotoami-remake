@@ -3,8 +3,9 @@ use std::{borrow::Borrow, collections::BTreeMap, fs, path::Path};
 use anyhow::Result;
 use cotoami_db::{Id, Node};
 use cotoami_node::prelude::NodeConfig;
+use log::debug;
 
-use crate::log::Logger;
+use crate::message::MessageSink;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
@@ -18,12 +19,12 @@ impl Configs {
             match Self::read_from_file(path) {
                 Ok(configs) => configs,
                 Err(e) => {
-                    app_handle.warn("Error reading the configs file.", Some(&e.to_string()));
+                    app_handle.error("Error reading the configs file.", Some(&e.to_string()));
                     Self::empty()
                 }
             }
         } else {
-            app_handle.debug("No configs file.", None);
+            debug!("No configs file.");
             Self::empty()
         }
     }
@@ -40,9 +41,12 @@ impl Configs {
         if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
             let file_path = config_dir.join(Self::FILENAME);
             if let Err(e) = self.save_to_file(&file_path) {
-                app_handle.warn("Error writing the configs file.", Some(&e.to_string()));
+                app_handle.error("Error writing the configs file.", Some(&e.to_string()));
             } else {
-                app_handle.debug("Configs saved.", Some(file_path.to_string_lossy().borrow()));
+                app_handle.info(
+                    "Configuration updated.",
+                    Some(file_path.to_string_lossy().borrow()),
+                );
             }
         }
     }

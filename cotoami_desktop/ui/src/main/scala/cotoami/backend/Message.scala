@@ -6,18 +6,18 @@ import marubinotto.facade.Nullable
 import cotoami.models.SystemMessages
 
 @js.native
-trait LogEventJson extends js.Object {
-  val level: String = js.native
+trait MessageJson extends js.Object {
+  val category: String = js.native
   val message: String = js.native
   val details: Nullable[String] = js.native
 }
 
-object LogEventJson {
-  def toMessage(event: LogEventJson): SystemMessages.Entry =
+object MessageJson {
+  def toMessage(json: MessageJson): SystemMessages.Entry =
     SystemMessages.Entry(
-      SystemMessages.categories.get(event.level)
+      SystemMessages.categories.get(json.category)
         .getOrElse(SystemMessages.Info),
-      event.message,
-      Nullable.toOption(event.details)
+      json.message,
+      Nullable.toOption(json.details)
     )
 }

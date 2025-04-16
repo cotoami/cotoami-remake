@@ -1,5 +1,4 @@
 use std::{
-    borrow::Borrow,
     fs::{File, OpenOptions},
     io::{BufReader, BufWriter, Write},
     path::Path,
@@ -8,8 +7,9 @@ use std::{
 use anyhow::Result;
 use base64::Engine;
 use cotoami_db::prelude::Node;
+use tracing::debug;
 
-use crate::log::Logger;
+use crate::message::MessageSink;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub(crate) struct DatabaseOpened {
@@ -38,19 +38,16 @@ impl RecentDatabases {
 
     pub fn load(app_handle: &tauri::AppHandle) -> Self {
         if let Some(path) = crate::config_file_path(app_handle, Self::FILENAME) {
-            app_handle.debug(
-                "Reading the recent file...",
-                Some(path.to_string_lossy().borrow()),
-            );
+            debug!("Reading the recent file: {}", path.to_string_lossy());
             match Self::read_from_file(path) {
                 Ok(recent) => recent,
                 Err(e) => {
-                    app_handle.warn("Error reading the recent file.", Some(&e.to_string()));
+                    app_handle.error("Error reading the recent file.", Some(&e.to_string()));
                     Self::empty()
                 }
             }
         } else {
-            app_handle.debug("No recent databases.", None);
+            debug!("No recent databases.");
             Self::empty()
         }
     }
@@ -86,12 +83,9 @@ impl RecentDatabases {
         if let Some(config_dir) = app_handle.path_resolver().app_config_dir() {
             let file_path = config_dir.join(Self::FILENAME);
             if let Err(e) = self.save_to_file(&file_path) {
-                app_handle.warn("Error writing the recent file.", Some(&e.to_string()));
+                app_handle.error("Error writing the recent file.", Some(&e.to_string()));
             } else {
-                app_handle.debug(
-                    "RecentDatabases saved.",
-                    Some(file_path.to_string_lossy().borrow()),
-                );
+                debug!("RecentDatabases saved: {}", file_path.to_string_lossy());
             }
         }
     }

@@ -86,10 +86,10 @@ object Main {
           Cmd.none
         )
 
-      case Msg.LogEvent(event) =>
+      case Msg.BackendMessage(message) =>
         (
           model.modify(_.viewMessages.messages).using(
-            _.add(LogEventJson.toMessage(event))
+            _.add(MessageJson.toMessage(message))
           ),
           Cmd.none
         )
@@ -497,9 +497,8 @@ object Main {
     )
 
   def subscriptions(model: Model): Sub[Msg] =
-    // Specify the type of the event payload (`LogEvent`) here,
-    // otherwise a runtime error will occur for some reason
-    (tauri.listen[LogEventJson]("log", None).map(Msg.LogEvent): Sub[Msg]) <+>
+    (tauri.listen[MessageJson]("message", None)
+      .map(Msg.BackendMessage): Sub[Msg]) <+>
       listenToBackendChanges(model) <+>
       (tauri.listen[LocalNodeEventJson]("backend-event", None)
         .map(Msg.BackendEvent))

@@ -13,7 +13,6 @@ use self::recent::RecentDatabases;
 use crate::{
     commands::{error::Error, OperatingAs},
     config::Configs,
-    log::Logger,
 };
 
 pub(crate) mod recent;
@@ -116,7 +115,6 @@ pub async fn create_database(
 ) -> Result<DatabaseInfo, Error> {
     let path: PathBuf = [base_folder, folder_name].iter().collect();
     let folder = normalize_path(path)?;
-    app_handle.debug("Creating a database...", Some(&folder));
 
     // Create a new config.
     let new_owner_password = cotoami_db::generate_secret(None);
@@ -143,7 +141,6 @@ pub async fn create_database(
         Some(new_owner_password),
     )
     .await?;
-    app_handle.info("Database created.", Some(&folder));
     RecentDatabases::update(&app_handle, folder, db_info.local_node());
 
     // Store the states.
@@ -244,7 +241,6 @@ pub async fn open_database(
         new_owner_password,
     )
     .await?;
-    app_handle.info("Database opened.", Some(&folder));
 
     Ok(db_info)
 }

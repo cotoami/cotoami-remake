@@ -20,9 +20,9 @@ object Msg {
       message: String,
       details: Option[String] = None
   ) extends Msg
-  case class LogEvent(event: LogEventJson) extends Msg
 
   // Backend events
+  case class BackendMessage(message: MessageJson) extends Msg
   case class BackendChange(log: ChangelogEntryJson) extends Msg
   case class BackendEvent(event: LocalNodeEventJson) extends Msg
 

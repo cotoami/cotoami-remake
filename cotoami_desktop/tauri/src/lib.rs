@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
-use crate::log::Logger;
+use tracing::warn;
 
 pub mod commands;
 mod config;
 mod event;
-mod log;
+mod message;
 pub mod plugins;
 
 fn config_file_path(app_handle: &tauri::AppHandle, file_name: &str) -> Option<PathBuf> {
@@ -17,7 +17,7 @@ fn config_file_path(app_handle: &tauri::AppHandle, file_name: &str) -> Option<Pa
             None
         }
     } else {
-        app_handle.warn("app_config_dir is None.", None);
+        warn!("app_config_dir is None.");
         None
     }
 }
