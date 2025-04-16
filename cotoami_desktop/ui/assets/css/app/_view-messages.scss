@@ -1,10 +1,11 @@
 @use "../pico-customized" as pico;
 
-section.log-view {
+section.system-messages {
   display: flex;
   flex-direction: column;
 
   width: 60vw;
+  max-width: 1000px;
   height: 30vh;
 
   background: var(--card-background-color);
@@ -20,7 +21,7 @@ section.log-view {
     }
   }
 
-  .log-entries {
+  section.entries {
     flex: 1;
 
     margin: 5px;
@@ -35,7 +36,7 @@ section.log-view {
 
     overflow-y: auto;
 
-    .log-entry {
+    section.entry {
       display: flex;
       flex-direction: row;
 
@@ -43,14 +44,6 @@ section.log-view {
 
       &.error {
         color: #{pico.$amber-900};
-      }
-
-      &.warn {
-        color: #{pico.$amber-400};
-      }
-
-      &.debug {
-        opacity: .5;
       }
 
       span.material-symbols {

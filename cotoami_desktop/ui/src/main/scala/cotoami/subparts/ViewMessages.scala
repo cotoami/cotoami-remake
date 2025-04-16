@@ -51,18 +51,18 @@ object ViewMessages {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     Option.when(model.open) {
-      section(className := "log-view")(
+      section(className := "system-messages")(
         header(className := "tools")(
           button(
-            className := "close-log-view default",
+            className := "close default",
             onClick := (_ => dispatch(Msg.Toggle.into))
           )(materialSymbol("close"))
         ),
-        LogEntries(entries = model.messages.entries)
+        ContentArea(entries = model.messages.entries)
       )
     }
 
-  @react object LogEntries {
+  @react object ContentArea {
     case class Props(
         entries: Seq[SystemMessages.Entry]
     )
@@ -74,16 +74,18 @@ object ViewMessages {
         bottomRef.current.scrollIntoView(false)
       })
 
-      div(className := "log-entries")(
+      section(className := "entries")(
         props.entries.map(entry =>
-          div(
-            className := s"log-entry ${entry.category.name}",
+          section(
+            className := s"entry ${entry.category.name}",
             key := entry.timestamp.getTime().toString()
           )(
-            div(className := "level")(materialSymbol(entry.category.icon)),
+            section(className := "category")(
+              materialSymbol(entry.category.icon)
+            ),
             div(className := "content")(
-              div(className := "message")(entry.message),
-              div(className := "details")(entry.details)
+              section(className := "message")(entry.message),
+              section(className := "details")(entry.details)
             )
           )
         ) :+ div(key := "bottom", ref := bottomRef)(): _*
