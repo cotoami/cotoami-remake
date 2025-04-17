@@ -113,6 +113,9 @@ impl HttpClient {
             Command::SetLocalNodeIcon { icon } => self
                 .put(&format!("{API_PATH_LOCAL}/icon"))
                 .body(bytes::Bytes::from(icon)),
+            Command::SetImageMaxSize(size) => self
+                .put(&format!("{API_PATH_LOCAL}/image-max-size"))
+                .json(&size),
             Command::EnableAnonymousRead { enable } => self
                 .put(&format!("{API_PATH_LOCAL}/enable-anonymous"))
                 .json(&enable),

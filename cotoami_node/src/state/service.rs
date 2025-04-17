@@ -34,6 +34,9 @@ impl NodeState {
             Command::SetLocalNodeIcon { icon } => {
                 format.serialize(self.set_local_node_icon(icon.into(), opr?).await)
             }
+            Command::SetImageMaxSize(size) => {
+                format.serialize(self.set_image_max_size(size, opr?).await)
+            }
             Command::EnableAnonymousRead { enable } => {
                 format.serialize(self.enable_anonymous_read(enable, opr?).await)
             }

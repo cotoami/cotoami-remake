@@ -16,6 +16,9 @@ pub enum Command {
         icon: Bytes,
     },
 
+    /// Request to set the image max size and return the [LocalNode] if succeeded.
+    SetImageMaxSize(i32),
+
     /// Request to enable/disable anonymous read and return the [LocalNode] if succeeded.
     EnableAnonymousRead { enable: bool },
 

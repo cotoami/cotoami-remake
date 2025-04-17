@@ -19,6 +19,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/", get(local_node))
         .route("/server", get(local_server))
         .route("/icon", put(set_local_node_icon))
+        .route("/image-max-size", put(set_image_max_size))
         .route("/enable-anonymous", put(enable_anonymous_read))
 }
 
@@ -61,6 +62,22 @@ async fn set_local_node_icon(
         .set_local_node_icon(body, Arc::new(operator))
         .await
         .map(|node| Content(node, accept))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// PUT /api/data/nodes/local/image-max-size
+/////////////////////////////////////////////////////////////////////////////
+
+async fn set_image_max_size(
+    State(state): State<NodeState>,
+    Extension(operator): Extension<Operator>,
+    TypedHeader(accept): TypedHeader<Accept>,
+    Json(size): Json<i32>,
+) -> Result<Content<LocalNode>, ServiceError> {
+    state
+        .set_image_max_size(size, Arc::new(operator))
+        .await
+        .map(|local| Content(local, accept))
 }
 
 /////////////////////////////////////////////////////////////////////////////

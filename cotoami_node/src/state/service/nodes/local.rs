@@ -37,9 +37,10 @@ impl NodeState {
 
     pub async fn set_image_max_size(
         self,
-        size: Option<i32>,
+        size: i32,
         operator: Arc<Operator>,
     ) -> Result<LocalNode, ServiceError> {
+        let size = if size > 0 { Some(size) } else { None };
         let db = self.db().clone();
         spawn_blocking(move || {
             db.new_session()?
