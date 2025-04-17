@@ -11,7 +11,6 @@ import marubinotto.components.{materialSymbol, ScrollArea}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.Root
-import cotoami.backend.{DatabaseInfo, ErrorJson}
 import cotoami.subparts.{
   buttonEdit,
   field,
@@ -30,10 +29,9 @@ object ModalNodeProfile {
   case class Model(
       nodeId: Id[Node],
       error: Option[String] = None,
-      resettingPassword: Boolean = false,
-      resettingPasswordError: Option[String] = None,
 
       // Roles
+      self: FieldsSelf.Model,
       localServer: SectionLocalServer.Model,
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
@@ -71,6 +69,7 @@ object ModalNodeProfile {
       (
         Model(
           nodeId = nodeId,
+          self = FieldsSelf.Model(nodeId),
           localServer = localServer,
           asClient = asClient,
           asChild = asChild
@@ -92,10 +91,7 @@ object ModalNodeProfile {
   }
 
   object Msg {
-    case object ResetOwnerPassword extends Msg
-    case class OwnerPasswordReset(result: Either[ErrorJson, String]) extends Msg
-
-    // Roles
+    case class FieldsSelfMsg(submsg: FieldsSelf.Msg) extends Msg
     case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
     case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
     case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
@@ -105,27 +101,10 @@ object ModalNodeProfile {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.ResetOwnerPassword =>
-        (
-          model.copy(resettingPassword = true),
-          DatabaseInfo.newOwnerPassword
-            .map(Msg.OwnerPasswordReset(_).into)
-        )
-
-      case Msg.OwnerPasswordReset(Right(password)) =>
-        (
-          model.copy(resettingPassword = false),
-          Modal.open(Modal.NewPassword.forOwner(password))
-        )
-
-      case Msg.OwnerPasswordReset(Left(e)) =>
-        (
-          model.copy(
-            resettingPassword = false,
-            resettingPasswordError = Some(e.default_message)
-          ),
-          Cmd.none
-        )
+      case Msg.FieldsSelfMsg(submsg) => {
+        val (self, cmd) = FieldsSelf.update(submsg, model.self)
+        (model.copy(self = self), cmd)
+      }
 
       case Msg.SectionLocalServerMsg(submsg) => {
         val (localServer, cmd) =
@@ -179,9 +158,7 @@ object ModalNodeProfile {
             fieldId(node),
             fieldName(node, rootCoto, model),
             rootCoto.map(fieldDescription(_, model)),
-            Option.when(model.isLocal && model.isSelf) {
-              fieldOwnerPassword(model)
-            },
+            FieldsSelf(model.self),
             SectionLocalServer(model.localServer),
             model.asServer.map(SectionAsServer(_)),
             SectionAsClient(model.asClient),
@@ -301,35 +278,6 @@ object ModalNodeProfile {
           buttonEditRootCoto(rootCoto)
         )
       }
-    )
-
-  private def fieldOwnerPassword(model: Model)(implicit
-      context: Context,
-      dispatch: Into[AppMsg] => Unit
-  ): ReactElement =
-    field(
-      name = context.i18n.text.ModalNodeProfile_ownerPassword,
-      classes = "owner-password"
-    )(
-      button(
-        `type` := "button",
-        className := "reset-password contrast outline",
-        disabled := model.resettingPassword,
-        aria - "busy" := model.resettingPassword.toString(),
-        onClick := (_ =>
-          dispatch(
-            Modal.Msg.OpenModal(
-              Modal.Confirm(
-                context.i18n.text.Owner_confirmResetPassword,
-                Msg.ResetOwnerPassword
-              )
-            )
-          )
-        )
-      )(context.i18n.text.Owner_resetPassword),
-      model.resettingPasswordError.map(
-        section(className := "error")(_)
-      )
     )
 
   private def buttonEditRootCoto(rootCoto: Coto)(implicit
