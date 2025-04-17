@@ -58,7 +58,6 @@ where
         local_server,
         pat!(LocalServer {
             active_config: eq(&active_config),
-            anonymous_read_enabled: eq(&false),
             anonymous_connections: eq(&0)
         })
     );
