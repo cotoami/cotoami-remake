@@ -132,14 +132,14 @@ pub struct ClientAdded {
 pub struct InitialDataset {
     pub last_change_number: i64,
     pub nodes: Vec<Node>,
-    pub local_node_id: Id<Node>,
+    pub local_settings: LocalNode,
     pub parent_node_ids: Vec<Id<Node>>,
     pub servers: Vec<Server>,
     pub active_clients: Vec<ActiveClient>,
 }
 
 impl InitialDataset {
-    pub fn local_node(&self) -> Option<&Node> { self.node(&self.local_node_id) }
+    pub fn local_node(&self) -> Option<&Node> { self.node(&self.local_settings.node_id) }
 
     pub fn node(&self, id: &Id<Node>) -> Option<&Node> {
         self.nodes.iter().find(|node| node.uuid == *id)

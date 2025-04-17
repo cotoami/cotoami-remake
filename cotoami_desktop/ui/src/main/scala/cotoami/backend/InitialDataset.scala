@@ -5,7 +5,7 @@ import scala.scalajs.js
 import marubinotto.fui.Cmd
 import marubinotto.libs.tauri
 
-import cotoami.models.{ActiveClient, Id, Node, Server}
+import cotoami.models.{ActiveClient, Id, LocalNode, Node, Server}
 
 case class InitialDataset(json: InitialDatasetJson) {
   def lastChangeNumber: Double = json.last_change_number
@@ -16,9 +16,9 @@ case class InitialDataset(json: InitialDatasetJson) {
       .map(node => node.id -> node)
       .toMap
 
-  def localNodeId: Id[Node] = Id(json.local_node_id)
+  def localSettings: LocalNode = LocalNodeBackend.toModel(json.local_settings)
 
-  def localNode: Option[Node] = nodes.get(localNodeId)
+  def localNode: Option[Node] = nodes.get(localSettings.nodeId)
 
   lazy val parentNodeIds: js.Array[Id[Node]] =
     json.parent_node_ids.map(Id[Node](_))
@@ -42,7 +42,7 @@ object InitialDataset {
 trait InitialDatasetJson extends js.Object {
   val last_change_number: Double = js.native
   val nodes: js.Array[NodeJson] = js.native
-  val local_node_id: String = js.native
+  val local_settings: LocalNodeJson = js.native
   val parent_node_ids: js.Array[String] = js.native
   val servers: js.Array[ServerJson] = js.native
   val active_clients: js.Array[ActiveClientJson] = js.native

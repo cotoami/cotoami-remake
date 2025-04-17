@@ -318,7 +318,7 @@ impl NodeState {
         Ok(InitialDataset {
             last_change_number,
             nodes: self.all_nodes().await?,
-            local_node_id: self.db().globals().try_get_local_node_id()?,
+            local_settings: self.db().globals().try_get_local_node()?,
             parent_node_ids: self.db().globals().parent_node_ids(),
             servers: self.all_servers(operator).await?,
             active_clients: self.active_clients(),

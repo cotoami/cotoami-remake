@@ -12,6 +12,7 @@ import cotoami.models.{
   DatabaseRole,
   Id,
   Ito,
+  LocalNode,
   Node,
   ParentStatus,
   Server
@@ -20,7 +21,7 @@ import cotoami.backend.InitialDataset
 
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
-    localId: Option[Id[Node]] = None,
+    localSettings: Option[LocalNode] = None,
     selfId: Option[Id[Node]] = None,
     focusedId: Option[Id[Node]] = None,
 
@@ -30,6 +31,8 @@ case class Nodes(
     parentIds: Seq[Id[Node]] = Seq.empty
 ) {
   def onNodeChange: Nodes = unfocus
+
+  val localId: Option[Id[Node]] = localSettings.map(_.nodeId)
 
   def get(id: Id[Node]): Option[Node] = map.get(id)
 
@@ -180,8 +183,8 @@ object Nodes {
   def apply(dataset: InitialDataset, localId: Id[Node]): Nodes =
     new Nodes(
       map = dataset.nodes,
-      localId = Some(localId),
-      selfId = Some(dataset.localNodeId),
+      localSettings = Some(dataset.localSettings),
+      selfId = Some(dataset.localSettings.nodeId),
       parentIds = dataset.parentNodeIds.toSeq
     )
       .addServers(dataset.servers)
