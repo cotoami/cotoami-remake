@@ -27,7 +27,7 @@ case class ClientNode(
 object ClientNode {
   def validateNodeId(
       nodeId: String,
-      localNodeId: Option[Id[Node]]
+      selfNodeId: Option[Id[Node]]
   ): Seq[Validation.Error] = {
     val fieldName = "node ID"
     Seq(
@@ -35,8 +35,8 @@ object ClientNode {
       Validation.uuid(fieldName, nodeId)
     ).flatten match {
       case Seq() =>
-        if (Some(nodeId) == localNodeId.map(_.uuid))
-          Seq(Node.localNodeCannotBeRemoteError)
+        if (Some(nodeId) == selfNodeId.map(_.uuid))
+          Seq(Node.selfCannotBeRemoteError)
         else
           Seq.empty
       case errors => errors

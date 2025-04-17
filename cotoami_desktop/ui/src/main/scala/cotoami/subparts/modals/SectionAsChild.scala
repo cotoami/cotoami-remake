@@ -28,7 +28,7 @@ object SectionAsChild {
       saving: Boolean = false,
       savingError: Option[String] = None
   ) {
-    def isLocalNode(implicit context: Context): Boolean =
+    def isLocal(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
     def setChild(child: ChildNode): Model =
@@ -49,7 +49,7 @@ object SectionAsChild {
     def apply(
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (!context.repo.nodes.isOperating(nodeId))
+      if (!context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
           ChildNodeBackend.fetch(nodeId)
@@ -168,7 +168,7 @@ object SectionAsChild {
         onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled)),
         onCanPostCotonomas = (_ => dispatch(Msg.CanPostCotonomasToggled))
       ),
-      Option.when(!model.isLocalNode) {
+      Option.when(!model.isLocal) {
         div(className := "edit")(
           if (model.saving)
             span(

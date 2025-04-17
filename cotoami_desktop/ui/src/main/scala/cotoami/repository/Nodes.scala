@@ -21,7 +21,7 @@ import cotoami.backend.InitialDataset
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
     localId: Option[Id[Node]] = None,
-    operatedId: Option[Id[Node]] = None,
+    selfId: Option[Id[Node]] = None,
     focusedId: Option[Id[Node]] = None,
 
     // remote nodes
@@ -55,15 +55,15 @@ case class Nodes(
 
   def isLocal(id: Id[Node]): Boolean = Some(id) == localId
 
-  def operated: Option[Node] = operatedId.flatMap(get)
+  def self: Option[Node] = selfId.flatMap(get)
 
-  def operatingRemote: Boolean =
-    (localId, operatedId) match {
-      case (Some(local), Some(operated)) => local != operated
-      case _                             => false
+  def isSelf(id: Id[Node]): Boolean = Some(id) == selfId
+
+  def isSelfRemote: Boolean =
+    (localId, selfId) match {
+      case (Some(local), Some(self)) => local != self
+      case _                         => false
     }
-
-  def isOperating(id: Id[Node]): Boolean = operatedId == Some(id)
 
   def parents: Seq[Node] = parentIds.map(get).flatten
 
@@ -81,7 +81,7 @@ case class Nodes(
 
   def focused: Option[Node] = focusedId.flatMap(get)
 
-  def current: Option[Node] = focused.orElse(operated)
+  def current: Option[Node] = focused.orElse(self)
 
   def prependParentId(id: Id[Node]): Nodes =
     if (parentIds.contains(id)) this
@@ -144,30 +144,30 @@ case class Nodes(
       .getOrElse(false)
 
   def isWritable(nodeId: Id[Node]): Boolean =
-    isOperating(nodeId) || childPrivilegesTo(nodeId).isDefined
+    isSelf(nodeId) || childPrivilegesTo(nodeId).isDefined
 
   // A coto can be edited only by its creator, but if a coto is a cotonoma,
   // owners can edit it, too.
   def canEdit(coto: Coto): Boolean =
     isWritable(coto.nodeId) &&
-      (isOperating(coto.postedById) ||
+      (isSelf(coto.postedById) ||
         (coto.isCotonoma && isOwnerOf(coto.nodeId)))
 
   // A coto can be deleted by its creator or the node owner.
   def canDelete(coto: Coto): Boolean =
     isWritable(coto.nodeId) &&
-      (isOperating(coto.postedById) || isOperating(coto.nodeId))
+      (isSelf(coto.postedById) || isSelf(coto.nodeId))
 
   def canEdit(ito: Ito): Boolean = canEditItosIn(ito.nodeId)
 
   def canEditItosIn(nodeId: Id[Node]): Boolean =
-    isOperating(nodeId) ||
+    isSelf(nodeId) ||
       childPrivilegesTo(nodeId)
         .map(_.canEditItos)
         .getOrElse(false)
 
   def canPostCotonoma(nodeId: Id[Node]): Boolean =
-    isOperating(nodeId) ||
+    isSelf(nodeId) ||
       childPrivilegesTo(nodeId)
         .map(_.canPostCotonomas)
         .getOrElse(false)
@@ -181,7 +181,7 @@ object Nodes {
     new Nodes(
       map = dataset.nodes,
       localId = Some(localId),
-      operatedId = Some(dataset.localNodeId),
+      selfId = Some(dataset.localNodeId),
       parentIds = dataset.parentNodeIds.toSeq
     )
       .addServers(dataset.servers)

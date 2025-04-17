@@ -404,7 +404,7 @@ object Root {
     *   The initial dataset of this repository.
     * @param localId
     *   The local node ID of the database this app has originally opened. This
-    *   ID can be different from `dataset.localNodeId` when the operated node is
+    *   ID can be different from `dataset.localNodeId` when the self node is
     *   switched to a remote node.
     */
   def apply(dataset: InitialDataset, localId: Id[Node]): Root =

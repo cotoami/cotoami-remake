@@ -28,7 +28,7 @@ object AppHeader {
         section(className := "tools")(
           model.uiState.map(divToolButtons),
           divSearch(model.search),
-          model.repo.nodes.operated.map(buttonNodeProfile)
+          model.repo.nodes.self.map(buttonNodeProfile)
         )
       )
     )

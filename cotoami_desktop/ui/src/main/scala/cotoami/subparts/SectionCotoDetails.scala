@@ -122,7 +122,7 @@ object SectionCotoDetails {
           header()(
             PartsIto.buttonSubcotoIto(ito),
             PartsCoto.divAttributes(coto),
-            Option.when(Some(coto.postedById) != repo.nodes.operatedId) {
+            Option.when(!repo.nodes.isSelf(coto.postedById)) {
               PartsCoto.addressAuthor(coto, repo.nodes)
             }
           ),

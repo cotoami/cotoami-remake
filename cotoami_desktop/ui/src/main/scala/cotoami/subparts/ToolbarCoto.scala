@@ -114,7 +114,7 @@ object ToolbarCoto {
             dispatch(
               Modal.Msg.OpenModal(
                 Modal.Confirm(
-                  if (repo.nodes.isOperating(coto.postedById))
+                  if (repo.nodes.isSelf(coto.postedById))
                     context.i18n.text.ConfirmDeleteCoto
                   else
                     context.i18n.text.ConfirmDeleteOthersCoto(

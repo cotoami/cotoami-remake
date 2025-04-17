@@ -38,20 +38,20 @@ object ModalNodeProfile {
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
   ) {
-    def isLocalNode(implicit context: Context): Boolean =
+    def isLocal(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
 
-    def isOperatedNode(implicit context: Context): Boolean =
-      context.repo.nodes.isOperating(nodeId)
+    def isSelf(implicit context: Context): Boolean =
+      context.repo.nodes.isSelf(nodeId)
 
     def asServer(implicit context: Context): Option[Server] =
       context.repo.nodes.servers.get(nodeId)
 
     def nodeRoleName(implicit context: Context): Option[String] =
-      if (isOperatedNode)
+      if (isSelf)
         Some(
-          context.i18n.text.ModalNodeProfile_operatedNode ++
-            Option.when(!isLocalNode)(" (switched)").getOrElse("")
+          context.i18n.text.ModalNodeProfile_selfNode ++
+            Option.when(!isLocal)(" (switched)").getOrElse("")
         )
       else if (asServer.isDefined)
         Some(context.i18n.text.Server)
@@ -179,7 +179,7 @@ object ModalNodeProfile {
             fieldId(node),
             fieldName(node, rootCoto, model),
             rootCoto.map(fieldDescription(_, model)),
-            Option.when(model.isLocalNode && model.isOperatedNode) {
+            Option.when(model.isLocal && model.isSelf) {
               fieldOwnerPassword(model)
             },
             SectionLocalServer(model.localServer),
@@ -208,7 +208,7 @@ object ModalNodeProfile {
         if (node.hasIcon)
           Fragment(
             PartsNode.imgNode(node),
-            Option.when(model.isOperatedNode) {
+            Option.when(model.isSelf) {
               buttonEdit(_ => dispatch(Modal.Msg.OpenModal(Modal.NodeIcon())))
             }
           )
@@ -220,7 +220,7 @@ object ModalNodeProfile {
       model.nodeRoleName.map { role =>
         Fragment(
           section(className := "node-role")(role),
-          Option.when(!model.isOperatedNode) {
+          Option.when(!model.isSelf) {
             sectionNodeRelationship(
               context.repo.nodes.childPrivilegesTo(node.id)
             )
@@ -239,8 +239,8 @@ object ModalNodeProfile {
           PartsNode.childPrivileges(privileges).map(li()(_)): _*
         )
       },
-      section(className := "operated-node")(
-        context.repo.nodes.operated.map(PartsNode.imgNode(_))
+      section(className := "self-node")(
+        context.repo.nodes.self.map(PartsNode.imgNode(_))
       )
     )
 
@@ -278,7 +278,7 @@ object ModalNodeProfile {
         readOnly := true,
         value := node.name
       ),
-      Option.when(model.isOperatedNode) {
+      Option.when(model.isSelf) {
         div(className := "edit")(
           rootCoto.map(buttonEditRootCoto)
         )
@@ -296,7 +296,7 @@ object ModalNodeProfile {
       section(className := "node-description")(
         PartsCoto.sectionCotonomaContent(rootCoto)
       ),
-      Option.when(model.isOperatedNode) {
+      Option.when(model.isSelf) {
         div(className := "edit")(
           buttonEditRootCoto(rootCoto)
         )

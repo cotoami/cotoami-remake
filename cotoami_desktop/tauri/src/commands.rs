@@ -43,7 +43,7 @@ pub async fn node_command(
 
 /// An tauri command that is the entry point to the Operate-as feature.
 ///
-/// The Operate-as feature allows to switch the operated node between the
+/// The Operate-as feature allows to switch the self node between the
 /// local node (default) and one of the parent nodes to which the local node
 /// has owner privilege.
 ///
@@ -53,8 +53,8 @@ pub async fn node_command(
 ///   and tasks piping events from the node to the frontend. It is stored in
 ///   [tauri::State] and modified from the [operate_as] command.
 /// * [event::pipe] spawns tasks piping each [ChangelogEntry] and [LocalNodeEvent]
-///   from the operated node to the frontend.
-/// * An [InitialDataset] will be fetched when the operated node is switched.
+///   from the self node to the frontend.
+/// * An [InitialDataset] will be fetched when the self node is switched.
 ///   [commands::db::initial_dataset] returns an [InitialDataset] according to
 ///   the current [OperatingAs].
 /// * The tauri command [node_command] changes the destination of [Command]s
@@ -71,11 +71,11 @@ pub async fn operate_as(
     operating_as: tauri::State<'_, OperatingAs>,
     parent_id: Option<Id<Node>>,
 ) -> Result<InitialDataset, Error> {
-    // Switch the node to operate on.
-    debug!("Switching the operated node to {parent_id:?}...");
+    // Switch the self node.
+    debug!("Switching the self node to {parent_id:?}...");
     operating_as.operate_as(parent_id, state.inner().clone(), app_handle)?;
 
-    // Fetch the [InitialDataset] from the new operated node.
+    // Fetch the [InitialDataset] from the new self node.
     db::initial_dataset(&state, &operating_as).await
 }
 
@@ -85,7 +85,7 @@ pub struct OperatingAs {
     /// [None] means the application is operating on the local node (default).
     parent_id: RwLock<Option<Id<Node>>>,
 
-    /// Tasks to pipe operated node events into the frontend.
+    /// Tasks to pipe self node events into the frontend.
     piping_events: Abortables,
 }
 
@@ -98,10 +98,10 @@ impl OperatingAs {
         self.operate_as(None, state, app_handle)
     }
 
-    /// Switch the operated node to the specified parent node if the local
+    /// Switch the self node to the specified parent node if the local
     /// node has the permissions to do so.
     ///
-    /// If `parent_id` is [None], the operated node will be switched back to
+    /// If `parent_id` is [None], the self node will be switched back to
     /// the local node.
     pub fn operate_as(
         &self,

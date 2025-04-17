@@ -98,7 +98,7 @@ object en extends Text {
     """
 
   val ModalNodeProfile_title = "Node Profile"
-  val ModalNodeProfile_operatedNode = "You"
+  val ModalNodeProfile_selfNode = "You"
   val ModalNodeProfile_switched = "switched"
   val ModalNodeProfile_ownerPassword = "Owner Password"
 

@@ -35,8 +35,8 @@ object ModalRepost {
   ) {
     def targetNodeIds(repo: Root): js.Array[Id[Node]] =
       js.Array(
-        // You can always repost a coto to the operated node.
-        repo.nodes.operatedId,
+        // You can always repost a coto to the self node.
+        repo.nodes.selfId,
         // You can repost a coto to the same node in which the coto has posted
         // only if you have a permission to write to the node.
         Option.when(repo.nodes.isWritable(coto.nodeId))(coto.nodeId)

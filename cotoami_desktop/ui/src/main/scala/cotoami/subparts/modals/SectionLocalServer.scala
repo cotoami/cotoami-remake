@@ -44,7 +44,7 @@ object SectionLocalServer {
     def apply(
         nodeId: Id[Node]
     )(implicit context: Context): (Model, Cmd[AppMsg]) =
-      if (context.repo.nodes.isOperating(nodeId))
+      if (context.repo.nodes.isSelf(nodeId))
         (
           Model(nodeId, loading = true),
           Cmd.Batch(

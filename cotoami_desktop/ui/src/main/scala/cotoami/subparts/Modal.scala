@@ -96,7 +96,7 @@ object Modal {
       NewPassword(
         context.i18n.text.ModalNewOwnerPassword_title,
         context.i18n.text.ModalNewOwnerPassword_message,
-        context.repo.nodes.operated,
+        context.repo.nodes.self,
         password
       )
 

@@ -50,7 +50,7 @@ object ModalOperateAs {
       case Msg.Switch =>
         (
           model.copy(switching = true, switchingError = None),
-          InitialDataset.switchOperatedNodeTo(
+          InitialDataset.switchSelfNodeTo(
             Option.when(!context.repo.nodes.isLocal(model.switchingTo.id))(
               model.switchingTo.id
             )
@@ -72,7 +72,7 @@ object ModalOperateAs {
             switching = false,
             switchingError = Some(e.default_message)
           ),
-          cotoami.error("Couldn't switch the operated node.", e)
+          cotoami.error("Couldn't switch the self node.", e)
         )
     }
 

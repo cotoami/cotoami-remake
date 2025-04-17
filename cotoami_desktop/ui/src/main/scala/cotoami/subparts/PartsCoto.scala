@@ -60,7 +60,7 @@ object PartsCoto {
           materialSymbol("push_pin")
         )
       },
-      Option.when(!context.repo.nodes.isOperating(coto.nodeId)) {
+      Option.when(!context.repo.nodes.isSelf(coto.nodeId)) {
         val connected = context.repo.nodes.parentConnected(coto.nodeId)
         div(
           className := optionalClasses(

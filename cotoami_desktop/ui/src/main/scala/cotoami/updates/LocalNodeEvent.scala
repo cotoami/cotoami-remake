@@ -38,13 +38,13 @@ object LocalNodeEvent {
         ),
         // Cmd[Msg]
         if (
-          model.repo.nodes.operatingRemote &&
-          model.repo.nodes.isOperating(nodeId) &&
+          model.repo.nodes.isSelfRemote &&
+          model.repo.nodes.isSelf(nodeId) &&
           notConnected.isDefined
         ) {
           // Switch back to the local node when disconnected from the
           // remote node on which the app is currently operating.
-          InitialDataset.switchOperatedNodeTo(None).flatMap(_ match {
+          InitialDataset.switchSelfNodeTo(None).flatMap(_ match {
             case Right(dataset) =>
               Browser.send(Msg.SetInitialDataset(dataset))
             case Left(_) => Cmd.none

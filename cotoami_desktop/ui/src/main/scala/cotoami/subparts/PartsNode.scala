@@ -61,7 +61,7 @@ object PartsNode {
   ): Option[ReactElement] = {
     val repo = context.repo
     Option.when(
-      !repo.nodes.operatingRemote &&
+      !repo.nodes.isSelfRemote &&
         repo.nodes.childPrivilegesTo(switchTo.id)
           .map(_.asOwner).getOrElse(false)
     ) {
@@ -73,7 +73,7 @@ object PartsNode {
         onClick = _ =>
           dispatch(
             Modal.Msg.OpenModal(
-              Modal.OperateAs(repo.nodes.operated.get, switchTo)
+              Modal.OperateAs(repo.nodes.self.get, switchTo)
             )
           )
       )
