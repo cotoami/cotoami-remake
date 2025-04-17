@@ -352,8 +352,13 @@ object Modal {
 
       case Msg.NodeProfileMsg(modalMsg) =>
         stack.get[NodeProfile].map { case NodeProfile(modal) =>
-          ModalNodeProfile.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(NodeProfile(modal), model), cmds)
+          ModalNodeProfile.update(modalMsg, modal).pipe {
+            case (modal, nodes, cmds) =>
+              (
+                updateModal(NodeProfile(modal), model)
+                  .modify(_.repo.nodes).setTo(nodes),
+                cmds
+              )
           }
         }
 

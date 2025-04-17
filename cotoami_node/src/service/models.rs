@@ -32,7 +32,6 @@ pub struct Pagination {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct LocalServer {
     pub active_config: Option<ServerConfig>,
-    pub anonymous_read_enabled: bool,
     pub anonymous_connections: usize,
 }
 

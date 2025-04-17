@@ -8,6 +8,7 @@ import slinky.web.html._
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
+import cotoami.repository.Nodes
 import cotoami.backend.{
   ClientNodeBackend,
   Commands,
@@ -35,10 +36,7 @@ object SectionLocalServer {
       localServer: Option[LocalServer] = None,
       clientCount: Double = 0,
       enablingAnonymousRead: Boolean = false
-  ) {
-    def anonymousReadEnabled: Boolean =
-      localServer.map(_.anonymousReadEnabled).getOrElse(false)
-  }
+  )
 
   object Model {
     def apply(
@@ -76,44 +74,50 @@ object SectionLocalServer {
         extends Msg
   }
 
-  def update(msg: Msg, model: Model): (Model, Cmd[AppMsg]) =
+  def update(msg: Msg, model: Model)(implicit
+      context: Context
+  ): (Model, Nodes, Cmd[AppMsg]) = {
+    val default = (model, context.repo.nodes, Cmd.none)
     msg match {
       case Msg.LocalServerFetched(Right(server)) =>
-        (
-          model.copy(localServer = Some(server), loading = false),
-          Cmd.none
+        default.copy(_1 =
+          model.copy(localServer = Some(server), loading = false)
         )
 
       case Msg.LocalServerFetched(Left(e)) =>
-        (
-          model.copy(loading = false),
-          cotoami.error("Couldn't fetch the local server.", e)
+        default.copy(
+          _1 = model.copy(loading = false),
+          _3 = cotoami.error("Couldn't fetch the local server.", e)
         )
 
       case Msg.ClientCountFetched(Right(count)) =>
-        (model.copy(clientCount = count), Cmd.none)
+        default.copy(_1 = model.copy(clientCount = count))
 
       case Msg.ClientCountFetched(Left(e)) =>
-        (model, cotoami.error("Couldn't fetch client count.", e))
+        default.copy(_3 = cotoami.error("Couldn't fetch client count.", e))
 
       case Msg.EnableAnonymousRead(enable) =>
-        (
-          model.copy(enablingAnonymousRead = true),
-          enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
+        default.copy(
+          _1 = model.copy(enablingAnonymousRead = true),
+          _3 = enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
         )
 
       case Msg.AnonymousReadEnabled(Right(enabled)) =>
-        (
-          model
+        default.copy(
+          _1 = model
             .modify(_.enablingAnonymousRead).setTo(false)
-            .modify(_.localServer.each.anonymousReadEnabled).setTo(enabled)
             .modify(_.localServer.each.anonymousConnections).setTo(0),
-          Cmd.none
+          _2 = context.repo.nodes
+            .modify(_.localSettings.each.anonymousReadEnabled)
+            .setTo(enabled)
         )
 
       case Msg.AnonymousReadEnabled(Left(e)) =>
-        (model, cotoami.error("Couldn't enable/disable anonymous read.", e))
+        default.copy(_3 =
+          cotoami.error("Couldn't enable/disable anonymous read.", e)
+        )
     }
+  }
 
   def fetchClientCount: Cmd.One[AppMsg] =
     ClientNodeBackend.fetchRecent(0, Some(1))
@@ -179,7 +183,11 @@ object SectionLocalServer {
 
   private def fieldAnonymousRead(
       model: Model
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
+    val anonymousReadEnabled =
+      context.repo.nodes.localSettings
+        .map(_.anonymousReadEnabled)
+        .getOrElse(false)
     field(
       name = context.i18n.text.AsServer_anonymousRead,
       classes = "anonymous-read"
@@ -187,10 +195,10 @@ object SectionLocalServer {
       input(
         `type` := "checkbox",
         role := "switch",
-        checked := model.anonymousReadEnabled,
+        checked := anonymousReadEnabled,
         disabled := model.enablingAnonymousRead,
         onChange := (_ =>
-          if (model.anonymousReadEnabled)
+          if (anonymousReadEnabled)
             dispatch(Msg.EnableAnonymousRead(false)) // disable
           else
             dispatch(
@@ -206,7 +214,7 @@ object SectionLocalServer {
       Option.when(model.enablingAnonymousRead) {
         span(className := "processing", aria - "busy" := "true")()
       },
-      Option.when(model.anonymousReadEnabled) {
+      Option.when(anonymousReadEnabled) {
         model.localServer.map(_.anonymousConnections).map(count =>
           span(className := "anonymous-connections")(
             s"(Active connections: ${count})"
@@ -214,4 +222,5 @@ object SectionLocalServer {
         )
       }
     )
+  }
 }

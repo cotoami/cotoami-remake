@@ -10,7 +10,7 @@ import marubinotto.components.{materialSymbol, ScrollArea}
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
-import cotoami.repository.Root
+import cotoami.repository.{Nodes, Root}
 import cotoami.subparts.{
   buttonEdit,
   field,
@@ -99,27 +99,27 @@ object ModalNodeProfile {
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Cmd[AppMsg]) =
+  ): (Model, Nodes, Cmd[AppMsg]) =
     msg match {
       case Msg.FieldsSelfMsg(submsg) => {
         val (self, cmd) = FieldsSelf.update(submsg, model.self)
-        (model.copy(self = self), cmd)
+        (model.copy(self = self), context.repo.nodes, cmd)
       }
 
       case Msg.SectionLocalServerMsg(submsg) => {
-        val (localServer, cmd) =
+        val (localServer, nodes, cmd) =
           SectionLocalServer.update(submsg, model.localServer)
-        (model.copy(localServer = localServer), cmd)
+        (model.copy(localServer = localServer), nodes, cmd)
       }
 
       case Msg.SectionAsClientMsg(submsg) => {
         val (asClient, cmd) = SectionAsClient.update(submsg, model.asClient)
-        (model.copy(asClient = asClient), cmd)
+        (model.copy(asClient = asClient), context.repo.nodes, cmd)
       }
 
       case Msg.SectionAsChildMsg(submsg) => {
         val (asChild, cmd) = SectionAsChild.update(submsg, model.asChild)
-        (model.copy(asChild = asChild), cmd)
+        (model.copy(asChild = asChild), context.repo.nodes, cmd)
       }
     }
 

@@ -7,12 +7,10 @@ import marubinotto.facade.Nullable
 
 case class LocalServer(
     activeConfig: Option[ServerConfig],
-    anonymousReadEnabled: Boolean,
     anonymousConnections: Int
 ) {
   def this(json: LocalServerJson) = this(
     Nullable.toOption(json.active_config).map(ServerConfig),
-    json.anonymous_read_enabled,
     json.anonymous_connections
   )
 }
@@ -25,7 +23,6 @@ object LocalServer {
 @js.native
 trait LocalServerJson extends js.Object {
   val active_config: Nullable[ServerConfigJson] = js.native
-  val anonymous_read_enabled: Boolean = js.native
   val anonymous_connections: Int = js.native
 }
 
