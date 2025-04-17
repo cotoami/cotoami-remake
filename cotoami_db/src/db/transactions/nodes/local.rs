@@ -151,7 +151,7 @@ impl<'a> DatabaseSession<'a> {
         }
     }
 
-    pub fn set_image_max_size(&self, size: Option<i32>, operator: &Operator) -> Result<()> {
+    pub fn set_image_max_size(&self, size: Option<i32>, operator: &Operator) -> Result<LocalNode> {
         operator.requires_to_be_owner()?;
         self.update_local_node(|local_node| {
             let mut update = local_node.to_update();
@@ -160,7 +160,7 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn enable_anonymous_read(&self, enable: bool, operator: &Operator) -> Result<()> {
+    pub fn enable_anonymous_read(&self, enable: bool, operator: &Operator) -> Result<LocalNode> {
         operator.requires_to_be_owner()?;
         self.update_local_node(|local_node| {
             let mut update = local_node.to_update();
@@ -176,17 +176,16 @@ impl<'a> DatabaseSession<'a> {
     pub fn start_owner_session(&self, password: &str, duration: Duration) -> Result<LocalNode> {
         self.update_local_node(|local_node| {
             self.write_transaction(local_ops::start_session(local_node, password, duration))
-        })?;
-        self.globals.try_get_local_node()
+        })
     }
 
-    pub fn clear_owner_session(&self) -> Result<()> {
+    pub fn clear_owner_session(&self) -> Result<LocalNode> {
         self.update_local_node(|local_node| {
             self.write_transaction(local_ops::clear_session(local_node))
         })
     }
 
-    pub fn set_owner_password_if_none(&self, new_password: &str) -> Result<()> {
+    pub fn set_owner_password_if_none(&self, new_password: &str) -> Result<LocalNode> {
         self.update_local_node(|local_node| {
             let mut principal = local_node.as_principal();
             ensure!(
@@ -202,7 +201,11 @@ impl<'a> DatabaseSession<'a> {
         })
     }
 
-    pub fn change_owner_password(&self, new_password: &str, old_password: &str) -> Result<()> {
+    pub fn change_owner_password(
+        &self,
+        new_password: &str,
+        old_password: &str,
+    ) -> Result<LocalNode> {
         self.update_local_node(|local_node| {
             let mut principal = local_node.as_principal();
             principal.verify_password(old_password)?;
@@ -216,12 +219,12 @@ impl<'a> DatabaseSession<'a> {
     }
 
     /// Utility function to update the [LocalNode] to make sure to also update the cache.
-    fn update_local_node<Update>(&self, update: Update) -> Result<()>
+    fn update_local_node<Update>(&self, update: Update) -> Result<LocalNode>
     where
         Update: FnOnce(&LocalNode) -> Result<LocalNode>,
     {
         let mut local_node = self.globals.try_write_local_node()?;
         *local_node = update(&local_node)?; // also update the cache
-        Ok(())
+        Ok(local_node.clone())
     }
 }
