@@ -65,11 +65,14 @@ pub(crate) struct NewLocalNode<'a> {
     rowid: i64,
     node_id: &'a Id<Node>,
     owner_password_hash: Option<String>,
+    image_max_size: Option<i32>,
 }
 
 impl<'a> NewLocalNode<'a> {
     /// There can be only one row with `rowid=1`
     pub const SINGLETON_ROWID: i64 = 1;
+
+    pub const DEFAULT_IMAGE_MAX_SIZE: i32 = 1200;
 
     pub fn new(node_id: &'a Id<Node>, password: Option<&'a str>) -> Result<Self> {
         let owner_password_hash = if let Some(p) = password {
@@ -81,6 +84,7 @@ impl<'a> NewLocalNode<'a> {
             rowid: Self::SINGLETON_ROWID,
             node_id,
             owner_password_hash,
+            image_max_size: Some(Self::DEFAULT_IMAGE_MAX_SIZE),
         })
     }
 }
