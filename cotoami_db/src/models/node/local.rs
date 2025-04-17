@@ -14,21 +14,34 @@ use crate::{models::Id, schema::local_node};
 /////////////////////////////////////////////////////////////////////////////
 
 /// A row in `local_node` table
-#[derive(derive_more::Debug, Clone, PartialEq, Eq, Identifiable, Queryable, Selectable)]
+#[derive(
+    derive_more::Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Identifiable,
+    Queryable,
+    Selectable,
+    serde::Serialize,
+    serde::Deserialize,
+)]
 #[diesel(table_name = local_node, primary_key(node_id))]
 pub struct LocalNode {
     /// UUID of a local node.
     pub node_id: Id<Node>,
 
     /// SQLite rowid (so-called "integer primary key").
+    #[serde(skip_serializing, skip_deserializing)]
     pub rowid: i64,
 
     /// Password for owner authentication of this local node.
     #[debug(skip)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub owner_password_hash: Option<String>,
 
     /// Node owner's session token.
     #[debug(skip)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub owner_session_token: Option<String>,
 
     /// Expiration date of node owner's session.
