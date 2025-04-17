@@ -35,6 +35,19 @@ impl NodeState {
             .await
     }
 
+    pub async fn set_image_max_size(
+        self,
+        size: Option<i32>,
+        operator: Arc<Operator>,
+    ) -> Result<(), ServiceError> {
+        let db = self.db().clone();
+        spawn_blocking(move || {
+            db.new_session()?.set_image_max_size(size, &operator)?;
+            Ok(())
+        })
+        .await?
+    }
+
     pub async fn enable_anonymous_read(
         self,
         enable: bool,
