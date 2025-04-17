@@ -16,7 +16,7 @@ pub enum Command {
         icon: Bytes,
     },
 
-    /// Request to enable/disable anonymous read and return the [bool] of enabled if succeeded.
+    /// Request to enable/disable anonymous read and return the [LocalNode] if succeeded.
     EnableAnonymousRead { enable: bool },
 
     /// Request an [InitialDataset].

@@ -39,11 +39,12 @@ impl NodeState {
         self,
         size: Option<i32>,
         operator: Arc<Operator>,
-    ) -> Result<(), ServiceError> {
+    ) -> Result<LocalNode, ServiceError> {
         let db = self.db().clone();
         spawn_blocking(move || {
-            db.new_session()?.set_image_max_size(size, &operator)?;
-            Ok(())
+            db.new_session()?
+                .set_image_max_size(size, &operator)
+                .map_err(ServiceError::from)
         })
         .await?
     }
@@ -52,15 +53,16 @@ impl NodeState {
         self,
         enable: bool,
         operator: Arc<Operator>,
-    ) -> Result<bool, ServiceError> {
+    ) -> Result<LocalNode, ServiceError> {
         if !enable {
             self.anonymous_conns().disconnect_all();
         }
 
         let db = self.db().clone();
         spawn_blocking(move || {
-            db.new_session()?.enable_anonymous_read(enable, &operator)?;
-            Ok(enable)
+            db.new_session()?
+                .enable_anonymous_read(enable, &operator)
+                .map_err(ServiceError::from)
         })
         .await?
     }

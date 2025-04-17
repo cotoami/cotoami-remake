@@ -69,8 +69,8 @@ where
     assert_that!(backend_local.anonymous_read_enabled, eq(false));
 
     let request = Command::EnableAnonymousRead { enable: true }.into_request();
-    let enabled = service.call(request).await?.content::<bool>()?;
-    assert_that!(enabled, eq(true));
+    let local = service.call(request).await?.content::<LocalNode>()?;
+    assert_that!(local.anonymous_read_enabled, eq(true));
 
     let (backend_local, backend_node) = backend_ds.local_node_pair(&backend_owner)?;
     assert_that!(backend_local.anonymous_read_enabled, eq(true));

@@ -72,9 +72,9 @@ async fn enable_anonymous_read(
     Extension(operator): Extension<Operator>,
     TypedHeader(accept): TypedHeader<Accept>,
     Json(enable): Json<bool>,
-) -> Result<Content<bool>, ServiceError> {
+) -> Result<Content<LocalNode>, ServiceError> {
     state
         .enable_anonymous_read(enable, Arc::new(operator))
         .await
-        .map(|enabled| Content(enabled, accept))
+        .map(|local| Content(local, accept))
 }
