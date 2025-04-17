@@ -7,12 +7,12 @@ import slinky.web.html._
 
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Id, Node}
+import cotoami.models.{Id, LocalNode, Node}
 import cotoami.repository.Nodes
 import cotoami.backend.{
   ClientNodeBackend,
-  Commands,
   ErrorJson,
+  LocalNodeBackend,
   LocalServer,
   ServerConfig
 }
@@ -70,7 +70,7 @@ object SectionLocalServer {
         extends Msg
     case class ClientCountFetched(result: Either[ErrorJson, Double]) extends Msg
     case class EnableAnonymousRead(enable: Boolean) extends Msg
-    case class AnonymousReadEnabled(result: Either[ErrorJson, Boolean])
+    case class AnonymousReadEnabled(result: Either[ErrorJson, LocalNode])
         extends Msg
   }
 
@@ -99,17 +99,16 @@ object SectionLocalServer {
       case Msg.EnableAnonymousRead(enable) =>
         default.copy(
           _1 = model.copy(enablingAnonymousRead = true),
-          _3 = enableAnonymousRead(enable).map(Msg.AnonymousReadEnabled(_).into)
+          _3 = LocalNodeBackend.enableAnonymousRead(enable)
+            .map(Msg.AnonymousReadEnabled(_).into)
         )
 
-      case Msg.AnonymousReadEnabled(Right(enabled)) =>
+      case Msg.AnonymousReadEnabled(Right(local)) =>
         default.copy(
           _1 = model
             .modify(_.enablingAnonymousRead).setTo(false)
             .modify(_.localServer.each.anonymousConnections).setTo(0),
-          _2 = context.repo.nodes
-            .modify(_.localSettings.each.anonymousReadEnabled)
-            .setTo(enabled)
+          _2 = context.repo.nodes.modify(_.localSettings).setTo(Some(local))
         )
 
       case Msg.AnonymousReadEnabled(Left(e)) =>
@@ -123,11 +122,6 @@ object SectionLocalServer {
     ClientNodeBackend.fetchRecent(0, Some(1))
       .map(_.map(_.totalItems))
       .map(Msg.ClientCountFetched(_).into)
-
-  def enableAnonymousRead(
-      enable: Boolean
-  ): Cmd.One[Either[ErrorJson, Boolean]] =
-    Commands.send(Commands.EnableAnonymousRead(enable))
 
   /////////////////////////////////////////////////////////////////////////////
   // View

@@ -2,7 +2,9 @@ package cotoami.backend
 
 import scala.scalajs.js
 
+import marubinotto.fui.Cmd
 import marubinotto.facade.Nullable
+
 import cotoami.models.{Id, LocalNode}
 
 @js.native
@@ -12,6 +14,13 @@ trait LocalNodeJson extends js.Object {
   val anonymous_read_enabled: Boolean = js.native
 }
 
+object LocalNodeJson {
+  def enableAnonymousRead(
+      enable: Boolean
+  ): Cmd.One[Either[ErrorJson, LocalNodeJson]] =
+    Commands.send(Commands.EnableAnonymousRead(enable))
+}
+
 object LocalNodeBackend {
   def toModel(json: LocalNodeJson): LocalNode =
     LocalNode(
@@ -19,4 +28,9 @@ object LocalNodeBackend {
       imageMaxSize = Nullable.toOption(json.image_max_size),
       anonymousReadEnabled = json.anonymous_read_enabled
     )
+
+  def enableAnonymousRead(
+      enable: Boolean
+  ): Cmd.One[Either[ErrorJson, LocalNode]] =
+    LocalNodeJson.enableAnonymousRead(enable).map(_.map(toModel))
 }
