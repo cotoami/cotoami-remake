@@ -91,14 +91,12 @@ mod tests {
                 node_name = "Hello"
                 session_minutes = 1440
                 changes_chunk_size = 100
-                image_max_size = 1200
 
                 [00000000-0000-0000-0000-000000000002]
                 db_dir = "/path/to/db2"
                 node_name = "Bye"
                 session_minutes = 1440
                 changes_chunk_size = 100
-                image_max_size = 1200
             "#})
         );
         Ok(())
