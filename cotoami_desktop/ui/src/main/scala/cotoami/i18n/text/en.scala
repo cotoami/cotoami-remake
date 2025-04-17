@@ -72,11 +72,11 @@ object en extends Text {
   val SectionNodeTools_enableSync = "Enable Sync"
   val SectionNodeTools_disableSync = "Disable Sync"
 
-  val ModalInputOwnerPassword_title = "Input Owner Password"
+  val ModalInputOwnerPassword_title = "Owner Password Required"
   val ModalInputOwnerPassword_message =
     "You need to input the owner password to open this database."
 
-  val ModalInputClientPassword_title = "Input Client Password"
+  val ModalInputClientPassword_title = "Client Password Required"
   val ModalInputClientPassword_message =
     """
     Failed to log in to the server node with the configured password.
