@@ -8,7 +8,7 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.backend.{DatabaseInfo, ErrorJson}
-import cotoami.subparts.{field, Modal}
+import cotoami.subparts.{buttonEdit, field, Modal}
 
 object FieldsSelf {
 
@@ -81,18 +81,40 @@ object FieldsSelf {
   ): ReactElement =
     Option.when(model.isSelf) {
       Fragment(
+        fieldImageMaxSize(model),
         Option.when(model.isLocal) {
           fieldOwnerPassword(model)
         }
       )
     }
 
+  private def fieldImageMaxSize(model: Model)(implicit
+      context: Context
+  ): ReactElement =
+    field(
+      name = context.i18n.text.FieldsSelf_imageMaxSize,
+      classes = "image-max-size"
+    )(
+      input(
+        `type` := "text",
+        readOnly := true,
+        placeholder := context.i18n.text.FieldsSelf_imageMaxSize_placeholder,
+        value :=
+          context.repo.nodes.localSettings
+            .flatMap(_.imageMaxSize)
+            .map(_.toString())
+      ),
+      div(className := "edit")(
+        buttonEdit(_ => ())
+      )
+    )
+
   private def fieldOwnerPassword(model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = context.i18n.text.ModalNodeProfile_ownerPassword,
+      name = context.i18n.text.FieldsSelf_ownerPassword,
       classes = "owner-password"
     )(
       button(
