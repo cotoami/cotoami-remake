@@ -24,18 +24,7 @@ object AppHeader {
         className := "header-content",
         data - "tauri-drag-region" := "default"
       )(
-        model.repo.currentFocus.map(sectionCurrentFocus(_)).getOrElse(
-          button(
-            className := "app-info default",
-            title := "View app info"
-          )(
-            img(
-              className := "app-icon",
-              alt := "Cotoami",
-              src := "/images/logo/logomark.svg"
-            )
-          )
-        ),
+        model.repo.currentFocus.map(sectionCurrentFocus),
         section(className := "tools")(
           model.uiState.map(divToolButtons),
           divSearch(model.search),
