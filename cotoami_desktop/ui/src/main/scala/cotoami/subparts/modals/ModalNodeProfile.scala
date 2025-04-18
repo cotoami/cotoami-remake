@@ -98,9 +98,9 @@ object ModalNodeProfile {
   ): (Model, Nodes, Cmd[AppMsg]) =
     msg match {
       case Msg.FieldImageMaxSizeMsg(submsg) => {
-        val (imageMaxSize, cmd) =
+        val (imageMaxSize, nodes, cmd) =
           FieldImageMaxSize.update(submsg, model.imageMaxSize)
-        (model.copy(imageMaxSize = imageMaxSize), context.repo.nodes, cmd)
+        (model.copy(imageMaxSize = imageMaxSize), nodes, cmd)
       }
 
       case Msg.FieldOwnerPasswordMsg(submsg) => {

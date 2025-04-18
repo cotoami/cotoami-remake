@@ -1,12 +1,15 @@
 package cotoami.subparts.modals
 
 import scala.util.chaining._
+import com.softwaremill.quicklens._
 import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
-import cotoami.models.{Id, Node}
+import cotoami.models.{Id, LocalNode, Node}
+import cotoami.repository.Nodes
+import cotoami.backend.{ErrorJson, LocalNodeBackend}
 import cotoami.subparts.Modal
 
 object FieldImageMaxSize {
@@ -49,21 +52,21 @@ object FieldImageMaxSize {
           .map(size => Right(Some(size)))
           .getOrElse(Left(()))
 
-    def readyToSave(implicit context: Context): Boolean =
-      value match {
-        case Right(size) =>
-          // Changed from the original?
-          size != context.repo.nodes.selfSettings.flatMap(_.imageMaxSize)
-        case Left(_) => false
-      }
+    def readyToSave: Boolean = value.isRight && changed
+
+    def save: (Model, Cmd[AppMsg]) =
+      (
+        copy(saving = true),
+        value.map(setImageMaxSize).getOrElse(Cmd.none)
+      )
+
+    private def setImageMaxSize(size: Option[Int]): Cmd[AppMsg] =
+      LocalNodeBackend.setImageMaxSize(size).map(Msg.Saved(_).into)
   }
 
   object Model {
     def apply(nodeId: Id[Node])(implicit context: Context): Model = {
-      val originalValue = context.repo.nodes.selfSettings
-        .flatMap(_.imageMaxSize)
-        .map(_.toString())
-        .getOrElse("")
+      val originalValue = valueAsString(context.repo.nodes.selfSettings)
       Model(
         nodeId,
         originalValue = originalValue,
@@ -71,6 +74,9 @@ object FieldImageMaxSize {
       )
     }
   }
+
+  def valueAsString(local: Option[LocalNode]): String =
+    local.flatMap(_.imageMaxSize).map(_.toString()).getOrElse("")
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -87,21 +93,40 @@ object FieldImageMaxSize {
     case object Edit extends Msg
     case object CancelEditing extends Msg
     case class Input(size: String) extends Msg
+    case object Save extends Msg
+    case class Saved(result: Either[ErrorJson, LocalNode]) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
-  ): (Model, Cmd[AppMsg]) =
+  ): (Model, Nodes, Cmd[AppMsg]) = {
+    val default = (model, context.repo.nodes, Cmd.none)
     msg match {
-      case Msg.Edit =>
-        (model.edit, Cmd.none)
+      case Msg.Edit => default.copy(_1 = model.edit)
 
-      case Msg.CancelEditing =>
-        (model.cancelEditing, Cmd.none)
+      case Msg.CancelEditing => default.copy(_1 = model.cancelEditing)
 
-      case Msg.Input(size) =>
-        (model.copy(input = size), Cmd.none)
+      case Msg.Input(size) => default.copy(_1 = model.copy(input = size))
+
+      case Msg.Save =>
+        model.save.pipe { case (model, cmd) =>
+          default.copy(_1 = model, _3 = cmd)
+        }
+
+      case Msg.Saved(Right(local)) =>
+        default.copy(
+          _1 = model.copy(
+            saving = false,
+            editing = false,
+            originalValue = valueAsString(Some(local))
+          ),
+          _2 = context.repo.nodes.modify(_.selfSettings).setTo(Some(local))
+        )
+
+      case Msg.Saved(Left(e)) =>
+        default.copy(_3 = cotoami.error("Couldn't save image max size.", e))
     }
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // View
@@ -124,7 +149,7 @@ object FieldImageMaxSize {
       classes = "image-max-size",
       edit = FieldEdit(
         onEditClick = _ => dispatch(Msg.Edit.into),
-        // onSaveClick = _ => dispatch(Msg.Save.into),
+        onSaveClick = _ => dispatch(Msg.Save.into),
         onCancelClick = _ => dispatch(Msg.CancelEditing.into),
         editing = model.editing,
         readyToSave = model.readyToSave,
