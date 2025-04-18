@@ -20,6 +20,7 @@ object FieldsSelf {
       nodeId: Id[Node],
 
       // Image max size
+      originalImageMaxSize: String,
       imageMaxSizeInput: String,
       editingImageMaxSize: Boolean = false,
       savingImageMaxSize: Boolean = false,
@@ -44,17 +45,38 @@ object FieldsSelf {
           .getOrElse(""),
         editingImageMaxSize = false
       )
+
+    def changed: Boolean = originalImageMaxSize != imageMaxSizeInput
+
+    def imageMaxSize: Either[Unit, Option[Int]] =
+      if (imageMaxSizeInput.isEmpty())
+        Right(None)
+      else
+        imageMaxSizeInput.toIntOption
+          .map(size => Right(Some(size)))
+          .getOrElse(Left(()))
+
+    def readyToSaveImageMaxSize(implicit context: Context): Boolean =
+      imageMaxSize match {
+        case Right(size) =>
+          // Changed from the original?
+          size != context.repo.nodes.selfSettings.flatMap(_.imageMaxSize)
+        case Left(_) => false
+      }
   }
 
   object Model {
-    def apply(nodeId: Id[Node])(implicit context: Context): Model =
+    def apply(nodeId: Id[Node])(implicit context: Context): Model = {
+      val originalValue = context.repo.nodes.selfSettings
+        .flatMap(_.imageMaxSize)
+        .map(_.toString())
+        .getOrElse("")
       Model(
         nodeId,
-        imageMaxSizeInput = context.repo.nodes.selfSettings
-          .flatMap(_.imageMaxSize)
-          .map(_.toString())
-          .getOrElse("")
+        originalImageMaxSize = originalValue,
+        imageMaxSizeInput = originalValue
       )
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -141,7 +163,7 @@ object FieldsSelf {
         // onSaveClick = _ => dispatch(Msg.Save.into),
         onCancelClick = _ => dispatch(Msg.CancelEditingImageMaxSize.into),
         editing = model.editingImageMaxSize,
-        readyToSave = false,
+        readyToSave = model.readyToSaveImageMaxSize,
         saving = model.savingImageMaxSize,
         error = None
       )
@@ -151,6 +173,11 @@ object FieldsSelf {
         readOnly := !model.editingImageMaxSize,
         placeholder := context.i18n.text.FieldsSelf_imageMaxSize_placeholder,
         value := model.imageMaxSizeInput,
+        aria - "invalid" :=
+          (if (model.changed)
+             model.imageMaxSize.isLeft.toString()
+           else
+             ""),
         onChange := (e => dispatch(Msg.ImageMaxSizeInput(e.target.value)))
       )
     )
