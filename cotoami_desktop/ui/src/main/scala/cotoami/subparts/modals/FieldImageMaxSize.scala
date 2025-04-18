@@ -20,8 +20,8 @@ object FieldImageMaxSize {
 
   case class Model(
       nodeId: Id[Node],
-      originalValue: String,
-      input: String,
+      originalValue: String = "",
+      input: String = "",
       editing: Boolean = false,
       saving: Boolean = false
   ) {
@@ -62,21 +62,24 @@ object FieldImageMaxSize {
 
     private def setImageMaxSize(size: Option[Int]): Cmd[AppMsg] =
       LocalNodeBackend.setImageMaxSize(size).map(Msg.Saved(_).into)
-  }
 
-  object Model {
-    def apply(nodeId: Id[Node])(implicit context: Context): Model = {
-      val originalValue = valueAsString(context.repo.nodes.selfSettings)
-      Model(
-        nodeId,
+    def reset(local: LocalNode): Model = {
+      val originalValue = local.imageMaxSize.map(_.toString()).getOrElse("")
+      copy(
         originalValue = originalValue,
-        input = originalValue
+        input = originalValue,
+        editing = false,
+        saving = false
       )
     }
   }
 
-  def valueAsString(local: Option[LocalNode]): String =
-    local.flatMap(_.imageMaxSize).map(_.toString()).getOrElse("")
+  object Model {
+    def apply(nodeId: Id[Node])(implicit context: Context): Model =
+      context.repo.nodes.selfSettings
+        .map(new Model(nodeId).reset(_))
+        .getOrElse(new Model(nodeId))
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Update
@@ -115,11 +118,7 @@ object FieldImageMaxSize {
 
       case Msg.Saved(Right(local)) =>
         default.copy(
-          _1 = model.copy(
-            saving = false,
-            editing = false,
-            originalValue = valueAsString(Some(local))
-          ),
+          _1 = model.reset(local),
           _2 = context.repo.nodes.modify(_.selfSettings).setTo(Some(local))
         )
 
