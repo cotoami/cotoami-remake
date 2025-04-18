@@ -23,8 +23,9 @@ object ModalNodeProfile {
       nodeId: Id[Node],
       error: Option[String] = None,
 
-      // Roles
+      // Fields
       self: FieldsSelf.Model,
+      ownerPassword: FieldOwnerPassword.Model,
       localServer: SectionLocalServer.Model,
       asClient: SectionAsClient.Model,
       asChild: SectionAsChild.Model
@@ -63,6 +64,7 @@ object ModalNodeProfile {
         Model(
           nodeId = nodeId,
           self = FieldsSelf.Model(nodeId),
+          ownerPassword = FieldOwnerPassword.Model(nodeId),
           localServer = localServer,
           asClient = asClient,
           asChild = asChild
@@ -85,6 +87,7 @@ object ModalNodeProfile {
 
   object Msg {
     case class FieldsSelfMsg(submsg: FieldsSelf.Msg) extends Msg
+    case class FieldOwnerPasswordMsg(submsg: FieldOwnerPassword.Msg) extends Msg
     case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
     case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
     case class SectionAsChildMsg(submsg: SectionAsChild.Msg) extends Msg
@@ -97,6 +100,12 @@ object ModalNodeProfile {
       case Msg.FieldsSelfMsg(submsg) => {
         val (self, cmd) = FieldsSelf.update(submsg, model.self)
         (model.copy(self = self), context.repo.nodes, cmd)
+      }
+
+      case Msg.FieldOwnerPasswordMsg(submsg) => {
+        val (ownerPassword, cmd) =
+          FieldOwnerPassword.update(submsg, model.ownerPassword)
+        (model.copy(ownerPassword = ownerPassword), context.repo.nodes, cmd)
       }
 
       case Msg.SectionLocalServerMsg(submsg) => {
@@ -152,6 +161,7 @@ object ModalNodeProfile {
             fieldName(node, rootCoto, model),
             rootCoto.map(fieldDescription(_, model)),
             FieldsSelf(model.self),
+            FieldOwnerPassword(model.ownerPassword),
             SectionLocalServer(model.localServer),
             model.asServer.map(SectionAsServer(_)),
             SectionAsClient(model.asClient),
