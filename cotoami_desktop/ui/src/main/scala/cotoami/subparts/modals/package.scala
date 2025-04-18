@@ -68,7 +68,7 @@ package object modals {
     Fragment(
       toolButton(
         classes = "save",
-        symbol = "check",
+        symbol = "database_upload",
         tip = Some(context.i18n.text.Save),
         onClick = onSaveClick
       ),
