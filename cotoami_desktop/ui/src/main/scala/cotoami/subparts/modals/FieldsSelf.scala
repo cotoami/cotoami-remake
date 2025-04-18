@@ -20,7 +20,7 @@ object FieldsSelf {
       nodeId: Id[Node],
 
       // Image max size
-      imageMaxSizeInput: String = "",
+      imageMaxSizeInput: String,
       editingImageMaxSize: Boolean = false,
 
       // Reset owner password
@@ -32,6 +32,17 @@ object FieldsSelf {
 
     def isSelf(implicit context: Context): Boolean =
       context.repo.nodes.isSelf(nodeId)
+  }
+
+  object Model {
+    def apply(nodeId: Id[Node])(implicit context: Context): Model =
+      Model(
+        nodeId,
+        imageMaxSizeInput = context.repo.nodes.localSettings
+          .flatMap(_.imageMaxSize)
+          .map(_.toString())
+          .getOrElse("")
+      )
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -114,10 +125,7 @@ object FieldsSelf {
         `type` := "text",
         readOnly := !model.editingImageMaxSize,
         placeholder := context.i18n.text.FieldsSelf_imageMaxSize_placeholder,
-        value :=
-          context.repo.nodes.localSettings
-            .flatMap(_.imageMaxSize)
-            .map(_.toString()),
+        value := model.imageMaxSizeInput,
         onChange := (e => dispatch(Msg.ImageMaxSizeInput(e.target.value)))
       ),
       div(className := "edit")(
