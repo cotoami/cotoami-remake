@@ -17,6 +17,7 @@ pub enum Command {
     },
 
     /// Request to set the image max size and return the [LocalNode] if succeeded.
+    /// Setting zero means disabling image resizing.
     SetImageMaxSize(i32),
 
     /// Request to enable/disable anonymous read and return the [LocalNode] if succeeded.

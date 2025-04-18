@@ -45,6 +45,21 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
+    // Command: SetImageMaxSize
+    /////////////////////////////////////////////////////////////////////////////
+
+    assert_that!(backend_local.image_max_size, some(eq(1200)));
+
+    // Zero means no max size
+    let request = Command::SetImageMaxSize(0).into_request();
+    let local = service.call(request).await?.content::<LocalNode>()?;
+    assert_that!(local.image_max_size, none());
+
+    let request = Command::SetImageMaxSize(2000).into_request();
+    let local = service.call(request).await?.content::<LocalNode>()?;
+    assert_that!(local.image_max_size, some(eq(2000)));
+
+    /////////////////////////////////////////////////////////////////////////////
     // Command: LocalServer
     /////////////////////////////////////////////////////////////////////////////
 
