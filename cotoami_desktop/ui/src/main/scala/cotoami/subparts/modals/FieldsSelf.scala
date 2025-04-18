@@ -22,6 +22,7 @@ object FieldsSelf {
       // Image max size
       imageMaxSizeInput: String,
       editingImageMaxSize: Boolean = false,
+      savingImageMaxSize: Boolean = false,
 
       // Reset owner password
       resettingPassword: Boolean = false,
@@ -32,6 +33,17 @@ object FieldsSelf {
 
     def isSelf(implicit context: Context): Boolean =
       context.repo.nodes.isSelf(nodeId)
+
+    def editImageMaxSize: Model = copy(editingImageMaxSize = true)
+
+    def cancelEditingImageMaxSize(implicit context: Context): Model =
+      copy(
+        imageMaxSizeInput = context.repo.nodes.selfSettings
+          .flatMap(_.imageMaxSize)
+          .map(_.toString())
+          .getOrElse(""),
+        editingImageMaxSize = false
+      )
   }
 
   object Model {
@@ -58,6 +70,7 @@ object FieldsSelf {
 
   object Msg {
     case object EditImageMaxSize extends Msg
+    case object CancelEditingImageMaxSize extends Msg
     case class ImageMaxSizeInput(size: String) extends Msg
     case object ResetOwnerPassword extends Msg
     case class OwnerPasswordReset(result: Either[ErrorJson, String]) extends Msg
@@ -68,7 +81,10 @@ object FieldsSelf {
   ): (Model, Cmd[AppMsg]) =
     msg match {
       case Msg.EditImageMaxSize =>
-        (model.copy(editingImageMaxSize = true), Cmd.none)
+        (model.editImageMaxSize, Cmd.none)
+
+      case Msg.CancelEditingImageMaxSize =>
+        (model.cancelEditingImageMaxSize, Cmd.none)
 
       case Msg.ImageMaxSizeInput(size) =>
         (model.copy(imageMaxSizeInput = size), Cmd.none)
@@ -129,7 +145,18 @@ object FieldsSelf {
         onChange := (e => dispatch(Msg.ImageMaxSizeInput(e.target.value)))
       ),
       div(className := "edit")(
-        buttonEdit(_ => dispatch(Msg.EditImageMaxSize.into))
+        if (model.savingImageMaxSize)
+          span(
+            className := "processing",
+            aria - "busy" := model.savingImageMaxSize.toString()
+          )()
+        else if (model.editingImageMaxSize)
+          buttonsSaveOrCancel(
+            onSaveClick = _ => (),
+            onCancelClick = _ => ()
+          )
+        else
+          buttonEdit(_ => dispatch(Msg.EditImageMaxSize.into))
       )
     )
 
