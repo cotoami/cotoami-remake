@@ -33,6 +33,9 @@ object Commands {
 
   def SetLocalNodeIcon(icon: String) = jso(SetLocalNodeIcon = jso(icon = icon))
 
+  def SetImageMaxSize(size: Option[Int]) =
+    jso(SetImageMaxSize = size.getOrElse(0).asInstanceOf[js.Any])
+
   def EnableAnonymousRead(enable: Boolean) =
     jso(EnableAnonymousRead = jso(enable = enable))
 

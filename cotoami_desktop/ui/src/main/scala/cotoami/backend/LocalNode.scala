@@ -15,6 +15,11 @@ trait LocalNodeJson extends js.Object {
 }
 
 object LocalNodeJson {
+  def setImageMaxSize(
+      size: Option[Int]
+  ): Cmd.One[Either[ErrorJson, LocalNodeJson]] =
+    Commands.send(Commands.SetImageMaxSize(size))
+
   def enableAnonymousRead(
       enable: Boolean
   ): Cmd.One[Either[ErrorJson, LocalNodeJson]] =
@@ -28,6 +33,11 @@ object LocalNodeBackend {
       imageMaxSize = Nullable.toOption(json.image_max_size),
       anonymousReadEnabled = json.anonymous_read_enabled
     )
+
+  def setImageMaxSize(
+      size: Option[Int]
+  ): Cmd.One[Either[ErrorJson, LocalNode]] =
+    LocalNodeJson.setImageMaxSize(size).map(_.map(toModel))
 
   def enableAnonymousRead(
       enable: Boolean
