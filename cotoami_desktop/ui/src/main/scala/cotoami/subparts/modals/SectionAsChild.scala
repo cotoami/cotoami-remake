@@ -165,7 +165,6 @@ object SectionAsChild {
         onSaveClick = _ => dispatch(Msg.Save.into),
         onCancelClick = _ => dispatch(Msg.CancelEditing.into),
         editing = model.editing,
-        validated = true,
         saving = model.saving,
         error = model.savingError
       )

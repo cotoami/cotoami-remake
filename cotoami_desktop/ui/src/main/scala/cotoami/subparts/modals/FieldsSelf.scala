@@ -141,7 +141,7 @@ object FieldsSelf {
         // onSaveClick = _ => dispatch(Msg.Save.into),
         onCancelClick = _ => dispatch(Msg.CancelEditingImageMaxSize.into),
         editing = model.editingImageMaxSize,
-        validated = true,
+        readyToSave = false,
         saving = model.savingImageMaxSize,
         error = None
       )

@@ -89,7 +89,7 @@ package object modals {
       onSaveClick: SyntheticMouseEvent[_] => Unit = _ => (),
       onCancelClick: SyntheticMouseEvent[_] => Unit = _ => (),
       editing: Boolean = false,
-      validated: Boolean = false,
+      readyToSave: Boolean = true,
       saving: Boolean = false,
       error: Option[String] = None
   )
@@ -111,7 +111,7 @@ package object modals {
                 classes = "save",
                 symbol = "database_upload",
                 tip = Some(context.i18n.text.Save),
-                disabled = model.saving || !model.validated,
+                disabled = model.saving || !model.readyToSave,
                 onClick = model.onSaveClick
               ),
               toolButton(

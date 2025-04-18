@@ -85,6 +85,10 @@ dialog {
 
             &.save {
               font-size: 22px;
+
+              &:disabled {
+                opacity: 0.2;
+              }
             }
 
             &.cancel {
