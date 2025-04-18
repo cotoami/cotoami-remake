@@ -11,7 +11,7 @@ import marubinotto.components.toolButton
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
 import cotoami.backend.{ChildNodeBackend, ChildNodeInput, ErrorJson}
-import cotoami.subparts.{buttonEdit, field, Modal, PartsNode}
+import cotoami.subparts.{Modal, PartsNode}
 
 object SectionAsChild {
 

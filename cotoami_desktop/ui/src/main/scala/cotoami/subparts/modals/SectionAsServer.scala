@@ -5,7 +5,7 @@ import slinky.web.html._
 
 import cotoami.Context
 import cotoami.models.Server
-import cotoami.subparts.{field, PartsNode, ViewConnectionStatus}
+import cotoami.subparts.{PartsNode, ViewConnectionStatus}
 
 object SectionAsServer {
 

@@ -19,7 +19,7 @@ import cotoami.backend.{
   NodeBackend,
   NodeJson
 }
-import cotoami.subparts.{field, fieldInput, Modal}
+import cotoami.subparts.Modal
 
 object ModalWelcome {
 

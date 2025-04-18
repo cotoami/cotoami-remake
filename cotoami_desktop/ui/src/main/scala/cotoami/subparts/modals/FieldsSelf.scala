@@ -8,7 +8,7 @@ import marubinotto.fui.Cmd
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.backend.{DatabaseInfo, ErrorJson}
-import cotoami.subparts.{buttonEdit, field, Modal}
+import cotoami.subparts.Modal
 
 object FieldsSelf {
 

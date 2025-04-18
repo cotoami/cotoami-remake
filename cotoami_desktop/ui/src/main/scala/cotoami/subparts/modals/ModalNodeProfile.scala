@@ -11,14 +11,7 @@ import marubinotto.components.{materialSymbol, ScrollArea}
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Coto, Id, Node, Server}
 import cotoami.repository.{Nodes, Root}
-import cotoami.subparts.{
-  buttonEdit,
-  field,
-  fieldInput,
-  Modal,
-  PartsCoto,
-  PartsNode
-}
+import cotoami.subparts.{Modal, PartsCoto, PartsNode}
 
 object ModalNodeProfile {
 
