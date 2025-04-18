@@ -9,7 +9,7 @@ import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{Id, Node}
 import cotoami.subparts.Modal
 
-object FieldsSelf {
+object FieldImageMaxSize {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -17,10 +17,10 @@ object FieldsSelf {
 
   case class Model(
       nodeId: Id[Node],
-      originalImageMaxSize: String,
-      imageMaxSizeInput: String,
-      editingImageMaxSize: Boolean = false,
-      savingImageMaxSize: Boolean = false
+      originalValue: String,
+      input: String,
+      editing: Boolean = false,
+      saving: Boolean = false
   ) {
     def isLocal(implicit context: Context): Boolean =
       context.repo.nodes.isLocal(nodeId)
@@ -28,29 +28,29 @@ object FieldsSelf {
     def isSelf(implicit context: Context): Boolean =
       context.repo.nodes.isSelf(nodeId)
 
-    def editImageMaxSize: Model = copy(editingImageMaxSize = true)
+    def edit: Model = copy(editing = true)
 
-    def cancelEditingImageMaxSize(implicit context: Context): Model =
+    def cancelEditing(implicit context: Context): Model =
       copy(
-        imageMaxSizeInput = context.repo.nodes.selfSettings
+        input = context.repo.nodes.selfSettings
           .flatMap(_.imageMaxSize)
           .map(_.toString())
           .getOrElse(""),
-        editingImageMaxSize = false
+        editing = false
       )
 
-    def changed: Boolean = originalImageMaxSize != imageMaxSizeInput
+    def changed: Boolean = originalValue != input
 
-    def imageMaxSize: Either[Unit, Option[Int]] =
-      if (imageMaxSizeInput.isEmpty())
+    def value: Either[Unit, Option[Int]] =
+      if (input.isEmpty())
         Right(None)
       else
-        imageMaxSizeInput.toIntOption
+        input.toIntOption
           .map(size => Right(Some(size)))
           .getOrElse(Left(()))
 
-    def readyToSaveImageMaxSize(implicit context: Context): Boolean =
-      imageMaxSize match {
+    def readyToSave(implicit context: Context): Boolean =
+      value match {
         case Right(size) =>
           // Changed from the original?
           size != context.repo.nodes.selfSettings.flatMap(_.imageMaxSize)
@@ -66,8 +66,8 @@ object FieldsSelf {
         .getOrElse("")
       Model(
         nodeId,
-        originalImageMaxSize = originalValue,
-        imageMaxSizeInput = originalValue
+        originalValue = originalValue,
+        input = originalValue
       )
     }
   }
@@ -78,29 +78,29 @@ object FieldsSelf {
 
   sealed trait Msg extends Into[AppMsg] {
     def into =
-      ModalNodeProfile.Msg.FieldsSelfMsg(this)
+      ModalNodeProfile.Msg.FieldImageMaxSizeMsg(this)
         .pipe(Modal.Msg.NodeProfileMsg)
         .pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
-    case object EditImageMaxSize extends Msg
-    case object CancelEditingImageMaxSize extends Msg
-    case class ImageMaxSizeInput(size: String) extends Msg
+    case object Edit extends Msg
+    case object CancelEditing extends Msg
+    case class Input(size: String) extends Msg
   }
 
   def update(msg: Msg, model: Model)(implicit
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
-      case Msg.EditImageMaxSize =>
-        (model.editImageMaxSize, Cmd.none)
+      case Msg.Edit =>
+        (model.edit, Cmd.none)
 
-      case Msg.CancelEditingImageMaxSize =>
-        (model.cancelEditingImageMaxSize, Cmd.none)
+      case Msg.CancelEditing =>
+        (model.cancelEditing, Cmd.none)
 
-      case Msg.ImageMaxSizeInput(size) =>
-        (model.copy(imageMaxSizeInput = size), Cmd.none)
+      case Msg.Input(size) =>
+        (model.copy(input = size), Cmd.none)
     }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -123,27 +123,23 @@ object FieldsSelf {
       name = context.i18n.text.FieldsSelf_imageMaxSize,
       classes = "image-max-size",
       edit = FieldEdit(
-        onEditClick = _ => dispatch(Msg.EditImageMaxSize.into),
+        onEditClick = _ => dispatch(Msg.Edit.into),
         // onSaveClick = _ => dispatch(Msg.Save.into),
-        onCancelClick = _ => dispatch(Msg.CancelEditingImageMaxSize.into),
-        editing = model.editingImageMaxSize,
-        readyToSave = model.readyToSaveImageMaxSize,
-        saving = model.savingImageMaxSize,
+        onCancelClick = _ => dispatch(Msg.CancelEditing.into),
+        editing = model.editing,
+        readyToSave = model.readyToSave,
+        saving = model.saving,
         error = None
       )
     )(
       input(
         `type` := "text",
-        readOnly := !model.editingImageMaxSize,
+        readOnly := !model.editing,
         placeholder := context.i18n.text.FieldsSelf_imageMaxSize_placeholder,
-        value := model.imageMaxSizeInput,
+        value := model.input,
         aria - "invalid" :=
-          (if (model.changed)
-             model.imageMaxSize.isLeft.toString()
-           else
-             ""),
-        onChange := (e => dispatch(Msg.ImageMaxSizeInput(e.target.value)))
+          (if (model.changed) model.value.isLeft.toString() else ""),
+        onChange := (e => dispatch(Msg.Input(e.target.value)))
       )
     )
-
 }

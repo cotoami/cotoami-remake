@@ -24,7 +24,7 @@ object ModalNodeProfile {
       error: Option[String] = None,
 
       // Fields
-      self: FieldsSelf.Model,
+      imageMaxSize: FieldImageMaxSize.Model,
       ownerPassword: FieldOwnerPassword.Model,
       localServer: SectionLocalServer.Model,
       asClient: SectionAsClient.Model,
@@ -63,7 +63,7 @@ object ModalNodeProfile {
       (
         Model(
           nodeId = nodeId,
-          self = FieldsSelf.Model(nodeId),
+          imageMaxSize = FieldImageMaxSize.Model(nodeId),
           ownerPassword = FieldOwnerPassword.Model(nodeId),
           localServer = localServer,
           asClient = asClient,
@@ -86,7 +86,7 @@ object ModalNodeProfile {
   }
 
   object Msg {
-    case class FieldsSelfMsg(submsg: FieldsSelf.Msg) extends Msg
+    case class FieldImageMaxSizeMsg(submsg: FieldImageMaxSize.Msg) extends Msg
     case class FieldOwnerPasswordMsg(submsg: FieldOwnerPassword.Msg) extends Msg
     case class SectionLocalServerMsg(submsg: SectionLocalServer.Msg) extends Msg
     case class SectionAsClientMsg(submsg: SectionAsClient.Msg) extends Msg
@@ -97,9 +97,10 @@ object ModalNodeProfile {
       context: Context
   ): (Model, Nodes, Cmd[AppMsg]) =
     msg match {
-      case Msg.FieldsSelfMsg(submsg) => {
-        val (self, cmd) = FieldsSelf.update(submsg, model.self)
-        (model.copy(self = self), context.repo.nodes, cmd)
+      case Msg.FieldImageMaxSizeMsg(submsg) => {
+        val (imageMaxSize, cmd) =
+          FieldImageMaxSize.update(submsg, model.imageMaxSize)
+        (model.copy(imageMaxSize = imageMaxSize), context.repo.nodes, cmd)
       }
 
       case Msg.FieldOwnerPasswordMsg(submsg) => {
@@ -160,7 +161,7 @@ object ModalNodeProfile {
             fieldId(node),
             fieldName(node, rootCoto, model),
             rootCoto.map(fieldDescription(_, model)),
-            FieldsSelf(model.self),
+            FieldImageMaxSize(model.imageMaxSize),
             FieldOwnerPassword(model.ownerPassword),
             SectionLocalServer(model.localServer),
             model.asServer.map(SectionAsServer(_)),
