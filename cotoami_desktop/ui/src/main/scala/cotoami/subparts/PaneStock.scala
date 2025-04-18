@@ -83,7 +83,7 @@ object PaneStock {
         model.repo.geolocationInFocus
           .map(location =>
             model
-              .pipe(updates.uiState(_.openGeomap))
+              .pipe(update(Msg.OpenGeomap, _))
               .pipe { case (model, cmd) =>
                 (model.modify(_.geomap).using(_.moveTo(location)), cmd)
               }
