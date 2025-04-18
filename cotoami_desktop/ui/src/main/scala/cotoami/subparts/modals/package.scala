@@ -11,6 +11,16 @@ import marubinotto.components.toolButton
 
 package object modals {
 
+  def buttonEdit(
+      onClick: SyntheticMouseEvent[_] => Unit
+  )(implicit context: Context): ReactElement =
+    toolButton(
+      classes = "edit",
+      symbol = "edit",
+      tip = Some(context.i18n.text.Edit),
+      onClick = onClick
+    )
+
   def field(
       name: String,
       classes: String = ""
@@ -51,32 +61,62 @@ package object modals {
       inputErrors.map(Validation.sectionValidationError)
     )
 
-  def buttonEdit(
-      onClick: SyntheticMouseEvent[_] => Unit
-  )(implicit context: Context): ReactElement =
-    toolButton(
-      classes = "edit",
-      symbol = "edit",
-      tip = Some(context.i18n.text.Edit),
-      onClick = onClick
-    )
-
-  def buttonsSaveOrCancel(
-      onSaveClick: SyntheticMouseEvent[_] => Unit,
-      onCancelClick: SyntheticMouseEvent[_] => Unit
-  )(implicit context: Context): ReactElement =
-    Fragment(
-      toolButton(
-        classes = "save",
-        symbol = "database_upload",
-        tip = Some(context.i18n.text.Save),
-        onClick = onSaveClick
-      ),
-      toolButton(
-        classes = "cancel",
-        symbol = "close",
-        tip = Some(context.i18n.text.Cancel),
-        onClick = onCancelClick
+  def fieldEditable(
+      name: String,
+      classes: String = "",
+      edit: FieldEdit
+  )(fieldContent: ReactElement*)(implicit
+      context: Context
+  ): ReactElement =
+    div(className := s"field ${classes}")(
+      section(className := "field-name")(name),
+      section(className := "field-content")(
+        (fieldContent :+ viewFieldEdit(edit)): _*
       )
     )
+
+  case class FieldEdit(
+      disabled: Boolean = false,
+      onEditClick: SyntheticMouseEvent[_] => Unit,
+      onSaveClick: SyntheticMouseEvent[_] => Unit = _ => (),
+      onCancelClick: SyntheticMouseEvent[_] => Unit = _ => (),
+      editing: Boolean = false,
+      validated: Boolean = false,
+      saving: Boolean = false,
+      error: Option[String] = None
+  )
+
+  private def viewFieldEdit(
+      model: FieldEdit
+  )(implicit context: Context): ReactElement =
+    Option.when(!model.disabled) {
+      Fragment(
+        div(className := "edit")(
+          if (model.saving)
+            span(
+              className := "processing",
+              aria - "busy" := model.saving.toString()
+            )()
+          else if (model.editing)
+            Fragment(
+              toolButton(
+                classes = "save",
+                symbol = "database_upload",
+                tip = Some(context.i18n.text.Save),
+                disabled = model.saving || !model.validated,
+                onClick = model.onSaveClick
+              ),
+              toolButton(
+                classes = "cancel",
+                symbol = "close",
+                tip = Some(context.i18n.text.Cancel),
+                onClick = model.onCancelClick
+              )
+            )
+          else
+            buttonEdit(model.onEditClick)
+        ),
+        model.error.map(section(className := "error")(_))
+      )
+    }
 }

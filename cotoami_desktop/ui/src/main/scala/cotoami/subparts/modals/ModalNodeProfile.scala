@@ -248,11 +248,7 @@ object ModalNodeProfile {
         readOnly := true,
         value := node.name
       ),
-      Option.when(model.isSelf) {
-        div(className := "edit")(
-          rootCoto.map(buttonEditRootCoto)
-        )
-      }
+      rootCoto.map(divEditRootCoto(_, model))
     )
 
   private def fieldDescription(rootCoto: Coto, model: Model)(implicit
@@ -266,22 +262,22 @@ object ModalNodeProfile {
       section(className := "node-description")(
         PartsCoto.sectionCotonomaContent(rootCoto)
       ),
-      Option.when(model.isSelf) {
-        div(className := "edit")(
-          buttonEditRootCoto(rootCoto)
-        )
-      }
+      divEditRootCoto(rootCoto, model)
     )
 
-  private def buttonEditRootCoto(rootCoto: Coto)(implicit
+  private def divEditRootCoto(rootCoto: Coto, model: Model)(implicit
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    buttonEdit(_ =>
-      dispatch(
-        (Modal.Msg.OpenModal.apply _).tupled(
-          Modal.EditCoto(rootCoto)
+    Option.when(model.isSelf) {
+      div(className := "edit")(
+        buttonEdit(_ =>
+          dispatch(
+            (Modal.Msg.OpenModal.apply _).tupled(
+              Modal.EditCoto(rootCoto)
+            )
+          )
         )
       )
-    )
+    }
 }

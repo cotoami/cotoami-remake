@@ -156,9 +156,19 @@ object SectionAsChild {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    field(
+    fieldEditable(
       name = context.i18n.text.ChildPrivileges,
-      classes = "privileges"
+      classes = "privileges",
+      edit = FieldEdit(
+        disabled = model.isLocal, // prevent changing self privileges
+        onEditClick = _ => dispatch(Msg.Edit.into),
+        onSaveClick = _ => dispatch(Msg.Save.into),
+        onCancelClick = _ => dispatch(Msg.CancelEditing.into),
+        editing = model.editing,
+        validated = true,
+        saving = model.saving,
+        error = model.savingError
+      )
     )(
       PartsNode.inputChildPrivileges(
         values = model.childInput,
@@ -166,23 +176,6 @@ object SectionAsChild {
         onAsOwnerChange = (_ => dispatch(Msg.AsOwnerToggled)),
         onCanEditItosChange = (_ => dispatch(Msg.CanEditItosToggled)),
         onCanPostCotonomas = (_ => dispatch(Msg.CanPostCotonomasToggled))
-      ),
-      Option.when(!model.isLocal) {
-        div(className := "edit")(
-          if (model.saving)
-            span(
-              className := "processing",
-              aria - "busy" := model.saving.toString()
-            )()
-          else if (model.editing)
-            buttonsSaveOrCancel(
-              onSaveClick = _ => dispatch(Msg.Save.into),
-              onCancelClick = _ => dispatch(Msg.CancelEditing.into)
-            )
-          else
-            buttonEdit(_ => dispatch(Msg.Edit.into))
-        )
-      },
-      model.savingError.map(section(className := "error")(_))
+      )
     )
 }

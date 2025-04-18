@@ -133,9 +133,18 @@ object FieldsSelf {
       context: Context,
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
-    field(
+    fieldEditable(
       name = context.i18n.text.FieldsSelf_imageMaxSize,
-      classes = "image-max-size"
+      classes = "image-max-size",
+      edit = FieldEdit(
+        onEditClick = _ => dispatch(Msg.EditImageMaxSize.into),
+        // onSaveClick = _ => dispatch(Msg.Save.into),
+        onCancelClick = _ => dispatch(Msg.CancelEditingImageMaxSize.into),
+        editing = model.editingImageMaxSize,
+        validated = true,
+        saving = model.savingImageMaxSize,
+        error = None
+      )
     )(
       input(
         `type` := "text",
@@ -143,20 +152,6 @@ object FieldsSelf {
         placeholder := context.i18n.text.FieldsSelf_imageMaxSize_placeholder,
         value := model.imageMaxSizeInput,
         onChange := (e => dispatch(Msg.ImageMaxSizeInput(e.target.value)))
-      ),
-      div(className := "edit")(
-        if (model.savingImageMaxSize)
-          span(
-            className := "processing",
-            aria - "busy" := model.savingImageMaxSize.toString()
-          )()
-        else if (model.editingImageMaxSize)
-          buttonsSaveOrCancel(
-            onSaveClick = _ => (),
-            onCancelClick = _ => dispatch(Msg.CancelEditingImageMaxSize.into)
-          )
-        else
-          buttonEdit(_ => dispatch(Msg.EditImageMaxSize.into))
       )
     )
 
