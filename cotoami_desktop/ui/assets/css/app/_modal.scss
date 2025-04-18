@@ -64,6 +64,35 @@ dialog {
       >section.field-content {
         position: relative;
         margin-top: 4px;
+
+        input[readOnly] {
+          background-color: var(--card-background-color);
+        }
+
+        div.edit {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          right: 10px;
+
+          display: inline-flex;
+          flex-direction: row;
+
+          button {
+            &.edit {
+              font-size: 20px;
+            }
+
+            &.save {
+              font-size: 22px;
+            }
+
+            &.cancel {
+              margin-left: 8px;
+              font-size: 22px;
+            }
+          }
+        }
       }
     }
 
