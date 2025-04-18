@@ -18,6 +18,7 @@ object FieldsSelf {
 
   case class Model(
       nodeId: Id[Node],
+      imageMaxSizeInput: String = "",
       resettingPassword: Boolean = false,
       resettingPasswordError: Option[String] = None
   ) {
@@ -40,6 +41,7 @@ object FieldsSelf {
   }
 
   object Msg {
+    case class ImageMaxSizeInput(size: String) extends Msg
     case object ResetOwnerPassword extends Msg
     case class OwnerPasswordReset(result: Either[ErrorJson, String]) extends Msg
   }
@@ -48,6 +50,9 @@ object FieldsSelf {
       context: Context
   ): (Model, Cmd[AppMsg]) =
     msg match {
+      case Msg.ImageMaxSizeInput(size) =>
+        (model.copy(imageMaxSizeInput = size), Cmd.none)
+
       case Msg.ResetOwnerPassword =>
         (
           model.copy(resettingPassword = true),
@@ -89,7 +94,8 @@ object FieldsSelf {
     }
 
   private def fieldImageMaxSize(model: Model)(implicit
-      context: Context
+      context: Context,
+      dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
       name = context.i18n.text.FieldsSelf_imageMaxSize,
@@ -102,7 +108,8 @@ object FieldsSelf {
         value :=
           context.repo.nodes.localSettings
             .flatMap(_.imageMaxSize)
-            .map(_.toString())
+            .map(_.toString()),
+        onChange := (e => dispatch(Msg.ImageMaxSizeInput(e.target.value)))
       ),
       div(className := "edit")(
         buttonEdit(_ => ())
