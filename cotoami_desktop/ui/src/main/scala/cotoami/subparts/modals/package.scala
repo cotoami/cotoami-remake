@@ -1,6 +1,6 @@
 package cotoami.subparts
 
-import slinky.core.facade.ReactElement
+import slinky.core.facade.{Fragment, ReactElement}
 import slinky.web.html
 import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
@@ -59,5 +59,24 @@ package object modals {
       symbol = "edit",
       tip = Some(context.i18n.text.Edit),
       onClick = onClick
+    )
+
+  def buttonsSaveOrCancel(
+      onSaveClick: SyntheticMouseEvent[_] => Unit,
+      onCancelClick: SyntheticMouseEvent[_] => Unit
+  )(implicit context: Context): ReactElement =
+    Fragment(
+      toolButton(
+        classes = "save",
+        symbol = "check",
+        tip = Some(context.i18n.text.Save),
+        onClick = onSaveClick
+      ),
+      toolButton(
+        classes = "cancel",
+        symbol = "close",
+        tip = Some(context.i18n.text.Cancel),
+        onClick = onCancelClick
+      )
     )
 }

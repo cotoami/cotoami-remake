@@ -2,11 +2,10 @@ package cotoami.subparts.modals
 
 import scala.util.chaining._
 import com.softwaremill.quicklens._
-import slinky.core.facade.{Fragment, ReactElement}
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import marubinotto.fui.Cmd
-import marubinotto.components.toolButton
 
 import cotoami.{Context, Into, Msg => AppMsg}
 import cotoami.models.{ChildNode, Id, Node}
@@ -176,19 +175,9 @@ object SectionAsChild {
               aria - "busy" := model.saving.toString()
             )()
           else if (model.editing)
-            Fragment(
-              toolButton(
-                classes = "save",
-                symbol = "check",
-                tip = Some(context.i18n.text.Save),
-                onClick = _ => dispatch(Msg.Save.into)
-              ),
-              toolButton(
-                classes = "cancel",
-                symbol = "close",
-                tip = Some(context.i18n.text.Cancel),
-                onClick = _ => dispatch(Msg.CancelEditing.into)
-              )
+            buttonsSaveOrCancel(
+              onSaveClick = _ => dispatch(Msg.Save.into),
+              onCancelClick = _ => dispatch(Msg.CancelEditing.into)
             )
           else
             buttonEdit(_ => dispatch(Msg.Edit.into))
