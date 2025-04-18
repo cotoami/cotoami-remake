@@ -38,7 +38,7 @@ object FieldsSelf {
     def apply(nodeId: Id[Node])(implicit context: Context): Model =
       Model(
         nodeId,
-        imageMaxSizeInput = context.repo.nodes.localSettings
+        imageMaxSizeInput = context.repo.nodes.selfSettings
           .flatMap(_.imageMaxSize)
           .map(_.toString())
           .getOrElse("")

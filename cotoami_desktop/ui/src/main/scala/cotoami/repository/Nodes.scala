@@ -21,18 +21,23 @@ import cotoami.backend.InitialDataset
 
 case class Nodes(
     map: Map[Id[Node], Node] = Map.empty,
-    localSettings: Option[LocalNode] = None,
-    selfId: Option[Id[Node]] = None,
+
+    // Local: the node that the app has originally opened.
+    localId: Option[Id[Node]] = None,
+
+    // Self: the node currently being treated as the local node.
+    // This node can be changed via the "Switch Node" feature.
+    selfSettings: Option[LocalNode] = None,
+
+    // Focus: the node being browsed.
     focusedId: Option[Id[Node]] = None,
 
-    // remote nodes
+    // Remote nodes
     servers: Servers = Servers(),
     activeClients: ActiveClients = ActiveClients(),
     parentIds: Seq[Id[Node]] = Seq.empty
 ) {
   def onNodeChange: Nodes = unfocus
-
-  val localId: Option[Id[Node]] = localSettings.map(_.nodeId)
 
   def get(id: Id[Node]): Option[Node] = map.get(id)
 
@@ -57,6 +62,8 @@ case class Nodes(
   def local: Option[Node] = localId.flatMap(get)
 
   def isLocal(id: Id[Node]): Boolean = Some(id) == localId
+
+  val selfId: Option[Id[Node]] = selfSettings.map(_.nodeId)
 
   def self: Option[Node] = selfId.flatMap(get)
 
@@ -183,8 +190,8 @@ object Nodes {
   def apply(dataset: InitialDataset, localId: Id[Node]): Nodes =
     new Nodes(
       map = dataset.nodes,
-      localSettings = Some(dataset.localSettings),
-      selfId = Some(dataset.localSettings.nodeId),
+      localId = Some(localId),
+      selfSettings = Some(dataset.localSettings),
       parentIds = dataset.parentNodeIds.toSeq
     )
       .addServers(dataset.servers)

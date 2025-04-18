@@ -102,7 +102,7 @@ object SectionLocalServer {
           _1 = model
             .modify(_.enablingAnonymousRead).setTo(false)
             .modify(_.localServer.each.anonymousConnections).setTo(0),
-          _2 = context.repo.nodes.modify(_.localSettings).setTo(Some(local))
+          _2 = context.repo.nodes.modify(_.selfSettings).setTo(Some(local))
         )
 
       case Msg.AnonymousReadEnabled(Left(e)) =>
@@ -173,7 +173,7 @@ object SectionLocalServer {
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
     val anonymousReadEnabled =
-      context.repo.nodes.localSettings
+      context.repo.nodes.selfSettings
         .map(_.anonymousReadEnabled)
         .getOrElse(false)
     field(
