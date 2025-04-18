@@ -6,7 +6,7 @@ import slinky.web.html._
 import slinky.web.SyntheticMouseEvent
 
 import cotoami.Context
-import marubinotto.Validation
+import marubinotto.{optionalClasses, Validation}
 import marubinotto.components.toolButton
 
 package object modals {
@@ -70,8 +70,16 @@ package object modals {
   ): ReactElement =
     div(className := s"field ${classes}")(
       section(className := "field-name")(name),
-      section(className := "field-content")(
-        (fieldContent :+ viewFieldEdit(edit)): _*
+      section(
+        className := optionalClasses(
+          Seq(
+            ("field-content", true),
+            ("editing", edit.editing)
+          )
+        )
+      )(
+        div(className := "content")(fieldContent: _*),
+        viewFieldEdit(edit)
       )
     )
 

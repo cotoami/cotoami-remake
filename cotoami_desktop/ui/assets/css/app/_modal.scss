@@ -93,6 +93,22 @@ dialog {
             }
           }
         }
+
+        &.editing {
+          display: flex;
+          flex-direction: row;
+
+          div.content {
+            flex: 1;
+          }
+
+          div.edit {
+            position: relative;
+            right: auto;
+            padding-left: 8px;
+            padding-right: 4px;
+          }
+        }
       }
     }
 
