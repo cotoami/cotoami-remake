@@ -153,7 +153,7 @@ object FieldsSelf {
         else if (model.editingImageMaxSize)
           buttonsSaveOrCancel(
             onSaveClick = _ => (),
-            onCancelClick = _ => ()
+            onCancelClick = _ => dispatch(Msg.CancelEditingImageMaxSize.into)
           )
         else
           buttonEdit(_ => dispatch(Msg.EditImageMaxSize.into))
