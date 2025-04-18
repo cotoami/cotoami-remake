@@ -77,9 +77,10 @@ trait Text {
   val ModalNodeProfile_selfNode: String
   val ModalNodeProfile_switched: String
 
-  val FieldsSelf_imageMaxSize: String
-  val FieldsSelf_imageMaxSize_placeholder: String
-  val FieldsSelf_ownerPassword: String
+  val FieldImageMaxSize: String
+  val FieldImageMaxSize_placeholder: String
+
+  val FieldOwnerPassword: String
 
   val AsServer_title: String
   val AsServer_url: String

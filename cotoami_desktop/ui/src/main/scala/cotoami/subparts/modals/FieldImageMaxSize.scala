@@ -120,7 +120,7 @@ object FieldImageMaxSize {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     fieldEditable(
-      name = context.i18n.text.FieldsSelf_imageMaxSize,
+      name = context.i18n.text.FieldImageMaxSize,
       classes = "image-max-size",
       edit = FieldEdit(
         onEditClick = _ => dispatch(Msg.Edit.into),
@@ -135,7 +135,7 @@ object FieldImageMaxSize {
       input(
         `type` := "text",
         readOnly := !model.editing,
-        placeholder := context.i18n.text.FieldsSelf_imageMaxSize_placeholder,
+        placeholder := context.i18n.text.FieldImageMaxSize_placeholder,
         value := model.input,
         aria - "invalid" :=
           (if (model.changed) model.value.isLeft.toString() else ""),

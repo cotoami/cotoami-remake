@@ -76,7 +76,7 @@ object FieldOwnerPassword {
       dispatch: Into[AppMsg] => Unit
   ): ReactElement =
     field(
-      name = context.i18n.text.FieldsSelf_ownerPassword,
+      name = context.i18n.text.FieldOwnerPassword,
       classes = "owner-password"
     )(
       button(

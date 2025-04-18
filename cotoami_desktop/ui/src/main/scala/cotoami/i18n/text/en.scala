@@ -101,9 +101,10 @@ object en extends Text {
   val ModalNodeProfile_selfNode = "You"
   val ModalNodeProfile_switched = "switched"
 
-  val FieldsSelf_imageMaxSize = "Image Resize Threshold (pixels)"
-  val FieldsSelf_imageMaxSize_placeholder = "No resizing"
-  val FieldsSelf_ownerPassword = "Owner Password"
+  val FieldImageMaxSize = "Image Resize Threshold (pixels)"
+  val FieldImageMaxSize_placeholder = "No resizing"
+
+  val FieldOwnerPassword = "Owner Password"
 
   val AsServer_title = "As Server"
   val AsServer_url = "URL"
