@@ -303,6 +303,17 @@ impl<'a> NewCoto<'a> {
         self.datetime_end = datetime_range.end;
     }
 
+    pub fn process_media_content(mut self, image_max_size: Option<u32>) -> Result<Self> {
+        let content =
+            if let (Some(content), Some(media_type)) = (self.media_content, self.media_type) {
+                Some(process_media_content(content, media_type, image_max_size)?)
+            } else {
+                None
+            };
+        self.media_content = content;
+        Ok(self)
+    }
+
     pub fn new(
         node_id: &'a Id<Node>,
         posted_in_id: &'a Id<Cotonoma>,
@@ -317,9 +328,7 @@ impl<'a> NewCoto<'a> {
         coto.summary = input.summary.as_deref();
 
         if let Some((content, media_type)) = input.media_content.as_ref() {
-            let content =
-                process_media_content(content.as_ref(), media_type.as_ref(), image_max_size)?;
-            coto.media_content = Some(content);
+            coto.media_content = Some(Cow::from(content.as_ref()));
             coto.media_type = Some(media_type.as_ref());
         }
 
@@ -332,7 +341,7 @@ impl<'a> NewCoto<'a> {
         }
 
         coto.validate()?;
-        Ok(coto)
+        coto.process_media_content(image_max_size)
     }
 
     pub fn new_cotonoma(
@@ -515,7 +524,8 @@ impl<'a> UpdateCoto<'a> {
             }
             FieldDiff::Change((content, media_type)) => {
                 let media_type = media_type.as_ref();
-                let content = process_media_content(content.as_ref(), media_type, image_max_size)?;
+                let content =
+                    process_media_content(Cow::from(content.as_ref()), media_type, image_max_size)?;
                 self.media_content = Some(Some(content));
                 self.media_type = Some(Some(media_type));
             }
@@ -636,7 +646,7 @@ impl<'a> CotoContentDiff<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 fn process_media_content<'a>(
-    media_content: &'a [u8],
+    media_content: Cow<'a, [u8]>,
     media_type: &'a str,
     image_max_size: Option<u32>,
 ) -> Result<Cow<'a, [u8]>> {

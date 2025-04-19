@@ -1,5 +1,7 @@
 //! A node is a single Cotoami database that has connections to/from other databases(nodes).
 
+use std::borrow::Cow;
+
 use anyhow::{anyhow, bail, ensure, Result};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
@@ -181,7 +183,7 @@ impl<'a> UpdateNode<'a> {
     /// and converted into PNG.
     pub fn set_icon(&mut self, icon: &'a [u8]) -> Result<()> {
         let processed = crate::image::process_image(
-            icon,
+            Cow::from(icon),
             Some(Node::ICON_MAX_SIZE),
             Some(image::ImageFormat::Png),
         )?;

@@ -8,11 +8,11 @@ use image::{
 use tracing::debug;
 
 pub(crate) fn process_image<'a>(
-    image_bytes: &'a [u8],
+    image_bytes: Cow<'a, [u8]>,
     max_size: Option<u32>,
     format: Option<ImageFormat>,
 ) -> Result<Cow<'a, [u8]>> {
-    let mut decoder = ImageReader::new(Cursor::new(image_bytes))
+    let mut decoder = ImageReader::new(Cursor::new(image_bytes.as_ref()))
         .with_guessed_format()?
         .into_decoder()?;
     let orientation = decoder.orientation()?;
@@ -22,7 +22,7 @@ pub(crate) fn process_image<'a>(
     // Return the input bytes as is if no processing is needed.
     if matches!(orientation, Orientation::NoTransforms) && new_size.is_none() && format.is_none() {
         debug!("No processing is needed for the image.");
-        return Ok(Cow::from(image_bytes));
+        return Ok(image_bytes);
     }
 
     // Apply Exif orientation to the image
@@ -43,7 +43,7 @@ pub(crate) fn process_image<'a>(
     let format = if let Some(format) = format {
         format
     } else {
-        image::guess_format(image_bytes)?
+        image::guess_format(image_bytes.as_ref())?
     };
     let mut bytes: Vec<u8> = Vec::new();
     image.write_to(&mut Cursor::new(&mut bytes), format)?;
