@@ -164,7 +164,7 @@ impl Coto {
         }
     }
 
-    pub(crate) fn to_import(&self) -> Result<NewCoto> {
+    pub(crate) fn to_import(&self, image_max_size: Option<u32>) -> Result<NewCoto> {
         // Since it can't import reposts before the originals and
         // `reposted_in_ids` will be updated when inserting a repost,
         // `reposted_in_ids` must be None for import.
@@ -172,7 +172,7 @@ impl Coto {
             self.reposted_in_ids.is_none(),
             "reposted_in_ids must be None for import."
         );
-        Ok(NewCoto {
+        let new_coto = NewCoto {
             uuid: self.uuid,
             node_id: &self.node_id,
             posted_in_id: self.posted_in_id.as_ref(),
@@ -193,7 +193,8 @@ impl Coto {
             reposted_in_ids: None,
             created_at: self.created_at,
             updated_at: self.updated_at,
-        })
+        };
+        new_coto.process_media_content(image_max_size)
     }
 }
 

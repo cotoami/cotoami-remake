@@ -12,7 +12,12 @@ impl<'a> DatabaseSession<'a> {
         parent_node_id: &Id<Node>,
     ) -> Result<Option<ChangelogEntry>> {
         let mut parent_node = self.globals.try_write_parent_node(parent_node_id)?;
-        self.write_transaction(changelog_ops::import_change(log, &mut parent_node))
+        let local_node = self.globals.try_read_local_node()?;
+        self.write_transaction(changelog_ops::import_change(
+            log,
+            &mut parent_node,
+            &local_node,
+        ))
     }
 
     pub fn chunk_of_changes(

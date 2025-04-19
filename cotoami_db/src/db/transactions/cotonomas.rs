@@ -205,12 +205,13 @@ impl<'a> DatabaseSession<'a> {
     ) -> Result<((Cotonoma, Coto), ChangelogEntry)> {
         assert_eq!(coto.uuid, cotonoma.coto_id);
 
-        let local_node_id = self.globals.try_get_local_node_id()?;
+        let local_node = self.globals.try_read_local_node()?;
         self.write_transaction(|ctx: &mut Context<'_, WritableConn>| {
-            let (coto, _) = coto_ops::insert(&coto.to_import()?).run(ctx)?;
+            let new_coto = &coto.to_import(local_node.image_max_size())?;
+            let (coto, _) = coto_ops::insert(new_coto).run(ctx)?;
             let cotonoma = cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             let change = Change::CreateCotonoma(cotonoma.clone(), coto.clone());
-            let changelog = changelog_ops::log_change(&change, &local_node_id).run(ctx)?;
+            let changelog = changelog_ops::log_change(&change, &local_node.node_id).run(ctx)?;
             Ok(((cotonoma, coto), changelog))
         })
     }

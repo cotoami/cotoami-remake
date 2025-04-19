@@ -11,7 +11,7 @@ use crate::{
     db::{error::*, op::*},
     models::{
         changelog::{Change, ChangelogEntry, NewChangelogEntry},
-        node::{parent::ParentNode, Node},
+        node::{local::LocalNode, parent::ParentNode, Node},
         Id,
     },
     schema::changelog,
@@ -121,6 +121,7 @@ pub(crate) fn contains_change<Conn: AsReadableConn>(
 pub(crate) fn import_change<'a>(
     log: &'a ChangelogEntry,
     parent_node: &'a mut ParentNode,
+    local_node: &'a LocalNode,
 ) -> impl Operation<WritableConn, Option<ChangelogEntry>> + 'a {
     composite_op::<WritableConn, _, _>(move |ctx| {
         // Check if the local node has been forked from the parent
@@ -153,7 +154,7 @@ pub(crate) fn import_change<'a>(
             );
             None
         } else {
-            let apply_result = apply_change(&log.change).run(ctx);
+            let apply_result = apply_change(&log.change, local_node).run(ctx);
 
             // Record the applied change log.
             let mut log_to_import = log.to_import();
@@ -179,14 +180,18 @@ pub(crate) fn import_change<'a>(
     })
 }
 
-fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
+fn apply_change<'a>(
+    change: &'a Change,
+    local_node: &'a LocalNode,
+) -> impl Operation<WritableConn, ()> + 'a {
+    let image_max_size = local_node.image_max_size();
     composite_op::<WritableConn, _, _>(move |ctx| {
         match change {
             Change::None => (),
             Change::CreateNode { node, root } => {
                 node_ops::upsert(node).run(ctx)?;
                 if let Some((cotonoma, coto)) = root {
-                    coto_ops::insert(&coto.to_import()?).run(ctx)?;
+                    coto_ops::insert(&coto.to_import(image_max_size)?).run(ctx)?;
                     cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
                 }
             }
@@ -210,7 +215,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 node_ops::set_root_cotonoma(node_id, cotonoma_id).run(ctx)?;
             }
             Change::CreateCoto(coto) => {
-                coto_ops::insert(&coto.to_import()?).run(ctx)?;
+                coto_ops::insert(&coto.to_import(image_max_size)?).run(ctx)?;
             }
             Change::EditCoto {
                 coto_id,
@@ -233,7 +238,7 @@ fn apply_change(change: &Change) -> impl Operation<WritableConn, ()> + '_ {
                 coto_ops::delete(coto_id, Some(*deleted_at)).run(ctx)?;
             }
             Change::CreateCotonoma(cotonoma, coto) => {
-                coto_ops::insert(&coto.to_import()?).run(ctx)?;
+                coto_ops::insert(&coto.to_import(image_max_size)?).run(ctx)?;
                 cotonoma_ops::insert(&cotonoma.to_import()).run(ctx)?;
             }
             Change::RenameCotonoma {

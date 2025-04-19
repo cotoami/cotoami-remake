@@ -99,13 +99,14 @@ impl<'a> DatabaseSession<'a> {
             post_to,
             &posted_by_id,
             input,
-            local_node.image_max_size.map(|size| size as u32),
+            local_node.image_max_size(),
         )?;
         self.create_coto(&new_coto)
     }
 
     pub fn import_coto(&self, coto: &Coto) -> Result<(Coto, ChangelogEntry)> {
-        self.create_coto(&coto.to_import()?)
+        let local_node = self.globals.try_read_local_node()?;
+        self.create_coto(&coto.to_import(local_node.image_max_size())?)
     }
 
     /// Inserting a [NewCoto] as a change originated in this node.
@@ -140,13 +141,7 @@ impl<'a> DatabaseSession<'a> {
             operator.can_update_coto(&coto)?;
 
             // Do edit
-            let coto = coto_ops::edit(
-                id,
-                &diff,
-                local_node.image_max_size.map(|size| size as u32),
-                None,
-            )
-            .run(ctx)?;
+            let coto = coto_ops::edit(id, &diff, local_node.image_max_size(), None).run(ctx)?;
 
             // Log change
             let change = Change::EditCoto {

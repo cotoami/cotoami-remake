@@ -55,6 +55,8 @@ pub struct LocalNode {
 }
 
 impl LocalNode {
+    pub fn image_max_size(&self) -> Option<u32> { self.image_max_size.map(|size| size as u32) }
+
     pub fn as_principal(&self) -> NodeOwner {
         NodeOwner {
             node_id: &self.node_id,
