@@ -22,11 +22,10 @@ trait Text {
   val Save: String
   val Edit: String
   val Delete: String
+  val Connect: String
 
   val DeleteCotonoma: String
-  val Connect: String
   val WriteSubcoto: String
-  val EditItos: String
 
   val Node_notYetConnected: String
 
