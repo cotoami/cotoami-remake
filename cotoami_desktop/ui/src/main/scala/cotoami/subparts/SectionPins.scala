@@ -312,7 +312,7 @@ object SectionPins {
           } else {
             toolButton(
               symbol = "more_horiz",
-              tip = Some("Load itos"),
+              tip = Some(context.i18n.text.LoadItos),
               tipPlacement = "bottom",
               classes = "fetch-itos",
               onClick = _ => dispatch(Root.Msg.FetchGraphFromCoto(coto.id))

@@ -29,6 +29,7 @@ object en extends Text {
 
   val DeleteCotonoma = "Delete Cotonoma"
   val WriteSubcoto = "Write Sub-coto"
+  val LoadItos = "Load Itos"
 
   val Node_notYetConnected = "Not yet connected"
 

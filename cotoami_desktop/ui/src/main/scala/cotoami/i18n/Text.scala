@@ -26,6 +26,7 @@ trait Text {
 
   val DeleteCotonoma: String
   val WriteSubcoto: String
+  val LoadItos: String
 
   val Node_notYetConnected: String
 
