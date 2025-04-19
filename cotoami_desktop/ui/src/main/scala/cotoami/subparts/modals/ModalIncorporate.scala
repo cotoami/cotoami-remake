@@ -20,18 +20,18 @@ object ModalIncorporate {
   /////////////////////////////////////////////////////////////////////////////
 
   case class Model(
+      error: Option[String] = None,
+
       // form
       nodeUrlInput: String = "",
       passwordInput: String = "",
 
       // connect
       connecting: Boolean = false,
-      connectingError: Option[String] = None,
       nodeSession: Option[ClientNodeSession] = None,
 
       // incorporate
-      incorporating: Boolean = false,
-      incorporatingError: Option[String] = None
+      incorporating: Boolean = false
   ) {
     def nodeUrl: String = nodeUrlInput.trim()
 
@@ -48,7 +48,7 @@ object ModalIncorporate {
 
     def connect: (Model, Cmd.One[AppMsg]) =
       (
-        copy(connecting = true, connectingError = None),
+        copy(connecting = true, error = None),
         ClientNodeSession.logIntoServer(nodeUrl, password)
           .map(Msg.Connected(_).into)
       )
@@ -57,7 +57,7 @@ object ModalIncorporate {
 
     def incorporate: (Model, Cmd.One[AppMsg]) =
       (
-        copy(incorporating = true, incorporatingError = None),
+        copy(incorporating = true, error = None),
         ServerBackend.addServer(nodeUrl, password)
           .map(Msg.Incorporated(_).into)
       )
@@ -65,8 +65,7 @@ object ModalIncorporate {
     def cancel: Model =
       copy(
         connecting = false,
-        connectingError = None,
-        incorporatingError = None,
+        error = None,
         nodeSession = None
       )
   }
@@ -115,15 +114,14 @@ object ModalIncorporate {
           default.copy(
             _1 = model.copy(
               connecting = false,
-              connectingError =
-                Some("This node has already been registered as a server.")
+              error = Some("This node has already been registered as a server.")
             )
           )
         else
           default.copy(
             _1 = model.copy(
               connecting = false,
-              connectingError = None,
+              error = None,
               nodeSession = Some(session)
             ),
             _2 = nodes.put(session.server)
@@ -134,7 +132,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(
             connecting = false,
-            connectingError = Some(e.default_message)
+            error = Some(e.default_message)
           )
         )
 
@@ -147,7 +145,7 @@ object ModalIncorporate {
 
       case Msg.Incorporated(Right(server)) =>
         default.copy(
-          _1 = model.copy(incorporating = false, incorporatingError = None),
+          _1 = model.copy(incorporating = false, error = None),
           _2 = nodes.addServer(server),
           _3 = Modal.close(classOf[Modal.Incorporate])
         )
@@ -156,7 +154,7 @@ object ModalIncorporate {
         default.copy(
           _1 = model.copy(
             incorporating = false,
-            incorporatingError = Some(e.default_message)
+            error = Some(e.default_message)
           ),
           _3 = cotoami.error("Node incorporating error.", e)
         )
@@ -173,7 +171,8 @@ object ModalIncorporate {
   ): ReactElement =
     Modal.view(
       dialogClasses = "incorporate",
-      closeButton = Some((classOf[Modal.Incorporate], dispatch))
+      closeButton = Some((classOf[Modal.Incorporate], dispatch)),
+      error = model.error
     )(
       Modal.spanTitleIcon(Node.IconName),
       context.i18n.text.ModalIncorporate_title
@@ -187,7 +186,6 @@ object ModalIncorporate {
       model: Model
   )(implicit dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "connect")(
-      model.connectingError.map(e => section(className := "error")(e)),
       form()(
         // Node URL
         fieldInput(
@@ -227,8 +225,6 @@ object ModalIncorporate {
       nodeSession: ClientNodeSession
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     section(className := "incorporate")(
-      model.incorporatingError.map(e => section(className := "error")(e)),
-
       // Node preview
       section(className := "node-preview")(
         section(className := "node")(PartsNode.spanNode(nodeSession.server)),
