@@ -318,7 +318,7 @@ impl<'a> NewCoto<'a> {
 
         if let Some((content, media_type)) = input.media_content.as_ref() {
             let content =
-                process_media_content((content.as_ref(), media_type.as_ref()), image_max_size)?;
+                process_media_content(content.as_ref(), media_type.as_ref(), image_max_size)?;
             coto.media_content = Some(content);
             coto.media_type = Some(media_type.as_ref());
         }
@@ -515,8 +515,7 @@ impl<'a> UpdateCoto<'a> {
             }
             FieldDiff::Change((content, media_type)) => {
                 let media_type = media_type.as_ref();
-                let content =
-                    process_media_content((content.as_ref(), media_type), image_max_size)?;
+                let content = process_media_content(content.as_ref(), media_type, image_max_size)?;
                 self.media_content = Some(Some(content));
                 self.media_type = Some(Some(media_type));
             }
@@ -637,14 +636,14 @@ impl<'a> CotoContentDiff<'a> {
 /////////////////////////////////////////////////////////////////////////////
 
 fn process_media_content<'a>(
-    media_content: (&'a [u8], &'a str),
+    media_content: &'a [u8],
+    media_type: &'a str,
     image_max_size: Option<u32>,
 ) -> Result<Cow<'a, [u8]>> {
-    let (content, media_type) = media_content;
     if media_type.starts_with("image/") {
-        crate::image::process_image(content, image_max_size, None)
+        crate::image::process_image(media_content, image_max_size, None)
     } else {
-        Ok(Cow::from(content))
+        Ok(Cow::from(media_content))
     }
 }
 
