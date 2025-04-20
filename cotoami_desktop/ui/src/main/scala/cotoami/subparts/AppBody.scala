@@ -42,7 +42,7 @@ object AppBody {
           NavCotonomas.DefaultWidth
         ),
         resizable = uiState.paneOpened(NavCotonomas.PaneName),
-        className = Some("main-split-pane default-layout"),
+        className = Some("main-split-pane"),
         onPrimarySizeChanged = Some((newSize) =>
           dispatch(AppMsg.ResizePane(NavCotonomas.PaneName, newSize))
         ),

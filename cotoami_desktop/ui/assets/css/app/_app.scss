@@ -47,6 +47,16 @@ div.app {
       border-left: 1px solid var(--pane-border-color);
       box-shadow: -1px 0 3px var(--box-shadow);
     }
+
+    &.search-active {
+      .flow.pane.split-pane-left {
+        max-width: var(--max-article-width);
+      }
+
+      .stock.pane.split-pane-right {
+        max-width: 55rem;
+      }
+    }
   }
 
   // flow and stock
