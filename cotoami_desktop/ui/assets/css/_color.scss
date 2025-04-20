@@ -16,6 +16,7 @@
   --error-color: #{pico.$red-800};
   --color-in-light-background: #{pico.$grey-700};
   --embedded-cotobackground-color: #{rgba(pico.$grey-50, 0.5)};
+  --box-shadow: rgba(0, 0, 0, .1);
 }
 
 @mixin dark-colors {
@@ -33,6 +34,7 @@
   --error-color: #{pico.$red-700};
   --color-in-light-background: #{pico.$grey-700};
   --embedded-cotobackground-color: #{pico.$grey-900};
+  --box-shadow: rgba(0, 0, 0, .8);
 }
 
 // Default: Light theme

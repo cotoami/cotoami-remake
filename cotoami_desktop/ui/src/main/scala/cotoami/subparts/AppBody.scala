@@ -14,18 +14,22 @@ object AppBody {
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    div(id := "app-body", className := "body")(
+    div(
+      id := "app-body",
+      className := optionalClasses(
+        Seq(
+          ("body", true),
+          ("search-active", model.search.active)
+        )
+      )
+    )(
       (model.uiState, model.repo.nodes.self) match {
-        case (Some(uiState), Some(_)) =>
-          if (model.search.queryInput.isBlank())
-            Some(defaultLayout(model, uiState))
-          else
-            Some(searchLayout(model, uiState))
-        case _ => None
+        case (Some(uiState), Some(_)) => Some(content(model, uiState))
+        case _                        => None
       }
     )
 
-  private def defaultLayout(
+  private def content(
       model: Model,
       uiState: UiState
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
@@ -63,31 +67,9 @@ object AppBody {
         secondary = SplitPane.Secondary.Props()(
           AppMain(model, uiState)
         )
-      )
-    )
-
-  private def searchLayout(
-      model: Model,
-      uiState: UiState
-  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
-    Fragment(
-      SplitPane(
-        vertical = true,
-        reverse = true,
-        initialPrimarySize = uiState.paneSizes.getOrElse(
-          PaneSearch.PaneName,
-          PaneSearch.DefaultWidth
-        ),
-        className = Some("main-split-pane search-layout"),
-        onPrimarySizeChanged = Some((newSize) =>
-          dispatch(AppMsg.ResizePane(PaneSearch.PaneName, newSize))
-        ),
-        primary = SplitPane.Primary.Props()(
-          PaneSearch(model.search)
-        ),
-        secondary = SplitPane.Secondary.Props()(
-          AppMain(model, uiState)
-        )
-      )
+      ),
+      Option.when(model.search.active) {
+        PaneSearch(model.search)
+      }
     )
 }

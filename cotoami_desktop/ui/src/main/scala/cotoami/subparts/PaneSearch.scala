@@ -37,6 +37,8 @@ object PaneSearch {
       imeActive: Boolean = false,
       loading: Boolean = false
   ) {
+    def active: Boolean = !queryInput.isBlank()
+
     def inputQuery(query: String): (Model, Cmd[AppMsg]) =
       if (query.isBlank())
         (
