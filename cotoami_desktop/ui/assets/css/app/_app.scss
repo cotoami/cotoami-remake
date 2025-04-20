@@ -49,11 +49,11 @@ div.app {
     }
 
     &.search-active {
-      .flow.pane.split-pane-left {
+      .flow.pane.occupying section.flow {
         max-width: var(--max-article-width);
       }
 
-      .stock.pane.split-pane-right {
+      .stock.pane section.stock {
         max-width: 55rem;
       }
     }
