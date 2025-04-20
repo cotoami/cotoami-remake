@@ -62,7 +62,11 @@ object ModalSwitchNode {
           model.copy(switching = false, switchingError = None),
           Cmd.Batch(
             Browser.send(AppMsg.SetInitialDataset(dataset)),
-            Modal.close(classOf[Modal.SwitchNode])
+            Modal.close(classOf[Modal.SwitchNode]),
+            cotoami.info(
+              "Switched the self node.",
+              dataset.localNode.map(_.name)
+            )
           )
         )
 
