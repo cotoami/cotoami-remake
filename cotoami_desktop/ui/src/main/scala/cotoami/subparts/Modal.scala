@@ -156,10 +156,10 @@ object Modal {
   case class ParentSync(model: ModalParentSync.Model = ModalParentSync.Model())
       extends Modal
 
-  case class OperateAs(model: ModalOperateAs.Model) extends Modal
+  case class SwitchNode(model: ModalSwitchNode.Model) extends Modal
   object OperateAs {
-    def apply(current: Node, switchingTo: Node): OperateAs =
-      OperateAs(ModalOperateAs.Model(current, switchingTo))
+    def apply(current: Node, switchingTo: Node): SwitchNode =
+      SwitchNode(ModalSwitchNode.Model(current, switchingTo))
   }
 
   case class NodeProfile(model: ModalNodeProfile.Model) extends Modal
@@ -215,7 +215,7 @@ object Modal {
     case class SubcotoMsg(msg: ModalSubcoto.Msg) extends Msg
     case class IncorporateMsg(msg: ModalIncorporate.Msg) extends Msg
     case class ParentSyncMsg(msg: ModalParentSync.Msg) extends Msg
-    case class OperateAsMsg(msg: ModalOperateAs.Msg) extends Msg
+    case class SwitchNodeMsg(msg: ModalSwitchNode.Msg) extends Msg
     case class NodeProfileMsg(msg: ModalNodeProfile.Msg) extends Msg
     case class NodeIconMsg(msg: ModalNodeIcon.Msg) extends Msg
     case class ClientsMsg(msg: ModalClients.Msg) extends Msg
@@ -343,10 +343,10 @@ object Modal {
           }
         }
 
-      case Msg.OperateAsMsg(modalMsg) =>
-        stack.get[OperateAs].map { case OperateAs(modal) =>
-          ModalOperateAs.update(modalMsg, modal).pipe { case (modal, cmds) =>
-            (updateModal(OperateAs(modal), model), cmds)
+      case Msg.SwitchNodeMsg(modalMsg) =>
+        stack.get[SwitchNode].map { case SwitchNode(modal) =>
+          ModalSwitchNode.update(modalMsg, modal).pipe { case (modal, cmds) =>
+            (updateModal(SwitchNode(modal), model), cmds)
           }
         }
 
@@ -476,7 +476,7 @@ object Modal {
 
       case ParentSync(modal) => Some(ModalParentSync(modal, model.parentSync))
 
-      case OperateAs(modal) => Some(ModalOperateAs(modal))
+      case SwitchNode(modal) => Some(ModalSwitchNode(modal))
 
       case NodeProfile(modal) => Some(ModalNodeProfile(modal))
 

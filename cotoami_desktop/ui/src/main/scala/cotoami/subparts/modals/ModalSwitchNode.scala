@@ -12,7 +12,7 @@ import cotoami.models.Node
 import cotoami.backend.{ErrorJson, InitialDataset}
 import cotoami.subparts.{Modal, PartsNode}
 
-object ModalOperateAs {
+object ModalSwitchNode {
 
   /////////////////////////////////////////////////////////////////////////////
   // Model
@@ -32,7 +32,7 @@ object ModalOperateAs {
   /////////////////////////////////////////////////////////////////////////////
 
   sealed trait Msg extends Into[AppMsg] {
-    def into = Modal.Msg.OperateAsMsg(this).pipe(AppMsg.ModalMsg)
+    def into = Modal.Msg.SwitchNodeMsg(this).pipe(AppMsg.ModalMsg)
   }
 
   object Msg {
@@ -62,7 +62,7 @@ object ModalOperateAs {
           model.copy(switching = false, switchingError = None),
           Cmd.Batch(
             Browser.send(AppMsg.SetInitialDataset(dataset)),
-            Modal.close(classOf[Modal.OperateAs])
+            Modal.close(classOf[Modal.SwitchNode])
           )
         )
 
@@ -83,17 +83,17 @@ object ModalOperateAs {
   def apply(
       model: Model
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement = {
-    val modalType = classOf[Modal.OperateAs]
+    val modalType = classOf[Modal.SwitchNode]
     Modal.view(
-      dialogClasses = "operate-as",
+      dialogClasses = "switch-node",
       closeButton = Some((modalType, dispatch)),
       error = model.switchingError
     )(
       Modal.spanTitleIcon(Node.SwitchIconName),
-      "Switch Node"
+      context.i18n.text.ModalSwitchNode_title
     )(
       section(className := "preview")(
-        p("You are about to switch the node to operate on as below:"),
+        p(context.i18n.text.ModalSwitchNode_message),
         sectionNode(model.current, "current"),
         div(className := "arrow")(materialSymbol("arrow_downward", "arrow")),
         sectionNode(model.switchingTo, "switching-to")

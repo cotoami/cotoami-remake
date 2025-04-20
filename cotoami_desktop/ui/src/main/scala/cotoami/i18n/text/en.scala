@@ -151,4 +151,10 @@ object en extends Text {
     The child node below has been registered.
     Send the generated password to the node's owner in a secure way.
     """
+
+  val ModalSwitchNode_title = "Switch Node"
+  val ModalSwitchNode_message =
+    """
+    You are about to switch the node to operate on as below.
+    """
 }

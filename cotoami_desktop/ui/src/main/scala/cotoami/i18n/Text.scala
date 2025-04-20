@@ -110,6 +110,9 @@ trait Text {
 
   val ModalNewClient_title: String
   val ModalNewClient_registered: String
+
+  val ModalSwitchNode_title: String
+  val ModalSwitchNode_message: String
 }
 
 object Text {
