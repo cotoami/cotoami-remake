@@ -24,6 +24,14 @@ impl<'a> DatabaseSession<'a> {
         self.read_transaction(ito_ops::outgoing(coto_ids))
     }
 
+    pub fn sibling_ito_group(
+        &mut self,
+        source_coto_id: &Id<Coto>,
+        node_id: &Id<Node>,
+    ) -> Result<Vec<Ito>> {
+        self.read_transaction(ito_ops::sibling_group(source_coto_id, node_id))
+    }
+
     pub fn recent_itos(
         &mut self,
         node_id: Option<&Id<Node>>,
