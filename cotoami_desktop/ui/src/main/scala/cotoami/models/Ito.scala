@@ -1,8 +1,6 @@
 package cotoami.models
 
 import java.time.Instant
-import scala.collection.immutable.TreeMap
-import com.softwaremill.quicklens._
 
 import marubinotto.Validation
 
@@ -45,33 +43,6 @@ object Ito {
       Validation.length(fieldName, description, 1, DescriptionMaxLength)
     ).flatten
   }
-}
-
-// Outgoing itos grouped by belonging nodes.
-// Each grouped itos are sorted in TreeMap by Ito.order.
-case class OutgoingItos(byNode: Map[Id[Node], TreeMap[Int, Ito]] = Map.empty) {
-  def isEmpty: Boolean = byNode.isEmpty
-
-  def all: Iterable[Ito] = byNode.values.map(_.values).flatten
-
-  def group(id: Id[Node]): Iterable[Ito] =
-    byNode.get(id).map(_.values).getOrElse(Seq.empty)
-
-  def hasDuplicateOrder(ito: Ito): Boolean =
-    byNode.get(ito.nodeId).map(_.contains(ito.order)).getOrElse(false)
-
-  def put(ito: Ito): OutgoingItos =
-    this.modify(_.byNode.atOrElse(ito.nodeId, TreeMap(ito.order -> ito))).using(
-      _.filterNot(_._2.id == ito.id) // remove old version
-        .updated(ito.order, ito)
-    )
-
-  def delete(ito: Ito): OutgoingItos =
-    this
-      .modify(_.byNode.index(ito.nodeId)).using(
-        _.filterNot(_._2.id == ito.id)
-      )
-      .modify(_.byNode).using(_.filterNot(_._2.isEmpty))
 }
 
 // Sibling itos and their target cotos from the same source coto and
