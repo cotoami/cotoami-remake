@@ -1,112 +1,106 @@
 package cotoami.repository
 
-import scala.collection.immutable.{HashSet, TreeMap}
+import scala.collection.immutable.HashSet
 import com.softwaremill.quicklens._
 
-import cotoami.models.{Coto, Id, Ito}
+import cotoami.models.{Coto, Id, Ito, OutgoingItos}
 
 case class Itos(
     map: Map[Id[Ito], Ito] = Map.empty,
-    outgoingItos: OutgoingItos = OutgoingItos(),
-    incomingItoIds: IncomingItoIds = IncomingItoIds()
+    bySource: ItosBySource = ItosBySource(),
+    byTarget: ItosByTarget = ItosByTarget()
 ) {
   def get(id: Id[Ito]): Option[Ito] = map.get(id)
 
   def put(ito: Ito): Itos =
     this
       .modify(_.map).using(_ + (ito.id -> ito))
-      .modify(_.outgoingItos).using(_.put(ito))
-      .modify(_.incomingItoIds).using(_.put(ito))
+      .modify(_.bySource).using(_.put(ito))
+      .modify(_.byTarget).using(_.put(ito))
 
   def putAll(itos: Iterable[Ito]): Itos = itos.foldLeft(this)(_ put _)
 
-  def replaceOutgoingItos(cotoId: Id[Coto], itos: Iterable[Ito]): Itos =
+  def replaceOutgoingItos(cotoId: Id[Coto], itos: OutgoingItos): Itos =
     this
-      .modify(_.map).using(map =>
-        itos.foldLeft(map)((map, ito) => map + (ito.id -> ito))
-      )
-      .modify(_.outgoingItos).using(_.replace(cotoId, itos))
-      .modify(_.incomingItoIds).using(_.putAll(itos))
+      .putAll(itos.all)
+      .modify(_.bySource).using(_.replace(cotoId, itos))
+      .modify(_.byTarget).using(_.putAll(itos.all))
 
   def delete(id: Id[Ito]): Itos =
-    this
-      .modify(_.map).using(_ - id)
-      .modify(_.outgoingItos).using(_.delete(id))
-      .modify(_.incomingItoIds).using(_.delete(id))
+    get(id).map { ito =>
+      this
+        .modify(_.map).using(_ - ito.id)
+        .modify(_.bySource).using(_.delete(ito))
+        .modify(_.byTarget).using(_.delete(ito.id))
+    }.getOrElse(this)
 
   def connected(from: Id[Coto], to: Id[Coto]): Boolean =
-    incomingItoIds.get(to).map(
+    byTarget.get(to).map(
       _.exists(get(_).map(_.sourceCotoId == from).getOrElse(false))
     ).getOrElse(false)
 
-  def from(id: Id[Coto]): Iterable[Ito] = outgoingItos.from(id)
+  def from(id: Id[Coto]): Option[OutgoingItos] = bySource.from(id)
 
-  def anyFrom(id: Id[Coto]): Boolean = outgoingItos.anyFrom(id)
+  def anyFrom(id: Id[Coto]): Boolean = bySource.anyFrom(id)
 
   def hasDuplicateOrder(ito: Ito): Boolean =
-    outgoingItos.hasDuplicateOrder(ito)
+    bySource.hasDuplicateOrder(ito)
 
   def to(id: Id[Coto]): Seq[Ito] =
-    incomingItoIds.get(id).map(_.map(get).flatten.toSeq)
+    byTarget.get(id).map(_.map(get).flatten.toSeq)
       .getOrElse(Seq.empty)
 
   def onCotoDelete(id: Id[Coto]): Itos = {
-    val toDelete = (from(id).toSeq ++ to(id)).map(_.id)
+    val itosFrom = from(id).map(_.all).getOrElse(Seq.empty)
+    val itosTo = to(id)
+    val toDelete = (itosFrom ++ itosTo).map(_.id)
     toDelete.foldLeft(this)(_ delete _)
   }
 }
 
-// Hold each outgoing itos in TreeMap so that they are ordered by Ito.order
-case class OutgoingItos(map: Map[Id[Coto], TreeMap[Int, Ito]] = Map.empty)
-    extends AnyVal {
-  def from(id: Id[Coto]): Iterable[Ito] =
-    map.get(id).map(_.values).getOrElse(Seq.empty)
+// Itos grouped by source coto IDs.
+case class ItosBySource(
+    map: Map[Id[Coto], OutgoingItos] = Map.empty
+) extends AnyVal {
+  def from(id: Id[Coto]): Option[OutgoingItos] = map.get(id)
 
   def anyFrom(id: Id[Coto]): Boolean =
-    map.get(id).map(!_.isEmpty).getOrElse(false)
+    from(id).map(!_.isEmpty).getOrElse(false)
 
   def hasDuplicateOrder(ito: Ito): Boolean =
-    map.get(ito.sourceCotoId).map(_.contains(ito.order)).getOrElse(false)
+    from(ito.sourceCotoId).map(_.hasDuplicateOrder(ito)).getOrElse(false)
 
-  def put(ito: Ito): OutgoingItos =
+  def put(ito: Ito): ItosBySource =
     copy(map =
       map + (ito.sourceCotoId ->
         map.get(ito.sourceCotoId)
-          .map(_.filterNot(_._2.id == ito.id)) // remove old version
-          .map(_ + (ito.order -> ito))
-          .getOrElse(TreeMap(ito.order -> ito)))
+          .map(_.put(ito))
+          .getOrElse(OutgoingItos().put(ito)))
     )
 
-  def replace(cotoId: Id[Coto], itos: Iterable[Ito]): OutgoingItos =
-    copy(map =
-      (map - cotoId) + (cotoId ->
-        TreeMap.from(itos.map(ito => ito.order -> ito)))
-    )
+  def replace(cotoId: Id[Coto], itos: OutgoingItos): ItosBySource =
+    copy(map = map + (cotoId -> itos))
 
-  def delete(id: Id[Ito]): OutgoingItos =
-    copy(map = map.map { case (cotoId, itos) =>
-      (cotoId, itos.filterNot(_._2.id == id))
-    }
-      .filterNot(_._2.isEmpty))
+  def delete(ito: Ito): ItosBySource =
+    this
+      .modify(_.map.index(ito.sourceCotoId)).using(_.delete(ito))
+      .modify(_.map).using(_.filterNot(_._2.isEmpty))
 }
 
 // Ito IDs indexed by target coto ID
-case class IncomingItoIds(map: Map[Id[Coto], HashSet[Id[Ito]]] = Map.empty)
+case class ItosByTarget(map: Map[Id[Coto], HashSet[Id[Ito]]] = Map.empty)
     extends AnyVal {
   def get(id: Id[Coto]): Option[HashSet[Id[Ito]]] = map.get(id)
 
-  def put(ito: Ito): IncomingItoIds =
-    copy(map =
-      map + (ito.targetCotoId ->
-        map.get(ito.targetCotoId)
-          .map(_ + ito.id)
-          .getOrElse(HashSet(ito.id)))
+  def put(ito: Ito): ItosByTarget =
+    this.modify(_.map.atOrElse(ito.targetCotoId, HashSet(ito.id))).using(
+      _ + ito.id
     )
 
-  def putAll(itos: Iterable[Ito]): IncomingItoIds =
+  def putAll(itos: Iterable[Ito]): ItosByTarget =
     itos.foldLeft(this)(_ put _)
 
-  def delete(id: Id[Ito]): IncomingItoIds =
+  def delete(id: Id[Ito]): ItosByTarget =
     copy(map = map.map { case (cotoId, itoIds) => (cotoId, itoIds - id) }
       .filterNot(_._2.isEmpty))
 }
