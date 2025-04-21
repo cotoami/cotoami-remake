@@ -21,7 +21,7 @@ impl<'a> DatabaseSession<'a> {
     }
 
     pub fn outgoing_itos(&mut self, coto_ids: &[Id<Coto>]) -> Result<Vec<Ito>> {
-        self.read_transaction(ito_ops::get_by_source_coto_ids(coto_ids))
+        self.read_transaction(ito_ops::outgoing(coto_ids))
     }
 
     pub fn recent_itos(

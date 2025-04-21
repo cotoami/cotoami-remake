@@ -25,7 +25,13 @@ pub(crate) fn get<Conn: AsReadableConn>(id: &Id<Ito>) -> impl Operation<Conn, Op
     })
 }
 
-pub(crate) fn get_by_source_coto_ids<Conn: AsReadableConn>(
+pub(crate) fn try_get<Conn: AsReadableConn>(
+    id: &Id<Ito>,
+) -> impl Operation<Conn, Result<Ito, DatabaseError>> + '_ {
+    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Ito, *id)))
+}
+
+pub(crate) fn outgoing<Conn: AsReadableConn>(
     coto_ids: &[Id<Coto>],
 ) -> impl Operation<Conn, Vec<Ito>> + '_ {
     read_op(move |conn| {
@@ -34,12 +40,6 @@ pub(crate) fn get_by_source_coto_ids<Conn: AsReadableConn>(
             .load::<Ito>(conn)
             .map_err(anyhow::Error::from)
     })
-}
-
-pub(crate) fn try_get<Conn: AsReadableConn>(
-    id: &Id<Ito>,
-) -> impl Operation<Conn, Result<Ito, DatabaseError>> + '_ {
-    get(id).map(|opt| opt.ok_or(DatabaseError::not_found(EntityKind::Ito, *id)))
 }
 
 pub(crate) fn recent<'a, Conn: AsReadableConn>(
