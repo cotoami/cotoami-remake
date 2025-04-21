@@ -260,7 +260,7 @@ object ModalIncorporate {
         nodeSession.childPrivileges match {
           case Some(privileges) =>
             PartsNode.childPrivileges(privileges).mkString(", ")
-          case None => context.i18n.text.ReadOnly
+          case None => context.i18n.text.ChildPrivileges_readOnly
         }
       )
     )

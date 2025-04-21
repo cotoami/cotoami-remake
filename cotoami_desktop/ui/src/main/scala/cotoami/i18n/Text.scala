@@ -12,7 +12,6 @@ trait Text {
   val Owner: String
   val Server: String
   val Client: String
-  val ReadOnly: String
 
   val Id: String
   val Name: String
@@ -50,6 +49,7 @@ trait Text {
   val ChildPrivileges_canPostCotos: String
   val ChildPrivileges_canEditItos: String
   val ChildPrivileges_canPostCotonomas: String
+  val ChildPrivileges_readOnly: String
 
   val ConfirmDeleteCoto: String
   def ConfirmDeleteOthersCoto(someoneElse: ReactElement): ReactElement
