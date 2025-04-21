@@ -181,18 +181,13 @@ case class Root(
       .getOrElse(Map.empty)
 
   def childrenOf(cotoId: Id[Coto]): Map[Id[Node], SiblingGroup] =
-    itos.from(cotoId).map { outgoingItos =>
-      outgoingItos.byNode.map { case (nodeId, itos) =>
-        (nodeId, getSiblingGroup(itos))
-      }.toMap
-    }.getOrElse(Map.empty)
+    itos.from(cotoId).map { case (nodeId, itos) =>
+      (nodeId, getSiblingGroup(itos))
+    }.toMap
 
-  private def getSiblingGroup(itos: TreeMap[Int, Ito]): SiblingGroup =
-    itos.values
-      .map(ito =>
-        cotos.get(ito.targetCotoId)
-          .map(targetCoto => (ito, targetCoto))
-      )
+  private def getSiblingGroup(itos: Iterable[Ito]): SiblingGroup =
+    itos
+      .map(ito => cotos.get(ito.targetCotoId).map(coto => (ito, coto)))
       .flatten
       .toSeq
       .pipe(SiblingGroup(_))
@@ -264,9 +259,9 @@ case class Root(
     graphLoaded.contains(cotoId)
 
   def anyTargetMissingItosFrom(id: Id[Coto]): Boolean =
-    itos.from(id).map(
-      _.all.find(ito => !cotos.contains(ito.targetCotoId)).isDefined
-    ).getOrElse(false)
+    itos.from(id).values.flatten
+      .find(ito => !cotos.contains(ito.targetCotoId))
+      .isDefined
 
   /////////////////////////////////////////////////////////////////////////////
   // Geolocation
