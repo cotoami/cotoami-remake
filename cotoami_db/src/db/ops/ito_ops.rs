@@ -42,6 +42,20 @@ pub(crate) fn outgoing<Conn: AsReadableConn>(
     })
 }
 
+pub(crate) fn sibling_group<'a, Conn: AsReadableConn>(
+    source_coto_id: &'a Id<Coto>,
+    node_id: &'a Id<Node>,
+) -> impl Operation<Conn, Vec<Ito>> + 'a {
+    read_op(move |conn| {
+        itos::table
+            .filter(itos::source_coto_id.eq(source_coto_id))
+            .filter(itos::node_id.eq(node_id))
+            .order(itos::order.asc())
+            .load::<Ito>(conn)
+            .map_err(anyhow::Error::from)
+    })
+}
+
 pub(crate) fn recent<'a, Conn: AsReadableConn>(
     node_id: Option<&'a Id<Node>>,
     page_size: i64,
