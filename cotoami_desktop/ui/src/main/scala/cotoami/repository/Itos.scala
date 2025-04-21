@@ -72,10 +72,12 @@ case class ItosBySource(
 
   def put(ito: Ito): ItosBySource =
     copy(map =
-      map + (ito.sourceCotoId ->
+      map.updated(
+        ito.sourceCotoId,
         map.get(ito.sourceCotoId)
           .map(_.put(ito))
-          .getOrElse(OutgoingItos().put(ito)))
+          .getOrElse(OutgoingItos().put(ito))
+      )
     )
 
   def replace(cotoId: Id[Coto], itos: OutgoingItos): ItosBySource =

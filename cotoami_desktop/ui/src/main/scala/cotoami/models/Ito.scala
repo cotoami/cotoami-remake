@@ -74,6 +74,8 @@ case class OutgoingItos(byNode: Map[Id[Node], TreeMap[Int, Ito]] = Map.empty) {
       .modify(_.byNode).using(_.filterNot(_._2.isEmpty))
 }
 
+// Sibling itos and their target cotos from the same source coto and
+// belonging to the same node.
 case class SiblingGroup(sorted: Seq[(Ito, Coto)]) {
   def length = sorted.length
 

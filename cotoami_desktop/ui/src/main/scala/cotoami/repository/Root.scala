@@ -264,7 +264,9 @@ case class Root(
     graphLoaded.contains(cotoId)
 
   def anyTargetMissingItosFrom(id: Id[Coto]): Boolean =
-    itos.from(id).find(ito => !cotos.contains(ito.targetCotoId)).isDefined
+    itos.from(id).map(
+      _.all.find(ito => !cotos.contains(ito.targetCotoId)).isDefined
+    ).getOrElse(false)
 
   /////////////////////////////////////////////////////////////////////////////
   // Geolocation
