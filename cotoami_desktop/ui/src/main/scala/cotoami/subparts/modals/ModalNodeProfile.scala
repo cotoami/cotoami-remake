@@ -203,6 +203,7 @@ object ModalNodeProfile {
           section(className := "node-role")(role),
           Option.when(!model.isSelf) {
             sectionNodeRelationship(
+              context.repo.nodes.isParent(node.id),
               context.repo.nodes.childPrivilegesTo(node.id)
             )
           }
@@ -210,12 +211,15 @@ object ModalNodeProfile {
       }
     )
 
-  private def sectionNodeRelationship(privileges: Option[ChildNode])(implicit
+  private def sectionNodeRelationship(
+      isParent: Boolean,
+      privileges: Option[ChildNode]
+  )(implicit
       context: Context
   ): ReactElement =
     section(className := "node-relationship")(
       div(className := "arrow")(materialSymbol("arrow_upward")),
-      privileges.map { privileges =>
+      Option.when(isParent) {
         ul(className := "privileges")(
           PartsNode.childPrivileges(privileges).map(li()(_)): _*
         )
