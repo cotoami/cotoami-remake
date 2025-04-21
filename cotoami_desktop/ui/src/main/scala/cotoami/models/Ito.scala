@@ -49,32 +49,32 @@ object Ito {
 
 // Outgoing itos grouped by belonging nodes.
 // Each grouped itos are sorted in TreeMap by Ito.order.
-case class OutgoingItos(map: Map[Id[Node], TreeMap[Int, Ito]] = Map.empty) {
-  def isEmpty: Boolean = map.isEmpty
+case class OutgoingItos(byNode: Map[Id[Node], TreeMap[Int, Ito]] = Map.empty) {
+  def isEmpty: Boolean = byNode.isEmpty
 
-  def all: Iterable[Ito] = map.values.map(_.values).flatten
+  def all: Iterable[Ito] = byNode.values.map(_.values).flatten
 
   def group(id: Id[Node]): Iterable[Ito] =
-    map.get(id).map(_.values).getOrElse(Seq.empty)
+    byNode.get(id).map(_.values).getOrElse(Seq.empty)
 
   def hasDuplicateOrder(ito: Ito): Boolean =
-    map.get(ito.nodeId).map(_.contains(ito.order)).getOrElse(false)
+    byNode.get(ito.nodeId).map(_.contains(ito.order)).getOrElse(false)
 
   def put(ito: Ito): OutgoingItos =
-    this.modify(_.map.atOrElse(ito.nodeId, TreeMap(ito.order -> ito))).using(
+    this.modify(_.byNode.atOrElse(ito.nodeId, TreeMap(ito.order -> ito))).using(
       _.filterNot(_._2.id == ito.id) // remove old version
         .updated(ito.order, ito)
     )
 
   def delete(ito: Ito): OutgoingItos =
     this
-      .modify(_.map.index(ito.nodeId)).using(
+      .modify(_.byNode.index(ito.nodeId)).using(
         _.filterNot(_._2.id == ito.id)
       )
-      .modify(_.map).using(_.filterNot(_._2.isEmpty))
+      .modify(_.byNode).using(_.filterNot(_._2.isEmpty))
 }
 
-case class Siblings(sorted: Seq[(Ito, Coto)]) {
+case class SiblingGroup(sorted: Seq[(Ito, Coto)]) {
   def length = sorted.length
 
   def isEmpty: Boolean = sorted.isEmpty
@@ -113,8 +113,8 @@ case class Siblings(sorted: Seq[(Ito, Coto)]) {
   def fingerprint: String = itos.map(_.id.uuid).mkString
 }
 
-object Siblings {
-  def empty: Siblings = Siblings(Seq.empty)
+object SiblingGroup {
+  def empty: SiblingGroup = SiblingGroup(Seq.empty)
 }
 
 case class OrderContext(

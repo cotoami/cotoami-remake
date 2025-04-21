@@ -1,7 +1,7 @@
 package cotoami.repository
 
 import scala.util.chaining._
-import scala.collection.immutable.HashSet
+import scala.collection.immutable.{HashSet, TreeMap}
 import scala.scalajs.js
 
 import com.softwaremill.quicklens._
@@ -176,15 +176,26 @@ case class Root(
   // Itos
   /////////////////////////////////////////////////////////////////////////////
 
-  lazy val pins: Siblings =
+  lazy val pins: Map[Id[Node], SiblingGroup] =
     currentCotonoma.map(cotonoma => childrenOf(cotonoma.cotoId))
-      .getOrElse(Siblings.empty)
+      .getOrElse(Map.empty)
 
-  def childrenOf(cotoId: Id[Coto]): Siblings =
-    itos.from(cotoId).toSeq
-      .map(ito => cotos.get(ito.targetCotoId).map(child => (ito, child)))
+  def childrenOf(cotoId: Id[Coto]): Map[Id[Node], SiblingGroup] =
+    itos.from(cotoId).map { outgoingItos =>
+      outgoingItos.byNode.map { case (nodeId, itos) =>
+        (nodeId, getSiblingGroup(itos))
+      }.toMap
+    }.getOrElse(Map.empty)
+
+  private def getSiblingGroup(itos: TreeMap[Int, Ito]): SiblingGroup =
+    itos.values
+      .map(ito =>
+        cotos.get(ito.targetCotoId)
+          .map(targetCoto => (ito, targetCoto))
+      )
       .flatten
-      .pipe(Siblings(_))
+      .toSeq
+      .pipe(SiblingGroup(_))
 
   def parentsOf(
       cotoId: Id[Coto],
