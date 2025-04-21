@@ -120,8 +120,10 @@ case class Nodes(
       Client(_, clientNode, activeClients.get(clientNode.nodeId))
     )
 
+  def isParent(id: Id[Node]): Boolean = parentIds.contains(id)
+
   def parentStatus(parentId: Id[Node]): Option[ParentStatus] = {
-    if (!parentIds.contains(parentId)) return None
+    if (!isParent(parentId)) return None
 
     servers.get(parentId).map(server =>
       server.notConnected
