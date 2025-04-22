@@ -265,7 +265,7 @@ where
     );
 
     /////////////////////////////////////////////////////////////////////////////
-    // Command: OutgoingItos
+    // Command: SiblingItos
     /////////////////////////////////////////////////////////////////////////////
 
     let (coto2, _) = backend_ds.post_coto(
@@ -278,8 +278,9 @@ where
         &backend_owner,
     )?;
 
-    let request = Command::OutgoingItos {
+    let request = Command::SiblingItos {
         coto: backend_root_coto.uuid,
+        node: None,
     }
     .into_request();
     let itos = service.call(request).await?.content::<Vec<Ito>>()?;

@@ -266,7 +266,14 @@ impl HttpClient {
                 .put(&format!("{API_PATH_COTONOMAS}/{id}/rename"))
                 .json(&name),
             Command::Ito { id } => self.get(&format!("{API_PATH_ITOS}/{id}")),
-            Command::OutgoingItos { coto } => self.get(&format!("{API_PATH_COTOS}/{coto}/itos")),
+            Command::SiblingItos { coto, node } => {
+                let url = format!("{API_PATH_COTOS}/{coto}/itos");
+                if let Some(node_id) = node {
+                    self.get(&url).query(&("node", node_id))
+                } else {
+                    self.get(&url)
+                }
+            }
             Command::CreateIto(input) => self.post(API_PATH_ITOS).json(&input),
             Command::EditIto { id, diff } => self.put(&format!("{API_PATH_ITOS}/{id}")).json(&diff),
             Command::DeleteIto { id } => self.delete(&format!("{API_PATH_ITOS}/{id}")),

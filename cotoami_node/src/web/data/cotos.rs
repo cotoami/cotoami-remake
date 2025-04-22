@@ -33,7 +33,7 @@ pub(super) fn routes() -> Router<NodeState> {
         .route("/{coto_id}/cotonoma", get(cotonoma))
         .route("/{coto_id}", put(edit_coto).delete(delete_coto))
         .route("/{coto_id}/promote", put(promote))
-        .route("/{coto_id}/itos", get(outgoing_itos))
+        .route("/{coto_id}/itos", get(sibling_itos))
         .route("/{coto_id}/graph", get(graph))
 }
 
@@ -214,15 +214,22 @@ async fn delete_coto(
 // GET /api/data/cotos/{coto_id}/itos
 /////////////////////////////////////////////////////////////////////////////
 
-async fn outgoing_itos(
+async fn sibling_itos(
     State(state): State<NodeState>,
     TypedHeader(accept): TypedHeader<Accept>,
     Path(coto_id): Path<Id<Coto>>,
+    Query(filter): Query<SiblingItosFilter>,
 ) -> Result<Content<Vec<Ito>>, ServiceError> {
     state
-        .outgoing_itos(coto_id)
+        .sibling_itos(coto_id, filter.node)
         .await
         .map(|itos| Content(itos, accept))
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct SiblingItosFilter {
+    #[serde(default)]
+    pub node: Option<Id<Node>>,
 }
 
 /////////////////////////////////////////////////////////////////////////////

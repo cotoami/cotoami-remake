@@ -14,8 +14,13 @@ impl NodeState {
         self.get(move |ds| ds.try_get_ito(&id)).await
     }
 
-    pub async fn outgoing_itos(&self, coto_id: Id<Coto>) -> Result<Vec<Ito>, ServiceError> {
-        self.get(move |ds| ds.outgoing_itos(&[coto_id])).await
+    pub async fn sibling_itos(
+        &self,
+        coto_id: Id<Coto>,
+        node_id: Option<Id<Node>>,
+    ) -> Result<Vec<Ito>, ServiceError> {
+        self.get(move |ds| ds.sibling_itos(&coto_id, node_id.as_ref()))
+            .await
     }
 
     pub async fn create_ito(

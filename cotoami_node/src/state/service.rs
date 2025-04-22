@@ -134,7 +134,9 @@ impl NodeState {
                 format.serialize(self.rename_cotonoma(id, name, opr?).await)
             }
             Command::Ito { id } => format.serialize(self.ito(id).await),
-            Command::OutgoingItos { coto } => format.serialize(self.outgoing_itos(coto).await),
+            Command::SiblingItos { coto, node } => {
+                format.serialize(self.sibling_itos(coto, node).await)
+            }
             Command::CreateIto(input) => format.serialize(self.create_ito(input, opr?).await),
             Command::EditIto { id, diff } => format.serialize(self.edit_ito(id, diff, opr?).await),
             Command::DeleteIto { id } => format.serialize(self.delete_ito(id, opr?).await),

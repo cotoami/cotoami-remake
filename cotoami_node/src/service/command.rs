@@ -174,8 +174,11 @@ pub enum Command {
     /// Request a [Ito] of the given ID.
     Ito { id: Id<Ito> },
 
-    /// Request outgoing [Vec<Ito>] from the specified coto.
-    OutgoingItos { coto: Id<Coto> },
+    /// Request sibling itos [Vec<Ito>] from the given coto.
+    SiblingItos {
+        coto: Id<Coto>,
+        node: Option<Id<Node>>,
+    },
 
     /// Request to create a new [Ito] and return the [Ito] if suceeded.
     CreateIto(ItoInput<'static>),
