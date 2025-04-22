@@ -85,7 +85,7 @@ object SectionPins {
     }
   }
 
-  def sectionPins(
+  private def sectionPins(
       pins: Siblings,
       uiState: UiState,
       currentCotonoma: (Cotonoma, Coto)
@@ -93,44 +93,7 @@ object SectionPins {
     val (cotonoma, cotonomaCoto) = currentCotonoma
     val inColumns = uiState.arePinsInColumns(cotonoma.id)
     section(className := "pins header-and-body fill")(
-      header()(
-        ToolbarCoto(cotonomaCoto),
-        section(className := "title")(
-          span(
-            className := "current-cotonoma-name",
-            onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
-          )(
-            context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
-            cotonoma.name
-          )
-        ),
-        section(className := "view-switch")(
-          toolButton(
-            symbol = "view_agenda",
-            tip = Some("Document"),
-            classes = optionalClasses(
-              Seq(
-                ("view-document", true),
-                ("selected", !inColumns)
-              )
-            ),
-            disabled = !inColumns,
-            onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, false))
-          ),
-          toolButton(
-            symbol = "view_column",
-            tip = Some("Columns"),
-            classes = optionalClasses(
-              Seq(
-                ("view-columns", true),
-                ("selected", inColumns)
-              )
-            ),
-            disabled = inColumns,
-            onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, true))
-          )
-        )
-      ),
+      header(cotonoma, cotonomaCoto, inColumns),
       div(
         className := optionalClasses(
           Seq(
@@ -156,6 +119,50 @@ object SectionPins {
       )
     )
   }
+
+  private def header(
+      cotonoma: Cotonoma,
+      cotonomaCoto: Coto,
+      inColumns: Boolean
+  )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
+    slinky.web.html.header()(
+      ToolbarCoto(cotonomaCoto),
+      section(className := "title")(
+        span(
+          className := "current-cotonoma-name",
+          onDoubleClick := (_ => dispatch(AppMsg.FocusCoto(cotonomaCoto.id)))
+        )(
+          context.repo.nodes.get(cotonoma.nodeId).map(PartsNode.imgNode(_)),
+          cotonoma.name
+        )
+      ),
+      section(className := "view-switch")(
+        toolButton(
+          symbol = "view_agenda",
+          tip = Some("Document"),
+          classes = optionalClasses(
+            Seq(
+              ("view-document", true),
+              ("selected", !inColumns)
+            )
+          ),
+          disabled = !inColumns,
+          onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, false))
+        ),
+        toolButton(
+          symbol = "view_column",
+          tip = Some("Columns"),
+          classes = optionalClasses(
+            Seq(
+              ("view-columns", true),
+              ("selected", inColumns)
+            )
+          ),
+          disabled = inColumns,
+          onClick = _ => dispatch(Msg.SwitchView(cotonoma.id, true))
+        )
+      )
+    )
 
   @react object DocumentView {
     case class Props(
@@ -380,7 +387,7 @@ object SectionPins {
         PartsCoto.article(coto, dispatch, Seq(("sub-coto", true)))(
           ToolbarCoto(coto),
           ToolbarReorder(ito, order),
-          header()(
+          slinky.web.html.header()(
             PartsIto.buttonSubcotoIto(ito)
           ),
           div(className := "body")(
