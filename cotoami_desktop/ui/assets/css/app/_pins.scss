@@ -74,10 +74,10 @@ section.pins {
     }
   }
 
-  ol.pins {
+  section.pin-groups {
     padding-top: 20px;
 
-    li.pin {
+    section.pin {
       background-color: var(--card-background-color);
 
       &.with-description {
@@ -187,35 +187,31 @@ section.pins {
         position: sticky;
         top: 0;
 
-        ol.toc {
-          width: 100%;
+        div.toc-entry {
+          opacity: 0.6;
 
-          li.toc-entry {
-            opacity: 0.6;
+          &.active {
+            opacity: 1;
+            font-weight: 550;
+          }
 
-            &.active {
-              opacity: 1;
-              font-weight: 550;
+          button {
+            width: 100%;
+            margin-bottom: 3px;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+
+            &:hover,
+            &.highlighted {
+              background-color: var(--hover-background-color);
             }
 
-            button {
-              width: 100%;
-              margin-bottom: 3px;
-              padding: 5px 15px;
-              font-size: 0.9rem;
-
-              &:hover,
-              &.highlighted {
-                background-color: var(--hover-background-color);
-              }
-
-              img.node-icon {
-                width: 16px;
-                height: 16px;
-                border-radius: 4px;
-                vertical-align: text-bottom;
-                margin-right: 5px;
-              }
+            img.node-icon {
+              width: 16px;
+              height: 16px;
+              border-radius: 4px;
+              vertical-align: text-bottom;
+              margin-right: 5px;
             }
           }
         }
@@ -231,7 +227,7 @@ section.pins {
 
         max-width: calc(var(--max-article-width) + var(--toc-width));
 
-        ol.pins {
+        section.pin-groups {
           flex: 1;
           min-width: 0; // let this item shrink below the content size
         }
@@ -243,7 +239,7 @@ section.pins {
       }
     }
 
-    li.pin {
+    section.pin {
       margin-bottom: 3rem;
     }
 
@@ -258,8 +254,7 @@ section.pins {
 
     // Disable card-background-color in document-view
     article.coto,
-    ol.pins ol.sub-cotos>div.itos,
-    ol.pins div.itos-not-yet-loaded,
+    div.itos-not-yet-loaded,
     ul.parents {
       background-color: var(--background-color);
     }
@@ -277,15 +272,21 @@ section.pins {
       }
     }
 
-    ol.pins {
+    section.pin-groups {
       display: flex;
       flex-direction: row;
 
       height: 100%;
       padding-left: 16px;
+
+      &>section.sibling-group {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+      }
     }
 
-    li.pin {
+    section.pin {
       flex: 1;
       min-width: 400px;
       margin-right: 16px;
@@ -297,7 +298,7 @@ section.pins {
         min-height: 0; // let this item shrink below the content size
       }
 
-      ol.sub-cotos {
+      section.sub-cotos {
         padding-top: 16px;
         padding-bottom: 3rem;
       }

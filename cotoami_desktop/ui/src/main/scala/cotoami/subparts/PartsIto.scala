@@ -124,7 +124,7 @@ object PartsIto {
   def sectionSiblings(siblings: Siblings, classes: String = "")(
       renderSibling: (Ito, Coto, OrderContext) => ReactElement
   ): ReactElement =
-    section(className := s"sibling ${classes}")(
+    section(className := s"siblings ${classes}")(
       siblings.groupsInOrder.map(sectionSiblingGroup(_, renderSibling)): _*
     )
 

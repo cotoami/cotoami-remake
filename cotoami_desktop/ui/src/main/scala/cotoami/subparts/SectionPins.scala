@@ -361,7 +361,9 @@ object SectionPins {
       inColumn: Boolean
   )(implicit context: Context, dispatch: Into[AppMsg] => Unit): ReactElement =
     if (inColumn) {
-      ScrollArea()(sectionSubCotos(subCotos))
+      ScrollArea(className = Some("scrollable-sub-cotos"))(
+        sectionSubCotos(subCotos)
+      )
     } else {
       sectionSubCotos(subCotos)
     }
